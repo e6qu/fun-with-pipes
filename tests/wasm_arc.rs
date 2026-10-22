@@ -454,7 +454,7 @@ fn synchronous_wasi_vector_lane_counts_do_not_narrow_before_validation() {
                 fwp::cgen::compile_for(candidate, &binary, opt, fwp::cgen::Target::Wasi).unwrap();
                 let output = wasi(&binary, dir.path()).output().unwrap();
                 let (status, stdout, stderr) = match (name, label) {
-                    ("splat", "checked") => (1, "", "fwp: trap: array too large\n"),
+                    ("splat", "checked") => (101, "", "fwp: trap: array too large\n"),
                     ("splat", "narrowed") => (0, "0\n", ""),
                     ("from-array", "checked") => (0, "True\n", ""),
                     ("from-array", "narrowed") => (0, "False\n", ""),

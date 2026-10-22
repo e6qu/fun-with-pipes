@@ -278,6 +278,13 @@ fn string_size_checks_precede_allocation_and_empty_repeat_does_no_work() {
                     .arg("-o")
                     .arg(&binary),
             );
+            if let Some(path) = std::env::var_os("FWP_TEXT_TRANSFORM_ARTIFACTS") {
+                let path = std::path::PathBuf::from(path);
+                std::fs::create_dir_all(&path).unwrap();
+                let stem = format!("string-size-{label}{opt}");
+                std::fs::write(path.join(format!("{stem}.c")), measured).unwrap();
+                std::fs::copy(&binary, path.join(format!("{stem}.bin"))).unwrap();
+            }
             for case in 0..6 {
                 let expected = if case < 3 && label != "missing-size" {
                     125

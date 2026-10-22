@@ -26,6 +26,18 @@ corresponding elements; because subtraction takes its subject last, the original
 vector is the final argument. Repeating this step lowers the objective in this
 example; it does not guarantee convergence for arbitrary functions.
 
+The descent loop keeps a pair `(steps-left, weights)`. `both (const 199) id`
+creates that pair: `const 199` ignores its input and supplies the count, while
+`id` keeps the starting weights. `.0` selects the count and `.1` the weights.
+Each `Again` supplies the next pair; `Stop` returns the final weights. The loop
+therefore makes exactly 199 updates without keeping a list of earlier vectors.
+
+Keeping a history is useful when plotting the path, but this example only needs
+the final result. `iterate 200 descend | last` would retain 200 vectors including
+the starting one and perform the same 199 updates. The
+[measured comparison](../../measurements/ad-application.md) explains the storage
+saved by the loop and the remaining cost of derivative recording.
+
 ## Expressions and execution devices
 
 A tensor expression describes arithmetic over an array. `tensor.lazy` creates
@@ -74,9 +86,9 @@ main = [
     [-1.2, 1.0, 0.5] | grad rosenbrock | show | print,
     [-1.2, 1.0, 0.5] | gradient rosenbrock | show | print,
     [-1.2, 1.0, 0.5]
-    | iterate 200 descend
-    | last
-    | option.unwrap-or []
+    | both (const 199) id
+    | loop
+        (if (.0 | eq 0) (.1 | Stop) (both (.0 | sub 1) (.1 | descend) | Again))
     | rosenbrock
     | show
     | print,

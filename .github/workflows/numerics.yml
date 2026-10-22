@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [text-owners, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -2241,7 +2241,7 @@ jobs:
           path: ~/Library/Logs/DiagnosticReports/fwp*
           if-no-files-found: ignore
   wordfreq:
-    if: inputs.suite == 'wordfreq' || inputs.suite == 'text-owners'
+    if: inputs.suite == 'wordfreq'
     strategy:
       fail-fast: false
       matrix:
@@ -2258,12 +2258,10 @@ jobs:
         with:
           components: rustfmt
       - uses: actions/setup-node@v7
-        if: inputs.suite == 'text-owners'
         with:
           node-version: 24
           package-manager-cache: false
       - name: Synchronous WASI toolchain
-        if: inputs.suite == 'text-owners'
         run: |
           sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
           rustup target add wasm32-wasip1
@@ -2280,33 +2278,36 @@ jobs:
           path: text-transform-evidence/
           if-no-files-found: error
       - name: Native interpreter counts
-        if: ${{ !cancelled() && inputs.suite == 'text-owners' }}
+        if: ${{ !cancelled() }}
         run: >-
           cargo test --locked --release --lib prims_std::count_tests:: -- --test-threads=1
       - name: Interpreter counts on 32-bit WebAssembly
-        if: ${{ !cancelled() && inputs.suite == 'text-owners' }}
+        if: ${{ !cancelled() }}
         env:
+          CC_wasm32_wasip1: clang
+          CXX_wasm32_wasip1: clang++
           CARGO_TARGET_WASM32_WASIP1_RUNNER: node tests/wasm/wasi-run.mjs
         run: >-
           cargo test --locked --release --lib --target wasm32-wasip1 prims_std::count_tests:: -- --test-threads=1
       - name: Synchronous WASI text aliases and physical cleanup
-        if: ${{ !cancelled() && inputs.suite == 'text-owners' }}
+        if: ${{ !cancelled() }}
         env:
           FWP_REQUIRE_WASI_ARC: '1'
           FWP_WASI_ARC_ARTIFACTS: text-wasi-evidence
           FWP_WASM_CC: clang
         run: cargo test --locked --release --test wasm_arc synchronous_wasi_ -- --nocapture
       - uses: actions/upload-artifact@v7
-        if: always() && inputs.suite == 'text-owners'
+        if: always()
         with:
           name: text-wasi-${{ matrix.runner }}
           path: text-wasi-evidence/
           if-no-files-found: error
       - name: Word-frequency native and interpreter boundary cases
-        if: inputs.suite == 'wordfreq'
+        if: ${{ !cancelled() }}
         run: cargo test --locked --release --test text_file_tools word_frequencies_preserve_separators_normalization_and_tie_order -- --exact
       - name: Download the explicit accepted word-frequency baseline
-        if: inputs.suite == 'wordfreq'
+        id: baseline
+        if: ${{ !cancelled() }}
         env:
           GH_TOKEN: ${{ github.token }}
           BASELINE_RUN: ${{ inputs.baseline_run }}
@@ -2316,7 +2317,7 @@ jobs:
           python3 -c 'import json; r=json.load(open("baseline-run.json")); assert r["conclusion"] == "success" and r["headSha"] == "74263bccf8e2e67865e1863e2c04a296a97877bb"'
           gh run download "$BASELINE_RUN" --name "wordfreq-${{ matrix.runner }}" --dir wordfreq-before
       - name: Compare the maintained word-frequency application
-        if: inputs.suite == 'wordfreq'
+        if: ${{ !cancelled() && steps.baseline.conclusion == 'success' }}
         run: >-
           python3 scripts/measure-wordfreq.py --compiler target/release/fwp
           --cc gcc --rustc rustc --objdump objdump --nm nm --time /usr/bin/time
@@ -2324,7 +2325,7 @@ jobs:
           --baseline wordfreq-before --baseline-source 74263bccf8e2e67865e1863e2c04a296a97877bb
           --timeout 180 --host "${{ matrix.runner }}" --output wordfreq-evidence
       - uses: actions/upload-artifact@v7
-        if: always() && inputs.suite == 'wordfreq'
+        if: always()
         with:
           name: wordfreq-${{ matrix.runner }}
           path: wordfreq-evidence/

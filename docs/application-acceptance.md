@@ -39,7 +39,10 @@ mark this suite complete because one application improved.
 
 Run the `wordfreq` suite in the **Numerical and ownership evidence** workflow.
 It measures Linux AMD64 and ARM64 separately, using production GCC and explicit
-O2 settings. The script requires every input size, tool, sample count, warmup
+O2 settings. Each host builds once for native ownership checks, the 32-bit
+WebAssembly interpreter and generated-code checks, and the paired measurement.
+A failed check does not suppress the independent checks that follow it.
+The script requires every input size, tool, sample count, warmup
 count and timeout; it has no implicit benchmark configuration.
 
 The fwp program lowercases ASCII letters and removes commas and periods from
@@ -91,10 +94,10 @@ one number to a candidate vector; a gradient says how each component changes
 that number. Each update subtracts 0.001 times the gradient.
 
 The starting vector alternates −1.2 and 1.0. Cases have 3, 33 or 129 dimensions.
-The original `iterate 200 descend | last` retains 200 vectors, including the
+The former tutorial expression `iterate 200 descend | last` retains 200 vectors, including the
 initial one, so it performs **199 updates**. The comparison loop performs the
 same updates while retaining only its current vector. Both return the complete
-final vector; neither returns the discarded history. This is a change in program
+final vector; neither returns the discarded history. The tutorial now uses this loop. This is a change in program
 structure, not an implemented compiler optimization.
 
 Both raw interpreter forms must agree bit-for-bit with each other and with the
@@ -120,7 +123,7 @@ and repeated-host timing budgets remain open.
 
 ## Testing unchanged string ownership
 
-The next text candidate consumes the source owner for ASCII case conversion,
+The text candidate consumes the source owner for ASCII case conversion,
 trimming and replacement. If bytes do not change, the result receives that owner;
 if bytes change, a new string is created before the old owner is released.
 Other aliases retain their original bytes. Failure and cancellation must release

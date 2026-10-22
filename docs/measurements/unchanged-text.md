@@ -62,6 +62,23 @@ Small-case ARC ratios are 0.883× and 0.873×. All four tracing ratios also impr
 This repeats the direction of the change on the named cases; it does not establish
 a general timing budget or performance on other hardware.
 
+## Correctness and cleanup
+
+The original text source also passes both complete WASI jobs in
+[run 39694266236](https://github.com/e6qu/fun-with-pipes/actions/runs/39694266236).
+The expanded alias fixture at `a9a6ba203ec15228f9a99f3e4fae2dd5ca74025d` passes
+native and synchronous WASI checks on both Linux hosts in
+[run 39696094960](https://github.com/e6qu/fun-with-pipes/actions/runs/39696094960).
+It covers source/pattern sharing, source/replacement sharing and all three
+arguments referring to one string, as well as unchanged and changed results.
+
+[Independent inspection](text-aliases-2026-10-22.json) records the generated-C
+and binary hashes of 24 native cleanup controls and four executed WASI modules.
+The WASI exports, memory limits and code sections are decoded from the binaries;
+none contains named tracing collector functions. These focused results precede
+the later large-count repairs and final production validation. Their status is
+recorded in the [handoff](../development-state.md).
+
 ## Allocations, live storage and code
 
 Both hosts and both memory modes reproduce these counts. Retains are unchanged:

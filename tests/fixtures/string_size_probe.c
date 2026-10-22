@@ -28,7 +28,9 @@ static V buf_to_str(fwp_buf *b) { (void)b; exit(128); }
 /* REPEAT */
 int main(int argc, char **argv) {
     if (argc != 2) return 128;
-    struct { uint64_t len; char d[4]; } a={0,{0}},b={0,{0}};
+    /* Use the real header type: casting a different struct violates C aliasing.
+       Every path exits before reading payload bytes, so no payload is needed. */
+    fwp_str a={0},b={0};
     switch (atoi(argv[1])) {
     case 0: fwp_str_new("",SIZE_MAX); break;
     case 1: a.len=SIZE_MAX; b.len=1; fwp_p_concat(PTR(&b),PTR(&a)); break;
