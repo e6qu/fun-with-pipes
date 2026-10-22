@@ -2251,6 +2251,7 @@ jobs:
     env:
       CC: gcc
       CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -2263,7 +2264,9 @@ jobs:
           package-manager-cache: false
       - name: Synchronous WASI toolchain
         if: inputs.suite == 'text-owners'
-        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+        run: |
+          sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+          rustup target add wasm32-wasip1
       - run: cargo fmt --all -- --check
       - run: cargo build --locked --release --bin fwp
       - name: Consumed text owners, alias preservation and forced failures
@@ -2276,13 +2279,23 @@ jobs:
           name: text-transform-${{ matrix.runner }}
           path: text-transform-evidence/
           if-no-files-found: error
+      - name: Native interpreter counts
+        if: ${{ !cancelled() && inputs.suite == 'text-owners' }}
+        run: >-
+          cargo test --locked --release --lib prims_std::count_tests:: -- --test-threads=1
+      - name: Interpreter counts on 32-bit WebAssembly
+        if: ${{ !cancelled() && inputs.suite == 'text-owners' }}
+        env:
+          CARGO_TARGET_WASM32_WASIP1_RUNNER: node tests/wasm/wasi-run.mjs
+        run: >-
+          cargo test --locked --release --lib --target wasm32-wasip1 prims_std::count_tests:: -- --test-threads=1
       - name: Synchronous WASI text aliases and physical cleanup
         if: ${{ !cancelled() && inputs.suite == 'text-owners' }}
         env:
           FWP_REQUIRE_WASI_ARC: '1'
           FWP_WASI_ARC_ARTIFACTS: text-wasi-evidence
           FWP_WASM_CC: clang
-        run: cargo test --locked --release --test wasm_arc synchronous_wasi_programs_match_interpretation_and_free_physical_storage -- --exact --nocapture
+        run: cargo test --locked --release --test wasm_arc synchronous_wasi_ -- --nocapture
       - uses: actions/upload-artifact@v7
         if: always() && inputs.suite == 'text-owners'
         with:

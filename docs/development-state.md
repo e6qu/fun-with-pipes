@@ -5,8 +5,9 @@
 Next: audit [PR #191](https://github.com/e6qu/fun-with-pipes/pull/191) at
 `12be5afcee7c81f1b98ffed2081d698e1124b000`. Production `39688998592`, documentation
 `39688998567` and focused GCC `39688997806` must all pass for this exact head.
-Documentation, benchmarks, focused GCC and both ARM macOS jobs pass with full
-logs audited. Six production jobs remain running; no failure has been reported.
+Documentation, benchmarks, focused GCC, all four macOS jobs, Linux AMD64 and
+Windows ARM64 pass with full logs audited. Linux ARM64 and Windows AMD64 remain
+running; no failure has been reported.
 Keep this delivery head fixed. Fix all discovered failures together.
 
 Use `/private/tmp/fwp-audit-191-final.py` and `/private/tmp/fwp-audit-191-gcc.py`.
@@ -23,10 +24,11 @@ PR, then the seven remaining plan areas. Do not open a second delivery PR.
   Receipt: `/private/tmp/fwp-combined-publication.json`. Its only local edit is the
   handoff; do not push that alone while final gates run.
 - Next group: `application-baselines`, `/private/tmp/fwp-application-baselines`,
-  based on #191's tested head. Current published head is `4ce989e5ffb9252fe47abbdb7dbebb50728fbad7`.
-  New uncommitted work adds three source-level replacement alias cases, the repeat
-  report and a focused native/WASI `text-owners` workflow selection. Publish them
-  together and require their checks before delivery.
+  based on #191's tested head. Published preparation `a9a6ba203ec1` passes both
+  focused native/WASI jobs. Uncommitted repairs preserve large counts and indices
+  on 32-bit targets, bound slice/size arithmetic and avoid empty repetition loops.
+  Publish these with focused native/32-bit interpreter/WASI checks and rerun the
+  paired word-frequency comparison because runtime code changed.
 - Older await/CPU preparation worktrees and immutable tags are evidence. Preserve
   them; their superseded instructions are not new work.
 
@@ -55,7 +57,8 @@ suite is `docs/application-acceptance.md`. No work area is complete.
 |---|---|---|
 | Word-frequency C/Rust baseline | `74263bccf8e2` / `39690307737` | Both Linux jobs pass; eight binaries inspected. Larger ARC case takes 3.29–3.52× C and 2.45–2.54× Rust time. |
 | Descent history versus current weights | `4815e3d16c34` / `39692176065` | Both Linux jobs pass; 24 binaries inspected. At 129 coordinates, managed peak falls 845,424 → 26,288 bytes, with modest/mixed timings. Raw tape buffers are outside the counters. |
-| Unchanged string owners | `67b684506bb4` / native `39694262883`, WASI `39694266236` | Both native jobs pass; twelve comparison binaries and 24 cleanup controls inspected. WASI jobs still run. |
+| Unchanged string owners | `67b684506bb4` / native `39694262883`, WASI `39694266236` | Both native jobs pass; twelve comparison binaries and 24 cleanup controls inspected. Both full WASI jobs also pass; artifact inspection remains outstanding. |
+| Additional source aliases | `a9a6ba203ec1` / `39696094960` | Both focused native/WASI jobs pass with audited logs; latest artifacts still need independent inspection. |
 | Repeat identical word-frequency binaries | runner `4ce989e5ffb9` / `39695137827` | Both jobs pass; repeated ARC improvements and eight independently checked stack-estimate binaries with identical code bytes. |
 
 Full logs for completed jobs are audited. Each source has an immutable
@@ -84,12 +87,20 @@ The peers combine normalization in one pass, so this is not an isolated compiler
 overhead. Code sections shrink. Main-worker stack frames grow 16 bytes and
 lowercasing gains a 48/64-byte separate frame; do not claim every cost decreases.
 
-The latest extra fixture covers pattern/source, replacement/source and all-three
-aliases. Four raw-interpreter cases pass with a prior compiler after fixing an
-incorrect data-last `apply` order. **Current native/WASI acceptance of these new
-cases is pending.** The focused workflow reuses one release build per Linux host
-for native ownership and synchronous WASI checks; it does not rerun benchmarks.
-Final delivery still requires all nine production jobs and docs.
+The extra fixture covers pattern/source, replacement/source and all-three
+aliases. Both Linux jobs pass native ownership and synchronous WASI checks.
+Receipts: `/private/tmp/fwp-text-alias-acceptance.json` and
+`/private/tmp/fwp-owned-text-acceptance.json` are accepted. Download and inspect
+latest alias artifacts before delivery; do not repeat completed native baseline,
+AD or stack inspections. Final delivery requires all nine production jobs and docs.
+
+Current bounds repairs have formatting/workflow/raw 64-bit reference checks and
+36 small native C size/empty-repeat controls passing. Current Rust compilation,
+32-bit interpreter and generated WASI verification are still pending. The tests
+include deliberately narrowed vector counts and omitted size checks to prove
+that broken versions fail. SIMD F128 limits account for sixteen-byte lanes.
+Earlier string timing results describe source `67b684506bb4`, not these repairs;
+retain them and measure the changed runtime before claiming the same improvement.
 
 ## Local checks and limits
 

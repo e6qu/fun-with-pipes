@@ -103,6 +103,12 @@ double-four = simd.mul (simd.splat 2.0)
 `simd.splat 2.0` fills all four lanes with 2.0. `simd.mul` multiplies matching
 lanes. `array.from-list` constructs the input array; `simd.from-array` checks its
 length and returns `Some vector` on success or `None` for the wrong length.
+The declared lane count is checked before conversion to the target's pointer
+width. For example, an empty array cannot satisfy `Vec[4294967296, I64]` on a
+32-bit WebAssembly target. Constructing that vector with `simd.splat` traps with
+`array too large` before allocation. F128 lanes require sixteen bytes each;
+representable lengths do not guarantee that sufficient memory is available.
+
 `option.map` applies a function inside `Some` and leaves `None` unchanged:
 
 ```fwp

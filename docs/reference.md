@@ -279,6 +279,29 @@ For two arguments, `curry (match (_, _) -> const)` returns the first argument:
 its two holes pass both values to `const`, which ignores the second. The brace
 form `match { Some -> id, None -> const 0 }` fits on one line.
 
+### Counts and indices
+
+An index selects a position, starting at zero. `nth`, `array.get`, `array.set`
+and `bytes.get` return `None` for a negative or out-of-range index. A large index
+must not wrap to a smaller valid position on a 32-bit target.
+
+A count describes how much to take, drop, repeat or slice. Negative counts mean
+zero; `chunks` instead requires a positive chunk size. Slices stop at the end
+of their input, even when the requested count is much larger:
+
+```fwp
+"héllo" | string.slice 1 4294967296  # produces "éllo"
+"héllo" | string.slice 4294967296 3  # produces ""
+"" | string.repeat 9223372036854775807  # produces "" without a repetition loop
+```
+
+String slices count Unicode scalar values, so `é` occupies one position.
+Byte slices count bytes; array slices count elements. A huge count does not
+imply a huge allocation when the result is bounded by an existing input.
+Operations that actually construct large nonempty results still need storage.
+Native string construction checks length arithmetic before allocating and traps
+with `string too large` if the representation would overflow.
+
 ## Types
 
 A type describes the values an expression may have. A record holds named fields;

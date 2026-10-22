@@ -171,3 +171,132 @@ fn text_transformations_preserve_aliases_and_consumed_owners() {
         }
     }
 }
+
+#[test]
+fn large_counts_keep_small_results_without_wrapping_or_empty_repeat_work() {
+    let dir = fwp::cgen::TempDir::new("count-boundaries").unwrap();
+    let source = dir.join("counts.fwp");
+    std::fs::write(&source, include_str!("fixtures/count_boundaries.fwp")).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    assert!(!reference.stdout.is_empty() && reference.stderr.is_empty());
+    let optimized = checked(
+        Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    assert_eq!(
+        (&optimized.stdout, &optimized.stderr),
+        (&reference.stdout, &reference.stderr)
+    );
+    for mode in ["arc", "tracing"] {
+        let cfile = dir.join("counts.c");
+        checked(
+            Command::new(compiler)
+                .env_remove("FWP_NO_OPT")
+                .args(["build", "--gc", mode, "--emit-c"])
+                .arg(&source)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(cfile).unwrap();
+        for opt in ["-O0", "-O2"] {
+            let binary = dir.join("counts.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            let stress = if mode == "arc" { "0" } else { "1" };
+            let actual = checked(
+                Command::new(&binary)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", stress),
+            );
+            assert_eq!(
+                (&actual.stdout, &actual.stderr),
+                (&reference.stdout, &reference.stderr),
+                "{mode} {opt}"
+            );
+        }
+    }
+}
+
+#[test]
+fn string_size_checks_precede_allocation_and_empty_repeat_does_no_work() {
+    let dir = fwp::cgen::TempDir::new("string-sizes").unwrap();
+    let function = |source: &str, signature: &str| {
+        let start = source.find(signature).unwrap();
+        let end = start + source[start..].find("\n}").unwrap() + 2;
+        source[start..end].to_string()
+    };
+    let code = include_str!("fixtures/string_size_probe.c")
+        .replace(
+            "/* STRING_CONSTRUCTOR */",
+            &function(include_str!("../runtime/fwp_rt.c"), "static V fwp_str_new("),
+        )
+        .replace(
+            "/* CONCAT */",
+            &function(
+                include_str!("../runtime/fwp_rt_prims.c"),
+                "static V fwp_p_concat(",
+            ),
+        )
+        .replace(
+            "/* REPEAT */",
+            &function(
+                include_str!("../runtime/fwp_rt_prims.c"),
+                "static V fwp_p_str_repeat(",
+            ),
+        );
+    let missing_sizes = code
+        .replace("len > SIZE_MAX - sizeof(fwp_str) - 1", "0")
+        .replace(
+            "STR(s)->len > limit || STR(t)->len > limit - STR(s)->len",
+            "0",
+        );
+    let missing_empty = code.replace("if (!k || !STR(s)->len) return fwp_str_new(\"\", 0);", "");
+    assert_ne!(missing_sizes, code);
+    assert_ne!(missing_empty, code);
+    for opt in ["-O0", "-O2"] {
+        for (label, measured) in [
+            ("checked", &code),
+            ("missing-size", &missing_sizes),
+            ("missing-empty", &missing_empty),
+        ] {
+            let source = dir.join("sizes.c");
+            let binary = dir.join("sizes.exe");
+            std::fs::write(&source, measured).unwrap();
+            checked(
+                Command::new(std::env::var_os("CC").unwrap_or_else(|| "cc".into()))
+                    .args(["-std=c11", opt])
+                    .arg(&source)
+                    .arg("-o")
+                    .arg(&binary),
+            );
+            for case in 0..6 {
+                let expected = if case < 3 && label != "missing-size" {
+                    125
+                } else if case == 5 && label == "missing-empty" {
+                    127
+                } else {
+                    126
+                };
+                let output = Command::new(&binary)
+                    .arg(case.to_string())
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    output.status.code(),
+                    Some(expected),
+                    "{label} {opt} {case}: {output:?}"
+                );
+                assert!(output.stdout.is_empty() && output.stderr.is_empty());
+            }
+        }
+    }
+}
