@@ -998,7 +998,8 @@ describe the program, cleanup counters and current validation status.
 The [channel proof](ownership.md#ownership-boundaries) follows each channel's
 payload types and rejects a path back to that channel type. Immutable recursive
 containers remain allowed. Mutable
-cycles, raw pointers and unproved external callbacks remain excluded.
+cycles and unproved external callbacks remain excluded. Raw pointers carry
+manual lifetime obligations, not managed ownership (validation is in the handoff).
 Checked ARC supports native main and function executables,
 including CLI commands, and C libraries with copied inputs. The C-result
 extension accepted in PR #165 transfers owned strings and record string fields to the host, with
@@ -1006,8 +1007,8 @@ explicit per-export release functions. It avoids an extra heap handle; unique
 owners move and shared fields retain only the necessary owners. When the existing
 worker already returns record fields and takes ordinary word arguments, the C
 export transfers those fields directly instead of allocating and unpacking a
-record box. Typed cleanup protects the fields if conversion fails. Raw pointers
-remain excluded. [Delivery history](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
+record box. Typed cleanup protects the fields if conversion fails. Raw pointer
+bits copy without owning their pointees; an option wrapper is still counted. [Delivery history](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
 records full acceptance. Every library export is checked as a separate entry. Synchronous WASI
 main/function/CLI entries use the same ownership checks and free counted storage
 through their existing external count table. Checked gRPC clients and service

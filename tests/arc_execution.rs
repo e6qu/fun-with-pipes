@@ -288,7 +288,6 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
     for (name,source,reason) in [
         ("custom-native","foreign \"fwp\" string.repeat : I64 -> I64 -> I64\nmain = 1 | string.repeat 2 | echo\n","no checked ownership signature"),
         ("foreign-callback","foreign \"C\" invoke : (I64 -> String) -> I64\nmain = invoke show | echo\n","foreign boundary has no checked ownership contract"),
-        ("foreign-address","foreign \"C\" lookup : () -> Ptr[I64]\nmain = lookup () | ignore\n","tracing-free ownership contract"),
         ("http-stream-channel","streams : I64 -> Channel[H2Stream] ! {Async}\nstreams = channel.make\nmain = streams 1 | channel.close\n","channel payloads cannot contain"),
         ("wrapped-http-stream-channel","streams : I64 -> Channel[List[H2Stream]] ! {Async}\nstreams = channel.make\nmain = streams 1 | channel.close\n","channel payloads cannot contain"),
         ("cyclic-channel","Link = | Node (Channel[Link])\nlinks : I64 -> Channel[Link] ! {Async}\nlinks = channel.make\nmain = links 1 | channel.close\n","a queue can lead back to channel type"),

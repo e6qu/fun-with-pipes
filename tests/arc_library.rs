@@ -239,7 +239,6 @@ fn copied_library_values_match_interpreter_and_reclaim_storage() {
 fn library_checks_every_export_and_rejects_escaping_storage() {
     let dir = fwp::cgen::TempDir::new("arc-library-reject").unwrap();
     for (name, source, diagnostic) in [
-        ("pointer", "export pointer : Ptr[I64] -> I64\npointer = const 1\n", "copied C inputs"),
         ("tape", "export good : I64 -> I64\ngood = ad.scope ad.tape\nexport bad : I64 -> I64\nbad = ad.tape\n", "outside an autodiff scope"),
         ("state", "export good : () -> I64\ngood = run-state 0 get | .0\nexport bad : () -> I64 ! {State[I64]}\nbad = get\n", "outside a State scope"),
     ] {

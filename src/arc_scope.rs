@@ -75,6 +75,7 @@ fn has_functions(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> bool {
         MT::Record(fields) => fields
             .iter()
             .any(|(_, field)| has_functions(program, field, seen)),
+        MT::Con(name, _) if name == "std::Ptr" => false,
         MT::Con(name, args) => {
             name == "?"
                 || args.iter().any(|arg| has_functions(program, arg, seen))
@@ -105,6 +106,7 @@ fn has_owner_channels(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> bo
         MT::Record(fields) => fields
             .iter()
             .any(|(_, field)| has_owner_channels(program, field, seen)),
+        MT::Con(name, _) if name == "std::Ptr" => false,
         MT::Con(name, args) => {
             name == "?"
                 || (name == "std::Channel"
@@ -150,6 +152,7 @@ fn has_channels(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> bool {
     match ty {
         MT::Fun(..) | MT::Nat(_) => false,
         MT::Record(fields) => fields.iter().any(|(_, ty)| has_channels(program, ty, seen)),
+        MT::Con(name, _) if name == "std::Ptr" => false,
         MT::Con(name, args) => {
             name == "std::Channel"
                 || name == "?"
@@ -176,6 +179,7 @@ fn has_tasks(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> bool {
     match ty {
         MT::Fun(..) | MT::Nat(_) => false,
         MT::Record(fields) => fields.iter().any(|(_, ty)| has_tasks(program, ty, seen)),
+        MT::Con(name, _) if name == "std::Ptr" => false,
         MT::Con(name, args) => {
             name == "std::Task"
                 || name == "?"
@@ -209,6 +213,7 @@ fn queued_capture_type(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> R
             }
             Ok(())
         }
+        MT::Con(name, _) if name == "std::Ptr" => Ok(()),
         MT::Con(name, args) => {
             if matches!(
                 name.as_str(),

@@ -53,8 +53,9 @@ pub enum CType {
     },
 }
 
-/// These C values copy all payload bits; retaining them cannot retain a managed
-/// language pointer. Apply the same classifier to ARC admission and lowering.
+/// These C values copy payload bits, including manually managed addresses.
+/// A Ptr never owns its pointee; C must not retain borrowed language storage.
+/// Apply the same classifier to ARC admission and lowering.
 pub fn by_value(ty: &CType) -> bool {
     match ty {
         CType::Void
@@ -64,7 +65,9 @@ pub fn by_value(ty: &CType) -> bool {
         | CType::F32
         | CType::F64
         | CType::F128
-        | CType::Bool => true,
+        | CType::Bool
+        | CType::Ptr
+        | CType::OptPtr => true,
         CType::Struct { fields, .. } => fields.iter().all(|(_, _, field)| by_value(field)),
         _ => false,
     }
@@ -76,8 +79,8 @@ pub fn scoped_callback(ty: &CType) -> bool {
     matches!(ty, CType::Callback { params, ret } if params.iter().all(by_value) && by_value(ret))
 }
 
-/// C borrows text/byte storage until return. Raw pointers have an independent,
-/// unproved pointee lifetime and are deliberately outside this contract.
+/// C borrows text/byte storage until return. Raw pointers carry the programmer's
+/// independent pointee lifetime; passing one does not transfer an ARC owner.
 pub fn scoped_argument(ty: &CType) -> bool {
     match ty {
         CType::Str | CType::Bytes => true,
@@ -87,8 +90,8 @@ pub fn scoped_argument(ty: &CType) -> bool {
     }
 }
 
-/// Foreign strings are copied before returning to language code. No pointer
-/// into host storage enters the owned result graph.
+/// Foreign strings are copied before returning to language code. Raw addresses
+/// are copied without acquiring ownership of host storage.
 pub fn copied_result(ty: &CType) -> bool {
     match ty {
         CType::Str => true,
@@ -553,4 +556,34 @@ void *fwp_shim_set_host(void *f, void *ctx) {
     out.push_str(&convs);
     out.push_str(&body);
     Ok(out)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn manual_addresses_and_managed_c_addresses_have_distinct_contracts() {
+        for ty in [CType::Ptr, CType::OptPtr] {
+            assert!(by_value(&ty));
+            assert!(scoped_argument(&ty));
+            assert!(copied_result(&ty));
+            assert!(scoped_callback(&CType::Callback {
+                params: vec![ty.clone()],
+                ret: Box::new(ty),
+            }));
+        }
+        assert!(!by_value(&CType::Str));
+        assert!(!scoped_callback(&CType::Callback {
+            params: vec![CType::Ptr],
+            ret: Box::new(CType::Str),
+        }));
+        assert!(copied_result(&CType::Struct {
+            name: "PointerText".into(),
+            fields: vec![
+                ("pointer".into(), 0, CType::OptPtr),
+                ("text".into(), 1, CType::Str),
+            ],
+        }));
+    }
 }
