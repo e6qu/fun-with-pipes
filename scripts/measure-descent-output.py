@@ -151,15 +151,17 @@ def main():
         parser.add_argument('--' + name, required=True, type=Path)
     for name in ['host', 'cc', 'rustc', 'c-arch', 'objdump', 'nm', 'time']:
         parser.add_argument('--' + name, required=True)
-    for name in ['samples', 'warmups', 'order-seed', 'timeout', 'repetitions']:
+    for name in ['samples', 'warmups', 'order-seed', 'timeout']:
         parser.add_argument('--' + name, required=True, type=int)
     parser.add_argument('--control-max-difference', required=True, type=float)
-    parser.add_argument('--case', required=True, action='append')
+    parser.add_argument('--case', required=True, action='append', metavar='COORDINATES:UPDATES:SOLVES')
     args = parser.parse_args()
     assert platform.system() == 'Linux'
-    assert min(args.samples, args.warmups, args.timeout, args.repetitions) > 0
+    assert min(args.samples, args.warmups, args.timeout) > 0
     assert args.samples % 8 == 0 and 0 < args.control_max_difference < 1
-    assert len(args.case) == len(set(args.case)) and '33:199' in args.case
+    plans = [tuple(map(int, case.split(':'))) for case in args.case]
+    assert all(len(plan) == 3 and plan[2] > 0 for plan in plans)
+    assert len({plan[:2] for plan in plans}) == len(plans) and any(plan[:2] == (33, 199) for plan in plans)
     assert args.c_arch == {'x86_64': 'x86-64', 'aarch64': 'armv8-a'}[platform.machine()]
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
@@ -181,8 +183,7 @@ def main():
 
     labels = ['fwp-full', 'fwp-sink', 'fwp-full-identical', 'fwp-sink-identical', 'c-full', 'c-sink', 'rust-full', 'rust-sink']
     results = {}
-    for case in args.case:
-        points, updates = map(int, case.split(':'))
+    for points, updates, repetitions in plans:
         assert 2 <= points <= 4096 and 0 <= updates <= 4091
         name = f'{points}-{updates}'
         directory = out / name
@@ -235,37 +236,38 @@ def main():
         for language in ['fwp', 'c', 'rust']:
             for sink in [False, True]:
                 label = language + ('-sink' if sink else '-full')
-                code = repeated(originals[language], language, args.repetitions, sink)
+                code = repeated(originals[language], language, repetitions, sink)
                 actual = compile_program(label, language, code, 'hash' if sink else '', 0)
                 assert not actual.stderr
                 outputs[label] = actual.stdout
                 if sink:
                     dump = compile_program(label + '-dump', language, code, 'dump', 0)
                     assert not dump.stderr
-                    vectors = sink_vectors(dump.stdout, expected, args.repetitions)
+                    vectors = sink_vectors(dump.stdout, expected, repetitions)
                     assert actual.stdout == sink_checksum(vectors)
-                    if case == '33:199':
+                    if (points, updates) == (33, 199):
                         broken = compile_program(label + '-omit', language, code, 'omit', 0)
                         assert not broken.stderr and broken.stdout != actual.stdout
                         controls[label] = dict(expected=actual.stdout.decode(), omittedLast=broken.stdout.decode())
                 else:
-                    COORDINATE.check_vectors(actual.stdout, expected, args.repetitions)
+                    COORDINATE.check_vectors(actual.stdout, expected, repetitions)
                     if language == 'fwp':
-                        assert actual.stdout == reference.stdout * args.repetitions
+                        assert actual.stdout == reference.stdout * repetitions
                 if language == 'fwp':
                     instrumented = BATCHES.PEERS.AD.RAW.instrument(BATCHES.PEERS.AD.PROFILE.instrument(originals[language]))
-                    instrumented = BATCHES.observe_solves(repeated(instrumented, language, args.repetitions, sink), 'checked')
+                    instrumented = BATCHES.observe_solves(repeated(instrumented, language, repetitions, sink), 'checked')
                     observed = compile_program(label + '-profile', language, instrumented, 'hash' if sink else '', 0)
                     assert observed.stdout == actual.stdout
                     rows = [json.loads(line) for line in observed.stderr.splitlines()]
                     checkpoints = [row for row in rows if 'solve' in row]
-                    assert checkpoints == [dict(solve=i+1, managedLiveBytes=0, rawLiveBytes=0) for i in range(args.repetitions)]
+                    assert checkpoints == [dict(solve=i+1, managedLiveBytes=0, rawLiveBytes=0) for i in range(repetitions)]
                     managed, raw = [row for row in rows if 'solve' not in row]
                     assert managed['retains'] == managed['finalChargedBytes'] == managed['collections'] == 0
                     BATCHES.PEERS.AD.RAW.check_profile(raw['rawDerivativeStorage'], 0, True)
-                    profiles[label] = dict(managed=managed, raw=raw, checkpoints=checkpoints)
+                    profiles[label] = dict(managed=managed, raw=raw, completedSolves=len(checkpoints),
+                                          observationsSha256=digest(observed.stderr), first=checkpoints[0], last=checkpoints[-1])
                 else:
-                    for omit in ([False, True] if case == '33:199' else [False]):
+                    for omit in ([False, True] if (points, updates) == (33, 199) else [False]):
                         profiled = label + ('-missing-release' if omit else '-profile')
                         observed = compile_program(profiled, language, peer_profile(code, language, omit),
                                                    'hash' if sink else '', 226 if omit else 0)
@@ -277,8 +279,9 @@ def main():
                         else:
                             assert observed.stdout == actual.stdout
                             assert rows == [dict(solve=i, inputRequests=2*i, inputRequestedBytes=16*points*i,
-                                                inputLiveBytes=0, inputPeakBytes=16*points) for i in range(1, args.repetitions+1)]
-                            peer_profiles[label] = rows
+                                                inputLiveBytes=0, inputPeakBytes=16*points) for i in range(1, repetitions+1)]
+                            peer_profiles[label] = dict(completedSolves=len(rows), observationsSha256=digest(observed.stderr),
+                                                        first=rows[0], last=rows[-1])
         for mode in ['full', 'sink']:
             label, copy = 'fwp-' + mode, 'fwp-' + mode + '-identical'
             shutil.copyfile(binaries[label], directory / copy)
@@ -307,7 +310,7 @@ def main():
             assert sizes
             metadata[label] = dict(bytes=len(raw), sha256=digest(raw), sourceSha256=digest(path.read_bytes()), expectedStatus=statuses[label],
                                    disassemblySha256=digest(asm), instructionBytes=sum(int(s, 16) for s in sizes))
-        assert len(metadata) == (24 if case == '33:199' else 17)
+        assert len(metadata) == (24 if (points, updates) == (33, 199) else 17)
         sequence = orders(labels, args.samples, args.order_seed)
         for _ in range(args.warmups):
             for label in labels:
@@ -331,7 +334,7 @@ def main():
         copies = {mode: medians['fwp-' + mode] / medians['fwp-' + mode + '-identical'] for mode in ['full', 'sink']}
         frames = {p.name: dict(sha256=digest(p.read_bytes()), text=p.read_text()) for p in directory.glob('*.su')}
         assert frames
-        results[name] = dict(dimensions=points, updates=updates, profiles=profiles, peerBufferProfiles=peer_profiles,
+        results[name] = dict(dimensions=points, updates=updates, repetitions=repetitions, profiles=profiles, peerBufferProfiles=peer_profiles,
             controls=controls, inputSourceSha256=digest(source.read_bytes()), inputCSha256=digest(generated.read_bytes()),
             samplesNs=samples, orders=sequence, medianNs=medians, identicalCopyRatios=copies,
             controlsWithinBound={mode: abs(ratio-1) <= args.control_max_difference for mode, ratio in copies.items()},
@@ -357,7 +360,8 @@ def main():
         'bounds checks and cleanup remain. No LTO; the same separately compiled C consumer reads every result coordinate. '
         'Compilation, dump validation, memory profiles and RSS probes are excluded from timed samples. '
         'C/Rust reuse two numerical buffers; fwp constructs immutable arrays. Memory profiles cover fwp managed/raw storage '
-        'and only the numerical buffers in C/Rust; those scopes are not directly comparable. Process RSS covers each complete '
+        'and only the numerical buffers in C/Rust; those scopes are not directly comparable. Instrumentation can prevent '
+        'allocation elimination, so its counts are not an allocation trace of the timed executable. Process RSS covers each complete '
         'process. One run does not establish a compiler speed improvement.')
     (out / 'comparison.json').write_text(json.dumps(report, indent=2) + '\n')
 

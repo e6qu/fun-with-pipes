@@ -6,15 +6,19 @@ That includes input creation, numerical updates, output and cleanup. It does not
 identify how much time any one of those parts takes.
 
 This diagnostic changes only how the final vector is consumed. It is a
-measurement tool, not a proposed language or compiler optimization. Results are
-pending; no speed improvement is established.
+measurement tool, not a proposed language or compiler optimization. The
+[initial result](descent-output-initial.md) preserves five inconclusive timing
+rows. Longer repeated runs are pending; no speed improvement is established.
 
 ## Two ways to consume the same result
 
 A solve starts with alternating -1.2 and 1.0 values and repeatedly subtracts
 0.001 times the Rosenbrock derivative. The derivative is an explicit formula;
 these programs do not record an automatic-differentiation tape. Each process
-performs 512 fresh solves, including input creation and cleanup after each one.
+performs fresh solves, including input creation and cleanup after each one.
+Use 32,768 solves for 3 coordinates with 0 or 1 update, and 4,096 solves for each
+remaining input. These explicit per-input counts lengthen the short checksum
+cases; the initial 512-solve run had several failing timing controls.
 
 For each language, compare:
 
@@ -28,7 +32,9 @@ For each language, compare:
   All three languages link the same consumer object without link-time
   optimization. It reads bytes to accommodate fwp's word-backed float storage.
 
-The checksum prevents unused results from being discarded. It also costs time.
+The checksum prevents unused results from being discarded. It also costs time;
+its final print can use internal C-library storage, outside the numerical-buffer
+observer's scope.
 Therefore, subtracting these timings does **not** give pure formatting time.
 The checksum variant still includes input creation, all updates, bounds checks,
 allocation, cleanup, runtime startup and the checksum itself. In fwp it removes
@@ -59,6 +65,9 @@ observer must fail at the first checkpoint, even if final cleanup would hide it.
 
 fwp's managed allocation counts include runtime values. The C/Rust observer
 counts only their two numerical buffers and excludes formatting/runtime storage.
+Instrumentation can prevent allocation elimination: the initial uninstrumented
+AMD64 Rust zero-update image eliminates an unused buffer. Profile counts are
+observations of instrumented programs, not allocation traces of the timed images.
 These scopes cannot establish a total-memory ratio. Record process peak resident
 memory separately for every timed entry. Memory probes are excluded from timing.
 

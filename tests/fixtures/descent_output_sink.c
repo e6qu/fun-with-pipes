@@ -1,7 +1,8 @@
 /* One externally compiled consumer shared by the fwp, C and Rust diagnostics.
  * No LTO: each solve must supply every result coordinate before releasing it.
  * DUMP=1 records exact float bits for untimed validation. DUMP=0 hashes all
- * coordinates and prints once at process end. Neither mode allocates storage.
+ * coordinates and prints once at process end. Neither allocates numerical
+ * buffers; stdio may allocate its own internal storage.
  * Read bytes: fwp stores float bits in word-backed storage; aliasing that
  * storage through a double lvalue would violate C's effective-type rules. */
 #include <inttypes.h>

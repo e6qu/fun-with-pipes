@@ -19,18 +19,24 @@ accepted. Its redundant same-tree main CI was cancelled; docs were retained.
 
 ## Independent numerical preparation
 
-**Next:** finish the output-cost diagnostic in `/private/tmp/fwp-descent-output`,
-branch `descent-output-preparation`, based on #204's source. Review and publish an
-immutable preparation source, then dispatch `descent-output` with
-`native_runner=all`. Inspect both Linux runs and actual binaries; repeat stable
-measurements on matching CPU models before drawing timing conclusions. Keep one
+**Next:** publish and run the longer output-cost diagnostic in
+`/private/tmp/fwp-descent-output`, branch `descent-output-preparation`, based on
+#204's source. Initial source `697f0ba6e01a2f24b31ab699452152c7c6e09fb3` and run
+`40021659651` passed both Linux jobs, full-log audits and 338 binary inspections.
+[The initial report](measurements/descent-output-initial.md) retains five
+inconclusive timing rows. The revised protocol explicitly uses 32,768 solves for
+3-coordinate 0/1-update cases, and 4,096 for the others. Publish an immutable
+source and dispatch `descent-output` with `native_runner=all`. Repeat on matching
+CPU models before drawing timing conclusions. Keep one
 active PR; combine the accepted diagnostic with related work after #204 merges.
 
 The [protocol](measurements/descent-output-protocol.md) compares unchanged full
 output against an external consumer of every result coordinate. It covers fwp
 and coordinate-based C/Rust, fresh inputs, all updates and cleanup. Checksum work
 replaces output construction, so the difference is not pure formatting time.
-No compiler/runtime change or speed result is claimed.
+No compiler/runtime change or repeatable speed result is claimed. Every memory
+checkpoint remains checked and saved; compact summaries hash the complete logs.
+Regular Linux CI now includes untimed output/lifetime and observer controls.
 
 Sixty untimed ARM64 controls pass (20.45s), using accepted compiler
 `5e17fc10e860b1971ffc9cd9cb57fcb795ccad24` with unchanged compiler/runtime/library
@@ -44,6 +50,15 @@ after the solve loop. All sixteen existing coordinate/edge controls also pass
 (5.69s), including omitted releases; receipt
 `/private/tmp/fwp-coordinate-controls-output-change.json`.
 Local Clang is not GCC acceptance. Benchmarking runs only on GitHub.
+
+The initial GCC runs pass the same controls on both Linux hosts. Inspection
+resolved Rust's indirect AMD64 consumer calls through actual ELF relocations;
+the first direct-call-only inspection stopped rather than assuming a call target.
+An unused Rust buffer disappears in the timed zero-update binary but remains
+observable under instrumentation; the report now states this limit. Initial
+archives/reports remain under `/private/tmp/fwp-output-evidence/697f0ba6e01a`.
+`fwp-output-preparation.json` records the completed initial publication; do not
+rerun its publication helper. The revised source has not yet been published.
 
 ## Resume records
 

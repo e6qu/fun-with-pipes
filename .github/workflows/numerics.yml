@@ -72,8 +72,9 @@ jobs:
           python3 scripts/measure-descent-output.py
           --compiler target/release/fwp --cc gcc --rustc rustc
           --c-arch "${{ matrix.c_arch }}" --objdump objdump --nm nm --time /usr/bin/time
-          --case 3:0 --case 3:1 --case 3:199 --case 3:1999 --case 33:199 --case 129:199
-          --repetitions 512 --warmups 4 --samples 48 --order-seed 20261023
+          --case 3:0:32768 --case 3:1:32768 --case 3:199:4096
+          --case 3:1999:4096 --case 33:199:4096 --case 129:199:4096
+          --warmups 4 --samples 48 --order-seed 20261023
           --timeout 60 --control-max-difference 0.02
           --host "${{ matrix.runner }}" --output descent-output-evidence
       - uses: actions/upload-artifact@v7

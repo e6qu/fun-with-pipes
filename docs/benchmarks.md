@@ -69,8 +69,10 @@ takes 10.40–13.69× C time and 11.86–14.07× Rust time; formula arrangement 
 close the gap. Per-solve probes also check actual C/Rust buffer releases. The
 report preserves one failed timing control and explains the different memory scopes.
 The [output-cost protocol](measurements/descent-output-protocol.md) next compares
-ordinary printing with a shared consumer of every result coordinate. Results are
-pending; the protocol explains why its checksum variant is not pure arithmetic time.
+ordinary printing with a shared consumer of every result coordinate. Its
+[initial result](measurements/descent-output-initial.md) passes correctness and
+binary inspection but has five inconclusive timing rows. Longer runs are pending;
+the protocol explains why its checksum variant is not pure arithmetic time.
 
 ## Choose the question first
 
