@@ -246,15 +246,16 @@ for unit, written `()`. `task.spawn` starts that function; `task.await` waits
 for it and returns an optional result. Successful completion contains `10`,
 the text length. A cancelled task has no result. `echo` prints the returned value.
 
-Three test groups extend these lifetime checks to explicit ARC and tracing:
+Four test groups extend these lifetime checks to explicit ARC and tracing:
 
 | Group | What must survive or be released |
 |---|---|
 | [Retained callbacks](../../tests/retained_thunk_ownership.rs) | Captures and outside aliases across completion, cancellation before entry and cancellation after suspension; cleanup when task-stack allocation, scope growth or a retain fails |
 | [Deadlines](../../tests/within_thunk_ownership.rs) | The caller's callback alias survives both success and timeout; the consumed owner, result and duration storage are released |
 | [Scopes](../../tests/scope_thunk_ownership.rs) | Results, child-task arrays and error handlers are cleaned up or restored when cancellation happens before entry or after producing a result |
+| [Task handles](../../tests/task_handle_ownership.rs) | Repeated awaits keep independent result owners; discarded handles leave scheduler/scope owners alive; failed result retains release temporary storage |
 
-Each internal probe repeats 32 rounds. Every ARC round restores the starting
+The shared callback and handle probes repeat 32 rounds. Every ARC round restores the starting
 managed byte allowance, leaves no separate wide-count entries and performs no
 collection. Final scheduler shutdown must restore the full allowance. Integer
 bits resembling a managed pointer remain integers. Outside aliases retain their
@@ -276,10 +277,31 @@ remain until their replacements have full native acceptance.
 Probe C and complete-program C are emitted at compiler O2 with dynamic storage
 and stack placement disabled, then compiled at C O1 and O2. Complete programs
 must match the unoptimized interpreter's output, errors and exit status. The
-78 saved callback outcomes include the deliberately broken programs; their C,
+142 saved callback/task outcomes include the deliberately broken programs; their C,
 actual binaries, output and status are retained for inspection. Together with
-the earlier groups, the expanded inspection expects 647 images per host.
+the earlier groups, the expanded inspection expects 711 images per host.
 
 Local ARM64 checks are preparation evidence only. GCC, both Windows hosts and
 all six final native hosts still need their exact-source checks. See the
 [handoff](../development-state.md) for current sources and accepted runs.
+
+### Shared handles and a sole scheduler owner
+
+A task handle lets a program await or cancel a task. Two awaits of the same task
+must each acquire a result owner: releasing one result must not invalidate the
+other. The handle probe checks 32 rounds, including count overflow while
+acquiring a result and cancellation before or after the callback suspends.
+An attempt to remove a counted task's ownership contract must trap in ARC.
+
+Some internal C tasks have no language-visible handle. Only the scheduler owns
+them, so their destruction needs no reference count. A separate probe runs
+64 repetitions of normal completion, cancellation before entry and cancellation
+after suspension. Omitting destruction or incorrectly using the counted-object
+release operation must leave a measured storage charge and fail. Explicitly
+disabling physical release is a separate retention control, not a supported
+ARC execution policy. Normal shutdown must release the scheduler's storage.
+
+Both probes retain generated C, actual binaries, outputs and exit statuses at
+C O1/O2. Unique-task controls also retain a diagnostic naming the first
+iteration's charge difference. These 64 additional observations check ownership
+and cleanup; they do not measure task-switch latency or process resident memory.

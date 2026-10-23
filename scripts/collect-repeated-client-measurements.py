@@ -228,7 +228,8 @@ def main():
                     names += [layout_name, f"stream-owners/streams{opt}-no-free-{no_free}.exe"]
             names += [f"stream-owners/streams-no-free-{no_free}.c" for no_free in ["false", "true"]]
         if args.closed_connections and baseline:
-            names += [f"task-owners/unique{opt}{extension}"
+            names += [f"task-owners/{memory}-unique{opt}{extension}"
+                      for memory in ["arc", "tracing"]
                       for opt in ["-O1", "-O2"] for extension in [".c", ".exe"]]
         observations = folder / "binary-observations.json"
         if observations.exists():

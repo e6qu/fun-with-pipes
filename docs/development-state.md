@@ -11,27 +11,33 @@ is running; docs `39981747884` and benchmarks pass. Audit all final jobs and
 inspect 569 images on each of six hosts before merging. Do not alter that
 passing head merely to add this next preparation.
 
-**Next:** validate this grouped task-callback preparation, publish an immutable
-preparation tag and run the 41-group focused suite on Linux AMD64 and both
-Windows architectures. Fix every failure before one batched push. Keep one PR;
-prepare the next delivery on the verified #202 squash only after its acceptance.
+**Next:** complete the four-group task ownership preparation, then run its
+42-group focused suite on Linux AMD64 and both Windows architectures. Audit
+all failures together. Prepare one delivery on the verified #202 squash after
+its acceptance; do not open a second PR while #202 is active.
 
-This worktree is `/private/tmp/fwp-task-callback-cleanup`, branch
-`task-callback-cleanup-preparation`, based on the published #202 head. Three test
-groups cover retained callbacks, deadlines and scopes: 32 rounds of completion,
-cancellation, failed creation and exact cleanup, plus deliberate breakages.
-Fixtures explicitly own raw injected tasks and durations; ARC rejects missing
-callback ownership metadata. Compiler/runtime and language semantics are unchanged.
+This worktree is `/private/tmp/fwp-task-handle-cleanup`, branch
+`task-handle-cleanup-preparation`, based on callback preparation
+`0c182d8b1aab3058f904511250b9f08f1692d200`. Its preserved tag is
+`roadmap/preparation-task-cleanup-0c182d8b1aab`; the 41-group runs are Linux
+`39984203331`, Windows AMD64 `39984208216` and Windows ARM64 `39984212932`.
+They remain required evidence for that source, not this handle extension.
+
+The four groups cover retained callbacks, deadlines, scopes and task handles.
+Shared-owner probes repeat 32 rounds; sole-scheduler tasks repeat 64 rounds of
+three completion/cancellation cases. ARC byte balances and deliberately missing
+cleanup detect retention without collection. The evidence collector now requires
+explicit ARC/tracing unique-task artifacts. Compiler/runtime are unchanged.
 [The guide](measurements/record-cleanup.md#task-callbacks-and-cancellation) explains
-an example, observations and limitations. Expected inspection: 647 images per
-host, including 78 callback outcomes; focused checks do not replace final gates.
+examples and limits. Expected inspection: 711 images per host, including
+142 callback/task outcomes; focused checks do not replace final gates.
 
 ## Checks and failures
 
 Local ARM64 checks compare complete native programs with the raw interpreter,
 execute missing-cleanup controls and inspect generated machine code. Retained
-completion, failed creation, deadlines and scopes pass all 78 outcomes,
-including four added byte-balance controls. A new retained-probe variable
+completion, failed creation, deadlines and scopes pass 78 outcomes. The handle extension adds 64 passing outcomes
+(29.64s guarded); all saved ARM64 images are inspected. A new retained-probe variable
 was declared inside the repeated loop but used afterward. Its declaration was
 corrected and the affected checks pass. Preserve the failed compile output;
 this was a fixture error, not a production runtime defect.
@@ -47,10 +53,12 @@ suites stay on GitHub; keep every CPU, memory, disk and deadline limit.
 `/private/tmp/fwp-merge-call.py` requires all exact-source gates and inspections.
 Do not use expanded preparation counts to accept the earlier delivery.
 
-The task-callback mutation helpers COMPLETED; do not rerun them. Original tests
+The task-callback and task-handle mutation helpers COMPLETED; do not rerun them. Original tests
 are `/private/tmp/fwp-*_thunk_ownership-before.rs`. Local checks use
-`/private/tmp/fwp-check-task-callbacks.py`; receipts live in
-`/private/tmp/fwp-task-callback-*`. The compiler is the accepted `5e17fc10` binary,
+`/private/tmp/fwp-check-task-callbacks.py` and `fwp-check-task-handles.py`;
+receipts live in `/private/tmp/fwp-task-callback-*` and `fwp-task-handle-current`.
+`/private/tmp/fwp-task-preparation.json` records the published 41-group parent.
+Its audit/inspection helpers cover 647 images, not this 711-image extension. The compiler is the accepted `5e17fc10` binary,
 with current compiler/runtime identity verified before each focused invocation.
 
 ## Roadmap status
