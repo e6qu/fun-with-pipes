@@ -1,4 +1,4 @@
-//! Eligibility for explicitly requested reference-counted execution.
+//! Eligibility for checked reference-counted execution.
 //! Unproved mutable ownership and external lifetimes are rejected.
 use crate::ir::{Body, Program, TypeShape, MT};
 use crate::ownership::{Argument, Callback, ResultOwnership};
@@ -172,8 +172,9 @@ pub(crate) fn check(
         }
         let symbol = match &f.body {
             Body::Expr(_) | Body::Ctor(_) => continue,
-            Body::ForeignC { .. } => {
-                let (params, result) = crate::ffi::signature(prog, f).map_err(reject)?;
+            Body::ForeignC { symbol, .. } => {
+                let (params, result) = crate::ffi::signature(prog, f)
+                    .map_err(|e| format!("foreign function `{symbol}`: {e}"))?;
                 // Check the actual C ABI: scoped borrows and copied results
                 // cannot publish managed pointers after this call returns.
                 // Raw addresses remain manually managed. Callbacks returning

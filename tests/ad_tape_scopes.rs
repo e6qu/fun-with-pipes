@@ -311,7 +311,7 @@ main = read-all () | concat "runtime-owned scope input" | make {
         checked(
             Command::new(fwp)
                 .env_remove("FWP_NO_OPT")
-                .args(["build"])
+                .args(["build", "--gc", "tracing"])
                 .arg(&input)
                 .args([opt, "-o"])
                 .arg(&executable),

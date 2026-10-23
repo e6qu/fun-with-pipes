@@ -101,11 +101,13 @@ fn golden_programs_with_static_memory() {
                     break;
                 };
                 let name = path.file_stem().unwrap().to_string_lossy().to_string();
-                // two thousand tasks at once
-                let opts: &[&str] = if name == "tasks_local" {
-                    &["--tasks", "2048", "--task-stack", "256K"]
-                } else {
-                    &[]
+                let opts: &[&str] = match name.as_str() {
+                    // Two thousand tasks at once.
+                    "tasks_local" => &["--tasks", "2048", "--task-stack", "256K"],
+                    // Preserve the deliberately invalid tape's runtime trap.
+                    // arc_corpus separately requires its compile-time rejection.
+                    "ad_task_reuse" => &["--gc", "tracing"],
+                    _ => &[],
                 };
                 let exe = dir.0.join(&name);
                 let built = build(&path, &exe, opts);
@@ -201,7 +203,7 @@ fn a_small_heap_is_collected_and_reused() {
     }
     let dir = TempDir::new("small");
     let src = dir.0.join("churn.fwp");
-    // about 200 MiB allocated, a few KiB live at a time
+    // Three million loop steps must fit in 1 MiB with default ownership.
     std::fs::write(
         &src,
         "step : (I64, I64) -> Step[(I64, I64), I64]\n\
@@ -216,9 +218,67 @@ fn a_small_heap_is_collected_and_reused() {
         .env("FWP_MEMORY_REPORT", "1")
         .output()
         .unwrap();
-    assert_eq!(render(&o).lines().next(), Some("3000000"), "{}", render(&o));
+    assert!(o.status.success(), "{}", render(&o));
+    assert_eq!(o.stdout, b"3000000\n", "{}", render(&o));
     let report = String::from_utf8_lossy(&o.stderr);
     assert!(report.contains("heap            1024 KiB"), "{}", report);
+
+    // Actual collection needs a separate control: counted reclamation can keep
+    // the default build bounded without tracing. Disable freeing and reuse for
+    // short-lived lists/strings, then require collection inside the same 1 MiB.
+    let workload = include_str!("gc/churn.fwp");
+    assert_eq!(workload.matches("(6000, 0)").count(), 1);
+    let source = dir.0.join("shared.fwp");
+    std::fs::write(&source, workload.replace("(6000, 0)", "(60, 0)")).unwrap();
+    let shared = dir.0.join("shared");
+    let built = Command::new(fwp())
+        .args([
+            "build", "--gc", "tracing", "--memory", "static", "--heap", "1M", "-O1",
+        ])
+        .arg(&source)
+        .arg("-o")
+        .arg(&shared)
+        .env("FWP_FREE", "0")
+        .env("FWP_REUSE", "0")
+        .output()
+        .unwrap();
+    assert!(built.status.success(), "{}", render(&built));
+    let collected = Command::new(&shared)
+        .env("FWP_GC", "on")
+        .env("FWP_GC_STATS", "1")
+        .env("FWP_MEMORY_REPORT", "1")
+        .output()
+        .unwrap();
+    assert!(collected.status.success(), "{}", render(&collected));
+    assert_eq!(collected.stdout, b"217680\n", "{}", render(&collected));
+    let report = String::from_utf8_lossy(&collected.stderr);
+    assert!(report.contains("heap            1024 KiB"), "{report}");
+    let statistics = report
+        .lines()
+        .find(|line| line.starts_with("fwp gc: "))
+        .expect("collection statistics");
+    let collections: usize = statistics
+        .split_whitespace()
+        .nth(2)
+        .unwrap()
+        .parse()
+        .unwrap();
+    assert!(collections > 0, "{report}");
+
+    // Without either counted reclamation or tracing, the identical executable
+    // must exhaust this heap. This prevents a vacuous collection assertion.
+    let uncollected = Command::new(&shared).env("FWP_GC", "off").output().unwrap();
+    assert_eq!(
+        uncollected.status.code(),
+        Some(102),
+        "{}",
+        render(&uncollected)
+    );
+    assert!(
+        String::from_utf8_lossy(&uncollected.stderr).contains("the static heap (1024 KiB) is full"),
+        "{}",
+        render(&uncollected)
+    );
 }
 
 #[test]

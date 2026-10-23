@@ -101,9 +101,10 @@ There are three different claims to keep separate:
 | `FWP_GC=off` | Turns collection off in a tracing build, useful as a test control | Values have complete ownership or memory use stays bounded |
 
 `--memory static` provides a bounded memory pool. It does not mean that every
-value has a statically known lifetime. WebAssembly and native libraries release
-typed counted owners but retain unproved shared graphs: they cannot scan arbitrary
-host roots. Checked ARC admits native executables, synchronous WASI executables,
+value has a statically known lifetime. In explicit tracing mode, WebAssembly and
+native libraries release typed counted owners but retain unproved shared graphs:
+they cannot scan arbitrary host roots. Default checked ARC instead rejects
+unproved ownership. It admits native executables, synchronous WASI executables
 and C libraries with checked copying boundaries, described below.
 The browser-loader and asynchronous WASI extensions accepted in PR #164 also use
 these ownership checks. [Checked ARC delivery](#checked-arc-delivery) records

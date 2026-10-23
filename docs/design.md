@@ -709,10 +709,11 @@ Linux, macOS and Windows find roots through their platform's executable-image
 and task-stack mechanisms. Native entry uses the operating system's thread-stack
 limit. A frame pointer is a compiler's marker inside a function's stack storage;
 it can lie below live temporary values and is not a safe limit for scanning.
-WebAssembly cannot scan hidden host locals, and a
-native library cannot discover arbitrary host roots. Those modes free counted
-owners but retain unproved shared graphs. Disabling collection is not a lifetime
-proof. Resource cleanup also runs on failure, traps and task cancellation.
+WebAssembly cannot scan hidden host locals, and a native library cannot discover
+arbitrary host roots. In explicit tracing mode, they free counted owners but
+retain unproved shared graphs. Default checked ARC instead rejects unproved
+ownership and requires checked host boundaries. Disabling collection is not a
+lifetime proof. Resource cleanup also runs on failure, traps and task cancellation.
 
 Native tasks are cooperatively scheduled computations on one event loop, with
 function-entry preemption to let ready tasks run. Kernel worker threads are a

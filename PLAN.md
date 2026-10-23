@@ -103,6 +103,10 @@ outside the benchmark suite.
    records accepted programs and remaining exclusions. Keep
    programmer-managed `Unsafe` obligations explicit; do not admit invalid
    inter-task derivative lifetimes merely to increase the accepted count.
+   After default-mode acceptance, replace collector-specific diagnostics with
+   ownership checks that catch missing releases, invalid reuse and stale borrows
+   without relying on tracing or permanently retained poisoned objects. Keep
+   the existing controls until their replacements pass, then remove tracing mode.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
    [Integer counting](docs/measurements/integer-counting.md) and
    [checked products](docs/measurements/checked-products.md) preserve slower
@@ -150,8 +154,9 @@ A C toolchain is needed for native compilation; encrypted networking needs
 OpenSSL 3. Existing support does not promise every cross-compilation combination.
 
 The memory objective includes native executables, libraries, services and
-WebAssembly: current checked ARC exclusions are remaining work, not evidence
-that these boundaries can already execute safely without a collector.
+WebAssembly. Missing ownership contracts for maintained boundaries remain work;
+invalid lifetimes stay rejected. Neither a rejected program nor disabled
+collection establishes safe execution without tracing.
 
 ## Syntax and behavior to preserve
 

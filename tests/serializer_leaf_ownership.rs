@@ -64,7 +64,7 @@ main = read-all () | concat "heap-dependent text" | both id checks | echo
                 Command::new(fwp)
                     .env_remove("FWP_NO_OPT")
                     .env("FWP_STACK", stack)
-                    .args(["build"])
+                    .args(["build", "--gc", "tracing"])
                     .arg(&source)
                     .args([opt, "--emit-c", "-o"])
                     .arg(&cfile),
@@ -73,7 +73,7 @@ main = read-all () | concat "heap-dependent text" | both id checks | echo
                 Command::new(fwp)
                     .env_remove("FWP_NO_OPT")
                     .env("FWP_STACK", stack)
-                    .args(["build"])
+                    .args(["build", "--gc", "tracing"])
                     .arg(&source)
                     .args([opt, "-o"])
                     .arg(&exe),

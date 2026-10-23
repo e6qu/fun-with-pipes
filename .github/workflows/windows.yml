@@ -80,6 +80,7 @@ jobs:
           cargo build --bin fwp 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Python SDK and native disassembly
+        if: ${{ !cancelled() && steps.native_compiler.outcome == 'success' }}
         env:
           PYTHONPATH: sdk/python
           FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp.exe

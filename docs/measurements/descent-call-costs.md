@@ -72,7 +72,8 @@ no tracing collections. The raw data records instruction sizes, actual machine
 code and static/dynamic frame estimates; fewer call sites alone would not prove
 faster execution.
 
-The next investigation is whether generic call adapters keep otherwise unused
-function bodies in the executable after specialization. That is a separate
-code-size hypothesis, with no timing improvement established here. The
-[plan](../../PLAN.md) keeps ownership and the wider numerical gaps open.
+The subsequent [direct-call change](direct-call-entries.md) removes unused
+generic adapters, and [local captures](callback-locals.md) reduce code and stack
+storage further. Both shipped in [PR #198](../roadmap-history.md#local-callback-captures-and-repeated-numerical-work-pr-198).
+Those results do not change this failed inlining experiment or establish a timing
+gain. The [plan](../../PLAN.md) keeps ownership and numerical performance gaps open.
