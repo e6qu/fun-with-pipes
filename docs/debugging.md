@@ -154,6 +154,7 @@ report = tool.compare(
         Target("arm64-linux", "aarch64-linux-gnu-gcc", "aarch64-linux-gnu", triple=None, sysroot=None),
     ],
     levels=("O0", "O1", "O2", "O3"),
+    ownership="arc",
 )
 for target in report["targets"]:
     print(target["name"], target["generated_c"])
@@ -165,9 +166,14 @@ for variant in report["variants"]:
 ```
 
 Those compiler paths are examples: install matching toolchains for the requested
-targets. Tool paths, timeout, targets and optimization levels are all required;
-the example allows 180 seconds per subprocess. The third argument selects fwp's C generation target: `"native"` for the
-host, or a supported Linux triple. C is generated separately for each target.
+targets. Tool paths, timeout, targets, optimization levels and ownership mode are
+all required. `ownership="arc"` selects checked ownership; `"tracing"` selects
+the collector for a deliberate comparison. The report records that choice and
+the exact C-generation command. An invalid mode fails before creating output.
+
+The example allows 180 seconds per subprocess. The third `Target` argument
+selects fwp's C generation target: `"native"` for the host, or a supported Linux
+triple. C is generated separately for each target.
 With Clang, supply `triple=...` to select its target. `triple=None` uses the
 selected compiler's target, as in the cross-GCC examples. A **sysroot** supplies
 the target's headers and libraries; pass its path or explicitly use `sysroot=None`

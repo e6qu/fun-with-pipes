@@ -247,7 +247,8 @@ an unoptimized program with source-expression markers for stepping and value
 events. Those markers are absent from ordinary native builds.
 
 The disassembler reads actual objects or executables using LLVM. Its Python
-comparison API generates C for each explicit target, then invokes the selected
+comparison API requires an explicit ARC or tracing mode, records that choice,
+and generates C for each explicit target. It then invokes the selected
 C compiler at each requested optimization level. C debug line tables associate
 instructions with generated source. They are not a one-to-one mapping after
 optimization, and cross-target inspection is not native execution evidence.

@@ -20,19 +20,25 @@ Receipts: `/private/tmp/fwp-198-final-acceptance.json`,
 The clean `/private/tmp/fwp-direct-entry-delivery` worktree preserves the tested
 head. Do not rerun its completed merge, publication or inspection helpers.
 
-**Next:** publish the checked ownership migration as one
-combined PR, run focused native-command checks, then the full production matrix.
-Fix all encountered failures and inspect default-build binaries before merging.
-No permission question is pending.
+**Next:** audit all nine production jobs and docs for the current head of
+[PR #199](https://github.com/e6qu/fun-with-pipes/pull/199). Inspect default O0/O1/O2
+binaries on all six native platforms, fix every failure together, then squash-merge
+with one line (at most 80 characters), an empty body and no trailers. Verify the
+merge tree, sole parent and message, then continue PLAN.md. No permission question
+is pending. A failed or skipped job is not support.
 
 ## Current ownership migration
 
 Branch `checked-native-default` lives in `/private/tmp/fwp-checked-native-default`,
-based on #198's verified merge. It is separate from the clean delivery worktree
-and has not been published. The primary checkout is detached at the same merge;
-its modified handoff mirrors this state. Use the preparation worktree for code.
+based on #198's verified merge. Use this worktree for code; the primary checkout
+is detached at #198 with the live handoff. The current head/run IDs belong in
+`/private/tmp/fwp-default-ownership-publication.json`; check that receipt and the
+PR before publishing or dispatching again. The initial publisher
+`/private/tmp/fwp-publish-native-default.py` completed. Final repair publication
+uses `/private/tmp/fwp-publish-native-default-repair.py`; do not repeat it once
+its publication receipt records completion.
 
-The preparation includes:
+The PR includes:
 
 - Checked ARC for ordinary native builds, commands and generated modules.
   Ownership rejection stays an error; no automatic switch to tracing is added.
@@ -47,22 +53,56 @@ The preparation includes:
   separate ARC compile rejection. No test assertion or collector gate is removed.
 - Current README, reference, design and ownership guidance for the new behavior.
 
-This is implemented preparation, **not verified support**. The mode-selection
-audit covers workflow scripts and hand-built compiler IR probes. Three unused pre-ARC allocation scripts were removed; the benchmark
-guide links their frozen sources instead. Run `native-commands` on Linux AMD64
-first using the existing evidence workflow;
-it compiles every test target and runs six targets covering commands, standard
-tests, ARC, CLI ownership and the golden corpus.
-Then require the full final production matrix. Inspect actual default-build
-binaries from all six native platforms. Keep every failure and repair its cause.
+The Python disassembly comparison now requires `ownership="arc"` or `"tracing"`,
+records it and passes it explicitly to C generation. Invalid modes fail before
+creating output. Its example and tests cover both modes at O0/O1/O2/O3.
+
+## Focused run and complete repairs
+
+Run `39883631101` checked source `93b6b8ed`. Compilation/lint of every test target
+passed. All six execution targets passed: `aot`, `std_tests`, `arc_execution`,
+`cli_ownership`, `golden_run`, `arc_corpus` (26 tests). Of 179 library unit tests,
+178 passed and only `grpc::web::tests::body_bounds_and_error_order_agree_with_native`
+failed: its deliberate GC-stress run inherited the new ARC default. The entire
+log and remaining steps were audited. The failure is preserved in
+`/private/tmp/fwp-default-ownership-preparation-acceptance.json` and
+`/private/tmp/fwp-default-preparation-120186598150.log`.
+
+The repair explicitly selects tracing for that unit's generated probe and restores
+its prior compiler options. The wider audit also repairs `compiler_options.rs`
+for the specific invalid-mode diagnostic and explicitly selects tracing in
+`tests/support/http2_values.rs`, shared by collector/omitted-owner probes.
+Assertions and collector stress settings remain intact. The focused workflow now
+also includes compiler-option and HTTP/2 root checks for future dispatches.
+
+Three unused allocation scripts tied to pre-ARC compilers were removed; the
+benchmark guide links their frozen historical sources. The current iteration
+measurement selects tracing explicitly. This is not complete GC removal, and
+remaining PLAN areas stay open. Do not repeat the six unchanged passing targets
+merely to create another focused run; full final-head CI checks the combined repair.
 
 ## Checks and resources
 
-`python3 scripts/local-guard.py python3 /private/tmp/fwp-check-native-default.py`
-passes formatting, workflows, all 106 documentation link sets/immutable preparation
-anchors, seven plan steps and test-function/collector-setting preservation
-(final check: 8.76s). No compiler build or native execution of this preparation
-has run yet. Full suites remain runner work.
+The initial grouped check (`/private/tmp/fwp-check-native-default.py` through the
+guard) passed formatting, workflows, 106 documentation link sets/immutable anchors,
+seven plan steps and preservation of test functions/collector settings (8.76s).
+The combined repair passed the same check in 6.23s. No full compiler build or
+suite ran locally; complete validation belongs on runners.
+
+Two focused SDK tests passed through the guard in 1.58s: invalid mode rejection
+and inspection of eight native ARM64 objects (O0/O1/O2/O3, ARC and tracing).
+They used the already accepted #197 compiler at
+`/private/tmp/fwp-check-compiler-0367e819/fwp`, with Apple Clang and LLVM objdump;
+this checks the new Python API, not the new compiler's final acceptance.
+Command: `python3 -W error::ResourceWarning -m unittest`
+`test_tools.Tools.test_disassembly_rejects_invalid_ownership_before_creating_output`
+`test_tools.Tools.test_disassembly_compares_c_and_instruction_encodings_at_four_levels -v`,
+with explicit `PYTHONPATH`, `FWP_TEST_BIN`, `FWP_OBJDUMP` and `CC` inside the guard.
+
+`/private/tmp/fwp-inspect-default-builds.py` accepts explicit run/source/host/job
+and artifact arguments. It checks archive hashes, actual image architecture,
+disassembly, output and absence of tracing in O0/O1/O2 default builds. Require a
+passing final job; do not substitute the failed preparation run for acceptance.
 
 Keep local checks serial and guarded: at least 64 GiB free disk, generated target
 storage below 2 GiB, sampled aggregate RSS below 1 GiB and a 180-second deadline.
