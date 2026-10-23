@@ -75,6 +75,7 @@ jobs:
         env:
           FWP_INVENTORY_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
+          set -o pipefail
           mkdir -p "$RUNNER_TEMP/ownership-inventory"
           rustc --version > "$RUNNER_TEMP/ownership-inventory/rustc.txt"
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output "$RUNNER_TEMP/ownership-inventory/candidate.json" 2>&1 | tee "$RUNNER_TEMP/ownership-inventory/audit.log"
@@ -99,6 +100,7 @@ jobs:
           path: ${{ runner.temp }}/macos-regular-tests/
           if-no-files-found: warn
       - name: Python SDK and native disassembly
+        if: ${{ !cancelled() }}
         env:
           PYTHONPATH: sdk/python
           FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
@@ -108,8 +110,11 @@ jobs:
           export FWP_OBJDUMP
           python3 -W error::ResourceWarning -m unittest discover -s sdk/python/tests -v
       - name: Build standalone compiler
+        id: standalone_compiler
+        if: ${{ !cancelled() }}
         run: cargo build --release --bin fwp
       - name: Iterator and state allocation and binary evidence
+        if: ${{ !cancelled() && steps.standalone_compiler.outcome == 'success' }}
         run: |
           python3 scripts/measure-iteration.py --output "$RUNNER_TEMP/iteration-evidence"
           python3 scripts/measure-checkpoint.py --output "$RUNNER_TEMP/iteration-evidence/checkpoint"
@@ -119,8 +124,11 @@ jobs:
           name: iteration-evidence-${{ runner.os }}-${{ runner.arch }}
           path: ${{ runner.temp }}/iteration-evidence/
       - name: Verify separate native artifact outside checkout
+        id: native_package
+        if: ${{ !cancelled() && steps.standalone_compiler.outcome == 'success' }}
         run: python3 scripts/package-native.py --output "$RUNNER_TEMP/native-package"
       - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() && steps.native_package.outcome == 'success' }}
         with:
           name: fwp-${{ runner.os }}-${{ runner.arch }}
           path: ${{ runner.temp }}/native-package/
@@ -299,6 +307,7 @@ jobs:
         env:
           FWP_INVENTORY_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
+          set -o pipefail
           mkdir -p "$RUNNER_TEMP/ownership-inventory"
           rustc --version > "$RUNNER_TEMP/ownership-inventory/rustc.txt"
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output "$RUNNER_TEMP/ownership-inventory/candidate.json" 2>&1 | tee "$RUNNER_TEMP/ownership-inventory/audit.log"
@@ -330,6 +339,7 @@ jobs:
           path: ${{ runner.temp }}/linux-tests/
           if-no-files-found: ignore
       - name: Python SDK and native disassembly
+        if: ${{ !cancelled() }}
         env:
           PYTHONPATH: sdk/python
           FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
@@ -337,8 +347,11 @@ jobs:
           FWP_OBJDUMP: llvm-objdump
         run: python3 -W error::ResourceWarning -m unittest discover -s sdk/python/tests -v
       - name: Build standalone compiler
+        id: standalone_compiler
+        if: ${{ !cancelled() }}
         run: cargo build --release --bin fwp
       - name: Iterator and state allocation and binary evidence
+        if: ${{ !cancelled() && steps.standalone_compiler.outcome == 'success' }}
         run: |
           python3 scripts/measure-iteration.py --output "$RUNNER_TEMP/iteration-evidence"
           python3 scripts/measure-checkpoint.py --output "$RUNNER_TEMP/iteration-evidence/checkpoint"
@@ -348,8 +361,11 @@ jobs:
           name: iteration-evidence-${{ runner.os }}-${{ runner.arch }}
           path: ${{ runner.temp }}/iteration-evidence/
       - name: Verify separate native artifact outside checkout
+        id: native_package
+        if: ${{ !cancelled() && steps.standalone_compiler.outcome == 'success' }}
         run: python3 scripts/package-native.py --output "$RUNNER_TEMP/native-package"
       - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() && steps.native_package.outcome == 'success' }}
         with:
           name: fwp-${{ runner.os }}-${{ runner.arch }}
           path: ${{ runner.temp }}/native-package/

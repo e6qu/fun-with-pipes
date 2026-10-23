@@ -41,7 +41,7 @@ fn failed_calls_reclaim_function_storage_without_collection() {
     std::fs::write(&src, SOURCE).unwrap();
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -132,7 +132,7 @@ fn consumed_function_releases_captures_when_its_entry_fails() {
     );
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -194,7 +194,7 @@ int main(void) {
         }
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -232,7 +232,7 @@ main = 1 | attempt choose | result.unwrap-or id | apply "!" | echo
     );
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -320,7 +320,7 @@ int main(void) {
         }
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -360,7 +360,7 @@ main = "owned" | concat " input" | attempt execute | echo
     );
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -430,7 +430,7 @@ int main(void) {
         }
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -457,7 +457,7 @@ fn cancelled_entry_releases_runtime_function_and_callee_parameters() {
     std::fs::write(&src, source).unwrap();
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),

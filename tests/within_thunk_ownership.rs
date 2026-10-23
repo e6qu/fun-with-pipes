@@ -34,7 +34,7 @@ main = [
         String::from_utf8_lossy(&reference.stderr)
     );
     let build = Command::new(fwp)
-        .arg("build")
+        .args(["build", "--gc", "tracing"])
         .arg(&source)
         .args(["--emit-c", "-o"])
         .arg(&cfile)

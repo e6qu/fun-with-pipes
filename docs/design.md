@@ -693,7 +693,7 @@ and [measurements](benchmarks.md#compiler-proved-cached-map-reads).
 A type descriptor is runtime metadata used for operations such as equality,
 printing and decoding.
 
-The default native memory mode combines reference counting with a non-moving
+Explicit `--gc tracing` combines reference counting with a non-moving
 tracing collector. Counting frees proved owned objects when their last owner is
 released. Tracing starts from live roots (registers, stacks and globals) and
 finds reachable shared objects. Minor collections inspect young objects plus
@@ -709,10 +709,11 @@ Linux, macOS and Windows find roots through their platform's executable-image
 and task-stack mechanisms. Native entry uses the operating system's thread-stack
 limit. A frame pointer is a compiler's marker inside a function's stack storage;
 it can lie below live temporary values and is not a safe limit for scanning.
-WebAssembly cannot scan hidden host locals, and a
-native library cannot discover arbitrary host roots. Those modes free counted
-owners but retain unproved shared graphs. Disabling collection is not a lifetime
-proof. Resource cleanup also runs on failure, traps and task cancellation.
+WebAssembly cannot scan hidden host locals, and a native library cannot discover
+arbitrary host roots. In explicit tracing mode, they free counted owners but
+retain unproved shared graphs. Default checked ARC instead rejects unproved
+ownership and requires checked host boundaries. Disabling collection is not a
+lifetime proof. Resource cleanup also runs on failure, traps and task cancellation.
 
 Native tasks are cooperatively scheduled computations on one event loop, with
 function-entry preemption to let ready tasks run. Kernel worker threads are a
@@ -1038,7 +1039,7 @@ and captured task-bearing queues remain rejected.
 The [queued-function extension](ownership.md#functions-stored-in-channels),
 accepted in PR #175, admits functions whose actual immutable captures are
 proved safe and checks their required scope when called after receiving.
-The current extension also admits shared socket handles: `fwp_sock` owns only
+Shared socket handles are also admitted: `fwp_sock` owns only
 a descriptor, kind and reference count. A TLS stream additionally owns OpenSSL
 state and copied protocol bytes, which contain no fwp values. Neither can own
 a channel or callback. Existing typed closure cleanup therefore releases these

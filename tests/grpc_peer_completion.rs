@@ -6,6 +6,10 @@ mod c_instrument;
 
 #[test]
 fn serving_peer_owner_survives_children_and_releases_at_completion() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![

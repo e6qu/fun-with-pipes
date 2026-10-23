@@ -37,7 +37,7 @@ fn callback_scopes_release_live_tapes_without_per_scope_heap_owners() {
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&input)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -57,6 +57,9 @@ fn callback_scopes_release_live_tapes_without_per_scope_heap_owners() {
             .unwrap()
     );
     let probe = PROBE.replace("AD_BACKWARD", &backward_worker);
+    let release = "    fwp_rc_free_arr(owned);";
+    assert_eq!(probe.matches(release).count(), 1);
+    let unreleased_probe = probe.replace(release, "");
     let start = original
         .find("/* ------------------------------------------------------------------ tapes */")
         .unwrap();
@@ -98,6 +101,7 @@ fn callback_scopes_release_live_tapes_without_per_scope_heap_owners() {
                 ("unlinked", &unlinked, 61),
                 ("unconsumed", &unconsumed, 62),
                 ("uncounted", &uncounted, 76),
+                ("unreleased", &runtime, 77),
             ] {
                 let executable = scratch
                     .0
@@ -108,7 +112,12 @@ fn callback_scopes_release_live_tapes_without_per_scope_heap_owners() {
                 } else {
                     ""
                 };
-                let code = format!("{mode}{source}\n{probe}");
+                let observation = if label == "unreleased" {
+                    &unreleased_probe
+                } else {
+                    &probe
+                };
+                let code = format!("{mode}{source}\n{observation}");
                 fwp::cgen::compile_c(&code, &executable, opt).unwrap();
                 for reuse in if arc == 1 {
                     &["0"][..]
@@ -213,7 +222,7 @@ fn scoped_gradient_functions_agree_with_raw_interpreter() {
             checked(
                 Command::new(env!("CARGO_BIN_EXE_fwp"))
                     .env_remove("FWP_NO_OPT")
-                    .arg("build")
+                    .args(["build", "--gc", "tracing"])
                     .arg(&input)
                     .args(["--emit-c", "-o"])
                     .arg(&cfile),
@@ -311,7 +320,7 @@ main = read-all () | concat "runtime-owned scope input" | make {
         checked(
             Command::new(fwp)
                 .env_remove("FWP_NO_OPT")
-                .args(["build"])
+                .args(["build", "--gc", "tracing"])
                 .arg(&input)
                 .args([opt, "-o"])
                 .arg(&executable),

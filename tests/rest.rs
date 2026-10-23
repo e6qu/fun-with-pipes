@@ -2295,7 +2295,7 @@ fn client_runs(
         let srv = native(executable, true);
         let exe = client_dir.join("client");
         let b = Command::new(fwp())
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(client_dir.join(program))
             .args(["-O1", "-o"])
             .arg(&exe)

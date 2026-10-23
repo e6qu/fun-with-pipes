@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn grpc_context_restores_on_nested_failures_and_cancelled_callbacks() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![

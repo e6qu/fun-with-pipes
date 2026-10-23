@@ -50,7 +50,7 @@ fn compiler_tokens_transfer_release_and_unwind() {
     );
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile)
@@ -144,7 +144,7 @@ int main(void) {
         }
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -182,7 +182,7 @@ fn compiler_token_cleanup_respects_ownership_switches() {
         for (flag, value) in [("FWP_FREE", "0"), ("FWP_REUSE", "0"), ("FWP_STACK", "0")] {
             checked(
                 Command::new(fwp)
-                    .arg("build")
+                    .args(["build", "--gc", "tracing"])
                     .arg(&src)
                     .args(["-O1", "-o"])
                     .arg(&exe)
@@ -218,7 +218,7 @@ fn bump_allocator_still_compiles_token_cleanup() {
     );
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile)
@@ -258,7 +258,7 @@ main = Box 1000000 | attempt down | echo
         Command::new(fwp)
             .env("FWP_STACK", "0")
             .env("FWP_VRET", "0")
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),

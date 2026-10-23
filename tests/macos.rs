@@ -48,7 +48,7 @@ fn native_tasks_and_autodiff_under_collection() {
         let exe = scratch.0.join(name);
         checked(
             Command::new(fwp())
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args(["-O1", "-o"])
                 .arg(&exe),
@@ -107,7 +107,7 @@ fn optimized_lists_under_collection() {
             let exe = scratch.0.join(format!("{name}{opt}"));
             checked(
                 Command::new(fwp())
-                    .arg("build")
+                    .args(["build", "--gc", "tracing"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe),
@@ -146,7 +146,7 @@ fn openssl_prefix_is_usable_in_both_backends() {
     let exe = scratch.0.join("available");
     checked(
         Command::new(fwp())
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .arg("-o")
             .arg(&exe),
@@ -160,7 +160,7 @@ fn writable_global_roots_survive_collection() {
     let generated = scratch.0.join("roots.c");
     checked(
         Command::new(fwp())
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(root().join("examples/hello.fwp"))
             .args(["--emit-c", "-o"])
             .arg(&generated),
@@ -205,7 +205,7 @@ fn darwin_library_names_and_unsupported_static_linking() {
     let scratch = Scratch::new("libraries");
     checked(
         Command::new(fwp())
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(root().join("tests/c-interop/geom.fwp"))
             .arg("--cdylib")
             .arg("-o")
@@ -215,7 +215,7 @@ fn darwin_library_names_and_unsupported_static_linking() {
     assert!(scratch.0.join("libgeom.dylib").is_file());
     assert!(scratch.0.join("libgeom.h").is_file());
     let output = Command::new(fwp())
-        .arg("build")
+        .args(["build", "--gc", "tracing"])
         .arg(root().join("examples/hello.fwp"))
         .arg("--static")
         .arg("-o")

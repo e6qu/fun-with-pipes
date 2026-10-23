@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn client_request_buffers_release_on_encode_trap_and_cancelled_send() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![

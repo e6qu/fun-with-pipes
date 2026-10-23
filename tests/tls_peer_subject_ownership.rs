@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn peer_subject_failures_and_copy_traps_release_temporary_owners() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![

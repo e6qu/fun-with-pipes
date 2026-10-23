@@ -6,6 +6,10 @@ use std::process::{Command, Output};
 
 #[test]
 fn temporary_channel_fields_preserve_owners_and_nonlocal_cleanup() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let channel = MT::Con("std::Channel".into(), vec![MT::con("std::String")]);
     let integer = MT::con("std::I64");
     let pair = MT::Record(vec![
@@ -173,6 +177,10 @@ int main(void){
 
 #[test]
 fn borrowed_function_channels_preserve_native_context_destruction() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let channel = MT::Con(
         "std::Channel".into(),
         vec![MT::Fun(
@@ -305,6 +313,10 @@ int main(void) {
 
 #[test]
 fn direct_borrowed_fields_preserve_owners_on_success_failure_and_cancellation() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let string = MT::con("std::String");
     let integer = MT::con("std::I64");
     let pair = MT::Record(vec![
@@ -546,7 +558,7 @@ fn actual_caller_releases_owned_values_and_preserves_aliases() {
     );
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -623,7 +635,7 @@ int main(void) {
         }
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -678,7 +690,7 @@ main = 2 | attempt (pair guard) | echo
     );
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -737,7 +749,7 @@ int main(void) {
         }
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -778,7 +790,7 @@ fn boxed_wrapper_and_unboxed_worker_release_separate_owners() {
     );
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -843,7 +855,7 @@ int main(void) {
         }
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -870,7 +882,7 @@ fn incoming_parameters_release_before_cancelled_entry_tick() {
     std::fs::write(&src, source).unwrap();
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -962,7 +974,7 @@ main = "owned" | concat " input" | attempt (hold guard) | echo
     );
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -1026,7 +1038,7 @@ int main(void) {
         }
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -1058,7 +1070,7 @@ int main(void) {
         );
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args(["-O2", "-o"])
                 .arg(&exe),

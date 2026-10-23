@@ -69,7 +69,7 @@ main = [
             let exe = dir.0.join(format!("aliases{opt}-{stack}"));
             checked(
                 Command::new(fwp)
-                    .arg("build")
+                    .args(["build", "--gc", "tracing"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe)
@@ -120,7 +120,7 @@ main = (10000, 0) | loop step | echo
     let emitted = dir.0.join("loop.c");
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&emitted)
@@ -224,7 +224,7 @@ main = (read-all () | concat "needle!", ["needle", "skip"] | map (concat "!")) |
             let cfile = dir.0.join(format!("{fold}-{stack}.c"));
             checked(
                 Command::new(fwp)
-                    .arg("build")
+                    .args(["build", "--gc", "tracing"])
                     .arg(&source)
                     .args(["--emit-c", "-o"])
                     .arg(&cfile)

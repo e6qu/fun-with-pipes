@@ -39,8 +39,8 @@ $ fwp serve --mcp converter.fwp                 # the same, without a build step
 
 `fwp build file.fwp --mcp --gc arc -o server` checks ownership of the generated
 entry and excludes tracing garbage collection. Unsupported lifetimes are compile
-errors. This entry mode is under validation; [the handoff](development-state.md)
-records standard-input and HTTP cleanup checks and native platform evidence.
+errors. [PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164)
+records passing standard-input and HTTP cleanup checks and native platform evidence.
 
 The server reads one JSON-RPC message per line on standard input and
 writes one response per line on standard output, until its input ends

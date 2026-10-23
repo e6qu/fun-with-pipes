@@ -120,6 +120,10 @@ fn program() -> Program {
 
 #[test]
 fn exported_boxes_are_reclaimed_and_host_strings_survive() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let program = program();
     let mut interp = fwp::interp::Interp::new(&program, Box::new(Vec::new())).unwrap();
     assert_eq!(
@@ -245,6 +249,10 @@ int main(void) {
 
 #[test]
 fn exported_names_cannot_collide_with_result_release_functions() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let mut p = program();
     p.exports.push(("fwp_release_text".into(), 0));
     let error = fwp::cgen::generate_library(&p, "collision").unwrap_err();

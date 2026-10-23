@@ -322,7 +322,7 @@ int main(void) {
         let library = temp.join(format!("libbits.{extension}"));
         let mut build = Command::new(fwp());
         build
-            .args(["build", kind])
+            .args(["build", "--gc", "tracing", kind])
             .arg(&source)
             .arg("-o")
             .arg(&library);
@@ -459,18 +459,27 @@ fn unsupported_types_are_reported() {
         "foreign \"C\" takes-list : List[I64] -> I64 = \"abs\"\nmain = [1] | takes-list | echo\n",
     )
     .unwrap();
-    let out = Command::new(fwp())
-        .arg("build")
-        .arg(&src)
-        .arg("-o")
-        .arg(d.join("bad"))
-        .output()
-        .unwrap();
-    assert!(!out.status.success());
-    assert_eq!(
-        String::from_utf8_lossy(&out.stderr),
-        "fwp build: foreign function `abs`: `List[I64]` has no C representation (records need `repr(C)`)\n"
-    );
+    // Invalid C representations are independent of the ownership mode.
+    for options in [vec![], vec!["--gc", "arc"], vec!["--gc", "tracing"]] {
+        let executable = d
+            .join("bad")
+            .with_extension(std::env::consts::EXE_EXTENSION);
+        let out = Command::new(fwp())
+            .arg("build")
+            .args(&options)
+            .arg(&src)
+            .arg("-o")
+            .arg(&executable)
+            .output()
+            .unwrap();
+        assert!(!out.status.success(), "{options:?}");
+        assert_eq!(
+            String::from_utf8_lossy(&out.stderr),
+            "fwp build: foreign function `abs`: `List[I64]` has no C representation (records need `repr(C)`)\n",
+            "{options:?}"
+        );
+        assert!(!executable.exists(), "{options:?}");
+    }
     let _ = std::fs::remove_dir_all(&d);
 }
 

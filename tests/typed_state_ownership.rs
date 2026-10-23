@@ -63,7 +63,7 @@ main = [
             .env_remove("FWP_NO_OPT")
             .env("FWP_REUSE", "1")
             .env("FWP_FREE", "1")
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&input)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -216,7 +216,7 @@ main = [
                         .env("FWP_STACK", stack)
                         .env("FWP_REUSE", "1")
                         .env("FWP_FREE", "1")
-                        .arg("build")
+                        .args(["build", "--gc", "tracing"])
                         .arg(&input)
                         .args([opt, "--emit-c", "-o"])
                         .arg(cfile),
@@ -228,7 +228,7 @@ main = [
                     .env("FWP_STACK", stack)
                     .env("FWP_REUSE", "1")
                     .env("FWP_FREE", "1")
-                    .arg("build")
+                    .args(["build", "--gc", "tracing"])
                     .arg(&input)
                     .args([opt, "-o"])
                     .arg(&executable),

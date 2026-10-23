@@ -1,13 +1,15 @@
 # Comparable coordinate work in fwp, C and Rust
 
-This experiment joins the callback changes in PR #198. A separate preparation
-branch runs the measurement before the grouped final repair is published;
-it is not a second delivery PR. Final native acceptance remains required.
+This is the predeclared protocol for the [completed comparison](coordinate-work.md).
+It shipped with the callback changes in
+[PR #198](../roadmap-history.md#local-callback-captures-and-repeated-numerical-work-pr-198).
+The instructions below preserve the experiment's inputs and acceptance rules;
+current work belongs in the [plan](../../PLAN.md).
 
 The repeated-work comparison shows about 10–12 times C time in the largest
 packed case, even after retain traffic reaches zero. It compares different
-arithmetic arrangements and buffer policies. The next experiment must separate
-those differences before selecting a compiler optimization.
+arithmetic arrangements and buffer policies. This experiment separates those
+differences before selecting a compiler optimization.
 
 Use the expanded compiler's saved, inspected C from numerical run `39816519529`,
 source `927c6b1852a69748ae613291d89774bb8ae31121`. The driver checks its archive,

@@ -230,7 +230,7 @@ fn ignored_caf_arguments_still_trap_in_evaluation_order() {
         assert_eq!(optimized.stderr, reference.stderr);
         for opt in ["-O1", "-O2"] {
             let build = Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe)
@@ -280,7 +280,7 @@ fn unused_counted_caf_argument_evaluates_and_releases_its_temporary() {
     assert!(reference.status.success());
     assert_eq!(reference.stdout, b"17\n");
     let build = Command::new(fwp)
-        .arg("build")
+        .args(["build", "--gc", "tracing"])
         .arg(&src)
         .args(["--emit-c", "-o"])
         .arg(&cfile)

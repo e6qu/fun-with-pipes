@@ -70,9 +70,10 @@ $ fwp run --native --gc arc --link visit.c visit.fwp
 ```
 
 Both print `5`, the number of characters in `"hello"`; [visit.out](visit.out)
-records that result. The callback-input extension has passed focused native
-[checks](../../measurements/callback-inputs.md); delivery gates are tracked in
-[the handoff](../../development-state.md).
+records that result. The [callback checks](../../measurements/callback-inputs.md)
+cover copied inputs and failure cleanup;
+[PR #196](../../roadmap-history.md#array-owner-moves-and-copied-callback-strings-pr-196)
+records passing native delivery checks.
 C's text is copied into an owned fwp string. Keeping that string in checked
 state is safe after C returns; the copy survives changes to C's original buffer.
 C must not retain the callback itself. Returning a managed string from the

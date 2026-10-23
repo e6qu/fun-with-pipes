@@ -56,7 +56,7 @@ raised = string.repeat 2 | fail
     let cfile = dir.join("owners.c");
     checked(
         Command::new(compiler)
-            .args(["build", "--cli", "--emit-c"])
+            .args(["build", "--gc", "tracing", "--cli", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile),

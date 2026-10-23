@@ -53,7 +53,7 @@ fn partial_duplicate_failures_preserve_aliases_and_pending_owned_arguments() {
     );
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -182,7 +182,7 @@ int main(void) {
         }
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -213,7 +213,7 @@ fn unique_closure_captures_move_through_partial_calls_and_failures() {
     );
     checked(
         Command::new(fwp)
-            .args(["build", "--emit-c"])
+            .args(["build", "--gc", "tracing", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile),

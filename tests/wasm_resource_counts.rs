@@ -38,7 +38,7 @@ main = "unused" | flip file.with other | ignore
     let emitted = dir.join("probe.c");
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .env("FWP_FREE", free)
             .arg(&src)
             .args(["--emit-c", "-o"])

@@ -104,7 +104,7 @@ main = () | loop (read-all () | string.length | eq 0 | choose) | file.read-all |
             let emitted = dir.0.join("scoped.c");
             checked(
                 Command::new(fwp)
-                    .arg("build")
+                    .args(["build", "--gc", "tracing"])
                     .arg(&src)
                     .args(["--emit-c", "-o"])
                     .arg(&emitted),
@@ -124,7 +124,7 @@ main = () | loop (read-all () | string.length | eq 0 | choose) | file.read-all |
         let emitted = dir.0.join(format!("{name}-no-free.c"));
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args(["--emit-c", "-o"])
                 .arg(&emitted)
@@ -159,7 +159,7 @@ main = () | loop (read-all () | string.length | eq 0 | choose) | file.read-all |
                 let exe = dir.0.join(format!("{name}-{opt}-{flags}"));
                 checked(
                     Command::new(fwp)
-                        .arg("build")
+                        .args(["build", "--gc", "tracing"])
                         .arg(&src)
                         .args([opt, "-o"])
                         .arg(&exe)

@@ -103,7 +103,11 @@ int main(int argc, char **argv) {{
     if(borrow_initializations!=(unsigned)(inputs ? 1+borrow_reenter : 0))return 201;
     if(borrow_seen) {{
         uint8_t *slot=fwp_rc_slot(borrow_seen);
-        if(fwp_reuse_verify ? MAP(borrow_seen)->len!=0 : (slot && *slot))return 202;
+#ifndef FWP_ARC_ONLY
+        if(fwp_reuse_verify) {{ if(MAP(borrow_seen)->len!=0)return 202; }}
+        else
+#endif
+        if(slot && *slot)return 202;
     }}
     if(borrow_held) {{
         uint8_t *slot=fwp_rc_slot(borrow_held);
@@ -255,7 +259,13 @@ int main(void){
   fwp_trap_recover=0;fwp_trap_jb=0;
   if(fwp_cleanups)return 2;
   if(alias){if(*fwp_rc_slot(input)!=1||STR(input)->len!=5)return 3;fwp_rc_free_obj(input);}
-  else if(!(fwp_reuse_verify?STR(input)->len==0:*fwp_rc_slot(input)==0))return 4;
+  else {
+#ifndef FWP_ARC_ONLY
+   if(fwp_reuse_verify){if(STR(input)->len!=0)return 4;}
+   else
+#endif
+   if(*fwp_rc_slot(input)!=0)return 4;
+  }
  }
  fwp_caf_finish();return 0;
 }

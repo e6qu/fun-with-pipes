@@ -2,8 +2,10 @@
 
 The cancellation-storage comparison passed focused checks on all six native
 platforms and both WebAssembly runners. The repaired Windows ARC checks also
-passed on both architectures in PR #189; full delivery acceptance is pending. Follow
-the [session handoff](../development-state.md) for current runs.
+passed on both architectures in
+[PR #189](../roadmap-history.md#compact-task-records-and-repaired-native-validation-pr-189),
+which completed all nine production gates and documentation. The
+[session handoff](../development-state.md) records current work.
 
 A [task](../concurrency.md) is a computation scheduled alongside others. It can
 pause while waiting for another task, a timer or a channel (a queue for passing
@@ -12,7 +14,7 @@ Cancellation first runs
 cleanup and then uses `longjmp` to return there. Previously each heap task record
 contained this saved state (`jmp_buf`), even the root task, which never uses it.
 
-The candidate keeps that state in a local variable of the task entry function.
+The implementation keeps that state in a local variable of the task entry function.
 The record borrows its address while the function runs and clears it before
 joining children and finishing. Retained task handles cannot keep a pointer to
 a recycled stack. This removes storage from the heap record; it still occupies

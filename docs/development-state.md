@@ -1,122 +1,107 @@
 # Session handoff
 
-All seven areas of [PLAN.md](../PLAN.md) remain open. Ownership, borrowing and
-removal of tracing remain the priority. JIT is excluded. Continue grouped PRs;
-a completed delivery does not finish the language's memory/performance goals.
+All seven areas of [PLAN.md](../PLAN.md) remain open. Remove tracing; prefer
+ownership, borrowing and moves; reserve ARC for necessary sharing. JIT is excluded.
 
-## Accepted baseline
+## Current delivery and next action
 
-The user merged [PR #197](https://github.com/e6qu/fun-with-pipes/pull/197) as
-`b94710c9212cbbfc3e39409835e539b371069b36`. All nine production jobs
-(`39793823991`) and docs (`39793823875`) passed exact head `0367e81941a213b96de14dbe175143ff0a121f77`.
-The merge tree, sole parent and one-line message were verified. Receipts:
-`/private/tmp/fwp-197-final-acceptance.json`, `/private/tmp/fwp-197-user-merge.json`.
-Duplicate main production run `39809854139` was cancelled; passing docs were kept.
-[History](roadmap-history.md#borrowed-array-captures-pr-197) preserves the result.
+[PR #198](https://github.com/e6qu/fun-with-pipes/pull/198) is accepted and merged as
+`27a3e009b83e28f06130a5d686a3196b9934e53f`. Its nine production jobs, documentation
+and binary inspection passed. [History](roadmap-history.md#local-callback-captures-and-repeated-numerical-work-pr-198)
+records its results and remaining numerical performance gaps.
 
-## Current PR and next action
+[PR #199](https://github.com/e6qu/fun-with-pipes/pull/199) is the only open delivery.
+Worktree: `/private/tmp/fwp-checked-native-default`, branch `checked-native-default`.
+The primary checkout is detached at #198 and holds the live handoff. Preparation
+worktrees and their evidence are retained; they are not separate pending PRs.
 
-[PR #198](https://github.com/e6qu/fun-with-pipes/pull/198) is the sole active delivery.
-Branch `direct-call-entries` lives in `/private/tmp/fwp-direct-entry-delivery`.
-The primary checkout remains detached at #197; use the delivery worktree.
+Source `df84b726cc2a2a37fbaf7c1cca53aacc93cc8bb8` passed focused run `39922765292`:
+65 integration tests across twenty targets, 179 library tests and independent
+compiler, ownership inventory and coverage audits. The complete log has no
+errors or unexpected diagnostics. All 95 saved GCC/AMD64 images passed inspection:
+three default builds, twelve allocator probes and eighty record outcomes.
 
-**Next:** publish the checked grouped repair, then audit all nine production jobs
-and docs for its final head. The publication receipt identifies the current head:
-`/private/tmp/fwp-direct-callback-delivery-publication.json`. Consult it before
-pushing or dispatching again; never rerun a completed publication helper.
-Use `/private/tmp/fwp-audit-198-final.py` and inspect final-head capture binaries
-with `/private/tmp/fwp-inspect-198-captures.py --host HOST --part PART`.
-For Linux/Windows use `all`; for macOS inspect both `regular` and `gc`.
-Fix every failure together. Squash merge is authorized only after exact-head
-acceptance: one-line subject at most 80 characters, explicitly empty body,
-no trailers or attribution. Verify tree/parent/message and continue PLAN.md.
-No permission question is pending.
+The following workflow-only repair adds two missing Windows record targets,
+sets ARC artifact output for the whole job, and uploads the whole ownership
+evidence directory. Compiler, runtime and tests remain identical to the focused
+source. Documentation records the result. Do not repeat unchanged focused work;
+require the full matrix and binary inspection on the new exact commit.
 
-The PR combines:
+**Next:** publish the workflow repair with `/private/tmp/fwp-publish-windows-evidence.py`,
+then register production/documentation runs with `/private/tmp/fwp-discover-199-runs.py`.
+Audit every final job and inspect actual binaries on all six native platforms.
+After all gates pass, squash-merge using `/private/tmp/fwp-merge-199.py`: one-line
+subject, at most eighty characters, empty body, no trailers or attribution.
+Verify tree, sole parent and message; then continue PLAN.md. No approval is pending.
 
-- Local captures for known array generators and both fold directions; unused
-  generic call adapters are removed while function values/external dispatch
-  retain theirs. [Design](design.md) records eligibility and lifetime rules.
-- Interpreter/native checks for reused/stored callbacks, ordinary calls, empty
-  inputs, ordering, errors and cancellation, with broken-ownership controls.
-- Per-solve memory observations and C/Rust comparisons that distinguish formula
-  arrangement, buffers, checked access and output costs.
-- Windows callback coverage, explicit executable paths for saved fold evidence,
-  and parallel target execution with progress limits and retained build logs.
-- Clearer benchmark/application guidance and a shorter current plan.
+The publication helper is UNRUN in this snapshot. Check its receipt before use:
+`/private/tmp/fwp-windows-evidence-publication.json`. The current exact source and
+run IDs live in `/private/tmp/fwp-default-ownership-publication.json`. Do not rerun
+completed publication or dispatch helpers. The earlier focused-ready helper is
+superseded by this workflow-only publication; no extra focused dispatch is needed.
 
-## Complete audit of the first production head
+## Changes and repairs
 
-Head `41a6c570aac248f2a4488993ec98225a07574313` finished production run
-`39820054190` and docs `39820054279`. All six Linux/macOS jobs, benchmarks and
-docs passed. Both Windows jobs failed only
-`right_fold_releases_accumulator_and_scratch_on_failure`: the artifact copy at
-`tests/fold_unwind_ownership.rs:216` used an extensionless filename, while the
-Windows linker produced `.exe`. Later Windows checks reported no other failures.
-Complete logs and every completed target were audited. Receipt:
-`/private/tmp/fwp-198-final-acceptance.json` (archive it by source before updating
-that path for the repair). Early logs are also in `/private/tmp/fwp-198-windows-early/`.
+Native commands, builds, modules and compiler APIs select checked ARC by default.
+Unproved ownership is a compile error. Explicit tracing remains available; this
+does not complete GC removal. Python disassembly requires an explicit ownership
+mode. Collector tests request tracing; ordinary native tests compare ARC,
+interpreter and saved output. Independent CI checks continue after failures.
 
-Both fold artifact paths now use explicit `.exe` names. Windows adds four missing
-array/fold targets and moves the already-covered fold-unwind target once.
-The resource/TLS groups retain all 128 existing target occurrences through the
-existing two-target runner, with 600-second progress limits and separate logs.
-Combined logs still capture build failures. Final CI must verify these changes.
-A speculative callback-path change was disproved by the accepted compiler and
-removed; do not restore it or weaken cleanup assertions.
+Static-heap pressure now forces a full collection and rechecks freed small slots
+before exhaustion. Tests retain the original 1 MiB limit and demonstrate failures
+when either repair is removed. ARC excludes mark storage, age checks, collector
+stack discovery and late poisoning of released objects, arrays, files and sockets.
+Page metadata falls from 4,648 to 4,128 bytes; counts remain 4,096 bytes.
+[The layout report](measurements/arc-metadata.md) makes no timing or process-memory claim.
 
-The first head's macOS ARM64 artifacts contain 80 independently inspected
-callback/capture/unwind images and 136 verified observations, under
-`/private/tmp/fwp-198-capture-evidence/41a6c570aac2/`. This is preparation evidence;
-inspect the final-head artifacts too. Earlier invalid ARC stress settings and
-an obsolete fold adapter probe were repaired before this head; their failed
-runs remain recorded in the measurement reports, not counted as acceptance.
+[Record checks](measurements/record-cleanup.md) run updates, copies and field
+conversions in ARC and tracing. They repeat 32 rounds, requiring ARC byte balance,
+no wide-count entries and no collections. Missing releases fail. Five old overflow
+fixtures restored auxiliary counts but left inline marker 255, preventing their
+final frees. One round retained 64 bytes and four entries. They now restore the
+fixture's real sole owner with `fwp_rc_fresh`; broken-cleanup controls detect the
+old defect. This is a fixture repair, with no change to runtime ownership rules.
 
-## Numerical evidence included in this PR
+Guides now link accepted callbacks, manual pointers, REST/MCP, task storage and
+range sets to delivery history. The primitive guide correctly describes unique
+ASCII case-conversion reuse. All superseded full logs have been audited; the
+latest old run `39918185432` has only seven requested cancellation errors, with
+no hidden test failures. Cancellation is not acceptance.
 
-- [Callback locals](measurements/callback-locals.md): source `927c6b1852a69748ae613291d89774bb8ae31121`,
-  run `39816519529`, both hosts pass; 132 inspected images. Largest instructions
-  fall to 33,570 bytes on AMD64 and 31,612 on ARM64. Generator frames fall from
-  96 to 48 bytes. Requests/retains/managed peak stay 459/0/7,200 bytes. No speed claim.
-- [Per-solve observers](measurements/descent-observers.md): run `39816523757`,
-  both hosts pass; 104 inspected images. All 512 checkpoints have zero live
-  managed/raw storage. Delayed release fails 225; final-only observation misses it.
-  This run uses saved adapter-only sources, not the expanded capture-local compiler.
-- [Matched formulas](measurements/coordinate-work.md): preparation
-  `b9d598629ab38cfdd29d7863ec9cdbfd9bd893b6`, run `39827232824`, both hosts pass;
-  144 inspected images plus sixteen small controls per host. Largest fwp time
-  is 10.40–13.69× coordinate C and 11.86–14.07× Rust. Eleven timing controls pass;
-  AMD64 3:1999 exceeds 2% and remains inconclusive. Peer buffer-release faults
-  and fwp delayed-release controls behave as required. Actual outer loops and
-  AMD64 indirect allocation targets are inspected. One run per host is not a
-  compiler speedup claim. Numerical preparation is fully integrated; receipts:
-  `/private/tmp/fwp-coordinate-acceptance.json`, `/private/tmp/fwp-coordinate-integration.json`.
+## Verification and resume tools
 
-The earlier [inline experiment](measurements/descent-call-costs.md) failed its
-predeclared 5% speed screen. Do not select an inlining rule from it. Preserve
-historical timings, failed controls and implementation differences.
+Local checks use `python3 scripts/local-guard.py COMMAND...`, serially. Full
+builds, suites and measurements stay on GitHub. Preserve at least 64 GiB free,
+generated target data below 2 GiB, sampled workload RSS below 1 GiB and the
+180-second deadline. Never raise or bypass limits.
 
-## Checks and local resources
+- Focused audit: `/private/tmp/fwp-record-cleanup-focused-acceptance.json`.
+- Focused binary report: `/private/tmp/fwp-default-ownership-evidence/df84b726cc2a/ubuntu-latest-39922765292.json`;
+  guarded inspection took 12.40 seconds.
+- `/private/tmp/fwp-check-windows-evidence.py`: both Windows hosts select all seven
+  saved-image targets and upload their shared directory; thirteen existing runner
+  controls also pass (7.91 seconds).
+- Local record checks: `/private/tmp/fwp-record-rounds/results.json` and
+  `/private/tmp/fwp-wide-fixtures/results.json`, 26 ARM64 binaries/36 observations.
+  These use the accepted #197 compiler with the current runtime substituted;
+  they do not establish new-compiler or cross-platform acceptance.
+- Original fixture leak: `/private/tmp/fwp-record-fixture-leak.json`.
+- Superseded full audit: `/private/tmp/fwp-199-production-acceptance-5f3e7e53.json`.
 
-Focused checks pass: grouped formatting/workflow/docs/budget/runner controls
-(14.77s), integrated source hashes/new report links/formatting (3.42s), and exact
-Windows target preservation plus workflow lint (0.26s). Helpers:
-`/private/tmp/fwp-check-combined-repair.py`,
-`/private/tmp/fwp-check-coordinate-integration.py`,
-`/private/tmp/fwp-check-windows-group-coverage.py`.
-These do not replace final native CI. No full build or benchmark ran locally.
+`/private/tmp/fwp-audit-199-final.py` audits all final production/documentation
+logs and exact-source PR checks. `/private/tmp/fwp-inspect-default-builds.py`
+requires 95 images per host and sixty allocator observations. On macOS, provide
+both regular and GC artifact/job arguments: record updates/conversions and variants
+are regular; general copies and retain probes are GC. Windows legitimately uses
+stack-bound APIs for contexts/static storage; inspect collector startup at O0.
+The ARM64 resolver has passed old-binary controls.
 
-Use `python3 scripts/local-guard.py COMMAND...` serially. Keep 64 GiB free disk,
-target data below 2 GiB, aggregate sampled RSS below 1 GiB and the 180-second
-limit; never raise limits. Free space was about 66 GiB before the new evidence
-downloads. Preserve modified worktrees and receipts. Do not repeat old cleanup,
-publication or integration helpers with existing receipts.
-
-Preparation `/private/tmp/fwp-coordinate-costs`, branch `measure-coordinate-costs`,
-is clean at `b9d59862`; its files/results are already integrated into #198's worktree.
-Preserve its tag; do not create another PR for it. `/private/tmp/fwp-descent-call-costs`
-is inactive. After this PR, separate remaining output, callback, bounds-check and
-buffer costs before choosing the next optimization; ownership boundaries remain open.
+`/private/tmp/fwp-merge-199.py` requires all six binary reports and all ten checks.
+`/private/tmp/fwp-after-merge-199.py` preserves the primary handoff, moves its
+detached checkout and cancels only redundant same-tree main production CI,
+keeping documentation. Both helpers are UNRUN. Archive receipts before changing
+sources; preserve prior evidence. No numerical optimization has been selected.
 
 ## Roadmap status
 

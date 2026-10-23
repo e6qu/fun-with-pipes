@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn inline_paths_preserve_display_and_reduce_constructor_allocations() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::Record(vec![]);
     let program = Program {
         funcs: vec![Func {
@@ -153,7 +157,7 @@ fn source_file_io_matches_the_unoptimized_interpreter() {
                 build.env("FWP_REUSE", "0").env("FWP_FREE", "0");
             }
             let out = build
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&source)
                 .args([opt, "-o"])
                 .arg(&exe)

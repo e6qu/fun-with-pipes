@@ -48,9 +48,7 @@ fn checkpointed_vjp_matches_explicit_segment_precision_and_raw_execution() {
             let binary = dir.join("checkpoint.exe");
             let mut build = Command::new(compiler);
             build.arg("build").arg(&source).arg(opt);
-            if mode == "arc" {
-                build.args(["--gc", "arc"]);
-            }
+            build.args(["--gc", mode]);
             checked(build.arg("-o").arg(&binary));
             let output = checked(
                 Command::new(&binary)
@@ -111,9 +109,7 @@ fn checkpoint_arguments_fail_before_replay_and_reject_wrong_seed_counts() {
             let binary = dir.join("error.exe");
             let mut build = Command::new(compiler);
             build.arg("build").arg(&source);
-            if mode == "arc" {
-                build.args(["--gc", "arc"]);
-            }
+            build.args(["--gc", mode]);
             checked(build.arg("-o").arg(&binary));
             let output = Command::new(binary).output().unwrap();
             assert!(!output.status.success());

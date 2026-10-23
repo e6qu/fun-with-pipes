@@ -167,9 +167,10 @@ images**: 120 in each original run and 132 in the revised run. The latter includ
 12 byte-identical controls and 48 untimed profiles. Inspection checks architecture,
 generated C, binary hashes, instructions and tracing exclusion in ARC.
 
-One counted callback capture remains per coordinate update. The next compiler
-question is whether eligible known callbacks can borrow their captures throughout
-the call while the caller keeps them alive, including failure/cancellation. Unknown
-or escaping callbacks need separate ownership proofs. Preserve the current memory
-budgets and control timing variability before making a speed claim. Full production
-acceptance for delivery is tracked in the [handoff](../development-state.md).
+This measured version retains one callback capture per coordinate update.
+Subsequent [capture borrowing](array-capture-descent.md) removes that traffic;
+unknown or escaping callbacks still need separate ownership proofs. The array-owner
+moves shipped in [PR #196](../roadmap-history.md#array-owner-moves-and-copied-callback-strings-pr-196),
+and borrowing shipped in [PR #197](../roadmap-history.md#borrowed-array-captures-pr-197).
+Preserve the recorded memory costs and timing variability when comparing revisions;
+these earlier measurements are not the current compiler's cost profile.

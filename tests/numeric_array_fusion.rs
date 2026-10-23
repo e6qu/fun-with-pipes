@@ -56,7 +56,7 @@ fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
                     Command::new(fwp)
                         .env_remove("FWP_NO_OPT")
                         .env("FWP_ARRAY_FUSION", mode)
-                        .args(["build", opt])
+                        .args(["build", "--gc", "tracing", opt])
                         .arg(&input)
                         .arg("-o")
                         .arg(&binary),
@@ -97,7 +97,7 @@ fn numeric_array_fusion_eliminates_intermediates_and_reclaims_inputs() {
             Command::new(env!("CARGO_BIN_EXE_fwp"))
                 .env_remove("FWP_NO_OPT")
                 .env("FWP_ARRAY_FUSION", mode)
-                .args(["build", "--fn", "reduce64", "--emit-c"])
+                .args(["build", "--gc", "tracing", "--fn", "reduce64", "--emit-c"])
                 .arg(&input)
                 .arg("-o")
                 .arg(&cfile),

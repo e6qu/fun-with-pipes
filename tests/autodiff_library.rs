@@ -27,7 +27,7 @@ managed = const [0.0] | rev._seed | .1 | rev._seed | .1
     )
     .unwrap();
     let build = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--cdylib", "--emit-c"])
+        .args(["build", "--gc", "tracing", "--cdylib", "--emit-c"])
         .arg(&input)
         .arg("-o")
         .arg(&output)

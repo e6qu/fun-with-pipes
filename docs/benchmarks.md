@@ -14,6 +14,13 @@ machine. This page separates two different questions:
 The measurements below are dated observations. They do not promise the same
 ratios on another machine or establish that the whole language is “zero-cost.”
 
+Early one-off allocation probes are archived with their original compiler setup:
+[derivative scopes](https://github.com/e6qu/fun-with-pipes/blob/27a3e009b83e28f06130a5d686a3196b9934e53f/scripts/measure-ad-scope-allocations-complete.py),
+[list callbacks](https://github.com/e6qu/fun-with-pipes/blob/27a3e009b83e28f06130a5d686a3196b9934e53f/scripts/measure-list-callback-allocations-complete.py),
+and [typed state](https://github.com/e6qu/fun-with-pipes/blob/27a3e009b83e28f06130a5d686a3196b9934e53f/scripts/measure-typed-state-allocations-complete.py).
+Their results remain historical evidence; these scripts are no longer maintained
+commands. Current comparisons name ARC or tracing explicitly.
+
 The [application acceptance suite](application-acceptance.md) names the larger
 programs, current checks and remaining measurement gaps. The first
 [word-frequency baseline](measurements/wordfreq.md) records a 3.29–3.52× ARC/C
@@ -2066,7 +2073,8 @@ uses vector addition and paired stores (`0x100002140` onward). Neither filling l
 calls a function or accesses the stack; scalar tails handle leftover keys.
 The surrounding function still allocates and manages its result owner. This is
 evidence for these loops, not universally optimal registers or zero heap use.
-[The handoff](development-state.md) records pending final production acceptance.
+[PR #173](roadmap-history.md#direct-integer-range-sets-pr-173) records passing
+production and documentation checks for this change.
 
 ### Mapped lists: accepted earlier measurements
 

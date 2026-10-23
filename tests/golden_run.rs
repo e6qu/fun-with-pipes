@@ -32,8 +32,14 @@ fn run_native(path: &Path, want: &str) -> String {
         std::process::id(),
         path.file_stem().unwrap().to_string_lossy()
     ));
-    let build = Command::new(fwp())
-        .arg("build")
+    let mut command = Command::new(fwp());
+    command.arg("build");
+    // This deliberately expired derivative must still exercise the runtime
+    // safety trap. arc_corpus separately requires its compile-time rejection.
+    if path.file_stem().is_some_and(|name| name == "ad_task_reuse") {
+        command.args(["--gc", "tracing"]);
+    }
+    let build = command
         .arg(path.file_name().unwrap())
         .current_dir(path.parent().unwrap())
         .arg("-o")
@@ -52,8 +58,13 @@ fn run_native(path: &Path, want: &str) -> String {
         // Preserve the failing artifact before another compilation or cleanup
         // can erase it. The emitted C uses the same optimization level.
         let source = exe.with_extension("c");
-        let emitted = Command::new(fwp())
-            .args(["build", "--emit-c", "-O1", "-o"])
+        let mut command = Command::new(fwp());
+        command.arg("build");
+        if path.file_stem().is_some_and(|name| name == "ad_task_reuse") {
+            command.args(["--gc", "tracing"]);
+        }
+        let emitted = command
+            .args(["--emit-c", "-O1", "-o"])
             .arg(&source)
             .arg(path.file_name().unwrap())
             .current_dir(path.parent().unwrap())

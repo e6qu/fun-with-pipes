@@ -58,7 +58,7 @@ main = [
             Command::new(env!("CARGO_BIN_EXE_fwp"))
                 .env_remove("FWP_NO_OPT")
                 .env("FWP_ITER_CONSUMERS", enabled)
-                .args(["build", "--emit-c"])
+                .args(["build", "--gc", "tracing", "--emit-c"])
                 .arg(&input)
                 .arg("-o")
                 .arg(&cfile),
@@ -129,7 +129,7 @@ fn producer_lookahead_and_exhausted_stage_order_match_raw_interpreter() {
                 Command::new(env!("CARGO_BIN_EXE_fwp"))
                     .env_remove("FWP_NO_OPT")
                     .env("FWP_ITER_PRODUCERS", producers)
-                    .args(["build", "-O2"])
+                    .args(["build", "--gc", "tracing", "-O2"])
                     .arg(&input)
                     .arg("-o")
                     .arg(&binary),

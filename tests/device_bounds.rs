@@ -82,7 +82,7 @@ fn device_output_limits_preserve_kernel_validation_order() {
                     Command::new(fwp)
                         .env_remove("FWP_NO_OPT")
                         .env("FWP_REUSE", reuse)
-                        .args(["build", opt, "--emit-c", "-o"])
+                        .args(["build", "--gc", "tracing", opt, "--emit-c", "-o"])
                         .arg(&cfile)
                         .arg(&source),
                 );
@@ -90,7 +90,7 @@ fn device_output_limits_preserve_kernel_validation_order() {
                     Command::new(fwp)
                         .env_remove("FWP_NO_OPT")
                         .env("FWP_REUSE", reuse)
-                        .args(["build", opt, "-o"])
+                        .args(["build", "--gc", "tracing", opt, "-o"])
                         .arg(&executable)
                         .arg(&source),
                 );

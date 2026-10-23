@@ -55,8 +55,8 @@ calls it with `curl` and a generated client.
 `fwp build app.fwp --rest --gc arc -o server` applies the compiler's ownership
 checks to the generated server and excludes tracing garbage collection. The
 checks reject unsupported lifetimes; they do not silently enable tracing.
-This entry mode is under validation: [the handoff](development-state.md) records
-which execution, cleanup and platform checks have passed.
+[PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164)
+records passing native execution and cleanup checks for this entry mode.
 
 A server takes `--listen host:port` (default: `FWP_REST_ADDR`, else
 `127.0.0.1:8080`; port 0 picks a free port), `--tls-cert file` and

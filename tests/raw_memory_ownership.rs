@@ -155,6 +155,10 @@ fn string_copies_survive_their_source_buffers() {
 
 #[test]
 fn native_string_boundaries_borrow_inputs_and_return_reclaimable_copies() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let string = MT::con("std::String");
     let ptr = MT::Con("std::Ptr".into(), vec![MT::con("std::U8")]);
     let primitive = |symbol: &str, parameter: MT, result: MT| Func {
@@ -275,7 +279,7 @@ fn pipe_string_copy_matches_raw_interpreter_under_gc_and_reuse_verification() {
     assert_eq!(reference.stdout, "héhéhé\n".as_bytes());
     assert!(reference.stderr.is_empty());
     let generated = Command::new(fwp)
-        .arg("build")
+        .args(["build", "--gc", "tracing"])
         .arg(&source)
         .args(["--emit-c", "-o"])
         .arg(&cfile)

@@ -3489,6 +3489,7 @@ static void fwp_file_drop(V h) {
 #elif !defined(FWP_RESOURCE_NO_FREE)
     /* Unknown runtime sharing keeps storage under the collector's lifetime. */
     if (!fwp_rc_last(h)) return;
+#ifndef FWP_ARC_ONLY
     if (fwp_reuse_verify < 0) {
         const char *e = getenv("FWP_REUSE_VERIFY");
         fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
@@ -3498,6 +3499,7 @@ static void fwp_file_drop(V h) {
         file->path[0] = 0;
         return;
     }
+#endif
     intptr_t before = fwp_gc.budget;
     fwp_mem_free(file);
     fwp_gc.freed += (double)(fwp_gc.budget - before);

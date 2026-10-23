@@ -65,7 +65,7 @@ main = [
     let emitted = scratch.0.join("boundaries.c");
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&emitted),
@@ -97,7 +97,7 @@ main = [
     let exe = scratch.0.join("boundaries");
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["-O1", "-o"])
             .arg(&exe),
@@ -143,7 +143,7 @@ main = (10000, key) | loop step | echo
     let emitted = scratch.0.join("key-loop.c");
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&emitted)
@@ -200,7 +200,7 @@ fn saturated_counts_protect_reachable_values() {
     let hello = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/hello.fwp");
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(hello)
             .args(["--emit-c", "-o"])
             .arg(&emitted),

@@ -57,7 +57,9 @@ Each loop removes 401 allocation requests, 401 retains and 11,208 requested
 bytes. At 129 coordinates the peak managed charge falls about 96.9%, yet over a
 million allocation requests remain. Most allocation/count traffic therefore
 comes from the repeated gradient and weight updates, not the saved history.
-This identifies a useful next investigation; it does not locate every cost.
+Later [packed-array](packed-descent.md) and [capture-borrowing](array-capture-descent.md)
+measurements reduce those costs substantially. The table above records the earlier
+history-versus-loop comparison, not the current compiler's allocation profile.
 
 All measured cases finish with zero managed charge, zero collections and no
 live or owned derivative tapes before runtime shutdown. Deliberately leaving a

@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn streamed_error_rendering_releases_partial_and_complete_scratch() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![

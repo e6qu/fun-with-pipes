@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn alpn_string_allocation_keeps_the_owning_session_live() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![

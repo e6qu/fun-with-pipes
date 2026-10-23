@@ -31,7 +31,7 @@ main = [task.yield (), (1, ("left", "right", 17), "tail") | loop step | echo] | 
     );
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),

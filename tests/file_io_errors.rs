@@ -36,7 +36,7 @@ fn read_failures_and_invalid_utf8_match_the_original_interpreter() {
             for opt in ["-O1", "-O2"] {
                 let exe = dir.join("probe");
                 let built = Command::new(fwp)
-                    .arg("build")
+                    .args(["build", "--gc", "tracing"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe)
@@ -71,6 +71,10 @@ fn read_failures_and_invalid_utf8_match_the_original_interpreter() {
 
 #[test]
 fn read_temporaries_and_write_errors_have_precise_stream_ownership() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     use fwp::ir::*;
     let unit = MT::Record(vec![]);
     let p = Program {

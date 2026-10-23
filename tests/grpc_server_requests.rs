@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn served_requests_survive_resets_jobs_and_retained_inputs() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![

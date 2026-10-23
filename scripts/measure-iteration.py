@@ -113,7 +113,7 @@ def main():
             label = name if producers else name + ('-consumer-only' if fused else '-unfused')
             variant_env = dict(environment, FWP_ITER_CONSUMERS='1' if fused else '0', FWP_ITER_PRODUCERS='1' if producers else '0')
             cfile = out / (label + '.c')
-            run([compiler, 'build', '-O2', '--emit-c', source, '-o', cfile], variant_env)
+            run([compiler, 'build', '--gc', 'tracing', '-O2', '--emit-c', source, '-o', cfile], variant_env)
             workers = loop_evidence(cfile.read_text())
             if name in ('fold', 'each', 'find', 'pipeline', 'iterate', 'array'):
                 assert bool(workers) == fused, (name, fused, workers)

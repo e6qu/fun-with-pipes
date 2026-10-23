@@ -592,9 +592,9 @@ fwp build file.fwp [options]                  compile
                      with the arguments after `--` (stdin from
                      --pgo-input F, or empty), then build with the profile
                      (needs GCC)
-    --gc arc         checked native/WebAssembly executables and native C libraries;
+    --gc arc         checked ownership (default) for native/WebAssembly and C libraries;
                      unsupported value/runtime boundaries diagnose
-    --gc tracing     tracing collection mode (the default)
+    --gc tracing     explicitly select tracing collection
     --memory static  bounded runtime storage and stacks at startup, with
                      --heap S, --pool S, --stack S, --tasks N,
                      --task-stack S and --threads N
@@ -714,7 +714,8 @@ by value. A `String -> String` export returns an owned string with a matching
 `fwp_release_NAME` function. Records may contain scalars and owned strings;
 release the complete unchanged record once. Raw pointer fields carry manual
 pointee lifetimes; releasing a record frees its owned strings, never those
-pointees. The pointer extension is under [validation](development-state.md).
+pointees. [PR #193](roadmap-history.md#manual-c-pointers-and-foreign-storage-cleanup-pr-193)
+records passing native checks for the manual-pointer contract.
 Serialize host calls, including releases, and release every owned result
 before library unload. [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
 records passing six-platform and production checks for these library results.
@@ -1136,7 +1137,9 @@ exports.deactivate = () => client && client.stop();
 `fwp test --gc arc tests.fwp` checks every test against the ARC ownership rules
 before any test runs. `fwp test --std --gc arc` checks the standard library tests in the same mode.
 A rejected entry produces a compile diagnostic; it does not rerun under tracing.
-The existing default remains tracing while the wider migration is validated.
+Checked ARC is now the default. `--gc tracing` explicitly selects the collector
+for diagnostics and programs whose ownership is not yet proved. A rejected
+program never changes memory modes automatically.
 
 For example, `test "length" = "abc" | string.length | eq 3` succeeds. A test that
 raises a language `Error` reports its value and fails; the runner releases that

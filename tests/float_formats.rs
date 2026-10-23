@@ -56,7 +56,7 @@ main = [
         let built = Command::new(fwp)
             .env_remove("FWP_NO_OPT")
             .env("FWP_CACHE_DIR", directory.join("cache"))
-            .args(["build", opt])
+            .args(["build", "--gc", "tracing", opt])
             .arg(&source)
             .arg("-o")
             .arg(&binary)
@@ -89,7 +89,7 @@ fn quad_array_bytes_and_escaping_owners_are_independent() {
     .unwrap();
     let c = directory.join("quad.c");
     let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--fn", "quad", "--emit-c"])
+        .args(["build", "--gc", "tracing", "--fn", "quad", "--emit-c"])
         .arg(&path)
         .arg("-o")
         .arg(&c)

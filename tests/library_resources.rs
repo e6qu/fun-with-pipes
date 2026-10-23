@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn unload_closes_owned_files_sessions_and_transferred_http2_handles() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![

@@ -89,8 +89,10 @@ it mistakenly enabled tracing stress in an ARC-only binary. The first repair
 still enabled reuse verification, which retains released storage and is also
 prohibited in ARC mode. The complete repair enables stress and reuse verification
 only for tracing. Both failures remain recorded and are not compiler passes. Existing
-callback, ownership, gRPC and queued-function checks passed independently; the [handoff](../development-state.md) records every host and the
-repair. Full delivery gates are still required for the final PR head.
+callback, ownership, gRPC and queued-function checks passed independently.
+The repaired adapter change and [local captures](callback-locals.md) shipped in
+[PR #198](../roadmap-history.md#local-callback-captures-and-repeated-numerical-work-pr-198)
+after all nine production jobs and documentation passed.
 
 The [native artifact record](direct-call-native-2026-10-22.json) preserves all
 714 inspected executables/libraries from the individually passing tests, plus
@@ -98,4 +100,4 @@ twelve executed WASI modules. It retains the six failed-job statuses and their
 only failed test. Native images cover Linux, macOS and Windows on both architectures;
 WASI checks 32-bit storage and allocation bounds separately. Inspection verifies
 machine types, instructions, output, ownership counters and broken cleanup controls.
-A repaired Linux AMD64 run and final delivery CI must pass before merge.
+Final delivery inspection is recorded separately in the linked #198 history.

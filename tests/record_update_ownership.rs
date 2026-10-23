@@ -1,5 +1,7 @@
 //! Record copies retain typed kept fields; updates release overwritten owners.
 use std::process::Command;
+#[path = "support/record_probe.rs"]
+mod record_probe;
 fn checked(c: &mut Command) -> std::process::Output {
     let o = c.output().unwrap();
     assert!(
@@ -16,7 +18,9 @@ fn updates_release_replaced_fields_and_partial_copy_owners() {
     std::fs::create_dir_all(&dir).unwrap();
     let src = dir.join("probe.fwp");
     let cfile = dir.join("probe.c");
-    let exe = dir.join("probe");
+    let exe = dir
+        .join("probe")
+        .with_extension(std::env::consts::EXE_EXTENSION);
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, r#"Box = { first: String, last: String, old: String, word: I64 }
 replace-old : Box -> Box
@@ -33,70 +37,77 @@ main = [task.yield (), Box { first = "first", last = "last", old = "old", word =
             .args(["run", "--interp"])
             .arg(&src),
     );
-    checked(
-        Command::new(fwp)
-            .arg("build")
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile)
-            .env("FWP_STACK", "0"),
-    );
-    let emitted = std::fs::read_to_string(&cfile).unwrap();
-    let start = emitted.find("/* replace-old :").unwrap();
-    let end = start + emitted[start..].find("/* other :").unwrap();
-    let function = &emitted[start..end];
-    let id = function
-        .split("static V f")
-        .nth(1)
-        .unwrap()
-        .split('(')
-        .next()
-        .unwrap();
-    let replacement = function
-        .lines()
-        .find(|l| l.contains("OBJ(l0)->f[2] = "))
-        .unwrap()
-        .split(" = ")
-        .nth(1)
-        .unwrap()
-        .trim_end_matches(';');
-    let copy_line = function
-        .lines()
-        .find(|l| l.contains(" = fwp_rc_fresh(fwp_data("))
-        .unwrap();
-    let copy = copy_line.split_whitespace().nth(1).unwrap();
-    assert!(function.contains("fwp_rc_dup(OBJ("));
-    assert!(
-        !function.contains("for (uint32_t k"),
-        "scalar words must never be retained"
-    );
-    let drop = emitted[emitted.find("/* Box */\nstatic void fwp_drop").unwrap()..]
-        .split("static void ")
-        .nth(1)
-        .unwrap()
-        .split('(')
-        .next()
-        .unwrap();
-    // Replace the static captured field with a counted value supplied by the C
-    // probe. This exercises the same consumed replacement slot and typed scope.
-    let modified = function
-        .replace(replacement, "replacement_value")
-        .replace("fwp_rc_unique(l0)", "(failing ? 0 : fwp_rc_unique(l0))")
-        .replace(
-            copy_line,
-            &format!("{copy_line} observed_copy={copy}; arm_update();"),
+    for mode in ["arc", "tracing"] {
+        let stress = if mode == "arc" { "0" } else { "1" };
+        let poisons: &[&str] = if mode == "arc" { &["0"] } else { &["0", "1"] };
+        checked(
+            Command::new(fwp)
+                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .arg(&src)
+                .args(["--emit-c", "-O2", "-o"])
+                .arg(&cfile)
+                .env("FWP_STACK", "0"),
         );
-    let runtime = emitted[..start].to_string() + &modified + &emitted[end..];
-    let runtime = runtime.replacen("/* replace-old :", "static V replacement_value, observed_copy; static int failing; static void arm_update(void);\n/* replace-old :", 1)
+        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let start = emitted.find("/* replace-old :").unwrap();
+        let end = start + emitted[start..].find("/* other :").unwrap();
+        let function = &emitted[start..end];
+        let id = function
+            .split("static V f")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let replacement = function
+            .lines()
+            .find(|l| l.contains("OBJ(l0)->f[2] = "))
+            .unwrap()
+            .split(" = ")
+            .nth(1)
+            .unwrap()
+            .trim_end_matches(';');
+        let copy_line = function
+            .lines()
+            .find(|l| l.contains(" = fwp_rc_fresh(fwp_data("))
+            .unwrap();
+        let copy = copy_line.split_whitespace().nth(1).unwrap();
+        assert!(function.contains("fwp_rc_dup(OBJ("));
+        assert!(
+            !function.contains("for (uint32_t k"),
+            "scalar words must never be retained"
+        );
+        let drop = emitted[emitted.find("/* Box */\nstatic void fwp_drop").unwrap()..]
+            .split("static void ")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        // Replace the static captured field with a counted value supplied by the C
+        // probe. This exercises the same consumed replacement slot and typed scope.
+        let modified = function
+            .replace(replacement, "replacement_value")
+            .replace("fwp_rc_unique(l0)", "(failing ? 0 : fwp_rc_unique(l0))")
+            .replace(
+                copy_line,
+                &format!("{copy_line} observed_copy={copy}; arm_update();"),
+            );
+        let runtime = emitted[..start].to_string() + &modified + &emitted[end..];
+        let runtime = runtime.replacen("/* replace-old :", "static V replacement_value, observed_copy; static int failing; static void arm_update(void);\n/* replace-old :", 1)
         .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)");
-    let probe = r#"
+        let probe = r#"
 static volatile V first, last, old, word, box;
 static int fail_field;
 static jmp_buf overflow;
 static int recover(void) { return 1; }
-static int dead(V v) { return fwp_reuse_verify ? STR(v)->len==0 : *fwp_rc_slot(v)==0; }
+static int dead(V v) {
+#ifndef FWP_ARC_ONLY
+    if (fwp_reuse_verify) return STR(v)->len==0;
+#endif
+    return *fwp_rc_slot(v)==0;
+}
 static size_t count(V v) { uint8_t n=*fwp_rc_slot(v); return n==255?(*fwp_rc_wide_link(fwp_rc_slot(v)))->count:n; }
-static void single(V v) { if (*fwp_rc_slot(v)==255) (*fwp_rc_wide_link(fwp_rc_slot(v)))->count=1;else *fwp_rc_slot(v)=1; }
 static void arm_update(void) {
     if (!failing) return;
     for (int i=1;i<255;i++) { fwp_rc_dup(first);fwp_rc_dup(last); }
@@ -110,6 +121,8 @@ static void setup(void) {
 }
 int main(void) {
     fwp_prog_out=stdout; fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    intptr_t baseline=fwp_gc.budget;
+    for (volatile int round=0;round<32;round++) {
     for (int alias=0;alias<2;alias++) {
         setup(); failing=0; if (alias) fwp_rc_dup(box);
         V result=fFUNCTION(box);
@@ -129,79 +142,134 @@ int main(void) {
         if (!setjmp(overflow)) { fFUNCTION(box);return 6; }
         fwp_trap_recover=0;fwp_trap_jb=0;failing=0;
         if (fwp_cleanups || !observed_copy || !dead(replacement_value)) return 7;
-        if (fwp_reuse_verify ? OBJ(observed_copy)->tag!=0xdead : *fwp_rc_slot(observed_copy)!=0) return 8;
+#ifndef FWP_ARC_ONLY
+        if (fwp_reuse_verify) { if (OBJ(observed_copy)->tag!=0xdead) return 8; }
+        else
+#endif
+        if (*fwp_rc_slot(observed_copy)!=0) return 8;
         size_t a=field?255:SIZE_MAX,b=field?SIZE_MAX:255;
         if (!alias) {a--;b--; if (!dead(old)) return 9;}
         else if (count(box)!=1 || count(old)!=1) return 10;
         if (count(first)!=a || count(last)!=b) return 11;
         if (*fwp_rc_slot(word)!=1 || STR(word)->len!=6) return 12;
         if (alias) RECORD_DROP(box);
-        single(first);single(last);fwp_rc_free_obj(first);fwp_rc_free_obj(last);fwp_rc_free_obj(word);
+        /* Restore the real fixture owners, discarding artificial overflow counts. */
+        fwp_rc_fresh(first);fwp_rc_fresh(last);fwp_rc_free_obj(first);fwp_rc_free_obj(last);fwp_rc_free_obj(word);
+    }
+#ifdef FWP_ARC_ONLY
+        if (fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
+#endif
     }
     puts("record updates preserve typed kept fields and release replaced owners");return 0;
 }
 "#.replace("FUNCTION", id).replace("RECORD_DROP", drop);
-    let remove_scope = |function: &str, needle: &str| {
-        let line = function.lines().find(|l| l.contains(needle)).unwrap();
-        let push = line.find("fwp_cleanup_push(&").unwrap();
-        let node = line[push + "fwp_cleanup_push(&".len()..]
-            .split(',')
-            .next()
-            .unwrap();
-        let end = push + line[push..].find(';').unwrap() + 1;
-        function
-            .replace(&line[push..end], "")
-            .replace(&format!("fwp_cleanup_pop(&{node});"), "")
-    };
-    let unique_drop = modified
-        .lines()
-        .find(|l| l.contains("(OBJ(l0)->f[2]);"))
-        .unwrap();
-    let controls = [
-        (modified.replace(unique_drop, ""), 3),
-        (remove_scope(&modified, "fwp_rc_cleanup_cell"), 8),
-        (remove_scope(&modified, "= {0, 0}"), 11),
-        (remove_scope(&modified, "= {replacement_value}"), 7),
-    ];
-    for opt in ["-O1", "-O2"] {
-        for (control, expected) in &controls {
-            let controlled = runtime.replace(&modified, control);
-            fwp::cgen::compile_c(&format!("{controlled}\n{probe}"), &exe, opt).unwrap();
-            let out = Command::new(&exe)
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
+        let remove_scope = |function: &str, needle: &str| {
+            let line = function.lines().find(|l| l.contains(needle)).unwrap();
+            let push = line.find("fwp_cleanup_push(&").unwrap();
+            let node = line[push + "fwp_cleanup_push(&".len()..]
+                .split(',')
+                .next()
                 .unwrap();
-            assert_eq!(
-                out.status.code(),
-                Some(*expected),
-                "missing ownership control: {}",
-                String::from_utf8_lossy(&out.stderr)
-            );
-        }
-        fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
+            let end = push + line[push..].find(';').unwrap() + 1;
+            function
+                .replace(&line[push..end], "")
+                .replace(&format!("fwp_cleanup_pop(&{node});"), "")
+        };
+        let unique_drop = modified
+            .lines()
+            .find(|l| l.contains("(OBJ(l0)->f[2]);"))
+            .unwrap();
+        let controls = [
+            (modified.replace(unique_drop, ""), 3),
+            (remove_scope(&modified, "fwp_rc_cleanup_cell"), 8),
+            (remove_scope(&modified, "= {0, 0}"), 11),
+            (remove_scope(&modified, "= {replacement_value}"), 7),
+        ];
+        for opt in ["-O1", "-O2"] {
+            for (control, expected) in &controls {
+                let controlled = runtime.replace(&modified, control);
+                fwp::cgen::compile_c(&format!("{controlled}\n{probe}"), &exe, opt).unwrap();
+                let out = Command::new(&exe)
+                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "record_update_ownership",
+                    &format!("{mode}{opt}-control{expected}"),
+                    &format!("{controlled}\n{probe}"),
+                    &exe,
+                    &out,
+                );
+                assert_eq!(
+                    out.status.code(),
+                    Some(*expected),
+                    "missing ownership control: {}",
+                    String::from_utf8_lossy(&out.stderr)
+                );
+            }
+            fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
+            for poison in poisons {
+                let out = checked(
+                    Command::new(&exe)
+                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", poison),
+                );
+                record_probe::save(
+                    "record_update_ownership",
+                    &format!("{mode}{opt}-normal-poison{poison}"),
+                    &format!("{runtime}\n{probe}"),
+                    &exe,
+                    &out,
+                );
+            }
+            if mode == "arc" {
+                // Removing scalar-bit fixture cleanup leaves an allocation that
+                // the field-count assertions do not detect. The ledger must.
+                let leaked_probe = probe.replace("fwp_rc_free_obj(word);", "");
+                assert_ne!(leaked_probe, probe);
+                fwp::cgen::compile_c(&format!("{runtime}\n{leaked_probe}"), &exe, opt).unwrap();
+                let leaked = Command::new(&exe)
+                    .env("FWP_GC", "off")
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "record_update_ownership",
+                    &format!("{mode}{opt}-missing-release"),
+                    &format!("{runtime}\n{leaked_probe}"),
+                    &exe,
+                    &leaked,
+                );
+                assert_eq!(leaked.status.code(), Some(90), "{mode} {opt}: {leaked:?}");
+            }
             checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
+                Command::new(fwp)
+                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .arg(&src)
+                    .args([opt, "-o"])
+                    .arg(&exe)
+                    .env("FWP_STACK", "0"),
             );
+            let out = checked(
+                Command::new(&exe)
+                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", stress),
+            );
+            assert_eq!(out.stdout, reference.stdout);
         }
-        checked(
-            Command::new(fwp)
-                .arg("build")
-                .arg(&src)
-                .args([opt, "-o"])
-                .arg(&exe)
-                .env("FWP_STACK", "0"),
-        );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
-        assert_eq!(out.stdout, reference.stdout);
     }
     std::fs::remove_dir_all(dir).unwrap();
 }

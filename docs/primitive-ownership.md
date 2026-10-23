@@ -35,9 +35,10 @@ is the runtime entry that implements that transfer policy.
 A synchronous C callback runs before the foreign call returns. Its temporary
 values and context have scoped cleanup. A raw pointer has a manual pointee
 lifetime: copying its address never acquires an ARC owner. The programmer still
-ensures validity and cleanup; PR #193 records native acceptance. The current
+ensures validity and cleanup; PR #193 records native acceptance. The
 [callback-input extension](ownership.md#c-library-results-and-foreign-calls) copies
-incoming C strings into owned fwp values and is under validation.
+incoming C strings into owned fwp values, accepted in
+[PR #196](roadmap-history.md#array-owner-moves-and-copied-callback-strings-pr-196).
 Retained unknown callbacks and callbacks returning managed C addresses remain
 outside the checked contract.
 
@@ -104,15 +105,22 @@ aliases are preserved. Unmodeled callbacks retain explicit sharing and conservat
 owner. `replace from to source` borrows its pattern/replacement and consumes
 one source owner. `OwnedLeaf` names this compiler contract: a leaf has no managed
 children. The source stays protected while a changed result is allocated. An
-unchanged result transfers that same owner, without an extra retain/release pair;
-a changed result owns its copy and releases the consumed source.
+unchanged result transfers that same owner, without an extra retain/release pair.
+A changed result reuses eligible unique storage or owns a copy and releases the
+consumed source.
 
-No bytes are changed in place. Other owners still see the original string.
+ASCII case conversion can change uniquely owned storage in place. Tracing mode
+also requires that storage to be young (not yet preserved by a collection);
+reuse verification forces a copy. Shared strings copy, preserving every older
+value. Changed trim and replacement results use separate storage.
 ASCII case conversion returns the source when no relevant ASCII letter changes;
 trim returns it when no boundary whitespace is removed. Replacement returns it
 for an empty pattern, equal pattern/replacement or no occurrence. Embedded NUL
-and non-ASCII bytes keep the existing length-aware behavior. These contracts are
-under validation; [the handoff](development-state.md) records actual checks.
+and non-ASCII bytes keep the existing length-aware behavior.
+[PR #192](roadmap-history.md#string-ownership-and-repeated-file-cleanup-pr-192)
+accepted unchanged-result transfers;
+[PR #194](roadmap-history.md#string-map-ownership-and-native-reuse-checks-pr-194)
+accepted unique ASCII case reuse, including alias and failure controls.
 
 ## Registered unwind cleanup
 

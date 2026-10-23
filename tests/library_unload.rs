@@ -14,6 +14,10 @@ struct snapshot {
 
 #[test]
 fn loader_unload_drains_tasks_restores_signals_and_releases_regions() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let string = MT::con("std::String");
     let int = MT::con("std::I64");
     let p = Program {

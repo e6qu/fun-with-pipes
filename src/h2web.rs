@@ -1146,7 +1146,16 @@ mod tests {
             named: vec![("request".into(), 1)],
             ..Program::default()
         };
-        let (generated, _) = crate::cgen::generate_library(&program, "body_bounds").unwrap();
+        // This probe deliberately requests collector stress and retained-storage
+        // poisoning. Select that mode without changing other compiler tests.
+        let previous = crate::cgen::native_options();
+        crate::cgen::set_native_options(crate::cgen::NativeOptions {
+            arc: false,
+            ..previous.clone()
+        });
+        let generated = crate::cgen::generate_library(&program, "body_bounds");
+        crate::cgen::set_native_options(previous);
+        let (generated, _) = generated.unwrap();
         let descriptor = generated
             .lines()
             .find_map(|line| {

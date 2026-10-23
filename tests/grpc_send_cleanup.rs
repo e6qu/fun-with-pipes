@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn encoded_messages_release_on_cancel_and_preserve_plain_and_gzip_frames() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![

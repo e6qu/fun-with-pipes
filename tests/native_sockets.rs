@@ -9,7 +9,7 @@ fn socket_scheduler_waits_on_readiness_and_releases_waiters() {
     let cfile = dir.join("main.c");
     std::fs::write(&input, "main = ()\n").unwrap();
     let built = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--emit-c"])
+        .args(["build", "--gc", "tracing", "--emit-c"])
         .arg(&input)
         .arg("-o")
         .arg(&cfile)
@@ -113,7 +113,7 @@ fn socket_scratch_is_released_on_cancel_and_allocation_failure() {
     let cfile = dir.join("main.c");
     std::fs::write(&input, "main = ()\n").unwrap();
     let built = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--emit-c"])
+        .args(["build", "--gc", "tracing", "--emit-c"])
         .arg(&input)
         .arg("-o")
         .arg(&cfile)
@@ -206,7 +206,7 @@ fn socket_addresses_reject_nul_before_using_the_prefix() {
     }
     let cfile = dir.join("main.c");
     let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--emit-c"])
+        .args(["build", "--gc", "tracing", "--emit-c"])
         .arg(&input)
         .arg("-o")
         .arg(&cfile)
@@ -236,7 +236,7 @@ fn tcp_constructor_failures_release_real_descriptors() {
     let cfile = dir.join("main.c");
     std::fs::write(&input, "main = ()\n").unwrap();
     let emitted = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--emit-c"])
+        .args(["build", "--gc", "tracing", "--emit-c"])
         .arg(&input)
         .arg("-o")
         .arg(&cfile)

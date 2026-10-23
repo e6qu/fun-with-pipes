@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn grpc_connect_and_handshake_release_pending_resources_on_cancellation() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![

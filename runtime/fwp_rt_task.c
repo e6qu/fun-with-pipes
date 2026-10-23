@@ -1854,6 +1854,7 @@ static void fwp_sock_drop(V value) {
     fwp_rc_free_obj(value);
 #elif !defined(FWP_RESOURCE_NO_FREE)
     if (!fwp_rc_last(value)) return;
+#ifndef FWP_ARC_ONLY
     if (fwp_reuse_verify < 0) {
         const char *e = getenv("FWP_REUSE_VERIFY");
         fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
@@ -1861,6 +1862,7 @@ static void fwp_sock_drop(V value) {
     /* This leaf has a socket layout, not a String header. Its zero owners and
      * invalid descriptor already expose a later accidental use. */
     if (fwp_reuse_verify) return;
+#endif
     intptr_t before = fwp_gc.budget;
     fwp_mem_free(s);
     fwp_gc.freed += (double)(fwp_gc.budget - before);

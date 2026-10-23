@@ -279,13 +279,17 @@ extern int pthread_getattr_np(pthread_t, pthread_attr_t *);
 enum { GC_FREE = 0, GC_SMALL, GC_BIG, GC_BIG_TAIL };
 
 typedef struct {
-    uint8_t type, leaf, cls, mark; /* leaf: the kind (0, 1, 2); mark: big objects */
-    uint8_t dirty;                 /* free, but its memory not given back */
+    uint8_t type, leaf, cls;       /* leaf: the kind (0, 1, 2) */
+#ifndef FWP_ARC_ONLY
+    uint8_t mark, dirty;           /* tracing age and decommit bookkeeping */
+#endif
     uint32_t slot, nslots;
     uint32_t head;                 /* big: number of chunks; tail: its head */
     size_t size;                   /* big: bytes */
     uint32_t recip;                /* small: 2^32 / slot, rounded up */
+#ifndef FWP_ARC_ONLY
     uint64_t bits[GC_CHUNK / 16 / 64]; /* small: a mark bit per slot */
+#endif
     uint8_t rc[GC_CHUNK / 16];     /* all small kinds: inline count or wide marker;
                                     * big: rc[0] (fwp_rc_*) */
 } gc_chunk;
@@ -509,7 +513,8 @@ static inline char *fwp_gc_chunk_addr(size_t ci) { return fwp_gc.base + (ci << G
 
 static void fwp_gc_collect(void);
 
-/* `k` free chunks in a row (index of the first) */
+/* `k` free chunks in a row, or SIZE_MAX when a bounded heap has no run.
+ * Callers collect and retry: small allocations must also recheck freed slots. */
 static size_t fwp_gc_chunks(size_t k) {
     size_t *rover = k == 1 ? &fwp_gc.rover : &fwp_gc.big_rover;
     size_t run = 0;
@@ -524,17 +529,7 @@ static size_t fwp_gc_chunks(size_t k) {
     /* a free run ending at the top grows into fresh chunks */
     size_t first = fwp_gc.top - run;
 #ifdef FWP_STATIC_MEMORY
-    /* the heap cannot grow: collect, once, before giving up */
-    static int retrying = 0;
-    if (first + k > fwp_gc.nchunks && fwp_gc.armed && !fwp_gc.collecting && !retrying) {
-        retrying = 1;
-        fwp_gc.rover = fwp_gc.big_rover = 0;
-        fwp_gc_collect();
-        fwp_gc.rover = fwp_gc.big_rover = 0;
-        size_t ci = fwp_gc_chunks(k);
-        retrying = 0;
-        return ci;
-    }
+    if (first + k > fwp_gc.nchunks) return SIZE_MAX;
 #endif
     fwp_gc.nfree_chunks -= run;
     fwp_gc_commit(first + k);
@@ -568,18 +563,33 @@ static __attribute__((noinline)) void *fwp_gc_alloc_big(size_t n, int leaf) {
     if ((fwp_gc.budget -= (intptr_t)n) < 0) fwp_gc_spent();
     size_t k = (n + GC_CHUNK - 1) >> GC_SHIFT;
     size_t ci = fwp_gc_chunks(k);
+#ifdef FWP_STATIC_MEMORY
+    if (ci == SIZE_MAX) {
+        if (fwp_gc.armed && !fwp_gc.collecting) {
+            /* Exhaustion needs all dead generations, not only young objects. */
+            fwp_gc.major_next = 1;
+            fwp_gc_collect();
+        }
+        ci = fwp_gc_chunks(k);
+        if (ci == SIZE_MAX) fwp_static_full("heap", fwp_static.heap_bytes, "--heap");
+    }
+#endif
     gc_chunk *m = &fwp_gc.meta[ci];
     m->type = GC_BIG;
     m->leaf = (uint8_t)leaf;
+#ifndef FWP_ARC_ONLY
     m->mark = 0;
     m->dirty = 1;
+#endif
     m->head = (uint32_t)k;
     m->size = n;
     fwp_rc_clear_slot(&m->rc[0]);
     for (size_t i = 1; i < k; i++) {
         gc_chunk *t = &fwp_gc.meta[ci + i];
         t->type = GC_BIG_TAIL;
+#ifndef FWP_ARC_ONLY
         t->dirty = 1;
+#endif
         t->head = (uint32_t)ci;
     }
     char *p = fwp_gc_chunk_addr(ci);
@@ -590,11 +600,26 @@ static __attribute__((noinline)) void *fwp_gc_alloc_big(size_t n, int leaf) {
 /* the free list and the bump space of a class are empty: a new chunk */
 static __attribute__((noinline)) char *fwp_gc_refill(gc_list *l, unsigned c, int leaf) {
     size_t ci = fwp_gc_chunks(1);
+#ifdef FWP_STATIC_MEMORY
+    if (ci == SIZE_MAX) {
+        if (fwp_gc.armed && !fwp_gc.collecting) {
+            fwp_gc.major_next = 1;
+            fwp_gc_collect();
+            /* A partly live chunk can supply slots without becoming free. */
+            char *p = l->free;
+            if (p) { l->free = (char *)~*(uintptr_t *)p; return p; }
+        }
+        ci = fwp_gc_chunks(1);
+        if (ci == SIZE_MAX) fwp_static_full("heap", fwp_static.heap_bytes, "--heap");
+    }
+#endif
     gc_chunk *m = &fwp_gc.meta[ci];
     m->type = GC_SMALL;
     m->leaf = (uint8_t)leaf;
     m->cls = (uint8_t)c;
+#ifndef FWP_ARC_ONLY
     m->dirty = 1;
+#endif
     m->slot = fwp_gc.slot[c];
     m->nslots = (uint32_t)(GC_CHUNK / m->slot);
     m->recip = (uint32_t)((((uint64_t)1 << 32) + m->slot - 1) / m->slot);
@@ -697,7 +722,9 @@ static void fwp_mem_free(void *p) {
         gc_list *l = &fwp_gc.lists[m->leaf][m->cls];
         /* reused unmarked: young again */
         size_t i = (size_t)((uintptr_t)p & (GC_CHUNK - 1)) / m->slot;
+#ifndef FWP_ARC_ONLY
         m->bits[i >> 6] &= ~((uint64_t)1 << (i & 63));
+#endif
         fwp_rc_clear_slot(&m->rc[i]);
         /* A stale conservative root can still name the free slot. Under
          * verification it must not preserve old child words that later
@@ -708,7 +735,9 @@ static void fwp_mem_free(void *p) {
         fwp_gc.budget += m->slot;
     } else if (m->type == GC_BIG && (char *)p == fwp_gc_chunk_addr(ci)) {
         fwp_gc.budget += (intptr_t)m->size;
+#ifndef FWP_ARC_ONLY
         m->mark = 0;
+#endif
         fwp_rc_clear_slot(&m->rc[0]);
         size_t k = m->head;
         for (size_t i = 0; i < k; i++) fwp_gc.meta[ci + i].type = GC_FREE;
@@ -843,11 +872,15 @@ static void fwp_rc_share(V v) {
 static inline int fwp_rc_young(V v) {
     uint8_t *c = fwp_rc_slot(v);
     if (!c) return 0;
+#ifdef FWP_ARC_ONLY
+    return 1; /* No collection can age a counted ARC value. */
+#else
     uintptr_t off = (uintptr_t)v - (uintptr_t)fwp_gc.base;
     gc_chunk *m = &fwp_gc.meta[off >> GC_SHIFT];
     size_t i = (size_t)(c - m->rc);
     return m->type == GC_BIG ? !m->mark :
         !(m->bits[i >> 6] & ((uint64_t)1 << (i & 63)));
+#endif
 }
 
 /* `v`, shared (a value the runtime keeps) */
@@ -856,6 +889,7 @@ static inline V fwp_rc_shared(V v) {
     return v;
 }
 
+#ifndef FWP_ARC_ONLY
 /* an object that was judged to have one reference, under
  * FWP_REUSE_VERIFY: any later use of it reads nonsense (and a match on it
  * finds no arm) */
@@ -877,6 +911,7 @@ static void fwp_rc_poison(V v) {
 /* FWP_REUSE_VERIFY=1: an object that would be reused is copied instead,
  * and the original poisoned, so that a wrong judgment shows */
 static int fwp_reuse_verify = -1;
+#endif
 
 /* 1: `v` has one reference and may be written in place; 2: it would be,
  * but is to be copied and poisoned (FWP_REUSE_VERIFY) */
@@ -887,6 +922,9 @@ static inline int fwp_rc_unique(V v) {
 
     uint8_t *c = fwp_rc_slot(v);
     if (!c || *c != 1) return 0;
+#ifdef FWP_ARC_ONLY
+    return 1;
+#else
     uintptr_t off = (uintptr_t)v - (uintptr_t)fwp_gc.base;
     gc_chunk *m = &fwp_gc.meta[off >> GC_SHIFT];
     size_t i = (size_t)(c - m->rc);
@@ -898,6 +936,7 @@ static inline int fwp_rc_unique(V v) {
         fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
     }
     return fwp_reuse_verify ? 2 : 1;
+#endif
 }
 
 /* 1: the object of kind 2 `v` (an array) has one reference and may be
@@ -911,11 +950,15 @@ static inline int fwp_rc_unique_mut(V v) {
 
     uint8_t *c = fwp_rc_slot(v);
     if (!c || *c != 1) return 0;
+#ifdef FWP_ARC_ONLY
+    return 1;
+#else
     if (__builtin_expect(fwp_reuse_verify < 0, 0)) {
         const char *e = getenv("FWP_REUSE_VERIFY");
         fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
     }
     return fwp_reuse_verify ? 2 : 1;
+#endif
 }
 
 /* whether `v` has one reference, which is being given up: the references
@@ -934,6 +977,7 @@ static inline int fwp_rc_last(V v) {
  * The bytes freed still count as allocated. */
 static void fwp_rc_free_obj(V v) {
     if (!fwp_rc_last(v)) return;
+#ifndef FWP_ARC_ONLY
     if (__builtin_expect(fwp_reuse_verify < 0, 0)) {
         const char *e = getenv("FWP_REUSE_VERIFY");
         fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
@@ -942,6 +986,7 @@ static void fwp_rc_free_obj(V v) {
         fwp_rc_poison(v);
         return;
     }
+#endif
     intptr_t before = fwp_gc.budget;
     fwp_mem_free((void *)(uintptr_t)v);
     fwp_gc.freed += (double)(fwp_gc.budget - before);
@@ -950,6 +995,7 @@ static void fwp_rc_free_obj(V v) {
 /* an array, map or set, the same way (poisoned: empty) */
 static void fwp_rc_free_arr(V v) {
     if (!fwp_rc_last(v)) return;
+#ifndef FWP_ARC_ONLY
     if (__builtin_expect(fwp_reuse_verify < 0, 0)) {
         const char *e = getenv("FWP_REUSE_VERIFY");
         fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
@@ -958,6 +1004,7 @@ static void fwp_rc_free_arr(V v) {
         memset((void *)(uintptr_t)v, 0, sizeof(uint64_t));
         return;
     }
+#endif
     intptr_t before = fwp_gc.budget;
     fwp_mem_free((void *)(uintptr_t)v);
     fwp_gc.freed += (double)(fwp_gc.budget - before);
@@ -1547,6 +1594,7 @@ static void fwp_gc_report(void) {
  * thread's complete upper stack bound before enabling collection. */
 static void fwp_gc_start(void *top) {
     if (!fwp_gc.ready) fwp_gc_init();
+#ifndef FWP_ARC_ONLY
 #ifdef _WIN32
     /* Windows frame pointers may sit near the bottom of a large frame.
      * Its higher locals are roots too; use the OS thread/fiber stack bound. */
@@ -1573,7 +1621,6 @@ static void fwp_gc_start(void *top) {
 #else
     fwp_gc.main_top = (char *)top;
 #endif
-#ifndef FWP_ARC_ONLY
 #ifdef __linux__
     dl_iterate_phdr(fwp_gc_find_data, 0);
 #elif defined(__APPLE__) || defined(_WIN32)
@@ -1583,6 +1630,7 @@ static void fwp_gc_start(void *top) {
     fwp_gc.armed = fwp_gc.enabled && fwp_gc.ndata > 0;
 #endif
 #endif
+    (void)top;
     if (fwp_gc.stats) atexit(fwp_gc_report);
 #ifdef FWP_STATIC_MEMORY
     const char *mr = getenv("FWP_MEMORY_REPORT");

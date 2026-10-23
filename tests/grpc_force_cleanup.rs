@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn forced_cells_release_received_storage_and_decoder_failure_text() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
