@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -46,13 +49,18 @@ main = (10000, 0) | loop step | echo
     )
     .unwrap();
     let fwp = env!("CARGO_BIN_EXE_fwp");
-    let reference = checked(Command::new(fwp).args(["run", "--interp"]).arg(&src));
+    let reference = checked(
+        Command::new(fwp)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&src),
+    );
     let cfile = dir.0.join("temporaries.c");
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build", "--gc", "tracing", "--memory", "dynamic"])
             .arg(&src)
-            .args(["--emit-c", "-o"])
+            .args(["--emit-c", "-O2", "-o"])
             .arg(&cfile)
             .env("FWP_STACK", "0"),
     );
@@ -75,7 +83,7 @@ main = (10000, 0) | loop step | echo
     let unknown = current.replace(&pattern, "fwp_rc_drop(l");
     let mut freed = Vec::new();
     for (name, source) in [("unknown", unknown), ("typed", current)] {
-        let exe = dir.0.join(name);
+        let exe = dir.0.join(format!("{name}.exe"));
         fwp::cgen::compile_c(&source, &exe, "-O1").unwrap();
         let out = checked(
             Command::new(&exe)
@@ -101,6 +109,74 @@ main = (10000, 0) | loop step | echo
         "temporary children MiB freed by counts: {} -> {}",
         freed[0], freed[1]
     );
+    checked(
+        Command::new(fwp)
+            .args(["build", "--gc", "arc", "--memory", "dynamic"])
+            .arg(&src)
+            .args(["--emit-c", "-O2", "-o"])
+            .arg(&cfile)
+            .env("FWP_STACK", "0"),
+    );
+    let emitted = std::fs::read_to_string(&cfile).unwrap();
+    let start = emitted
+        .find("/* List[String -> String] */\nstatic void fwp_drop")
+        .expect("typed list cleanup");
+    let helper = emitted[start..]
+        .lines()
+        .nth(1)
+        .unwrap()
+        .strip_prefix("static void ")
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    let pattern = format!("{helper}(l");
+    assert!(emitted.contains(&pattern));
+    let missing = emitted.replace(&pattern, "fwp_rc_drop(l");
+    let probe = r#"
+int main(int argc,char **argv){
+ int result=original_main(argc,argv);if(result)return result;
+ if(fwp_gc.budget!=fwp_gc.budget_given||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+ return 0;
+}
+"#;
+    for opt in ["-O1", "-O2"] {
+        let exe = dir.0.join(format!("arc-temporaries{opt}.exe"));
+        for (case, source, expected) in
+            [("normal", &emitted, 0), ("missing-children", &missing, 90)]
+        {
+            let code = format!(
+                "{}\n{probe}",
+                source.replace(
+                    "int main(int argc, char **argv)",
+                    "int original_main(int argc, char **argv)"
+                )
+            );
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+            let output = Command::new(&exe)
+                .env("FWP_GC", "off")
+                .env("FWP_GC_STATS", "0")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            record_probe::save(
+                "temporary_ownership",
+                &format!("arc{opt}-{case}"),
+                &code,
+                &exe,
+                &output,
+            );
+            assert_eq!(
+                output.status.code(),
+                Some(expected),
+                "{opt} {case}: {output:?}"
+            );
+            assert_eq!(output.stdout, reference.stdout);
+            assert!(output.stderr.is_empty(), "{output:?}");
+        }
+    }
 }
 
 #[test]
@@ -128,24 +204,43 @@ main = [
     )
     .unwrap();
     let fwp = env!("CARGO_BIN_EXE_fwp");
-    let reference = checked(Command::new(fwp).args(["run", "--interp"]).arg(&src));
-    for opt in ["-O1", "-O2"] {
-        let exe = dir.0.join(opt);
-        checked(
-            Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
-                .arg(&src)
-                .args([opt, "-o"])
-                .arg(&exe),
-        );
-        for poison in ["0", "1"] {
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
+    let reference = checked(
+        Command::new(fwp)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&src),
+    );
+    for mode in ["arc", "tracing"] {
+        let stress = if mode == "arc" { "0" } else { "1" };
+        for opt in ["-O1", "-O2"] {
+            let exe = dir.0.join(format!("aliases-{mode}{opt}.exe"));
+            checked(
+                Command::new(fwp)
+                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .arg(&src)
+                    .args([opt, "-o"])
+                    .arg(&exe)
+                    .env("FWP_STACK", "1"),
             );
-            assert_eq!(out.stdout, reference.stdout, "{opt}, poison {poison}");
+            for poison in if mode == "arc" {
+                &["0"][..]
+            } else {
+                &["0", "1"][..]
+            } {
+                let output = checked(
+                    Command::new(&exe)
+                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", poison),
+                );
+                assert_eq!(
+                    output.stdout, reference.stdout,
+                    "{mode} {opt} poison {poison}"
+                );
+                assert_eq!(output.stderr, reference.stderr);
+            }
         }
     }
 }

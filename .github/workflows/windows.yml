@@ -172,7 +172,7 @@ jobs:
         shell: pwsh
         run: |
           $testTargets = @(
-            'list_applicative_ownership', 'typed_state_ownership', 'serializer_leaf_ownership', 'argument_preparation_ownership', 'closure_ownership',
+            'list_applicative_ownership', 'typed_state_ownership', 'serializer_leaf_ownership', 'argument_preparation_ownership', 'closure_ownership', 'temporary_ownership',
             'retain_unwind_ownership', 'runtime_call_ownership', 'constructor_type_ownership', 'scope_thunk_ownership', 'retained_thunk_ownership',
             'service_value_ownership', 'process_exit_ownership', 'grpc_canonical_encoding', 'grpc_response_encoding', 'grpc_force_cleanup',
             'grpc_render_cleanup', 'grpc_receive_cleanup', 'grpc_status_cleanup', 'grpc_send_cleanup', 'grpc_request_encoding',

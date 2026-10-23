@@ -107,7 +107,7 @@ uses. An internal **reuse token** temporarily owns an emptied object: a later
 constructor may fill that storage, or cleanup must free it. Tokens are compiler
 bookkeeping, not a new language feature.
 
-These seven test targets now check both ARC and tracing:
+These ten test targets now check both ARC and tracing:
 
 | Check | What must remain true |
 |---|---|
@@ -118,6 +118,9 @@ These seven test targets now check both ARC and tracing:
 | [Partial calls](../../tests/argument_preparation_ownership.rs) | Failure while acquiring arguments preserves caller aliases; unique captured values move without extra retains |
 | [Right folds](../../tests/fold_unwind_ownership.rs) | A failed callback, allocation or cancelled task releases the accumulator and temporary buffer |
 | [Loop cancellation](../../tests/loop_unwind_ownership.rs) | Cancellation releases the current state at the first or a later iteration; failed result preparation preserves outside aliases |
+| [Cached values](../../tests/caf_ownership.rs) | Initialization can fail or reenter; the cache and its callers keep separate owners, released at the correct lifetime boundary |
+| [Escaping functions](../../tests/closure_ownership.rs) | A returned function keeps its captured values alive and releases its storage after use |
+| [Temporary containers](../../tests/temporary_ownership.rs) | Discarding a temporary list releases its children while preserving independent aliases |
 
 Here is the field-selection pattern. `Leaf` constructs an `Inner` containing a
 string. `make` constructs a record by applying each field function to the input;
@@ -138,7 +141,8 @@ compiler can remove the outer record, but must still release that string.
 The source tests also choose the function at runtime so a direct-call rewrite
 cannot hide the cleanup obligation.
 
-Each instrumented probe repeats 32 rounds, with and without caller aliases.
+The first seven targets repeat instrumented probes for 32 rounds, with and
+without caller aliases.
 ARC requires the managed byte charge to return to its starting value, no extra
 count-table entries and no collections. Deliberately missing releases or adding
 an extra owner must fail. Two internal-compiler controls erase a needed child
@@ -166,8 +170,18 @@ including nested state fields and integer words that resemble addresses.
 The twelve-pattern capture report retains its existing rows and columns; each
 pattern now repeats 32 times before the final rows are reported.
 
+A computed top-level value is cached after its first successful evaluation.
+Repeated reads share that value. The cache retains one owner until program
+teardown; a caller that keeps the value needs its own owner. Cached-value probes
+repeat initialization, failure, replacement and teardown for 32 lifetimes, and
+separately check that a complete program initializes its value just once.
+The two function/container workloads run 10,000 iterations. ARC must end with
+no live managed charge, extra count entries or collections; deliberately missing
+closure-storage or child-value cleanup must fail. Their older tracing-based
+freed-byte comparisons remain separate controls, not ARC measurements.
+
 Windows now selects the previously omitted match-context, reuse-token, ARC
-program-corpus and HTTP/2 body-copy targets. Linux's `static_memory` target is
+program-corpus, HTTP/2 body-copy and temporary-container targets. Linux's `static_memory` target is
 Linux-specific; Windows uses `windows_static_memory` for native storage checks.
 Selecting a target that skips execution does not establish platform support.
 The two variant tests that change process-wide generator options serialize those
@@ -187,10 +201,11 @@ The constructor and call batch passed
 `69c3b1e0135dd95961dba3729911ec27dc1736b6`, including all production jobs,
 documentation and inspection of 1,050 saved native binary files across six hosts.
 
-The field/match source, returned-alias program and reuse extensions have local
+The ten extended targets have local
 Apple Clang ARM64 checks using accepted compiler `5e17fc10e860b1971ffc9cd9cb57fcb795ccad24`
 with its unchanged runtime. The new internal-compiler cases and all other native
-platforms still require CI. See the handoff for exact commands, receipts and
+platforms still require CI. The three newly added targets have not yet passed
+the Rust harness or GCC; their local source checks are not final acceptance. See the handoff for exact commands, receipts and
 current acceptance; these local checks do not establish GCC or Windows support.
 
 CI saves generated C, executables, output and status under `record-ownership/`

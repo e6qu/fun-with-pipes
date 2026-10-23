@@ -114,7 +114,9 @@ outside the benchmark suite.
    distinguishes local results from native acceptance.
    [Loop and collection cleanup](docs/measurements/collection-cleanup.md) extends
    the checks to partial iteration state, callbacks, temporary buffers and cancellation.
-   Extend this evidence to the remaining collector-specific checks before removing them.
+   The active grouped delivery also covers cached values, escaping functions and
+   temporary containers. Extend evidence to the remaining collector-specific
+   checks before removing them.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
    [Integer counting](docs/measurements/integer-counting.md) and
    [checked products](docs/measurements/checked-products.md) preserve slower

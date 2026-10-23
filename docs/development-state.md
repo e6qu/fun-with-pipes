@@ -5,35 +5,27 @@ ownership and borrowing, and reserve ARC for necessary sharing. JIT is excluded.
 
 ## Accepted work and current delivery
 
-[PR #200](https://github.com/e6qu/fun-with-pipes/pull/200) passed nine production
-jobs, documentation and 1,050 actual binary inspections at
-`69c3b1e0135dd95961dba3729911ec27dc1736b6`. The verified squash is
-`a57a2593a11178934cba33dffb3f0e2fafa15fcc`.
-
-[PR #201](https://github.com/e6qu/fun-with-pipes/pull/201) is the sole open delivery,
-at `c6ad1aaf6d2f58fa41e11e326fe83ac8a5156f31`, in
-`/private/tmp/fwp-collection-delivery`. Production run `39955074782` and docs run
-`39955074824` require ten passing jobs and six reports of 331 saved native images.
-Its focused preparation passed 28 targets and 179 library tests, with 331 GCC
-images inspected. Do not alter the final head or merge from focused evidence.
+[PR #201](https://github.com/e6qu/fun-with-pipes/pull/201) passed all nine production
+jobs, documentation and inspection of 1,986 saved binaries across six native
+hosts at `c6ad1aaf6d2f58fa41e11e326fe83ac8a5156f31`. Its verified squash merge is
+`c56f85547610b14bd1b8af9a9ad96413f3c494e9`. No delivery PR is open. Checked ARC is the native default;
+explicit tracing remains, and all seven roadmap areas remain open.
 
 ## Next action
 
-**Next:** check and publish the three added call/fold/loop targets for the combined
-35-target focused suite. Audit PR #201's independent full gates and saved
-binaries in parallel. Merge #201 only after its exact-source acceptance; deliver
-all seven related test targets together as one substantial PR afterward.
+**Next:** publish the combined 38-target focused preparation, audit all Linux and
+Windows outcomes and inspect saved binaries. The earlier seven-target source
+`84d39476347b55b4b90d1d682c81f866eaa931a6` passed all 35 Linux targets, 179 library
+tests, both focused Windows runs and 511 saved images on each of those hosts.
+Its source remains preserved; the expanded preparation adds cached values,
+escaping functions and temporary containers. No second delivery PR is open.
 
-Four-target preparation: `/private/tmp/fwp-post-collection-aliases`, source
-`5bbb8d297a4aacc80e15bf42c2d659e215d979ea`, focused run `39962527524`. Its earlier
-run `39959341151` passed all 32 native targets and 179 library tests, but Clippy
-rejected a new `.err().expect()` assertion. Both matching tests now use `expect_err`; preserve
-the failed run and complete log. The repaired run must pass independently.
-
-Added work: `/private/tmp/fwp-post-alias-calls`, branch `post-alias-call-cleanup`,
-based on that repaired preparation. It adds partial-call/capture, right-fold and
-loop-cancellation checks, preserving their existing measurement formats. No
-second PR is open. Compiler and runtime are unchanged.
+Worktree `/private/tmp/fwp-cached-value-cleanup`, branch
+`cached-value-cleanup-preparation`, is based on that passing source. Compiler and
+runtime are unchanged. It adds a coverage control to catch Windows omissions and
+selects the previously missing temporary-container target, alongside the four
+Windows coverage repairs already prepared. Final-head production acceptance is
+still required before merging the eventual grouped delivery.
 
 ## Changes and checks
 
@@ -44,13 +36,13 @@ types must be rejected in ARC. Reuse checks cover failure, unused cells and a
 million-step native tail recurrence. Compiler/runtime behavior is unchanged.
 [The guide](measurements/record-cleanup.md) explains the concepts and examples.
 
-Windows was missing match-context, reuse-token, ARC corpus and HTTP/2 body-copy
-targets; all four are now selected. Linux's `static_memory` is deliberately
+Windows was missing match-context, reuse-token, ARC corpus, HTTP/2 body-copy
+and temporary-container targets; all five are now selected. Linux's `static_memory` is deliberately
 Linux-only; Windows has native `windows_static_memory` checks. An earlier claim
 that every shared focused target ran on Windows was too broad and is corrected.
 Final Windows execution remains required for the added targets.
 The two internal variant tests serialize changes to process-wide generator
-options. Combined focused native CI selects 35 related targets, with one macOS
+options. Combined focused native CI selects 38 related targets, with one macOS
 shard per target. Preserve source-program CLI builds and raw-interpreter comparisons.
 
 Guarded local checks use accepted compiler `5e17fc10` with unchanged runtime:
@@ -68,7 +60,8 @@ The first alias helper expected concatenation in the wrong order; raw
 interpretation returns `laterlastfirst`. The helper was corrected and rerun;
 the repository test already compares with the interpreter. Its failed first
 attempt remains preserved. The four original new targets passed their native
-cases in the initial focused run. The three additions still require Rust-harness and GCC execution. Complete
+cases in the initial focused run. The original seven additions passed their focused run. The new cache/closure/temporary
+extensions still require Rust-harness and GCC execution. Complete
 cross-platform acceptance remains required on the final delivery source.
 
 Use `python3 scripts/local-guard.py COMMAND...` for serial focused local work.
@@ -76,23 +69,28 @@ Full builds and suites stay on GitHub. Keep all fixed resource limits.
 
 ## Resume records
 
-`/private/tmp/fwp-collection-publication.json` identifies #201's source and runs.
-`/private/tmp/fwp-audit-collection-final.py` is reentrant; its receipt records
-complete job-log audits. `/private/tmp/fwp-inspect-collection-delivery-builds.py`
-checks actual saved binaries on each host. `/private/tmp/fwp-merge-collection.py`
-is UNRUN and requires exact-source acceptance. After verified merge, cancel only
-redundant same-tree main production jobs; keep documentation.
+Prior accepted work and current delivery are identified by
+`/private/tmp/fwp-collection-publication.json`; its full audit is
+`/private/tmp/fwp-collection-final-acceptance.json`.
+The seven-target preparation and its accepted focused runs remain recorded in
+`/private/tmp/fwp-call-preparation.json` and the matching focused receipts.
 
-The alias/reuse and call/fold/loop mutation helpers have COMPLETED; do not rerun
-them. Added local receipts: `/private/tmp/fwp-loop-unwind-current/results.json`,
-`/private/tmp/fwp-argument-current/results.json`, and
-`/private/tmp/fwp-fold-unwind-current-v2/results.json`. The first
-fold attempt caught a negative-test edit leaving an empty `else`; the omitted
-release now leaves a valid empty statement. Preserve the failed attempt.
-Their original files and local observations remain in `/private/tmp`.
-`/private/tmp/fwp-field-source-verified-before-ir.json` preserves the source
-functions that passed before internal-compiler tests were extended. Verify the
-source-function identity when linking those results to the preparation.
+Added local checks pass 54 ARM64 binary observations, including cached success,
+cached failure, closure aliases, temporary aliases and deliberately omitted
+cleanup. Receipts: `/private/tmp/fwp-cached-source-current-v2/initialization-results.json`,
+`/private/tmp/fwp-cached-trap-current/results.json` and
+`/private/tmp/fwp-closure-temporary-current/results.json`.
+The internal cache probe still requires Rust-harness/GCC execution. A first
+helper mistook allocator remaining allowance for live bytes; the corrected check
+requires restoration to `budget_given`. A second helper assumed trap exit 1;
+the interpreter returns 101. Failed attempts remain preserved; only affected
+checks were rerun. No product-runtime defect was found by those attempts.
+
+`/private/tmp/fwp-prepare-cached-cleanup.py` and
+`/private/tmp/fwp-prepare-closure-temporary.py` COMPLETED; do not rerun them.
+Their original tests remain in `/private/tmp/fwp-*-before.rs`.
+`/private/tmp/fwp-check-cached-preparation.py` verifies current source/probe
+identities, runner controls and docs before publication.
 
 ## Roadmap status
 
