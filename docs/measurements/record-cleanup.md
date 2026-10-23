@@ -280,6 +280,47 @@ These checks disable workspace caching explicitly to observe immediate frees;
 byte balances exclude raw buffers, so both measurements are required. No new
 speed or numerical-accuracy improvement is claimed here.
 
+## Arrays and borrowed callbacks
+
+An array stores indexed elements. An array of strings holds references to text;
+another live reference must keep its old contents after an update. `both f g`
+returns the results of applying both functions to the same input. Here `id`
+keeps the original array while `array.push "end"` produces an extended one:
+
+```fwp
+keep : Array[String] -> (Array[String], Array[String])
+keep = both id (array.push "end")
+main = ["a", "b"] | array.from-list | keep | echo
+```
+
+This prints `(array["a", "b"], array["a", "b", "end"])`. The compiler may reuse
+storage only when doing so preserves the original value's independently live
+owners. [Array tests](../../tests/array_element_ownership.rs) compare aliases,
+callbacks and effects with the interpreter, with stack placement on and off.
+Two tracing controls deliberately disable reuse or freeing; ARC rejects that
+policy. They are not evidence for ARC execution.
+
+A separate 10,000-iteration program constructs, updates, slices, maps and sorts
+string arrays. ARC must return its managed storage charge to zero before runtime
+teardown at C O1/O2. Keeping an extra owner of each sorted result must fail.
+The older tracing O1 comparison still contrasts counted cleanup with deliberately
+uncounted sharing, with collection off; its rounded freed-byte totals are not an
+exact retention or timing measurement.
+
+The scalar probe repeats 32 rounds. Integer bits that resemble addresses must
+remain integers through conversions, selection, updates and sorting. The fixture
+now releases its input/output lists, optional-result containers and final string;
+each omitted release must fail the ARC balance check. A control that counts
+integer elements must also fail. These array checks save 42 outcomes.
+
+[Borrowed-callback checks](../../tests/borrowed_callbacks.rs) repeat 32 rounds of
+partial calls, captured aliases and calls whose arguments continue into a returned
+function. The caller keeps its function owner; type information identifies which
+arguments need owners. Missing capture cleanup, counting scalar arguments and
+omitting final fixture owners must fail. Complete programs also compare with the
+interpreter. This group saves 28 outcomes. These are lifetime checks, not a new
+allocation, speed or C/Rust comparison.
+
 ## Acceptance and limits
 
 [PR #199](../roadmap-history.md#checked-native-defaults-and-arc-metadata-pr-199)
@@ -297,7 +338,8 @@ The combined seven-group preparation `a447d6a7e99887be5f02506669bc3b499de298f5` 
 runs and 853-image inspection on Linux AMD64 and both Windows hosts. This delivery
 still requires its own nine production jobs, docs and six-host binary inspection. [The handoff](../development-state.md)
 records exact sources and runs; [history](../roadmap-history.md) records delivery.
-The derivative extension is preparation work. Its local outcomes do not establish
+The derivative, array and borrowed-callback extensions are preparation work.
+Their local outcomes do not establish
 GCC, Windows or final delivery acceptance; see the handoff for actual checks.
 All seven PLAN areas remain open, including complete removal of tracing.
 

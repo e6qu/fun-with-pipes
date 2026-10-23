@@ -57,6 +57,32 @@ executed gradient example and the 975-image manifest pass (11.65s guarded).
 Formatting and reference-artifact saves after those runs do not change the
 emitted C or observed source programs. Focused GCC/Windows CI is still required.
 
+## Adjacent array and borrowed-callback preparation
+
+Derivative source `2fe6bf63c485ee79fc05684f4f52ca7bb596155b` is published at
+`roadmap/preparation-derivatives-2fe6bf63c485`; focused runs are Linux AMD64
+`40005138351`, Windows AMD64 `40005142138` and Windows ARM64 `40005145689`.
+All were running without failed steps at the last check; final results and their
+975-image inspections remain unverified. Preserve that source separately.
+
+The cumulative branch `array-cleanup-preparation` in `/private/tmp/fwp-array-cleanup`
+adds two groups while keeping #203 unchanged. Fixture lists and optional-result
+containers now have explicit releases; every missing owner must be detected.
+The borrowed source example now uses explicit `apply 7 (choose 3)` and runs
+against the interpreter. Its earlier function-valued pipe was only emitted for
+runtime metadata in that test, not checked as an executed example.
+
+Seventy local ARM64 outcomes pass: `fwp-array-borrowed` (28, 12.73s),
+`fwp-array-scalar` (22, 11.31s), `fwp-array-reclamation` (6, 4.13s) and
+`fwp-array-aliases` (14, 12.12s), under `/private/tmp/`. The scalar calling
+conventions were inspected first (`fwp-array-scalar-layout`, 0.25s guarded).
+No compiler/runtime changes. The new focused selection has 48 groups and its
+expected artifacts contain 1,045 images per host, including 1,030 aggregate
+outcomes. Formatting, fourteen runner controls, docs, the executed array alias
+example and the 1,045-image manifest pass (11.51s guarded). Windows binary output
+setup now reports failure explicitly; native Windows verification is pending.
+Full final native acceptance remains required.
+
 ## Resume records
 
 `/private/tmp/fwp-task-publication.json` identifies #203 and its runs;

@@ -118,7 +118,9 @@ outside the benchmark suite.
    complete this grouped preparation. It still requires final delivery acceptance.
    [Derivative buffers and scopes](docs/measurements/record-cleanup.md#derivative-buffers-and-callback-scopes)
    are the next related extension: prove repeated numeric-buffer and managed-array
-   cleanup together, including cancellation and invalid handles. Extend the
+   cleanup together, including cancellation and invalid handles.
+   [Arrays and borrowed callbacks](docs/measurements/record-cleanup.md#arrays-and-borrowed-callbacks)
+   add repeated value/alias checks and exact array reclamation. Extend the
    remaining collector-specific checks before removing tracing.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
    [Integer counting](docs/measurements/integer-counting.md) and
