@@ -119,6 +119,9 @@ outside the benchmark suite.
    extend repeated cleanup to deadlines, retained tasks and scoped cancellation;
    their preparation is not final cross-platform acceptance. Extend evidence
    to the remaining collector-specific checks before removing them.
+   [State and task values](docs/measurements/record-cleanup.md#state-deadlines-and-channel-values)
+   extend the preparation to repeated state, deadline and channel cleanup.
+   Their full native acceptance is still pending.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
    [Integer counting](docs/measurements/integer-counting.md) and
    [checked products](docs/measurements/checked-products.md) preserve slower

@@ -305,3 +305,60 @@ Both probes retain generated C, actual binaries, outputs and exit statuses at
 C O1/O2. Unique-task controls also retain a diagnostic naming the first
 iteration's charge difference. These 64 additional observations check ownership
 and cleanup; they do not measure task-switch latency or process resident memory.
+
+## State, deadlines and channel values
+
+`State[T]` is an effect that lets a function read or replace a value of type `T`.
+`run-state` supplies the initial value and returns `(result, final-state)`.
+`get` reads that value; `modify` applies a function to it. For example:
+
+```fwp
+increment : () -> I64 ! {State[I64]}
+increment = const (add 1) | modify | get
+main = () | run-state 0 increment | echo
+```
+
+Here `()` is unit, a value carrying no data. `const (add 1)` ignores that input
+and returns the function that adds one. `modify` uses it to replace zero with
+one, then `get` reads one. The program prints `(1, 1)`: both the result and
+final state are one. The `! {State[I64]}` annotation declares this state effect.
+Nested `run-state` calls have separate storage; a suspended task must restore
+its own state when it resumes.
+
+[Typed state checks](../../tests/typed_state_ownership.rs) repeat 32 rounds of
+reads, replacement, errors, allocation failure, task switches and cancellation.
+Every ARC round restores its starting managed byte charge; scheduler shutdown
+restores the full allowance. Six controls omit individual ownership operations;
+another omits the final fixture owner. Each must fail. Whole programs compare
+with the unoptimized interpreter, including nested handlers, arrays, functions
+stored in state and stack placement enabled or disabled. These produce 56 saved
+outcomes at C O1/O2, including the deliberately broken programs.
+
+A deadline sets the current task's time limit and passes its input through.
+For example, `42 | task.deadline 1h` returns `42` and sets a one-hour limit;
+it does not wait an hour. An earlier existing deadline still applies. A channel
+is a queue through which tasks exchange values. Sending or receiving a value
+must respect its type: integer bits that happen to resemble an address are not
+additional owners of the object at that address.
+
+[Task value checks](../../tests/task_ownership.rs) repeat 32 deadline/channel
+rounds. They preserve outside aliases and release the optional receive result,
+channel, test string and duration. Deliberately omitting a retain must fail its
+count check; omitting each final owner must fail ARC's byte balance. A separate
+10,000-value loop verifies complete ARC reclamation and detects an extra owner.
+The existing tracing comparison keeps collection disabled and compares counted
+cleanup with deliberately uncounted sharing; that control does not establish
+ARC support. Complete alias programs still compare with the raw interpreter.
+These add 28 saved outcomes at C O1/O2; the historical tracing comparison uses O1.
+
+The new balance check caught a fixture mistake: `fwp_rc_drop` lowers a shared
+count but does not destroy the last owner. The test now frees its final string
+explicitly, and a missing-string control proves this release is observed.
+Typed-state fixtures likewise explicitly own injected child tasks. These are
+fixture repairs, with no production compiler/runtime change.
+
+This preparation adds 84 outcomes to the preceding task/callback batch, for
+795 saved images per host. Local ARM64 results do not establish GCC or Windows
+acceptance. See the [handoff](../development-state.md) for actual source IDs,
+runs and inspections. These checks measure managed storage cleanup, not process
+memory or timing overhead against C/Rust.
