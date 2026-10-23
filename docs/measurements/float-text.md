@@ -86,7 +86,11 @@ measurements. Invoke it with `native_runner=all`. A successful job means the
 experiment completed; the saved `meetsSingleRunScreen` field is not final
 acceptance. Repeat measurements with `suite=float-text-costs` and
 `native_runner=all`; this does not repeat the unchanged six-host correctness
-jobs. No speed result has been established yet.
+jobs. To obtain a missing same-model repetition, select `native_runner=ubuntu-latest`
+or `native_runner=ubuntu-24.04-arm` explicitly. GitHub's standard runners may
+assign different CPU models; retain unmatched runs and repeat only the needed
+architecture. A single selected host never establishes two-architecture coverage.
+No repeated speed result has been accepted yet.
 `suite=float-text-checks` runs only the six native correctness jobs, so a test
 repair does not repeat unchanged benchmarks. The Windows probe uses CRLF in its
 one-line summary; the Rust test parses a line rather than requiring LF bytes.

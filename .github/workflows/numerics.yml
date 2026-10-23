@@ -105,21 +105,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - runner: ubuntu-latest
-            c_arch: x86-64
-          - runner: ubuntu-24.04-arm
-            c_arch: armv8-a
+        include: ${{ fromJSON('{"all":[{"runner":"ubuntu-latest","c_arch":"x86-64"},{"runner":"ubuntu-24.04-arm","c_arch":"armv8-a"}],"ubuntu-latest":[{"runner":"ubuntu-latest","c_arch":"x86-64"}],"ubuntu-24.04-arm":[{"runner":"ubuntu-24.04-arm","c_arch":"armv8-a"}]}')[inputs.native_runner] }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 35
     env:
       CARGO_BUILD_JOBS: 2
     steps:
       - uses: actions/checkout@v7
-      - name: Require both native Linux architectures
+      - name: Require an explicit native Linux selection
         env:
           SELECTED_RUNNER: ${{ inputs.native_runner }}
-        run: test "$SELECTED_RUNNER" = all
+        run: |
+          case "$SELECTED_RUNNER" in
+            all|ubuntu-latest|ubuntu-24.04-arm) ;;
+            *) echo "float-text-costs requires all, ubuntu-latest or ubuntu-24.04-arm" >&2; exit 1 ;;
+          esac
       - uses: dtolnay/rust-toolchain@stable
       - uses: actions/cache@v6
         with:

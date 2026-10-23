@@ -1,122 +1,97 @@
 # Session handoff
 
 All seven PLAN.md areas remain open. Remove tracing, prefer ownership and borrowing,
-and reserve ARC for needed sharing. JIT is excluded.
+and reserve ARC for necessary sharing. JIT is excluded.
 
-## Current delivery
+## Current action
 
-[PR #204](https://github.com/e6qu/fun-with-pipes/pull/204) is open at
-`80c89baa53567839dce0599d88f18d5791285943`. Production `40019873535` and docs
-`40019873426` are the final-head gates. Require all nine production jobs, docs,
-full log audits and 6,966 saved binary files across six native hosts before squash
-merge. Use one subject of at most eighty characters and an explicit empty body.
-Do not change that tested branch while its gates run.
+**Next:** publish the explicit single-host formatter measurement selector and run
+one additional AMD64 comparison. The first two AMD64 runs used different CPU
+models, so they do not yet meet the predeclared matching-model rule. Preserve both
+results and the unchanged protocol. Inspect the completed second ARM64 artifact.
+Keep one active delivery PR; prepare the next grouped delivery after #204 merges.
+
+Worktree `/private/tmp/fwp-float-format`, branch `float-format-preparation`, is at
+`550ef3157720127c7064aa349e569ebe819a344d`, with only workflow/docs edits pending.
+The selector accepts `all`, `ubuntu-latest` or `ubuntu-24.04-arm` explicitly.
+It avoids repeating accepted ARM64 work or correctness checks for an AMD64 timing
+repetition. Unsupported selections fail. Runtime, tests and measurements are unchanged.
+
+## Active delivery
+
+[PR #204](https://github.com/e6qu/fun-with-pipes/pull/204) remains at
+`80c89baa53567839dce0599d88f18d5791285943`. Seven production jobs and documentation
+passed full-log audits; Linux AMD64/ARM64 are still running. Exact-head gates are
+production `40019873535` and docs `40019873426`. Require all nine production jobs,
+docs and 1,161 saved files per host (6,966 total) before squash merge.
+
+Mac ARM64 inspection passed all 1,161 files. Its two ZIP caches were pruned after
+remote verification. Intel GC archive `12533329161` is downloaded; the regular
+Intel and both Windows artifacts are now available. Finish those inspections,
+then inspect the Linux artifacts when their jobs pass. The delivery worktree is
+clean. Publication receipt and helpers use the `fwp-derivative-array-` prefix in
+`/private/tmp`; merge and post-merge helpers remain UNRUN.
 
 [PR #203](https://github.com/e6qu/fun-with-pipes/pull/203) is verified merged at
-`3e3ebd2717f4d77c8d8331e7df1936768546d1ed`, with all gates and 5,118 saved files
-accepted. Its redundant same-tree main CI was cancelled; docs were retained.
+`3e3ebd2717f4d77c8d8331e7df1936768546d1ed`: all gates, complete logs and 5,118 binary
+inspections passed. Its redundant main CI was cancelled; docs were retained.
 [History](roadmap-history.md#tasks-state-and-runtime-call-cleanup-pr-203) records it.
 
-## Independent numerical preparation
+## Formatter checks and timing
 
-**Next:** complete the [formatter candidate](measurements/float-text.md) checks
-and publish its focused native/measurement preparation while #204 finishes.
-Worktree `/private/tmp/fwp-float-format` is based on longer diagnostic source
-`a948b7478278a6ee8c5b81cfaf6e8272e96bf935`. That source is already published under
-`roadmap/preparation-output-longer-a948b7478278`; runs `40024299907` and
-`40024303916` are underway. Do not repeat publication. Initial source
-`697f0ba6e01a2f24b31ab699452152c7c6e09fb3` and run
-`40021659651` passed both Linux jobs, full-log audits and 338 binary inspections.
-[The initial report](measurements/descent-output-initial.md) retains five
-inconclusive timing rows. The revised protocol explicitly uses 32,768 solves for
-3-coordinate 0/1-update cases, and 4,096 for the others. Compare independent
-runs on matching
-CPU models before drawing timing conclusions. Keep one
-active PR; combine the accepted diagnostic with related work after #204 merges.
+The candidate reuses rounded digits when formatting fixed decimal text. Integer
+and scientific output retain their existing paths. [The protocol](measurements/float-text.md)
+explains the example, comparison, output contract and fixed acceptance screen.
 
-The [protocol](measurements/descent-output-protocol.md) compares unchanged full
-output against an external consumer of every result coordinate. It covers fwp
-and coordinate-based C/Rust, fresh inputs, all updates and cleanup. Checksum work
-replaces output construction, so the difference is not pure formatting time.
-The diagnostic does not change the runtime. No repeatable speed result is claimed. Every memory
-checkpoint remains checked and saved; compact summaries hash the complete logs.
-Regular Linux CI now includes untimed output/lifetime and observer controls.
+Source `550ef3157720127c7064aa349e569ebe819a344d`, run `40028991372`, passed all six
+native correctness jobs, complete logs and 72 independent binary inspections.
+The two Windows jobs at initial source `5476466183f7adc663d54dc69118fdb69225f8f8`
+failed an LF-only test assertion despite zero numerical mismatches and boundary
+writes. All targets were audited. The repair parses one summary line, accepts
+platform line endings, and saves all six precision/control cases before reporting
+collected failures. Native reruns verify it. No runtime or measurement change was
+needed. Failure evidence and both immutable tags are retained.
 
-Sixty untimed ARM64 controls pass (20.45s), using accepted compiler
-`5e17fc10e860b1971ffc9cd9cb57fcb795ccad24` with unchanged compiler/runtime/library
-sources. They cover complete output, exact float bits, omitted coordinates,
-per-solve memory balances and missing releases. Actual C/Rust/fwp binaries were
-inspected. Reports and generated files remain in
-`/private/tmp/fwp-descent-output-controls-v2`; the earlier 36-case run is retained.
-Review corrected the consumer to read bytes instead of aliasing word-backed
-storage as doubles. The shared Rust observer now also supports a checksum report
-after the solve loop. All sixteen existing coordinate/edge controls also pass
-(5.69s), including omitted releases; receipt
-`/private/tmp/fwp-coordinate-controls-output-change.json`.
-Local Clang is not GCC acceptance. Benchmarking runs only on GitHub.
+Timing uses source `5476466183f7adc663d54dc69118fdb69225f8f8`, runs `40027402138`
+and `40027406689`. All four measurement jobs passed. The first run has 240 actual
+binary inspections accepted; the second AMD64 job has 120 accepted. All six inputs
+pass both noise controls in these three inspected jobs. Largest-case ratios of
+current/original fwp time are 0.7115 on EPYC 9V74, 0.7274 on EPYC 7763 and 0.6798
+on Neoverse-N2. Require a matching AMD64 pair and the second ARM64 inspection
+before accepting repeated gains. Do not relax the 2% noise limit or 5% target.
 
-The initial GCC runs pass the same controls on both Linux hosts. Inspection
-resolved Rust's indirect AMD64 consumer calls through actual ELF relocations;
-the first direct-call-only inspection stopped rather than assuming a call target.
-An unused Rust buffer disappears in the timed zero-update binary but remains
-observable under instrumentation; the report now states this limit. Initial
-archives/reports remain under `/private/tmp/fwp-output-evidence/697f0ba6e01a`.
-`fwp-output-preparation.json` records the completed initial publication; do not
-rerun its publication helper. Both initial ZIPs were pruned after inspection,
-digest checks and verification of unexpired GitHub originals.
+Costs must accompany gains. In the first GCC runs, formatter frames grow
+224→256 bytes on AMD64 and 208→288 on ARM64; surrounding writer frames stay
+720/704 bytes. Whole-program instruction bytes grow 33,010→33,826 and
+30,972→31,516. Allocation and live-memory observations match between formatters.
+The first current programs still take 9.47/9.95 times C/Rust time on AMD64 and
+7.12/8.24 on ARM64. This is an improvement candidate, not C/Rust parity.
 
-The formatter candidate changes only `fwp_format_g`: reuse rounded digits for
-fixed output, retain integer/scientific paths. Twelve local ARM64 generated-C
-cases pass at O1/O2, including raw-interpreter output, tracing stress and
-deliberately changed digits/boundaries. The precision probe checked 119,768
-values and 1,017,484 precisions. Reports remain in
-`/private/tmp/fwp-float-native-v1/results.json`. This patches the exact function
-in accepted compiler output; it does not compile the changed Rust harness.
-The `float-text` workflow must build/test all six native hosts. Its paired
-Linux benchmark requires 2% noise controls and a repeated 5% reduction for the
-largest case on both architectures, while reporting every other case and stack/
-code-size costs. No timing improvement is established.
-Eight untimed numerical binaries also passed (8.39s), including identical
-formatter memory observations and native C/Rust buffer cleanup. The new workflow,
-Rust formatting and documentation checks pass; full builds remain on GitHub.
-Receipt: `/private/tmp/fwp-float-measurement-v1/results.json`.
+Receipts `fwp-float-preparation.json` and `fwp-float-repair-publication.json` record
+completed publication. Use `fwp-audit-float-focused.py`, `fwp-inspect-float-checks.py`
+and `fwp-inspect-float-costs.py`; reports are in `fwp-float-check-evidence` and
+`fwp-float-cost-evidence`. Read receipts before any mutation; do not repeat completed
+publication, recording or pruning. Download archives explicitly before inspection.
 
-Formatter preparation `5476466183f7adc663d54dc69118fdb69225f8f8` is published
-under `roadmap/preparation-float-text-5476466183f7`. Run `40027402138` checks six
-native hosts and measures Linux; `40027406689` repeats only Linux measurements.
-Both Linux and both macOS correctness jobs passed complete-log audits. Windows
-AMD64 and ARM64 failed the new summary's LF-only assertion despite zero numerical
-mismatches and zero canary failures; all three other test targets passed on each.
-Every completed target and failed job has been audited. The repair parses exactly
-one line, accepting platform line endings,
-and saves every O1/O2 corruption case before reporting collected failures.
-Publish the checked repair. Runtime and measurement sources remain
-unchanged; preserve the active measurements. `float-text-checks` reruns correctness
-without repeating benchmarks. Failure evidence is retained in `/private/tmp`.
+## Accepted diagnostic
 
-Both longer output runs passed complete-log audits and all 676 binary inspections.
-The [report](measurements/descent-output-longer.md) records matching AMD EPYC 7763
-and Neoverse-N2 models, all samples and three inconclusive AMD64 pairs. Nine of
-twelve pairs pass both runs' controls. All four downloaded ZIP caches were pruned
-only after inspection, digest checks and verification of unexpired remote originals.
+[Longer output measurements](measurements/descent-output-longer.md) at
+`a948b7478278a6ee8c5b81cfaf6e8272e96bf935` passed runs `40024299907`, `40024303916`,
+complete-log audits and 676 binary inspections. Nine of twelve input/host pairs
+pass both runs' controls on matching models. AMD64 3–0, 3–1 and 3–199 remain
+inconclusive. The report retains every sample and explains the different output
+work and memory scopes; it does not claim isolated formatting time.
+The [initial result](measurements/descent-output-initial.md) retains its five
+inconclusive rows and 338 inspected files. Inspected duplicate ZIP caches were
+pruned only after checking digests and unexpired remote originals.
 
-For #204, macOS ARM64 regular/stress, benchmarks and docs have passed full-log
-audits; all 1,161 macOS ARM64 files passed independent inspection (26.14s).
-Both local ZIPs were pruned after verifying remote originals. Six other native
-jobs were still running at the last audit. Never treat a subset as delivery.
-
-## Resume records
-
-`/private/tmp/fwp-derivative-array-publication.json` identifies #204. Use
-`fwp-audit-derivative-array-final.py`, `fwp-inspect-derivative-array-delivery-builds.py`
-and `fwp-merge-derivative-array.py` for exact-head acceptance. Its focused source
-`9e9662f93aa5e1f0ebd86b6a31d9396dffe13215` passed Linux AMD64 and both Windows
-runs, including 3,483 saved binary files. Intermediate 975/1,045-file inspections
-are not claimed. Source tags, logs and failure repairs remain recorded.
+## Resume rules
 
 Use `python3 scripts/local-guard.py COMMAND...` serially. Full builds, benchmarks
-and suites stay on GitHub. Preserve resource limits and failure evidence. Read
-mutation receipts before resuming; never repeat completed publication or merge.
+and suites stay on GitHub; never raise resource limits. Keep failure evidence,
+source tags, logs and reports. Publication and squash merge are authorized after
+final acceptance: one subject of at most eighty characters, empty body, no trailers
+or attribution. A preparation run never replaces the final delivery matrix.
 
 ## Roadmap status
 
@@ -129,10 +104,3 @@ mutation receipts before resuming; never repeat completed publication or merge.
 | 5 | In progress | Validate CPU numerical kernels |
 | 6 | In progress | Stabilize comparisons and set workload budgets |
 | 7 | In progress | Complete the application acceptance suite |
-
-The largest measured descent still takes about 10–14 times C/Rust time. Separate
-output, indexing, callback and buffer costs before selecting optimizations. An
-untimed local review found callback and loop bodies inlined in ARM64 code;
-verbose unused generated C is not evidence of execution overhead. Scheduling
-models from completed Linux CI logs suggest only about two minutes can be saved
-by reordering fixed-duration targets; no runner change or speedup is claimed.
