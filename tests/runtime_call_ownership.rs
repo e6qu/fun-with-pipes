@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -39,23 +42,28 @@ fn failed_calls_reclaim_function_storage_without_collection() {
     let cfile = dir.0.join("counts.c");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
-    checked(
-        Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(cfile).unwrap();
-    let start = emitted.find("/* cap-error :").unwrap();
-    let id = emitted[start..]
-        .split("static V f")
-        .nth(1)
-        .unwrap()
-        .split('(')
-        .next()
-        .unwrap();
-    let probe = r#"
+    for memory in ["arc", "tracing"] {
+        checked(
+            Command::new(fwp)
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_STACK", "1")
+                .env("FWP_FREE", "1")
+                .env("FWP_REUSE", "1")
+                .args(["build", "--memory", "dynamic", "--gc", memory, "-O2"])
+                .arg(&src)
+                .args(["--emit-c", "-o"])
+                .arg(&cfile),
+        );
+        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let start = emitted.find("/* cap-error :").unwrap();
+        let id = emitted[start..]
+            .split("static V f")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let probe = r#"
 static volatile V captured, function_value;
 int main(void) {
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
@@ -76,44 +84,56 @@ int main(void) {
     return remaining==0?0:171;
 }
 "#
-    .replace("FUNCTION", id);
-    let owned = format!(
-        "{}\n{probe}",
-        emitted.replace(
-            "int main(int argc, char **argv)",
-            "int original_main(int argc, char **argv)"
-        )
-    );
-    // Restore only the runtime frame's former missing consumed-function release.
-    let release = "if (function) fwp_closure_drop(function);";
-    assert_eq!(owned.matches(release).count(), 1);
-    let leaking = owned.replace(release, "(void)function;");
-    let mut remaining = Vec::new();
-    for (name, code, expected) in [("leaking", &leaking, 171), ("owned", &owned, 0)] {
-        let exe = dir.0.join(name);
-        fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
-        let out = Command::new(&exe)
-            .env("FWP_GC", "off")
-            .env("FWP_GC_VERIFY", "1")
-            .env("FWP_GC_STRESS", "0")
-            .env("FWP_REUSE_VERIFY", "0")
-            .output()
-            .unwrap();
-        assert_eq!(out.status.code(), Some(expected), "{name}: {out:?}");
-        let text = String::from_utf8(out.stdout).unwrap();
-        remaining.push(
-            text.trim()
-                .strip_prefix("failed call remaining bytes: ")
-                .unwrap()
-                .parse::<u64>()
-                .unwrap(),
+        .replace("FUNCTION", id);
+        let owned = format!(
+            "{}\n{probe}",
+            emitted.replace(
+                "int main(int argc, char **argv)",
+                "int original_main(int argc, char **argv)"
+            )
         );
+        // Restore only the runtime frame's former missing consumed-function release.
+        let release = "if (function) fwp_closure_drop(function);";
+        assert_eq!(owned.matches(release).count(), 1);
+        let leaking = owned.replace(release, "(void)function;");
+        for opt in ["-O1", "-O2"] {
+            let mut remaining = Vec::new();
+            for (name, code, expected) in [("leaking", &leaking, 171), ("owned", &owned, 0)] {
+                let exe = dir.0.join(format!("{memory}{opt}-{name}.exe"));
+                fwp::cgen::compile_c(code, &exe, opt).unwrap();
+                let out = Command::new(&exe)
+                    .env("FWP_GC", "off")
+                    .env("FWP_GC_VERIFY", if memory == "arc" { "0" } else { "1" })
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "runtime_call_ownership",
+                    &format!("{memory}{opt}-failed-{name}"),
+                    code,
+                    &exe,
+                    &out,
+                );
+                assert_eq!(out.status.code(), Some(expected), "{name}: {out:?}");
+                assert!(out.stderr.is_empty(), "{out:?}");
+                let text = String::from_utf8(out.stdout).unwrap();
+                remaining.push(
+                    text.trim()
+                        .strip_prefix("failed call remaining bytes: ")
+                        .unwrap()
+                        .parse::<u64>()
+                        .unwrap(),
+                );
+            }
+            // A consumed closure must release its own storage even when its captures
+            // have already moved into the failing callee. Check exact retained bytes;
+            // rounded freed-byte statistics cannot distinguish that smaller leak.
+            assert!(remaining[0] >= 10000 * 16, "{remaining:?}");
+            assert_eq!(remaining[1], 0);
+        }
     }
-    // A consumed closure must release its own storage even when its captures
-    // have already moved into the failing callee. Check exact retained bytes;
-    // rounded freed-byte statistics cannot distinguish that smaller leak.
-    assert!(remaining[0] >= 10000 * 16, "{remaining:?}");
-    assert_eq!(remaining[1], 0);
 }
 
 #[test]
@@ -121,7 +141,7 @@ fn consumed_function_releases_captures_when_its_entry_fails() {
     let dir = Scratch::new("captures");
     let src = dir.0.join("capture.fwp");
     let cfile = dir.0.join("capture.c");
-    let exe = dir.0.join("capture");
+    let exe = dir.0.join("capture.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
     let reference = checked(
@@ -130,29 +150,36 @@ fn consumed_function_releases_captures_when_its_entry_fails() {
             .args(["run", "--interp"])
             .arg(&src),
     );
-    checked(
-        Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(cfile).unwrap();
-    let start = emitted.find("/* cap-error :").unwrap();
-    let id = emitted[start..]
-        .split("static V f")
-        .nth(1)
-        .unwrap()
-        .split('(')
-        .next()
-        .unwrap();
-    let probe = r#"
+    for memory in ["arc", "tracing"] {
+        checked(
+            Command::new(fwp)
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_STACK", "1")
+                .env("FWP_FREE", "1")
+                .env("FWP_REUSE", "1")
+                .args(["build", "--memory", "dynamic", "--gc", memory, "-O2"])
+                .arg(&src)
+                .args(["--emit-c", "-o"])
+                .arg(&cfile),
+        );
+        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let start = emitted.find("/* cap-error :").unwrap();
+        let id = emitted[start..]
+            .split("static V f")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let probe = r#"
 static volatile V captured, function_value;
 static int dead_string(V v) { return fwp_reuse_verify ? STR(v)->len == 0 : *fwp_rc_slot(v) == 0; }
 static int dead_function(V v) { return fwp_reuse_verify ? CLO(v)->fn == 0xdead : *fwp_rc_slot(v) == 0; }
 int main(void) {
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
     if (!fwp_fns[FUNCTION].owned || !fwp_fns[FUNCTION].owned->drop_arguments) return 1;
+    intptr_t baseline=fwp_gc.budget;
+    for(int round=0;round<32;round++) {
     for (int alias = 0; alias < 2; alias++) {
         captured = fwp_rc_fresh(fwp_str_new("capture", 7));
         function_value = fwp_rc_fresh(fwp_pap(FUNCTION, 1, (V[]){captured}));
@@ -170,42 +197,85 @@ int main(void) {
         }
         if (!dead_function(function_value) || !dead_string(captured)) return 5;
     }
+    ARC_BALANCE
+    }
     puts("consumed closures release across failed entries");
     return 0;
 }
 "#.replace("FUNCTION", id);
-    let runtime = emitted.replace(
-        "int main(int argc, char **argv)",
-        "int original_main(int argc, char **argv)",
-    );
-    for opt in ["-O1", "-O2"] {
-        fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
+        let probe =
+            if memory == "arc" {
+                probe.replace("fwp_reuse_verify", "0").replace("ARC_BALANCE",
+            "if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;")
+            } else {
+                probe.replace("ARC_BALANCE", "")
+            };
+        let runtime = emitted.replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        );
+        let missing = probe.replace(
+            "fwp_closure_drop(function_value);",
+            "/* omitted outside alias */",
+        );
+        assert_ne!(missing, probe);
+        let cases = [
+            ("captures", format!("{runtime}\n{probe}"), 0),
+            ("captures-missing-alias", format!("{runtime}\n{missing}"), 5),
+        ];
+        for opt in ["-O1", "-O2"] {
+            for (label, code, status) in &cases {
+                fwp::cgen::compile_c(code, &exe, opt).unwrap();
+                for poison in if memory == "arc" {
+                    &["0"][..]
+                } else {
+                    &["0", "1"][..]
+                } {
+                    let stress = if memory == "arc" { "0" } else { "1" };
+                    let out = Command::new(&exe)
+                        .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", poison)
+                        .output()
+                        .unwrap();
+                    let label = format!("{memory}{opt}-{label}-poison{poison}");
+                    record_probe::save("runtime_call_ownership", &label, code, &exe, &out);
+                    assert_eq!(out.status.code(), Some(*status), "{label}: {out:?}");
+                    assert!(out.stderr.is_empty(), "{label}: {out:?}");
+                    assert_eq!(
+                        String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
+                        if *status == 0 {
+                            "consumed closures release across failed entries\n"
+                        } else {
+                            ""
+                        },
+                        "{label}"
+                    );
+                }
+            }
+            let exe = dir.0.join(format!("{memory}{opt}-source.exe"));
+            fwp::cgen::compile_c(&emitted, &exe, opt).unwrap();
+            let stress = if memory == "arc" { "0" } else { "1" };
+            let out = Command::new(&exe)
+                .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
+                .env("FWP_GC_STATS", "0")
+                .env("FWP_GC_STRESS", stress)
+                .env("FWP_GC_VERIFY", stress)
+                .env("FWP_REUSE_VERIFY", stress)
+                .output()
+                .unwrap();
+            let label = format!("{memory}{opt}-captures-source");
+            record_probe::save("runtime_call_ownership", &label, &emitted, &exe, &out);
             assert_eq!(
-                String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
-                "consumed closures release across failed entries\n"
+                out.status.code(),
+                reference.status.code(),
+                "{label}: {out:?}"
             );
+            assert_eq!(out.stdout, reference.stdout, "{label}");
+            assert_eq!(out.stderr, reference.stderr, "{label}");
         }
-        checked(
-            Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
-                .arg(&src)
-                .args([opt, "-o"])
-                .arg(&exe),
-        );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
-        assert_eq!(out.stdout, reference.stdout);
     }
 }
 
@@ -214,7 +284,7 @@ fn overapplication_releases_pending_arguments_without_counting_scalars() {
     let dir = Scratch::new("overapply");
     let src = dir.0.join("overapply.fwp");
     let cfile = dir.0.join("overapply.c");
-    let exe = dir.0.join("overapply");
+    let exe = dir.0.join("overapply.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(
         &src,
@@ -230,31 +300,36 @@ main = 1 | attempt choose | result.unwrap-or id | apply "!" | echo
             .args(["run", "--interp"])
             .arg(&src),
     );
-    checked(
-        Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(cfile).unwrap();
-    let start = emitted.find("/* choose :").unwrap();
-    let id = emitted[start..]
-        .split("static V f")
-        .nth(1)
-        .unwrap()
-        .split('(')
-        .next()
-        .unwrap();
-    let id_start = emitted.find("/* id :").unwrap();
-    let identity = emitted[id_start..]
-        .split("static V f")
-        .nth(1)
-        .unwrap()
-        .split('(')
-        .next()
-        .unwrap();
-    let probe = r#"
+    for memory in ["arc", "tracing"] {
+        checked(
+            Command::new(fwp)
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_STACK", "1")
+                .env("FWP_FREE", "1")
+                .env("FWP_REUSE", "1")
+                .args(["build", "--memory", "dynamic", "--gc", memory, "-O2"])
+                .arg(&src)
+                .args(["--emit-c", "-o"])
+                .arg(&cfile),
+        );
+        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let start = emitted.find("/* choose :").unwrap();
+        let id = emitted[start..]
+            .split("static V f")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let id_start = emitted.find("/* id :").unwrap();
+        let identity = emitted[id_start..]
+            .split("static V f")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let probe = r#"
 static volatile V pending, scalar_word, function_value;
 /* Exercise the runtime's curried entry ABI using the real generated type
  * metadata, rather than changing the source language's full-spine arity. */
@@ -277,6 +352,8 @@ int main(void) {
     prefix_fns[FUNCTION].owned = &prefix_owned;
     fwp_fns = prefix_fns;
     if (!prefix_owned.drop_arguments) return 1;
+    intptr_t baseline=fwp_gc.budget;
+    for(int round=0;round<32;round++) {
     pending = fwp_rc_fresh(fwp_str_new("pending", 7));
     function_value = fwp_rc_fresh(fwp_pap(FUNCTION, 0, 0));
     fwp_trap_recover = recover_pending;
@@ -293,45 +370,115 @@ int main(void) {
     if (!fwp_rc_release_last(result) || !fwp_rc_release_last(scalar_word)) return 6;
     fwp_mem_free((void *)(uintptr_t)result);
     fwp_mem_free((void *)(uintptr_t)scalar_word);
+    ARC_BALANCE
+    }
+    fwp_trap_jb=NULL;fwp_fns=fwp_fn_table;
     puts("overapplication owns pending typed arguments");
     return 0;
 }
 "#.replace("FUNCTION", id).replace("IDENTITY", identity);
-    let runtime = emitted.replace(
-        "int main(int argc, char **argv)",
-        "int original_main(int argc, char **argv)",
-    );
-    let span_probe = probe.replace("fwp_apply_owned(function_value, 2, (V[]){0, pending})", "fwp_apply_borrowed_span(function_value, 2, (V[]){0, pending}, 1, 1)").replace("if (fwp_reuse_verify ? CLO(function_value)->fn != 0xdead : *fwp_rc_slot(function_value) != 0) return 4;", "if (*fwp_rc_slot(function_value) != 1) return 4; fwp_closure_drop(function_value);").replace("fwp_apply_owned(function_value, 2, (V[]){scalar_word, pending})", "fwp_apply_borrowed_span(function_value, 2, (V[]){scalar_word, pending}, 1, 1)").replace("    if (!fwp_rc_release_last(result)", "    if (*fwp_rc_slot(function_value) != 1) return 7; fwp_closure_drop(function_value);\n    if (!fwp_rc_release_last(result)");
-    for opt in ["-O1", "-O2"] {
-        for probe in [&probe, &span_probe] {
-            fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-            for poison in ["0", "1"] {
-                let out = checked(
-                    Command::new(&exe)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison),
-                );
-                assert_eq!(
-                    String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
-                    "overapplication owns pending typed arguments\n"
-                );
-            }
+        let probe =
+            if memory == "arc" {
+                probe.replace("fwp_reuse_verify", "0").replace("ARC_BALANCE",
+            "if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;")
+            } else {
+                probe.replace("ARC_BALANCE", "")
+            };
+        let runtime = emitted.replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        );
+        let consumed_check = format!(
+            "if ({} ? CLO(function_value)->fn != 0xdead : *fwp_rc_slot(function_value) != 0) return 4;",
+            if memory == "arc" { "0" } else { "fwp_reuse_verify" }
+        );
+        assert_eq!(probe.matches(consumed_check.as_str()).count(), 1);
+        let span_probe = probe
+            .replace(
+                "fwp_apply_owned(function_value, 2, (V[]){0, pending})",
+                "fwp_apply_borrowed_span(function_value, 2, (V[]){0, pending}, 1, 1)",
+            )
+            .replace(
+                &consumed_check,
+                "if (*fwp_rc_slot(function_value) != 1) return 4; fwp_closure_drop(function_value);",
+            )
+            .replace(
+                "fwp_apply_owned(function_value, 2, (V[]){scalar_word, pending})",
+                "fwp_apply_borrowed_span(function_value, 2, (V[]){scalar_word, pending}, 1, 1)",
+            )
+            .replace(
+                "    if (!fwp_rc_release_last(result)",
+                "    if (*fwp_rc_slot(function_value) != 1) return 7; fwp_closure_drop(function_value);\n    if (!fwp_rc_release_last(result)",
+            );
+        let mut cases = vec![
+            ("overapply", format!("{runtime}\n{probe}"), 0),
+            ("span", format!("{runtime}\n{span_probe}"), 0),
+        ];
+        if memory == "arc" {
+            let missing = probe.replace(
+                "fwp_mem_free((void *)(uintptr_t)scalar_word);",
+                "/* omitted scalar owner */",
+            );
+            assert_ne!(missing, probe);
+            cases.push((
+                "overapply-missing-scalar",
+                format!("{runtime}\n{missing}"),
+                90,
+            ));
         }
-        checked(
-            Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
-                .arg(&src)
-                .args([opt, "-o"])
-                .arg(&exe),
-        );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
-        assert_eq!(out.stdout, reference.stdout);
+        for opt in ["-O1", "-O2"] {
+            for (label, code, status) in &cases {
+                fwp::cgen::compile_c(code, &exe, opt).unwrap();
+                for poison in if memory == "arc" {
+                    &["0"][..]
+                } else {
+                    &["0", "1"][..]
+                } {
+                    let stress = if memory == "arc" { "0" } else { "1" };
+                    let out = Command::new(&exe)
+                        .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", poison)
+                        .output()
+                        .unwrap();
+                    let label = format!("{memory}{opt}-{label}-poison{poison}");
+                    record_probe::save("runtime_call_ownership", &label, code, &exe, &out);
+                    assert_eq!(out.status.code(), Some(*status), "{label}: {out:?}");
+                    assert!(out.stderr.is_empty(), "{label}: {out:?}");
+                    assert_eq!(
+                        String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
+                        if *status == 0 {
+                            "overapplication owns pending typed arguments\n"
+                        } else {
+                            ""
+                        },
+                        "{label}"
+                    );
+                }
+            }
+            let exe = dir.0.join(format!("{memory}{opt}-source.exe"));
+            fwp::cgen::compile_c(&emitted, &exe, opt).unwrap();
+            let stress = if memory == "arc" { "0" } else { "1" };
+            let out = Command::new(&exe)
+                .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
+                .env("FWP_GC_STATS", "0")
+                .env("FWP_GC_STRESS", stress)
+                .env("FWP_GC_VERIFY", stress)
+                .env("FWP_REUSE_VERIFY", stress)
+                .output()
+                .unwrap();
+            let label = format!("{memory}{opt}-overapply-source");
+            record_probe::save("runtime_call_ownership", &label, &emitted, &exe, &out);
+            assert_eq!(
+                out.status.code(),
+                reference.status.code(),
+                "{label}: {out:?}"
+            );
+            assert_eq!(out.stdout, reference.stdout, "{label}");
+            assert_eq!(out.stderr, reference.stderr, "{label}");
+        }
     }
 }
 
@@ -340,7 +487,7 @@ fn owned_primitive_arguments_and_stack_captures_release_on_trap() {
     let dir = Scratch::new("primitive-stack");
     let src = dir.0.join("primitive.fwp");
     let cfile = dir.0.join("primitive.c");
-    let exe = dir.0.join("primitive");
+    let exe = dir.0.join("primitive.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(
         &src,
@@ -358,90 +505,129 @@ main = "owned" | concat " input" | attempt execute | echo
             .args(["run", "--interp"])
             .arg(&src),
     );
-    checked(
-        Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(cfile).unwrap();
-    assert!(
-        emitted.contains("/* stack argument child */"),
-        "fixture must use an owned stack capture"
-    );
-    assert!(emitted.contains("fwp_cleanup_push(&c, fwp_entry_release"));
-    let start = emitted.find("/* execute :").unwrap();
-    let execute = format!(
-        "f{}",
-        emitted[start..]
-            .split("static V f")
-            .nth(1)
-            .unwrap()
-            .split('(')
-            .next()
-            .unwrap()
-    );
-    let probe = r#"
+    for memory in ["arc", "tracing"] {
+        checked(
+            Command::new(fwp)
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_STACK", "1")
+                .env("FWP_FREE", "1")
+                .env("FWP_REUSE", "1")
+                .args(["build", "--memory", "dynamic", "--gc", memory, "-O2"])
+                .arg(&src)
+                .args(["--emit-c", "-o"])
+                .arg(&cfile),
+        );
+        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        assert!(
+            emitted.contains("/* stack argument child */"),
+            "fixture must use an owned stack capture"
+        );
+        assert!(emitted.contains("fwp_cleanup_push(&c, fwp_entry_release"));
+        let start = emitted.find("/* execute :").unwrap();
+        let execute = format!(
+            "f{}",
+            emitted[start..]
+                .split("static V f")
+                .nth(1)
+                .unwrap()
+                .split('(')
+                .next()
+                .unwrap()
+        );
+        let probe = r#"
 static volatile V original_capture;
 static jmp_buf primitive_trap;
 static int recover_primitive(void) { fwp_trap_jb = &primitive_trap; fwp_trap_cleanup = 0; return 1; }
 int main(void) {
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
+    intptr_t baseline=fwp_gc.budget;
+    for(int round=0;round<32;round++) {
     original_capture = fwp_rc_fresh(fwp_str_new("original", 8));
     trap_concat = 1; fwp_trap_recover = recover_primitive;
     if (!setjmp(primitive_trap)) { EXECUTE(original_capture); return 1; }
     fwp_trap_recover = 0; trap_concat = 0;
     if (strcmp(fwp_trap_msg, "owned primitive trap") || fwp_cleanups) return 2;
     if (fwp_reuse_verify ? STR(original_capture)->len != 0 : *fwp_rc_slot(original_capture) != 0) return 3;
+    ARC_BALANCE
+    }
+    fwp_trap_jb=NULL;
     puts("primitive arguments and stack captures release on trap");
     return 0;
 }
 "#.replace("EXECUTE", &execute);
-    // Inject a recoverable failure at the real primitive's entry. The actual
-    // compiled caller, stack closure, owned wrapper and releases stay intact.
-    let mut runtime = emitted.replace(
-        "int main(int argc, char **argv)",
-        "int original_main(int argc, char **argv)",
-    );
-    assert!(runtime.contains("static V fwp_p_concat(V t, V s) {"));
-    runtime = runtime.replace(
+        let probe =
+            if memory == "arc" {
+                probe.replace("fwp_reuse_verify", "0").replace("ARC_BALANCE",
+            "if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;")
+            } else {
+                probe.replace("ARC_BALANCE", "")
+            };
+        // Inject a recoverable failure at the real primitive's entry. The actual
+        // compiled caller, stack closure, owned wrapper and releases stay intact.
+        let mut runtime = emitted.replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        );
+        assert!(runtime.contains("static V fwp_p_concat(V t, V s) {"));
+        runtime = runtime.replace(
         "static V fwp_p_concat(V t, V s) {",
         "static V fwp_p_concat(V t, V s) { if (trap_concat) fwp_trap(\"owned primitive trap\");",
     );
-    for opt in ["-O1", "-O2"] {
-        fwp::cgen::compile_c(
-            &format!("static volatile int trap_concat;\n{runtime}\n{probe}"),
-            &exe,
-            opt,
-        )
-        .unwrap();
-        for poison in ["0", "1"] {
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
+        let code = format!("static volatile int trap_concat;\n{runtime}\n{probe}");
+        let cases = [("primitive", code, 0)];
+        for opt in ["-O1", "-O2"] {
+            for (label, code, status) in &cases {
+                fwp::cgen::compile_c(code, &exe, opt).unwrap();
+                for poison in if memory == "arc" {
+                    &["0"][..]
+                } else {
+                    &["0", "1"][..]
+                } {
+                    let stress = if memory == "arc" { "0" } else { "1" };
+                    let out = Command::new(&exe)
+                        .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", poison)
+                        .output()
+                        .unwrap();
+                    let label = format!("{memory}{opt}-{label}-poison{poison}");
+                    record_probe::save("runtime_call_ownership", &label, code, &exe, &out);
+                    assert_eq!(out.status.code(), Some(*status), "{label}: {out:?}");
+                    assert!(out.stderr.is_empty(), "{label}: {out:?}");
+                    assert_eq!(
+                        String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
+                        if *status == 0 {
+                            "primitive arguments and stack captures release on trap\n"
+                        } else {
+                            ""
+                        },
+                        "{label}"
+                    );
+                }
+            }
+            let exe = dir.0.join(format!("{memory}{opt}-source.exe"));
+            fwp::cgen::compile_c(&emitted, &exe, opt).unwrap();
+            let stress = if memory == "arc" { "0" } else { "1" };
+            let out = Command::new(&exe)
+                .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
+                .env("FWP_GC_STATS", "0")
+                .env("FWP_GC_STRESS", stress)
+                .env("FWP_GC_VERIFY", stress)
+                .env("FWP_REUSE_VERIFY", stress)
+                .output()
+                .unwrap();
+            let label = format!("{memory}{opt}-primitive-source");
+            record_probe::save("runtime_call_ownership", &label, &emitted, &exe, &out);
             assert_eq!(
-                String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
-                "primitive arguments and stack captures release on trap\n"
+                out.status.code(),
+                reference.status.code(),
+                "{label}: {out:?}"
             );
+            assert_eq!(out.stdout, reference.stdout, "{label}");
+            assert_eq!(out.stderr, reference.stderr, "{label}");
         }
-        checked(
-            Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
-                .arg(&src)
-                .args([opt, "-o"])
-                .arg(&exe),
-        );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
-        assert_eq!(out.stdout, reference.stdout);
     }
 }
 
@@ -450,32 +636,40 @@ fn cancelled_entry_releases_runtime_function_and_callee_parameters() {
     let dir = Scratch::new("cancelled-call");
     let src = dir.0.join("cancelled.fwp");
     let cfile = dir.0.join("cancelled.c");
-    let exe = dir.0.join("cancelled");
+    let exe = dir.0.join("cancelled.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     let source = SOURCE.replace("main = 0 | attempt (cap-error (\"owned\" | concat \" capture\")) | echo",
         "main = [task.yield (), 0 | attempt (cap-error (\"owned\" | concat \" capture\")) | echo] | ignore");
     std::fs::write(&src, source).unwrap();
-    checked(
-        Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(cfile).unwrap();
-    let start = emitted.find("/* cap-error :").unwrap();
-    let id = emitted[start..]
-        .split("static V f")
-        .nth(1)
-        .unwrap()
-        .split('(')
-        .next()
-        .unwrap();
-    let probe = r#"
+    for memory in ["arc", "tracing"] {
+        checked(
+            Command::new(fwp)
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_STACK", "1")
+                .env("FWP_FREE", "1")
+                .env("FWP_REUSE", "1")
+                .args(["build", "--memory", "dynamic", "--gc", memory, "-O2"])
+                .arg(&src)
+                .args(["--emit-c", "-o"])
+                .arg(&cfile),
+        );
+        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let start = emitted.find("/* cap-error :").unwrap();
+        let id = emitted[start..]
+            .split("static V f")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let probe = r#"
 static volatile V captured, function_value;
 static fwp_task cancelled_call;
 int main(void) {
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
+    intptr_t baseline=fwp_gc.budget;
+    for(int round=0;round<32;round++) {
+    memset(&cancelled_call,0,sizeof(cancelled_call));
     captured = fwp_rc_fresh(fwp_str_new("cancel capture", 14));
     function_value = fwp_rc_fresh(fwp_pap(FUNCTION, 1, (V[]){captured}));
     cancelled_call.cancelled = 1; fwp_cur = &cancelled_call; fwp_budget = 0;
@@ -486,28 +680,57 @@ int main(void) {
     if (fwp_reuse_verify) {
         if (CLO(function_value)->fn != 0xdead || STR(captured)->len != 0) return 3;
     } else if (*fwp_rc_slot(function_value) || *fwp_rc_slot(captured)) return 4;
+    ARC_BALANCE
+    }
     puts("runtime function and incoming owners release on cancellation");
     return 0;
 }
 "#
-    .replace("FUNCTION", id);
-    let runtime = emitted.replace(
-        "int main(int argc, char **argv)",
-        "int original_main(int argc, char **argv)",
-    );
-    for opt in ["-O1", "-O2"] {
-        fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-            assert_eq!(
-                String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
-                "runtime function and incoming owners release on cancellation\n"
-            );
+        .replace("FUNCTION", id);
+        let probe =
+            if memory == "arc" {
+                probe.replace("fwp_reuse_verify", "0").replace("ARC_BALANCE",
+            "if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;")
+            } else {
+                probe.replace("ARC_BALANCE", "")
+            };
+        let runtime = emitted.replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        );
+        let cases = [("cancelled", format!("{runtime}\n{probe}"), 0)];
+        for opt in ["-O1", "-O2"] {
+            for (label, code, status) in &cases {
+                fwp::cgen::compile_c(code, &exe, opt).unwrap();
+                for poison in if memory == "arc" {
+                    &["0"][..]
+                } else {
+                    &["0", "1"][..]
+                } {
+                    let stress = if memory == "arc" { "0" } else { "1" };
+                    let out = Command::new(&exe)
+                        .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", poison)
+                        .output()
+                        .unwrap();
+                    let label = format!("{memory}{opt}-{label}-poison{poison}");
+                    record_probe::save("runtime_call_ownership", &label, code, &exe, &out);
+                    assert_eq!(out.status.code(), Some(*status), "{label}: {out:?}");
+                    assert!(out.stderr.is_empty(), "{label}: {out:?}");
+                    assert_eq!(
+                        String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
+                        if *status == 0 {
+                            "runtime function and incoming owners release on cancellation\n"
+                        } else {
+                            ""
+                        },
+                        "{label}"
+                    );
+                }
+            }
         }
     }
 }

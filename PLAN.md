@@ -122,6 +122,9 @@ outside the benchmark suite.
    [State and task values](docs/measurements/record-cleanup.md#state-deadlines-and-channel-values)
    extend the preparation to repeated state, deadline and channel cleanup.
    Their full native acceptance is still pending.
+   [Runtime-selected calls](docs/measurements/record-cleanup.md#calls-chosen-while-a-program-runs)
+   also need repeated ownership checks for failure, borrowed arguments and
+   cancellation; their focused preparation is not final native acceptance.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
    [Integer counting](docs/measurements/integer-counting.md) and
    [checked products](docs/measurements/checked-products.md) preserve slower

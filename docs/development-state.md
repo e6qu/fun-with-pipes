@@ -1,55 +1,57 @@
 # Session handoff
 
 All seven PLAN.md areas remain open. Prefer ownership and borrowing, reserve ARC
-for needed sharing and remove tracing. JIT is excluded.
+for necessary sharing and remove tracing. JIT is excluded.
 
 ## Current work
 
-**Next:** publish and audit the focused state/deadline preparation on Linux AMD64
-and native Windows ARM64/AMD64. Check every completed target and saved image.
-Keep one active PR: #202 remains the current final delivery. Merge it only after
-all nine production jobs, documentation and six-host binary inspection pass.
+**Next:** publish and audit the expanded focused ownership preparation on Linux
+AMD64 and native Windows ARM64/AMD64, including all completed test targets and
+853 saved images per host. Keep one active PR: #202 is the current final delivery.
+It needs nine production jobs, documentation and six-host binary inspection before
+squash merge. The live primary handoff records its latest status.
 
-This worktree is `/private/tmp/fwp-state-cleanup`, branch
-`state-cleanup-preparation`, based on `8ad428aae8c759c1a0bb7650a9305d6d7a0b6c80`.
-The parent four-group task/callback preparation passed all three focused runs:
-`39985541831`, `39985545882`, `39985550071`, plus 711 image inspections per host.
-It is ready for delivery after #202; this independent preparation must not delay
-that accepted batch. Its parent evidence remains under the immutable tag
-`roadmap/preparation-task-handles-8ad428aae8c7`.
+This worktree is `/private/tmp/fwp-runtime-call-cleanup`, branch
+`runtime-call-cleanup-preparation`, based on
+`67415f551edc05cd6602a3ee1a55b32d66f815f9` (state/deadline preparation).
+That parent is preserved under `roadmap/preparation-state-cleanup-67415f551edc`;
+its focused runs are `39993997300`, `39994002186`, `39994007156`.
+The earlier task/callback source `8ad428aae8c759c1a0bb7650a9305d6d7a0b6c80`
+passed all three focused runs and 711-image inspection on each host. It is ready
+for delivery after #202. Do not postpone accepted work solely for this separate
+preparation; combine related groups when their checks are ready.
 
-PR #202 source is `46c26002b5f748529a2c6ad5977891cdc1593c06`, production run
-`39981747930`, docs `39981747884`. Final delivery helpers and acceptance receipts
-are in `/private/tmp/fwp-call-*`; the live primary handoff has its latest status.
+## Changes and verification
 
-## State/deadline changes
+Five runtime-call tests now exercise explicit ARC and tracing: 10,000 failed
+calls; 32-round capture aliases, pending arguments, primitive traps and cancelled
+entries; native/interpreter comparisons; and deliberate missing-owner controls.
+They add 58 saved outcomes to the prior state/deadline and task/callback groups,
+for 853 images per host. Compiler/runtime and syntax are unchanged.
+[The guide](measurements/record-cleanup.md#calls-chosen-while-a-program-runs)
+explains the source example, internal call behavior and precise measurements.
 
-Two test groups add explicit ARC checks while preserving tracing controls:
-32-round state replacement/unwind/task switching; 32-round deadline/channel
-aliases; and complete reclamation of a 10,000-value deadline loop. Missing
-retains, missing releases and extra owners must fail. [The guide](measurements/record-cleanup.md#state-deadlines-and-channel-values)
-introduces the state and task concepts and states exactly what is measured.
-Compiler/runtime and language syntax are unchanged.
+All 58 local Apple Clang ARM64 observations pass, including actual binary
+inspection. Guarded checks took 5.75s (failed), 9.35s (captures), 7.59s (pending
+arguments), 4.99s (primitive traps), and 2.93s (cancellation). Their receipts are
+`/private/tmp/fwp-runtime-call-{failed,captures,overapply,primitive,cancelled}/results.json`.
+They use accepted compiler `5e17fc10e860b1971ffc9cd9cb57fcb795ccad24`, with
+unchanged compiler/runtime/library sources. GCC, Windows and the Rust harness
+remain pending. Local results do not establish final native support.
+The documentation example initially used a function-valued pipe that inferred
+composition; it now uses explicit `apply 3 (choose True)`. The failed source is
+preserved in `/private/tmp/fwp-runtime-doc-example-failed.fwp`.
 
-Local Apple Clang ARM64 checks pass 44 state probe outcomes, 12 state-program
-comparisons and 28 deadline/channel outcomes. They use the accepted compiler
-`5e17fc10e860b1971ffc9cd9cb57fcb795ccad24`; compiler/runtime/library identity is
-unchanged. Every actual binary is inspected. These do not replace native GCC,
-Windows or final six-host checks. The expanded focused suite selects 44 groups
-and expects 795 saved images per host.
+The parent state/deadline preparation passed 84 local observations. Its fixture
+repair explicitly frees a final string; an omitted-string control detects the
+old retained charge. Failed evidence remains in `fwp-deadline-current`, repaired
+evidence in `fwp-deadline-v2`; state receipts are in `fwp-state-probe` and
+`fwp-state-source`. These are cleanup checks, not timing or process-memory claims.
 
-A new fixture initially retained 32 bytes because its final string count was
-lowered without destroying the value. The repaired fixture explicitly frees it,
-and a control omitting that release fails. Failed and diagnostic evidence remains
-in `/private/tmp/fwp-deadline-current`; passing evidence is in `fwp-deadline-v2`.
-State receipts are `fwp-state-probe/results.json` and `fwp-state-source/results.json`.
-Formatting-only changes after those state observations do not change their C.
-No known unresolved local failure; focused Rust/Clippy and native checks remain.
-
-Use `python3 scripts/local-guard.py COMMAND...` for serial focused checks, keeping
-all resource limits. Full builds and suites run on GitHub. Never treat skipped
-Linux-only storage cases as Windows support. Preserve exact source tags, reports
-and failed-control evidence; do not repeat completed mutation helpers.
+Use `python3 scripts/local-guard.py COMMAND...` serially, preserving all local
+resource limits. Full builds/suites stay on GitHub. Keep exact source tags,
+inspection reports and failed-control evidence. Do not rerun completed mutation
+or publication helpers; inspect receipts before resuming.
 
 ## Roadmap status
 
