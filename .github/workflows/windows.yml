@@ -113,7 +113,8 @@ jobs:
             'cached_map_borrows', 'caf_ownership', 'inline_caf_ownership', 'selection_unwind_ownership', 'zip_unwind_ownership',
             'windows_runtime', 'windows_static_memory', 'loop_unwind_ownership', 'path_validation', 'io_error_ownership',
             'system_snapshots', 'file_values', 'text_file_tools', 'text_transform_ownership', 'file_construction_ownership',
-            'file_inline_path', 'file_storage_disposal', 'record_update_ownership', 'general_record_update_ownership'
+            'file_inline_path', 'file_storage_disposal', 'record_update_ownership', 'general_record_update_ownership',
+            'constructor_unwind_ownership'
           )
           python scripts/run-native-tests.py --targets $testTargets --idle-timeout 600 --logs windows-resource-tests 2>&1 | Tee-Object -Append windows-native.log
           exit $LASTEXITCODE

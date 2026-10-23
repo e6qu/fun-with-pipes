@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -72,7 +75,7 @@ fn failed_constructor_allocation_releases_typed_fields_and_preserves_aliases() {
     let dir = Scratch::new("allocation");
     let src = dir.0.join("allocation.fwp");
     let cfile = dir.0.join("allocation.c");
-    let exe = dir.0.join("allocation");
+    let exe = dir.0.join("allocation").with_extension("exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
     let reference = checked(
@@ -81,21 +84,33 @@ fn failed_constructor_allocation_releases_typed_fields_and_preserves_aliases() {
             .args(["run", "--interp"])
             .arg(&src),
     );
-    checked(
-        Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(cfile).unwrap();
-    let probe=r#"
+    for mode in ["arc", "tracing"] {
+        let stress = if mode == "arc" { "0" } else { "1" };
+        checked(
+            Command::new(fwp)
+                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .env("FWP_STACK", "1")
+                .arg(&src)
+                .args(["--emit-c", "-O2", "-o"])
+                .arg(&cfile),
+        );
+        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let probe=r#"
 static volatile V first, last, scalar_word;
 static jmp_buf allocating;
 static int recover_allocation(void) { return 1; }
-static int dead_string(V v) { return fwp_reuse_verify ? STR(v)->len==0 : *fwp_rc_slot(v)==0; }
+static int dead_string(V v) {
+#ifndef FWP_ARC_ONLY
+    if (fwp_reuse_verify) return STR(v)->len==0;
+#endif
+    return *fwp_rc_slot(v)==0; }
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
+#endif
     fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    intptr_t baseline=fwp_gc.budget;
+    for (volatile int round=0;round<32;round++) {
     for (volatile int mode=0;mode<4;mode++) for (volatile int alias=0;alias<2;alias++) {
         first=fwp_rc_fresh(fwp_str_new("first",5));last=fwp_rc_fresh(fwp_str_new("last",4));
         if (alias) { fwp_rc_dup(first);fwp_rc_dup(last); }
@@ -119,64 +134,116 @@ int main(void) {
         if (*fwp_rc_slot(scalar_word)!=1 || STR(scalar_word)->len!=11) return 6;
         fwp_rc_free_obj(scalar_word);
     }
+#ifdef FWP_ARC_ONLY
+    if (fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
+#endif
+    }
     puts("constructor allocation failure releases typed fields without losing aliases or scalar bits");
     return 0;
 }
 "#.replace("LEAF",function_id(&emitted,"Payload.Leaf")).replace("VARIANT",function_id(&emitted,"variant")).replace("RECORD",function_id(&emitted,"record")).replace("CONTINUED",function_id(&emitted,"continued"));
-    let marker = "static V fwp_data(uint32_t tag, uint32_t n, const V *f) {";
-    assert_eq!(emitted.matches(marker).count(), 1);
-    let runtime=emitted.replace("typedef uint64_t V;","typedef uint64_t V;\nstatic int fail_allocation; static volatile V observed_field; static void fwp_trap(const char *msg);")
+        let marker = "static V fwp_data(uint32_t tag, uint32_t n, const V *f) {";
+        assert_eq!(emitted.matches(marker).count(), 1);
+        let runtime=emitted.replace("typedef uint64_t V;","typedef uint64_t V;\nstatic int fail_allocation; static volatile V observed_field; static void fwp_trap(const char *msg);")
         .replace(marker,&format!("{marker}\n    if (fail_allocation && (n==3 || n==9)) {{ observed_field=f[0]; fwp_trap(\"injected constructor allocation failure\"); }}"))
         .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
-    // Removing only the constructor-function allocation scope restores the
-    // missing field release; the same probe must detect it.
-    let start = runtime
-        .find("fwp_cleanup_push(&allocation_cleanup,")
-        .unwrap();
-    let end = start + runtime[start..].find(';').unwrap() + 1;
-    let unprotected = runtime
-        .replacen(&runtime[start..end], "(void)pending;", 1)
-        .replacen(
-            "fwp_cleanup_pop(&allocation_cleanup);",
-            "(void)allocation_cleanup;",
-            1,
-        );
-    for opt in ["-O1", "-O2"] {
-        fwp::cgen::compile_c(&format!("{unprotected}\n{probe}"), &exe, opt).unwrap();
-        let old = Command::new(&exe)
-            .env("FWP_GC_STRESS", "1")
-            .env("FWP_GC_VERIFY", "1")
-            .env("FWP_REUSE_VERIFY", "1")
-            .output()
+        // Removing only the constructor-function allocation scope restores the
+        // missing field release; the same probe must detect it.
+        let start = runtime
+            .find("fwp_cleanup_push(&allocation_cleanup,")
             .unwrap();
-        assert_eq!(
-            old.status.code(),
-            Some(5),
-            "missing constructor scope must leak its fields"
-        );
-        fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
+        let end = start + runtime[start..].find(';').unwrap() + 1;
+        let unprotected = runtime
+            .replacen(&runtime[start..end], "(void)pending;", 1)
+            .replacen(
+                "fwp_cleanup_pop(&allocation_cleanup);",
+                "(void)allocation_cleanup;",
+                1,
+            );
+        for opt in ["-O1", "-O2"] {
+            if mode == "arc" {
+                let missing = probe.replace("fwp_rc_free_obj(scalar_word);", "");
+                assert_ne!(missing, probe);
+                fwp::cgen::compile_c(&format!("{runtime}\n{missing}"), &exe, opt).unwrap();
+                let out = Command::new(&exe)
+                    .env("FWP_GC", "off")
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "constructor_unwind_ownership",
+                    &format!("{mode}{opt}-missing-release"),
+                    &format!("{runtime}\n{missing}"),
+                    &exe,
+                    &out,
+                );
+                assert_eq!(out.status.code(), Some(90), "{mode} {opt}: {out:?}");
+            }
+
+            fwp::cgen::compile_c(&format!("{unprotected}\n{probe}"), &exe, opt).unwrap();
+            let old = Command::new(&exe)
+                .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                .env("FWP_GC_STATS", "0")
+                .env("FWP_GC_STRESS", stress)
+                .env("FWP_GC_VERIFY", stress)
+                .env("FWP_REUSE_VERIFY", stress)
+                .output()
+                .unwrap();
+            record_probe::save(
+                "constructor_unwind_ownership",
+                &format!("{mode}{opt}-missing-scope"),
+                &format!("{unprotected}\n{probe}"),
+                &exe,
+                &old,
+            );
+            assert_eq!(
+                old.status.code(),
+                Some(5),
+                "missing constructor scope must leak its fields"
+            );
+            fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
+            for poison in if mode == "arc" {
+                &["0"][..]
+            } else {
+                &["0", "1"][..]
+            } {
+                let out = checked(
+                    Command::new(&exe)
+                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", poison),
+                );
+                record_probe::save(
+                    "constructor_unwind_ownership",
+                    &format!("{mode}{opt}-normal-poison{poison}"),
+                    &format!("{runtime}\n{probe}"),
+                    &exe,
+                    &out,
+                );
+                assert_eq!(out.stdout,b"constructor allocation failure releases typed fields without losing aliases or scalar bits\n");
+            }
+            checked(
+                Command::new(fwp)
+                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .env("FWP_STACK", "1")
+                    .arg(&src)
+                    .args([opt, "-o"])
+                    .arg(&exe),
+            );
             let out = checked(
                 Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
+                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", stress),
             );
-            assert_eq!(out.stdout,b"constructor allocation failure releases typed fields without losing aliases or scalar bits\n");
+            assert_eq!(out.stdout, reference.stdout);
         }
-        checked(
-            Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
-                .arg(&src)
-                .args([opt, "-o"])
-                .arg(&exe),
-        );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
-        assert_eq!(out.stdout, reference.stdout);
     }
 }

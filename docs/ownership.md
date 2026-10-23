@@ -123,8 +123,9 @@ The [ARC metadata cleanup](measurements/arc-metadata.md) removes unused tracing
 mark storage and age checks from ARC's allocator. It also excludes poisoned-storage
 diagnostics at compilation time, so a host's later environment changes cannot
 make ARC retain released objects, arrays, files or sockets. Startup rejection of
-unsupported diagnostic settings is unchanged. Native acceptance is pending in
-the [handoff](development-state.md); local layout results are not timing claims.
+unsupported diagnostic settings is unchanged.
+[PR #199](roadmap-history.md#checked-native-defaults-and-arc-metadata-pr-199) records
+six-host acceptance; layout results are not timing claims.
 
 The compiler first tries to eliminate temporary objects, keep fields as scalars,
 and place eligible values on the stack. Values that still need shared storage
@@ -133,11 +134,12 @@ releases typed children and eligible storage. Counts above 254 use an auxiliary
 exact count; they do not automatically become permanently shared. Count overflow
 traps. Checked ARC rejects unproved runtime sharing.
 
-[Record cleanup checks](measurements/record-cleanup.md) exercise updates, aliases
-and partial failures directly in ARC, including repeated rounds and deliberately
-missing releases. They also repair overflow-test fixtures that failed to clear
-their artificial wide counts. This extends verification without changing the
-runtime ownership rules; final native acceptance is tracked in the handoff.
+[Record and variant cleanup checks](measurements/record-cleanup.md) exercise
+updates, constructors, call preparation, cancellation and partial failures
+directly in ARC. Repeated rounds and deliberately missing releases check that
+storage is reclaimed. They also repair overflow-fixture counts and a test selector
+that ran the wrong constructor case. Runtime ownership rules are unchanged;
+the handoff distinguishes local checks from final native acceptance.
 
 | Value family | Current representation or ownership | Important boundary |
 |---|---|---|
@@ -872,8 +874,9 @@ cover ARC exclusion and an ordinary tracing control.
 | WASI and browser-loader modules | Counted values and command-end task/scheduler cleanup | [Module evidence](benchmarks.md#webassembly-task-and-browser-loader-ownership); loader tested in Node, actual browser engines remain unverified |
 
 These accepted paths still allocate and count references. Native builds now
-select checked ARC unless `--gc tracing` is explicit. Acceptance of the default
-change is tracked in the [handoff](development-state.md). Tracing remains an
+select checked ARC unless `--gc tracing` is explicit.
+[PR #199](roadmap-history.md#checked-native-defaults-and-arc-metadata-pr-199) records
+acceptance of this default. Tracing remains an
 explicit mode; removing it entirely is a [project goal](../PLAN.md).
 The JavaScript host owns its instances, promises and copied strings independently;
 removing fwp tracing does not remove that host's collector.
