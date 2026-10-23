@@ -4,6 +4,8 @@ static int capacity_oversized,capacity_exit_code;
 static jmp_buf capacity_oom,capacity_trap;
 static V capacity_base;
 static fwp_tape *capacity_registry;
+static fwp_tape_scope capacity_scope = {-1};
+static fwp_cleanup capacity_scope_owner;
 static void *capacity_realloc(void *old,size_t n) {
     capacity_calls++;
     if(n>4096){capacity_oversized=1;return 0;}
@@ -24,7 +26,7 @@ static void capacity_exit(int code){capacity_exit_code=code;longjmp(capacity_oom
 static int capacity_recover(void){return 1;}
 static void capacity_dispose(void) {
     for(int64_t i=0;i<fwp_ntapes;i++){
-        fwp_tape *t=&fwp_tapes[i];capacity_free(t->pa);capacity_free(t->da);
+        fwp_tape *t=&fwp_tapes[i];fwp_tape_unlink_scope(t);capacity_free(t->pa);capacity_free(t->da);
     }
     capacity_free(fwp_tapes);fwp_tapes=0;fwp_ntapes=fwp_tapes_cap=0;
     fwp_tape_next_slot=0;
@@ -32,7 +34,10 @@ static void capacity_dispose(void) {
 }
 int main(void) {
     fwp_gc_start(__builtin_frame_address(0));
-    fwp_trap_recover=capacity_recover;fwp_trap_jb=&capacity_trap;fwp_trap_cleanup=0;
+    fwp_cleanup_push(&capacity_scope_owner,fwp_tape_scope_release,&capacity_scope);
+    fwp_trap_recover=capacity_recover;fwp_trap_jb=&capacity_trap;fwp_trap_cleanup=&capacity_scope_owner;
+    static int round;
+    for(round=0;round<32;round++) {
     if(fwp_tape_limit()!=INT32_MAX/8)return 180;
     if(!setjmp(capacity_trap)){fwp_p_ad_tape((V)(fwp_tape_limit()+1));return 182;}
     if(strcmp(fwp_trap_msg,"autodiff: too many inputs") || capacity_calls || capacity_live)return 182;
@@ -58,5 +63,9 @@ int main(void) {
     if(!setjmp(capacity_trap)){fwp_tape_reserve(capacity_registry,fwp_tape_limit()+1);return 187;}
     if(strcmp(fwp_trap_msg,"autodiff: the tape is full") || capacity_calls || capacity_oversized)return 188;
     capacity_dispose();if(capacity_live)return 189;
+    if(capacity_scope.head!=-1 || fwp_cleanups!=&capacity_scope_owner)return 190;
+    }
+    fwp_cleanup_pop(&capacity_scope_owner);fwp_tape_scope_release(&capacity_scope);
+    fwp_trap_cleanup=0;fwp_trap_recover=0;fwp_trap_jb=0;
     puts("checked tape capacities and exact realloc failure ownership passed");return 0;
 }

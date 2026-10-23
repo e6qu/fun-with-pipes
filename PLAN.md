@@ -122,6 +122,10 @@ outside the benchmark suite.
    [Arrays and borrowed callbacks](docs/measurements/record-cleanup.md#arrays-and-borrowed-callbacks)
    add repeated value/alias checks and exact array reclamation. Extend the
    remaining collector-specific checks before removing tracing.
+   [Derivative growth and workspace checks](docs/measurements/record-cleanup.md#derivative-growth-and-workspace-cleanup)
+   add allocation-failure recovery, atomic weight transfer and unused-suffix
+   bounds to this same upcoming delivery. Local results do not establish native
+   acceptance; keep the current PR unchanged while these focused jobs run.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
    [Integer counting](docs/measurements/integer-counting.md) and
    [checked products](docs/measurements/checked-products.md) preserve slower

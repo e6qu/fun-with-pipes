@@ -321,6 +321,42 @@ omitting final fixture owners must fail. Complete programs also compare with the
 interpreter. This group saves 28 outcomes. These are lifetime checks, not a new
 allocation, speed or C/Rust comparison.
 
+## Derivative growth and workspace cleanup
+
+A derivative tape records operations for a later backward pass. Each recorded
+operation keeps parent indices and derivative weights. Growing these buffers can
+fail; already allocated storage still needs exactly one owner. A workspace is a
+bounded cache of numeric buffers that the next computation can reuse. It is not a
+cache of program values.
+
+Three checks exercise the generated runtime directly, with ARC and tracing:
+
+- **Growth failure:** reject impossible capacities before allocation; inject
+  failures into each paired-buffer growth and registry growth. The previous
+  owner survives or releases its buffers as required. Thirty-two rounds leave
+  no tracked raw allocation. Deleting a bound, release or registry-owner update
+  must make the check fail.
+- **Weight transfer:** record inputs without operation metadata. Fail the second
+  weight retain, verify the first retain is undone, then successfully reuse that
+  tape slot. Release the result, input list, records and arrays. Thirty-two rounds
+  must return ARC's managed storage charge to its starting value.
+- **Unused suffix:** record thousands of later operations but request an earlier
+  result. Check the derivative values, number of visited operations and adjoint
+  buffer size. Thirty-two rounds release temporary arrays and records. A separate
+  growing-input check verifies bounded workspace reuse. Scanning or allocating
+  for the unused suffix must fail the controls.
+
+For example, a result recorded before a later unused chain needs the earlier
+parents during differentiation. The later operations still execute when recorded:
+this check does not permit removing their effects or traps. The existing language
+examples also check that distinction.
+
+The workspace cases run with caching both enabled and disabled, at C `-O1` and
+`-O2`. Tracing keeps stress, verification and reuse-poisoning controls; ARC checks
+exact managed storage balance and deliberately omitted releases. Raw allocation
+tracking and managed charges describe different storage. These are correctness
+and representation checks, not timing measurements or proof of C/Rust speed.
+
 ## Acceptance and limits
 
 [PR #199](../roadmap-history.md#checked-native-defaults-and-arc-metadata-pr-199)
