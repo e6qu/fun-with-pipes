@@ -223,3 +223,118 @@ fn static_heap_pressure_reclaims_old_pages_and_partly_live_slots() {
         }
     }
 }
+
+#[test]
+fn arc_metadata_and_reclamation_do_not_depend_on_tracing_options() {
+    let dir = fwp::cgen::TempDir::new("arc-metadata").unwrap();
+    let source = dir.join("metadata.fwp");
+    std::fs::write(&source, "main = ()\n").unwrap();
+    let artifacts = std::env::var_os("FWP_ARC_ARTIFACTS")
+        .map(|path| std::path::PathBuf::from(path).join("allocator-metadata"));
+    if let Some(path) = &artifacts {
+        std::fs::create_dir_all(path).unwrap();
+    }
+    for ownership in ["arc", "tracing"] {
+        for memory in ["dynamic", "static"] {
+            let generated = dir.join(format!("{ownership}-{memory}.c"));
+            let mut build = Command::new(env!("CARGO_BIN_EXE_fwp"));
+            build.args(["build", "--gc", ownership, "--memory", memory, "--emit-c"]);
+            if memory == "static" {
+                build.args(["--heap", "1M"]);
+            }
+            let emitted = build
+                .arg(&source)
+                .arg("-o")
+                .arg(&generated)
+                .output()
+                .unwrap();
+            assert!(emitted.status.success(), "{emitted:?}");
+            let code = std::fs::read_to_string(&generated).unwrap();
+            let entry = "static void *fwp_main_thread(void *arg) {";
+            let start = "    fwp_gc_start(__builtin_frame_address(0));\n";
+            assert_eq!(code.matches(entry).count(), 1);
+            assert_eq!(code.matches(start).count(), 1);
+            let measured = code
+                .replace(
+                    entry,
+                    &format!("{}\n{entry}", include_str!("fixtures/arc_metadata_probe.c")),
+                )
+                .replace(start, &format!("{start}    arc_metadata_probe();\n"));
+            for opt in ["-O0", "-O1", "-O2"] {
+                let label = format!("{ownership}-{memory}{opt}");
+                let binary = dir.join(format!("{label}.exe"));
+                fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
+                if let Some(path) = &artifacts {
+                    std::fs::write(path.join(format!("{label}.c")), &measured).unwrap();
+                    std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
+                }
+                for kind in [
+                    "plain",
+                    "late-object",
+                    "late-array",
+                    "late-file",
+                    "late-socket",
+                ] {
+                    let output = Command::new(&binary)
+                        .env("FWP_METADATA_CASE", kind)
+                        .env("FWP_METADATA_FILE", dir.join("resource.dat"))
+                        .env("FWP_GC", "off")
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_GC_STRESS", "0")
+                        .env("FWP_GC_VERIFY", "0")
+                        .env("FWP_REUSE_VERIFY", "0")
+                        .env_remove("FWP_MEMORY_REPORT")
+                        .output()
+                        .unwrap();
+                    assert!(
+                        output.status.success() && output.stderr.is_empty(),
+                        "{label}/{kind}: {output:?}"
+                    );
+                    let fields: Vec<i64> = String::from_utf8_lossy(&output.stdout)
+                        .split_whitespace()
+                        .map(|value| value.parse().unwrap())
+                        .collect();
+                    assert_eq!(fields.len(), 6, "{label}/{kind}: {output:?}");
+                    assert_eq!(
+                        &fields[..4],
+                        &[
+                            65536,
+                            if ownership == "arc" { 4128 } else { 4648 },
+                            if ownership == "arc" { 0 } else { 512 },
+                            4096
+                        ]
+                    );
+                    let retained = ownership == "tracing" && kind != "plain";
+                    assert_eq!(fields[4] > 0, retained, "{label}/{kind}: {fields:?}");
+                    if !retained {
+                        assert_eq!(fields[4], 0);
+                    }
+                    let reused = kind == "late-object" || kind == "late-array";
+                    assert_eq!(
+                        fields[5],
+                        if reused {
+                            if retained {
+                                2
+                            } else {
+                                1
+                            }
+                        } else {
+                            0
+                        }
+                    );
+                    if let Some(path) = &artifacts {
+                        std::fs::write(path.join(format!("{label}-{kind}.stdout")), &output.stdout)
+                            .unwrap();
+                        std::fs::write(path.join(format!("{label}-{kind}.stderr")), &output.stderr)
+                            .unwrap();
+                        std::fs::write(
+                            path.join(format!("{label}-{kind}.status")),
+                            format!("{:?}\n", output.status.code()),
+                        )
+                        .unwrap();
+                    }
+                }
+            }
+        }
+    }
+}

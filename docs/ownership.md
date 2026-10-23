@@ -119,6 +119,13 @@ The pressure and deliberately broken controls are in `tests/native_allocator.rs`
 `tests/static_memory.rs` also checks repeated language-level allocation. The
 [handoff](development-state.md) records acceptance of the pressure repair.
 
+The [ARC metadata cleanup](measurements/arc-metadata.md) removes unused tracing
+mark storage and age checks from ARC's allocator. It also excludes poisoned-storage
+diagnostics at compilation time, so a host's later environment changes cannot
+make ARC retain released objects, arrays, files or sockets. Startup rejection of
+unsupported diagnostic settings is unchanged. Native acceptance is pending in
+the [handoff](development-state.md); local layout results are not timing claims.
+
 The compiler first tries to eliminate temporary objects, keep fields as scalars,
 and place eligible values on the stack. Values that still need shared storage
 use typed reference counts where their lifetime is proved. A count reaching zero

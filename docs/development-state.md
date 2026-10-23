@@ -1,128 +1,128 @@
 # Session handoff
 
-All seven areas of [PLAN.md](../PLAN.md) remain open. Remove tracing and prefer
-ownership, borrowing and moves; use ARC only where sharing needs it. JIT is excluded.
-Continue substantial grouped PRs, with one active delivery and exact-head acceptance.
+All seven areas of [PLAN.md](../PLAN.md) remain open. Remove tracing; prefer
+ownership, borrowing and moves; reserve ARC for necessary sharing. JIT is excluded.
+Continue substantial grouped PRs with one active delivery and exact-source gates.
 
-## Accepted baseline
+## Accepted baseline and active PR
 
 [PR #198](https://github.com/e6qu/fun-with-pipes/pull/198) is squash-merged as
-`27a3e009b83e28f06130a5d686a3196b9934e53f`. Nine production jobs (`39845348815`)
-and docs (`39845348589`) passed source `30c6d65c10b3cc33cfeb72f523e4d47624508896`.
-Inspection covered 480 native binaries and 816 execution observations. The merge
-has the tested tree, one parent and the required one-line message with no trailers.
+`27a3e009b83e28f06130a5d686a3196b9934e53f`. All nine production jobs and docs passed
+source `30c6d65c10b3cc33cfeb72f523e4d47624508896`; inspection covered 480 binaries
+and 816 observations. The tree, sole parent and one-line message were verified.
 [History](roadmap-history.md#local-callback-captures-and-repeated-numerical-work-pr-198)
-records the delivery. Redundant main production run `39871314012` was cancelled;
-main documentation was preserved. The clean `/private/tmp/fwp-direct-entry-delivery`
-worktree and `/private/tmp/fwp-198-{final-acceptance,merge,merge-runs}.json` preserve
-its evidence. Do not rerun its completed helpers.
+records the evidence. Redundant main production CI was cancelled; docs were kept.
 
-## Active PR and next action
+[PR #199](https://github.com/e6qu/fun-with-pipes/pull/199) is the only open delivery.
+Published source: `4e16d81cf3b0f66ccf7933339b44521fa7315dd1`, branch
+`checked-native-default`, worktree `/private/tmp/fwp-checked-native-default`.
+Production run `39900026387` is still running; documentation `39898452054` passed.
+The benchmark and both ARM macOS jobs also passed with complete logs audited.
+Remaining jobs have reported no failed step. **Do not merge this source:** the
+independent late-option probe found the ownership defect described below.
 
-[PR #199](https://github.com/e6qu/fun-with-pipes/pull/199) uses branch
-`checked-native-default` in `/private/tmp/fwp-checked-native-default`, based on
-#198's merge. Edit code there. The primary checkout is detached at #198 and holds
-the live handoff. Published head: `51b34e6bcf1a69646766839a21d9d31468c569ed`.
-The PR is draft. Focused run `39894751457` confirms all four original production
-failures are fixed and all 179 library tests pass. Its new real-collection control
-exposes a static-heap exhaustion bug; the current working repair also fixes the
-related reuse of slots inside partly live pages. Neither repair is published yet.
-The publication receipt is `/private/tmp/fwp-default-ownership-publication.json`.
+The complete working repair is in `/private/tmp/fwp-arc-metadata-cleanup`, branch
+`arc-metadata-cleanup`, based on `4e16d81c`. It belongs in PR #199, not a second PR.
+The primary checkout stays detached at #198 and holds the live copy of this file.
+Publication state: `/private/tmp/fwp-default-ownership-publication.json`.
+Its `knownUnresolved` field prevents acceptance/merge of the obsolete source.
 
-**Next:** publish the static-heap repairs together and dispatch `native-commands`
-on Linux AMD64 for their immutable tag. Its thirteen targets now include
-`native_allocator`, with controls that deliberately remove each repair. Keep the
-PR draft until the entire focused job passes, then mark it ready. Require nine
-production jobs and docs for the same head, inspect default O0/O1/O2 binaries on
-six native platforms, and squash-merge. Use a one-line subject of at most 80
-characters and an empty body; verify tree, sole parent and message. Continue
-PLAN.md afterward. No permission question is pending.
+**Next:** finish the staged docs/test review, commit the grouped repair and
+fast-forward the delivery branch to it. Audit every completed or failed current
+job before pushing; cancel the obsolete run once its replacement is ready.
+Keep the PR draft during a thirteen-target `native-commands` Linux AMD64 check.
+After that exact-source job and its audits pass, mark the PR ready for nine full
+production jobs and docs. Inspect actual default and allocator-metadata binaries
+on all six native platforms, then squash-merge with a one-line subject of at most
+80 characters and an empty body. Verify tree, sole parent and message, then
+continue PLAN.md. No permission question is pending.
 
-The PR makes checked ARC the default for native commands, builds and generated
-modules. Unproved ownership remains an error, with no automatic switch to tracing.
-`--gc tracing` still exists; this does not finish GC removal or eliminate ARC.
-Existing collector, disabled-freeing and poisoned-storage controls select tracing
-explicitly. The intentionally expired derivative keeps its tracing runtime trap
-and separate ARC compile rejection. Ordinary golden programs exercise the default.
+## What this PR changes
 
-Default command tests cover cache identity with explicit ARC, test rejection
-before execution, and O0/O1/O2 binaries with saved C, output, status and symbols.
-Repeated/unknown `build --gc` settings fail consistently. The Python disassembly
-comparison requires `ownership="arc"` or `"tracing"`, records it, and tests both
-at O0–O3. Docs explain the new default and link frozen sources for three removed,
-obsolete allocation scripts.
+Ordinary native commands, builds, generated modules and compiler APIs use checked
+ARC by default. Unproved ownership remains an error, without a tracing fallback.
+Explicit `--gc tracing` still exists; this does not finish GC removal or eliminate
+ARC. Collector probes explicitly select tracing. The invalid inter-task derivative
+keeps its runtime trap under tracing and separate ARC compile rejection.
+Default command tests cover cache identity, rejection before execution, and saved
+O0/O1/O2 binaries. Python disassembly requires and records an explicit ownership
+mode, with both modes tested at O0–O3. Guides and historical next actions are cleaned up.
 
-## Failures, repairs and evidence
+The first full matrix found four failures, all repaired: two missed collector-mode
+selections, a mislabeled unsupported C-type diagnostic, and the invalid derivative
+in the static-memory golden suite. Independent SDK, packaging and measurements
+now continue after an earlier failure. Inventory failures propagate through log
+capture; an injected exit 37 checks that repair.
 
-The full first matrix at `8bf72ec9` was audited across all ten jobs. Benchmarks
-and docs passed; eight platform jobs shared four failures. Head `51b34e6b` fixes
-all four, confirmed by the completed focused run:
+The added real-collection control exposed two static-heap bugs. Pressure now
+forces a full collection and rechecks slots freed inside partly live pages.
+The original 1 MiB limit remains. Deliberately removing each fix, or disabling
+collection, produces the expected exhaustion. These repairs passed the focused
+run and both ARM macOS full jobs at `4e16d81c`.
 
-- Two collector probes now explicitly request tracing while preserving stress.
-- Unsupported C types receive the same specific diagnostic in default, ARC and
-  tracing modes, without producing an executable.
-- The static-memory golden suite preserves the invalid derivative's runtime trap
-  under explicit tracing; its separate ARC compile rejection remains tested.
-- Independent SDK, packaging and measurement checks continue after test failures.
-  Inventory failures propagate through log capture; an injected exit 37 confirms
-  this, and removing the fix reproduces the previously hidden failure.
+The working repair additionally prevents a host's late `FWP_REUSE_VERIFY` change
+from retaining released ARC objects, arrays, files and sockets. ARC excludes those
+diagnostic paths at compilation time; invalid startup options still fail.
+Unused mark storage and age checks are removed from ARC, along with the collector's
+stack-bound lookup. Page metadata falls from 4,648 to 4,128 bytes; inline counts
+remain 4,096 bytes. Tracing's layout is unchanged. This is a structure-size result,
+not a timing or resident-memory claim. [The report](measurements/arc-metadata.md)
+explains the measurement and limits.
 
-The added collection control still fails at `51b34e6b`: 60 iterations of the
-existing churn fixture exhaust a 1 MiB heap despite reclaimable storage. The
-working allocator repair forces a full collection under static-heap pressure and
-rechecks small-object free slots afterward. A partly live page can supply such
-slots without becoming a completely free page. Neither fix raises the heap limit.
+## Verification and retained evidence
 
-`native_allocator` now generates a real static-memory program and probes both
-cases at O0/O1/O2. It checks zeroed storage and surviving roots, then deliberately
-removes each fix and disables collection to verify that those controls fail.
-Nine binaries produce 54 observations per host. The existing 1 MiB language-level
-churn test remains, with exact output and a collection-disabled exhaustion check.
+The focused job `120234298323` in run `39898475722` passed 52 integration tests
+across thirteen targets, all 179 library tests, compiler/lint checks, inventory and
+failure controls. Its complete log has no unexpected errors. This is evidence for
+`4e16d81c`, not acceptance of the newer working repair. The earlier first-matrix
+and failed focused audits remain in `/private/tmp/fwp-199-production-acceptance-8bf72ec9.json`
+and `/private/tmp/fwp-default-repair-focused-acceptance.json`.
 
-The complete first production audit is archived at
-`/private/tmp/fwp-199-production-acceptance-8bf72ec9.json`. The failed focused
-audit is `/private/tmp/fwp-default-repair-focused-acceptance.json`; its full log
-ends with all 179 library tests passing, successful inventory/negative controls,
-and only the new collection test failing. Previous publication and dispatch
-helpers have completed; do not rerun them. The old ready helper requires `51b34e6b`
-and is obsolete. Prepare new publication/dispatch/audit helpers for the repair.
+Every local check uses `python3 scripts/local-guard.py COMMAND...`. Full builds,
+full suites and large measurements stay on GitHub. Local C checks use Apple Clang
+on ARM64, C emitted by accepted compiler #197, and the exact working runtime
+substituted into it. They do not establish new-compiler or other-platform support.
 
-After the next focused job passes and the PR is ready,
-`/private/tmp/fwp-discover-199-runs.py` registers production/docs runs.
-`/private/tmp/fwp-audit-199-final.py` then audits all exact-head gates.
-`/private/tmp/fwp-inspect-default-builds.py` checks artifact hashes, image
-architecture, disassembly, output and absence of tracing for O0/O1/O2.
-`/private/tmp/fwp-merge-199.py` requires that acceptance and six binary reports,
-then verifies the squash result. None of these final acceptance steps has run
-for the current repair.
+- Static-pressure checks passed 27 observations, then 54 using the tracked fixture
+  at O0/O1/O2. Nine actual ARM64 binaries were inspected. Evidence:
+  `/private/tmp/fwp-static-pressure{,-fixture}-verified/`.
+- `/private/tmp/fwp-probe-late-reuse-option.py` reproduced the ARC defect: uniqueness
+  changed to poisoned-copy mode and 32 released bytes stayed retained. The repaired
+  probe passes with uniqueness 1 and zero retained bytes.
+- `/private/tmp/fwp-check-arc-metadata-fixture.py` passed twelve inspected binaries
+  and sixty observations in 6.01 seconds. Both ownership/memory modes, O0/O1/O2,
+  wide counts and all four affected resource paths are covered. ARC symbols exclude
+  poisoning and stack discovery. Results: `/private/tmp/fwp-arc-metadata-fixture/`.
+- `/private/tmp/fwp-check-arc-metadata-negative.py` used the actual old runtime to
+  reproduce all four defects in six binaries/thirty observations (2.79 seconds).
+  Results: `/private/tmp/fwp-arc-metadata-negative/`.
+- `/private/tmp/fwp-check-late-corpus-samples.py` passed array-alias and task/channel/
+  UDP examples against the interpreter and goldens, with ordinary/late options
+  and return-memory ledgers (3.47 seconds). The complete corpus remains a CI gate.
+- `/private/tmp/fwp-check-metadata-docs.py` passed focused formatting, whitespace,
+  107 doc link sets, 106 immutable anchors and all seven roadmap status rows.
+  The staged measurement report and required handoff table are included.
 
-## Checks and resources
+The new native test saves twelve C files/executables and sixty outcomes per host
+under `allocator-metadata/`. The corpus reuses each compiled binary for its second
+environment, avoiding another compilation per program.
 
-Use `python3 scripts/local-guard.py COMMAND...` for every local check. The
-formatter, workflow/docs audits and preservation of existing test controls passed
-at `51b34e6b`; rerun them for the current edits before publication.
+## Resume tools and resource limits
 
-The guarded `/private/tmp/fwp-check-static-pressure.py` passed 27 native
-observations for the churn and partly-live-slot cases. The guarded
-`/private/tmp/fwp-check-static-pressure-fixture.py` passed all 54 observations
-using the actual new fixture at O0/O1/O2. These use Apple Clang on ARM64, C emitted
-by the accepted #197 compiler, and the exact working allocator substituted into
-that C. They verify the allocator repair locally, not the new compiler or other
-platforms. Receipts in `/private/tmp/fwp-static-pressure{,-fixture}-verified/`
-retain source/binary hashes, commands and outcomes. No full build ran locally.
+`/private/tmp/fwp-audit-199-final.py` audits the registered production/docs jobs and
+records known unresolved issues. Completed publication/dispatch/ready helpers must
+not be rerun. Prepare new ones for the metadata repair's source/tag; the old ready
+helper validates the previous static-pressure tag. Archive receipts when changing
+sources. Current failed or unfinished runs are not acceptance.
 
-Two SDK tests passed in 1.58 seconds through the guard using the accepted #197
-compiler at `/private/tmp/fwp-check-compiler-0367e819/fwp`, Apple Clang and LLVM
-objdump: invalid ownership rejection and eight actual ARM64 objects across both
-modes and O0–O3. Command: `python3 -W error::ResourceWarning -m unittest`
-`test_tools.Tools.test_disassembly_rejects_invalid_ownership_before_creating_output`
-`test_tools.Tools.test_disassembly_compares_c_and_instruction_encodings_at_four_levels -v`,
-with explicit `PYTHONPATH`, `FWP_TEST_BIN`, `FWP_OBJDUMP` and `CC`.
-This validates the Python API, not the new compiler's final acceptance.
+Extend `/private/tmp/fwp-inspect-default-builds.py` and `/private/tmp/fwp-merge-199.py`
+to require the new allocator-metadata evidence as well as the existing three default
+binaries per host. Merge still requires all nine exact-source production jobs and
+docs, with fresh live confirmation. No automatic merge is queued.
 
-Keep checks serial and guarded: at least 64 GiB free disk, generated target data
-below 2 GiB, sampled workload RSS below 1 GiB and the 180-second deadline.
-Last observed free space: 66 GiB. Never raise limits; preserve worktrees and receipts.
+Keep local work serial and guarded: 64 GiB free disk, generated target data below
+2 GiB, sampled aggregate RSS below 1 GiB and a 180-second deadline. Never raise
+limits. Preserve worktrees, source hashes, binaries and receipts.
 
 ## Roadmap status
 
@@ -135,3 +135,5 @@ Last observed free space: 66 GiB. Never raise limits; preserve worktrees and rec
 | 5 | In progress | Validate CPU numerical kernels |
 | 6 | In progress | Stabilize comparisons and set workload budgets |
 | 7 | In progress | Complete the application acceptance suite |
+
+No further optimization is selected beyond this PR.
