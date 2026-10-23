@@ -1,0 +1,71 @@
+# Cleanup when collection operations fail
+
+`map` applies a function to every list element. A later call can fail after an
+earlier call has already produced a result. That partial result and the temporary
+storage holding it must be released. Independently owned input values must remain
+valid.
+
+Automatic reference counting (ARC) releases storage when its last counted owner
+finishes using it. An alias is another reference to the same value. These checks
+exercise that cleanup directly, alongside the tracing mode that also searches
+the heap for reachable values.
+
+This function adds `!` to ordinary words and fails on `"stop"`:
+
+```fwp
+decorate : String -> String ! {Error[String]}
+decorate = if (eq "stop") (const "expected" | fail) (concat "!")
+main = ["a", "stop"] | attempt (map decorate) | echo
+```
+
+`! {Error[String]}` declares that the function can fail with a string message.
+`const "expected"` ignores its input and produces that message; `fail` raises it.
+`attempt` catches the failure, so the program prints `Err "expected"`. The
+intermediate `"a!"` must be released even though the list operation never returns
+a completed list.
+
+## Cases checked
+
+| Probe | Work and cleanup obligations |
+|---|---|
+| [Loop preparation](../../tests/loop_preparation_ownership.rs) | Prepare tuple fields for an iteration; release fields acquired before a later acquisition fails; preserve independent aliases and integer bits |
+| [Map](../../tests/map_unwind_ownership.rs) | Release completed results and temporary storage after callback failure, result-list allocation failure or cancellation |
+| [Filter and prefix selection](../../tests/selection_unwind_ownership.rs) | `filter` keeps matching elements; `take-while` keeps a matching prefix. Their selected aliases and temporary storage must be released when a predicate fails or the task is cancelled |
+| [Zip](../../tests/zip_unwind_ownership.rs) | Combine corresponding elements from two lists; release partial results and both temporary buffers, including failure while allocating the second buffer |
+
+The collection probes also use integers whose bits happen to equal valid object
+addresses. Typed cleanup must treat those integers as numbers, not as additional
+owners of the pointed-to objects.
+
+Each probe runs 32 rounds in checked ARC and tracing mode. ARC rounds must return
+the allocator's accounted bytes for live values (the managed byte charge) to the
+starting value, with no wide-count entries or
+collections. A wide count is an auxiliary counter used when the object's inline
+counter is too small. Deliberately omitting a final fixture release must fail with
+status 90. Removing a temporary-buffer release must fail with status 3; the loop's
+missing partial cleanup must fail with status 5.
+
+Settings are explicit: dynamic memory, enabled stack placement, C emission at O2,
+and native C builds at optimization levels O1/O2. ARC runs disable collector
+diagnostics. Tracing runs collect at every allocation and verify their tracing,
+with both ordinary and poisoned storage checks. Poisoning deliberately keeps
+released objects and marks their contents to expose stale uses. ARC uses direct
+cleanup checks because retaining released objects would violate its memory contract.
+Complete programs compare with the raw interpreter, which disables optimization.
+
+## Evidence and limits
+
+These tests measure cleanup, not execution speed. The byte charge covers managed
+storage, not resident memory, allocator metadata or every external allocation.
+They provide no C/Rust performance comparison and do not prove a bound for
+arbitrary programs.
+
+CI saves generated C, executables, output and exit status under `record-ownership/`.
+The related record, constructor and collection probes now save unexpected
+outcomes before asserting success, so a failed check leaves its evidence intact.
+The compiler and runtime are unchanged. [The handoff](../development-state.md)
+records local evidence and the remaining Rust-harness and native-platform gates.
+
+See [record cleanup](record-cleanup.md) for constructors and field conversions,
+[ownership](../ownership.md) for the memory contract and [PLAN.md](../../PLAN.md)
+for the remaining removal of tracing and unnecessary reference counting.

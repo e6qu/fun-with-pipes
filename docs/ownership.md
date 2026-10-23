@@ -141,6 +141,11 @@ storage is reclaimed. They also repair overflow-fixture counts and a test select
 that ran the wrong constructor case. Runtime ownership rules are unchanged;
 the handoff distinguishes local checks from final native acceptance.
 
+[Loop and collection cleanup checks](measurements/collection-cleanup.md) cover
+partly prepared iteration state and temporary storage for mapping, filtering and
+zipping. They preserve independent aliases and scalar bits across failure and
+cancellation, with repeated ARC storage checks and deliberately missing releases.
+
 | Value family | Current representation or ownership | Important boundary |
 |---|---|---|
 | Small scalars and empty variants | Inline words or concrete C scalars | Bits resembling addresses remain numbers |

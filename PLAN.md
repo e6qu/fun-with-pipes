@@ -109,6 +109,8 @@ outside the benchmark suite.
    the existing controls until their replacements pass, then remove tracing mode.
    [Record and variant cleanup checks](docs/measurements/record-cleanup.md) cover
    direct ARC failures, constructor/call cleanup and repeated storage balances.
+   [Loop and collection cleanup](docs/measurements/collection-cleanup.md) extends
+   the checks to partial iteration state, callbacks, temporary buffers and cancellation.
    Extend this evidence to the remaining collector-specific checks before removing them.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
    [Integer counting](docs/measurements/integer-counting.md) and
