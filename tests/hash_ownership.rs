@@ -169,9 +169,7 @@ fn hashes_match_typed_interpretation_and_preserve_aliases() {
                 .arg(&source)
                 .args(["--emit-c", "-o"])
                 .arg(&cfile);
-            if arc {
-                command.args(["--gc", "arc"]);
-            }
+            command.args(["--gc", if arc { "arc" } else { "tracing" }]);
             checked(&mut command);
             let mut code = std::fs::read_to_string(cfile).unwrap();
             if arc {
@@ -248,9 +246,7 @@ fn hashing_allocates_nothing_and_the_buffered_control_is_detected() {
             .arg(&source)
             .args(["--emit-c", "-o"])
             .arg(&cfile);
-        if arc {
-            command.args(["--gc", "arc"]);
-        }
+        command.args(["--gc", if arc { "arc" } else { "tracing" }]);
         checked(&mut command);
         let code = std::fs::read_to_string(&cfile).unwrap();
         let code = &code[..code.find("int main(").unwrap()];
@@ -369,9 +365,7 @@ main = input () | map (both id (const (div 0 1)) | hash) | fold bit.xor 0u64 | e
                 .arg(&input)
                 .arg("-o")
                 .arg(&cfile);
-            if arc {
-                build.args(["--gc", "arc"]);
-            }
+            build.args(["--gc", if arc { "arc" } else { "tracing" }]);
             checked(&mut build);
             let code = std::fs::read_to_string(cfile).unwrap();
             assert_eq!(code.contains("/* fused :"), fused, "{label}");
@@ -416,9 +410,7 @@ fn hash_reduction_removes_lists_and_temporary_heap_tuples() {
                 .arg(&input)
                 .arg("-o")
                 .arg(&cfile);
-            if arc {
-                build.args(["--gc", "arc"]);
-            }
+            build.args(["--gc", if arc { "arc" } else { "tracing" }]);
             checked(&mut build);
             let mut code = std::fs::read_to_string(cfile).unwrap();
             assert!(code.contains("/* fused :"));

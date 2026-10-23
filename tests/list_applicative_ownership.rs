@@ -53,7 +53,7 @@ fn cartesian_results_and_scratch_release_on_trap_and_cancel() {
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&input)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -248,7 +248,7 @@ main = [
             checked(
                 Command::new(env!("CARGO_BIN_EXE_fwp"))
                     .env_remove("FWP_NO_OPT")
-                    .arg("build")
+                    .args(["build", "--gc", "tracing"])
                     .arg(&input)
                     .args(["--emit-c", "-o"])
                     .arg(&cfile),
@@ -304,7 +304,7 @@ fn closure_drop_context_recovers_after_capture_trap_and_spill_oom() {
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&input)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -393,7 +393,7 @@ fn inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries() 
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&input)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -532,7 +532,7 @@ main = [
         checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
                 .env_remove("FWP_NO_OPT")
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&input)
                 .args(["--emit-c", "-o"])
                 .arg(&cfile),

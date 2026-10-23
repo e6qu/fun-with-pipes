@@ -27,6 +27,10 @@ fn receive_program() -> Program {
 }
 
 fn receive_runtime() -> String {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let (generated, _) = fwp::cgen::generate_library(&receive_program(), "grpc_receive").unwrap();
     generated
 }
@@ -108,6 +112,10 @@ int main(int argc,char **argv){
 
 #[test]
 fn executable_shutdown_closes_idle_connections_before_draining_tasks() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let mut program = receive_program();
     program.main = Some(program.funcs.len());
     program.exports.clear();

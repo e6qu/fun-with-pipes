@@ -56,9 +56,7 @@ fn direct_range_arrays_preserve_values_and_bound_order() {
                     .arg(&input)
                     .arg("-o")
                     .arg(&cfile);
-                if arc {
-                    build.args(["--gc", "arc"]);
-                }
+                build.args(["--gc", if arc { "arc" } else { "tracing" }]);
                 checked(&mut build);
                 let code = std::fs::read_to_string(cfile).unwrap();
                 assert_eq!(
@@ -112,9 +110,7 @@ fn direct_range_array_has_no_per_element_heap_allocations() {
                 .arg(&input)
                 .arg("-o")
                 .arg(&cfile);
-            if arc {
-                build.args(["--gc", "arc"]);
-            }
+            build.args(["--gc", if arc { "arc" } else { "tracing" }]);
             checked(&mut build);
             let mut code = std::fs::read_to_string(cfile).unwrap();
             let marker = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";

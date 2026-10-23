@@ -38,7 +38,7 @@ fn emitted(scratch: &Scratch, fixture_name: &str, function: &str, packing: &str)
             .env_remove("FWP_TYPED_ABI")
             .env("FWP_REUSE", "1")
             .env("FWP_PACKED_ARRAYS", packing)
-            .args(["build", "--fn", function, "--emit-c"])
+            .args(["build", "--gc", "tracing", "--fn", function, "--emit-c"])
             .arg(fixture(fixture_name))
             .arg("-o")
             .arg(&path),
@@ -92,7 +92,7 @@ fn immutable_numeric_operations_agree_with_raw_interpreter() {
                         .env_remove("FWP_NO_OPT")
                         .env("FWP_PACKED_ARRAYS", packing)
                         .env("FWP_REUSE", reuse)
-                        .args(["build", opt])
+                        .args(["build", "--gc", "tracing", opt])
                         .arg(&source)
                         .arg("-o")
                         .arg(&path),

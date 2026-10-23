@@ -98,7 +98,7 @@ main = "{}" | file.open | reopen
         let exe = dir.0.join(opt);
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -149,7 +149,7 @@ main = [discard (), discard ()] | ignore | const "closed" | print
             let exe = dir.0.join(format!("helper{opt}-{flags}"));
             checked(
                 Command::new(fwp)
-                    .arg("build")
+                    .args(["build", "--gc", "tracing"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe)
@@ -213,7 +213,7 @@ main = "PATH" | file.open | attempt give-error | match
             let exe = dir.0.join("probe");
             checked(
                 Command::new(fwp)
-                    .arg("build")
+                    .args(["build", "--gc", "tracing"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe),

@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn file_storage_disposal_removes_finalizers_before_reuse() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![Func {

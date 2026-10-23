@@ -96,8 +96,8 @@ There are three different claims to keep separate:
 
 | Mode or setting | What it provides | What it does not prove |
 |---|---|---|
-| Default native tracing mode | Reference counting for proved owners, plus tracing collection for shared graphs | Every object is freed immediately |
-| `--gc arc` | Compile-time checks for the supported automatic-reference-counting subset; tracing code is excluded | Every fwp program is supported, or allocations disappear |
+| Explicit `--gc tracing` | Reference counting for proved owners, plus tracing collection for shared graphs | Every object is freed immediately |
+| Default native mode, also selected by `--gc arc` | Compile-time checks for the supported automatic-reference-counting subset; tracing code is excluded | Every fwp program is supported, or allocations disappear |
 | `FWP_GC=off` | Turns collection off in a tracing build, useful as a test control | Values have complete ownership or memory use stays bounded |
 
 `--memory static` provides a bounded memory pool. It does not mean that every
@@ -848,8 +848,10 @@ cover ARC exclusion and an ordinary tracing control.
 | Generated REST/MCP | Same checked entries, including aliases, errors and normal shutdown | [PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164) |
 | WASI and browser-loader modules | Counted values and command-end task/scheduler cleanup | [Module evidence](benchmarks.md#webassembly-task-and-browser-loader-ownership); loader tested in Node, actual browser engines remain unverified |
 
-These accepted paths still allocate and count references. Default native mode
-still includes tracing; general removal is a [project goal](../PLAN.md).
+These accepted paths still allocate and count references. Native builds now
+select checked ARC unless `--gc tracing` is explicit. Acceptance of the default
+change is tracked in the [handoff](development-state.md). Tracing remains an
+explicit mode; removing it entirely is a [project goal](../PLAN.md).
 The JavaScript host owns its instances, promises and copied strings independently;
 removing fwp tracing does not remove that host's collector.
 

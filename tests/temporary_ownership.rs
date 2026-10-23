@@ -50,7 +50,7 @@ main = (10000, 0) | loop step | echo
     let cfile = dir.0.join("temporaries.c");
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile)
@@ -133,7 +133,7 @@ main = [
         let exe = dir.0.join(opt);
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),

@@ -30,7 +30,7 @@ fn emitted(dir: &Scratch, source: &str) -> String {
     std::fs::write(&path, source).unwrap();
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&path)
             .args(["--emit-c", "-o"])
             .arg(&cfile)
@@ -258,7 +258,7 @@ main = [
             let exe = dir.0.join(format!("stress{opt}-{stack}"));
             checked(
                 Command::new(fwp)
-                    .arg("build")
+                    .args(["build", "--gc", "tracing"])
                     .arg(&source)
                     .args([opt, "-o"])
                     .arg(&exe)

@@ -10,7 +10,7 @@ fn input_nodes_omit_metadata_and_managed_weights_transfer_atomically() {
     let cfile = directory.join("runtime.c");
     std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
     let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--emit-c", "-o"])
+        .args(["build", "--gc", "tracing", "--emit-c", "-o"])
         .arg(&cfile)
         .arg(&input)
         .output()
@@ -75,7 +75,7 @@ fn autodiff_workspaces_reuse_bounded_storage_and_release_every_private_owner() {
     let cfile = directory.join("runtime.c");
     std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
     let out = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--emit-c"])
+        .args(["build", "--gc", "tracing", "--emit-c"])
         .arg(&input)
         .arg("-o")
         .arg(&cfile)
@@ -181,7 +181,7 @@ fn backward_prefix_bounds_actual_native_storage_and_scans() {
     let cfile = directory.join("runtime.c");
     std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
     let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--emit-c"])
+        .args(["build", "--gc", "tracing", "--emit-c"])
         .arg(&input)
         .arg("-o")
         .arg(&cfile)
@@ -279,7 +279,7 @@ fn unused_tape_suffix_preserves_language_values_and_forward_traps() {
                 let binary = directory.join("prefix.exe");
                 let mut build = Command::new(compiler);
                 build.arg("build").arg(&input).arg(opt).arg("-o").arg(&binary);
-                if arc { build.args(["--gc", "arc"]); }
+                build.args(["--gc", if arc { "arc" } else { "tracing" }]);
                 let built = build.output().unwrap();
                 assert!(built.status.success(), "{built:?}");
                 for workspace in ["0", "1"] {

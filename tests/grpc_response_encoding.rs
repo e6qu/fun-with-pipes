@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn served_buffers_release_on_decode_encode_traps_and_cancelled_send() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -211,6 +215,10 @@ int main(void){
 
 #[test]
 fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     use fwp::value::Value;
     let unit = MT::unit();
     let string = MT::con("std::String");
@@ -430,6 +438,10 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
 
 #[test]
 fn native_output_channels_borrow_values_and_release_context() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![

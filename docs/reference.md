@@ -592,9 +592,9 @@ fwp build file.fwp [options]                  compile
                      with the arguments after `--` (stdin from
                      --pgo-input F, or empty), then build with the profile
                      (needs GCC)
-    --gc arc         checked native/WebAssembly executables and native C libraries;
+    --gc arc         checked ownership (default) for native/WebAssembly and C libraries;
                      unsupported value/runtime boundaries diagnose
-    --gc tracing     tracing collection mode (the default)
+    --gc tracing     explicitly select tracing collection
     --memory static  bounded runtime storage and stacks at startup, with
                      --heap S, --pool S, --stack S, --tasks N,
                      --task-stack S and --threads N
@@ -1136,7 +1136,9 @@ exports.deactivate = () => client && client.stop();
 `fwp test --gc arc tests.fwp` checks every test against the ARC ownership rules
 before any test runs. `fwp test --std --gc arc` checks the standard library tests in the same mode.
 A rejected entry produces a compile diagnostic; it does not rerun under tracing.
-The existing default remains tracing while the wider migration is validated.
+Checked ARC is now the default. `--gc tracing` explicitly selects the collector
+for diagnostics and programs whose ownership is not yet proved. A rejected
+program never changes memory modes automatically.
 
 For example, `test "length" = "abc" | string.length | eq 3` succeeds. A test that
 raises a language `Error` reports its value and fails; the runner releases that

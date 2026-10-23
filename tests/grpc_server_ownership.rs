@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn cancelling_grpc_server_releases_listener_and_preserves_accepted_owners() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![

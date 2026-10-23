@@ -13,6 +13,10 @@ fn checked(command: &mut Command) -> Output {
 }
 #[test]
 fn original_record_holders_preserve_files_without_heap_boxes() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let dir = fwp::cgen::TempDir::new("fwp-resource-frame-fields").unwrap();
     let data = dir.join("data");
     std::fs::write(&data, "contents").unwrap();
@@ -44,7 +48,7 @@ main = "{}" | file.open | pack | .file | file.close | const "closed" | echo
     for opt in ["-O1", "-O2"] {
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),

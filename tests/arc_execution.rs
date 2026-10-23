@@ -536,7 +536,7 @@ int main(void) {
                     .env_remove("FWP_NO_OPT")
                     .env("FWP_STACK", "0")
                     .env("FWP_FREE", free)
-                    .args(["build", "--emit-c"])
+                    .args(["build", "--gc", "tracing", "--emit-c"])
                     .arg(&input)
                     .arg("-o")
                     .arg(&hybrid_c),

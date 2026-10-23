@@ -48,7 +48,7 @@ main = "{}" | file.create | observe | echo
         let exe = dir.0.join(opt);
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -67,6 +67,10 @@ main = "{}" | file.create | observe | echo
 
 #[test]
 fn flush_failures_are_write_errors_and_preserve_the_borrowed_handle() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     use fwp::ir::*;
     let p = Program {
         funcs: vec![Func {

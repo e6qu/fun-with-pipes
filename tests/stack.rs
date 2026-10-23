@@ -171,7 +171,7 @@ fn allocated(dir: &TempDir, name: &str, var: &str, value: &str, expected: &str) 
     let src = root().join(format!("tests/stack/{}.fwp", name));
     let exe = dir.0.join(format!("{}{}", name, value));
     let b = Command::new(fwp())
-        .arg("build")
+        .args(["build", "--gc", "tracing"])
         .arg(&src)
         .arg("-o")
         .arg(&exe)

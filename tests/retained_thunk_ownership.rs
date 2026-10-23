@@ -39,7 +39,7 @@ fn spawned_thunks_release_captures_and_preserve_external_aliases() {
         String::from_utf8_lossy(&reference.stderr)
     );
     let build = Command::new(fwp)
-        .arg("build")
+        .args(["build", "--gc", "tracing"])
         .arg(&src)
         .args(["--emit-c", "-o"])
         .arg(&cfile)
@@ -145,7 +145,7 @@ fn failing_spawn_preparation_releases_transferred_owner_and_preserves_alias() {
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
     let build = Command::new(fwp)
-        .arg("build")
+        .args(["build", "--gc", "tracing"])
         .arg(&src)
         .args(["--emit-c", "-o"])
         .arg(&cfile)

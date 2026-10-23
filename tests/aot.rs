@@ -599,12 +599,17 @@ fn native_ownership_modes_are_explicit_and_part_of_the_cache() {
     let source = dir.join("main.fwp");
     std::fs::write(&source, "main = \"abc\" | string.repeat 7 | echo\n").unwrap();
     let mut cached = Vec::new();
-    for mode in ["arc", "tracing", "arc"] {
-        let actual = output(cache.fwp(&["run", "--gc", mode]).arg(&source), b"");
+    for (options, count) in [
+        (vec!["run"], 1),
+        (vec!["run", "--gc", "arc"], 1),
+        (vec!["run", "--gc", "tracing"], 2),
+        (vec!["run", "--gc", "arc"], 2),
+    ] {
+        let actual = output(cache.fwp(&options).arg(&source), b"");
         assert!(actual.status.success(), "{}", render(&actual));
         assert_eq!(actual.stdout, b"abcabcabcabcabcabcabc\n");
         let entries = cache.entries();
-        assert_eq!(entries.len(), if cached.is_empty() { 1 } else { 2 });
+        assert_eq!(entries.len(), count);
         if cached.is_empty() {
             let symbols = Command::new("nm").arg(&entries[0]).output().unwrap();
             assert!(symbols.status.success(), "{}", render(&symbols));
@@ -614,13 +619,52 @@ fn native_ownership_modes_are_explicit_and_part_of_the_cache() {
             cached = entries;
         }
     }
+    for opt in ["-O0", "-O1", "-O2"] {
+        let emitted = dir.join(format!("default{opt}.c"));
+        let binary = dir.join(format!("default{opt}.exe"));
+        let built = output(
+            cache
+                .fwp(&["build", opt, "--emit-c", "-o"])
+                .arg(&emitted)
+                .arg(&source),
+            b"",
+        );
+        assert!(built.status.success(), "{}", render(&built));
+        let code = std::fs::read_to_string(&emitted).unwrap();
+        assert!(code.contains("#define FWP_ARC_ONLY 1"));
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        let ran = output(&mut Command::new(&binary), b"");
+        assert!(ran.status.success(), "{}", render(&ran));
+        assert_eq!(ran.stdout, b"abcabcabcabcabcabcabc\n");
+        assert!(ran.stderr.is_empty());
+        let symbols = Command::new("nm").arg(&binary).output().unwrap();
+        assert!(symbols.status.success(), "{}", render(&symbols));
+        for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+            assert!(!String::from_utf8_lossy(&symbols.stdout).contains(name));
+        }
+        if let Some(artifacts) = std::env::var_os("FWP_ARC_ARTIFACTS") {
+            let destination = PathBuf::from(artifacts).join("default-ownership");
+            std::fs::create_dir_all(&destination).unwrap();
+            let stem = destination.join(format!("default{opt}"));
+            std::fs::copy(&binary, stem.with_extension("exe")).unwrap();
+            std::fs::copy(&emitted, stem.with_extension("c")).unwrap();
+            std::fs::write(stem.with_extension("stdout"), &ran.stdout).unwrap();
+            std::fs::write(stem.with_extension("stderr"), &ran.stderr).unwrap();
+            std::fs::write(
+                stem.with_extension("status"),
+                format!("{:?}\n", ran.status.code()),
+            )
+            .unwrap();
+            std::fs::write(stem.with_extension("symbols"), &symbols.stdout).unwrap();
+        }
+    }
     let bad = dir.join("bad.fwp");
     std::fs::write(
         &bad,
         "test \"good\" = True\ntest \"missing scope\" = () | get | eq 0\n",
     )
     .unwrap();
-    let rejected = output(cache.fwp(&["test", "--gc", "arc"]).arg(&bad), b"");
+    let rejected = output(cache.fwp(&["test"]).arg(&bad), b"");
     assert_eq!(rejected.status.code(), Some(1), "{}", render(&rejected));
     assert!(
         rejected.stdout.is_empty(),
@@ -646,11 +690,49 @@ fn native_ownership_modes_are_explicit_and_part_of_the_cache() {
         );
         assert!(rejected.stdout.is_empty());
     }
+    // Build accepts options after the file too; ownership still must be chosen
+    // exactly once, and invalid modes must not produce an output file.
+    let emitted = dir.join("rejected.c");
+    for options in [
+        vec!["--gc"],
+        vec!["--gc=unknown"],
+        vec!["--gc=arc", "--gc=tracing"],
+        vec!["--gc", "arc", "--gc", "arc"],
+    ] {
+        let rejected = output(
+            cache
+                .fwp(&["build", "--emit-c", "-o"])
+                .arg(&emitted)
+                .arg(&source)
+                .args(&options),
+            b"",
+        );
+        assert_eq!(
+            rejected.status.code(),
+            Some(2),
+            "{options:?}: {}",
+            render(&rejected)
+        );
+        assert!(rejected.stdout.is_empty());
+        let message = if options.len() > 1 {
+            "choose --gc once: arc or tracing"
+        } else {
+            "--gc requires arc or tracing"
+        };
+        assert!(
+            String::from_utf8_lossy(&rejected.stderr).contains(message),
+            "{}",
+            render(&rejected)
+        );
+        assert!(!emitted.exists());
+    }
     let tools = root().join("tests/exec/tools.fwp");
     let spec = format!("{t}:scale 2 | {t}:total", t = tools.display());
-    let pipeline = output(&mut cache.fwp(&["pipe", "--gc", "arc", &spec]), b"1\n2\n");
-    assert!(pipeline.status.success(), "{}", render(&pipeline));
-    assert_eq!(pipeline.stdout, b"6\n");
+    for options in [vec!["pipe", &spec], vec!["pipe", "--gc", "arc", &spec]] {
+        let pipeline = output(&mut cache.fwp(&options), b"1\n2\n");
+        assert!(pipeline.status.success(), "{}", render(&pipeline));
+        assert_eq!(pipeline.stdout, b"6\n");
+    }
 }
 
 #[test]

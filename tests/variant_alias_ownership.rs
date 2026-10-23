@@ -10,6 +10,10 @@ fn fun(params: &[MT], result: MT) -> MT {
 }
 #[test]
 fn returned_variant_aliases_transfer_fields_once() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let string = MT::con("std::String");
     let i64 = MT::con("std::I64");
     let outcome = MT::con("Outcome");
@@ -232,7 +236,7 @@ main = "later" | choose (read-all () | string.length | eq 0) "first" "last" | ec
         .unwrap();
     assert!(reference.status.success());
     let output = Command::new(fwp)
-        .arg("build")
+        .args(["build", "--gc", "tracing"])
         .arg(&src)
         .args(["--emit-c", "-o"])
         .arg(&cfile)
@@ -256,7 +260,7 @@ main = "later" | choose (read-all () | string.length | eq 0) "first" "last" | ec
     );
     for opt in ["-O1", "-O2"] {
         let output = Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args([opt, "-o"])
             .arg(&exe)
@@ -288,6 +292,10 @@ main = "later" | choose (read-all () | string.length | eq 0) "first" "last" | ec
 
 #[test]
 fn matching_one_variant_payload_moves_its_owner_in_all_result_forms() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let text = MT::con("std::String");
     let outcome = MT::con("Single");
     let pair = MT::Record(vec![

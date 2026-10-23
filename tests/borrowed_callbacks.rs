@@ -37,7 +37,7 @@ main = 3 | choose | apply 7 | echo
     .unwrap();
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&fixture)
             .args(["--emit-c", "-o"])
             .arg(&emitted),

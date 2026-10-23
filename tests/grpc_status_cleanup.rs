@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn served_status_messages_release_after_encoding_and_on_cancellation() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![

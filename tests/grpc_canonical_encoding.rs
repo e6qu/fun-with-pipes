@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn canonical_encoding_scratch_releases_on_partial_and_transcoder_failure() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -120,6 +124,10 @@ int main(void){
 
 #[test]
 fn canonical_decoding_scratch_releases_on_malformed_values_and_allocation_traps() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![

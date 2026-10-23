@@ -14,6 +14,13 @@ machine. This page separates two different questions:
 The measurements below are dated observations. They do not promise the same
 ratios on another machine or establish that the whole language is “zero-cost.”
 
+Early one-off allocation probes are archived with their original compiler setup:
+[derivative scopes](https://github.com/e6qu/fun-with-pipes/blob/27a3e009b83e28f06130a5d686a3196b9934e53f/scripts/measure-ad-scope-allocations-complete.py),
+[list callbacks](https://github.com/e6qu/fun-with-pipes/blob/27a3e009b83e28f06130a5d686a3196b9934e53f/scripts/measure-list-callback-allocations-complete.py),
+and [typed state](https://github.com/e6qu/fun-with-pipes/blob/27a3e009b83e28f06130a5d686a3196b9934e53f/scripts/measure-typed-state-allocations-complete.py).
+Their results remain historical evidence; these scripts are no longer maintained
+commands. Current comparisons name ARC or tracing explicitly.
+
 The [application acceptance suite](application-acceptance.md) names the larger
 programs, current checks and remaining measurement gaps. The first
 [word-frequency baseline](measurements/wordfreq.md) records a 3.29–3.52× ARC/C

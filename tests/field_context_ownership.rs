@@ -4,6 +4,10 @@ use fwp::value::Value;
 use std::process::Command;
 #[test]
 fn inlined_projection_releases_discarded_nested_children() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let string = MT::con("std::String");
     let i64 = MT::con("std::I64");
     let inner = MT::con("Inner");
@@ -197,7 +201,7 @@ main = "input" | choose (read-all () | string.length | eq 0) | echo
         .unwrap();
     assert!(reference.status.success());
     let output = Command::new(fwp)
-        .arg("build")
+        .args(["build", "--gc", "tracing"])
         .arg(&src)
         .args(["--emit-c", "-o"])
         .arg(&cfile)
@@ -254,7 +258,7 @@ int main(void) {
             );
         }
         let output = Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args([opt, "-o"])
             .arg(&exe)

@@ -155,6 +155,10 @@ fn program() -> Program {
 
 #[test]
 fn library_input_copies_transfer_or_release_exactly_once() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let p = program();
     let mut interp = fwp::interp::Interp::new(&p, Box::new(Vec::new())).unwrap();
     assert_eq!(
@@ -314,6 +318,10 @@ int main(void){
 
 #[test]
 fn byte_pointer_export_parameters_report_the_missing_length() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let f = Func {
         name: "size".into(),
         arity: 1,

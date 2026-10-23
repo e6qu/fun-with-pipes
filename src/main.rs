@@ -112,7 +112,8 @@ FWP_CACHE_MAX, default 256); -O0..-O3 before the file sets the C
 optimization level (default -O2, -O1 for tests). --interp (or
 FWP_RUN=interp) runs the interpreter instead. A missing C compiler is an error.
 --gc arc|tracing before the file selects native ownership for run, exec,
-test and serve; pipe accepts it before its stages. Tracing remains the default.
+test and serve; pipe accepts it before its stages. Checked ARC is the default.
+Rejected ownership is an error; execution never switches to tracing automatically.
   fwp cache dir | clean          print or empty the cache of executables
 ";
 
@@ -508,7 +509,8 @@ fn build(args: &[String]) -> ExitCode {
     let mut memory: Option<fwp::cgen::StaticMemory> = None;
     let mut sizes: Vec<(String, String)> = Vec::new();
     let mut static_link = false;
-    let mut arc = false;
+    let mut arc = true;
+    let mut ownership_selected = false;
     let mut cross: Option<String> = None;
     let mut pgo = false;
     let mut pgo_input: Option<String> = None;
@@ -520,7 +522,12 @@ fn build(args: &[String]) -> ExitCode {
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
-            "--gc" | "--gc=arc" | "--gc=tracing" => {
+            option if option == "--gc" || option.starts_with("--gc=") => {
+                if ownership_selected {
+                    eprintln!("fwp build: choose --gc once: arc or tracing");
+                    return ExitCode::from(2);
+                }
+                ownership_selected = true;
                 let value = match args[i].split_once('=') {
                     Some((_, value)) => Some(value.to_string()),
                     None => {

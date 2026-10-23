@@ -42,7 +42,7 @@ fn recursive_record_workers_keep_results_unboxed() {
     let cfile = dir.0.join("wide.c");
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -71,6 +71,10 @@ fn recursive_record_workers_keep_results_unboxed() {
 
 #[test]
 fn transferred_record_fields_preserve_aliases_and_trap_cleanup() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     use fwp::ir::*;
     use fwp::value::Value;
     fn fun(args: &[MT], ret: MT) -> MT {
@@ -300,6 +304,10 @@ int main(void){
 
 #[test]
 fn forwarded_callback_records_keep_their_box_and_release_aliases_on_failure() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     use fwp::ir::*;
     use fwp::value::{Closure, Value};
     use std::rc::Rc;

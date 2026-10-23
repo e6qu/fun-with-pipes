@@ -85,7 +85,7 @@ fn failed_result_boxing_releases_fields_and_remaining_caller_owners() {
     );
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -183,7 +183,7 @@ int main(void) {
         }
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),

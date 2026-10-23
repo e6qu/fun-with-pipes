@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn listener_stop_releases_context_after_accepted_sessions_finish() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::Record(vec![]);
     let program = Program {
         funcs: vec![

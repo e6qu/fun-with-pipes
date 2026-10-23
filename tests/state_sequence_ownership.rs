@@ -71,7 +71,7 @@ main = [
             let exe = dir.0.join(format!("aliases{opt}-{stack}"));
             checked(
                 Command::new(fwp)
-                    .arg("build")
+                    .args(["build", "--gc", "tracing"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe)
@@ -95,7 +95,7 @@ main = [
         let exe = dir.0.join(flag);
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args(["-O1", "-o"])
                 .arg(&exe)
@@ -141,7 +141,7 @@ main = (10000, 0) | loop step | echo
     let emitted = dir.0.join("loop.c");
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&emitted)
@@ -351,7 +351,7 @@ fn each_avoids_allocating_a_discarded_result_list() {
             assert_eq!(raw.stdout, format!("{count}\n").as_bytes());
             checked(
                 Command::new(compiler)
-                    .args(["build", "--emit-c", "-O2"])
+                    .args(["build", "--gc", "tracing", "--emit-c", "-O2"])
                     .arg(&input)
                     .arg("-o")
                     .arg(&cfile),

@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn file_aliases_and_borrowed_io_unwind_preserve_stream_owners() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     use fwp::ir::*;
     let unit = MT::Record(vec![]);
     let p = Program {

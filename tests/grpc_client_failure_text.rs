@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn client_failure_text_releases_after_traps_and_typed_errors() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![

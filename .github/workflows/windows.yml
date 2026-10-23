@@ -192,6 +192,8 @@ jobs:
           exit $LASTEXITCODE
       - name: Native commands, test recovery and executable cache
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
+        env:
+          FWP_ARC_ARTIFACTS: ownership-evidence/arc
         run: python scripts/run-native-tests.py --targets aot --idle-timeout 600 --logs windows-command-tests
       - name: Publish failed native tls and executable ownership log
         uses: actions/upload-artifact@v7

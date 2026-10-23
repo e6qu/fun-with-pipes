@@ -33,7 +33,7 @@ main = link-channel 1 | tap send-self | tap channel.close | receive | discard-op
     assert_eq!(reference.stdout, b"drained\n");
     let built = Command::new(fwp)
         .env("FWP_NO_OPT", "1")
-        .arg("build")
+        .args(["build", "--gc", "tracing"])
         .arg(&source)
         .args(["--emit-c", "-o"])
         .arg(&cfile)

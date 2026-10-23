@@ -4,6 +4,10 @@ use fwp::value::Value;
 use std::process::Command;
 #[test]
 fn cached_values_keep_exact_owners_and_release_typed_children() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let string = MT::con("std::String");
     let i64 = MT::con("std::I64");
     let record = MT::Record(vec![
@@ -255,7 +259,7 @@ main = [cached | echo, cached | echo] | ignore
     );
     assert_eq!(reference.stdout, b"inputinput\ninputinput\n");
     let build = Command::new(fwp)
-        .arg("build")
+        .args(["build", "--gc", "tracing"])
         .arg(&src)
         .args(["--emit-c", "-o"])
         .arg(&cfile)
@@ -342,7 +346,7 @@ main = [task.yield (), "input" | choose (read-all () | string.length | eq 0) | e
         .unwrap();
     assert!(!reference.status.success());
     let build = Command::new(fwp)
-        .arg("build")
+        .args(["build", "--gc", "tracing"])
         .arg(&src)
         .args(["--emit-c", "-o"])
         .arg(&cfile)

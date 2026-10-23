@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn constructor_failures_release_storage_and_preserve_finalizer_registry() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![Func {

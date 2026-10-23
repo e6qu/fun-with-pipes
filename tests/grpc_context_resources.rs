@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn scoped_tls_options_release_after_callbacks_and_escaped_tasks() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![

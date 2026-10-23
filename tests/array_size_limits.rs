@@ -137,7 +137,7 @@ fn array_size_limits_agree_with_raw_interpreter_and_generic_wrappers() {
                     Command::new(fwp)
                         .env_remove("FWP_NO_OPT")
                         .env("FWP_REUSE", reuse)
-                        .args(["build", opt, "--emit-c", "-o"])
+                        .args(["build", "--gc", "tracing", opt, "--emit-c", "-o"])
                         .arg(&cfile)
                         .arg(&source),
                 );
@@ -145,7 +145,7 @@ fn array_size_limits_agree_with_raw_interpreter_and_generic_wrappers() {
                     Command::new(fwp)
                         .env_remove("FWP_NO_OPT")
                         .env("FWP_REUSE", reuse)
-                        .args(["build", opt, "-o"])
+                        .args(["build", "--gc", "tracing", opt, "-o"])
                         .arg(&executable)
                         .arg(&source),
                 );

@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn metadata_capture_releases_after_callbacks_and_escaped_tasks() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::unit();
     let int = MT::con("std::I64");
     let pair = MT::Record(vec![

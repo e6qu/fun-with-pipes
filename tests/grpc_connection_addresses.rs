@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn connection_addresses_preserve_long_pool_keys_in_one_allocation() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![

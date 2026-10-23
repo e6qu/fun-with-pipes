@@ -70,9 +70,7 @@ fn deep_self_recursion_preserves_swaps_aliases_effects_and_failure_order() {
             let cfile = dir.join(format!("{mode}.c"));
             let mut command = Command::new(compiler);
             command.env_remove("FWP_NO_OPT").args(["build", "--emit-c"]);
-            if mode == "arc" {
-                command.args(["--gc", "arc"]);
-            }
+            command.args(["--gc", mode]);
             checked(command.arg(&src).arg("-o").arg(&cfile));
             let mut code = std::fs::read_to_string(&cfile).unwrap();
             assert!(code.contains("fwp_self_again:"));

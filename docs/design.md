@@ -693,7 +693,7 @@ and [measurements](benchmarks.md#compiler-proved-cached-map-reads).
 A type descriptor is runtime metadata used for operations such as equality,
 printing and decoding.
 
-The default native memory mode combines reference counting with a non-moving
+Explicit `--gc tracing` combines reference counting with a non-moving
 tracing collector. Counting frees proved owned objects when their last owner is
 released. Tracing starts from live roots (registers, stacks and globals) and
 finds reachable shared objects. Minor collections inspect young objects plus

@@ -50,15 +50,10 @@ impl Drop for TempDir {
     }
 }
 
-fn build(args: &[&str], cwd: &Path) {
-    build_with_env(args, cwd, &[]);
-}
-
-fn build_with_env(args: &[&str], cwd: &Path, env: &[(&str, &str)]) {
+fn build(args: &[&str], cwd: &Path, ownership: &str) {
     let out = Command::new(fwp())
-        .arg("build")
+        .args(["build", "--gc", ownership])
         .args(args)
-        .envs(env.iter().copied())
         .current_dir(cwd)
         .output()
         .unwrap();
@@ -124,7 +119,7 @@ fn retain_stress_failure(path: &Path, dir: &Path, want: &str, got: &str) {
     .unwrap();
     let source = retained.with_extension("c");
     let emitted = Command::new(fwp())
-        .args(["build", "--emit-c", "-O2", "-o"])
+        .args(["build", "--gc", "tracing", "--emit-c", "-O2", "-o"])
         .arg(&source)
         .arg(path.file_name().unwrap())
         .current_dir(path.parent().unwrap())
@@ -148,7 +143,7 @@ fn stressed_with_env(path: &Path, dir: &Path, env: &[(&str, &str)]) -> String {
         .join(path.file_stem().unwrap())
         .with_extension(std::env::consts::EXE_EXTENSION);
     let b = Command::new(fwp())
-        .arg("build")
+        .args(["build", "--gc", "tracing"])
         .arg(path.file_name().unwrap())
         .args(["-O2", "-o"])
         .arg(&exe)
@@ -386,6 +381,7 @@ fn long_loop_runs_in_bounded_memory() {
             exe.to_str().unwrap(),
         ],
         &dir.0,
+        "tracing",
     );
     let out = Command::new(&exe)
         .env("FWP_GC_STATS", "1")
@@ -395,13 +391,13 @@ fn long_loop_runs_in_bounded_memory() {
     assert_eq!(String::from_utf8_lossy(&out.stdout), "21768000\n");
     let (allocated, _, rss) = stats(&String::from_utf8_lossy(&out.stderr));
     // Counted ownership can reclaim this workload without a collection.
-    // The shared fallback below separately requires actual tracing.
+    // The shared control below separately requires actual tracing.
     assert!(allocated > 0.0, "allocated {} MiB", allocated);
     assert!(rss < 64 * 1024, "max RSS {} KiB", rss);
 
     let shared = dir.0.join("churn-shared");
     let built = Command::new(fwp())
-        .arg("build")
+        .args(["build", "--gc", "tracing"])
         .arg(root().join("tests/gc/churn.fwp"))
         .arg("-o")
         .arg(&shared)
@@ -560,6 +556,7 @@ fn http_server_runs_in_bounded_memory() {
             exe.to_str().unwrap(),
         ],
         &dir.0,
+        "tracing",
     );
     let mut cmd = Command::new(&exe);
     cmd.env("FWP_ADDR", "127.0.0.1:0");
@@ -590,6 +587,7 @@ fn rest_server_runs_in_bounded_memory() {
             exe.to_str().unwrap(),
         ],
         &dir.0,
+        "tracing",
     );
     let mut cmd = Command::new(&exe);
     cmd.args(["--listen", "127.0.0.1:0"]);
@@ -631,16 +629,9 @@ fn grpc_server_memory(memory_mode: &str) {
     .unwrap();
     std::fs::copy(root().join("tests/gc/hammer.fwp"), dir.0.join("hammer.fwp")).unwrap();
     build(
-        &[
-            "--gc",
-            memory_mode,
-            "hammer.fwp",
-            "--service",
-            "greeter",
-            "-o",
-            "split",
-        ],
+        &["hammer.fwp", "--service", "greeter", "-o", "split"],
         &dir.0,
+        memory_mode,
     );
     let mut cmd = Command::new(dir.0.join("split/greeter"));
     cmd.args(["--listen", "127.0.0.1:0"]);

@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn tls_pool_keys_distinguish_complete_options_and_survive_scope_release() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![

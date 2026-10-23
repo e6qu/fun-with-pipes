@@ -37,7 +37,7 @@ fn callback_scopes_release_live_tapes_without_per_scope_heap_owners() {
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&input)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -213,7 +213,7 @@ fn scoped_gradient_functions_agree_with_raw_interpreter() {
             checked(
                 Command::new(env!("CARGO_BIN_EXE_fwp"))
                     .env_remove("FWP_NO_OPT")
-                    .arg("build")
+                    .args(["build", "--gc", "tracing"])
                     .arg(&input)
                     .args(["--emit-c", "-o"])
                     .arg(&cfile),

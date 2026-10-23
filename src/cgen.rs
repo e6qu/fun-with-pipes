@@ -75,7 +75,7 @@ pub fn set_static_memory(m: Option<StaticMemory>) {
 
 /// Options of native executables beyond the C source: linked statically
 /// (`fwp build --static`), and the phase of a profile-guided build.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct NativeOptions {
     /// Require checked reference-counted execution without tracing.
     pub arc: bool,
@@ -84,6 +84,17 @@ pub struct NativeOptions {
     /// Another system to build for (`fwp build --target`), as a GNU
     /// triple such as `aarch64-linux-gnu`.
     pub cross: Option<String>,
+}
+
+impl Default for NativeOptions {
+    fn default() -> Self {
+        Self {
+            arc: true,
+            static_link: false,
+            pgo: None,
+            cross: None,
+        }
+    }
 }
 
 /// The 64-bit little-endian architectures the runtime is written for.

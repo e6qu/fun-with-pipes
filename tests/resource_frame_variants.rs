@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn original_variant_frame_holders_do_not_force_heap_boxes() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let dir = fwp::cgen::TempDir::new("resource-frame-variants").unwrap();
     let data = dir.join("data");
     std::fs::write(&data, "contents").unwrap();
@@ -44,7 +48,7 @@ main = {:?} | file.open | pack | close | const "closed" | echo
         let out = Command::new(fwp)
             .env("FWP_REUSE", "0")
             .env("FWP_FREE", "0")
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&source)
             .args([opt, "-o"])
             .arg(&source_exe)

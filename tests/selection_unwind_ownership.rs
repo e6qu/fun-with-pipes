@@ -89,7 +89,7 @@ fn predicates_and_partial_spines_release_selected_aliases_and_scratch() {
     );
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -200,7 +200,7 @@ int main(void) {
         }
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -225,7 +225,7 @@ fn scalar_address_bits_survive_selection_cleanup() {
     std::fs::write(&src, SOURCE).unwrap();
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),

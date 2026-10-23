@@ -62,9 +62,7 @@ fn nested_reverse_derivatives_match_analytic_values_and_both_engines() {
                 .arg(&source)
                 .arg("-o")
                 .arg(&cfile);
-            if arc {
-                build.args(["--gc", "arc"]);
-            }
+            build.args(["--gc", if arc { "arc" } else { "tracing" }]);
             checked(&mut build);
             let code = std::fs::read_to_string(cfile).unwrap();
             let start = code
@@ -184,9 +182,7 @@ fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
             .arg(&source)
             .arg("-o")
             .arg(&cfile);
-        if arc {
-            build.args(["--gc", "arc"]);
-        }
+        build.args(["--gc", if arc { "arc" } else { "tracing" }]);
         checked(&mut build);
         let original = std::fs::read_to_string(cfile).unwrap();
         assert!(original.contains("#define FWP_UNWIND 1"));
@@ -329,7 +325,7 @@ fn completed_task_identity_cannot_be_reused_by_a_later_task() {
     let cfile = dir.join("reuse.c");
     checked(
         Command::new(compiler)
-            .args(["build", "--emit-c"])
+            .args(["build", "--gc", "tracing", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile),
@@ -391,7 +387,7 @@ main = [1.0] | rev._seed | .1 | rev._seed | .1
     let binary = dir.join("task.exe");
     checked(
         Command::new(compiler)
-            .args(["build", "-O2"])
+            .args(["build", "--gc", "tracing", "-O2"])
             .arg(&source)
             .arg("-o")
             .arg(&binary),
@@ -427,7 +423,7 @@ main = [1.0] | rev._seed | .1 | rev._seed | .1
     assert_eq!(reference.stdout, b"1.0\n");
     checked(
         Command::new(compiler)
-            .args(["build", "-O2"])
+            .args(["build", "--gc", "tracing", "-O2"])
             .arg(&source)
             .arg("-o")
             .arg(&binary),

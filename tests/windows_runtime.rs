@@ -24,7 +24,7 @@ fn compare(source: &Path, dir: &Path, expected_exit: i32) {
         let binary = dir.join("generated.exe");
         checked(
             Command::new(compiler)
-                .args(["build", opt])
+                .args(["build", "--gc", "tracing", opt])
                 .arg(source)
                 .arg("-o")
                 .arg(&binary)

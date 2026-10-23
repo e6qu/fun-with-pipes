@@ -20,6 +20,10 @@ impl Drop for Scratch {
 }
 #[test]
 fn construction_failures_close_streams_once_and_clear_finalized_handles() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![Func {

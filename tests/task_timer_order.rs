@@ -52,7 +52,7 @@ fn channel_orders_prints_even_when_shorter_timer_starts_late() {
             let exe = dir.0.join(format!("ordered-{delayed}{opt}"));
             checked(
                 Command::new(fwp)
-                    .arg("build")
+                    .args(["build", "--gc", "tracing"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe),

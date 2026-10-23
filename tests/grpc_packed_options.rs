@@ -4,6 +4,10 @@ use std::process::Command;
 
 #[test]
 fn tls_options_use_one_allocation_and_release_after_the_last_owner() {
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc: false,
+        ..Default::default()
+    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![

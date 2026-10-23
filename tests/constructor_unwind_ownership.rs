@@ -83,7 +83,7 @@ fn failed_constructor_allocation_releases_typed_fields_and_preserves_aliases() {
     );
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -166,7 +166,7 @@ int main(void) {
         }
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),

@@ -40,7 +40,7 @@ fn blocked_matrix_preserves_raw_products_and_cast_shape_behavior() {
             Command::new(fwp)
                 .env_remove("FWP_NO_OPT")
                 .env("FWP_MATRIX_BLOCKING", mode)
-                .args(["build", "--emit-c"])
+                .args(["build", "--gc", "tracing", "--emit-c"])
                 .arg(&input)
                 .arg("-o")
                 .arg(&generated),
@@ -101,7 +101,14 @@ fn blocked_matrix_uses_only_output_storage_and_preserves_scalar_order() {
             Command::new(env!("CARGO_BIN_EXE_fwp"))
                 .env_remove("FWP_NO_OPT")
                 .env("FWP_MATRIX_BLOCKING", mode)
-                .args(["build", "--fn", "product-data", "--emit-c"])
+                .args([
+                    "build",
+                    "--gc",
+                    "tracing",
+                    "--fn",
+                    "product-data",
+                    "--emit-c",
+                ])
                 .arg(&input)
                 .arg("-o")
                 .arg(&generated),
@@ -197,7 +204,7 @@ fn blocked_matrix_releases_output_when_computation_unwinds() {
     let cfile = d.join("matrix.c");
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--emit-c"])
+            .args(["build", "--gc", "tracing", "--emit-c"])
             .arg(&input)
             .arg("-o")
             .arg(&cfile),

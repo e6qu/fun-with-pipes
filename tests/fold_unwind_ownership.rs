@@ -75,7 +75,7 @@ fn right_fold_releases_accumulator_and_scratch_on_failure() {
     checked(
         Command::new(fwp)
             .env("FWP_STACK", "1")
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -244,7 +244,7 @@ int main(void) {
         checked(
             Command::new(fwp)
                 .env("FWP_STACK", "1")
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -269,7 +269,7 @@ fn borrowed_prefix_duplicates_and_scalar_words_release_precisely() {
     std::fs::write(&src, SOURCE).unwrap();
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),

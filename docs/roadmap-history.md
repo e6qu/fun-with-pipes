@@ -12,6 +12,30 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Local callback captures and repeated numerical work (PR #198)
+
+Known generators and folds keep captures in local values; direct calls no longer
+retain unused generic adapters. Boundary tests preserve stored/reused callbacks,
+effects, empty inputs and cleanup on failure/cancellation. Windows gained missing
+callback coverage and corrected saved-executable paths.
+
+[Callback measurements](measurements/callback-locals.md) show fewer instructions
+and a 96-to-48-byte generator frame, with unchanged requests and live memory.
+[Per-solve observers](measurements/descent-observers.md) detect delayed cleanup
+that final-only observations miss. [Matched C/Rust formulas](measurements/coordinate-work.md)
+still show substantial numerical timing gaps; noisy controls remain recorded.
+These results do not establish a compiler speedup or complete any PLAN area.
+
+[PR #198](https://github.com/e6qu/fun-with-pipes/pull/198) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39845348815)
+and [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39845348589) at
+`30c6d65c10b3cc33cfeb72f523e4d47624508896`. Final-head inspection covered
+480 native binaries and 816 execution observations. The first ARM64 macOS stress
+attempt received no runner; its retry passed. Squash merge
+`27a3e009b83e28f06130a5d686a3196b9934e53f` has identical files, #197 as its sole
+parent and the verified one-line message with no body or trailers. Redundant
+same-tree main production run `39871314012` was cancelled; docs were preserved.
+
 ## Borrowed array captures (PR #197)
 
 Known numeric array-generation callbacks borrow caller-owned captures. Temporary
@@ -31,7 +55,7 @@ and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39793823
 at `0367e81941a213b96de14dbe175143ff0a121f77`. All completed logs were audited.
 The user's squash merge `b94710c9212cbbfc3e39409835e539b371069b36` has identical
 files, #196 as its sole parent and a one-line message under 80 characters without
-trailers. This is the accepted baseline for the next direct-call work.
+trailers. The direct-call extension followed in #198.
 
 ## Array-owner moves and copied callback strings (PR #196)
 

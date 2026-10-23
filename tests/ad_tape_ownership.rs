@@ -39,7 +39,7 @@ fn detached_tape_buffers_release_on_return_trap_and_cancellation() {
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&input)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -194,7 +194,7 @@ fn public_tape_tokens_agree_with_raw_interpreter() {
             checked(
                 Command::new(env!("CARGO_BIN_EXE_fwp"))
                     .env_remove("FWP_NO_OPT")
-                    .arg("build")
+                    .args(["build", "--gc", "tracing"])
                     .arg(&input)
                     .args([opt, "-o"])
                     .arg(&executable),

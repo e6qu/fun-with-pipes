@@ -37,7 +37,7 @@ main = [task.yield (), "later" | choose (read-all () | string.length | eq 0) (Bo
     );
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile)
@@ -208,7 +208,7 @@ int main(void) {
 
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe)

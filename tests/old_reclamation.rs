@@ -46,7 +46,7 @@ main = [
     .unwrap();
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -199,7 +199,7 @@ fn surviving_leaf_storage_is_released_by_counts() {
     std::fs::write(&src, "discard : String -> I64\ndiscard = const 1\nmain = read-all () | string.repeat 2 | discard | echo\n").unwrap();
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -300,7 +300,7 @@ fn retained_task_boundaries_preserve_golden_behavior() {
             .with_extension(std::env::consts::EXE_EXTENSION);
         checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&source)
                 .args([opt, "-o"])
                 .arg(&exe),

@@ -34,7 +34,7 @@ fn cleanup_scopes_and_suspended_tasks_unwind_exactly_once() {
     std::fs::write(&src, "main = task.yield () | echo\n").unwrap();
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -192,7 +192,7 @@ fn scoped_files_close_on_return_error_trap_and_cancellation() {
     std::fs::write(&src, "main = task.yield () | echo\n").unwrap();
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -331,7 +331,7 @@ main = [
         let exe = dir.0.join(opt);
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),

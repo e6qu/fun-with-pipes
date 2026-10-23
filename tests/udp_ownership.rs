@@ -54,7 +54,7 @@ fn udp_results_preserve_values_aliases_and_release_storage() {
     let retained = dir.join("retained.c");
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--emit-c"])
+            .args(["build", "--gc", "tracing", "--emit-c"])
             .env("FWP_FREE", "0")
             .arg(&input)
             .arg("-o")

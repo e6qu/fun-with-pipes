@@ -153,7 +153,7 @@ fn golden_programs_with_reuse_verified() {
                 let exe = dir.0.join(format!("{name}.exe"));
                 let want = std::fs::read_to_string(path.with_extension("out")).unwrap();
                 let b = Command::new(fwp())
-                    .arg("build")
+                    .args(["build", "--gc", "tracing"])
                     .arg(path.file_name().unwrap())
                     .args(["-O1", "-o"])
                     .arg(&exe)
@@ -221,7 +221,7 @@ fn unique_records_are_updated_in_place() {
     let allocated = |reuse: &str| -> f64 {
         let exe = dir.0.join(format!("upd{reuse}.exe"));
         let b = Command::new(fwp())
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .arg("-o")
             .arg(&exe)
@@ -276,7 +276,7 @@ fn variant_cells_are_reused() {
     let allocated = |reuse: &str| -> f64 {
         let exe = dir.0.join(format!("tree{reuse}.exe"));
         let b = Command::new(fwp())
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .arg("-o")
             .arg(&exe)
@@ -322,7 +322,7 @@ fn unique_arrays_are_written_in_place() {
         let allocated = |reuse: &str| -> f64 {
             let exe = dir.0.join(format!("{name}{reuse}.exe"));
             let b = Command::new(fwp())
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .arg("-o")
                 .arg(&exe)
@@ -363,7 +363,7 @@ fn objects_are_freed_by_their_counts() {
     let stats = |free: &str| -> (f64, u64) {
         let exe = dir.0.join(format!("tree{free}.exe"));
         let b = Command::new(fwp())
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&src)
             .arg("-o")
             .arg(&exe)

@@ -397,7 +397,15 @@ fn every_kind_of_call() {
         let no_reuse = d.join("no-reuse");
         let mut compile = Command::new(fwp());
         compile
-            .args(["build", "--service", "greeter", "--emit-c", "-o"])
+            .args([
+                "build",
+                "--gc",
+                "tracing",
+                "--service",
+                "greeter",
+                "--emit-c",
+                "-o",
+            ])
             .arg(&no_reuse)
             .arg(&client)
             .current_dir(dir())

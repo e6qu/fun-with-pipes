@@ -74,6 +74,8 @@ main = [
         Command::new(compiler)
             .args([
                 "build",
+                "--gc",
+                "tracing",
                 "--emit-c",
                 "--memory",
                 "static",
@@ -150,7 +152,7 @@ fn fixed_storage_exhaustion_names_the_configured_part() {
         std::fs::write(&source, program).unwrap();
         checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", "--memory", "static", "-O1"])
+                .args(["build", "--gc", "tracing", "--memory", "static", "-O1"])
                 .args(options)
                 .arg(&source)
                 .arg("-o")

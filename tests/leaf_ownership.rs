@@ -56,7 +56,7 @@ main = read-all () | concat "héllo" | trim | checks | echo
         let exe = dir.0.join(format!("leaves{opt}"));
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -98,7 +98,7 @@ main = (10000, 0) | loop step | echo
         let exe = dir.0.join(format!("loop-{free}"));
         checked(
             Command::new(fwp)
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(&src)
                 .args(["-O1", "-o"])
                 .arg(&exe)

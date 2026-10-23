@@ -27,8 +27,9 @@ and iterator optimizations, nested automatic differentiation, several floating
 formats, a formatter, linter and language server. These are foundations to extend;
 they do not establish that every abstraction is free or every program avoids GC.
 
-Default native execution still combines reference counting with tracing.
-Checked `--gc arc` removes tracing for supported programs, including accepted
+Native execution now selects checked ARC unless tracing is requested explicitly.
+Final acceptance of this default change is tracked in the handoff. Checked
+`--gc arc` removes tracing for supported programs, including accepted
 synchronous WASI entries, gRPC clients/services, HTTP clients/servers and
 scoped C calls with manually managed pointers. Some
 closures, containers and call boundaries still allocate, and measured numerical
@@ -110,7 +111,7 @@ outside the benchmark suite.
    459 allocation requests; [borrowing](docs/measurements/array-capture-descent.md)
    removes its retains without increasing the 7,200-byte managed peak.
    [Callback locals](docs/measurements/callback-locals.md) reduce instructions and
-   generator frames further; final native acceptance is tracked in the handoff.
+   generator frames further; #198 passed final native acceptance.
    The [matched-formula comparison](docs/measurements/coordinate-work.md) still
    measures 10.40–13.69× C time and 11.86–14.07× Rust time for the largest case.
    Eleven of twelve identical-copy controls pass; one remains inconclusive.
@@ -127,7 +128,7 @@ outside the benchmark suite.
    time/memory budgets before claiming improvement. Native command ownership,
    test-failure cleanup and raw derivative workspace passed #195 delivery. Borrowed array captures, temporary records, last-read aliases and exceptional
    cleanup passed #197 delivery. [The handoff](docs/development-state.md) records
-   the current direct-call work and final gates.
+   the current ownership-default migration and its checks.
    The [benchmark index](docs/benchmarks.md)
    records current comparisons and their limits. For example,
    [direct await fields](docs/measurements/task-await-fields.md) remove 34 allocation

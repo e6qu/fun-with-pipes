@@ -146,7 +146,7 @@ fn natives() -> Option<&'static (PathBuf, PathBuf)> {
         let build = |name: &str| {
             let exe = d.join(name);
             let st = Command::new(fwp())
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(root().join("tests/web").join(format!("{}.fwp", name)))
                 .arg("-o")
                 .arg(&exe)

@@ -103,7 +103,7 @@ fn native_boundary_offsets_match_raw_interpreter_and_reject_signed_overflow() {
     assert!(reference.stderr.is_empty());
     checked(
         Command::new(fwp)
-            .arg("build")
+            .args(["build", "--gc", "tracing"])
             .arg(&source)
             .args(["--emit-c", "-o"])
             .arg(&cfile),

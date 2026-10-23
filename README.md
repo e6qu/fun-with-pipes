@@ -32,10 +32,11 @@ documentation; you do not need to learn them all before writing a program.
   access, networking or a recoverable error. These are called *effects*.
 - **Immutable values.** An update produces a new logical value. The compiler
   may reuse storage when it can prove that older values cannot observe the change.
-- **Several ways to manage memory.** The normal native runtime includes a
-  garbage collector. Checked `--gc arc` uses automatic reference counting for
-  programs whose memory lifetimes the compiler can prove safe. Unsupported
-  programs are rejected in that mode; not every fwp program is collector-free.
+- **Checked native ownership.** Native builds use checked automatic reference
+  counting (ARC), with borrowing and moves where proved. Unproved lifetimes are
+  compile errors. `--gc tracing` explicitly selects the tracing collector; its
+  complete removal remains a project goal. The [handoff](docs/development-state.md)
+  records validation of the new default.
 - **Numerical programming.** The library includes vectors, matrices, several
   floating-point formats, and automatic differentiation: computing how a
   function's output changes when its inputs change.
