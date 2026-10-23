@@ -225,20 +225,24 @@ int main(void) {
             }
             fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
             for poison in poisons {
-                let out = checked(
-                    Command::new(&exe)
-                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", poison),
-                );
+                let out = Command::new(&exe)
+                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", poison)
+                    .output()
+                    .unwrap();
                 record_probe::save(
                     "record_conversion_ownership",
                     &format!("{mode}{opt}-normal-poison{poison}"),
                     &format!("{runtime}\n{probe}"),
                     &exe,
                     &out,
+                );
+                assert!(
+                    out.status.success(),
+                    "{mode} {opt} poison={poison}: {out:?}"
                 );
             }
 

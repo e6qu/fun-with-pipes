@@ -1,5 +1,7 @@
 //! Initial flattened loop state must retain exact partial owners on unwind.
 use std::process::Command;
+#[path = "support/record_probe.rs"]
+mod record_probe;
 fn checked(command: &mut Command) -> std::process::Output {
     let out = command.output().unwrap();
     assert!(
@@ -16,7 +18,7 @@ fn flattened_loop_preparation_releases_original_and_partial_fields() {
     std::fs::create_dir_all(&dir).unwrap();
     let src = dir.join("probe.fwp");
     let cfile = dir.join("probe.c");
-    let exe = dir.join("probe");
+    let exe = dir.join("probe.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(
         &src,
@@ -33,40 +35,55 @@ main = [task.yield (), (1, "left", "right", 17) | loop step | echo] | ignore
             .args(["run", "--interp"])
             .arg(&src),
     );
-    checked(
-        Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(&cfile).unwrap();
-    let start = emitted.find("/* loop of step :").unwrap();
-    let body = &emitted[start..];
-    let id = body
-        .split("static V fwp_loop")
-        .nth(1)
-        .unwrap()
-        .split('(')
-        .next()
-        .unwrap();
-    let start = emitted
-        .find(&format!("static V fwp_loop{id}(V s) {{"))
-        .unwrap();
-    let end = start + emitted[start..].find("\n}\n").unwrap() + 3;
-    let original = &emitted[start..end];
-    assert!(
-        original.contains("V st[4]"),
-        "state must flatten: {original}"
-    );
-    assert!(original.contains("prepared.v0 = st[1]") && original.contains("prepared.v1 = st[2]"));
-    let probe = r#"
+    for mode in ["arc", "tracing"] {
+        let stress = if mode == "arc" { "0" } else { "1" };
+        checked(
+            Command::new(fwp)
+                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .env("FWP_STACK", "1")
+                .arg(&src)
+                .args(["--emit-c", "-O2", "-o"])
+                .arg(&cfile),
+        );
+        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let start = emitted.find("/* loop of step :").unwrap();
+        let body = &emitted[start..];
+        let id = body
+            .split("static V fwp_loop")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let start = emitted
+            .find(&format!("static V fwp_loop{id}(V s) {{"))
+            .unwrap();
+        let end = start + emitted[start..].find("\n}\n").unwrap() + 3;
+        let original = &emitted[start..end];
+        assert!(
+            original.contains("V st[4]"),
+            "state must flatten: {original}"
+        );
+        assert!(
+            original.contains("prepared.v0 = st[1]") && original.contains("prepared.v1 = st[2]")
+        );
+        let probe = r#"
 static volatile V first, second, scalar_word, state_box;
 static jmp_buf failed_preparation;
 static int recover_preparation(void) { return 1; }
-static int dead(V v) { return fwp_reuse_verify ? STR(v)->len == 0 : *fwp_rc_slot(v) == 0; }
+static int dead(V v) {
+#ifndef FWP_ARC_ONLY
+    if (fwp_reuse_verify) return STR(v)->len == 0;
+#endif
+    return *fwp_rc_slot(v) == 0;
+}
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
+#endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
+    intptr_t baseline = fwp_gc.budget;
+    for (volatile int round=0; round<32; round++) {
     for (volatile int fail=0; fail<2; fail++) for (volatile int box_alias=0;box_alias<2;box_alias++)
     for (volatile int leaf_alias=0;leaf_alias<2;leaf_alias++) for (volatile int same=0;same<2;same++) {
         first=fwp_rc_fresh(fwp_str_new("first",5));
@@ -91,62 +108,66 @@ int main(void) {
         if (leaf_alias) { STRING_DROP(first);STRING_DROP(second); }
         fwp_rc_free_obj(scalar_word);
     }
+#ifdef FWP_ARC_ONLY
+    if (fwp_gc.budget != baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
+#endif
+    }
     puts("flattened preparation releases partial fields and preserves aliases and scalar bits");return 0;
 }
 "#;
-    let input_scope = original
-        .split("fwp_cleanup_push(&input_cleanup, fwp_owner_release")
-        .nth(1)
-        .unwrap()
-        .split(',')
-        .next()
-        .unwrap();
-    let cleanup = emitted
-        .split(&format!(
-            "static void fwp_owner_release{input_scope}(void *arg) {{"
-        ))
-        .nth(1)
-        .unwrap()
-        .split('}')
-        .next()
-        .unwrap();
-    let input_drop = cleanup
-        .split("; ")
-        .nth(1)
-        .unwrap()
-        .split('(')
-        .next()
-        .unwrap()
-        .trim();
-    let scope = original
-        .split("fwp_cleanup_push(&preparation_cleanup, fwp_owner_release")
-        .nth(1)
-        .unwrap()
-        .split(',')
-        .next()
-        .unwrap();
-    let cleanup = emitted
-        .split(&format!(
-            "static void fwp_owner_release{scope}(void *arg) {{"
-        ))
-        .nth(1)
-        .unwrap()
-        .split('}')
-        .next()
-        .unwrap();
-    let string_drop = cleanup
-        .split("; ")
-        .nth(1)
-        .unwrap()
-        .split('(')
-        .next()
-        .unwrap()
-        .trim();
-    let probe = probe
-        .replace("LOOP", &format!("fwp_loop{id}"))
-        .replace("INPUT_DROP", input_drop)
-        .replace("STRING_DROP", string_drop);
-    let failing = original
+        let input_scope = original
+            .split("fwp_cleanup_push(&input_cleanup, fwp_owner_release")
+            .nth(1)
+            .unwrap()
+            .split(',')
+            .next()
+            .unwrap();
+        let cleanup = emitted
+            .split(&format!(
+                "static void fwp_owner_release{input_scope}(void *arg) {{"
+            ))
+            .nth(1)
+            .unwrap()
+            .split('}')
+            .next()
+            .unwrap();
+        let input_drop = cleanup
+            .split("; ")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap()
+            .trim();
+        let scope = original
+            .split("fwp_cleanup_push(&preparation_cleanup, fwp_owner_release")
+            .nth(1)
+            .unwrap()
+            .split(',')
+            .next()
+            .unwrap();
+        let cleanup = emitted
+            .split(&format!(
+                "static void fwp_owner_release{scope}(void *arg) {{"
+            ))
+            .nth(1)
+            .unwrap()
+            .split('}')
+            .next()
+            .unwrap();
+        let string_drop = cleanup
+            .split("; ")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap()
+            .trim();
+        let probe = probe
+            .replace("LOOP", &format!("fwp_loop{id}"))
+            .replace("INPUT_DROP", input_drop)
+            .replace("STRING_DROP", string_drop);
+        let failing = original
         .replace(
             "fwp_rc_dup(st[1]);",
             "if (current_dup++==wanted_dup) fwp_trap(\"preparation fault\"); fwp_rc_dup(st[1]);",
@@ -155,59 +176,110 @@ int main(void) {
             "fwp_rc_dup(st[2]);",
             "if (current_dup++==wanted_dup) fwp_trap(\"preparation fault\"); fwp_rc_dup(st[2]);",
         );
-    let runtime = "static int wanted_dup, current_dup;\n".to_string()
-        + &emitted.replacen(original, &failing, 1).replace(
-            "int main(int argc, char **argv)",
-            "int original_main(int argc, char **argv)",
-        );
-    let old = failing
-        .replace(
-            &format!(
-                "fwp_cleanup_push(&preparation_cleanup, fwp_owner_release{scope}, &prepared);"
-            ),
-            "",
-        )
-        .replace("prepared.v0 = st[1];", "")
-        .replace("prepared.v1 = st[2];", "")
-        .replace("fwp_cleanup_pop(&preparation_cleanup);", "");
-    let old_runtime = runtime.replacen(&failing, &old, 1);
-    for opt in ["-O1", "-O2"] {
-        fwp::cgen::compile_c(&format!("{old_runtime}\n{probe}"), &exe, opt).unwrap();
-        let control = Command::new(&exe)
-            .env("FWP_GC_STRESS", "1")
-            .env("FWP_GC_VERIFY", "1")
-            .env("FWP_REUSE_VERIFY", "1")
-            .output()
-            .unwrap();
-        assert_eq!(
-            control.status.code(),
-            Some(5),
-            "missing partial cleanup must retain an extra field"
-        );
-        fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
+        let runtime = "static int wanted_dup, current_dup;\n".to_string()
+            + &emitted.replacen(original, &failing, 1).replace(
+                "int main(int argc, char **argv)",
+                "int original_main(int argc, char **argv)",
             );
+        let old = failing
+            .replace(
+                &format!(
+                    "fwp_cleanup_push(&preparation_cleanup, fwp_owner_release{scope}, &prepared);"
+                ),
+                "",
+            )
+            .replace("prepared.v0 = st[1];", "")
+            .replace("prepared.v1 = st[2];", "")
+            .replace("fwp_cleanup_pop(&preparation_cleanup);", "");
+        let old_runtime = runtime.replacen(&failing, &old, 1);
+        for opt in ["-O1", "-O2"] {
+            if mode == "arc" {
+                let missing = probe.replace("fwp_rc_free_obj(scalar_word);", "");
+                assert_ne!(missing, probe);
+                fwp::cgen::compile_c(&format!("{runtime}\n{missing}"), &exe, opt).unwrap();
+                let out = Command::new(&exe)
+                    .env("FWP_GC", "off")
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "loop_preparation_ownership",
+                    &format!("{mode}{opt}-missing-release"),
+                    &format!("{runtime}\n{missing}"),
+                    &exe,
+                    &out,
+                );
+                assert_eq!(out.status.code(), Some(90), "{mode} {opt}: {out:?}");
+            }
+            fwp::cgen::compile_c(&format!("{old_runtime}\n{probe}"), &exe, opt).unwrap();
+            let control = Command::new(&exe)
+                .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                .env("FWP_GC_STATS", "0")
+                .env("FWP_GC_STRESS", stress)
+                .env("FWP_GC_VERIFY", stress)
+                .env("FWP_REUSE_VERIFY", stress)
+                .output()
+                .unwrap();
+            record_probe::save(
+                "loop_preparation_ownership",
+                &format!("{mode}{opt}-missing-scope"),
+                &format!("{old_runtime}\n{probe}"),
+                &exe,
+                &control,
+            );
+            assert_eq!(
+                control.status.code(),
+                Some(5),
+                "missing partial cleanup must retain an extra field"
+            );
+            fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
+            for poison in if mode == "arc" {
+                &["0"][..]
+            } else {
+                &["0", "1"][..]
+            } {
+                let out = Command::new(&exe)
+                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", poison)
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "loop_preparation_ownership",
+                    &format!("{mode}{opt}-normal-poison{poison}"),
+                    &format!("{runtime}\n{probe}"),
+                    &exe,
+                    &out,
+                );
+                assert!(
+                    out.status.success(),
+                    "{mode} {opt} poison={poison}: {out:?}"
+                );
+                assert_eq!(out.stdout, b"flattened preparation releases partial fields and preserves aliases and scalar bits\n");
+            }
+            checked(
+                Command::new(fwp)
+                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .env("FWP_STACK", "1")
+                    .arg(&src)
+                    .args([opt, "-o"])
+                    .arg(&exe),
+            );
+            let out = checked(
+                Command::new(&exe)
+                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", stress),
+            );
+            assert_eq!(out.stdout, reference.stdout);
         }
-
-        checked(
-            Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
-                .arg(&src)
-                .args([opt, "-o"])
-                .arg(&exe),
-        );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
-        assert_eq!(out.stdout, reference.stdout);
     }
     std::fs::remove_dir_all(dir).unwrap();
 }

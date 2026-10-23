@@ -12,6 +12,26 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Repeated constructor and call cleanup (PR #200)
+
+Six tests now repeat constructor, call and variant failures with ARC and tracing.
+ARC must return managed storage to its starting charge without collection;
+deliberately omitted releases and cleanup steps must fail. A fixture selector
+bug had run the variant case twice instead of checking the record case. Distinct
+failure statuses now prevent that false pass. Windows gained the missing
+constructor-allocation test and exact binary output handling.
+
+[PR #200](https://github.com/e6qu/fun-with-pipes/pull/200) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39939679368)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39937419223)
+at `69c3b1e0135dd95961dba3729911ec27dc1736b6`. Complete logs were audited. The
+[inspection record](measurements/constructor-cleanup-2026-10-23.json) covers 1,050
+saved binaries, 960 aggregate outcomes and 360 allocator observations across six
+native hosts. Squash merge `a57a2593a11178934cba33dffb3f0e2fafa15fcc` has the same tree and a verified
+one-line message without a body or trailers. These are cleanup checks, not speed
+benchmarks or completion of tracing removal. See the
+[explained examples](measurements/record-cleanup.md).
+
 ## Checked native defaults and ARC metadata (PR #199)
 
 Native commands, modules and compiler APIs use checked ARC by default. Unproved
@@ -667,8 +687,9 @@ storage instead of retained startup heap objects. Tests check zero startup
 allocation requests, immutable updates and final ARC cleanup. O0 float linking
 and cleanup probes were repaired. The native runner times out stalled tests
 without killing a long suite that continues completing cases. This closes the
-failures left by #168; it does not remove the default tracing collector or
-establish a timing improvement over C/Rust.
+failures left by #168. Tracing was still the default at that revision;
+[PR #199](#checked-native-defaults-and-arc-metadata-pr-199) later changed it to
+checked ARC. These allocation results do not establish a timing gain over C/Rust.
 
 ## Self-tail recursion and shutdown repairs (PR #168)
 
@@ -744,7 +765,8 @@ interpreter debugger/Python SDK and generated-C/machine-code inspection. Toolcha
 timeout, target, notebook directory/port and REPL mode settings are explicit.
 Guides explain parsing, compiler stages, examples and benchmark scope. Weak
 references and guaranteed tail recursion were proposals at this revision;
-default tracing removal remains unfinished.
+tracing was still the default then. [PR #199](#checked-native-defaults-and-arc-metadata-pr-199)
+later made checked ARC the default; complete tracing removal remains work.
 
 - Same files: merge `e8e22f1901e5396e1bf3555073ebeb9d5c65da41`, tested `7cb899faa86d3cafb1192529d7fd357e7067ca4b`.
 - Passing [nine production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39141587973)
