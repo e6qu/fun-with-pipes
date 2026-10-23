@@ -1,4 +1,4 @@
-# Checking record cleanup without tracing
+# Checking record and variant cleanup without tracing
 
 A record groups named fields. Updating one field produces a new value; any
 older value still visible to the program must remain unchanged. Here `String`
@@ -57,19 +57,62 @@ and set the inline count to one. The related
 no wide entries remain, and deliberately restore the old mistake to prove
 that the observation detects it. No runtime ownership rule changes.
 
+## Constructors and failed calls
+
+A constructor creates a record or a variant. A variant chooses one of several
+named forms. For example, `Outcome` below is either empty or contains text and
+an integer; `Value "ready" 7` selects the second form:
+
+```fwp
+Outcome = | Empty | Value String I64
+```
+
+The compiler can pass fields directly to an internal function. If another call
+needs a single object, it must put those fields into storage first. Allocation
+can fail at that point. Acquiring a shared field can also fail after earlier
+fields have been acquired. Cleanup must release those completed owners while
+preserving independent aliases and treating integer bits as numbers.
+
+Six related probes now repeat 32 rounds in ARC and tracing:
+
+| Check | Failure or cancellation exercised |
+|---|---|
+| [Nested constructors](../../tests/constructor_type_ownership.rs) | A later field fails after an earlier field creates a child value |
+| [Constructor allocation](../../tests/constructor_unwind_ownership.rs) | Storage allocation fails before fields transfer to the new object |
+| [Call preparation](../../tests/worker_preparation_ownership.rs) | Copying or moving fields stops partway through, or the called task is cancelled |
+| [Result storage](../../tests/worker_boxing_ownership.rs) | A function returns fields but allocation of the enclosing object fails |
+| [Variant conversion](../../tests/variant_conversion_ownership.rs) | A field count overflows while converting an object to direct fields |
+| [Partial retains](../../tests/retain_unwind_ownership.rs) | Count overflow leaves earlier acquisitions and a caller's remaining owners to release |
+
+Every ARC round must return its managed byte charge to the starting value, with
+no wide-count entries or collections. Removing a final fixture release fails
+with status 90. Existing controls still remove individual cleanup steps. Stack
+placement is explicitly disabled for the nested-constructor and variant-conversion
+probes that need actual objects; it stays enabled for the other four. C uses
+O1/O2, and complete programs compare with raw interpretation in both modes.
+
+The nested-constructor test also had a selection bug: substituting a function
+name changed the environment-variable name used to select its record case.
+Both intended cases therefore ran the variant failure. The substitution now
+changes only the function placeholder. The two negative controls must return
+distinct statuses, 4 for the variant and 14 for the record. Windows now includes
+the constructor-allocation target and writes probe output in binary mode, so
+newline conversion cannot change the expected output.
+
 ## Evidence and limits
 
-Local Apple Clang/ARM64 checks passed 18 inspected record-probe binaries and 24
-observations at O1/O2. The two related overflow fixtures passed eight binaries
-and twelve observations, including the broken-cleanup controls. These checks use
-the accepted #197 compiler with the exact current runtime substituted into its
-generated C; new-compiler and cross-platform acceptance remains a CI requirement.
+The original record and allocator batch passed
+[PR #199's full acceptance](../roadmap-history.md#checked-native-defaults-and-arc-metadata-pr-199).
+Its [inspection record](native-default-2026-10-23.json) contains 95 saved binary
+files per host across all six native targets, including eighty record outcomes
+and sixty allocator observations per host.
 
-Focused GCC/AMD64 run `39922765292` at `df84b726cc2a2a37fbaf7c1cca53aacc93cc8bb8`
-passed all twenty selected targets (65 integration tests), 179 library tests and
-independent audits. Inspection verified eighty saved record outcomes, including
-the deliberate failures, plus fifteen default/allocator binaries. This establishes
-focused Linux evidence; full native acceptance still requires all six hosts.
+The six extended probes pass sixty Apple Clang/ARM64 images and 76 observations
+with the explicit settings above. Twenty-four complete program builds also match
+raw interpretation at O1/O2 in both modes. These use compiler `5e17fc10e860b1971ffc9cd9cb57fcb795ccad24` from the passing
+[macOS production job](https://github.com/e6qu/fun-with-pipes/actions/runs/39924646271/job/120317937423),
+with its embedded runtime unchanged. Rust harness execution and cross-platform
+acceptance still require CI. The handoff records actual gates and receipts.
 
 CI saves generated C, executables, output and status under `record-ownership/`
 for independent inspection. [The handoff](../development-state.md) records

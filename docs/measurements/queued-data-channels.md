@@ -15,7 +15,8 @@ rule with a complete example that prints `Some "hello"`.
 
 These are correctness and cleanup checks against fwp's raw interpreter, not a
 speed benchmark or a comparison with C/Rust. They do not measure retain/release
-traffic or total-process memory. Default execution still includes tracing.
+traffic or total-process memory. They select ARC and tracing explicitly;
+[current native defaults](../ownership.md#checked-arc-delivery) use checked ARC.
 
 ## Programs and counters
 

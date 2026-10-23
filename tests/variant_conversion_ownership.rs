@@ -18,9 +18,7 @@ fn conversion_overflow_releases_box_and_remaining_callers() {
     std::fs::create_dir_all(&dir).unwrap();
     let src = dir.join("probe.fwp");
     let cfile = dir.join("probe.c");
-    let exe = dir
-        .join("probe")
-        .with_extension(std::env::consts::EXE_EXTENSION);
+    let exe = dir.join("probe").with_extension("exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src,r#"Outcome = | Value String I64 String | Empty
 maker : String -> String -> Outcome
@@ -43,54 +41,67 @@ main = [task.yield (), "later" | choose (read-all () | string.length | eq 0) "fi
             .args(["run", "--interp"])
             .arg(&src),
     );
-    checked(
-        Command::new(fwp)
-            .args(["build", "--gc", "tracing", "--memory", "dynamic"])
-            .arg(&src)
-            .args(["--emit-c", "-O2", "-o"])
-            .arg(&cfile)
-            .env("FWP_STACK", "0"),
-    );
-    let emitted = std::fs::read_to_string(&cfile).unwrap();
-    let conversions = emitted
-        .lines()
-        .filter(|line| line.contains(" = fwp_vunbox3("))
-        .collect::<Vec<_>>();
-    assert_eq!(
-        conversions.len(),
-        1,
-        "fixture must exercise a real boxed-to-struct conversion"
-    );
-    let holder = emitted[emitted.find("/* holder :").unwrap()..]
-        .split("static V f")
-        .nth(1)
-        .unwrap()
-        .split('(')
-        .next()
-        .unwrap();
-    let line = conversions[0];
-    let variable = line.split_whitespace().nth(1).unwrap();
-    let boxed = line
-        .split("fwp_vunbox3(")
-        .nth(1)
-        .unwrap()
-        .split(')')
-        .next()
-        .unwrap();
-    let armed_line = format!("{line} arm_conversion(&{variable},{boxed});");
-    let prototype = "static void arm_conversion(fwp_u3 *u,V boxed);\n";
-    let type_end = emitted.find("} fwp_u3;").unwrap() + "} fwp_u3;".len();
-    let mut runtime = emitted[..type_end].to_string() + "\n" + prototype + &emitted[type_end..];
-    runtime = runtime.replacen(line, &armed_line, 1).replace(
-        "int main(int argc, char **argv)",
-        "int original_main(int argc, char **argv)",
-    );
-    let probe = r#"
+    for mode in ["arc", "tracing"] {
+        let stress = if mode == "arc" { "0" } else { "1" };
+        checked(
+            Command::new(fwp)
+                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .arg(&src)
+                .args(["--emit-c", "-O2", "-o"])
+                .arg(&cfile)
+                .env("FWP_STACK", "0"),
+        );
+        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let conversions = emitted
+            .lines()
+            .filter(|line| line.contains(" = fwp_vunbox3("))
+            .collect::<Vec<_>>();
+        assert_eq!(
+            conversions.len(),
+            1,
+            "fixture must exercise a real boxed-to-struct conversion"
+        );
+        let holder = emitted[emitted.find("/* holder :").unwrap()..]
+            .split("static V f")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let line = conversions[0];
+        let variable = line.split_whitespace().nth(1).unwrap();
+        let boxed = line
+            .split("fwp_vunbox3(")
+            .nth(1)
+            .unwrap()
+            .split(')')
+            .next()
+            .unwrap();
+        let armed_line = format!("{line} arm_conversion(&{variable},{boxed});");
+        let prototype = "static void arm_conversion(fwp_u3 *u,V boxed);\n";
+        let type_end = emitted.find("} fwp_u3;").unwrap() + "} fwp_u3;".len();
+        let mut runtime = emitted[..type_end].to_string() + "\n" + prototype + &emitted[type_end..];
+        runtime = runtime.replacen(line, &armed_line, 1).replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        );
+        let probe = r#"
 static volatile V first, last, other, scalar_word, observed_box;
 static int converting, fail_field, retain_box;
 static jmp_buf overflow;
 static int recover_overflow(void) { return 1; }
-static int dead_string(V v) { return fwp_reuse_verify ? STR(v)->len==0 : *fwp_rc_slot(v)==0; }
+static int dead_string(V v) {
+#ifndef FWP_ARC_ONLY
+    if (fwp_reuse_verify) return STR(v)->len==0;
+#endif
+    return *fwp_rc_slot(v)==0;
+}
+static int dead_box(V v) {
+#ifndef FWP_ARC_ONLY
+    if (fwp_reuse_verify) return OBJ(v)->tag==0xdead;
+#endif
+    return *fwp_rc_slot(v)==0;
+}
 static gc_rc_wide *wide(V v) { return *fwp_rc_wide_link(fwp_rc_slot(v)); }
 static size_t count(V v) { uint8_t c=*fwp_rc_slot(v);return c==255?wide(v)->count:c; }
 static void arm_conversion(fwp_u3 *u,V boxed) {
@@ -105,6 +116,8 @@ static void arm_conversion(fwp_u3 *u,V boxed) {
 }
 int main(void) {
     fwp_prog_out=stdout;fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    intptr_t baseline=fwp_gc.budget;
+    for (volatile int round=0;round<32;round++) {
     for (volatile int field=0;field<2;field++) for (volatile int box_alias=0;box_alias<2;box_alias++)
     for (volatile int other_alias=0;other_alias<2;other_alias++) {
         first=fwp_rc_fresh(fwp_str_new("first",5));last=fwp_rc_fresh(fwp_str_new("other",5));
@@ -116,7 +129,7 @@ int main(void) {
         fwp_trap_recover=0;fwp_trap_jb=0;converting=0;
         if (!observed_box || fwp_cleanups) return 2;
         if (box_alias) { if (*fwp_rc_slot(observed_box)!=1) return 3; }
-        else if (fwp_reuse_verify ? OBJ(observed_box)->tag!=0xdead : *fwp_rc_slot(observed_box)!=0) return 3;
+        else if (!dead_box(observed_box)) return 3;
         size_t first_expected=field?255:SIZE_MAX,last_expected=field?SIZE_MAX:255;
         if (!box_alias) {first_expected--;last_expected--;}
         if (count(first)!=first_expected || STR(first)->len!=5) return 4;
@@ -130,115 +143,159 @@ int main(void) {
         fwp_rc_free_obj(first);fwp_rc_free_obj(last);fwp_rc_free_obj(scalar_word);
         if (fwp_gc.rc_wide_len) return 90;
     }
+#ifdef FWP_ARC_ONLY
+    if (fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
+#endif
+    }
     puts("boxed conversion overflow releases original and remaining caller owners");return 0;
 }
 "#;
-    let drop = emitted[emitted.find("/* Outcome */\nstatic void fwp_drop").unwrap()..]
-        .split("static void ")
-        .nth(1)
-        .unwrap()
-        .split('(')
-        .next()
-        .unwrap();
-    let probe = probe
-        .replace("HOLDER", holder)
-        .replace("OUTCOME_DROP", drop);
-    let header = format!("static V f{holder}(V l0, V l1, V l2) {{");
-    let start = runtime.find(&header).unwrap();
-    let end = start + runtime[start..].find("\n}").unwrap() + 2;
-    let worker = &runtime[start..end];
-    let point = worker.find(" = fwp_vunbox3(").unwrap();
-    let pushes = worker[..point]
-        .match_indices("fwp_cleanup_push(")
-        .map(|(i, _)| i)
-        .collect::<Vec<_>>();
-    assert!(pushes.len() >= 2);
-    let without_scope = |push: usize| {
-        let end = push + worker[push..].find(';').unwrap() + 1;
-        let node = worker[push..end]
-            .split('&')
+        let drop = emitted[emitted.find("/* Outcome */\nstatic void fwp_drop").unwrap()..]
+            .split("static void ")
             .nth(1)
             .unwrap()
-            .split(',')
+            .split('(')
             .next()
             .unwrap();
-        let old = worker.replacen(&worker[push..end], "", 1).replacen(
-            &format!("fwp_cleanup_pop(&{node});"),
-            "",
-            1,
-        );
-        runtime.replacen(worker, &old, 1)
-    };
-    let original_control = without_scope(*pushes.last().unwrap());
-    let remaining_control = without_scope(pushes[pushes.len() - 2]);
-    for opt in ["-O1", "-O2"] {
-        let uncleared = probe.replace("fwp_rc_fresh(first);", "wide(first)->count=1;");
-        assert_ne!(uncleared, probe);
-        fwp::cgen::compile_c(&format!("{runtime}\n{uncleared}"), &exe, opt).unwrap();
-        let stale = Command::new(&exe)
-            .env("FWP_GC", "off")
-            .env("FWP_GC_STATS", "0")
-            .env("FWP_GC_STRESS", "0")
-            .env("FWP_GC_VERIFY", "0")
-            .env("FWP_REUSE_VERIFY", "0")
-            .output()
-            .unwrap();
-        record_probe::save(
-            "variant_conversion_ownership",
-            &format!("tracing{opt}-uncleared-count"),
-            &format!("{runtime}\n{uncleared}"),
-            &exe,
-            &stale,
-        );
-        assert_eq!(stale.status.code(), Some(90), "{opt}: {stale:?}");
+        let probe = probe
+            .replace("HOLDER", holder)
+            .replace("OUTCOME_DROP", drop);
+        let header = format!("static V f{holder}(V l0, V l1, V l2) {{");
+        let start = runtime.find(&header).unwrap();
+        let end = start + runtime[start..].find("\n}").unwrap() + 2;
+        let worker = &runtime[start..end];
+        let point = worker.find(" = fwp_vunbox3(").unwrap();
+        let pushes = worker[..point]
+            .match_indices("fwp_cleanup_push(")
+            .map(|(i, _)| i)
+            .collect::<Vec<_>>();
+        assert!(pushes.len() >= 2);
+        let without_scope = |push: usize| {
+            let end = push + worker[push..].find(';').unwrap() + 1;
+            let node = worker[push..end]
+                .split('&')
+                .nth(1)
+                .unwrap()
+                .split(',')
+                .next()
+                .unwrap();
+            let old = worker.replacen(&worker[push..end], "", 1).replacen(
+                &format!("fwp_cleanup_pop(&{node});"),
+                "",
+                1,
+            );
+            runtime.replacen(worker, &old, 1)
+        };
+        let original_control = without_scope(*pushes.last().unwrap());
+        let remaining_control = without_scope(pushes[pushes.len() - 2]);
+        for opt in ["-O1", "-O2"] {
+            if mode == "arc" {
+                let missing = probe.replace("fwp_rc_free_obj(scalar_word);", "");
+                assert_ne!(missing, probe);
+                fwp::cgen::compile_c(&format!("{runtime}\n{missing}"), &exe, opt).unwrap();
+                let out = Command::new(&exe)
+                    .env("FWP_GC", "off")
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "variant_conversion_ownership",
+                    &format!("{mode}{opt}-missing-release"),
+                    &format!("{runtime}\n{missing}"),
+                    &exe,
+                    &out,
+                );
+                assert_eq!(out.status.code(), Some(90), "{mode} {opt}: {out:?}");
+            }
 
-        for (control, expected) in [(&original_control, 3), (&remaining_control, 7)] {
-            fwp::cgen::compile_c(&format!("{control}\n{probe}"), &exe, opt).unwrap();
-            let out = Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1")
+            let uncleared = probe.replace("fwp_rc_fresh(first);", "wide(first)->count=1;");
+            assert_ne!(uncleared, probe);
+            fwp::cgen::compile_c(&format!("{runtime}\n{uncleared}"), &exe, opt).unwrap();
+            let stale = Command::new(&exe)
+                .env("FWP_GC", "off")
+                .env("FWP_GC_STATS", "0")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
                 .output()
                 .unwrap();
-            assert_eq!(
-                out.status.code(),
-                Some(expected),
-                "missing conversion scope must leave its owner unreleased: {}",
-                String::from_utf8_lossy(&out.stderr)
-            );
-        }
-        fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
             record_probe::save(
                 "variant_conversion_ownership",
-                &format!("tracing{opt}-normal-poison{poison}"),
-                &format!("{runtime}\n{probe}"),
+                &format!("{mode}{opt}-uncleared-count"),
+                &format!("{runtime}\n{uncleared}"),
                 &exe,
-                &out,
+                &stale,
             );
-        }
+            assert_eq!(stale.status.code(), Some(90), "{opt}: {stale:?}");
 
-        checked(
-            Command::new(fwp)
-                .args(["build", "--gc", "tracing", "--memory", "dynamic"])
-                .arg(&src)
-                .args([opt, "-o"])
-                .arg(&exe)
-                .env("FWP_STACK", "0"),
-        );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
-        assert_eq!(out.stdout, reference.stdout, "holder {holder}");
+            for (control, expected) in [(&original_control, 3), (&remaining_control, 7)] {
+                fwp::cgen::compile_c(&format!("{control}\n{probe}"), &exe, opt).unwrap();
+                let out = Command::new(&exe)
+                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", stress)
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "variant_conversion_ownership",
+                    &format!("{mode}{opt}-control{expected}"),
+                    &format!("{control}\n{probe}"),
+                    &exe,
+                    &out,
+                );
+                assert_eq!(
+                    out.status.code(),
+                    Some(expected),
+                    "missing conversion scope must leave its owner unreleased: {}",
+                    String::from_utf8_lossy(&out.stderr)
+                );
+            }
+            fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
+            for poison in if mode == "arc" {
+                &["0"][..]
+            } else {
+                &["0", "1"][..]
+            } {
+                let out = checked(
+                    Command::new(&exe)
+                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", poison),
+                );
+                record_probe::save(
+                    "variant_conversion_ownership",
+                    &format!("{mode}{opt}-normal-poison{poison}"),
+                    &format!("{runtime}\n{probe}"),
+                    &exe,
+                    &out,
+                );
+            }
+
+            checked(
+                Command::new(fwp)
+                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .arg(&src)
+                    .args([opt, "-o"])
+                    .arg(&exe)
+                    .env("FWP_STACK", "0"),
+            );
+            let out = checked(
+                Command::new(&exe)
+                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", stress),
+            );
+            assert_eq!(out.stdout, reference.stdout, "holder {holder}");
+        }
     }
     std::fs::remove_dir_all(dir).unwrap();
 }

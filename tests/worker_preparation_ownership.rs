@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -58,7 +61,7 @@ fn wrapper_preparation_failures_and_worker_entry_preserve_exact_owners() {
     let dir = Scratch::new("fields");
     let src = dir.0.join("fields.fwp");
     let cfile = dir.0.join("fields.c");
-    let exe = dir.0.join("fields");
+    let exe = dir.0.join("fields").with_extension("exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
     let reference = checked(
@@ -67,38 +70,41 @@ fn wrapper_preparation_failures_and_worker_entry_preserve_exact_owners() {
             .args(["run", "--interp"])
             .arg(&src),
     );
-    checked(
-        Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(cfile).unwrap();
-    let id = function_id(&emitted, "work");
-    let comment = emitted.find("/* work :").unwrap();
-    let header = format!("static V f{id}(");
-    let start = comment + emitted[comment..].find(&header).unwrap();
-    let wrapper = emitted[start..].lines().next().unwrap();
-    assert!(wrapper.contains("prepared.v0 = field1_0"));
-    assert!(wrapper.contains("prepared.v1 = field1_1"));
-    assert!(wrapper.contains("owned.v0 = 0"));
-    let preparing=wrapper.replace("fwp_rc_dup(field1_0);", "if (fail_field==0) fwp_trap(\"injected first field duplication failure\"); prepared_copies++; fwp_rc_dup(field1_0);")
+    for mode in ["arc", "tracing"] {
+        let stress = if mode == "arc" { "0" } else { "1" };
+        checked(
+            Command::new(fwp)
+                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .env("FWP_STACK", "1")
+                .arg(&src)
+                .args(["--emit-c", "-O2", "-o"])
+                .arg(&cfile),
+        );
+        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let id = function_id(&emitted, "work");
+        let comment = emitted.find("/* work :").unwrap();
+        let header = format!("static V f{id}(");
+        let start = comment + emitted[comment..].find(&header).unwrap();
+        let wrapper = emitted[start..].lines().next().unwrap();
+        assert!(wrapper.contains("prepared.v0 = field1_0"));
+        assert!(wrapper.contains("prepared.v1 = field1_1"));
+        assert!(wrapper.contains("owned.v0 = 0"));
+        let preparing=wrapper.replace("fwp_rc_dup(field1_0);", "if (fail_field==0) fwp_trap(\"injected first field duplication failure\"); prepared_copies++; fwp_rc_dup(field1_0);")
         .replace("fwp_rc_dup(field1_1);", "if (fail_field==1) fwp_trap(\"injected later field duplication failure\"); prepared_copies++; fwp_rc_dup(field1_1);")
         .replace("prepared.v0 = field1_0;", "prepared.v0 = field1_0; if (fail_field==2) fwp_trap(\"injected partial field transfer failure\");");
-    assert_ne!(wrapper, preparing);
-    let start = comment
-        + emitted[comment..]
-            .find(&format!("static V w{id}("))
-            .unwrap();
-    let end = start + emitted[start..].find("\n}\n").unwrap() + 3;
-    let worker = &emitted[start..end];
-    assert!(worker.contains("FWP_TICK();"));
-    let ticking = worker.replace("FWP_TICK();", "cancel_worker_tick(); FWP_TICK();");
-    let runtime=emitted.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int fail_field, cancel_in_worker, prepared_copies; static void cancel_worker_tick(void);")
+        assert_ne!(wrapper, preparing);
+        let start = comment
+            + emitted[comment..]
+                .find(&format!("static V w{id}("))
+                .unwrap();
+        let end = start + emitted[start..].find("\n}\n").unwrap() + 3;
+        let worker = &emitted[start..end];
+        assert!(worker.contains("FWP_TICK();"));
+        let ticking = worker.replace("FWP_TICK();", "cancel_worker_tick(); FWP_TICK();");
+        let runtime=emitted.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int fail_field, cancel_in_worker, prepared_copies; static void cancel_worker_tick(void);")
         .replace(wrapper,&preparing).replace(worker,&ticking)
         .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
-    let probe=r#"
+        let probe=r#"
 static volatile V first, second, extra, scalar_word, boxed;
 static jmp_buf preparation;
 static fwp_task cancelled_worker;
@@ -106,12 +112,18 @@ static int recover_preparation(void) { return 1; }
 static void cancel_worker_tick(void) {
     if (cancel_in_worker && fwp_cur) { fwp_cur->cancelled=1;fwp_budget=0; }
 }
-static int dead_string(V v) { return fwp_reuse_verify ? STR(v)->len==0 : *fwp_rc_slot(v)==0; }
+static int dead_string(V v) {
+#ifndef FWP_ARC_ONLY
+    if (fwp_reuse_verify) return STR(v)->len==0;
+#endif
+    return *fwp_rc_slot(v)==0; }
 int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
 #endif
     fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    intptr_t baseline=fwp_gc.budget;
+    for (volatile int round=0;round<32;round++) {
     for (volatile int mode=0;mode<5;mode++) for (volatile int box_alias=0;box_alias<2;box_alias++) for (volatile int leaf_alias=0;leaf_alias<2;leaf_alias++) {
         first=fwp_rc_fresh(fwp_str_new("first",5));second=fwp_rc_fresh(fwp_str_new("second",6));
         extra=fwp_rc_fresh(fwp_str_new("extra",5));scalar_word=fwp_rc_fresh(fwp_str_new("scalar bits",11));
@@ -155,88 +167,140 @@ int main(void) {
         if (*fwp_rc_slot(scalar_word)!=1 || STR(scalar_word)->len!=11) return 10;
         fwp_rc_free_obj(scalar_word);
     }
+#ifdef FWP_ARC_ONLY
+    if (fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
+#endif
+    }
     puts("worker preparation and entry release exact owners while preserving aliases and scalar bits");
     return 0;
 }
 "#.replace("WORK",id);
-    // Read release IDs from the exact original-owner scope, not descriptor order.
-    let owner_id = wrapper
-        .split("fwp_cleanup_push(&cleanup, fwp_owner_release")
-        .nth(1)
-        .unwrap()
-        .split(',')
-        .next()
-        .unwrap();
-    let release = format!("static void fwp_owner_release{owner_id}(void *arg)");
-    let at = emitted.find(&release).unwrap();
-    let release = emitted[at..].lines().next().unwrap();
-    let string_drop = release
-        .split("fwp_drop")
-        .nth(1)
-        .unwrap()
-        .split('(')
-        .next()
-        .unwrap();
-    let box_drop = release
-        .split("fwp_drop")
-        .nth(2)
-        .unwrap()
-        .split('(')
-        .next()
-        .unwrap();
-    let probe = probe
-        .replace("STRING", string_drop)
-        .replace("BOX", box_drop);
-    // Restore only the missing partial-preparation owner. Original argument
-    // cleanup still runs, but the first successful duplicate must leak.
-    let push = preparing
-        .find("fwp_cleanup_push(&preparation_cleanup,")
-        .unwrap();
-    let end = push + preparing[push..].find(';').unwrap() + 1;
-    let old_wrapper = preparing
-        .replacen(&preparing[push..end], "(void)prepared;", 1)
-        .replacen(
-            "fwp_cleanup_pop(&preparation_cleanup);",
-            "(void)preparation_cleanup;",
-            1,
-        );
-    let unprotected = runtime.replacen(&preparing, &old_wrapper, 1);
-    for opt in ["-O1", "-O2"] {
-        fwp::cgen::compile_c(&format!("{unprotected}\n{probe}"), &exe, opt).unwrap();
-        let old = Command::new(&exe)
-            .env("FWP_GC_STRESS", "1")
-            .env("FWP_GC_VERIFY", "1")
-            .env("FWP_REUSE_VERIFY", "1")
-            .output()
+        // Read release IDs from the exact original-owner scope, not descriptor order.
+        let owner_id = wrapper
+            .split("fwp_cleanup_push(&cleanup, fwp_owner_release")
+            .nth(1)
+            .unwrap()
+            .split(',')
+            .next()
             .unwrap();
-        assert_eq!(
-            old.status.code(),
-            Some(4),
-            "missing partial scope must leave an earlier shared duplicate owned"
-        );
-        fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
+        let release = format!("static void fwp_owner_release{owner_id}(void *arg)");
+        let at = emitted.find(&release).unwrap();
+        let release = emitted[at..].lines().next().unwrap();
+        let string_drop = release
+            .split("fwp_drop")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let box_drop = release
+            .split("fwp_drop")
+            .nth(2)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let probe = probe
+            .replace("STRING", string_drop)
+            .replace("BOX", box_drop);
+        // Restore only the missing partial-preparation owner. Original argument
+        // cleanup still runs, but the first successful duplicate must leak.
+        let push = preparing
+            .find("fwp_cleanup_push(&preparation_cleanup,")
+            .unwrap();
+        let end = push + preparing[push..].find(';').unwrap() + 1;
+        let old_wrapper = preparing
+            .replacen(&preparing[push..end], "(void)prepared;", 1)
+            .replacen(
+                "fwp_cleanup_pop(&preparation_cleanup);",
+                "(void)preparation_cleanup;",
+                1,
+            );
+        let unprotected = runtime.replacen(&preparing, &old_wrapper, 1);
+        for opt in ["-O1", "-O2"] {
+            if mode == "arc" {
+                let missing = probe.replace("fwp_rc_free_obj(scalar_word);", "");
+                assert_ne!(missing, probe);
+                fwp::cgen::compile_c(&format!("{runtime}\n{missing}"), &exe, opt).unwrap();
+                let out = Command::new(&exe)
+                    .env("FWP_GC", "off")
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "worker_preparation_ownership",
+                    &format!("{mode}{opt}-missing-release"),
+                    &format!("{runtime}\n{missing}"),
+                    &exe,
+                    &out,
+                );
+                assert_eq!(out.status.code(), Some(90), "{mode} {opt}: {out:?}");
+            }
+
+            fwp::cgen::compile_c(&format!("{unprotected}\n{probe}"), &exe, opt).unwrap();
+            let old = Command::new(&exe)
+                .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                .env("FWP_GC_STATS", "0")
+                .env("FWP_GC_STRESS", stress)
+                .env("FWP_GC_VERIFY", stress)
+                .env("FWP_REUSE_VERIFY", stress)
+                .output()
+                .unwrap();
+            record_probe::save(
+                "worker_preparation_ownership",
+                &format!("{mode}{opt}-missing-scope"),
+                &format!("{unprotected}\n{probe}"),
+                &exe,
+                &old,
+            );
+            assert_eq!(
+                old.status.code(),
+                Some(4),
+                "missing partial scope must leave an earlier shared duplicate owned"
+            );
+            fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
+            for poison in if mode == "arc" {
+                &["0"][..]
+            } else {
+                &["0", "1"][..]
+            } {
+                let out = checked(
+                    Command::new(&exe)
+                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", poison),
+                );
+                record_probe::save(
+                    "worker_preparation_ownership",
+                    &format!("{mode}{opt}-normal-poison{poison}"),
+                    &format!("{runtime}\n{probe}"),
+                    &exe,
+                    &out,
+                );
+                assert_eq!(out.stdout,b"worker preparation and entry release exact owners while preserving aliases and scalar bits\n");
+            }
+            checked(
+                Command::new(fwp)
+                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .env("FWP_STACK", "1")
+                    .arg(&src)
+                    .args([opt, "-o"])
+                    .arg(&exe),
+            );
             let out = checked(
                 Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
+                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", stress),
             );
-            assert_eq!(out.stdout,b"worker preparation and entry release exact owners while preserving aliases and scalar bits\n");
+            assert_eq!(out.stdout, reference.stdout);
         }
-        checked(
-            Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
-                .arg(&src)
-                .args([opt, "-o"])
-                .arg(&exe),
-        );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
-        assert_eq!(out.stdout, reference.stdout);
     }
 }

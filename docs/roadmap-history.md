@@ -12,6 +12,29 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Checked native defaults and ARC metadata (PR #199)
+
+Native commands, modules and compiler APIs use checked ARC by default. Unproved
+ownership is rejected; explicit tracing remains. ARC omits tracing mark storage,
+age checks, collector stack discovery and late poisoned-storage diagnostics.
+[Page metadata](measurements/arc-metadata.md) falls from 4,648 to 4,128 bytes,
+with the 4,096 count bytes unchanged. This establishes layout, not a timing gain.
+
+The delivery also repairs static-heap pressure collection and reuse of freed
+slots. Repeated [record cleanup checks](measurements/record-cleanup.md) found and
+fixed five overflow-fixture cleanup errors. Windows gained missing record tests
+and complete ownership artifact uploads. Documentation distinguishes the checked
+default from the remaining work to remove tracing and limit counting.
+
+[PR #199](https://github.com/e6qu/fun-with-pipes/pull/199) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39924646271)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39924644039)
+at `5e17fc10e860b1971ffc9cd9cb57fcb795ccad24`. Complete logs were audited. The
+[inspection record](measurements/native-default-2026-10-23.json) covers 570 saved
+native binaries, 360 allocator observations and 480 record outcomes across six
+hosts. Squash merge `aedafcd909b3bff01ca1a1da00d57cdcf0ba028e` has identical files, #198 as its sole
+parent and the verified one-line subject with no body or trailers.
+
 ## Local callback captures and repeated numerical work (PR #198)
 
 Known generators and folds keep captures in local values; direct calls no longer
