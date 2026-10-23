@@ -667,11 +667,15 @@ An early-stopping `find` needs nontrapping stages. Keep the
 
 ## Evidence required
 
-For semantic changes, compare native execution against the unoptimized interpreter,
-including effects and failures. Memory changes need tracing stress/verification,
-reuse verification, aliases, exceptional exits and deliberate omitted-cleanup
-controls. A deliberate omission should make the test fail; otherwise a successful
-run may not be measuring reclamation at all.
+For semantic changes, compare native execution with the unoptimized interpreter,
+including effects and failures. Check aliases, cancellation and exceptional exits.
+In ARC, observe owner counts and live storage at repeated lifetime boundaries;
+deliberately omitted cleanup must fail. Final-only zero storage can miss retention
+between requests. Run tracing stress and poisoned-storage controls in tracing
+builds, where those settings are supported. Keep those controls until replacement
+ownership checks pass on the required native hosts. The
+[cleanup guide](measurements/record-cleanup.md) explains the examples, negative
+controls and limits of the measured byte charge.
 
 For performance, name the baseline and compare equivalent inputs/results. Record
 hardware, compiler versions, flags, timing scope, allocations, peak live storage,

@@ -12,6 +12,24 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Cached values, aliases and failed calls (PR #202)
+
+Ten groups now check cleanup with ARC and tracing: fields, matching, returned
+aliases, reusable storage, partial calls, folds, loop cancellation, cached values,
+escaping functions and temporary containers. Repeated byte balances and deliberate
+missing releases detect retained storage. Windows gained five omitted test groups;
+a runner control now checks production coverage. Compiler/runtime are unchanged.
+
+[PR #202](https://github.com/e6qu/fun-with-pipes/pull/202) passed nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39981747930)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39981747884)
+at `46c26002b5f748529a2c6ad5977891cdc1593c06`. Complete logs passed audit. The
+[inspection record](measurements/call-cleanup-2026-10-23.json) covers 3,414
+saved binaries across six hosts, including 3,324 aggregate cleanup outcomes and
+360 allocator observations. Verified squash `ff1bfcc8a294a488b9cb043622143233a903d068` has the same
+tree and a one-line message with no body or trailers. [The guide](measurements/record-cleanup.md)
+explains the checks; they do not establish speed or complete removal of tracing.
+
 ## Failed loops and collection cleanup (PR #201)
 
 Loop, map, filter/take-while and zip probes now check repeated cleanup with ARC

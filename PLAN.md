@@ -109,14 +109,14 @@ outside the benchmark suite.
    the existing controls until their replacements pass, then remove tracing mode.
    [Record and variant cleanup checks](docs/measurements/record-cleanup.md) cover
    direct ARC failures, constructor/call cleanup and repeated storage balances.
-   The next grouped checks extend field selection, returned aliases and temporary
-   storage reuse, partial calls, folds and loop cancellation; the handoff
-   distinguishes local results from native acceptance.
-   [Loop and collection cleanup](docs/measurements/collection-cleanup.md) extends
-   the checks to partial iteration state, callbacks, temporary buffers and cancellation.
-   The active grouped delivery also covers cached values, escaping functions and
-   temporary containers. Extend evidence to the remaining collector-specific
-   checks before removing them.
+   [PR #202](docs/roadmap-history.md#cached-values-aliases-and-failed-calls-pr-202)
+   verifies cached values, aliases and call cleanup on six native hosts.
+   [Task callback checks](docs/measurements/record-cleanup.md#task-callbacks-and-cancellation)
+   extend this to deadlines, scopes, retained callbacks and task handles.
+   [State and task values](docs/measurements/record-cleanup.md#state-deadlines-and-channel-values)
+   and [runtime calls](docs/measurements/record-cleanup.md#calls-chosen-while-a-program-runs)
+   complete this grouped preparation. It still requires final delivery acceptance.
+   Extend the remaining collector-specific checks before removing tracing.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
    [Integer counting](docs/measurements/integer-counting.md) and
    [checked products](docs/measurements/checked-products.md) preserve slower
