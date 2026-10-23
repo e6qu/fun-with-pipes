@@ -1,72 +1,109 @@
 //! Check bounded AD workspace reuse and exact owners at actual native boundaries.
 #[path = "support/c_instrument.rs"]
 mod c_instrument;
+#[path = "support/record_probe.rs"]
+mod record_probe;
 use std::process::Command;
 
 #[test]
 fn input_nodes_omit_metadata_and_managed_weights_transfer_atomically() {
-    let directory = fwp::cgen::TempDir::new("fwp-ad-operations").unwrap();
-    let input = directory.join("runtime.fwp");
-    let cfile = directory.join("runtime.c");
-    std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
-    let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--gc", "tracing", "--emit-c", "-o"])
-        .arg(&cfile)
-        .arg(&input)
-        .output()
-        .unwrap();
-    assert!(output.status.success(), "{output:?}");
-    let code = std::fs::read_to_string(cfile).unwrap().replace(
-        "int main(int argc, char **argv)",
-        "int original_main(int argc, char **argv)",
-    );
-    let marker = "    t->len = n;";
-    assert_eq!(code.matches(marker).count(), 1);
-    let padded = code.replace(marker, &format!("{marker}\n    fwp_tape_reserve(t, n);"));
-    let registration = "        fwp_cleanup_push(&weight_cleanup, fwp_value_release, &weight);";
-    assert_eq!(code.matches(registration).count(), 1);
-    let unprotected = code.replace(registration, "");
-    for opt in ["-O1", "-O2"] {
-        for (label, runtime, status) in [
-            ("operations", &code, 0),
-            ("padded", &padded, 230),
-            ("unprotected", &unprotected, 237),
-        ] {
-            let binary = directory.join(label);
-            let source = format!(
-                "{runtime}\n{}",
-                include_str!("fixtures/autodiff_operations_probe.c")
-            );
-            fwp::cgen::compile_c(&source, &binary, opt).unwrap();
-            for cache in ["0", "1"] {
-                let result = Command::new(&binary)
-                    .env("FWP_AD_WORKSPACE", cache)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", "1")
-                    .output()
-                    .unwrap();
-                assert_eq!(
-                    result.status.code(),
-                    Some(status),
-                    "{label} {opt} cache={cache}: {result:?}"
-                );
-                if status == 0 {
-                    assert!(result.stderr.is_empty());
-                }
-                if let Some(destination) = std::env::var_os("FWP_AD_WORKSPACE_ARTIFACTS") {
-                    let destination = std::path::PathBuf::from(destination);
-                    std::fs::create_dir_all(&destination).unwrap();
-                    std::fs::write(
-                        destination.join(format!("operations-{label}{opt}.c")),
-                        &source,
-                    )
-                    .unwrap();
+    for memory in ["arc", "tracing"] {
+        let directory = fwp::cgen::TempDir::new("fwp-ad-operations").unwrap();
+        let input = directory.join("runtime.fwp");
+        let cfile = directory.join("runtime.c");
+        std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
+        let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args([
+                "build", "--gc", memory, "--memory", "dynamic", "-O2", "--emit-c", "-o",
+            ])
+            .arg(&cfile)
+            .arg(&input)
+            .env("FWP_STACK", "0")
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{output:?}");
+        let code = std::fs::read_to_string(cfile).unwrap().replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        );
+        let marker = "    t->len = n;";
+        assert_eq!(code.matches(marker).count(), 1);
+        let padded = code.replace(marker, &format!("{marker}\n    fwp_tape_reserve(t, n);"));
+        let registration = "        fwp_cleanup_push(&weight_cleanup, fwp_value_release, &weight);";
+        assert_eq!(code.matches(registration).count(), 1);
+        let unprotected = code.replace(registration, "");
+        let probe = include_str!("fixtures/autodiff_operations_probe.c");
+        let mut cases = vec![
+            ("operations", code.clone(), probe.to_owned(), 0),
+            ("padded", padded, probe.to_owned(), 230),
+            ("unprotected", unprotected, probe.to_owned(), 237),
+        ];
+        if memory == "arc" {
+            for (label, release) in [
+                ("missing-input", "fwp_rc_free_arr(operation_seeds);"),
+                ("missing-result", "fwp_rc_free_arr(result);"),
+            ] {
+                assert_eq!(probe.matches(release).count(), 1);
+                cases.push((
+                    label,
+                    code.clone(),
+                    probe.replace(release, "/* omitted release */"),
+                    90,
+                ));
+            }
+        }
+        for opt in ["-O1", "-O2"] {
+            for (label, runtime, probe, status) in &cases {
+                let binary = directory.join(format!("{label}.exe"));
+                let source = format!("{runtime}\n{probe}");
+                fwp::cgen::compile_c(&source, &binary, opt).unwrap();
+                for cache in ["0", "1"] {
+                    for &reuse in if memory == "arc" {
+                        &["0"][..]
+                    } else {
+                        &["0", "1"][..]
+                    } {
+                        let result = Command::new(&binary)
+                            .env("FWP_AD_WORKSPACE", cache)
+                            .env("FWP_FREE", "1")
+                            .env("FWP_REUSE", "1")
+                            .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
+                            .env("FWP_GC_STRESS", if memory == "arc" { "0" } else { "1" })
+                            .env("FWP_GC_VERIFY", if memory == "arc" { "0" } else { "1" })
+                            .env("FWP_REUSE_VERIFY", reuse)
+                            .output()
+                            .unwrap();
+                        record_probe::save(
+                            "autodiff_workspace",
+                            &format!("operations-{memory}{opt}-{label}-cache{cache}-reuse{reuse}"),
+                            &source,
+                            &binary,
+                            &result,
+                        );
+                        assert_eq!(
+                            result.status.code(),
+                            Some(*status),
+                            "{label} {opt} cache={cache}: {result:?}"
+                        );
+                        if *status == 0 {
+                            assert!(result.stderr.is_empty());
+                        }
+                        if let Some(destination) = std::env::var_os("FWP_AD_WORKSPACE_ARTIFACTS") {
+                            let destination = std::path::PathBuf::from(destination);
+                            std::fs::create_dir_all(&destination).unwrap();
+                            std::fs::write(
+                                destination.join(format!("operations-{memory}-{label}{opt}.c")),
+                                &source,
+                            )
+                            .unwrap();
+                        }
+                    }
                 }
             }
         }
     }
 }
+
 #[test]
 fn autodiff_workspaces_reuse_bounded_storage_and_release_every_private_owner() {
     let directory = std::env::temp_dir().join(format!("fwp-ad-workspace-{}", std::process::id()));
@@ -104,7 +141,7 @@ fn autodiff_workspaces_reuse_bounded_storage_and_release_every_private_owner() {
         "V r = workspace_result_array((size_t)tp.leaves);",
     );
     assert!(tape.contains("V r = workspace_result_array((size_t)tp.leaves);"));
-    let declarations="static void *workspace_realloc(void *,size_t);\nstatic void *workspace_calloc(size_t,size_t);\nstatic void workspace_free(void *);\nstatic V workspace_result_array(size_t);\n";
+    let declarations = "static void *workspace_realloc(void *,size_t);\nstatic void *workspace_calloc(size_t,size_t);\nstatic void workspace_free(void *);\nstatic V workspace_result_array(size_t);\n";
     let runtime=format!("{}{}{}{}",&source[..start],declarations,tape,&source[end..])
       .replace("typedef uint64_t V;","typedef uint64_t V;\nstatic uint64_t measured_calls,measured_bytes;")
       .replace("static inline void *fwp_gc_alloc(size_t n, int leaf) {","static inline void *fwp_gc_alloc(size_t n, int leaf) {\nif(leaf!=0){measured_calls++;measured_bytes+=n;}")
@@ -176,73 +213,114 @@ fn autodiff_workspaces_reuse_bounded_storage_and_release_every_private_owner() {
 
 #[test]
 fn backward_prefix_bounds_actual_native_storage_and_scans() {
-    let directory = fwp::cgen::TempDir::new("fwp-ad-prefix").unwrap();
-    let input = directory.join("runtime.fwp");
-    let cfile = directory.join("runtime.c");
-    std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
-    let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--gc", "tracing", "--emit-c"])
-        .arg(&input)
-        .arg("-o")
-        .arg(&cfile)
-        .output()
-        .unwrap();
-    assert!(output.status.success(), "{output:?}");
-    let code = std::fs::read_to_string(cfile).unwrap();
-    let scan = "for (int64_t i = active - 1; i >= tp.leaves; i--) {";
-    let release = "fwp_tape_buffers *b = (fwp_tape_buffers *)arg;";
-    assert_eq!(code.matches(scan).count(), 1);
-    assert_eq!(code.matches(release).count(), 1);
-    let code = code
-        .replace(
-            "typedef uint64_t V;",
-            "typedef uint64_t V;\nstatic size_t prefix_scans,prefix_adj_bytes;",
-        )
-        .replace(scan, &format!("{scan}\n        prefix_scans++;"))
-        .replace(
-            release,
-            &format!("{release}\n    prefix_adj_bytes=(size_t)b->adjcap*sizeof(double);"),
-        )
-        .replace(
-            "int main(int argc, char **argv)",
-            "int original_main(int argc, char **argv)",
-        );
-    let needed = "int64_t needed = active;";
-    assert_eq!(code.matches(needed).count(), 1);
-    let full_storage = code.replace(needed, "int64_t needed = tp.len ? tp.len : 1;");
-    let full_scan =
-        full_storage.replace(scan, "for (int64_t i = tp.len - 1; i >= tp.leaves; i--) {");
-    let probe = include_str!("fixtures/autodiff_prefix_probe.c");
-    for opt in ["-O1", "-O2"] {
-        for (name, code, status) in [
-            ("bounded", &code, 0),
-            ("full-storage", &full_storage, 240),
-            ("full-scan", &full_scan, 241),
-        ] {
-            let binary = directory.join(name);
-            let code = format!("{code}\n{probe}");
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            for (cache, reuse) in [("0", "0"), ("0", "1"), ("1", "0"), ("1", "1")] {
-                let output = Command::new(&binary)
-                    .env("FWP_AD_WORKSPACE", cache)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", reuse)
-                    .output()
-                    .unwrap();
-                assert_eq!(
-                    output.status.code(),
-                    Some(status),
-                    "{name} {opt} cache={cache} reuse={reuse}: {output:?}"
-                );
-                if let Some(destination) = std::env::var_os("FWP_AD_WORKSPACE_ARTIFACTS") {
-                    let destination = std::path::PathBuf::from(destination);
-                    std::fs::create_dir_all(&destination).unwrap();
-                    let prefix =
-                        destination.join(format!("prefix-{name}-{opt}-cache{cache}-reuse{reuse}"));
-                    std::fs::write(prefix.with_extension("c"), &code).unwrap();
-                    std::fs::write(prefix.with_extension("status"), format!("{output:?}\n"))
-                        .unwrap();
+    for memory in ["arc", "tracing"] {
+        let directory = fwp::cgen::TempDir::new("fwp-ad-prefix").unwrap();
+        let input = directory.join("runtime.fwp");
+        let cfile = directory.join("runtime.c");
+        std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
+        let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args([
+                "build", "--gc", memory, "--memory", "dynamic", "-O2", "--emit-c",
+            ])
+            .arg(&input)
+            .env("FWP_STACK", "0")
+            .arg("-o")
+            .arg(&cfile)
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{output:?}");
+        let code = std::fs::read_to_string(cfile).unwrap();
+        let scan = "for (int64_t i = active - 1; i >= tp.leaves; i--) {";
+        let release = "fwp_tape_buffers *b = (fwp_tape_buffers *)arg;";
+        assert_eq!(code.matches(scan).count(), 1);
+        assert_eq!(code.matches(release).count(), 1);
+        let code = code
+            .replace(
+                "typedef uint64_t V;",
+                "typedef uint64_t V;\nstatic size_t prefix_scans,prefix_adj_bytes;",
+            )
+            .replace(scan, &format!("{scan}\n        prefix_scans++;"))
+            .replace(
+                release,
+                &format!("{release}\n    prefix_adj_bytes=(size_t)b->adjcap*sizeof(double);"),
+            )
+            .replace(
+                "int main(int argc, char **argv)",
+                "int original_main(int argc, char **argv)",
+            );
+        let needed = "int64_t needed = active;";
+        assert_eq!(code.matches(needed).count(), 1);
+        let full_storage = code.replace(needed, "int64_t needed = tp.len ? tp.len : 1;");
+        let full_scan =
+            full_storage.replace(scan, "for (int64_t i = tp.len - 1; i >= tp.leaves; i--) {");
+        let probe = include_str!("fixtures/autodiff_prefix_probe.c");
+        let mut cases = vec![
+            ("bounded", code.clone(), probe.to_owned(), 0),
+            ("full-storage", full_storage, probe.to_owned(), 240),
+            ("full-scan", full_scan, probe.to_owned(), 241),
+        ];
+        if memory == "arc" {
+            for (label, release) in [
+                ("missing-output", "fwp_rc_free_arr(outs);"),
+                ("missing-seed", "fwp_rc_free_arr(seeds);"),
+                ("missing-result", "fwp_rc_free_arr(result);"),
+            ] {
+                assert!(probe.contains(release));
+                cases.push((
+                    label,
+                    code.clone(),
+                    probe.replace(release, "/* omitted release */"),
+                    90,
+                ));
+            }
+        }
+        for opt in ["-O1", "-O2"] {
+            for (name, code, probe, status) in &cases {
+                let binary = directory.join(format!("{name}.exe"));
+                let code = format!("{code}\n{probe}");
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                for cache in ["0", "1"] {
+                    for &reuse in if memory == "arc" {
+                        &["0"][..]
+                    } else {
+                        &["0", "1"][..]
+                    } {
+                        let output = Command::new(&binary)
+                            .env("FWP_AD_WORKSPACE", cache)
+                            .env("FWP_FREE", "1")
+                            .env("FWP_REUSE", "1")
+                            .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
+                            .env("FWP_GC_STRESS", if memory == "arc" { "0" } else { "1" })
+                            .env("FWP_GC_VERIFY", if memory == "arc" { "0" } else { "1" })
+                            .env("FWP_REUSE_VERIFY", reuse)
+                            .output()
+                            .unwrap();
+                        record_probe::save(
+                            "autodiff_workspace",
+                            &format!("prefix-{memory}{opt}-{name}-cache{cache}-reuse{reuse}"),
+                            &code,
+                            &binary,
+                            &output,
+                        );
+                        assert_eq!(
+                            output.status.code(),
+                            Some(*status),
+                            "{name} {opt} cache={cache} reuse={reuse}: {output:?}"
+                        );
+                        if let Some(destination) = std::env::var_os("FWP_AD_WORKSPACE_ARTIFACTS") {
+                            let destination = std::path::PathBuf::from(destination);
+                            std::fs::create_dir_all(&destination).unwrap();
+                            let prefix = destination.join(format!(
+                                "prefix-{memory}-{name}-{opt}-cache{cache}-reuse{reuse}"
+                            ));
+                            std::fs::write(prefix.with_extension("c"), &code).unwrap();
+                            std::fs::write(
+                                prefix.with_extension("status"),
+                                format!("{output:?}\n"),
+                            )
+                            .unwrap();
+                        }
+                    }
                 }
             }
         }
@@ -254,21 +332,48 @@ fn unused_tape_suffix_preserves_language_values_and_forward_traps() {
     let directory = fwp::cgen::TempDir::new("fwp-ad-prefix-language").unwrap();
     let compiler = env!("CARGO_BIN_EXE_fwp");
     for (name, source, expected, status, diagnostic) in [
-        ("registry", include_str!("run/ad_registry_growth.fwp"),
-         include_str!("run/ad_registry_growth.out"), 0, ""),
-        ("inputs", include_str!("run/ad_input_storage.fwp"),
-         include_str!("run/ad_input_storage.out"), 0, ""),
-        ("values", include_str!("run/ad_unused_suffix.fwp"),
-         include_str!("run/ad_unused_suffix.out"), 0, ""),
-        ("trap", "bad : List[Rev[F64]] -> List[Rev[F64]]\nbad = tap (const \"unused suffix still evaluated\" | prim.trap)\nmain = [2.0] | vjp bad [1.0] | echo\n",
-         "", 101, "unused suffix still evaluated"),
+        (
+            "registry",
+            include_str!("run/ad_registry_growth.fwp"),
+            include_str!("run/ad_registry_growth.out"),
+            0,
+            "",
+        ),
+        (
+            "inputs",
+            include_str!("run/ad_input_storage.fwp"),
+            include_str!("run/ad_input_storage.out"),
+            0,
+            "",
+        ),
+        (
+            "values",
+            include_str!("run/ad_unused_suffix.fwp"),
+            include_str!("run/ad_unused_suffix.out"),
+            0,
+            "",
+        ),
+        (
+            "trap",
+            "bad : List[Rev[F64]] -> List[Rev[F64]]\nbad = tap (const \"unused suffix still evaluated\" | prim.trap)\nmain = [2.0] | vjp bad [1.0] | echo\n",
+            "",
+            101,
+            "unused suffix still evaluated",
+        ),
     ] {
         let input = directory.join(format!("{name}.fwp"));
         std::fs::write(&input, source).unwrap();
-        let reference = Command::new(compiler).args(["run", "--interp"])
-            .arg(&input).env("FWP_NO_OPT", "1").output().unwrap();
+        let reference = Command::new(compiler)
+            .args(["run", "--interp"])
+            .arg(&input)
+            .env("FWP_NO_OPT", "1")
+            .output()
+            .unwrap();
         assert_eq!(reference.status.code(), Some(status), "{reference:?}");
-        assert_eq!(String::from_utf8_lossy(&reference.stdout).replace("\r\n", "\n"), expected);
+        assert_eq!(
+            String::from_utf8_lossy(&reference.stdout).replace("\r\n", "\n"),
+            expected
+        );
         if diagnostic.is_empty() {
             assert!(reference.stderr.is_empty(), "{reference:?}");
         } else {
@@ -278,16 +383,23 @@ fn unused_tape_suffix_preserves_language_values_and_forward_traps() {
             for opt in ["-O1", "-O2"] {
                 let binary = directory.join("prefix.exe");
                 let mut build = Command::new(compiler);
-                build.arg("build").arg(&input).arg(opt).arg("-o").arg(&binary);
+                build
+                    .arg("build")
+                    .arg(&input)
+                    .arg(opt)
+                    .arg("-o")
+                    .arg(&binary);
                 build.args(["--gc", if arc { "arc" } else { "tracing" }]);
                 let built = build.output().unwrap();
                 assert!(built.status.success(), "{built:?}");
                 for workspace in ["0", "1"] {
-                    let output = Command::new(&binary).env("FWP_AD_WORKSPACE", workspace)
+                    let output = Command::new(&binary)
+                        .env("FWP_AD_WORKSPACE", workspace)
                         .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
                         .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
                         .env("FWP_REUSE_VERIFY", if arc { "0" } else { "1" })
-                        .output().unwrap();
+                        .output()
+                        .unwrap();
                     assert_eq!(output.status.code(), reference.status.code(), "{output:?}");
                     assert_eq!(output.stdout, reference.stdout);
                     if diagnostic.is_empty() {

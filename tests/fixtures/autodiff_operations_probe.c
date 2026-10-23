@@ -10,8 +10,13 @@ static void operation_drop(V value) { if (value) operation_retains--; }
 
 int main(void) {
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
-    operation_tuple=fwp_record(4,(V[4]){0,0,0,0});
-    operation_outputs=fwp_arr_new(1); operation_seeds=fwp_arr_new(1);
+    static int round;
+    for(round=0;round<32;round++) {
+    static fwp_tape_scope scope={-1};static fwp_cleanup scope_owner;
+    fwp_cleanup_push(&scope_owner,fwp_tape_scope_release,&scope);
+    intptr_t baseline=fwp_gc.budget;
+    operation_tuple=fwp_rc_fresh(fwp_record(4,(V[4]){0,0,0,0}));
+    operation_outputs=fwp_rc_fresh(fwp_arr_new(1)); operation_seeds=fwp_rc_fresh(fwp_arr_new(1));
     ARR(operation_seeds)->d[0]=fwp_from_f64(1.0);
     const int64_t sizes[]={1,65,4096};
     for (size_t k=0;k<3;k++) {
@@ -28,19 +33,21 @@ int main(void) {
         node=fwp_p_ad_push(operation_tuple);
         if (node!=base+(V)n+1 || t->cap!=64 || t->pa[0]!=0 || t->pa[1]!=n || t->pb[0]!=n-1) return 232;
         ARR(operation_outputs)->d[0]=node;
-        V result=fwp_p_ad_backward(base,operation_outputs,operation_seeds);
+        V result=fwp_rc_fresh(fwp_p_ad_backward(base,operation_outputs,operation_seeds));
         if (ARR(result)->len!=(size_t)n) return 233;
         for (int64_t i=0;i<n;i++) {
             double expected=(i==0?8.0:0.0)+(i==n-1?12.0:0.0);
             if (fwp_f64(ARR(result)->d[i])!=expected) return 234;
         }
+        fwp_rc_free_arr(result);
+        if(scope.head!=-1)return 242;
         fwp_tape_finish();
     }
     /* Managed inputs also have no metadata. Fail the second actual retain,
      * recover with the tape still live, then successfully reuse its first slot. */
     static const fwp_desc element={.kind=K_I64,.dup=operation_dup,.drop=operation_drop};
-    operation_parameters=fwp_record(4,(V[4]){0,0,0,0});
-    for (int i=0;i<65;i++) operation_inputs=fwp_cons(0,operation_inputs);
+    operation_parameters=fwp_rc_fresh(fwp_record(4,(V[4]){0,0,0,0}));
+    for (int i=0;i<65;i++) operation_inputs=fwp_rc_fresh(fwp_cons(0,operation_inputs));
     V base=fwp_p_ad_tape_owned(operation_parameters,operation_inputs,&element);
     fwp_tape *t=fwp_tape_of((int64_t)base>>32);
     if (t->cap || t->pa || t->pb || t->owned->weights || t->owned->cap) return 235;
@@ -50,12 +57,24 @@ int main(void) {
     fwp_trap_cleanup=fwp_cleanups;
     if (!setjmp(operation_recovered)) { fwp_p_ad_push_owned(operation_tuple,&element);return 236; }
     if (strcmp(fwp_trap_msg,"second weight retain control") || operation_retains) return 237;
-    if (t->len!=65 || t->owned->len!=65 || fwp_cleanups) return 238;
+    if (t->len!=65 || t->owned->len!=65 || fwp_cleanups!=&scope_owner) return 238;
     operation_fail=0;
     if (fwp_p_ad_push_owned(operation_tuple,&element)!=base+65 || operation_retains!=2) return 239;
     if (t->cap!=64 || t->owned->cap!=64 || t->owned->weights[0]!=1 || t->owned->weights[1]!=2) return 240;
-    fwp_tape_retire(t); fwp_tape_finish();
-    if (operation_retains || fwp_owned_tapes || fwp_cleanups) return 241;
+    fwp_tape_unlink_scope(t);fwp_tape_retire(t);fwp_tape_finish();
+    if(operation_retains||fwp_owned_tapes||scope.head!=-1||fwp_cleanups!=&scope_owner)return 241;
+    while(operation_inputs){V tail=OBJ(operation_inputs)->f[1];fwp_rc_free_obj(operation_inputs);operation_inputs=tail;}
+    fwp_rc_free_obj(operation_parameters);fwp_rc_free_obj(operation_tuple);
+    fwp_rc_free_arr(operation_outputs);fwp_rc_free_arr(operation_seeds);
+    operation_parameters=operation_tuple=operation_outputs=operation_seeds=0;
+    fwp_cleanup_pop(&scope_owner);fwp_tape_scope_release(&scope);
+    fwp_trap_cleanup=0;fwp_trap_recover=0;fwp_trap_jb=0;
+#ifdef FWP_ARC_ONLY
+    if(fwp_gc.budget!=baseline||fwp_gc.ncollect||fwp_gc.rc_wide_len)return 90;
+#else
+    (void)baseline;
+#endif
+    }
     puts("input nodes need no operation buffers; managed weight transfer is atomic");
     return 0;
 }

@@ -1,6 +1,8 @@
 //! Check actual native tape growth and allocator-failure ownership without giant allocations.
 #[path = "support/c_instrument.rs"]
 mod c_instrument;
+#[path = "support/record_probe.rs"]
+mod record_probe;
 use std::process::Command;
 
 #[test]
@@ -99,102 +101,124 @@ fn paired_metadata_preserves_values_alignment_and_recoverable_growth() {
 
 #[test]
 fn tape_capacity_checks_and_realloc_failures_preserve_owners() {
-    let directory = std::env::temp_dir().join(format!("fwp-ad-capacity-{}", std::process::id()));
-    std::fs::create_dir(&directory).unwrap();
-    let input = directory.join("runtime.fwp");
-    let cfile = directory.join("runtime.c");
-    std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
-    let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--gc", "tracing", "--emit-c"])
-        .arg(&input)
-        .arg("-o")
-        .arg(&cfile)
-        .output()
-        .unwrap();
-    assert!(
-        output.status.success(),
-        "{}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    let source = std::fs::read_to_string(&cfile).unwrap();
-    let start = source
-        .find("/* ------------------------------------------------------------------ tapes */")
-        .unwrap();
-    let end = start
+    for memory in ["arc", "tracing"] {
+        let directory =
+            std::env::temp_dir().join(format!("fwp-ad-capacity-{}", std::process::id()));
+        std::fs::create_dir(&directory).unwrap();
+        let input = directory.join("runtime.fwp");
+        let cfile = directory.join("runtime.c");
+        std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
+        let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args([
+                "build", "--gc", memory, "--memory", "dynamic", "-O2", "--emit-c",
+            ])
+            .arg(&input)
+            .env("FWP_STACK", "0")
+            .arg("-o")
+            .arg(&cfile)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let source = std::fs::read_to_string(&cfile).unwrap();
+        let start = source
+            .find("/* ------------------------------------------------------------------ tapes */")
+            .unwrap();
+        let end = start
         + source[start..]
             .find("/* ---------------------------------------------------------------- kernels */")
             .unwrap();
-    let tape = c_instrument::calls(
-        &source[start..end],
-        &[
-            ("realloc", "capacity_realloc"),
-            ("free", "capacity_free"),
-            ("_Exit", "capacity_exit"),
-        ],
-    )
-    .replace("PTRDIFF_MAX", "INT32_MAX")
-    // Faults recover instead of exiting; an invalid-registry negative
-    // control must not run real process shutdown after returning its code.
-    .replace("atexit(fwp_tape_finish)", "0");
-    let declarations="static void *capacity_realloc(void *,size_t);\nstatic void capacity_free(void *);\nstatic void capacity_exit(int);\n";
-    let runtime = format!(
-        "{}{}{}{}",
-        &source[..start],
-        declarations,
-        tape,
-        &source[end..]
-    )
-    .replace(
-        "int main(int argc, char **argv)",
-        "int original_main(int argc, char **argv)",
-    );
-    let code = format!(
-        "{runtime}\n{}",
-        include_str!("fixtures/autodiff_capacity_probe.c")
-    );
-    let missing_input_bound = code.replace(
-        "if (n < 0 || n > fwp_tape_limit()) fwp_trap(\"autodiff: too many inputs\");",
-        "",
-    );
-    let missing_release = code.replace(
-        "capacity_free(t->pa);capacity_free(t->da);",
-        "(void)t->pa;capacity_free(t->da);",
-    );
-    let missing_registry_owner = code.replace("if (!next) {", "if (!next) { fwp_tapes = next;");
-    assert_ne!(missing_input_bound, code);
-    assert_ne!(missing_release, code);
-    assert_ne!(missing_registry_owner, code);
-    for opt in ["-O1", "-O2"] {
-        for (label, source, expected) in [
-            ("checked", &code, 0),
-            ("missing-bound", &missing_input_bound, 182),
-            ("missing-release", &missing_release, 184),
-            ("missing-registry-owner", &missing_registry_owner, 186),
-        ] {
-            let executable = directory.join(format!("{label}{}", &opt[1..]));
-            fwp::cgen::compile_c(source, &executable, opt).unwrap();
-            let out = Command::new(&executable)
-                .env("FWP_AD_WORKSPACE", "0")
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1")
-                .output()
-                .unwrap();
-            assert_eq!(
-                out.status.code(),
-                Some(expected),
-                "{label} {opt}: {}",
-                String::from_utf8_lossy(&out.stderr)
-            );
-            if expected == 0 {
-                assert_eq!(
-                    String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
-                    "checked tape capacities and exact realloc failure ownership passed\n"
-                );
+        let tape = c_instrument::calls(
+            &source[start..end],
+            &[
+                ("realloc", "capacity_realloc"),
+                ("free", "capacity_free"),
+                ("_Exit", "capacity_exit"),
+            ],
+        )
+        .replace("PTRDIFF_MAX", "INT32_MAX")
+        // Faults recover instead of exiting; an invalid-registry negative
+        // control must not run real process shutdown after returning its code.
+        .replace("atexit(fwp_tape_finish)", "0");
+        let declarations = "static void *capacity_realloc(void *,size_t);\nstatic void capacity_free(void *);\nstatic void capacity_exit(int);\n";
+        let runtime = format!(
+            "{}{}{}{}",
+            &source[..start],
+            declarations,
+            tape,
+            &source[end..]
+        )
+        .replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        );
+        let code = format!(
+            "{runtime}\n{}",
+            include_str!("fixtures/autodiff_capacity_probe.c")
+        );
+        let missing_input_bound = code.replace(
+            "if (n < 0 || n > fwp_tape_limit()) fwp_trap(\"autodiff: too many inputs\");",
+            "",
+        );
+        let missing_release = code.replace(
+            "capacity_free(t->pa);capacity_free(t->da);",
+            "(void)t->pa;capacity_free(t->da);",
+        );
+        let missing_registry_owner = code.replace("if (!next) {", "if (!next) { fwp_tapes = next;");
+        assert_ne!(missing_input_bound, code);
+        assert_ne!(missing_release, code);
+        assert_ne!(missing_registry_owner, code);
+        for opt in ["-O1", "-O2"] {
+            for (label, source, expected) in [
+                ("checked", &code, 0),
+                ("missing-bound", &missing_input_bound, 182),
+                ("missing-release", &missing_release, 184),
+                ("missing-registry-owner", &missing_registry_owner, 186),
+            ] {
+                let executable = directory.join(format!("{label}{}.exe", &opt[1..]));
+                fwp::cgen::compile_c(source, &executable, opt).unwrap();
+                for &reuse in if memory == "arc" {
+                    &["0"][..]
+                } else {
+                    &["0", "1"][..]
+                } {
+                    let out = Command::new(&executable)
+                        .env("FWP_AD_WORKSPACE", "0")
+                        .env("FWP_FREE", "1")
+                        .env("FWP_REUSE", "1")
+                        .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
+                        .env("FWP_GC_STRESS", if memory == "arc" { "0" } else { "1" })
+                        .env("FWP_GC_VERIFY", if memory == "arc" { "0" } else { "1" })
+                        .env("FWP_REUSE_VERIFY", reuse)
+                        .output()
+                        .unwrap();
+                    record_probe::save(
+                        "autodiff_capacity_bounds",
+                        &format!("capacity-{memory}{opt}-{label}-reuse{reuse}"),
+                        source,
+                        &executable,
+                        &out,
+                    );
+                    assert_eq!(
+                        out.status.code(),
+                        Some(expected),
+                        "{label} {opt}: {}",
+                        String::from_utf8_lossy(&out.stderr)
+                    );
+                    if expected == 0 {
+                        assert_eq!(
+                            String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
+                            "checked tape capacities and exact realloc failure ownership passed\n"
+                        );
+                    }
+                }
             }
         }
+        std::fs::remove_dir_all(&directory).unwrap();
     }
-    std::fs::remove_dir_all(&directory).unwrap();
 }
 
 #[test]

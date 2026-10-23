@@ -38,6 +38,10 @@ Generated C, actual executables, output and exit status are saved under
 `record-ownership/` for independent inspection. Inspections verify the target
 architecture, instructions and absence of tracing code in ARC binaries.
 
+An outcome combines a generated variant, optimization level and runtime settings.
+Some outcomes execute the same binary with different settings. Totals count saved
+observations and executable files, not distinct machine-code programs.
+
 The byte charge measures managed value storage. It excludes process resident
 memory, allocator metadata, task stacks and ordinary C-library allocations.
 Code size, stack use and elapsed time need separate measurements. See the
@@ -231,27 +235,151 @@ Omitted outside-alias or scalar-fixture releases must fail. These 58 outcomes us
 compiler O2 and C O1/O2 with stack placement enabled to exercise stack captures.
 Complete programs also compare with raw interpretation.
 
+## Derivative buffers and callback scopes
+
+Automatic differentiation computes how an output changes when its inputs change.
+Reverse mode records operations in a **tape**, then walks them backward to compute
+those derivatives. `grad` returns one derivative per input. `Rev[F64]` is the value
+type used while recording a reverse-mode computation with 64-bit floating numbers.
+
+`fork mul id id` multiplies a value by itself: both `id` branches receive the same
+input, then `mul` combines them. `map` applies that square to each list element;
+`sum` adds the squares:
+
+```fwp
+energy : List[Rev[F64]] -> Rev[F64]
+energy = map (fork mul id id) | sum
+main = [3.0, 4.0] | grad energy | echo
+```
+
+The derivatives are `[6.0, 8.0]`: the derivative of a square at `x` is `2*x`.
+The library owns the tape's lifetime. Its lower-level `ad.scope` operation gives
+raw tape handles a bounded lifetime; checked ARC requires that scope. Printing
+belongs outside this pure callback. A failed derivative must release its recorded
+operations and temporary derivative arrays just as a successful one does.
+
+[Detached-buffer checks](../../tests/ad_tape_ownership.rs) repeat 32 rounds of
+normal results, invalid or mixed tape references, result allocation failure and
+cancellation. They count frees of the separately allocated numeric buffers and
+check managed-array storage balance. The caller keeps an independent computation
+alive while an injected task unwinds its own cleanup chain. Expired tape handles
+and exhausted generations must remain invalid. Removing buffer cleanup, input or
+result releases must fail. This group saves 64 outcomes, including complete
+program comparisons with the interpreter at C O1/O2 in ARC and tracing.
+
+[Scope checks](../../tests/ad_tape_scopes.rs) repeat 32 rounds of nested callbacks,
+errors, cancellation and explicitly consumed tapes. They check result ownership,
+release caller-owned input arrays and empty the raw tape registry. Controls omit
+scope registration, unlinking, result ownership or individual releases. Gradient
+programs, callback failures and returned aliases compare with the interpreter;
+files still cannot be duplicated through a borrowed callback. This group saves
+58 outcomes.
+
+The old fixtures left some input/result arrays to tracing. They now own and
+release those arrays explicitly. The first new raw fixture omitted the required
+scope and was repaired; its mutable recovery scope uses static storage so its
+contents remain defined across C `longjmp`. No language or runtime rule changes.
+These checks disable workspace caching explicitly to observe immediate frees;
+[workspace measurements](../numerics.md) cover the separate reuse policy. Managed
+byte balances exclude raw buffers, so both measurements are required. No new
+speed or numerical-accuracy improvement is claimed here.
+
+## Arrays and borrowed callbacks
+
+An array stores indexed elements. An array of strings holds references to text;
+another live reference must keep its old contents after an update. `both f g`
+returns the results of applying both functions to the same input. Here `id`
+keeps the original array while `array.push "end"` produces an extended one:
+
+```fwp
+keep : Array[String] -> (Array[String], Array[String])
+keep = both id (array.push "end")
+main = ["a", "b"] | array.from-list | keep | echo
+```
+
+This prints `(array["a", "b"], array["a", "b", "end"])`. The compiler may reuse
+storage only when doing so preserves the original value's independently live
+owners. [Array tests](../../tests/array_element_ownership.rs) compare aliases,
+callbacks and effects with the interpreter, with stack placement on and off.
+Two tracing controls deliberately disable reuse or freeing; ARC rejects that
+policy. They are not evidence for ARC execution.
+
+A separate 10,000-iteration program constructs, updates, slices, maps and sorts
+string arrays. ARC must return its managed storage charge to zero before runtime
+teardown at C O1/O2. Keeping an extra owner of each sorted result must fail.
+The older tracing O1 comparison still contrasts counted cleanup with deliberately
+uncounted sharing, with collection off; its rounded freed-byte totals are not an
+exact retention or timing measurement.
+
+The scalar probe repeats 32 rounds. Integer bits that resemble addresses must
+remain integers through conversions, selection, updates and sorting. The fixture
+now releases its input/output lists, optional-result containers and final string;
+each omitted release must fail the ARC balance check. A control that counts
+integer elements must also fail. These array checks save 42 outcomes.
+
+[Borrowed-callback checks](../../tests/borrowed_callbacks.rs) repeat 32 rounds of
+partial calls, captured aliases and calls whose arguments continue into a returned
+function. The caller keeps its function owner; type information identifies which
+arguments need owners. Missing capture cleanup, counting scalar arguments and
+omitting final fixture owners must fail. Complete programs also compare with the
+interpreter. This group saves 28 outcomes. These are lifetime checks, not a new
+allocation, speed or C/Rust comparison.
+
+## Derivative growth and workspace cleanup
+
+A derivative tape records operations for a later backward pass. Each operation
+remembers which earlier values it used and its derivative through each input.
+These input derivatives are called weights. When differentiating derivatives,
+a weight can itself own data. The runtime also keeps a table that maps checked
+tape handles to their storage.
+
+A workspace is a bounded cache of numeric buffers for the next computation.
+Growing a buffer or the handle table can fail. Each raw buffer still needs exactly
+one owner; a failed weight transfer must release any owners it already took.
+
+Three checks exercise the generated runtime with ARC and tracing:
+
+- [Growth failures](../../tests/autodiff_capacity_bounds.rs) reject impossible
+  sizes before allocation and inject failures into buffer and handle-table growth.
+  Thirty-two rounds leave no tracked raw allocation. Removing a bound, a buffer
+  release or the saved table pointer must make the controls fail.
+- [Weight transfer](../../tests/autodiff_workspace.rs) fails while retaining a
+  second weight. The first retain must be undone, and the tape slot must remain
+  usable. Thirty-two rounds release input lists, records and arrays and return
+  ARC's managed storage charge to its starting value.
+- The same workspace tests record thousands of operations after an earlier
+  result, then request derivatives of that earlier result. They check its values,
+  visited operations and temporary derivative-buffer size. Thirty-two rounds
+  release every temporary array and record. A separate growing-input case checks
+  bounded cache reuse. Processing the unused later operations must fail a control.
+
+Those later operations still execute when recorded. Omitting them during the
+backward pass does not permit removing their original effects or traps. Existing
+language examples check that distinction too.
+
+The workspace cases run with caching enabled and disabled, at C `-O1` and `-O2`.
+Tracing keeps stress and released-storage checks; ARC checks exact managed storage
+balance and deliberately omitted releases. Raw buffers and managed values are
+measured separately. These checks verify correctness and representation; they do
+not measure execution time or establish C/Rust performance parity.
+
 ## Acceptance and limits
 
-[PR #199](../roadmap-history.md#checked-native-defaults-and-arc-metadata-pr-199)
-accepted the original record/allocator batch: 95 saved binaries per host and
-sixty allocator observations on six native hosts. [PR #200](../roadmap-history.md#repeated-constructor-and-call-cleanup-pr-200)
-accepted constructor/call cleanup with 1,050 saved binaries across six hosts.
-[Collection cleanup](collection-cleanup.md) records the following loop/builder batch.
+| Delivery | Accepted evidence |
+|---|---|
+| [#199](../roadmap-history.md#checked-native-defaults-and-arc-metadata-pr-199) | Record/allocator checks and checked ARC defaults |
+| [#200](../roadmap-history.md#repeated-constructor-and-call-cleanup-pr-200) | Constructor and call cleanup |
+| [#201](collection-cleanup.md) | Loops and collection builders |
+| [#202](../roadmap-history.md#cached-values-aliases-and-failed-calls-pr-202) | Fields, aliases, cached values and temporary containers |
+| [#203](../roadmap-history.md#tasks-state-and-runtime-call-cleanup-pr-203) | Task callbacks/handles, state, deadlines, channels and runtime calls |
 
-The ten field/alias/cache groups passed focused Linux and Windows checks at
-`aa81e2756054e989a292313e1462af00ef4c6d42`, including 569 saved images per host.
-[PR #202](../roadmap-history.md#cached-values-aliases-and-failed-calls-pr-202)
-passed all final jobs and six-host binary inspection at `46c26002b5f748529a2c6ad5977891cdc1593c06`.
+Those deliveries passed their complete production matrices and six-host binary
+inspection. Their linked records preserve exact sources, runs and observations.
+The current six-group preparation `9e9662f93aa5e1f0ebd86b6a31d9396dffe13215` passed focused Linux
+AMD64 and both Windows runs, with 1,161 saved images inspected on each host.
+Its final delivery still requires nine production jobs, docs and all six native
+binary inspections. [The handoff](../development-state.md) records current gates.
 
-The combined seven-group preparation `a447d6a7e99887be5f02506669bc3b499de298f5` passed all three focused
-runs and 853-image inspection on Linux AMD64 and both Windows hosts. This delivery
-still requires its own nine production jobs, docs and six-host binary inspection. [The handoff](../development-state.md)
-records exact sources and runs; [history](../roadmap-history.md) records delivery.
-All seven PLAN areas remain open, including complete removal of tracing.
-
-Windows now includes five formerly omitted groups: match-context, reuse-token,
-ARC corpus, HTTP/2 body copies and temporary containers. Coverage controls check
-selected targets against production jobs. Linux-only storage tests do not establish
-Windows support; Windows has its own native storage tests. These checks strengthen
-ownership evidence without changing the production compiler/runtime.
+Coverage controls check selected targets against production jobs. Linux-only
+storage tests do not establish Windows support; Windows has its own native storage
+checks. All seven PLAN areas remain open, including complete removal of tracing.

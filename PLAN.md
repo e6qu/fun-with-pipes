@@ -111,12 +111,15 @@ outside the benchmark suite.
    direct ARC failures, constructor/call cleanup and repeated storage balances.
    [PR #202](docs/roadmap-history.md#cached-values-aliases-and-failed-calls-pr-202)
    verifies cached values, aliases and call cleanup on six native hosts.
-   [Task callback checks](docs/measurements/record-cleanup.md#task-callbacks-and-cancellation)
-   extend this to deadlines, scopes, retained callbacks and task handles.
-   [State and task values](docs/measurements/record-cleanup.md#state-deadlines-and-channel-values)
-   and [runtime calls](docs/measurements/record-cleanup.md#calls-chosen-while-a-program-runs)
-   complete this grouped preparation. It still requires final delivery acceptance.
-   Extend the remaining collector-specific checks before removing tracing.
+   [PR #203](docs/roadmap-history.md#tasks-state-and-runtime-call-cleanup-pr-203)
+   extends delivery evidence to task callbacks and handles, state, deadlines,
+   channel values and runtime-selected calls.
+   [Derivative buffers and scopes](docs/measurements/record-cleanup.md#derivative-buffers-and-callback-scopes)
+   and [arrays and borrowed callbacks](docs/measurements/record-cleanup.md#arrays-and-borrowed-callbacks),
+   together with [growth and workspace cleanup](docs/measurements/record-cleanup.md#derivative-growth-and-workspace-cleanup),
+   are the current grouped extension. Their focused source passes; this delivery
+   still needs all final native gates. Extend remaining collector-specific checks
+   before removing tracing.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
    [Integer counting](docs/measurements/integer-counting.md) and
    [checked products](docs/measurements/checked-products.md) preserve slower

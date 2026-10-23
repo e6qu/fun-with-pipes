@@ -1,6 +1,6 @@
 static int prefix_case(int64_t leaves, int constants) {
-    V tuple=fwp_record(4,(V[4]){0,0,0,0});
-    V outs=fwp_arr_new(constants ? 1 : 4), seeds=fwp_arr_new(constants ? 1 : 4);
+    V tuple=fwp_rc_fresh(fwp_record(4,(V[4]){0,0,0,0}));
+    V outs=fwp_rc_fresh(fwp_arr_new(constants ? 1 : 4)), seeds=fwp_rc_fresh(fwp_arr_new(constants ? 1 : 4));
     V base=fwp_p_ad_tape((V)leaves), early=base, tail;
     if(leaves) {
         OBJ(tuple)->f[0]=base;OBJ(tuple)->f[1]=fwp_from_f64(2.0);
@@ -20,7 +20,7 @@ static int prefix_case(int64_t leaves, int constants) {
         ARR(seeds)->d[2]=fwp_from_f64(1.0);ARR(seeds)->d[3]=fwp_from_f64(NAN);
     }
     prefix_scans=0;prefix_adj_bytes=0;
-    V result=fwp_p_ad_backward(base,outs,seeds);
+    V result=fwp_rc_fresh(fwp_p_ad_backward(base,outs,seeds));
     if(prefix_scans!=(constants ? 0 : 1))return 241;
     if(ARR(result)->len!=(size_t)leaves)return 242;
     for(int64_t i=0;i<leaves;i++) {
@@ -30,15 +30,24 @@ static int prefix_case(int64_t leaves, int constants) {
     size_t expected_bytes=(size_t)(constants ? leaves : 4)*sizeof(double);
     if(prefix_adj_bytes!=expected_bytes)return 240;
     for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)return 244;
-    if(fwp_cleanups)return 245;
+    if(!fwp_cleanups||fwp_cleanups->release!=fwp_tape_scope_release||fwp_cleanups->prev)return 245;
+    fwp_rc_free_arr(result);fwp_rc_free_arr(outs);fwp_rc_free_arr(seeds);fwp_rc_free_obj(tuple);
     fwp_tape_finish();
     return 0;
 }
 int main(void) {
     fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_tape_scope scope={-1};fwp_cleanup scope_owner;
+    fwp_cleanup_push(&scope_owner,fwp_tape_scope_release,&scope);
+    intptr_t baseline=fwp_gc.budget;
+    for(int round=0;round<32;round++) {
     int result=prefix_case(3,0);if(result)return result;
     result=prefix_case(3,1);if(result)return result;
     result=prefix_case(0,1);if(result)return result;
+#ifdef FWP_ARC_ONLY
+    if(fwp_gc.budget!=baseline||fwp_gc.ncollect||fwp_gc.rc_wide_len)return 90;
+#endif
+    }
     if(fwp_tape_workspace_enabled()) {
         V outs=fwp_rc_fresh(fwp_arr_new(0)),seeds=fwp_rc_fresh(fwp_arr_new(0));
         size_t previous=0;int growths=0;
@@ -54,6 +63,13 @@ int main(void) {
         if(growths!=8)return 246;
         fwp_rc_free_arr(outs);fwp_rc_free_arr(seeds);fwp_tape_finish();
     }
+    if(scope.head!=-1||fwp_cleanups!=&scope_owner)return 245;
+    fwp_cleanup_pop(&scope_owner);fwp_tape_scope_release(&scope);
+#ifdef FWP_ARC_ONLY
+    if(fwp_gc.budget!=baseline||fwp_gc.ncollect||fwp_gc.rc_wide_len)return 90;
+#else
+    (void)baseline;
+#endif
     puts("numeric backward prefix preserves inputs and bounds adjoints and scans");
     return 0;
 }

@@ -3,6 +3,9 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Command, Output, Stdio};
 
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -239,48 +242,93 @@ main = [
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for opt in ["-O1", "-O2"] {
-        for stack in ["0", "1"] {
-            let exe = dir.0.join(format!("aliases{opt}-{stack}"));
-            checked(
-                Command::new(fwp)
-                    .args(["build", "--gc", "tracing"])
-                    .arg(&src)
-                    .args([opt, "-o"])
-                    .arg(&exe)
-                    .env("FWP_STACK", stack),
-            );
-            for poison in ["0", "1"] {
-                let out = checked(
-                    Command::new(&exe)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison),
-                );
-                assert_eq!(
-                    out.stdout, reference.stdout,
-                    "{opt}, stack {stack}, poison {poison}"
-                );
+    for memory in ["arc", "tracing"] {
+        for opt in ["-O1", "-O2"] {
+            for stack in ["0", "1"] {
+                let exe = dir
+                    .0
+                    .join(format!("{memory}{opt}-aliases-stack{stack}.exe"));
+                let cfile = exe.with_extension("c");
+                for emit in [true, false] {
+                    let mut command = Command::new(fwp);
+                    command
+                        .env_remove("FWP_NO_OPT")
+                        .env("FWP_STACK", stack)
+                        .env("FWP_FREE", "1")
+                        .env("FWP_REUSE", "1")
+                        .args(["build", "--memory", "dynamic", "--gc", memory, opt])
+                        .arg(&src);
+                    if emit {
+                        command.arg("--emit-c");
+                    }
+                    command.arg("-o").arg(if emit { &cfile } else { &exe });
+                    checked(&mut command);
+                }
+                let code = std::fs::read_to_string(cfile).unwrap();
+                for poison in if memory == "arc" {
+                    &["0"][..]
+                } else {
+                    &["0", "1"][..]
+                } {
+                    let stress = if memory == "arc" { "0" } else { "1" };
+                    let out = Command::new(&exe)
+                        .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", poison)
+                        .output()
+                        .unwrap();
+                    let label = format!("{memory}{opt}-aliases-stack{stack}-poison{poison}");
+                    record_probe::save("array_element_ownership", &label, &code, &exe, &out);
+                    assert_eq!(
+                        out.status.code(),
+                        reference.status.code(),
+                        "{label}: {out:?}"
+                    );
+                    assert_eq!(out.stdout, reference.stdout, "{label}");
+                    assert_eq!(out.stderr, reference.stderr, "{label}");
+                }
             }
         }
     }
+    // These are tracing controls; ARC rejects disabled ownership/freeing.
     for flag in ["FWP_REUSE", "FWP_FREE"] {
-        let exe = dir.0.join(flag);
+        let exe = dir.0.join(format!("{flag}.exe"));
+        let cfile = exe.with_extension("c");
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_STACK", "0")
+                .env("FWP_FREE", "1")
+                .env("FWP_REUSE", "1")
+                .env(flag, "0")
+                .args([
+                    "build", "--memory", "dynamic", "--gc", "tracing", "-O2", "--emit-c",
+                ])
                 .arg(&src)
-                .args(["-O1", "-o"])
-                .arg(&exe)
-                .env(flag, "0"),
+                .arg("-o")
+                .arg(&cfile),
         );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
+        let code = std::fs::read_to_string(cfile).unwrap();
+        fwp::cgen::compile_c(&code, &exe, "-O1").unwrap();
+        let out = Command::new(&exe)
+            .env("FWP_GC", "on")
+            .env("FWP_GC_STATS", "0")
+            .env("FWP_GC_STRESS", "1")
+            .env("FWP_GC_VERIFY", "1")
+            .env("FWP_REUSE_VERIFY", "1")
+            .output()
+            .unwrap();
+        let label = format!("tracing-O1-disabled-{flag}");
+        record_probe::save("array_element_ownership", &label, &code, &exe, &out);
+        assert_eq!(
+            out.status.code(),
+            reference.status.code(),
+            "{label}: {out:?}"
         );
-        assert_eq!(out.stdout, reference.stdout, "{flag}=0");
+        assert_eq!(out.stdout, reference.stdout, "{label}");
+        assert_eq!(out.stderr, reference.stderr, "{label}");
     }
 }
 
@@ -313,73 +361,128 @@ main = (10000, 0) | loop step | echo
             .arg(&src),
     );
     let emitted = dir.0.join("loop.c");
-    checked(
-        Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&emitted)
-            .env("FWP_STACK", "0"),
-    );
-    let owned = std::fs::read_to_string(&emitted).unwrap();
-    // Keep identical typed alias duplication and scratch cleanup; change only
-    // whether the emitted wrappers share their structural result graphs.
-    let mut changed = 0;
-    let shared = owned
-        .lines()
-        .map(|line| {
-            if [
-                "array_make",
-                "array_from_list",
-                "array_push",
-                "array_set",
-                "array_slice",
-                "array_map",
-                "array_append",
-                "array_sort",
-                "array_to_list",
-            ]
-            .iter()
-            .any(|name| line.contains(&format!("return fwp_p_{name}_typed(")))
-            {
-                changed += 1;
-                line.replace("return fwp_p_", "return fwp_rc_shared(fwp_p_")
-                    .replace(");", "));")
-            } else {
-                line.to_string()
+    for memory in ["arc", "tracing"] {
+        checked(
+            Command::new(fwp)
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_STACK", "0")
+                .env("FWP_FREE", "1")
+                .env("FWP_REUSE", "1")
+                .args([
+                    "build", "--memory", "dynamic", "--gc", memory, "-O2", "--emit-c",
+                ])
+                .arg(&src)
+                .arg("-o")
+                .arg(&emitted),
+        );
+        let owned = std::fs::read_to_string(&emitted).unwrap();
+        if memory == "arc" {
+            let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
+            assert_eq!(owned.matches(finish).count(), 1);
+            let balanced=owned.replace(finish,&format!("{finish}    if(fwp_gc.budget!=fwp_gc.budget_given||fwp_gc.rc_wide_len||fwp_gc.ncollect)exit(90);\n"));
+            let mut changed = 0;
+            let leaking = balanced
+                .lines()
+                .map(|line| {
+                    if line.contains("return fwp_p_array_sort_typed(") {
+                        changed += 1;
+                        line.replace(
+                            "return fwp_p_array_sort_typed(",
+                            "V result = fwp_p_array_sort_typed(",
+                        )
+                        .replace(';', "; fwp_rc_dup(result); return result;")
+                    } else {
+                        line.to_owned()
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join("\n");
+            assert_eq!(changed, 1);
+            for opt in ["-O1", "-O2"] {
+                for (name, code, status) in [
+                    ("reclamation", &balanced, 0),
+                    ("extra-sort-owner", &leaking, 90),
+                ] {
+                    let exe = dir.0.join(format!("arc{opt}-{name}.exe"));
+                    fwp::cgen::compile_c(code, &exe, opt).unwrap();
+                    let out = Command::new(&exe)
+                        .env("FWP_GC", "off")
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_GC_STRESS", "0")
+                        .env("FWP_GC_VERIFY", "0")
+                        .env("FWP_REUSE_VERIFY", "0")
+                        .output()
+                        .unwrap();
+                    let label = format!("arc{opt}-{name}");
+                    record_probe::save("array_element_ownership", &label, code, &exe, &out);
+                    assert_eq!(out.status.code(), Some(status), "{label}: {out:?}");
+                    assert_eq!(out.stdout, reference.stdout, "{label}");
+                    assert!(out.stderr.is_empty(), "{label}: {out:?}");
+                }
             }
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
-    assert_eq!(changed, 9, "missing typed array wrappers: {changed}");
-    assert_ne!(shared, owned);
-    let mut freed = Vec::new();
-    for (name, code) in [("shared", &shared), ("owned", &owned)] {
-        let exe = dir.0.join(name);
-        fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC", "off")
-                .env("FWP_GC_STATS", "1")
-                .env("FWP_REUSE_VERIFY", "0"),
-        );
-        assert_eq!(out.stdout, reference.stdout);
-        let stats = String::from_utf8_lossy(&out.stderr);
-        assert!(stats.contains("fwp gc: 0 collections"), "{stats}");
-        freed.push(
-            stats
-                .split(" MiB freed by counts")
-                .next()
-                .unwrap()
-                .rsplit('(')
-                .next()
-                .unwrap()
-                .parse::<f64>()
-                .unwrap(),
-        );
+        } else {
+            // Preserve the old uncounted-sharing comparison in tracing mode.
+            let mut changed = 0;
+            let shared = owned
+                .lines()
+                .map(|line| {
+                    if [
+                        "array_make",
+                        "array_from_list",
+                        "array_push",
+                        "array_set",
+                        "array_slice",
+                        "array_map",
+                        "array_append",
+                        "array_sort",
+                        "array_to_list",
+                    ]
+                    .iter()
+                    .any(|name| line.contains(&format!("return fwp_p_{name}_typed(")))
+                    {
+                        changed += 1;
+                        line.replace("return fwp_p_", "return fwp_rc_shared(fwp_p_")
+                            .replace(");", "));")
+                    } else {
+                        line.to_owned()
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join("\n");
+            assert_eq!(changed, 9, "missing typed array wrappers");
+            let mut freed = Vec::new();
+            for (name, code) in [("shared", &shared), ("owned", &owned)] {
+                let exe = dir.0.join(format!("tracing-O1-{name}.exe"));
+                fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
+                let out = Command::new(&exe)
+                    .env("FWP_GC", "off")
+                    .env("FWP_GC_STATS", "1")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                let label = format!("tracing-O1-reclamation-{name}");
+                record_probe::save("array_element_ownership", &label, code, &exe, &out);
+                assert!(out.status.success(), "{label}: {out:?}");
+                assert_eq!(out.stdout, reference.stdout, "{label}");
+                let stats = String::from_utf8_lossy(&out.stderr);
+                assert!(stats.contains("fwp gc: 0 collections"), "{stats}");
+                freed.push(
+                    stats
+                        .split(" MiB freed by counts")
+                        .next()
+                        .unwrap()
+                        .rsplit('(')
+                        .next()
+                        .unwrap()
+                        .parse::<f64>()
+                        .unwrap(),
+                );
+            }
+            assert!(freed[1] > freed[0] + 0.3, "{freed:?}");
+        }
     }
-    eprintln!("typed array graph MiB freed by counts: {freed:?}");
-    assert!(freed[1] > freed[0] + 0.3, "{freed:?}");
 }
 
 #[test]
@@ -403,20 +506,27 @@ main = [
 "#,
     )
     .unwrap();
-    checked(
-        Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "tracing"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(cfile).unwrap();
-    let mut probe = r#"
+    for memory in ["arc", "tracing"] {
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_STACK", "0")
+                .env("FWP_FREE", "1")
+                .env("FWP_REUSE", "1")
+                .args(["build", "--memory", "dynamic", "--gc", memory, "-O2"])
+                .arg(&src)
+                .args(["--emit-c", "-o"])
+                .arg(&cfile),
+        );
+        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let mut probe = r#"
 int main(void) {
 #ifdef _WIN32
-    _setmode(_fileno(stdout), _O_BINARY);
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 23;
 #endif
     fwp_gc_start(__builtin_frame_address(0));
+    intptr_t baseline=fwp_gc.budget;
+    for(unsigned round=0;round<32;round++) {
     V bits = fwp_rc_fresh(fwp_cstr("numeric bits"));
     V xs = fwp_rc_fresh(fwp_cons(bits, 0));
     V original = FROM_LIST_WRAPPER(xs);
@@ -437,65 +547,134 @@ int main(void) {
     DROP_ARRAY(joined);
     DROP_ARRAY(repeated);
     if (*fwp_rc_slot(bits) != 1 || STR(bits)->len != 12) return 1;
+    DROP_LIST(xs);DROP_LIST(listed);
+    fwp_rc_free_obj(selected);fwp_rc_free_obj(changed);fwp_rc_free_obj(bits);
+#ifdef FWP_ARC_ONLY
+    if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+#endif
+    }
     puts("scalar array ownership preserved");
     return 0;
 }
 "#
-    .to_string();
-    for (symbol, placeholder) in [
-        ("array_from_list", "FROM_LIST_WRAPPER"),
-        ("array_get", "GET_WRAPPER"),
-        ("array_to_list", "TO_LIST_WRAPPER"),
-        ("array_slice", "SLICE_WRAPPER"),
-        ("array_sort", "SORT_WRAPPER"),
-        ("array_append", "APPEND_WRAPPER"),
-        ("array_make", "MAKE_WRAPPER"),
-        ("array_set", "SET_WRAPPER"),
-        ("array_push", "PUSH_WRAPPER"),
-    ] {
-        let boundary = emitted
-            .find(&format!("return fwp_p_{symbol}_typed("))
-            .unwrap_or_else(|| panic!("missing actual scalar {symbol} wrapper"));
-        let wrapper = emitted[..boundary]
-            .rsplit("static V ")
-            .next()
-            .unwrap()
-            .split('(')
-            .next()
-            .unwrap();
-        probe = probe.replace(placeholder, wrapper);
-        if symbol == "array_set" {
-            let call = emitted[boundary..].split(';').next().unwrap();
-            assert!(
-                call.contains("NULL, NULL,"),
-                "scalar set counts elements: {call}"
-            );
-            let mut arguments = call.rsplit(", ");
-            let descriptor = arguments.next().unwrap().trim_end_matches(')');
-            assert!(
-                descriptor.starts_with("&d"),
-                "missing element descriptor: {call}"
-            );
-            let drop = arguments.next().unwrap();
-            assert!(
-                drop.starts_with("fwp_drop") || drop == "fwp_rc_drop",
-                "missing array release: {call}"
-            );
-            probe = probe.replace("DROP_ARRAY", drop);
+        .to_string();
+        for (symbol, placeholder) in [
+            ("array_from_list", "FROM_LIST_WRAPPER"),
+            ("array_get", "GET_WRAPPER"),
+            ("array_to_list", "TO_LIST_WRAPPER"),
+            ("array_slice", "SLICE_WRAPPER"),
+            ("array_sort", "SORT_WRAPPER"),
+            ("array_append", "APPEND_WRAPPER"),
+            ("array_make", "MAKE_WRAPPER"),
+            ("array_set", "SET_WRAPPER"),
+            ("array_push", "PUSH_WRAPPER"),
+        ] {
+            let boundary = emitted
+                .find(&format!("return fwp_p_{symbol}_typed("))
+                .unwrap_or_else(|| panic!("missing actual scalar {symbol} wrapper"));
+            let wrapper = emitted[..boundary]
+                .rsplit("static V ")
+                .next()
+                .unwrap()
+                .split('(')
+                .next()
+                .unwrap();
+            probe = probe.replace(placeholder, wrapper);
+            if symbol == "array_set" {
+                let call = emitted[boundary..].split(';').next().unwrap();
+                assert!(
+                    call.contains("NULL, NULL,"),
+                    "scalar set counts elements: {call}"
+                );
+                let mut arguments = call.rsplit(", ");
+                let descriptor = arguments.next().unwrap().trim_end_matches(')');
+                assert!(
+                    descriptor.starts_with("&d"),
+                    "missing element descriptor: {call}"
+                );
+                let drop = arguments.next().unwrap();
+                assert!(
+                    drop.starts_with("fwp_drop") || drop == "fwp_rc_drop",
+                    "missing array release: {call}"
+                );
+                probe = probe.replace("DROP_ARRAY", drop);
+            }
         }
-    }
-    let runtime = emitted.replace(
-        "int main(int argc, char **argv)",
-        "int original_main(int argc, char **argv)",
-    );
-    let source = format!("{runtime}\n{probe}");
-    for opt in ["-O1", "-O2"] {
-        let exe = dir.0.join(opt);
-        fwp::cgen::compile_c(&source, &exe, opt).unwrap();
-        assert_eq!(
-            checked(&mut Command::new(&exe)).stdout,
-            b"scalar array ownership preserved\n"
+        let runtime = emitted.replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
         );
+        let boundary = emitted.find("return fwp_p_array_to_list_typed(").unwrap();
+        let call = emitted[boundary..].split(';').next().unwrap();
+        let drop_list = call.rsplit(", ").next().unwrap().trim_end_matches(')');
+        assert!(
+            drop_list.starts_with("fwp_drop"),
+            "missing scalar list release: {call}"
+        );
+        probe = probe.replace("DROP_LIST", drop_list);
+        let scalar = "return fwp_p_array_from_list_typed(l0, NULL,";
+        assert_eq!(runtime.matches(scalar).count(), 1);
+        let mut cases = vec![
+            ("scalar", runtime.clone(), probe.clone(), 0),
+            (
+                "scalar-counted",
+                runtime.replace(scalar, "return fwp_p_array_from_list_typed(l0, fwp_rc_dup,"),
+                probe.clone(),
+                1,
+            ),
+        ];
+        if memory == "arc" {
+            for (label, release) in [
+                ("missing-input-list", format!("{drop_list}(xs);")),
+                ("missing-output-list", format!("{drop_list}(listed);")),
+                ("missing-selected", "fwp_rc_free_obj(selected);".to_owned()),
+                ("missing-changed", "fwp_rc_free_obj(changed);".to_owned()),
+                ("missing-bits", "fwp_rc_free_obj(bits);".to_owned()),
+            ] {
+                assert_eq!(probe.matches(&release).count(), 1);
+                cases.push((
+                    label,
+                    runtime.clone(),
+                    probe.replace(&release, "/* omitted owner */"),
+                    90,
+                ));
+            }
+        }
+        for opt in ["-O1", "-O2"] {
+            for (case, runtime, probe, status) in &cases {
+                let code = format!("{runtime}\n{probe}");
+                let exe = dir.0.join(format!("{memory}{opt}-{case}.exe"));
+                fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+                for poison in if memory == "arc" {
+                    &["0"][..]
+                } else {
+                    &["0", "1"][..]
+                } {
+                    let stress = if memory == "arc" { "0" } else { "1" };
+                    let out = Command::new(&exe)
+                        .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", poison)
+                        .output()
+                        .unwrap();
+                    let label = format!("{memory}{opt}-{case}-poison{poison}");
+                    record_probe::save("array_element_ownership", &label, &code, &exe, &out);
+                    assert_eq!(out.status.code(), Some(*status), "{label}: {out:?}");
+                    assert!(out.stderr.is_empty(), "{label}: {out:?}");
+                    assert_eq!(
+                        out.stdout,
+                        if *status == 0 {
+                            b"scalar array ownership preserved\n".as_slice()
+                        } else {
+                            b""
+                        },
+                        "{label}"
+                    );
+                }
+            }
+        }
     }
 }
 
