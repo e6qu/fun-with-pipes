@@ -65,6 +65,12 @@ and twelve observations, including the broken-cleanup controls. These checks use
 the accepted #197 compiler with the exact current runtime substituted into its
 generated C; new-compiler and cross-platform acceptance remains a CI requirement.
 
+Focused GCC/AMD64 run `39922765292` at `df84b726cc2a2a37fbaf7c1cca53aacc93cc8bb8`
+passed all twenty selected targets (65 integration tests), 179 library tests and
+independent audits. Inspection verified eighty saved record outcomes, including
+the deliberate failures, plus fifteen default/allocator binaries. This establishes
+focused Linux evidence; full native acceptance still requires all six hosts.
+
 CI saves generated C, executables, output and status under `record-ownership/`
 for independent inspection. [The handoff](../development-state.md) records
 commands, sources and actual acceptance. The byte charge covers managed value
