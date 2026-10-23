@@ -1,66 +1,65 @@
 # Session handoff
 
-All seven PLAN.md areas remain open. Prefer ownership and borrowing, reserve ARC
-for necessary sharing and remove tracing. JIT is excluded.
+All seven PLAN.md areas remain open. Remove tracing, prefer ownership and borrowing,
+and reserve ARC for needed sharing. JIT is excluded.
 
-## Accepted work and current delivery
+## Accepted delivery and current work
 
-[PR #202](https://github.com/e6qu/fun-with-pipes/pull/202) passed nine production
-jobs, docs and 3,414 binary inspections at `46c26002b5f748529a2c6ad5977891cdc1593c06`.
-Verified squash: `ff1bfcc8a294a488b9cb043622143233a903d068`. [History](roadmap-history.md#cached-values-aliases-and-failed-calls-pr-202)
-and the [inspection record](measurements/call-cleanup-2026-10-23.json) retain evidence.
+[PR #203](https://github.com/e6qu/fun-with-pipes/pull/203) passed all nine
+production jobs, docs and 5,118 binary inspections at `460e847b34a7b2691b69f89a4dfea84ea25950b7`.
+Verified squash: `3e3ebd2717f4d77c8d8331e7df1936768546d1ed`. [History](roadmap-history.md#tasks-state-and-runtime-call-cleanup-pr-203)
+and the [inspection record](measurements/task-cleanup-2026-10-23.json) retain evidence.
 
-**Next:** finish this grouped task ownership delivery. Audit every final-head
-production job and documentation; inspect 853 saved images on each of six native
-hosts. Only then squash merge with one subject of at most eighty characters and
-an explicit empty body. Continue PLAN.md afterward.
+**Next:** finish this combined derivative/array delivery. Audit every final-head
+production job and docs; inspect 1,161 saved images on each of six native hosts.
+Only then squash merge with one subject of at most eighty characters and an
+explicit empty body. Continue PLAN.md after the verified merge.
 
-Worktree `/private/tmp/fwp-task-delivery`, branch `task-cleanup-delivery`, is based
-on that verified merge. Native code, tests, scripts and workflows exactly match
-preparation `a447d6a7e99887be5f02506669bc3b499de298f5` in `/private/tmp/fwp-runtime-call-cleanup`.
-Its Linux run `39996376457` and both Windows runs
-`39996381026` / `39996385840`
-passed focused checks, full log audits and 853 saved images per host. The Linux
-suite selects 45 groups; Linux-only storage tests do not establish Windows support.
+Worktree `/private/tmp/fwp-derivative-array-delivery`, branch
+`derivative-array-cleanup-delivery`, is based on that verified merge. Native code,
+tests, scripts and workflows exactly match `9e9662f93aa5e1f0ebd86b6a31d9396dffe13215` in
+`/private/tmp/fwp-derivative-growth`. Its focused runs `40010961711`,
+`40010966471` and
+`40010970526` passed full log audits and
+1,161-image inspection per host. The focused selection has 50 groups; Linux-only
+storage tests are not Windows support.
 
 ## Scope and checks
 
-Seven groups cover callbacks, task handles, state, deadline/channel values and
-runtime-selected calls. Shared owners repeat 32 rounds; tasks owned only by the
-scheduler repeat 64 rounds of three completion/cancellation cases. Missing cleanup must fail, and ARC must reject a
-counted value crossing an uncounted boundary. Fixtures now own their injected
-tasks and duration records explicitly. [The guide](measurements/record-cleanup.md#task-callbacks-and-cancellation)
-explains examples and exact observations. No compiler/runtime or syntax change;
-these are storage-cleanup checks, not speed or complete-GC-removal claims.
+Six groups verify detached derivative buffers, callback scopes, borrowed calls,
+array values, buffer-growth failures and workspace cleanup. Repeated work checks
+managed storage balances alongside raw numeric-buffer frees. Missing cleanup,
+invalid scalar counts and stale tape
+handles must fail. Alias/effect programs compare with raw interpretation; a
+10,000-iteration array program checks exact ARC reclamation. The guide introduces
+concepts before examples and distinguishes raw buffers, managed charges and speed.
 
-All 284 local ARM64 observations pass, including native/interpreter comparisons
-and actual binary inspection. Fourteen runner controls, formatting, docs/examples
-and artifact-consumer checks pass. A variable-scope mistake and a missing final
-fixture release were fixed; failed and repaired evidence remain preserved.
-The guide states the shared test protocol once and introduces notation before
-each example, retaining controls and measurement limits. A function-valued
-pipe example was corrected to an explicit `apply` call and executed successfully.
-
-Use `python3 scripts/local-guard.py COMMAND...` for serial focused checks. Full
-suites stay on GitHub. Preserve every local resource limit.
+All 308 new local ARM64 outcomes pass, including 116 growth/workspace checks.
+Fourteen runner controls, formatting, docs/examples and inspection manifests pass.
+The new derivative fixture's missing
+scope and misplaced IO were repaired. Its mutable scope survives `longjmp` through
+static storage. Fixture arrays, lists and optional results are released explicitly.
+Windows output setup reports failure. No production runtime or language changes.
+The first combined focused run failed Rust compilation on all three hosts because
+the array test omitted its artifact helper declaration. All failure logs were
+audited; the declaration and affected callers were checked before the passing
+rerun. Saved C execution alone does not verify the Rust harness.
 
 ## Resume records
 
-`/private/tmp/fwp-call-merge.json` records the prior verified merge.
-`/private/tmp/fwp-runtime-preparation.json` identifies the focused source/runs.
-Its `fwp-runtime-focused*acceptance.json` receipts retain complete log audits;
-853-image reports are in `fwp-runtime-ownership-evidence`.
-`/private/tmp/fwp-task-publication.json` will identify this delivery.
-`fwp-audit-task-final.py`, `fwp-inspect-expanded-task-delivery-builds.py` and
-`fwp-expanded-merge-task.py` require final-source acceptance before merge.
-Preparation mutation helpers completed. Read the publication receipt before
-resuming publication; never repeat a completed mutation.
-The Windows AMD64 artifact transfer reset during download. An automatic download
-in the inspector overwrote its partial transfer; both failed files are preserved.
-Inspectors now require an explicit digest-verified download, and the recovered
-archive passed all 853 inspections. No CI rerun was needed.
-Keep immutable tags and source/binary inspection reports. Older callback-only
-helpers expect 647 images; they must not accept this expanded 853-image delivery.
+`/private/tmp/fwp-task-merge.json` records the prior accepted delivery.
+`fwp-growth-preparation.json` identifies focused sources/runs; its acceptance
+receipts and `fwp-growth-ownership-evidence` preserve logs and binary reports.
+Earlier derivative and array preparations retain their focused logs; separate
+975- and 1,045-image inspections are not claimed. `/private/tmp/fwp-derivative-array-publication.json`
+will identify this delivery. Use `fwp-audit-derivative-array-final.py`,
+`fwp-inspect-derivative-array-delivery-builds.py` and
+`fwp-merge-derivative-array.py` for exact-head acceptance.
+Read mutation receipts before resuming; never repeat completed publication/merge.
+
+Use `python3 scripts/local-guard.py COMMAND...` serially. Full suites and builds
+stay on GitHub; preserve CPU, RSS, disk and deadline limits. Keep immutable source
+tags, reports and failure evidence. Only verified duplicate archives may be pruned.
 
 ## Roadmap status
 

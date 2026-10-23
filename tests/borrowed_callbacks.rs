@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -31,24 +34,33 @@ choose : I64 -> (I64 -> String)
 choose = if (rem 2 | eq 0)
     (show | flip string.repeat)
     (add 1 | show | flip string.repeat)
-main = 3 | choose | apply 7 | echo
+main = apply 7 (choose 3) | echo
 "#,
     )
     .unwrap();
-    checked(
+    let reference = checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "tracing"])
-            .arg(&fixture)
-            .args(["--emit-c", "-o"])
-            .arg(&emitted),
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&fixture),
     );
-    let runtime = std::fs::read_to_string(emitted).unwrap().replace(
-        "int main(int argc, char **argv)",
-        "int original_main(int argc, char **argv)",
-    );
-    let source = format!(
-        "{runtime}\n{}",
-        r#"
+    for memory in ["arc", "tracing"] {
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_STACK", "0")
+                .env("FWP_FREE", "1")
+                .env("FWP_REUSE", "1")
+                .args(["build", "--memory", "dynamic", "--gc", memory, "-O2"])
+                .arg(&fixture)
+                .args(["--emit-c", "-o"])
+                .arg(&emitted),
+        );
+        let runtime = std::fs::read_to_string(&emitted).unwrap().replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        );
+        let probe = r#"
 static void probe_drop_leaf(V v) {
     uint8_t *c = fwp_rc_slot(v);
     if (!c || !*c) return;
@@ -109,6 +121,8 @@ int main(void) {
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 22;
 #endif
     fwp_gc_start(__builtin_frame_address(0));
+    intptr_t baseline=fwp_gc.budget;
+    for(unsigned round=0;round<32;round++) {
     /* Exercise the compiler's actual parameter metadata, including a
      * scalar whose bits look exactly like the following pointer argument. */
     fwp_fns = fwp_fn_table;
@@ -207,22 +221,102 @@ int main(void) {
     if (*fwp_rc_slot(leaf) != 1 || *fwp_rc_slot(scalar) != 1) return 9;
     probe_drop_leaf(leaf);
     probe_drop_leaf(scalar);
+#ifdef FWP_ARC_ONLY
+    if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+#endif
+    }
     puts("borrowed owners and typed slices preserved");
     return 0;
 }
-"#
-    );
-    for opt in ["-O1", "-O2"] {
-        let exe = dir.0.join(format!("probe{opt}"));
-        fwp::cgen::compile_c(&source, &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-            assert_eq!(out.stdout, b"borrowed owners and typed slices preserved\n");
+"#;
+        let mut cases = vec![("normal", probe.to_owned(), 0)];
+        for (label, old, new, status) in [
+            (
+                "missing-capture",
+                "else probe_drop_leaf(CLO(f)->a[0]);",
+                "else (void)f;",
+                4,
+            ),
+            (
+                "scalar-counted",
+                "(void)a; (void)start; (void)n;",
+                "if (!start && n) fwp_rc_dup(a[0]);",
+                5,
+            ),
+        ] {
+            assert_eq!(probe.matches(old).count(), 1);
+            cases.push((label, probe.replace(old, new), status));
+        }
+        if memory == "arc" {
+            for (label, release) in [
+                ("missing-scalar", "probe_drop_leaf(scalar);"),
+                ("missing-factory", "fwp_closure_drop(factory);"),
+            ] {
+                assert_eq!(probe.matches(release).count(), 1);
+                cases.push((label, probe.replace(release, "/* omitted owner */"), 90));
+            }
+        }
+        for opt in ["-O1", "-O2"] {
+            let program = std::fs::read_to_string(&emitted).unwrap();
+            let exe = dir.0.join(format!("{memory}{opt}-program.exe"));
+            fwp::cgen::compile_c(&program, &exe, opt).unwrap();
+            for poison in if memory == "arc" {
+                &["0"][..]
+            } else {
+                &["0", "1"][..]
+            } {
+                let stress = if memory == "arc" { "0" } else { "1" };
+                let output = Command::new(&exe)
+                    .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", poison)
+                    .output()
+                    .unwrap();
+                let label = format!("{memory}{opt}-program-poison{poison}");
+                record_probe::save("borrowed_callbacks", &label, &program, &exe, &output);
+                assert_eq!(
+                    output.status.code(),
+                    reference.status.code(),
+                    "{label}: {output:?}"
+                );
+                assert_eq!(output.stdout, reference.stdout, "{label}");
+                assert_eq!(output.stderr, reference.stderr, "{label}");
+            }
+            for (case, probe, status) in &cases {
+                let code = format!("{runtime}\n{probe}");
+                let exe = dir.0.join(format!("{memory}{opt}-{case}.exe"));
+                fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+                for poison in if memory == "arc" {
+                    &["0"][..]
+                } else {
+                    &["0", "1"][..]
+                } {
+                    let stress = if memory == "arc" { "0" } else { "1" };
+                    let output = Command::new(&exe)
+                        .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", poison)
+                        .output()
+                        .unwrap();
+                    let label = format!("{memory}{opt}-{case}-poison{poison}");
+                    record_probe::save("borrowed_callbacks", &label, &code, &exe, &output);
+                    assert_eq!(output.status.code(), Some(*status), "{label}: {output:?}");
+                    assert!(output.stderr.is_empty(), "{label}: {output:?}");
+                    assert_eq!(
+                        output.stdout,
+                        if *status == 0 {
+                            b"borrowed owners and typed slices preserved\n".as_slice()
+                        } else {
+                            b""
+                        },
+                        "{label}"
+                    );
+                }
+            }
         }
     }
 }
