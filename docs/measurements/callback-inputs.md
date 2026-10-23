@@ -68,5 +68,5 @@ oversized allocation traps.
 
 These are correctness and ownership checks, not benchmarks. They do not show
 zero allocations, universal cycle freedom or C/Rust speed parity. Full production
-and documentation acceptance for the delivery is recorded in the
-[handoff](../development-state.md) and [history](../roadmap-history.md).
+and documentation acceptance is recorded in
+[PR #196's delivery history](../roadmap-history.md#array-owner-moves-and-copied-callback-strings-pr-196).

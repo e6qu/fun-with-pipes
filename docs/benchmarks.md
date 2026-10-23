@@ -2073,7 +2073,8 @@ uses vector addition and paired stores (`0x100002140` onward). Neither filling l
 calls a function or accesses the stack; scalar tails handle leftover keys.
 The surrounding function still allocates and manages its result owner. This is
 evidence for these loops, not universally optimal registers or zero heap use.
-[The handoff](development-state.md) records pending final production acceptance.
+[PR #173](roadmap-history.md#direct-integer-range-sets-pr-173) records passing
+production and documentation checks for this change.
 
 ### Mapped lists: accepted earlier measurements
 

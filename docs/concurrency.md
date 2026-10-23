@@ -128,10 +128,13 @@ that buffer in its own live frame; the heap task record borrows the address only
 until the task starts finishing. Completed handles retain the result, not a
 pointer into a recycled stack. This saves heap-record space while using more of
 the existing child stack. The [storage comparison](measurements/task-cancellation.md)
-records the six-host focused results and pending delivery acceptance.
+records the six-host focused results.
+[PR #189](roadmap-history.md#compact-task-records-and-repaired-native-validation-pr-189)
+records full production acceptance after repairing the Windows output assertion
+and dependency fetching that failed in #188.
 
 Windows fibers preserve the state needed to resume execution. Tracing builds
-also save a register copy for root scanning. The pending ARC change removes that
+also save a register copy for root scanning. ARC excludes that
 collector-only copy and its stack marker; cancellation's return buffer remains.
 Both modes still use Windows fibers and preserve their floating-point state.
 

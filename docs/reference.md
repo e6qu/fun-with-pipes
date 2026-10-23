@@ -714,7 +714,8 @@ by value. A `String -> String` export returns an owned string with a matching
 `fwp_release_NAME` function. Records may contain scalars and owned strings;
 release the complete unchanged record once. Raw pointer fields carry manual
 pointee lifetimes; releasing a record frees its owned strings, never those
-pointees. The pointer extension is under [validation](development-state.md).
+pointees. [PR #193](roadmap-history.md#manual-c-pointers-and-foreign-storage-cleanup-pr-193)
+records passing native checks for the manual-pointer contract.
 Serialize host calls, including releases, and release every owned result
 before library unload. [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
 records passing six-platform and production checks for these library results.

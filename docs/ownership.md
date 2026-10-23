@@ -131,7 +131,13 @@ and place eligible values on the stack. Values that still need shared storage
 use typed reference counts where their lifetime is proved. A count reaching zero
 releases typed children and eligible storage. Counts above 254 use an auxiliary
 exact count; they do not automatically become permanently shared. Count overflow
-traps. Unproved runtime sharing still uses tracing.
+traps. Checked ARC rejects unproved runtime sharing.
+
+[Record cleanup checks](measurements/record-cleanup.md) exercise updates, aliases
+and partial failures directly in ARC, including repeated rounds and deliberately
+missing releases. They also repair overflow-test fixtures that failed to clear
+their artificial wide counts. This extends verification without changing the
+runtime ownership rules; final native acceptance is tracked in the handoff.
 
 | Value family | Current representation or ownership | Important boundary |
 |---|---|---|
@@ -942,7 +948,8 @@ callbacks and exports. Its [native checks](measurements/manual-pointers.md) and
 [verified delivery](roadmap-history.md#manual-c-pointers-and-foreign-storage-cleanup-pr-193) record support. A pointer copies an address, never an owner of
 `T`. ARC releases any surrounding option or record, but neither follows nor
 frees the address. This also applies when `T` names an opaque host type.
-The callback-input extension, under [validation](development-state.md), copies
+The callback-input extension, accepted in
+[PR #196](roadmap-history.md#array-owner-moves-and-copied-callback-strings-pr-196), copies
 incoming C strings into owned fwp strings before invoking the callback. A callback
 may retain that copy in ordinary checked state or suspend while using it; C may
 change its original buffer after the callback returns. Scalar and manually owned

@@ -1,5 +1,7 @@
 //! Boxed-to-struct conversion retains original and remaining typed owners.
 use std::process::Command;
+#[path = "support/record_probe.rs"]
+mod record_probe;
 fn checked(command: &mut Command) -> std::process::Output {
     let out = command.output().unwrap();
     assert!(
@@ -16,7 +18,9 @@ fn conversion_overflow_releases_box_and_remaining_callers() {
     std::fs::create_dir_all(&dir).unwrap();
     let src = dir.join("probe.fwp");
     let cfile = dir.join("probe.c");
-    let exe = dir.join("probe");
+    let exe = dir
+        .join("probe")
+        .with_extension(std::env::consts::EXE_EXTENSION);
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src,r#"Outcome = | Value String I64 String | Empty
 maker : String -> String -> Outcome
@@ -41,9 +45,9 @@ main = [task.yield (), "later" | choose (read-all () | string.length | eq 0) "fi
     );
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build", "--gc", "tracing", "--memory", "dynamic"])
             .arg(&src)
-            .args(["--emit-c", "-o"])
+            .args(["--emit-c", "-O2", "-o"])
             .arg(&cfile)
             .env("FWP_STACK", "0"),
     );
@@ -89,7 +93,6 @@ static int recover_overflow(void) { return 1; }
 static int dead_string(V v) { return fwp_reuse_verify ? STR(v)->len==0 : *fwp_rc_slot(v)==0; }
 static gc_rc_wide *wide(V v) { return *fwp_rc_wide_link(fwp_rc_slot(v)); }
 static size_t count(V v) { uint8_t c=*fwp_rc_slot(v);return c==255?wide(v)->count:c; }
-static void single(V v) { if (*fwp_rc_slot(v)==255) wide(v)->count=1;else *fwp_rc_slot(v)=1; }
 static void arm_conversion(fwp_u3 *u,V boxed) {
     if (!converting) return;
     observed_box=boxed;
@@ -122,8 +125,10 @@ int main(void) {
         if (other_alias) { if (*fwp_rc_slot(other)!=1 || STR(other)->len!=5) return 7;fwp_rc_free_obj(other); }
         else if (!dead_string(other)) return 7;
         if (box_alias) OUTCOME_DROP(observed_box);
-        single(first);single(last);
+        /* Restore the real fixture owners, discarding artificial overflow counts. */
+        fwp_rc_fresh(first);fwp_rc_fresh(last);
         fwp_rc_free_obj(first);fwp_rc_free_obj(last);fwp_rc_free_obj(scalar_word);
+        if (fwp_gc.rc_wide_len) return 90;
     }
     puts("boxed conversion overflow releases original and remaining caller owners");return 0;
 }
@@ -167,6 +172,26 @@ int main(void) {
     let original_control = without_scope(*pushes.last().unwrap());
     let remaining_control = without_scope(pushes[pushes.len() - 2]);
     for opt in ["-O1", "-O2"] {
+        let uncleared = probe.replace("fwp_rc_fresh(first);", "wide(first)->count=1;");
+        assert_ne!(uncleared, probe);
+        fwp::cgen::compile_c(&format!("{runtime}\n{uncleared}"), &exe, opt).unwrap();
+        let stale = Command::new(&exe)
+            .env("FWP_GC", "off")
+            .env("FWP_GC_STATS", "0")
+            .env("FWP_GC_STRESS", "0")
+            .env("FWP_GC_VERIFY", "0")
+            .env("FWP_REUSE_VERIFY", "0")
+            .output()
+            .unwrap();
+        record_probe::save(
+            "variant_conversion_ownership",
+            &format!("tracing{opt}-uncleared-count"),
+            &format!("{runtime}\n{uncleared}"),
+            &exe,
+            &stale,
+        );
+        assert_eq!(stale.status.code(), Some(90), "{opt}: {stale:?}");
+
         for (control, expected) in [(&original_control, 3), (&remaining_control, 7)] {
             fwp::cgen::compile_c(&format!("{control}\n{probe}"), &exe, opt).unwrap();
             let out = Command::new(&exe)
@@ -184,17 +209,24 @@ int main(void) {
         }
         fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
         for poison in ["0", "1"] {
-            checked(
+            let out = checked(
                 Command::new(&exe)
                     .env("FWP_GC_STRESS", "1")
                     .env("FWP_GC_VERIFY", "1")
                     .env("FWP_REUSE_VERIFY", poison),
             );
+            record_probe::save(
+                "variant_conversion_ownership",
+                &format!("tracing{opt}-normal-poison{poison}"),
+                &format!("{runtime}\n{probe}"),
+                &exe,
+                &out,
+            );
         }
 
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build", "--gc", "tracing", "--memory", "dynamic"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe)

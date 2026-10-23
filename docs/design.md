@@ -1039,7 +1039,7 @@ and captured task-bearing queues remain rejected.
 The [queued-function extension](ownership.md#functions-stored-in-channels),
 accepted in PR #175, admits functions whose actual immutable captures are
 proved safe and checks their required scope when called after receiving.
-The current extension also admits shared socket handles: `fwp_sock` owns only
+Shared socket handles are also admitted: `fwp_sock` owns only
 a descriptor, kind and reference count. A TLS stream additionally owns OpenSSL
 state and copied protocol bytes, which contain no fwp values. Neither can own
 a channel or callback. Existing typed closure cleanup therefore releases these

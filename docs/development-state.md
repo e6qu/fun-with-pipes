@@ -2,158 +2,129 @@
 
 All seven areas of [PLAN.md](../PLAN.md) remain open. Remove tracing; prefer
 ownership, borrowing and moves; reserve ARC for necessary sharing. JIT is excluded.
-Continue substantial grouped PRs with one active delivery and exact-source gates.
+Keep one delivery PR and require exact-source checks before squash merge.
 
-## Accepted baseline and active PR
+## Current delivery
 
-[PR #198](https://github.com/e6qu/fun-with-pipes/pull/198) is squash-merged as
-`27a3e009b83e28f06130a5d686a3196b9934e53f`. All nine production jobs and docs passed
-source `30c6d65c10b3cc33cfeb72f523e4d47624508896`; inspection covered 480 binaries
-and 816 observations. The tree, sole parent and one-line message were verified.
-[History](roadmap-history.md#local-callback-captures-and-repeated-numerical-work-pr-198)
-records the evidence. Redundant main production CI was cancelled; docs were kept.
+[PR #198](https://github.com/e6qu/fun-with-pipes/pull/198) is accepted and merged as
+`27a3e009b83e28f06130a5d686a3196b9934e53f`; its nine production jobs, docs and binary
+inspection passed. [History](roadmap-history.md#local-callback-captures-and-repeated-numerical-work-pr-198)
+records the results and remaining numerical performance gaps.
 
 [PR #199](https://github.com/e6qu/fun-with-pipes/pull/199) is the only open delivery.
-Published source: `3321091d8dcdda1ee3041288cbda4c9cad06c089`, branch
+Published source: `5f3e7e537f730eb748932f2d86a9fad629a83342`, branch
 `checked-native-default`, worktree `/private/tmp/fwp-checked-native-default`.
-The PR is draft. Focused run `39906577400` failed one of 53 integration tests:
-`ad_tape_scopes` referenced tracing-only diagnostic state in an ARC probe.
-All other integration tests, all 179 library tests, compiler/lint checks,
-inventory and coverage audits passed. The complete log is audited in
-`/private/tmp/fwp-arc-metadata-focused-acceptance.json`.
+Focused run `39916787104` passed 60 integration tests across fifteen targets,
+179 library tests, compiler/lint checks and independent ownership/coverage audits.
+Its complete log has no unexpected errors. Inspection passed fifteen GCC binaries
+and sixty allocator observations. Production run `39918185432` is still running;
+benchmarks and documentation `39916776571` passed, with complete logs audited.
+No remaining job has reported a failure at the last check.
 
-The repository audit found the same issue in cached-map cleanup and TCP/UDP
-library-unload probes. The working repair preserves physical-free assertions in
-ARC and poison assertions in tracing, with a deliberately missing autodiff
-release as a failure control. The focused suite now includes cached maps and
-socket ownership (fifteen targets). Tracing-only probes retain their diagnostics;
-no fake runtime flag or ARC poisoning path is added.
-The clean preparation worktree `/private/tmp/fwp-arc-metadata-cleanup` remains
-at `3321091d`; edit only the delivery worktree. The primary checkout stays detached
-at #198 and holds this live handoff.
+**Do not merge that source.** Additional repeated checks found cleanup defects in
+five overflow-test fixtures. These are test defects, not a product-runtime leak.
+`knownUnresolved` in `/private/tmp/fwp-default-ownership-publication.json` prevents
+acceptance until the repair is published and verified.
 
-The superseded `4e16d81c` run `39900026387` was cancelled after the grouped repair
-was pushed. Both ARM macOS jobs, benchmarks and docs passed; six platform jobs
-were interrupted. All ten completed logs have been audited: no unexpected
-compiler/test diagnostic, only the six requested cancellation errors. This is
-partial evidence, not acceptance of either revision. Retained audit:
-`/private/tmp/fwp-199-production-acceptance-4e16d81c.json`.
+The grouped repair is prepared in `/private/tmp/fwp-post-default-ownership`, branch
+`post-default-ownership`, based on `5f3e7e53`. It belongs in PR #199. The primary
+checkout remains detached at #198 and holds the live copy of this handoff.
+The older `/private/tmp/fwp-arc-metadata-cleanup` worktree is clean at `3321091d`;
+it is retained evidence, not another task or delivery.
 
-**Next:** finish focused local probe/format/doc checks, commit and publish all
-probe repairs together, and dispatch the expanded focused suite. Keep the PR draft
-until its exact-source job and independent audits pass, then start nine production
-jobs and docs. Inspect actual default and allocator binaries on six native
-platforms before squash merge. Verify the tree, sole parent and one-line message
-(maximum 80 characters, empty body), then continue PLAN.md. No permission question
+**Next:** audit all completed/failed production jobs with
+`/private/tmp/fwp-audit-199-final.py`, commit the grouped repair, fast-forward the
+delivery branch, mark the PR draft and push with a new immutable revision tag.
+Cancel the superseded run only after replacement publication; audit all its final
+logs. Run the expanded twenty-target focused suite before marking the PR ready
+for nine full production jobs and docs. Inspect actual binaries on all six native
+platforms. Squash-merge only after every final-source gate and inspection passes:
+one-line subject, at most 80 characters, empty body, no trailers or attribution.
+Verify tree, sole parent and message, then continue PLAN.md. No permission question
 is pending and no automatic merge is queued.
 
-Publication state: `/private/tmp/fwp-default-ownership-publication.json`.
-Its `knownUnresolved` marker records the failed probe audit. Preserve earlier
-receipts and create new source-specific publication/dispatch/ready records; do not
-rerun completed helpers or use the thirteen-target acceptance for the new suite.
+## Scope and repair
 
-## What this PR changes
+Native commands, builds, modules and compiler APIs select checked ARC by default.
+Unproved ownership remains a compile error. Explicit tracing remains available;
+this does not complete GC removal. Python disassembly requires an explicit
+ownership mode. Collector tests request tracing; ordinary native tests compare
+ARC, interpreter and saved output. Independent CI checks continue after failures.
 
-Ordinary native commands, builds, generated modules and compiler APIs use checked
-ARC by default. Unproved ownership remains an error, without a tracing fallback.
-Explicit `--gc tracing` still exists; this does not finish GC removal or eliminate
-ARC. Collector probes explicitly select tracing. The invalid inter-task derivative
-keeps its runtime trap under tracing and separate ARC compile rejection.
-Default command tests cover cache identity, rejection before execution, and saved
-O0/O1/O2 binaries. Python disassembly requires and records an explicit ownership
-mode, with both modes tested at O0–O3. Guides and historical next actions are cleaned up.
+Static-heap pressure now forces a full collection and rechecks freed small slots
+before exhaustion, retaining the original 1 MiB tests and broken-repair controls.
+ARC excludes unused mark storage, age checks, collector stack discovery and late
+poisoning of released objects, arrays, files and sockets. Page metadata falls from
+4,648 to 4,128 bytes; counts remain 4,096 bytes. [The report](measurements/arc-metadata.md)
+explains this layout result; no timing or process-memory gain is claimed.
 
-The first full matrix found four failures, all repaired: two missed collector-mode
-selections, a mislabeled unsupported C-type diagnostic, and the invalid derivative
-in the static-memory golden suite. Independent SDK, packaging and measurements
-now continue after an earlier failure. Inventory failures propagate through log
-capture; an injected exit 37 checks that repair.
+The new [record checks](measurements/record-cleanup.md) run updates, copies and
+field conversions directly in ARC and tracing. They repeat 32 rounds and check
+ARC byte balance, no wide-count entries and no collections. Deliberately missing
+releases fail. The old overflow fixtures reset auxiliary counts to one but left
+inline marker 255, so freeing did nothing: one round retained 64 bytes and four
+entries. All five occurrences now restore the fixture's actual sole owner with
+`fwp_rc_fresh`, clearing the artificial metadata. Related variant/retain fixtures
+also detect deliberately restored old cleanup. Runtime ownership rules are unchanged.
 
-The added real-collection control exposed two static-heap bugs. Pressure now
-forces a full collection and rechecks slots freed inside partly live pages.
-The original 1 MiB limit remains. Deliberately removing each fix, or disabling
-collection, produces the expected exhaustion. These repairs passed the focused
-run and both ARM macOS full jobs at `4e16d81c`.
+The same patch fixes stale acceptance notes for C callbacks, manual pointers,
+REST/MCP, task storage and integer range sets. It corrects the primitive guide's
+outdated claim that ASCII case conversion never reuses unique storage. Verified
+history replaces stale links to an active handoff; existing limitations remain.
 
-The published repair additionally prevents a host's late `FWP_REUSE_VERIFY` change
-from retaining released ARC objects, arrays, files and sockets. ARC excludes those
-diagnostic paths at compilation time; invalid startup options still fail.
-Unused mark storage and age checks are removed from ARC, along with the collector's
-stack-bound lookup. Page metadata falls from 4,648 to 4,128 bytes; inline counts
-remain 4,096 bytes. Tracing's layout is unchanged. This is a structure-size result,
-not a timing or resident-memory claim. [The report](measurements/arc-metadata.md)
-explains the measurement and limits.
+## Verification and evidence
 
-## Verification and retained evidence
+All local checks use `python3 scripts/local-guard.py COMMAND...`, serially.
+Full compiler builds, suites and measurements stay on GitHub. Local C checks use
+accepted compiler #197 with the exact current runtime substituted into emitted C;
+they do not establish new-compiler or other-platform acceptance.
 
-The focused job `120234298323` in run `39898475722` passed 52 integration tests
-across thirteen targets, all 179 library tests, compiler/lint checks, inventory and
-failure controls. Its complete log has no unexpected errors. This is evidence for
-`4e16d81c`, not acceptance of the newer working repair. The earlier first-matrix
-and failed focused audits remain in `/private/tmp/fwp-199-production-acceptance-8bf72ec9.json`
-and `/private/tmp/fwp-default-repair-focused-acceptance.json`.
+- `/private/tmp/fwp-check-record-rounds.py`: eighteen inspected ARM64 binaries,
+  twenty-four observations at O1/O2 pass (11.28 seconds). Results:
+  `/private/tmp/fwp-record-rounds/results.json`.
+- `/private/tmp/fwp-check-wide-fixtures.py`: eight C binaries/twelve observations
+  pass, including restored old-cleanup controls (5.42 seconds). Results:
+  `/private/tmp/fwp-wide-fixtures/results.json`.
+- `/private/tmp/fwp-check-record-proof-links.py`: all five current C fixtures and
+  inputs match that saved evidence (0.13 seconds); Rust orchestration awaits CI.
+- `/private/tmp/fwp-check-record-docs.py`: formatting, whitespace, 108 doc link
+  sets, 106 immutable anchors, seven roadmap rows and thirteen native-runner
+  coverage/failure controls pass (10.45 seconds).
+- Original fixture-leak reproduction: `/private/tmp/fwp-record-fixture-leak.json`.
+- Current-source focused acceptance: `/private/tmp/fwp-probe-repair-focused-acceptance.json`.
+  GCC inspection: `/private/tmp/fwp-default-ownership-evidence/5f3e7e537f73/ubuntu-latest-39916787104.json`.
+  These verify `5f3e7e53`, not the newer prepared test repair.
+- Earlier runtime layout/resource checks: twelve ARM64 binaries/sixty observations;
+  the actual old runtime reproduces all four late-option defects in six binaries/
+  thirty observations. Receipts: `/private/tmp/fwp-arc-metadata-{fixture,negative}/`.
+  Array/task corpus samples also pass: `/private/tmp/fwp-late-corpus-samples/`.
 
-Every local check uses `python3 scripts/local-guard.py COMMAND...`. Full builds,
-full suites and large measurements stay on GitHub. Local C checks use Apple Clang
-on ARM64, C emitted by accepted compiler #197, and the exact working runtime
-substituted into it. They do not establish new-compiler or other-platform support.
+The twenty-target focused selection includes all five affected overflow tests.
+`tests/support/record_probe.rs` saves C, executables, output and status under
+`record-ownership/`. Existing evidence saves three default builds and twelve
+allocator probes/sixty observations per host. On macOS, record update/conversion
+and variant probes are in the regular artifact; general record copy and retain
+probes are in the GC artifact. Both artifacts are needed for complete inspection.
 
-- `/private/tmp/fwp-check-probe-repair.py` passed eight ARM64 binaries and twelve
-  observations at O1/O2 (4.83 seconds): scoped autodiff cleanup succeeds in both
-  ownership modes, and removing the output release fails with status 77. Tracing
-  also checks poisoned storage. Results: `/private/tmp/fwp-probe-repair/results.json`.
-- `/private/tmp/fwp-check-probe-docs.py` passed focused Rust formatting, whitespace,
-  107 doc link sets, 106 immutable anchors, all seven roadmap rows and thirteen
-  native test coverage/failure controls (10.52 seconds). No full local build ran.
-- Static-pressure checks passed 27 observations, then 54 using the tracked fixture
-  at O0/O1/O2. Nine actual ARM64 binaries were inspected. Evidence:
-  `/private/tmp/fwp-static-pressure{,-fixture}-verified/`.
-- `/private/tmp/fwp-probe-late-reuse-option.py` reproduced the ARC defect: uniqueness
-  changed to poisoned-copy mode and 32 released bytes stayed retained. The repaired
-  probe passes with uniqueness 1 and zero retained bytes.
-- `/private/tmp/fwp-check-arc-metadata-fixture.py` passed twelve inspected binaries
-  and sixty observations in 6.01 seconds. Both ownership/memory modes, O0/O1/O2,
-  wide counts and all four affected resource paths are covered. ARC symbols exclude
-  poisoning and stack discovery. Results: `/private/tmp/fwp-arc-metadata-fixture/`.
-- `/private/tmp/fwp-check-arc-metadata-negative.py` used the actual old runtime to
-  reproduce all four defects in six binaries/thirty observations (2.79 seconds).
-  Results: `/private/tmp/fwp-arc-metadata-negative/`.
-- `/private/tmp/fwp-check-late-corpus-samples.py` passed array-alias and task/channel/
-  UDP examples against the interpreter and goldens, with ordinary/late options
-  and return-memory ledgers (3.47 seconds). The complete corpus remains a CI gate.
-- `/private/tmp/fwp-check-metadata-docs.py` passed focused formatting, whitespace,
-  107 doc link sets, 106 immutable anchors and all seven roadmap status rows.
-  The staged measurement report and required handoff table are included.
+## Resume tools and limits
 
-The new native test saves twelve C files/executables and sixty outcomes per host
-under `allocator-metadata/`. The corpus reuses each compiled binary for its second
-environment, avoiding another compilation per program.
+Archive publication/acceptance receipts when changing sources. Completed publish,
+dispatch and ready helpers must not be rerun. Prepare new helpers for the new tag
+and all twenty focused targets. `/private/tmp/fwp-discover-199-runs.py` registers
+full runs only after readiness; `/private/tmp/fwp-audit-199-final.py` audits them.
 
-## Resume tools and resource limits
+Extend `/private/tmp/fwp-inspect-default-builds.py` and `/private/tmp/fwp-merge-199.py`
+to require the saved record probes as well as default/allocator images. Windows
+still uses stack-bound APIs for contexts/static storage: inspect collector startup
+at O0 instead of banning the import globally. The ARM64 import resolver in
+`/private/tmp/fwp_pe_startup.py` has passed old-binary controls.
+`/private/tmp/fwp-after-merge-199.py` is prepared but UNRUN: after a verified merge
+it preserves the primary handoff, moves the detached checkout and cancels only
+redundant same-tree main production CI, keeping documentation.
 
-`/private/tmp/fwp-audit-199-final.py` audits registered final production/docs jobs.
-Do not run it until the new full runs are registered. Existing receipts are tied
-to their source; archive them before any further repair. Completed publication,
-dispatch and ready helpers must not be rerun.
-
-`/private/tmp/fwp-inspect-default-builds.py` now requires explicit default and
-metadata artifact/job arguments. Linux/Windows use the same artifact for both;
-macOS default binaries come from the regular job and metadata binaries from the
-GC job (`ownership-evidence-gc-macOS-{ARM64,X64}`). Each host needs three default
-and twelve metadata binaries, with sixty metadata observations. No final images
-have been inspected for the pending repair yet. Windows legitimately uses the stack-bound
-API for contexts/static memory; inspect the collector entry at O0 rather than
-banning that import globally. `/private/tmp/fwp-merge-199.py` requires all six
-expanded reports plus fresh exact-source confirmation of all ten checks. The
-Windows ARM64 check uses `/private/tmp/fwp_pe_startup.py` to resolve O0 import
-loads/calls from LLVM disassembly and PE symbol addresses, rejecting unresolved
-indirect calls. `/private/tmp/fwp-check-windows-startup-inspection.py` confirmed
-both native Windows architectures identify the old stack query in accepted #198
-binaries (0.13 seconds); a name-only ARM64 search would have missed it.
-
-Keep local work serial and guarded: 64 GiB free disk, generated target data below
-2 GiB, sampled aggregate RSS below 1 GiB and a 180-second deadline. Never raise
-limits. Preserve worktrees, source hashes, binaries and receipts.
+Preserve worktrees and evidence. Keep at least 64 GiB free disk, generated target
+data below 2 GiB, sampled workload RSS below 1 GiB and the 180-second guard limit.
+Never raise limits or bypass the guard. No new optimization has been selected.
 
 ## Roadmap status
 
@@ -166,5 +137,3 @@ limits. Preserve worktrees, source hashes, binaries and receipts.
 | 5 | In progress | Validate CPU numerical kernels |
 | 6 | In progress | Stabilize comparisons and set workload budgets |
 | 7 | In progress | Complete the application acceptance suite |
-
-No further optimization is selected beyond this PR.

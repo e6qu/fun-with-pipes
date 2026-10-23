@@ -1,5 +1,7 @@
 //! Actual wide-count overflow must release partial retains and caller owners.
 use std::process::Command;
+#[path = "support/record_probe.rs"]
+mod record_probe;
 fn checked(command: &mut Command) -> std::process::Output {
     let out = command.output().unwrap();
     assert!(
@@ -16,7 +18,9 @@ fn wide_count_overflow_releases_partial_variant_retains_and_live_callers() {
     std::fs::create_dir_all(&dir).unwrap();
     let src = dir.join("probe.fwp");
     let cfile = dir.join("probe.c");
-    let exe = dir.join("probe");
+    let exe = dir
+        .join("probe")
+        .with_extension(std::env::consts::EXE_EXTENSION);
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(
         &src,
@@ -49,9 +53,9 @@ main = [task.yield (),
     );
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build", "--gc", "tracing", "--memory", "dynamic"])
             .arg(&src)
-            .args(["--emit-c", "-o"])
+            .args(["--emit-c", "-O2", "-o"])
             .arg(&cfile),
     );
     let emitted = std::fs::read_to_string(&cfile).unwrap();
@@ -96,15 +100,18 @@ int main(void) {
         if (wide(first)->count!=(mode?255:SIZE_MAX)) return 3;
         if (wide(last)->count!=(mode?SIZE_MAX:255)) return 4;
         if (*fwp_rc_slot(scalar_word)!=1 || STR(scalar_word)->len!=11 || STR(first)->len!=5 || STR(last)->len!=5) return 5;
-        wide(first)->count=1;wide(last)->count=1;
+        /* Discard the artificial counts, including their wide-count entries. */
+        fwp_rc_fresh(first);fwp_rc_fresh(last);
         fwp_rc_free_obj(first);fwp_rc_free_obj(last);fwp_rc_free_obj(scalar_word);
+        if (fwp_gc.rc_wide_len) return 90;
     }
     first=counted("input");wide(first)->count=SIZE_MAX;
     fwp_trap_recover=recover_overflow;fwp_trap_jb=&overflow;fwp_trap_cleanup=0;
     if (!setjmp(overflow)) { fREPEAT(first);return 6; }
     fwp_trap_recover=0;fwp_trap_jb=0;
     if (fwp_cleanups || wide(first)->count!=SIZE_MAX-1 || STR(first)->len!=5) return 7;
-    wide(first)->count=1;fwp_rc_free_obj(first);
+    fwp_rc_fresh(first);fwp_rc_free_obj(first);
+    if (fwp_gc.rc_wide_len) return 90;
     puts("wide-count overflow releases exact partial retains and caller owners");return 0;
 }
 "#.replace("HELPER",helper).replace("REPEAT",repeat);
@@ -142,6 +149,26 @@ int main(void) {
     );
     let caller_control = runtime.replacen(worker, &old_worker, 1);
     for opt in ["-O1", "-O2"] {
+        let uncleared = probe.replace("fwp_rc_fresh(first);", "wide(first)->count=1;");
+        assert_ne!(uncleared, probe);
+        fwp::cgen::compile_c(&format!("{runtime}\n{uncleared}"), &exe, opt).unwrap();
+        let stale = Command::new(&exe)
+            .env("FWP_GC", "off")
+            .env("FWP_GC_STATS", "0")
+            .env("FWP_GC_STRESS", "0")
+            .env("FWP_GC_VERIFY", "0")
+            .env("FWP_REUSE_VERIFY", "0")
+            .output()
+            .unwrap();
+        record_probe::save(
+            "retain_unwind_ownership",
+            &format!("tracing{opt}-uncleared-count"),
+            &format!("{runtime}\n{uncleared}"),
+            &exe,
+            &stale,
+        );
+        assert_eq!(stale.status.code(), Some(90), "{opt}: {stale:?}");
+
         fwp::cgen::compile_c(&format!("{caller_control}\n{probe}"), &exe, opt).unwrap();
         let out = Command::new(&exe)
             .env("FWP_GC_STRESS", "1")
@@ -169,16 +196,23 @@ int main(void) {
         );
         fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
         for poison in ["0", "1"] {
-            checked(
+            let out = checked(
                 Command::new(&exe)
                     .env("FWP_GC_STRESS", "1")
                     .env("FWP_GC_VERIFY", "1")
                     .env("FWP_REUSE_VERIFY", poison),
             );
+            record_probe::save(
+                "retain_unwind_ownership",
+                &format!("tracing{opt}-normal-poison{poison}"),
+                &format!("{runtime}\n{probe}"),
+                &exe,
+                &out,
+            );
         }
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build", "--gc", "tracing", "--memory", "dynamic"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),

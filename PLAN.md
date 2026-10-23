@@ -107,6 +107,9 @@ outside the benchmark suite.
    ownership checks that catch missing releases, invalid reuse and stale borrows
    without relying on tracing or permanently retained poisoned objects. Keep
    the existing controls until their replacements pass, then remove tracing mode.
+   [Record cleanup checks](docs/measurements/record-cleanup.md) begin this work
+   with direct ARC failure controls and repeated storage balances; they do not
+   replace the remaining collector-specific checks.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
    [Integer counting](docs/measurements/integer-counting.md) and
    [checked products](docs/measurements/checked-products.md) preserve slower
