@@ -27,8 +27,12 @@ merge as one PR. Preserve the tested code when transplanting; record accepted
 
 Preparation worktree: `/private/tmp/fwp-post-collection-aliases`, branch
 `post-collection-alias-ownership`, based on `96dce6277c00d0afa9751b207686bc01e127c2d1`.
-No second PR is open. Its immutable publication receipt will record the exact
-preparation source and focused run; never infer passing checks from a commit.
+No second PR is open. Initial preparation `99b5762efe070796cade23541b09c1ce6f7c4fa7`
+ran in `39959341151`. All 32 native targets and 179 library tests passed. The
+complete log contains one failure: Clippy rejects `.err().expect()` in the new
+field assertion. Both field and match assertions now use `expect_err`; no
+warning is suppressed. The next focused run must pass the repaired source.
+`/private/tmp/fwp-alias-preparation.json` records revisions and run IDs.
 
 ## Changes and checks
 
@@ -56,8 +60,9 @@ Guarded local checks use accepted compiler `5e17fc10` with unchanged runtime:
 The first alias helper expected concatenation in the wrong order; raw
 interpretation returns `laterlastfirst`. The helper was corrected and rerun;
 the repository test already compares with the interpreter. Its failed first
-attempt remains preserved. New Rust harness and internal-compiler checks have
-not yet run; cross-platform support requires CI, not these local C checks.
+attempt remains preserved. All new Rust harness and internal-compiler cases passed the initial focused
+run. Its Clippy failure remains a failed gate until the repaired source passes;
+cross-platform acceptance still requires the full final matrix.
 
 Use `python3 scripts/local-guard.py COMMAND...` for serial focused local work.
 Full builds and suites stay on GitHub. Keep all fixed resource limits.
