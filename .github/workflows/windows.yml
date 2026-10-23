@@ -186,7 +186,7 @@ jobs:
             'exec_protocol_ownership', 'exec_invocation_ownership', 'arc_tasks', 'arc_execution', 'server_entry_ownership',
             'arc_library', 'transpose_ownership', 'linalg_ownership', 'array_loop_borrows', 'loop_ownership',
             'loop_preparation_ownership', 'nested_loop_boxing', 'field_moves', 'boxed_projection_ownership', 'boxed_field_moves',
-            'field_context_ownership', 'unboxed_worker_locals', 'compiler_call_liveness', 'worker_preparation_ownership', 'worker_boxing_ownership',
+            'field_context_ownership', 'match_context_ownership', 'unboxed_worker_locals', 'compiler_call_liveness', 'worker_preparation_ownership', 'worker_boxing_ownership',
             'ffi', 'raw_memory_ownership', 'library_input_ownership', 'library_result_ownership', 'record_conversion_ownership',
             'resource_frames', 'resource_frame_fields', 'resource_frame_variants', 'resource_match_context', 'foreign_callback_ownership',
             'float_formats', 'float_linking', 'protocol', 'blocked_matrix', 'wide_workers'
@@ -240,7 +240,7 @@ jobs:
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: |
-          cargo test --no-fail-fast --test reuse --test string_map_ownership --test text_ownership -- --nocapture 2>&1 | Tee-Object windows-reuse_tests.log
+          cargo test --no-fail-fast --test reuse --test reuse_token_ownership --test string_map_ownership --test text_ownership -- --nocapture 2>&1 | Tee-Object windows-reuse_tests.log
           exit $LASTEXITCODE
       - name: Publish native reuse diagnostics
         if: always()

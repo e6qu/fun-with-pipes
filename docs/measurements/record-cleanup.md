@@ -99,6 +99,61 @@ distinct statuses, 4 for the variant and 14 for the record. Windows now includes
 the constructor-allocation target and writes probe output in binary mode, so
 newline conversion cannot change the expected output.
 
+## Selecting fields, returning aliases and reusing storage
+
+An alias is another live reference to the same value. Selecting one field must
+release discarded fields while preserving any aliases that the caller still
+uses. An internal **reuse token** temporarily owns an emptied object: a later
+constructor may fill that storage, or cleanup must free it. Tokens are compiler
+bookkeeping, not a new language feature.
+
+These four test targets now check both ARC and tracing:
+
+| Check | What must remain true |
+|---|---|
+| [Field selection](../../tests/field_context_ownership.rs) | Selecting an integer releases the unused nested string, even when the outer record is eliminated |
+| [Pattern matching](../../tests/match_context_ownership.rs) | Matching a variant preserves its child type so discarded owners are released |
+| [Returned aliases](../../tests/variant_alias_ownership.rs) | Returned variant fields transfer once, remain unboxed where expected, and preserve caller aliases across task suspension |
+| [Reusable storage](../../tests/reuse_token_ownership.rs) | A consumed object's empty storage transfers to a new result or is freed on failure, an unused branch or a tail call |
+
+Here is the field-selection pattern. `Leaf` constructs an `Inner` containing a
+string. `make` constructs a record by applying each field function to the input;
+`const 17` ignores that input and returns 17. `.number` selects the numeric field.
+
+```fwp
+Inner = | Leaf String
+Outer = { child: Inner, number: I64 }
+make-outer : String -> Outer
+make-outer = make { child = string.repeat 2 | Leaf, number = const 17 }
+discard : String -> I64
+discard = make-outer | .number
+main = "input" | discard | echo
+```
+
+The result is `17`. The repeated string is unused after field selection. The
+compiler can remove the outer record, but must still release that string.
+The source tests also choose the function at runtime so a direct-call rewrite
+cannot hide the cleanup obligation.
+
+Each instrumented probe repeats 32 rounds, with and without caller aliases.
+ARC requires the managed byte charge to return to its starting value, no extra
+count-table entries and no collections. Deliberately missing releases or adding
+an extra owner must fail. Two internal-compiler controls erase a needed child
+type: ARC must reject them before C generation; tracing retains the old runtime
+leak controls. An absent proof must not quietly enable tracing.
+
+The reuse target also runs a million-step countdown at C O1/O2 in both modes.
+It compares the result with a small raw-interpreter case of the same recurrence.
+This checks that unused storage is cleaned up without accumulating native call
+frames for this eligible recursion pattern; it makes no promise for arbitrary
+recursion. Tracing keeps its old-cell, poisoned-storage and collection-on/off
+controls. ARC additionally rejects settings that disable ownership or freeing.
+
+Windows now runs the previously omitted match-context and reuse-token targets.
+The two variant tests that change process-wide generator options serialize those
+changes, so concurrent test execution cannot select another test's memory mode.
+Generated C, executable and output are saved before checking each result.
+
 ## Evidence and limits
 
 The original record and allocator batch passed
@@ -107,12 +162,16 @@ Its [inspection record](native-default-2026-10-23.json) contains 95 saved binary
 files per host across all six native targets, including eighty record outcomes
 and sixty allocator observations per host.
 
-The six extended probes pass sixty Apple Clang/ARM64 images and 76 observations
-with the explicit settings above. Twenty-four complete program builds also match
-raw interpretation at O1/O2 in both modes. These use compiler `5e17fc10e860b1971ffc9cd9cb57fcb795ccad24` from the passing
-[macOS production job](https://github.com/e6qu/fun-with-pipes/actions/runs/39924646271/job/120317937423),
-with its embedded runtime unchanged. Rust harness execution and cross-platform
-acceptance still require CI. The handoff records actual gates and receipts.
+The constructor and call batch passed
+[PR #200](https://github.com/e6qu/fun-with-pipes/pull/200) at source
+`69c3b1e0135dd95961dba3729911ec27dc1736b6`, including all production jobs,
+documentation and inspection of 1,050 saved native binary files across six hosts.
+
+The field/match source, returned-alias program and reuse extensions have local
+Apple Clang ARM64 checks using accepted compiler `5e17fc10e860b1971ffc9cd9cb57fcb795ccad24`
+with its unchanged runtime. The new internal-compiler cases and all other native
+platforms still require CI. See the handoff for exact commands, receipts and
+current acceptance; these local checks do not establish GCC or Windows support.
 
 CI saves generated C, executables, output and status under `record-ownership/`
 for independent inspection. [The handoff](../development-state.md) records
