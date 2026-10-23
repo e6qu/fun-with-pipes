@@ -107,12 +107,12 @@ Its [inspection record](native-default-2026-10-23.json) contains 95 saved binary
 files per host across all six native targets, including eighty record outcomes
 and sixty allocator observations per host.
 
-The six extended probes pass sixty Apple Clang/ARM64 images and 76 observations
-with the explicit settings above. Twenty-four complete program builds also match
-raw interpretation at O1/O2 in both modes. These use compiler `5e17fc10e860b1971ffc9cd9cb57fcb795ccad24` from the passing
-[macOS production job](https://github.com/e6qu/fun-with-pipes/actions/runs/39924646271/job/120317937423),
-with its embedded runtime unchanged. Rust harness execution and cross-platform
-acceptance still require CI. The handoff records actual gates and receipts.
+The six extended probes passed
+[PR #200's full acceptance](../roadmap-history.md#repeated-constructor-and-call-cleanup-pr-200).
+Its [inspection record](constructor-cleanup-2026-10-23.json) contains 175 saved
+binary files per host, including 160 aggregate outcomes and sixty allocator
+observations. Complete logs passed audit. Local checks additionally compared
+24 complete O1/O2 programs with raw interpretation in both modes.
 
 CI saves generated C, executables, output and status under `record-ownership/`
 for independent inspection. [The handoff](../development-state.md) records

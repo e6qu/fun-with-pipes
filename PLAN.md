@@ -28,7 +28,8 @@ formats, a formatter, linter and language server. These are foundations to exten
 they do not establish that every abstraction is free or every program avoids GC.
 
 Native execution now selects checked ARC unless tracing is requested explicitly.
-Final acceptance of this default change is tracked in the handoff. Checked
+[PR #199](docs/roadmap-history.md#checked-native-defaults-and-arc-metadata-pr-199)
+records six-host acceptance of this default. Checked
 `--gc arc` removes tracing for supported programs, including accepted
 synchronous WASI entries, gRPC clients/services, HTTP clients/servers and
 scoped C calls with manually managed pointers. Some
@@ -109,6 +110,8 @@ outside the benchmark suite.
    the existing controls until their replacements pass, then remove tracing mode.
    [Record and variant cleanup checks](docs/measurements/record-cleanup.md) cover
    direct ARC failures, constructor/call cleanup and repeated storage balances.
+   [Loop and collection cleanup](docs/measurements/collection-cleanup.md) extends
+   the checks to partial iteration state, callbacks, temporary buffers and cancellation.
    Extend this evidence to the remaining collector-specific checks before removing them.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
    [Integer counting](docs/measurements/integer-counting.md) and
