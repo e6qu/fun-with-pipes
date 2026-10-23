@@ -22,17 +22,20 @@ its evidence. Do not rerun its completed helpers.
 [PR #199](https://github.com/e6qu/fun-with-pipes/pull/199) uses branch
 `checked-native-default` in `/private/tmp/fwp-checked-native-default`, based on
 #198's merge. Edit code there. The primary checkout is detached at #198 and holds
-the live handoff. Published head: `8bf72ec96335bf6fb83018dff6f3ee59ee761af3`;
-production run `39885288684`, docs `39885284210`. **This head fails CI.**
+the live handoff. Published head: `51b34e6bcf1a69646766839a21d9d31468c569ed`.
+The PR is draft. Focused run `39894751457` confirms all four original production
+failures are fixed and all 179 library tests pass. Its new real-collection control
+exposes a static-heap exhaustion bug; the current working repair also fixes the
+related reuse of slots inside partly live pages. Neither repair is published yet.
 The publication receipt is `/private/tmp/fwp-default-ownership-publication.json`.
 
-**Next:** publish the grouped repair and run `native-commands` on Linux AMD64
-for that exact source. Its twelve targets now include every repaired case and
-the new static-memory collection control. Keep the PR draft during this focused
-check, then mark it ready. Require all nine production jobs and docs for that
-same head, inspect its default O0/O1/O2 binaries on six native platforms, and
-squash-merge. Supply a one-line subject of at most 80 characters
-and an empty body; verify the resulting tree, sole parent and message. Continue
+**Next:** publish the static-heap repairs together and dispatch `native-commands`
+on Linux AMD64 for their immutable tag. Its thirteen targets now include
+`native_allocator`, with controls that deliberately remove each repair. Keep the
+PR draft until the entire focused job passes, then mark it ready. Require nine
+production jobs and docs for the same head, inspect default O0/O1/O2 binaries on
+six native platforms, and squash-merge. Use a one-line subject of at most 80
+characters and an empty body; verify tree, sole parent and message. Continue
 PLAN.md afterward. No permission question is pending.
 
 The PR makes checked ARC the default for native commands, builds and generated
@@ -49,66 +52,64 @@ comparison requires `ownership="arc"` or `"tracing"`, records it, and tests both
 at O0–O3. Docs explain the new default and link frozen sources for three removed,
 obsolete allocation scripts.
 
-## Production failures and working repair
+## Failures, repairs and evidence
 
-Every production job and its full log has been audited. Four distinct tests
-failed: three shared failures across macOS, Windows and Linux, plus the Linux
-static-memory golden case for the intentionally invalid derivative. Benchmarks
-and documentation passed. No further failure was found in the completed matrix.
+The full first matrix at `8bf72ec9` was audited across all ten jobs. Benchmarks
+and docs passed; eight platform jobs shared four failures. Head `51b34e6b` fixes
+all four, confirmed by the completed focused run:
 
-- `ad_tape_scopes` and `serializer_leaf_ownership` still used the new default
-  while requesting collector stress. Their builds now select tracing explicitly;
-  stress settings and assertions are unchanged.
-- `ffi::unsupported_types_are_reported` exposed an invalid C type reported as
-  an ARC limitation. The compiler now gives the specific foreign-function error.
-  The test checks default, ARC and tracing builds and absence of an executable.
-- `static_memory::golden_programs_with_static_memory` now selects tracing for
-  that same invalid derivative's runtime trap. The bounded-heap test keeps its
-  default-ownership case and adds actual tracing of uncounted temporary data:
-  collections must occur, and disabling them must exhaust the identical heap.
-- Independent SDK, packaging and measurement checks now continue after test
-  failures, preserving red job status and their own prerequisites. Previously
-  a failed target hid later checks until another full run. Both Unix ownership
-  inventory steps now preserve failure status through `tee`. A controlled failure
-  returns exit 37 and keeps its log; removing the fix reproduces the hidden failure.
-- Host-boundary docs distinguish explicit tracing's retention from default ARC's
-  rejection. The plan calls for tested replacements for collector diagnostics
-  before deleting tracing, while keeping invalid lifetimes rejected. Seven older
-  measurement reports now link their completed deliveries instead of leaving
-  obsolete next actions or acceptance-pending claims; original data is preserved.
+- Two collector probes now explicitly request tracing while preserving stress.
+- Unsupported C types receive the same specific diagnostic in default, ARC and
+  tracing modes, without producing an executable.
+- The static-memory golden suite preserves the invalid derivative's runtime trap
+  under explicit tracing; its separate ARC compile rejection remains tested.
+- Independent SDK, packaging and measurement checks continue after test failures.
+  Inventory failures propagate through log capture; an injected exit 37 confirms
+  this, and removing the fix reproduces the previously hidden failure.
 
-Audit: `/private/tmp/fwp-199-final-acceptance.json`; refresh with
-`/private/tmp/fwp-audit-199-final.py`. It preserves every completed job's log and
-all unexpected diagnostics. `/private/tmp/fwp-publish-default-production-repair.py`
-requires the complete ten-job audit, archives this failed receipt and publishes
-one repair with the PR temporarily draft. Inspect its publication receipt before
-rerunning anything. Earlier publication helpers already completed. Dispatch the
-`native-commands` suite on the repair's immutable tag with `native_runner=ubuntu-latest`.
-After the focused job passes and the PR is ready, `/private/tmp/fwp-discover-199-runs.py`
-registers its production/docs runs before using the acceptance auditor again.
+The added collection control still fails at `51b34e6b`: 60 iterations of the
+existing churn fixture exhaust a 1 MiB heap despite reclaimable storage. The
+working allocator repair forces a full collection under static-heap pressure and
+rechecks small-object free slots afterward. A partly live page can supply such
+slots without becoming a completely free page. Neither fix raises the heap limit.
 
-`/private/tmp/fwp-inspect-default-builds.py` checks artifact hashes, real image
+`native_allocator` now generates a real static-memory program and probes both
+cases at O0/O1/O2. It checks zeroed storage and surviving roots, then deliberately
+removes each fix and disables collection to verify that those controls fail.
+Nine binaries produce 54 observations per host. The existing 1 MiB language-level
+churn test remains, with exact output and a collection-disabled exhaustion check.
+
+The complete first production audit is archived at
+`/private/tmp/fwp-199-production-acceptance-8bf72ec9.json`. The failed focused
+audit is `/private/tmp/fwp-default-repair-focused-acceptance.json`; its full log
+ends with all 179 library tests passing, successful inventory/negative controls,
+and only the new collection test failing. Previous publication and dispatch
+helpers have completed; do not rerun them. The old ready helper requires `51b34e6b`
+and is obsolete. Prepare new publication/dispatch/audit helpers for the repair.
+
+After the next focused job passes and the PR is ready,
+`/private/tmp/fwp-discover-199-runs.py` registers production/docs runs.
+`/private/tmp/fwp-audit-199-final.py` then audits all exact-head gates.
+`/private/tmp/fwp-inspect-default-builds.py` checks artifact hashes, image
 architecture, disassembly, output and absence of tracing for O0/O1/O2.
-`/private/tmp/fwp-merge-199.py` is prepared but not run; it requires exact-head
-acceptance and all six binary reports, then verifies the squash result.
+`/private/tmp/fwp-merge-199.py` requires that acceptance and six binary reports,
+then verifies the squash result. None of these final acceptance steps has run
+for the current repair.
 
 ## Checks and resources
 
-Use `python3 scripts/local-guard.py COMMAND...` for every local check. The latest
-`python3 /private/tmp/fwp-check-native-default.py` passed formatting, workflow
-lint, documentation links, 106 immutable anchors, seven plan steps and preservation
-of test functions/collector settings in 6.10 seconds after the static-memory repair; the expanded focused workflow
-and final prose still need the publication check. The publication helper also
-checks staged documentation before committing. The inventory-failure control passed in
-0.64 seconds via `python3 /private/tmp/fwp-check-inventory-failure.py` inside the
-guard. No full build or suite ran locally.
+Use `python3 scripts/local-guard.py COMMAND...` for every local check. The
+formatter, workflow/docs audits and preservation of existing test controls passed
+at `51b34e6b`; rerun them for the current edits before publication.
 
-Focused preparation `39883631101` at `93b6b8ed` compiled/linted all test targets;
-six execution targets passed (26 tests). One of 179 library tests failed because
-an HTTP/2 stress probe inherited ARC. Its mode selection, a shared HTTP/2 helper
-and an invalid-option assertion were repaired in `8bf72ec9`; the failed receipt is
-`/private/tmp/fwp-default-ownership-preparation-acceptance.json`. Do not count
-that failed preparation as acceptance or repeat unchanged targets for a green badge.
+The guarded `/private/tmp/fwp-check-static-pressure.py` passed 27 native
+observations for the churn and partly-live-slot cases. The guarded
+`/private/tmp/fwp-check-static-pressure-fixture.py` passed all 54 observations
+using the actual new fixture at O0/O1/O2. These use Apple Clang on ARM64, C emitted
+by the accepted #197 compiler, and the exact working allocator substituted into
+that C. They verify the allocator repair locally, not the new compiler or other
+platforms. Receipts in `/private/tmp/fwp-static-pressure{,-fixture}-verified/`
+retain source/binary hashes, commands and outcomes. No full build ran locally.
 
 Two SDK tests passed in 1.58 seconds through the guard using the accepted #197
 compiler at `/private/tmp/fwp-check-compiler-0367e819/fwp`, Apple Clang and LLVM

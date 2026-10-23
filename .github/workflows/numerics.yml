@@ -178,13 +178,13 @@ jobs:
         if: ${{ !cancelled() && runner.os != 'Windows' }}
         shell: bash
         run: |
-          python3 scripts/run-native-tests.py --targets aot std_tests arc_execution cli_ownership golden_run arc_corpus compiler_options http2_body_roots ffi ad_tape_scopes serializer_leaf_ownership static_memory --idle-timeout 600 --logs native-commands-evidence/targets 2>&1 | tee native-commands-evidence/tests.log
+          python3 scripts/run-native-tests.py --targets aot std_tests arc_execution cli_ownership golden_run arc_corpus compiler_options http2_body_roots ffi ad_tape_scopes serializer_leaf_ownership static_memory native_allocator --idle-timeout 600 --logs native-commands-evidence/targets 2>&1 | tee native-commands-evidence/tests.log
       - name: Windows native execution modes, test cleanup and ownership
         if: ${{ !cancelled() && runner.os == 'Windows' }}
         shell: pwsh
         run: |
           whoami /priv | Out-File native-commands-evidence/privileges.txt
-          python scripts/run-native-tests.py --targets aot std_tests arc_execution cli_ownership golden_run arc_corpus compiler_options http2_body_roots ffi ad_tape_scopes serializer_leaf_ownership static_memory --idle-timeout 600 --logs native-commands-evidence/targets 2>&1 | Tee-Object native-commands-evidence/tests.log
+          python scripts/run-native-tests.py --targets aot std_tests arc_execution cli_ownership golden_run arc_corpus compiler_options http2_body_roots ffi ad_tape_scopes serializer_leaf_ownership static_memory native_allocator --idle-timeout 600 --logs native-commands-evidence/targets 2>&1 | Tee-Object native-commands-evidence/tests.log
           exit $LASTEXITCODE
       - name: Ownership contract and native coverage audits
         if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}

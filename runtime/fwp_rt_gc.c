@@ -509,7 +509,8 @@ static inline char *fwp_gc_chunk_addr(size_t ci) { return fwp_gc.base + (ci << G
 
 static void fwp_gc_collect(void);
 
-/* `k` free chunks in a row (index of the first) */
+/* `k` free chunks in a row, or SIZE_MAX when a bounded heap has no run.
+ * Callers collect and retry: small allocations must also recheck freed slots. */
 static size_t fwp_gc_chunks(size_t k) {
     size_t *rover = k == 1 ? &fwp_gc.rover : &fwp_gc.big_rover;
     size_t run = 0;
@@ -524,17 +525,7 @@ static size_t fwp_gc_chunks(size_t k) {
     /* a free run ending at the top grows into fresh chunks */
     size_t first = fwp_gc.top - run;
 #ifdef FWP_STATIC_MEMORY
-    /* the heap cannot grow: collect, once, before giving up */
-    static int retrying = 0;
-    if (first + k > fwp_gc.nchunks && fwp_gc.armed && !fwp_gc.collecting && !retrying) {
-        retrying = 1;
-        fwp_gc.rover = fwp_gc.big_rover = 0;
-        fwp_gc_collect();
-        fwp_gc.rover = fwp_gc.big_rover = 0;
-        size_t ci = fwp_gc_chunks(k);
-        retrying = 0;
-        return ci;
-    }
+    if (first + k > fwp_gc.nchunks) return SIZE_MAX;
 #endif
     fwp_gc.nfree_chunks -= run;
     fwp_gc_commit(first + k);
@@ -568,6 +559,17 @@ static __attribute__((noinline)) void *fwp_gc_alloc_big(size_t n, int leaf) {
     if ((fwp_gc.budget -= (intptr_t)n) < 0) fwp_gc_spent();
     size_t k = (n + GC_CHUNK - 1) >> GC_SHIFT;
     size_t ci = fwp_gc_chunks(k);
+#ifdef FWP_STATIC_MEMORY
+    if (ci == SIZE_MAX) {
+        if (fwp_gc.armed && !fwp_gc.collecting) {
+            /* Exhaustion needs all dead generations, not only young objects. */
+            fwp_gc.major_next = 1;
+            fwp_gc_collect();
+        }
+        ci = fwp_gc_chunks(k);
+        if (ci == SIZE_MAX) fwp_static_full("heap", fwp_static.heap_bytes, "--heap");
+    }
+#endif
     gc_chunk *m = &fwp_gc.meta[ci];
     m->type = GC_BIG;
     m->leaf = (uint8_t)leaf;
@@ -590,6 +592,19 @@ static __attribute__((noinline)) void *fwp_gc_alloc_big(size_t n, int leaf) {
 /* the free list and the bump space of a class are empty: a new chunk */
 static __attribute__((noinline)) char *fwp_gc_refill(gc_list *l, unsigned c, int leaf) {
     size_t ci = fwp_gc_chunks(1);
+#ifdef FWP_STATIC_MEMORY
+    if (ci == SIZE_MAX) {
+        if (fwp_gc.armed && !fwp_gc.collecting) {
+            fwp_gc.major_next = 1;
+            fwp_gc_collect();
+            /* A partly live chunk can supply slots without becoming free. */
+            char *p = l->free;
+            if (p) { l->free = (char *)~*(uintptr_t *)p; return p; }
+        }
+        ci = fwp_gc_chunks(1);
+        if (ci == SIZE_MAX) fwp_static_full("heap", fwp_static.heap_bytes, "--heap");
+    }
+#endif
     gc_chunk *m = &fwp_gc.meta[ci];
     m->type = GC_SMALL;
     m->leaf = (uint8_t)leaf;

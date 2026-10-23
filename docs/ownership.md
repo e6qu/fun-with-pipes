@@ -110,6 +110,15 @@ The browser-loader and asynchronous WASI extensions accepted in PR #164 also use
 these ownership checks. [Checked ARC delivery](#checked-arc-delivery) records
 their passing evidence under Node and the remaining browser-engine coverage gap.
 
+A tracing executable with `--memory static --heap 1M` must reuse its fixed
+1 MiB pool. When no whole page is available, it performs a full collection,
+including older objects. A small allocation can then reuse a freed slot in a
+partly live page; it need not obtain another whole page. If collection is disabled
+or cannot recover enough space, allocation reports the configured heap limit.
+The pressure and deliberately broken controls are in `tests/native_allocator.rs`;
+`tests/static_memory.rs` also checks repeated language-level allocation. The
+[handoff](development-state.md) records acceptance of the pressure repair.
+
 The compiler first tries to eliminate temporary objects, keep fields as scalars,
 and place eligible values on the stack. Values that still need shared storage
 use typed reference counts where their lifetime is proved. A count reaching zero

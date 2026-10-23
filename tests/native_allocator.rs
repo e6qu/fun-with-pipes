@@ -139,3 +139,87 @@ int main(void) {
         }
     }
 }
+
+#[test]
+fn static_heap_pressure_reclaims_old_pages_and_partly_live_slots() {
+    let dir = fwp::cgen::TempDir::new("static-heap-pressure").unwrap();
+    let source = dir.join("pressure.fwp");
+    let generated = dir.join("pressure.c");
+    std::fs::write(&source, "main = ()\n").unwrap();
+    let emitted = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .args([
+            "build", "--gc", "tracing", "--memory", "static", "--heap", "1M", "--emit-c",
+        ])
+        .arg(&source)
+        .arg("-o")
+        .arg(&generated)
+        .output()
+        .unwrap();
+    assert!(emitted.status.success(), "{emitted:?}");
+    let code = std::fs::read_to_string(&generated).unwrap();
+    let entry = "static void *fwp_main_thread(void *arg) {";
+    let start = "    fwp_gc_start(__builtin_frame_address(0));\n";
+    assert_eq!(code.matches(entry).count(), 1);
+    assert_eq!(code.matches(start).count(), 1);
+    let slots = "            /* A partly live chunk can supply slots without becoming free. */\n            char *p = l->free;\n            if (p) { l->free = (char *)~*(uintptr_t *)p; return p; }";
+    let major = "            fwp_gc.major_next = 1;\n";
+    assert_eq!(code.matches(slots).count(), 1);
+    assert_eq!(code.matches(major).count(), 2);
+    for (variant, program) in [
+        ("repaired", code.clone()),
+        (
+            "missing-slots",
+            code.replace(slots, "            /* omit reclaimed slots */"),
+        ),
+        ("missing-major", code.replace(major, "")),
+    ] {
+        let program = program
+            .replace(
+                entry,
+                &format!(
+                    "{}\n{entry}",
+                    include_str!("fixtures/static_heap_pressure.c")
+                ),
+            )
+            .replace(
+                start,
+                &format!("{start}    static_heap_pressure_probe();\n"),
+            );
+        for opt in ["-O0", "-O1", "-O2"] {
+            let binary = dir.join(format!("{variant}{opt}.exe"));
+            fwp::cgen::compile_c(&program, &binary, opt).unwrap();
+            for kind in ["slots", "pages"] {
+                for collector in ["on", "full", "off"] {
+                    let output = Command::new(&binary)
+                        .env("FWP_STATIC_PROBE", kind)
+                        .env("FWP_GC", collector)
+                        .env("FWP_GC_STATS", "0")
+                        .env_remove("FWP_MEMORY_REPORT")
+                        .env("FWP_GC_STRESS", "0")
+                        .env("FWP_GC_VERIFY", "0")
+                        .env("FWP_REUSE_VERIFY", "0")
+                        .output()
+                        .unwrap();
+                    let exhausted = collector == "off"
+                        || (variant == "missing-slots" && kind == "slots")
+                        || (variant == "missing-major" && kind == "pages" && collector == "on");
+                    assert_eq!(
+                        output.status.code(),
+                        Some(if exhausted { 102 } else { 0 }),
+                        "{variant}/{opt}/{kind}/{collector}: {output:?}"
+                    );
+                    assert!(output.stdout.is_empty(), "{output:?}");
+                    if exhausted {
+                        assert!(
+                            String::from_utf8_lossy(&output.stderr)
+                                .contains("the static heap (1024 KiB) is full"),
+                            "{output:?}"
+                        );
+                    } else {
+                        assert!(output.stderr.is_empty(), "{output:?}");
+                    }
+                }
+            }
+        }
+    }
+}
