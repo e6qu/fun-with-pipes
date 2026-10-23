@@ -3,63 +3,60 @@
 All seven PLAN.md areas remain open. Remove tracing, prefer ownership and borrowing,
 and reserve ARC for needed sharing. JIT is excluded.
 
-## Accepted delivery and current work
+## Current delivery
 
-[PR #203](https://github.com/e6qu/fun-with-pipes/pull/203) passed all nine
-production jobs, docs and 5,118 binary inspections at `460e847b34a7b2691b69f89a4dfea84ea25950b7`.
-Verified squash: `3e3ebd2717f4d77c8d8331e7df1936768546d1ed`. [History](roadmap-history.md#tasks-state-and-runtime-call-cleanup-pr-203)
-and the [inspection record](measurements/task-cleanup-2026-10-23.json) retain evidence.
+[PR #204](https://github.com/e6qu/fun-with-pipes/pull/204) is open at
+`80c89baa53567839dce0599d88f18d5791285943`. Production `40019873535` and docs
+`40019873426` are the final-head gates. Require all nine production jobs, docs,
+full log audits and 6,966 saved binary files across six native hosts before squash
+merge. Use one subject of at most eighty characters and an explicit empty body.
+Do not change that tested branch while its gates run.
 
-**Next:** finish this combined derivative/array delivery. Audit every final-head
-production job and docs; inspect 1,161 saved images on each of six native hosts.
-Only then squash merge with one subject of at most eighty characters and an
-explicit empty body. Continue PLAN.md after the verified merge.
+[PR #203](https://github.com/e6qu/fun-with-pipes/pull/203) is verified merged at
+`3e3ebd2717f4d77c8d8331e7df1936768546d1ed`, with all gates and 5,118 saved files
+accepted. Its redundant same-tree main CI was cancelled; docs were retained.
+[History](roadmap-history.md#tasks-state-and-runtime-call-cleanup-pr-203) records it.
 
-Worktree `/private/tmp/fwp-derivative-array-delivery`, branch
-`derivative-array-cleanup-delivery`, is based on that verified merge. Native code,
-tests, scripts and workflows exactly match `9e9662f93aa5e1f0ebd86b6a31d9396dffe13215` in
-`/private/tmp/fwp-derivative-growth`. Its focused runs `40010961711`,
-`40010966471` and
-`40010970526` passed full log audits and
-1,161-image inspection per host. The focused selection has 50 groups; Linux-only
-storage tests are not Windows support.
+## Independent numerical preparation
 
-## Scope and checks
+**Next:** finish the output-cost diagnostic in `/private/tmp/fwp-descent-output`,
+branch `descent-output-preparation`, based on #204's source. Review and publish an
+immutable preparation source, then dispatch `descent-output` with
+`native_runner=all`. Inspect both Linux runs and actual binaries; repeat stable
+measurements on matching CPU models before drawing timing conclusions. Keep one
+active PR; combine the accepted diagnostic with related work after #204 merges.
 
-Six groups verify detached derivative buffers, callback scopes, borrowed calls,
-array values, buffer-growth failures and workspace cleanup. Repeated work checks
-managed storage balances alongside raw numeric-buffer frees. Missing cleanup,
-invalid scalar counts and stale tape
-handles must fail. Alias/effect programs compare with raw interpretation; a
-10,000-iteration array program checks exact ARC reclamation. The guide introduces
-concepts before examples and distinguishes raw buffers, managed charges and speed.
+The [protocol](measurements/descent-output-protocol.md) compares unchanged full
+output against an external consumer of every result coordinate. It covers fwp
+and coordinate-based C/Rust, fresh inputs, all updates and cleanup. Checksum work
+replaces output construction, so the difference is not pure formatting time.
+No compiler/runtime change or speed result is claimed.
 
-All 308 new local ARM64 outcomes pass, including 116 growth/workspace checks.
-Fourteen runner controls, formatting, docs/examples and inspection manifests pass.
-The new derivative fixture's missing
-scope and misplaced IO were repaired. Its mutable scope survives `longjmp` through
-static storage. Fixture arrays, lists and optional results are released explicitly.
-Windows output setup reports failure. No production runtime or language changes.
-The first combined focused run failed Rust compilation on all three hosts because
-the array test omitted its artifact helper declaration. All failure logs were
-audited; the declaration and affected callers were checked before the passing
-rerun. Saved C execution alone does not verify the Rust harness.
+Sixty untimed ARM64 controls pass (20.45s), using accepted compiler
+`5e17fc10e860b1971ffc9cd9cb57fcb795ccad24` with unchanged compiler/runtime/library
+sources. They cover complete output, exact float bits, omitted coordinates,
+per-solve memory balances and missing releases. Actual C/Rust/fwp binaries were
+inspected. Reports and generated files remain in
+`/private/tmp/fwp-descent-output-controls-v2`; the earlier 36-case run is retained.
+Review corrected the consumer to read bytes instead of aliasing word-backed
+storage as doubles. The shared Rust observer now also supports a checksum report
+after the solve loop. All sixteen existing coordinate/edge controls also pass
+(5.69s), including omitted releases; receipt
+`/private/tmp/fwp-coordinate-controls-output-change.json`.
+Local Clang is not GCC acceptance. Benchmarking runs only on GitHub.
 
 ## Resume records
 
-`/private/tmp/fwp-task-merge.json` records the prior accepted delivery.
-`fwp-growth-preparation.json` identifies focused sources/runs; its acceptance
-receipts and `fwp-growth-ownership-evidence` preserve logs and binary reports.
-Earlier derivative and array preparations retain their focused logs; separate
-975- and 1,045-image inspections are not claimed. `/private/tmp/fwp-derivative-array-publication.json`
-will identify this delivery. Use `fwp-audit-derivative-array-final.py`,
-`fwp-inspect-derivative-array-delivery-builds.py` and
-`fwp-merge-derivative-array.py` for exact-head acceptance.
-Read mutation receipts before resuming; never repeat completed publication/merge.
+`/private/tmp/fwp-derivative-array-publication.json` identifies #204. Use
+`fwp-audit-derivative-array-final.py`, `fwp-inspect-derivative-array-delivery-builds.py`
+and `fwp-merge-derivative-array.py` for exact-head acceptance. Its focused source
+`9e9662f93aa5e1f0ebd86b6a31d9396dffe13215` passed Linux AMD64 and both Windows
+runs, including 3,483 saved binary files. Intermediate 975/1,045-file inspections
+are not claimed. Source tags, logs and failure repairs remain recorded.
 
-Use `python3 scripts/local-guard.py COMMAND...` serially. Full suites and builds
-stay on GitHub; preserve CPU, RSS, disk and deadline limits. Keep immutable source
-tags, reports and failure evidence. Only verified duplicate archives may be pruned.
+Use `python3 scripts/local-guard.py COMMAND...` serially. Full builds, benchmarks
+and suites stay on GitHub. Preserve resource limits and failure evidence. Read
+mutation receipts before resuming; never repeat completed publication or merge.
 
 ## Roadmap status
 
@@ -73,6 +70,9 @@ tags, reports and failure evidence. Only verified duplicate archives may be prun
 | 6 | In progress | Stabilize comparisons and set workload budgets |
 | 7 | In progress | Complete the application acceptance suite |
 
-The largest measured descent case still takes about 10–14 times the C/Rust time.
-Fewer allocations alone do not establish parity. Preserve measured controls and
-separate callback, indexing, output and buffer costs before selecting changes.
+The largest measured descent still takes about 10–14 times C/Rust time. Separate
+output, indexing, callback and buffer costs before selecting optimizations. An
+untimed local review found callback and loop bodies inlined in ARM64 code;
+verbose unused generated C is not evidence of execution overhead. Scheduling
+models from completed Linux CI logs suggest only about two minutes can be saved
+by reordering fixed-duration targets; no runner change or speedup is claimed.

@@ -135,6 +135,9 @@ outside the benchmark suite.
    These are complete implementations, not isolated compiler overhead.
    Next separate callback calls, checked indexing, output construction and buffer
    storage, then set repeatable per-workload budgets before choosing an optimization.
+   The [output-cost protocol](docs/measurements/descent-output-protocol.md) is the
+   next diagnostic: compare full output with a shared checksum consumer while
+   checking every result and storage after every solve. Results are pending.
    Preserve arithmetic/trap order and inspect real code, stack frames and cleanup.
    The [inline experiment](docs/measurements/descent-call-costs.md) failed its
    predeclared speed screen; it does not justify an inlining rule. Resource-owning
