@@ -1,4 +1,4 @@
-# Checking record and variant cleanup without tracing
+# Checking value and call cleanup without tracing
 
 A record groups named fields. Updating one field produces a new value; any
 older value still visible to the program must remain unchanged. Here `String`
@@ -227,3 +227,59 @@ for independent inspection. [The handoff](../development-state.md) records
 commands, sources and actual acceptance. The byte charge covers managed value
 storage, not process memory, allocator metadata or task stacks. These are cleanup
 checks, not timing benchmarks or a comparison with C/Rust application speed.
+
+## Task callbacks and cancellation
+
+A task runs a function that may pause while other tasks run. A callback is the
+function supplied to that task. Its captured values must stay alive until the
+task finishes or is cancelled. For example:
+
+```fwp
+plain : String -> () -> I64
+plain = curry (.0 | string.length)
+main = task.spawn (plain ("input" | string.repeat 2)) | task.await | echo
+```
+
+`string.repeat 2` produces `"inputinput"`. `curry` turns the tuple-taking body
+into two single-argument calls: supplying the text leaves a function waiting
+for unit, written `()`. `task.spawn` starts that function; `task.await` waits
+for it and returns an optional result. Successful completion contains `10`,
+the text length. A cancelled task has no result. `echo` prints the returned value.
+
+Three test groups extend these lifetime checks to explicit ARC and tracing:
+
+| Group | What must survive or be released |
+|---|---|
+| [Retained callbacks](../../tests/retained_thunk_ownership.rs) | Captures and outside aliases across completion, cancellation before entry and cancellation after suspension; cleanup when task-stack allocation, scope growth or a retain fails |
+| [Deadlines](../../tests/within_thunk_ownership.rs) | The caller's callback alias survives both success and timeout; the consumed owner, result and duration storage are released |
+| [Scopes](../../tests/scope_thunk_ownership.rs) | Results, child-task arrays and error handlers are cleaned up or restored when cancellation happens before entry or after producing a result |
+
+Each internal probe repeats 32 rounds. Every ARC round restores the starting
+managed byte allowance, leaves no separate wide-count entries and performs no
+collection. Final scheduler shutdown must restore the full allowance. Integer
+bits resembling a managed pointer remain integers. Outside aliases retain their
+contents and exact owner counts. These checks measure managed storage charges,
+not process resident memory or elapsed-time overhead.
+
+Negative controls deliberately omit result, callback, task, scope or final-owner
+cleanup, publish a failed task too early, or omit handler restoration. Each must
+fail its specified observation. Removing a final duration/scalar release must
+fail the byte-balance check with status 90. Clearing callback ownership metadata
+must trap in ARC while leaving its caller's owners available for cleanup;
+tracing's separately tested uncounted behavior does not establish ARC support.
+
+Fixtures now explicitly own their raw injected tasks and free their temporary
+durations. The older tracing fixtures could leave that storage to collection.
+No production runtime rule changes. Tracing stress and poisoned-storage checks
+remain until their replacements have full native acceptance.
+
+Probe C and complete-program C are emitted at compiler O2 with dynamic storage
+and stack placement disabled, then compiled at C O1 and O2. Complete programs
+must match the unoptimized interpreter's output, errors and exit status. The
+78 saved callback outcomes include the deliberately broken programs; their C,
+actual binaries, output and status are retained for inspection. Together with
+the earlier groups, the expanded inspection expects 647 images per host.
+
+Local ARM64 checks are preparation evidence only. GCC, both Windows hosts and
+all six final native hosts still need their exact-source checks. See the
+[handoff](../development-state.md) for current sources and accepted runs.
