@@ -7,7 +7,10 @@ void setup(uintptr_t *descriptors) {
     intptr_t budget=fwp_gc.budget;
     for(int i=0;i<32;i++) if(!probe(i)) exit(247);
     if(fwp_gc.ncollect || fwp_gc.enabled) exit(248);
-    if(!fwp_reuse_verify && fwp_gc.budget<budget) exit(248);
+#ifndef FWP_ARC_ONLY
+    if(!fwp_reuse_verify)
+#endif
+    if(fwp_gc.budget<budget) exit(248);
     V address=fwp_rc_fresh(fwp_cstr("127.0.0.1:0"));
     V listener=fwp_p_tcp_listen(address,NULL);
     V target=fwp_rc_fresh(fwp_p_local_addr(listener));

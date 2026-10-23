@@ -103,7 +103,11 @@ int main(void) {
     if (*fwp_rc_slot(owned)!=1 || ARR(owned)->len!=1 || fwp_f64(ARR(owned)->d[0])!=1) return 76;
     fwp_rc_free_arr(owned);
     uint8_t *remaining=fwp_rc_slot(owned);
-    if (fwp_reuse_verify ? ARR(owned)->len!=0 : (remaining && *remaining!=0)) return 77;
+#ifndef FWP_ARC_ONLY
+    if (fwp_reuse_verify) { if (ARR(owned)->len!=0) return 77; }
+    else
+#endif
+    if (remaining && *remaining!=0) return 77;
     fwp_cleanup_pop(&owned_cleanup);fwp_tape_scope_release(&owned_scope);
     printf("scoped autodiff releases callback tapes; tape=%zu align=%zu scope=%zu cleanup=%zu\n",
            sizeof(fwp_tape),_Alignof(fwp_tape),sizeof(fwp_tape_scope),sizeof(fwp_cleanup));

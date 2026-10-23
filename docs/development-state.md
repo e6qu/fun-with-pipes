@@ -14,28 +14,43 @@ and 816 observations. The tree, sole parent and one-line message were verified.
 records the evidence. Redundant main production CI was cancelled; docs were kept.
 
 [PR #199](https://github.com/e6qu/fun-with-pipes/pull/199) is the only open delivery.
-Published source: `4e16d81cf3b0f66ccf7933339b44521fa7315dd1`, branch
+Published source: `3321091d8dcdda1ee3041288cbda4c9cad06c089`, branch
 `checked-native-default`, worktree `/private/tmp/fwp-checked-native-default`.
-Production run `39900026387` is still running; documentation `39898452054` passed.
-The benchmark and both ARM macOS jobs also passed with complete logs audited.
-Remaining jobs have reported no failed step. **Do not merge this source:** the
-independent late-option probe found the ownership defect described below.
+The PR is draft. Focused run `39906577400` failed one of 53 integration tests:
+`ad_tape_scopes` referenced tracing-only diagnostic state in an ARC probe.
+All other integration tests, all 179 library tests, compiler/lint checks,
+inventory and coverage audits passed. The complete log is audited in
+`/private/tmp/fwp-arc-metadata-focused-acceptance.json`.
 
-The complete working repair is in `/private/tmp/fwp-arc-metadata-cleanup`, branch
-`arc-metadata-cleanup`, based on `4e16d81c`. It belongs in PR #199, not a second PR.
-The primary checkout stays detached at #198 and holds the live copy of this file.
+The repository audit found the same issue in cached-map cleanup and TCP/UDP
+library-unload probes. The working repair preserves physical-free assertions in
+ARC and poison assertions in tracing, with a deliberately missing autodiff
+release as a failure control. The focused suite now includes cached maps and
+socket ownership (fifteen targets). Tracing-only probes retain their diagnostics;
+no fake runtime flag or ARC poisoning path is added.
+The clean preparation worktree `/private/tmp/fwp-arc-metadata-cleanup` remains
+at `3321091d`; edit only the delivery worktree. The primary checkout stays detached
+at #198 and holds this live handoff.
+
+The superseded `4e16d81c` run `39900026387` was cancelled after the grouped repair
+was pushed. Both ARM macOS jobs, benchmarks and docs passed; six platform jobs
+were interrupted. All ten completed logs have been audited: no unexpected
+compiler/test diagnostic, only the six requested cancellation errors. This is
+partial evidence, not acceptance of either revision. Retained audit:
+`/private/tmp/fwp-199-production-acceptance-4e16d81c.json`.
+
+**Next:** finish focused local probe/format/doc checks, commit and publish all
+probe repairs together, and dispatch the expanded focused suite. Keep the PR draft
+until its exact-source job and independent audits pass, then start nine production
+jobs and docs. Inspect actual default and allocator binaries on six native
+platforms before squash merge. Verify the tree, sole parent and one-line message
+(maximum 80 characters, empty body), then continue PLAN.md. No permission question
+is pending and no automatic merge is queued.
+
 Publication state: `/private/tmp/fwp-default-ownership-publication.json`.
-Its `knownUnresolved` field prevents acceptance/merge of the obsolete source.
-
-**Next:** finish the staged docs/test review, commit the grouped repair and
-fast-forward the delivery branch to it. Audit every completed or failed current
-job before pushing; cancel the obsolete run once its replacement is ready.
-Keep the PR draft during a thirteen-target `native-commands` Linux AMD64 check.
-After that exact-source job and its audits pass, mark the PR ready for nine full
-production jobs and docs. Inspect actual default and allocator-metadata binaries
-on all six native platforms, then squash-merge with a one-line subject of at most
-80 characters and an empty body. Verify tree, sole parent and message, then
-continue PLAN.md. No permission question is pending.
+Its `knownUnresolved` marker records the failed probe audit. Preserve earlier
+receipts and create new source-specific publication/dispatch/ready records; do not
+rerun completed helpers or use the thirteen-target acceptance for the new suite.
 
 ## What this PR changes
 
@@ -60,7 +75,7 @@ The original 1 MiB limit remains. Deliberately removing each fix, or disabling
 collection, produces the expected exhaustion. These repairs passed the focused
 run and both ARM macOS full jobs at `4e16d81c`.
 
-The working repair additionally prevents a host's late `FWP_REUSE_VERIFY` change
+The published repair additionally prevents a host's late `FWP_REUSE_VERIFY` change
 from retaining released ARC objects, arrays, files and sockets. ARC excludes those
 diagnostic paths at compilation time; invalid startup options still fail.
 Unused mark storage and age checks are removed from ARC, along with the collector's
@@ -83,6 +98,13 @@ full suites and large measurements stay on GitHub. Local C checks use Apple Clan
 on ARM64, C emitted by accepted compiler #197, and the exact working runtime
 substituted into it. They do not establish new-compiler or other-platform support.
 
+- `/private/tmp/fwp-check-probe-repair.py` passed eight ARM64 binaries and twelve
+  observations at O1/O2 (4.83 seconds): scoped autodiff cleanup succeeds in both
+  ownership modes, and removing the output release fails with status 77. Tracing
+  also checks poisoned storage. Results: `/private/tmp/fwp-probe-repair/results.json`.
+- `/private/tmp/fwp-check-probe-docs.py` passed focused Rust formatting, whitespace,
+  107 doc link sets, 106 immutable anchors, all seven roadmap rows and thirteen
+  native test coverage/failure controls (10.52 seconds). No full local build ran.
 - Static-pressure checks passed 27 observations, then 54 using the tracked fixture
   at O0/O1/O2. Nine actual ARM64 binaries were inspected. Evidence:
   `/private/tmp/fwp-static-pressure{,-fixture}-verified/`.
@@ -109,16 +131,25 @@ environment, avoiding another compilation per program.
 
 ## Resume tools and resource limits
 
-`/private/tmp/fwp-audit-199-final.py` audits the registered production/docs jobs and
-records known unresolved issues. Completed publication/dispatch/ready helpers must
-not be rerun. Prepare new ones for the metadata repair's source/tag; the old ready
-helper validates the previous static-pressure tag. Archive receipts when changing
-sources. Current failed or unfinished runs are not acceptance.
+`/private/tmp/fwp-audit-199-final.py` audits registered final production/docs jobs.
+Do not run it until the new full runs are registered. Existing receipts are tied
+to their source; archive them before any further repair. Completed publication,
+dispatch and ready helpers must not be rerun.
 
-Extend `/private/tmp/fwp-inspect-default-builds.py` and `/private/tmp/fwp-merge-199.py`
-to require the new allocator-metadata evidence as well as the existing three default
-binaries per host. Merge still requires all nine exact-source production jobs and
-docs, with fresh live confirmation. No automatic merge is queued.
+`/private/tmp/fwp-inspect-default-builds.py` now requires explicit default and
+metadata artifact/job arguments. Linux/Windows use the same artifact for both;
+macOS default binaries come from the regular job and metadata binaries from the
+GC job (`ownership-evidence-gc-macOS-{ARM64,X64}`). Each host needs three default
+and twelve metadata binaries, with sixty metadata observations. No final images
+have been inspected for the pending repair yet. Windows legitimately uses the stack-bound
+API for contexts/static memory; inspect the collector entry at O0 rather than
+banning that import globally. `/private/tmp/fwp-merge-199.py` requires all six
+expanded reports plus fresh exact-source confirmation of all ten checks. The
+Windows ARM64 check uses `/private/tmp/fwp_pe_startup.py` to resolve O0 import
+loads/calls from LLVM disassembly and PE symbol addresses, rejecting unresolved
+indirect calls. `/private/tmp/fwp-check-windows-startup-inspection.py` confirmed
+both native Windows architectures identify the old stack query in accepted #198
+binaries (0.13 seconds); a name-only ARM64 search would have missed it.
 
 Keep local work serial and guarded: 64 GiB free disk, generated target data below
 2 GiB, sampled aggregate RSS below 1 GiB and a 180-second deadline. Never raise
