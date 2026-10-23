@@ -83,6 +83,16 @@ example and the 1,045-image manifest pass (11.51s guarded). Windows binary outpu
 setup now reports failure explicitly; native Windows verification is pending.
 Full final native acceptance remains required.
 
+The first array source `455d4ea904f2636cb9f557a5c8539f92f1510c02` failed all
+three focused compiler checks: Linux `40006880672`, Windows AMD64 `40006884490`,
+Windows ARM64 `40006888933`. Full logs show the same missing `record_probe`
+module declaration at five call sites in `array_element_ownership.rs`. Native
+batches could not start; Linux's 179 library tests and runner controls passed.
+The declaration is restored, all saver users were audited, and the new one-character
+replacement uses a character pattern. Generated C and local outcomes are unchanged.
+Failure evidence: `/private/tmp/fwp-array-failure-audit.json` and its three logs.
+The repaired source requires fresh focused CI before any acceptance claim.
+
 ## Resume records
 
 `/private/tmp/fwp-task-publication.json` identifies #203 and its runs;

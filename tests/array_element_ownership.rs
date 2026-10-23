@@ -3,6 +3,9 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Command, Output, Stdio};
 
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -387,7 +390,7 @@ main = (10000, 0) | loop step | echo
                             "return fwp_p_array_sort_typed(",
                             "V result = fwp_p_array_sort_typed(",
                         )
-                        .replace(";", "; fwp_rc_dup(result); return result;")
+                        .replace(';', "; fwp_rc_dup(result); return result;")
                     } else {
                         line.to_owned()
                     }
