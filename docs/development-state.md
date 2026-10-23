@@ -81,6 +81,25 @@ formatter memory observations and native C/Rust buffer cleanup. The new workflow
 Rust formatting and documentation checks pass; full builds remain on GitHub.
 Receipt: `/private/tmp/fwp-float-measurement-v1/results.json`.
 
+Formatter preparation `5476466183f7adc663d54dc69118fdb69225f8f8` is published
+under `roadmap/preparation-float-text-5476466183f7`. Run `40027402138` checks six
+native hosts and measures Linux; `40027406689` repeats only Linux measurements.
+Both Linux and both macOS correctness jobs passed complete-log audits. Windows
+AMD64 and ARM64 failed the new summary's LF-only assertion despite zero numerical
+mismatches and zero canary failures; all three other test targets passed on each.
+Every completed target and failed job has been audited. The repair parses exactly
+one line, accepting platform line endings,
+and saves every O1/O2 corruption case before reporting collected failures.
+Publish the checked repair. Runtime and measurement sources remain
+unchanged; preserve the active measurements. `float-text-checks` reruns correctness
+without repeating benchmarks. Failure evidence is retained in `/private/tmp`.
+
+Both longer output runs passed complete-log audits and all 676 binary inspections.
+The [report](measurements/descent-output-longer.md) records matching AMD EPYC 7763
+and Neoverse-N2 models, all samples and three inconclusive AMD64 pairs. Nine of
+twelve pairs pass both runs' controls. All four downloaded ZIP caches were pruned
+only after inspection, digest checks and verification of unexpired remote originals.
+
 For #204, macOS ARM64 regular/stress, benchmarks and docs have passed full-log
 audits; all 1,161 macOS ARM64 files passed independent inspection (26.14s).
 Both local ZIPs were pruned after verifying remote originals. Six other native

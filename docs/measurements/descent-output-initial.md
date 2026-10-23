@@ -73,8 +73,9 @@ can make allocations observable: the uninstrumented AMD64 Rust zero-update
 program removes an unused buffer, while its instrumented counterpart records two.
 Profile counts therefore are not allocation traces of the timed executables.
 
-The next run uses explicit per-input repetition counts to reduce short-process
-noise, preserving every failed control above. Separately, source review identifies
+The [longer repetitions](descent-output-longer.md) use explicit per-input solve
+counts to reduce short-process noise, preserving every failed control above.
+Separately, source review identifies
 repeated float-to-text conversion in `runtime/fwp_rt_ops.c`; a candidate must
 preserve interpreter/native text, numerical boundaries, stack costs and cleanup
 and pass a paired timing protocol before being accepted as an improvement.

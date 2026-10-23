@@ -99,6 +99,7 @@ fn float_text_matches_frozen_precision_and_detects_corruption() {
         "int main(int argc, char **argv)",
         "int saved_main(int argc, char **argv)",
     );
+    let mut failures = Vec::new();
     for opt in ["-O1", "-O2"] {
         for (label, control, status) in [
             ("checked", 0, 0),
@@ -122,22 +123,22 @@ fn float_text_matches_frozen_precision_and_detects_corruption() {
                 &executable,
                 &actual,
             );
-            assert_eq!(
-                actual.status.code(),
-                Some(status),
-                "{label} {opt}: {actual:?}"
-            );
-            let text = String::from_utf8(actual.stdout).unwrap();
-            assert!(
-                text.starts_with("float-text values=119768 precisions="),
-                "{text}"
-            );
-            if status == 0 {
-                assert!(actual.stderr.is_empty());
-                assert!(text.ends_with("mismatches=0 bounds=0\n"), "{text}");
+            let text = std::str::from_utf8(&actual.stdout);
+            let summary_ok = text.is_ok_and(|text| {
+                let lines: Vec<_> = text.lines().collect();
+                matches!(lines.as_slice(), [line]
+                    if line.starts_with("float-text values=119768 precisions=")
+                    && (status != 0 || line.ends_with("mismatches=0 bounds=0")))
+            });
+            if actual.status.code() != Some(status)
+                || !summary_ok
+                || (status == 0 && !actual.stderr.is_empty())
+            {
+                failures.push(format!("{label} {opt}: {actual:?}"));
             }
         }
     }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
 #[test]

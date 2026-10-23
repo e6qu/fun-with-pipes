@@ -2,7 +2,7 @@
 
 This is a candidate optimization, not an accepted speed improvement. It changes
 native F64/F32 text conversion while preserving the text printed by existing
-programs. The [output experiment](descent-output-initial.md) motivates measuring
+programs. The [output experiment](descent-output-longer.md) motivates measuring
 this cost; it does not establish the benefit of this particular change.
 
 For example, `0.30000000000000004 | echo` must still print
@@ -87,6 +87,10 @@ experiment completed; the saved `meetsSingleRunScreen` field is not final
 acceptance. Repeat measurements with `suite=float-text-costs` and
 `native_runner=all`; this does not repeat the unchanged six-host correctness
 jobs. No speed result has been established yet.
+`suite=float-text-checks` runs only the six native correctness jobs, so a test
+repair does not repeat unchanged benchmarks. The Windows probe uses CRLF in its
+one-line summary; the Rust test parses a line rather than requiring LF bytes.
+Ordinary fwp output still requires exact agreement with the interpreter.
 
 See [benchmark guidance](../benchmarks.md) for interpreting ratios and
 [the handoff](../development-state.md) for current source and run identities.

@@ -71,8 +71,11 @@ report preserves one failed timing control and explains the different memory sco
 The [output-cost protocol](measurements/descent-output-protocol.md) next compares
 ordinary printing with a shared consumer of every result coordinate. Its
 [initial result](measurements/descent-output-initial.md) passes correctness and
-binary inspection but has five inconclusive timing rows. Longer runs are pending;
-the protocol explains why its checksum variant is not pure arithmetic time.
+binary inspection but has five inconclusive timing rows. The
+[longer repetitions](measurements/descent-output-longer.md) pass repeated controls
+for nine of twelve input/host pairs, including the largest on both architectures;
+three AMD64 pairs remain inconclusive. The protocol explains why the checksum
+variant is not pure arithmetic time.
 The [float-text candidate](measurements/float-text.md) tests reuse of rounded
 decimal digits against the original formatter with exactly matching output.
 Its timing, stack and code-size comparison is not yet accepted.
