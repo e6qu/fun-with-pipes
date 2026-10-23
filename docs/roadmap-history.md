@@ -12,6 +12,24 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Derivative storage, arrays and borrowed callbacks (PR #204)
+
+Six groups extend cleanup checks to derivative buffers and scopes, borrowed
+callbacks, array values, failed buffer growth and workspace caches. Repeated
+computations must release their temporary values; deliberately omitted cleanup
+must fail. The examples explain what owns each value. Compiler/runtime behavior
+is unchanged; these are correctness checks, not a timing improvement.
+
+[PR #204](https://github.com/e6qu/fun-with-pipes/pull/204) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40019873535)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40019873426)
+at `80c89baa53567839dce0599d88f18d5791285943`, with complete logs audited.
+The [inspection record](measurements/derivative-array-cleanup-2026-10-24.json)
+contains 6,966 saved binaries on six native hosts, including 6,876 aggregate cleanup
+outcomes and 360 allocator observations. Counts describe saved outcomes, not
+unique source programs. Verified squash `2ba458a9a8049a33c2fa5c73a374c83c8fe34e10` has the tested tree
+and one subject without a body or trailers. All seven roadmap areas remain open.
+
 ## Tasks, state and runtime call cleanup (PR #203)
 
 Seven groups check task callbacks, handles, state, deadlines, channel values and

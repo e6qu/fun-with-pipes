@@ -114,12 +114,11 @@ outside the benchmark suite.
    [PR #203](docs/roadmap-history.md#tasks-state-and-runtime-call-cleanup-pr-203)
    extends delivery evidence to task callbacks and handles, state, deadlines,
    channel values and runtime-selected calls.
-   [Derivative buffers and scopes](docs/measurements/record-cleanup.md#derivative-buffers-and-callback-scopes)
-   and [arrays and borrowed callbacks](docs/measurements/record-cleanup.md#arrays-and-borrowed-callbacks),
-   together with [growth and workspace cleanup](docs/measurements/record-cleanup.md#derivative-growth-and-workspace-cleanup),
-   are the current grouped extension. Their focused source passes; this delivery
-   still needs all final native gates. Extend remaining collector-specific checks
-   before removing tracing.
+   [PR #204](docs/roadmap-history.md#derivative-storage-arrays-and-borrowed-callbacks-pr-204)
+   verifies derivative buffers/scopes, array values, borrowed callbacks, failed
+   growth and workspace caches on all six native hosts. Extend the remaining
+   collector-specific checks before removing tracing; completed groups are
+   evidence, not a backlog.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
    [Integer counting](docs/measurements/integer-counting.md) and
    [checked products](docs/measurements/checked-products.md) preserve slower
@@ -133,8 +132,15 @@ outside the benchmark suite.
    measures 10.40–13.69× C time and 11.86–14.07× Rust time for the largest case.
    Eleven of twelve identical-copy controls pass; one remains inconclusive.
    These are complete implementations, not isolated compiler overhead.
-   Next separate callback calls, checked indexing, output construction and buffer
-   storage, then set repeatable per-workload budgets before choosing an optimization.
+   The [repeated output diagnostic](docs/measurements/descent-output-longer.md)
+   identifies output construction and float printing as major costs. Nine of
+   twelve input/host pairs pass repeated controls; three smaller AMD64 pairs
+   remain inconclusive. It compares full output with a checksum consumer, not
+   isolated arithmetic. The [formatter change](docs/measurements/float-text.md)
+   passes six-host correctness and the [repeated speed screen](docs/measurements/float-text-results.md),
+   with stack and code-size costs reported. Its final delivery gates remain
+   required. Next measure the remaining
+   callback, checked-indexing and buffer costs against equivalent-work budgets.
    Preserve arithmetic/trap order and inspect real code, stack frames and cleanup.
    The [inline experiment](docs/measurements/descent-call-costs.md) failed its
    predeclared speed screen; it does not justify an inlining rule. Resource-owning

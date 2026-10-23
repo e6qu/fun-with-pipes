@@ -350,6 +350,28 @@ jobs:
         id: standalone_compiler
         if: ${{ !cancelled() }}
         run: cargo build --release --bin fwp
+      - name: Numerical output and lifetime controls
+        if: ${{ !cancelled() && steps.standalone_compiler.outcome == 'success' }}
+        shell: bash
+        run: |
+          case "$RUNNER_ARCH" in
+            X64) output_arch=x86-64 ;;
+            ARM64) output_arch=armv8-a ;;
+            *) echo "Unsupported numerical control architecture: $RUNNER_ARCH" >&2; exit 1 ;;
+          esac
+          python3 scripts/test-descent-output.py --compiler target/release/fwp \
+            --cc gcc --rustc rustc --c-arch "$output_arch" --objdump objdump --nm nm \
+            --output "$RUNNER_TEMP/descent-output-controls"
+          python3 scripts/test-coordinate-work.py --cc gcc --rustc rustc \
+            --c-arch "$output_arch" --output "$RUNNER_TEMP/coordinate-controls.json"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: numerical-output-controls-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            ${{ runner.temp }}/descent-output-controls/
+            ${{ runner.temp }}/coordinate-controls.json
+          if-no-files-found: warn
       - name: Iterator and state allocation and binary evidence
         if: ${{ !cancelled() && steps.standalone_compiler.outcome == 'success' }}
         run: |

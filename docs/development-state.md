@@ -1,65 +1,81 @@
 # Session handoff
 
 All seven PLAN.md areas remain open. Remove tracing, prefer ownership and borrowing,
-and reserve ARC for needed sharing. JIT is excluded.
+and reserve ARC for necessary sharing. JIT is excluded.
 
-## Accepted delivery and current work
+## Current action
 
-[PR #203](https://github.com/e6qu/fun-with-pipes/pull/203) passed all nine
-production jobs, docs and 5,118 binary inspections at `460e847b34a7b2691b69f89a4dfea84ea25950b7`.
-Verified squash: `3e3ebd2717f4d77c8d8331e7df1936768546d1ed`. [History](roadmap-history.md#tasks-state-and-runtime-call-cleanup-pr-203)
-and the [inspection record](measurements/task-cleanup-2026-10-23.json) retain evidence.
+**Next:** finish this grouped formatter/output delivery: audit all nine final-head
+production jobs and documentation, then inspect the native binaries. Require
+7,158 saved files: 6,966 ownership/cleanup files, 72 float cases and 120 Linux
+output/lifetime controls. The publication receipt under `/private/tmp` records
+the final source, PR and run IDs; preparation evidence does not replace them.
+Squash merge only after final acceptance, with one subject at most eighty
+characters and an explicit empty body. Continue the roadmap after that merge.
 
-**Next:** finish this combined derivative/array delivery. Audit every final-head
-production job and docs; inspect 1,161 saved images on each of six native hosts.
-Only then squash merge with one subject of at most eighty characters and an
-explicit empty body. Continue PLAN.md after the verified merge.
+Worktree `/private/tmp/fwp-float-delivery`, branch `float-output-delivery`, is based
+on verified #204 squash `2ba458a9a8049a33c2fa5c73a374c83c8fe34e10`.
+Compiler/runtime, language tests, measurement scripts and workflows match
+preparation `d7ad3e55f38685d3abaaa9c87badc3a8fc4a045f`, apart from removing one
+extra final blank line in the frozen test oracle. The local resource guard
+also repairs an exit/signalling race; six regression and disk tests pass with
+all resource limits unchanged.
+Documentation includes its accepted measurements and #204's final evidence.
+Local source identity, roadmap/link, Python syntax and workflow checks passed
+(3.13s). The guard repair passed six tests (1.65s); repeated inspection then
+passed all 120 AMD64 binaries (13.68s). Real permission failures still stop work.
+All inspected preparation ZIP caches were pruned after checking remote originals.
 
-Worktree `/private/tmp/fwp-derivative-array-delivery`, branch
-`derivative-array-cleanup-delivery`, is based on that verified merge. Native code,
-tests, scripts and workflows exactly match `9e9662f93aa5e1f0ebd86b6a31d9396dffe13215` in
-`/private/tmp/fwp-derivative-growth`. Its focused runs `40010961711`,
-`40010966471` and
-`40010970526` passed full log audits and
-1,161-image inspection per host. The focused selection has 50 groups; Linux-only
-storage tests are not Windows support.
+Use `fwp-float-delivery-publication.json`, `fwp-audit-float-delivery-final.py` and
+`fwp-inspect-float-delivery-{ownership,text,controls}.py` under `/private/tmp`.
+`fwp-merge-float-delivery.py` requires every final gate and inspection before its
+one-line squash; `fwp-after-merge-float-delivery.py` verifies the primary guard
+repair before preserving the handoff and advancing to that merge.
 
-## Scope and checks
+## Scope and verified preparation
 
-Six groups verify detached derivative buffers, callback scopes, borrowed calls,
-array values, buffer-growth failures and workspace cleanup. Repeated work checks
-managed storage balances alongside raw numeric-buffer frees. Missing cleanup,
-invalid scalar counts and stale tape
-handles must fail. Alias/effect programs compare with raw interpretation; a
-10,000-iteration array program checks exact ARC reclamation. The guide introduces
-concepts before examples and distinguishes raw buffers, managed charges and speed.
+The formatter reuses already-rounded scientific digits for fixed decimal output.
+The [report](measurements/float-text-results.md) explains why this saves work,
+all input timings, matching-model acceptance, the remaining C/Rust gap and the
+larger stack/code costs. Allocation counts and per-solve live storage are unchanged.
+Six native jobs pass at `550ef3157720`; twelve saved cases per host cover exact
+ordinary/JSON output, rounding and deliberately corrupted results. The first
+Windows attempt found an LF-only summary assertion; its repaired line parser
+passes both Windows hosts. Runtime and measurement sources did not change.
 
-All 308 new local ARM64 outcomes pass, including 116 growth/workspace checks.
-Fourteen runner controls, formatting, docs/examples and inspection manifests pass.
-The new derivative fixture's missing
-scope and misplaced IO were repaired. Its mutable scope survives `longjmp` through
-static storage. Fixture arrays, lists and optional results are released explicitly.
-Windows output setup reports failure. No production runtime or language changes.
-The first combined focused run failed Rust compilation on all three hosts because
-the array test omitted its artifact helper declaration. All failure logs were
-audited; the declaration and affected callers were checked before the passing
-rerun. Saved C execution alone does not verify the Rust harness.
+Timing sources `5476466183f7` and `d7ad3e55f386` have identical runtime and benchmark
+inputs. Runs `40027402138`, `40027406689`, `40032008445` retain five measurements,
+including unmatched CPU models. Matching pairs satisfy the original 2% copy-control
+limit and 5% largest-case reduction on both architectures. All 600 timing/control
+images and 72 native correctness images passed independent binary inspection.
+The first mixed workflow retains its old Windows failures; its timing jobs passed.
+Later six-host correctness evidence verifies the repair. Do not label that entire
+initial workflow successful or replace final-head gates with preparation evidence.
 
-## Resume records
+The [output diagnostic](measurements/descent-output-longer.md) separately compares
+ordinary printing with a shared checksum consumer. It passed 676 binary checks;
+nine of twelve input/host pairs pass repeated controls. Three smaller AMD64 pairs
+remain inconclusive and cannot set budgets. Initial results and all samples remain
+linked. Checksum work is not pure arithmetic or isolated formatting time.
 
-`/private/tmp/fwp-task-merge.json` records the prior accepted delivery.
-`fwp-growth-preparation.json` identifies focused sources/runs; its acceptance
-receipts and `fwp-growth-ownership-evidence` preserve logs and binary reports.
-Earlier derivative and array preparations retain their focused logs; separate
-975- and 1,045-image inspections are not claimed. `/private/tmp/fwp-derivative-array-publication.json`
-will identify this delivery. Use `fwp-audit-derivative-array-final.py`,
-`fwp-inspect-derivative-array-delivery-builds.py` and
-`fwp-merge-derivative-array.py` for exact-head acceptance.
-Read mutation receipts before resuming; never repeat completed publication/merge.
+## Accepted preceding delivery
 
-Use `python3 scripts/local-guard.py COMMAND...` serially. Full suites and builds
-stay on GitHub; preserve CPU, RSS, disk and deadline limits. Keep immutable source
-tags, reports and failure evidence. Only verified duplicate archives may be pruned.
+[PR #204](https://github.com/e6qu/fun-with-pipes/pull/204) passed nine production
+jobs, docs and 6,966 binary inspections at `80c89baa53567839dce0599d88f18d5791285943`.
+[History](roadmap-history.md#derivative-storage-arrays-and-borrowed-callbacks-pr-204)
+and the [inspection record](measurements/derivative-array-cleanup-2026-10-24.json)
+retain source, merge, logs and six-host outcomes. Cleanup checks remain required
+when the runtime changes; they do not establish complete removal of tracing.
+
+## Resume rules
+
+Use `python3 scripts/local-guard.py COMMAND...` serially; full builds, suites and
+benchmarks stay on GitHub. Keep at least 64 GiB free disk and never raise limits.
+Read receipts before mutations. Preserve failure evidence, unique results and
+immutable source tags; prune only inspected duplicate caches after remote checks.
+Keep one active PR. Publication and squash merge after passing final gates are
+authorized; every commit is one line, at most eighty characters, without trailers
+or attribution. Python package initializers stay empty; imports stay at file top.
 
 ## Roadmap status
 
@@ -72,7 +88,3 @@ tags, reports and failure evidence. Only verified duplicate archives may be prun
 | 5 | In progress | Validate CPU numerical kernels |
 | 6 | In progress | Stabilize comparisons and set workload budgets |
 | 7 | In progress | Complete the application acceptance suite |
-
-The largest measured descent case still takes about 10–14 times the C/Rust time.
-Fewer allocations alone do not establish parity. Preserve measured controls and
-separate callback, indexing, output and buffer costs before selecting changes.

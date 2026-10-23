@@ -72,12 +72,12 @@ def observe_peer_inputs(code, language, arrangement, mode):
         marker = '    writeln!(output, "]")'
         assert code.count(marker) == 1
         code = code.replace(marker, f'    let result = writeln!(output, "]");\n    std::mem::forget({buffer});\n    result')
-    marker = ' { workload()?; } Ok(()) }'
-    assert code.count(marker) == 1 and code.count('for _ in 0..') == 2
-    # The workload has its own update loop; rename only the final solve loop.
+    # Only the final solve loop gets an observation. A consumer may report a
+    # checksum after that loop; it does not change the buffer lifetime boundary.
     prefix, wrapper = code.rsplit('fn main() -> io::Result<()> {', 1)
-    wrapper = wrapper.replace('for _ in 0..', 'for solve in 0..')
-    return prefix + 'fn main() -> io::Result<()> {' + wrapper.replace(marker, ' { workload()?; observe_inputs(solve + 1); } Ok(()) }')
+    loop, = re.findall(r'for _ in 0\.\.\d+ \{ workload\(\)\?; \}', wrapper)
+    observed = loop.replace('for _ in', 'for solve in').replace('workload()?;', 'workload()?; observe_inputs(solve + 1);')
+    return prefix + 'fn main() -> io::Result<()> {' + wrapper.replace(loop, observed)
 
 
 def main():

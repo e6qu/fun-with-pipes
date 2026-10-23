@@ -34,8 +34,13 @@ def stop(sig):
     if child:
         try: os.killpg(child.pid,sig)
         except ProcessLookupError: pass
-        except PermissionError:
-            if child.poll() is None: raise
+        except PermissionError as error:
+            # macOS can report EPERM while the last group member is exiting,
+            # before a nonblocking wait observes its status. Reap that exit;
+            # a still-live child remains a hard signalling failure.
+            if child.poll() is None:
+                try: child.wait(timeout=0.1)
+                except subprocess.TimeoutExpired: raise error
     for pid in tracked:
         if child and pid == child.pid and child.poll() is not None: continue
         try: os.kill(pid,sig)
