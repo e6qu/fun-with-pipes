@@ -1,66 +1,76 @@
 # Session handoff
 
-All seven PLAN.md areas remain open. Prefer ownership and borrowing, reserve ARC
-for necessary sharing and remove tracing. JIT is excluded.
+All seven PLAN.md areas remain open. Remove tracing, prefer ownership and borrowing,
+and reserve ARC for necessary sharing. JIT is excluded.
 
-## Accepted work and current delivery
+## Current delivery and preparation
 
-[PR #202](https://github.com/e6qu/fun-with-pipes/pull/202) passed nine production
-jobs, docs and 3,414 binary inspections at `46c26002b5f748529a2c6ad5977891cdc1593c06`.
-Verified squash: `ff1bfcc8a294a488b9cb043622143233a903d068`. [History](roadmap-history.md#cached-values-aliases-and-failed-calls-pr-202)
-and the [inspection record](measurements/call-cleanup-2026-10-23.json) retain evidence.
+**Next:** finish [PR #203](https://github.com/e6qu/fun-with-pipes/pull/203) at
+`460e847b34a7b2691b69f89a4dfea84ea25950b7`: production `40002922119`, docs
+`40002921896`, then 853 binary inspections on each native host. Audit every
+completed job and fix all failures before a single repair push. Merge only after
+all nine production jobs, documentation and binary inspections pass.
 
-**Next:** finish this grouped task ownership delivery. Audit every final-head
-production job and documentation; inspect 853 saved images on each of six native
-hosts. Only then squash merge with one subject of at most eighty characters and
-an explicit empty body. Continue PLAN.md afterward.
+The delivery worktree is `/private/tmp/fwp-task-delivery`. Its final commit stays
+unchanged while derivative preparation proceeds separately in
+`/private/tmp/fwp-derivative-cleanup`, branch `derivative-cleanup-preparation`.
+The derivative branch starts from that PR head; keep one active PR. Do not treat
+unmerged preparation as final platform support.
 
-Worktree `/private/tmp/fwp-task-delivery`, branch `task-cleanup-delivery`, is based
-on that verified merge. Native code, tests, scripts and workflows exactly match
-preparation `a447d6a7e99887be5f02506669bc3b499de298f5` in `/private/tmp/fwp-runtime-call-cleanup`.
-Its Linux run `39996376457` and both Windows runs
-`39996381026` / `39996385840`
-passed focused checks, full log audits and 853 saved images per host. The Linux
-suite selects 45 groups; Linux-only storage tests do not establish Windows support.
+[PR #202](roadmap-history.md#cached-values-aliases-and-failed-calls-pr-202) is
+verified merged at `ff1bfcc8a294a488b9cb043622143233a903d068`, with all jobs,
+logs and 3,414 binaries accepted. Its redundant main CI was cancelled and main
+docs passed. The recorded merge has one subject, no body or trailers.
 
-## Scope and checks
+## Derivative cleanup preparation
 
-Seven groups cover callbacks, task handles, state, deadline/channel values and
-runtime-selected calls. Shared owners repeat 32 rounds; tasks owned only by the
-scheduler repeat 64 rounds of three completion/cancellation cases. Missing cleanup must fail, and ARC must reject a
-counted value crossing an uncounted boundary. Fixtures now own their injected
-tasks and duration records explicitly. [The guide](measurements/record-cleanup.md#task-callbacks-and-cancellation)
-explains examples and exact observations. No compiler/runtime or syntax change;
-these are storage-cleanup checks, not speed or complete-GC-removal claims.
+Two groups extend ownership checks to detached numeric buffers, callback scopes,
+input/result arrays, nested gradients and expired handles. Repeated managed-byte
+balances complement raw-buffer free counts. Missing releases must fail; ARC uses
+no tracing or permanently retained poison. Workspace caching is explicitly off.
+[The guide](measurements/record-cleanup.md#derivative-buffers-and-callback-scopes)
+explains the example, boundaries and measurement limits.
 
-All 284 local ARM64 observations pass, including native/interpreter comparisons
-and actual binary inspection. Fourteen runner controls, formatting, docs/examples
-and artifact-consumer checks pass. A variable-scope mistake and a missing final
-fixture release were fixed; failed and repaired evidence remain preserved.
-The guide states the shared test protocol once and introduces notation before
-each example, retaining controls and measurement limits. A function-valued
-pipe example was corrected to an explicit `apply` call and executed successfully.
+The original fixtures left arrays for tracing. They now release those owners.
+A new raw fixture crashed because it omitted ARC's required tape scope. Adding
+that scope and separating the injected task's cleanup chain repaired it; the
+mutable scope is static to keep its contents defined across `longjmp`. A source
+fixture initially put printing inside a pure scope; printing now occurs outside.
+Failed diagnostics remain in `/private/tmp/fwp-derivative-raw-probe` and
+`fwp-derivative-raw-source`. An unresponsive debugger was stopped; a sanitizer
+attempt timed out; bounded stage logging located the missing scope. Neither is
+reported as passing validation.
 
-Use `python3 scripts/local-guard.py COMMAND...` for serial focused checks. Full
-suites stay on GitHub. Preserve every local resource limit.
+Local checks use the accepted unchanged compiler `5e17fc10e860b1971ffc9cd9cb57fcb795ccad24`.
+Native code, runtime and library are unchanged. Local Clang results cannot
+establish GCC or Windows support. The expanded focused workflow selects 46 groups;
+its expected artifact contains 975 saved images (960 aggregate, 12 allocator and
+3 default binaries). All six final native targets remain required.
+
+Local receipts: `fwp-derivative-raw-probe-v3` (34 outcomes, 10.94s),
+`fwp-derivative-scope-probe` (34, 12.68s), `fwp-derivative-raw-source-v2`
+(30, 13.01s) and `fwp-derivative-scope-source` (24, 25.77s), all under
+`/private/tmp/`. Each includes generated C, real ARM64 binary inspection and
+expected failures. The earlier successful raw-probe v2 preceded the explicit
+static-scope repair; v3 is final. Formatting, fourteen runner controls, docs, the
+executed gradient example and the 975-image manifest pass (11.65s guarded).
+Formatting and reference-artifact saves after those runs do not change the
+emitted C or observed source programs. Focused GCC/Windows CI is still required.
 
 ## Resume records
 
-`/private/tmp/fwp-call-merge.json` records the prior verified merge.
-`/private/tmp/fwp-runtime-preparation.json` identifies the focused source/runs.
-Its `fwp-runtime-focused*acceptance.json` receipts retain complete log audits;
-853-image reports are in `fwp-runtime-ownership-evidence`.
-`/private/tmp/fwp-task-publication.json` will identify this delivery.
+`/private/tmp/fwp-task-publication.json` identifies #203 and its runs;
 `fwp-audit-task-final.py`, `fwp-inspect-expanded-task-delivery-builds.py` and
-`fwp-expanded-merge-task.py` require final-source acceptance before merge.
-Preparation mutation helpers completed. Read the publication receipt before
-resuming publication; never repeat a completed mutation.
-The Windows AMD64 artifact transfer reset during download. An automatic download
-in the inspector overwrote its partial transfer; both failed files are preserved.
-Inspectors now require an explicit digest-verified download, and the recovered
-archive passed all 853 inspections. No CI rerun was needed.
-Keep immutable tags and source/binary inspection reports. Older callback-only
-helpers expect 647 images; they must not accept this expanded 853-image delivery.
+`fwp-expanded-merge-task.py` require exact-source acceptance. Publication helpers
+for #203 COMPLETED; do not rerun them. Preserve immutable tags and inspection
+reports. `/private/tmp/fwp-check-derivatives.py` runs one explicit part and output
+path; read existing results before repeating anything.
+
+Use `python3 scripts/local-guard.py COMMAND...` serially. Full suites and builds
+stay on GitHub; keep all CPU, RSS, disk and deadline limits. Verified #202 archive
+cache copies were pruned after checking remote originals and full hashes, freeing
+989.8 MiB. Reports and unexpired GitHub originals remain; receipt:
+`/private/tmp/fwp-pruned-call-archives.json`.
 
 ## Roadmap status
 

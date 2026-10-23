@@ -40,7 +40,7 @@ static V scope_outer_entry(V *args) {
     if (scope_mode==2) fwp_check_cancel();
     if (scope_mode==3) {
         ARR(scope_outputs)->d[0]=scope_base;
-        fwp_p_ad_backward(scope_base,scope_outputs,scope_seeds);
+        fwp_rc_free_arr(fwp_rc_fresh(fwp_p_ad_backward(scope_base,scope_outputs,scope_seeds)));
         fwp_tape *t=&fwp_tapes[(((int64_t)scope_base>>32)&0xffff)-1];
         if (t->scope || t->live) scope_error=62;
     }
@@ -57,7 +57,9 @@ static const fwp_fninfo scope_entries[]={
 static fwp_clo outer_scope_callback={0,0};
 int main(void) {
     fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
-    scope_outputs=fwp_arr_new(1);scope_seeds=fwp_arr_new(1);
+    intptr_t baseline=fwp_gc.budget;
+    for(unsigned round=0;round<32;round++) {
+    scope_outputs=fwp_rc_fresh(fwp_arr_new(1));scope_seeds=fwp_rc_fresh(fwp_arr_new(1));
     ARR(scope_seeds)->d[0]=fwp_from_f64(1);
     fwp_fns=scope_entries;
     fwp_trap_recover=scope_recover;fwp_trap_jb=&scope_recovered;fwp_trap_cleanup=0;
@@ -109,6 +111,13 @@ int main(void) {
 #endif
     if (remaining && *remaining!=0) return 77;
     fwp_cleanup_pop(&owned_cleanup);fwp_tape_scope_release(&owned_scope);
+    fwp_rc_free_arr(scope_outputs);fwp_rc_free_arr(scope_seeds);
+    scope_outputs=scope_seeds=0;fwp_tape_finish();
+    if(fwp_tapes||fwp_ntapes||fwp_tapes_cap||fwp_tape_cached_bytes)return 78;
+#ifdef FWP_ARC_ONLY
+    if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+#endif
+    }
     printf("scoped autodiff releases callback tapes; tape=%zu align=%zu scope=%zu cleanup=%zu\n",
            sizeof(fwp_tape),_Alignof(fwp_tape),sizeof(fwp_tape_scope),sizeof(fwp_cleanup));
     return 0;

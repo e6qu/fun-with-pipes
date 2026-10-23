@@ -231,6 +231,55 @@ Omitted outside-alias or scalar-fixture releases must fail. These 58 outcomes us
 compiler O2 and C O1/O2 with stack placement enabled to exercise stack captures.
 Complete programs also compare with raw interpretation.
 
+## Derivative buffers and callback scopes
+
+Automatic differentiation computes how an output changes when its inputs change.
+Reverse mode records operations in a **tape**, then walks them backward to compute
+those derivatives. `grad` returns one derivative per input. `Rev[F64]` is the value
+type used while recording a reverse-mode computation with 64-bit floating numbers.
+
+`fork mul id id` multiplies a value by itself: both `id` branches receive the same
+input, then `mul` combines them. `map` applies that square to each list element;
+`sum` adds the squares:
+
+```fwp
+energy : List[Rev[F64]] -> Rev[F64]
+energy = map (fork mul id id) | sum
+main = [3.0, 4.0] | grad energy | echo
+```
+
+The derivatives are `[6.0, 8.0]`: the derivative of a square at `x` is `2*x`.
+The library owns the tape's lifetime. Its lower-level `ad.scope` operation gives
+raw tape handles a bounded lifetime; checked ARC requires that scope. Printing
+belongs outside this pure callback. A failed derivative must release its recorded
+operations and temporary derivative arrays just as a successful one does.
+
+[Detached-buffer checks](../../tests/ad_tape_ownership.rs) repeat 32 rounds of
+normal results, invalid or mixed tape references, result allocation failure and
+cancellation. They count frees of the separately allocated numeric buffers and
+check managed-array storage balance. The caller keeps an independent computation
+alive while an injected task unwinds its own cleanup chain. Expired tape handles
+and exhausted generations must remain invalid. Removing buffer cleanup, input or
+result releases must fail. This group saves 64 outcomes, including complete
+program comparisons with the interpreter at C O1/O2 in ARC and tracing.
+
+[Scope checks](../../tests/ad_tape_scopes.rs) repeat 32 rounds of nested callbacks,
+errors, cancellation and explicitly consumed tapes. They check result ownership,
+release caller-owned input arrays and empty the raw tape registry. Controls omit
+scope registration, unlinking, result ownership or individual releases. Gradient
+programs, callback failures and returned aliases compare with the interpreter;
+files still cannot be duplicated through a borrowed callback. This group saves
+58 outcomes.
+
+The old fixtures left some input/result arrays to tracing. They now own and
+release those arrays explicitly. The first new raw fixture omitted the required
+scope and was repaired; its mutable recovery scope uses static storage so its
+contents remain defined across C `longjmp`. No language or runtime rule changes.
+These checks disable workspace caching explicitly to observe immediate frees;
+[workspace measurements](../numerics.md) cover the separate reuse policy. Managed
+byte balances exclude raw buffers, so both measurements are required. No new
+speed or numerical-accuracy improvement is claimed here.
+
 ## Acceptance and limits
 
 [PR #199](../roadmap-history.md#checked-native-defaults-and-arc-metadata-pr-199)
@@ -248,6 +297,8 @@ The combined seven-group preparation `a447d6a7e99887be5f02506669bc3b499de298f5` 
 runs and 853-image inspection on Linux AMD64 and both Windows hosts. This delivery
 still requires its own nine production jobs, docs and six-host binary inspection. [The handoff](../development-state.md)
 records exact sources and runs; [history](../roadmap-history.md) records delivery.
+The derivative extension is preparation work. Its local outcomes do not establish
+GCC, Windows or final delivery acceptance; see the handoff for actual checks.
 All seven PLAN areas remain open, including complete removal of tracing.
 
 Windows now includes five formerly omitted groups: match-context, reuse-token,

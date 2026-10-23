@@ -116,7 +116,10 @@ outside the benchmark suite.
    [State and task values](docs/measurements/record-cleanup.md#state-deadlines-and-channel-values)
    and [runtime calls](docs/measurements/record-cleanup.md#calls-chosen-while-a-program-runs)
    complete this grouped preparation. It still requires final delivery acceptance.
-   Extend the remaining collector-specific checks before removing tracing.
+   [Derivative buffers and scopes](docs/measurements/record-cleanup.md#derivative-buffers-and-callback-scopes)
+   are the next related extension: prove repeated numeric-buffer and managed-array
+   cleanup together, including cancellation and invalid handles. Extend the
+   remaining collector-specific checks before removing tracing.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
    [Integer counting](docs/measurements/integer-counting.md) and
    [checked products](docs/measurements/checked-products.md) preserve slower
