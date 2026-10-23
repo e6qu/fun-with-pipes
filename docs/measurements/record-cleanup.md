@@ -99,6 +99,108 @@ distinct statuses, 4 for the variant and 14 for the record. Windows now includes
 the constructor-allocation target and writes probe output in binary mode, so
 newline conversion cannot change the expected output.
 
+## Selecting fields, returning aliases and reusing storage
+
+An alias is another live reference to the same value. Selecting one field must
+release discarded fields while preserving any aliases that the caller still
+uses. An internal **reuse token** temporarily owns an emptied object: a later
+constructor may fill that storage, or cleanup must free it. Tokens are compiler
+bookkeeping, not a new language feature.
+
+These ten groups of tests check both ARC and tracing:
+
+| Check | What must remain true |
+|---|---|
+| [Field selection](../../tests/field_context_ownership.rs) | Selecting an integer releases the unused nested string, even when the outer record is eliminated |
+| [Pattern matching](../../tests/match_context_ownership.rs) | Matching a variant preserves its child type so discarded owners are released |
+| [Returned aliases](../../tests/variant_alias_ownership.rs) | Returned variant fields transfer once, remain unboxed where expected, and preserve caller aliases across task suspension |
+| [Reusable storage](../../tests/reuse_token_ownership.rs) | A consumed object's empty storage transfers to a new result or is freed on failure, an unused branch or a tail call |
+| [Partial calls](../../tests/argument_preparation_ownership.rs) | Failure while acquiring arguments preserves caller aliases; unique captured values move without extra retains |
+| [Right folds](../../tests/fold_unwind_ownership.rs) | A failed callback, allocation or cancelled task releases the accumulator and temporary buffer |
+| [Loop cancellation](../../tests/loop_unwind_ownership.rs) | Cancellation releases the current state at the first or a later iteration; failed result preparation preserves outside aliases |
+| [Cached values](../../tests/caf_ownership.rs) | Initialization can fail or reenter; the cache and its callers keep separate owners, released at the correct lifetime boundary |
+| [Escaping functions](../../tests/closure_ownership.rs) | A returned function keeps its captured values alive and releases its storage after use |
+| [Temporary containers](../../tests/temporary_ownership.rs) | Discarding a temporary list releases its children while preserving independent aliases |
+
+Here is the field-selection pattern. `Leaf` constructs an `Inner` containing a
+string. `make` constructs a record by applying each field function to the input;
+`const 17` ignores that input and returns 17. `.number` selects the numeric field.
+
+```fwp
+Inner = | Leaf String
+Outer = { child: Inner, number: I64 }
+make-outer : String -> Outer
+make-outer = make { child = string.repeat 2 | Leaf, number = const 17 }
+discard : String -> I64
+discard = make-outer | .number
+main = "input" | discard | echo
+```
+
+The result is `17`. The repeated string is unused after field selection. The
+compiler can remove the outer record, but must still release that string.
+The source tests also choose the function at runtime so a direct-call rewrite
+cannot hide the cleanup obligation.
+
+The first seven targets repeat instrumented probes for 32 rounds, with and
+without caller aliases.
+ARC requires the managed byte charge to return to its starting value, no extra
+count-table entries and no collections. Deliberately missing releases or adding
+an extra owner must fail. Two internal-compiler controls erase a needed child
+type: ARC must reject them before C generation; tracing retains the old runtime
+leak controls. An absent proof must not quietly enable tracing.
+
+The reuse target also runs a million-step countdown at C O1/O2 in both modes.
+It compares the result with a small raw-interpreter case of the same recurrence.
+This checks that unused storage is cleaned up without accumulating native call
+frames for this eligible recursion pattern; it makes no promise for arbitrary
+recursion. Tracing keeps its old-cell, poisoned-storage and collection-on/off
+controls. ARC additionally rejects settings that disable ownership or freeing.
+
+A **partial call** supplies an argument and returns a function waiting for its
+next argument. For example, `add 1` waits for a number; it adds one to that number.
+Captured values must stay alive while the returned function can use them. A
+unique function can transfer those values into its call without increasing their
+reference counts. An independently live alias must keep its own values.
+
+A **fold** repeatedly combines an element with an accumulator; a right fold
+starts at the right end of the list. These tests deliberately fail after an
+intermediate accumulator exists. They also omit a temporary-buffer release to
+prove the check detects it. Loop checks cancel both before and after an update,
+including nested state fields and integer words that resemble addresses.
+The twelve-pattern capture report retains its existing rows and columns; each
+pattern now repeats 32 times before the final rows are reported.
+
+A computed top-level value is cached after its first successful evaluation.
+Repeated reads share that value. The cache retains one owner until program
+teardown; a caller that keeps the value needs its own owner. Cached-value probes
+repeat initialization, failure, replacement and teardown for 32 lifetimes, and
+separately check that a complete program initializes its value just once.
+
+For example, `string.repeat 2` repeats the input text twice. `echo` prints it.
+The list evaluates both prints in order; `ignore` discards their results:
+
+```fwp
+cached = "input" | string.repeat 2
+main = [cached | echo, cached | echo] | ignore
+```
+
+This prints `inputinput` on each of two lines. The initializer runs once, and
+both reads use its cached result. The test observes the initialization count
+and checks that teardown releases the cache's final owner.
+
+The two function/container workloads run 10,000 iterations. ARC must end with
+no live managed charge, extra count entries or collections; deliberately missing
+closure-storage or child-value cleanup must fail. Their older tracing-based
+freed-byte comparisons remain separate controls, not ARC measurements.
+
+Windows now selects the previously omitted match-context, reuse-token, ARC
+program-corpus, HTTP/2 body-copy and temporary-container tests. Linux's
+`static_memory` group is Linux-specific; Windows uses `windows_static_memory` for native storage checks.
+Selecting a target that skips execution does not establish platform support.
+The two variant tests that change process-wide generator options serialize those
+changes, so concurrent test execution cannot select another test's memory mode.
+Generated C, executable and output are saved before checking each result.
+
 ## Evidence and limits
 
 The original record and allocator batch passed
@@ -107,12 +209,18 @@ Its [inspection record](native-default-2026-10-23.json) contains 95 saved binary
 files per host across all six native targets, including eighty record outcomes
 and sixty allocator observations per host.
 
-The six extended probes passed
-[PR #200's full acceptance](../roadmap-history.md#repeated-constructor-and-call-cleanup-pr-200).
-Its [inspection record](constructor-cleanup-2026-10-23.json) contains 175 saved
-binary files per host, including 160 aggregate outcomes and sixty allocator
-observations. Complete logs passed audit. Local checks additionally compared
-24 complete O1/O2 programs with raw interpretation in both modes.
+The constructor and call batch passed
+[PR #200](../roadmap-history.md#repeated-constructor-and-call-cleanup-pr-200) at source
+`69c3b1e0135dd95961dba3729911ec27dc1736b6`, including all production jobs,
+documentation and inspection of 1,050 saved native binary files across six hosts.
+
+The ten extended test groups passed local Apple Clang ARM64 source checks using
+accepted compiler `5e17fc10e860b1971ffc9cd9cb57fcb795ccad24` with unchanged runtime.
+Focused run `39974679542` passed all 38 Linux AMD64 test groups and 179
+library tests; 569 saved GCC images passed inspection. Both focused Windows runs
+passed their applicable cases, and their 569 saved binaries per host passed
+inspection. The final delivery still requires full production
+and documentation acceptance at its exact source. See the handoff for current status.
 
 CI saves generated C, executables, output and status under `record-ownership/`
 for independent inspection. [The handoff](../development-state.md) records

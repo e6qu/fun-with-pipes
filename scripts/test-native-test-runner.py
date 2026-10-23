@@ -3,6 +3,7 @@
 import importlib.util
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -44,6 +45,46 @@ class Coverage(unittest.TestCase):
             for flag in ["--lib", "--bins", "--examples", "--benches"]:
                 self.assertEqual(flag in args, shard == "regular")
             self.assertEqual([args[i + 1] for i, arg in enumerate(args) if arg == "--test"], output[2])
+
+    def test_focused_ownership_targets_have_production_coverage(self):
+        workflow = (SHARDS.ROOT / ".github/workflows/numerics.yml").read_text()
+        selections = re.findall(
+            r"--targets (.*?) --idle-timeout \d+ --logs native-commands-evidence/targets",
+            workflow)
+        self.assertEqual(len(selections), 2, "Unix and Windows focused commands")
+        unix, windows = [selection.split() for selection in selections]
+        self.assertEqual(unix, windows)
+        self.assertEqual(len(unix), len(set(unix)), "duplicate focused target")
+        schedule = SHARDS.assignment(SHARDS.SCHEDULE)
+        for target in unix:
+            self.assertEqual(sum(target in names for names in schedule.values()), 1,
+                             f"missing or duplicated macOS assignment: {target}")
+
+        windows_workflow = (SHARDS.ROOT / ".github/workflows/windows.yml").read_text()
+        selected = set()
+        # Explicit PowerShell arrays must feed the native runner in that step.
+        arrays = re.findall(
+            r"\$testTargets = @\((.*?)\)\s*\n\s*python scripts/run-native-tests.py --targets \$testTargets\b",
+            windows_workflow, re.S)
+        self.assertTrue(arrays, "missing Windows target arrays")
+        for array in arrays:
+            self.assertEqual(re.sub(r"'[a-zA-Z0-9_]+'|[,\s]", "", array), "",
+                             "Windows target arrays must contain explicit names")
+            selected.update(re.findall(r"'([a-zA-Z0-9_]+)'", array))
+        for line in windows_workflow.splitlines():
+            if "cargo test" in line:
+                selected.update(re.findall(r"--test ([a-zA-Z0-9_]+)(?=\s|$)", line))
+            inline = re.search(
+                r"python(?:3)? scripts/run-native-tests.py --targets ([^$]+?) --idle-timeout",
+                line)
+            if inline:
+                selected.update(inline.group(1).split())
+        # Linux's /proc/strace suite does not establish Windows execution.
+        # Windows uses its own native storage checks, not a skipped Linux test.
+        required = {"windows_static_memory" if target == "static_memory" else target
+                    for target in unix}
+        self.assertFalse(required - selected,
+                         f"focused targets absent from Windows production: {sorted(required - selected)}")
 
     def test_repository_targets_are_assigned_exactly_once(self):
         value = json.loads(subprocess.check_output(
