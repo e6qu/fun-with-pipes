@@ -62,8 +62,42 @@ static void fwp_format_g(char *out, size_t cap, double x, int p) {
         snprintf(out, cap, "%se%c%02d", mant, exp < 0 ? '-' : '+', exp < 0 ? -exp : exp);
     } else {
         int decimals = p - 1 - exp;
-        if (decimals < 0) decimals = 0;
-        snprintf(out, cap, "%.*f", decimals, x);
+        if (decimals <= 0 || p == 1) {
+            /* Integer output prints the exact rounded integer even when it has
+             * more than p digits. At p=1 the scientific text has no decimal
+             * separator to reuse (which can depend on the C locale). */
+            if (decimals < 0) decimals = 0;
+            snprintf(out, cap, "%.*f", decimals, x);
+        } else {
+            /* The scientific conversion already rounded these digits to the
+             * required precision. Move its separator instead of performing a
+             * second floating conversion. If rounding raised the exponent,
+             * its mantissa is exactly 1 followed by zeros, also the fixed result.
+             * Fixed exponents are at least -5, so eight extra bytes suffice. */
+            char fixed[sizeof sci + 8];
+            char *at = fixed;
+            const char *first = sci + (sci[0] == '-');
+            const char *fraction = e - (p - 1);
+            size_t separator = (size_t)(fraction - first - 1);
+            if (sci[0] == '-') *at++ = '-';
+            if (exp < 0) {
+                *at++ = '0';
+                memcpy(at, first + 1, separator); at += separator;
+                for (int i = 0; i < -exp - 1; i++) *at++ = '0';
+                *at++ = *first;
+                memcpy(at, fraction, (size_t)(p - 1)); at += p - 1;
+            } else {
+                *at++ = *first;
+                memcpy(at, fraction, (size_t)exp); at += exp;
+                memcpy(at, first + 1, separator); at += separator;
+                memcpy(at, fraction + exp, (size_t)decimals); at += decimals;
+            }
+            size_t size = (size_t)(at - fixed);
+            if (!cap) return;
+            if (size >= cap) size = cap - 1;
+            memcpy(out, fixed, size);
+            out[size] = 0;
+        }
         size_t l = strlen(out);
         if (strchr(out, '.')) {
             while (l > 0 && out[l - 1] == '0') out[--l] = 0;

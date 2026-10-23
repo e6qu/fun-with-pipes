@@ -19,14 +19,18 @@ accepted. Its redundant same-tree main CI was cancelled; docs were retained.
 
 ## Independent numerical preparation
 
-**Next:** publish and run the longer output-cost diagnostic in
-`/private/tmp/fwp-descent-output`, branch `descent-output-preparation`, based on
-#204's source. Initial source `697f0ba6e01a2f24b31ab699452152c7c6e09fb3` and run
+**Next:** complete the [formatter candidate](measurements/float-text.md) checks
+and publish its focused native/measurement preparation while #204 finishes.
+Worktree `/private/tmp/fwp-float-format` is based on longer diagnostic source
+`a948b7478278a6ee8c5b81cfaf6e8272e96bf935`. That source is already published under
+`roadmap/preparation-output-longer-a948b7478278`; runs `40024299907` and
+`40024303916` are underway. Do not repeat publication. Initial source
+`697f0ba6e01a2f24b31ab699452152c7c6e09fb3` and run
 `40021659651` passed both Linux jobs, full-log audits and 338 binary inspections.
 [The initial report](measurements/descent-output-initial.md) retains five
 inconclusive timing rows. The revised protocol explicitly uses 32,768 solves for
-3-coordinate 0/1-update cases, and 4,096 for the others. Publish an immutable
-source and dispatch `descent-output` with `native_runner=all`. Repeat on matching
+3-coordinate 0/1-update cases, and 4,096 for the others. Compare independent
+runs on matching
 CPU models before drawing timing conclusions. Keep one
 active PR; combine the accepted diagnostic with related work after #204 merges.
 
@@ -34,7 +38,7 @@ The [protocol](measurements/descent-output-protocol.md) compares unchanged full
 output against an external consumer of every result coordinate. It covers fwp
 and coordinate-based C/Rust, fresh inputs, all updates and cleanup. Checksum work
 replaces output construction, so the difference is not pure formatting time.
-No compiler/runtime change or repeatable speed result is claimed. Every memory
+The diagnostic does not change the runtime. No repeatable speed result is claimed. Every memory
 checkpoint remains checked and saved; compact summaries hash the complete logs.
 Regular Linux CI now includes untimed output/lifetime and observer controls.
 
@@ -58,7 +62,29 @@ An unused Rust buffer disappears in the timed zero-update binary but remains
 observable under instrumentation; the report now states this limit. Initial
 archives/reports remain under `/private/tmp/fwp-output-evidence/697f0ba6e01a`.
 `fwp-output-preparation.json` records the completed initial publication; do not
-rerun its publication helper. The revised source has not yet been published.
+rerun its publication helper. Both initial ZIPs were pruned after inspection,
+digest checks and verification of unexpired GitHub originals.
+
+The formatter candidate changes only `fwp_format_g`: reuse rounded digits for
+fixed output, retain integer/scientific paths. Twelve local ARM64 generated-C
+cases pass at O1/O2, including raw-interpreter output, tracing stress and
+deliberately changed digits/boundaries. The precision probe checked 119,768
+values and 1,017,484 precisions. Reports remain in
+`/private/tmp/fwp-float-native-v1/results.json`. This patches the exact function
+in accepted compiler output; it does not compile the changed Rust harness.
+The `float-text` workflow must build/test all six native hosts. Its paired
+Linux benchmark requires 2% noise controls and a repeated 5% reduction for the
+largest case on both architectures, while reporting every other case and stack/
+code-size costs. No timing improvement is established.
+Eight untimed numerical binaries also passed (8.39s), including identical
+formatter memory observations and native C/Rust buffer cleanup. The new workflow,
+Rust formatting and documentation checks pass; full builds remain on GitHub.
+Receipt: `/private/tmp/fwp-float-measurement-v1/results.json`.
+
+For #204, macOS ARM64 regular/stress, benchmarks and docs have passed full-log
+audits; all 1,161 macOS ARM64 files passed independent inspection (26.14s).
+Both local ZIPs were pruned after verifying remote originals. Six other native
+jobs were still running at the last audit. Never treat a subset as delivery.
 
 ## Resume records
 
