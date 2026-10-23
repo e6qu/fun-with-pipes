@@ -160,6 +160,10 @@ execution of the other targets. Focused checks supplement the full merge gates.
 
 For each macOS architecture, the two jobs use the explicit integration-target
 lists in `scripts/macos-test-shards.json`, read by `scripts/run-native-tests.py`.
+The native-runner control tests also require each focused ownership target in
+production macOS and Windows coverage. Linux static-memory tests use `/proc` and
+`strace`; Windows has its own `windows_static_memory` target. A skipped Linux
+test does not establish Windows support.
 List order is execution priority: long targets start early so one worker is less
 likely to wait for the other's final target. The ordering comes from recorded
 CI target times; [the scheduling estimate](docs/measurements/ci-scheduling-2026-10-18.json)

@@ -2,12 +2,14 @@
 use fwp::ir::*;
 use fwp::value::Value;
 use std::process::Command;
+
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
 #[test]
 fn cached_values_keep_exact_owners_and_release_typed_children() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
+    std::env::set_var("FWP_STACK", "0");
+    fwp::cgen::set_static_memory(None);
     let string = MT::con("std::String");
     let i64 = MT::con("std::I64");
     let record = MT::Record(vec![
@@ -85,17 +87,43 @@ fn cached_values_keep_exact_owners_and_release_typed_children() {
             .into()
         )
     );
-    let emitted = fwp::cgen::generate(&p).unwrap();
-    let runtime=emitted.replace("fwp_p_str_repeat(l0, l1)","observe_repeat(l0, l1)")
+    let dir = fwp::cgen::TempDir::new("caf-cache").unwrap();
+    let exe = dir.join("probe.exe");
+    for arc in [true, false] {
+        let mode = if arc { "arc" } else { "tracing" };
+        let stress = if arc { "0" } else { "1" };
+        fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+            arc,
+            static_link: false,
+            pgo: None,
+            cross: None,
+        });
+        let emitted = fwp::cgen::generate(&p).unwrap();
+        let runtime=emitted.replace("fwp_p_str_repeat(l0, l1)","observe_repeat(l0, l1)")
         .replacen("/* repeat :","static V observed; static int calls, fail_once, reenter; static V scalar_bits, reentrant_held; static V observe_repeat(V n,V s) { calls++; if(reenter){reenter=0;reentrant_held=caf0();} if(fail_once){fail_once=0;fwp_trap(\"initialization failed\");} V r=fwp_p_str_repeat(n,s);observed=r;return r; }\n/* repeat :",1)
         .replace("return (V)(int64_t)17LL;","return scalar_bits;")
         .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
-    let probe = r#"
+        let probe = r#"
 static jmp_buf overflow; static int recover(void){return 1;}
-static int dead(V v){return fwp_reuse_verify?STR(v)->len==0:*fwp_rc_slot(v)==0;}
+static int dead(V v){
+#ifndef FWP_ARC_ONLY
+ if(fwp_reuse_verify)return STR(v)->len==0;
+#endif
+ return *fwp_rc_slot(v)==0;
+}
+static int dead_record(V v){
+#ifndef FWP_ARC_ONLY
+ if(fwp_reuse_verify)return OBJ(v)->tag==0xdead;
+#endif
+ return *fwp_rc_slot(v)==0;
+}
 int main(void){
  fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+ intptr_t baseline=fwp_gc.budget;
  scalar_bits=fwp_rc_fresh(fwp_str_new("scalar",6));
+ intptr_t round_baseline=fwp_gc.budget;
+ for(int round=0;round<32;round++){
+ calls=0;observed=0;reenter=0;reentrant_held=0;
  fail_once=1;fwp_trap_recover=recover;fwp_trap_jb=&overflow;fwp_trap_cleanup=fwp_cleanups;
  if(setjmp(overflow)==0){(void)caf0();return 10;}
  fwp_trap_recover=0;fwp_trap_jb=0;
@@ -116,61 +144,44 @@ int main(void){
  fwp_rc_drop(r);
  if(*fwp_rc_slot(r)!=1||*fwp_rc_slot(observed)!=4)return 8;
  fwp_caf_finish();
- if(!dead(observed)||(fwp_reuse_verify?OBJ(r)->tag!=0xdead:*fwp_rc_slot(r)!=0)||*fwp_rc_slot(scalar_bits)!=1){fprintf(stderr,"after finish: child=%u len=%zu record=%u scalar=%u\n",*fwp_rc_slot(observed),STR(observed)->len,*fwp_rc_slot(r),*fwp_rc_slot(scalar_bits));return 9;}
+ if(!dead(observed)||!dead_record(r)||*fwp_rc_slot(scalar_bits)!=1)return 9;
  fwp_caf_finish();
  reenter=1;V outer=caf0();V inner=reentrant_held;
  if(outer==inner||*fwp_rc_slot(outer)!=2||*fwp_rc_slot(inner)!=1)return 12;
  fwp_rc_free_obj(inner);fwp_rc_drop(outer);fwp_caf_finish();
  if(!dead(inner)||!dead(outer))return 13;
+#ifdef FWP_ARC_ONLY
+ if(fwp_gc.budget!=round_baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+#endif
+ }
  fwp_rc_free_obj(scalar_bits);
+#ifdef FWP_ARC_ONLY
+ if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+#endif
  return 0;
 }
 "#;
-    let executable_probe = r#"
+        let executable_probe = r#"static int dead(V v){
+#ifndef FWP_ARC_ONLY
+ if(fwp_reuse_verify)return STR(v)->len==0;
+#endif
+ return *fwp_rc_slot(v)==0;
+}
 int main(int argc,char **argv){int result=original_main(argc,argv);if(result)return result;
- if(!observed || !(fwp_reuse_verify?STR(observed)->len==0:*fwp_rc_slot(observed)==0))return 3;
+ if(!observed || !dead(observed))return 3;
  return 0;}
 "#;
-    let root_start = runtime.find("    V r = caf3();").unwrap();
-    let root = &runtime[root_start..];
-    let root_drop = root
-        .split("    fwp_tasks_finish();\n    ")
-        .nth(1)
-        .unwrap()
-        .split(';')
-        .next()
-        .unwrap();
-    assert!(root_drop.starts_with("fwp_drop"));
-    let missing_root = runtime.replacen(&format!("    {root_drop};"), "", 1);
-    let dir = std::env::temp_dir().join(format!("fwp-caf-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).unwrap();
-    let exe = dir.join("probe");
-    for opt in ["-O1", "-O2"] {
-        fwp::cgen::compile_c(&format!("{missing_root}\n{executable_probe}"), &exe, opt).unwrap();
-        let old = Command::new(&exe)
-            .env("FWP_REUSE_VERIFY", "1")
-            .output()
+        let root_start = runtime.find("    V r = caf3();").unwrap();
+        let root = &runtime[root_start..];
+        let root_drop = root
+            .split("    fwp_tasks_finish();\n    ")
+            .nth(1)
+            .unwrap()
+            .split(';')
+            .next()
             .unwrap();
-        assert_eq!(
-            old.status.code(),
-            Some(3),
-            "missing executable root release must keep children alive"
-        );
-        fwp::cgen::compile_c(&format!("{runtime}\n{executable_probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let o = Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", poison)
-                .output()
-                .unwrap();
-            assert!(
-                o.status.success(),
-                "executable root code {:?}: {}",
-                o.status.code(),
-                String::from_utf8_lossy(&o.stderr)
-            );
-        }
+        assert!(root_drop.starts_with("fwp_drop"));
+        let missing_root = runtime.replacen(&format!("    {root_drop};"), "", 1);
         let caf0 = runtime.split("static V caf0(void) {").nth(1).unwrap();
         let previous_drop = caf0
             .split("(previous);")
@@ -180,55 +191,162 @@ int main(int argc,char **argv){int result=original_main(argc,argv);if(result)ret
             .next_back()
             .unwrap();
         let missing_previous = runtime.replace(&format!("{previous_drop}(previous);"), "");
-        fwp::cgen::compile_c(&format!("{missing_previous}\n{probe}"), &exe, opt).unwrap();
-        let old = Command::new(&exe)
-            .env("FWP_REUSE_VERIFY", "1")
-            .output()
-            .unwrap();
-        assert_eq!(
-            old.status.code(),
-            Some(12),
-            "reentrant cache replacement must release the previous owner"
-        );
         let missing_return_owner = runtime.replace("fwp_rc_dup(fwp_caf_value0);", "");
-        fwp::cgen::compile_c(&format!("{missing_return_owner}\n{probe}"), &exe, opt).unwrap();
-        let control = Command::new(&exe)
-            .env("FWP_REUSE_VERIFY", "1")
-            .output()
-            .unwrap();
-        assert_eq!(
-            control.status.code(),
-            Some(11),
-            "missing CAF return owner must change counts"
-        );
-        let missing_finish = probe.replace("fwp_caf_finish();", "(void)0;");
-        fwp::cgen::compile_c(&format!("{runtime}\n{missing_finish}"), &exe, opt).unwrap();
-        let control = Command::new(&exe)
-            .env("FWP_REUSE_VERIFY", "1")
-            .output()
-            .unwrap();
-        assert_eq!(
-            control.status.code(),
-            Some(9),
-            "missing cache teardown must keep children alive"
-        );
-        fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let o = Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", poison)
-                .output()
-                .unwrap();
-            assert!(
-                o.status.success(),
-                "code {:?}: {}",
-                o.status.code(),
-                String::from_utf8_lossy(&o.stderr)
-            );
+        assert_ne!(missing_previous, runtime);
+        assert_ne!(missing_return_owner, runtime);
+        for opt in ["-O1", "-O2"] {
+            for (case, code, expected) in [
+                (
+                    "missing-previous",
+                    format!("{missing_previous}\n{probe}"),
+                    12,
+                ),
+                (
+                    "missing-return",
+                    format!("{missing_return_owner}\n{probe}"),
+                    11,
+                ),
+                (
+                    "missing-finish",
+                    format!(
+                        "{runtime}\n{}",
+                        probe.replace("fwp_caf_finish();", "(void)0;")
+                    ),
+                    9,
+                ),
+            ] {
+                fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+                let output = Command::new(&exe)
+                    .env("FWP_GC", "off")
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", if mode == "arc" { "0" } else { "1" })
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "caf_ownership",
+                    &format!("{mode}{opt}-cache-{case}"),
+                    &code,
+                    &exe,
+                    &output,
+                );
+                assert_eq!(
+                    output.status.code(),
+                    Some(expected),
+                    "{mode} {opt} {case}: {output:?}"
+                );
+                assert!(output.stderr.is_empty(), "{output:?}");
+            }
+            let code = format!("{runtime}\n{probe}");
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+            for poison in if mode == "arc" {
+                &["0"][..]
+            } else {
+                &["0", "1"][..]
+            } {
+                let output = Command::new(&exe)
+                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", poison)
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "caf_ownership",
+                    &format!("{mode}{opt}-cache-normal-poison{poison}"),
+                    &code,
+                    &exe,
+                    &output,
+                );
+                assert!(output.status.success(), "{mode} {opt}: {output:?}");
+                assert_eq!(output.stdout, b"");
+                assert!(output.stderr.is_empty(), "{output:?}");
+            }
+        }
+        for opt in ["-O1", "-O2"] {
+            {
+                let (case, code, expected) = (
+                    "missing-root",
+                    format!("{missing_root}\n{executable_probe}"),
+                    3,
+                );
+                fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+                let output = Command::new(&exe)
+                    .env("FWP_GC", "off")
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", if mode == "arc" { "0" } else { "1" })
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "caf_ownership",
+                    &format!("{mode}{opt}-root-{case}"),
+                    &code,
+                    &exe,
+                    &output,
+                );
+                assert_eq!(
+                    output.status.code(),
+                    Some(expected),
+                    "{mode} {opt} {case}: {output:?}"
+                );
+                assert!(output.stderr.is_empty(), "{output:?}");
+            }
+            let code = format!("{runtime}\n{executable_probe}");
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+            for poison in if mode == "arc" {
+                &["0"][..]
+            } else {
+                &["0", "1"][..]
+            } {
+                let output = Command::new(&exe)
+                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", poison)
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "caf_ownership",
+                    &format!("{mode}{opt}-root-normal-poison{poison}"),
+                    &code,
+                    &exe,
+                    &output,
+                );
+                assert!(output.status.success(), "{mode} {opt}: {output:?}");
+                assert_eq!(output.stdout, b"");
+                assert!(output.stderr.is_empty(), "{output:?}");
+            }
+        }
+        if arc {
+            let missing = probe.replace("fwp_rc_free_obj(scalar_bits);", "");
+            assert_ne!(missing, probe);
+            for opt in ["-O1", "-O2"] {
+                let code = format!("{runtime}\n{missing}");
+                fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+                let output = Command::new(&exe)
+                    .env("FWP_GC", "off")
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "caf_ownership",
+                    &format!("{mode}{opt}-cache-missing-release"),
+                    &code,
+                    &exe,
+                    &output,
+                );
+                assert_eq!(output.status.code(), Some(90), "{output:?}");
+            }
         }
     }
-    std::fs::remove_dir_all(dir).unwrap();
 }
 
 #[test]
@@ -237,7 +355,7 @@ fn source_cafs_initialize_once_and_release_after_tasks_finish() {
     std::fs::create_dir_all(&dir).unwrap();
     let src = dir.join("probe.fwp");
     let cfile = dir.join("probe.c");
-    let exe = dir.join("probe");
+    let exe = dir.join("probe.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(
         &src,
@@ -258,60 +376,122 @@ main = [cached | echo, cached | echo] | ignore
         String::from_utf8_lossy(&reference.stderr)
     );
     assert_eq!(reference.stdout, b"inputinput\ninputinput\n");
-    let build = Command::new(fwp)
-        .args(["build", "--gc", "tracing"])
-        .arg(&src)
-        .args(["--emit-c", "-o"])
-        .arg(&cfile)
-        .output()
-        .unwrap();
-    assert!(
-        build.status.success(),
-        "{}",
-        String::from_utf8_lossy(&build.stderr)
-    );
-    let emitted = std::fs::read_to_string(&cfile).unwrap();
-    let runtime=emitted.replace("fwp_p_str_repeat(l0, l1)","observe_repeat(l0, l1)")
+    for mode in ["arc", "tracing"] {
+        let stress = if mode == "arc" { "0" } else { "1" };
+        let build = Command::new(fwp)
+            .args(["build", "--gc", mode, "--memory", "dynamic"])
+            .arg(&src)
+            .args(["--emit-c", "-O2", "-o"])
+            .arg(&cfile)
+            .env("FWP_STACK", "0")
+            .output()
+            .unwrap();
+        assert!(
+            build.status.success(),
+            "{}",
+            String::from_utf8_lossy(&build.stderr)
+        );
+        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let runtime=emitted.replace("fwp_p_str_repeat(l0, l1)","observe_repeat(l0, l1)")
         .replacen("/* string.repeat :","static volatile V observed; static int evaluations; static V observe_repeat(V n,V s){evaluations++;V r=fwp_p_str_repeat(n,s);observed=r;return r;}\n/* string.repeat :",1)
         .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
-    assert!(runtime.contains("static volatile V observed"));
-    let probe = r#"
+        assert!(runtime.contains("static volatile V observed"));
+        let probe = r#"static int dead(V v){
+#ifndef FWP_ARC_ONLY
+ if(fwp_reuse_verify)return STR(v)->len==0;
+#endif
+ return *fwp_rc_slot(v)==0;
+}
 int main(int argc,char **argv){
  int result=original_main(argc,argv);
  if(result)return result;
  if(evaluations!=1)return 4;
- if(!observed || !(fwp_reuse_verify ? STR(observed)->len==0 : *fwp_rc_slot(observed)==0))return 3;
+ if(!observed || !dead(observed))return 3;
+#ifdef FWP_ARC_ONLY
+ /* budget is remaining allowance; zero live charge restores its initial value. */
+ if(fwp_gc.budget!=fwp_gc.budget_given||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+#endif
  return 0;
 }
 "#;
-    for opt in ["-O1", "-O2"] {
-        let control = runtime.replace("    fwp_caf_finish();", "");
-        fwp::cgen::compile_c(&format!("{control}\n{probe}"), &exe, opt).unwrap();
-        let o = Command::new(&exe)
-            .env("FWP_REUSE_VERIFY", "1")
-            .output()
-            .unwrap();
-        assert_eq!(
-            o.status.code(),
-            Some(3),
-            "missing executable cache teardown must leak the child"
-        );
-        fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let o = Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", poison)
+        for opt in ["-O1", "-O2"] {
+            {
+                let (case, code, expected) = (
+                    "missing-finish",
+                    format!("{}\n{probe}", runtime.replace("    fwp_caf_finish();", "")),
+                    3,
+                );
+                fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+                let output = Command::new(&exe)
+                    .env("FWP_GC", "off")
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", if mode == "arc" { "0" } else { "1" })
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "caf_ownership",
+                    &format!("{mode}{opt}-source-{case}"),
+                    &code,
+                    &exe,
+                    &output,
+                );
+                assert_eq!(
+                    output.status.code(),
+                    Some(expected),
+                    "{mode} {opt} {case}: {output:?}"
+                );
+                assert!(output.stderr.is_empty(), "{output:?}");
+            }
+            let code = format!("{runtime}\n{probe}");
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+            for poison in if mode == "arc" {
+                &["0"][..]
+            } else {
+                &["0", "1"][..]
+            } {
+                let output = Command::new(&exe)
+                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", poison)
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "caf_ownership",
+                    &format!("{mode}{opt}-source-normal-poison{poison}"),
+                    &code,
+                    &exe,
+                    &output,
+                );
+                assert!(output.status.success(), "{mode} {opt}: {output:?}");
+                assert_eq!(output.stdout, reference.stdout);
+                assert!(output.stderr.is_empty(), "{output:?}");
+            }
+        }
+        for opt in ["-O1", "-O2"] {
+            let build = Command::new(fwp)
+                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .arg(&src)
+                .args([opt, "-o"])
+                .arg(&exe)
+                .env("FWP_STACK", "0")
                 .output()
                 .unwrap();
-            assert!(
-                o.status.success(),
-                "code {:?}: {}",
-                o.status.code(),
-                String::from_utf8_lossy(&o.stderr)
-            );
-            assert_eq!(o.stdout, reference.stdout);
-            assert_eq!(o.stderr, reference.stderr);
+            assert!(build.status.success(), "{build:?}");
+            let native = Command::new(&exe)
+                .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                .env("FWP_GC_STATS", "0")
+                .env("FWP_GC_STRESS", stress)
+                .env("FWP_GC_VERIFY", stress)
+                .env("FWP_REUSE_VERIFY", stress)
+                .output()
+                .unwrap();
+            assert!(native.status.success(), "{native:?}");
+            assert_eq!(native.stdout, reference.stdout);
+            assert_eq!(native.stderr, reference.stderr);
         }
     }
     std::fs::remove_dir_all(dir).unwrap();
@@ -323,7 +503,7 @@ fn trapping_caf_evaluation_releases_caller_owners() {
     std::fs::create_dir_all(&dir).unwrap();
     let src = dir.join("probe.fwp");
     let cfile = dir.join("probe.c");
-    let exe = dir.join("probe");
+    let exe = dir.join("probe.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(
         &src,
@@ -345,37 +525,48 @@ main = [task.yield (), "input" | choose (read-all () | string.length | eq 0) | e
         .output()
         .unwrap();
     assert!(!reference.status.success());
-    let build = Command::new(fwp)
-        .args(["build", "--gc", "tracing"])
-        .arg(&src)
-        .args(["--emit-c", "-o"])
-        .arg(&cfile)
-        .output()
-        .unwrap();
-    assert!(
-        build.status.success(),
-        "{}",
-        String::from_utf8_lossy(&build.stderr)
-    );
-    let emitted = std::fs::read_to_string(&cfile).unwrap();
-    let start = emitted.find("/* holder :").unwrap();
-    let end = start + emitted[start..].find("\n}\n").unwrap() + 3;
-    let body = &emitted[start..end];
-    let id = body
-        .split("static V f")
-        .nth(1)
-        .unwrap()
-        .split('(')
-        .next()
-        .unwrap();
-    let runtime = emitted.replace(
-        "int main(int argc, char **argv)",
-        "int original_main(int argc, char **argv)",
-    );
-    let probe = r#"
+    for mode in ["arc", "tracing"] {
+        let stress = if mode == "arc" { "0" } else { "1" };
+        let build = Command::new(fwp)
+            .args(["build", "--gc", mode, "--memory", "dynamic"])
+            .arg(&src)
+            .args(["--emit-c", "-O2", "-o"])
+            .arg(&cfile)
+            .env("FWP_STACK", "0")
+            .output()
+            .unwrap();
+        assert!(
+            build.status.success(),
+            "{}",
+            String::from_utf8_lossy(&build.stderr)
+        );
+        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let start = emitted.find("/* holder :").unwrap();
+        let end = start + emitted[start..].find("\n}\n").unwrap() + 3;
+        let body = &emitted[start..end];
+        let id = body
+            .split("static V f")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let runtime = emitted.replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        );
+        let probe = r#"
+static int dead(V v){
+#ifndef FWP_ARC_ONLY
+ if(fwp_reuse_verify)return STR(v)->len==0;
+#endif
+ return *fwp_rc_slot(v)==0;
+}
 static jmp_buf trapped; static int recover(void){return 1;}
 int main(void){
  fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+ intptr_t baseline=fwp_gc.budget;
+ for(int round=0;round<32;round++){
  for(int alias=0;alias<2;alias++){
   V input=fwp_rc_fresh(fwp_str_new("input",5));if(alias)fwp_rc_dup(input);
   fwp_trap_recover=recover;fwp_trap_jb=&trapped;fwp_trap_cleanup=0;
@@ -383,59 +574,103 @@ int main(void){
   fwp_trap_recover=0;fwp_trap_jb=0;
   if(fwp_cleanups)return 2;
   if(alias){if(*fwp_rc_slot(input)!=1||STR(input)->len!=5)return 3;fwp_rc_free_obj(input);}
-  else if(!(fwp_reuse_verify?STR(input)->len==0:*fwp_rc_slot(input)==0))return 4;
+  else if(!dead(input))return 4;
  }
- fwp_caf_finish();return 0;
+ fwp_caf_finish();
+#ifdef FWP_ARC_ONLY
+ if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+#endif
+ }
+ return 0;
 }
 "#
-    .replace("FUNCTION", id);
-    let caf = body.find(" = caf").unwrap();
-    let point = body[..caf]
-        .rfind("fwp_cleanup_push(")
-        .expect("CAF evaluation must protect the caller");
-    let stop = point + body[point..].find(';').unwrap() + 1;
-    let push = &body[point..stop];
-    let node = push.split('&').nth(1).unwrap().split(',').next().unwrap();
-    let control_body =
-        body.replacen(push, "", 1)
-            .replacen(&format!("fwp_cleanup_pop(&{node});"), "", 1);
-    let control = runtime.replacen(body, &control_body, 1);
-    for opt in ["-O1", "-O2"] {
-        fwp::cgen::compile_c(&format!("{control}\n{probe}"), &exe, opt).unwrap();
-        let old = Command::new(&exe)
-            .env("FWP_REUSE_VERIFY", "1")
-            .output()
-            .unwrap();
-        assert_eq!(
-            old.status.code(),
-            Some(4),
-            "missing CAF caller scope must leak the unique input"
-        );
-        fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let o = Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", poison)
+        .replace("FUNCTION", id);
+        let caf = body.find(" = caf").unwrap();
+        let point = body[..caf]
+            .rfind("fwp_cleanup_push(")
+            .expect("CAF evaluation must protect the caller");
+        let stop = point + body[point..].find(';').unwrap() + 1;
+        let push = &body[point..stop];
+        let node = push.split('&').nth(1).unwrap().split(',').next().unwrap();
+        let control_body =
+            body.replacen(push, "", 1)
+                .replacen(&format!("fwp_cleanup_pop(&{node});"), "", 1);
+        let control = runtime.replacen(body, &control_body, 1);
+        for opt in ["-O1", "-O2"] {
+            {
+                let (case, code, expected) = ("missing-scope", format!("{control}\n{probe}"), 4);
+                fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+                let output = Command::new(&exe)
+                    .env("FWP_GC", "off")
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", if mode == "arc" { "0" } else { "1" })
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "caf_ownership",
+                    &format!("{mode}{opt}-trap-{case}"),
+                    &code,
+                    &exe,
+                    &output,
+                );
+                assert_eq!(
+                    output.status.code(),
+                    Some(expected),
+                    "{mode} {opt} {case}: {output:?}"
+                );
+                assert!(output.stderr.is_empty(), "{output:?}");
+            }
+            let code = format!("{runtime}\n{probe}");
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+            for poison in if mode == "arc" {
+                &["0"][..]
+            } else {
+                &["0", "1"][..]
+            } {
+                let output = Command::new(&exe)
+                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", poison)
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "caf_ownership",
+                    &format!("{mode}{opt}-trap-normal-poison{poison}"),
+                    &code,
+                    &exe,
+                    &output,
+                );
+                assert!(output.status.success(), "{mode} {opt}: {output:?}");
+                assert_eq!(output.stdout, b"");
+                assert!(output.stderr.is_empty(), "{output:?}");
+            }
+        }
+        for opt in ["-O1", "-O2"] {
+            let build = Command::new(fwp)
+                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .arg(&src)
+                .args([opt, "-o"])
+                .arg(&exe)
+                .env("FWP_STACK", "0")
                 .output()
                 .unwrap();
-            assert!(
-                o.status.success(),
-                "code {:?}: {}\n{body}",
-                o.status.code(),
-                String::from_utf8_lossy(&o.stderr)
-            );
+            assert!(build.status.success(), "{build:?}");
+            let native = Command::new(&exe)
+                .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                .env("FWP_GC_STATS", "0")
+                .env("FWP_GC_STRESS", stress)
+                .env("FWP_GC_VERIFY", stress)
+                .env("FWP_REUSE_VERIFY", stress)
+                .output()
+                .unwrap();
+            assert_eq!(native.status.code(), reference.status.code());
+            assert_eq!(native.stdout, reference.stdout);
+            assert_eq!(native.stderr, reference.stderr);
         }
-        fwp::cgen::compile_c(&emitted, &exe, opt).unwrap();
-        let native = Command::new(&exe)
-            .env("FWP_GC_STRESS", "1")
-            .env("FWP_GC_VERIFY", "1")
-            .env("FWP_REUSE_VERIFY", "1")
-            .output()
-            .unwrap();
-        assert_eq!(native.status.code(), reference.status.code());
-        assert_eq!(native.stdout, reference.stdout);
-        assert_eq!(native.stderr, reference.stderr);
     }
     std::fs::remove_dir_all(dir).unwrap();
 }

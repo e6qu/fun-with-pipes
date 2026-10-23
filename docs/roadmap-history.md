@@ -12,6 +12,25 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Failed loops and collection cleanup (PR #201)
+
+Loop, map, filter/take-while and zip probes now check repeated cleanup with ARC
+and tracing, including allocation failures, failed callbacks and cancellation.
+Deliberately omitted buffer cleanup and final releases must fail. Thirteen
+related tests save generated C, binaries and results before asserting success,
+so a failing run retains its evidence. Compiler behavior is unchanged.
+
+[PR #201](https://github.com/e6qu/fun-with-pipes/pull/201) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39955074782)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39955074824)
+at `c6ad1aaf6d2f58fa41e11e326fe83ac8a5156f31`. Complete logs passed audit. The
+[inspection record](measurements/collection-cleanup-2026-10-23.json) covers 1,986
+saved binaries across six native hosts: 1,896 aggregate cleanup outcomes,
+360 allocator observations and eighteen default-program builds. Squash merge
+`c56f85547610b14bd1b8af9a9ad96413f3c494e9` has the same tree and a verified one-line message without
+body or trailers. [The guide](measurements/collection-cleanup.md) explains the
+failure cases. These checks establish cleanup, not speed or complete GC removal.
+
 ## Repeated constructor and call cleanup (PR #200)
 
 Six tests now repeat constructor, call and variant failures with ARC and tracing.

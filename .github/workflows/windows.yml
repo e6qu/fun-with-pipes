@@ -172,7 +172,7 @@ jobs:
         shell: pwsh
         run: |
           $testTargets = @(
-            'list_applicative_ownership', 'typed_state_ownership', 'serializer_leaf_ownership', 'argument_preparation_ownership', 'closure_ownership',
+            'list_applicative_ownership', 'typed_state_ownership', 'serializer_leaf_ownership', 'argument_preparation_ownership', 'closure_ownership', 'temporary_ownership',
             'retain_unwind_ownership', 'runtime_call_ownership', 'constructor_type_ownership', 'scope_thunk_ownership', 'retained_thunk_ownership',
             'service_value_ownership', 'process_exit_ownership', 'grpc_canonical_encoding', 'grpc_response_encoding', 'grpc_force_cleanup',
             'grpc_render_cleanup', 'grpc_receive_cleanup', 'grpc_status_cleanup', 'grpc_send_cleanup', 'grpc_request_encoding',
@@ -180,13 +180,13 @@ jobs:
             'grpc_server_requests', 'grpc_connect_startup', 'grpc_connect_cleanup', 'library_resources', 'service_scope_ownership',
             'service_context_storage', 'grpc_context_restore', 'grpc_context_resources', 'grpc_packed_options', 'grpc_environment_cache',
             'grpc_peer_completion', 'grpc_connection_addresses', 'grpc_tls_pool_identity', 'http2_peer_cleanup', 'http2_client_ownership',
-            'http2_server_ownership', 'grpc_capture_resources', 'byte_decoder_ownership', 'text_decoder_ownership', 'web',
+            'http2_server_ownership', 'http2_body_roots', 'grpc_capture_resources', 'byte_decoder_ownership', 'text_decoder_ownership', 'web',
             'std_tests', 'tls', 'cli_ownership', 'console_ownership', 'process_ownership',
             'terminal_ownership', 'cli', 'clock_ownership', 'directory_report', 'working_directory',
-            'exec_protocol_ownership', 'exec_invocation_ownership', 'arc_tasks', 'arc_execution', 'server_entry_ownership',
+            'exec_protocol_ownership', 'exec_invocation_ownership', 'arc_tasks', 'arc_execution', 'arc_corpus', 'server_entry_ownership',
             'arc_library', 'transpose_ownership', 'linalg_ownership', 'array_loop_borrows', 'loop_ownership',
             'loop_preparation_ownership', 'nested_loop_boxing', 'field_moves', 'boxed_projection_ownership', 'boxed_field_moves',
-            'field_context_ownership', 'unboxed_worker_locals', 'compiler_call_liveness', 'worker_preparation_ownership', 'worker_boxing_ownership',
+            'field_context_ownership', 'match_context_ownership', 'unboxed_worker_locals', 'compiler_call_liveness', 'worker_preparation_ownership', 'worker_boxing_ownership',
             'ffi', 'raw_memory_ownership', 'library_input_ownership', 'library_result_ownership', 'record_conversion_ownership',
             'resource_frames', 'resource_frame_fields', 'resource_frame_variants', 'resource_match_context', 'foreign_callback_ownership',
             'float_formats', 'float_linking', 'protocol', 'blocked_matrix', 'wide_workers'
@@ -240,7 +240,7 @@ jobs:
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: |
-          cargo test --no-fail-fast --test reuse --test string_map_ownership --test text_ownership -- --nocapture 2>&1 | Tee-Object windows-reuse_tests.log
+          cargo test --no-fail-fast --test reuse --test reuse_token_ownership --test string_map_ownership --test text_ownership -- --nocapture 2>&1 | Tee-Object windows-reuse_tests.log
           exit $LASTEXITCODE
       - name: Publish native reuse diagnostics
         if: always()

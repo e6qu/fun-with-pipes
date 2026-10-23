@@ -67,8 +67,17 @@ CI saves generated C, executables, output and exit status under `record-ownershi
 The related record, constructor and collection probes now save unexpected
 outcomes before asserting success, so a failed check leaves its evidence intact.
 The compiler and runtime are unchanged. [The handoff](../development-state.md)
-records local and focused GCC evidence and the remaining final native-platform gates.
+records current delivery work; accepted results are recorded below.
 
 See [record cleanup](record-cleanup.md) for constructors and field conversions,
 [ownership](../ownership.md) for the memory contract and [PLAN.md](../../PLAN.md)
 for the remaining removal of tracing and unnecessary reference counting.
+
+## Native acceptance
+
+[PR #201](../roadmap-history.md#failed-loops-and-collection-cleanup-pr-201) passed
+all production jobs and documentation. Its
+[inspection record](collection-cleanup-2026-10-23.json) contains 331 saved binary
+files per host across all six native targets. This includes 316 aggregate cleanup
+outcomes and sixty allocator observations per host. All complete job logs were
+audited; these are ownership checks, not performance comparisons.

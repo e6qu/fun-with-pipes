@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -100,7 +103,7 @@ fn current_loop_states_release_at_first_and_later_cancellation_ticks() {
     let dir = Scratch::new("ticks");
     let src = dir.0.join("ticks.fwp");
     let cfile = dir.0.join("ticks.c");
-    let exe = dir.0.join("ticks");
+    let exe = dir.0.join("ticks.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
     let reference = checked(
@@ -109,40 +112,48 @@ fn current_loop_states_release_at_first_and_later_cancellation_ticks() {
             .args(["run", "--interp"])
             .arg(&src),
     );
-    checked(
-        Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(cfile).unwrap();
-    let step = function_id(&emitted, "record-step");
-    let nested = function_id(&emitted, "nested-step");
-    let (step_scope, step_slots) = loop_scope(&emitted, step);
-    let (nested_scope, nested_slots) = loop_scope(&emitted, nested);
-    let step_read = match step_slots {
-        1 => "text=OBJ(((fwp_owner_ctxSCOPE *)fwp_cleanups->arg)->v0)->f[1];",
-        2 => "text=((fwp_owner_ctxSCOPE *)fwp_cleanups->arg)->v0;",
-        _ => panic!("unexpected record state width {step_slots}"),
-    };
-    let nested_read = match nested_slots {
+    for mode in ["arc", "tracing"] {
+        let stress = if mode == "arc" { "0" } else { "1" };
+        checked(
+            Command::new(fwp)
+                .env("FWP_STACK", "1")
+                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .arg(&src)
+                .args(["--emit-c", "-O2", "-o"])
+                .arg(&cfile),
+        );
+        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let step = function_id(&emitted, "record-step");
+        let nested = function_id(&emitted, "nested-step");
+        let (step_scope, step_slots) = loop_scope(&emitted, step);
+        let (nested_scope, nested_slots) = loop_scope(&emitted, nested);
+        let step_read = match step_slots {
+            1 => "text=OBJ(((fwp_owner_ctxSCOPE *)fwp_cleanups->arg)->v0)->f[1];",
+            2 => "text=((fwp_owner_ctxSCOPE *)fwp_cleanups->arg)->v0;",
+            _ => panic!("unexpected record state width {step_slots}"),
+        };
+        let nested_read = match nested_slots {
         1 => "V pair=OBJ(((fwp_owner_ctxNSCOPE *)fwp_cleanups->arg)->v0)->f[1]; text=OBJ(pair)->f[0]; other=OBJ(pair)->f[1];",
         2 => "V pair=((fwp_owner_ctxNSCOPE *)fwp_cleanups->arg)->v0; text=OBJ(pair)->f[0]; other=OBJ(pair)->f[1];",
         3 => "text=((fwp_owner_ctxNSCOPE *)fwp_cleanups->arg)->v0; other=((fwp_owner_ctxNSCOPE *)fwp_cleanups->arg)->v1;",
         _ => panic!("unexpected nested state width {nested_slots}"),
     };
-    assert!(
-        emitted.contains(&format!(
-            "typedef struct {{ V v0; V v1; }} fwp_owner_ctx{nested_scope};"
-        )),
-        "nested state must own its flattened String fields directly"
-    );
-    let probe=r#"
+        assert!(
+            emitted.contains(&format!(
+                "typedef struct {{ V v0; V v1; }} fwp_owner_ctx{nested_scope};"
+            )),
+            "nested state must own its flattened String fields directly"
+        );
+        let probe=r#"
 static fwp_task cancelled_loop;
 static volatile V original_text, state_box, capture, scalar_word, observed_text, observed_other;
 static int wanted_tick, current_tick;
-static int dead_string(V v) { return fwp_reuse_verify ? STR(v)->len==0 : *fwp_rc_slot(v)==0; }
+static int dead_string(V v) {
+#ifndef FWP_ARC_ONLY
+ if(fwp_reuse_verify)return STR(v)->len==0;
+#endif
+ return *fwp_rc_slot(v)==0;
+}
 static void cancel_at_loop_tick(void) {
     if (!fwp_cur || !fwp_cleanups) return;
     V text=0, other=0;
@@ -163,6 +174,8 @@ int main(void) {
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 190;
 #endif
     fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    intptr_t baseline=fwp_gc.budget;
+    for(int round=0;round<32;round++){
     for (volatile int tick=1;tick<=2;tick++) for (volatile int mode=0;mode<5;mode++) {
         original_text=fwp_rc_fresh(fwp_str_new("seed",4));fwp_rc_dup(original_text);
         scalar_word=fwp_rc_fresh(fwp_str_new("scalar bits",11));
@@ -200,45 +213,83 @@ int main(void) {
         if (mode==3) { if (!dead_string(capture)) return 7; } else fwp_rc_free_obj(capture);
         fwp_rc_free_obj(original_text);fwp_rc_free_obj(scalar_word);
     }
+#ifdef FWP_ARC_ONLY
+    if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
+#endif
+    }
     puts("loop states release at cancellation ticks with aliases and scalar bits intact");
     return 0;
 }
 "#.replace("READ_RECORD_OWNER",step_read).replace("READ_NESTED_OWNER",nested_read).replace("NSCOPE",&nested_scope).replace("SCOPE",&step_scope).replace("NESTED",nested).replace("STEP",step).replace("GENERIC",function_id(&emitted,"generic")).replace("DYNAMIC",function_id(&emitted,"dynamic")).replace("CAPTURED",function_id(&emitted,"captured"));
-    let runtime = "static void cancel_at_loop_tick(void);\n".to_string()
-        + &emitted
-            .replace("FWP_TICK();", "cancel_at_loop_tick(); FWP_TICK();")
-            .replace(
-                "int main(int argc, char **argv)",
-                "int original_main(int argc, char **argv)",
+        let runtime = "static void cancel_at_loop_tick(void);\n".to_string()
+            + &emitted
+                .replace("FWP_TICK();", "cancel_at_loop_tick(); FWP_TICK();")
+                .replace(
+                    "int main(int argc, char **argv)",
+                    "int original_main(int argc, char **argv)",
+                );
+        for opt in ["-O1", "-O2"] {
+            let mut cases = vec![("normal", probe.clone(), 0)];
+            if mode == "arc" {
+                let missing = probe.replace("fwp_rc_free_obj(original_text);", "");
+                assert_ne!(missing, probe);
+                cases.push(("missing-release", missing, 90));
+            }
+            for (label, probe, status) in cases {
+                let code = format!("{runtime}\n{probe}");
+                fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+                for poison in if mode == "tracing" && label == "normal" {
+                    &["0", "1"][..]
+                } else {
+                    &["0"][..]
+                } {
+                    let out = Command::new(&exe)
+                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", poison)
+                        .output()
+                        .unwrap();
+                    record_probe::save(
+                        "loop_unwind_ownership",
+                        &format!("{mode}{opt}-ticks-{label}-poison{poison}"),
+                        &code,
+                        &exe,
+                        &out,
+                    );
+                    assert_eq!(
+                        out.status.code(),
+                        Some(status),
+                        "{mode} {opt} {label}: {out:?}"
+                    );
+                    assert!(out.stderr.is_empty(), "{mode} {opt} {label}: {out:?}");
+                    let expected = if status == 0 {
+                        &b"loop states release at cancellation ticks with aliases and scalar bits intact\n"[..]
+                    } else {
+                        &b""[..]
+                    };
+                    assert_eq!(out.stdout, expected);
+                }
+            }
+            checked(
+                Command::new(fwp)
+                    .env("FWP_STACK", "1")
+                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .arg(&src)
+                    .args([opt, "-o"])
+                    .arg(&exe),
             );
-    for opt in ["-O1", "-O2"] {
-        fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
             let out = checked(
                 Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
+                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", stress),
             );
-            assert_eq!(
-                out.stdout,
-                b"loop states release at cancellation ticks with aliases and scalar bits intact\n"
-            );
+            assert_eq!(out.stdout, reference.stdout);
         }
-        checked(
-            Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
-                .arg(&src)
-                .args([opt, "-o"])
-                .arg(&exe),
-        );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
-        assert_eq!(out.stdout, reference.stdout);
     }
 }
 
@@ -247,25 +298,28 @@ fn owned_steps_release_if_payload_preparation_fails() {
     let dir = Scratch::new("payload");
     let src = dir.0.join("payload.fwp");
     let cfile = dir.0.join("payload.c");
-    let exe = dir.0.join("payload");
+    let exe = dir.0.join("payload.exe");
     std::fs::write(&src, SOURCE).unwrap();
-    checked(
-        Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "tracing"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(cfile).unwrap();
-    let drop_step = emitted
-        .split("return fwp_p_loop_own(l0, l1,")
-        .nth(1)
-        .unwrap()
-        .split(',')
-        .nth(2)
-        .unwrap()
-        .trim();
-    let probe = r#"
+    for mode in ["arc", "tracing"] {
+        let stress = if mode == "arc" { "0" } else { "1" };
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .env("FWP_STACK", "1")
+                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .arg(&src)
+                .args(["--emit-c", "-O2", "-o"])
+                .arg(&cfile),
+        );
+        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let drop_step = emitted
+            .split("return fwp_p_loop_own(l0, l1,")
+            .nth(1)
+            .unwrap()
+            .split(',')
+            .nth(2)
+            .unwrap()
+            .trim();
+        let probe = r#"
 static volatile V original_text, scalar_word, owned_step;
 static int recover_payload(void) { return 1; }
 static void fail_duplicate(V value) { (void)value; fwp_trap("injected payload preparation failure"); }
@@ -274,6 +328,8 @@ int main(void) {
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 190;
 #endif
     fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    intptr_t baseline=fwp_gc.budget;
+    for(int round=0;round<32;round++){
     for (volatile int stop=0;stop<2;stop++) for (volatile int alias=0;alias<2;alias++) {
         original_text=fwp_rc_fresh(fwp_str_new("seed",4));fwp_rc_dup(original_text);
         scalar_word=fwp_rc_fresh(fwp_str_new("scalar bits",11));
@@ -297,27 +353,62 @@ int main(void) {
         if (*fwp_rc_slot(scalar_word)!=1 || STR(scalar_word)->len!=11) return 5;
         fwp_rc_free_obj(original_text);fwp_rc_free_obj(scalar_word);
     }
+#ifdef FWP_ARC_ONLY
+    if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
+#endif
+    }
     puts("owned Steps release on payload preparation failure without losing aliases");
     return 0;
 }
 "#.replace("DROP_STEP",drop_step);
-    let runtime = emitted.replace(
-        "int main(int argc, char **argv)",
-        "int original_main(int argc, char **argv)",
-    );
-    for opt in ["-O1", "-O2"] {
-        fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-            assert_eq!(
-                out.stdout,
-                b"owned Steps release on payload preparation failure without losing aliases\n"
-            );
+        let runtime = emitted.replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        );
+        for opt in ["-O1", "-O2"] {
+            let mut cases = vec![("normal", probe.clone(), 0)];
+            if mode == "arc" {
+                let missing = probe.replace("fwp_rc_free_obj(original_text);", "");
+                assert_ne!(missing, probe);
+                cases.push(("missing-release", missing, 90));
+            }
+            for (label, probe, status) in cases {
+                let code = format!("{runtime}\n{probe}");
+                fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+                for poison in if mode == "tracing" && label == "normal" {
+                    &["0", "1"][..]
+                } else {
+                    &["0"][..]
+                } {
+                    let out = Command::new(&exe)
+                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", poison)
+                        .output()
+                        .unwrap();
+                    record_probe::save(
+                        "loop_unwind_ownership",
+                        &format!("{mode}{opt}-payload-{label}-poison{poison}"),
+                        &code,
+                        &exe,
+                        &out,
+                    );
+                    assert_eq!(
+                        out.status.code(),
+                        Some(status),
+                        "{mode} {opt} {label}: {out:?}"
+                    );
+                    assert!(out.stderr.is_empty(), "{mode} {opt} {label}: {out:?}");
+                    let expected = if status == 0 {
+                        &b"owned Steps release on payload preparation failure without losing aliases\n"[..]
+                    } else {
+                        &b""[..]
+                    };
+                    assert_eq!(out.stdout, expected);
+                }
+            }
         }
     }
 }
