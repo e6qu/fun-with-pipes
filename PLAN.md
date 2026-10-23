@@ -110,7 +110,8 @@ outside the benchmark suite.
    [Record and variant cleanup checks](docs/measurements/record-cleanup.md) cover
    direct ARC failures, constructor/call cleanup and repeated storage balances.
    The next grouped checks extend field selection, returned aliases and temporary
-   storage reuse; the handoff distinguishes local results from native acceptance.
+   storage reuse, partial calls, folds and loop cancellation; the handoff
+   distinguishes local results from native acceptance.
    [Loop and collection cleanup](docs/measurements/collection-cleanup.md) extends
    the checks to partial iteration state, callbacks, temporary buffers and cancellation.
    Extend this evidence to the remaining collector-specific checks before removing them.

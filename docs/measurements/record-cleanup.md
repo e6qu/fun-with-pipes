@@ -107,7 +107,7 @@ uses. An internal **reuse token** temporarily owns an emptied object: a later
 constructor may fill that storage, or cleanup must free it. Tokens are compiler
 bookkeeping, not a new language feature.
 
-These four test targets now check both ARC and tracing:
+These seven test targets now check both ARC and tracing:
 
 | Check | What must remain true |
 |---|---|
@@ -115,6 +115,9 @@ These four test targets now check both ARC and tracing:
 | [Pattern matching](../../tests/match_context_ownership.rs) | Matching a variant preserves its child type so discarded owners are released |
 | [Returned aliases](../../tests/variant_alias_ownership.rs) | Returned variant fields transfer once, remain unboxed where expected, and preserve caller aliases across task suspension |
 | [Reusable storage](../../tests/reuse_token_ownership.rs) | A consumed object's empty storage transfers to a new result or is freed on failure, an unused branch or a tail call |
+| [Partial calls](../../tests/argument_preparation_ownership.rs) | Failure while acquiring arguments preserves caller aliases; unique captured values move without extra retains |
+| [Right folds](../../tests/fold_unwind_ownership.rs) | A failed callback, allocation or cancelled task releases the accumulator and temporary buffer |
+| [Loop cancellation](../../tests/loop_unwind_ownership.rs) | Cancellation releases the current state at the first or a later iteration; failed result preparation preserves outside aliases |
 
 Here is the field-selection pattern. `Leaf` constructs an `Inner` containing a
 string. `make` constructs a record by applying each field function to the input;
@@ -149,7 +152,24 @@ frames for this eligible recursion pattern; it makes no promise for arbitrary
 recursion. Tracing keeps its old-cell, poisoned-storage and collection-on/off
 controls. ARC additionally rejects settings that disable ownership or freeing.
 
-Windows now runs the previously omitted match-context and reuse-token targets.
+A **partial call** supplies an argument and returns a function waiting for its
+next argument. For example, `add 1` waits for a number; it adds one to that number.
+Captured values must stay alive while the returned function can use them. A
+unique function can transfer those values into its call without increasing their
+reference counts. An independently live alias must keep its own values.
+
+A **fold** repeatedly combines an element with an accumulator; a right fold
+starts at the right end of the list. These tests deliberately fail after an
+intermediate accumulator exists. They also omit a temporary-buffer release to
+prove the check detects it. Loop checks cancel both before and after an update,
+including nested state fields and integer words that resemble addresses.
+The twelve-pattern capture report retains its existing rows and columns; each
+pattern now repeats 32 times before the final rows are reported.
+
+Windows now selects the previously omitted match-context, reuse-token, ARC
+program-corpus and HTTP/2 body-copy targets. Linux's `static_memory` target is
+Linux-specific; Windows uses `windows_static_memory` for native storage checks.
+Selecting a target that skips execution does not establish platform support.
 The two variant tests that change process-wide generator options serialize those
 changes, so concurrent test execution cannot select another test's memory mode.
 Generated C, executable and output are saved before checking each result.
