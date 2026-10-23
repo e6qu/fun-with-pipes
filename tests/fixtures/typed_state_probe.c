@@ -19,12 +19,15 @@ static void typed_drop_string(V value) {
     DROP_STRING(value);
     if(last) {
         count=fwp_rc_slot(value);
+#ifndef FWP_ARC_ONLY
         if(fwp_reuse_verify) {
             /* Verification retains the physical leaf and poisons its payload.
              * Establish that storage still exists before inspecting poison. */
             if(!count || *count!=1) exit(typed_failure(125,__LINE__));
             if(STR(value)->len || STR(value)->d[0]) exit(typed_failure(125,__LINE__));
-        } else {
+        } else
+#endif
+        {
             /* Small freed slots can still have a metadata address. Require a
              * cleared count and an actual counted-storage free counter change. */
             if((count && *count) || fwp_gc.freed<=before) exit(typed_failure(125,__LINE__));
@@ -47,8 +50,10 @@ static V typed_tuple(V first,V second) {
 static void typed_child_body(void *arg,int cancelled);
 static V typed_entry(V *args) {
     (void)args;
+#ifndef FWP_ARC_ONLY
     fwp_gc_collect();
     if(!fwp_gc.armed || !fwp_gc.ncollect) exit(typed_failure(129,__LINE__));
+#endif
     if(typed_mode==1) {
         V value=fwp_rc_fresh(fwp_cstr("replacement"));
         fwp_p_put_owned(value,fwp_rc_dup);typed_drop_string(value);
@@ -65,6 +70,8 @@ static V typed_entry(V *args) {
         fwp_state_owner *expected=fwp_state_owners;
         if(fwp_cur!=typed_child) {
             typed_child_released=0;typed_child=fwp_spawn_task(0,typed_child_body,NULL,0,0);
+            typed_child->ownership=FWP_TASK_SHARED;
+            fwp_rc_fresh(PTR(typed_child));fwp_rc_dup(PTR(typed_child));
             if(typed_mode==5) {
                 fwp_p_task_yield();
                 if(!typed_started) exit(typed_failure(130,__LINE__));
@@ -72,6 +79,7 @@ static V typed_entry(V *args) {
             }
             fwp_await(typed_child);
             if(typed_mode==5 && typed_child_released!=1) exit(typed_failure(125,__LINE__));
+            fwp_task_drop(PTR(typed_child));fwp_free_zombie();
         } else fwp_p_task_yield();
         /* Reject a stale task-stack owner before accessing its fields. */
         if(fwp_state_owners!=expected) exit(typed_failure(128,__LINE__));
@@ -96,7 +104,10 @@ static void typed_child_body(void *arg,int cancelled) {
 int main(void) {
     fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
     fwp_tasks_init();fwp_fns=typed_entries;
+    intptr_t baseline=fwp_gc.budget;
     fwp_trap_recover=typed_recover;fwp_trap_jb=&typed_trap;fwp_trap_cleanup=0;
+    for(int round=0;round<32;round++) {
+    typed_started=0;
     for(typed_mode=0;typed_mode<7;typed_mode++) {
         V initial=fwp_rc_fresh(fwp_cstr("initial State"));
         size_t before=fwp_gc.ncollect;
@@ -123,7 +134,12 @@ int main(void) {
             fwp_state_restore(0);
         }
         if(fwp_state_owners || fwp_cleanups || fwp_state_len) return typed_failure(125,__LINE__);
-        if(fwp_gc.ncollect<=before || !fwp_rc_slot(initial) || *fwp_rc_slot(initial)!=1) return typed_failure(125,__LINE__);
+#ifndef FWP_ARC_ONLY
+        if(fwp_gc.ncollect<=before) return typed_failure(125,__LINE__);
+#else
+        if(fwp_gc.ncollect!=before) return typed_failure(129,__LINE__);
+#endif
+        if(!fwp_rc_slot(initial) || *fwp_rc_slot(initial)!=1) return typed_failure(125,__LINE__);
         typed_drop_string(initial);
     }
     /* An address-shaped I64 in an untyped slot must not clear a real count. */
@@ -131,6 +147,16 @@ int main(void) {
     fwp_state_push(FWP_UNIT);fwp_p_put_owned(sentinel,NULL);
     if(!fwp_rc_slot(sentinel) || *fwp_rc_slot(sentinel)!=1) return typed_failure(133,__LINE__);
     fwp_state_restore(0);typed_drop_string(sentinel);
+    fwp_tasks_finish();fwp_free_zombie();
+#ifdef FWP_ARC_ONLY
+    if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+#endif
+    }
+    fwp_trap_recover=NULL;fwp_trap_jb=NULL;fwp_fns=fwp_fn_table;
+    fwp_native_tasks_finish();
+#ifdef FWP_ARC_ONLY
+    if(fwp_gc.budget!=fwp_gc.budget_given||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+#endif
     printf("typed State ownership; collections=%zu owner=%zu cleanup=%zu task=%zu\n",
         fwp_gc.ncollect,sizeof(fwp_state_owner),sizeof(fwp_cleanup),sizeof(fwp_task));
     return 0;
