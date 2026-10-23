@@ -147,10 +147,11 @@ impl Contract {
 
 /// Whether an argument's outer object is used only during this call. This is
 /// stronger than Borrow: borrowed inputs may otherwise be returned or retained.
-/// Hash only reads typed bytes and returns an immediate fingerprint. Synchronous
+/// Hash only reads typed bytes and returns an immediate fingerprint. Array list
+/// display copies numeric text into a fresh string without retaining its input. Synchronous
 /// callbacks may return captured children, but never the callback object itself.
 pub fn borrows_without_escape(symbol: &str, index: usize) -> bool {
-    if symbol == "hash" && index == 0 {
+    if matches!(symbol, "hash" | "array._show-list") && index == 0 {
         return true;
     }
     primitive(symbol).is_some_and(|c| c.borrows_callback() && c.callback_argument() == Some(index))
@@ -379,7 +380,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         }
         "string.slice" | "bytes.slice" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         "join" | "format" => (&[B, B], ResultOwnership::FreshLeaf, None, &[]),
-        "show" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
+        "show" | "array._show-list" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
         "dir.create-all" | "dir.create" | "dir.remove" | "file.remove" | "file.exists"
         | "file.is-dir" => (&[B], R, None, &[]),
         "file.rename" | "file.append" | "file.write-bytes" | "file.write-new" => {
@@ -744,6 +745,12 @@ mod tests {
     fn borrowed_arguments_need_an_independent_nonescape_proof() {
         assert!(borrows_without_escape("hash", 0));
         assert!(!borrows_without_escape("hash", 1));
+        assert!(borrows_without_escape("array._show-list", 0));
+        assert!(!borrows_without_escape("array._show-list", 1));
+        let display = primitive("array._show-list").unwrap();
+        assert_eq!(display.arguments, &[Argument::Borrow]);
+        assert_eq!(display.result, ResultOwnership::FreshLeaf);
+        assert!(display.callback.is_none() && display.aliases.is_empty());
         assert!(borrows_without_escape("map", 0));
         assert!(!borrows_without_escape("map", 1));
         assert!(!borrows_without_escape("task.spawn", 0));

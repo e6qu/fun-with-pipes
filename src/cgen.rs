@@ -7037,6 +7037,13 @@ impl<'p> Gen<'p> {
                 Some(false) => "return fwp_show_u64(l0);".into(),
                 None => format!("return fwp_show(l0, {});", self.desc(&p(0))),
             },
+            "array._show-list" => {
+                let MT::Con(name, elements) = p(0) else {
+                    unreachable!("array list display requires an array");
+                };
+                assert!(name == "std::Array" && elements.len() == 1);
+                format!("return fwp_show_array_list(l0, {});", self.desc(&elements[0]))
+            }
             "json.write" => format!("return fwp_p_json_write(l0, {});", self.desc(&p(0))),
             "csv.parse-with" => {
                 let MT::Con(_, fields) = &result else {

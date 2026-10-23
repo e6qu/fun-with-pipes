@@ -189,7 +189,7 @@ jobs:
             'field_context_ownership', 'match_context_ownership', 'unboxed_worker_locals', 'compiler_call_liveness', 'worker_preparation_ownership', 'worker_boxing_ownership',
             'ffi', 'raw_memory_ownership', 'library_input_ownership', 'library_result_ownership', 'record_conversion_ownership',
             'resource_frames', 'resource_frame_fields', 'resource_frame_variants', 'resource_match_context', 'foreign_callback_ownership',
-            'float_formats', 'float_linking', 'protocol', 'blocked_matrix', 'wide_workers'
+            'float_formats', 'array_text', 'float_linking', 'protocol', 'blocked_matrix', 'wide_workers'
           )
           python scripts/run-native-tests.py --targets $testTargets --idle-timeout 600 --logs windows-tls-tests 2>&1 | Tee-Object windows-tls_tests.log
           exit $LASTEXITCODE

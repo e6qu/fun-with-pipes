@@ -20,6 +20,7 @@
 //! unknown functions, primitives not listed here).
 
 use std::collections::{BTreeSet, HashMap};
+use std::rc::Rc;
 
 use crate::ir::*;
 use crate::value::Value;
@@ -233,9 +234,9 @@ fn prim(sym: &str, ty: &MT, args: &[Expr]) -> Traps {
         },
         // total, and with no effect but allocation (running out of memory
         // is not a trap a program can tell from another)
-        "show" | "concat" | "string.length" | "string.byte-length" | "string.chars" | "split"
-        | "join" | "lower" | "upper" | "trim" | "trim-start" | "trim-end" | "length"
-        | "reverse" | "not" | "and" | "or" | "range" => none(),
+        "show" | "array._show-list" | "concat" | "string.length" | "string.byte-length"
+        | "string.chars" | "split" | "join" | "lower" | "upper" | "trim" | "trim-start"
+        | "trim-end" | "length" | "reverse" | "not" | "and" | "or" | "range" => none(),
         // ordered maps and sets: structural comparisons of keys
         s if (s.starts_with("map.") || s.starts_with("set."))
             && !matches!(s, "map.update" | "map.map-values") =>
@@ -273,6 +274,39 @@ fn unboxed_numeric(ty: &MT) -> bool {
                 | "F32"
                 | "F64"
         )
+}
+
+fn numeric_literal_list(mut expression: &Expr) -> Option<Vec<Value>> {
+    let mut values = Vec::new();
+    loop {
+        match expression {
+            Expr::Construct(0, fields) if fields.is_empty() => return Some(values),
+            Expr::Const(Value::Data(0, fields)) if fields.is_empty() => return Some(values),
+            Expr::Construct(1, fields) if fields.len() == 2 => {
+                let Expr::Const(value) = &fields[0] else {
+                    return None;
+                };
+                if !matches!(
+                    value,
+                    Value::I8(_)
+                        | Value::U8(_)
+                        | Value::I16(_)
+                        | Value::U16(_)
+                        | Value::I32(_)
+                        | Value::U32(_)
+                        | Value::I64(_)
+                        | Value::U64(_)
+                        | Value::F32(_)
+                        | Value::F64(_)
+                ) {
+                    return None;
+                }
+                values.push(value.clone());
+                expression = &fields[1];
+            }
+            _ => return None,
+        }
+    }
 }
 
 /// A stage of a fused pipeline, outermost first as written in the IR.
@@ -633,8 +667,11 @@ impl Fuser<'_> {
                 ("1".into(), src_elem.clone()),
             ]),
             Some(Source::List(source)) => self.ty_in(&self.locals, source)?,
-            Some(Source::Array(source)) => MT::Record(vec![
-                ("0".into(), self.ty_in(&self.locals, source)?),
+            Some(Source::Array(_)) => MT::Record(vec![
+                (
+                    "0".into(),
+                    MT::Con("std::Array".into(), vec![src_elem.clone()]),
+                ),
                 ("1".into(), i64.clone()),
             ]),
             _ => iterator_ty.clone(),
@@ -642,8 +679,10 @@ impl Fuser<'_> {
         // An immutable array has no observable work when converted to a list
         // except allocating that list. Keep its owner and read in index order;
         // an option match preserves the existing checked access operation.
-        let array_access = if let Some(Source::Array(source)) = &producer {
-            let array = self.ty_in(&self.locals, source)?;
+        let array_access = if let Some(Source::Array(_)) = &producer {
+            // The iterator's element type also describes its original array,
+            // including a constant array with no expression-level type tag.
+            let array = MT::Con("std::Array".into(), vec![src_elem.clone()]);
             let option = MT::Con("std::Option".into(), vec![src_elem.clone()]);
             self.shapes.entry(option.clone()).or_insert_with(|| {
                 TypeShape::Adt(vec![
@@ -1000,6 +1039,11 @@ impl Fuser<'_> {
     /// The primitive a fused pipeline can end in, if `id` is one.
     fn consumer(&self, id: FuncId, args: &[Expr]) -> Option<&'static str> {
         match (prim_sym(self.funcs, id)?, args.len()) {
+            ("show" | "json.write", 1)
+                if std::env::var("FWP_ARRAY_FUSION").map_or(true, |v| v != "0") =>
+            {
+                Some("array-list-text")
+            }
             ("array.from-list", 1)
                 if std::env::var("FWP_ARRAY_FUSION").map_or(true, |v| v != "0") =>
             {
@@ -1053,6 +1097,33 @@ impl Fuser<'_> {
                 return Some(Expr::Let(*local, value.clone(), Box::new(consumed)));
             }
             return None;
+        }
+        if kind == "array-list-text" {
+            let Expr::Call(producer, inputs) = &args[0] else {
+                return None;
+            };
+            if prim_sym(self.funcs, *producer) != Some("array.to-list") || inputs.len() != 1 {
+                return None;
+            }
+            let parameter = self.funcs[*producer].ty.params(1).0[0];
+            let MT::Con(name, elements) = parameter else {
+                return None;
+            };
+            if name != "std::Array" || elements.len() != 1 || !unboxed_numeric(&elements[0]) {
+                return None;
+            }
+            // Array evaluation still finishes before formatting. Inline numeric
+            // elements have no resource finalizers or temporary boxed owners.
+            // The array remains borrowed until the complete string is built.
+            let symbol = if prim_sym(self.funcs, cons_id) == Some("show") {
+                "array._show-list"
+            } else {
+                "json.write"
+            };
+            let result = self.funcs[cons_id].ty.params(1).1.clone();
+            let ty = MT::Fun(Box::new(parameter.clone()), Box::new(result));
+            let direct = self.prim(symbol, ty, 1);
+            return Some(Expr::Call(direct, inputs.clone()));
         }
         if kind == "lane-dot" {
             let Expr::Call(multiply, inputs) = &args[0] else {
@@ -1138,6 +1209,15 @@ impl Fuser<'_> {
             };
             if name != "std::Array" || elements.len() != 1 || !unboxed_numeric(&elements[0]) {
                 return None;
+            }
+            // Only literal fixed-width numbers move into existing static array
+            // storage. No calls, effects, traps or dynamically owned values are
+            // evaluated early. Target-sized integers keep their target's layout.
+            if !matches!(&elements[0], MT::Con(name, _) if matches!(name.as_str(), "std::ISize" | "std::USize"))
+            {
+                if let Some(values) = numeric_literal_list(&args[0]) {
+                    return Some(Expr::Const(Value::Array(Rc::new(values))));
+                }
             }
             if let Expr::Call(range, bounds) = &args[0] {
                 if prim_sym(self.funcs, *range) == Some("range") && bounds.len() == 2 {
@@ -1457,7 +1537,10 @@ impl Fuser<'_> {
                 None => {
                     let (id, caps) = fns.last()?;
                     let (ps, _) = funcs[*id].ty.params(caps.len() + 1);
-                    MT::Con("std::List".into(), vec![(*ps.last()?).clone()])
+                    MT::Con(
+                        if array { "std::Array" } else { "std::List" }.into(),
+                        vec![(*ps.last()?).clone()],
+                    )
                 }
             },
         };

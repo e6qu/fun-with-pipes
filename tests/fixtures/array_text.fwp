@@ -1,0 +1,24 @@
+# Array text keeps the list's brackets and element spelling. Conversion must
+# also work for empty arrays, views and arrays whose older value remains live.
+empty : Array[F64]
+empty = [] | array.from-list
+main = [
+    [-128i8, 0i8, 127i8] | array.from-list | array.to-list | echo,
+    [0u8, 255u8] | array.from-list | array.to-list | json.write | echo,
+    [-32768i16, 32767i16] | array.from-list | array.to-list | echo,
+    [0u16, 65535u16] | array.from-list | array.to-list | echo,
+    [-2147483648i32, 2147483647i32] | array.from-list | array.to-list | echo,
+    [0u32, 4294967295u32] | array.from-list | array.to-list | echo,
+    [-9223372036854775808, 9223372036854775807] | array.from-list | array.to-list | echo,
+    [0u64, 18446744073709551615u64] | array.from-list | array.to-list | json.write | echo,
+    [0.0f32, -0.0f32, 0.1f32, 1.401298464324817e-45f32] | array.from-list | array.to-list | echo,
+    [0.0, -0.0, 0.1, 0.30000000000000004, 4.9406564584124654e-324] | array.from-list | array.to-list | echo,
+    [0.0, -0.0, 0.1, 0.30000000000000004, 4.9406564584124654e-324] | array.from-list | array.to-list | json.write | echo,
+    empty | array.to-list | echo,
+    empty | array.to-list | json.write | echo,
+    array.generate 257 int.to-float | array.slice 64 193 | array.to-list | echo,
+    [1.0, 2.0, 3.0] | array.from-list
+        | both id (array.set 0 9.0 | option.unwrap-or empty)
+        | both (.0 | array.to-list | show) (.1 | array.to-list | show) | echo,
+    [1, 2, 3] | array.from-list | array.map (add 1) | array.fold add 0 | echo,
+] | ignore

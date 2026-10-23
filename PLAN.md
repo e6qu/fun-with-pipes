@@ -139,7 +139,10 @@ outside the benchmark suite.
    isolated arithmetic. The [formatter change](docs/measurements/float-text.md)
    passes six-host correctness and the [repeated speed screen](docs/measurements/float-text-results.md),
    with stack and code-size costs reported. Its final delivery gates remain
-   required. Next measure the remaining
+   required. Next validate [temporary numeric list removal](docs/measurements/array-text.md)
+   at literal-array and text/JSON boundaries, including neighboring loop
+   optimization, allocation counts, cleanup and static-data/code/stack costs.
+   Then measure the remaining
    callback, checked-indexing and buffer costs against equivalent-work budgets.
    Preserve arithmetic/trap order and inspect real code, stack frames and cleanup.
    The [inline experiment](docs/measurements/descent-call-costs.md) failed its

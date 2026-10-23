@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -30,6 +30,89 @@ on:
         description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
+  array_text:
+    if: inputs.suite == 'array-text'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: ${{ fromJSON(inputs.native_runner == 'all' && '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]' || format('["{0}"]', inputs.native_runner)) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    env:
+      CC: ${{ startsWith(matrix.runner, 'ubuntu-') && 'gcc' || 'clang' }}
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
+      FWP_LTO: '0'
+      FWP_ARC_ARTIFACTS: array-text-evidence/arc
+    steps:
+      - uses: actions/checkout@v7
+      - name: Record source
+        shell: bash
+        run: |
+          mkdir -p array-text-evidence
+          git rev-parse HEAD > array-text-evidence/source.txt
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Fetch locked dependencies
+        shell: bash
+        run: |
+          cargo fetch --locked
+          echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
+      - name: Native Windows toolchain
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/setup-windows.ps1
+      - uses: actions/cache/restore@v6
+        id: windows_tls_cache
+        if: runner.os == 'Windows'
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: Native Windows OpenSSL
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/setup-windows-tls.ps1
+      - uses: actions/cache/save@v6
+        if: ${{ !cancelled() && runner.os == 'Windows' && env.FWP_WINDOWS_DEPS_READY == '1' && steps.windows_tls_cache.outputs.cache-hit != 'true' }}
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: OpenSSL on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - name: Record toolchains and audit contracts
+        shell: bash
+        run: |
+          rustc --version --verbose > array-text-evidence/rustc.txt
+          "$CC" --version > array-text-evidence/cc.txt
+          python scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output array-text-evidence/primitive-inventory.json
+          python scripts/test-native-test-runner.py
+      - name: Contracts, semantics, allocation and cleanup controls
+        run: cargo test --no-fail-fast --lib --test array_text --test numeric_array_fusion --test mapped_array_construction --test static_constants --test array_element_ownership --test array_unwind_ownership --test iterator_fusion --test float_formats
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: array-text-${{ matrix.runner }}
+          path: array-text-evidence/
+          if-no-files-found: error
   float_text:
     if: inputs.suite == 'float-text' || inputs.suite == 'float-text-checks'
     strategy:

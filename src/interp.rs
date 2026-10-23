@@ -860,6 +860,21 @@ impl<'p> Interp<'p> {
             "upper" => Ok(Value::str(&a[0].as_str().to_ascii_uppercase())),
             "concat" => Ok(Value::str(&format!("{}{}", a[1].as_str(), a[0].as_str()))),
             "show" => Ok(Value::str(&self.show(&a[0], &params[0]))),
+            "array._show-list" => {
+                let (Value::Array(items), MT::Con(name, elements)) = (&a[0], &params[0]) else {
+                    unreachable!("array list display requires an array");
+                };
+                assert!(name == "std::Array" && elements.len() == 1);
+                let mut text = String::from("[");
+                for (index, value) in items.iter().enumerate() {
+                    if index != 0 {
+                        text.push_str(", ");
+                    }
+                    write_value(&mut text, value, &elements[0], self.prog, false);
+                }
+                text.push(']');
+                Ok(Value::str(&text))
+            }
             "syntax.show" => Ok(Value::str(&crate::syntax::show(&a[0]))),
             "print" => {
                 let line = format!("{}\n", a[0].as_str());

@@ -5,32 +5,51 @@ and reserve ARC for necessary sharing. JIT is excluded.
 
 ## Current action
 
-**Next:** finish this grouped formatter/output delivery: audit all nine final-head
-production jobs and documentation, then inspect the native binaries. Require
-7,158 saved files: 6,966 ownership/cleanup files, 72 float cases and 120 Linux
-output/lifetime controls. The publication receipt under `/private/tmp` records
-the final source, PR and run IDs; preparation evidence does not replace them.
-Squash merge only after final acceptance, with one subject at most eighty
-characters and an explicit empty body. Continue the roadmap after that merge.
+**Next:** run the grouped numeric array changes on six native GitHub hosts using
+the explicit `array-text` focused suite, then audit every failure and saved binary.
+Keep active PR #205 unchanged; this is a separate preparation branch with no PR.
 
-Worktree `/private/tmp/fwp-float-delivery`, branch `float-output-delivery`, is based
-on verified #204 squash `2ba458a9a8049a33c2fa5c73a374c83c8fe34e10`.
-Compiler/runtime, language tests, measurement scripts and workflows match
-preparation `d7ad3e55f38685d3abaaa9c87badc3a8fc4a045f`, apart from removing one
-extra final blank line in the frozen test oracle. The local resource guard
-also repairs an exit/signalling race; six regression and disk tests pass with
-all resource limits unchanged.
-Documentation includes its accepted measurements and #204's final evidence.
-Local source identity, roadmap/link, Python syntax and workflow checks passed
-(3.13s). The guard repair passed six tests (1.65s); repeated inspection then
-passed all 120 AMD64 binaries (13.68s). Real permission failures still stop work.
-All inspected preparation ZIP caches were pruned after checking remote originals.
+Worktree `/private/tmp/fwp-array-list`, branch `array-list-preparation`, starts at
+`51c295e02a8037f985fe9f662b8e1000fcd97798`. #205's production run `40037426686` and
+docs run `40037426647` remain the current delivery gates. Primary handoff records
+their latest audit and prepared merge/inspection helpers.
 
-Use `fwp-float-delivery-publication.json`, `fwp-audit-float-delivery-final.py` and
-`fwp-inspect-float-delivery-{ownership,text,controls}.py` under `/private/tmp`.
-`fwp-merge-float-delivery.py` requires every final gate and inspection before its
-one-line squash; `fwp-after-merge-float-delivery.py` verifies the primary guard
-repair before preserving the handoff and advancing to that merge.
+Saved generated C for the 129-coordinate descent case builds 129 input list
+nodes before `array.from-list`, and 129 output nodes before `show`. Its measured
+459 managed allocation requests include these temporary values. Removing them
+is a proposed compiler improvement, not measured support yet.
+
+Planned checks: constant numeric input construction; direct list-style text and
+JSON output from numeric arrays; empty/sliced/aliased arrays; unchanged formatting,
+effect/trap order and older values after updates; managed/raw cleanup and actual
+machine code on all six native targets. Numeric constants may use existing static
+storage; this must not retain dynamic values permanently. Report static-data,
+stack/code size and allocation costs, and compare complete programs before making
+speed claims. Keep resource-owning/boxed cases outside a transformation until
+its lifetime/representation proof covers them. No new surface syntax is planned.
+
+Implementation awaits Rust/native CI: fusion recognizes immediate numeric
+`array.to-list | show` / `json.write`; native/interpreted list-style display reads
+the borrowed array directly. Its internal primitive has an explicit nonescaping
+borrow/fresh-string contract. Fixed-width numeric literal lists consumed by
+`array.from-list` become existing static array constants; target-sized integers
+are excluded. The display writer's unused argument was removed. Constant arrays
+exposed an existing type reconstruction error: an array map/fold could reconstruct
+a List type, and iterator fusion could lose the array type entirely. Both now
+derive the correct array type; the new allocation checks exercise those neighbors.
+
+`tests/array_text.rs` adds 96 semantic outcomes across modes/layouts/settings and
+48 allocation/cleanup outcomes, including eight deliberate missing-release
+controls. Each balanced allocation case repeats 64 times. Tests compare raw and
+optimized interpreters with O1/O2 native programs. The new target is assigned to
+regular macOS and native Windows; Linux discovers all targets. The preparation
+[protocol](measurements/array-text.md) fixes expectations before measurements.
+
+Local guarded checks: reference fixture execution with the accepted #199 compiler
+passed (0.26s; syntax/reference behavior only, not the new compiler); frozen
+primitive inventory passed (1.37s, 392 declarations/382 symbols); all fourteen
+native-runner coverage and failure controls passed (7.70s). Formatting passed.
+Full Rust compilation, runtime controls and binary inspection remain unverified.
 
 ## Scope and verified preparation
 
