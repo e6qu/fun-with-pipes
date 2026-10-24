@@ -2194,9 +2194,15 @@ jobs:
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
     env:
-      CC: ${{ matrix.part == 'queued' && startsWith(matrix.runner, 'ubuntu-') && 'gcc' || 'clang' }}
+      CC: ${{ (matrix.part == 'queued' || inputs.suite == 'server-checks') && startsWith(matrix.runner, 'ubuntu-') && 'gcc' || 'clang' }}
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
       FWP_UDP_ARTIFACTS: server-check-evidence/udp
       FWP_SERVER_ENTRY_ARTIFACTS: server-check-evidence/entries
       FWP_ENTRY_INTERFACE: ${{ matrix.part == 'http-rest' && 'rest' || matrix.part == 'http-mcp' && 'mcp' || '' }}
@@ -2278,9 +2284,9 @@ jobs:
         if: matrix.part == 'checks'
       - run: cargo clippy --all-targets -- -D warnings
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && matrix.part == 'checks' }}
-      - name: Accepted connections, UDP cleanup and readiness failures
+      - name: HTTP examples, startup failures and connection cleanup
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'server-checks' }}
-        run: cargo test --no-fail-fast --test grpc_server_connections --test udp_ownership --test native_sockets -- --nocapture
+        run: cargo test --no-fail-fast --test http_server --test web --test grpc_server_connections --test udp_ownership --test native_sockets -- --nocapture
       - name: Generated entry results and ownership restrictions
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite != 'server-checks' && matrix.part == 'checks' }}
         run: cargo test --no-fail-fast --test server_entry_ownership --test arc_execution -- --nocapture

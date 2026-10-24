@@ -30,6 +30,15 @@ Record intentional live data, raw buffers, external library storage and process
 memory separately. Keep failure/cancellation controls and checks that deliberately
 omit a release, so a broken observer cannot report success.
 
+The maintained JSON API has interpreter and native endpoint, concurrent
+keep-alive and graceful-shutdown tests. Their harness requires curl/compiler
+success, bounds startup and shutdown, and kills/reaps children on failure.
+Shared startup controls cover silence, partial lines, invalid addresses, early
+exit and preserved diagnostics. Windows uses an isolated CTRL_BREAK group.
+These checks are being extended to all six hosts; they do not supply the
+long-running service memory measurements still required above. Printed request
+counts are correctness results, not throughput benchmarks.
+
 Timing budgets remain unset until repeated baselines identify ordinary variation.
 Record the chosen host/input budget before optimizing, retain slower results and
 investigate inconclusive measurements. Do not choose a universal percentage or
