@@ -24,6 +24,7 @@ original, = (args.input / args.source).iterdir()
 records = []
 for case, expected in [
         ('wrong-mode', 'declared benchmark memory mode differs'),
+        ('wrong-arithmetic', 'declared arithmetic contract differs'),
         ('wrong-machine', 'benchmark binary has wrong architecture'),
         ('object-file', 'benchmark image is not executable'),
         ('missing-sample', 'need six positive timing samples')]:
@@ -35,6 +36,11 @@ for case, expected in [
         changed = directory / 'report.md'
         if case == 'wrong-mode':
             memory = 'tracing' if args.memory == 'arc' else 'arc'
+        elif case == 'wrong-arithmetic':
+            report = changed.read_text()
+            before = 'Arithmetic contract: checked signed I64 calculations in all three peers.'
+            assert report.count(before) == 1
+            changed.write_text(report.replace(before, 'Arithmetic contract: unchecked peers.'))
         elif case in {'wrong-machine', 'object-file'}:
             changed, *_ = sorted(directory.glob('*-c'))
             data = bytearray(changed.read_bytes())
@@ -72,4 +78,4 @@ for case, expected in [
 args.output.parent.mkdir(parents=True, exist_ok=True)
 args.output.write_text(json.dumps(dict(source=args.source, memory=args.memory,
                                      architecture=args.arch, controls=records), indent=2) + '\n')
-print('Rejected four corrupted benchmark artifact copies')
+print('Rejected five corrupted benchmark artifact copies')

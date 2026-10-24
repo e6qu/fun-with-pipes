@@ -5,92 +5,102 @@ reserve ARC for sharing and remove tracing. JIT is excluded.
 
 ## Current action
 
-**Next:** publish the grouped ARC benchmark/map PR from `arc-map-delivery`, then
-complete its exact-head nine production jobs, docs and actual-binary reviews.
-Keep one active PR. Squash-merge only after every final gate passes, with one
-subject of at most 80 characters and an empty body, then continue the plan.
+**Next:** publish the grouped list-copy/benchmark PR from `list-copy-delivery`,
+then verify its exact final head: nine production jobs, docs and saved binaries.
+Keep one active PR. Squash-merge only after every gate passes, with one subject
+of at most 80 characters and an empty body, then continue the plan.
 
-Checkout `/private/tmp/fwp-arc-benchmark-comparison`. Prepared from verified #208
-merge `058dc4e5954571ed222ca4d26af4403a52a8516b` and published preparation `e08646c505bb38ec0b0dc8869a06823f92463956`.
-Receipt `/private/tmp/fwp-arc-map-delivery-preparation.json` records this transition.
-Do not rerun completed preparation/publication helpers. Use their receipts.
+Checkout `/private/tmp/fwp-checked-peer-comparison`, branch `list-copy-delivery`.
+Prepared from verified #209 merge `2520d136b7036ab878cac0ef48947b581c81b84a` and published preparation
+`e5983ace1cc9fff7176482eeadb106d7a13a61e0`. Compiler/runtime/library sources match focused `883f1c140089`;
+the Windows test repair and measured results use `851c7a774b92`.
+The preparation branch and immutable source tags are retained.
 
 ## Grouped changes and evidence
 
-The C/Rust comparison explicitly selects compiler, ARC and no LTO, saves actual
-executables and six elapsed samples, and separately measures RSS and managed
-storage. See [the comparison](measurements/arc-comparison.md) for programs,
-arithmetic differences, timings and remaining costs.
-
-Map builders free sort scratch before result allocation. Borrowed words compact
-into input lanes whose original owners stay alive. Duplicate handling is preserved.
-The 500,000-entry map peak falls 24,000,008 → 16,000,008 managed bytes on both Linux
-hosts; four requests, 24,000,032 requested bytes, one retain and zero final charge
-are unchanged. AMD64 instruction bytes +16; ARM64 unchanged. Observed instrumented
-entry/sort frames are unchanged. No timing gain or general C/Rust parity is claimed.
-
-Focused preparations, all published with immutable revision tags:
-
-| Source | Run | Verified result |
+| Work | Result | Evidence |
 |---|---|---|
-| `617bb2319760` | `40075912779` | Two Linux hosts; 42 actual baseline images and eight corrupted-copy controls |
-| `b16ed5e33f29` | `40076674217` | 70 timed/profile images, RSS/count samples and fourteen leak controls |
-| `18ac20729402` | `40077293691` | 98 images; arithmetic screen fails AMD64, so no compiler rule adopted |
-| `6a6e8eea325c` | `40078374681`, `40078376733` | Six map jobs and two benchmarks; lower peak confirmed, 70 benchmark images reviewed |
-| `4c294917006b` | `40079580345` | All six map jobs; 138 actual images, 96 peak observations, failures/reuse and exact control-source edits reviewed |
-| `2a973dea2e07` | local guarded checks | Reports, source matching, stack details, production artifacts, docs gate and plan updates published |
-| `e08646c505bb` | guarded artifact reinspection | Shared focused/production inspector reproduces the identical six-host report |
+| Checked C/Rust peers | Explicit signed overflow and trap order; C allocation failures repaired | [Protocol and results](measurements/checked-peers.md), source `31ee015e9435`, run `40084725349`; both Linux jobs and 92 binary reviews pass |
+| Ordered-sort experiment | Both candidates fail their predeclared screen; neither is adopted | [Results](measurements/map-order-results.md), source `cbacdff5e8cb`, run `40085991550`; 128 binary reviews pass; slower/noisy samples retained |
+| Interrupted list copies | Fix the 80-byte handled-callback leak; protect partial results in seven operations; preserve aliases | [Cleanup](measurements/list-copy-cleanup.md) and [144 native binaries](measurements/list-copy-native-2026-10-24.json) |
+| Sort buffers | Remove two list buffers and one array buffer without changing the merge algorithm | [Results](measurements/list-sort-storage.md), source `851c7a774b92`, run `40089544249`; both Linux jobs and 96 binary reviews pass |
+| Windows repair | Explicit binary stdout fixes CRLF/LF test failure; all three list targets enter production coverage | Runs `40089546129` and `40089548269`; complete logs and both native artifact reviews pass |
 
-[Native map evidence](measurements/map-scratch-native-2026-10-24.json) includes
-ARC/tracing at production GCC/Clang settings and deliberate missing-cleanup,
-wasted-slot and late-release controls. All eight collection-evidence controls and
-eighteen native coverage/failure controls pass. Primitive inventory: 392
-declarations, 382 distinct symbols, zero unclassified contracts. Final production
-acceptance of this new delivery remains required.
+List cleanup runs at O1/O2 in ARC and tracing modes, including collection stress,
+reuse, cancellation and deliberate missing releases. Each host has six balanced
+observations and twelve missing-cleanup controls. Source `883f1c140089` passes
+Linux/macOS on both architectures in `40088243982`; its two Windows jobs fail only
+the old scalar-key fixture. The Windows replacements above use `851c7a774b92`,
+with identical compiler/runtime/library sources. Preserve the original failures.
 
-## Previous delivery
+At 4,096 words, sorting requests 65,552 fewer bytes for lists and 32,776 fewer
+for arrays. Both Linux architectures and O1/O2 agree. Whole-program peak storage
+and retain counts stay unchanged; final charge is zero. Ordinary code is smaller;
+the O1 list entry frame shrinks sixteen bytes. This is no timing-speedup claim.
+Current complete-program comparisons still show slower loop and character-counting
+rows. New production steps inspect list-copy binaries and sort-storage evidence.
+Full final-head acceptance is still required.
 
-#208 is verified and merged. [History](roadmap-history.md#api-memory-stack-guards-and-connection-cleanup-pr-208)
-links all gates and 8,454 binary files; source `227e671257d885185e54b3f915f6d1ebf470b3ea`.
-Merge and after-merge receipts/helpers are under `/private/tmp`, prefixed
-`fwp-http-memory-delivery`. Preserve primary checkout's operational handoff.
+## Verification and local receipts
 
-Keep unique failed API/mapping/socket evidence: `ef66ca99`, `027be46e`,
-`10626760`. All diagnosed faults were repaired. Original failure archives remain;
-never treat an isolated repeat as their repair. Verified duplicate caches and
-clean published checkout copies were pruned with receipts. Branches, reports,
-source tags and ignored-file backups remain.
+Helpers and receipts under `/private/tmp` use these prefixes:
 
-## Local limits
+- `fwp-checked-peer`, `fwp-map-order`, `fwp-list-copy`, `fwp-list-sort`:
+  preparation publication, focused audits and independent reviews are complete.
+  Never rerun completed publication/download/review helpers.
+- `fwp-record-list-copy-native.py` and `fwp-record-arc-map-delivery.py` are complete.
+  `fwp-record-list-sort-results.py` wrote the reports, then failed its final index
+  edit; that link was fixed separately. Do not rerun it over the edited prose.
+- `fwp-sort-callback-leak` preserves the original leak and repair controls.
+  `fwp-list-copy-runtime-probe` records 130 allocation/retain interruptions plus
+  six callback exits across eight rounds. Early probes used saved C with explicit
+  runtime/API edits; focused current-compiler CI supplies compilation acceptance.
+- `fwp-verified-list-copy-compiler/receipt.json` verifies the current macOS compiler
+  from source `883f1c140089`. `fwp-list-sort-current-probe` records its bounded
+  32-word counters. These do not replace production GCC or native target checks.
 
-Focused local checks use `python3 scripts/local-guard.py COMMAND...`, serially.
-Full builds, suites and benchmarks run on GitHub. Preserve 64 GiB free, target
-below 2 GiB, sampled RSS below 1 GiB and the 180-second deadline. Do not retry the
-full local API compilation that exceeded RSS, or raise limits. Inspect binaries
-without executing downloaded files. Record each new check and unresolved failure.
+Bounded checks pass: frozen inventory (392 declarations, 382 symbols, zero
+unclassified), Rust formatting, Python syntax, 19 native-runner controls,
+126 documentation link sets and actionlint for all three changed workflows.
+The docs check caught a missing live roadmap table; restoring it passes the
+check. The storage report label now correctly says counting starts after constant
+initialization; its code and measured observations are unchanged. Full builds
+and suites run on GitHub.
 
-## Remaining direction
+## Last accepted delivery
 
-Finish this delivery, then use explicit equivalent-work budgets to choose the
-next ownership/representation or measured numerical costs. The arithmetic and
-inlining experiments failed their full screens; do not adopt them from loop-only
-wins. Persistent subscriptions, externally retained callbacks, host-owned values,
-cycles and collector-specific diagnostics remain part of tracing removal.
-Differentiation and numerical/application budgets also remain open; a finished PR
-does not finish any of the seven work areas by itself.
+[PR #209](https://github.com/e6qu/fun-with-pipes/pull/209) passed all nine production
+jobs in `40082867710` and docs in `40082867648` at `b298665da6ac`.
+All logs and 8,627 actual binary files were independently reviewed. Its verified
+squash is `2520d136b7036ab878cac0ef48947b581c81b84a`, with the same tested tree
+and a one-line message without body/trailers. [History](roadmap-history.md#map-peak-storage-and-explicit-benchmarks-pr-209)
+links the acceptance record. Duplicate same-tree main run `40091501837` was
+cancelled. Its merge/after-merge helpers are COMPLETE; never rerun them.
+Primary checkout is detached there with only an operational handoff dirty.
+
+## Local resources
+
+Run focused checks serially through `python3 scripts/local-guard.py COMMAND...`.
+Keep 64 GiB free, generated target data below 2 GiB, sampled workload RSS below
+1 GiB and the 180-second deadline. Never raise or bypass limits. Full builds,
+suites, benchmarks and large regeneration belong on GitHub runners.
+
+Disk refusals stopped downloads before violating the reserve. Byte-identical
+APFS clones preserved every file/path/mode while recovering space; receipts are
+`fwp-evidence-clones-oct24.json` and `fwp-checkout-clones-oct24-verified.json`.
+Completed #209 ZIP copies were pruned only after all reviews and remote digest
+checks. Keep unique failed evidence, all reports/layout images and dirty old
+checkouts. The initial checkout-clone attempt failed before changing any file
+because a pruned directory lacked `.git`; its empty receipt is retained.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | Remove tracing and limit counting at remaining boundaries |
-| 2 | In progress | Extend borrowing and remove functional overhead |
+| 1 | In progress | Remove tracing; prove cleanup and borrowing at remaining boundaries |
+| 2 | In progress | Remove functional allocation/counting costs and extend tail-call proofs |
 | 3 | In progress | Meet measured machine-level time and memory budgets |
 | 4 | In progress | Improve differentiation speed, memory and precision |
-| 5 | In progress | Validate CPU numerical kernels |
-| 6 | In progress | Stabilize comparisons and set workload budgets |
-| 7 | In progress | Complete the application acceptance suite |
-
-The pre-push documentation check caught this status table missing from the
-streamlined handoff. It was restored before publication; no source-code failure
-or unresolved test was hidden.
+| 5 | In progress | Validate CPU numerical kernels against accuracy and cost budgets |
+| 6 | In progress | Stabilize equivalent-work comparisons and regression budgets |
+| 7 | In progress | Complete the selected application acceptance suite |

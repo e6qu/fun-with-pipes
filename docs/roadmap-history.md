@@ -12,6 +12,26 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Map peak storage and explicit benchmarks (PR #209)
+
+Map construction now releases sort scratch before allocating its final storage.
+For the 500,000-entry map, peak managed storage falls from 24,000,008 to
+16,000,008 bytes on both Linux hosts. Requests, retains and final balance stay
+unchanged. Timing, RSS and managed counts use separate measurements with
+explicit compiler/memory settings; no speedup is claimed. The
+[comparison report](measurements/arc-comparison.md) preserves algorithms,
+arithmetic differences, slower rows and rejected arithmetic experiments.
+
+[PR #209](https://github.com/e6qu/fun-with-pipes/pull/209) passes all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40082867710)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40082867648)
+at `b298665da6ac97fe4bcc05318c66e671fed7a5a4`. All logs and 8,627 actual binary files pass independent
+review, including 138 map/set images, cleanup controls and benchmark memory checks.
+[Acceptance records](measurements/arc-map-delivery-2026-10-24.json) preserve the
+sources, artifact/report hashes and check results. Squash `2520d136b7036ab878cac0ef48947b581c81b84a`
+has the identical tested tree and a one-line message without a body or trailers.
+All seven plan areas remain open.
+
 ## API memory, stack guards and connection cleanup (PR #208)
 
 The maintained JSON API now has bounded request/disconnect/shutdown checks.

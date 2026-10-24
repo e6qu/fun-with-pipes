@@ -120,6 +120,11 @@ outside the benchmark suite.
    collector-specific checks before removing tracing; completed groups are
    evidence, not a backlog.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
+   The [checked-peer comparison](docs/measurements/checked-peers.md) now aligns
+   signed-overflow checks. [Ordered-sort shortcuts](docs/measurements/map-order-results.md)
+   failed their screen and are rejected. Deliver the [list-copy cleanup](docs/measurements/list-copy-cleanup.md)
+   and [sort buffer savings](docs/measurements/list-sort-storage.md), then select
+   the next measured cost; fewer allocations alone do not prove faster execution.
    The [explicit ARC baseline](docs/measurements/arc-comparison.md) compares seven
    complete programs with C/Rust and measures process and managed memory separately.
    Focused measurements support reducing map peak storage by releasing sort scratch

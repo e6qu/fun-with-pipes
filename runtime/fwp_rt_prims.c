@@ -430,93 +430,119 @@ static V fwp_p_flatten(V xss) {
     return r;
 }
 
-/* Copies leave their new nodes uncounted until the monomorphic wrapper
- * duplicates element references by type. The optional suffix is borrowed. */
-static V fwp_copy_finish(V *a, size_t n, V tail) {
-    V result = tail;
-    for (size_t i = n; i; i--) result = fwp_cons(a[i - 1], result);
+/* Borrow input lanes, consume the owned suffix and construct counted nodes.
+ * Each copied element is protected before allocating its node. A failed retain
+ * or allocation releases the partial list without touching borrowed inputs. */
+static V fwp_copy_finish(V *a, size_t n, V owned_tail, const fwp_desc *list) {
+    fwp_value_owner result = {owned_tail, list->drop};
+    fwp_cleanup cleanup; fwp_value_protect(&result, &cleanup);
+    for (size_t i = n; i; i--) {
+        V value = a[i - 1];
+        if (list->elem->dup) list->elem->dup(value);
+        fwp_value_owner pending = {value, list->elem->drop};
+        fwp_cleanup pending_cleanup; fwp_value_protect(&pending, &pending_cleanup);
+        result.value = fwp_rc_fresh(fwp_cons(value, result.value));
+        (void)fwp_value_finish(&pending, &pending_cleanup);
+    }
     FWP_KEEP_ALIVE(a);
-    FWP_KEEP_ALIVE(tail);
-    fwp_mem_free(a);
-    return result;
+    return fwp_value_finish(&result, &cleanup);
 }
-/* Sorting aliases values; scratch words are tracing roots, not owners. */
-static V fwp_p_sort_copied(V xs, const fwp_desc *elem) {
+/* Plain sorting uses the same words as keys and values; one merge buffer is
+ * sufficient. The source list keeps every borrowed element alive. */
+static V fwp_p_sort_copied(V xs, const fwp_desc *elem, const fwp_desc *list) {
     size_t n;
     V *a = fwp_map_items(xs, &n);
+    fwp_cleanup scratch_cleanup; fwp_scratch_protect(&a, &scratch_cleanup);
     if (n > 1) {
         V *tk = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
-        V *tv = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
-        V *vals = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
-        memcpy(vals, a, n * sizeof(V));
-        fwp_msort(a, vals, n, elem, tk, tv);
-        FWP_KEEP_ALIVE(tk);
-        FWP_KEEP_ALIVE(tv);
-        FWP_KEEP_ALIVE(vals);
-        fwp_mem_free(vals);
-        fwp_mem_free(tv);
-        fwp_mem_free(tk);
+        fwp_cleanup tk_cleanup; fwp_scratch_protect(&tk, &tk_cleanup);
+        fwp_msort(a, a, n, elem, tk, tk);
+        fwp_scratch_finish(&tk, &tk_cleanup);
     }
-    V result = fwp_copy_finish(a, n, 0);
+    V result = fwp_copy_finish(a, n, 0, list);
+    fwp_scratch_finish(&a, &scratch_cleanup);
     FWP_KEEP_ALIVE(xs);
     return result;
 }
-/* Callback keys carry owned references; output values borrow the source.
- * The monomorphic key release distinguishes scalar words from references. */
-static V fwp_p_sort_by_copied(V f, V xs, const fwp_desc *key, void (*drop_key)(V)) {
+/* Own each completed callback key while output values borrow the source.
+ * Failure/cancellation releases keys already returned and every scratch lane. */
+static V fwp_p_sort_by_copied(V f, V xs, const fwp_desc *key,
+                             void (*drop_key)(V), const fwp_desc *list) {
     size_t n;
     V *vals = fwp_map_items(xs, &n);
+    fwp_cleanup vals_cleanup; fwp_scratch_protect(&vals, &vals_cleanup);
     V *keys = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
-    for (size_t i = 0; i < n; i++) keys[i] = fwp_apply_borrowed(f, 1, &vals[i]);
+    fwp_map_owner owner = {keys, 0, 0, drop_key, NULL};
+    fwp_cleanup keys_cleanup; fwp_map_protect(&owner, &keys_cleanup);
+    for (size_t i = 0; i < n; i++) {
+        keys[i] = fwp_apply_borrowed(f, 1, &vals[i]);
+        owner.count++;
+    }
     if (n > 1) {
         V *tk = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+        fwp_cleanup tk_cleanup; fwp_scratch_protect(&tk, &tk_cleanup);
         V *tv = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+        fwp_cleanup tv_cleanup; fwp_scratch_protect(&tv, &tv_cleanup);
         fwp_msort(keys, vals, n, key, tk, tv);
-        FWP_KEEP_ALIVE(tk);
-        FWP_KEEP_ALIVE(tv);
-        fwp_mem_free(tv);
-        fwp_mem_free(tk);
+        fwp_scratch_finish(&tv, &tv_cleanup);
+        fwp_scratch_finish(&tk, &tk_cleanup);
     }
-    if (drop_key) {
-        for (size_t i = 0; i < n; i++) {
-            V owned_key = keys[i];
-            keys[i] = 0;
-            drop_key(owned_key);
-        }
-    }
-    FWP_KEEP_ALIVE(keys);
-    fwp_mem_free(keys);
-    V result = fwp_copy_finish(vals, n, 0);
+#if FWP_UNWIND
+    fwp_cleanup_pop(&keys_cleanup);
+#endif
+    fwp_map_release(&owner);
+    V result = fwp_copy_finish(vals, n, 0, list);
+    fwp_scratch_finish(&vals, &vals_cleanup);
     FWP_KEEP_ALIVE(f);
     FWP_KEEP_ALIVE(xs);
     return result;
 }
-static V fwp_p_reverse_copied(V xs) {
-    V source = xs, result = 0;
+static V fwp_p_reverse_copied(V xs, const fwp_desc *list) {
+    V source = xs;
+    fwp_value_owner result = {0, list->drop};
+    fwp_cleanup cleanup; fwp_value_protect(&result, &cleanup);
     while (xs) {
-        result = fwp_cons(OBJ(xs)->f[0], result);
+        V value = OBJ(xs)->f[0];
+        if (list->elem->dup) list->elem->dup(value);
+        fwp_value_owner pending = {value, list->elem->drop};
+        fwp_cleanup pending_cleanup; fwp_value_protect(&pending, &pending_cleanup);
+        result.value = fwp_rc_fresh(fwp_cons(value, result.value));
+        (void)fwp_value_finish(&pending, &pending_cleanup);
         xs = OBJ(xs)->f[1];
     }
     FWP_KEEP_ALIVE(source);
-    return result;
+    return fwp_value_finish(&result, &cleanup);
 }
-static V fwp_p_append_copied(V ys, V xs) {
+static V fwp_p_append_copied(V ys, V xs, const fwp_desc *list) {
     size_t n;
     V *a = fwp_map_items(xs, &n);
-    V result = fwp_copy_finish(a, n, ys);
+    fwp_cleanup cleanup; fwp_scratch_protect(&a, &cleanup);
+    fwp_rc_dup(ys);
+    V result = fwp_copy_finish(a, n, ys, list);
+    fwp_scratch_finish(&a, &cleanup);
     FWP_KEEP_ALIVE(xs);
     FWP_KEEP_ALIVE(ys);
     return result;
 }
-static V fwp_p_flatten_copied(V xss) {
+static V fwp_p_flatten_copied(V xss, const fwp_desc *list) {
     size_t n;
     V *a = fwp_map_items(xss, &n);
-    V result = 0;
-    for (size_t i = n; i; i--) result = fwp_p_append_copied(result, a[i - 1]);
-    FWP_KEEP_ALIVE(a);
+    fwp_cleanup scratch_cleanup; fwp_scratch_protect(&a, &scratch_cleanup);
+    fwp_value_owner result = {0, list->drop};
+    fwp_cleanup cleanup; fwp_value_protect(&result, &cleanup);
+    for (size_t i = n; i; i--) {
+        size_t count;
+        V *items = fwp_map_items(a[i - 1], &count);
+        fwp_cleanup items_cleanup; fwp_scratch_protect(&items, &items_cleanup);
+        V tail = result.value;
+        result.value = 0;
+        result.value = fwp_copy_finish(items, count, tail, list);
+        fwp_scratch_finish(&items, &items_cleanup);
+    }
+    V value = fwp_value_finish(&result, &cleanup);
+    fwp_scratch_finish(&a, &scratch_cleanup);
     FWP_KEEP_ALIVE(xss);
-    fwp_mem_free(a);
-    return result;
+    return value;
 }
 
 static size_t fwp_count_arg(V n) { uint64_t count = (int64_t)n < 0 ? 0 : n; return count > SIZE_MAX ? SIZE_MAX : (size_t)count; }
@@ -533,11 +559,13 @@ static V fwp_p_drop(V n, V xs) {
     return xs;
 }
 
-static V fwp_p_take_copied(V n, V xs) {
+static V fwp_p_take_copied(V n, V xs, const fwp_desc *list) {
     size_t len;
     V *a = fwp_map_items(xs, &len);
+    fwp_cleanup cleanup; fwp_scratch_protect(&a, &cleanup);
     size_t k = fwp_count_arg(n);
-    V result = fwp_copy_finish(a, k < len ? k : len, 0);
+    V result = fwp_copy_finish(a, k < len ? k : len, 0, list);
+    fwp_scratch_finish(&a, &cleanup);
     FWP_KEEP_ALIVE(xs);
     return result;
 }
@@ -1030,15 +1058,17 @@ static V fwp_p_unique(V xs, const fwp_desc *d) {
     return fwp_list_from(a, k);
 }
 
-static V fwp_p_unique_copied(V xs, const fwp_desc *d) {
+static V fwp_p_unique_copied(V xs, const fwp_desc *d, const fwp_desc *list) {
     size_t n, k = 0;
     V *a = fwp_map_items(xs, &n);
+    fwp_cleanup cleanup; fwp_scratch_protect(&a, &cleanup);
     for (size_t i = 0; i < n; i++) {
         int seen = 0;
         for (size_t j = 0; j < k && !seen; j++) seen = fwp_cmp(a[j], a[i], d) == 0;
         if (!seen) a[k++] = a[i];
     }
-    V result = fwp_copy_finish(a, k, 0);
+    V result = fwp_copy_finish(a, k, 0, list);
+    fwp_scratch_finish(&a, &cleanup);
     FWP_KEEP_ALIVE(xs);
     return result;
 }
@@ -2396,15 +2426,11 @@ static V fwp_p_array_sort_typed(V a, void (*dup)(V), const fwp_desc *elem) {
         fwp_cleanup key_cleanup; fwp_scratch_protect(&keys, &key_cleanup);
         V *tk = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
         fwp_cleanup tk_cleanup; fwp_scratch_protect(&tk, &tk_cleanup);
-        V *tv = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
-        fwp_cleanup tv_cleanup; fwp_scratch_protect(&tv, &tv_cleanup);
         for (size_t i = 0; i < n; i++) keys[i] = fwp_array_load(a, i, elem);
-        fwp_msort(keys, keys, n, elem, tk, tv);
+        fwp_msort(keys, keys, n, elem, tk, tk);
         for (size_t i = 0; i < n; i++) fwp_array_store(result, i, keys[i], elem);
         FWP_KEEP_ALIVE(keys);
         FWP_KEEP_ALIVE(tk);
-        FWP_KEEP_ALIVE(tv);
-        fwp_scratch_finish(&tv, &tv_cleanup);
         fwp_scratch_finish(&tk, &tk_cleanup);
         fwp_scratch_finish(&keys, &key_cleanup);
     }
