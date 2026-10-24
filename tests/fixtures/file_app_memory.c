@@ -1,5 +1,5 @@
 /* Inserted after the generated runtime, before its main worker. The counters
-   observe managed charge, directory/file.read handles and file.read scratch bytes; allocator pages,
+   observe managed charge, directory/file-read/file-write handles and file.read scratch bytes; allocator pages,
    other C buffers and process RSS are separate quantities. */
 static double file_app_start;
 static double file_app_phase_charge[3];

@@ -28,6 +28,7 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
       FWP_ARC_ARTIFACTS: ownership-evidence/arc
+      FWP_FILE_APPLICATION_ARTIFACTS: ownership-evidence/file-applications
       FWP_UDP_ARTIFACTS: ownership-evidence/udp
       FWP_TAIL_ARTIFACTS: ownership-evidence/tail
       FWP_CALLBACK_CAPTURE_ARTIFACTS: ownership-evidence/direct-captures
@@ -180,7 +181,7 @@ jobs:
             'grpc_server_requests', 'grpc_connect_startup', 'grpc_connect_cleanup', 'library_resources', 'service_scope_ownership',
             'service_context_storage', 'grpc_context_restore', 'grpc_context_resources', 'grpc_packed_options', 'grpc_environment_cache',
             'grpc_peer_completion', 'grpc_connection_addresses', 'grpc_tls_pool_identity', 'http2_peer_cleanup', 'http2_client_ownership',
-            'http2_server_ownership', 'http2_body_roots', 'grpc_capture_resources', 'byte_decoder_ownership', 'text_decoder_ownership', 'web',
+            'http2_server_ownership', 'http2_body_roots', 'grpc_capture_resources', 'byte_decoder_ownership', 'text_decoder_ownership', 'web', 'http_server',
             'std_tests', 'tls', 'cli_ownership', 'console_ownership', 'process_ownership',
             'terminal_ownership', 'cli', 'clock_ownership', 'directory_report', 'working_directory',
             'exec_protocol_ownership', 'exec_invocation_ownership', 'arc_tasks', 'arc_execution', 'arc_corpus', 'server_entry_ownership',

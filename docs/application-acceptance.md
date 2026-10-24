@@ -12,8 +12,8 @@ performance and platform requirements in the last column.
 |---|---|---|---|
 | [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [C/Rust baseline](measurements/wordfreq.md) and [paired/repeated text comparison](measurements/unchanged-text.md) on two Linux hosts | Set time/memory budgets; validate the current runtime and preserve six-platform cleanup evidence |
 | [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and a small tracing control | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | Preserve these observations as ownership changes; allocation-failure coverage remains |
-| [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scaled counting/filtering/CSV cleanup passes on six hosts; separate input/output costs and extend task-file coverage |
-| Numerical pipeline | Map/reduce 65,537 elements and multiply 65×67 by 67×63 matrices, eight rounds | [Existing C/Rust comparison](benchmarks.md#current-numerical-comparison-and-record-moves) | Repeat current-revision comparisons; set per-size budgets; include a larger numerical application |
+| [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scaled counting/filtering/CSV/task-file cleanup passes on six hosts; preserve current delivery coverage and separate input/output costs |
+| Numerical pipeline | Map/reduce 65,537 elements and multiply 65×67 by 67×63 matrices, eight rounds | [Existing C/Rust comparison](benchmarks.md#numerical-kernels-and-record-moves) | Repeat current-revision comparisons; set per-size budgets; include a larger numerical application |
 | Derivative application | Rosenbrock descent at 3, 33 and 129 dimensions; 199 updates plus zero/one/1,999-update controls | [AD storage](measurements/ad-application.md), [C/Rust peers](measurements/descent-peers.md), [packed arrays](measurements/packed-descent.md) and [array-owner moves](measurements/array-owner-moves.md) and [borrowed captures](measurements/array-capture-descent.md) on two Linux hosts | Stabilize identical-code timing controls and set per-input budgets; extend nested and platform evidence |
 | Long-running service | Existing HTTP/gRPC clients, handlers, streams and task cancellation | [Service ownership](ownership.md#http-ownership) and [service measurements](benchmarks.md#server-memory-after-completed-remote-calls) | Consolidate one repeatable service scenario with bounded concurrency, disconnects and repeated live-memory samples |
 
@@ -29,6 +29,24 @@ increasing repeat counts; a clean exit alone does not prove bounded retention.
 Record intentional live data, raw buffers, external library storage and process
 memory separately. Keep failure/cancellation controls and checks that deliberately
 omit a release, so a broken observer cannot report success.
+
+The maintained JSON API tests compare raw interpretation with native execution.
+They check endpoints, concurrent requests over reused connections, and shutdown
+that lets active replies finish. The tests require curl/compiler success, limit
+startup/shutdown time and clean up child processes after failures. Separate tests
+cover silent servers, incomplete or invalid startup lines, early exits and
+preserved diagnostics. Windows uses CTRL_BREAK, a console shutdown signal,
+restricted to the tested server's process group.
+
+Before signaling shutdown, the test reads the request counter to confirm that
+the slow request entered its handler and checks that its reply is still pending.
+The `http-application` focused suite checks this example alone. The full
+`server-checks` suite splits protocol tests from application/connection tests to
+fit the existing 25-minute job limit. All twelve jobs passed on six native hosts
+in [run 40062164443](https://github.com/e6qu/fun-with-pipes/actions/runs/40062164443).
+Production CI keeps both HTTP test suites. These checks do not supply the
+long-running service memory measurements still required above. Printed request
+counts are correctness results, not throughput benchmarks.
 
 Timing budgets remain unset until repeated baselines identify ordinary variation.
 Record the chosen host/input budget before optimizing, retain slower results and
@@ -233,13 +251,22 @@ expected rows. Repeated failures cover a missing second file, invalid UTF-8 and
 a requested column absent from a successfully parsed table. Output is drained
 while observing memory, so a large report cannot fill a pipe and stall the test.
 
-All four programs must match raw interpretation. Native checks compile fwp at O1
+Task-file checks seed 128 or 4,096 Unicode tasks, list them, mark the first task,
+reject item zero, clear completed tasks and append a new task. Rust computes
+the full expected listing and final file contents independently. Every successful
+round restores the seed, keeping the on-disk input size bounded. Three phases
+repeat edits, a failed second append into a missing directory, and a failed
+second read containing invalid UTF-8. Partial results and successful first writes
+must survive or be released according to their ordinary semantics.
+
+All five programs must match raw interpretation. Native checks compile fwp at O1
 and generated C at O1 and O2 with LTO disabled. Existing small tracing/stress
 checks remain; the larger observations use checked ARC. Each checkpoint records:
 
 - Managed allocator charge after the preceding operation. It must stay constant
   within each phase and return to its initial value before runtime teardown.
-- Successfully opened directory/file-read handles minus actual closes: zero.
+- Successfully opened directory, file-read and file-write handles minus actual
+  closes: zero. Write counters cover append, byte writes and replacement writes.
 - C scratch bytes belonging to `file.read`: zero. This excludes other C buffers.
 - Process resident memory at rounds 0, 32 and 63 of each phase, while the child
   waits at the checkpoint. RSS includes allocator pages, libraries, stacks and
@@ -247,9 +274,21 @@ checks remain; the larger observations use checked ARC. Each checkpoint records:
   threshold or claim that managed charge represents the whole process.
 
 Controls deliberately omit managed releases, handle closes and file-read scratch
-frees. Each must fail the observer before shutdown. The tests retain generated C,
-30 native binaries, disassembly, output and sixteen memory series per host. Machine headers verify
-that artifacts target the runner's actual architecture. These cases do not yet
+frees. A separate task-file control omits only write closes while flushing their
+bytes, so later reads still see the same data. It must fail the handle observer,
+not an unrelated output assertion. Each control must fail before shutdown.
+The expanded focused suite retains generated C, 40 native binaries, disassembly,
+twenty memory series and 80 execution outcomes per host. Both ordinary runs and
+deliberately broken controls save stdout, stderr and exit status before any
+result assertion; incomplete runs retain their partial observations. Production
+jobs also upload these sources, binaries and execution records with their
+ownership artifacts. On macOS, directory evidence comes from the GC test job
+and text/task evidence from the regular job; both archives are required. A
+coverage check follows the actual test assignments and rejects missing exports.
+Focused measurements explicitly disable link-time optimization; production
+artifacts retain production compiler settings. The earlier four-program report
+retains its original 30 binaries and sixteen series; it does not verify this
+extension. Machine headers verify the runner's actual architecture. These cases do not yet
 cover forced allocation failure or every file operation and do not complete the
 application suite.
 
@@ -268,7 +307,7 @@ commands' diagnostics, and these categories:
 
 - **Both accepted:** both modes emit C. This alone does not verify execution or cleanup.
 - **ARC rejected:** tracing emits C, but ARC rejects the ownership contract. Investigate
-  each diagnostic before changing the default memory mode.
+  each diagnostic before admitting a new ownership pattern.
 - **Tracing rejected:** the program fails ordinary compilation too, including
   intentional diagnostic fixtures. This is not an ARC migration failure.
 
@@ -276,11 +315,12 @@ Timeouts, compiler crashes and mismatched emitted memory modes fail the inventor
 Recorded ARC rejections are discovery results, not accepted language coverage.
 The ordinary execution snapshots and the runtime ownership tests remain necessary.
 
-The [pre-extension inventory](measurements/file-applications.md#which-maintained-examples-pass-arcs-checks)
-identified the raw-pointer gap and distinguished it from an intentionally invalid
-inter-task derivative lifetime. [PR #193](roadmap-history.md#manual-c-pointers-and-foreign-storage-cleanup-pr-193)
-records the accepted manual-pointer extension. Existing `arc_corpus` tests execute admitted programs
-and check their final managed storage; extend that coverage as admissions change.
+The [current inventory](measurements/file-applications.md#which-execution-examples-pass-arcs-checks)
+accepts 81 examples in both modes, including manual pointers with explicit caller
+obligations. Three intentionally invalid examples fail ordinary compilation; the
+expired inter-task derivative remains rejected by ARC. Existing `arc_corpus`
+tests execute admitted programs and check their final managed storage; extend
+that coverage as admissions change.
 
 ## Separating derivative and representation costs
 

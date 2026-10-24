@@ -1,0 +1,695 @@
+{
+  "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+  "merge": "8cd5153b3ed7084ec46601cfd5b2551825f64057",
+  "parent": "336692f4329d9f628c05d6a42a7353c1702bdc09",
+  "tree": "44b81b6f10da318412b214f92011dc27e815b9de",
+  "subject": "Remove temporary array lists and bound constant initialization stack",
+  "productionRun": 40055774892,
+  "documentationRun": 40055774862,
+  "savedBinaryFiles": 8166,
+  "stackObjects": 12,
+  "layoutReviews": 144,
+  "checks": [
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T04:39:45Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40055774892/job/120758317971",
+      "name": "windows / native (windows-2025)",
+      "startedAt": "2026-10-24T02:49:32Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T02:49:58Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40055774862/job/120758317788",
+      "name": "roadmap_docs",
+      "startedAt": "2026-10-24T02:49:32Z",
+      "status": "COMPLETED",
+      "workflowName": "Roadmap documentation"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T04:17:37Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40055774892/job/120758318077",
+      "name": "windows / native (windows-11-arm)",
+      "startedAt": "2026-10-24T02:49:32Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T03:28:04Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40055774892/job/120758318045",
+      "name": "macos (macos-15)",
+      "startedAt": "2026-10-24T02:49:52Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T04:04:15Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40055774892/job/120758317908",
+      "name": "macos (macos-15-intel)",
+      "startedAt": "2026-10-24T02:49:35Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T03:28:16Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40055774892/job/120758318039",
+      "name": "macos_gc (macos-15)",
+      "startedAt": "2026-10-24T02:49:56Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T04:05:31Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40055774892/job/120758317949",
+      "name": "macos_gc (macos-15-intel)",
+      "startedAt": "2026-10-24T02:49:51Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T04:51:10Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40055774892/job/120758317782",
+      "name": "test (ubuntu-latest)",
+      "startedAt": "2026-10-24T02:49:32Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T04:31:23Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40055774892/job/120758318020",
+      "name": "test (ubuntu-24.04-arm)",
+      "startedAt": "2026-10-24T02:49:34Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T02:51:24Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40055774892/job/120758317916",
+      "name": "bench",
+      "startedAt": "2026-10-24T02:49:32Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    }
+  ],
+  "reports": [
+    {
+      "kind": "ownership",
+      "host": "ubuntu-latest",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12548631024,
+      "archiveSha256": "68581f410e7c4bd7e05b07ef8326fba93494ed0d028ce32d8b5db5499351b53b",
+      "reportSha256": "252ccba8854acdc763764f4262c1fe36afe2dfb627a02748adc568558b14e6ff",
+      "savedFiles": 1161,
+      "stack": []
+    },
+    {
+      "kind": "ownership",
+      "host": "ubuntu-24.04-arm",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12548376166,
+      "archiveSha256": "0ac1d2ad814dfb4d21e9f08f39126635b02788eb326e5976284a757fe08b8058",
+      "reportSha256": "6eb3acd51a541840c9674c244b124a0470fc69cdf2ee0a1aaf71af63857903b6",
+      "savedFiles": 1161,
+      "stack": []
+    },
+    {
+      "kind": "ownership",
+      "host": "windows-2025",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12547684598,
+      "archiveSha256": "cc9050997be5d8d7a05e8ad3940ecc44db1675f41d6376f3f05903b74450fc62",
+      "reportSha256": "df11fd4eec44f76b02b776c1f14da0d70350e94ff184bad4b067900fc4b104b6",
+      "savedFiles": 1161,
+      "stack": []
+    },
+    {
+      "kind": "ownership",
+      "host": "windows-11-arm",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12546689401,
+      "archiveSha256": "e58b9f39ca39a8bf70f2c32554f626a79cf8b63379e6c4330bb1a30a97899ff4",
+      "reportSha256": "be9cb46b350cba018ddf1fb3766dfd421e4dc21d05b7d73bf1aeb8ad5aeea00b",
+      "savedFiles": 1161,
+      "stack": []
+    },
+    {
+      "kind": "ownership",
+      "host": "macos-15",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12546084116,
+      "archiveSha256": "ad6e07f90ce5dcfc30eed19d696e3b8f3074c2c5c862c7ed915cf49fb04547a0",
+      "reportSha256": "562745582278e2b4ba52efd389d1f3ff3eca557613fe641ee5287171187becf9",
+      "savedFiles": 1161,
+      "stack": []
+    },
+    {
+      "kind": "ownership",
+      "host": "macos-15-intel",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12547332644,
+      "archiveSha256": "91bed53e13c96fcd89ec83bcbf05face19796572168640cc776380dc4dcca289",
+      "reportSha256": "8a706fd3c4eed7159fb3daa9e8911f4238c6fbb2e2040eef302fdbcaa6891a24",
+      "savedFiles": 1161,
+      "stack": []
+    },
+    {
+      "kind": "floats",
+      "host": "ubuntu-latest",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12548631024,
+      "archiveSha256": "68581f410e7c4bd7e05b07ef8326fba93494ed0d028ce32d8b5db5499351b53b",
+      "reportSha256": "31f01c36fbc03637b9aea4cec834d171a0c713b53e92566abb10ef87fb75b2ef",
+      "savedFiles": 12,
+      "stack": []
+    },
+    {
+      "kind": "floats",
+      "host": "ubuntu-24.04-arm",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12548376166,
+      "archiveSha256": "0ac1d2ad814dfb4d21e9f08f39126635b02788eb326e5976284a757fe08b8058",
+      "reportSha256": "76e4fa04df8f8c5a47f510801ed0f6863aae092ec1fd14004bd28453c92a90ba",
+      "savedFiles": 12,
+      "stack": []
+    },
+    {
+      "kind": "floats",
+      "host": "windows-2025",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12547684598,
+      "archiveSha256": "cc9050997be5d8d7a05e8ad3940ecc44db1675f41d6376f3f05903b74450fc62",
+      "reportSha256": "cb391c1b68fd3f3ae1f475c9db175a43a3944b1479824681dd6f9413ddef4dff",
+      "savedFiles": 12,
+      "stack": []
+    },
+    {
+      "kind": "floats",
+      "host": "windows-11-arm",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12546689401,
+      "archiveSha256": "e58b9f39ca39a8bf70f2c32554f626a79cf8b63379e6c4330bb1a30a97899ff4",
+      "reportSha256": "35a9d055db3b65b89ce5b67a5377465ae1d23e9c27d4d84b93f637f17183e568",
+      "savedFiles": 12,
+      "stack": []
+    },
+    {
+      "kind": "floats",
+      "host": "macos-15",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12546084116,
+      "archiveSha256": "ad6e07f90ce5dcfc30eed19d696e3b8f3074c2c5c862c7ed915cf49fb04547a0",
+      "reportSha256": "7d6698db2da1b6eb689fd831867a3dcf56acf51880b9d94cb2cd9e63a32be2c9",
+      "savedFiles": 12,
+      "stack": []
+    },
+    {
+      "kind": "floats",
+      "host": "macos-15-intel",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12547332644,
+      "archiveSha256": "91bed53e13c96fcd89ec83bcbf05face19796572168640cc776380dc4dcca289",
+      "reportSha256": "048b8ff2d62ad4b6760f48f2d531365b1002adb26d1244e4c8c9696828d2cef4",
+      "savedFiles": 12,
+      "stack": []
+    },
+    {
+      "kind": "controls",
+      "host": "ubuntu-latest",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12548069431,
+      "archiveSha256": "26d854d883d01edd5051156961f8112ef624a4702e1f6dc4c1fb6125b7ceabae",
+      "reportSha256": "96995855ee68fe077e39a63097fd10759ea671231d4c078e64003a4171f4dfae",
+      "savedFiles": 60,
+      "stack": []
+    },
+    {
+      "kind": "controls",
+      "host": "ubuntu-24.04-arm",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12547572725,
+      "archiveSha256": "ef34c56e196571fef39eb7189047d53f221e8d93d9e8fd21a3c68e0c8095f80a",
+      "reportSha256": "9fbecdc48bc057bd27806a7d4495049067bff993e75d31d315d5cde7098ba880",
+      "savedFiles": 60,
+      "stack": []
+    },
+    {
+      "kind": "arrays",
+      "host": "ubuntu-latest",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12548631024,
+      "archiveSha256": "68581f410e7c4bd7e05b07ef8326fba93494ed0d028ce32d8b5db5499351b53b",
+      "reportSha256": "9051f82d6b71302115c0106288d376ba813617de6a63a17efb741baffaa71093",
+      "savedFiles": 168,
+      "stack": []
+    },
+    {
+      "kind": "arrays",
+      "host": "ubuntu-24.04-arm",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12548376166,
+      "archiveSha256": "0ac1d2ad814dfb4d21e9f08f39126635b02788eb326e5976284a757fe08b8058",
+      "reportSha256": "8e0add391a96fafcb283f1d8d7dcc43f38f9a1008f92dc0c0260ab62e3f0544d",
+      "savedFiles": 168,
+      "stack": []
+    },
+    {
+      "kind": "arrays",
+      "host": "windows-2025",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12547684598,
+      "archiveSha256": "cc9050997be5d8d7a05e8ad3940ecc44db1675f41d6376f3f05903b74450fc62",
+      "reportSha256": "a7a188439bb64f4c20d9a31532444cef93726b6892c4a39b63284aa339f8d1fe",
+      "savedFiles": 168,
+      "stack": []
+    },
+    {
+      "kind": "arrays",
+      "host": "windows-11-arm",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12546689401,
+      "archiveSha256": "e58b9f39ca39a8bf70f2c32554f626a79cf8b63379e6c4330bb1a30a97899ff4",
+      "reportSha256": "9e85e57ac8eaf1f0bf9963372daa35cdce816eed5c256d84ae9270863b033d68",
+      "savedFiles": 168,
+      "stack": []
+    },
+    {
+      "kind": "arrays",
+      "host": "macos-15",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12546084116,
+      "archiveSha256": "ad6e07f90ce5dcfc30eed19d696e3b8f3074c2c5c862c7ed915cf49fb04547a0",
+      "reportSha256": "39dd6902bdab64db68ace8ca17e7b679e22e8f3676496362f375d6c5b3599983",
+      "savedFiles": 168,
+      "stack": []
+    },
+    {
+      "kind": "arrays",
+      "host": "macos-15-intel",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12547332644,
+      "archiveSha256": "91bed53e13c96fcd89ec83bcbf05face19796572168640cc776380dc4dcca289",
+      "reportSha256": "9d250bde2fad15e8eebebcf5bc089d3fee8de675fe074e71e1d79812fc926d34",
+      "savedFiles": 168,
+      "stack": []
+    },
+    {
+      "kind": "stack",
+      "host": "ubuntu-latest",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12548631024,
+      "archiveSha256": "68581f410e7c4bd7e05b07ef8326fba93494ed0d028ce32d8b5db5499351b53b",
+      "reportSha256": "b66da0478441211eda0552c420f6b79ef36f35ab318447bb591d27629ed1e7c8",
+      "savedFiles": 0,
+      "stack": [
+        {
+          "opt": "-O1",
+          "frames": {
+            "fwp_init_consts": {
+              "bytes": 160,
+              "kind": "static"
+            },
+            "fwp_main_thread": {
+              "bytes": 304,
+              "kind": "static"
+            },
+            "main": {
+              "bytes": 112,
+              "kind": "static"
+            }
+          },
+          "usage": "/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1120:21:fwp_rc_wide_link\t8\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:2969:13:fwp_fmt_u128\t144\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:2979:13:fwp_fmt_i128\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:9148:13:fwp_wl_remove\t8\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:9166:13:fwp_timer_remove\t8\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:9175:13:fwp_make_ready\t8\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:9327:13:fwp_wake_io\t24\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:9363:13:fwp_cancel_tree\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:503:13:fwp_flush\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1113:13:fwp_gc_oom\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:2357:13:fwp_gc_report\t336\tdynamic,bounded\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:2824:13:buf_grow\t32\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:2846:13:buf_put\t32\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:2852:13:buf_puts\t32\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:2853:13:buf_putc\t32\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:2867:13:fwp_format_g\t272\tdynamic,bounded\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:2928:13:fwp_finish_float\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1292:15:fwp_gc_chunks\t32\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:528:13:fwp_trap\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:7370:16:fwp_now_ns\t48\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:396:20:fwp_array_store\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:2268:39:fwp_gc_collect\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1194:13:fwp_gc_init\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1318:13:fwp_gc_spent\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1128:13:fwp_rc_forget_slot\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1375:40:fwp_gc_refill\t64\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1491:13:fwp_mem_free\t48\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1335:40:fwp_gc_alloc_big\t64\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1409:40:fwp_gc_alloc_slow\t64\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1165:13:fwp_rc_wide_drop\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:9485:13:fwp_poll_events\t64\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:3072:13:fwp_write\t688\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:9371:13:fwp_task_dispose\t32\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:9404:13:fwp_free_zombie\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:9556:13:fwp_block\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:17345:13:fwp_init_consts\t160\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:17484:14:fwp_main_thread\t304\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:11244:13:fwp_segv\t32\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:17531:5:main\t112\tstatic\n",
+          "sourceSha256": "92696582cb3b5c8a3f7f1d3289d246e04d9ff5ee81368431918f4440520c2ceb",
+          "objectSha256": "07d5d0e1ac1bd4be5e823c5dda5fcaf19299cc1e0656c4e14a0cfb97268d2c97",
+          "assemblySha256": "1dcfc2c3a295ad86def084fd0c00fd972bd974ba0e4f587e93edbc89116e82f5"
+        },
+        {
+          "opt": "-O2",
+          "frames": {
+            "fwp_init_consts": {
+              "bytes": 160,
+              "kind": "static"
+            },
+            "fwp_main_thread": {
+              "bytes": 304,
+              "kind": "static"
+            },
+            "main": {
+              "bytes": 128,
+              "kind": "static"
+            }
+          },
+          "usage": "/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:2969:13:fwp_fmt_u128\t160\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:503:13:fwp_flush\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1113:13:fwp_gc_oom\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:11244:13:fwp_segv\t32\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:2824:13:buf_grow\t32\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:2846:13:buf_put\t32\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1292:15:fwp_gc_chunks\t32\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:9363:13:fwp_cancel_tree.part.0\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:528:13:fwp_trap\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:7370:16:fwp_now_ns\t48\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:2268:39:fwp_gc_collect\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:2928:13:fwp_finish_float\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:2867:13:fwp_format_g.constprop\t256\tdynamic,bounded\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:2357:13:fwp_gc_report\t336\tdynamic,bounded\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:396:20:fwp_array_store.constprop\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1194:13:fwp_gc_init\t32\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1318:13:fwp_gc_spent\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:9327:13:fwp_wake_io\t24\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1128:13:fwp_rc_forget_slot\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1491:13:fwp_mem_free\t64\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1335:40:fwp_gc_alloc_big.constprop\t64\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1375:40:fwp_gc_refill.constprop\t64\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:1409:40:fwp_gc_alloc_slow.constprop\t64\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:9485:13:fwp_poll_events\t48\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:9371:13:fwp_task_dispose\t32\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:9404:13:fwp_free_zombie\t32\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:9556:13:fwp_block\t16\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:17345:13:fwp_init_consts\t160\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:3072:13:fwp_write.constprop\t720\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:17484:14:fwp_main_thread\t304\tstatic\n/tmp/array-text-counts-fb328ae878ffd1927a41d245d67a21a5/constant-stack.c:17531:5:main\t128\tstatic\n",
+          "sourceSha256": "92696582cb3b5c8a3f7f1d3289d246e04d9ff5ee81368431918f4440520c2ceb",
+          "objectSha256": "9dcbd5bc1544c50b61aa0c6d8d277d2bf3519b12657a41cf585e480d5abcb6c0",
+          "assemblySha256": "dc53aeb811d6578177449ab8f8d766afbabf750bd8804a72e90f1d2f3e4086d5"
+        }
+      ]
+    },
+    {
+      "kind": "stack",
+      "host": "ubuntu-24.04-arm",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12548376166,
+      "archiveSha256": "0ac1d2ad814dfb4d21e9f08f39126635b02788eb326e5976284a757fe08b8058",
+      "reportSha256": "e64e26705a088ac6189d47ec468ea2d8c8d693c5bd420425d3ab17c858c9ed78",
+      "savedFiles": 0,
+      "stack": [
+        {
+          "opt": "-O1",
+          "frames": {
+            "fwp_init_consts": {
+              "bytes": 176,
+              "kind": "static"
+            },
+            "fwp_main_thread": {
+              "bytes": 288,
+              "kind": "static"
+            },
+            "main": {
+              "bytes": 128,
+              "kind": "static"
+            }
+          },
+          "usage": "/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1120:21:fwp_rc_wide_link\t0\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:2969:13:fwp_fmt_u128\t96\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:2979:13:fwp_fmt_i128\t16\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:9148:13:fwp_wl_remove\t0\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:9166:13:fwp_timer_remove\t0\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:9175:13:fwp_make_ready\t0\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:9327:13:fwp_wake_io\t48\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:9363:13:fwp_cancel_tree\t32\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:503:13:fwp_flush\t16\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1113:13:fwp_gc_oom\t16\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:2357:13:fwp_gc_report\t416\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:2824:13:buf_grow\t32\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:2846:13:buf_put\t48\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:2852:13:buf_puts\t32\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:2853:13:buf_putc\t32\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:2867:13:fwp_format_g\t288\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:2928:13:fwp_finish_float\t32\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1292:15:fwp_gc_chunks\t48\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:528:13:fwp_trap\t32\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:7370:16:fwp_now_ns\t48\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:396:20:fwp_array_store\t16\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:2268:39:fwp_gc_collect\t16\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1194:13:fwp_gc_init\t48\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1318:13:fwp_gc_spent\t16\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1128:13:fwp_rc_forget_slot\t16\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1375:40:fwp_gc_refill\t64\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1491:13:fwp_mem_free\t64\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1335:40:fwp_gc_alloc_big\t64\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1409:40:fwp_gc_alloc_slow\t64\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1165:13:fwp_rc_wide_drop\t32\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:9485:13:fwp_poll_events\t80\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:3072:13:fwp_write\t704\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:9371:13:fwp_task_dispose\t48\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:9404:13:fwp_free_zombie\t32\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:9556:13:fwp_block\t32\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:17345:13:fwp_init_consts\t176\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:17484:14:fwp_main_thread\t288\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:11244:13:fwp_segv\t48\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:17531:5:main\t128\tstatic\n",
+          "sourceSha256": "92696582cb3b5c8a3f7f1d3289d246e04d9ff5ee81368431918f4440520c2ceb",
+          "objectSha256": "9ca2e1169dab167f06233e43aa3065f08fb012d0b4cd83f01814592e4e05d154",
+          "assemblySha256": "a6bdb6520ec73e43b838a0981a4b4ffa9a477d229a839bc5cd1d9020c49265a3"
+        },
+        {
+          "opt": "-O2",
+          "frames": {
+            "fwp_init_consts": {
+              "bytes": 176,
+              "kind": "static"
+            },
+            "fwp_main_thread": {
+              "bytes": 320,
+              "kind": "static"
+            },
+            "main": {
+              "bytes": 160,
+              "kind": "static"
+            }
+          },
+          "usage": "/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:2969:13:fwp_fmt_u128\t96\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:503:13:fwp_flush\t16\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1113:13:fwp_gc_oom\t16\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:11244:13:fwp_segv\t48\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:2824:13:buf_grow\t32\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:2846:13:buf_put\t48\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1292:15:fwp_gc_chunks\t64\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:9363:13:fwp_cancel_tree.part.0\t32\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:528:13:fwp_trap\t32\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:7370:16:fwp_now_ns\t48\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:2268:39:fwp_gc_collect\t16\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:2928:13:fwp_finish_float\t32\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:2867:13:fwp_format_g.constprop\t288\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:2357:13:fwp_gc_report\t416\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:396:20:fwp_array_store.constprop\t16\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1194:13:fwp_gc_init\t64\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1318:13:fwp_gc_spent\t32\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:9327:13:fwp_wake_io\t0\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1128:13:fwp_rc_forget_slot\t32\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1491:13:fwp_mem_free\t64\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1335:40:fwp_gc_alloc_big.constprop\t64\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1375:40:fwp_gc_refill.constprop\t80\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:1409:40:fwp_gc_alloc_slow.constprop\t64\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:9485:13:fwp_poll_events\t64\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:9371:13:fwp_task_dispose\t48\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:9404:13:fwp_free_zombie\t32\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:9556:13:fwp_block\t32\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:17345:13:fwp_init_consts\t176\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:3072:13:fwp_write.constprop\t704\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:17484:14:fwp_main_thread\t320\tstatic\n/tmp/array-text-counts-7a691aab1b537c58e5acd9c9dfcfa0ee/constant-stack.c:17531:5:main\t160\tstatic\n",
+          "sourceSha256": "92696582cb3b5c8a3f7f1d3289d246e04d9ff5ee81368431918f4440520c2ceb",
+          "objectSha256": "fbf67b61136f183fdc0fc362d8db4dbdee094095dcdcf33b95a7254ab7f19ea8",
+          "assemblySha256": "a9e69fbcb7f4ebe1a34fc0347e3a9afa53a7336730bef97c3549f7bdbfda78b1"
+        }
+      ]
+    },
+    {
+      "kind": "stack",
+      "host": "windows-2025",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12547684598,
+      "archiveSha256": "cc9050997be5d8d7a05e8ad3940ecc44db1675f41d6376f3f05903b74450fc62",
+      "reportSha256": "99e363a222de07cd6e6d28a4b9e44197aeb7a6bbf911ce0a784ce5f8465822a8",
+      "savedFiles": 0,
+      "stack": [
+        {
+          "opt": "-O1",
+          "frames": {
+            "main": {
+              "bytes": 200,
+              "kind": "static"
+            },
+            "fwp_windows_main_thread": {
+              "bytes": 728,
+              "kind": "static"
+            }
+          },
+          "usage": "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:17531:main\t200\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:528:fwp_trap\t40\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:17525:fwp_windows_main_thread\t728\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:503:fwp_flush\t40\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:1194:fwp_gc_init\t72\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:2357:fwp_gc_report\t312\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:1113:fwp_gc_oom\t40\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:11216:fwp_stack_exception\t56\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:1128:fwp_rc_forget_slot\t40\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:2846:buf_put\t72\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:2867:fwp_format_g\t296\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:1409:fwp_gc_alloc_slow\t72\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:1335:fwp_gc_alloc_big\t72\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:1375:fwp_gc_refill\t88\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:1292:fwp_gc_chunks\t104\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:2268:fwp_gc_collect\t40\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:1165:fwp_rc_wide_drop\t40\tstatic\n",
+          "sourceSha256": "92696582cb3b5c8a3f7f1d3289d246e04d9ff5ee81368431918f4440520c2ceb",
+          "objectSha256": "510bc6598bd3bb485d33f6726c7747a2906b107375bb9f3706d4fe2eab690bce",
+          "assemblySha256": "6cbd5433ba19928d3969233109dd983f837522f5ffb12feab6d16e65a5c5c7a7"
+        },
+        {
+          "opt": "-O2",
+          "frames": {
+            "main": {
+              "bytes": 200,
+              "kind": "static"
+            },
+            "fwp_windows_main_thread": {
+              "bytes": 712,
+              "kind": "static"
+            }
+          },
+          "usage": "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:17531:main\t200\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:528:fwp_trap\t40\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:17525:fwp_windows_main_thread\t712\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:503:fwp_flush\t40\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:1194:fwp_gc_init\t56\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:2357:fwp_gc_report\t312\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:1113:fwp_gc_oom\t40\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:11216:fwp_stack_exception\t56\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:1128:fwp_rc_forget_slot\t40\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:2846:buf_put\t72\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:2867:fwp_format_g\t312\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:1409:fwp_gc_alloc_slow\t72\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:1335:fwp_gc_alloc_big\t72\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:1375:fwp_gc_refill\t88\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:1292:fwp_gc_chunks\t104\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:2268:fwp_gc_collect\t40\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-70900bcb2c5ce118582a000000000000\\constant-stack.c:1165:fwp_rc_wide_drop\t40\tstatic\n",
+          "sourceSha256": "92696582cb3b5c8a3f7f1d3289d246e04d9ff5ee81368431918f4440520c2ceb",
+          "objectSha256": "96f631398e5cb52bf297dfd8ce0176e9e9aa957063e2fc90a69bfd486ed46b7c",
+          "assemblySha256": "5336ca7ffd52bac8e7cfa78b871c520a5c5a52aae46843dabc49c91cd8aa111a"
+        }
+      ]
+    },
+    {
+      "kind": "stack",
+      "host": "windows-11-arm",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12546689401,
+      "archiveSha256": "e58b9f39ca39a8bf70f2c32554f626a79cf8b63379e6c4330bb1a30a97899ff4",
+      "reportSha256": "d4d971d352dd7868f96ac3c12e93ad0072a58adb386eadf4f3b44642dfaef8bd",
+      "savedFiles": 0,
+      "stack": [
+        {
+          "opt": "-O1",
+          "frames": {
+            "main": {
+              "bytes": 80,
+              "kind": "static"
+            },
+            "fwp_windows_main_thread": {
+              "bytes": 672,
+              "kind": "static"
+            }
+          },
+          "usage": "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:17531:main\t80\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:528:fwp_trap\t16\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:17525:fwp_windows_main_thread\t672\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:503:fwp_flush\t16\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:1194:fwp_gc_init\t48\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:2357:fwp_gc_report\t224\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:1113:fwp_gc_oom\t16\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:11216:fwp_stack_exception\t16\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:1128:fwp_rc_forget_slot\t16\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:2846:buf_put\t48\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:2867:fwp_format_g\t272\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:1409:fwp_gc_alloc_slow\t48\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:1335:fwp_gc_alloc_big\t48\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:1375:fwp_gc_refill\t80\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:1292:fwp_gc_chunks\t96\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:2268:fwp_gc_collect\t16\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:1165:fwp_rc_wide_drop\t16\tstatic\n",
+          "sourceSha256": "92696582cb3b5c8a3f7f1d3289d246e04d9ff5ee81368431918f4440520c2ceb",
+          "objectSha256": "70c763952b181a090b875198642d9dc57f8771ae7a31cd42c0d6d2738dec783d",
+          "assemblySha256": "cbb482287c48b7afb339c668cc1e14556df7f440638c12f97239b7a8686dd10f"
+        },
+        {
+          "opt": "-O2",
+          "frames": {
+            "main": {
+              "bytes": 80,
+              "kind": "static"
+            },
+            "fwp_windows_main_thread": {
+              "bytes": 672,
+              "kind": "static"
+            }
+          },
+          "usage": "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:17531:main\t80\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:528:fwp_trap\t16\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:17525:fwp_windows_main_thread\t672\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:503:fwp_flush\t16\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:1194:fwp_gc_init\t32\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:2357:fwp_gc_report\t224\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:1113:fwp_gc_oom\t16\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:11216:fwp_stack_exception\t16\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:1128:fwp_rc_forget_slot\t16\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:2846:buf_put\t48\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:2867:fwp_format_g\t272\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:1409:fwp_gc_alloc_slow\t48\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:1335:fwp_gc_alloc_big\t48\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:1375:fwp_gc_refill\t80\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:1292:fwp_gc_chunks\t96\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:2268:fwp_gc_collect\t16\tstatic\nC:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\array-text-counts-442ca615385be118e02b000000000000\\constant-stack.c:1165:fwp_rc_wide_drop\t16\tstatic\n",
+          "sourceSha256": "92696582cb3b5c8a3f7f1d3289d246e04d9ff5ee81368431918f4440520c2ceb",
+          "objectSha256": "34e0b96b4fa5dec8726b92e96ed587ba342e53914b57b1ae799ecb80af693a4d",
+          "assemblySha256": "cbb5b8a990b94717cb024c04c61747057687dbe95faafa170acba167a258fc8f"
+        }
+      ]
+    },
+    {
+      "kind": "stack",
+      "host": "macos-15",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12546084116,
+      "archiveSha256": "ad6e07f90ce5dcfc30eed19d696e3b8f3074c2c5c862c7ed915cf49fb04547a0",
+      "reportSha256": "ae5447235f8de4cd135328898eb66aa10a5658ec15c513d3de0b4851dad4b44f",
+      "savedFiles": 0,
+      "stack": [
+        {
+          "opt": "-O1",
+          "frames": {
+            "main": {
+              "bytes": 144,
+              "kind": "static"
+            },
+            "fwp_main_thread": {
+              "bytes": 720,
+              "kind": "static"
+            }
+          },
+          "usage": "/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:17531:main\t144\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:17484:fwp_main_thread\t720\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:503:fwp_flush\t16\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:1194:fwp_gc_init\t64\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:2357:fwp_gc_report\t352\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:11244:fwp_segv\t16\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:396:fwp_array_store\t32\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:1128:fwp_rc_forget_slot\t32\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:2846:buf_put\t48\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:2867:fwp_format_g\t288\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:1409:fwp_gc_alloc_slow\t64\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:1335:fwp_gc_alloc_big\t64\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:1375:fwp_gc_refill\t64\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:1292:fwp_gc_chunks\t48\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:2268:fwp_gc_collect\t32\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:1165:fwp_rc_wide_drop\t48\tstatic\n",
+          "sourceSha256": "92696582cb3b5c8a3f7f1d3289d246e04d9ff5ee81368431918f4440520c2ceb",
+          "objectSha256": "f9c6f42f7e079ac83e2b803531da1f4b0813b9e6ff51ae279d82758dcdb1faf6",
+          "assemblySha256": "5cbb562ab80735558dbfbecb24c62cfe5f97bafd966636108b39890d32a2616e"
+        },
+        {
+          "opt": "-O2",
+          "frames": {
+            "main": {
+              "bytes": 144,
+              "kind": "static"
+            },
+            "fwp_main_thread": {
+              "bytes": 704,
+              "kind": "static"
+            }
+          },
+          "usage": "/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:17531:main\t144\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:17484:fwp_main_thread\t704\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:503:fwp_flush\t16\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:1194:fwp_gc_init\t64\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:2357:fwp_gc_report\t352\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:11244:fwp_segv\t16\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:396:fwp_array_store\t32\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:1128:fwp_rc_forget_slot\t32\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:2846:buf_put\t48\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:2867:fwp_format_g\t288\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:1409:fwp_gc_alloc_slow\t64\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:1335:fwp_gc_alloc_big\t64\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:1375:fwp_gc_refill\t64\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:1292:fwp_gc_chunks\t48\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:2268:fwp_gc_collect\t32\tstatic\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/array-text-counts-5d6c778d74be368a0f89c0a7a0c5dcde/constant-stack.c:1165:fwp_rc_wide_drop\t48\tstatic\n",
+          "sourceSha256": "92696582cb3b5c8a3f7f1d3289d246e04d9ff5ee81368431918f4440520c2ceb",
+          "objectSha256": "53b263b680b13c990dd72c7ddd1fca2a8f3af85d70fa1d81fa30a7300f1238e3",
+          "assemblySha256": "5198be43291038743ce9adf1e17b8ba06b049e5f1de133bd22225cac14d0305d"
+        }
+      ]
+    },
+    {
+      "kind": "stack",
+      "host": "macos-15-intel",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12547332644,
+      "archiveSha256": "91bed53e13c96fcd89ec83bcbf05face19796572168640cc776380dc4dcca289",
+      "reportSha256": "38b9a8801276ee3cd99fbc602bd1ee9fa97b0e7e9c279ca0119a60d43804cbf0",
+      "savedFiles": 0,
+      "stack": [
+        {
+          "opt": "-O1",
+          "frames": {
+            "main": {
+              "bytes": 136,
+              "kind": "static"
+            },
+            "fwp_main_thread": {
+              "bytes": 648,
+              "kind": "static"
+            }
+          },
+          "usage": "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:17531:main\t136\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:17484:fwp_main_thread\t648\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:503:fwp_flush\t8\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:1194:fwp_gc_init\t40\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:2357:fwp_gc_report\t232\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:11244:fwp_segv\t8\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:396:fwp_array_store\t8\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:1128:fwp_rc_forget_slot\t8\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:2846:buf_put\t40\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:2867:fwp_format_g\t232\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:1409:fwp_gc_alloc_slow\t40\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:1335:fwp_gc_alloc_big\t56\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:1375:fwp_gc_refill\t56\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:1292:fwp_gc_chunks\t40\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:2268:fwp_gc_collect\t8\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:1165:fwp_rc_wide_drop\t24\tstatic\n",
+          "sourceSha256": "92696582cb3b5c8a3f7f1d3289d246e04d9ff5ee81368431918f4440520c2ceb",
+          "objectSha256": "05f0615c990bc637729dbde4b12f84672eb51634501f00ff0852453a50579b3f",
+          "assemblySha256": "b81d54a657a2d30d4fd639ca2365ae1d095ec109b36c8dd39f93d9f8ea13ac65"
+        },
+        {
+          "opt": "-O2",
+          "frames": {
+            "main": {
+              "bytes": 136,
+              "kind": "static"
+            },
+            "fwp_main_thread": {
+              "bytes": 632,
+              "kind": "static"
+            }
+          },
+          "usage": "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:17531:main\t136\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:17484:fwp_main_thread\t632\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:503:fwp_flush\t8\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:1194:fwp_gc_init\t24\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:2357:fwp_gc_report\t232\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:11244:fwp_segv\t8\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:396:fwp_array_store\t8\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:1128:fwp_rc_forget_slot\t8\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:2846:buf_put\t40\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:2867:fwp_format_g\t232\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:1409:fwp_gc_alloc_slow\t40\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:1335:fwp_gc_alloc_big\t56\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:1375:fwp_gc_refill\t56\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:1292:fwp_gc_chunks\t40\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:2268:fwp_gc_collect\t8\tstatic\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/array-text-counts-26db601091fb0e570480baa50e8ac7de/constant-stack.c:1165:fwp_rc_wide_drop\t24\tstatic\n",
+          "sourceSha256": "92696582cb3b5c8a3f7f1d3289d246e04d9ff5ee81368431918f4440520c2ceb",
+          "objectSha256": "2c609abf4acbd351d860b32bc7c91adfab40f6e4e1b1d17295e0e26af3ccbe28",
+          "assemblySha256": "3e2c5101e97895fe05aaf234cf75d15e05ee20e22de6aa8a4a08ff444cc05502"
+        }
+      ]
+    },
+    {
+      "kind": "layout",
+      "host": "ubuntu-latest",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12548631024,
+      "archiveSha256": null,
+      "reportSha256": "047e5a6921000a2facb75a89b19afd090fcf3e4e00c98444d2b54ee4269577ea",
+      "savedFiles": 24,
+      "stack": []
+    },
+    {
+      "kind": "layout",
+      "host": "ubuntu-24.04-arm",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12548376166,
+      "archiveSha256": null,
+      "reportSha256": "8c948cbafa17760251c0024e69566a8cb9d2ac053e7e5f8dbea9d556d6ed8406",
+      "savedFiles": 24,
+      "stack": []
+    },
+    {
+      "kind": "layout",
+      "host": "windows-2025",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12547684598,
+      "archiveSha256": null,
+      "reportSha256": "0bdbcd3cb06948db18de022d4fa5a28e1f6d8cbd79fc0ad52a4d17d0daf9ec25",
+      "savedFiles": 24,
+      "stack": []
+    },
+    {
+      "kind": "layout",
+      "host": "windows-11-arm",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12546689401,
+      "archiveSha256": null,
+      "reportSha256": "0e65ac4f272e7e9018f5e11fbe06c5c6b207374750ef30cd8ab49ff290c96eb2",
+      "savedFiles": 24,
+      "stack": []
+    },
+    {
+      "kind": "layout",
+      "host": "macos-15",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12546084116,
+      "archiveSha256": null,
+      "reportSha256": "a11192bdaec2f58b78a61582c48d6982400e055abcacccb63fe3df8ce85c1c0c",
+      "savedFiles": 24,
+      "stack": []
+    },
+    {
+      "kind": "layout",
+      "host": "macos-15-intel",
+      "source": "35932a77bc5fdad42350c6376059b5e0d88b3c3d",
+      "run": 40055774892,
+      "artifact": 12547332644,
+      "archiveSha256": null,
+      "reportSha256": "a5247143668600ef34198454343499d277d30e3cbc4e8a4e7730b7959499f762",
+      "savedFiles": 24,
+      "stack": []
+    }
+  ],
+  "scope": "Final production acceptance. Saved outcomes are not distinct source programs; layout reviews overlap array outcomes. Text-section bytes include padding. No downloaded binary was executed locally."
+}

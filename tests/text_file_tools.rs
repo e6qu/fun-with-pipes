@@ -288,6 +288,11 @@ fn scaled_text_tools_release_partial_results_and_file_handles() {
             include_str!("../examples/cli/csvtool.fwp"),
             include_str!("fixtures/csv_live.fwp"),
         ),
+        (
+            "todo",
+            include_str!("../examples/cli/todo.fwp"),
+            include_str!("fixtures/todo_live.fwp"),
+        ),
     ] {
         let dir = fwp::cgen::TempDir::new(program).unwrap();
         let source = dir.join(format!("{program}.fwp"));
@@ -319,19 +324,29 @@ fn scaled_text_tools_release_partial_results_and_file_handles() {
             "#define FILE_APP_OMIT_RAW_FREE 1",
         );
         assert_ne!(raw_leak, measured);
+        let unclosed_write = measured.replace(
+            "#define FILE_APP_OMIT_WRITE_CLOSE 0",
+            "#define FILE_APP_OMIT_WRITE_CLOSE 1",
+        );
+        assert_ne!(unclosed_write, measured);
         for opt in ["-O1", "-O2"] {
-            let binaries = [
+            let mut binaries = vec![
                 dir.join("measured.exe"),
                 dir.join("missing-release.exe"),
                 dir.join("missing-close.exe"),
                 dir.join("missing-buffer-free.exe"),
             ];
-            for (label, code, binary) in [
-                ("measured", &measured, &binaries[0]),
-                ("missing-release", &omitted, &binaries[1]),
-                ("missing-close", &unclosed, &binaries[2]),
-                ("missing-buffer-free", &raw_leak, &binaries[3]),
-            ] {
+            let mut variants = vec![
+                ("measured", &measured),
+                ("missing-release", &omitted),
+                ("missing-close", &unclosed),
+                ("missing-buffer-free", &raw_leak),
+            ];
+            if program == "todo" {
+                binaries.push(dir.join("missing-write-close.exe"));
+                variants.push(("missing-write-close", &unclosed_write));
+            }
+            for ((label, code), binary) in variants.iter().zip(&binaries) {
                 eprintln!("file application {program}: compile {label} at {opt}");
                 fwp::cgen::compile_c(code, binary, opt).unwrap();
                 if let Some(path) = std::env::var_os("FWP_FILE_APPLICATION_ARTIFACTS") {
@@ -350,12 +365,19 @@ fn scaled_text_tools_release_partial_results_and_file_handles() {
                         text.push_str(&format!("{i},\"héllo, {i}\",\"say \"\"hi\"\"\"\n"));
                     }
                     text
+                } else if program == "todo" {
+                    (0..lines)
+                        .map(|i| format!("[ ] task héllo {i}\n"))
+                        .collect()
                 } else {
                     "Apple pie\nhéllo 世界\n\nlast\n".repeat(lines / 4)
                 };
                 let second = "one\ttwo three\n\n".repeat(lines / 2);
                 std::fs::write(dir.join("first.txt"), &first).unwrap();
                 std::fs::write(dir.join("second.txt"), &second).unwrap();
+                if program == "todo" {
+                    std::fs::write(dir.join("seed.txt"), &first).unwrap();
+                }
                 let counts = [&first, &second].map(|text| {
                     (
                         text.bytes().filter(|&byte| byte == b'\n').count(),
@@ -423,6 +445,14 @@ fn scaled_text_tools_release_partial_results_and_file_handles() {
                             "0\nfirst.txt:{}\nsecond.txt:{lines}\n1\nfirst.txt:0\nsecond.txt:0\n",
                             first.lines().filter(|line| !line.contains('a')).count()
                         ));
+                    } else if program == "todo" {
+                        for i in 0..lines {
+                            expected.push_str(&format!("{:>3}. [ ] task héllo {i}\n", i + 1));
+                        }
+                        for i in 1..lines {
+                            expected.push_str(&format!("{i:>3}. [ ] task héllo {i}\n"));
+                        }
+                        expected.push_str(&format!("{lines:>3}. [ ] new 世界\n"));
                     } else {
                         expected.push_str("name\tid\n");
                         for i in 0..lines {
@@ -450,32 +480,34 @@ fn scaled_text_tools_release_partial_results_and_file_handles() {
                             String::new(),
                         )
                     };
+                    file_application_memory::save_execution(
+                        program,
+                        lines,
+                        variants[index].0,
+                        opt,
+                        &actual,
+                        &resident,
+                    );
                     assert_eq!(
                         actual.status.code(),
                         Some(if index == 0 { 0 } else { 241 }),
                         "{opt}, {lines}: {actual:?}"
                     );
                     if index == 0 {
+                        assert_eq!(resident.lines().count(), 10, "{actual:?}");
                         assert_eq!(actual.stdout, reference.stdout);
-                        file_application_memory::check_observations(&actual.stderr);
-                        if let Some(path) = std::env::var_os("FWP_FILE_APPLICATION_ARTIFACTS") {
-                            let path = std::path::PathBuf::from(path);
-                            std::fs::write(
-                                path.join(format!("{program}-{lines}{opt}.rss.tsv")),
-                                resident,
-                            )
-                            .unwrap();
-                            std::fs::write(
-                                path.join(format!("{program}-{lines}{opt}.stdout")),
-                                &actual.stdout,
-                            )
-                            .unwrap();
-                            std::fs::write(
-                                path.join(format!("{program}-{lines}{opt}.memory")),
-                                &actual.stderr,
-                            )
-                            .unwrap();
+                        if program == "todo" {
+                            assert_eq!(
+                                std::fs::read_to_string(dir.join("seed.txt")).unwrap(),
+                                first
+                            );
+                            assert_eq!(
+                                std::fs::read_to_string(dir.join("first.txt")).unwrap(),
+                                format!("{first}[ ] partial\n")
+                            );
+                            assert!(!dir.join("missing-dir").exists());
                         }
+                        file_application_memory::check_observations(&actual.stderr);
                     }
                 }
             }

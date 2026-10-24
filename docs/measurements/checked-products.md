@@ -95,12 +95,12 @@ registers without calls or stack traffic. AMD64's former 40-byte normal-entry
 frame disappears; ARM64 still has no normal-entry frame. Their overflow paths
 reserve 8 and 16 bytes respectively, excluding AMD64's return address.
 
-| Host | Instruction bytes before → candidate | Whole executable before → candidate |
+| Host | Text-section bytes before → candidate | Whole executable before → candidate |
 |---|---:|---:|
 | AMD64 | 25,586 → 25,522 | 61,776 → 61,776 |
 | ARM64 | 23,356 → 23,244 | 83,432 → 83,440 |
 
-Instruction bytes measure the ELF `.text` section. Whole-file size also includes
+Text-section bytes measure the ELF `.text` section, including compiler padding. Whole-file size also includes
 metadata and alignment, so a smaller instruction section need not shrink the
 file. The matched C loop still replaces more digit divisions with comparisons
 and constants. The remaining timing gap has not been assigned to individual
@@ -145,6 +145,6 @@ python3 scripts/local-guard.py python3 scripts/summarize-integer-counting.py \
 ```
 
 The validator checks raw samples, medians, execution order, sources, architecture,
-instruction bytes, hashes, memory controls and actual compiler output. It does
+text-section bytes, hashes, memory controls and actual compiler output. It does
 not rebuild or rerun Linux binaries locally. Full builds and measurement reruns
 belong on GitHub runners via the `integer-counting` focused suite.

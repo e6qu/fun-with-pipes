@@ -97,12 +97,12 @@ address, versus no normal-path frame in old fwp. ARM64 still has no normal-path
 frame; its overflow path saves 16 bytes. These are fixed costs, not per-item heap
 storage or growing recursion.
 
-| Host | Old fwp instruction bytes | New instruction bytes | Old whole file | New whole file |
+| Host | Old fwp text-section bytes | New text-section bytes | Old whole file | New whole file |
 |---|---:|---:|---:|---:|
 | AMD64 | 25,218 | 25,586 (+368) | 61,800 | 61,776 |
 | ARM64 | 22,908 | 23,356 (+448) | 83,432 | 83,432 |
 
-Instruction bytes are the ELF `.text` section. Whole-file sizes also reflect
+Text-section bytes are the ELF `.text` section, including compiler padding. Whole-file sizes also reflect
 symbols, metadata and alignment; their changes do not measure instruction cost.
 The matched C/Rust instruction sections are 585/242,195 bytes on AMD64 and
 600/218,876 on ARM64. These include each program's linked/runtime choices, not

@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -2185,18 +2185,24 @@ jobs:
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --test float_linking -- --nocapture
   server_checks:
-    if: inputs.suite == 'server-checks' || inputs.suite == 'server-entries' || inputs.suite == 'server-recheck'
+    if: inputs.suite == 'server-checks' || inputs.suite == 'http-application' || inputs.suite == 'server-entries' || inputs.suite == 'server-recheck'
     strategy:
       fail-fast: false
       matrix:
         runner: ${{ fromJSON(inputs.native_runner != 'all' && format('["{0}"]', inputs.native_runner) || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
-        part: ${{ fromJSON(inputs.suite == 'server-recheck' && '["checks","api"]' || inputs.suite == 'server-entries' && (inputs.server_entry_part == 'checks' && '["checks","api"]' || inputs.server_entry_part != 'all' && format('["{0}"]', inputs.server_entry_part) || '["checks","api","stdio","http-rest","http-mcp"]') || '["checks"]') }}
+        part: ${{ fromJSON(inputs.suite == 'server-checks' && '["checks","web"]' || inputs.suite == 'server-recheck' && '["checks","api"]' || inputs.suite == 'server-entries' && (inputs.server_entry_part == 'checks' && '["checks","api"]' || inputs.server_entry_part != 'all' && format('["{0}"]', inputs.server_entry_part) || '["checks","api","stdio","http-rest","http-mcp"]') || '["checks"]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
     env:
-      CC: ${{ matrix.part == 'queued' && startsWith(matrix.runner, 'ubuntu-') && 'gcc' || 'clang' }}
+      CC: ${{ (matrix.part == 'queued' || inputs.suite == 'server-checks' || inputs.suite == 'http-application') && startsWith(matrix.runner, 'ubuntu-') && 'gcc' || 'clang' }}
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
       FWP_UDP_ARTIFACTS: server-check-evidence/udp
       FWP_SERVER_ENTRY_ARTIFACTS: server-check-evidence/entries
       FWP_ENTRY_INTERFACE: ${{ matrix.part == 'http-rest' && 'rest' || matrix.part == 'http-mcp' && 'mcp' || '' }}
@@ -2271,18 +2277,24 @@ jobs:
               cpu = subprocess.check_output(['powershell', '-NoProfile', '-Command', 'Get-CimInstance Win32_Processor | Select-Object Name,Manufacturer,NumberOfCores,NumberOfLogicalProcessors | ConvertTo-Json'], text=True)
           (evidence / 'cpu.txt').write_text(platform.platform() + '\n' + platform.machine() + '\n' + cpu)
           files = sorted(p for directory in ['src', 'lib', 'runtime'] for p in Path(directory).rglob('*') if p.is_file())
-          files += [Path(name) for name in ['tests/server_entry_ownership.rs', 'tests/fixtures/server_entries.fwp', 'tests/fixtures/server_entry_client.fwp', 'tests/support/client_allocations.rs', 'tests/support/process_memory.rs', 'scripts/summarize-server-entries.py', '.github/workflows/numerics.yml']]
+          files += [Path(name) for name in ['tests/http_server.rs', 'tests/web.rs', 'tests/support/http_server_process.rs', 'examples/server/api.fwp', 'tests/web/server.fwp', 'tests/server_entry_ownership.rs', 'tests/fixtures/server_entries.fwp', 'tests/fixtures/server_entry_client.fwp', 'tests/support/client_allocations.rs', 'tests/support/process_memory.rs', 'scripts/summarize-server-entries.py', '.github/workflows/numerics.yml']]
           Path('server-check-evidence/source-sha256.json').write_text(json.dumps({p.as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in files}, indent=2) + '\n')
           PY
       - run: cargo fmt --all -- --check
         if: matrix.part == 'checks'
       - run: cargo clippy --all-targets -- -D warnings
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && matrix.part == 'checks' }}
-      - name: Accepted connections, UDP cleanup and readiness failures
-        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'server-checks' }}
-        run: cargo test --no-fail-fast --test grpc_server_connections --test udp_ownership --test native_sockets -- --nocapture
+      - name: HTTP examples, startup failures and connection cleanup
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'server-checks' && matrix.part == 'checks' }}
+        run: cargo test --no-fail-fast --test http_server --test grpc_server_connections --test udp_ownership --test native_sockets -- --nocapture
+      - name: HTTP protocols and checked ARC client/server equivalence
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'server-checks' && matrix.part == 'web' }}
+        run: cargo test --test web -- --nocapture
+      - name: Maintained HTTP application and shutdown handshake
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-application' }}
+        run: cargo test --test http_server -- --nocapture
       - name: Generated entry results and ownership restrictions
-        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite != 'server-checks' && matrix.part == 'checks' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && (inputs.suite == 'server-entries' || inputs.suite == 'server-recheck') && matrix.part == 'checks' }}
         run: cargo test --no-fail-fast --test server_entry_ownership --test arc_execution -- --nocapture
       - name: Queued functions in generated entries
         if: ${{ !cancelled() && matrix.part == 'queued' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
@@ -2303,7 +2315,7 @@ jobs:
             target/debug/fwp.exe
           if-no-files-found: error
       - name: Exact JSON and YAML numeric parsing
-        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite != 'server-checks' && matrix.part == 'checks' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && (inputs.suite == 'server-entries' || inputs.suite == 'server-recheck') && matrix.part == 'checks' }}
         shell: bash
         run: |
           status=0
@@ -2312,13 +2324,13 @@ jobs:
           cargo test --test rest openapi_balanced_integer_limits_are_exact -- --exact --nocapture || status=1
           exit "$status"
       - name: REST API, authentication and multipart forms with checked ARC
-        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite != 'server-checks' && matrix.part == 'api' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && (inputs.suite == 'server-entries' || inputs.suite == 'server-recheck') && matrix.part == 'api' }}
         run: cargo test --test rest checked_arc_rest_preserves_api_authentication_and_form_results -- --exact --nocapture
       - name: OpenAPI generated clients through JSON, forms and CSV
-        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite != 'server-checks' && matrix.part == 'api' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && (inputs.suite == 'server-entries' || inputs.suite == 'server-recheck') && matrix.part == 'api' }}
         run: cargo test --test rest forms_client_round_trip -- --exact --nocapture
       - name: Swagger generated clients through JSON, forms and CSV
-        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite != 'server-checks' && matrix.part == 'api' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && (inputs.suite == 'server-entries' || inputs.suite == 'server-recheck') && matrix.part == 'api' }}
         run: cargo test --test rest swagger_documents -- --exact --nocapture
       - name: Repeated MCP standard-input requests and non-freeing control
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'server-entries' && matrix.part == 'stdio' }}

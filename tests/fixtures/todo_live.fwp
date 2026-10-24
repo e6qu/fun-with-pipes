@@ -1,0 +1,57 @@
+# Appended to todo.fwp. The harness writes 128 or 4,096 UTF-8 tasks to seed.txt.
+# Each successful edit starts from that seed, so repeated work has bounded data.
+foreign "C" checkpoint : I64 -> I64 -> () ! {IO} = "file_app_checkpoint"
+
+reset-file : () -> () ! {FileIO, Error[IoError]}
+reset-file = const "seed.txt" | file.read | file.write-new "first.txt"
+require-done : Result[String, String] -> ()
+require-done = match
+    Ok _ -> ignore
+    Err _ -> prim.trap
+require-write-error : Result[List[String], IoError] -> ()
+require-write-error =
+    result.is-ok
+    | if id (const "expected a task-file write error" | prim.trap) (const ())
+require-read-error : Result[List[List[Item]], IoError] -> ()
+require-read-error =
+    result.is-ok
+    | if id (const "expected a task-file read error" | prim.trap) (const ())
+
+edit-items =
+    tap (flip done 1 | require-done)
+    | tap (flip done 0
+        | result.is-ok
+        | if id (const "item zero must be rejected" | prim.trap) (const ()))
+    | tap (clear | ignore)
+    | tap (flip add-item ["new", "世界"] | ignore)
+    | list-items
+read-cycle =
+    tap (checkpoint 0)
+    | tap (const () | reset-file)
+    | tap (const Store { file = "first.txt" } | edit-items | ignore)
+    | sub 1
+missing-cycle =
+    tap (checkpoint 1)
+    | tap (const () | reset-file)
+    | tap (const [
+            Store { file = "first.txt" },
+            Store { file = "missing-dir/tasks.txt" },
+        ]
+        | attempt (map (flip add-item ["partial"]))
+        | require-write-error)
+    | sub 1
+invalid-cycle =
+    tap (checkpoint 2)
+    | tap (const [Store { file = "first.txt" }, Store { file = "invalid.txt" }]
+        | attempt (map items)
+        | require-read-error)
+    | sub 1
+
+main = [
+    () | reset-file,
+    Store { file = "first.txt" } | list-items | each echo,
+    Store { file = "first.txt" } | edit-items | each echo,
+    64 | loop (if (eq 0) Stop (read-cycle | Again)) | ignore,
+    64 | loop (if (eq 0) Stop (missing-cycle | Again)) | ignore,
+    64 | loop (if (eq 0) Stop (invalid-cycle | Again)) | ignore,
+] | ignore

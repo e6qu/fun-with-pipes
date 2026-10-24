@@ -1,8 +1,9 @@
 # Array allocation, layout and startup costs
 
 The focused checks pass on Linux, macOS and Windows, each on ARM64 and AMD64.
-This is evidence for the named programs; final PR production acceptance is still
-open. [Examples and restrictions](array-text.md) explain the transformations.
+This is evidence for the named programs.
+[PR #206](../roadmap-history.md#array-output-storage-and-startup-stack-pr-206)
+passed final production acceptance on all six native hosts. [Examples and restrictions](array-text.md) explain the transformations.
 [Timing comparisons](array-output-results.md) answer a different question: how
 long complete fwp programs take compared with C and Rust.
 
@@ -107,4 +108,5 @@ twelve stack objects and 144 layout reviews (the latter reuse selected executabl
 outcomes). Artifact IDs, archive hashes, per-image hashes, statuses, counters,
 physical layouts and code sizes tie this summary to the saved files. Complete
 job logs were audited. All six jobs and independent artifact reviews passed.
-The [handoff](../development-state.md) tracks final production acceptance.
+The [delivery record](array-delivery-2026-10-24.json) records the passing final
+production jobs and independent binary reviews.

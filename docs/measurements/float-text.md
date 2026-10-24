@@ -38,8 +38,10 @@ Runtime and benchmark sources did not change in that repair.
 The largest generated program's GCC formatter stack frame grows from 224 to 256
 bytes on AMD64 (bounded dynamic stack use), and 208 to 288 bytes on ARM64 (static).
 The caller's writer frame stays at 720/704 bytes respectively. Whole-program
-instruction bytes grow from 33,010 to 33,826 on AMD64 and 30,972 to 31,516 on ARM64.
-These costs accompany a possible elapsed-time gain; the change does not reduce
+text-section bytes grow from 33,010 to 33,826 on AMD64 and 30,972 to 31,516 on ARM64.
+The byte counts measure the ELF `.text` section, including padding; the
+historical raw field is named `instructionBytes`. These costs accompany a
+possible elapsed-time gain; the change does not reduce
 allocation counts. Local Clang ARM64 separately reports 240 to 288 bytes for the
 formatter. These frame sizes describe individual functions, not total call-stack
 use.
@@ -83,7 +85,7 @@ every solve, and count the C/Rust numerical buffers. Instrumentation may prevent
 allocation elimination, so these counts are not traces of the timed binaries.
 C/Rust buffer counts and fwp managed/raw counts cover different storage scopes.
 Whole-process maximum resident memory, compiler-reported C stack frames,
-instruction bytes, executable sizes, sources and disassembly are also saved.
+text-section bytes, executable sizes, sources and disassembly are also saved.
 
 ## Decision rule, fixed before timing
 

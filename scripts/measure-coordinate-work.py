@@ -276,7 +276,7 @@ def main():
                 (directory / (label + '.symbols')).write_bytes(symbols)
                 source = directory / (label + ('.rs' if label.startswith('rust-') else '.c'))
                 metadata[label] = dict(bytes=len(raw), sha256=digest(raw), sourceSha256=digest(source.read_bytes()),
-                                       disassemblySha256=digest(assembly), instructionBytes=sum(int(s, 16) for s in sizes))
+                                       disassemblySha256=digest(assembly), textSectionBytes=sum(int(s, 16) for s in sizes))
             orders = BATCHES.batch_orders(labels, args.samples, args.order_seed)
             for _ in range(args.warmups):
                 for label in labels:

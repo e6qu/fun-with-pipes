@@ -160,7 +160,7 @@ def main():
                 (directory / (binary.name + '.symbols')).write_bytes(symbols)
                 source = binary.with_suffix('.rs' if binary.name == 'rust-explicit' else '.c')
                 metadata[binary.name] = dict(sha256=digest(raw), bytes=len(raw), sourceSha256=digest(source.read_bytes()),
-                    disassemblySha256=digest(assembly), instructionBytes=sum(int(size, 16) for size in sizes),
+                    disassemblySha256=digest(assembly), textSectionBytes=sum(int(size, 16) for size in sizes),
                     helperSymbols=[line.decode() for line in symbols.splitlines() if re.search(rb'\b' + args.helper.encode() + rb'(?:[.$]|$)', line)])
             assert len(metadata) == 10
             orders = PEERS.measurement_orders(labels, args.samples, args.order_seed)
@@ -199,7 +199,7 @@ def main():
                       for label in ['hint', 'forced']}
             screens = {label: all(abs(value - 1) <= args.control_max_difference for value in controls.values())
                        and ratios[label]['baseline'] <= args.candidate_max_ratio
-                       and metadata[label]['instructionBytes'] <= args.text_max_growth * metadata['baseline']['instructionBytes']
+                       and metadata[label]['textSectionBytes'] <= args.text_max_growth * metadata['baseline']['textSectionBytes']
                        for label in ['hint', 'forced']}
             results[name] = dict(dimensions=points, updates=updates, profiles=profiles, binaries=metadata,
                 outputSha256={label: digest(raw) for label, raw in outputs.items()}, samplesNs=samples, medianNs=medians,

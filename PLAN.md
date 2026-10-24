@@ -99,7 +99,7 @@ outside the benchmark suite.
    extensions are baselines, not new tasks. Prefer borrowing and scoped cleanup.
    Weak handles remain a proposal. Distinguish missing proofs from definite cycles,
    and reject unproved retention instead of silently enabling tracing.
-   The [execution-example inventory](docs/measurements/file-applications.md#which-maintained-examples-pass-arcs-checks)
+   The [execution-example inventory](docs/measurements/file-applications.md#which-execution-examples-pass-arcs-checks)
    records accepted programs and remaining exclusions. Keep
    programmer-managed `Unsafe` obligations explicit; do not admit invalid
    inter-task derivative lifetimes merely to increase the accepted count.
@@ -128,11 +128,13 @@ outside the benchmark suite.
    between languages, so their complete-program ratio is not isolated compiler
    overhead.
    [Float printing](docs/measurements/float-text-results.md) passed #205 delivery.
-   The next [array/iteration group](docs/measurements/array-text.md) removes
+   The [array/iteration group](docs/measurements/array-text.md) removes
    temporary lists, String copies and initial iterator tuples.
    [Focused six-host results](docs/measurements/array-native-results.md) record
-   counts, physical layout, code size and stack frames; final delivery remains open. Measure allocation, live storage, startup, code size and
-   stack frames alongside elapsed time. Keep noisy copy controls inconclusive.
+   counts, physical layout, code size and stack frames;
+   [#206 delivery](docs/roadmap-history.md#array-output-storage-and-startup-stack-pr-206)
+   verifies the final six-host results. Measure allocation, live storage, startup,
+   code size and stack frames alongside elapsed time. Keep noisy copy controls inconclusive.
    Then use equivalent-work budgets to select remaining callback, checked-indexing
    and buffer costs. The [inline experiment](docs/measurements/descent-call-costs.md)
    failed its predeclared speed screen and does not justify an inlining rule.
@@ -143,7 +145,7 @@ outside the benchmark suite.
    time/memory budgets before claiming improvement. Native command ownership,
    test-failure cleanup and raw derivative workspace passed #195 delivery. Borrowed array captures, temporary records, last-read aliases and exceptional
    cleanup passed #197 delivery. [The handoff](docs/development-state.md) records
-   the current ownership-default migration and its checks.
+   current grouped delivery work and its checks.
    The [benchmark index](docs/benchmarks.md)
    records current comparisons and their limits. For example,
    [direct await fields](docs/measurements/task-await-fields.md) remove 34 allocation

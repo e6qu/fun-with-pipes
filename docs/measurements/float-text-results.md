@@ -107,10 +107,12 @@ recorded separately for every executable.
 
 GCC reports a formatter frame increase from 224 to 256 bytes on AMD64 (bounded
 dynamic use) and 208 to 288 bytes on ARM64 (static). Writer frames stay at 720/704
-bytes. Largest-program instruction bytes grow 33,010→33,826 and 30,972→31,516.
+bytes. Largest-program text-section bytes grow 33,010→33,826 and 30,972→31,516.
 AMD64 executable size stays 69,184 bytes; ARM64 changes 82,904→82,896 bytes despite
-more instruction bytes, because total file size includes alignment and metadata.
-Actual disassembly and compiler frame records were reviewed. Individual frame
+more text-section bytes, because total file size includes alignment and metadata.
+These sizes measure the ELF `.text` section, including padding; historical raw
+records name the field `instructionBytes`. Actual disassembly and compiler frame
+records were reviewed. Individual frame
 sizes do not establish total maximum call-stack use. Local Clang ARM64 separately
 reports a 240→288-byte formatter frame.
 
@@ -126,5 +128,7 @@ images, including actual architecture, instructions, immutable sources and absen
 of tracing scan/mark/sweep code from ARC binaries. Counts describe saved outcomes,
 not 672 distinct source programs. The runtime and benchmark sources are identical
 across the measurement commits; the later commit only repairs test reporting and
-permits selecting the one host that needs repetition. Final delivery still needs
-its own complete production matrix and documentation audit.
+permits selecting the one host that needs repetition.
+[PR #205](../roadmap-history.md#float-printing-and-numerical-cost-measurements-pr-205)
+subsequently passed all nine production jobs, documentation and final-head binary
+inspection; that delivery is complete. The broader roadmap remains open.
