@@ -2383,8 +2383,21 @@ impl<'p> Gen<'p> {
                     "static struct {{ uint64_t len;{payload} }} fwp_constant{id} = {{.len = {}}};",
                     parts.len()
                 ));
-                for (i, value) in parts.iter().enumerate() {
-                    let _ = writeln!(self.const_init, "    fwp_array_store(PTR(&fwp_constant{id}), {i}, {value}, &(const fwp_desc){{.kind = {kind}}});");
+                if !parts.is_empty() {
+                    // The store only reads this descriptor. Reuse it within the
+                    // array's block: per-element compound literals remain live
+                    // until the initializer returns and can grow its stack frame.
+                    let _ = writeln!(
+                        self.const_init,
+                        "    {{ const fwp_desc element = {{.kind = {kind}}};"
+                    );
+                    for (i, value) in parts.iter().enumerate() {
+                        let _ = writeln!(
+                            self.const_init,
+                            "    fwp_array_store(PTR(&fwp_constant{id}), {i}, {value}, &element);"
+                        );
+                    }
+                    self.const_init.push_str("    }\n");
                 }
                 format!("PTR(&fwp_constant{id})")
             }

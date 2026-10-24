@@ -5,8 +5,8 @@ speed improvement has been accepted yet. [The handoff](../development-state.md)
 records the source and checks; [the plan](../../PLAN.md) remains open.
 
 An array stores adjacent numbers in one buffer. A list stores a separate node for
-each element. This program currently creates a list, copies it into an array,
-then creates another list solely to print it:
+each element. Without the new optimization, this program creates a list, copies it into an
+array, then creates another list solely to print it:
 
 `|` passes the value on its left to the function on its right. `array.from-list`
 and `array.to-list` convert between the two containers; `echo` prints a value.
@@ -15,8 +15,8 @@ and `array.to-list` convert between the two containers; `echo` prints a value.
 main = [1.0, 2.0, 3.0] | array.from-list | array.to-list | echo
 ```
 
-It prints `[1.0, 2.0, 3.0]`. The proposed changes store eligible literal arrays
-as static program data and read a numeric array directly when its only list
+It prints `[1.0, 2.0, 3.0]`. The implementation stores eligible literal arrays
+as static program data and reads a numeric array directly when its only list
 consumer is `show` or `json.write`. `echo` uses `show` before printing. Ordinary
 array display retains its `array[...]` notation. No language syntax changes.
 
@@ -97,3 +97,18 @@ paired speed comparison. Static input initialization occurs once per process and
 remains inside the total timing. The largest case is expected to make 200 managed
 requests with full output and 199 with the checksum consumer, with no retained
 storage after each solve; these predictions are not accepted measurements.
+
+## Startup stack repair
+
+Binary inspection found another cost: one temporary element-type descriptor per
+constant array element could reserve about 15 KiB in the entry frame. The store
+only reads this descriptor; it does not retain its address. Initialization now
+uses one descriptor within each array's block, allowing its storage to be reused
+for the next array. Empty arrays need no descriptor.
+
+For the saved 129-element F64 fixture, local Apple Clang 17 at O1 reduces the
+entry frame from 15,040 to 720 bytes. O2 uses 704 bytes before and after. Output,
+allocation counts and cleanup agree. These are local observations, not six-host
+acceptance. The native test now records compiler stack-usage reports and object
+files at O1/O2, requiring entry and constant-initialization frames at most 4 KiB
+for this fixture. That bound covers individual frames, not the full call stack.

@@ -388,7 +388,8 @@ def main():
         configuration={k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
         settings={k: v for k, v in environment.items() if k.startswith('FWP_') or k == 'CC'}, results=results,
         scope='Complete repeated solves with ordinary formatted output or a shared external checksum consumer. '
-        'The sink removes output-list construction and formatting in fwp, and formatting in C/Rust, but adds checksum work. '
+        'Full-output fwp formats the numeric array directly; neither fwp mode creates an output list. '
+        'The sink replaces formatted output with checksum work in all three implementations. '
         'This difference is not pure output time or pure arithmetic time. Arithmetic, input creation, update buffers, '
         'bounds checks and cleanup remain. No LTO; the same separately compiled C consumer reads every result coordinate. '
         'Compilation, dump validation, memory profiles and RSS probes are excluded from timed samples. '

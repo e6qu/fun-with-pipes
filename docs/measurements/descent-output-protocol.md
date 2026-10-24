@@ -25,7 +25,8 @@ cases; the initial 512-solve run had several failing timing controls.
 For each language, compare:
 
 - **Full output:** the existing program prints every coordinate after each solve.
-  fwp converts the final array to a list, formats it as text and prints it.
+  fwp's source converts the final array to a list for display, but numeric-array
+  fusion removes that intermediate list and formats the array directly.
   The C and Rust peers format their final numerical buffer directly.
 - **Checksum output:** a separately compiled C function reads every coordinate
   before its owner releases the buffer. It mixes the exact float bits into a
@@ -37,10 +38,17 @@ For each language, compare:
 The checksum prevents unused results from being discarded. It also costs time;
 its final print can use internal C-library storage, outside the numerical-buffer
 observer's scope.
+The formatters differ: fwp searches decimal precisions until parsing the result
+returns the original float, C uses `printf("%.17g", value)`, and Rust uses its
+ordinary `Display` formatter. Checks compare parsed coordinates, not identical
+text across languages. Full-output ratios therefore include different formatting
+algorithms; they do not isolate compiler overhead.
 Therefore, subtracting these timings does **not** give pure formatting time.
 The checksum variant still includes input creation, all updates, bounds checks,
-allocation, cleanup, runtime startup and the checksum itself. In fwp it removes
-output-list construction as well as formatting; in C/Rust it removes formatting.
+allocation, cleanup, runtime startup and the checksum itself. With numeric-array
+text fusion enabled, neither fwp mode builds an output list. The older results
+before this optimization also included list construction in their full-output
+mode; keep that difference explicit when comparing revisions.
 
 The [fwp program](../../tests/fixtures/descent_packed.fwp) and coordinate-based
 [C](../../tests/fixtures/descent_coordinate.c) and

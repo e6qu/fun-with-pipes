@@ -10,6 +10,57 @@ fn checked(command: &mut Command) -> Output {
     output
 }
 
+// Compile the same C with production optimization settings and ask the native
+// compiler for actual frame sizes. A 129-element constant used to reserve about
+// 15 KiB on Clang because each store had a separate temporary type descriptor.
+fn check_constant_stack(code: &str, directory: &std::path::Path, opt: &str) {
+    let source = directory.join("constant-stack.c");
+    let object = directory.join("constant-stack.o");
+    std::fs::write(&source, code).unwrap();
+    let (compiler, arguments) = fwp::cgen::c_compiler().unwrap();
+    checked(
+        Command::new(compiler)
+            .args(arguments)
+            .args([
+                opt,
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "-fstack-usage",
+                "-c",
+            ])
+            .arg(&source)
+            .arg("-o")
+            .arg(&object),
+    );
+    let usage = std::fs::read_to_string(object.with_extension("su")).unwrap();
+    let mut entry_found = false;
+    for line in usage.lines() {
+        let fields: Vec<_> = line.split('\t').collect();
+        assert!(fields.len() >= 3, "{line}");
+        let function = fields[0]
+            .rsplit(':')
+            .next()
+            .unwrap()
+            .split('.')
+            .next()
+            .unwrap();
+        if ["fwp_main_thread", "fwp_init_consts", "main"].contains(&function) {
+            entry_found |= function == "fwp_main_thread";
+            let bytes: usize = fields[1].parse().unwrap();
+            assert!(bytes <= 4096, "{opt}: startup frame exceeds 4 KiB: {line}");
+        }
+    }
+    assert!(entry_found, "missing entry frame: {usage}");
+    if let Some(root) = std::env::var_os("FWP_ARC_ARTIFACTS") {
+        let path = std::path::Path::new(&root).join("array-text-stack");
+        std::fs::create_dir_all(&path).unwrap();
+        std::fs::write(path.join(format!("constant{opt}.su")), usage).unwrap();
+        std::fs::write(path.join(format!("constant{opt}.c")), code).unwrap();
+        std::fs::copy(object, path.join(format!("constant{opt}.o"))).unwrap();
+    }
+}
+
 #[test]
 fn array_list_text_preserves_values_views_aliases_and_effect_order() {
     let directory = fwp::cgen::TempDir::new("array-list-text").unwrap();
@@ -297,6 +348,13 @@ fn array_text_counts_allocations_and_releases_every_iteration() {
                             "text_calls=0; text_watch=1;",
                             &format!("text_bad={fault}; text_calls=0; text_watch=1;"),
                         );
+                        if name == "literal-show"
+                            && fusion == "1"
+                            && packed == "1"
+                            && *control == "balanced"
+                        {
+                            check_constant_stack(&candidate, directory.path(), opt);
+                        }
                         let executable = directory.join("counts.exe");
                         fwp::cgen::compile_c(&candidate, &executable, opt).unwrap();
                         let actual = Command::new(&executable)
