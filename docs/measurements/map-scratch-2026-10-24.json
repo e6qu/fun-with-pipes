@@ -3082,5 +3082,1190 @@
       ],
       "ciInspectionSha256": "ac09de721c31e791aa1259b4f5222562938fb65bf004d90f78791487765b85e9"
     }
-  ]
+  ],
+  "instrumentedStackComparison": {
+    "scope": "Compiler stack reports for separately instrumented map profiles; not timed-image stack use or maximum call-chain stack.",
+    "rows": [
+      {
+        "source": "b16ed5e33f29774c2d56e5500c8d7548ea52ce06",
+        "host": "ubuntu-latest",
+        "archive": {
+          "source": "b16ed5e33f29774c2d56e5500c8d7548ea52ce06",
+          "run": 40076674217,
+          "artifact": 12553667216,
+          "bytes": 11946675,
+          "sha256": "43f98aea319a4cbc1ad7366b43587dc8c4d0e8d4ee6f8dfb19611004253ad2f6",
+          "initialBytes": 0,
+          "ranges": [
+            {
+              "start": 0,
+              "end": 11946674,
+              "sha256": "43f98aea319a4cbc1ad7366b43587dc8c4d0e8d4ee6f8dfb19611004253ad2f6"
+            }
+          ]
+        },
+        "stackFile": "bench-memory/map-ordinary.su",
+        "stackSha256": "177212497c367c0a258cebf761fca2f80f310956424b3ea70b813e63f34570be",
+        "rawLines": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17466:13:fwp_args38\t8\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:506:13:fwp_flush\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1116:13:fwp_gc_oom\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1295:15:fwp_gc_chunks\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:11267:13:fwp_segv\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9373:13:fwp_cancel_tree.part.0\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:7266:10:fwp_print_integer.constprop\t48\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:2371:13:fwp_gc_report\t336\tdynamic,bounded",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:4578:13:fwp_msort.constprop\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9337:13:fwp_wake_io\t24\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:531:13:fwp_trap\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:2282:39:fwp_gc_collect\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1131:13:fwp_rc_forget_slot.part.0\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1506:13:fwp_mem_free\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1378:40:fwp_gc_refill\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1150:13:fwp_rc_wide_dup\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1197:13:fwp_gc_init\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1321:13:fwp_gc_spent\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1338:40:fwp_gc_alloc_big\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1412:40:fwp_gc_alloc_slow\t80\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1456:21:fwp_gc_alloc\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:7380:16:fwp_now_ns\t48\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9495:13:fwp_poll_events\t48\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:552:45:fwp_trap_overflow.constprop\t128\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1768:13:fwp_rc_free_obj\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9381:13:fwp_task_dispose\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9414:13:fwp_free_zombie\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9566:13:fwp_block\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17458:13:fwp_caps38\t8\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17315:13:fwp_drop0\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17470:13:fwp_arg_drop41\t8\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:158:10:fwp_data.part.0\t48\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17660:10:f38\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17462:10:fwp_owned_entry38\t8\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1621:13:fwp_rc_share\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17456:10:e38\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17473:13:fwp_caps41\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17482:13:fwp_args41\t8\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17448:36:fwp_caf_init6\t48\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17538:10:f0\t80\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17900:14:fwp_main_thread\t272\tdynamic,bounded",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17756:10:f41\t80\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17478:10:fwp_owned_entry41\t8\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17457:10:e41\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17939:5:main\t128\tstatic"
+        ],
+        "frames": [
+          {
+            "function": "fwp_args38",
+            "bytes": 8,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_flush",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_oom",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_chunks",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_segv",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_cancel_tree.part.0",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_print_integer.constprop",
+            "bytes": 48,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_report",
+            "bytes": 336,
+            "kind": "dynamic,bounded"
+          },
+          {
+            "function": "fwp_msort.constprop",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_wake_io",
+            "bytes": 24,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_trap",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_collect",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_rc_forget_slot.part.0",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_mem_free",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_refill",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_rc_wide_dup",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_init",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_spent",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_alloc_big",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_alloc_slow",
+            "bytes": 80,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_alloc",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_now_ns",
+            "bytes": 48,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_poll_events",
+            "bytes": 48,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_trap_overflow.constprop",
+            "bytes": 128,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_rc_free_obj",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_task_dispose",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_free_zombie",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_block",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_caps38",
+            "bytes": 8,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_drop0",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_arg_drop41",
+            "bytes": 8,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_data.part.0",
+            "bytes": 48,
+            "kind": "static"
+          },
+          {
+            "function": "f38",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_owned_entry38",
+            "bytes": 8,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_rc_share",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "e38",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_caps41",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_args41",
+            "bytes": 8,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_caf_init6",
+            "bytes": 48,
+            "kind": "static"
+          },
+          {
+            "function": "f0",
+            "bytes": 80,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_main_thread",
+            "bytes": 272,
+            "kind": "dynamic,bounded"
+          },
+          {
+            "function": "f41",
+            "bytes": 80,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_owned_entry41",
+            "bytes": 8,
+            "kind": "static"
+          },
+          {
+            "function": "e41",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "main",
+            "bytes": 128,
+            "kind": "static"
+          }
+        ]
+      },
+      {
+        "source": "b16ed5e33f29774c2d56e5500c8d7548ea52ce06",
+        "host": "ubuntu-24.04-arm",
+        "archive": {
+          "source": "b16ed5e33f29774c2d56e5500c8d7548ea52ce06",
+          "run": 40076674217,
+          "artifact": 12553203866,
+          "bytes": 10569757,
+          "sha256": "906955a8078348e654dc4aa899fac8600e2467bb5d491ae11642964f4ba2e324",
+          "initialBytes": 0,
+          "ranges": [
+            {
+              "start": 0,
+              "end": 10569756,
+              "sha256": "906955a8078348e654dc4aa899fac8600e2467bb5d491ae11642964f4ba2e324"
+            }
+          ]
+        },
+        "stackFile": "bench-memory/map-ordinary.su",
+        "stackSha256": "dcd5c2e6c51a2c1600cd18109db119649a55e431d5eb8affec410bfc8956ccd4",
+        "rawLines": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17466:13:fwp_args38\t0\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:506:13:fwp_flush\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1116:13:fwp_gc_oom\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1295:15:fwp_gc_chunks\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:11267:13:fwp_segv\t48\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9373:13:fwp_cancel_tree.part.0\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:7266:10:fwp_print_integer.constprop\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:2371:13:fwp_gc_report\t416\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:4578:13:fwp_msort.constprop\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9337:13:fwp_wake_io\t0\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:531:13:fwp_trap\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:2282:39:fwp_gc_collect\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1131:13:fwp_rc_forget_slot.part.0\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1506:13:fwp_mem_free\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1378:40:fwp_gc_refill\t80\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1150:13:fwp_rc_wide_dup\t48\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1197:13:fwp_gc_init\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1321:13:fwp_gc_spent\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1338:40:fwp_gc_alloc_big\t80\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1412:40:fwp_gc_alloc_slow\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1456:21:fwp_gc_alloc\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:7380:16:fwp_now_ns\t48\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9495:13:fwp_poll_events\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:552:45:fwp_trap_overflow.constprop\t144\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1768:13:fwp_rc_free_obj\t48\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9381:13:fwp_task_dispose\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9414:13:fwp_free_zombie\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9566:13:fwp_block\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17458:13:fwp_caps38\t0\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17315:13:fwp_drop0\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17470:13:fwp_arg_drop41\t0\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:158:10:fwp_data.part.0\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17660:10:f38\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17462:10:fwp_owned_entry38\t0\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1621:13:fwp_rc_share\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17456:10:e38\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17473:13:fwp_caps41\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17482:13:fwp_args41\t0\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17448:36:fwp_caf_init6\t80\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17538:10:f0\t112\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17900:14:fwp_main_thread\t288\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17756:10:f41\t80\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17478:10:fwp_owned_entry41\t0\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17457:10:e41\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17939:5:main\t160\tstatic"
+        ],
+        "frames": [
+          {
+            "function": "fwp_args38",
+            "bytes": 0,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_flush",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_oom",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_chunks",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_segv",
+            "bytes": 48,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_cancel_tree.part.0",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_print_integer.constprop",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_report",
+            "bytes": 416,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_msort.constprop",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_wake_io",
+            "bytes": 0,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_trap",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_collect",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_rc_forget_slot.part.0",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_mem_free",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_refill",
+            "bytes": 80,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_rc_wide_dup",
+            "bytes": 48,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_init",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_spent",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_alloc_big",
+            "bytes": 80,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_alloc_slow",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_alloc",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_now_ns",
+            "bytes": 48,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_poll_events",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_trap_overflow.constprop",
+            "bytes": 144,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_rc_free_obj",
+            "bytes": 48,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_task_dispose",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_free_zombie",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_block",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_caps38",
+            "bytes": 0,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_drop0",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_arg_drop41",
+            "bytes": 0,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_data.part.0",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "f38",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_owned_entry38",
+            "bytes": 0,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_rc_share",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "e38",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_caps41",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_args41",
+            "bytes": 0,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_caf_init6",
+            "bytes": 80,
+            "kind": "static"
+          },
+          {
+            "function": "f0",
+            "bytes": 112,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_main_thread",
+            "bytes": 288,
+            "kind": "static"
+          },
+          {
+            "function": "f41",
+            "bytes": 80,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_owned_entry41",
+            "bytes": 0,
+            "kind": "static"
+          },
+          {
+            "function": "e41",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "main",
+            "bytes": 160,
+            "kind": "static"
+          }
+        ]
+      },
+      {
+        "source": "6a6e8eea325cc3183e39cd472209cd452c497089",
+        "host": "ubuntu-latest",
+        "archive": {
+          "source": "6a6e8eea325cc3183e39cd472209cd452c497089",
+          "run": 40078376733,
+          "artifact": 12554476201,
+          "bytes": 11948942,
+          "sha256": "03b98d6af4b6e6304d1c59614e77d06533ee8697f5bbb162731c7819eae4f37e",
+          "initialBytes": 0,
+          "ranges": [
+            {
+              "start": 0,
+              "end": 11948941,
+              "sha256": "03b98d6af4b6e6304d1c59614e77d06533ee8697f5bbb162731c7819eae4f37e"
+            }
+          ]
+        },
+        "stackFile": "bench-memory/map-ordinary.su",
+        "stackSha256": "397ca6fc95ea1daac3c903211755eec5ddf8a2383dbd95777448d5bed749e0f4",
+        "rawLines": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17469:13:fwp_args38\t8\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:506:13:fwp_flush\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1116:13:fwp_gc_oom\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1295:15:fwp_gc_chunks\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:11270:13:fwp_segv\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9376:13:fwp_cancel_tree.part.0\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:7269:10:fwp_print_integer.constprop\t48\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:2371:13:fwp_gc_report\t336\tdynamic,bounded",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:4578:13:fwp_msort.constprop\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9340:13:fwp_wake_io\t24\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:531:13:fwp_trap\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:2282:39:fwp_gc_collect\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1131:13:fwp_rc_forget_slot.part.0\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1506:13:fwp_mem_free\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1378:40:fwp_gc_refill\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1150:13:fwp_rc_wide_dup\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1197:13:fwp_gc_init\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1321:13:fwp_gc_spent\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1338:40:fwp_gc_alloc_big\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1412:40:fwp_gc_alloc_slow\t80\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1456:21:fwp_gc_alloc\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:7383:16:fwp_now_ns\t48\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9498:13:fwp_poll_events\t48\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:552:45:fwp_trap_overflow.constprop\t128\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1768:13:fwp_rc_free_obj\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9384:13:fwp_task_dispose\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9417:13:fwp_free_zombie\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9569:13:fwp_block\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17461:13:fwp_caps38\t8\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17318:13:fwp_drop0\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17473:13:fwp_arg_drop41\t8\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:158:10:fwp_data.part.0\t48\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17663:10:f38\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17465:10:fwp_owned_entry38\t8\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1621:13:fwp_rc_share\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17459:10:e38\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17476:13:fwp_caps41\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17485:13:fwp_args41\t8\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17451:36:fwp_caf_init6\t48\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17541:10:f0\t80\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17903:14:fwp_main_thread\t272\tdynamic,bounded",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17759:10:f41\t80\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17481:10:fwp_owned_entry41\t8\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17460:10:e41\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17942:5:main\t128\tstatic"
+        ],
+        "frames": [
+          {
+            "function": "fwp_args38",
+            "bytes": 8,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_flush",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_oom",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_chunks",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_segv",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_cancel_tree.part.0",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_print_integer.constprop",
+            "bytes": 48,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_report",
+            "bytes": 336,
+            "kind": "dynamic,bounded"
+          },
+          {
+            "function": "fwp_msort.constprop",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_wake_io",
+            "bytes": 24,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_trap",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_collect",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_rc_forget_slot.part.0",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_mem_free",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_refill",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_rc_wide_dup",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_init",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_spent",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_alloc_big",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_alloc_slow",
+            "bytes": 80,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_alloc",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_now_ns",
+            "bytes": 48,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_poll_events",
+            "bytes": 48,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_trap_overflow.constprop",
+            "bytes": 128,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_rc_free_obj",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_task_dispose",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_free_zombie",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_block",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_caps38",
+            "bytes": 8,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_drop0",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_arg_drop41",
+            "bytes": 8,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_data.part.0",
+            "bytes": 48,
+            "kind": "static"
+          },
+          {
+            "function": "f38",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_owned_entry38",
+            "bytes": 8,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_rc_share",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "e38",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_caps41",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_args41",
+            "bytes": 8,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_caf_init6",
+            "bytes": 48,
+            "kind": "static"
+          },
+          {
+            "function": "f0",
+            "bytes": 80,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_main_thread",
+            "bytes": 272,
+            "kind": "dynamic,bounded"
+          },
+          {
+            "function": "f41",
+            "bytes": 80,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_owned_entry41",
+            "bytes": 8,
+            "kind": "static"
+          },
+          {
+            "function": "e41",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "main",
+            "bytes": 128,
+            "kind": "static"
+          }
+        ]
+      },
+      {
+        "source": "6a6e8eea325cc3183e39cd472209cd452c497089",
+        "host": "ubuntu-24.04-arm",
+        "archive": {
+          "source": "6a6e8eea325cc3183e39cd472209cd452c497089",
+          "run": 40078376733,
+          "artifact": 12553784485,
+          "bytes": 10572154,
+          "sha256": "e8d50bacaa75669203efe31e4a74dec927c8f828231a36f2e34079be6d0d830d",
+          "initialBytes": 0,
+          "ranges": [
+            {
+              "start": 0,
+              "end": 10572153,
+              "sha256": "e8d50bacaa75669203efe31e4a74dec927c8f828231a36f2e34079be6d0d830d"
+            }
+          ]
+        },
+        "stackFile": "bench-memory/map-ordinary.su",
+        "stackSha256": "704901070e4dede3e6bdc19d966a9442ac504d7b6e645b2195a9d78b815ea66a",
+        "rawLines": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17469:13:fwp_args38\t0\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:506:13:fwp_flush\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1116:13:fwp_gc_oom\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1295:15:fwp_gc_chunks\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:11270:13:fwp_segv\t48\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9376:13:fwp_cancel_tree.part.0\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:7269:10:fwp_print_integer.constprop\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:2371:13:fwp_gc_report\t416\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:4578:13:fwp_msort.constprop\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9340:13:fwp_wake_io\t0\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:531:13:fwp_trap\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:2282:39:fwp_gc_collect\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1131:13:fwp_rc_forget_slot.part.0\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1506:13:fwp_mem_free\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1378:40:fwp_gc_refill\t80\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1150:13:fwp_rc_wide_dup\t48\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1197:13:fwp_gc_init\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1321:13:fwp_gc_spent\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1338:40:fwp_gc_alloc_big\t80\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1412:40:fwp_gc_alloc_slow\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1456:21:fwp_gc_alloc\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:7383:16:fwp_now_ns\t48\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9498:13:fwp_poll_events\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:552:45:fwp_trap_overflow.constprop\t144\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1768:13:fwp_rc_free_obj\t48\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9384:13:fwp_task_dispose\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9417:13:fwp_free_zombie\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:9569:13:fwp_block\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17461:13:fwp_caps38\t0\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17318:13:fwp_drop0\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17473:13:fwp_arg_drop41\t0\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:158:10:fwp_data.part.0\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17663:10:f38\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17465:10:fwp_owned_entry38\t0\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:1621:13:fwp_rc_share\t16\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17459:10:e38\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17476:13:fwp_caps41\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17485:13:fwp_args41\t0\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17451:36:fwp_caf_init6\t64\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17541:10:f0\t112\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17903:14:fwp_main_thread\t288\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17759:10:f41\t80\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17481:10:fwp_owned_entry41\t0\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17460:10:e41\t32\tstatic",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c:17942:5:main\t160\tstatic"
+        ],
+        "frames": [
+          {
+            "function": "fwp_args38",
+            "bytes": 0,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_flush",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_oom",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_chunks",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_segv",
+            "bytes": 48,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_cancel_tree.part.0",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_print_integer.constprop",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_report",
+            "bytes": 416,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_msort.constprop",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_wake_io",
+            "bytes": 0,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_trap",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_collect",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_rc_forget_slot.part.0",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_mem_free",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_refill",
+            "bytes": 80,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_rc_wide_dup",
+            "bytes": 48,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_init",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_spent",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_alloc_big",
+            "bytes": 80,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_alloc_slow",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_gc_alloc",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_now_ns",
+            "bytes": 48,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_poll_events",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_trap_overflow.constprop",
+            "bytes": 144,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_rc_free_obj",
+            "bytes": 48,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_task_dispose",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_free_zombie",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_block",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_caps38",
+            "bytes": 0,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_drop0",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_arg_drop41",
+            "bytes": 0,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_data.part.0",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "f38",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_owned_entry38",
+            "bytes": 0,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_rc_share",
+            "bytes": 16,
+            "kind": "static"
+          },
+          {
+            "function": "e38",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_caps41",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_args41",
+            "bytes": 0,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_caf_init6",
+            "bytes": 64,
+            "kind": "static"
+          },
+          {
+            "function": "f0",
+            "bytes": 112,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_main_thread",
+            "bytes": 288,
+            "kind": "static"
+          },
+          {
+            "function": "f41",
+            "bytes": 80,
+            "kind": "static"
+          },
+          {
+            "function": "fwp_owned_entry41",
+            "bytes": 0,
+            "kind": "static"
+          },
+          {
+            "function": "e41",
+            "bytes": 32,
+            "kind": "static"
+          },
+          {
+            "function": "main",
+            "bytes": 160,
+            "kind": "static"
+          }
+        ]
+      }
+    ]
+  }
 }

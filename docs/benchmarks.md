@@ -2055,7 +2055,9 @@ scratch-array cleanup must fail the probe. ARC shutdown charge is zero.
 Counts exclude allocator capacity/process RAM; binary sizes identify the tested
 files, not a claimed code-size improvement. No elapsed-time/C/Rust comparison
 was made. [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
-records acceptance; `scripts/summarize-map-failures.py` audits the artifacts.
+records acceptance. Use `scripts/summarize-map-failures.py` from that recorded
+revision to audit its historical artifacts. The current collector also checks
+comparison failures, compact sets and [sort-storage peaks](measurements/arc-comparison.md#releasing-map-sort-storage-sooner).
 
 ## Building numeric maps and sets without temporary lists
 

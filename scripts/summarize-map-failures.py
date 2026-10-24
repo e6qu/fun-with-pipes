@@ -55,13 +55,16 @@ def sort_observation(directory, label, kind, late):
             'finalChargedBytes': 0, 'exitStatus': status}
 
 
-def sort_storage(directory, file_format, llvm):
+def sort_storage(directory, file_format, llvm, runtime):
     runs = []
     for mode in ['arc', 'tracing']:
         ordinary = (directory / f'sort-storage-{mode}-ordinary.c').read_text()
         start = ordinary.index('static V fwp_map_build_typed(')
         end = start + ordinary[start:].index('\n}\n') + 3
         body = ordinary[start:end]
+        runtime_start = runtime.index('static V fwp_map_build_typed(')
+        runtime_end = runtime_start + runtime[runtime_start:].index('\n}\n') + 3
+        assert body == runtime[runtime_start:runtime_end], 'Saved builder differs from recorded source'
         release = '    fwp_scratch_finish(&tk, &tk_cleanup);\n'
         finish = '    fwp_value_finish(&owner, &cleanup);\n'
         assert body.count(release) == body.count(finish) == 1
@@ -91,6 +94,8 @@ def main():
     audit = json.loads(args.audit.read_text())
     assert audit['head'] == args.head
     assert audit['status'] == 'completed' and len(audit['jobs']) == 6
+    runtime = subprocess.check_output(
+        ['git', 'show', args.head + ':runtime/fwp_rt_prims.c'], text=True)
     rows = []
     for host, file_format in HOSTS.items():
         jobs = [job for job in audit['jobs'] if job['name'] == f'map_storage ({host})']
@@ -119,6 +124,25 @@ def main():
                 for kind in ['faults', 'callbacks']:
                     binaries.append(inspect(directory / f'{kind}-{mode}{opt}.bin',
                                             mode, kind, file_format, args.llvm_bin))
+        fault_source = (directory / 'faults-arc.c').read_text()
+        for name, function, before, after in [
+            ('missing-result-owner', 'fwp_map_typed_copy',
+             'fwp_value_owner owner = {result, ops->drop_map};',
+             'fwp_value_owner owner = {result, NULL};'),
+            ('missing-scratch-owner', 'fwp_map_build_typed',
+             'fwp_scratch_protect(&tk, &tk_cleanup);',
+             'fwp_cleanup_push(&tk_cleanup, map_test_no_release, &tk);')]:
+            start = fault_source.index(f'static V {function}(')
+            end = start + fault_source[start:].index('\n}\n') + 3
+            body = fault_source[start:end]
+            assert body.count(before) == 1
+            assert (directory / f'{name}.c').read_text() == (
+                fault_source[:start] + body.replace(before, after) + fault_source[end:])
+        compact_source = (directory / 'compact-arc-O0.c').read_text()
+        allocation = 'fwp_alloc(sizeof(fwp_map) + columns * len * sizeof(V))'
+        assert compact_source.count(allocation) == 1
+        assert (directory / 'compact-wasted-slot-control.c').read_text() == compact_source.replace(
+            allocation, 'fwp_alloc(sizeof(fwp_map) + (columns + 1) * len * sizeof(V))')
         controls = {name: (directory / f'{name}.txt').read_text().strip()
                     for name in ['missing-result-owner', 'missing-scratch-owner']}
         assert all(value.endswith(': 213') for value in controls.values())
@@ -129,7 +153,7 @@ def main():
             assert (directory / f'{name}.c').stat().st_size
             binaries.append(inspect(directory / f'{name}.bin', 'arc', name, file_format, args.llvm_bin))
         compact = COLLECTION.compact_sets(directory, host, args.llvm_bin)
-        storage = sort_storage(directory, file_format, args.llvm_bin)
+        storage = sort_storage(directory, file_format, args.llvm_bin, runtime)
         rows.append({'host': host, 'job': job['job'],
                      'settings': (directory / 'settings.txt').read_text().splitlines(),
                      'compiler': (directory / 'c.txt').read_text().strip(),

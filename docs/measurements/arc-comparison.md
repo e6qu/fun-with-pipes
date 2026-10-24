@@ -165,6 +165,7 @@ First-key identity and last-value duplicate handling stay unchanged.
 [Run 40078376733](https://github.com/e6qu/fun-with-pipes/actions/runs/40078376733)
 measured source `6a6e8eea325cc3183e39cd472209cd452c497089` on EPYC 9V74 and
 Neoverse-N2, with the same GCC O2, ARC and measurement scopes defined above.
+The program builds 500,000 key/value pairs and performs 2,000,000 lookups.
 On both hosts, the map's peak managed charge fell **24,000,008 → 16,000,008 bytes**.
 It still requests four allocations totalling 24,000,032 bytes, performs one retain
 and returns to zero final added charge. This change reduces overlapping storage;
@@ -182,6 +183,14 @@ source/binary hashes and stack reports. Review covers 42 timed images, 28 separa
 instrumented images, fourteen detected leaks and eight corrupted-artifact controls.
 No timing improvement or general C/Rust parity is claimed.
 
+The timed map instruction section grows from 14,290 to 14,306 bytes on AMD64
+and stays at 13,612 on ARM64. Whole executables remain 48,240 / 82,128 bytes.
+Separate instrumented stack reports keep the main/runtime-thread frames at
+128/272 bytes on AMD64 and 160/288 on ARM64; GCC marks the AMD64 runtime-thread
+frame dynamic but bounded. The recursive sorting function keeps a 64-byte frame
+on both hosts. These reports describe instrumented functions, not
+maximum call-chain stack use or the timed executable's frames.
+
 [Six-host map checks](https://github.com/e6qu/fun-with-pipes/actions/runs/40078374681)
 pass thirteen tests per host, using GCC on Linux and Clang elsewhere. Each checks
 ARC and tracing, aliases, duplicate handling, callback failures and reuse. Fault
@@ -192,5 +201,10 @@ A separate 4,096-key fixture puts its input lanes on the stack to isolate builde
 storage. Ordinary map/set peaks are 65,544 / 32,776 charged bytes, ending at zero.
 Deliberately delaying scratch release raises them to 131,080 / 65,544 and must
 fail the budget with exit 241. These fixture peaks exclude the input lanes; the
-whole-program profile above includes its heap input. The additional saved control
-binaries need another focused run and independent review before delivery.
+whole-program profile above includes its heap input. The [repeat run](https://github.com/e6qu/fun-with-pipes/actions/runs/40079580345)
+passes all six hosts at `4c294917006b2688a491d088a0cab297b07d274c`.
+[Independent review](map-scratch-native-2026-10-24.json) covers 138 actual images,
+96 peak observations, comparison/cleanup failures and reuse controls. Saved C
+matches the recorded builder, and each negative-control source makes exactly its
+intended change. ARC images exclude tracing symbols; tracing controls include them.
+Full production acceptance of the eventual PR remains separate.
