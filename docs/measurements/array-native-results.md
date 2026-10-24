@@ -39,11 +39,13 @@ All inspected objects are aligned and disjoint. Windows zero-initialized data
 is checked against actual PE section bounds, including its loader-zeroed tail.
 
 The table compares the same O2 programs with array transformations off → on and
-compact elements enabled. Instruction bytes count decoded machine instructions;
-executable bytes also include headers, data, metadata and padding. The display rows use allocation instrumentation; the mixed-value rows come from
+compact elements enabled. Code bytes are the native `.text`/`__text` section
+sizes, including compiler padding; `instructionBytes` is the raw report's field
+name for this measurement. Executable bytes also include headers, other data,
+metadata and file padding. The display rows use allocation instrumentation; the mixed-value rows come from
 the semantic fixture. Neither is a numerical timing program.
 
-| Host | Program | Instruction bytes, off → on | Executable bytes, off → on |
+| Host | Program | Code-section bytes, off → on | Executable bytes, off → on |
 |---|---|---:|---:|
 | Linux AMD64 | 129-number display | 30,706 → 20,850 | 64,784 → 57,448 |
 | Linux AMD64 | Mixed numeric values | 44,962 → 47,666 | 97,016 → 101,712 |
