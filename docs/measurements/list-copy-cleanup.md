@@ -3,7 +3,8 @@
 A list consists of linked cells, each holding an element and the next cell.
 Copying cells must preserve the original elements while releasing an unfinished
 copy if an allocation, retain or callback fails. Cancellation needs the same
-cleanup.
+cleanup. An owner is responsible for releasing storage. Automatic reference
+counting (ARC) releases a value when its last owner lets it go.
 
 This program sorts words by a newly allocated key string. `attempt` catches the
 error raised for `"b"`, so the result is `Err "expected"`:
@@ -24,27 +25,29 @@ right error but retained 80 managed bytes in a dynamic-input reproduction.
 `sort-by` protects completed keys and all scratch buffers as it proceeds.
 `sort`, `reverse`, `append`, `flatten`, `take` and `unique` also construct owned
 cells incrementally, instead of waiting for a successful return to count them.
-The compiler passes the result's element/list cleanup descriptor explicitly.
+The compiler explicitly supplies the functions that release each element and list.
 Borrowed source values remain unchanged. Flattening transfers each partial tail
 instead of retaining it again.
 
-Plain list sorting now uses one input lane and one merge lane; values are also
-the comparison keys. Typed array sorting likewise uses one merge lane. This
+Plain list sorting now uses one input buffer and one temporary merge buffer;
+values are also the comparison keys. Typed array sorting likewise uses one
+temporary merge buffer. This
 removes redundant scratch allocations without changing the merge algorithm.
-No elapsed-time improvement is claimed; allocation, peak, code-size and stack
-measurements remain required before delivery.
+[Measured storage and binary results](list-sort-storage.md) show fewer requests
+and smaller code; whole-program peak and retain counts stay unchanged. No
+elapsed-time improvement is claimed.
 
 ## Checks and limits
 
 `tests/sort_callback_ownership.rs` includes the list-copy fixture from
-`tests/support/list_copy.rs`. It compares native results with the raw interpreter
+`tests/support/list_copy.rs`. It compares native results with the interpreter with optimizations disabled
 and interrupts every allocation/retain in all seven list operations, both by
 trap and by task cancellation. It separately interrupts the first, middle and
 last key callback. Independent aliases must remain valid; eight rounds must
-return ARC storage to the starting balance. Tracing runs retain stress, verifier
-and reuse checks. Deliberately missing key, scratch and partial-list releases
-must fail the allocation ledger, which records explicit cleanup rather than
-letting collection hide a leak.
+return ARC storage to the starting balance. Tracing runs force frequent collection, verify collector consistency and
+exercise reused memory. Deliberately missing key, scratch and partial-list releases
+must fail the allocation ledger, which records allocations and explicit releases
+so collection cannot hide missing cleanup.
 
 The local runtime-only reproduction passes on macOS ARM64 Clang O1: handled
 failures and success end at zero managed charge; omitting key release leaks
@@ -55,7 +58,14 @@ production settings. Linux and macOS pass on both architectures. Both Windows
 jobs pass the new cleanup tests but expose a scalar-key probe that expected LF
 while writing through Windows text mode. It now selects binary stdout, matching
 the generated program convention. All three list targets are added to Windows
-production coverage. Their repair runs and full delivery remain pending.
+production coverage. Source `851c7a774b92` passes both complete repair runs:
+[Windows AMD64](https://github.com/e6qu/fun-with-pipes/actions/runs/40089546129)
+and [Windows ARM64](https://github.com/e6qu/fun-with-pipes/actions/runs/40089548269).
+All completed logs are audited. Independent review covers [144 actual binaries](list-copy-native-2026-10-24.json)
+across the six hosts: six balanced observations and twelve deliberately missing
+cleanup controls per host. Windows uses the repaired test revision; compiler,
+runtime and library sources match the four Unix jobs. Full delivery still
+requires the final PR head.
 
 The separate `list-copy-costs` measurement uses 0, 1, 32 and 4,096 input words
 through `read-all | words | sort | length` and the analogous array conversion.
@@ -63,4 +73,6 @@ It compares the repair with extra separate scratch lanes restored, keeping the
 new cleanup in both. Counts include parsing, result construction and output;
 ordinary and instrumented binaries are separate, each at O1/O2. Three fresh
 processes must agree on counts and finish with zero managed charge. No timing
-measurement is inferred from these instrumented runs. Results are pending.
+measurement is inferred from these instrumented runs. Both Linux jobs and
+independent binary reviews pass; [results](list-sort-storage.md) give exact
+counts, code sizes, stack frames and the unchanged peak storage.

@@ -91,6 +91,27 @@ class Coverage(unittest.TestCase):
         self.assertFalse(required - selected,
                          f"focused targets absent from Windows production: {sorted(required - selected)}")
 
+    def test_list_copy_artifacts_are_inspected_on_their_production_shards(self):
+        workflow = (SHARDS.ROOT / ".github/workflows/ci.yml").read_text()
+        schedule = SHARDS.assignment(SHARDS.SCHEDULE)
+        jobs = {"test"}
+        jobs.update({"regular": "macos", "gc": "macos_gc"}[shard]
+                    for shard, names in schedule.items() if "sort_callback_ownership" in names)
+        for job in jobs:
+            body = re.search(rf"^  {job}:\n(.*?)(?=^  \w+:\n|\Z)",
+                             workflow, re.M | re.S).group(1)
+            self.assertIn("scripts/inspect-list-copy.py --input ownership-evidence/arc/list-copy", body)
+            self.assertIn("--output ownership-evidence/list-copy-inspection.json", body)
+        windows = (SHARDS.ROOT / ".github/workflows/windows.yml").read_text()
+        self.assertIn("scripts/inspect-list-copy.py --input ownership-evidence/arc/list-copy", windows)
+        self.assertIn("--output ownership-evidence/list-copy-inspection.json", windows)
+        bench = re.search(r"^  bench:\n(.*?)(?=^  \w+:\n|\Z)",
+                          workflow, re.M | re.S).group(1)
+        self.assertIn("scripts/measure-list-sort-storage.py --compiler target/release/fwp", bench)
+        self.assertIn("scripts/inspect-list-sort-storage.py --input target/list-sort-storage", bench)
+        self.assertIn("            target/list-sort-storage/", bench)
+        self.assertIn("            target/list-sort-inspection.json", bench)
+
     def test_file_application_artifacts_follow_the_native_shards(self):
         workflow = (SHARDS.ROOT / ".github/workflows/ci.yml").read_text()
         schedule = SHARDS.assignment(SHARDS.SCHEDULE)

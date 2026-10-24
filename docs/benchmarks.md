@@ -101,6 +101,8 @@ and the startup-stack repair.
 | Can task creation avoid redundant ownership work? | [Callback transfer](measurements/queued-task-handles.md) | Same generated C with/without five restored retain/release pairs: 10 → 5 retains, unchanged allocations/bytes; six native hosts, no timing claim |
 | Can immediate task-result matches avoid boxes? | [Await fields](measurements/task-await-fields.md) | Same generated C with and without temporary option boxes: 134 → 100 allocation requests, 544 fewer requested bytes, unchanged retains and peak storage; no timing claim |
 | How much does grouped integer counting cost? | [Controlled CPU comparisons](measurements/integer-counting.md) | Paired old/new fwp, matched C/Rust, explicit CPU placement and all samples |
+| Does skipping already ordered sort work help? | [Ordered-sort experiment](measurements/map-order-results.md) | Both candidates fail the predeclared screen; keep noisy controls and code/stack costs |
+| Do shared sort buffers save storage? | [List/array sort storage](measurements/list-sort-storage.md) | Fewer requests and smaller code on both Linux architectures; whole-program peak and retains unchanged |
 | Can checked multiplication preserve numeric bounds? | [Checked-product comparison](measurements/checked-products.md) | Actual compiler output, per-CPU C/Rust gaps, dynamic-input controls and O0/O1 costs |
 | What does integer-text elimination save? | [Direct character counting](measurements/integer-text.md) | Native results and allocation controls; time against C/Rust counting versus formatting |
 | Does storage release correctly? | [Clients](#memory-used-by-complete-remote-stream-clients), [servers](#server-memory-after-completed-remote-calls), [C results](#returning-owned-values-to-c-callers), [failure cleanup](#cleanup-after-failed-map-and-set-operations) | Allocation/count/live-byte checks; most contain no timing benchmark |
@@ -2381,6 +2383,3 @@ optimization. [All repeat samples and profiles](measurements/cached-map-repeat-2
 are retained. Joined borrowing is faster in both modes on all five samples;
 separate-layout borrowing remains slower on both Xeon tracing samples (4.83%
 and 3.65%) and EPYC 9V74 tracing/ARC (8.29% and 4.65%).
-
-The [ordered-sort experiment](measurements/map-order-results.md) retains both
-failed screens and their raw samples. Neither shortcut was adopted.

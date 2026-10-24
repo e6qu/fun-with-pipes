@@ -89,8 +89,10 @@ Compilation times are one observation per program, including tool startup and
 linking but excluding the build of the fwp compiler itself.
 
 Use the [explicit reproduction command](../benchmarks.md#running-comparisons)
-and retain the native artifacts. Focused verification is not the nine-job
-production acceptance required for the next PR.
+and retain the native artifacts. [PR #209](../roadmap-history.md#map-peak-storage-and-explicit-benchmarks-pr-209)
+subsequently passed all nine production jobs, the documentation audit and
+independent binary review at its final revision. These earlier measurements
+keep their original sources and comparison rules.
 
 ## Separate memory measurements
 

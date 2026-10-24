@@ -227,6 +227,9 @@ jobs:
       - name: Second macOS test shard
         if: ${{ !cancelled() }}
         run: python3 scripts/run-native-tests.py --idle-timeout 1800 --shard gc --logs "$RUNNER_TEMP/macos-gc-tests"
+      - name: Inspect list-copy executables and missing-cleanup controls
+        if: ${{ !cancelled() }}
+        run: python3 scripts/inspect-list-copy.py --input ownership-evidence/arc/list-copy --source "${{ github.event.pull_request.head.sha || github.sha }}" --system macOS --arch "$RUNNER_ARCH" --objdump "$(xcrun --find llvm-objdump)" --output ownership-evidence/list-copy-inspection.json
       - name: Publish individual gc test logs
         if: always()
         uses: actions/upload-artifact@v7
@@ -344,6 +347,9 @@ jobs:
           FWP_REQUIRE_WASI_GOLDENS: "1"
           FWP_REQUIRE_FLOAT_WASI: "1"
         run: python3 scripts/run-native-tests.py --idle-timeout 1800 --all --logs "$RUNNER_TEMP/linux-tests"
+      - name: Inspect list-copy executables and missing-cleanup controls
+        if: ${{ !cancelled() }}
+        run: python3 scripts/inspect-list-copy.py --input ownership-evidence/arc/list-copy --source "${{ github.event.pull_request.head.sha || github.sha }}" --system Linux --arch "$RUNNER_ARCH" --objdump objdump --output ownership-evidence/list-copy-inspection.json
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -472,6 +478,10 @@ jobs:
         run: python3 scripts/measure-benchmark-memory.py --input target/bench-evidence --inspection target/bench-inspection.json --source "${{ github.event.pull_request.head.sha || github.sha }}" --cc gcc --time /usr/bin/time --samples 3 --output target/bench-memory
       - name: Inspect managed-storage images and leak controls
         run: python3 scripts/inspect-benchmark-memory.py --input target/bench-memory --benchmarks target/bench-evidence --inspection target/bench-inspection.json --source "${{ github.event.pull_request.head.sha || github.sha }}" --arch x86_64 --objdump objdump --output target/bench-memory-inspection.json
+      - name: Measure sort storage, code size and stack frames
+        run: |
+          python3 scripts/measure-list-sort-storage.py --compiler target/release/fwp --cc gcc --source "${{ github.event.pull_request.head.sha || github.sha }}" --output target/list-sort-storage
+          python3 scripts/inspect-list-sort-storage.py --input target/list-sort-storage --source "${{ github.event.pull_request.head.sha || github.sha }}" --arch X64 --objdump objdump --output target/list-sort-inspection.json
       - name: Preserve benchmark comparisons and measured executables
         if: always()
         uses: actions/upload-artifact@v7
@@ -486,4 +496,6 @@ jobs:
             target/bench-memory/
             target/bench-memory-inspection.json
             target/bench-evidence/
+            target/list-sort-storage/
+            target/list-sort-inspection.json
           if-no-files-found: error

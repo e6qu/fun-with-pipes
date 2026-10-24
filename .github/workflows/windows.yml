@@ -121,6 +121,9 @@ jobs:
           )
           python scripts/run-native-tests.py --targets $testTargets --idle-timeout 600 --logs windows-resource-tests 2>&1 | Tee-Object -Append windows-native.log
           exit $LASTEXITCODE
+      - name: Inspect list-copy executables and missing-cleanup controls
+        if: ${{ !cancelled() && steps.native_compiler.outcome == 'success' }}
+        run: python scripts/inspect-list-copy.py --input ownership-evidence/arc/list-copy --source "${{ github.event.pull_request.head.sha || github.sha }}" --system Windows --arch "$env:RUNNER_ARCH" --objdump llvm-objdump --output ownership-evidence/list-copy-inspection.json
       - name: Array and fold callbacks, capture storage and unwind cleanup
         if: ${{ !cancelled() && steps.native_compiler.outcome == 'success' }}
         run: python scripts/run-native-tests.py --targets array_element_ownership array_unwind_ownership fold_ownership right_fold_ownership fold_unwind_ownership --idle-timeout 600 --logs windows-callback-tests

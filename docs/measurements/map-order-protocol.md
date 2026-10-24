@@ -3,7 +3,7 @@
 The map benchmark builds 500,000 key/value pairs, sorts them, and performs two
 million lookups. [Current measurements](checked-peers.md) compare this complete
 program with C and Rust. This experiment compares two proposed fwp changes with
-unchanged fwp in the same runner session. It does not change the runtime yet.
+unchanged fwp in the same runner session. Neither candidate is adopted.
 
 The runtime's stable merge sort sorts each half, then merges them. **Stable**
 means equal keys retain their original order. Maps depend on that order: repeated
@@ -61,7 +61,6 @@ Dispatch `numerics.yml` with `suite=map-order` and `native_runner=all`.
 and stores sources, binaries, correctness observations and raw samples.
 [`inspect-map-order.py`](../../scripts/inspect-map-order.py) checks exact source
 edits, actual executable architectures, observations and recomputed screens.
-No new result or optimization is accepted yet.
 
 [Results](map-order-results.md): both candidates fail the full screen on both
 native Linux hosts. No sorting shortcut was adopted.

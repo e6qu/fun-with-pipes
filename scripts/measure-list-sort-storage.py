@@ -71,7 +71,7 @@ def main():
     report = dict(source=args.source, architecture=platform.machine(),
                   cpu=run(['lscpu']).stdout.decode(), kernel=run(['uname', '-a']).stdout.decode(),
                   compiler=run([args.cc, '--version']).stdout.decode(),
-                  scope='Managed requests, requested bytes, retains and sampled charged peak from '
+                  scope='Managed requests, requested bytes, retains and sampled charged peak after '
                         'constant initialization through language cleanup. Input parsing, result '
                         'construction and output are included. Counts exclude raw runtime buffers, '
                         'allocator metadata and stacks. No timing or C/Rust comparison. The control '
