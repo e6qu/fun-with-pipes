@@ -1,11 +1,18 @@
 # Current work
 
-**Next:** publish and finish all ten final-revision CI gates for the documentation
-overhaul on `docs-overhaul` in `/private/tmp/fwp-docs-overhaul`, then squash-merge
-under the standing authorization. Base: merged main
+**Next:** finish all ten final-revision CI gates for documentation
+[PR #211](https://github.com/e6qu/fun-with-pipes/pull/211) on `docs-overhaul`
+in `/private/tmp/fwp-docs-overhaul`, then squash-merge under the standing
+authorization. Base: merged main
 `380fa8412327e52db420b96918d20e2528bbfc7c`. Fix every failed check before merging.
 The squash message must be one line, at most 80 characters, with an empty body
-and no trailers or attribution. After delivery, integrate prepared task **A1** below.
+and no trailers or attribution. After delivery, publish integrated task **A1** below.
+
+The first published revision `29edbc03931de2a7e2f71744092a191fb3a21c85` passed
+documentation `40138325016` and the benchmark job in production `40138325017`.
+A final review corrected an overlooked tracing-default statement in the service
+guide. The updated revision needs all gates; do not use those earlier passes as
+its acceptance evidence. Check the PR for the current head and runs.
 
 The overhaul makes [PLAN.md](../PLAN.md) the detailed backlog: GC tasks G1–G5,
 ARC tasks A1–A5 and the six other milestone groups have concrete inputs, code/test
@@ -42,8 +49,13 @@ It moves unshared list prefixes into arrays and reuses unique arrays for sorting
 All six native jobs in `40100508025` and both Linux cost jobs in `40100509770`
 passed; focused logs and independent reviews are complete. The report in that
 checkout is `docs/measurements/array-sort-ownership.md`.
-Integrate with current main and run final delivery checks; do not repeat finished
-preparation or claim this code is already merged.
+The integration is saved separately in `/private/tmp/fwp-array-moves-delivery`,
+branch `array-moves-delivery`, commit `f4359dc82b19629a8779f3d5d175f082e8bdf4b7`.
+It keeps #210's CI repairs. Guarded formatting, workflow lint, primitive inventory,
+19 native-runner controls and 155 documentation link sets pass. After #211 merges,
+move it onto the merged tree, preserve this service-guide correction, update its
+handoff, and run final delivery checks. Do not repeat finished preparation or
+claim this code is already merged.
 
 ## Verification for this documentation change
 

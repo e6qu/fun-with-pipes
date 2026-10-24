@@ -115,10 +115,11 @@ process can be pointed elsewhere without rebuilding.
 
 ## Building without tracing collection
 
-The normal native runtime combines reference counts with a tracing garbage
-collector, which searches live objects to find what a program can still reach.
-`--gc arc` excludes that tracing code. An owner keeps a value alive; the last
-owner releases it. A borrow uses a value while an existing owner keeps it alive.
+Native builds use checked automatic reference counting (ARC) by default, with
+no tracing collector in accepted programs. `--gc arc` selects this mode
+explicitly; `--gc tracing` selects the collector scheduled for removal.
+An owner keeps a value alive; the last owner releases it. A borrow uses a value
+while an existing owner keeps it alive.
 Shared values still need reference counts, and message encoding, network buffers
 and task stacks still cost memory.
 
