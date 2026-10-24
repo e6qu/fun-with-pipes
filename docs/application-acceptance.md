@@ -260,8 +260,13 @@ Controls deliberately omit managed releases, handle closes and file-read scratch
 frees. A separate task-file control omits only write closes while flushing their
 bytes, so later reads still see the same data. It must fail the handle observer,
 not an unrelated output assertion. Each control must fail before shutdown.
-The expanded suite retains generated C, 40 native binaries, disassembly, output
-and twenty memory series per host. The earlier four-program report retains its
+The expanded focused suite retains generated C, 40 native binaries, disassembly,
+twenty memory series and 80 execution outcomes per host. Both ordinary runs and
+deliberately broken controls save stdout, stderr and exit status before any
+result assertion; incomplete runs retain their partial observations. Production
+jobs also upload these sources, binaries and execution records with their
+ownership artifacts. Focused measurements explicitly disable link-time
+optimization; production artifacts retain the production compiler settings. The earlier four-program report retains its
 original 30 binaries and sixteen series; it does not verify this extension. Machine headers verify
 that artifacts target the runner's actual architecture. These cases do not yet
 cover forced allocation failure or every file operation and do not complete the

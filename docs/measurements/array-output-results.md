@@ -61,7 +61,8 @@ frame reports and process RSS are in the [raw record](array-output-2026-10-24.js
   [run 40051285670](https://github.com/e6qu/fun-with-pipes/actions/runs/40051285670).
   It includes the stack repair. Revision `64c487652a28` changes its Windows
   frame-check test and documentation, with identical compiler/runtime/library
-  and build files. That test correction still needs full native verification.
+  and build files. The correction passes the [six-host focused checks](array-native-results.md);
+  the [handoff](../development-state.md) tracks final production acceptance.
 
 Each job passed independent inspection of 169 saved binaries, their source
 hashes, machine architecture, consumer calls and lifetime controls. That is 1,014

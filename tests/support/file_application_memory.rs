@@ -49,8 +49,32 @@ pub fn run_observed(command: &mut Command) -> (Output, String) {
         stdout: report.join().unwrap(),
         stderr,
     };
-    assert_eq!(resident.lines().count(), 10, "{command:?}: {output:?}");
     (output, resident)
+}
+// Preserve both healthy and deliberately broken runs before their assertions.
+pub fn save_execution(
+    program: &str,
+    size: usize,
+    variant: &str,
+    opt: &str,
+    output: &Output,
+    resident: &str,
+) {
+    if let Some(path) = std::env::var_os("FWP_FILE_APPLICATION_ARTIFACTS") {
+        let path = std::path::PathBuf::from(path);
+        std::fs::create_dir_all(&path).unwrap();
+        let label = format!("{program}-{size}-{variant}{opt}");
+        std::fs::write(path.join(format!("{label}.stdout")), &output.stdout).unwrap();
+        std::fs::write(path.join(format!("{label}.stderr")), &output.stderr).unwrap();
+        let status = match output.status.code() {
+            Some(code) => code.to_string(),
+            None => output.status.to_string(),
+        };
+        std::fs::write(path.join(format!("{label}.status")), status).unwrap();
+        if variant == "measured" {
+            std::fs::write(path.join(format!("{label}.rss.tsv")), resident).unwrap();
+        }
+    }
 }
 pub fn observe(original: &str) -> String {
     let mut code = original.to_string();

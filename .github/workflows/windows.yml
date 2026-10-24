@@ -28,6 +28,7 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
       FWP_ARC_ARTIFACTS: ownership-evidence/arc
+      FWP_FILE_APPLICATION_ARTIFACTS: ownership-evidence/file-applications
       FWP_UDP_ARTIFACTS: ownership-evidence/udp
       FWP_TAIL_ARTIFACTS: ownership-evidence/tail
       FWP_CALLBACK_CAPTURE_ARTIFACTS: ownership-evidence/direct-captures

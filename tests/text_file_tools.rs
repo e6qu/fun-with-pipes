@@ -480,12 +480,21 @@ fn scaled_text_tools_release_partial_results_and_file_handles() {
                             String::new(),
                         )
                     };
+                    file_application_memory::save_execution(
+                        program,
+                        lines,
+                        variants[index].0,
+                        opt,
+                        &actual,
+                        &resident,
+                    );
                     assert_eq!(
                         actual.status.code(),
                         Some(if index == 0 { 0 } else { 241 }),
                         "{opt}, {lines}: {actual:?}"
                     );
                     if index == 0 {
+                        assert_eq!(resident.lines().count(), 10, "{actual:?}");
                         assert_eq!(actual.stdout, reference.stdout);
                         if program == "todo" {
                             assert_eq!(
@@ -499,24 +508,6 @@ fn scaled_text_tools_release_partial_results_and_file_handles() {
                             assert!(!dir.join("missing-dir").exists());
                         }
                         file_application_memory::check_observations(&actual.stderr);
-                        if let Some(path) = std::env::var_os("FWP_FILE_APPLICATION_ARTIFACTS") {
-                            let path = std::path::PathBuf::from(path);
-                            std::fs::write(
-                                path.join(format!("{program}-{lines}{opt}.rss.tsv")),
-                                resident,
-                            )
-                            .unwrap();
-                            std::fs::write(
-                                path.join(format!("{program}-{lines}{opt}.stdout")),
-                                &actual.stdout,
-                            )
-                            .unwrap();
-                            std::fs::write(
-                                path.join(format!("{program}-{lines}{opt}.memory")),
-                                &actual.stderr,
-                            )
-                            .unwrap();
-                        }
                     }
                 }
             }

@@ -33,8 +33,8 @@ if args.mode == 'reinspect':
     assert original['os'] == system and original['architecture'] == architecture
     # Preserve the original execution/toolchain metadata. These binaries are
     # inspected again, not rebuilt or executed on the report-generation host.
-    report = {key: value for key, value in original.items() if key not in {'binaries', 'observations'}}
-    report.update(binaries={}, observations={})
+    report = {key: value for key, value in original.items() if key not in {'binaries', 'observations', 'executions'}}
+    report.update(binaries={}, observations={}, executions={})
 else:
     assert args.program_source == collector_source
     report = dict(source=args.program_source,
@@ -43,16 +43,20 @@ else:
         rust=subprocess.check_output(['rustc', '-Vv'], text=True),
         optimization=dict(fwp='O1', native=['-O1', '-O2'], lto=False),
         scope='Cleanup checks, not timing comparisons. RSS includes allocator pages and observer overhead.',
-        binaries={}, observations={})
+        binaries={}, observations={}, executions={})
 report['inspection_source'] = collector_source
 report['inspection_mode'] = args.mode
 report['rss_source'] = {'Linux': '/proc/PID/status VmRSS', 'macOS': 'ps -o rss=',
                         'Windows': 'K32GetProcessMemoryInfo WorkingSetSize / 1024'}[system]
-expected = {f'{program}-{variant}-O{opt}' for program, variants in [
-    ('directory', ['measured', 'missing-release', 'missing-close']),
-    *[(name, ['measured', 'missing-release', 'missing-close', 'missing-buffer-free']) for name in ['wc', 'grep', 'csv']],
-    ('todo', ['measured', 'missing-release', 'missing-close', 'missing-buffer-free', 'missing-write-close'])]
-    for variant in variants for opt in [1, 2]}
+variants_by_program = {
+    'directory': ['measured', 'missing-release', 'missing-close'],
+    **{name: ['measured', 'missing-release', 'missing-close', 'missing-buffer-free']
+       for name in ['wc', 'grep', 'csv']},
+    'todo': ['measured', 'missing-release', 'missing-close', 'missing-buffer-free', 'missing-write-close'],
+}
+expected = {f'{program}-{variant}-O{opt}'
+            for program, variants in variants_by_program.items()
+            for variant in variants for opt in [1, 2]}
 for binary in sorted(root.glob('*.bin')):
     label = binary.stem
     assert label in expected, label
@@ -89,8 +93,18 @@ if original is not None:
 for program, sizes in [('directory', [64, 1024]), *[(name, [128, 4096]) for name in ['wc', 'grep', 'csv', 'todo']]]:
     for size in sizes:
         for opt in [1, 2]:
-            label = f'{program}-{size}-O{opt}'
-            lines = root.joinpath(label + '.memory').read_text(encoding='utf-8').splitlines()
+            label = f'{program}-{size}-measured-O{opt}'
+            for variant in variants_by_program[program]:
+                execution = f'{program}-{size}-{variant}-O{opt}'
+                files = {kind: root.joinpath(f'{execution}.{kind}').read_bytes()
+                         for kind in ['stdout', 'stderr', 'status']}
+                status = files['status'].decode('ascii')
+                assert status == ('0' if variant == 'measured' else '241'), (execution, status)
+                if variant != 'measured':
+                    assert b'file-memory changed' in files['stderr'], execution
+                report['executions'][execution] = dict(status=int(status),
+                    sha256={kind: hashlib.sha256(data).hexdigest() for kind, data in files.items()})
+            lines = root.joinpath(label + '.stderr').read_text(encoding='utf-8').splitlines()
             assert len(lines) == 193 and lines[-1] == 'file-final\t0\t0\t0'
             charge = {}
             for index, line in enumerate(lines[:-1]):
@@ -107,5 +121,8 @@ for program, sizes in [('directory', [64, 1024]), *[(name, [128, 4096]) for name
             report['observations'][label] = dict(managed_charge_by_phase=charge,
                 open_directory_and_file_handles=0, file_read_scratch_bytes=0, rss_samples=samples,
                 stdout=root.joinpath(label + '.stdout').read_text(encoding='utf-8'))
+if original is not None:
+    assert report['executions'] == original['executions']
+    assert report['observations'] == original['observations']
 root.joinpath('inspection.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
-print(f"Inspected {len(expected)} native binaries and {len(report['observations'])} memory series on {system} {architecture}")
+print(f"Inspected {len(expected)} native binaries and {len(report['observations'])} memory series and {len(report['executions'])} executions on {system} {architecture}")
