@@ -125,6 +125,9 @@ outside the benchmark suite.
    failed their screen and are rejected. Deliver the [list-copy cleanup](docs/measurements/list-copy-cleanup.md)
    and [sort buffer savings](docs/measurements/list-sort-storage.md), then select
    the next measured cost; fewer allocations alone do not prove faster execution.
+   [Array-sort ownership](docs/measurements/array-sort-ownership.md) is the next
+   unverified preparation: reuse unshared arrays, preserve aliases and 128-bit
+   values, prove interruption cleanup, and measure copy/count savings.
    The [explicit ARC baseline](docs/measurements/arc-comparison.md) compares seven
    complete programs with C/Rust and measures process and managed memory separately.
    Focused measurements support reducing map peak storage by releasing sort scratch

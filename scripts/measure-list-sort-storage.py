@@ -33,11 +33,11 @@ def separate_lanes(code, kind):
         fwp_scratch_finish(&vals, &vals_cleanup);
         fwp_scratch_finish(&tv, &tv_cleanup);'''
     else:
-        old = '        fwp_msort(keys, keys, n, elem, tk, tk);'
-        new = '''        V *tv = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
-        fwp_cleanup tv_cleanup; fwp_scratch_protect(&tv, &tv_cleanup);
-        fwp_msort(keys, keys, n, elem, tk, tv);
-        fwp_scratch_finish(&tv, &tv_cleanup);'''
+        old = '    fwp_msort(keys, keys, n, elem, tk, tk);'
+        new = '''    V *tv = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+    fwp_cleanup tv_cleanup; fwp_scratch_protect(&tv, &tv_cleanup);
+    fwp_msort(keys, keys, n, elem, tk, tv);
+    fwp_scratch_finish(&tv, &tv_cleanup);'''
     assert body.count(old) == 1
     return code[:start] + body.replace(old, new) + code[end:]
 

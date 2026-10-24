@@ -1,0 +1,9 @@
+negative-quad : I64 -> F128
+negative-quad = int.to-float | neg
+failing : () -> () ! {Error[String]}
+failing = const "probe" | fail
+main = [
+    read-all () | words | array.from-list | array.sort | echo,
+    17 | flip array.generate negative-quad | array.sort | echo,
+    () | attempt failing | echo
+] | ignore
