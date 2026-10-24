@@ -86,7 +86,7 @@ jobs:
           clang -O1 -Wall -Wextra -Werror tests/fixtures/compiler_thread_stack.c -o allocation-evidence/stack-probe
           allocation-evidence/stack-probe > allocation-evidence/stack-ordinary.txt
           DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib allocation-evidence/stack-probe > allocation-evidence/stack-guard.txt 2>&1
-      - name: Inspect guarded compilation with an explicit diagnostic stack
+      - name: Inspect guarded compilation without changing compiler settings
         run: |
           python3 - <<'PY'
           from pathlib import Path

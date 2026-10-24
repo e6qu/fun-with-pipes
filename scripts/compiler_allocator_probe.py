@@ -1,36 +1,24 @@
-"""LLDB experiment: guard heap allocations with an explicit 256 MiB stack.
+"""Inspect the unchanged Intel compiler under Guard Malloc using LLDB.
 
-This changes only a debugger argument, not the production compiler or its policy.
-Load in LLDB and call run(debugger). A stopped or failed process fails the probe.
+Stop on the first allocator error or a bounded deadline and preserve its frames.
+No compiler argument, register, stack policy or generated instruction is changed.
 """
 
+import json
 import os
 from pathlib import Path
+import subprocess
+import time
 
 import lldb
 
-stack_requests = []
-
-
-def stack_size(frame, location, internal):
-    size = frame.FindRegister('rsi')
-    requested = size.GetValueAsUnsigned()
-    stack_requests.append(requested)
-    print(f'Diagnostic stack request: {requested} -> {256 * 1024 * 1024}', flush=True)
-    if requested != 4 * 1024 ** 3:
-        return True
-    error = lldb.SBError()
-    changed = size.SetValueFromCString(str(256 * 1024 * 1024), error)
-    return not changed or error.Fail()
-
 
 def run(debugger):
-    debugger.SetAsync(False)
+    debugger.SetAsync(True)
     target = debugger.CreateTarget('allocation-evidence/fwp')
     assert target.IsValid() and target.GetTriple().startswith('x86_64-'), target.GetTriple()
     stack = target.BreakpointCreateByName('pthread_attr_setstacksize')
     assert stack.GetNumLocations() == 1, stack.GetNumLocations()
-    stack.SetScriptCallbackFunction(__name__ + '.stack_size')
     target.BreakpointCreateByName('malloc_error_break')
     root = Path('allocation-evidence/debugger-guard').resolve()
     root.mkdir()
@@ -45,12 +33,55 @@ def run(debugger):
     launch.AddOpenFileAction(2, str(root / 'stderr.log'), False, True)
     error = lldb.SBError()
     process = target.Launch(launch, error)
-    print('Launch:', error, 'state:', process.GetState(), 'exit:', process.GetExitStatus())
-    print('Requested stacks:', stack_requests)
-    ok = (error.Success() and process.GetState() == lldb.eStateExited
-          and process.GetExitStatus() == 0 and stack_requests == [4 * 1024 ** 3])
+    print('Launch:', error, 'pid:', process.GetProcessID(), flush=True)
+    deadline = time.monotonic() + 120
+    next_sample = 0
+    stacks = []
+    reason = 'launch failed'
+    with (root / 'samples.jsonl').open('w') as samples:
+        while error.Success():
+            state = process.GetState()
+            if state == lldb.eStateExited:
+                reason = 'exited'
+                break
+            if state == lldb.eStateStopped:
+                thread = process.GetSelectedThread()
+                is_stack = (thread.GetStopReason() == lldb.eStopReasonBreakpoint
+                            and thread.GetStopReasonDataAtIndex(0) == stack.GetID())
+                if not is_stack:
+                    reason = 'debugger stop'
+                    break
+                size = thread.GetFrameAtIndex(0).FindRegister('rsi').GetValueAsUnsigned()
+                stacks.append(size)
+                print('Unchanged stack request:', size, flush=True)
+                if size != 4 * 1024 ** 3 or len(stacks) != 1:
+                    reason = 'unexpected stack request'
+                    break
+                target.BreakpointDelete(stack.GetID())
+                resumed = process.Continue()
+                if resumed.Fail():
+                    reason = str(resumed)
+                    break
+            if time.monotonic() >= deadline:
+                reason = '120 second diagnostic deadline'
+                process.Stop()
+                break
+            if time.monotonic() >= next_sample:
+                status = subprocess.run(['ps', '-p', str(process.GetProcessID()),
+                                         '-o', 'pid=,rss=,vsz=,time='], text=True, capture_output=True)
+                samples.write(json.dumps(dict(state=state, process=status.stdout.strip(),
+                                              sampleStatus=status.returncode)) + '\n')
+                samples.flush()
+                next_sample = time.monotonic() + 5
+            time.sleep(0.05)
+    ok = (reason == 'exited' and process.GetExitStatus() == 0
+          and stacks == [4 * 1024 ** 3])
+    print('Result:', reason, 'state:', process.GetState(), 'exit:', process.GetExitStatus(), flush=True)
+    (root / 'result.json').write_text(json.dumps(dict(reason=reason, state=process.GetState(),
+                                                    exit=process.GetExitStatus(), stacks=stacks), indent=2) + '\n')
     if not ok:
         debugger.HandleCommand('thread backtrace all')
         debugger.HandleCommand('register read')
-        process.Kill()
+        if process.GetState() != lldb.eStateExited:
+            process.Kill()
     (root / 'result.txt').write_text('pass\n' if ok else 'fail\n')
