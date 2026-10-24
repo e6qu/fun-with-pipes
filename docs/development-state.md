@@ -1,148 +1,121 @@
 # Session handoff
 
 All seven [plan](../PLAN.md) areas remain open. Prefer ownership and borrowing;
-reserve ARC for sharing and remove tracing. JIT is excluded.
+reserve ARC for necessary sharing and remove tracing. JIT is excluded.
 
 ## Current action
 
-**Next:** diagnose and repair PR #210's Intel macOS compiler allocator abort.
-The current changes preserve allocator messages, named inputs and the compiler
-image during the full CI run. They do not establish a runtime repair. Then verify
-the final head: nine production jobs, docs and saved binaries.
-Keep one active PR. Squash-merge only after every gate passes, with one subject
-of at most 80 characters and an empty body, then continue the plan.
+**Next:** resolve PR #210's Intel macOS compiler abort. Continue the targeted
+allocator investigation; repair the cause
+before repeating final-head acceptance. The independently verified array group
+is checkpointed for its next delivery. Keep one active PR. Squash-merge only after
+acceptance, with one subject line of at most eighty characters and no body/trailers.
 
-Checkout `/private/tmp/fwp-checked-peer-comparison`, branch `list-copy-delivery`.
-Prepared from verified #209 merge `2520d136b7036ab878cac0ef48947b581c81b84a` and published preparation
-`e5983ace1cc9fff7176482eeadb106d7a13a61e0`. Compiler/runtime/library sources match focused `883f1c140089`;
-the Windows test repair and measured results use `851c7a774b92`.
-The preparation branch and immutable source tags are retained.
+## Active PR #210
 
-## Unresolved compiler abort
+[PR #210](https://github.com/e6qu/fun-with-pipes/pull/210) is the active delivery.
+Checkout `/private/tmp/fwp-checked-peer-comparison`, branch `list-copy-delivery`,
+contains the CI repair batch (`ff1aca3e`, `85df5485`) and this updated investigation.
+Final-head CI and the compiler-abort repair remain required.
+It fixes interrupted list copies, removes redundant sort buffers, aligns benchmark
+peer arithmetic and repairs Windows test coverage.
 
-[PR #210](https://github.com/e6qu/fun-with-pipes/pull/210)'s original head
-`281b54d9193b432bb808b4387cc0a4dad34dacba` passed nine of ten gates. All completed
-logs were audited; only the Intel macOS GC job failed, in
-`console_input_matches_raw_interpretation`. The Rust compiler aborted in type
-inference, before generated C ran. Preserve [the original failure](https://github.com/e6qu/fun-with-pipes/actions/runs/40091968517/job/120866324330).
+The [compiler-abort investigation](measurements/compiler-abort.md) records the
+original failure, matching compiler, experiments and evidence locations. The cause
+is unresolved. No compiler/runtime repair has been made for that abort; successful
+reruns cannot establish one. Diagnostic run `40113866689`, source
+`bbab290503962a272398c95882724e2208c86adf`, has completed on native Intel macOS.
+It isolates the Guard Malloc startup failure to Rust's 4 GiB thread; the smaller
+stack reaches declaration collection but hits the diagnostic deadline. No invalid
+access reported and no passing guarded inference run. No production stack change. A new sanitizer run, `40114625111`, uses exact
+production Rust 1.99.1 from diagnostic source
+`39e6b19fa4a0b3b8b2c7ca5049e190d0cd8b098c`; the earlier sanitizer run used nightly.
+This diagnostic-only build enables ASan flags with `RUSTC_BOOTSTRAP=1`; neither
+production compiler flags nor its stack policy change. Review the full job log
+and archive before drawing conclusions. Earlier diagnostic helpers are COMPLETE;
+do not repeat their downloads or publication.
 
-The saved production compiler has the crash report's exact UUID
-`42cd802d-3482-3779-acce-42251ea4f37d`. Disassembly places the failure in ordinary
-system `free`, releasing a boxed function result type. Its owning type-checker
-code and library inputs are unchanged from the passing base. This narrows the
-investigation; it does not identify the cause.
+Earlier-head production `40106524885` has six audited failures: four regular
+Mac/Linux jobs fail the introduced Clippy borrow lint and then lack SDK compiler
+or inspection artifacts; both Mac GC jobs reject ASan's nano-zone warning.
+Local checkpoints `ff1aca3e` and `85df5485` repair these causes and preserve kernel
+probe artifacts. Documentation `40106524851`, benchmark and Windows ARM64 pass;
+completed logs audited. Windows AMD64 is still running and remains part of the
+audit. Publishing this batch does not cancel that job: the workflow has no
+cancel-in-progress policy. Audit its remaining results alongside the repaired
+head, and fix any additional failures in this PR.
 
-[Completed diagnostics](https://github.com/e6qu/fun-with-pipes/actions/runs/40103957497)
-pass 360 production compilations, 90 nightly AddressSanitizer compilations and
-three runs of the original two-worker test neighborhood. Their logs and artifact
-hashes were independently reviewed. Earlier partial runs and heap-check results
-are retained. Passing reruns do not repair the original crash.
+Focused checks passed under `scripts/local-guard.py`: standalone kernel test
+compiled with production Rust O1/assertions/overflow checks; sanitized C at O1/O2,
+including four deliberately broken controls; Rust formatting; workflow actionlint.
+The healthy kernel test first reproduced the precise nano-zone warning locally.
+Its repair retains allocator/sanitizer reporting. No full builds ran locally.
 
-[A guarded-allocation diagnostic](https://github.com/e6qu/fun-with-pipes/actions/runs/40105746847)
-reuses the matching compiler binary. Ordinary allocations pass; Guard Malloc
-cannot create the requested 4 GiB worker stack and stops before inference with
-EAGAIN. This distinct diagnostic limitation does not explain the original abort.
-The saved system allocator UUID also matches the crash. Inspect its internal
-free path and obtain a failing allocation history before changing ownership code.
+Original-head binary reviews are complete only for macOS ARM64 and benchmarks;
+other hosts are UNRUN. Helpers use `fwp-list-copy-delivery`; the audit is repeatable.
+Old merge/after-merge helpers are UNRUN and source-specific. Do not use them for a
+new head. Final acceptance requires new exact-head gates and actual binary reviews.
 
-macOS can suppress malloc error messages when stderr is captured. CI now explicitly
-requests those messages and preserves the debug compiler with crash reports.
-The console test logs each source body and uses a distinct filename for each case.
-No retry or ignored failure is added.
+## Prepared next group: array sorting and construction
 
-Local investigation records use `fwp-console-*` and `fwp-list-copy-console-failure`
-under `/private/tmp`; completed publication/review helpers must not be rerun.
-The independently verified next array-sort/construction group is checkpointed at
-`9824e22e827cfd6116c55ac2fcc2651ed02a7dcc`, tested source `e0c4dd51bae3`, on
-`array-sort-ownership`. Six native jobs and both Linux cost jobs pass; 504 native
-executables and 128 cost executables were reviewed. It remains the next grouped
-delivery after this failure is resolved. Keep one active PR.
+Checkout `/private/tmp/fwp-array-sort-ownership`, branch `array-sort-ownership`,
+is clean at report checkpoint `9824e22e827cfd6116c55ac2fcc2651ed02a7dcc`.
+Its tested code is `e0c4dd51bae37c0e09be10fcb373dd035279f815`. No second PR is open.
+Sorting reuses unique arrays and preserves shared arrays/views; permutation cycles
+protect inline 128-bit values. List conversion now moves an unshared prefix and
+copies the shared tail. Both changes protect cleanup through failure/cancellation.
+No surface syntax changes.
 
-## Grouped changes and evidence
+All six focused jobs in `40100508025` and both Linux cost jobs in `40100509770`
+pass with clean logs. All six independent native reviews are complete: 504 executable variants. Each host
+has 84 sort/construction executables, 24 repeated observations and 48 deliberately
+broken controls. Each construction observation checks 208 alias/bit-pattern cases
+and 88 interrupted operations.
 
-| Work | Result | Evidence |
-|---|---|---|
-| Checked C/Rust peers | Explicit signed overflow and trap order; C allocation failures repaired | [Protocol and results](measurements/checked-peers.md), source `31ee015e9435`, run `40084725349`; both Linux jobs and 92 binary reviews pass |
-| Ordered-sort experiment | Both candidates fail their predeclared screen; neither is adopted | [Results](measurements/map-order-results.md), source `cbacdff5e8cb`, run `40085991550`; 128 binary reviews pass; slower/noisy samples retained |
-| Interrupted list copies | Fix the 80-byte handled-callback leak; protect partial results in seven operations; preserve aliases | [Cleanup](measurements/list-copy-cleanup.md) and [144 native binaries](measurements/list-copy-native-2026-10-24.json) |
-| Sort buffers | Remove two list buffers and one array buffer without changing the merge algorithm | [Results](measurements/list-sort-storage.md), source `851c7a774b92`, run `40089544249`; both Linux jobs and 96 binary reviews pass |
-| Windows repair | Explicit binary stdout fixes CRLF/LF test failure; all three list targets enter production coverage | Runs `40089546129` and `40089548269`; complete logs and both native artifact reviews pass |
+Both cost reviews pass: 128 executables and eight wide-sort objects in total.
+At 4,096 words, moving list elements removes the remaining 4,096 retains; requests,
+requested bytes and peak are unchanged, final charge and collections are zero.
+This is not zero allocation or proof of zero ARC overhead. Instruction bytes grow
+by 176–336 on ARM64 and 224–272 on AMD64; the ARM64 O1 entry frame grows 16 bytes.
+The readable measurement report now records these costs and slower C/Rust rows.
+The alias example also matches native Clang/O2 ARC output under the guard.
+Current native/cost JSON uses `array-construction-*-2026-10-24.json`; earlier
+sort-only records remain linked. `fwp-record-array-construction.py` is COMPLETE.
 
-List cleanup runs at O1/O2 in ARC and tracing modes, including collection stress,
-reuse, cancellation and deliberate missing releases. Each host has six balanced
-observations and twelve missing-cleanup controls. Source `883f1c140089` passes
-Linux/macOS on both architectures in `40088243982`; its two Windows jobs fail only
-the old scalar-key fixture. The Windows replacements above use `851c7a774b92`,
-with identical compiler/runtime/library sources. Preserve the original failures.
+Helpers/receipts use `fwp-array-construction`. Publication is COMPLETE. Audit
+helpers are repeatable. All six host download/review/prune phases are COMPLETE; never repeat them.
+The verified compiler is `/private/tmp/fwp-verified-array-construction-compiler/fwp`. Reviews retain source hashes and compare actual binaries with CI reports.
+Cost download/review helpers are COMPLETE for both Linux hosts. Full delivery
+acceptance remains pending, after #210 is repaired and merged.
 
-At 4,096 words, sorting requests 65,552 fewer bytes for lists and 32,776 fewer
-for arrays. Both Linux architectures and O1/O2 agree. Whole-program peak storage
-and retain counts stay unchanged; final charge is zero. Ordinary code is smaller;
-the O1 list entry frame shrinks sixteen bytes. This is no timing-speedup claim.
-Current complete-program comparisons still show slower loop and character-counting
-rows. New production steps inspect list-copy binaries and sort-storage evidence.
-Full final-head acceptance is still required.
+Bounded checks pass: Rust formatting, Python syntax, frozen inventory (392
+primitive declarations, 382 symbols, zero unclassified), 19 native-runner controls,
+workflow actionlint and 127 documentation link sets. Full builds/tests run on GitHub.
 
-## Verification and local receipts
+## Resources and accepted baseline
 
-Helpers and receipts under `/private/tmp` use these prefixes:
+Use `python3 scripts/local-guard.py COMMAND...` serially. Preserve 64 GiB free,
+target data below 2 GiB, sampled workload RSS below 1 GiB and the 180-second limit.
+Free space is near 64.5 GiB; download/review/prune one host at a time. Preserve
+failed evidence, reports, actual layout objects and dirty older checkouts.
+`fwp-prune-reviewed-list-copy.py` is COMPLETE: six matching remote originals and
+the retained compiler were verified before removing 144,736,394 duplicate ZIP bytes.
+Never rerun completed archive pruning, APFS clone or publication helpers.
 
-- `fwp-checked-peer`, `fwp-map-order`, `fwp-list-copy`, `fwp-list-sort`:
-  preparation publication, focused audits and independent reviews are complete.
-  Never rerun completed publication/download/review helpers.
-- `fwp-record-list-copy-native.py` and `fwp-record-arc-map-delivery.py` are complete.
-  `fwp-record-list-sort-results.py` wrote the reports, then failed its final index
-  edit; that link was fixed separately. Do not rerun it over the edited prose.
-- `fwp-sort-callback-leak` preserves the original leak and repair controls.
-  `fwp-list-copy-runtime-probe` records 130 allocation/retain interruptions plus
-  six callback exits across eight rounds. Early probes used saved C with explicit
-  runtime/API edits; focused current-compiler CI supplies compilation acceptance.
-- `fwp-verified-list-copy-compiler/receipt.json` verifies the current macOS compiler
-  from source `883f1c140089`. `fwp-list-sort-current-probe` records its bounded
-  32-word counters. These do not replace production GCC or native target checks.
-
-Bounded checks pass: frozen inventory (392 declarations, 382 symbols, zero
-unclassified), Rust formatting, Python syntax, 19 native-runner controls,
-126 documentation link sets and actionlint for all three changed workflows.
-The docs check caught a missing live roadmap table; restoring it passes the
-check. The storage report label now correctly says counting starts after constant
-initialization; its code and measured observations are unchanged. Full builds
-and suites run on GitHub.
-
-## Last accepted delivery
-
-[PR #209](https://github.com/e6qu/fun-with-pipes/pull/209) passed all nine production
-jobs in `40082867710` and docs in `40082867648` at `b298665da6ac`.
-All logs and 8,627 actual binary files were independently reviewed. Its verified
-squash is `2520d136b7036ab878cac0ef48947b581c81b84a`, with the same tested tree
-and a one-line message without body/trailers. [History](roadmap-history.md#map-peak-storage-and-explicit-benchmarks-pr-209)
-links the acceptance record. Duplicate same-tree main run `40091501837` was
-cancelled. Its merge/after-merge helpers are COMPLETE; never rerun them.
-Primary checkout is detached there with only an operational handoff dirty.
-
-## Local resources
-
-Run focused checks serially through `python3 scripts/local-guard.py COMMAND...`.
-Keep 64 GiB free, generated target data below 2 GiB, sampled workload RSS below
-1 GiB and the 180-second deadline. Never raise or bypass limits. Full builds,
-suites, benchmarks and large regeneration belong on GitHub runners.
-
-Disk refusals stopped downloads before violating the reserve. Byte-identical
-APFS clones preserved every file/path/mode while recovering space; receipts are
-`fwp-evidence-clones-oct24.json` and `fwp-checkout-clones-oct24-verified.json`.
-Completed #209 ZIP copies were pruned only after all reviews and remote digest
-checks. Keep unique failed evidence, all reports/layout images and dirty old
-checkouts. The initial checkout-clone attempt failed before changing any file
-because a pruned directory lacked `.git`; its empty receipt is retained.
+#209 passed all ten gates and its binary reviews, then merged with the tested tree
+as `2520d136b7036ab878cac0ef48947b581c81b84a`; duplicate main CI was cancelled.
+The primary checkout is detached there with this operational handoff and the
+current compiler-abort investigation document dirty.
+Preserve it. [History](roadmap-history.md) records accepted deliveries.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | Remove tracing; prove cleanup and borrowing at remaining boundaries |
-| 2 | In progress | Remove functional allocation/counting costs and extend tail-call proofs |
+| 1 | In progress | Remove tracing and limit counting at remaining boundaries |
+| 2 | In progress | Extend borrowing and remove functional overhead |
 | 3 | In progress | Meet measured machine-level time and memory budgets |
 | 4 | In progress | Improve differentiation speed, memory and precision |
-| 5 | In progress | Validate CPU numerical kernels against accuracy and cost budgets |
-| 6 | In progress | Stabilize equivalent-work comparisons and regression budgets |
-| 7 | In progress | Complete the selected application acceptance suite |
+| 5 | In progress | Validate CPU numerical kernels |
+| 6 | In progress | Stabilize comparisons and set workload budgets |
+| 7 | In progress | Complete the application acceptance suite |
