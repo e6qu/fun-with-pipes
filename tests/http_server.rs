@@ -63,9 +63,9 @@ fn curl(args: &[&str]) -> String {
 }
 
 /// One request on an open keep-alive connection; returns (status, body).
-fn request(conn: &mut TcpStream, reader: &mut BufReader<TcpStream>, path: &str) -> (u32, String) {
+fn request(reader: &mut BufReader<TcpStream>, path: &str) -> (u32, String) {
     let req = format!("GET {} HTTP/1.1\r\nhost: test\r\n\r\n", path);
-    conn.write_all(req.as_bytes()).unwrap();
+    reader.get_mut().write_all(req.as_bytes()).unwrap();
     let mut status = String::new();
     reader.read_line(&mut status).unwrap();
     let code: u32 = status
@@ -146,7 +146,7 @@ fn exercise(name: &str, cmd: Command, clients: usize, per_client: usize) {
         .map(|c| {
             let addr = srv.addr.clone();
             std::thread::spawn(move || {
-                let mut conn =
+                let conn =
                     TcpStream::connect_timeout(&addr.parse().unwrap(), Duration::from_secs(20))
                         .unwrap();
                 conn.set_nodelay(true).unwrap();
@@ -154,10 +154,10 @@ fn exercise(name: &str, cmd: Command, clients: usize, per_client: usize) {
                     .unwrap();
                 conn.set_read_timeout(Some(Duration::from_secs(20)))
                     .unwrap();
-                let mut reader = BufReader::new(conn.try_clone().unwrap());
+                let mut reader = BufReader::new(conn);
                 for i in 0..per_client {
                     let id = c * 1000 + i;
-                    let (code, body) = request(&mut conn, &mut reader, &format!("/items/{}", id));
+                    let (code, body) = request(&mut reader, &format!("/items/{}", id));
                     assert_eq!(code, 200);
                     assert_eq!(body, format!("{{\"id\":{},\"name\":\"item {}\"}}", id, id));
                 }
@@ -182,14 +182,14 @@ fn exercise(name: &str, cmd: Command, clients: usize, per_client: usize) {
     let baseline = request_count(&metrics);
     let addr = srv.addr.clone();
     let slow = std::thread::spawn(move || {
-        let mut conn =
+        let conn =
             TcpStream::connect_timeout(&addr.parse().unwrap(), Duration::from_secs(20)).unwrap();
         conn.set_read_timeout(Some(Duration::from_secs(20)))
             .unwrap();
         conn.set_write_timeout(Some(Duration::from_secs(20)))
             .unwrap();
-        let mut reader = BufReader::new(conn.try_clone().unwrap());
-        request(&mut conn, &mut reader, "/slow?ms=2000")
+        let mut reader = BufReader::new(conn);
+        request(&mut reader, "/slow?ms=2000")
     });
     let until = Instant::now() + Duration::from_secs(20);
     let mut polls = 0.0;

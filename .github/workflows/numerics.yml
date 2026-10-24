@@ -52,7 +52,7 @@ jobs:
           git rev-parse HEAD > socket-evidence/source.txt
           rustc -Vv > socket-evidence/rust.txt
           rustc --edition=2021 -C opt-level=1 -C debug-assertions=yes -C overflow-checks=yes tests/fixtures/http_socket_inheritance.rs -o socket-evidence/probe.exe
-          socket-evidence/probe.exe | tee socket-evidence/result.txt
+          socket-evidence/probe.exe --parent | tee socket-evidence/result.txt
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -2372,7 +2372,7 @@ jobs:
               cpu = subprocess.check_output(['powershell', '-NoProfile', '-Command', 'Get-CimInstance Win32_Processor | Select-Object Name,Manufacturer,NumberOfCores,NumberOfLogicalProcessors | ConvertTo-Json'], text=True)
           (evidence / 'cpu.txt').write_text(platform.platform() + '\n' + platform.machine() + '\n' + cpu)
           files = sorted(p for directory in ['src', 'lib', 'runtime'] for p in Path(directory).rglob('*') if p.is_file())
-          files += [Path(name) for name in ['tests/http_server.rs', 'tests/web.rs', 'tests/support/http_server_process.rs', 'tests/support/http_application.rs', 'tests/support/http_application_memory.rs', 'tests/fixtures/http_app_memory.c', 'tests/task_context_storage.rs', 'tests/fixtures/task_stack_pages.c', 'examples/server/api.fwp', 'tests/web/server.fwp', 'tests/server_entry_ownership.rs', 'tests/fixtures/server_entries.fwp', 'tests/fixtures/server_entry_client.fwp', 'tests/support/client_allocations.rs', 'tests/support/process_memory.rs', 'scripts/summarize-server-entries.py', '.github/workflows/numerics.yml']]
+          files += [Path(name) for name in ['tests/http_server.rs', 'tests/web.rs', 'tests/gc.rs', 'tests/support/http_server_process.rs', 'tests/support/http_application.rs', 'tests/support/http_application_memory.rs', 'tests/fixtures/http_app_memory.c', 'tests/task_context_storage.rs', 'tests/fixtures/task_stack_pages.c', 'examples/server/api.fwp', 'tests/web/server.fwp', 'tests/server_entry_ownership.rs', 'tests/fixtures/server_entries.fwp', 'tests/fixtures/server_entry_client.fwp', 'tests/support/client_allocations.rs', 'tests/support/process_memory.rs', 'scripts/summarize-server-entries.py', '.github/workflows/numerics.yml']]
           Path('server-check-evidence/source-sha256.json').write_text(json.dumps({p.as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in files}, indent=2) + '\n')
           PY
       - run: cargo fmt --all -- --check
@@ -2402,10 +2402,18 @@ jobs:
           done
           exit "$result"
       - name: Linux task-stack page policy, reuse and setup errors
-        if: ${{ !cancelled() && runner.os == 'Linux' && inputs.suite == 'http-application' }}
+        if: ${{ !cancelled() && runner.os == 'Linux' && (inputs.suite == 'http-application' || (inputs.suite == 'server-checks' && matrix.part == 'checks')) }}
         env:
           FWP_TASK_CONTEXT_ARTIFACTS: server-check-evidence/task-context
         run: cargo test --test task_context_storage task_stack_pages_guard_reuse_and_setup_failures -- --exact --nocapture
+      - name: Repeated HTTP and REST server memory with single-owner test sockets
+        if: ${{ !cancelled() && runner.os == 'Linux' && inputs.suite == 'server-checks' && matrix.part == 'checks' }}
+        shell: bash
+        run: |
+          result=0
+          cargo test --test gc http_server_runs_in_bounded_memory -- --exact --nocapture || result=1
+          cargo test --test gc rest_server_runs_in_bounded_memory -- --exact --nocapture || result=1
+          exit "$result"
       - name: Generated entry results and ownership restrictions
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && (inputs.suite == 'server-entries' || inputs.suite == 'server-recheck') && matrix.part == 'checks' }}
         run: cargo test --no-fail-fast --test server_entry_ownership --test arc_execution -- --nocapture

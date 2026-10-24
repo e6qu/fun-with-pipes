@@ -1,9 +1,9 @@
 # Memory between JSON API requests
 
-Status: source `027be46e` passes all seven checks on Linux ARM64, both macOS
-architectures and Windows AMD64. Linux AMD64 O1 exceeds the RSS budget; Windows
-ARM64 O2 has an intermittent idle-checkpoint timeout. The stack-page repair and
-complete native matrix remain pending. Neither limit has been relaxed.
+Status: the stack repair `4fc97ca1` passes all six native API jobs and both Linux
+stack-policy checks. Repaired stack mappings have no huge pages. The original Windows ARM64 timeout remains under investigation;
+isolated repetitions pass. Client sockets now have one owner, with an explicit
+child-lifetime regression pending native verification. No limit has been relaxed.
 This extends the [application acceptance suite](../application-acceptance.md).
 It is a correctness and memory check, not a throughput benchmark or a comparison
 with C/Rust servers.
@@ -112,22 +112,53 @@ omitting advice or protection must be detected. The complete API run and new
 mapping snapshots must confirm application RSS after the repair. No throughput
 or C/Rust performance claim follows from this memory change.
 
+[Repaired mapping run 40069848297](https://github.com/e6qu/fun-with-pipes/actions/runs/40069848297)
+checks `4fc97ca1` in three new processes per optimization level and architecture.
+All 96 repaired idle samples have ordinary task-stack pages and meet the budget.
+The [sample records](http-stack-pages.json) retain both revisions, executable
+hashes and artifact digests. Each table range covers all 24 samples for that row;
+growth lists the three process maxima relative to each process's first sample.
+
+| Host / C optimization | Before RSS (KiB) | Repaired RSS (KiB) | Repaired growth (KiB) |
+|---|---:|---:|---|
+| AMD64 / O1 | 45,320–47,404 | 13,204–13,444 | 180, 160, 196 |
+| AMD64 / O2 | 45,192–47,292 | 13,092–13,288 | 176, 128, 144 |
+| ARM64 / O1 | 12,408–12,616 | 12,372–12,596 | 180, 120, 124 |
+| ARM64 / O2 | 12,036–12,220 | 12,004–12,172 | 144, 152, 168 |
+
+Representative AMD64 task stacks now use 52 KiB of physical pages instead of
+2,048 KiB. The AMD64 process still has 2 MiB of anonymous huge pages elsewhere:
+the repair is deliberately scoped to task stacks. These runs used different
+runner instances; this is direct mapping evidence and a memory-budget check,
+not a paired throughput benchmark. ARM64 already used ordinary pages.
+
 ## Windows timeout investigation
 
 The original Windows ARM64 O2 process completed checkpoint 40 but did not reach
 48 within 20 seconds. This was a normal-request group, before the partial-body
 disconnect group at 56. Its recorded managed charge was stable at 2,576 bytes.
 All three O2 attempts in [diagnostic run 40067911096](https://github.com/e6qu/fun-with-pipes/actions/runs/40067911096)
-passed, including negative controls. That does not establish a repair: the
-original timeout remains open while repeated saved-binary runs gather task and
-socket state. Neither the checkpoint deadline nor connection-close expectations
-have changed.
+passed, including negative controls. Source `4fc97ca1` also passes the six-host
+API matrix (`40069237866`) and 32 fresh isolated Windows ARM64 processes
+(`40069240258`). Those isolated repetitions do not reproduce the original overlap
+between API clients and another test's C compilation. Neither the checkpoint
+deadline nor connection-close expectations have changed.
 
 A separate `socket-inheritance` diagnostic uses native Rust sockets on Windows
 ARM64 and AMD64. It records original/cloned handle flags, drops both client
 handles while a child is alive, then checks connection closure after child exit.
 An explicitly inheritable socket is the control. This tests whether unrelated
 compiler children can prolong a cloned client connection, a possibility reported
-in [Rust issue #70719](https://github.com/rust-lang/rust/issues/70719). It is a
-hypothesis until the runner results confirm it; no runtime repair follows merely
-from that report.
+in [Rust issue #70719](https://github.com/rust-lang/rust/issues/70719). The first diagnostic (`10626760`, run `40069759142`) showed that the original
+socket closes while a child is alive. Its cloned-socket case waited until child
+exit, then the diagnostic incorrectly rejected the resulting connection reset.
+The revised probe records reset and EOF as closure, preserving both results.
+Full handle records and the explicit-inheritance control remain pending.
+
+The API, ordinary HTTP, WebSocket and GC test clients now hold one `TcpStream`
+inside their buffered reader and borrow it for writes. No socket duplication is
+needed. `client_socket_closes_while_another_child_runs` requires the actual client
+connection to close while a separately started child is still alive. This avoids
+serializing tests, extending deadlines or changing the language's scheduler.
+Focused checks include native/interpreter HTTP, WebSocket protocols and repeated
+Linux HTTP/REST memory checks. Complete current-source results remain pending.

@@ -46,8 +46,8 @@ merge, with only this operational handoff dirty.
 ## Independent API memory work
 
 Checkout `/private/tmp/fwp-http-application-memory`, branch `http-application-memory`,
-is clean at repair `4fc97ca1f1c28e0dd2561c6b14000d13d1b7f4f0`. No second PR is
-open. Six-host API run `40069237866` includes Linux page-policy/failure controls;
+is preparing the single-owner client repair on
+`106267600edc7d7bfc8a71dd476f2a6b7186b6a2`. No second PR is open. Six-host API run `40069237866` includes Linux page-policy/failure controls;
 Windows ARM64 run `40069240258` reuses one O2 binary for 32 fresh processes.
 Publication helper `fwp-publish-http-stack-repair.py` is COMPLETE; do not rerun.
 Its receipt is `fwp-http-stack-repair-publication.json`. Audit every failed job
@@ -75,12 +75,18 @@ Windows AMD64 and Intel macOS pass all seven checks. Audit with
   which task/socket remains parked; do not extend the deadline.
 
 Failure archives are in `/private/tmp/fwp-http-memory-failures-027be46e`; preserve
-them. Mapping review confirms 34–36 MiB of anonymous huge pages in shallow
-AMD64 task stacks; ARM64 uses ordinary pages. The repair requests ordinary pages
+them. Mapping review confirms 34–36 MiB of process-wide anonymous huge pages,
+including 32–34 MiB in shallow AMD64 task stacks; ARM64 uses ordinary pages. The repair requests ordinary pages
 on Linux stack allocation, preserves reuse and checks previously ignored guard
 setup failures. Actual-runtime-block tests cover physical mappings and failure
-cleanup at O1/O2. Linux ARM64 passes both API and page-policy/failure tests on `4fc97ca1`; other
-hosts are still running. Do not yet claim a repaired AMD64 budget.
+cleanup at O1/O2. All six API jobs and both Linux page-policy/failure checks pass on `4fc97ca1`;
+complete logs are audited. Mapping run `40069848297` also passes both Linux jobs;
+its artifact review is COMPLETE (13.46s). All 96 repaired samples have ordinary
+task-stack pages and pass the unchanged budget. AMD64 RSS is 13,092–13,444 KiB
+versus the baseline diagnostic's 45,192–47,404 KiB; repaired growth is at most
+196 KiB. ARM64 remains near 12 MiB. One AMD64 huge page remains outside the task
+stacks. `docs/measurements/http-stack-pages.json` retains samples/source/digests.
+Do not rerun `fwp-review-http-stack-mappings.py`. The old failure and baseline remain retained.
 
 Latest diagnostics at `b2d34d05`:
 
@@ -97,16 +103,25 @@ Latest diagnostics at `b2d34d05`:
   complete logs and saved artifacts audited (nine executions, no wait records).
   Archive SHA-256 `efaba136703b04b869c491743b9f92092223fdeed50b617231807998af004d8d`,
   in `fwp-http-idle-diagnostics-b2d34d05`. The original Windows timeout remains unresolved.
-  The next diagnostic compiles once, then runs 32 fresh processes to investigate
-  it without repeated C compilation.
+  The `4fc97ca1` diagnostic compiled once and all 32 fresh processes passed;
+  its complete log has 33 successful test summaries. This alone is not a repair.
 
-A new Windows-only socket-inheritance probe is being prepared. The original
-failure ran O1/O2 concurrently; isolated reruns do not launch another C compiler.
-Rust issue #70719 reports cloned socket handles unexpectedly inherited by child
-processes. That could delay peer EOF until a compiler child exits. This is a
-hypothesis: inspect real flags and peer closure with a child alive, including an
-explicit-inheritance control, on both native Windows architectures. No deadline
-or runtime behavior has been changed to conceal the timeout.
+Windows socket-inheritance run `40069759142` at `10626760` failed both native
+hosts in the same diagnostic assertion: a killed child closes an inherited
+connection with reset, while the probe required EOF. Original sockets closed
+before child exit; cloned cases waited until exit. Fix the probe to retain and
+accept both closure records. `fwp-publish-socket-inheritance.py` is COMPLETE.
+Full logs are in `fwp-socket-inheritance-*`; audit both hosts before publication.
+
+The current repair removes unnecessary socket clones from the API, HTTP,
+WebSocket and GC clients. Each buffered reader owns one socket, borrowed for
+writes. A portable regression requires client closure while another child is
+alive. The exact client-construction test plus three startup-helper controls
+pass locally at Rust O1 (6.26s); the isolated harness emits unused-item warnings
+for other extracted helper fields/functions, not repository target warnings.
+Publish all fixes together and run both Windows diagnostic hosts plus the
+six-host HTTP/protocol matrix and Linux repeated HTTP/REST memory checks.
+Do not change runtime scheduling or extend the 20-second idle deadline.
 
 Publication receipts/helpers use `fwp-http-{application-memory,memory-repair,
 memory-diagnostics}-*`. All three publication helpers are COMPLETE; do not rerun.

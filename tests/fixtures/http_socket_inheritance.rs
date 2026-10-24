@@ -72,12 +72,12 @@ fn run_case(mode: &str) {
         }
         result => panic!("unexpected read: {result:?}"),
     };
-    assert_eq!(
-        after_exit.unwrap(),
-        0,
-        "socket did not close after child exit"
-    );
-    println!("socket-inheritance\t{mode}\toriginal_flags={original_flags}\tclone_flags={clone_flags:?}\theld_until_child_exit={held_open}");
+    println!("socket-inheritance\t{mode}\toriginal_flags={original_flags}\tclone_flags={clone_flags:?}\theld_until_child_exit={held_open}\tafter_exit={after_exit:?}");
+    match after_exit {
+        Ok(0) => (),
+        Err(error) if error.kind() == std::io::ErrorKind::ConnectionReset => (),
+        result => panic!("socket did not close after child exit: {result:?}"),
+    }
 }
 
 fn main() {
@@ -86,6 +86,7 @@ fn main() {
         std::thread::sleep(Duration::from_secs(10));
         return;
     }
+    assert_eq!(std::env::args().nth(1).as_deref(), Some("--parent"));
     for mode in ["original", "clone", "forced-inherit"] {
         run_case(mode);
     }

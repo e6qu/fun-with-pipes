@@ -1,7 +1,7 @@
 //! Bounded-live cohorts through the maintained JSON API, including failures.
 use super::{example, fwp, http_server_process};
 use std::io::{BufRead, BufReader, Read, Write};
-use std::net::TcpStream;
+use std::net::{TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, ExitStatus, Stdio};
 use std::sync::{mpsc, Arc, Mutex};
@@ -128,7 +128,7 @@ impl Drop for Observed {
     }
 }
 
-fn connection(address: &str) -> (TcpStream, BufReader<TcpStream>) {
+fn connection(address: &str) -> BufReader<TcpStream> {
     let stream =
         TcpStream::connect_timeout(&address.parse().unwrap(), Duration::from_secs(15)).unwrap();
     stream
@@ -138,8 +138,7 @@ fn connection(address: &str) -> (TcpStream, BufReader<TcpStream>) {
         .set_write_timeout(Some(Duration::from_secs(15)))
         .unwrap();
     stream.set_nodelay(true).unwrap();
-    let reader = BufReader::new(stream.try_clone().unwrap());
-    (stream, reader)
+    BufReader::new(stream)
 }
 
 fn response(reader: &mut BufReader<TcpStream>) -> (u32, String) {
@@ -207,8 +206,8 @@ fn send(stream: &mut TcpStream, method: &str, path: &str, headers: &str, body: &
     .unwrap();
 }
 
-fn metrics(stream: &mut TcpStream, reader: &mut BufReader<TcpStream>) -> f64 {
-    send(stream, "GET", "/metrics", "", "");
+fn metrics(reader: &mut BufReader<TcpStream>) -> f64 {
+    send(reader.get_mut(), "GET", "/metrics", "", "");
     let (status, body) = response(reader);
     assert_eq!(status, 200);
     let count: f64 = body
@@ -227,9 +226,9 @@ fn metrics(stream: &mut TcpStream, reader: &mut BufReader<TcpStream>) -> f64 {
 fn cohort(address: &str, repeats: usize, disconnect: bool) {
     std::thread::scope(|scope| {
         let workers: Vec<_> = (0..8).map(|_| scope.spawn(move || {
-            let (mut stream, mut reader) = connection(address);
+            let mut reader = connection(address);
             if disconnect {
-                stream.write_all(b"POST /items HTTP/1.1\r\nhost: test\r\ncontent-length: 100\r\n\r\n{").unwrap();
+                reader.get_mut().write_all(b"POST /items HTTP/1.1\r\nhost: test\r\ncontent-length: 100\r\n\r\n{").unwrap();
                 return;
             }
             for _ in 0..repeats {
@@ -244,10 +243,10 @@ fn cohort(address: &str, repeats: usize, disconnect: bool) {
                     ("GET", "/slow?ms=0", "", "", 200, "slept 0 ms"),
                     ("GET", "/stream", "", "", 200, "line 1\nline 2\nline 3\nline 4\nline 5\n"),
                 ] {
-                    send(&mut stream, method, path, headers, body);
+                    send(reader.get_mut(), method, path, headers, body);
                     assert_eq!(response(&mut reader), (code, expected.into()), "{method} {path}");
                 }
-                assert!(metrics(&mut stream, &mut reader) > 0.0);
+                assert!(metrics(&mut reader) > 0.0);
             }
         })).collect();
         for worker in workers {
@@ -257,29 +256,28 @@ fn cohort(address: &str, repeats: usize, disconnect: bool) {
 }
 
 fn cancel_pending(server: &mut Observed) {
-    let (mut control, mut reader) = connection(&server.address);
-    let baseline = metrics(&mut control, &mut reader);
+    let mut control = connection(&server.address);
+    let baseline = metrics(&mut control);
     let mut pending = Vec::new();
     for _ in 0..7 {
-        let (mut stream, reader) = connection(&server.address);
-        send(&mut stream, "GET", "/slow?ms=60000", "", "");
-        pending.push((stream, reader));
+        let mut reader = connection(&server.address);
+        send(reader.get_mut(), "GET", "/slow?ms=60000", "", "");
+        pending.push(reader);
     }
     let deadline = Instant::now() + Duration::from_secs(10);
     for polls in 1.. {
-        if metrics(&mut control, &mut reader) == baseline + f64::from(polls) + 7.0 {
+        if metrics(&mut control) == baseline + f64::from(polls) + 7.0 {
             break;
         }
         assert!(Instant::now() < deadline, "slow handlers did not enter");
         std::thread::sleep(Duration::from_millis(10));
     }
-    drop(reader);
     drop(control);
     http_server_process::terminate(&server.child).unwrap();
     assert!(server.wait().success());
     // Shutdown's 3s grace expires before the handler's 5s timeout. All seven
     // incomplete requests must lose their connection; no successful slow reply.
-    for (_, mut reader) in pending {
+    for mut reader in pending {
         let mut bytes = Vec::new();
         if let Err(error) = reader.read_to_end(&mut bytes) {
             assert_eq!(error.kind(), std::io::ErrorKind::ConnectionReset, "{error}");
@@ -412,4 +410,29 @@ fn api_saved_binary_idle_memory() {
     let artifacts = PathBuf::from(std::env::var_os("FWP_HTTP_APPLICATION_ARTIFACTS").unwrap());
     std::fs::create_dir(&artifacts).unwrap();
     exercise(&binary, artifacts.join("api-saved"), "healthy");
+}
+
+#[test]
+fn client_socket_closes_while_another_child_runs() {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let client = connection(&listener.local_addr().unwrap().to_string());
+    let (mut peer, _) = listener.accept().unwrap();
+    peer.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
+    let mut command = Command::new(std::env::current_exe().unwrap());
+    command
+        .args([
+            "--exact",
+            "http_server_process::tests::child",
+            "--nocapture",
+        ])
+        .env("FWP_HTTP_STARTUP_CHILD", "ready");
+    let mut unrelated = super::start(command);
+    drop(client);
+    let closed = peer.read(&mut [0]);
+    assert!(unrelated.child.try_wait().unwrap().is_none());
+    assert_eq!(
+        closed.unwrap(),
+        0,
+        "another child retained the client socket"
+    );
 }
