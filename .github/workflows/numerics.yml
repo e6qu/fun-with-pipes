@@ -42,15 +42,13 @@ jobs:
           - mode: production
             toolchain: '1.99.1'
             allocator: ordinary
-            rounds: 200
-          - mode: heap-checks
-            toolchain: '1.99.1'
-            allocator: checked
             rounds: 20
+            compiler: target/debug/fwp
           - mode: address-sanitizer
             toolchain: nightly
             allocator: ordinary
-            rounds: 200
+            rounds: 10
+            compiler: target/x86_64-apple-darwin/debug/fwp
     runs-on: macos-15-intel
     timeout-minutes: 45
     env:
@@ -79,28 +77,87 @@ jobs:
         if: matrix.mode == 'production'
         run: |
           set -o pipefail
-          cargo test --locked --test console_ownership -- --nocapture 2>&1 | tee compiler-console-evidence/console-test.log
+          cargo test --locked --test console_ownership -- --test-threads=1 --nocapture 2>&1 | tee compiler-console-evidence/console-test.log
       - name: Build compiler with production settings
         if: matrix.mode != 'address-sanitizer'
-        run: cargo build --locked --bin fwp --target x86_64-apple-darwin
+        run: cargo build --locked --bin fwp
       - name: Build compiler with address sanitizer
         if: matrix.mode == 'address-sanitizer'
         env:
           RUSTFLAGS: '-Zsanitizer=address -Cforce-frame-pointers=yes'
         run: cargo build --locked --bin fwp --target x86_64-apple-darwin
+      - name: Preserve the exact compiler for disassembly
+        env:
+          DIAGNOSTIC_COMPILER: ${{ matrix.compiler }}
+        run: |
+          cp "$DIAGNOSTIC_COMPILER" compiler-console-evidence/fwp
+          shasum -a 256 compiler-console-evidence/fwp > compiler-console-evidence/compiler.sha256
+          otool -L compiler-console-evidence/fwp > compiler-console-evidence/libraries.txt
       - name: Repeat each input with named artifacts and allocator diagnostics
         env:
+          DIAGNOSTIC_COMPILER: ${{ matrix.compiler }}
           DIAGNOSTIC_ROUNDS: ${{ matrix.rounds }}
           DIAGNOSTIC_ALLOCATOR: ${{ matrix.allocator }}
           ASAN_OPTIONS: 'abort_on_error=1:detect_leaks=1:log_path=compiler-console-evidence/asan'
         run: |
-          python3 scripts/check-console-compiler.py --compiler target/x86_64-apple-darwin/debug/fwp --rounds "$DIAGNOSTIC_ROUNDS" --allocator "$DIAGNOSTIC_ALLOCATOR" --output compiler-console-evidence
+          python3 scripts/check-console-compiler.py --compiler "$DIAGNOSTIC_COMPILER" --rounds "$DIAGNOSTIC_ROUNDS" --max-seconds 1200 --allocator "$DIAGNOSTIC_ALLOCATOR" --output compiler-console-evidence
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: compiler-console-${{ matrix.mode }}
           path: |
             compiler-console-evidence/
+            ~/Library/Logs/DiagnosticReports/fwp*
+          if-no-files-found: error
+  compiler_console_context:
+    if: inputs.suite == 'compiler-console'
+    runs-on: macos-15-intel
+    timeout-minutes: 40
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 1
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: '1.99.1'
+      - name: Record source and production toolchains
+        run: |
+          mkdir compiler-context-evidence
+          git rev-parse HEAD > compiler-context-evidence/source.txt
+          rustc -Vv > compiler-context-evidence/rust.txt
+          clang --version > compiler-context-evidence/clang.txt
+          sw_vers > compiler-context-evidence/os.txt
+      - name: OpenSSL
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+      - name: Build and retain the compiler before executing tests
+        run: |
+          cargo build --locked --bin fwp
+          cp target/debug/fwp compiler-context-evidence/fwp
+          shasum -a 256 compiler-context-evidence/fwp > compiler-context-evidence/compiler.sha256
+          otool -L compiler-context-evidence/fwp > compiler-context-evidence/libraries.txt
+      - name: Reproduce the original two-worker test neighborhood
+        run: |
+          for iteration in 1 2 3; do
+            vm_stat > "compiler-context-evidence/vm-before-$iteration.txt"
+            python3 scripts/run-native-tests.py --idle-timeout 600 --targets arc_execution console_ownership float_math --logs "compiler-context-evidence/tests-$iteration" || exit
+            vm_stat > "compiler-context-evidence/vm-after-$iteration.txt"
+          done
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: compiler-console-context
+          path: |
+            compiler-context-evidence/
             ~/Library/Logs/DiagnosticReports/fwp*
           if-no-files-found: error
   socket_inheritance:

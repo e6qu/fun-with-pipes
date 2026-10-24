@@ -28,11 +28,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', type=Path, required=True)
     parser.add_argument('--rounds', type=int, required=True)
+    parser.add_argument('--max-seconds', type=int, required=True)
     parser.add_argument('--allocator', choices=('ordinary', 'checked'), required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
-    if args.rounds < 1:
-        parser.error('--rounds must be positive')
+    if args.rounds < 1 or args.max_seconds < 1:
+        parser.error('--rounds and --max-seconds must be positive')
     compiler = args.compiler.resolve(strict=True)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
@@ -43,11 +44,12 @@ def main():
                    MallocCheckHeapEach='1000', MallocCheckHeapAbort='1',
                    MallocErrorAbort='1', MallocLogFile=str(output / 'malloc.log'))
     metadata = dict(compiler=str(compiler), sha256=hashlib.sha256(compiler.read_bytes()).hexdigest(),
-                    rounds=args.rounds, allocator=args.allocator,
+                    rounds=args.rounds, maxSeconds=args.max_seconds, allocator=args.allocator,
                     source=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip())
     (output / 'compiler.json').write_text(json.dumps(metadata, indent=2) + '\n')
     for name, body in CASES.items():
         (output / f'{name}.fwp').write_text(f'main = {body}\n')
+    deadline = time.monotonic() + args.max_seconds
     with (output / 'attempts.jsonl').open('x') as records:
         for iteration in range(args.rounds):
             for name in CASES:
@@ -57,8 +59,11 @@ def main():
                     attempt = dict(iteration=iteration, case=name, gc=gc, command=command)
                     (output / 'current.json').write_text(json.dumps(attempt, indent=2) + '\n')
                     started = time.monotonic()
+                    remaining = deadline - started
+                    if remaining <= 0:
+                        raise SystemExit('Diagnostic time budget exhausted; partial attempts preserved')
                     with (output / 'stdout.log').open('wb') as stdout, (output / 'stderr.log').open('wb') as stderr:
-                        result = subprocess.run(command, env=env, stdout=stdout, stderr=stderr, timeout=60)
+                        result = subprocess.run(command, env=env, stdout=stdout, stderr=stderr, timeout=min(60, remaining))
                     attempt.update(returncode=result.returncode, seconds=time.monotonic() - started)
                     records.write(json.dumps(attempt) + '\n')
                     records.flush()
