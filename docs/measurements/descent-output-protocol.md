@@ -132,3 +132,10 @@ The [`descent-output` workflow](../../.github/workflows/numerics.yml) runs the
 [measurement](../../scripts/measure-descent-output.py). Select `native_runner=all`
 explicitly: this suite requires both Linux architectures. Full runs stay on
 GitHub; local work is limited to guarded, untimed controls.
+
+Compiler timeout, interruption and unsuccessful exit all terminate the compiler's
+process group before recording the failure. This includes a child that has closed
+its inherited output pipes: EOF alone does not prove that child exited. A real
+child-process control checks this case alongside timeout cleanup and metadata
+persistence. This policy does not claim to contain tools that deliberately detach
+into a different process group.

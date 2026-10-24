@@ -7,7 +7,9 @@ and borrowing, and use ARC only for necessary sharing. JIT is excluded.
 
 **Next:** audit the final-head production jobs for
 [PR #206](https://github.com/e6qu/fun-with-pipes/pull/206), then inspect their artifacts.
-The consolidated change is being published and marked ready for the full matrix. Require all nine production jobs, docs and exact-head binary
+The consolidated change is ready; the publication receipt identifies the current
+head and runs. A final failure-path review also repaired cleanup after a compiler
+exits unsuccessfully with a child that closed its output pipes. Require all nine production jobs, docs and exact-head binary
 inspection before the authorized one-line squash merge.
 
 Delivery: `/private/tmp/fwp-array-pipeline-delivery`, branch `array-pipeline-delivery`.
@@ -45,9 +47,13 @@ Primary checkout stays detached at the base, with only this handoff modified.
   The local guard's limits are unchanged.
 - Interrupted runs also lacked final hardware/toolchain records. The reporting repair
   writes `environment.json` before workloads and uses a separate `run_record`
-  for final reporting. Five real failure/cleanup controls pass (1.97s); comparison
+  for final reporting. The original five failure/cleanup controls passed (1.97s); comparison
   of parsed Python code confirms settings, flags, workloads and timed loops are
-  unchanged. The existing production benchmark job runs these controls. Formatting, docs,
+  unchanged. The existing production benchmark job runs these controls. A sixth real-child
+  control covers unsuccessful compiler exit with closed output pipes. All six
+  controls pass; the previous implementation fails that new control (5.26s
+  combined check). Only build-failure cleanup changed; measured code, settings
+  and timed loops are identical. Receipt: `fwp-array-child-repair-check.json`. Formatting, docs,
   frozen primitive contracts and fourteen native runner controls pass (12.87s).
   Publication separately audits all real Cargo targets against both native shards.
 
@@ -61,7 +67,8 @@ observed row. Fewer allocations are not a C/Rust parity or timing claim.
 Paths below are under `/private/tmp`; full source IDs are retained in receipts.
 
 - `fwp-array-delivery-publication.json`: current PR/head;
-  `fwp-array-delivery-final-publication.json`: consolidated publication and checks; initial receipt backed up
+  `fwp-array-delivery-final-publication.json`: consolidated publication and checks;
+  `fwp-array-child-repair-publication.json`: final compiler-child cleanup repair; initial receipt backed up
   as `fwp-array-delivery-initial-publication.json`.
 - `fwp-array-frame-check-{publication,audit}.json`: current native run.
   `fwp-inspect-array-frame-host.py --host HOST` runs once per uninspected host.

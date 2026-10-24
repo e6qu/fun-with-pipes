@@ -42,6 +42,8 @@ def build(command, environment, timeout, commands, directory):
                               stderr=subprocess.PIPE, start_new_session=True) as process:
             try:
                 stdout, stderr = process.communicate(timeout=timeout)
+                if process.returncode:
+                    raise subprocess.CalledProcessError(process.returncode, command, stdout, stderr)
             except BaseException:
                 try:
                     os.killpg(process.pid, signal.SIGKILL)
@@ -60,8 +62,6 @@ def build(command, environment, timeout, commands, directory):
     (directory / 'build-commands.json').write_text(json.dumps(commands, indent=2) + '\n')
     if failure is not None:
         raise failure
-    if returncode:
-        raise subprocess.CalledProcessError(returncode, command, stdout, stderr)
 
 
 def output_variant(code, language):

@@ -5,9 +5,11 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import signal
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -44,6 +46,40 @@ class BuildChecks(unittest.TestCase):
         row, = json.loads((self.directory / 'build-commands.json').read_text())
         self.assertEqual(row['returncode'], 7)
         self.assertEqual(row['stderr'], 'bad source\n')
+
+    def test_failed_compiler_stops_children_with_closed_output_pipes(self):
+        source = ('import subprocess, sys\n'
+                  'child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"],\n'
+                  '                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)\n'
+                  'print(child.pid, flush=True)\n'
+                  'sys.stderr.write("bad source\\n")\n'
+                  'sys.exit(7)\n')
+        with self.assertRaises(subprocess.CalledProcessError) as caught:
+            OUTPUT.build([sys.executable, '-c', source], self.environment,
+                         5, self.commands, self.directory)
+        row, = json.loads((self.directory / 'build-commands.json').read_text())
+        child = int(row['stdout'].strip())
+        try:
+            self.assertEqual(caught.exception.returncode, 7)
+            self.assertEqual(row['returncode'], 7)
+            self.assertEqual(row['stderr'], 'bad source\n')
+            # A killed orphan may briefly remain as a zombie awaiting reaping.
+            deadline = time.monotonic() + 1
+            while True:
+                status = subprocess.run(['ps', '-o', 'stat=', '-p', str(child)],
+                                        capture_output=True, text=True, timeout=5)
+                if not status.stdout.strip() or status.stdout.strip().startswith('Z'):
+                    break
+                if time.monotonic() >= deadline:
+                    self.fail(f'Compiler child is still running: {status.stdout}')
+                time.sleep(0.01)
+            self.assertEqual(row['failure'], 'CalledProcessError')
+        finally:
+            # Keep the negative control safe when tested against the old code.
+            try:
+                os.kill(child, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
 
     def test_missing_compiler_is_recorded(self):
         with self.assertRaises(FileNotFoundError):
