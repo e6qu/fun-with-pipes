@@ -122,3 +122,12 @@ passed, including negative controls. That does not establish a repair: the
 original timeout remains open while repeated saved-binary runs gather task and
 socket state. Neither the checkpoint deadline nor connection-close expectations
 have changed.
+
+A separate `socket-inheritance` diagnostic uses native Rust sockets on Windows
+ARM64 and AMD64. It records original/cloned handle flags, drops both client
+handles while a child is alive, then checks connection closure after child exit.
+An explicitly inheritable socket is the control. This tests whether unrelated
+compiler children can prolong a cloned client connection, a possibility reported
+in [Rust issue #70719](https://github.com/rust-lang/rust/issues/70719). It is a
+hypothesis until the runner results confirm it; no runtime repair follows merely
+from that report.

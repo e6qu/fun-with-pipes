@@ -14,7 +14,8 @@ pass; use one subject at most 80 characters and an empty body, then verify it.
 
 PR #207 source `bd0dc0100a516099590c340c012f74b7b666ebd2`; production run
 `40064764447`, docs run `40064764348`. Benchmark, docs and both macOS ARM64 jobs
-pass with complete logs audited. Six other native jobs are running; no failure
+and Intel macOS GC-stress pass with complete logs audited. Five other native jobs
+are running; no failure
 has been observed. Checkout `/private/tmp/fwp-file-http-delivery` is clean.
 Audit with `fwp-audit-file-http-delivery-final.py` under `/private/tmp`.
 
@@ -45,9 +46,12 @@ merge, with only this operational handoff dirty.
 ## Independent API memory work
 
 Checkout `/private/tmp/fwp-http-application-memory`, branch `http-application-memory`,
-is preparing the Linux stack-page repair on `b2d34d058d49fc663fb642492e21186e50c0c06f`.
-No second PR is open. Publish the repair and run the six-host API checks plus
-32 fresh Windows ARM64 O2 processes, retaining every failed attempt.
+is clean at repair `4fc97ca1f1c28e0dd2561c6b14000d13d1b7f4f0`. No second PR is
+open. Six-host API run `40069237866` includes Linux page-policy/failure controls;
+Windows ARM64 run `40069240258` reuses one O2 binary for 32 fresh processes.
+Publication helper `fwp-publish-http-stack-repair.py` is COMPLETE; do not rerun.
+Its receipt is `fwp-http-stack-repair-publication.json`. Audit every failed job
+and keep the original Windows timeout open until its cause is addressed.
 Eight clients exercise mixed requests, streams, partial-body disconnects and
 shutdown with seven pending handlers. Idle managed charge, accepted sockets,
 metric storage and RSS are separate observations. Missing-free/close controls
@@ -75,7 +79,8 @@ them. Mapping review confirms 34–36 MiB of anonymous huge pages in shallow
 AMD64 task stacks; ARM64 uses ordinary pages. The repair requests ordinary pages
 on Linux stack allocation, preserves reuse and checks previously ignored guard
 setup failures. Actual-runtime-block tests cover physical mappings and failure
-cleanup at O1/O2. Native verification is pending; do not claim a repaired budget.
+cleanup at O1/O2. Linux ARM64 passes both API and page-policy/failure tests on `4fc97ca1`; other
+hosts are still running. Do not yet claim a repaired AMD64 budget.
 
 Latest diagnostics at `b2d34d05`:
 
@@ -89,9 +94,19 @@ Latest diagnostics at `b2d34d05`:
 - Run `40067911096` (`http-idle-checks`) repeats O2 three times on Windows ARM64,
   retaining every attempt. Test-only wait records expose tasks and socket waits
   without changing scheduling or the 20s limit. All three attempts pass, with
-  complete logs audited. The original Windows timeout remains unresolved.
+  complete logs and saved artifacts audited (nine executions, no wait records).
+  Archive SHA-256 `efaba136703b04b869c491743b9f92092223fdeed50b617231807998af004d8d`,
+  in `fwp-http-idle-diagnostics-b2d34d05`. The original Windows timeout remains unresolved.
   The next diagnostic compiles once, then runs 32 fresh processes to investigate
   it without repeated C compilation.
+
+A new Windows-only socket-inheritance probe is being prepared. The original
+failure ran O1/O2 concurrently; isolated reruns do not launch another C compiler.
+Rust issue #70719 reports cloned socket handles unexpectedly inherited by child
+processes. That could delay peer EOF until a compiler child exits. This is a
+hypothesis: inspect real flags and peer closure with a child alive, including an
+explicit-inheritance control, on both native Windows architectures. No deadline
+or runtime behavior has been changed to conceal the timeout.
 
 Publication receipts/helpers use `fwp-http-{application-memory,memory-repair,
 memory-diagnostics}-*`. All three publication helpers are COMPLETE; do not rerun.
@@ -109,7 +124,8 @@ RSS and was stopped. Do not retry by raising/bypassing limits. Compiler receipt:
 An 80-response raw-interpreter probe passes (0.50s); the changed startup helper's
 three real-child checks pass (4.90s). Formatting, sixteen native-runner controls,
 source-insertion anchors and workflow syntax pass. Latest diagnostic publication
-checks pass (10.06s); the repair's formatting and observer insertion pass (2.71s). No native API was compiled locally after the refusal.
+checks pass (10.06s); the repair's formatting and observer insertion pass (2.71s), workflow syntax
+passes (0.14s) and publication/docs checks pass (10.44s). No native API was compiled locally after the refusal.
 
 A verified saved macOS ARM64 executable from the failed `ef66` driver run passed
 a bounded local diagnostic: 3,440 replies, disconnects and forced shutdown;
