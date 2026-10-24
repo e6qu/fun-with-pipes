@@ -24,7 +24,6 @@ fn input(command: &mut Command, bytes: &[u8]) -> Output {
 fn console_input_matches_raw_interpretation() {
     let dir = fwp::cgen::TempDir::new("console-ownership").unwrap();
     let compiler = env!("CARGO_BIN_EXE_fwp");
-    let source = dir.join("console.fwp");
     let bytes = b"first\r\n\nlast\r\ninvalid \xff\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\nend\r";
     for (name, body) in [
         ("all", "read-all () | echo"),
@@ -46,6 +45,8 @@ fn console_input_matches_raw_interpretation() {
             r#"[env.get "FWP_ENV_COPY", env.get "FWP_ENV_EMPTY", env.get "FWP_ENV_ABSENT", env.get "FWP_ENV_COPY\0suffix"] | echo"#,
         ),
     ] {
+        let source = dir.join(format!("{name}.fwp"));
+        eprintln!("console input {name}: main = {body}");
         std::fs::write(&source, format!("main = {body}\n")).unwrap();
         let all_cases = [bytes.as_slice(), b"", b"\n", b"last\r", b"a\0b\n"];
         let cases = if matches!(name, "args" | "environment" | "tty" | "width") {

@@ -1,5 +1,5 @@
 fn key(i: i64) -> i64 {
-    i * 7919 % 1_000_003
+    i.checked_mul(7919).expect("multiplication overflow") % 1_000_003
 }
 fn main() {
     // Match C and fwp: contiguous sorted pairs with bisection lookups.
@@ -24,6 +24,8 @@ fn main() {
                 0
             }
         })
-        .sum();
+        .fold(0i64, |sum, value| {
+            sum.checked_add(value).expect("addition overflow")
+        });
     println!("{}", sum);
 }

@@ -1,0 +1,17 @@
+bad : String -> String ! {Error[String]}
+bad = if (eq "b") (const "expected" | fail) (concat "owned:")
+main = [
+    task.yield (),
+    "c b a b" | words | both sort id | echo,
+    "c b a b" | words | both reverse id | echo,
+    "c b a b" | words | both (append ["tail"]) id | echo,
+    "c b a b" | words | both (take 2) id | echo,
+    "c b a b" | words | both unique id | echo,
+    ["c b", "a b"] | map words | both flatten id | echo,
+    "c b a b" | words | both (sort-by (concat "key:")) id | echo,
+    "c b a" | words | attempt (sort-by bad) | echo,
+    "b a c" | words | attempt (sort-by bad) | echo,
+    "a c b" | words | attempt (sort-by bad) | echo,
+    "c a z" | words | attempt (sort-by bad) | echo,
+    [] | attempt (sort-by bad) | echo,
+] | ignore

@@ -574,7 +574,7 @@ bad-argument = flip compare "bad\0argument"
         let id = program.exports.iter().find(|(n, _)| n == name).unwrap().1;
         C_STRING_COUNTS.with(|state| state.set((true, 0, 0)));
         for _ in 0..16 {
-            let result = interpreter.call(id, vec![input.clone()]);
+            let result = interpreter.call_root(id, vec![input.clone()]);
             match name {
                 "aliased" | "nested" => assert_eq!(result.unwrap(), input),
                 "failed" => assert!(

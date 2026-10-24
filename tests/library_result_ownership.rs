@@ -127,19 +127,19 @@ fn exported_boxes_are_reclaimed_and_host_strings_survive() {
     let program = program();
     let mut interp = fwp::interp::Interp::new(&program, Box::new(Vec::new())).unwrap();
     assert_eq!(
-        interp.call(0, vec![Value::I64(17)]).unwrap(),
+        interp.call_root(0, vec![Value::I64(17)]).unwrap(),
         Value::Record(vec![Value::I64(17), Value::I64(17)].into())
     );
     assert_eq!(
-        interp.call(2, vec![Value::I64(17)]).unwrap(),
+        interp.call_root(2, vec![Value::I64(17)]).unwrap(),
         Value::Record(vec![Value::I64(17), Value::Str("hihi".into())].into())
     );
     assert_eq!(
-        interp.call(5, vec![]).unwrap(),
+        interp.call_root(5, vec![]).unwrap(),
         Value::Record(vec![Value::I64(17), Value::I64(42)].into())
     );
     assert_eq!(
-        interp.call(6, vec![Value::I64(0)]).unwrap(),
+        interp.call_root(6, vec![Value::I64(0)]).unwrap(),
         Value::Str("okok".into())
     );
     let (source, _) = fwp::cgen::generate_library(&program, "ownership").unwrap();

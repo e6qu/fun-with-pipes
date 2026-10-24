@@ -80,7 +80,14 @@ fn empty_kernel_stack_is_safe_and_omission_is_detected() {
                 String::from_utf8_lossy(&compiler.stderr)
             );
             std::fs::copy(&executable, artifacts.join(format!("{label}.bin"))).unwrap();
-            let output = Command::new(&executable).output().unwrap();
+            let mut probe = Command::new(&executable);
+            // ASan reserves address space also requested by macOS's nano zone.
+            // Select the ordinary allocator for this sanitized process; retain
+            // allocator and sanitizer diagnostics, including the broken controls.
+            if cfg!(target_os = "macos") {
+                probe.env("MallocNanoZone", "0");
+            }
+            let output = probe.output().unwrap();
             std::fs::write(artifacts.join(format!("{label}.stdout")), &output.stdout).unwrap();
             std::fs::write(artifacts.join(format!("{label}.stderr")), &output.stderr).unwrap();
             std::fs::write(
@@ -112,7 +119,11 @@ fn empty_kernel_stack_is_safe_and_omission_is_detected() {
                     String::from_utf8_lossy(&output.stderr)
                 );
                 assert_eq!(output.stdout, b"kernel stack controls passed\n");
-                assert!(output.stderr.is_empty());
+                assert!(
+                    output.stderr.is_empty(),
+                    "{label}: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                );
             }
         }
     }

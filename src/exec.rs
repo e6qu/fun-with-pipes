@@ -408,7 +408,7 @@ pub fn exec_command(prog: &Program, cmd: &cli::Command, argv: &[String]) -> i32 
     let code = {
         // In binary mode the program's own output goes to stderr so that it
         // cannot corrupt the frame stream.
-        let program_out: Box<dyn Write> = if binary {
+        let program_out: Box<dyn Write + Send> = if binary {
             Box::new(std::io::stderr())
         } else {
             Box::new(std::io::stdout())
@@ -431,17 +431,12 @@ pub fn exec_command(prog: &Program, cmd: &cli::Command, argv: &[String]) -> i32 
                 args.push(Value::unit());
             }
             let r = if n == 0 {
-                it.call(fid, vec![])
+                it.call_root(fid, vec![])
             } else {
-                it.apply(fv.clone(), args)
+                it.apply_root(fv.clone(), args)
             };
-            if r.is_err() {
-                it.cancel_children();
-            } else {
-                it.join_children();
-            }
             // program output written with `print` goes before the result
-            let _ = it.out.flush();
+            let _ = it.out.lock().unwrap().flush();
             match r {
                 Ok(v) => {
                     let res = em.emit_result(&v, output, prog);
@@ -521,7 +516,7 @@ pub fn exec_command(prog: &Program, cmd: &cli::Command, argv: &[String]) -> i32 
                 }
             }
         }
-        let _ = it.out.flush();
+        let _ = it.out.lock().unwrap().flush();
         code
     };
     if binary {

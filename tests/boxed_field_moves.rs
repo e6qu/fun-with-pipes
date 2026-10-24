@@ -97,13 +97,13 @@ fn boxed_transfers_preserve_shared_parents_wide_values_and_cleanup() {
     raw.funcs[6].body = Body::Expr(Expr::Call(1, vec![Expr::Func(2)]));
     let value = fwp::interp::Interp::new(&raw, Box::new(Vec::new()))
         .unwrap()
-        .call(6, vec![])
+        .call_root(6, vec![])
         .unwrap();
     assert_eq!(value, Value::str("first"));
     raw.funcs[6].body = Body::Expr(Expr::Call(5, vec![Expr::Func(2)]));
     assert!(fwp::interp::Interp::new(&raw, Box::new(Vec::new()))
         .unwrap()
-        .call(6, vec![])
+        .call_root(6, vec![])
         .is_err());
     let dir = fwp::cgen::TempDir::new("boxed-field-moves").unwrap();
     let binary = dir.join("probe.exe");

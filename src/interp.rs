@@ -5,6 +5,7 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::io::{Read, Write};
 use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 use crate::ir::*;
 use crate::softfloat::{BFloat16, Binary128, Binary16};
@@ -79,21 +80,19 @@ pub(crate) fn set_raw_stack_limit(limit: usize) {
 }
 
 pub struct Interp<'p> {
-    pub prog: &'p Program,
+    pub(crate) prog: &'p Program,
+    pub(crate) entry_active: bool,
     pub(crate) control_stdin: bool,
     pub(crate) debugger: Option<crate::debugger::Shared>,
     /// Values of argument-less functions, shared by all tasks.
     pub(crate) cafs: Rc<RefCell<Vec<Option<Value>>>>,
     pub(crate) state: Vec<Value>,
     pub(crate) rng: u64,
-    pub out: Box<dyn Write + 'p>,
-    pub(crate) err: Box<dyn Write + 'p>,
+    pub(crate) out: Arc<Mutex<Box<dyn Write + Send + 'p>>>,
+    pub(crate) err: Arc<Mutex<Box<dyn Write + Send + 'p>>>,
     pub args: Vec<String>,
     pub(crate) world: std::sync::Arc<crate::sched::World>,
     pub(crate) task: std::sync::Arc<crate::sched::TaskShared>,
-    /// The root task's writer, shared by every task.
-    pub(crate) root_out: *mut (dyn Write + 'p),
-    pub(crate) root_err: *mut (dyn Write + 'p),
     /// Tasks spawned inside each enclosing `task.scope`.
     pub(crate) scopes: Vec<Vec<std::sync::Arc<crate::sched::TaskShared>>>,
     /// Immutable foreign-call bridge, prepared before evaluation begins.
@@ -105,7 +104,7 @@ pub struct Interp<'p> {
 
 impl<'p> Interp<'p> {
     /// Prepare foreign C bridges before evaluating any language expression.
-    pub fn new(prog: &'p Program, mut out: Box<dyn Write + 'p>) -> R<Self> {
+    pub fn new(prog: &'p Program, out: Box<dyn Write + Send + 'p>) -> R<Self> {
         let ffi = if prog
             .funcs
             .iter()
@@ -126,58 +125,55 @@ impl<'p> Interp<'p> {
                     .map(|d| d.as_nanos() as u64)
                     .unwrap_or(1)
             });
-        let root_out: *mut (dyn Write + 'p) = &mut *out;
-        let mut err: Box<dyn Write + 'p> = Box::new(std::io::stderr());
-        let root_err: *mut (dyn Write + 'p) = &mut *err;
         Ok(Interp {
             prog,
+            entry_active: false,
             control_stdin: CONTROL_STDIN.with(|flag| flag.get()),
             debugger: None,
             cafs: Rc::new(RefCell::new(vec![None; prog.funcs.len()])),
             state: Vec::new(),
             rng: seed | 1,
-            out,
-            err,
+            out: Arc::new(Mutex::new(out)),
+            err: Arc::new(Mutex::new(Box::new(std::io::stderr()))),
             args: Vec::new(),
             world: crate::sched::World::new(),
             task: crate::sched::TaskShared::new(),
-            root_out,
-            root_err,
             scopes: Vec::new(),
             ffi,
             grpc: Default::default(),
         })
     }
 
-    /// Set both the writer and the stable pointee forwarded to child tasks.
-    pub(crate) fn set_error_writer(&mut self, mut writer: Box<dyn Write + 'p>) {
-        self.root_err = &mut *writer;
-        self.err = writer;
+    /// Replace the error writer before an entry can share it with tasks.
+    pub(crate) fn set_error_writer(&mut self, writer: Box<dyn Write + Send + 'p>) {
+        assert!(!self.entry_active, "cannot replace an active task writer");
+        self.err = Arc::new(Mutex::new(writer));
     }
 
     // ----- evaluation ----------------------------------------------------------
 
-    /// Call a root function (main or a test) and wait for the tasks it
+    /// Call an entry function (main, a test, or compile-time code) and wait for the tasks it
     /// started; when it failed, they are cancelled first.
-    pub fn call_root(&mut self, id: FuncId) -> R<Value> {
-        crate::sched::start_slice();
-        let r = self.call(id, vec![]);
-        if r.is_err() {
-            self.cancel_children();
-        } else {
-            self.join_children();
-        }
-        r
+    pub fn call_root(&mut self, id: FuncId, args: Vec<Value>) -> R<Value> {
+        self.run_entry(|it| it.call(id, args))
     }
 
-    pub fn call(&mut self, id: FuncId, args: Vec<Value>) -> R<Value> {
+    /// Apply a closure at an entry boundary, including task cleanup.
+    pub fn apply_root(&mut self, function: Value, args: Vec<Value>) -> R<Value> {
+        self.run_entry(|it| it.apply(function, args))
+    }
+
+    pub(crate) fn call(&mut self, id: FuncId, args: Vec<Value>) -> R<Value> {
         let Some(debugger) = self.debugger.clone() else {
             return self.call_inner(id, args);
         };
         let task = std::sync::Arc::as_ptr(&self.task) as usize;
-        debugger.borrow_mut().enter(self.prog, task, id, &args)?;
+        debugger.lock().unwrap().enter(self.prog, task, id, &args)?;
         let result = self.call_inner(id, args);
-        debugger.borrow_mut().leave(self.prog, task, id, &result)?;
+        debugger
+            .lock()
+            .unwrap()
+            .leave(self.prog, task, id, &result)?;
         result
     }
 
@@ -258,7 +254,7 @@ impl<'p> Interp<'p> {
     }
 
     /// Apply a function value to arguments.
-    pub fn apply(&mut self, f: Value, mut args: Vec<Value>) -> R<Value> {
+    pub(crate) fn apply(&mut self, f: Value, mut args: Vec<Value>) -> R<Value> {
         let mut f = f;
         loop {
             let Value::Closure(c) = &f else {
@@ -298,9 +294,9 @@ impl<'p> Interp<'p> {
         }
     }
 
-    pub fn eval(&mut self, e: &Expr, locals: &mut Vec<Value>) -> R<Value> {
+    pub(crate) fn eval(&mut self, e: &Expr, locals: &mut Vec<Value>) -> R<Value> {
         if let Some(debugger) = &self.debugger {
-            debugger.borrow_mut().expression(
+            debugger.lock().unwrap().expression(
                 self.prog,
                 std::sync::Arc::as_ptr(&self.task) as usize,
                 e,
@@ -324,7 +320,7 @@ impl<'p> Interp<'p> {
             Expr::Trace(point, body) => {
                 let result = self.eval(body, locals)?;
                 if let Some(debugger) = &self.debugger {
-                    debugger.borrow_mut().value(
+                    debugger.lock().unwrap().value(
                         self.prog,
                         std::sync::Arc::as_ptr(&self.task) as usize,
                         point,
@@ -408,7 +404,7 @@ impl<'p> Interp<'p> {
 
     fn debug_binding(&self, slot: u32, value: &Value) -> R<()> {
         if let Some(debugger) = &self.debugger {
-            debugger.borrow_mut().bind(
+            debugger.lock().unwrap().bind(
                 self.prog,
                 std::sync::Arc::as_ptr(&self.task) as usize,
                 slot,
@@ -453,6 +449,8 @@ impl<'p> Interp<'p> {
 
     fn write_out(&mut self, s: &str) -> R<()> {
         self.out
+            .lock()
+            .unwrap()
             .write_all(s.as_bytes())
             .map_err(|e| Ctl::Trap(format!("cannot write output: {}", e)))
     }
@@ -477,7 +475,7 @@ impl<'p> Interp<'p> {
     fn prim(&mut self, id: FuncId, sym: &str, mut a: Vec<Value>) -> R<Value> {
         if let Some(debugger) = &self.debugger {
             if matches!(sym, "read-line" | "read-all" | "read-lines") {
-                let mut bytes = debugger.borrow_mut().read_input(sym == "read-line")?;
+                let mut bytes = debugger.lock().unwrap().read_input(sym == "read-line")?;
                 return Ok(if sym == "read-line" {
                     if bytes.is_empty() {
                         Value::nullary(0)
@@ -970,7 +968,7 @@ impl<'p> Interp<'p> {
                 self.args.iter().map(|a| Value::str(a)).collect(),
             )),
             "exit" => {
-                let _ = self.out.flush();
+                let _ = self.out.lock().unwrap().flush();
                 Err(Ctl::Exit(a[0].as_i128().unwrap_or(1) as i32))
             }
             "random.u64" => Ok(Value::U64(self.next_random())),
@@ -1110,7 +1108,9 @@ impl<'p> Interp<'p> {
                 crate::grpc::web::prim(self, sym, &mut a)
             }
             _ if sym.starts_with("grpc.") => crate::grpc::prim(self, id, sym, &mut a),
-            _ if crate::sys::handles(sym) => crate::sys::prim(sym, &a, &mut *self.out),
+            _ if crate::sys::handles(sym) => {
+                crate::sys::prim(sym, &a, &mut **self.out.lock().unwrap())
+            }
             "cli.parse" => {
                 let argv: Vec<String> = a[1]
                     .list_items()
@@ -1692,9 +1692,9 @@ pub fn run_main(prog: &Program, args: Vec<String>) -> RunResult {
     // which ends the module at once: write each line as it is complete so
     // that the output before such a failure is kept.
     #[cfg(target_family = "wasm")]
-    let out = std::io::LineWriter::new(stdout.lock());
+    let out = std::io::LineWriter::new(stdout);
     #[cfg(not(target_family = "wasm"))]
-    let out = std::io::BufWriter::new(stdout.lock());
+    let out = std::io::BufWriter::new(stdout);
     let Some(main) = prog.main else {
         eprintln!("fwp: no `main` binding");
         return RunResult { exit_code: 2 };
@@ -1708,8 +1708,8 @@ pub fn run_main(prog: &Program, args: Vec<String>) -> RunResult {
         }
     };
     it.args = args;
-    let r = it.call_root(main);
-    let _ = it.out.flush();
+    let r = it.call_root(main, vec![]);
+    let _ = it.out.lock().unwrap().flush();
     let code = report(&r, prog);
     match r {
         Ok(v) => {

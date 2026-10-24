@@ -230,18 +230,18 @@ fn transferred_record_fields_preserve_aliases_and_trap_cleanup() {
     let mut interp = fwp::interp::Interp::new(&p, Box::new(Vec::new())).unwrap();
     assert_eq!(
         interp
-            .call(2, vec![Value::Str("hello".into()), Value::I64(17)])
+            .call_root(2, vec![Value::Str("hello".into()), Value::I64(17)])
             .unwrap(),
         Value::Str("hello".into())
     );
     assert_eq!(
         interp
-            .call(3, vec![Value::Str("hello".into()), Value::I64(17)])
+            .call_root(3, vec![Value::Str("hello".into()), Value::I64(17)])
             .unwrap(),
         Value::Record(vec![Value::Str("hello".into()), Value::Str("hello".into())].into())
     );
     assert!(interp
-        .call(6, vec![Value::Str("hello".into()), Value::I64(17)])
+        .call_root(6, vec![Value::Str("hello".into()), Value::I64(17)])
         .is_err());
     let generated = fwp::cgen::generate(&p).unwrap();
     for name in ["transfer", "aliases", "fail_transfer"] {
@@ -399,10 +399,10 @@ fn forwarded_callback_records_keep_their_box_and_release_aliases_on_failure() {
         ]
     };
     assert_eq!(
-        interpreter.call(1, args(0)).unwrap(),
+        interpreter.call_root(1, args(0)).unwrap(),
         Value::Record(vec![Value::Str("hello".into()), Value::Str("hello".into())].into())
     );
-    assert!(interpreter.call(1, args(3)).is_err());
+    assert!(interpreter.call_root(1, args(3)).is_err());
     let code = fwp::cgen::generate(&program).unwrap();
     let declaration = "typedef uint64_t V;";
     let allocation = "static inline void *fwp_alloc_init(size_t n) {";

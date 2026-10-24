@@ -15,6 +15,10 @@ env:
   CARGO_PROFILE_TEST_OPT_LEVEL: '1'
   CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
   CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
+  # macOS suppresses allocator error messages when stderr is captured unless
+  # reporting is explicit. Preserve the original error in each failed test log.
+  MallocDebugReport: stderr
+  FWP_KERNEL_BOUNDS_ARTIFACTS: ownership-evidence/kernel-bounds
   FWP_CALLBACK_CAPTURE_ARTIFACTS: ownership-evidence/direct-captures
   FWP_ARRAY_CAPTURE_ARTIFACTS: ownership-evidence/array-captures
 
@@ -95,6 +99,7 @@ jobs:
       - name: Language formatting preflight
         run: cargo run --bin fwp -- fmt --check lib examples docs/tutorials bench
       - name: Regular macOS test shard
+        if: ${{ !cancelled() }}
         run: python3 scripts/run-native-tests.py --idle-timeout 1800 --shard regular --logs "$RUNNER_TEMP/macos-regular-tests"
       - name: Publish individual regular test logs
         if: always()
@@ -103,8 +108,12 @@ jobs:
           name: macos-regular-tests-${{ matrix.runner }}
           path: ${{ runner.temp }}/macos-regular-tests/
           if-no-files-found: warn
-      - name: Python SDK and native disassembly
+      - name: Build compiler for Python SDK checks
+        id: sdk_compiler
         if: ${{ !cancelled() }}
+        run: cargo build --locked --bin fwp
+      - name: Python SDK and native disassembly
+        if: ${{ !cancelled() && steps.sdk_compiler.outcome == 'success' }}
         env:
           PYTHONPATH: sdk/python
           FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
@@ -159,7 +168,9 @@ jobs:
         if: failure() && runner.os == 'macOS'
         with:
           name: compiler-crashes-regular-${{ matrix.runner }}
-          path: ~/Library/Logs/DiagnosticReports/fwp*
+          path: |
+            ~/Library/Logs/DiagnosticReports/fwp*
+            target/debug/fwp
           if-no-files-found: ignore
 
   # Split the integration targets between the two existing macOS jobs.
@@ -227,6 +238,9 @@ jobs:
       - name: Second macOS test shard
         if: ${{ !cancelled() }}
         run: python3 scripts/run-native-tests.py --idle-timeout 1800 --shard gc --logs "$RUNNER_TEMP/macos-gc-tests"
+      - name: Inspect list-copy executables and missing-cleanup controls
+        if: ${{ !cancelled() }}
+        run: python3 scripts/inspect-list-copy.py --input ownership-evidence/arc/list-copy --source "${{ github.event.pull_request.head.sha || github.sha }}" --system macOS --arch "$RUNNER_ARCH" --objdump "$(xcrun --find llvm-objdump)" --output ownership-evidence/list-copy-inspection.json
       - name: Publish individual gc test logs
         if: always()
         uses: actions/upload-artifact@v7
@@ -256,7 +270,9 @@ jobs:
         if: failure() && runner.os == 'macOS'
         with:
           name: compiler-crashes-gc-${{ matrix.runner }}
-          path: ~/Library/Logs/DiagnosticReports/fwp*
+          path: |
+            ~/Library/Logs/DiagnosticReports/fwp*
+            target/debug/fwp
           if-no-files-found: ignore
 
   test:
@@ -337,6 +353,7 @@ jobs:
       - name: Language formatting preflight
         run: cargo run --bin fwp -- fmt --check lib examples docs/tutorials bench
       - name: test
+        if: ${{ !cancelled() }}
         env:
           FWP_REQUIRE_WASM_RESOURCE_COUNTS: "1"
           FWP_REQUIRE_WASI_COUNTS: "1"
@@ -344,14 +361,21 @@ jobs:
           FWP_REQUIRE_WASI_GOLDENS: "1"
           FWP_REQUIRE_FLOAT_WASI: "1"
         run: python3 scripts/run-native-tests.py --idle-timeout 1800 --all --logs "$RUNNER_TEMP/linux-tests"
+      - name: Inspect list-copy executables and missing-cleanup controls
+        if: ${{ !cancelled() }}
+        run: python3 scripts/inspect-list-copy.py --input ownership-evidence/arc/list-copy --source "${{ github.event.pull_request.head.sha || github.sha }}" --system Linux --arch "$RUNNER_ARCH" --objdump objdump --output ownership-evidence/list-copy-inspection.json
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: native-test-logs-${{ matrix.runner }}
           path: ${{ runner.temp }}/linux-tests/
           if-no-files-found: ignore
-      - name: Python SDK and native disassembly
+      - name: Build compiler for Python SDK checks
+        id: sdk_compiler
         if: ${{ !cancelled() }}
+        run: cargo build --locked --bin fwp
+      - name: Python SDK and native disassembly
+        if: ${{ !cancelled() && steps.sdk_compiler.outcome == 'success' }}
         env:
           PYTHONPATH: sdk/python
           FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
@@ -454,6 +478,10 @@ jobs:
           env -u FWP_BLESS "$RUNNER_TEMP/fwp-stdlib-doc-check" --exact stdlib_doc_is_current
       - name: Language formatting preflight
         run: cargo run --release --bin fwp -- fmt --check lib examples docs/tutorials bench
+      - name: Check peer overflow order and allocation failures
+        run: |
+          python3 scripts/check-benchmark-peers.py --source "${{ github.event.pull_request.head.sha || github.sha }}" --cc gcc --rustc rustc --arch x86_64 --output target/bench-peer-controls
+          python3 scripts/inspect-benchmark-peers.py --input target/bench-peer-controls --source "${{ github.event.pull_request.head.sha || github.sha }}" --arch x86_64 --objdump objdump --output target/bench-peer-inspection.json
       - name: benchmarks against C and Rust (docs/benchmarks.md)
         env:
           CC: gcc
@@ -468,6 +496,10 @@ jobs:
         run: python3 scripts/measure-benchmark-memory.py --input target/bench-evidence --inspection target/bench-inspection.json --source "${{ github.event.pull_request.head.sha || github.sha }}" --cc gcc --time /usr/bin/time --samples 3 --output target/bench-memory
       - name: Inspect managed-storage images and leak controls
         run: python3 scripts/inspect-benchmark-memory.py --input target/bench-memory --benchmarks target/bench-evidence --inspection target/bench-inspection.json --source "${{ github.event.pull_request.head.sha || github.sha }}" --arch x86_64 --objdump objdump --output target/bench-memory-inspection.json
+      - name: Measure sort storage, code size and stack frames
+        run: |
+          python3 scripts/measure-list-sort-storage.py --compiler target/release/fwp --cc gcc --source "${{ github.event.pull_request.head.sha || github.sha }}" --output target/list-sort-storage
+          python3 scripts/inspect-list-sort-storage.py --input target/list-sort-storage --source "${{ github.event.pull_request.head.sha || github.sha }}" --arch X64 --objdump objdump --output target/list-sort-inspection.json
       - name: Preserve benchmark comparisons and measured executables
         if: always()
         uses: actions/upload-artifact@v7
@@ -477,7 +509,11 @@ jobs:
             target/bench.md
             target/bench-inspection.json
             target/bench-controls.json
+            target/bench-peer-controls/
+            target/bench-peer-inspection.json
             target/bench-memory/
             target/bench-memory-inspection.json
             target/bench-evidence/
+            target/list-sort-storage/
+            target/list-sort-inspection.json
           if-no-files-found: error

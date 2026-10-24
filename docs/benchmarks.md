@@ -101,6 +101,8 @@ and the startup-stack repair.
 | Can task creation avoid redundant ownership work? | [Callback transfer](measurements/queued-task-handles.md) | Same generated C with/without five restored retain/release pairs: 10 → 5 retains, unchanged allocations/bytes; six native hosts, no timing claim |
 | Can immediate task-result matches avoid boxes? | [Await fields](measurements/task-await-fields.md) | Same generated C with and without temporary option boxes: 134 → 100 allocation requests, 544 fewer requested bytes, unchanged retains and peak storage; no timing claim |
 | How much does grouped integer counting cost? | [Controlled CPU comparisons](measurements/integer-counting.md) | Paired old/new fwp, matched C/Rust, explicit CPU placement and all samples |
+| Does skipping already ordered sort work help? | [Ordered-sort experiment](measurements/map-order-results.md) | Both candidates fail the predeclared screen; keep noisy controls and code/stack costs |
+| Do shared sort buffers save storage? | [List/array sort storage](measurements/list-sort-storage.md) | Fewer requests and smaller code on both Linux architectures; whole-program peak and retains unchanged |
 | Can checked multiplication preserve numeric bounds? | [Checked-product comparison](measurements/checked-products.md) | Actual compiler output, per-CPU C/Rust gaps, dynamic-input controls and O0/O1 costs |
 | What does integer-text elimination save? | [Direct character counting](measurements/integer-text.md) | Native results and allocation controls; time against C/Rust counting versus formatting |
 | Does storage release correctly? | [Clients](#memory-used-by-complete-remote-stream-clients), [servers](#server-memory-after-completed-remote-calls), [C results](#returning-owned-values-to-c-callers), [failure cleanup](#cleanup-after-failed-map-and-set-operations) | Allocation/count/live-byte checks; most contain no timing benchmark |
@@ -160,8 +162,8 @@ storage. Neither cost is quantified by the countdown comparison.
 
 Each directory in [`bench/`](../bench) contains `main.fwp`, `main.c` and
 `main.rs`. The programs must print the same result. The runner builds native
-executables with `fwp build --gc MODE -O2`, the explicitly selected `CC -O2`,
-and `rustc -O`. `FWP_BENCH_OWNERSHIP` must name `arc` or `tracing`; there is
+executables with `fwp build --gc MODE -O2`, the explicitly selected `CC -std=c11 -O2 -ffp-contract=off`,
+and `rustc --edition=2021 -O`. `FWP_BENCH_OWNERSHIP` must name `arc` or `tracing`; there is
 no implicit measurement mode. `CC` must name the compiler and `FWP_LTO=0`
 keeps generated C in one source file without link-time optimization.
 Production CI selects checked ARC, matching the
@@ -202,11 +204,20 @@ must detect. Their timings are not used. Saved C, binaries, observations and
 stack reports permit inspection; those stack reports describe the instrumented
 images, not the original timed programs. C/Rust allocation counts are not measured.
 
+Signed data calculations now use checked 64-bit operations in all three peers.
+C uses overflow builtins and Rust uses `checked_*`; fixed input bounds keep
+ordinary loop/index increments within range. The hash in `range-set` deliberately
+wraps modulo 2^64. Failure messages differ and are outside these fixed-input
+timings. The [peer-check protocol](measurements/checked-peers.md) describes dynamic
+boundary inputs, failure order and allocation-failure controls. Its [two-host results](measurements/checked-peers.md#native-linux-results) retain
+all samples and remaining gaps; dated reports below retain their original rules.
+Changing a peer does not demonstrate a compiler speedup.
+
 ### What each program actually does
 
 | Program | Input and work | Important differences between implementations |
 |---|---|---|
-| `fib` | Compute `fib(35)`, with `fib(0)=0`, `fib(1)=1`, otherwise `fib(n-1)+fib(n-2)` | Same recurrence. Compilers can transform calls differently. fwp checks integer overflow; these C and optimized Rust builds do not have the same overflow guarantees. These inputs fit all three. |
+| `fib` | Compute `fib(35)`, with `fib(0)=0`, `fib(1)=1`, otherwise `fib(n-1)+fib(n-2)` | Same recurrence. Compilers can transform calls differently. All three check signed subtraction and addition. These inputs fit all three. |
 | `loop` | Start `(i, sum)=(100000000, 0)`; add `(i*3)%7`, decrement `i`, stop at zero | fwp expresses the loop state as a pair; its compiler can turn that into local variables. C and Rust write the loop directly. Checked arithmetic and generated code can still differ. |
 | `map` | Build `(key(i), i)` for `i=0..499999`, where `key(i)=(i*7919)%1000003`; sum 2 million lookups using the same key formula, missing values as zero | All three use contiguous sorted pairs searched by bisection. C uses `qsort`, Rust `sort_unstable_by_key`, fwp its map builder; construction/sorting costs differ. This compares complete implementations, not an isolated lookup operation. |
 | `range-set` | Build the distinct keys `0..999999`, then compute FNV-1a over the canonical set encoding: unsigned LEB128 count followed by eight little-endian bytes per key | All three start with ordered keys and need no sorting. C uses a heap buffer, Rust a vector, fwp a set. Hash multiplication wraps modulo 2^64 in all three. Optimizers may remove storage or combine loops; inspect retained binaries before claiming equal allocations. Runtime startup, allocation, hashing and output are timed together; the report explicitly names its ARC or tracing mode. |

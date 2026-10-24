@@ -80,7 +80,10 @@ memory to preserve interactive results; it is not a benchmark of a compiled
 program's ownership or ARC behavior. Consume resources such as open files within
 one cell, using helpers such as `file.with`; reusable results cannot hold affine
 resources (values that may be consumed only once). Child tasks are joined at the
-end of a successful cell and cancelled after a failed cell. Foreign C calls need
+end of a successful cell and cancelled and joined after a failed cell. Background
+connection workers also stop before the cell returns; consume remote streams
+within that cell rather than saving an unfinished stream for later. This keeps
+workers from retaining the previous cell's program or output writer. Foreign C calls need
 an ahead-of-time executable; the REPL does not compile C shims.
 
 ## Save work and measure a cell

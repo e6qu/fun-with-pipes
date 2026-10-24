@@ -18,6 +18,52 @@ impl Drop for Scratch {
         let _ = std::fs::remove_dir_all(&self.0);
     }
 }
+
+#[test]
+fn macro_expansion_joins_children_before_releasing_the_interpreter() {
+    let dir = Scratch(
+        std::env::temp_dir().join(format!("fwp-macro-task-lifetime-{}", std::process::id())),
+    );
+    std::fs::create_dir_all(&dir.0).unwrap();
+    let src = dir.0.join("macro-tasks.fwp");
+    std::fs::write(
+        &src,
+        r#"worker : () -> () ! {IO}
+worker = const "macro child completed" | print
+finish : Syntax -> Syntax ! {Async}
+macro finish = tap (const worker | task.spawn | ignore)
+main = [finish!(20), finish!(22)] | sum | echo
+"#,
+    )
+    .unwrap();
+    let fwp = env!("CARGO_BIN_EXE_fwp");
+    let children = b"macro child completed\nmacro child completed\n";
+    let check = checked(Command::new(fwp).arg("check").arg(&src));
+    assert_eq!(check.stderr, children);
+    let interpreted = checked(
+        Command::new(fwp)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&src),
+    );
+    assert_eq!(interpreted.stdout, b"42\n");
+    assert_eq!(interpreted.stderr, children);
+    for opt in ["-O1", "-O2"] {
+        let exe = dir.0.join(format!("macro-tasks{opt}.exe"));
+        let compiled = checked(
+            Command::new(fwp)
+                .args(["build", "--gc", "arc"])
+                .arg(&src)
+                .args([opt, "-o"])
+                .arg(&exe),
+        );
+        assert_eq!(compiled.stderr, children);
+        let native = checked(&mut Command::new(&exe));
+        assert_eq!(native.stdout, interpreted.stdout);
+        assert!(native.stderr.is_empty());
+    }
+}
+
 #[test]
 fn channel_orders_prints_even_when_shorter_timer_starts_late() {
     let dir = Scratch(std::env::temp_dir().join(format!("fwp-timer-order-{}", std::process::id())));

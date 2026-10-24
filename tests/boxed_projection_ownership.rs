@@ -101,13 +101,13 @@ fn boxed_projection_transfers_unique_fields_and_preserves_shared_values() {
     assert_eq!(
         fwp::interp::Interp::new(&p, Box::new(Vec::new()))
             .unwrap()
-            .call(0, vec![input()])
+            .call_root(0, vec![input()])
             .unwrap(),
         Value::str("kept")
     );
     assert!(fwp::interp::Interp::new(&p, Box::new(Vec::new()))
         .unwrap()
-        .call(2, vec![input()])
+        .call_root(2, vec![input()])
         .is_err());
     let dir = fwp::cgen::TempDir::new("boxed-projection").unwrap();
     let binary = dir.join("probe.exe");
@@ -274,13 +274,13 @@ fn check_stack_array_projection() {
     assert_eq!(
         fwp::interp::Interp::new(&p, Box::new(Vec::new()))
             .unwrap()
-            .call(0, vec![input.clone()])
+            .call_root(0, vec![input.clone()])
             .unwrap(),
         input
     );
     assert!(fwp::interp::Interp::new(&p, Box::new(Vec::new()))
         .unwrap()
-        .call(3, vec![input])
+        .call_root(3, vec![input])
         .is_err());
     let dir = fwp::cgen::TempDir::new("stack-array-projection").unwrap();
     for arc in [false, true] {

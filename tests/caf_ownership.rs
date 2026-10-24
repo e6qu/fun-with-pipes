@@ -73,8 +73,8 @@ fn cached_values_keep_exact_owners_and_release_typed_children() {
     };
     fwp::ir::check_locals(&p).unwrap();
     let mut interp = fwp::interp::Interp::new(&p, Box::new(Vec::new())).unwrap();
-    let a = interp.call(3, vec![]).unwrap();
-    let b = interp.call(3, vec![]).unwrap();
+    let a = interp.call_root(3, vec![]).unwrap();
+    let b = interp.call_root(3, vec![]).unwrap();
     assert_eq!(a, b);
     assert_eq!(
         a,

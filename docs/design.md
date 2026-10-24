@@ -738,6 +738,21 @@ wall-clock timers do not define an order between independent actions. Use a
 channel or await when ordering matters. [Concurrency](concurrency.md) gives the
 user-visible behavior and platform implementation.
 
+Interpreter evaluation has an explicit entry boundary (`call_root` or
+`apply_root` in the Rust API). Before it returns, ordinary child tasks finish,
+background connection workers are cancelled and joined, and pooled connections
+close. This includes macro expansion, commands and REPL cells: a worker must not
+retain a cell's borrowed program or output writer. A remote stream left unfinished
+at a cell boundary therefore cannot continue reading in a later cell. Ordinary
+completed values remain usable. Rust panics are propagated after task cleanup;
+they are not language errors that `attempt` can catch. Interpreter output writers
+must implement Rust's `Send` trait because tasks execute on different OS threads.
+Tasks share these writers through `Arc<Mutex<...>>`; no raw writer pointers are
+kept. The lock protects writer access, while entry cleanup bounds borrowed data.
+If cleanup itself panics, the process aborts: returning with live borrowed tasks
+would violate that lifetime boundary. Shutdown also drains connections that
+workers finish registering while cancellation is in progress.
+
 Dynamic native Unix task stacks reserve 256 MiB of virtual addresses and are reused in a
 bounded pool. Linux allocations request ordinary pages before touching the stack:
 transparent huge pages can otherwise commit 2 MiB for a shallow task. Guard-page

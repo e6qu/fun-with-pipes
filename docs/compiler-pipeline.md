@@ -202,6 +202,8 @@ The implementation:
    unresolved macro calls. Checks types and lowers that program.
 3. Invokes outermost macros in the interpreter, passing `Syntax` values. Each
    argument and the result must have type `Syntax`; arity must match.
+   It waits for child tasks before decoding the result. A failed invocation
+   cancels and joins its children before reporting the error.
 4. Decodes the result to an expression AST with fresh node IDs. Invalid syntax,
    macro failures and traps become diagnostics at the invocation.
 5. Repeats when expansion creates more macro calls, then checks the final program.

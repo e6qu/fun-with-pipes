@@ -114,11 +114,11 @@ fn start(it: &mut Interp, c: &ConnRef, s: StreamRef, w: &Rc<Web>) {
             match it.apply(h, vec![call]) {
                 Ok(_) | Err(Ctl::Cancelled) => {}
                 Err(Ctl::Exit(code)) => {
-                    let _ = it.out.flush();
+                    let _ = it.out.lock().unwrap().flush();
                     std::process::exit(code);
                 }
                 Err(e) => {
-                    let _ = it.out.flush();
+                    let _ = it.out.lock().unwrap().flush();
                     let code = crate::interp::report(&Err(e), it.prog);
                     std::process::exit(code);
                 }
@@ -907,7 +907,7 @@ pub fn ws_close_parse(p: &[u8]) -> (i64, String) {
 // =============================================================== primitives
 
 /// The `http2.*`, `zlib.*` and `ws.*` primitives.
-pub fn prim(it: &mut Interp, sym: &str, a: &mut [Value]) -> R<Value> {
+pub(crate) fn prim(it: &mut Interp, sym: &str, a: &mut [Value]) -> R<Value> {
     let b = |v: &[u8]| Value::Bytes(Rc::from(v));
     match sym {
         "http2.serve" => serve(it, a),

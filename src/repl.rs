@@ -122,15 +122,19 @@ impl Session {
         Ok(driver::show_scheme(&c.env, scheme))
     }
 
-    pub fn submit(&mut self, text: &str, output: &mut dyn Write) -> Result<Outcome, String> {
+    pub fn submit(
+        &mut self,
+        text: &str,
+        output: &mut (dyn Write + Send),
+    ) -> Result<Outcome, String> {
         self.submit_with_stderr(text, output, &mut std::io::stderr())
     }
 
     pub fn submit_with_stderr(
         &mut self,
         text: &str,
-        output: &mut dyn Write,
-        errors: &mut dyn Write,
+        output: &mut (dyn Write + Send),
+        errors: &mut (dyn Write + Send),
     ) -> Result<Outcome, String> {
         let started = Instant::now();
         INTERRUPTED.store(false, Ordering::Relaxed);
@@ -249,7 +253,7 @@ impl Session {
                 interpreter.rng = seed;
             }
             let result = if self.program.funcs[id].arity == 0 {
-                interpreter.call_root(id)
+                interpreter.call_root(id, vec![])
             } else {
                 Ok(Value::Closure(Rc::new(Closure {
                     func: id,
@@ -547,7 +551,11 @@ pub fn incomplete(text: &str) -> bool {
         })
 }
 
-fn command(session: &mut Session, line: &str, output: &mut dyn Write) -> Result<bool, String> {
+fn command(
+    session: &mut Session,
+    line: &str,
+    output: &mut (dyn Write + Send),
+) -> Result<bool, String> {
     let trimmed = line.trim();
     let (name, argument) = trimmed
         .split_once(char::is_whitespace)
@@ -609,7 +617,11 @@ fn command(session: &mut Session, line: &str, output: &mut dyn Write) -> Result<
     Ok(true)
 }
 
-fn display_outcome(outcome: Outcome, timed: bool, output: &mut dyn Write) -> Result<(), String> {
+fn display_outcome(
+    outcome: Outcome,
+    timed: bool,
+    output: &mut (dyn Write + Send),
+) -> Result<(), String> {
     if let Some(value) = outcome.value {
         writeln!(output, "Out[{}]: {value}", outcome.index).map_err(|e| e.to_string())?;
     } else {
@@ -630,7 +642,7 @@ fn display_outcome(outcome: Outcome, timed: bool, output: &mut dyn Write) -> Res
 /// Scripted sessions use the same engine, without prompts or terminal escapes.
 pub fn run_stream(
     mut input: impl BufRead,
-    mut output: impl Write,
+    mut output: impl Write + Send,
     directory: PathBuf,
 ) -> Result<(), String> {
     let mut session = Session::new(directory)?;
@@ -681,7 +693,7 @@ pub fn run_stream(
 /// captured separately from each reply; it can never impersonate a protocol line.
 pub fn run_json(
     mut input: impl BufRead,
-    mut output: impl Write,
+    mut output: impl Write + Send,
     directory: PathBuf,
 ) -> Result<(), String> {
     let _control_input = crate::interp::ControlStdin::reserve();
