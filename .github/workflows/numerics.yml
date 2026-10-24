@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -30,6 +30,182 @@ on:
         description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
+  float_text:
+    if: inputs.suite == 'float-text' || inputs.suite == 'float-text-checks'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: ${{ fromJSON(inputs.native_runner == 'all' && '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]' || format('["{0}"]', inputs.native_runner)) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      CC: ${{ startsWith(matrix.runner, 'ubuntu-') && 'gcc' || 'clang' }}
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      FWP_LTO: '0'
+      FWP_ARC_ARTIFACTS: float-text-checks/arc
+    steps:
+      - uses: actions/checkout@v7
+      - name: Prepare float output evidence
+        shell: bash
+        run: mkdir -p float-text-checks
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Fetch locked Rust dependencies
+        shell: bash
+        run: |
+          cargo fetch --locked
+          echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
+      - name: Native Windows toolchain
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/setup-windows.ps1
+      - uses: actions/cache/restore@v6
+        id: float_text_windows_tls_cache
+        if: runner.os == 'Windows'
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: Native Windows OpenSSL dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/setup-windows-tls.ps1
+      - uses: actions/cache/save@v6
+        if: ${{ !cancelled() && runner.os == 'Windows' && env.FWP_WINDOWS_DEPS_READY == '1' && steps.float_text_windows_tls_cache.outputs.cache-hit != 'true' }}
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: OpenSSL on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - name: Compare interpreter output, precision and deliberate corruption
+        run: cargo test --no-fail-fast --test float_formats --test float_linking --test float_literals --test float_math
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: float-text-checks-${{ matrix.runner }}
+          path: float-text-checks/
+          if-no-files-found: error
+  float_text_costs:
+    if: inputs.suite == 'float-text' || inputs.suite == 'float-text-costs'
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON('{"all":[{"runner":"ubuntu-latest","c_arch":"x86-64"},{"runner":"ubuntu-24.04-arm","c_arch":"armv8-a"}],"ubuntu-latest":[{"runner":"ubuntu-latest","c_arch":"x86-64"}],"ubuntu-24.04-arm":[{"runner":"ubuntu-24.04-arm","c_arch":"armv8-a"}]}')[inputs.native_runner] }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 35
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - name: Require an explicit native Linux selection
+        env:
+          SELECTED_RUNNER: ${{ inputs.native_runner }}
+        run: |
+          case "$SELECTED_RUNNER" in
+            all|ubuntu-latest|ubuntu-24.04-arm) ;;
+            *) echo "float-text-costs requires all, ubuntu-latest or ubuntu-24.04-arm" >&2; exit 1 ;;
+          esac
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - run: cargo build --locked --release --bin fwp
+      - name: Verify existing output and ownership observers
+        run: >-
+          python3 scripts/test-descent-output.py
+          --compiler target/release/fwp --cc gcc --rustc rustc
+          --c-arch "${{ matrix.c_arch }}" --objdump objdump --nm nm
+          --output float-text-controls
+      - name: Compare identical-output formatters and C/Rust programs
+        run: >-
+          python3 scripts/measure-float-text.py
+          --compiler target/release/fwp --cc gcc --rustc rustc
+          --c-arch "${{ matrix.c_arch }}" --objdump objdump --nm nm --time /usr/bin/time
+          --case 3:0:32768 --case 3:1:32768 --case 3:199:4096
+          --case 3:1999:4096 --case 33:199:4096 --case 129:199:4096
+          --warmups 4 --samples 48 --order-seed 20261024
+          --timeout 60 --control-max-difference 0.02 --required-reduction 0.05
+          --host "${{ matrix.runner }}" --output float-text-costs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: float-text-costs-${{ matrix.runner }}
+          path: |
+            float-text-controls/
+            float-text-costs/
+          if-no-files-found: error
+  descent_output:
+    if: inputs.suite == 'descent-output'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            c_arch: x86-64
+          - runner: ubuntu-24.04-arm
+            c_arch: armv8-a
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - name: Require both native Linux architectures
+        env:
+          SELECTED_RUNNER: ${{ inputs.native_runner }}
+        run: test "$SELECTED_RUNNER" = all
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Build this revision's compiler
+        run: cargo build --locked --release --bin fwp
+      - name: Verify complete outputs, checksum consumption and repeated cleanup
+        run: >-
+          python3 scripts/test-descent-output.py
+          --compiler target/release/fwp --cc gcc --rustc rustc
+          --c-arch "${{ matrix.c_arch }}" --objdump objdump --nm nm
+          --output descent-output-controls
+      - name: Verify existing coordinate observers
+        run: >-
+          python3 scripts/test-coordinate-work.py --cc gcc --rustc rustc
+          --c-arch "${{ matrix.c_arch }}" --output coordinate-controls.json
+      - name: Compare full output with a shared result consumer
+        run: >-
+          python3 scripts/measure-descent-output.py
+          --compiler target/release/fwp --cc gcc --rustc rustc
+          --c-arch "${{ matrix.c_arch }}" --objdump objdump --nm nm --time /usr/bin/time
+          --case 3:0:32768 --case 3:1:32768 --case 3:199:4096
+          --case 3:1999:4096 --case 33:199:4096 --case 129:199:4096
+          --warmups 4 --samples 48 --order-seed 20261023
+          --timeout 60 --control-max-difference 0.02
+          --host "${{ matrix.runner }}" --output descent-output-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: descent-output-${{ matrix.runner }}
+          path: |
+            descent-output-controls/
+            descent-output-evidence/
+            coordinate-controls.json
+          if-no-files-found: error
   coordinate_work:
     if: inputs.suite == 'coordinate-work'
     permissions:

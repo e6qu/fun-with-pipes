@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """Check disk samples suspend the workload and errors keep stopping it."""
+import ast
 import os
 from pathlib import Path
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
+from unittest.mock import Mock
 
 
 class DiskSampling(unittest.TestCase):
@@ -63,6 +67,63 @@ os.execv('/usr/bin/du', ['du', *sys.argv[1:]])
         self.assertEqual(result.returncode, 1, result.stderr)
         self.assertIn('target exceeded 2 GiB', result.stderr)
         self.assertFalse(completed)
+
+
+class SignalExitRace(unittest.TestCase):
+    def stop_function(self, child, tracked, killpg, kill):
+        path = Path(os.environ.get("FWP_GUARD_TEST_SOURCE",
+                                   str(Path(__file__).with_name("local-guard.py"))))
+        tree = ast.parse(path.read_text())
+        function, = [node for node in tree.body
+                     if isinstance(node, ast.FunctionDef) and node.name == "stop"]
+        namespace = dict(child=child, tracked=tracked,
+                         os=SimpleNamespace(killpg=killpg, kill=kill),
+                         subprocess=subprocess)
+        exec(compile(ast.Module(body=[function], type_ignores=[]), str(path), "exec"),
+             namespace)
+        return namespace["stop"]
+
+    def test_exiting_group_is_reaped_before_reporting_permission_failure(self):
+        for sig in [signal.SIGSTOP, signal.SIGCONT, signal.SIGKILL]:
+            with self.subTest(signal=sig):
+                child = Mock(pid=100)
+                child.poll.return_value = None
+                def finish(timeout):
+                    self.assertEqual(timeout, 0.1)
+                    child.poll.return_value = 0
+                    return 0
+                child.wait.side_effect = finish
+                killpg = Mock(side_effect=PermissionError("exiting group"))
+                kill = Mock()
+                self.stop_function(child, {100}, killpg, kill)(sig)
+                child.wait.assert_called_once_with(timeout=0.1)
+                killpg.assert_called_once_with(100, sig)
+                kill.assert_not_called()
+
+    def test_exiting_parent_does_not_skip_tracked_descendants(self):
+        child = Mock(pid=100)
+        child.poll.return_value = None
+        def finish(timeout):
+            child.poll.return_value = 0
+            return 0
+        child.wait.side_effect = finish
+        killpg = Mock(side_effect=PermissionError("exiting group"))
+        kill = Mock()
+        self.stop_function(child, {100, 101}, killpg, kill)(signal.SIGKILL)
+        kill.assert_called_once_with(101, signal.SIGKILL)
+
+    def test_live_permission_failure_still_stops_guard(self):
+        child = Mock(pid=100)
+        child.poll.return_value = None
+        child.wait.side_effect = subprocess.TimeoutExpired("workload", 0.1)
+        error = PermissionError("live group")
+        killpg = Mock(side_effect=error)
+        kill = Mock()
+        with self.assertRaises(PermissionError) as raised:
+            self.stop_function(child, {100}, killpg, kill)(signal.SIGSTOP)
+        self.assertIs(raised.exception, error)
+        child.wait.assert_called_once_with(timeout=0.1)
+        kill.assert_not_called()
 
 
 if __name__ == '__main__':

@@ -68,6 +68,18 @@ C/Rust peers while retaining the original edge-based programs. Its largest case
 takes 10.40–13.69× C time and 11.86–14.07× Rust time; formula arrangement does not
 close the gap. Per-solve probes also check actual C/Rust buffer releases. The
 report preserves one failed timing control and explains the different memory scopes.
+The [output-cost protocol](measurements/descent-output-protocol.md) compares
+ordinary printing with a shared consumer of every result coordinate. Its
+[initial result](measurements/descent-output-initial.md) passes correctness and
+binary inspection but has five inconclusive timing rows. The
+[longer repetitions](measurements/descent-output-longer.md) pass repeated controls
+for nine of twelve input/host pairs, including the largest on both architectures;
+three AMD64 pairs remain inconclusive. The protocol explains why the checksum
+variant is not pure arithmetic time.
+The [float-text comparison](measurements/float-text-results.md) reuses rounded
+decimal digits while preserving exact output. Matching-model repetitions pass
+the predeclared speed screen on both architectures. The report retains all
+inputs, C/Rust gaps, unchanged allocation counts and increased stack/code size.
 
 ## Choose the question first
 

@@ -1,6 +1,146 @@
 //! Declared precision must survive the interpreter, C ABI, text and wire paths.
 use std::process::Command;
 
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
+#[test]
+fn canonical_float_text_preserves_values_and_output_order() {
+    let directory = fwp::cgen::TempDir::new("float-text-program").unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let input =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/float_text.fwp");
+    let reference = Command::new(compiler)
+        .env("FWP_NO_OPT", "1")
+        .args(["run", "--interp"])
+        .arg(&input)
+        .output()
+        .unwrap();
+    assert!(reference.status.success(), "{reference:?}");
+    assert!(reference.stderr.is_empty(), "{reference:?}");
+    for ownership in ["arc", "tracing"] {
+        let cfile = directory.join("text.c");
+        let emitted = Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .env("FWP_LTO", "0")
+            .env("FWP_STACK", "1")
+            .env("FWP_FREE", "1")
+            .env("FWP_REUSE", "1")
+            .args([
+                "build", "--gc", ownership, "--memory", "dynamic", "--emit-c", "-O2",
+            ])
+            .arg(&input)
+            .arg("-o")
+            .arg(&cfile)
+            .output()
+            .unwrap();
+        assert!(emitted.status.success(), "{ownership}: {emitted:?}");
+        let code = std::fs::read_to_string(cfile).unwrap();
+        for opt in ["-O1", "-O2"] {
+            let executable = directory.join("text.exe");
+            fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+            let stresses: &[&str] = if ownership == "arc" {
+                &["0"]
+            } else {
+                &["0", "1"]
+            };
+            for stress in stresses {
+                let actual = Command::new(&executable)
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", stress)
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "float_formats",
+                    &format!("program-{ownership}{opt}-stress-{stress}"),
+                    &code,
+                    &executable,
+                    &actual,
+                );
+                assert_eq!(
+                    (&actual.stdout, &actual.stderr, actual.status.code()),
+                    (
+                        &reference.stdout,
+                        &reference.stderr,
+                        reference.status.code()
+                    ),
+                    "{ownership} {opt} stress={stress}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn float_text_matches_frozen_precision_and_detects_corruption() {
+    let directory = fwp::cgen::TempDir::new("float-text-precision").unwrap();
+    let input = directory.join("main.fwp");
+    std::fs::write(&input, "main = 0.1 | echo\n").unwrap();
+    let cfile = directory.join("main.c");
+    let emitted = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .env_remove("FWP_NO_OPT")
+        .env("FWP_LTO", "0")
+        .args([
+            "build", "--gc", "arc", "--memory", "dynamic", "--emit-c", "-O2",
+        ])
+        .arg(&input)
+        .arg("-o")
+        .arg(&cfile)
+        .output()
+        .unwrap();
+    assert!(emitted.status.success(), "{emitted:?}");
+    let generated = std::fs::read_to_string(cfile).unwrap();
+    assert_eq!(
+        generated.matches("int main(int argc, char **argv)").count(),
+        1
+    );
+    let generated = generated.replace(
+        "int main(int argc, char **argv)",
+        "int saved_main(int argc, char **argv)",
+    );
+    let mut failures = Vec::new();
+    for opt in ["-O1", "-O2"] {
+        for (label, control, status) in [
+            ("checked", 0, 0),
+            ("changed-digit", 1, 77),
+            ("changed-boundary", 2, 78),
+        ] {
+            let code = format!("{generated}\n{}\n#define FORMAT_CONTROL {control}\n#define FORMAT_SAMPLES 4096\n{}",
+                include_str!("fixtures/float_text_baseline.c"), include_str!("fixtures/float_text_probe.c"));
+            let executable = directory.join("probe.exe");
+            fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+            let actual = Command::new(&executable)
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            record_probe::save(
+                "float_formats",
+                &format!("precision-{label}{opt}"),
+                &code,
+                &executable,
+                &actual,
+            );
+            let text = std::str::from_utf8(&actual.stdout);
+            let summary_ok = text.is_ok_and(|text| {
+                let lines: Vec<_> = text.lines().collect();
+                matches!(lines.as_slice(), [line]
+                    if line.starts_with("float-text values=119768 precisions=")
+                    && (status != 0 || line.ends_with("mismatches=0 bounds=0")))
+            });
+            if actual.status.code() != Some(status)
+                || !summary_ok
+                || (status == 0 && !actual.stderr.is_empty())
+            {
+                failures.push(format!("{label} {opt}: {actual:?}"));
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
 #[test]
 fn declared_formats_agree_in_raw_and_native_execution() {
     let directory = fwp::cgen::TempDir::new("fwp-float-formats").unwrap();

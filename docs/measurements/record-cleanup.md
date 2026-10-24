@@ -372,13 +372,14 @@ not measure execution time or establish C/Rust performance parity.
 | [#201](collection-cleanup.md) | Loops and collection builders |
 | [#202](../roadmap-history.md#cached-values-aliases-and-failed-calls-pr-202) | Fields, aliases, cached values and temporary containers |
 | [#203](../roadmap-history.md#tasks-state-and-runtime-call-cleanup-pr-203) | Task callbacks/handles, state, deadlines, channels and runtime calls |
+| [#204](../roadmap-history.md#derivative-storage-arrays-and-borrowed-callbacks-pr-204) | Derivative storage/scopes, arrays, borrowed callbacks, failed growth and workspace caches |
 
 Those deliveries passed their complete production matrices and six-host binary
 inspection. Their linked records preserve exact sources, runs and observations.
-The current six-group preparation `9e9662f93aa5e1f0ebd86b6a31d9396dffe13215` passed focused Linux
-AMD64 and both Windows runs, with 1,161 saved images inspected on each host.
-Its final delivery still requires nine production jobs, docs and all six native
-binary inspections. [The handoff](../development-state.md) records current gates.
+The six-group derivative/array extension passed #204 delivery. Its
+[record](derivative-array-cleanup-2026-10-24.json) retains all 6,966 saved files and
+the exact source/run identities. [The handoff](../development-state.md) records
+current work.
 
 Coverage controls check selected targets against production jobs. Linux-only
 storage tests do not establish Windows support; Windows has its own native storage
