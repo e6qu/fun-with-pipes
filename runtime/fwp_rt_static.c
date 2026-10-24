@@ -248,7 +248,11 @@ static void fwp_static_init(void) {
     for (int i = 0; i < FWP_STATIC_TASKS; i++) {
         fwp_static.task_stack[i] = fwp_static_carve(FWP_STATIC_TASK_STACK, page);
         /* a guard page below each stack, where an overflow faults */
-        mprotect(fwp_static.task_stack[i], page, PROT_NONE);
+        if (mprotect(fwp_static.task_stack[i], page, PROT_NONE)) {
+            static const char msg[] = "fwp: cannot protect static task stack guard page\n";
+            munmap(r, total);
+            fwp_static_die(msg, sizeof msg - 1);
+        }
         fwp_static.task_free[i] = FWP_STATIC_TASKS - 1 - i;
     }
     fwp_static.ntask_free = FWP_STATIC_TASKS;

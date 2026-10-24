@@ -2372,7 +2372,7 @@ jobs:
               cpu = subprocess.check_output(['powershell', '-NoProfile', '-Command', 'Get-CimInstance Win32_Processor | Select-Object Name,Manufacturer,NumberOfCores,NumberOfLogicalProcessors | ConvertTo-Json'], text=True)
           (evidence / 'cpu.txt').write_text(platform.platform() + '\n' + platform.machine() + '\n' + cpu)
           files = sorted(p for directory in ['src', 'lib', 'runtime'] for p in Path(directory).rglob('*') if p.is_file())
-          files += [Path(name) for name in ['tests/http_server.rs', 'tests/web.rs', 'tests/gc.rs', 'tests/support/http_server_process.rs', 'tests/support/http_application.rs', 'tests/support/http_application_memory.rs', 'tests/fixtures/http_app_memory.c', 'tests/task_context_storage.rs', 'tests/fixtures/task_stack_pages.c', 'examples/server/api.fwp', 'tests/web/server.fwp', 'tests/server_entry_ownership.rs', 'tests/fixtures/server_entries.fwp', 'tests/fixtures/server_entry_client.fwp', 'tests/support/client_allocations.rs', 'tests/support/process_memory.rs', 'scripts/summarize-server-entries.py', '.github/workflows/numerics.yml']]
+          files += [Path(name) for name in ['tests/http_server.rs', 'tests/web.rs', 'tests/gc.rs', 'tests/support/http_server_process.rs', 'tests/support/http_application.rs', 'tests/support/http_application_memory.rs', 'tests/fixtures/http_app_memory.c', 'tests/task_context_storage.rs', 'tests/fixtures/task_stack_pages.c', 'tests/static_memory.rs', 'tests/fixtures/static_stack_guard.c', 'examples/server/api.fwp', 'tests/web/server.fwp', 'tests/server_entry_ownership.rs', 'tests/fixtures/server_entries.fwp', 'tests/fixtures/server_entry_client.fwp', 'tests/support/client_allocations.rs', 'tests/support/process_memory.rs', 'scripts/summarize-server-entries.py', '.github/workflows/numerics.yml']]
           Path('server-check-evidence/source-sha256.json').write_text(json.dumps({p.as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in files}, indent=2) + '\n')
           PY
       - run: cargo fmt --all -- --check
@@ -2406,6 +2406,11 @@ jobs:
         env:
           FWP_TASK_CONTEXT_ARTIFACTS: server-check-evidence/task-context
         run: cargo test --test task_context_storage task_stack_pages_guard_reuse_and_setup_failures -- --exact --nocapture
+      - name: Static Unix task-stack guard faults and setup cleanup
+        if: ${{ !cancelled() && runner.os != 'Windows' && (inputs.suite == 'http-application' || (inputs.suite == 'server-checks' && matrix.part == 'checks')) }}
+        env:
+          FWP_STATIC_GUARD_ARTIFACTS: server-check-evidence/static-guards
+        run: cargo test --test static_memory static_task_stack_guards_and_setup_failures -- --exact --nocapture
       - name: Repeated HTTP and REST server memory with single-owner test sockets
         if: ${{ !cancelled() && runner.os == 'Linux' && inputs.suite == 'server-checks' && matrix.part == 'checks' }}
         shell: bash

@@ -1,9 +1,10 @@
 # Memory between JSON API requests
 
 Status: the stack repair `4fc97ca1` passes all six native API jobs and both Linux
-stack-policy checks. Repaired stack mappings have no huge pages. The original Windows ARM64 timeout remains under investigation;
-isolated repetitions pass. Client sockets now have one owner, with an explicit
-child-lifetime regression pending native verification. No limit has been relaxed.
+stack-policy checks. Repaired stack mappings have no huge pages. The client repair
+`05de0f65` passes all twelve HTTP/protocol jobs. Native Windows probes confirm
+that duplicated client sockets were inherited by unrelated child processes.
+No memory budget or deadline has been relaxed. Final delivery remains pending.
 This extends the [application acceptance suite](../application-acceptance.md).
 It is a correctness and memory check, not a throughput benchmark or a comparison
 with C/Rust servers.
@@ -63,7 +64,7 @@ RSS limits and the negative controls. It reads binaries as data, without executi
 another host's code. Final acceptance still requires the exact delivery source's
 complete production matrix and documentation audit.
 
-For the open Linux failure, `http-mappings` runs the saved O1/O2 executables in
+To investigate the original Linux failure, `http-mappings` runs the saved O1/O2 executables in
 three fresh native processes each and records `/proc/PID/smaps` at every idle
 checkpoint. Those snapshots identify resident mappings and large physical pages;
 a successful diagnostic run does not turn an exceeded budget into a pass.
@@ -132,7 +133,7 @@ the repair is deliberately scoped to task stacks. These runs used different
 runner instances; this is direct mapping evidence and a memory-budget check,
 not a paired throughput benchmark. ARM64 already used ordinary pages.
 
-## Windows timeout investigation
+## Windows socket lifetime repair
 
 The original Windows ARM64 O2 process completed checkpoint 40 but did not reach
 48 within 20 seconds. This was a normal-request group, before the partial-body
@@ -153,7 +154,13 @@ in [Rust issue #70719](https://github.com/rust-lang/rust/issues/70719). The firs
 socket closes while a child is alive. Its cloned-socket case waited until child
 exit, then the diagnostic incorrectly rejected the resulting connection reset.
 The revised probe records reset and EOF as closure, preserving both results.
-Full handle records and the explicit-inheritance control remain pending.
+[The repaired probe](https://github.com/e6qu/fun-with-pipes/actions/runs/40070406753)
+passes on both native Windows architectures. Original sockets have inheritance
+flags 0 and close while the child lives; cloned sockets have flags 1 and remain
+open until the child exits. The explicit-inheritance control reproduces this.
+The saved PE executables, imports and all six observations were independently
+reviewed. Isolated API repeats did not expose this overlap with compiler children;
+they were diagnostics, not a repair.
 
 The API, ordinary HTTP, WebSocket and GC test clients now hold one `TcpStream`
 inside their buffered reader and borrow it for writes. No socket duplication is
@@ -161,4 +168,16 @@ needed. `client_socket_closes_while_another_child_runs` requires the actual clie
 connection to close while a separately started child is still alive. This avoids
 serializing tests, extending deadlines or changing the language's scheduler.
 Focused checks include native/interpreter HTTP, WebSocket protocols and repeated
-Linux HTTP/REST memory checks. Complete current-source results remain pending.
+Linux HTTP/REST memory checks. All twelve jobs at `05de0f65` pass in
+[run 40070408748](https://github.com/e6qu/fun-with-pipes/actions/runs/40070408748).
+
+
+## Static task-stack guards
+
+A follow-up audit found the same unchecked protection call in Unix static-memory
+startup. It now releases the shared mapping and exits with a specific diagnostic
+if any task guard cannot be installed. The test compiles the production initializer
+at O1/O2, checks that every guard faults while the stack body remains writable,
+and injects first/last guard failures and mapping failure. An intentionally omitted
+guard must be detected. These checks are pending native Linux/macOS verification;
+Windows uses its existing OS-managed fiber stacks.

@@ -341,3 +341,71 @@ fn options_are_checked() {
         assert!(err.contains(want), "{:?}: {}", opts, err);
     }
 }
+
+/// Check real guard faults and cleanup when any static guard cannot be installed.
+#[cfg(unix)]
+#[test]
+fn static_task_stack_guards_and_setup_failures() {
+    let runtime = include_str!("../runtime/fwp_rt_static.c");
+    let marker = "/* ---------------------------------------------------------------- the pool";
+    assert_eq!(runtime.matches(marker).count(), 1);
+    let initializer = &runtime[..runtime.find(marker).unwrap()];
+    let fixture = include_str!("fixtures/static_stack_guard.c");
+    assert_eq!(
+        fixture
+            .matches("/* PRODUCTION_STATIC_INITIALIZER */")
+            .count(),
+        1
+    );
+    let code = fixture.replace("/* PRODUCTION_STATIC_INITIALIZER */", initializer);
+    let path = std::env::var_os("FWP_STATIC_GUARD_ARTIFACTS")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            std::env::temp_dir().join(format!("fwp-static-guards-{}", std::process::id()))
+        });
+    std::fs::create_dir_all(&path).unwrap();
+    std::fs::write(path.join("guards.c"), &code).unwrap();
+    for opt in ["-O1", "-O2"] {
+        let binary = path.join(format!("guards{opt}"));
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        for (mode, status, message) in [
+            ("ordinary", 0, ""),
+            (
+                "first-guard-error",
+                102,
+                "fwp: cannot protect static task stack guard page\n",
+            ),
+            (
+                "last-guard-error",
+                102,
+                "fwp: cannot protect static task stack guard page\n",
+            ),
+            (
+                "map-error",
+                102,
+                "fwp: out of memory: cannot map the program's static memory\n",
+            ),
+            ("missing-guard", 211, ""),
+        ] {
+            let output = Command::new(&binary).arg(mode).output().unwrap();
+            let label = format!("{opt}-{mode}");
+            std::fs::write(path.join(format!("{label}.stdout")), &output.stdout).unwrap();
+            std::fs::write(path.join(format!("{label}.stderr")), &output.stderr).unwrap();
+            std::fs::write(
+                path.join(format!("{label}.status")),
+                format!("{}\n", output.status),
+            )
+            .unwrap();
+            assert_eq!(output.status.code(), Some(status), "{label}: {output:?}");
+            assert_eq!(output.stderr, message.as_bytes(), "{label}: {output:?}");
+            if mode == "ordinary" {
+                assert_eq!(
+                    output.stdout,
+                    b"three guarded stacks, writable bodies, one mapping released\n"
+                );
+            } else {
+                assert!(output.stdout.is_empty(), "{label}: {output:?}");
+            }
+        }
+    }
+}
