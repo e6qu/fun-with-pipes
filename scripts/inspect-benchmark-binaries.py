@@ -24,6 +24,9 @@ directory, = (args.input / args.source).iterdir()
 report = (directory / 'report.md').read_text()
 assert f'Source commit: `{args.source}`. Host: `linux/{args.arch}`.' in report
 assert f'Native fwp memory mode: `{args.memory}`.' in report, 'declared benchmark memory mode differs'
+assert 'Arithmetic contract: checked signed I64 calculations in all three peers.' in report, 'declared arithmetic contract differs'
+assert '-std=c11 -O2 -ffp-contract=off' in report, 'C build settings differ'
+assert 'Rust compiler (`rustc --edition=2021 -O`)' in report, 'Rust build settings differ'
 assert f'fwp build flags: `--gc {args.memory} -O2`, `FWP_LTO=0`' in report
 programs = sorted(path.name for path in (ROOT / 'bench').iterdir()
                   if (path / 'main.fwp').is_file())

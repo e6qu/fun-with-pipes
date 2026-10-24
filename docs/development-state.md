@@ -5,79 +5,53 @@ reserve ARC for sharing and remove tracing. JIT is excluded.
 
 ## Current action
 
-**Next:** publish the grouped ARC benchmark/map PR from `arc-map-delivery`, then
-complete its exact-head nine production jobs, docs and actual-binary reviews.
-Keep one active PR. Squash-merge only after every final gate passes, with one
-subject of at most 80 characters and an empty body, then continue the plan.
+**Next:** publish this checked-peer preparation and run `benchmark-comparison`
+on both native Linux architectures. Audit both complete logs and inspect the
+saved binaries before accepting new measurements.
 
-Checkout `/private/tmp/fwp-arc-benchmark-comparison`. Prepared from verified #208
-merge `058dc4e5954571ed222ca4d26af4403a52a8516b` and published preparation `e08646c505bb38ec0b0dc8869a06823f92463956`.
-Receipt `/private/tmp/fwp-arc-map-delivery-preparation.json` records this transition.
-Do not rerun completed preparation/publication helpers. Use their receipts.
+Checkout `/private/tmp/fwp-checked-peer-comparison`, branch
+`checked-peer-comparison`, based on `b298665da6ac97fe4bcc05318c66e671fed7a5a4`.
+This is independent preparation while [PR #209](https://github.com/e6qu/fun-with-pipes/pull/209)
+finishes. Keep one active PR; do not disturb its final head. #209's benchmark and
+documentation gates pass; all eight native jobs were running at the latest audit.
+Its 35 benchmark images and corruption/leak controls passed independent review.
 
-## Grouped changes and evidence
+## Prepared changes
 
-The C/Rust comparison explicitly selects compiler, ARC and no LTO, saves actual
-executables and six elapsed samples, and separately measures RSS and managed
-storage. See [the comparison](measurements/arc-comparison.md) for programs,
-arithmetic differences, timings and remaining costs.
+[Checked peers](measurements/checked-peers.md) make C/Rust signed calculations
+explicitly checked, retain fwp evaluation order in the loop and repair failed
+C allocations. The compiler/runtime are unchanged. Saved native probes cover
+51 dynamic inputs, six deliberately removed arithmetic checks and a missing
+partial cleanup. These controls and the new timings remain unverified.
 
-Map builders free sort scratch before result allocation. Borrowed words compact
-into input lanes whose original owners stay alive. Duplicate handling is preserved.
-The 500,000-entry map peak falls 24,000,008 → 16,000,008 managed bytes on both Linux
-hosts; four requests, 24,000,032 requested bytes, one retain and zero final charge
-are unchanged. AMD64 instruction bytes +16; ARM64 unchanged. Observed instrumented
-entry/sort frames are unchanged. No timing gain or general C/Rust parity is claimed.
+Local guarded checks pass Python syntax, workflow parsing, Rust formatting and
+whitespace. A command-edit mistake that passed C-only flags to `fwp build` was
+caught during diff review and fixed before publication. Native GCC/Rust checks,
+all seven output comparisons and artifact review belong on GitHub runners.
 
-Focused preparations, all published with immutable revision tags:
+Keep the [dated ARC comparison](measurements/arc-comparison.md) and its original
+peer rules. Changed peer timing is not a compiler speedup. Sorting, storage and
+formatting algorithms still differ. No new performance ratio is accepted yet.
 
-| Source | Run | Verified result |
-|---|---|---|
-| `617bb2319760` | `40075912779` | Two Linux hosts; 42 actual baseline images and eight corrupted-copy controls |
-| `b16ed5e33f29` | `40076674217` | 70 timed/profile images, RSS/count samples and fourteen leak controls |
-| `18ac20729402` | `40077293691` | 98 images; arithmetic screen fails AMD64, so no compiler rule adopted |
-| `6a6e8eea325c` | `40078374681`, `40078376733` | Six map jobs and two benchmarks; lower peak confirmed, 70 benchmark images reviewed |
-| `4c294917006b` | `40079580345` | All six map jobs; 138 actual images, 96 peak observations, failures/reuse and exact control-source edits reviewed |
-| `2a973dea2e07` | local guarded checks | Reports, source matching, stack details, production artifacts, docs gate and plan updates published |
-| `e08646c505bb` | guarded artifact reinspection | Shared focused/production inspector reproduces the identical six-host report |
+## Delivery state
 
-[Native map evidence](measurements/map-scratch-native-2026-10-24.json) includes
-ARC/tracing at production GCC/Clang settings and deliberate missing-cleanup,
-wasted-slot and late-release controls. All eight collection-evidence controls and
-eighteen native coverage/failure controls pass. Primitive inventory: 392
-declarations, 382 distinct symbols, zero unclassified contracts. Final production
-acceptance of this new delivery remains required.
+#208 is verified and merged at `058dc4e5954571ed222ca4d26af4403a52a8516b`.
+[History](roadmap-history.md#api-memory-stack-guards-and-connection-cleanup-pr-208)
+records its gates and 8,454 actual binary files. Primary checkout remains there
+with an operational handoff. Preserve it and unique failed API artifacts.
 
-## Previous delivery
-
-#208 is verified and merged. [History](roadmap-history.md#api-memory-stack-guards-and-connection-cleanup-pr-208)
-links all gates and 8,454 binary files; source `227e671257d885185e54b3f915f6d1ebf470b3ea`.
-Merge and after-merge receipts/helpers are under `/private/tmp`, prefixed
-`fwp-http-memory-delivery`. Preserve primary checkout's operational handoff.
-
-Keep unique failed API/mapping/socket evidence: `ef66ca99`, `027be46e`,
-`10626760`. All diagnosed faults were repaired. Original failure archives remain;
-never treat an isolated repeat as their repair. Verified duplicate caches and
-clean published checkout copies were pruned with receipts. Branches, reports,
-source tags and ignored-file backups remain.
+#209 source is `b298665da6ac97fe4bcc05318c66e671fed7a5a4`; production
+`40082867710`, docs `40082867648`. Delivery helpers under `/private/tmp` use prefix
+`fwp-arc-map-delivery`. Preparation/publication are complete; merge is unrun.
+Audit all nine production jobs plus docs, review all six native hosts and the
+benchmark, then squash-merge with one subject of at most 80 characters and an
+empty body. Continue with a substantial group; do not open another PR early.
 
 ## Local limits
 
-Focused local checks use `python3 scripts/local-guard.py COMMAND...`, serially.
-Full builds, suites and benchmarks run on GitHub. Preserve 64 GiB free, target
-below 2 GiB, sampled RSS below 1 GiB and the 180-second deadline. Do not retry the
-full local API compilation that exceeded RSS, or raise limits. Inspect binaries
-without executing downloaded files. Record each new check and unresolved failure.
-
-## Remaining direction
-
-Finish this delivery, then use explicit equivalent-work budgets to choose the
-next ownership/representation or measured numerical costs. The arithmetic and
-inlining experiments failed their full screens; do not adopt them from loop-only
-wins. Persistent subscriptions, externally retained callbacks, host-owned values,
-cycles and collector-specific diagnostics remain part of tracing removal.
-Differentiation and numerical/application budgets also remain open; a finished PR
-does not finish any of the seven work areas by itself.
+Use `python3 scripts/local-guard.py COMMAND...` serially. Full builds, suites and
+benchmarks run on GitHub. Preserve 64 GiB free, target below 2 GiB, sampled RSS
+below 1 GiB and the 180-second deadline. Do not bypass or increase those limits.
 
 ## Roadmap status
 
@@ -90,7 +64,3 @@ does not finish any of the seven work areas by itself.
 | 5 | In progress | Validate CPU numerical kernels |
 | 6 | In progress | Stabilize comparisons and set workload budgets |
 | 7 | In progress | Complete the application acceptance suite |
-
-The pre-push documentation check caught this status table missing from the
-streamlined handoff. It was restored before publication; no source-code failure
-or unresolved test was hidden.

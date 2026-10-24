@@ -1,6 +1,7 @@
 //! Benchmarks against C and Rust (`bench/<name>/main.{fwp,c,rs}`): each
-//! program uses an explicit `FWP_BENCH_OWNERSHIP` (arc or tracing), `CC -O2`
-//! and `rustc -O`. fwp receives the selected mode and `-O2`; the
+//! program uses explicit `FWP_BENCH_OWNERSHIP` (arc or tracing),
+//! `CC -std=c11 -O2 -ffp-contract=off`
+//! and `rustc --edition=2021 -O`. fwp receives the selected mode and `-O2`; the
 //! three must print the same, and the median of six runs in rotating order is
 //! reported with raw samples, compiler/host metadata and ratios to both baselines
 //! (on stdout, in target/bench.md, and in the GitHub
@@ -103,7 +104,7 @@ fn entry_check_arrangement_measurement() {
             let reference = dir.join(format!("{name}-c-reference.exe"));
             build(
                 Command::new(&cc)
-                    .args(["-O2", "-o"])
+                    .args(["-std=c11", "-O2", "-ffp-contract=off", "-o"])
                     .arg(&reference)
                     .arg(root().join("bench").join(name).join("main.c")),
             );
@@ -205,16 +206,18 @@ fn benchmarks() {
          Matching output does not imply equal work: maps use sorted pairs in\n\
          all three but sorting implementations differ; pipelines can remove collections, and\n\
          fwp can remove string formatting when only its length is needed.\n\
-         fwp checks integer overflow; except for text-length, the C and optimized\n\
-         Rust baselines do not provide the same overflow guarantees. text-length\n\
-         counts decimal digits directly in C/Rust and checks multiplication/sums.\n\
+         Arithmetic contract: checked signed I64 calculations in all three peers.\n\
+         C uses overflow builtins; Rust uses checked operations. Loop/index increments\n\
+         have fixed bounds; range-set hashes deliberately wrap modulo 2^64. Failure\n\
+         messages differ and are outside the timed fixed-input runs. text-length\n\
+         counts decimal digits directly in C/Rust without constructing text.\n\
          No allocation or peak-memory\n\
          counters are collected by this comparison. See docs/benchmarks.md.\n\n\
          The measured executables and source inputs are retained in `target/bench-evidence`.\n\
          Generated fwp C is emitted separately after timing with the same compiler/settings;\n\
          that extra emission is excluded from execution and compilation timings.\n\n\
-         C compiler (`{cc} -O2`):\n\n```text\n{}\n```\n\n\
-         Rust compiler (`rustc -O`):\n\n```text\n{}\n```\n\n\
+         C compiler (`{cc} -std=c11 -O2 -ffp-contract=off`):\n\n```text\n{}\n```\n\n\
+         Rust compiler (`rustc --edition=2021 -O`):\n\n```text\n{}\n```\n\n\
          fwp build flags: `--gc {ownership} -O2`, `FWP_LTO=0`; generated C is compiled\n\
          as one source file, without link-time optimization.\n\n\
          | Program | C | Rust | fwp | fwp / C (extra time) | fwp / Rust (extra time) |\n\
@@ -239,13 +242,13 @@ fn benchmarks() {
         );
         let c_build = build(
             Command::new(&cc)
-                .args(["-O2", "-o"])
+                .args(["-std=c11", "-O2", "-ffp-contract=off", "-o"])
                 .arg(&c)
                 .arg(src.join("main.c")),
         );
         let rust_build = build(
             Command::new("rustc")
-                .args(["-O", "-o"])
+                .args(["--edition=2021", "-O", "-o"])
                 .arg(&rs)
                 .arg(src.join("main.rs")),
         );

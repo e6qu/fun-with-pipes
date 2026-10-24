@@ -3864,6 +3864,16 @@ jobs:
         run: |
           cargo fmt --all -- --check
           cargo clippy --test bench -- -D warnings
+      - name: Check peer overflow order and allocation failures
+        shell: bash
+        run: |
+          case "$RUNNER_ARCH" in
+            X64) architecture=x86_64 ;;
+            ARM64) architecture=aarch64 ;;
+            *) echo "Unsupported benchmark architecture: $RUNNER_ARCH" >&2; exit 1 ;;
+          esac
+          python3 scripts/check-benchmark-peers.py --source "$GITHUB_SHA" --cc gcc --rustc rustc --arch "$architecture" --output target/bench-peer-controls
+          python3 scripts/inspect-benchmark-peers.py --input target/bench-peer-controls --source "$GITHUB_SHA" --arch "$architecture" --objdump objdump --output target/bench-peer-inspection.json
       - name: Compare checked ARC with C and Rust
         id: comparison
         run: cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
@@ -3909,6 +3919,8 @@ jobs:
             target/bench.md
             target/bench-inspection.json
             target/bench-controls.json
+            target/bench-peer-controls/
+            target/bench-peer-inspection.json
             target/bench-memory/
             target/bench-memory-inspection.json
             target/checked-bounds/

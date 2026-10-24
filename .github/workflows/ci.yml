@@ -454,6 +454,10 @@ jobs:
           env -u FWP_BLESS "$RUNNER_TEMP/fwp-stdlib-doc-check" --exact stdlib_doc_is_current
       - name: Language formatting preflight
         run: cargo run --release --bin fwp -- fmt --check lib examples docs/tutorials bench
+      - name: Check peer overflow order and allocation failures
+        run: |
+          python3 scripts/check-benchmark-peers.py --source "${{ github.event.pull_request.head.sha || github.sha }}" --cc gcc --rustc rustc --arch x86_64 --output target/bench-peer-controls
+          python3 scripts/inspect-benchmark-peers.py --input target/bench-peer-controls --source "${{ github.event.pull_request.head.sha || github.sha }}" --arch x86_64 --objdump objdump --output target/bench-peer-inspection.json
       - name: benchmarks against C and Rust (docs/benchmarks.md)
         env:
           CC: gcc
@@ -477,6 +481,8 @@ jobs:
             target/bench.md
             target/bench-inspection.json
             target/bench-controls.json
+            target/bench-peer-controls/
+            target/bench-peer-inspection.json
             target/bench-memory/
             target/bench-memory-inspection.json
             target/bench-evidence/
