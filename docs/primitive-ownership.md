@@ -141,7 +141,7 @@ The inventory checks declarations, runtime symbols and aliases against the
 immutable original baseline, including each numeric/CSV/CLI promotion and the
 nonreturning failure contract. Its generated report records current counts. Scalar
 signatures can still allocate external state; descriptors alone cannot establish
-counted reconstruction. The handoff records validation of the current revision.
+counted reconstruction; the runtime and failure checks establish those contracts.
 
 Unknown primitive, foreign and remote boundaries keep explicit sharing in
 [src/ownership.rs](../src/ownership.rs). The finite review records argument,
@@ -359,11 +359,11 @@ They are scoped reclamation evidence, not blanket speed, register-placement or
 no-GC claims. Retained callbacks, exception/cancellation, unknown runtime boundaries and
 cycles remain explicit acceptance concerns.
 
-The prepared vector-library contracts use borrowed inputs and already-owned
+The vector-library contracts use borrowed inputs and already-owned
 results for `simd.splat`, `simd.from-array`, `simd.sum`, and the six lane-wise binary
 operations. Their runtime paths must own wrappers, shared boxed lanes and reduction
 accumulators, and release partial results on failure. Contracts alone are not
-acceptance; [the handoff](development-state.md) records native and WASI checks.
+acceptance; [delivery history](roadmap-history.md) records native and WASI checks.
 
 ## Decoded values, metrics, CPU tensors and DNS
 
@@ -399,7 +399,7 @@ inputs or pending output. Whole-service ownership needs the separate
 [gRPC and HTTP contracts](ownership.md#checked-arc-delivery); these individual
 primitives alone cannot prove it. Retained foreign callbacks still need separate
 lifetime proofs. Socket handles have
-[their own contracts](ownership.md#tcp-and-tls-socket-owners).
+[their own contracts](ownership.md#original-resource-semantics).
 
 ## Copied service data
 
@@ -428,8 +428,8 @@ stream remains live during copying. HTTP clients give pooled connections, I/O
 tasks and requests explicit owners, accepted across the native platform matrix in
 [PR #162](roadmap-history.md#http-client-owners-and-complete-connection-keys-pr-162).
 The server extension gives stream handles typed owners and retains handler captures
-once per connection. Its focused checks pass on all six native hosts; final
-production acceptance is tracked in [the handoff](development-state.md).
+once per connection. [PR #163](roadmap-history.md#http-server-owners-and-fixed-function-storage-pr-163)
+records passing native focused and production checks.
 Handler tasks start with fresh State and
 automatic-differentiation scopes, rather than borrowing a caller's dynamic scope.
 
@@ -449,5 +449,5 @@ when verifying memory reuse. This position contract is one part of the complete
 connection, stream and decoder-capture ownership needed for remote calls.
 [PR #161](roadmap-history.md#remote-calls-without-tracing-and-record-field-moves-pr-161)
 accepted checked ARC for supported gRPC clients and services on all six native
-hosts. The [ownership guide](ownership.md#checked-grpc-clients-and-services)
+hosts. The [ownership guide](ownership.md#native-executables-and-services)
 states the remaining restrictions, including cycles through channel payloads.

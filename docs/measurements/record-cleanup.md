@@ -378,9 +378,8 @@ Those deliveries passed their complete production matrices and six-host binary
 inspection. Their linked records preserve exact sources, runs and observations.
 The six-group derivative/array extension passed #204 delivery. Its
 [record](derivative-array-cleanup-2026-10-24.json) retains all 6,966 saved files and
-the exact source/run identities. [The handoff](../development-state.md) records
-current work.
+the exact source/run identities.
 
 Coverage controls check selected targets against production jobs. Linux-only
 storage tests do not establish Windows support; Windows has its own native storage
-checks. All seven PLAN areas remain open, including complete removal of tracing.
+checks. These checks do not complete [the roadmap](../../PLAN.md), including tracing removal.

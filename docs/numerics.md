@@ -131,9 +131,9 @@ loops into vector instructions. The API alone guarantees neither those instructi
 nor a speedup. Integer lane addition, subtraction, multiplication and sum wrap on
 overflow; ordinary fwp integer arithmetic is checked. Division keeps its checks.
 Floating operations preserve their existing order and format. Choose these rules
-explicitly when using the lane API. [Lane measurements](benchmarks.md#fixed-size-lane-calculations-against-c-and-rust)
+explicitly when using the lane API. [Lane measurements](measurements/vector-lanes.md#fixed-size-lane-calculations-against-c-and-rust)
 compare the same dot-product workloads with C/Rust, explain removed temporary
-values and retain the remaining overhead. [Ownership](ownership.md#vector-library-results)
+values and retain the remaining overhead. [Ownership](ownership.md#representation-and-numerics)
 records the current value contract.
 
 ## Dense F64 solvers
@@ -366,7 +366,7 @@ missing workers on the caller. Counts are validated before conversion to WASI's
 overflow. The output-storage and failure-cleanup checks passed native and WASI
 validation in [PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153).
 The worker-range rules also passed the full PR #191 acceptance above.
-[Measured storage costs](benchmarks.md#cpu-tensor-output-storage) distinguish the
+[Measured storage costs](measurements/cpu-tensor-storage.md#cpu-tensor-output-storage) distinguish the
 removed buffer from remaining allocations. No timing improvement is claimed here.
 
 CPU reductions add each block of 4096 elements left to right from zero, then
@@ -381,9 +381,7 @@ Contraction is disabled.
 Just-in-time compilation (JIT) is excluded. The CPU runtime evaluates the kernel's
 instruction array using already compiled arithmetic routines; it generates no
 machine code during execution. GPU execution and distributed tensors are outside
-the CPU roadmap. A future GPU proposal would require device-specific ahead-of-time
-artifacts and actual hardware evidence. Native matrix multiplication has its own
-CPU implementation.
+the CPU roadmap. Native matrix multiplication has its own CPU implementation.
 
 ## Scoped-gradient allocation validation
 
@@ -397,7 +395,7 @@ source and test evidence; [benchmarks](benchmarks.md) explains counter meanings.
 
 ## Numerical kernel measurements
 
-[The numerical kernel report](measurements/numerical-kernels-2026-10-12.json)
+[The numerical kernel protocol and recorded results](measurements/numerical-kernels.md)
 compares equivalent array/matrix computations in fwp, C and Rust. It records
 hardware, compiler versions, flags, samples, outputs, allocation/reference counts,
 live storage, collection activity and resident process memory. Timing uses separate

@@ -10,8 +10,8 @@ is no timed C/Rust implementation and no claim about relative language overhead.
 checks 240 native binaries, 480 execution records and 120 memory series.
 The [raw record](file-applications-2026-10-24.json) retains source/toolchain
 identities, architecture and code-size checks, hashes and every memory sample.
-This focused evidence does not replace final production acceptance; see the
-[handoff](../development-state.md).
+[PR #207](../roadmap-history.md#file-cleanup-and-http-example-checks-pr-207) records the subsequent passing production and documentation gates.
+The focused measurements above retain their own source identity.
 
 ## Programs and inputs
 

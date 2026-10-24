@@ -151,7 +151,7 @@ callback returns and then releases it. A callback that saves the reply must
 acquire a separate owner.
 Closed channels, failed sends, cancelled calls and caught remote errors release
 their completed values. Earlier aliases remain usable. The
-[ownership contract](ownership.md#checked-grpc-clients-and-services) describes the
+[ownership contract](ownership.md#native-executables-and-services) describes the
 checks and the remaining limits. HTTP/2 handlers, REST, MCP and browser entries
 have separate contracts in the [ownership guide](ownership.md#ownership-boundaries).
 
@@ -333,7 +333,7 @@ Cancelling the task actually receiving a client response can still reset the
 remote call. Retaining an earlier position also retains its saved values and
 continuations, so sharing an iterator can increase memory use. Native stream
 storage has typed owners: a shared position keeps its saved values until its
-last reader releases it. The [ownership guide](ownership.md#received-iterators-and-remote-call-storage)
+last reader releases it. The [ownership guide](services.md#reading-the-same-stream-in-two-tasks)
 describes its cleanup and measured costs.
 
 ### Errors and status codes

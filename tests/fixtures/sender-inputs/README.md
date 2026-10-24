@@ -36,3 +36,6 @@ values pulled/encoded. Category totals count allocations, not live identities.
 Scheduler stack pools, raw buffers other than queued messages, TLS/OS/allocator
 metadata, server/process memory and timings are excluded. These fixtures do not
 establish checked ARC, zero-cost abstractions or speed parity with C/Rust.
+
+[Recorded protocol and results](../../../docs/measurements/repeated-remote-storage.md) name the
+measured revisions. [The plan](../../../PLAN.md) tracks current acceptance work.

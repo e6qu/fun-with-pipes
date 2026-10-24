@@ -65,7 +65,7 @@ reading the tutorials.
 | Borrow / retain / release | Use an existing value temporarily without taking ownership; add an owning reference; remove an owning reference. |
 | Alias | Another reference to the same storage. Sharing a value does not permit changing its observable contents. |
 | Owning cycle | A loop of references that keep each other alive. Counting alone cannot reclaim it; recursive types and shared values need not form cycles. |
-| Weak reference | A non-owning way to find an object that may already have been destroyed. Public weak handles are proposed, not implemented in fwp. |
+| Weak reference | A non-owning way to find an object that may already have been destroyed. A public weak-handle API is under consideration, not implemented in fwp. |
 | ARC (automatic reference counting) | Track owning references and release an object after the last is removed. Counting alone does not reclaim reference cycles. |
 | GC (garbage collection) | Find objects no longer reachable by the program and reclaim them. A tracing collector follows references from live roots. |
 | Root | A value the collector starts from, such as a live value held by an active call. |

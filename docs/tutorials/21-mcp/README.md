@@ -13,10 +13,8 @@ being described as an MCP client is not sufficient to establish compatibility.
 `jq` formats/selects JSON in the terminal. `<<'EOF'` supplies the following lines
 as input until the closing `EOF`; the `>` marks in the transcript are prompts.
 
-This tutorial makes ordinary functions the tools of a Model Context
-Protocol server, which compatible client applications
-call. The server implements the stateless `2026-07-28` protocol version: no session, no `initialize` handshake, every request on
-its own. It talks over standard input and output, or over HTTP. The tools'
+This tutorial exposes ordinary functions over standard input/output or HTTP.
+Each request stands alone: there is no session or `initialize` handshake. The tools'
 input and output schemas come from the functions' types, and their
 descriptions from the comments. [docs/mcp.md](../../mcp.md) has every rule.
 
