@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [compiler-console, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -33,6 +33,76 @@ on:
         description: Exact focused API run supplying native diagnostic executables
         type: string
 jobs:
+  compiler_console:
+    if: inputs.suite == 'compiler-console'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mode: production
+            toolchain: '1.99.1'
+            allocator: ordinary
+            rounds: 200
+          - mode: heap-checks
+            toolchain: '1.99.1'
+            allocator: checked
+            rounds: 20
+          - mode: address-sanitizer
+            toolchain: nightly
+            allocator: ordinary
+            rounds: 200
+    runs-on: macos-15-intel
+    timeout-minutes: 45
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - name: Preserve source, toolchain and host
+        run: |
+          mkdir compiler-console-evidence
+          git rev-parse HEAD > compiler-console-evidence/source.txt
+          rustc -Vv > compiler-console-evidence/rust.txt
+          sw_vers > compiler-console-evidence/os.txt
+          sysctl hw.memsize hw.ncpu >> compiler-console-evidence/os.txt
+      - name: Production console test
+        if: matrix.mode == 'production'
+        run: |
+          set -o pipefail
+          cargo test --locked --test console_ownership -- --nocapture 2>&1 | tee compiler-console-evidence/console-test.log
+      - name: Build compiler with production settings
+        if: matrix.mode != 'address-sanitizer'
+        run: cargo build --locked --bin fwp --target x86_64-apple-darwin
+      - name: Build compiler with address sanitizer
+        if: matrix.mode == 'address-sanitizer'
+        env:
+          RUSTFLAGS: '-Zsanitizer=address -Cforce-frame-pointers=yes'
+        run: cargo build --locked --bin fwp --target x86_64-apple-darwin
+      - name: Repeat each input with named artifacts and allocator diagnostics
+        env:
+          DIAGNOSTIC_ROUNDS: ${{ matrix.rounds }}
+          DIAGNOSTIC_ALLOCATOR: ${{ matrix.allocator }}
+          ASAN_OPTIONS: 'abort_on_error=1:detect_leaks=1:log_path=compiler-console-evidence/asan'
+        run: |
+          python3 scripts/check-console-compiler.py --compiler target/x86_64-apple-darwin/debug/fwp --rounds "$DIAGNOSTIC_ROUNDS" --allocator "$DIAGNOSTIC_ALLOCATOR" --output compiler-console-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: compiler-console-${{ matrix.mode }}
+          path: |
+            compiler-console-evidence/
+            ~/Library/Logs/DiagnosticReports/fwp*
+          if-no-files-found: error
   socket_inheritance:
     if: inputs.suite == 'socket-inheritance'
     strategy:
