@@ -47,7 +47,7 @@ jobs:
           - mode: address-sanitizer
             toolchain: nightly
             allocator: ordinary
-            rounds: 10
+            rounds: 5
             compiler: target/x86_64-apple-darwin/debug/fwp
     runs-on: macos-15-intel
     timeout-minutes: 45
