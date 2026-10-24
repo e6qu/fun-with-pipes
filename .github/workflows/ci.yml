@@ -432,6 +432,8 @@ jobs:
           echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
       - name: OpenSSL headers (TLS)
         run: sudo apt-get update && sudo apt-get install -y libssl-dev
+      - name: Benchmark build failure and metadata controls
+        run: python3 scripts/test-measurement-build.py
       - name: Numerical measurement requirement controls
         run: python3 scripts/test-descent-budgets.py
       - name: Generated standard-library docs preflight

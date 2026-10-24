@@ -212,6 +212,18 @@ def main():
         assert result.returncode == 0, (command, result.returncode, result.stderr.decode(errors='replace'))
         return result
 
+    source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+    inputs = subprocess.check_output(['git', 'ls-files', 'src', 'runtime', 'lib', 'scripts', 'tests/fixtures',
+                                      'Cargo.toml', 'Cargo.lock', 'build.rs'], cwd=ROOT, text=True).splitlines()
+    inputs += ['scripts/measure-descent-output.py', 'scripts/test-descent-output.py', 'tests/fixtures/descent_output_sink.c']
+    run_record = dict(source=source, sourceHashes={name: digest((ROOT/name).read_bytes()) for name in sorted(set(inputs))},
+        host=args.host, machine=platform.machine(), cpu=run(['lscpu'], environment).stdout.decode(),
+        compilerSha256=digest(args.compiler.read_bytes()), cCompiler=run([args.cc, '--version'], environment).stdout.decode(),
+        rustCompiler=run([args.rustc, '-Vv'], environment).stdout.decode(),
+        configuration={k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
+        settings={k: v for k, v in environment.items() if k.startswith('FWP_') or k == 'CC'})
+    (out / 'environment.json').write_text(json.dumps(run_record, indent=2) + '\n')
+
     labels = ['fwp-full', 'fwp-sink', 'fwp-full-identical', 'fwp-sink-identical', 'c-full', 'c-sink', 'rust-full', 'rust-sink']
     results = {}
     for points, updates, repetitions in plans:
@@ -377,16 +389,7 @@ def main():
             outputSha256={label: digest(raw) for label, raw in outputs.items()})
         (out / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
         print(name, 'sink/full', results[name]['sinkToFullRatios'], 'copy controls', copies, flush=True)
-    source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
-    inputs = subprocess.check_output(['git', 'ls-files', 'src', 'runtime', 'lib', 'scripts', 'tests/fixtures',
-                                      'Cargo.toml', 'Cargo.lock', 'build.rs'], cwd=ROOT, text=True).splitlines()
-    inputs += ['scripts/measure-descent-output.py', 'scripts/test-descent-output.py', 'tests/fixtures/descent_output_sink.c']
-    report = dict(source=source, sourceHashes={name: digest((ROOT/name).read_bytes()) for name in sorted(set(inputs))},
-        host=args.host, machine=platform.machine(), cpu=run(['lscpu'], environment).stdout.decode(),
-        compilerSha256=digest(args.compiler.read_bytes()), cCompiler=run([args.cc, '--version'], environment).stdout.decode(),
-        rustCompiler=run([args.rustc, '-Vv'], environment).stdout.decode(), commands=commands,
-        configuration={k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
-        settings={k: v for k, v in environment.items() if k.startswith('FWP_') or k == 'CC'}, results=results,
+    report = dict(run_record, commands=commands, results=results,
         scope='Complete repeated solves with ordinary formatted output or a shared external checksum consumer. '
         'Full-output fwp formats the numeric array directly; neither fwp mode creates an output list. '
         'The sink replaces formatted output with checksum work in all three implementations. '

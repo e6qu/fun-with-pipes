@@ -129,8 +129,9 @@ outside the benchmark suite.
    overhead.
    [Float printing](docs/measurements/float-text-results.md) passed #205 delivery.
    The next [array/iteration group](docs/measurements/array-text.md) removes
-   temporary lists, String copies and initial iterator tuples; its final delivery
-   checks remain open. Measure allocation, live storage, startup, code size and
+   temporary lists, String copies and initial iterator tuples.
+   [Focused six-host results](docs/measurements/array-native-results.md) record
+   counts, physical layout, code size and stack frames; final delivery remains open. Measure allocation, live storage, startup, code size and
    stack frames alongside elapsed time. Keep noisy copy controls inconclusive.
    Then use equivalent-work budgets to select remaining callback, checked-indexing
    and buffer costs. The [inline experiment](docs/measurements/descent-call-costs.md)

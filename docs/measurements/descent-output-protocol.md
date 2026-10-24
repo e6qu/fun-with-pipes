@@ -53,17 +53,29 @@ mode; keep that difference explicit when comparing revisions.
 The [fwp program](../../tests/fixtures/descent_packed.fwp) and coordinate-based
 [C](../../tests/fixtures/descent_coordinate.c) and
 [Rust](../../tests/fixtures/descent_coordinate.rs) peers keep their existing
-formulas. C/Rust reuse two numerical buffers; fwp builds immutable arrays.
-Those storage and checked-access differences remain part of each ratio.
+formulas. C/Rust allocate two numerical buffers per solve and reuse them during
+its updates. fwp builds immutable result arrays; the optimized literal input is
+initialized once per process and reused across solves. Those storage, input-setup
+and checked-access differences remain part of each ratio.
+
+The runner writes `environment.json` before starting workloads, recording the
+source and file hashes, compiler binary, hardware, toolchain versions and explicit
+settings. `build-commands.json` is updated after every compiler attempt. A failed
+run therefore keeps its identity and completed `results.json` rows; it does not
+produce a successful final comparison report. A failure-control test verifies
+that a real compiler-process error preserves both records.
 
 ## Correctness and memory
 
 Before timing, an untimed consumer prints each coordinate's exact 64-bit
 representation. The runner checks every coordinate and every solve against the
-numerical reference, then independently computes the checksum of those bits.
+numerical reference with relative and absolute tolerances of `1e-10`, then
+independently computes the checksum of those bits. Precisely, the accepted error
+is at most `max(1e-10, 1e-10 * max(abs(actual), abs(expected)))`. Full fwp output
+must additionally match its raw interpreter byte for byte.
 Each implementation must reproduce its own checksum on every timed run. Decimal
 formatting and small allowed numerical differences do not require equal checksums
-across languages. Missing, extra, changed, nonfinite or malformed coordinates
+across languages. Missing, extra, changed beyond tolerance, nonfinite or malformed coordinates
 must be rejected. A consumer that deliberately omits the last coordinate must
 produce a different checksum.
 

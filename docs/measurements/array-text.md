@@ -1,7 +1,8 @@
 # Removing temporary numeric lists
 
-Status: implementation and tests are in preparation. No allocation reduction or
-speed improvement has been accepted yet. [The handoff](../development-state.md)
+Status: focused checks and binary review pass on all six native targets.
+[Recorded allocation, layout and stack results](array-native-results.md) support
+the named cases; final production acceptance remains open. [The handoff](../development-state.md)
 records the source and checks; [the plan](../../PLAN.md) remains open.
 
 An array stores adjacent numbers in one buffer. A list stores a separate node for
@@ -89,15 +90,15 @@ the [comparison protocol](../benchmarks.md), retaining repeated samples and nois
 controls. The [descent comparison](float-text-results.md) motivates reducing
 temporary lists, but its earlier timings cannot establish this change's benefit.
 
-The existing full-output/checksum experiment is also being rerun with this
-compiler on both Linux architectures. The [recorded intermediate results](array-output-results.md)
-retain every timing row and failed noise control. Its six inputs, 48 samples, four warmups
+The full-output/checksum experiment has completed with this compiler on both
+Linux architectures. The [recorded results](array-output-results.md) retain every
+timing row and failed noise control. Its six inputs, 48 samples, four warmups
 and 2% identical-copy checks remain unchanged. It reports current complete
 programs against C/Rust; an earlier revision measured at another time is not a
 paired speed comparison. Static input initialization occurs once per process and
-remains inside the total timing. The largest case is expected to make 200 managed
-requests with full output and 199 with the checksum consumer, with no retained
-storage after each solve; these predictions are not accepted measurements.
+remains inside the total timing. The largest case records 200 managed requests with full output and 199 with the
+checksum consumer, with no retained managed storage after each solve. These
+instrumented counts are separate from the uninstrumented timing samples.
 
 ## Startup stack repair
 
@@ -109,10 +110,9 @@ for the next array. Empty arrays need no descriptor.
 
 For the saved 129-element F64 fixture, local Apple Clang 17 at O1 reduces the
 entry frame from 15,040 to 720 bytes. O2 uses 704 bytes before and after. Output,
-allocation counts and cleanup agree. These are local observations, not six-host
-acceptance. The native test now records compiler stack-usage reports and object
-files at O1/O2, requiring entry and constant-initialization frames at most 4 KiB
-for this fixture. That bound covers individual frames, not the full call stack.
+allocation counts and cleanup agree. The [six-host review](array-native-results.md#startup-stack) records the repaired
+compiler's O1/O2 frame reports and object files. All surviving startup frames
+pass the 4 KiB individual-frame limit for this fixture. That bound covers individual frames, not the full call stack.
 
 On Windows, Clang may inline the language entry into the operating-system thread
 entry. The test requires that platform entry and checks every surviving startup
