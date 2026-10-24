@@ -1,7 +1,7 @@
 """Inspect the unchanged Intel compiler under Guard Malloc using LLDB.
 
 Stop on the first allocator error or a bounded deadline and preserve its frames.
-No compiler argument, register, stack policy or generated instruction is changed.
+The requested stack size is an explicit debugger experiment, not a product fix.
 """
 
 import json
@@ -13,14 +13,15 @@ import time
 import lldb
 
 
-def run(debugger):
+def run(debugger, stack_mib):
+    assert stack_mib in (256, 4096)
     debugger.SetAsync(True)
     target = debugger.CreateTarget('allocation-evidence/fwp')
     assert target.IsValid() and target.GetTriple().startswith('x86_64-'), target.GetTriple()
     stack = target.BreakpointCreateByName('pthread_attr_setstacksize')
     assert stack.GetNumLocations() == 1, stack.GetNumLocations()
     target.BreakpointCreateByName('malloc_error_break')
-    root = Path('allocation-evidence/debugger-guard').resolve()
+    root = Path(f'allocation-evidence/debugger-guard-{stack_mib}').resolve()
     root.mkdir()
     source = root / 'all.fwp'
     source.write_text('main = read-all () | echo\n')
@@ -53,10 +54,16 @@ def run(debugger):
                     break
                 size = thread.GetFrameAtIndex(0).FindRegister('rsi').GetValueAsUnsigned()
                 stacks.append(size)
-                print('Unchanged stack request:', size, flush=True)
+                print('Original stack request:', size, 'diagnostic MiB:', stack_mib, flush=True)
                 if size != 4 * 1024 ** 3 or len(stacks) != 1:
                     reason = 'unexpected stack request'
                     break
+                register = thread.GetFrameAtIndex(0).FindRegister('rsi')
+                if stack_mib != 4096:
+                    changed = register.SetValueFromCString(str(stack_mib * 1024 ** 2))
+                    if not changed or register.GetValueAsUnsigned() != stack_mib * 1024 ** 2:
+                        reason = 'cannot set diagnostic stack size'
+                        break
                 target.BreakpointDelete(stack.GetID())
                 resumed = process.Continue()
                 if resumed.Fail():
@@ -78,10 +85,12 @@ def run(debugger):
           and stacks == [4 * 1024 ** 3])
     print('Result:', reason, 'state:', process.GetState(), 'exit:', process.GetExitStatus(), flush=True)
     (root / 'result.json').write_text(json.dumps(dict(reason=reason, state=process.GetState(),
-                                                    exit=process.GetExitStatus(), stacks=stacks), indent=2) + '\n')
+                                                    exit=process.GetExitStatus(), stacks=stacks,
+                                                    diagnosticStackMiB=stack_mib), indent=2) + '\n')
     if not ok:
-        debugger.HandleCommand('thread backtrace all')
-        debugger.HandleCommand('register read')
+        if process.GetState() == lldb.eStateStopped:
+            debugger.HandleCommand('thread backtrace all')
+            debugger.HandleCommand('register read')
         if process.GetState() != lldb.eStateExited:
             process.Kill()
     (root / 'result.txt').write_text('pass\n' if ok else 'fail\n')

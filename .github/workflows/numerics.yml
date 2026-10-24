@@ -44,6 +44,9 @@ jobs:
       MallocDebugReport: stderr
     steps:
       - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: '1.99.1'
       - uses: actions/download-artifact@v8
         with:
           name: compiler-console-production
@@ -83,19 +86,50 @@ jobs:
         run: python3 scripts/check-console-compiler.py --compiler allocation-evidence/fwp --rounds 1 --max-seconds 180 --allocator ordinary --output allocation-evidence/ordinary
       - name: Isolate stack reservation with and without Guard Malloc
         run: |
-          clang -O1 -Wall -Wextra -Werror tests/fixtures/compiler_thread_stack.c -o allocation-evidence/stack-probe
-          allocation-evidence/stack-probe > allocation-evidence/stack-ordinary.txt
-          DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib allocation-evidence/stack-probe > allocation-evidence/stack-guard.txt 2>&1
-      - name: Inspect guarded compilation without changing compiler settings
-        run: |
+          clang -O1 -Wall -Wextra -Werror tests/fixtures/compiler_thread_stack.c -o allocation-evidence/stack-c
+          rustc --edition=2021 -C opt-level=1 -C debug-assertions=yes -C overflow-checks=yes tests/fixtures/compiler_thread_stack.rs -o allocation-evidence/stack-rust
+          rustc -Vv > allocation-evidence/stack-rust-version.txt
           python3 - <<'PY'
+          import json
+          import os
           from pathlib import Path
           import subprocess
-          with Path('allocation-evidence/debugger.log').open('w') as log:
-              subprocess.run(['lldb', '-b', '-o', 'command script import scripts/compiler_allocator_probe.py',
-                              '-o', 'script compiler_allocator_probe.run(lldb.debugger)'],
-                             stdout=log, stderr=subprocess.STDOUT, timeout=180, check=True)
-          assert Path('allocation-evidence/debugger-guard/result.txt').read_text() == 'pass\n'
+          results = []
+          root = Path('allocation-evidence')
+          for implementation in ('c', 'rust'):
+              for allocator in ('ordinary', 'guard'):
+                  for size in (256, 4096):
+                      env = dict(os.environ)
+                      env.pop('DYLD_INSERT_LIBRARIES', None)
+                      if allocator == 'guard':
+                          env['DYLD_INSERT_LIBRARIES'] = '/usr/lib/libgmalloc.dylib'
+                      label = f'stack-{implementation}-{allocator}-{size}'
+                      result = subprocess.run([str(root / f'stack-{implementation}'), str(size)],
+                                              env=env, capture_output=True, timeout=30)
+                      (root / f'{label}.stdout').write_bytes(result.stdout)
+                      (root / f'{label}.stderr').write_bytes(result.stderr)
+                      results.append(dict(implementation=implementation, allocator=allocator,
+                                          stackMiB=size, exit=result.returncode))
+                      (root / 'stack-results.json').write_text(json.dumps(results, indent=2) + '\n')
+          assert all(row['exit'] == 0 for row in results if row['allocator'] == 'ordinary'), results
+          PY
+      - name: Compare Guard Malloc startup with an explicit debugger stack experiment
+        if: ${{ !cancelled() }}
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          import subprocess
+          root = Path('allocation-evidence')
+          for size in (4096, 256):
+              with (root / f'debugger-{size}.log').open('w') as log:
+                  subprocess.run(['lldb', '-b', '-o', 'command script import scripts/compiler_allocator_probe.py',
+                                  '-o', f'script compiler_allocator_probe.run(lldb.debugger, {size})'],
+                                 stdout=log, stderr=subprocess.STDOUT, timeout=180, check=True)
+          original = json.loads((root / 'debugger-guard-4096/result.json').read_text())
+          assert original['reason'] == 'exited' and original['exit'] == 101, original
+          assert 'spawn interpreter thread' in (root / 'debugger-guard-4096/stderr.log').read_text()
+          assert (root / 'debugger-guard-256/result.txt').read_text() == 'pass\n'
           PY
       - name: Preserve memory state
         if: always()
