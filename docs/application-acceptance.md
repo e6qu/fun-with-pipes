@@ -15,7 +15,7 @@ performance and platform requirements in the last column.
 | [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scaled counting/filtering/CSV/task-file cleanup passes on six hosts; preserve current delivery coverage and separate input/output costs |
 | Numerical pipeline | Map/reduce 65,537 elements and multiply 65×67 by 67×63 matrices, eight rounds | [Existing C/Rust comparison](benchmarks.md#numerical-kernels-and-record-moves) | Repeat current-revision comparisons; set per-size budgets; include a larger numerical application |
 | Derivative application | Rosenbrock descent at 3, 33 and 129 dimensions; 199 updates plus zero/one/1,999-update controls | [AD storage](measurements/ad-application.md), [C/Rust peers](measurements/descent-peers.md), [packed arrays](measurements/packed-descent.md) and [array-owner moves](measurements/array-owner-moves.md) and [borrowed captures](measurements/array-capture-descent.md) on two Linux hosts | Stabilize identical-code timing controls and set per-input budgets; extend nested and platform evidence |
-| Long-running service | Existing HTTP/gRPC clients, handlers, streams and task cancellation | [Service ownership](ownership.md#http-ownership) and [service measurements](benchmarks.md#server-memory-after-completed-remote-calls) | Consolidate one repeatable service scenario with bounded concurrency, disconnects and repeated live-memory samples |
+| Long-running service | Existing HTTP/gRPC clients, handlers, streams and task cancellation | [Service ownership](ownership.md#http-ownership) and [service measurements](benchmarks.md#server-memory-after-completed-remote-calls) | The [API memory scenario](measurements/http-application-memory.md) passes focused six-host checks; finish exact-head delivery and preserve failure/cancellation coverage as ownership changes |
 
 Before declaring this suite accepted, name the exact revisions, inputs and native
 hosts for each row. Require identical observable results against an independent
@@ -45,8 +45,11 @@ The `http-application` focused suite checks this example alone. The full
 fit the existing 25-minute job limit. All twelve jobs passed on six native hosts
 in [run 40062164443](https://github.com/e6qu/fun-with-pipes/actions/runs/40062164443).
 Production CI keeps both HTTP test suites. These checks do not supply the
-long-running service memory measurements still required above. Printed request
-counts are correctness results, not throughput benchmarks.
+long-running service memory measurements still required above. The next
+[API memory check](measurements/http-application-memory.md) samples between
+completed request groups, including disconnects and forced shutdown; its native
+results are pending. Printed request counts are correctness results, not
+throughput benchmarks.
 
 Timing budgets remain unset until repeated baselines identify ordinary variation.
 Record the chosen host/input budget before optimizing, retain slower results and

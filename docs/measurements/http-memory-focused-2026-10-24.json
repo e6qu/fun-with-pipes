@@ -1,0 +1,3003 @@
+{
+  "source": "cf3a11e4995cf228db9d2b783d20583da5a056f5",
+  "run": 40072655673,
+  "records": [
+    {
+      "kind": "api",
+      "host": "ubuntu-latest",
+      "source": "4fc97ca1f1c28e0dd2561c6b14000d13d1b7f4f0",
+      "run": 40069237866,
+      "artifact": 12551165146,
+      "archiveSha256": "9d57f31a51b8bdabd785ebf52421d2a01ea9f7c1b8ff52575cc722ae31905886",
+      "reportSha256": "782de559023cf0341bab34382ff46e059730eb17dbdb5d5e52f690f772f89407",
+      "binaries": {
+        "api-healthyO1": {
+          "machine": 62,
+          "fileBytes": 5248288,
+          "sha256": {
+            "exe": "9b7741694948425ffb07259a715aeba7d7ae5893a180ef502a118cd5d7fdaaea",
+            "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+            "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "stderr": "a43b53962d936095b7f992b596dae811f78ceed835a7e1b975b98561684cae55",
+            "rss.tsv": "522b9190328f75344481f137a0cebff7db1151efc18a3c0cd2ded9c5cb1f6753"
+          },
+          "textSectionBytes": 2949874,
+          "disassemblySha256": "455929de3d03ae20fa9f3d82de48045fe8ad8791f84b7018794070341b581d80",
+          "symbolsSha256": "9558f93b46ac0176a0cb4d467a59c25890c2ff2a5002f7520ad7dbad398205e8"
+        },
+        "api-healthyO2": {
+          "machine": 62,
+          "fileBytes": 5286456,
+          "sha256": {
+            "exe": "a323b8306770ac5734c6129ee559871610d3d3ec47883784449557cc917d00c3",
+            "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+            "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "stderr": "a43b53962d936095b7f992b596dae811f78ceed835a7e1b975b98561684cae55",
+            "rss.tsv": "0aecc66fc8d706885d6700b549f34f101247387d77b7f3763fa1f6444ac1b5d2"
+          },
+          "textSectionBytes": 2811986,
+          "disassemblySha256": "4c51db6be83911b2239941eb9e4975679f742f9c27f889759610d280fbe03a42",
+          "symbolsSha256": "5b45a6c3ce3e1fe401b88c344e2bd5b8a7db137d8f90d9e072e387b3a4a990e8"
+        },
+        "api-missing-closeO1": {
+          "machine": 62,
+          "fileBytes": 5248288,
+          "sha256": {
+            "exe": "2de781514dbf80d732dcf6f74fe67360de82771958183c0e600b4d0b9eab43e3",
+            "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "e10065d6127281396370e2b63991446d4371274b3824bf05c3a0bb29c998f45c",
+            "rss.tsv": "a726dd5076d3470f5c435eca525f9449dd6746be4e68f00d47b02d43513e3ec7"
+          },
+          "textSectionBytes": 2949906,
+          "disassemblySha256": "e2d93b0edcd5d610e24c871242c29cec9bb3406af2e800cd7f18876c07bd23d9",
+          "symbolsSha256": "44ff89495e8be282682b4a7de098661f168eeea44be7fb460474b962036d82b3"
+        },
+        "api-missing-closeO2": {
+          "machine": 62,
+          "fileBytes": 5286568,
+          "sha256": {
+            "exe": "0c5cad64dac2527e0365d2be863caa1b606307065c09bebf545a55d1f09b915f",
+            "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "e10065d6127281396370e2b63991446d4371274b3824bf05c3a0bb29c998f45c",
+            "rss.tsv": "2d4e3c6170e37271a82a9483c7218ebbf1f3c7080000778a1b4ac10e1a6c81d9"
+          },
+          "textSectionBytes": 2811874,
+          "disassemblySha256": "6ff9bc7ef68694ce60f6b97c2ba909fe1b8407e060404a61648838789c13f926",
+          "symbolsSha256": "17ac7bec95ed5fe5f16a27a024545961defcefbdbb52285327f47d3ad3ca96a5"
+        },
+        "api-missing-freeO1": {
+          "machine": 62,
+          "fileBytes": 5248288,
+          "sha256": {
+            "exe": "59ba73b6d6fc324b05f09ba4792fa4b673f83e3f8df5b3ac0f67cf032852408f",
+            "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "ab16daa55a1c78053a21fce543edbf5dc68bef3daa73c2d185d5aeb1641e5cdc",
+            "rss.tsv": "6f54bdc6155477a1b716f19320175e47ffe845b3c5864304a42987dd695c4c50"
+          },
+          "textSectionBytes": 2950002,
+          "disassemblySha256": "2d24fe971476d08b005695ec51d2c7107ad091a039ecefc3fb2f910f87e4a09f",
+          "symbolsSha256": "099593d608d86f99c4d36665191081a59d5d37bfc51380dcbef96235b5293c7b"
+        },
+        "api-missing-freeO2": {
+          "machine": 62,
+          "fileBytes": 5282848,
+          "sha256": {
+            "exe": "e66fbe8bec470c361ec97ebf394f1d395dc0f5e61daf9daa52946999fdbe2a4b",
+            "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "84cabf37e1d388abb4a88feb9734fc4f9dbf9e6eb5b2dfc308947920453bea34",
+            "rss.tsv": "23dbb2c66bd5a0cf1d3402f46118bbed55095c82068c59203ef0e9141398def6"
+          },
+          "textSectionBytes": 2812834,
+          "disassemblySha256": "3d9f15572fd4715e952cf7b189ab5057a18311247bc61a89b5d414cb2f7b4e4a",
+          "symbolsSha256": "a940977f20b3cf66890dbcc3ee7a3d858b7dffd4f646e1aa7b03beaca62824fd"
+        }
+      },
+      "observations": {
+        "api-healthyO1": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "24",
+              "24",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "32",
+              "32",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "40",
+              "40",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "48",
+              "48",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "56",
+              "56",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "64",
+              "64",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              13228
+            ],
+            [
+              16,
+              13276
+            ],
+            [
+              24,
+              13316
+            ],
+            [
+              32,
+              13356
+            ],
+            [
+              40,
+              13376
+            ],
+            [
+              48,
+              13376
+            ],
+            [
+              56,
+              13376
+            ],
+            [
+              64,
+              13376
+            ]
+          ],
+          "status": 0,
+          "maxRssGrowthKiB": 148
+        },
+        "api-healthyO2": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "24",
+              "24",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "32",
+              "32",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "40",
+              "40",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "48",
+              "48",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "56",
+              "56",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "64",
+              "64",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              13124
+            ],
+            [
+              16,
+              13204
+            ],
+            [
+              24,
+              13260
+            ],
+            [
+              32,
+              13300
+            ],
+            [
+              40,
+              13320
+            ],
+            [
+              48,
+              13320
+            ],
+            [
+              56,
+              13320
+            ],
+            [
+              64,
+              13320
+            ]
+          ],
+          "status": 0,
+          "maxRssGrowthKiB": 196
+        },
+        "api-missing-closeO1": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "8",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              13248
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        },
+        "api-missing-closeO2": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "8",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              13120
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        },
+        "api-missing-freeO1": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "7501568",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              13156
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        },
+        "api-missing-freeO2": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "7549728",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              13132
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        }
+      }
+    },
+    {
+      "kind": "api",
+      "host": "ubuntu-24.04-arm",
+      "source": "4fc97ca1f1c28e0dd2561c6b14000d13d1b7f4f0",
+      "run": 40069237866,
+      "artifact": 12550980331,
+      "archiveSha256": "327db062a7a67006e9762318d29dded979ff7a7cf04855cce9eebe3133b59063",
+      "reportSha256": "f1ddf33db2f3ff118899ec92509a6e304e48c2dc66f0d939dbfa09cfbba1c7e8",
+      "binaries": {
+        "api-healthyO1": {
+          "machine": 183,
+          "fileBytes": 5483096,
+          "sha256": {
+            "exe": "e987715c378ca3c19ef58bce9e65efb44304c9cfa8252b95e2abcd6be8678800",
+            "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+            "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "stderr": "a43b53962d936095b7f992b596dae811f78ceed835a7e1b975b98561684cae55",
+            "rss.tsv": "e47c26f9130b2fda97f7797a0be926966de05c1a0ee6413496b0b60c4b32018d"
+          },
+          "textSectionBytes": 3069676,
+          "disassemblySha256": "181b34a734cff4b22e13b9adc954d1a37055b29cafcdc446732e27e898086344",
+          "symbolsSha256": "ec3ed5fc52e29ec9d8008091f5bab9ec49986c25d3eb45591152b30577434e77"
+        },
+        "api-healthyO2": {
+          "machine": 183,
+          "fileBytes": 5086104,
+          "sha256": {
+            "exe": "f8e50ae0ae99fc6ad12c993a98dc6acde7b87f3b75e12acc0a40aeac48f531a4",
+            "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+            "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "stderr": "a43b53962d936095b7f992b596dae811f78ceed835a7e1b975b98561684cae55",
+            "rss.tsv": "e91292e8c90afc87d3fcad39c8ec874589051f4906494ab2deec573521dd7738"
+          },
+          "textSectionBytes": 2604060,
+          "disassemblySha256": "e425a9702349f6fd554e15cd72a93c1366aa37f25fd481d61164bb491bb1a1b2",
+          "symbolsSha256": "afa3f46302e1db2323498f8c67cc81cd5b8df090346e8bad75e21bcb6db8d2a0"
+        },
+        "api-missing-closeO1": {
+          "machine": 183,
+          "fileBytes": 5482920,
+          "sha256": {
+            "exe": "ea8bec58af26f3df15090084859810f11a3511a77ed9cf677193afff0bd588a3",
+            "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "e10065d6127281396370e2b63991446d4371274b3824bf05c3a0bb29c998f45c",
+            "rss.tsv": "77ec4b14ebbdbc40d0d6c2ea3e5cb52e44d74c52a2e01eb5ae394fdf8d262cbf"
+          },
+          "textSectionBytes": 3065612,
+          "disassemblySha256": "41881d13cfd44dadfee72232e8ad1c187fbad497878f1cea8d2bbea5c6df88ee",
+          "symbolsSha256": "1584b152380a0af0fffdd1b4a9d337e03ee4bd884cef402376640e509fcad6cc"
+        },
+        "api-missing-closeO2": {
+          "machine": 183,
+          "fileBytes": 5085416,
+          "sha256": {
+            "exe": "3062b19f259a5efd0c732aea8eccad210781de4a8c4055131e99762b3da83996",
+            "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "e10065d6127281396370e2b63991446d4371274b3824bf05c3a0bb29c998f45c",
+            "rss.tsv": "41ee51da3dde593b1d4700a42c4a9a7c6918a7bbbfaffeb4928072be49afc9db"
+          },
+          "textSectionBytes": 2583564,
+          "disassemblySha256": "f6aa89f186987b90354894c0c1c662df9080f43f5950e573aa520947282aa188",
+          "symbolsSha256": "e39982135cc44d81d86f498c8890842418f71bc10de2a4047b3bc62775a27d8d"
+        },
+        "api-missing-freeO1": {
+          "machine": 183,
+          "fileBytes": 5483176,
+          "sha256": {
+            "exe": "9671157f147490d62fb394beb9efcf0b7e62e4c2632303b3e83a91ec8e7af207",
+            "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "405e72bdc3f7e4518343435937383ead0f4a89221593416aca8baa652969e5e0",
+            "rss.tsv": "a34d52b9ed9fa21922964901cbe939b4156446531655934178b432cce16971d7"
+          },
+          "textSectionBytes": 3077820,
+          "disassemblySha256": "2f4197299b530e7df491e174cb254bb97ab5dbbb0b77c78ee1236b477a80f7b0",
+          "symbolsSha256": "c903ed0ad5c5755e2c3334437ccdaaa7cbe264479e18668c6c3d4693ded0d583"
+        },
+        "api-missing-freeO2": {
+          "machine": 183,
+          "fileBytes": 5085536,
+          "sha256": {
+            "exe": "c61a76a6e165d9f7557a8e5a599989dada3c83120ab69274d62ebd2e83f1cea3",
+            "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "62e34aa4ddce83c42b19026ab32bccb14412efe5ee8d40574a31d96b18da860d",
+            "rss.tsv": "7e8a00c1892b0c682baa16b559d9022bbbc2a83ba146aa1ea880ceb7f1a5f872"
+          },
+          "textSectionBytes": 2588732,
+          "disassemblySha256": "2aca3facc3de310b1c5d94f878edfb925b1b64415f109b9608ffefc08668d81b",
+          "symbolsSha256": "4b400cac19ba60ca27724cb86b2332e6b4d16db55ade214304ca11a76069ba92"
+        }
+      },
+      "observations": {
+        "api-healthyO1": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "24",
+              "24",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "32",
+              "32",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "40",
+              "40",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "48",
+              "48",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "56",
+              "56",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "64",
+              "64",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              12384
+            ],
+            [
+              16,
+              12496
+            ],
+            [
+              24,
+              12520
+            ],
+            [
+              32,
+              12520
+            ],
+            [
+              40,
+              12540
+            ],
+            [
+              48,
+              12560
+            ],
+            [
+              56,
+              12560
+            ],
+            [
+              64,
+              12560
+            ]
+          ],
+          "status": 0,
+          "maxRssGrowthKiB": 176
+        },
+        "api-healthyO2": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "24",
+              "24",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "32",
+              "32",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "40",
+              "40",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "48",
+              "48",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "56",
+              "56",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "64",
+              "64",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              11976
+            ],
+            [
+              16,
+              12124
+            ],
+            [
+              24,
+              12188
+            ],
+            [
+              32,
+              12208
+            ],
+            [
+              40,
+              12208
+            ],
+            [
+              48,
+              12208
+            ],
+            [
+              56,
+              12208
+            ],
+            [
+              64,
+              12208
+            ]
+          ],
+          "status": 0,
+          "maxRssGrowthKiB": 232
+        },
+        "api-missing-closeO1": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "8",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              12376
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        },
+        "api-missing-closeO2": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "8",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              11952
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        },
+        "api-missing-freeO1": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "7483712",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              12416
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        },
+        "api-missing-freeO2": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "3120",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "7468304",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              12008
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        }
+      }
+    },
+    {
+      "kind": "api",
+      "host": "macos-15",
+      "source": "4fc97ca1f1c28e0dd2561c6b14000d13d1b7f4f0",
+      "run": 40069237866,
+      "artifact": 12550453982,
+      "archiveSha256": "70b2481b6bcf8124ec3fbba1f6d6e6cfceea9e1d20e431a07e17e03923bedd9e",
+      "reportSha256": "cff4c045e06fa1d028c80d3144854140d88289a1795ad2657ae68b55eb40a5a2",
+      "binaries": {
+        "api-healthyO1": {
+          "machine": 16777228,
+          "fileBytes": 4809920,
+          "sha256": {
+            "exe": "851702bcf517fb46988b2739bc48296278a18d8f55342926b130ca6448359be0",
+            "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+            "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "stderr": "dc314eea2b8cf1af6477b1847ec504f33b0488a6bedad6fc17219493331879e8",
+            "rss.tsv": "1ab06d4f687f59779ee7237f70470d66369b4230bdced4977b2dada6146c65a1"
+          },
+          "textSectionBytes": 3806160,
+          "disassemblySha256": "5b6c5cc2807e472bc7db01bd065fe3b4becc6eea4cb917e40fe4ca5640239127",
+          "symbolsSha256": "e0c77dafa98fe85e071770317d7ca05d2fb62e540c79b3d27b44ea947bd28393"
+        },
+        "api-healthyO2": {
+          "machine": 16777228,
+          "fileBytes": 4594400,
+          "sha256": {
+            "exe": "e146d652ac770bbd71acb7556f173b90241a904b39148aff526c814ffdc846e6",
+            "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+            "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "stderr": "dc314eea2b8cf1af6477b1847ec504f33b0488a6bedad6fc17219493331879e8",
+            "rss.tsv": "3aeadbbccfb87f717cc8c8c14df77d9338ef5ccf6ef7650e08d68e57636055ba"
+          },
+          "textSectionBytes": 3588164,
+          "disassemblySha256": "d9ac02a773890e9460d45325e176f82b238cf081a35055ea7e6e43ae63f28012",
+          "symbolsSha256": "37767ca4256ec15eaf77f89778aa5957b42aed0ab0dd692922d24b4e285e1a67"
+        },
+        "api-missing-closeO1": {
+          "machine": 16777228,
+          "fileBytes": 4809928,
+          "sha256": {
+            "exe": "30cd13f565a13153cab35d8e8a89cb93dfb1c77a5a19e40116280760eb3df861",
+            "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "bca9588ecd850e3320ee52200a8249f13d8cfbfcb7344dab1b5cca19616b57ac",
+            "rss.tsv": "393ebe7957bbdc047dfcd86c21ab14c7038534e8c590df2b9362f8ff5cc81ece"
+          },
+          "textSectionBytes": 3806216,
+          "disassemblySha256": "8b641a16693ae2c5cbc546029708c212b6a402d021d78817bac4e9050cf4aa8a",
+          "symbolsSha256": "c5ae0b38e58b515c5637d9cfc49ddcdd115ec937a44f8c685ba52143f1511a21"
+        },
+        "api-missing-closeO2": {
+          "machine": 16777228,
+          "fileBytes": 4594408,
+          "sha256": {
+            "exe": "4b4b20418aca9a978d2e731796857969c3627e995656413c2f12a0d0d49ea6b6",
+            "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "bca9588ecd850e3320ee52200a8249f13d8cfbfcb7344dab1b5cca19616b57ac",
+            "rss.tsv": "e1b4f907e17383cbba59065948ae990dc657c379ab569d07c392ace80664dee4"
+          },
+          "textSectionBytes": 3588220,
+          "disassemblySha256": "d675e3280490db2be07feacea070b71dc6941010f624c5b70f3f823c5c2b1597",
+          "symbolsSha256": "b7c7fbadef3d99944f8d7ba0ddf09cf7788360899484e8f469b430635a1021aa"
+        },
+        "api-missing-freeO1": {
+          "machine": 16777228,
+          "fileBytes": 4859464,
+          "sha256": {
+            "exe": "b9764cbf422de0b6fda11609c6a52629d362891845fec1c621dc98c6c0dc0d60",
+            "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "a74063eef09602dcb635a759dbede388564ebe701ca040228ec15d2d2d10b73b",
+            "rss.tsv": "1236ac29896eb8cba24d349b0c3ca8c3ad6622c8b09799e3e05fcf478bdd0df6"
+          },
+          "textSectionBytes": 3858632,
+          "disassemblySha256": "48f434a89ef0827b68e3403ed558643d7df1af6bacce8a65087db4555afee211",
+          "symbolsSha256": "3fadccb6c2e64ab0c15314605939ad169d4ce453fd3a11d4bc7037adf2b74ac6"
+        },
+        "api-missing-freeO2": {
+          "machine": 16777228,
+          "fileBytes": 4627432,
+          "sha256": {
+            "exe": "a743e9ba54bfb696cfd6008d8f4f5df9ad70b8baf8a033811c21e5d2fb3f0c0d",
+            "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "098dde6f593a262b93f830d2b88024f3cc5adaecbabb49e0c140c9120e90d017",
+            "rss.tsv": "b3490d7abeec3c3f24dbb7a2c94edaac6c6825e4ce6066e25728744c000532e7"
+          },
+          "textSectionBytes": 3612428,
+          "disassemblySha256": "6ebb1e76862538232c893a36fb85f5101dff00bed09ab09e19883ba7efcdd7b7",
+          "symbolsSha256": "b2b593fcba5d5f15aafc36a32cb122fc1e4272abb25ddb31a9f0135bd9c0ca0d"
+        }
+      },
+      "observations": {
+        "api-healthyO1": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "24",
+              "24",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "32",
+              "32",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "40",
+              "40",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "48",
+              "48",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "56",
+              "56",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "64",
+              "64",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              6672
+            ],
+            [
+              16,
+              7024
+            ],
+            [
+              24,
+              7136
+            ],
+            [
+              32,
+              7168
+            ],
+            [
+              40,
+              7184
+            ],
+            [
+              48,
+              7184
+            ],
+            [
+              56,
+              7184
+            ],
+            [
+              64,
+              7184
+            ]
+          ],
+          "status": 0,
+          "maxRssGrowthKiB": 512
+        },
+        "api-healthyO2": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "24",
+              "24",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "32",
+              "32",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "40",
+              "40",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "48",
+              "48",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "56",
+              "56",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "64",
+              "64",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              6688
+            ],
+            [
+              16,
+              6832
+            ],
+            [
+              24,
+              6944
+            ],
+            [
+              32,
+              6976
+            ],
+            [
+              40,
+              7008
+            ],
+            [
+              48,
+              7008
+            ],
+            [
+              56,
+              7008
+            ],
+            [
+              64,
+              7008
+            ]
+          ],
+          "status": 0,
+          "maxRssGrowthKiB": 320
+        },
+        "api-missing-closeO1": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              6896
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        },
+        "api-missing-closeO2": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              6592
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        },
+        "api-missing-freeO1": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "7596448",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              6864
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        },
+        "api-missing-freeO2": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "7527984",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              6848
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        }
+      }
+    },
+    {
+      "kind": "api",
+      "host": "macos-15-intel",
+      "source": "4fc97ca1f1c28e0dd2561c6b14000d13d1b7f4f0",
+      "run": 40069237866,
+      "artifact": 12551170678,
+      "archiveSha256": "e102d6d4ae977cfd7c60c29e982c401b06afbca24670407cd5453e2817f210c5",
+      "reportSha256": "72f2944cb302a4569ba00c00421a5424bc4a5c5a8d2d8ca4fe3212aa10615d42",
+      "binaries": {
+        "api-healthyO1": {
+          "machine": 16777223,
+          "fileBytes": 5239504,
+          "sha256": {
+            "exe": "a53077afa329cbf542e81db311ddd8e82f21fe4def3ef581d531c5f75ef5936e",
+            "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+            "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "stderr": "dc314eea2b8cf1af6477b1847ec504f33b0488a6bedad6fc17219493331879e8",
+            "rss.tsv": "37dd92c16629b3893513a1670b8fa28cc761d8dceeb0998d11f69e2daa563f8d"
+          },
+          "textSectionBytes": 4286896,
+          "disassemblySha256": "97964d6fd5af6fbe5339bce9804d88288bc2b595d3e3271b39a953ce1bb2a765",
+          "symbolsSha256": "aa793fa2c6b513cdd7826044e31802d13486489d0237446a9fcf0f84137b8faf"
+        },
+        "api-healthyO2": {
+          "machine": 16777223,
+          "fileBytes": 5029768,
+          "sha256": {
+            "exe": "219e4ee7d9fe02333983c7bd4c661b338a1cc6c03c01824b44113e93b4b16e85",
+            "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+            "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "stderr": "dc314eea2b8cf1af6477b1847ec504f33b0488a6bedad6fc17219493331879e8",
+            "rss.tsv": "f0e677d954ce74e5a99fb99f9073c7eadc22891bb2d78efa8fc77dffa7fd7e96"
+          },
+          "textSectionBytes": 4080016,
+          "disassemblySha256": "5a0f351f7ef9a2f86c91f340c5c046f8ebb71cf5882cbb1cc34d9a4abf0e625e",
+          "symbolsSha256": "0f3b6c0ef72679b279018c77e7f750ba2a37a08e54ff64c4d5e9e52603cd717a"
+        },
+        "api-missing-closeO1": {
+          "machine": 16777223,
+          "fileBytes": 5239504,
+          "sha256": {
+            "exe": "52842548bb5fe8a6bfdb347706c21b1e1a87a382e50c7cf9f40bbe5934cb6409",
+            "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "bca9588ecd850e3320ee52200a8249f13d8cfbfcb7344dab1b5cca19616b57ac",
+            "rss.tsv": "fdfbea2c95d19a6eb027587424a3f05dfd4f0ce6e2d86735c9e9d05e3eb59bd0"
+          },
+          "textSectionBytes": 4286928,
+          "disassemblySha256": "85c23afe54eff5934211d294a7d9f3808117ad473d6e68edfd35805584501517",
+          "symbolsSha256": "b0432df7b0e62862705b5ba526441f841e252437318af72054f38ce01738b227"
+        },
+        "api-missing-closeO2": {
+          "machine": 16777223,
+          "fileBytes": 5033864,
+          "sha256": {
+            "exe": "56a7e14bf31f01025bf771f6a55b62acc4ff9ef104b0d53f0798ebab03d79f5e",
+            "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "bca9588ecd850e3320ee52200a8249f13d8cfbfcb7344dab1b5cca19616b57ac",
+            "rss.tsv": "64e582fd9b90b5b15189a8e189fa0f2ed7f9e68ec50195d92e8c836b57e41147"
+          },
+          "textSectionBytes": 4080032,
+          "disassemblySha256": "2eb43883f4cf1d259330fac7e12b2013ecee39d6055d7246a8a5e40116b5e38e",
+          "symbolsSha256": "c4bcdccc73f7f034af49a840cdb339f9a4806ddc69dbc1d28d71e57822f66d1c"
+        },
+        "api-missing-freeO1": {
+          "machine": 16777223,
+          "fileBytes": 5296848,
+          "sha256": {
+            "exe": "1b9f86426a06da7e4b7d95ce7b3ec50e325ed5781325f1018dcc4759f8fcb54e",
+            "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "836fbe46e71f4efc39689f00b78d9b9292980d2f59d430c3fa35ca15dd4c8cc8",
+            "rss.tsv": "0aa8087073b20fcc9ab72e5bb2715f72491327ce63030982a141eb2e651e48bb"
+          },
+          "textSectionBytes": 4343728,
+          "disassemblySha256": "b63f8bc879de49dc4b4920ad2bf9f3a142e2b4d2bd51a95f2e3a48d372d1d8f6",
+          "symbolsSha256": "42a0468dce0bb6600e65be288532de5453c4e3b3f7378395e462bd61c669099d"
+        },
+        "api-missing-freeO2": {
+          "machine": 16777223,
+          "fileBytes": 5050248,
+          "sha256": {
+            "exe": "1e9651e4b1eba786961c41127dd466818a439d267b72cb17183e63de3a8efe1e",
+            "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "7eb4854ad5ce04d72fc962a6bbcd65566977a7ff52882063d6e803d365c991b5",
+            "rss.tsv": "ff1f24ac9318551444dc94cdab5ee6ee330b725556da7fbedaa1f5d2f96af139"
+          },
+          "textSectionBytes": 4099760,
+          "disassemblySha256": "023db2abb9a2757ee2ef08274f8300a178c9fc0f86e163864d4cb509d33de486",
+          "symbolsSha256": "e3804979f1e09a03f42bac0e851d22a099095b364b0ab7cffdb2ae1750d611ed"
+        }
+      },
+      "observations": {
+        "api-healthyO1": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "24",
+              "24",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "32",
+              "32",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "40",
+              "40",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "48",
+              "48",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "56",
+              "56",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "64",
+              "64",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              5732
+            ],
+            [
+              16,
+              5888
+            ],
+            [
+              24,
+              6000
+            ],
+            [
+              32,
+              6008
+            ],
+            [
+              40,
+              6100
+            ],
+            [
+              48,
+              6120
+            ],
+            [
+              56,
+              6120
+            ],
+            [
+              64,
+              6140
+            ]
+          ],
+          "status": 0,
+          "maxRssGrowthKiB": 408
+        },
+        "api-healthyO2": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "24",
+              "24",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "32",
+              "32",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "40",
+              "40",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "48",
+              "48",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "56",
+              "56",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "64",
+              "64",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              5628
+            ],
+            [
+              16,
+              5844
+            ],
+            [
+              24,
+              5920
+            ],
+            [
+              32,
+              5960
+            ],
+            [
+              40,
+              5968
+            ],
+            [
+              48,
+              6008
+            ],
+            [
+              56,
+              6036
+            ],
+            [
+              64,
+              6036
+            ]
+          ],
+          "status": 0,
+          "maxRssGrowthKiB": 408
+        },
+        "api-missing-closeO1": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              5728
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        },
+        "api-missing-closeO2": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              5516
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        },
+        "api-missing-freeO1": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "7462720",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              5672
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        },
+        "api-missing-freeO2": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "7462752",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              5592
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        }
+      }
+    },
+    {
+      "kind": "api",
+      "host": "windows-2025",
+      "source": "4fc97ca1f1c28e0dd2561c6b14000d13d1b7f4f0",
+      "run": 40069237866,
+      "artifact": 12550603117,
+      "archiveSha256": "e53999bebce8d70adc0982af8591e78d3860b25b57e8a47c3a84d2fa08479b8f",
+      "reportSha256": "7c4fa92def53f2bf1c191f810363e32afba0121033de7feb1cb01abcf2adf22d",
+      "binaries": {
+        "api-healthyO1": {
+          "machine": 34404,
+          "fileBytes": 5524480,
+          "sha256": {
+            "exe": "4040105fbd755fbe9cdf9cdc21fea9185f50a5303d7bed59eb580564cf859e08",
+            "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+            "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "stderr": "dc314eea2b8cf1af6477b1847ec504f33b0488a6bedad6fc17219493331879e8",
+            "rss.tsv": "719a88c10d7e1b47018bc57d6b351eca62d71b809f6f334e6525926ef0531a32"
+          },
+          "textSectionBytes": 4258326,
+          "disassemblySha256": "6f9d016853ad9aad7f22a5ba6d074f96e5c3d08085b8f09e1fa0355a81e45667",
+          "symbolsSha256": "d88a620a2675d013b5bdb7c59eac48522341fee01a7ae9e91fb48f374d409bb3"
+        },
+        "api-healthyO2": {
+          "machine": 34404,
+          "fileBytes": 5321216,
+          "sha256": {
+            "exe": "e61cbe642d011d633c31478c6c779f3aac2b061d6bd7ae92b19e55dc4f55971b",
+            "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+            "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "stderr": "dc314eea2b8cf1af6477b1847ec504f33b0488a6bedad6fc17219493331879e8",
+            "rss.tsv": "5c7ade9699c2004c2c9a6ae8c326a2f1d44c152d985cff6147dad54582b67530"
+          },
+          "textSectionBytes": 4055270,
+          "disassemblySha256": "c5b219b1a34fd4e0c4056b6139b7fa2cde05da13ae461a16634f5bc7c2cd88ff",
+          "symbolsSha256": "8305f78eb460da8f2cffef886ad34e741a56db5431e3a46f371f2a30a8885507"
+        },
+        "api-missing-closeO1": {
+          "machine": 34404,
+          "fileBytes": 5524480,
+          "sha256": {
+            "exe": "888c88e9fc4f22605b1be009338af71fc5cff079db7602c61dd383c04de74ccb",
+            "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "bca9588ecd850e3320ee52200a8249f13d8cfbfcb7344dab1b5cca19616b57ac",
+            "rss.tsv": "356960b3be8943ee04c66476a1aa2e0a74baeb92cfb25892ee918fac0b45b0b4"
+          },
+          "textSectionBytes": 4258358,
+          "disassemblySha256": "e018e0540d0ec19c8f08e293e9f0460d8db9da6121dea8ba4236617784cf601c",
+          "symbolsSha256": "c1670d0c3476341b27b07558d64b3547a4b4696cf499854c99b659aa6d03d606"
+        },
+        "api-missing-closeO2": {
+          "machine": 34404,
+          "fileBytes": 5321216,
+          "sha256": {
+            "exe": "657926789ca7fd41633477a0fadc35dec0c82aa2cbb406b2441b0de6b65648f0",
+            "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "bca9588ecd850e3320ee52200a8249f13d8cfbfcb7344dab1b5cca19616b57ac",
+            "rss.tsv": "c642780e55366010b5469332ecaed8178098ab3ef11ed4981ff259c9dfa3fe43"
+          },
+          "textSectionBytes": 4055318,
+          "disassemblySha256": "79701bfbfa8f0c1213004ca6ad9e286d8f9edf5042bff16ce0d7c5b3c8292e4a",
+          "symbolsSha256": "1753694cd39ef0092f4a8a6f088b59d444646c0b1e4474138232844b1386e42a"
+        },
+        "api-missing-freeO1": {
+          "machine": 34404,
+          "fileBytes": 5569024,
+          "sha256": {
+            "exe": "cd93c8f3b8d67ab076fbacf0ef3f24935624a1f46a627f4d8e905a476c7c9d71",
+            "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "383b0d14df3463f66b9b5d66859c6d3886136dd830b332f159628823e23dfa65",
+            "rss.tsv": "bbab5317b095fd781dfe20602bbd7a139cc50ff5d021d78e7d01cca312b8eb89"
+          },
+          "textSectionBytes": 4303142,
+          "disassemblySha256": "f27faf9c9fca74602089531ddd42be58c9ca4b8eb86aa75ef8ec0caa2d4c8335",
+          "symbolsSha256": "32fdd6d196af3fae3e876a935898fbf471e45b1fe196844630b8a4ab25220c13"
+        },
+        "api-missing-freeO2": {
+          "machine": 34404,
+          "fileBytes": 5328384,
+          "sha256": {
+            "exe": "0022ace94c020ea33d9582edde69149565ee591f1b4dc2007d03855efd8a4ed2",
+            "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "36ec96d78e9e28bb5fd5e3754cf3d425646ed9a82669dcd666b02a8d749a8474",
+            "rss.tsv": "9d0c5687f3c361fe3191cad9a96dd8d6c99f635a69aeeed1b50fcda80ad50542"
+          },
+          "textSectionBytes": 4062582,
+          "disassemblySha256": "dcc90c8c95281c10940ad153fd40dc5af1200cdd3f084e8547da1e03ab6ceba3",
+          "symbolsSha256": "e96b129977441225ba3bed0cdf1bec26d306ac6fc8cd692a930305e32f6ed5f8"
+        }
+      },
+      "observations": {
+        "api-healthyO1": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "24",
+              "24",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "32",
+              "32",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "40",
+              "40",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "48",
+              "48",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "56",
+              "56",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "64",
+              "64",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              12080
+            ],
+            [
+              16,
+              12104
+            ],
+            [
+              24,
+              12280
+            ],
+            [
+              32,
+              12296
+            ],
+            [
+              40,
+              12276
+            ],
+            [
+              48,
+              12312
+            ],
+            [
+              56,
+              12368
+            ],
+            [
+              64,
+              12372
+            ]
+          ],
+          "status": 0,
+          "maxRssGrowthKiB": 292
+        },
+        "api-healthyO2": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "24",
+              "24",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "32",
+              "32",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "40",
+              "40",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "48",
+              "48",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "56",
+              "56",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "64",
+              "64",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              11964
+            ],
+            [
+              16,
+              12000
+            ],
+            [
+              24,
+              12128
+            ],
+            [
+              32,
+              12176
+            ],
+            [
+              40,
+              12204
+            ],
+            [
+              48,
+              12204
+            ],
+            [
+              56,
+              12256
+            ],
+            [
+              64,
+              12276
+            ]
+          ],
+          "status": 0,
+          "maxRssGrowthKiB": 312
+        },
+        "api-missing-closeO1": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              12088
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        },
+        "api-missing-closeO2": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              11972
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        },
+        "api-missing-freeO1": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "7662144",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              12124
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        },
+        "api-missing-freeO2": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "7730800",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              11908
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        }
+      }
+    },
+    {
+      "kind": "api",
+      "host": "windows-11-arm",
+      "source": "4fc97ca1f1c28e0dd2561c6b14000d13d1b7f4f0",
+      "run": 40069237866,
+      "artifact": 12550184883,
+      "archiveSha256": "43f2193a164cec3743d904eba33262a6b38d92c5e76b13c122ccda1b8e09040e",
+      "reportSha256": "eb32981c5a064eeb70a83623286906ca4b5fab72764ff0dd6cfb5f38b4d0e255",
+      "binaries": {
+        "api-healthyO1": {
+          "machine": 43620,
+          "fileBytes": 4877312,
+          "sha256": {
+            "exe": "1ada8dd9c271dd5f819f467df083ac2cb41c1a08ebfcc05533f78ec2633c00ea",
+            "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+            "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "stderr": "dc314eea2b8cf1af6477b1847ec504f33b0488a6bedad6fc17219493331879e8",
+            "rss.tsv": "b800d31154af7d034dc2b106e3b66fcd10847198e12d12a2a1c46795672e535b"
+          },
+          "textSectionBytes": 3714136,
+          "disassemblySha256": "ec8f9f289353fc0908a1423955325d13f9da686c537addadbdf6eebc4dfed22d",
+          "symbolsSha256": "f973ee6d6c6ee15c49a91664e5ab112b371b09b2c3011534625932cc947cf35e"
+        },
+        "api-healthyO2": {
+          "machine": 43620,
+          "fileBytes": 4617728,
+          "sha256": {
+            "exe": "62c2019a72e68d4f7007444d67f80a3edf907212b78dfb776d28b688c7a9c297",
+            "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+            "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "stderr": "dc314eea2b8cf1af6477b1847ec504f33b0488a6bedad6fc17219493331879e8",
+            "rss.tsv": "e38e1d06be81503417db631ed8304e91c86b8dff926a4b21aea1daee98747088"
+          },
+          "textSectionBytes": 3456120,
+          "disassemblySha256": "8bd00726ecc0c5bf589f6bde6568e2bffe8edb2cc59a3c134c52b503e8ce35b4",
+          "symbolsSha256": "5c606f8b6a8828cecbbbc0290531f1b068a255449e11614fd9306dc1a858804d"
+        },
+        "api-missing-closeO1": {
+          "machine": 43620,
+          "fileBytes": 4877312,
+          "sha256": {
+            "exe": "9464c4e1302f118146e0c7df12fa0ac151f04c2d120af8971689655d30df9a28",
+            "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "bca9588ecd850e3320ee52200a8249f13d8cfbfcb7344dab1b5cca19616b57ac",
+            "rss.tsv": "49893004732cac17c7ee96a295c0b7abb5d5ae44a4c06a84b2be5edd14a0e855"
+          },
+          "textSectionBytes": 3714184,
+          "disassemblySha256": "4ce8a9e723eebb99ead5360f3baae6036dea2b2ee2e184fe9756e003903fb932",
+          "symbolsSha256": "43324e4750835aace440a34a5955748b7b8f5d7140da66130ca66d7166e24749"
+        },
+        "api-missing-closeO2": {
+          "machine": 43620,
+          "fileBytes": 4617728,
+          "sha256": {
+            "exe": "c4f97a195875b6c411fc404b69adf75e21c4fbdfbe26f6d5a9bd8781072d9fba",
+            "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "bca9588ecd850e3320ee52200a8249f13d8cfbfcb7344dab1b5cca19616b57ac",
+            "rss.tsv": "f774d16377b37c53a1f5253fa1e616bbfc93a8b672e8935babe031f4770670a6"
+          },
+          "textSectionBytes": 3456168,
+          "disassemblySha256": "ffabb22b992c15d42f83eeb29deda51045a7c8d958578b84f95df4d82a3a74ec",
+          "symbolsSha256": "9ae04d5f43af111b63e5b69589d0077b2ada85010e536ab5505a77dd9f93ec93"
+        },
+        "api-missing-freeO1": {
+          "machine": 43620,
+          "fileBytes": 4921856,
+          "sha256": {
+            "exe": "6cc8e9657dda223d358a33562d99eb0ae97eb991bf4dcfebf390807279f34b07",
+            "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "8c104eae32af2b16e15f48171b199f9cef994889ed680e5ec0cff5de618f102d",
+            "rss.tsv": "a1a9bd9591db3894248b32a2cc5fb99a997e76e7b173b54ed1df70df26ac3112"
+          },
+          "textSectionBytes": 3759264,
+          "disassemblySha256": "885a21b8f0879d820e23f9b955b0a7210c5bcae431befae3ce60536ee386216e",
+          "symbolsSha256": "91eb6a2cb974d349176d25d65bab11d1b6ff2a8a957491d67050852f31f3e7b5"
+        },
+        "api-missing-freeO2": {
+          "machine": 43620,
+          "fileBytes": 4649472,
+          "sha256": {
+            "exe": "59f0c380c0474092ad7fc89eaa79649fba26896b53e203e6d7c06bb0682c5125",
+            "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+            "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+            "stderr": "922dcf3874e75c8c74ff95e43bcd1b6459981d3ffbf6b3c5745fe66d973e812b",
+            "rss.tsv": "649224b488c92ceef86c7493fb2fa26d745b215655da7c0e3fb21597c99b6ade"
+          },
+          "textSectionBytes": 3488148,
+          "disassemblySha256": "6a24f8a14c1271ba67ca61b84ff556d9ef2388d5fab239dbe2eb93c153f279aa",
+          "symbolsSha256": "a5873cb3009f18e98e9952703470afcd31ba2d0f0f182d1480b3dd6366a643ae"
+        }
+      },
+      "observations": {
+        "api-healthyO1": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "24",
+              "24",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "32",
+              "32",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "40",
+              "40",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "48",
+              "48",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "56",
+              "56",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "64",
+              "64",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              12072
+            ],
+            [
+              16,
+              12128
+            ],
+            [
+              24,
+              12084
+            ],
+            [
+              32,
+              12156
+            ],
+            [
+              40,
+              12064
+            ],
+            [
+              48,
+              12092
+            ],
+            [
+              56,
+              12108
+            ],
+            [
+              64,
+              12044
+            ]
+          ],
+          "status": 0,
+          "maxRssGrowthKiB": 84
+        },
+        "api-healthyO2": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "24",
+              "24",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "32",
+              "32",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "40",
+              "40",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "48",
+              "48",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "56",
+              "56",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "64",
+              "64",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              11972
+            ],
+            [
+              16,
+              12000
+            ],
+            [
+              24,
+              12000
+            ],
+            [
+              32,
+              12012
+            ],
+            [
+              40,
+              11948
+            ],
+            [
+              48,
+              11924
+            ],
+            [
+              56,
+              11872
+            ],
+            [
+              64,
+              11888
+            ]
+          ],
+          "status": 0,
+          "maxRssGrowthKiB": 40
+        },
+        "api-missing-closeO1": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              12136
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        },
+        "api-missing-closeO2": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              11964
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        },
+        "api-missing-freeO1": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "8044176",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              12164
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        },
+        "api-missing-freeO2": {
+          "idle": [
+            [
+              "http-memory",
+              "8",
+              "8",
+              "2576",
+              "1",
+              "532",
+              "0"
+            ],
+            [
+              "http-memory",
+              "16",
+              "16",
+              "8333056",
+              "1",
+              "532",
+              "0"
+            ]
+          ],
+          "rssKiB": [
+            [
+              8,
+              12084
+            ]
+          ],
+          "status": 241,
+          "maxRssGrowthKiB": 0
+        }
+      }
+    },
+    {
+      "kind": "static-guards",
+      "host": "ubuntu-latest",
+      "source": "cf3a11e4995cf228db9d2b783d20583da5a056f5",
+      "run": 40072655673,
+      "artifact": 12551363903,
+      "archiveSha256": "b93578af3754d3f263837f5c1fdbfd45acee109af72da6e249a601bcfb655e10",
+      "reportSha256": "9995970e135766d0a3796157c6c49a1355fa768762b096e7503e4c12b3acf980",
+      "binaries": {
+        "-O1": {
+          "machine": 62,
+          "binarySha256": "79a5f1dbdaedee4d638865c86adcee1aed3df3fa3eab01b0579129f7dedeabb6",
+          "fileBytes": 16936,
+          "symbolsSha256": "b02c27af84407284a068828ec49138c1853762bbb40dbf70501e621ad0a72e0d",
+          "disassemblySha256": "5a97cf3991e93c38fb2567520ba330199ace118677442a769fe8a01c441c2ff9"
+        },
+        "-O2": {
+          "machine": 62,
+          "binarySha256": "1ae17c3519c2ec405711be2f71bf1998df16f0b48d94d16d057a18ed8cd8d880",
+          "fileBytes": 16920,
+          "symbolsSha256": "6a506287b14d942d3dbf2174eeb61ea9496a60308e18154dbe323d3265e80d06",
+          "disassemblySha256": "7d27bb1d62798eacbac380eb7118e2b83eab12ffb2c01a01108292bab4f29db3"
+        }
+      },
+      "executions": {
+        "-O1-ordinary": {
+          "status": 0,
+          "stdout": "three guarded stacks, writable bodies, one mapping released\n",
+          "stderr": ""
+        },
+        "-O1-first-guard-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: cannot protect static task stack guard page\n"
+        },
+        "-O1-last-guard-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: cannot protect static task stack guard page\n"
+        },
+        "-O1-map-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: out of memory: cannot map the program's static memory\n"
+        },
+        "-O1-missing-guard": {
+          "status": 211,
+          "stdout": "",
+          "stderr": ""
+        },
+        "-O2-ordinary": {
+          "status": 0,
+          "stdout": "three guarded stacks, writable bodies, one mapping released\n",
+          "stderr": ""
+        },
+        "-O2-first-guard-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: cannot protect static task stack guard page\n"
+        },
+        "-O2-last-guard-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: cannot protect static task stack guard page\n"
+        },
+        "-O2-map-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: out of memory: cannot map the program's static memory\n"
+        },
+        "-O2-missing-guard": {
+          "status": 211,
+          "stdout": "",
+          "stderr": ""
+        }
+      }
+    },
+    {
+      "kind": "static-guards",
+      "host": "ubuntu-24.04-arm",
+      "source": "cf3a11e4995cf228db9d2b783d20583da5a056f5",
+      "run": 40072655673,
+      "artifact": 12552295391,
+      "archiveSha256": "c645d562c23a1c82e3710eaf0b58c214ebecbba51722a519b984d58fdb1306e4",
+      "reportSha256": "adefd70679fb41cd66e5c230f991c3bbe6786d50c0e745e8b94e416c680de111",
+      "binaries": {
+        "-O1": {
+          "machine": 183,
+          "binarySha256": "d42b75906d25555548cd87992344343f3e99aaf12ff9160d180b44ac4df20a4d",
+          "fileBytes": 71384,
+          "symbolsSha256": "9e9c1eff5fe0603b8726f0e2674e513db6bfe3600f16b6a7f1f7978f7642936f",
+          "disassemblySha256": "c9c2575967aa82af2b2e8c9c5786667bb6120171536e5c154d72a865e29adf17"
+        },
+        "-O2": {
+          "machine": 183,
+          "binarySha256": "c687c23d6c31e0e0af7d57b1f6d6a61ebce235febb03a9dcf2c544bfe71daa41",
+          "fileBytes": 71408,
+          "symbolsSha256": "9a7ea7dddfca98164678b4b680f2a604db4927851462a08a4e74df9379e5936b",
+          "disassemblySha256": "7c3b92c4eb1a9aa30097019a32e3f8b9af413ec472188042a14d6de668d6b5b5"
+        }
+      },
+      "executions": {
+        "-O1-ordinary": {
+          "status": 0,
+          "stdout": "three guarded stacks, writable bodies, one mapping released\n",
+          "stderr": ""
+        },
+        "-O1-first-guard-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: cannot protect static task stack guard page\n"
+        },
+        "-O1-last-guard-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: cannot protect static task stack guard page\n"
+        },
+        "-O1-map-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: out of memory: cannot map the program's static memory\n"
+        },
+        "-O1-missing-guard": {
+          "status": 211,
+          "stdout": "",
+          "stderr": ""
+        },
+        "-O2-ordinary": {
+          "status": 0,
+          "stdout": "three guarded stacks, writable bodies, one mapping released\n",
+          "stderr": ""
+        },
+        "-O2-first-guard-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: cannot protect static task stack guard page\n"
+        },
+        "-O2-last-guard-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: cannot protect static task stack guard page\n"
+        },
+        "-O2-map-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: out of memory: cannot map the program's static memory\n"
+        },
+        "-O2-missing-guard": {
+          "status": 211,
+          "stdout": "",
+          "stderr": ""
+        }
+      }
+    },
+    {
+      "kind": "static-guards",
+      "host": "macos-15",
+      "source": "cf3a11e4995cf228db9d2b783d20583da5a056f5",
+      "run": 40072655673,
+      "artifact": 12551692597,
+      "archiveSha256": "60e16f9a6cbc767ac5d4a2f5fba19d0df3cc1c782ecea337f6ffed946fd6ae42",
+      "reportSha256": "fdae7ffce840c23de86be94545c4f5d95baf9fe12fd6678dc829513a26ff31d3",
+      "binaries": {
+        "-O1": {
+          "machine": 16777228,
+          "binarySha256": "9af5d9d2a9eeae5ceba0329c607c965e92786cdaca64c8726cce44e1da6607c5",
+          "fileBytes": 34232,
+          "symbolsSha256": "f3ffc5fd279c8299cd099f2a3925b0c382b0757f9b13b700495c26aa7b1636df",
+          "disassemblySha256": "09d14263aea5c8a31afae173403ed2819f2871e6e5064766f43e15ee45d165c5"
+        },
+        "-O2": {
+          "machine": 16777228,
+          "binarySha256": "2c09fac479d0b8ada814c395ba9d7b396ad836e3797b4376d6ffd5d31fbc0199",
+          "fileBytes": 34664,
+          "symbolsSha256": "b91b03b83286d81b6c4a1e547a531c761715af1fc86c2fff5bc500d94c56c6d9",
+          "disassemblySha256": "e1f7d27482f892d238facb733d560d6de55c3f7ba7d6a59728cd036e86ff3cb3"
+        }
+      },
+      "executions": {
+        "-O1-ordinary": {
+          "status": 0,
+          "stdout": "three guarded stacks, writable bodies, one mapping released\n",
+          "stderr": ""
+        },
+        "-O1-first-guard-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: cannot protect static task stack guard page\n"
+        },
+        "-O1-last-guard-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: cannot protect static task stack guard page\n"
+        },
+        "-O1-map-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: out of memory: cannot map the program's static memory\n"
+        },
+        "-O1-missing-guard": {
+          "status": 211,
+          "stdout": "",
+          "stderr": ""
+        },
+        "-O2-ordinary": {
+          "status": 0,
+          "stdout": "three guarded stacks, writable bodies, one mapping released\n",
+          "stderr": ""
+        },
+        "-O2-first-guard-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: cannot protect static task stack guard page\n"
+        },
+        "-O2-last-guard-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: cannot protect static task stack guard page\n"
+        },
+        "-O2-map-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: out of memory: cannot map the program's static memory\n"
+        },
+        "-O2-missing-guard": {
+          "status": 211,
+          "stdout": "",
+          "stderr": ""
+        }
+      }
+    },
+    {
+      "kind": "static-guards",
+      "host": "macos-15-intel",
+      "source": "cf3a11e4995cf228db9d2b783d20583da5a056f5",
+      "run": 40072655673,
+      "artifact": 12552461849,
+      "archiveSha256": "9bbb3faf165b588670c8e6faa24a6b2fb22aa7e5f22006eafead11471c2a637e",
+      "reportSha256": "d124ad1ae269b3ea76b34cdefbafcafe83fdf1d3c33a7b6a938daf26a1f901cf",
+      "binaries": {
+        "-O1": {
+          "machine": 16777223,
+          "binarySha256": "1850afefc9bd57437f9a6b2eb32ad9d5bbeda43c47095977a5639b1bfbfcafaf",
+          "fileBytes": 9248,
+          "symbolsSha256": "93c91de6e4eb987c095d89d29b9c619efafefae6f3c088b00ea14e3d947b19ca",
+          "disassemblySha256": "6315a63ddc5e8234d8b52ea83137d0cebfa0b449a2365d9a0245ac2b615bf2a8"
+        },
+        "-O2": {
+          "machine": 16777223,
+          "binarySha256": "662418f53f3c07a0aa765cab6734b605af8b7617136679129737cde644cd7529",
+          "fileBytes": 9672,
+          "symbolsSha256": "1dae56cf72831790693dc447e3504f07db6978b2e7169304c0b32ff97cff0479",
+          "disassemblySha256": "6c67f014df9fd6492da164db963dfb4e65336566b8e8866ca923972855bd8071"
+        }
+      },
+      "executions": {
+        "-O1-ordinary": {
+          "status": 0,
+          "stdout": "three guarded stacks, writable bodies, one mapping released\n",
+          "stderr": ""
+        },
+        "-O1-first-guard-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: cannot protect static task stack guard page\n"
+        },
+        "-O1-last-guard-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: cannot protect static task stack guard page\n"
+        },
+        "-O1-map-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: out of memory: cannot map the program's static memory\n"
+        },
+        "-O1-missing-guard": {
+          "status": 211,
+          "stdout": "",
+          "stderr": ""
+        },
+        "-O2-ordinary": {
+          "status": 0,
+          "stdout": "three guarded stacks, writable bodies, one mapping released\n",
+          "stderr": ""
+        },
+        "-O2-first-guard-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: cannot protect static task stack guard page\n"
+        },
+        "-O2-last-guard-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: cannot protect static task stack guard page\n"
+        },
+        "-O2-map-error": {
+          "status": 102,
+          "stdout": "",
+          "stderr": "fwp: out of memory: cannot map the program's static memory\n"
+        },
+        "-O2-missing-guard": {
+          "status": 211,
+          "stdout": "",
+          "stderr": ""
+        }
+      }
+    },
+    {
+      "kind": "socket-inheritance",
+      "reportSha256": "8602a6438fd927196e209c49c7ab06d5818f8bd8ae3de233227f012e5a6f4f01",
+      "source": "05de0f652ae291df3f97c521a447a6f9636efce3",
+      "run": 40070406753,
+      "job": 120802423807,
+      "host": "windows-2025",
+      "artifact": 12551356263,
+      "archiveSha256": "8dbb36e934a57a63bd714ba95cc5c8ec68679604aab548b26959be8357ccc634",
+      "binarySha256": "5667ff4ab72659e202bbfffc41f0d12c4a1321f9eb4da3deef21f0ef56367848",
+      "machine": 34404,
+      "disassemblySha256": "951ee0b503bcfb2486dd2338b88ed76d20175287ac5e4b1a7dbd096ea3e67904",
+      "importsSha256": "73f4de403bd80966e761f2195795913dbfb517c30479f0c52a5d9739b8b61281",
+      "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-pc-windows-msvc\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "results": [
+        "socket-inheritance\toriginal\toriginal_flags=0\tclone_flags=None\theld_until_child_exit=false\tafter_exit=Ok(0)",
+        "socket-inheritance\tclone\toriginal_flags=0\tclone_flags=Some(1)\theld_until_child_exit=true\tafter_exit=Err(Os { code: 10054, kind: ConnectionReset, message: \"An existing connection was forcibly closed by the remote host.\" })",
+        "socket-inheritance\tforced-inherit\toriginal_flags=1\tclone_flags=None\theld_until_child_exit=true\tafter_exit=Err(Os { code: 10054, kind: ConnectionReset, message: \"An existing connection was forcibly closed by the remote host.\" })"
+      ],
+      "scope": "Rust client/socket diagnostic on native Windows; no fwp timing or runtime-layout claim"
+    },
+    {
+      "kind": "socket-inheritance",
+      "reportSha256": "6f0334c3621d60948e95e068f72bd60455a7f191ce2dd9500291f1171bf1a6a5",
+      "source": "05de0f652ae291df3f97c521a447a6f9636efce3",
+      "run": 40070406753,
+      "job": 120802423775,
+      "host": "windows-11-arm",
+      "artifact": 12551196602,
+      "archiveSha256": "4d98bcc5b08d620b8fd1fa54df00910b40399b57c695865c7a6e9516633ded53",
+      "binarySha256": "99fcde92ce4fb62a931ffda61f62347c71873f6bf280be76fc5eabdffff2047b",
+      "machine": 43620,
+      "disassemblySha256": "f2bb2cec2bbaac045e6980560758f626e5af963069d57b13c239276f5d069cc4",
+      "importsSha256": "c77c034277b3fb02a172826d429e57be7081562f1a17fc29e935bcf818279cba",
+      "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-pc-windows-msvc\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "results": [
+        "socket-inheritance\toriginal\toriginal_flags=0\tclone_flags=None\theld_until_child_exit=false\tafter_exit=Ok(0)",
+        "socket-inheritance\tclone\toriginal_flags=0\tclone_flags=Some(1)\theld_until_child_exit=true\tafter_exit=Err(Os { code: 10054, kind: ConnectionReset, message: \"An existing connection was forcibly closed by the remote host.\" })",
+        "socket-inheritance\tforced-inherit\toriginal_flags=1\tclone_flags=None\theld_until_child_exit=true\tafter_exit=Err(Os { code: 10054, kind: ConnectionReset, message: \"An existing connection was forcibly closed by the remote host.\" })"
+      ],
+      "scope": "Rust client/socket diagnostic on native Windows; no fwp timing or runtime-layout claim"
+    }
+  ],
+  "scope": "Focused API and static guard evidence at the named sources. Final delivery acceptance is separate; these are correctness/memory checks, not throughput measurements."
+}

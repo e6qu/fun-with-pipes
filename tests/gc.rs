@@ -491,14 +491,13 @@ fn requests(addr: &str, paths: &[&str], n: usize) {
     let mut done = 0;
     while done < n {
         let conn = TcpStream::connect(addr).unwrap();
-        let mut reader = BufReader::new(conn.try_clone().unwrap());
         conn.set_nodelay(true).unwrap();
-        let mut w = conn;
+        let mut reader = BufReader::new(conn);
         for _ in 0..50 {
             let path = paths[done % paths.len()];
             // one write: a request split over packets waits for delayed ACKs
             let req = format!("GET {} HTTP/1.1\r\nhost: test\r\n\r\n", path);
-            w.write_all(req.as_bytes()).unwrap();
+            reader.get_mut().write_all(req.as_bytes()).unwrap();
             let mut status = String::new();
             reader.read_line(&mut status).unwrap();
             assert!(status.contains(" 200 "), "{}: {:?}", path, status);

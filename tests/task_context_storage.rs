@@ -11,6 +11,41 @@ mod allocations;
 
 const PROGRAM: &str = "worker : I64 -> I64 ! {Async}\nworker = tap (const () | task.yield) | add 1\nmain = range 0 32 | task.map worker | map (option.unwrap-or 0) | sum | echo\n";
 
+#[test]
+fn task_stack_pages_guard_reuse_and_setup_failures() {
+    let runtime = include_str!("../runtime/fwp_rt_task.c");
+    let begin = "    t->stack_size = FWP_NATIVE_TASK_STACK;\n    if (fwp_stack_pool_n > 0)";
+    assert_eq!(runtime.matches(begin).count(), 1);
+    let block = &runtime[runtime.find(begin).unwrap()..];
+    let block = &block[..block.find("#endif\n    t->gc_next").unwrap()];
+    let code = include_str!("fixtures/task_stack_pages.c")
+        .replace("    /* PRODUCTION_STACK_ALLOCATION */", block);
+    let path = directory("pages");
+    for opt in ["-O1", "-O2"] {
+        let binary = compile(&code, &path, opt, opt, false);
+        for (mode, status) in [
+            ("ordinary", 0),
+            ("no-thp", 0),
+            ("map-error", 0),
+            ("advice-error", 0),
+            ("guard-error", 0),
+            ("missing-advice", 211),
+            ("missing-guard", 212),
+        ] {
+            let output = run(
+                Command::new(&binary).arg(mode),
+                &path,
+                &format!("{opt}-{mode}"),
+                10,
+            );
+            assert_eq!(output.status.code(), Some(status), "{mode}: {output:?}");
+            if status == 0 {
+                assert!(output.stderr.is_empty(), "{output:?}");
+            }
+        }
+    }
+}
+
 fn directory(case: &str) -> PathBuf {
     let root = std::env::var_os("FWP_TASK_CONTEXT_ARTIFACTS")
         .map(PathBuf::from)

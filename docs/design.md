@@ -738,6 +738,16 @@ wall-clock timers do not define an order between independent actions. Use a
 channel or await when ordering matters. [Concurrency](concurrency.md) gives the
 user-visible behavior and platform implementation.
 
+Dynamic native Unix task stacks reserve 256 MiB of virtual addresses and are reused in a
+bounded pool. Linux allocations request ordinary pages before touching the stack:
+transparent huge pages can otherwise commit 2 MiB for a shallow task. Guard-page
+and page-policy setup errors release the mapping before trapping. This preserves
+task semantics and the existing virtual stack limit; it does not remove stack
+storage costs. [API memory measurements](measurements/http-application-memory.md#linux-physical-pages-and-stack-reuse)
+record the diagnosed cost and focused native verification. Static Unix startup
+also checks every task guard; a failed guard releases the shared mapping and
+exits before tasks run. Windows retains OS-managed fiber guards.
+
 Client connection I/O tasks have one scheduler owner. Their records release
 when execution finishes and their stacks and scheduler links have been removed;
 this path needs no task reference-count updates. Language-visible task handles

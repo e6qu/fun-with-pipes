@@ -15,11 +15,12 @@ pub fn start(
     command: &mut Command,
     prefix: &str,
     timeout: Duration,
+    input: Stdio,
 ) -> Result<(Child, String, BufReader<ChildStderr>), String> {
     #[cfg(windows)]
     command.creation_flags(0x00000200); // isolate CTRL_BREAK to this server
     let mut child = command
-        .stdin(Stdio::null())
+        .stdin(input)
         .stdout(Stdio::null())
         .stderr(Stdio::piped())
         .spawn()
@@ -117,6 +118,7 @@ mod tests {
                 } else {
                     10
                 }),
+                std::process::Stdio::null(),
             );
             let error = result.unwrap_err();
             assert!(
@@ -139,6 +141,7 @@ mod tests {
             &mut command("ready"),
             "listening on http://",
             std::time::Duration::from_secs(15),
+            std::process::Stdio::null(),
         )
         .unwrap();
         child.kill().unwrap();
