@@ -147,6 +147,30 @@ identical-binary control within 3%, at least 5% loop improvement and no more tha
 No compiler change is selected. Protocol and runner are prepared; publication
 and native execution remain pending.
 
+
+## Prepared map storage reduction
+
+The benchmark branch now compacts typed map/set borrowed words into their input
+scratch lanes and frees sort scratch before result allocation. All three runtime
+callers and the numeric compiler builder keep source owners alive or use unboxed
+words; their input scratch is discarded after return. Source and hash/layout
+semantics remain unchanged. Do not compact an owning container without proving
+its cleanup contract.
+
+Map/set failure injection now includes every comparison, so the existing missing
+scratch-owner control remains meaningful during sorting. A new regression in the
+existing `map_set_ownership` target checks map/set peak charge at O1/O2 in ARC and
+tracing, with a delayed-release control that must exceed the budget. It uses
+4,096 entries so both buffers use exact large-object charges, avoiding small-slot
+rounding. The map-focused workflow now uses production GCC on Linux and Clang
+elsewhere, and records the actual selected C compiler.
+
+Local formatting passes (1.47s). Native compilation, memory measurements and
+six-host failure/reuse acceptance are pending publication. The prior arithmetic
+experiment passed correctness on both hosts, but its screen failed on AMD64 due
+to noisy controls and some slower rows; ARM64 passed. No arithmetic compiler
+change is selected. Full binary/sample review of that experiment remains pending.
+
 ## Local limits
 
 Use `python3 scripts/local-guard.py COMMAND...` serially. Full builds/suites and

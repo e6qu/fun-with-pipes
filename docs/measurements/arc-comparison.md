@@ -154,3 +154,20 @@ controls and eight corrupted-artifact controls. Instrumented binary sizes and
 compiler stack reports are retained separately; they cannot describe the original
 timed program's stack use. No instrumented or GNU-time run contributes to the
 elapsed-time table above.
+
+## Next storage change under test
+
+The typed map builder currently keeps input, sort scratch and result buffers
+alive together. The candidate compacts the sorted borrowed words into the input
+lanes and releases sort scratch before allocating the result. All callers keep
+the original owners alive and discard those scratch lanes after the call;
+numeric builders contain unboxed values. First-key/last-value duplicate handling
+must remain unchanged. Expected whole-program map peak falls from 24,000,008 to
+16,000,008 charged bytes; this is a prediction until current-source measurement.
+
+A focused regression uses 4,096 unordered unique integer keys with stack input
+lanes. Its observed budget covers one sort/result buffer at a time. A control
+that delays scratch release must exceed that budget. Existing alias tests also
+inject every comparison failure, including sorting while scratch is live and
+compaction after release. Native success, failure, tracing stress and reuse
+checks remain required on all six targets. No timing improvement is assumed.

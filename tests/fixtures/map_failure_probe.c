@@ -1,4 +1,4 @@
-/* Inject every allocation/retain failure into real typed map/set operations.
+/* Inject every allocation/retain/comparison failure into real typed map/set operations.
  * The allocation ledger also observes logical frees under reuse poisoning. */
 static int map_test_armed, map_test_step, map_test_fail, map_test_live;
 static void *map_test_allocations[256];

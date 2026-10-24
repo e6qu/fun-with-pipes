@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare joined map buffers with the old separate layout on the same runner."""
+"""Compare current map construction with the historical separate-buffer builder."""
 import argparse
 import importlib.util
 import json
@@ -129,6 +129,9 @@ def main():
               'scope': 'Same-runner, same-compiler comparison of joined key/value storage with the '
                        'original independent allocations. The old builder bodies are an explicit '
                        'measurement fixture; numeric callback and sorting code stay unchanged. '
+                       'The historical fixture also retains scratch until after result materialization; '
+                       'the current builder releases it earlier. This now compares both layout and '
+                       'scratch lifetime, not an isolated buffer-layout effect. '
                        'All variants retain checked arithmetic, ownership and cleanup. Twenty-four '
                        'fresh processes per variant rotate order; each position occurs six times. '
                        'Full work constructs 500,000 entries and makes 2,000,000 lookups; separate '
