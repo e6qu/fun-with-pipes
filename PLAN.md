@@ -120,6 +120,14 @@ outside the benchmark suite.
    collector-specific checks before removing tracing; completed groups are
    evidence, not a backlog.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
+   The [explicit ARC baseline](docs/measurements/arc-comparison.md) compares seven
+   complete programs with C/Rust and measures process and managed memory separately.
+   Focused measurements support reducing map peak storage by releasing sort scratch
+   sooner; final delivery remains tracked in the handoff. The
+   [checked-arithmetic experiment](docs/measurements/checked-bounds-results.md) fails
+   its full performance screen, so no compiler rule is adopted. Use these baselines
+   to set equivalent-work budgets for the remaining costs. Keep historical tracing
+   snapshots labelled; different runs do not establish a memory-mode speedup.
    The [benchmark index](docs/benchmarks.md) links inputs, algorithms, arithmetic
    rules and current limitations. Integer counting and checked products retain
    slower results and optimization-level differences. Numerical descent still has
@@ -139,9 +147,8 @@ outside the benchmark suite.
    and buffer costs. The [inline experiment](docs/measurements/descent-call-costs.md)
    failed its predeclared speed screen and does not justify an inlining rule.
    Resource-owning tail frames and mutual recursion need separate lifetime proofs.
-3. Deliver the [API memory scenario](docs/measurements/http-application-memory.md),
-   including stack-page and test-client socket fixes, then complete the
-   [application acceptance suite](docs/application-acceptance.md) and use equivalent-work measurements
+3. Extend the [application acceptance suite](docs/application-acceptance.md) from
+   the verified [API memory scenario](docs/measurements/http-application-memory.md) and use equivalent-work measurements
    to choose the next costs to remove: dynamic calls, input copies, container
    layout, numerical workspace and derivative recording. Establish workload-specific
    time/memory budgets before claiming improvement. Native command ownership,

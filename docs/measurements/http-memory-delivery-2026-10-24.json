@@ -1,0 +1,3705 @@
+{
+  "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+  "merge": "058dc4e5954571ed222ca4d26af4403a52a8516b",
+  "parent": "46a7235a81c46d30d0c155f319913e6b7fe4ddbc",
+  "tree": "cacb988c631c94dd52b7a880880776998a32c472",
+  "subject": "Bound API memory and verify stack and connection cleanup",
+  "productionRun": 40074183388,
+  "documentationRun": 40074183289,
+  "savedBinaryFiles": 8454,
+  "stackObjects": 12,
+  "layoutReviews": 144,
+  "checks": [
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T09:22:39Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40074183388/job/120813918967",
+      "name": "windows / native (windows-2025)",
+      "startedAt": "2026-10-24T07:27:30Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T07:28:02Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40074183289/job/120813918371",
+      "name": "roadmap_docs",
+      "startedAt": "2026-10-24T07:27:31Z",
+      "status": "COMPLETED",
+      "workflowName": "Roadmap documentation"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T08:59:48Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40074183388/job/120813918993",
+      "name": "windows / native (windows-11-arm)",
+      "startedAt": "2026-10-24T07:27:15Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T08:11:16Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40074183388/job/120813918844",
+      "name": "macos (macos-15)",
+      "startedAt": "2026-10-24T07:27:36Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T09:04:51Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40074183388/job/120813918964",
+      "name": "macos (macos-15-intel)",
+      "startedAt": "2026-10-24T07:27:40Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T08:09:29Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40074183388/job/120813918928",
+      "name": "macos_gc (macos-15)",
+      "startedAt": "2026-10-24T07:27:43Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T09:05:37Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40074183388/job/120813918951",
+      "name": "macos_gc (macos-15-intel)",
+      "startedAt": "2026-10-24T07:27:58Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T09:12:52Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40074183388/job/120813918952",
+      "name": "test (ubuntu-latest)",
+      "startedAt": "2026-10-24T07:30:24Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T09:09:34Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40074183388/job/120813918903",
+      "name": "test (ubuntu-24.04-arm)",
+      "startedAt": "2026-10-24T07:27:33Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T07:31:56Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40074183388/job/120813918950",
+      "name": "bench",
+      "startedAt": "2026-10-24T07:30:03Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    }
+  ],
+  "reports": [
+    {
+      "kind": "ownership",
+      "host": "ubuntu-latest",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12555156428,
+      "archiveSha256": "23e6212d72cbe4317a23c50c9acde845f39ddafaa2114e520d23f5efa3b15bb6",
+      "reportSha256": "dc9d69f89db3f83a66b26138fb0f1cf2a492db9595729e61f0ad6e2d74d928f9"
+    },
+    {
+      "kind": "ownership",
+      "host": "ubuntu-24.04-arm",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554848992,
+      "archiveSha256": "2996e2684a4251deaa830e2c1e1d56d8e8fc92d50947c15c77b7c0b642285a41",
+      "reportSha256": "6446bab11509fbcb2204b692eeafa8d18fe78d33c50c9311a90037c8a9a6ef83"
+    },
+    {
+      "kind": "ownership",
+      "host": "windows-2025",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12555198017,
+      "archiveSha256": "059509faf636b5163fa0533d187130cfd70c2136ad86b17bbd128f1472425308",
+      "reportSha256": "14de36359895e8a2a51ec4539655710c67931f26c9150a4bb9ee019c2a90934b"
+    },
+    {
+      "kind": "ownership",
+      "host": "windows-11-arm",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554892533,
+      "archiveSha256": "9d4e5c93f20dfdcddd7a0bfe19d0e2cbb85479c61e7d541141b29cafec72d823",
+      "reportSha256": "59a7370399e4d53966cdf83a4ab8d2bb66dd356627265514afea6b09c31a83b4"
+    },
+    {
+      "kind": "ownership",
+      "host": "macos-15",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12553607790,
+      "archiveSha256": "3e1efd6a6e9558f625797e66aa336836a43fae5c25c3e4a98bed414e6d708a9d",
+      "reportSha256": "966fdd730d05f1720433b049e67c21e102d1fb284d4641f169e7c15253f4a6c4"
+    },
+    {
+      "kind": "ownership",
+      "host": "macos-15-intel",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554134111,
+      "archiveSha256": "4143cf75d576cd29690a3b1f28fbffcddfaa06528d4e0abbc85d73929d89ace3",
+      "reportSha256": "ac2250f3f30d13184b9d1545a731a00c47773181fc88fcdb6b0158ac04b44cdd"
+    },
+    {
+      "kind": "floats",
+      "host": "ubuntu-latest",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12555156428,
+      "archiveSha256": "23e6212d72cbe4317a23c50c9acde845f39ddafaa2114e520d23f5efa3b15bb6",
+      "reportSha256": "62919e32336958a36f66861c84823c8b41756d4000c70a8c63d1023461ea153c"
+    },
+    {
+      "kind": "floats",
+      "host": "ubuntu-24.04-arm",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554848992,
+      "archiveSha256": "2996e2684a4251deaa830e2c1e1d56d8e8fc92d50947c15c77b7c0b642285a41",
+      "reportSha256": "a0313ed00115ddfe7d4a18655ef95cad2efe95f0a2879f44efaf692c35c0cd16"
+    },
+    {
+      "kind": "floats",
+      "host": "windows-2025",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12555198017,
+      "archiveSha256": "059509faf636b5163fa0533d187130cfd70c2136ad86b17bbd128f1472425308",
+      "reportSha256": "e76ba394e3be7b113c545f9ec36ca66598d346f88ce156151a289c34432d9319"
+    },
+    {
+      "kind": "floats",
+      "host": "windows-11-arm",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554892533,
+      "archiveSha256": "9d4e5c93f20dfdcddd7a0bfe19d0e2cbb85479c61e7d541141b29cafec72d823",
+      "reportSha256": "3e64d8c8b3728773b2ab5670655f11bfda487413b99bbed4f9390dcfdbf46585"
+    },
+    {
+      "kind": "floats",
+      "host": "macos-15",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12553607790,
+      "archiveSha256": "3e1efd6a6e9558f625797e66aa336836a43fae5c25c3e4a98bed414e6d708a9d",
+      "reportSha256": "8eb9a766a873693e322e4b2d7e9f927f673964df4f494d6beac8edbd69399d61"
+    },
+    {
+      "kind": "floats",
+      "host": "macos-15-intel",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554134111,
+      "archiveSha256": "4143cf75d576cd29690a3b1f28fbffcddfaa06528d4e0abbc85d73929d89ace3",
+      "reportSha256": "c8abd06c70a96d8342ef9c861be99e69a5e4c2a429a3de9131244b1669a7ee4a"
+    },
+    {
+      "kind": "controls",
+      "host": "ubuntu-latest",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12555490711,
+      "archiveSha256": "9fb1d9df78e13f37ec096e0b2f571bb7f86865c87d494825169946018634f7fd",
+      "reportSha256": "4cd1aff250e3908afa39c92063cf106984b1684ac2c8c0b4a2fd3f295ba1ea03"
+    },
+    {
+      "kind": "controls",
+      "host": "ubuntu-24.04-arm",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554134340,
+      "archiveSha256": "d749cc1ab546c293a5cd0152047988400316f6acab8ce65daf5d2a9068e7db82",
+      "reportSha256": "f9fc398326381317cfeadb7d8baf0f3ae2f425dbc9f39c1815af0c00f393b906"
+    },
+    {
+      "kind": "arrays",
+      "host": "ubuntu-latest",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12555156428,
+      "archiveSha256": "23e6212d72cbe4317a23c50c9acde845f39ddafaa2114e520d23f5efa3b15bb6",
+      "reportSha256": "c929bdceb858309532da1cf81a9c317a9493b69bfbd5cd53b53173a68074c692"
+    },
+    {
+      "kind": "arrays",
+      "host": "ubuntu-24.04-arm",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554848992,
+      "archiveSha256": "2996e2684a4251deaa830e2c1e1d56d8e8fc92d50947c15c77b7c0b642285a41",
+      "reportSha256": "7dc42b5e9618d3e71f8345e86ebdb179973cdeb6dc70852d736b41932bd2b496"
+    },
+    {
+      "kind": "arrays",
+      "host": "windows-2025",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12555198017,
+      "archiveSha256": "059509faf636b5163fa0533d187130cfd70c2136ad86b17bbd128f1472425308",
+      "reportSha256": "6e0d4a50bfe64e0225b60cfb35c10ba77618b340b559aef3800db9c5597d6026"
+    },
+    {
+      "kind": "arrays",
+      "host": "windows-11-arm",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554892533,
+      "archiveSha256": "9d4e5c93f20dfdcddd7a0bfe19d0e2cbb85479c61e7d541141b29cafec72d823",
+      "reportSha256": "68404c2eae5cdf17fafe7c4935714d1b1c88a3f35b86ace9afa829c9111429c3"
+    },
+    {
+      "kind": "arrays",
+      "host": "macos-15",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12553607790,
+      "archiveSha256": "3e1efd6a6e9558f625797e66aa336836a43fae5c25c3e4a98bed414e6d708a9d",
+      "reportSha256": "89176dee84982c5cc74f6dcec877d238cf5e8d24bffc04ee7b45951db946d3dd"
+    },
+    {
+      "kind": "arrays",
+      "host": "macos-15-intel",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554134111,
+      "archiveSha256": "4143cf75d576cd29690a3b1f28fbffcddfaa06528d4e0abbc85d73929d89ace3",
+      "reportSha256": "971493ea2c27d6d1bec9cb0ba7c90b29acb7a8bbd7091895188d0e812cc3e0f2"
+    },
+    {
+      "kind": "stack",
+      "host": "ubuntu-latest",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12555156428,
+      "archiveSha256": "23e6212d72cbe4317a23c50c9acde845f39ddafaa2114e520d23f5efa3b15bb6",
+      "reportSha256": "e5f0423b354a4bdc37632b82bb4265b6f86a9a0bde3c853eb6718deecf162cf4"
+    },
+    {
+      "kind": "stack",
+      "host": "ubuntu-24.04-arm",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554848992,
+      "archiveSha256": "2996e2684a4251deaa830e2c1e1d56d8e8fc92d50947c15c77b7c0b642285a41",
+      "reportSha256": "39a66db00385713375d825c92fb6fe98a20e2ea843dcd5fc44b7192ba6d4cc67"
+    },
+    {
+      "kind": "stack",
+      "host": "windows-2025",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12555198017,
+      "archiveSha256": "059509faf636b5163fa0533d187130cfd70c2136ad86b17bbd128f1472425308",
+      "reportSha256": "d89101ac4245bad49a30756a5e1a0a87adb2b84cf3416a776b52743d80fd7c41"
+    },
+    {
+      "kind": "stack",
+      "host": "windows-11-arm",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554892533,
+      "archiveSha256": "9d4e5c93f20dfdcddd7a0bfe19d0e2cbb85479c61e7d541141b29cafec72d823",
+      "reportSha256": "6b29190d2422d8070e41cf43bd406a3cf1a0dd94d159ad1767e888086be69a86"
+    },
+    {
+      "kind": "stack",
+      "host": "macos-15",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12553607790,
+      "archiveSha256": "3e1efd6a6e9558f625797e66aa336836a43fae5c25c3e4a98bed414e6d708a9d",
+      "reportSha256": "9534b2a351839c7b8ef03cae09b965dd0e44f3fa12f9d03e18c4af61b7183d39"
+    },
+    {
+      "kind": "stack",
+      "host": "macos-15-intel",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554134111,
+      "archiveSha256": "4143cf75d576cd29690a3b1f28fbffcddfaa06528d4e0abbc85d73929d89ace3",
+      "reportSha256": "7fe53941d0d120b9a5499ae73e494089301af0cad348e30155465a15ef4cf5bf"
+    },
+    {
+      "kind": "layout",
+      "host": "ubuntu-latest",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12555156428,
+      "archiveSha256": null,
+      "reportSha256": "0444346ae725b3c8451fb51e7bab3992aaf33ce7ac9f7bf5401fc93373403325"
+    },
+    {
+      "kind": "layout",
+      "host": "ubuntu-24.04-arm",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554848992,
+      "archiveSha256": null,
+      "reportSha256": "78be814dab134fb7d828564944bb512354759adeb64258ea80b40b2dddd8bb97"
+    },
+    {
+      "kind": "layout",
+      "host": "windows-2025",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12555198017,
+      "archiveSha256": null,
+      "reportSha256": "2adf765c213083a098f6dea9ea7d9ccf68f6c9f074d40eb92ecd1824d24a6254"
+    },
+    {
+      "kind": "layout",
+      "host": "windows-11-arm",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554892533,
+      "archiveSha256": null,
+      "reportSha256": "7e7b7d111f68c2312540fceb5cc11943eee50ddebc71668857ba3b1401db7805"
+    },
+    {
+      "kind": "layout",
+      "host": "macos-15",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12553607790,
+      "archiveSha256": null,
+      "reportSha256": "e7a60a62dc9c4ba1118ecbf5e35480add0e4e122b248ef724f6d7f320f212ed9"
+    },
+    {
+      "kind": "layout",
+      "host": "macos-15-intel",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554134111,
+      "archiveSha256": null,
+      "reportSha256": "56098f317f7e965a213f55c483b50c1e3b5972bbf3263569908716806af52d13"
+    },
+    {
+      "kind": "files",
+      "host": "ubuntu-latest",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12555156428,
+      "archiveSha256": "23e6212d72cbe4317a23c50c9acde845f39ddafaa2114e520d23f5efa3b15bb6",
+      "reportSha256": "8d1005184f1351403d8aa0ecf201be9c8582a8ee0907d66704749f4db218440b"
+    },
+    {
+      "kind": "files",
+      "host": "ubuntu-24.04-arm",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554848992,
+      "archiveSha256": "2996e2684a4251deaa830e2c1e1d56d8e8fc92d50947c15c77b7c0b642285a41",
+      "reportSha256": "12368eccf7c2400bda3900cd20c94240b5509cb187fb31eae7532d82b45d332b"
+    },
+    {
+      "kind": "files",
+      "host": "windows-2025",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12555198017,
+      "archiveSha256": "059509faf636b5163fa0533d187130cfd70c2136ad86b17bbd128f1472425308",
+      "reportSha256": "141b28562474b47c699a6a3de603760e675132dfd4a57fdffc285feb1d736aea"
+    },
+    {
+      "kind": "files",
+      "host": "windows-11-arm",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554892533,
+      "archiveSha256": "9d4e5c93f20dfdcddd7a0bfe19d0e2cbb85479c61e7d541141b29cafec72d823",
+      "reportSha256": "8ec58b2970928361812bce22525a468b0509ac964ce0f9a309820376cb10bb32"
+    },
+    {
+      "kind": "files",
+      "host": "macos-15",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12553607790,
+      "archiveSha256": "3e1efd6a6e9558f625797e66aa336836a43fae5c25c3e4a98bed414e6d708a9d",
+      "reportSha256": "3d41a786050ddac6e3bd53ba9f8b9d510362fe3e2b43d65d0f4d5d44c6505553"
+    },
+    {
+      "kind": "files",
+      "host": "macos-15-intel",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": 12554134111,
+      "archiveSha256": "4143cf75d576cd29690a3b1f28fbffcddfaa06528d4e0abbc85d73929d89ace3",
+      "reportSha256": "d61fc6794459f9b3a1f03389793fb2e6927ada479cc52c933ef4b756ac42cad3"
+    },
+    {
+      "kind": "services",
+      "host": "ubuntu-latest",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": null,
+      "archiveSha256": null,
+      "reportSha256": "06a801b7a01cb29da5543d2c938a1d255be682ee4d6c3aa0a65bd4c0af0dfffa"
+    },
+    {
+      "kind": "services",
+      "host": "ubuntu-24.04-arm",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": null,
+      "archiveSha256": null,
+      "reportSha256": "12ecb72bb5161fc2fa66965ba87268d31a983c4a8bfda8816652b71a7a6335d3"
+    },
+    {
+      "kind": "services",
+      "host": "windows-2025",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": null,
+      "archiveSha256": null,
+      "reportSha256": "5fc9ac3081d9df461f76ae86b9e473353fe4b62f4c549d835d2da31c59b8d12d"
+    },
+    {
+      "kind": "services",
+      "host": "windows-11-arm",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": null,
+      "archiveSha256": null,
+      "reportSha256": "2fe794d671899ef3f17798914d3a1daf55b6abd41b5f76ac0934b5326830ff3c"
+    },
+    {
+      "kind": "services",
+      "host": "macos-15",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": null,
+      "archiveSha256": null,
+      "reportSha256": "5375108da8c4ba52513ebdc57c4db05731b4a0982440f209af59b845176b6987"
+    },
+    {
+      "kind": "services",
+      "host": "macos-15-intel",
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "artifact": null,
+      "archiveSha256": null,
+      "reportSha256": "4e038d8ab485592ef1d53c35fd8fcbf2caae17e92898b61ad5e040d444d90c1c"
+    }
+  ],
+  "services": [
+    {
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "host": "ubuntu-latest",
+      "archives": [
+        {
+          "artifact": 12555156428,
+          "sha256": "23e6212d72cbe4317a23c50c9acde845f39ddafaa2114e520d23f5efa3b15bb6",
+          "job": 120813918952
+        }
+      ],
+      "scope": "Exact-head API, static Unix guards and Linux dynamic stack allocation block. Native saved executions and actual binaries inspected; no downloaded executable run locally.",
+      "api": {
+        "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+        "os": "Linux",
+        "architecture": "X64",
+        "tool": "Apple LLVM version 17.0.0\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64    - AArch64 (little endian)\n    aarch64_32 - AArch64 (little endian ILP32)\n    aarch64_be - AArch64 (big endian)\n    arm        - ARM\n    arm64      - ARM64 (little endian)\n    arm64_32   - ARM64 (little endian ILP32)\n    armeb      - ARM (big endian)\n    thumb      - Thumb\n    thumbeb    - Thumb (big endian)\n    x86        - 32-bit X86: Pentium-Pro and above\n    x86-64     - 64-bit X86: EM64T and AMD64\n",
+        "scope": "Saved ARC API binaries; static inspection, no local execution. Managed charge, metric storage and RSS are separate quantities. Text section bytes include padding. No C/Rust timing comparison.",
+        "binaries": {
+          "api-healthyO1": {
+            "machine": 62,
+            "fileBytes": 5248288,
+            "sha256": {
+              "exe": "9b7741694948425ffb07259a715aeba7d7ae5893a180ef502a118cd5d7fdaaea",
+              "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+              "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+              "stderr": "a43b53962d936095b7f992b596dae811f78ceed835a7e1b975b98561684cae55",
+              "rss.tsv": "c6b65695eab48b631c0cb4d0e3d7024ba09ca1afea2ea3d885f934259367e8f5"
+            },
+            "textSectionBytes": 2949874,
+            "disassemblySha256": "17e960179bdff258a3226b8e7ff3113c4b03745d72187e07b7b686ab5804b1e2",
+            "symbolsSha256": "7fd77844cbccf8f3727518495ecd4206ded325d3ec61e7479e7468f7638ddf74"
+          },
+          "api-healthyO2": {
+            "machine": 62,
+            "fileBytes": 5286456,
+            "sha256": {
+              "exe": "a323b8306770ac5734c6129ee559871610d3d3ec47883784449557cc917d00c3",
+              "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+              "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+              "stderr": "a43b53962d936095b7f992b596dae811f78ceed835a7e1b975b98561684cae55",
+              "rss.tsv": "530ec1af7509bb819d3998394a07369a5598e7dbbaf8185ebef3a2e4f9c6d01a"
+            },
+            "textSectionBytes": 2811986,
+            "disassemblySha256": "288564f5010c4785d2404329c75ad22f6a34082fc586d7e4402be23daed46e37",
+            "symbolsSha256": "f310f198c2c4f3aa7e85c6bc09a62980baa4f11a35db30c446b4562ab155ffc4"
+          },
+          "api-missing-closeO1": {
+            "machine": 62,
+            "fileBytes": 5248288,
+            "sha256": {
+              "exe": "2de781514dbf80d732dcf6f74fe67360de82771958183c0e600b4d0b9eab43e3",
+              "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "e10065d6127281396370e2b63991446d4371274b3824bf05c3a0bb29c998f45c",
+              "rss.tsv": "1a433e56bd20fc656e0378216eeeeb20e870eb91d58fa9accd9df4d5f8307ce2"
+            },
+            "textSectionBytes": 2949906,
+            "disassemblySha256": "8385b713caa29024eb18c28485bea2a79d67788711e211d6d8e8cd76655f16af",
+            "symbolsSha256": "73b6f994364e249891a228ef44aefb35127cef0918b3894f42308a32f88e688b"
+          },
+          "api-missing-closeO2": {
+            "machine": 62,
+            "fileBytes": 5286568,
+            "sha256": {
+              "exe": "0c5cad64dac2527e0365d2be863caa1b606307065c09bebf545a55d1f09b915f",
+              "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "e10065d6127281396370e2b63991446d4371274b3824bf05c3a0bb29c998f45c",
+              "rss.tsv": "6ceab8376929179360591a4d0f1ba675927fa4f4dc79033ca2ffbd246b31c1db"
+            },
+            "textSectionBytes": 2811874,
+            "disassemblySha256": "4dbc2e8d0bf63c79ac25078e0528742c5ba24d1917117f94229853910c87824d",
+            "symbolsSha256": "1b7adf3c5f2f32f0a2a15a00a7313b440752ec8c053cd29447dad106170b0f4d"
+          },
+          "api-missing-freeO1": {
+            "machine": 62,
+            "fileBytes": 5248288,
+            "sha256": {
+              "exe": "59ba73b6d6fc324b05f09ba4792fa4b673f83e3f8df5b3ac0f67cf032852408f",
+              "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "040e5955229e30630f259faedbc86188dbcb1ac35ba169446437453cf002b1c5",
+              "rss.tsv": "0c5f83d2637150ca79fb0e68c8b16ba0d0ac8a8f4c721a9aec29cfbd903e9896"
+            },
+            "textSectionBytes": 2950002,
+            "disassemblySha256": "efdb7f51539291059c1975457d92e10a7ec4d14fc4f38a57e2d3a4d60b5e3d29",
+            "symbolsSha256": "00bd2f0ec930ba26f66daee7c896d19871ebcd07f1fb2055476906d0aee663f2"
+          },
+          "api-missing-freeO2": {
+            "machine": 62,
+            "fileBytes": 5282848,
+            "sha256": {
+              "exe": "e66fbe8bec470c361ec97ebf394f1d395dc0f5e61daf9daa52946999fdbe2a4b",
+              "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "304e157ace118a7be8c2d0fdb3784cea236bad1b6e42a09684a1e72b0b1a0afa",
+              "rss.tsv": "2d4e3c6170e37271a82a9483c7218ebbf1f3c7080000778a1b4ac10e1a6c81d9"
+            },
+            "textSectionBytes": 2812834,
+            "disassemblySha256": "d30f2bfb25fd6fb48302b0b8c325b1dc56e759568766be57d06b11b69725ec74",
+            "symbolsSha256": "f045a342a048327f8808b6b4cfe5169402312e0141f68cda8d126c4faec786d3"
+          }
+        },
+        "observations": {
+          "api-healthyO1": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "24",
+                "24",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "32",
+                "32",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "40",
+                "40",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "48",
+                "48",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "56",
+                "56",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "64",
+                "64",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                13224
+              ],
+              [
+                16,
+                13268
+              ],
+              [
+                24,
+                13268
+              ],
+              [
+                32,
+                13288
+              ],
+              [
+                40,
+                13328
+              ],
+              [
+                48,
+                13328
+              ],
+              [
+                56,
+                13328
+              ],
+              [
+                64,
+                13328
+              ]
+            ],
+            "status": 0,
+            "maxRssGrowthKiB": 104
+          },
+          "api-healthyO2": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "24",
+                "24",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "32",
+                "32",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "40",
+                "40",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "48",
+                "48",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "56",
+                "56",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "64",
+                "64",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                13068
+              ],
+              [
+                16,
+                13096
+              ],
+              [
+                24,
+                13232
+              ],
+              [
+                32,
+                13252
+              ],
+              [
+                40,
+                13252
+              ],
+              [
+                48,
+                13272
+              ],
+              [
+                56,
+                13272
+              ],
+              [
+                64,
+                13272
+              ]
+            ],
+            "status": 0,
+            "maxRssGrowthKiB": 204
+          },
+          "api-missing-closeO1": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "8",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                13224
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          },
+          "api-missing-closeO2": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "8",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                13124
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          },
+          "api-missing-freeO1": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "8036864",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                13188
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          },
+          "api-missing-freeO2": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "8125760",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                13120
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          }
+        }
+      },
+      "static": {
+        "sourceSha256": "f693380c0c7177f5704625420c52a6170a830574ec59af20365b278c110a1623",
+        "binaries": {
+          "-O1": {
+            "machine": 62,
+            "binarySha256": "317edc5bdc4ee8e337c4a2b49bc56b4ba2027896796bacfdbb6fda47e60cf5c4",
+            "fileBytes": 16936,
+            "symbolsSha256": "6a8a11d946a52d419ab0c5782838304f06a9822b0d05e18f6787658c37afaa50",
+            "disassemblySha256": "b4ec3690f2857762ef93db05877994ff51fa2f1ccc573d3731881b74b2c890ac"
+          },
+          "-O2": {
+            "machine": 62,
+            "binarySha256": "f624e2032ac57ffd4198bfee6cd3b19fb9860c39acf856116dc52ccddbdc38e1",
+            "fileBytes": 16920,
+            "symbolsSha256": "044cd73c9d0897228ec41f48d10c5a26ec420807e13564472a8f2e15106b118f",
+            "disassemblySha256": "3f2f035dbe32ffcce7bd54a773597aa329adf98a4e377d2283accf5ba640cf85"
+          }
+        },
+        "executions": {
+          "-O1-ordinary": {
+            "status": 0,
+            "stdout": "three guarded stacks, writable bodies, one mapping released\n",
+            "stderr": ""
+          },
+          "-O1-first-guard-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: cannot protect static task stack guard page\n"
+          },
+          "-O1-last-guard-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: cannot protect static task stack guard page\n"
+          },
+          "-O1-map-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: out of memory: cannot map the program's static memory\n"
+          },
+          "-O1-missing-guard": {
+            "status": 211,
+            "stdout": "",
+            "stderr": ""
+          },
+          "-O2-ordinary": {
+            "status": 0,
+            "stdout": "three guarded stacks, writable bodies, one mapping released\n",
+            "stderr": ""
+          },
+          "-O2-first-guard-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: cannot protect static task stack guard page\n"
+          },
+          "-O2-last-guard-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: cannot protect static task stack guard page\n"
+          },
+          "-O2-map-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: out of memory: cannot map the program's static memory\n"
+          },
+          "-O2-missing-guard": {
+            "status": 211,
+            "stdout": "",
+            "stderr": ""
+          }
+        }
+      },
+      "pages": {
+        "binaries": {
+          "-O1": {
+            "sourceSha256": "6203172bbfa7ca25138306260d49ae26d5aa46b835c26dade14e6b2ecae4ef9e",
+            "machine": 62,
+            "binarySha256": "52f900c60f9779c344ca15466a8336bc42caa840a495637c9da43638a4ce6e21",
+            "fileBytes": 17240,
+            "symbolsSha256": "0d88834bb9189e842c10e830ea89407b6dbc5a37dafdeb24524735e9ee9baf81",
+            "disassemblySha256": "9a36a68589ee47b99e48335721bcd03947b7b4f19505c987fee2bed468d338fe"
+          },
+          "-O2": {
+            "sourceSha256": "6203172bbfa7ca25138306260d49ae26d5aa46b835c26dade14e6b2ecae4ef9e",
+            "machine": 62,
+            "binarySha256": "bcfb4dc078197f2527a0d7f70e531609a4b676cb24a4b6a7260d82710ec37d7e",
+            "fileBytes": 17200,
+            "symbolsSha256": "e385998c1c0aa1e949a2d64fc68a90a50882a1de51a7b5ffe5a395e43796d1b8",
+            "disassemblySha256": "450ed5718fd270fe2f5adf2d9c39255fbfc1e7a0d48f62806248a49677e7bde4"
+          }
+        },
+        "executions": {
+          "-O1-ordinary": {
+            "status": 0,
+            "stdout": "stack-pages\tguard=1\tordinary=1\thuge_kib=0\nstack-pages\tguard=1\tordinary=1\thuge_kib=0\n",
+            "stderr": ""
+          },
+          "-O1-no-thp": {
+            "status": 0,
+            "stdout": "stack-pages\tguard=1\tordinary=0\thuge_kib=2048\nstack-pages\tguard=1\tordinary=0\thuge_kib=2048\n",
+            "stderr": ""
+          },
+          "-O1-map-error": {
+            "status": 0,
+            "stdout": "stack-error\tmap-error\tunmaps=0\n",
+            "stderr": ""
+          },
+          "-O1-advice-error": {
+            "status": 0,
+            "stdout": "stack-error\tadvice-error\tunmaps=1\n",
+            "stderr": ""
+          },
+          "-O1-guard-error": {
+            "status": 0,
+            "stdout": "stack-error\tguard-error\tunmaps=1\n",
+            "stderr": ""
+          },
+          "-O1-missing-advice": {
+            "status": 211,
+            "stdout": "",
+            "stderr": "missing ordinary-page policy\n"
+          },
+          "-O1-missing-guard": {
+            "status": 212,
+            "stdout": "",
+            "stderr": "missing stack guard\n"
+          },
+          "-O2-ordinary": {
+            "status": 0,
+            "stdout": "stack-pages\tguard=1\tordinary=1\thuge_kib=0\nstack-pages\tguard=1\tordinary=1\thuge_kib=0\n",
+            "stderr": ""
+          },
+          "-O2-no-thp": {
+            "status": 0,
+            "stdout": "stack-pages\tguard=1\tordinary=0\thuge_kib=2048\nstack-pages\tguard=1\tordinary=0\thuge_kib=2048\n",
+            "stderr": ""
+          },
+          "-O2-map-error": {
+            "status": 0,
+            "stdout": "stack-error\tmap-error\tunmaps=0\n",
+            "stderr": ""
+          },
+          "-O2-advice-error": {
+            "status": 0,
+            "stdout": "stack-error\tadvice-error\tunmaps=1\n",
+            "stderr": ""
+          },
+          "-O2-guard-error": {
+            "status": 0,
+            "stdout": "stack-error\tguard-error\tunmaps=1\n",
+            "stderr": ""
+          },
+          "-O2-missing-advice": {
+            "status": 211,
+            "stdout": "",
+            "stderr": "missing ordinary-page policy\n"
+          },
+          "-O2-missing-guard": {
+            "status": 212,
+            "stdout": "",
+            "stderr": "missing stack guard\n"
+          }
+        }
+      }
+    },
+    {
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "host": "ubuntu-24.04-arm",
+      "archives": [
+        {
+          "artifact": 12554848992,
+          "sha256": "2996e2684a4251deaa830e2c1e1d56d8e8fc92d50947c15c77b7c0b642285a41",
+          "job": 120813918903
+        }
+      ],
+      "scope": "Exact-head API, static Unix guards and Linux dynamic stack allocation block. Native saved executions and actual binaries inspected; no downloaded executable run locally.",
+      "api": {
+        "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+        "os": "Linux",
+        "architecture": "ARM64",
+        "tool": "Apple LLVM version 17.0.0\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64    - AArch64 (little endian)\n    aarch64_32 - AArch64 (little endian ILP32)\n    aarch64_be - AArch64 (big endian)\n    arm        - ARM\n    arm64      - ARM64 (little endian)\n    arm64_32   - ARM64 (little endian ILP32)\n    armeb      - ARM (big endian)\n    thumb      - Thumb\n    thumbeb    - Thumb (big endian)\n    x86        - 32-bit X86: Pentium-Pro and above\n    x86-64     - 64-bit X86: EM64T and AMD64\n",
+        "scope": "Saved ARC API binaries; static inspection, no local execution. Managed charge, metric storage and RSS are separate quantities. Text section bytes include padding. No C/Rust timing comparison.",
+        "binaries": {
+          "api-healthyO1": {
+            "machine": 183,
+            "fileBytes": 5483096,
+            "sha256": {
+              "exe": "e987715c378ca3c19ef58bce9e65efb44304c9cfa8252b95e2abcd6be8678800",
+              "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+              "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+              "stderr": "a43b53962d936095b7f992b596dae811f78ceed835a7e1b975b98561684cae55",
+              "rss.tsv": "c2a4d09dee85a2fb40a7eb4eee82074ab7e2820fca184dadeaddf4017793c41e"
+            },
+            "textSectionBytes": 3069676,
+            "disassemblySha256": "be6c497d19bc5a82a1d1a2389417338b1b9d2247f0048c84b8901b24b908e00e",
+            "symbolsSha256": "1f1fa96d82ca46e7a29177c58b57e410e42b5c2e9f7ed38d9e33aedcd49cbfd3"
+          },
+          "api-healthyO2": {
+            "machine": 183,
+            "fileBytes": 5086104,
+            "sha256": {
+              "exe": "f8e50ae0ae99fc6ad12c993a98dc6acde7b87f3b75e12acc0a40aeac48f531a4",
+              "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+              "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+              "stderr": "a43b53962d936095b7f992b596dae811f78ceed835a7e1b975b98561684cae55",
+              "rss.tsv": "ec548804f75e96e35b247d360caf65d2aada974f2c914981efd4e60a1bbe5bc4"
+            },
+            "textSectionBytes": 2604060,
+            "disassemblySha256": "b1bfa260faa5eb7d677745151e3405bb1f3a32076321b55ef98b36ec6b55eb7f",
+            "symbolsSha256": "379c1d3a3a982ffa4f51a110276159a9f9a86a8365bcb6ebdf9129f8ab4a5c8f"
+          },
+          "api-missing-closeO1": {
+            "machine": 183,
+            "fileBytes": 5482920,
+            "sha256": {
+              "exe": "ea8bec58af26f3df15090084859810f11a3511a77ed9cf677193afff0bd588a3",
+              "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "e10065d6127281396370e2b63991446d4371274b3824bf05c3a0bb29c998f45c",
+              "rss.tsv": "fd6dbfa050755ff23160bb4627fa88904a11d2364c4b9e9f417ee7ed3b1ccb91"
+            },
+            "textSectionBytes": 3065612,
+            "disassemblySha256": "ae94fa33b903a7a5b6e4495c37d4a6c94cc7dcd77f1e90f361649099078c7249",
+            "symbolsSha256": "bb9539755e8cf1398bbea6b492b69daa8d6d452fe051e6aebe40b551e94e76c6"
+          },
+          "api-missing-closeO2": {
+            "machine": 183,
+            "fileBytes": 5085416,
+            "sha256": {
+              "exe": "3062b19f259a5efd0c732aea8eccad210781de4a8c4055131e99762b3da83996",
+              "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "e10065d6127281396370e2b63991446d4371274b3824bf05c3a0bb29c998f45c",
+              "rss.tsv": "2b0acec643047260f597ddb0ae54a8c0f2ad2e79ee3e08c5de9c5bda1b2fd5a0"
+            },
+            "textSectionBytes": 2583564,
+            "disassemblySha256": "c4204d7aa4889f742ca5b0d1b37f78a98ee0c5a218ca0b7312e5685cd7e81500",
+            "symbolsSha256": "82a8e57375cf9356d52d138405da95cc26e320c639ed0fec48b2f87e940c61ce"
+          },
+          "api-missing-freeO1": {
+            "machine": 183,
+            "fileBytes": 5483176,
+            "sha256": {
+              "exe": "9671157f147490d62fb394beb9efcf0b7e62e4c2632303b3e83a91ec8e7af207",
+              "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "6d70f89c15643a9f6a4cac8a395035fb00463f3a4c2696c5f0c5de4a0bce224c",
+              "rss.tsv": "54009b739651e3aa35ce224bc0339b79836fa6e1947480811a206eb6f859a9ce"
+            },
+            "textSectionBytes": 3077820,
+            "disassemblySha256": "1ea67ae81b84a5995fc5d801e13b9b74a35dec9210b60bafdec23b463261cb48",
+            "symbolsSha256": "4976f9148309a3b9d1a4f04582e24dde5e58226b597ecb8faca1fa3f6d524a01"
+          },
+          "api-missing-freeO2": {
+            "machine": 183,
+            "fileBytes": 5085536,
+            "sha256": {
+              "exe": "c61a76a6e165d9f7557a8e5a599989dada3c83120ab69274d62ebd2e83f1cea3",
+              "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "6715c048f23073e235e417e5148f58c94af1dd0918341cb0446ef3be15b55cfd",
+              "rss.tsv": "d89b3a6d6c310852adbcf7b2f3d7d000a2d747a00af8b02d25801bd2683cbf0e"
+            },
+            "textSectionBytes": 2588732,
+            "disassemblySha256": "ff3ff9e4d0209451039cdd26e11609bd80b85e8465229a136f65496bb5ded5a6",
+            "symbolsSha256": "e7d9c1906718376ea5d065dad4e590b0e8ecf04213a937d3d14aba753bb444f0"
+          }
+        },
+        "observations": {
+          "api-healthyO1": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "24",
+                "24",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "32",
+                "32",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "40",
+                "40",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "48",
+                "48",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "56",
+                "56",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "64",
+                "64",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                12432
+              ],
+              [
+                16,
+                12504
+              ],
+              [
+                24,
+                12504
+              ],
+              [
+                32,
+                12524
+              ],
+              [
+                40,
+                12528
+              ],
+              [
+                48,
+                12528
+              ],
+              [
+                56,
+                12528
+              ],
+              [
+                64,
+                12528
+              ]
+            ],
+            "status": 0,
+            "maxRssGrowthKiB": 96
+          },
+          "api-healthyO2": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "24",
+                "24",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "32",
+                "32",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "40",
+                "40",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "48",
+                "48",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "56",
+                "56",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "64",
+                "64",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                12064
+              ],
+              [
+                16,
+                12108
+              ],
+              [
+                24,
+                12128
+              ],
+              [
+                32,
+                12128
+              ],
+              [
+                40,
+                12136
+              ],
+              [
+                48,
+                12156
+              ],
+              [
+                56,
+                12156
+              ],
+              [
+                64,
+                12196
+              ]
+            ],
+            "status": 0,
+            "maxRssGrowthKiB": 132
+          },
+          "api-missing-closeO1": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "8",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                12340
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          },
+          "api-missing-closeO2": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "8",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                12012
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          },
+          "api-missing-freeO1": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "7476944",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                12384
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          },
+          "api-missing-freeO2": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "3120",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "7507808",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                11936
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          }
+        }
+      },
+      "static": {
+        "sourceSha256": "f693380c0c7177f5704625420c52a6170a830574ec59af20365b278c110a1623",
+        "binaries": {
+          "-O1": {
+            "machine": 183,
+            "binarySha256": "6f5669c990ab67d71f9dadfe0d7eeb0465247ec6075a2fe2abd47101903679af",
+            "fileBytes": 71384,
+            "symbolsSha256": "cfb2f9578434f36896ce8fa54c801b11b2683116c664ffab5d5e0a8ab140db70",
+            "disassemblySha256": "6a34fc2fed77206e4c711a9d2f9fad83039ff9f639534a6254094ffb76cb63f1"
+          },
+          "-O2": {
+            "machine": 183,
+            "binarySha256": "4ddffa293a85082b1859bec8055ea7c3609e36cd7805fc231686edee90e11573",
+            "fileBytes": 71408,
+            "symbolsSha256": "16cb6c22ac69d67a36cc05afdeb71cf46e4e7714558252ef4271034ff4411a32",
+            "disassemblySha256": "0f42d82b22705358aef2401ee7a1ce2cd24ee48cebb02bac14b1cb7df1410dd1"
+          }
+        },
+        "executions": {
+          "-O1-ordinary": {
+            "status": 0,
+            "stdout": "three guarded stacks, writable bodies, one mapping released\n",
+            "stderr": ""
+          },
+          "-O1-first-guard-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: cannot protect static task stack guard page\n"
+          },
+          "-O1-last-guard-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: cannot protect static task stack guard page\n"
+          },
+          "-O1-map-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: out of memory: cannot map the program's static memory\n"
+          },
+          "-O1-missing-guard": {
+            "status": 211,
+            "stdout": "",
+            "stderr": ""
+          },
+          "-O2-ordinary": {
+            "status": 0,
+            "stdout": "three guarded stacks, writable bodies, one mapping released\n",
+            "stderr": ""
+          },
+          "-O2-first-guard-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: cannot protect static task stack guard page\n"
+          },
+          "-O2-last-guard-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: cannot protect static task stack guard page\n"
+          },
+          "-O2-map-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: out of memory: cannot map the program's static memory\n"
+          },
+          "-O2-missing-guard": {
+            "status": 211,
+            "stdout": "",
+            "stderr": ""
+          }
+        }
+      },
+      "pages": {
+        "binaries": {
+          "-O1": {
+            "sourceSha256": "6203172bbfa7ca25138306260d49ae26d5aa46b835c26dade14e6b2ecae4ef9e",
+            "machine": 183,
+            "binarySha256": "e636894c391b5c4ffcb99bc3d9d70c1644553e03c3309267444b1d76daf5ebe6",
+            "fileBytes": 71664,
+            "symbolsSha256": "91726a7280c1ace2d339eb47a75c68100bb1969079f05d85c86592dc3fe33c30",
+            "disassemblySha256": "7a4dddffd156cace32aa55edd0e143662ae8f9a4cd494d392c524caed6d9bdfa"
+          },
+          "-O2": {
+            "sourceSha256": "6203172bbfa7ca25138306260d49ae26d5aa46b835c26dade14e6b2ecae4ef9e",
+            "machine": 183,
+            "binarySha256": "a45e52332f9927500a8ad5c65fd6122353452d359c2909d121864adfd72141fd",
+            "fileBytes": 71640,
+            "symbolsSha256": "5c9c67d5ac61ee33e3598ea02bd9454af5f963fe2d0e196c5576b045c0810dbd",
+            "disassemblySha256": "91038590bb881f8a368b12d9610cae28fb785cfaa3c6cccd52d6adddf6ce2b21"
+          }
+        },
+        "executions": {
+          "-O1-ordinary": {
+            "status": 0,
+            "stdout": "stack-pages\tguard=1\tordinary=1\thuge_kib=0\nstack-pages\tguard=1\tordinary=1\thuge_kib=0\n",
+            "stderr": ""
+          },
+          "-O1-no-thp": {
+            "status": 0,
+            "stdout": "stack-pages\tguard=1\tordinary=0\thuge_kib=0\nstack-pages\tguard=1\tordinary=0\thuge_kib=0\n",
+            "stderr": ""
+          },
+          "-O1-map-error": {
+            "status": 0,
+            "stdout": "stack-error\tmap-error\tunmaps=0\n",
+            "stderr": ""
+          },
+          "-O1-advice-error": {
+            "status": 0,
+            "stdout": "stack-error\tadvice-error\tunmaps=1\n",
+            "stderr": ""
+          },
+          "-O1-guard-error": {
+            "status": 0,
+            "stdout": "stack-error\tguard-error\tunmaps=1\n",
+            "stderr": ""
+          },
+          "-O1-missing-advice": {
+            "status": 211,
+            "stdout": "",
+            "stderr": "missing ordinary-page policy\n"
+          },
+          "-O1-missing-guard": {
+            "status": 212,
+            "stdout": "",
+            "stderr": "missing stack guard\n"
+          },
+          "-O2-ordinary": {
+            "status": 0,
+            "stdout": "stack-pages\tguard=1\tordinary=1\thuge_kib=0\nstack-pages\tguard=1\tordinary=1\thuge_kib=0\n",
+            "stderr": ""
+          },
+          "-O2-no-thp": {
+            "status": 0,
+            "stdout": "stack-pages\tguard=1\tordinary=0\thuge_kib=0\nstack-pages\tguard=1\tordinary=0\thuge_kib=0\n",
+            "stderr": ""
+          },
+          "-O2-map-error": {
+            "status": 0,
+            "stdout": "stack-error\tmap-error\tunmaps=0\n",
+            "stderr": ""
+          },
+          "-O2-advice-error": {
+            "status": 0,
+            "stdout": "stack-error\tadvice-error\tunmaps=1\n",
+            "stderr": ""
+          },
+          "-O2-guard-error": {
+            "status": 0,
+            "stdout": "stack-error\tguard-error\tunmaps=1\n",
+            "stderr": ""
+          },
+          "-O2-missing-advice": {
+            "status": 211,
+            "stdout": "",
+            "stderr": "missing ordinary-page policy\n"
+          },
+          "-O2-missing-guard": {
+            "status": 212,
+            "stdout": "",
+            "stderr": "missing stack guard\n"
+          }
+        }
+      }
+    },
+    {
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "host": "windows-2025",
+      "archives": [
+        {
+          "artifact": 12555198017,
+          "sha256": "059509faf636b5163fa0533d187130cfd70c2136ad86b17bbd128f1472425308",
+          "job": 120813918967
+        }
+      ],
+      "scope": "Exact-head API, static Unix guards and Linux dynamic stack allocation block. Native saved executions and actual binaries inspected; no downloaded executable run locally.",
+      "api": {
+        "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+        "os": "Windows",
+        "architecture": "X64",
+        "tool": "Apple LLVM version 17.0.0\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64    - AArch64 (little endian)\n    aarch64_32 - AArch64 (little endian ILP32)\n    aarch64_be - AArch64 (big endian)\n    arm        - ARM\n    arm64      - ARM64 (little endian)\n    arm64_32   - ARM64 (little endian ILP32)\n    armeb      - ARM (big endian)\n    thumb      - Thumb\n    thumbeb    - Thumb (big endian)\n    x86        - 32-bit X86: Pentium-Pro and above\n    x86-64     - 64-bit X86: EM64T and AMD64\n",
+        "scope": "Saved ARC API binaries; static inspection, no local execution. Managed charge, metric storage and RSS are separate quantities. Text section bytes include padding. No C/Rust timing comparison.",
+        "binaries": {
+          "api-healthyO1": {
+            "machine": 34404,
+            "fileBytes": 5524480,
+            "sha256": {
+              "exe": "658de7b95a03add58a8282ccc56d263468083fa11aad74af6e5ba955d1614cd6",
+              "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+              "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+              "stderr": "dc314eea2b8cf1af6477b1847ec504f33b0488a6bedad6fc17219493331879e8",
+              "rss.tsv": "547e4319a32edff14038cb73d42b1379d0559a8acdc323d6bf23f3d185313d54"
+            },
+            "textSectionBytes": 4258326,
+            "disassemblySha256": "3ba2e0b0f63506b12513ffe66ed01c9e10740f3f6442bae788191e9b670254a8",
+            "symbolsSha256": "1c8b074f8f8271386328658a919cd1e14481767872049f30eaea06a7ebd364b8"
+          },
+          "api-healthyO2": {
+            "machine": 34404,
+            "fileBytes": 5321216,
+            "sha256": {
+              "exe": "9f3e454b9a0868988b8e4d1510cdfc3b219b9c1a9848eb6cbbc62eafe1c01948",
+              "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+              "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+              "stderr": "dc314eea2b8cf1af6477b1847ec504f33b0488a6bedad6fc17219493331879e8",
+              "rss.tsv": "edb09cbcac53ca67df573e5ad93769650044ea63eae963bbcd83db1a02610af1"
+            },
+            "textSectionBytes": 4055270,
+            "disassemblySha256": "4ff9d9220058989544f302676f54128555a09c9c0efd09ff6c6ea832a176a2bb",
+            "symbolsSha256": "bb1df881e65da36ffb27b9865bc1f211c314a49e73cdcb4351c5a95221f33653"
+          },
+          "api-missing-closeO1": {
+            "machine": 34404,
+            "fileBytes": 5524480,
+            "sha256": {
+              "exe": "2206ee388a55cfd60374fc79e8e52987bfb3895a075c369ea4a569911a014033",
+              "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "bca9588ecd850e3320ee52200a8249f13d8cfbfcb7344dab1b5cca19616b57ac",
+              "rss.tsv": "ef91d2719d9d856f9cdba778456c152babcacea14843bfaf472b019438b3d57c"
+            },
+            "textSectionBytes": 4258358,
+            "disassemblySha256": "651cc02bf0767f7a6aeeb8d7381e013072a57d9805629ba91438928fbdecd006",
+            "symbolsSha256": "b66c11c38d2e41f5c8683f48a0b749929b8385bf2315700a7de4488080d8bbef"
+          },
+          "api-missing-closeO2": {
+            "machine": 34404,
+            "fileBytes": 5321216,
+            "sha256": {
+              "exe": "4efc5cdee6d6a3a2425bbe97636f675b6db7632ba93695bc274e16dcd5486307",
+              "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "bca9588ecd850e3320ee52200a8249f13d8cfbfcb7344dab1b5cca19616b57ac",
+              "rss.tsv": "2bd383c4dc880d38517475c97c743809129e4c3adef833f4ab59659e082da5e2"
+            },
+            "textSectionBytes": 4055318,
+            "disassemblySha256": "56f0e84e91bb51d4ae4767d171a11e0b193153654fd98ea96502de3619632f34",
+            "symbolsSha256": "f28ac7b150279c8400fb2c0d7fb1ca8bd8f740a4a7118458526c414996591d7c"
+          },
+          "api-missing-freeO1": {
+            "machine": 34404,
+            "fileBytes": 5569024,
+            "sha256": {
+              "exe": "1ee446c8b30229585405845243a325db68107c8782aa8e15dd900c197dee3df1",
+              "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "ac3a633850487828e6d1150774680955d394238da4663b359500a691d39113e2",
+              "rss.tsv": "0462ce9f5c776258e86822f15c02f8ef6794842e02d63e4b8782d27b7718ffc5"
+            },
+            "textSectionBytes": 4303142,
+            "disassemblySha256": "35e224439a9557ed94631246d8109461028fb6c05715a6fa16f30be811a6d0c1",
+            "symbolsSha256": "08e8da8ab03cf09fa9a6254af673c83585f795516a9e7f8f72f6e29119b3705d"
+          },
+          "api-missing-freeO2": {
+            "machine": 34404,
+            "fileBytes": 5328384,
+            "sha256": {
+              "exe": "ef988d635e81f60ff81be7241e882db04981717bf8f95b7a1d20ba30b8b390c2",
+              "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "238c05f5354050f252cee20d8bd5910be8837a3ff0339829754900c52f13a336",
+              "rss.tsv": "d89b3a6d6c310852adbcf7b2f3d7d000a2d747a00af8b02d25801bd2683cbf0e"
+            },
+            "textSectionBytes": 4062582,
+            "disassemblySha256": "6a13a9b7d814e18aab65d983b4fb84c700af5815d7927578e00025d870317e5e",
+            "symbolsSha256": "fee3bad04365e7d360de43ea5ce2c9934c67424ec8bcd5dbf3bc4ada19f9477f"
+          }
+        },
+        "observations": {
+          "api-healthyO1": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "24",
+                "24",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "32",
+                "32",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "40",
+                "40",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "48",
+                "48",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "56",
+                "56",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "64",
+                "64",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                12080
+              ],
+              [
+                16,
+                12064
+              ],
+              [
+                24,
+                12212
+              ],
+              [
+                32,
+                12244
+              ],
+              [
+                40,
+                12292
+              ],
+              [
+                48,
+                12304
+              ],
+              [
+                56,
+                12284
+              ],
+              [
+                64,
+                12292
+              ]
+            ],
+            "status": 0,
+            "maxRssGrowthKiB": 224
+          },
+          "api-healthyO2": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "24",
+                "24",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "32",
+                "32",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "40",
+                "40",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "48",
+                "48",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "56",
+                "56",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "64",
+                "64",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                11956
+              ],
+              [
+                16,
+                11940
+              ],
+              [
+                24,
+                12152
+              ],
+              [
+                32,
+                12176
+              ],
+              [
+                40,
+                12188
+              ],
+              [
+                48,
+                12180
+              ],
+              [
+                56,
+                12232
+              ],
+              [
+                64,
+                12172
+              ]
+            ],
+            "status": 0,
+            "maxRssGrowthKiB": 276
+          },
+          "api-missing-closeO1": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                12040
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          },
+          "api-missing-closeO2": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                11944
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          },
+          "api-missing-freeO1": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "7735408",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                12096
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          },
+          "api-missing-freeO2": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "7791744",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                11936
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          }
+        }
+      }
+    },
+    {
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "host": "windows-11-arm",
+      "archives": [
+        {
+          "artifact": 12554892533,
+          "sha256": "9d4e5c93f20dfdcddd7a0bfe19d0e2cbb85479c61e7d541141b29cafec72d823",
+          "job": 120813918993
+        }
+      ],
+      "scope": "Exact-head API, static Unix guards and Linux dynamic stack allocation block. Native saved executions and actual binaries inspected; no downloaded executable run locally.",
+      "api": {
+        "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+        "os": "Windows",
+        "architecture": "ARM64",
+        "tool": "Apple LLVM version 17.0.0\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64    - AArch64 (little endian)\n    aarch64_32 - AArch64 (little endian ILP32)\n    aarch64_be - AArch64 (big endian)\n    arm        - ARM\n    arm64      - ARM64 (little endian)\n    arm64_32   - ARM64 (little endian ILP32)\n    armeb      - ARM (big endian)\n    thumb      - Thumb\n    thumbeb    - Thumb (big endian)\n    x86        - 32-bit X86: Pentium-Pro and above\n    x86-64     - 64-bit X86: EM64T and AMD64\n",
+        "scope": "Saved ARC API binaries; static inspection, no local execution. Managed charge, metric storage and RSS are separate quantities. Text section bytes include padding. No C/Rust timing comparison.",
+        "binaries": {
+          "api-healthyO1": {
+            "machine": 43620,
+            "fileBytes": 4877312,
+            "sha256": {
+              "exe": "834dbf2d208cd021be31bdf26522f4fe5d80a9d32692f59df3aa5fb85c9e4be8",
+              "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+              "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+              "stderr": "dc314eea2b8cf1af6477b1847ec504f33b0488a6bedad6fc17219493331879e8",
+              "rss.tsv": "f26e7cd9440a3607a6c6be02e2be5871c1444033e51fdb6f00955f324cc01da9"
+            },
+            "textSectionBytes": 3714136,
+            "disassemblySha256": "a1029c0550e13996d23c9722f40541c8964a09abdfa6661aa9b41cec8dfe8165",
+            "symbolsSha256": "b57e7d42029fda87194116e584821eef97cf4d9dad9d570c67205905d9f20756"
+          },
+          "api-healthyO2": {
+            "machine": 43620,
+            "fileBytes": 4617728,
+            "sha256": {
+              "exe": "43657665038fac0e3d94d1e17122e5b0fcbcf7c8b2fdf5b0f4508d562ef1c5c0",
+              "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+              "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+              "stderr": "dc314eea2b8cf1af6477b1847ec504f33b0488a6bedad6fc17219493331879e8",
+              "rss.tsv": "21cd326f84a8daa85ad37dbea8d44926a13126bc50a9c5e339eaafaae6b3bc17"
+            },
+            "textSectionBytes": 3456120,
+            "disassemblySha256": "741e4b216056c48c6a2bc3f3218b6a474df48a5f4dc769ad25afd9a5a4a6766a",
+            "symbolsSha256": "1e93abf98a1ddd652e10016f5d57dc5325c6b7c1fa036f566b5073d5bf98c130"
+          },
+          "api-missing-closeO1": {
+            "machine": 43620,
+            "fileBytes": 4877312,
+            "sha256": {
+              "exe": "56feb579988f4d331993d0f3ff0cc6ab1987210635583586edf09e1682900fa5",
+              "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "bca9588ecd850e3320ee52200a8249f13d8cfbfcb7344dab1b5cca19616b57ac",
+              "rss.tsv": "f532134b6bda701b43f08d07208a6a7e1b417643c7029ec3c57c6175d7ef785e"
+            },
+            "textSectionBytes": 3714184,
+            "disassemblySha256": "387ca32d3b15e8eb50b87bfca869505ef47ddc4cc29000d0cd58cf3a8fd8e8e9",
+            "symbolsSha256": "09192988d8af948e5368f84366758bbff73d4fb61bb9e8cfad4f34ff2ccb249f"
+          },
+          "api-missing-closeO2": {
+            "machine": 43620,
+            "fileBytes": 4617728,
+            "sha256": {
+              "exe": "100a0d79e62b3baba9094e3a6629821e1eb5a3c6f3bc00ee16ae2fe787fb1266",
+              "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "bca9588ecd850e3320ee52200a8249f13d8cfbfcb7344dab1b5cca19616b57ac",
+              "rss.tsv": "94781dbebee741a5488cac1757905df7538422869975d0074a98f65543c6c082"
+            },
+            "textSectionBytes": 3456168,
+            "disassemblySha256": "a3c5c55b1d18f8c986ea9373af023e6635a4db34e4298b1c8e6e00c908e1cf97",
+            "symbolsSha256": "30fded25e86201801097cbd5036c37d90923701307c40c3a16f299427d715687"
+          },
+          "api-missing-freeO1": {
+            "machine": 43620,
+            "fileBytes": 4921856,
+            "sha256": {
+              "exe": "35d131f1fed08778454159da755baab2ea2d62ba5ba4aa6663049d9ae9c6fbbb",
+              "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "5d2ec1f346b38b3665fe1502b80e5a5729bcfc16beddcc7d7c7553be470f6269",
+              "rss.tsv": "806f059b26428e9fe2bc56152e01c83285b073f1f7810aaddf6800b5000874ee"
+            },
+            "textSectionBytes": 3759264,
+            "disassemblySha256": "e8e7fa90f4b5948f8d2135eceb891c911b2c4c7ebff4ff82a9443d3809e0c50a",
+            "symbolsSha256": "72f558c7e80b08bfe5fa76878bb3780b364bf4fe7c5f06ed88e696b0cf85b7e7"
+          },
+          "api-missing-freeO2": {
+            "machine": 43620,
+            "fileBytes": 4649472,
+            "sha256": {
+              "exe": "385d43b450793f36bddb8fe611ad6783c58cde4fc6d0410987d311251306e2f0",
+              "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "c90ce0a434eaf3df2453b39570e6033193b6e74441dcea7c04c7e6d0fbad3e8c",
+              "rss.tsv": "41ee51da3dde593b1d4700a42c4a9a7c6918a7bbbfaffeb4928072be49afc9db"
+            },
+            "textSectionBytes": 3488148,
+            "disassemblySha256": "3945c4d28e8a488b4f6d798a0321dc6c62bd11e3872b2e9c64e16bbeb6b4f477",
+            "symbolsSha256": "99265fb72298687b9cc49548c46d5051d160b93118a69011eb506f9f8cae009e"
+          }
+        },
+        "observations": {
+          "api-healthyO1": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "24",
+                "24",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "32",
+                "32",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "40",
+                "40",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "48",
+                "48",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "56",
+                "56",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "64",
+                "64",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                12112
+              ],
+              [
+                16,
+                12088
+              ],
+              [
+                24,
+                12096
+              ],
+              [
+                32,
+                12100
+              ],
+              [
+                40,
+                12128
+              ],
+              [
+                48,
+                12092
+              ],
+              [
+                56,
+                12156
+              ],
+              [
+                64,
+                12200
+              ]
+            ],
+            "status": 0,
+            "maxRssGrowthKiB": 88
+          },
+          "api-healthyO2": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "24",
+                "24",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "32",
+                "32",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "40",
+                "40",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "48",
+                "48",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "56",
+                "56",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "64",
+                "64",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                11964
+              ],
+              [
+                16,
+                11984
+              ],
+              [
+                24,
+                12012
+              ],
+              [
+                32,
+                11992
+              ],
+              [
+                40,
+                11992
+              ],
+              [
+                48,
+                12000
+              ],
+              [
+                56,
+                11948
+              ],
+              [
+                64,
+                11964
+              ]
+            ],
+            "status": 0,
+            "maxRssGrowthKiB": 48
+          },
+          "api-missing-closeO1": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                12076
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          },
+          "api-missing-closeO2": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                11960
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          },
+          "api-missing-freeO1": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "8080000",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                12104
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          },
+          "api-missing-freeO2": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "8351504",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                11952
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          }
+        }
+      }
+    },
+    {
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "host": "macos-15",
+      "archives": [
+        {
+          "artifact": 12553607790,
+          "sha256": "3e1efd6a6e9558f625797e66aa336836a43fae5c25c3e4a98bed414e6d708a9d",
+          "job": 120813918844
+        },
+        {
+          "artifact": 12553910767,
+          "sha256": "4a1361481f40803c3052bc80b200a86e597c9495b1031aae67dbe2bfe08763bf",
+          "job": 120813918928
+        }
+      ],
+      "scope": "Exact-head API, static Unix guards and Linux dynamic stack allocation block. Native saved executions and actual binaries inspected; no downloaded executable run locally.",
+      "api": {
+        "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+        "os": "macOS",
+        "architecture": "ARM64",
+        "tool": "Apple LLVM version 17.0.0\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64    - AArch64 (little endian)\n    aarch64_32 - AArch64 (little endian ILP32)\n    aarch64_be - AArch64 (big endian)\n    arm        - ARM\n    arm64      - ARM64 (little endian)\n    arm64_32   - ARM64 (little endian ILP32)\n    armeb      - ARM (big endian)\n    thumb      - Thumb\n    thumbeb    - Thumb (big endian)\n    x86        - 32-bit X86: Pentium-Pro and above\n    x86-64     - 64-bit X86: EM64T and AMD64\n",
+        "scope": "Saved ARC API binaries; static inspection, no local execution. Managed charge, metric storage and RSS are separate quantities. Text section bytes include padding. No C/Rust timing comparison.",
+        "binaries": {
+          "api-healthyO1": {
+            "machine": 16777228,
+            "fileBytes": 4809920,
+            "sha256": {
+              "exe": "851702bcf517fb46988b2739bc48296278a18d8f55342926b130ca6448359be0",
+              "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+              "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+              "stderr": "dc314eea2b8cf1af6477b1847ec504f33b0488a6bedad6fc17219493331879e8",
+              "rss.tsv": "6d11fea5339f24c1a2d5af503110a343274d4441181f13127d2e1b46cc976ed8"
+            },
+            "textSectionBytes": 3806160,
+            "disassemblySha256": "228fa7d1c7b97beac7e973b4147cfaf59da3e65335af4ca5efafe9bbae5e5bb6",
+            "symbolsSha256": "6a036c772b48d4d5e3ffe18eba32d493982aa066771a3815560ba37ab24ec199"
+          },
+          "api-healthyO2": {
+            "machine": 16777228,
+            "fileBytes": 4594400,
+            "sha256": {
+              "exe": "e146d652ac770bbd71acb7556f173b90241a904b39148aff526c814ffdc846e6",
+              "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+              "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+              "stderr": "dc314eea2b8cf1af6477b1847ec504f33b0488a6bedad6fc17219493331879e8",
+              "rss.tsv": "b5f179872c9f4f4cacd158eda9f6e238f8d1a80a3972715821ded0ffc50e5b7d"
+            },
+            "textSectionBytes": 3588164,
+            "disassemblySha256": "e56868b51ae9faa6f7410d0f4812cce69ec5803ab85f8aff9f5c42f85baa307e",
+            "symbolsSha256": "a8f7eb01c324934797ac38b8b0e22bc82b06bd119a92aa6edcb18e82c57ca1a3"
+          },
+          "api-missing-closeO1": {
+            "machine": 16777228,
+            "fileBytes": 4809928,
+            "sha256": {
+              "exe": "30cd13f565a13153cab35d8e8a89cb93dfb1c77a5a19e40116280760eb3df861",
+              "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "bca9588ecd850e3320ee52200a8249f13d8cfbfcb7344dab1b5cca19616b57ac",
+              "rss.tsv": "d90f6fdf4e60e4335f0e43000cb00ae17bceff3d8fcacabee2cf050cdc6234e5"
+            },
+            "textSectionBytes": 3806216,
+            "disassemblySha256": "7339f2b4b62c0a36e5bc7911016fe450d53320f4a5b2ca141222730c1b464984",
+            "symbolsSha256": "bac144455825d9f997090b8bea4aa5e9f930dee2aae79e0857a315623338ea45"
+          },
+          "api-missing-closeO2": {
+            "machine": 16777228,
+            "fileBytes": 4594408,
+            "sha256": {
+              "exe": "4b4b20418aca9a978d2e731796857969c3627e995656413c2f12a0d0d49ea6b6",
+              "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "bca9588ecd850e3320ee52200a8249f13d8cfbfcb7344dab1b5cca19616b57ac",
+              "rss.tsv": "3d7da551be4b6c426caec8d77dcaaab41a6782bb371d27ce00970e29db275f31"
+            },
+            "textSectionBytes": 3588220,
+            "disassemblySha256": "598afd329e0ecb0c0bf8c51f037382fcfb7cfd78fc50d305e8521010e3a779f5",
+            "symbolsSha256": "260fb2d9fb5aba170b1f19e4e5683469eaa0b1a84e0d869126a655aaeea56e58"
+          },
+          "api-missing-freeO1": {
+            "machine": 16777228,
+            "fileBytes": 4859464,
+            "sha256": {
+              "exe": "b9764cbf422de0b6fda11609c6a52629d362891845fec1c621dc98c6c0dc0d60",
+              "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "7ec96c875b720bc92c7eb4421931d54fee8dc2bc80d80ff9bd6702984f01ac78",
+              "rss.tsv": "b3490d7abeec3c3f24dbb7a2c94edaac6c6825e4ce6066e25728744c000532e7"
+            },
+            "textSectionBytes": 3858632,
+            "disassemblySha256": "b655744d90223e506fcff28495f088fd86e9f7811081a3ebcb98ee7edaf81555",
+            "symbolsSha256": "20b7290c2836641b6118b4c114ba3513281276d8519ef52a2a7ea55cefb2e01c"
+          },
+          "api-missing-freeO2": {
+            "machine": 16777228,
+            "fileBytes": 4627432,
+            "sha256": {
+              "exe": "a743e9ba54bfb696cfd6008d8f4f5df9ad70b8baf8a033811c21e5d2fb3f0c0d",
+              "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "128a17299f3fb1a2f6dbcc629460ae367a8d3f264ef7b3a652d18c7a8f6df202",
+              "rss.tsv": "c8d78a3b24c0592f1147c478e2707c486b69af6c8c33918776e5a058d6f7a839"
+            },
+            "textSectionBytes": 3612428,
+            "disassemblySha256": "b9a6c2014defb6de5f9dbc432d65e58e9a09039bfd6381737fa93818977896fd",
+            "symbolsSha256": "bc06147a43af97b8f61f2788ff2e45b29a8c7f232b76633094cdf1510eacaf16"
+          }
+        },
+        "observations": {
+          "api-healthyO1": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "24",
+                "24",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "32",
+                "32",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "40",
+                "40",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "48",
+                "48",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "56",
+                "56",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "64",
+                "64",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                6784
+              ],
+              [
+                16,
+                7008
+              ],
+              [
+                24,
+                7088
+              ],
+              [
+                32,
+                7120
+              ],
+              [
+                40,
+                7168
+              ],
+              [
+                48,
+                7184
+              ],
+              [
+                56,
+                7184
+              ],
+              [
+                64,
+                7184
+              ]
+            ],
+            "status": 0,
+            "maxRssGrowthKiB": 400
+          },
+          "api-healthyO2": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "24",
+                "24",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "32",
+                "32",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "40",
+                "40",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "48",
+                "48",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "56",
+                "56",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "64",
+                "64",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                6800
+              ],
+              [
+                16,
+                6880
+              ],
+              [
+                24,
+                6928
+              ],
+              [
+                32,
+                6976
+              ],
+              [
+                40,
+                7088
+              ],
+              [
+                48,
+                7088
+              ],
+              [
+                56,
+                7088
+              ],
+              [
+                64,
+                7088
+              ]
+            ],
+            "status": 0,
+            "maxRssGrowthKiB": 288
+          },
+          "api-missing-closeO1": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                6544
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          },
+          "api-missing-closeO2": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                6656
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          },
+          "api-missing-freeO1": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "7561712",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                6848
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          },
+          "api-missing-freeO2": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "7536128",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                6736
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          }
+        }
+      },
+      "static": {
+        "sourceSha256": "f693380c0c7177f5704625420c52a6170a830574ec59af20365b278c110a1623",
+        "binaries": {
+          "-O1": {
+            "machine": 16777228,
+            "binarySha256": "d4eb3f7017e74b9e83024ecd25d3ca34c8f65cd167345dad4a109ca449413638",
+            "fileBytes": 34232,
+            "symbolsSha256": "9d081f5ebe5e445e5a95e6c55e80c637d7fe2ab69c9f0bef50fb5df13ecf8554",
+            "disassemblySha256": "46b0253bec18d69256afb3c0e8d135a2f749cb7f8bbc578b23bb8c5fe39ad38b"
+          },
+          "-O2": {
+            "machine": 16777228,
+            "binarySha256": "19d2039114ad1023e6aaa60ee99250f6825c74946e33b4ec9eb0ce2a28c74336",
+            "fileBytes": 34664,
+            "symbolsSha256": "38ede2039b877c1d534905d1ae02d5cd0163ed81e34bafaebb6e0ee819925dc6",
+            "disassemblySha256": "56eabd744b64d52c1b6b779f666a63789dff3f1d3a6fe1a4b6f3179791de0d34"
+          }
+        },
+        "executions": {
+          "-O1-ordinary": {
+            "status": 0,
+            "stdout": "three guarded stacks, writable bodies, one mapping released\n",
+            "stderr": ""
+          },
+          "-O1-first-guard-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: cannot protect static task stack guard page\n"
+          },
+          "-O1-last-guard-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: cannot protect static task stack guard page\n"
+          },
+          "-O1-map-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: out of memory: cannot map the program's static memory\n"
+          },
+          "-O1-missing-guard": {
+            "status": 211,
+            "stdout": "",
+            "stderr": ""
+          },
+          "-O2-ordinary": {
+            "status": 0,
+            "stdout": "three guarded stacks, writable bodies, one mapping released\n",
+            "stderr": ""
+          },
+          "-O2-first-guard-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: cannot protect static task stack guard page\n"
+          },
+          "-O2-last-guard-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: cannot protect static task stack guard page\n"
+          },
+          "-O2-map-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: out of memory: cannot map the program's static memory\n"
+          },
+          "-O2-missing-guard": {
+            "status": 211,
+            "stdout": "",
+            "stderr": ""
+          }
+        }
+      }
+    },
+    {
+      "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+      "run": 40074183388,
+      "host": "macos-15-intel",
+      "archives": [
+        {
+          "artifact": 12554134111,
+          "sha256": "4143cf75d576cd29690a3b1f28fbffcddfaa06528d4e0abbc85d73929d89ace3",
+          "job": 120813918964
+        },
+        {
+          "artifact": 12555206208,
+          "sha256": "c403df759911a80894259ba451ccf02b2a93b387f7c80c411128faf51ef142d6",
+          "job": 120813918951
+        }
+      ],
+      "scope": "Exact-head API, static Unix guards and Linux dynamic stack allocation block. Native saved executions and actual binaries inspected; no downloaded executable run locally.",
+      "api": {
+        "source": "227e671257d885185e54b3f915f6d1ebf470b3ea",
+        "os": "macOS",
+        "architecture": "X64",
+        "tool": "Apple LLVM version 17.0.0\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64    - AArch64 (little endian)\n    aarch64_32 - AArch64 (little endian ILP32)\n    aarch64_be - AArch64 (big endian)\n    arm        - ARM\n    arm64      - ARM64 (little endian)\n    arm64_32   - ARM64 (little endian ILP32)\n    armeb      - ARM (big endian)\n    thumb      - Thumb\n    thumbeb    - Thumb (big endian)\n    x86        - 32-bit X86: Pentium-Pro and above\n    x86-64     - 64-bit X86: EM64T and AMD64\n",
+        "scope": "Saved ARC API binaries; static inspection, no local execution. Managed charge, metric storage and RSS are separate quantities. Text section bytes include padding. No C/Rust timing comparison.",
+        "binaries": {
+          "api-healthyO1": {
+            "machine": 16777223,
+            "fileBytes": 5239504,
+            "sha256": {
+              "exe": "a53077afa329cbf542e81db311ddd8e82f21fe4def3ef581d531c5f75ef5936e",
+              "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+              "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+              "stderr": "dc314eea2b8cf1af6477b1847ec504f33b0488a6bedad6fc17219493331879e8",
+              "rss.tsv": "fc7268469304ba731993a9b74b1ce5674fff925d7965b8d7bf338e124e6a33cb"
+            },
+            "textSectionBytes": 4286896,
+            "disassemblySha256": "6c5e37d9d6765b988533063b752e66761fbb64959e0ab9724b69b2dd6df9ce84",
+            "symbolsSha256": "1284ace78f2e00f78327baabed14f077734873ad3ae97de2dfa0aeafd8e12b6e"
+          },
+          "api-healthyO2": {
+            "machine": 16777223,
+            "fileBytes": 5029768,
+            "sha256": {
+              "exe": "219e4ee7d9fe02333983c7bd4c661b338a1cc6c03c01824b44113e93b4b16e85",
+              "c": "e41fcc36a654df4e552f8e27442e8b2193e42bebabfb56e1b009b8b6726708dd",
+              "status": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+              "stderr": "dc314eea2b8cf1af6477b1847ec504f33b0488a6bedad6fc17219493331879e8",
+              "rss.tsv": "bc34f7d4125e228699e093803d5395eaa78402540af683d0bfcd0cb89d7bb0e5"
+            },
+            "textSectionBytes": 4080016,
+            "disassemblySha256": "f10a8411fcec7035f01c999e06d3738acf088bf14c91fa7313fbf0629e4c2dd6",
+            "symbolsSha256": "d7f432a18a85044fbc6b7543eb8f99c0d8a8a143057177a139c0bd6d02825510"
+          },
+          "api-missing-closeO1": {
+            "machine": 16777223,
+            "fileBytes": 5239504,
+            "sha256": {
+              "exe": "52842548bb5fe8a6bfdb347706c21b1e1a87a382e50c7cf9f40bbe5934cb6409",
+              "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "bca9588ecd850e3320ee52200a8249f13d8cfbfcb7344dab1b5cca19616b57ac",
+              "rss.tsv": "e1fc2cbe643ab5d69da3e2bd0f63c5579d7c2e2c1496ecf9eda2264eac737a20"
+            },
+            "textSectionBytes": 4286928,
+            "disassemblySha256": "94ceb57f2dbc4c9ab0e381bbf33603832a4d3ffd7f04707045addadf1df0473c",
+            "symbolsSha256": "0dacedb309c4a16132efa210db1f75974a302202ae3df37fb12cf695ea52ce0f"
+          },
+          "api-missing-closeO2": {
+            "machine": 16777223,
+            "fileBytes": 5033864,
+            "sha256": {
+              "exe": "56a7e14bf31f01025bf771f6a55b62acc4ff9ef104b0d53f0798ebab03d79f5e",
+              "c": "3fe39a09e1109f51ad91f900557d232bc3d8ed7d799a162ef0a7dc77ef91a7cc",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "bca9588ecd850e3320ee52200a8249f13d8cfbfcb7344dab1b5cca19616b57ac",
+              "rss.tsv": "468a326f96118ba93bf462cb86ca67f9ffaf3bd0faa8092b45d2f26334c6ef6c"
+            },
+            "textSectionBytes": 4080032,
+            "disassemblySha256": "a9a222dd5428d7211c3db44ffe888a3dd3c66b86ae3e16aecf73f5343da4d7b5",
+            "symbolsSha256": "b429f96623e7d4022e8f7dd7e345c46784531d15bb6a863f6039f52d0683ad25"
+          },
+          "api-missing-freeO1": {
+            "machine": 16777223,
+            "fileBytes": 5296848,
+            "sha256": {
+              "exe": "1b9f86426a06da7e4b7d95ce7b3ec50e325ed5781325f1018dcc4759f8fcb54e",
+              "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "94cd54ed3c4efbf44c321038ce396891d45b9ee23e7864f013691de9ca0401b4",
+              "rss.tsv": "768ac9949b5d5f0bc459f763a0a4a7c36517625293ab2c53b8728641c2959f5d"
+            },
+            "textSectionBytes": 4343728,
+            "disassemblySha256": "eec2cbe45cc2d693173b6a18696913fc84ab8afb3a38f6fa8e0fa11cac4710f8",
+            "symbolsSha256": "0ecd171a5989fe26c86f4b604f34db003dac18f90d1d08bcf51571e0597eb363"
+          },
+          "api-missing-freeO2": {
+            "machine": 16777223,
+            "fileBytes": 5050248,
+            "sha256": {
+              "exe": "1e9651e4b1eba786961c41127dd466818a439d267b72cb17183e63de3a8efe1e",
+              "c": "7661c766d4c4f23ba31e10edc27e4b7ab49949bf6e60fc53ad6011e3d737d944",
+              "status": "749fc650cacb0f06547520d53c31505c8156e0a3be07073eddb2ef3ad9e383ba",
+              "stderr": "dcd0b840d129f7f075c14b6ba907f1d4372166fa4403e861ac978f0ff3907edd",
+              "rss.tsv": "66ac3a0a768ccb341380bba954d337074f5089747bdd7d833d33ddbd33afbc1f"
+            },
+            "textSectionBytes": 4099760,
+            "disassemblySha256": "282e6bc72258ff85a320b90e2fe80005cf977cb6e2aa2c1992369a87706b1711",
+            "symbolsSha256": "4c962167b01b9f47f7cfc51d43aecc87015cba9cc61f9239d936bd5fa243c39c"
+          }
+        },
+        "observations": {
+          "api-healthyO1": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "24",
+                "24",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "32",
+                "32",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "40",
+                "40",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "48",
+                "48",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "56",
+                "56",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "64",
+                "64",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                5624
+              ],
+              [
+                16,
+                5920
+              ],
+              [
+                24,
+                6032
+              ],
+              [
+                32,
+                6052
+              ],
+              [
+                40,
+                6100
+              ],
+              [
+                48,
+                6120
+              ],
+              [
+                56,
+                6120
+              ],
+              [
+                64,
+                6160
+              ]
+            ],
+            "status": 0,
+            "maxRssGrowthKiB": 536
+          },
+          "api-healthyO2": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "24",
+                "24",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "32",
+                "32",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "40",
+                "40",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "48",
+                "48",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "56",
+                "56",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "64",
+                "64",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                5552
+              ],
+              [
+                16,
+                5812
+              ],
+              [
+                24,
+                5976
+              ],
+              [
+                32,
+                5976
+              ],
+              [
+                40,
+                5984
+              ],
+              [
+                48,
+                6036
+              ],
+              [
+                56,
+                6036
+              ],
+              [
+                64,
+                6036
+              ]
+            ],
+            "status": 0,
+            "maxRssGrowthKiB": 484
+          },
+          "api-missing-closeO1": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                5748
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          },
+          "api-missing-closeO2": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                5664
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          },
+          "api-missing-freeO1": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "7465744",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                5788
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          },
+          "api-missing-freeO2": {
+            "idle": [
+              [
+                "http-memory",
+                "8",
+                "8",
+                "2576",
+                "1",
+                "532",
+                "0"
+              ],
+              [
+                "http-memory",
+                "16",
+                "16",
+                "7466752",
+                "1",
+                "532",
+                "0"
+              ]
+            ],
+            "rssKiB": [
+              [
+                8,
+                5560
+              ]
+            ],
+            "status": 241,
+            "maxRssGrowthKiB": 0
+          }
+        }
+      },
+      "static": {
+        "sourceSha256": "f693380c0c7177f5704625420c52a6170a830574ec59af20365b278c110a1623",
+        "binaries": {
+          "-O1": {
+            "machine": 16777223,
+            "binarySha256": "4d26c64de587676dfe028940adc28a93d8e80a85529b39c34f126054aa0fd908",
+            "fileBytes": 9248,
+            "symbolsSha256": "56cac79e0f5848774c4aca9edf237440470888823c4f9b4ca95450b5e6339eb2",
+            "disassemblySha256": "4594e5bfcd145ad729cc59dd9b7d93711dca854448dcb42ce09bd7d42aad534b"
+          },
+          "-O2": {
+            "machine": 16777223,
+            "binarySha256": "641161fa92bdd5c3c1c43f6f226d968bdd7f469d7ae9fa4e9fdd6ef5ee3d3b93",
+            "fileBytes": 9672,
+            "symbolsSha256": "b771e9f895e40c43e69917042ee352db156a6ab5d24d617aa326c37f309a6679",
+            "disassemblySha256": "b9f50e148203f9f0cc80b8b7e40b6c3d8d933d43e22e1aeba6c4f9d52b6ef1b8"
+          }
+        },
+        "executions": {
+          "-O1-ordinary": {
+            "status": 0,
+            "stdout": "three guarded stacks, writable bodies, one mapping released\n",
+            "stderr": ""
+          },
+          "-O1-first-guard-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: cannot protect static task stack guard page\n"
+          },
+          "-O1-last-guard-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: cannot protect static task stack guard page\n"
+          },
+          "-O1-map-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: out of memory: cannot map the program's static memory\n"
+          },
+          "-O1-missing-guard": {
+            "status": 211,
+            "stdout": "",
+            "stderr": ""
+          },
+          "-O2-ordinary": {
+            "status": 0,
+            "stdout": "three guarded stacks, writable bodies, one mapping released\n",
+            "stderr": ""
+          },
+          "-O2-first-guard-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: cannot protect static task stack guard page\n"
+          },
+          "-O2-last-guard-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: cannot protect static task stack guard page\n"
+          },
+          "-O2-map-error": {
+            "status": 102,
+            "stdout": "",
+            "stderr": "fwp: out of memory: cannot map the program's static memory\n"
+          },
+          "-O2-missing-guard": {
+            "status": 211,
+            "stdout": "",
+            "stderr": ""
+          }
+        }
+      }
+    }
+  ],
+  "scope": "PR 208 exact-head delivery. Binary outcomes are not distinct programs; layout reviews overlap array images. API/static-guard/page-policy binary records and all observations are retained. These are cleanup and bounded-memory checks, not throughput comparisons. No downloaded executable was run locally."
+}

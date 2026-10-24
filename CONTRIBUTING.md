@@ -127,7 +127,7 @@ cargo test --all-targets
 ```
 
 A separate CI job runs the C/Rust comparison
-(`cargo test --release --test bench benchmarks -- --ignored --exact --nocapture`). It
+(`CC=gcc FWP_LTO=0 FWP_BENCH_OWNERSHIP=arc cargo test --release --test bench benchmarks -- --ignored --exact --nocapture`). It
 reports times without failing on them, but it does fail when fwp, C and
 Rust print different results.
 

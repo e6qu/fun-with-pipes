@@ -126,6 +126,26 @@ class Coverage(unittest.TestCase):
                       environment)
         self.assertIn("ownership-evidence/", steps)
 
+    def test_map_failure_artifacts_follow_the_native_shards(self):
+        workflow = (SHARDS.ROOT / ".github/workflows/ci.yml").read_text()
+        schedule = SHARDS.assignment(SHARDS.SCHEDULE)
+        targets = {"map_set_ownership"}
+        jobs = {"test"}
+        jobs.update({"regular": "macos", "gc": "macos_gc"}[shard]
+                    for shard, names in schedule.items() if targets & set(names))
+        for job in jobs:
+            body = re.search(rf"^  {job}:\n(.*?)(?=^  \w+:\n|\Z)",
+                             workflow, re.M | re.S).group(1)
+            environment, steps = body.split("    steps:", 1)
+            self.assertIn("FWP_MAP_FAILURE_ARTIFACTS: ownership-evidence/maps",
+                          environment, job)
+            self.assertIn("path: ownership-evidence/", steps, job)
+        windows = (SHARDS.ROOT / ".github/workflows/windows.yml").read_text()
+        environment, steps = windows.split("    steps:", 1)
+        self.assertIn("FWP_MAP_FAILURE_ARTIFACTS: ownership-evidence/maps",
+                      environment)
+        self.assertIn("ownership-evidence/", steps)
+
     def test_stack_guard_artifacts_follow_the_native_shards(self):
         workflow = (SHARDS.ROOT / ".github/workflows/ci.yml").read_text()
         schedule = SHARDS.assignment(SHARDS.SCHEDULE)

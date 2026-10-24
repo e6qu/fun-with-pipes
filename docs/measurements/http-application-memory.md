@@ -1,10 +1,11 @@
 # Memory between JSON API requests
 
-Status: the stack repair `4fc97ca1` passes all six native API jobs and both Linux
-stack-policy checks. Repaired stack mappings have no huge pages. The client repair
-`05de0f65` passes all twelve HTTP/protocol jobs. Native Windows probes confirm
-that duplicated client sockets were inherited by unrelated child processes.
-No memory budget or deadline has been relaxed. Final delivery remains pending.
+Status: [PR #208](https://github.com/e6qu/fun-with-pipes/pull/208) passes all nine
+production jobs, documentation and independent six-host binary review at
+`227e671257d885185e54b3f915f6d1ebf470b3ea`. The [delivery record](http-memory-delivery-2026-10-24.json)
+includes API, static-guard and Linux page-policy outcomes. No memory budget or
+deadline was relaxed. Earlier focused runs below record how the faults were
+isolated and repaired; they are not remaining tasks.
 This extends the [application acceptance suite](../application-acceptance.md).
 It is a correctness and memory check, not a throughput benchmark or a comparison
 with C/Rust servers.
@@ -183,4 +184,4 @@ guard must be detected. All four native Linux/macOS jobs pass these checks at `c
 [run 40072655673](https://github.com/e6qu/fun-with-pipes/actions/runs/40072655673).
 Independent review verifies eight binaries and forty outcome records. Windows
 uses its existing OS-managed fiber stacks. The [focused evidence](http-memory-focused-2026-10-24.json)
-records this review and the six-host API binary checks; final delivery remains separate.
+records the earlier review; final delivery is linked at the top of this page.

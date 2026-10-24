@@ -12,6 +12,24 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## API memory, stack guards and connection cleanup (PR #208)
+
+The maintained JSON API now has bounded request/disconnect/shutdown checks.
+Linux task stacks avoid huge-page backing, failed Unix guard setup releases its
+mapping before exit, and Windows test clients keep one socket owner so unrelated
+compiler children cannot inherit a duplicate connection. Memory budgets and
+deadlines remain unchanged; deliberately missing frees and closes are detected.
+
+[PR #208](https://github.com/e6qu/fun-with-pipes/pull/208) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40074183388)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40074183289)
+at `227e671257d885185e54b3f915f6d1ebf470b3ea`. Review covered 8,454 actual binary files,
+including 36 API, eight static-guard and four Linux page-policy images.
+The [acceptance record](measurements/http-memory-delivery-2026-10-24.json)
+retains their observations, source/artifact hashes and gate results. Squash
+`058dc4e5954571ed222ca4d26af4403a52a8516b` has the identical tested tree and one subject with an empty
+body. All seven roadmap areas remain open.
+
 ## File cleanup and HTTP example checks (PR #207)
 
 Task-file tests repeat edits and errors at 128 and 4,096 UTF-8 items. Deliberately

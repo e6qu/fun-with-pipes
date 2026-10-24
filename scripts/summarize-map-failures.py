@@ -2,9 +2,16 @@
 """Inspect saved map failure evidence without executing downloaded programs."""
 import argparse
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 import subprocess
+
+
+SPEC = importlib.util.spec_from_file_location(
+    'collection_report', Path(__file__).with_name('summarize-collection-build.py'))
+COLLECTION = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(COLLECTION)
 
 
 HOSTS = {
@@ -37,6 +44,101 @@ def inspect(binary, mode, kind, file_format, llvm):
             'internal_runtime_symbols': len(runtime), 'tracing_symbols': tracing}
 
 
+def sort_observation(directory, label, kind, late):
+    limit = 65544 if kind == 'map' else 32776
+    peak = limit + (65536 if kind == 'map' else 32768) if late else limit
+    expected = f'{kind} peak={peak} limit={limit} final=0'
+    assert (directory / f'{label}-{kind}.txt').read_text().strip() == expected
+    status = int((directory / f'{label}-{kind}.status').read_text())
+    assert status == (241 if late else 0), (label, kind, status)
+    return {'kind': kind, 'peakChargedBytes': peak, 'limit': limit,
+            'finalChargedBytes': 0, 'exitStatus': status}
+
+
+def sort_storage(directory, file_format, llvm, runtime):
+    runs = []
+    for mode in ['arc', 'tracing']:
+        ordinary = (directory / f'sort-storage-{mode}-ordinary.c').read_text()
+        start = ordinary.index('static V fwp_map_build_typed(')
+        end = start + ordinary[start:].index('\n}\n') + 3
+        body = ordinary[start:end]
+        runtime_start = runtime.index('static V fwp_map_build_typed(')
+        runtime_end = runtime_start + runtime[runtime_start:].index('\n}\n') + 3
+        assert body == runtime[runtime_start:runtime_end], 'Saved builder differs from recorded source'
+        release = '    fwp_scratch_finish(&tk, &tk_cleanup);\n'
+        finish = '    fwp_value_finish(&owner, &cleanup);\n'
+        assert body.count(release) == body.count(finish) == 1
+        late_body = body.replace(release, '').replace(finish, finish + release)
+        late_source = (directory / f'sort-storage-{mode}-late-release.c').read_text()
+        assert late_source == ordinary[:start] + late_body + ordinary[end:]
+        for label in ['ordinary', 'late-release']:
+            source = directory / f'sort-storage-{mode}-{label}.c'
+            for opt in ['-O1', '-O2']:
+                name = f'sort-storage-{mode}-{label}{opt}'
+                runs.append({'mode': mode, 'optimization': opt, 'control': label,
+                    'sourceSha256': hashlib.sha256(source.read_bytes()).hexdigest(),
+                    'binary': inspect(directory / f'{name}.bin', mode, 'sort-storage', file_format, llvm),
+                    'observations': [sort_observation(directory, name, kind, label == 'late-release')
+                                     for kind in ['map', 'set']]})
+    return runs
+
+
+def inspect_host(directory, host, llvm, runtime):
+    file_format = HOSTS[host]
+    reference = (directory / 'interpreter.txt').read_bytes()
+    assert reference.count(b'Err "expected"\n') == 4
+    runs, binaries = [], []
+    for mode in ['arc', 'tracing']:
+        for opt in ['-O1', '-O2']:
+            for poison in (['0'] if mode == 'arc' else ['0', '1']):
+                line = (directory / f'faults-{mode}{opt}-reuse-{poison}.txt').read_text().strip()
+                count = 138 if poison == '1' else 136
+                assert line == (f'22 map/set operations: {count} injected failures cleaned; '
+                                'aliases preserved'), line
+                runs.append({'mode': mode, 'optimization': opt,
+                             'reuse_verification': poison == '1',
+                             'injected_failures': count})
+            assert (directory / f'callbacks-{mode}{opt}.txt').read_bytes() == reference
+            assert not (directory / f'callbacks-{mode}{opt}.stderr').read_bytes()
+            for kind in ['faults', 'callbacks']:
+                binaries.append(inspect(directory / f'{kind}-{mode}{opt}.bin',
+                                        mode, kind, file_format, llvm))
+    fault_source = (directory / 'faults-arc.c').read_text()
+    for name, function, before, after in [
+        ('missing-result-owner', 'fwp_map_typed_copy',
+         'fwp_value_owner owner = {result, ops->drop_map};',
+         'fwp_value_owner owner = {result, NULL};'),
+        ('missing-scratch-owner', 'fwp_map_build_typed',
+         'fwp_scratch_protect(&tk, &tk_cleanup);',
+         'fwp_cleanup_push(&tk_cleanup, map_test_no_release, &tk);')]:
+        start = fault_source.index(f'static V {function}(')
+        end = start + fault_source[start:].index('\n}\n') + 3
+        body = fault_source[start:end]
+        assert body.count(before) == 1
+        assert (directory / f'{name}.c').read_text() == (
+            fault_source[:start] + body.replace(before, after) + fault_source[end:])
+    compact_source = (directory / 'compact-arc-O0.c').read_text()
+    allocation = 'fwp_alloc(sizeof(fwp_map) + columns * len * sizeof(V))'
+    assert compact_source.count(allocation) == 1
+    assert (directory / 'compact-wasted-slot-control.c').read_text() == compact_source.replace(
+        allocation, 'fwp_alloc(sizeof(fwp_map) + (columns + 1) * len * sizeof(V))')
+    controls = {name: (directory / f'{name}.txt').read_text().strip()
+                for name in ['missing-result-owner', 'missing-scratch-owner']}
+    assert all(value.endswith(': 213') for value in controls.values())
+    controls['compact-wasted-slot-control'] = (directory / 'compact-wasted-slot-control.txt').read_text().strip()
+    for name, status in [('missing-result-owner', 213), ('missing-scratch-owner', 213),
+                         ('compact-wasted-slot-control', 211)]:
+        assert int((directory / f'{name}.status').read_text()) == status
+        assert (directory / f'{name}.c').stat().st_size
+        binaries.append(inspect(directory / f'{name}.bin', 'arc', name, file_format, llvm))
+    compact = COLLECTION.compact_sets(directory, host, llvm)
+    storage = sort_storage(directory, file_format, llvm, runtime)
+    return {'runs': runs, 'controls': controls, 'binaries': binaries,
+            'compactSets': compact, 'sortStorage': storage,
+            'callback_outputs_match_interpreter': True,
+            'arc_shutdown_counted_bytes': 0}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--artifacts', type=Path, required=True)
@@ -48,45 +150,25 @@ def main():
     audit = json.loads(args.audit.read_text())
     assert audit['head'] == args.head
     assert audit['status'] == 'completed' and len(audit['jobs']) == 6
+    runtime = subprocess.check_output(
+        ['git', 'show', args.head + ':runtime/fwp_rt_prims.c'], text=True)
     rows = []
-    for host, file_format in HOSTS.items():
+    for host in HOSTS:
         jobs = [job for job in audit['jobs'] if job['name'] == f'map_storage ({host})']
         assert len(jobs) == 1, host
         job = jobs[0]
-        assert job['conclusion'] == 'success' and job['passed'] == 12
+        assert job['conclusion'] == 'success' and job['passed'] == 13
         assert not any(job[key] for key in
                        ['failed', 'ignored', 'failed_steps', 'panic_lines'])
         directory = args.artifacts / f'map-storage-{host}'
         assert (directory / 'source.txt').read_text().strip() == audit['head']
-        reference = (directory / 'interpreter.txt').read_bytes()
-        assert reference.count(b'Err "expected"\n') == 4
-        runs, binaries = [], []
-        for mode in ['arc', 'tracing']:
-            for opt in ['-O1', '-O2']:
-                for poison in (['0'] if mode == 'arc' else ['0', '1']):
-                    line = (directory / f'faults-{mode}{opt}-reuse-{poison}.txt').read_text().strip()
-                    count = 106 if poison == '1' else 104
-                    assert line == (f'22 map/set operations: {count} injected failures cleaned; '
-                                    'aliases preserved'), line
-                    runs.append({'mode': mode, 'optimization': opt,
-                                 'reuse_verification': poison == '1',
-                                 'injected_failures': count})
-                assert (directory / f'callbacks-{mode}{opt}.txt').read_bytes() == reference
-                assert not (directory / f'callbacks-{mode}{opt}.stderr').read_bytes()
-                for kind in ['faults', 'callbacks']:
-                    binaries.append(inspect(directory / f'{kind}-{mode}{opt}.bin',
-                                            mode, kind, file_format, args.llvm_bin))
-        controls = {name: (directory / f'{name}.txt').read_text().strip()
-                    for name in ['missing-result-owner', 'missing-scratch-owner']}
-        assert all(value.endswith(': 213') for value in controls.values())
-        rows.append({'host': host, 'job': job['job'],
-                     'settings': (directory / 'settings.txt').read_text().splitlines(),
-                     'clang': (directory / 'clang.txt').read_text().strip(),
-                     'rustc': (directory / 'rustc.txt').read_text().strip(),
-                     'runs': runs, 'controls': controls, 'binaries': binaries,
-                     'callback_outputs_match_interpreter': True,
-                     'arc_shutdown_counted_bytes': 0})
-        print(host, '8 binaries, 6 fault configurations, 4 callback runs, 2 controls verified')
+        row = inspect_host(directory, host, args.llvm_bin, runtime)
+        row.update(host=host, job=job['job'],
+                   settings=(directory / 'settings.txt').read_text().splitlines(),
+                   compiler=(directory / 'c.txt').read_text().strip(),
+                   rustc=(directory / 'rustc.txt').read_text().strip())
+        rows.append(row)
+        print(host, '23 binaries, 6 fault configurations, 4 callbacks, 16 peaks, 3 cleanup/layout controls verified')
     args.output.write_text(json.dumps({
         'source': audit['head'], 'run': audit['run'], 'complete_native_matrix': True,
         'scope': 'Failure cleanup and typed ownership, not a timing or code-size comparison. '
