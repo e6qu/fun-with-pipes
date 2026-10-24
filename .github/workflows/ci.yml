@@ -106,6 +106,9 @@ jobs:
       - name: Inspect array-sort ownership and wide-value controls
         if: ${{ !cancelled() }}
         run: python3 scripts/inspect-array-sort.py --input ownership-evidence/arc/array-sort --source "${{ github.event.pull_request.head.sha || github.sha }}" --system macOS --arch "$RUNNER_ARCH" --objdump "$(xcrun --find llvm-objdump)" --output ownership-evidence/array-sort-inspection.json
+      - name: Inspect array construction moves and cleanup
+        if: ${{ !cancelled() }}
+        run: python3 scripts/inspect-array-construction.py --input ownership-evidence/arc/array-construction --source "${{ github.event.pull_request.head.sha || github.sha }}" --system macOS --arch "$RUNNER_ARCH" --objdump "$(xcrun --find llvm-objdump)" --output ownership-evidence/array-construction-inspection.json
       - name: Python SDK and native disassembly
         if: ${{ !cancelled() }}
         env:
@@ -356,6 +359,9 @@ jobs:
       - name: Inspect array-sort ownership and wide-value controls
         if: ${{ !cancelled() }}
         run: python3 scripts/inspect-array-sort.py --input ownership-evidence/arc/array-sort --source "${{ github.event.pull_request.head.sha || github.sha }}" --system Linux --arch "$RUNNER_ARCH" --objdump objdump --output ownership-evidence/array-sort-inspection.json
+      - name: Inspect array construction moves and cleanup
+        if: ${{ !cancelled() }}
+        run: python3 scripts/inspect-array-construction.py --input ownership-evidence/arc/array-construction --source "${{ github.event.pull_request.head.sha || github.sha }}" --system Linux --arch "$RUNNER_ARCH" --objdump objdump --output ownership-evidence/array-construction-inspection.json
       - uses: actions/upload-artifact@v7
         if: always()
         with:

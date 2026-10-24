@@ -208,6 +208,7 @@ jobs:
           if [ "$RUNNER_OS" = Windows ]; then inspector=llvm-objdump; fi
           python scripts/inspect-list-copy.py --input list-copy-evidence/arc/list-copy --source "$GITHUB_SHA" --system "$RUNNER_OS" --arch "$RUNNER_ARCH" --objdump "$inspector" --output list-copy-evidence/inspection.json
           python scripts/inspect-array-sort.py --input list-copy-evidence/arc/array-sort --source "$GITHUB_SHA" --system "$RUNNER_OS" --arch "$RUNNER_ARCH" --objdump "$inspector" --output list-copy-evidence/array-sort-inspection.json
+          python scripts/inspect-array-construction.py --input list-copy-evidence/arc/array-construction --source "$GITHUB_SHA" --system "$RUNNER_OS" --arch "$RUNNER_ARCH" --objdump "$inspector" --output list-copy-evidence/array-construction-inspection.json
       - name: Save compiler for bounded macOS ARM64 diagnostics
         if: ${{ always() && runner.os == 'macOS' && runner.arch == 'ARM64' && hashFiles('target/debug/fwp') != '' }}
         run: |

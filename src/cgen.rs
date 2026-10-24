@@ -8533,8 +8533,10 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                                         },
                                     );
                                 }
-                                if matches!(sym.as_str(), "array.set" | "array.push" | "array.sort")
-                                {
+                                if matches!(
+                                    sym.as_str(),
+                                    "array.set" | "array.push" | "array.sort" | "array.from-list"
+                                ) {
                                     let array = &func.locals[func.arity as usize - 1];
                                     args.push(if free_enabled() || self.resource_type(array) {
                                         format!("fwp_drop{}", self.drop_id(array))

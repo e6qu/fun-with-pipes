@@ -3,6 +3,12 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Command, Output, Stdio};
 
+#[path = "support/array_construction.rs"]
+mod array_construction;
+
+#[path = "support/array_probe.rs"]
+mod array_probe;
+
 #[path = "support/array_sort.rs"]
 mod array_sort;
 
@@ -535,6 +541,7 @@ int main(void) {
     for(unsigned round=0;round<32;round++) {
     V bits = fwp_rc_fresh(fwp_cstr("numeric bits"));
     V xs = fwp_rc_fresh(fwp_cons(bits, 0));
+    fwp_rc_dup(xs); /* Keep the independent list alias across conversion. */
     V original = FROM_LIST_WRAPPER(xs);
     V selected = GET_WRAPPER(0, original);
     V listed = TO_LIST_WRAPPER(original);

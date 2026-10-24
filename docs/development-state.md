@@ -5,7 +5,8 @@ reserve ARC for necessary sharing and remove tracing. JIT is excluded.
 
 ## Current action
 
-**Next:** finish PR #210's remaining production gates and binary reviews, then
+**Next:** diagnose and repair PR #210's Intel macOS compiler abort, audit every
+remaining job, and repeat acceptance for the repaired head. Then
 squash-merge only after acceptance. Publish the prepared array-sort group as the
 next substantial PR; keep one active PR. Use a one-line subject of at most eighty
 characters, an empty body and no trailers. Continue the plan after verified merges.
@@ -13,10 +14,17 @@ characters, an empty body and no trailers. Continue the plan after verified merg
 [PR #210](https://github.com/e6qu/fun-with-pipes/pull/210) is unchanged at
 `281b54d9193b432bb808b4387cc0a4dad34dacba`. Checkout
 `/private/tmp/fwp-checked-peer-comparison`, branch `list-copy-delivery`, is clean.
-Production run `40091968517`; docs `40091968459`. Docs, benchmarks and both macOS
-ARM64 shards pass. The other six production jobs are running; no failure is known.
-Completed logs are clean. Audit every failed job and completed target before any
-repair push; preserve this head while its remaining gates run.
+Production run `40091968517`; docs `40091968459`. Eight gates pass; Windows AMD64
+is finishing. Intel macOS GC job `120866324330` failed only
+`console_input_matches_raw_interpretation`: the compiler aborted during type
+inference, before C generation. The native crash report shows `malloc_report`
+under `TypeTable::open_call`; its cause is unresolved. Keep the crash/report ZIPs
+and extracted logs in `/private/tmp/fwp-list-copy-console-failure`. Do not treat
+a successful retry as a repair. Focused diagnostic source
+`359f680d147bb931dcffd6a91d7ded541efd5993` is running in `40100186269`: production
+Rust 1.99.1, allocator heap checks, and nightly AddressSanitizer. The active PR
+is unchanged. A bounded eighteen-input driver check and a stop-on-failure control
+passed locally; native diagnostics run only on GitHub. Audit all completed logs before a repair push.
 
 The PR fixes interrupted list copies, removes redundant sort buffers, aligns
 benchmark peer arithmetic, fixes Windows test coverage and records rejected sort
@@ -66,8 +74,13 @@ Code/stack costs and slower C/Rust rows remain in the report. No timing gain cla
 
 Readable results and raw JSON are in `docs/measurements/array-sort-ownership.md`,
 `array-sort-native-2026-10-24.json` and `array-sort-costs-2026-10-24.json` in that
-checkout. Results, indexes and plan are checkpointed together;
-prepare the next delivery after #210 merges. No second PR is open.
+checkout, checkpointed and published as `07a565fb6287213b194f468ab9aeaea3e6a5b84f`.
+The checkout now also holds an UNPUBLISHED, UNVERIFIED list-to-array move
+prototype. It transfers only the unshared prefix, preserves shared tails, and
+adds String/F128 failure/cancellation and cost checks. Preserve these dirty files
+while repairing #210. Focused publication is next after formatting, inventory, workflow and documentation
+checks. It needs compilation, six-host checks, measurements and
+binary review before acceptance. No second PR is open.
 
 Helpers/receipts use `fwp-array-sort-preparation`, `fwp-array-sort-measurement`
 and `fwp-array-sort-costs`. All publication, download and independent review work
@@ -82,7 +95,7 @@ Bounded checks pass: frozen inventory (392 declarations, 382 symbols, zero
 unclassified), Rust formatting, Python syntax, 19 native-runner controls,
 workflow actionlint and 127 documentation link sets. The inventory's first check
 caught an overbroad exception-list edit; correcting it passed. Full builds/tests
-ran only on GitHub. The final documentation check includes the new report links.
+ran only on GitHub. New report links still need the final documentation check.
 
 ## Resources and last accepted delivery
 

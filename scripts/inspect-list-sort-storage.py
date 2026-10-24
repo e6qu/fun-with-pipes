@@ -27,7 +27,7 @@ assert report['architecture'] == ('aarch64' if args.arch == 'ARM64' else 'x86_64
 for name in ['scripts/measure-list-sort-storage.py', 'scripts/measure-iteration.py']:
     assert (ROOT / name).read_bytes() == subprocess.check_output(['git', 'show', args.source + ':' + name])
 runtime = subprocess.check_output(['git', 'show', args.source + ':runtime/fwp_rt_prims.c'], text=True)
-assert [row['name'] for row in report['programs']] == ['list', 'array', 'array-owned']
+assert [row['name'] for row in report['programs']] == ['list', 'array', 'array-owned', 'array-built']
 images = []
 observations = []
 for row in report['programs']:
@@ -83,16 +83,16 @@ for row in report['programs']:
         for opt in ['-O1', '-O2']:
             shared = entry['variants'][normal + opt][0]
             separate = entry['variants'][control + opt][0]
-            extra = (2 if kind == 'list' else 1) if count > 1 else 0
+            extra = (2 if kind == 'list' else 0 if kind == 'array-built' else 1) if count > 1 else 0
             assert separate['requests'] - shared['requests'] == extra
             assert separate['requestedBytes'] - shared['requestedBytes'] == extra * (count + 1) * 8
-            assert separate['retains'] - shared['retains'] == (count if kind == 'array-owned' and count > 1 else 0)
+            assert separate['retains'] - shared['retains'] == (count if kind == 'array-built' or (kind == 'array-owned' and count > 1) else 0)
             assert separate['peakChargedBytes'] >= shared['peakChargedBytes']
             observations.append(dict(program=kind, elements=count, optimization=opt,
                                      normalVariant=normal, controlVariant=control, normal=shared, control=separate))
-assert len(images) == len(observations) == 24
+assert len(images) == len(observations) == 32
 args.output.parent.mkdir(parents=True, exist_ok=True)
 args.output.write_text(json.dumps(dict(source=args.source, architecture=report['architecture'],
     reportSha256=hashlib.sha256((args.input / 'report.json').read_bytes()).hexdigest(),
     images=images, observations=observations), indent=2) + '\n')
-print('Inspected 24 actual sort-storage images and 24 repeated count comparisons')
+print('Inspected 32 actual sort-storage images and 32 repeated count comparisons')

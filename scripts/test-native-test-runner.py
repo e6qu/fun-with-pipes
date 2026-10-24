@@ -96,7 +96,8 @@ class Coverage(unittest.TestCase):
         schedule = SHARDS.assignment(SHARDS.SCHEDULE)
         windows = (SHARDS.ROOT / ".github/workflows/windows.yml").read_text()
         for group, target in [("list-copy", "sort_callback_ownership"),
-                              ("array-sort", "array_element_ownership")]:
+                              ("array-sort", "array_element_ownership"),
+                              ("array-construction", "array_element_ownership")]:
             jobs = {"test"}
             jobs.update({"regular": "macos", "gc": "macos_gc"}[shard]
                         for shard, names in schedule.items() if target in names)

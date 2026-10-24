@@ -2199,18 +2199,35 @@ static V fwp_array_typed_copy(V a, size_t extra, void (*dup)(V), const fwp_desc 
     FWP_KEEP_ALIVE(a);
     return fwp_array_builder_finish(&result, &cleanup);
 }
-static V fwp_p_array_from_list_typed(V xs, void (*dup)(V), const fwp_desc *elem) {
-    V source = xs;
+static V fwp_p_array_from_list_typed(V xs, void (*dup)(V),
+                                    void (*drop_list)(V), const fwp_desc *elem) {
+    fwp_value_owner input = {xs, drop_list};
+    fwp_cleanup input_cleanup; fwp_value_protect(&input, &input_cleanup);
     fwp_array_builder result = {fwp_array_typed_new(fwp_list_len(xs), elem), 0, elem};
     fwp_cleanup cleanup; fwp_array_builder_protect(&result, &cleanup);
-    for (size_t i = 0; xs; i++, xs = OBJ(xs)->f[1]) {
-        V value = OBJ(xs)->f[0];
-        if (dup && elem->kind != K_F128) dup(value);
-        fwp_array_store(result.value, i, value, elem);
-        result.filled++;
+    int move_prefix = 1;
+    for (size_t i = 0; xs; i++) {
+        V node = xs, value = OBJ(node)->f[0], tail = OBJ(node)->f[1];
+        if (move_prefix && fwp_rc_last(node)) {
+            /* Transfer both children before freeing only this list node.
+             * Wide scalars are copied into inline array slots and released. */
+            input.value = tail;
+            fwp_array_store_owned(result.value, i, value, elem);
+            result.filled++;
+            fwp_rc_free_obj(node);
+        } else {
+            /* A shared node also shares access to its descendants, even when
+             * their own counts are one. Keep this whole tail owned. */
+            move_prefix = 0;
+            if (dup && elem->kind != K_F128) dup(value);
+            fwp_array_store(result.value, i, value, elem);
+            result.filled++;
+        }
+        xs = tail;
     }
-    FWP_KEEP_ALIVE(source);
-    return fwp_array_builder_finish(&result, &cleanup);
+    V array = fwp_array_builder_finish(&result, &cleanup);
+    drop_list(fwp_value_finish(&input, &input_cleanup));
+    return array;
 }
 /* Compiler-only inline integer range immediately consumed as an array. Wide
  * arithmetic computes the distance without signed overflow or WASI truncation.

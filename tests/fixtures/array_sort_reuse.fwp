@@ -4,6 +4,6 @@ failing : () -> () ! {Error[String]}
 failing = const "probe" | fail
 main = [
     read-all () | words | array.from-list | array.sort | echo,
-    17 | flip array.generate negative-quad | array.sort | echo,
+    17 | range 0 | map negative-quad | array.from-list | array.sort | echo,
     () | attempt failing | echo
 ] | ignore

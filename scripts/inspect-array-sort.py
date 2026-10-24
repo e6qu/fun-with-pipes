@@ -12,22 +12,22 @@ import subprocess
 def instrument(program, fixture):
     code = program.replace('int main(int argc, char **argv)', 'int original_main(int argc, char **argv)')
     for name, replacement, header, arguments in [
-            ('fwp_gc_alloc', 'sort_allocate', 'size_t n, int leaf', 'n, leaf'),
-            ('fwp_alloc_init', 'sort_allocate_init', 'size_t n', 'n')]:
+            ('fwp_gc_alloc', 'array_probe_allocate', 'size_t n, int leaf', 'n, leaf'),
+            ('fwp_alloc_init', 'array_probe_allocate_init', 'size_t n', 'n')]:
         definition = f'static inline void *{name}({header}) {{'
         assert code.count(definition) == 1
         renamed = f'static inline void *{replacement}({header}) {{'
         code = code.replace(definition, renamed)
         start = code.index(renamed)
         end = code.index('\n}\n', start) + 3
-        body = code[start:end].replace('fwp_gc_alloc(n, 0)', 'sort_allocate(n, 0)')
-        wrapper = f'\nstatic inline void *{name}({header}) {{ sort_tick(); void *p = {replacement}({arguments}); sort_record(p); return p; }}\n'
+        body = code[start:end].replace('fwp_gc_alloc(n, 0)', 'array_probe_allocate(n, 0)')
+        wrapper = f'\nstatic inline void *{name}({header}) {{ array_probe_tick(); void *p = {replacement}({arguments}); array_probe_record(p); return p; }}\n'
         code = code[:start] + body + wrapper + code[end:]
     for before, after, count in [
-            ('static inline void fwp_rc_dup(V v) {\n', 'static inline void fwp_rc_dup(V v) { sort_tick();\n', 1),
-            ('static void fwp_mem_free(void *p) {\n', 'static void fwp_mem_free(void *p) { sort_release(p);\n', 1),
-            ('    if (!fwp_rc_last(v)) return;', '    if (!fwp_rc_last(v)) return;\n    sort_release((void *)(uintptr_t)v);', 2),
-            ('static int fwp_cmp(V a, V b, const fwp_desc *d) {', 'static int fwp_cmp(V a, V b, const fwp_desc *d) { sort_tick();', 1)]:
+            ('static inline void fwp_rc_dup(V v) {\n', 'static inline void fwp_rc_dup(V v) { array_probe_tick();\n', 1),
+            ('static void fwp_mem_free(void *p) {\n', 'static void fwp_mem_free(void *p) { array_probe_release(p);\n', 1),
+            ('    if (!fwp_rc_last(v)) return;', '    if (!fwp_rc_last(v)) return;\n    array_probe_release((void *)(uintptr_t)v);', 2),
+            ('static int fwp_cmp(V a, V b, const fwp_desc *d) {', 'static int fwp_cmp(V a, V b, const fwp_desc *d) { array_probe_tick();', 1)]:
         assert code.count(before) == count
         code = code.replace(before, after)
     for prefix, kind in [('STRING', 'K_STR'), ('QUAD', 'K_F128')]:
@@ -42,7 +42,7 @@ def instrument(program, fixture):
             matches.append((function, arguments[2], arguments[3]))
         (function, drop, descriptor), = matches
         fixture = fixture.replace(prefix + '_SORT', function).replace(prefix + '_DROP', drop).replace(prefix + '_DESCRIPTOR', descriptor)
-    return 'static void sort_tick(void); static void sort_record(void *); static void sort_release(void *);\n' + code + '\n' + fixture
+    return 'static void array_probe_tick(void); static void array_probe_record(void *); static void array_probe_release(void *);\n' + code + '\n' + fixture
 
 
 parser = argparse.ArgumentParser(description=__doc__)

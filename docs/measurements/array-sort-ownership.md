@@ -134,3 +134,26 @@ runs do not establish that array reuse improves elapsed time. The [raw evidence]
 contains all samples, inputs, flags, compiler/hardware details, stack reports and
 independent reviews of 112 executables plus eight objects. Full production gates
 and final-head binary review remain required before merge.
+
+## Next experiment: move list elements into the array
+
+The verified sort above still retains elements when it constructs its input array.
+The next prototype consumes the input list and moves elements from its unshared
+prefix. A prefix is the sequence of nodes before the first shared node. Once a
+shared node is reached, the conversion copies the remaining elements: another
+owner can reach all of that tail, even if individual descendant counts are one.
+
+For example, `"c a b" | words | array.from-list` can transfer all three string
+references. If the program also keeps the original list, conversion retains those
+strings and leaves the list unchanged. Inline 128-bit elements copy their bits
+into array slots and release the old scalar boxes.
+
+This prototype is not yet verified. Its checks cover whole-list and tail aliases,
+empty/singleton inputs, exact wide bits, interrupted allocation/retains and
+cancellation. Deliberately broken variants must expose missing cleanup or moves
+through a shared tail. The `array-built` measurement compares the same generated
+program with moves enabled against a control that retains every list element;
+parsing, construction, sorting, output and cleanup are included in both. It records
+allocation/count differences and code/stack costs, not a C/Rust timing speedup.
+The earlier tables refer only to their named revisions and do not establish the
+prototype's results.

@@ -3,26 +3,26 @@
 static const fwp_desc *const sort_types[] = {STRING_DESCRIPTOR, QUAD_DESCRIPTOR};
 static V (*const sort_calls[])(V) = {STRING_SORT, QUAD_SORT};
 static void (*const sort_drops[])(V) = {STRING_DROP, QUAD_DROP};
-static int sort_armed, sort_recording, sort_step, sort_failure, sort_live, sort_cancel;
+static int sort_armed, array_probe_recording, sort_step, sort_failure, sort_live, sort_cancel;
 static void *sort_allocations[1024];
 static volatile V sort_input, sort_alias, sort_result;
 static jmp_buf sort_jump;
 static fwp_task sort_task;
 static fwp_task *sort_saved_task;
 static int sort_recover(void) { return 1; }
-static void sort_tick(void) {
+static void array_probe_tick(void) {
     if (!sort_armed || ++sort_step != sort_failure) return;
     if (sort_cancel) { sort_task.cancelled = 1; fwp_check_cancel(); }
     fwp_trap("injected array-sort failure");
 }
-static void sort_record(void *p) {
-    if (!sort_recording || !p) return;
+static void array_probe_record(void *p) {
+    if (!array_probe_recording || !p) return;
     for (size_t i = 0; i < 1024; i++) if (!sort_allocations[i]) {
         sort_allocations[i] = p; sort_live++; return;
     }
     abort();
 }
-static void sort_release(void *p) {
+static void array_probe_release(void *p) {
     for (size_t i = 0; i < 1024; i++) if (p && sort_allocations[i] == p) {
         sort_allocations[i] = NULL; sort_live--; return;
     }
@@ -56,7 +56,7 @@ static V sort_make(int kind, size_t n, int pattern) {
 static int sort_case(int kind, size_t n, int pattern, int sharing,
                      int failure, int cancel, int *steps) {
     intptr_t before = fwp_gc.budget_given - fwp_gc.budget;
-    sort_recording = 1; sort_failure = failure; sort_step = 0; sort_cancel = cancel;
+    array_probe_recording = 1; sort_failure = failure; sort_step = 0; sort_cancel = cancel;
     sort_input = sort_make(kind, n + (sharing == 2 ? 2 : 0), pattern);
     if (sharing == 1) { sort_alias = sort_input; fwp_rc_dup(sort_alias); }
     if (sharing == 2) {
@@ -130,7 +130,7 @@ static int sort_case(int kind, size_t n, int pattern, int sharing,
         if (!kind && (*fwp_rc_slot(value) != 1 || STR(value)->len != 1)) return 210;
     }
     if (sort_alias) sort_drops[kind](sort_alias);
-    sort_alias = sort_input = 0; sort_recording = 0;
+    sort_alias = sort_input = 0; array_probe_recording = 0;
     if (sort_live) { fprintf(stderr, "array-sort live allocations: %d\n", sort_live); return 211; }
 #ifdef FWP_ARC_ONLY
     if (fwp_gc.budget_given - fwp_gc.budget != before || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 212;

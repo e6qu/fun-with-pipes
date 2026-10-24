@@ -52,7 +52,18 @@ def copy_array(code):
     return code[:start] + body.replace(before, 'int unique = 0;') + code[end:]
 
 
+def copy_list_elements(code):
+    """Retain every element while keeping its consumed list alive through the copy."""
+    start = code.index('static V fwp_p_array_from_list_typed(')
+    end = code.index('\n}\n', start) + 3
+    body = code[start:end]
+    assert body.count('int move_prefix = 1;') == 1
+    return code[:start] + body.replace('int move_prefix = 1;', 'int move_prefix = 0;') + code[end:]
+
+
 def variants(code, kind):
+    if kind == 'array-built':
+        return [('moves', code), ('copy-control', copy_list_elements(code))]
     if kind == 'array-owned':
         return [('reuse', code), ('copy-control', copy_array(code))]
     return [('shared', code), ('separate-control', separate_lanes(code, kind))]
@@ -92,11 +103,13 @@ def main():
                         'construction and output are included. Counts exclude raw runtime buffers, '
                         'allocator metadata and stacks. No timing or C/Rust comparison. The control '
                         'restores redundant scratch lanes for list/array rows. The array-owned row '
-                        'forces only sorting to copy its input. Both controls retain cleanup.', programs=[])
+                        'forces only sorting to copy its input. The array-built row retains list '
+                        'elements instead of moving them. Every control retains cleanup.', programs=[])
     for kind, expression, primitive, removed in [
         ('list', 'sort | length', 'fwp_p_sort_copied', 2),
         ('array', 'array.from-list | array.sort | array.length', 'fwp_p_array_sort_typed', 1),
         ('array-owned', 'array.from-list | array.sort | array.length', 'fwp_p_array_sort_typed', 1),
+        ('array-built', 'array.from-list | array.sort | array.length', 'fwp_p_array_from_list_typed', 0),
     ]:
         source = args.output / f'{kind}.fwp'
         source.write_text(f'main = read-all () | words | {expression} | echo\n')
@@ -155,7 +168,7 @@ def main():
                 extra = removed if count > 1 else 0
                 assert separate['requests'] - shared['requests'] == extra
                 assert separate['requestedBytes'] - shared['requestedBytes'] == extra * (count + 1) * 8
-                assert separate['retains'] - shared['retains'] == (count if kind == 'array-owned' and count > 1 else 0)
+                assert separate['retains'] - shared['retains'] == (count if kind == 'array-built' or (kind == 'array-owned' and count > 1) else 0)
                 assert separate['peakChargedBytes'] >= shared['peakChargedBytes']
             row['observations'].append(observed)
         report['programs'].append(row)
