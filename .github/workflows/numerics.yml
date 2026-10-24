@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -29,7 +29,75 @@ on:
       baseline_run:
         description: Earlier matching cost run for paired revision comparison
         type: string
+      application_run:
+        description: Exact focused API run supplying native diagnostic executables
+        type: string
 jobs:
+  http_mappings:
+    if: inputs.suite == 'http-mappings'
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Verify and download the exact native API artifacts
+        id: application_artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APPLICATION_RUN: ${{ inputs.application_run }}
+          APPLICATION_SOURCE: ${{ inputs.source_revision }}
+          APPLICATION_HOST: ${{ matrix.runner }}
+        run: |
+          python3 - <<'PYCODE'
+          import hashlib, json, os, re, subprocess, zipfile
+          from pathlib import Path
+          run = os.environ['APPLICATION_RUN']
+          source = os.environ['APPLICATION_SOURCE']
+          host = os.environ['APPLICATION_HOST']
+          assert run.isdigit() and re.fullmatch('[0-9a-f]{40}', source)
+          output = Path('mapping-evidence'); output.mkdir()
+          artifacts = json.loads(subprocess.check_output(['gh', 'api', f'repos/e6qu/fun-with-pipes/actions/runs/{run}/artifacts?per_page=100']))['artifacts']
+          artifact, = [item for item in artifacts if item['name'] == f'http-application-{host}-checks']
+          assert not artifact['expired'] and artifact['workflow_run']['head_sha'] == source
+          archive = output / 'application.zip'
+          with archive.open('wb') as stream:
+              subprocess.run(['gh', 'api', f'repos/e6qu/fun-with-pipes/actions/artifacts/{artifact["id"]}/zip'], stdout=stream, check=True)
+          assert artifact['digest'] == 'sha256:' + hashlib.sha256(archive.read_bytes()).hexdigest()
+          with zipfile.ZipFile(archive) as zipped:
+              assert zipped.read('revision.txt').decode().strip() == source
+              hashes = json.loads(zipped.read('source-sha256.json'))
+              for name, digest in hashes.items():
+                  original = subprocess.check_output(['git', 'show', f'{source}:{name}'])
+                  assert hashlib.sha256(original).hexdigest() == digest, name
+              for opt in ['O1', 'O2']:
+                  for extension in ['exe', 'c']:
+                      name = f'api-healthy{opt}.{extension}'
+                      (output / name).write_bytes(zipped.read('http-application/' + name))
+                  (output / f'api-healthy{opt}.exe').chmod(0o755)
+          (output / 'artifact.json').write_text(json.dumps(artifact, indent=2) + '\n')
+          (output / 'source.txt').write_text(source + '\n')
+          (output / 'workflow-source.txt').write_text(subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True))
+          PYCODE
+      - name: O1 resident mappings across three fresh API processes
+        if: ${{ !cancelled() && steps.application_artifacts.outcome == 'success' }}
+        run: python3 scripts/probe-http-mappings.py --binary mapping-evidence/api-healthyO1.exe --output mapping-evidence/O1 --repetitions 3
+      - name: O2 resident mappings across three fresh API processes
+        if: ${{ !cancelled() && steps.application_artifacts.outcome == 'success' }}
+        run: python3 scripts/probe-http-mappings.py --binary mapping-evidence/api-healthyO2.exe --output mapping-evidence/O2 --repetitions 3
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: http-mappings-${{ matrix.runner }}
+          path: mapping-evidence/
+          if-no-files-found: error
   array_text:
     if: inputs.suite == 'array-text'
     strategy:
@@ -2185,7 +2253,7 @@ jobs:
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --test float_linking -- --nocapture
   server_checks:
-    if: inputs.suite == 'server-checks' || inputs.suite == 'http-application' || inputs.suite == 'server-entries' || inputs.suite == 'server-recheck'
+    if: inputs.suite == 'server-checks' || inputs.suite == 'http-idle-checks' || inputs.suite == 'http-application' || inputs.suite == 'server-entries' || inputs.suite == 'server-recheck'
     strategy:
       fail-fast: false
       matrix:
@@ -2194,7 +2262,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
     env:
-      CC: ${{ (matrix.part == 'queued' || inputs.suite == 'server-checks' || inputs.suite == 'http-application') && startsWith(matrix.runner, 'ubuntu-') && 'gcc' || 'clang' }}
+      CC: ${{ (matrix.part == 'queued' || inputs.suite == 'server-checks' || inputs.suite == 'http-idle-checks' || inputs.suite == 'http-application') && startsWith(matrix.runner, 'ubuntu-') && 'gcc' || 'clang' }}
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
       CARGO_PROFILE_DEV_OPT_LEVEL: '1'
@@ -2294,6 +2362,15 @@ jobs:
       - name: Maintained HTTP application and shutdown handshake
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-application' }}
         run: cargo test --test http_server -- --nocapture
+      - name: Three complete O2 idle-memory attempts with all failures retained
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-idle-checks' }}
+        shell: bash
+        run: |
+          result=0
+          for attempt in 1 2 3; do
+            FWP_HTTP_APPLICATION_ARTIFACTS="server-check-evidence/attempt-$attempt" cargo test --test http_server http_application::api_live_memory_o2 -- --exact --nocapture || result=1
+          done
+          exit "$result"
       - name: Generated entry results and ownership restrictions
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && (inputs.suite == 'server-entries' || inputs.suite == 'server-recheck') && matrix.part == 'checks' }}
         run: cargo test --no-fail-fast --test server_entry_ownership --test arc_execution -- --nocapture

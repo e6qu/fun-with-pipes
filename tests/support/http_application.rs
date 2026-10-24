@@ -59,10 +59,24 @@ impl Observed {
     }
 
     fn checkpoint(&mut self, connections: usize, resume: bool) {
-        let line = self
-            .lines
-            .recv_timeout(Duration::from_secs(20))
-            .expect("idle memory checkpoint");
+        let deadline = Instant::now() + Duration::from_secs(20);
+        let line = loop {
+            let message = self
+                .lines
+                .recv_timeout(deadline.saturating_duration_since(Instant::now()));
+            let line = match message {
+                Ok(line) => line,
+                Err(error) => {
+                    let log = self.log.lock().unwrap().clone();
+                    panic!(
+                        "idle memory checkpoint after {connections} connections: {error}; {log}"
+                    );
+                }
+            };
+            if !line.starts_with("http-wait") {
+                break line;
+            }
+        };
         let fields: Vec<_> = line.split('\t').collect();
         assert_eq!(fields.len(), 7, "{line}");
         assert_eq!(fields[0], "http-memory", "{line}");

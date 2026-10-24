@@ -28,17 +28,30 @@ emitted C (18.66s); local Clang O1 exceeded the fixed 1 GiB aggregate RSS guard
 and was stopped. Move validation to GitHub, never raise or bypass that limit.
 Compiler receipt: `/private/tmp/fwp-verified-206-compiler/receipt.json`.
 
-Focused source `ef66ca9973ffe55a9d246db4d6ae8373bd7749ad`, run `40066024251`,
-exposed a test-driver bug: API counters use floating text such as `80.0`.
-Five completed hosts pass five older tests and fail both new memory tests at
-this parser. Their complete logs show no other cause. Intel macOS is still running;
-continue auditing its original job while the combined repair runs.
-The corrected parser checks finite, integral floating values. An 80-response raw
-interpreter probe passes (0.50s); startup's three real-child controls pass (4.90s).
-Observer insertion anchors pass (2.71s). Native memory results remain unverified.
-The repair also prevents sampling handshakes after shutdown begins, records
-portable exit codes and adds independent binary/record inspection.
+Preparation `ef66ca9973ffe55a9d246db4d6ae8373bd7749ad`, run `40066024251`,
+exposed a counter-parser error (`80.0` is floating text). The combined repair
+`027be46eaa8aed59a049c1fc0d112bfc4a1869e8`, run `40066708867`, fixes this and
+checks actual shutdown cancellation. Linux ARM64 passes all seven tests. Linux
+AMD64 O1 exceeds the unchanged 8 MiB RSS growth budget: 39,184 to 47,396 KiB
+(8,212 KiB growth); O2 passes. Windows ARM64 O2 times out at the 48-connection
+idle checkpoint; O1 passes. Both have stable managed charge and successful
+socket cleanup up to their last checkpoints. Other hosts are still under audit.
+Do not increase either budget or deadline to get a pass.
 
+Preserved failure archives are in `/private/tmp/fwp-http-memory-failures-027be46e`.
+The next diagnostics read Linux mapping snapshots from the existing CI binaries,
+and repeat the Windows O2 check with task/socket wait records. A 2 MiB pattern in
+Linux growth suggests large physical pages or pooled stacks; it is not yet a
+proved cause. No runtime repair has been made. Keep all failures visible and
+repair the causes before delivery. `http-mappings` uses an explicit application
+run/source; `http-idle-checks` retains three O2 attempts, even after a failure.
+
+A guarded local diagnostic reused the first failed macOS ARM64 job's compiled
+executable: 3,440 verified responses, disconnects and seven pending handlers;
+idle charge 2,576 bytes at every checkpoint, all 72 sockets closed, final charge
+zero and 532 metric bytes freed at exit. It completed in 4.52s, with 3.10s shutdown.
+This is earlier-source diagnostic evidence, not acceptance of the repaired head.
+The local compiler memory limit was not bypassed; compilation stayed on CI.
 
 ## What changed and what passed
 

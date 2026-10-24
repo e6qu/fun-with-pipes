@@ -1,6 +1,8 @@
 # Memory between JSON API requests
 
-Status: implementation prepared; native execution and binary review are pending.
+Status: Linux ARM64 passes the first complete native run. Linux AMD64 O1 exceeds
+the RSS budget; Windows ARM64 O2 has an idle-checkpoint timeout. Repairs and the
+complete native matrix remain pending. Neither limit has been relaxed.
 This extends the [application acceptance suite](../application-acceptance.md).
 It is a correctness and memory check, not a throughput benchmark or a comparison
 with C/Rust servers.
@@ -41,7 +43,8 @@ Requirements fixed before measuring:
 - O1 and O2 each reject controls that deliberately omit managed frees or socket
   closes after warmup. Both must exit with the observer's failure status, 241.
 
-Charge excludes allocator pages, raw networking buffers, TLS-library storage and
+Managed charge counts storage currently charged to values by fwp’s allocator.
+It excludes allocator pages, raw networking buffers, TLS-library storage and
 task stacks. Metrics bytes exclude malloc overhead. RSS includes such resident
 process costs but is not an allocation count. None of these quantities should be
 added together. TLS, HTTP/2 and arbitrary servers are outside this measurement;
@@ -58,3 +61,10 @@ checks architecture, executable sections, tracing symbols, all checkpoint record
 RSS limits and the negative controls. It reads binaries as data, without executing
 another host's code. Final acceptance still requires the exact delivery source's
 complete production matrix and documentation audit.
+
+For the open Linux failure, `http-mappings` runs the saved O1/O2 executables in
+three fresh native processes each and records `/proc/PID/smaps` at every idle
+checkpoint. Those snapshots identify resident mappings and large physical pages;
+a successful diagnostic run does not turn an exceeded budget into a pass.
+`http-idle-checks` repeats the O2 check three times with task/socket wait records.
+It preserves every attempt and fails if any attempt fails.
