@@ -16,6 +16,7 @@ main = [
     [0.0, -0.0, 0.1, 0.30000000000000004, 4.9406564584124654e-324] | array.from-list | array.to-list | json.write | echo,
     empty | array.to-list | echo,
     empty | array.to-list | json.write | echo,
+    ["line\n\"quoted\"", "", "λ"] | both id (map show) | echo,
     array.generate 257 int.to-float | array.slice 64 193 | array.to-list | echo,
     [1.0, 2.0, 3.0] | array.from-list
         | both id (array.set 0 9.0 | option.unwrap-or empty)

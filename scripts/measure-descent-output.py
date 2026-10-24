@@ -34,7 +34,7 @@ def output_variant(code, language):
     if language == 'fwp':
         assert '#define FWP_ARC_ONLY 1' in code
         ids = []
-        for name in ['array.to-list', 'show', 'print']:
+        for name in ['array._show-list', 'print']:
             match, = re.findall(r'/\* ' + re.escape(name) + r' : [^\n]+ \*/\nstatic V (f\d+)\(', code)
             ids.append(match)
         body, = re.findall(r'^static V f0\(void\) \{\n(.*?)^\}', code, re.M | re.S)

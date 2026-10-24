@@ -19,7 +19,11 @@ fail-step : I64 -> I64 -> I64 ! {Error[String]}
 fail-step = curry (const "callback first" | fail)
 strings : String -> String
 strings = concat | flip iter.iterate "seed" | iter.take 4 | iter.fold (flip concat) ""
+offset-sum : I64 -> I64
+offset-sum = add | flip iter.map (array.generate 6 id | array.to-list | iter.from-list)
+    | iter.take 5 | iter.filter (rem 2 | eq 0) | iter.take 2 | iter.fold add 0
 main = [
+    10 | offset-sum | echo,
     0 | iter.count-from | iter.take 1000 | iter.map (add 1) | iter.filter (rem 2 | eq 0) | iter.fold add 0 | echo,
     poison | iter.map (add 1) | iter.find (eq 8) | echo,
     poison | iter.take 1 | iter.fold add 0 | echo,
@@ -163,7 +167,11 @@ selected : Array[String] -> String
 selected = array.to-list | iter.from-list | iter.take 3 | iter.fold (flip concat) "seed"
 rejected : String -> String -> String ! {Error[String]}
 rejected = curry (.1 | string.repeat 2 | fail)
+tagged : String -> String
+tagged = concat | flip iter.map (words 5 | array.to-list | iter.from-list)
+    | iter.take 2 | iter.fold (flip concat) ""
 main = [
+    range 1 65 | map (show | tagged) | echo,
     range 1 65 | map (words | both selected (array.to-list | length)) | echo,
     range 1 65 | map (words | array.to-list | iter.from-list | attempt (iter.fold rejected "")) | echo,
 ] | ignore

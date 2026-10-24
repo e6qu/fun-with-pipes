@@ -5,8 +5,8 @@ and reserve ARC for necessary sharing. JIT is excluded.
 
 ## Current action
 
-**Next:** publish the Rust borrowing repair, then require passing six-host
-reruns and inspect their saved binaries. All completed failed jobs are audited.
+**Next:** audit the remaining native and benchmark jobs, publish the string-copy,
+iterator-state and measurement repairs together, then inspect passing reruns.
 Keep active PR #205 unchanged; this is a separate preparation branch with no PR.
 
 Worktree `/private/tmp/fwp-array-list`, branch `array-list-preparation`, starts at
@@ -83,31 +83,32 @@ with the corrected function. Unused payload types are opaque in this local
 check; it does not replace full compilation. The optional compiler-artifact step
 now runs only when the file exists, avoiding a second error after a failed build.
 
-## Scope and verified preparation
+## Remaining repair and measurement
 
-The formatter reuses already-rounded scientific digits for fixed decimal output.
-The [report](measurements/float-text-results.md) explains why this saves work,
-all input timings, matching-model acceptance, the remaining C/Rust gap and the
-larger stack/code costs. Allocation counts and per-solve live storage are unchanged.
-Six native jobs pass at `550ef3157720`; twelve saved cases per host cover exact
-ordinary/JSON output, rounding and deliberately corrupted results. The first
-Windows attempt found an LF-only summary assertion; its repaired line parser
-passes both Windows hosts. Runtime and measurement sources did not change.
+`4aadfc11a8c590c6e626bdb4f203ce55ca74c40e`, run `40044090119`, compiles.
+All six complete native jobs pass the value/effect test and adjacent targets, but
+report two allocation failures: JSON followed by `echo` copies the resulting
+string, and an array iterator allocates two initial state records. The new
+repair removes top-level string-display copies before ownership lowering and
+puts array/index/accumulator directly in the iterator's state fields. Nested
+string escaping remains unchanged. Added shared string examples and expanded
+focused loop, iteration and string cleanup checks. All six full logs are audited.
 
-Timing sources `5476466183f7` and `d7ad3e55f386` have identical runtime and benchmark
-inputs. Runs `40027402138`, `40027406689`, `40032008445` retain five measurements,
-including unmatched CPU models. Matching pairs satisfy the original 2% copy-control
-limit and 5% largest-case reduction on both architectures. All 600 timing/control
-images and 72 native correctness images passed independent binary inspection.
-The first mixed workflow retains its old Windows failures; its timing jobs passed.
-Later six-host correctness evidence verifies the repair. Do not label that entire
-initial workflow successful or replace final-head gates with preparation evidence.
+The matching C/Rust experiment `40044793534` failed both jobs before timing;
+both full logs are audited. It uses the same source. Its existing
+helpers assume an empty static initializer and an unfused array-to-list display
+sequence. Both assumptions need updating for the new compiler. A local check
+with the verified CI-built compiler passes eighteen Clang O1/O2 full-output,
+checksum-dump and omitted-coordinate controls after the script repair (8.64s).
+This validates the scripts, not the new Rust optimization or GCC execution.
+The original failed source and artifacts remain retained. No timings accepted.
 
-The [output diagnostic](measurements/descent-output-longer.md) separately compares
-ordinary printing with a shared checksum consumer. It passed 676 binary checks;
-nine of twelve input/host pairs pass repeated controls. Three smaller AMD64 pairs
-remain inconclusive and cannot set budgets. Initial results and all samples remain
-linked. Checksum work is not pure arithmetic or isolated formatting time.
+Compiler and generated C are in `/private/tmp/fwp-array-borrow-diagnostics`,
+with their source/digest in `identity.json`; use them only for bounded diagnosis.
+The source archive is `fwp-array-borrow-failure-evidence/macos-15-40044090119-12539959368.zip`.
+New raw/value and allocation/retention checks remain required on all six hosts.
+The published formatter evidence belongs to active #205; see its worktree and
+the primary handoff for delivery gates and verified measurement reports.
 
 ## Accepted preceding delivery
 

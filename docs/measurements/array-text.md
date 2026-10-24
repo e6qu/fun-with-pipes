@@ -20,6 +20,12 @@ as static program data and read a numeric array directly when its only list
 consumer is `show` or `json.write`. `echo` uses `show` before printing. Ordinary
 array display retains its `array[...]` notation. No language syntax changes.
 
+Two neighboring costs are included: displaying a string on its own can reuse
+that immutable string, because its bytes do not change; strings inside lists
+or tuples still need quotes and escaping. An array iterator can keep its array,
+index and accumulator in separate loop variables, avoiding temporary state
+tuples before the loop starts.
+
 Static storage applies only to fixed-width integers through 64 bits and 32-/64-bit
 floating-point literals (F32/F64), including empty arrays. It cannot retain a dynamically produced value.
 The existing representation reserves the array in the executable's data section
@@ -82,3 +88,12 @@ not speed. Before a timing claim, compare complete equivalent-work programs usin
 the [comparison protocol](../benchmarks.md), retaining repeated samples and noise
 controls. The [descent comparison](float-text-results.md) motivates reducing
 temporary lists, but its earlier timings cannot establish this change's benefit.
+
+The existing full-output/checksum experiment is also being rerun with this
+compiler on both Linux architectures. Its six inputs, 48 samples, four warmups
+and 2% identical-copy checks remain unchanged. It reports current complete
+programs against C/Rust; an earlier revision measured at another time is not a
+paired speed comparison. Static input initialization occurs once per process and
+remains inside the total timing. The largest case is expected to make 200 managed
+requests with full output and 199 with the checksum consumer, with no retained
+storage after each solve; these predictions are not accepted measurements.

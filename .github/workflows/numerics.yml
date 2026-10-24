@@ -106,7 +106,7 @@ jobs:
           python scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output array-text-evidence/primitive-inventory.json
           python scripts/test-native-test-runner.py
       - name: Contracts, semantics, allocation and cleanup controls
-        run: cargo test --no-fail-fast --lib --test array_text --test numeric_array_fusion --test mapped_array_construction --test static_constants --test array_element_ownership --test array_unwind_ownership --test iterator_fusion --test float_formats
+        run: cargo test --no-fail-fast --lib --test array_text --test numeric_array_fusion --test mapped_array_construction --test static_constants --test array_element_ownership --test array_unwind_ownership --test iterator_fusion --test iteration_consumers --test loop_ownership --test loop_preparation_ownership --test loop_unwind_ownership --test nested_loop_boxing --test string_map_ownership --test float_formats
       - name: Save compiler for bounded macOS ARM64 diagnostics
         if: ${{ always() && runner.os == 'macOS' && runner.arch == 'ARM64' && hashFiles('target/debug/fwp') != '' }}
         run: |

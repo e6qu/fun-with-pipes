@@ -667,13 +667,7 @@ impl Fuser<'_> {
                 ("1".into(), src_elem.clone()),
             ]),
             Some(Source::List(source)) => self.ty_in(&self.locals, source)?,
-            Some(Source::Array(_)) => MT::Record(vec![
-                (
-                    "0".into(),
-                    MT::Con("std::Array".into(), vec![src_elem.clone()]),
-                ),
-                ("1".into(), i64.clone()),
-            ]),
+            Some(Source::Array(_)) => MT::Con("std::Array".into(), vec![src_elem.clone()]),
             _ => iterator_ty.clone(),
         };
         // An immutable array has no observable work when converted to a list
@@ -757,9 +751,7 @@ impl Fuser<'_> {
                 ])
             }
             Some(Source::List(list)) => list.clone(),
-            Some(Source::Array(array)) => {
-                Expr::Record(vec![array.clone(), Expr::Const(Value::I64(0))])
-            }
+            Some(Source::Array(array)) => array.clone(),
             _ => cur.clone(),
         };
         let src = {
@@ -770,6 +762,10 @@ impl Fuser<'_> {
         // the state: the iterator, the list so far (reversed), the take
         // counters, then captured locals
         let nt = takes.len();
+        // Keep an array and its index in separate state fields. Nesting the
+        // pair would allocate two initial records before the flat native loop.
+        let array_source = matches!(producer, Some(Source::Array(_)));
+        let source_width = if array_source { 2 } else { 1 };
         let mut outer: Vec<Local> = Vec::new();
         let mut field = |e: &Expr| -> Expr {
             match e {
@@ -781,12 +777,21 @@ impl Fuser<'_> {
                             outer.len() - 1
                         }
                     };
-                    Expr::Field(Box::new(Expr::Local(0)), (2 + nt + i) as u32)
+                    Expr::Field(Box::new(Expr::Local(0)), (source_width + 1 + nt + i) as u32)
                 }
                 _ => e.clone(),
             }
         };
-        let st = |i: usize| Expr::Field(Box::new(Expr::Local(0)), i as u32);
+        let st = |i: usize| {
+            if array_source && i == 0 {
+                Expr::Record(vec![
+                    Expr::Field(Box::new(Expr::Local(0)), 0),
+                    Expr::Field(Box::new(Expr::Local(0)), 1),
+                ])
+            } else {
+                Expr::Field(Box::new(Expr::Local(0)), (i + source_width - 1) as u32)
+            }
+        };
         let mut calls: Vec<Option<Expr>> = Vec::new();
         for s in &stages {
             calls.push(match s {
@@ -800,17 +805,18 @@ impl Fuser<'_> {
             _ => None,
         };
         let nout = outer.len();
-        let mut fields = vec![
-            ("0".to_string(), src_ty.clone()),
-            ("1".to_string(), result_ty.clone()),
-        ];
-        fields.extend((0..nt).map(|i| ((i + 2).to_string(), i64.clone())));
-        fields.extend(
-            outer
-                .iter()
-                .enumerate()
-                .map(|(i, l)| ((i + 2 + nt).to_string(), self.locals[*l as usize].clone())),
-        );
+        let mut fields = vec![("0".to_string(), src_ty.clone())];
+        if array_source {
+            fields.push(("1".to_string(), i64.clone()));
+        }
+        fields.push((source_width.to_string(), result_ty.clone()));
+        fields.extend((0..nt).map(|i| ((i + source_width + 1).to_string(), i64.clone())));
+        fields.extend(outer.iter().enumerate().map(|(i, l)| {
+            (
+                (i + source_width + 1 + nt).to_string(),
+                self.locals[*l as usize].clone(),
+            )
+        }));
         MT::sort_fields(&mut fields);
         let state_ty = MT::Record(fields);
         // step locals: the state, the source's head and tail, then the
@@ -844,7 +850,15 @@ impl Fuser<'_> {
                 }
                 _ => Expr::Apply(Box::new(Expr::Local(t)), vec![unit.clone()]),
             };
-            let mut fs = vec![tail, acc.clone()];
+            let mut fs = if array_source {
+                let Expr::Record(fields) = tail else {
+                    unreachable!("array iterator tail contains its array and index");
+                };
+                fields
+            } else {
+                vec![tail]
+            };
+            fs.push(acc.clone());
             fs.extend(counters.iter().cloned());
             fs.extend((0..nout).map(|i| st(2 + nt + i)));
             let mut e = Expr::Construct(0, vec![Expr::Record(fs)]);
@@ -1023,7 +1037,11 @@ impl Fuser<'_> {
             ),
             2,
         );
-        let mut init = vec![src, initial];
+        let mut init = vec![src];
+        if array_source {
+            init.push(Expr::Const(Value::I64(0)));
+        }
+        init.push(initial);
         init.extend(takes);
         init.extend(outer.into_iter().map(Expr::Local));
         let mut out = Expr::Call(loop_id, vec![Expr::Func(step), Expr::Record(init)]);
