@@ -17,6 +17,7 @@ fn array_list_text_preserves_values_views_aliases_and_effect_order() {
     let cases = [
         ("values", include_str!("fixtures/array_text.fwp"), 0, true),
         ("effects", "main = array.generate 3 (tap echo) | array.to-list | echo\n", 0, true),
+        ("shared", "main = array.generate 3 id | array.to-list | both show (map (add 1) | show) | echo\n", 0, false),
         ("trap", "main = array.generate 3 (if (eq 1) (const 1 | div 0) (tap echo)) | array.to-list | echo\n", 101, true),
         ("boxed", "main = [[\"a\", \"b\\n\"] | array.from-list | array.to-list | echo, [1.0000000000000000000000000000000002f128, -0.0f128] | array.from-list | array.to-list | echo] | ignore\n", 0, false),
     ];
@@ -84,14 +85,28 @@ fn array_list_text_preserves_values_views_aliases_and_effect_order() {
                         .arg(&cfile),
                 );
                 let code = std::fs::read_to_string(cfile).unwrap();
-                assert_eq!(
-                    code.contains("fwp_show_array_list(l0,"),
-                    eligible && fusion == "1",
-                    "{name}/{ownership}/fusion{fusion}: expected display lowering"
-                );
+                if let Some(root) = std::env::var_os("FWP_ARC_ARTIFACTS") {
+                    let path = std::path::Path::new(&root).join("array-text-source");
+                    std::fs::create_dir_all(&path).unwrap();
+                    std::fs::write(
+                        path.join(format!(
+                            "{name}-fusion{fusion}-packed{packed}-{ownership}.c"
+                        )),
+                        &code,
+                    )
+                    .unwrap();
+                }
+                if code.contains("fwp_show_array_list(l0,") != (eligible && fusion == "1") {
+                    failures.push(format!("{name}/{ownership}/fusion{fusion}/packed{packed}: incorrect display lowering"));
+                }
                 for opt in ["-O1", "-O2"] {
                     let executable = directory.join("program.exe");
-                    fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+                    if let Err(error) = fwp::cgen::compile_c(&code, &executable, opt) {
+                        failures.push(format!(
+                            "{name}/{ownership}/fusion{fusion}/packed{packed}/{opt}: {error}"
+                        ));
+                        continue;
+                    }
                     let settings: &[&str] = if ownership == "arc" {
                         &["0"]
                     } else {
@@ -170,9 +185,18 @@ fn array_text_counts_allocations_and_releases_every_iteration() {
                         .arg(&cfile),
                 );
                 let mut code = std::fs::read_to_string(cfile).unwrap();
+                if let Some(root) = std::env::var_os("FWP_ARC_ARTIFACTS") {
+                    let path = std::path::Path::new(&root).join("array-text-source");
+                    std::fs::create_dir_all(&path).unwrap();
+                    std::fs::write(
+                        path.join(format!("{name}-fusion{fusion}-packed{packed}.c")),
+                        &code,
+                    )
+                    .unwrap();
+                }
                 let declarations = "typedef uint64_t V;";
                 assert_eq!(code.matches(declarations).count(), 1);
-                code = code.replace(declarations, &format!("{declarations}\nstatic size_t text_calls, text_raw_live;\nstatic int text_watch, text_bad;"));
+                code = code.replace(declarations, &format!("{declarations}\nstatic size_t text_calls, text_raw_live, text_retains;\nstatic int text_watch, text_bad;"));
                 for (marker, increment) in [
                     (
                         "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
@@ -186,6 +210,12 @@ fn array_text_counts_allocations_and_releases_every_iteration() {
                     assert_eq!(code.matches(marker).count(), 1);
                     code = code.replace(marker, &format!("{marker} {increment}"));
                 }
+                let retain = "static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {";
+                assert_eq!(code.matches(retain).count(), 1);
+                code = code.replace(
+                    retain,
+                    &format!("{retain}\n        if(text_watch) text_retains++;"),
+                );
                 let grow = "        b->d = data;\n        b->cap = cap;";
                 assert_eq!(code.matches(grow).count(), 1);
                 code = code.replace(
@@ -201,8 +231,21 @@ fn array_text_counts_allocations_and_releases_every_iteration() {
                     drop,
                     &format!("{drop}\n    if(text_watch && text_bad==1)return;"),
                 );
-                let entry = "    V r = f0();";
-                assert_eq!(code.matches(entry).count(), 1);
+                let entries: Vec<_> = code
+                    .lines()
+                    .filter(|line| line.starts_with("    V r = caf"))
+                    .collect();
+                assert_eq!(entries.len(), 1);
+                let entry = entries[0].to_owned();
+                let id = entry
+                    .strip_prefix("    V r = caf")
+                    .unwrap()
+                    .strip_suffix("();")
+                    .unwrap();
+                assert!(!id.is_empty() && id.bytes().all(|byte| byte.is_ascii_digit()));
+                // Repeat the complete workload, not its cached zero-argument
+                // result. These fixtures have no other top-level cached values.
+                assert_eq!(code.matches("static V caf").count(), 1);
                 let expectation = if fusion == "1" {
                     format!("text_calls!={expected}")
                 } else {
@@ -214,16 +257,17 @@ fn array_text_counts_allocations_and_releases_every_iteration() {
                     r#"    V r = FWP_UNIT;
     for(unsigned iteration=0;iteration<64;iteration++) {{
         intptr_t baseline=fwp_gc.budget;
-        text_calls=0; text_watch=1;
-        r=f0();
+        text_retains=0; text_calls=0; text_watch=1;
+        r=f{id}();
         text_watch=0;
         if({expectation}) {{ fprintf(stderr,"allocation requests: %zu\n",text_calls); _Exit(211); }}
+        if({fusion} && text_retains) _Exit(214);
         if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) _Exit(212);
         if(text_raw_live) _Exit(213);
     }}
-    fprintf(stderr,"managed requests per iteration: %zu; retained managed/raw bytes: 0\n",text_calls);"#
+    fprintf(stderr,"managed requests per iteration: %zu; retains: %zu; retained managed/raw bytes: 0\n",text_calls,text_retains);"#
                 );
-                code = code.replace(entry, &loop_body);
+                code = code.replace(&entry, &loop_body);
                 // Both omission controls must fail the balance checks, even
                 // though they leave the printed values unchanged.
                 let controls: &[(&str, i32, i32)] = if name == "literal-show" && fusion == "1" {

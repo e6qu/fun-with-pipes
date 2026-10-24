@@ -1893,7 +1893,7 @@ fn map_locals(e: &Expr, f: &mut dyn FnMut(&Expr) -> Expr) -> Expr {
     }
 }
 
-/// The first evaluated operation, through lets and trivial record prefixes.
+/// The first evaluated operation, through unary calls, lets and trivial record prefixes.
 /// Reading a local/constant cannot move an effect or a resource frame. Stop at
 /// every other preceding expression, even a function value of unknown arity.
 fn first_evaluated(e: &mut Expr) -> &mut Expr {
@@ -1904,6 +1904,14 @@ fn first_evaluated(e: &mut Expr) -> &mut Expr {
         _ => None,
     };
     match (e, first_field) {
+        (Expr::Call(_, args), _)
+            if args.len() == 1 && matches!(args[0], Expr::Call(..) | Expr::Let(..)) =>
+        {
+            // A statically known unary call evaluates its sole argument first.
+            // This exposes show inside print without crossing an earlier effect
+            // or a resource frame. Multi-argument calls retain their ordering.
+            first_evaluated(&mut args[0])
+        }
         (Expr::Let(_, v, _), _) => first_evaluated(v),
         (Expr::Record(fields), Some(first)) => first_evaluated(&mut fields[first]),
         (e, _) => e,

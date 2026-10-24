@@ -5,8 +5,8 @@ and reserve ARC for necessary sharing. JIT is excluded.
 
 ## Current action
 
-**Next:** run the grouped numeric array changes on six native GitHub hosts using
-the explicit `array-text` focused suite, then audit every failure and saved binary.
+**Next:** publish the consolidated repair batch, then require passing six-host
+reruns and inspect their saved binaries. All initial jobs have been audited.
 Keep active PR #205 unchanged; this is a separate preparation branch with no PR.
 
 Worktree `/private/tmp/fwp-array-list`, branch `array-list-preparation`, starts at
@@ -28,7 +28,7 @@ stack/code size and allocation costs, and compare complete programs before makin
 speed claims. Keep resource-owning/boxed cases outside a transformation until
 its lifetime/representation proof covers them. No new surface syntax is planned.
 
-Implementation awaits Rust/native CI: fusion recognizes immediate numeric
+Implementation is not accepted yet: fusion recognizes immediate numeric
 `array.to-list | show` / `json.write`; native/interpreted list-style display reads
 the borrowed array directly. Its internal primitive has an explicit nonescaping
 borrow/fresh-string contract. Fixed-width numeric literal lists consumed by
@@ -38,7 +38,7 @@ exposed an existing type reconstruction error: an array map/fold could reconstru
 a List type, and iterator fusion could lose the array type entirely. Both now
 derive the correct array type; the new allocation checks exercise those neighbors.
 
-`tests/array_text.rs` adds 96 semantic outcomes across modes/layouts/settings and
+`tests/array_text.rs` now adds 120 semantic outcomes across modes/layouts/settings and
 48 allocation/cleanup outcomes, including eight deliberate missing-release
 controls. Each balanced allocation case repeats 64 times. Tests compare raw and
 optimized interpreters with O1/O2 native programs. The new target is assigned to
@@ -49,7 +49,29 @@ Local guarded checks: reference fixture execution with the accepted #199 compile
 passed (0.26s; syntax/reference behavior only, not the new compiler); frozen
 primitive inventory passed (1.37s, 392 declarations/382 symbols); all fourteen
 native-runner coverage and failure controls passed (7.70s). Formatting passed.
-Full Rust compilation, runtime controls and binary inspection remain unverified.
+The initial source `5f3efa1ea15065c8f9ced617309b76112d096e7a` compiles and passes
+lint, but all six native jobs fail the same three checks. Full logs and all
+other target results are retained in `fwp-array-preparation-audit.json`. The unit
+tests and six other integration targets pass on every host; all three failures
+are addressed together below.
+
+The repair keeps the dynamic-primitive ownership probe on explicit unfused input,
+repeats the actual workload behind its cached entry, and lets fusion reach `show`
+inside a unary `print` call without moving earlier effects. A new shared-list
+case checks that multiple consumers retain their list. Generated C is now saved
+before structural assertions, and a missed lowering no longer hides later cases.
+The focused macOS ARM64 job will also save its compiler for bounded diagnostics;
+full builds remain on GitHub.
+
+The repaired observer passes local production Clang O1/O2 checks using the accepted
+#199 compiler (3.58s): 260 requests for the original 129-element program, zero
+retained managed/text-buffer storage, and both omitted releases detected. This
+checks instrumentation, not the new Rust optimization. Adding actual reference-count
+increments to the same observer also passes all six controls (3.17s); optimized
+cases require zero increments. This does not measure every bookkeeping instruction.
+An actual intermediate
+representation dump confirms the nested unary display case (0.26s). New compiler
+runtime checks and binary inspection still require CI.
 
 ## Scope and verified preparation
 

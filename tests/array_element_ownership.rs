@@ -507,9 +507,12 @@ main = [
     )
     .unwrap();
     for memory in ["arc", "tracing"] {
+        // This probe needs the dynamic conversion primitives so it can inject
+        // scalar bits shaped like managed addresses into their actual wrappers.
         checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
                 .env_remove("FWP_NO_OPT")
+                .env("FWP_ARRAY_FUSION", "0")
                 .env("FWP_STACK", "0")
                 .env("FWP_FREE", "1")
                 .env("FWP_REUSE", "1")
