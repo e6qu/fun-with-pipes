@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/list_copy.rs"]
+mod list_copy;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -161,7 +164,10 @@ main = (10000, 0) | loop step | echo
     assert_ne!(shared, owned);
     // Keep owned output but remove only typed key destruction. Raw drops
     // reduce outer counts without destroying the last owned key allocation.
-    let kept_keys = owned.replace("drop_key(owned_key);", "fwp_rc_drop(owned_key);");
+    let kept_keys = owned.replace(
+        "fwp_map_owner owner = {keys, 0, 0, drop_key, NULL};",
+        "fwp_map_owner owner = {keys, 0, 0, drop_key ? fwp_rc_drop : NULL, NULL};",
+    );
     assert_ne!(kept_keys, owned);
     let mut freed = Vec::new();
     for (name, code) in [
@@ -215,7 +221,7 @@ fn scalar_key_bits_do_not_release_pointed_to_values() {
     let boundary = emitted.find("V result = fwp_p_sort_by_copied(l").unwrap();
     let body = emitted[boundary..].lines().next().unwrap();
     assert!(
-        body.contains(", NULL);"),
+        body.contains(", NULL, &d"),
         "scalar key has a release function"
     );
     // Invoke the actual emitted monomorphic wrapper, with scalar words whose

@@ -56,8 +56,8 @@ pub enum ResultOwnership {
     },
     /// New owned list nodes containing already-owned callback results.
     FreshSpine,
-    /// New list nodes alias borrowed elements; an optional suffix aliases
-    /// the specified argument and requires one additional tail reference.
+    /// Runtime constructs counted list nodes retaining borrowed elements and
+    /// cleans partial copies. An optional suffix retains the specified argument.
     CopiedSpine {
         runtime: &'static str,
         tail: Option<usize>,

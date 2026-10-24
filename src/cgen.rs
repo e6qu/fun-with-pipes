@@ -8370,9 +8370,9 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                                     .replace("fwp_p_drop_while(", "fwp_p_drop_while_owned(")
                                     .replace("fwp_p_drop(", "fwp_p_drop_owned(");
                             }
-                            ResultOwnership::CopiedSpine { runtime, tail } => {
-                                let result_type = func.ty.params(func.arity as usize).1;
-                                let MT::Con(name, elements) = result_type else {
+                            ResultOwnership::CopiedSpine { runtime, .. } => {
+                                let result_type = func.ty.params(func.arity as usize).1.clone();
+                                let MT::Con(name, elements) = &result_type else {
                                     return Err(format!(
                                         "copied spine `{sym}` has a non-list result"
                                     ));
@@ -8382,14 +8382,6 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                                         "copied spine `{sym}` has a non-list result"
                                     ));
                                 }
-                                let duplicate =
-                                    if crate::rc::needs_rc(&self.prog.shapes, &elements[0]) {
-                                        "fwp_rc_dup(OBJ(node)->f[0]);"
-                                    } else {
-                                        ""
-                                    };
-                                let stop =
-                                    tail.map(|i| format!("l{i}")).unwrap_or_else(|| "0".into());
                                 let call = s.replace(
                                     &format!("fwp_p_{runtime}("),
                                     &format!("fwp_p_{runtime}_copied("),
@@ -8399,17 +8391,16 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                                         "copied spine `{sym}` has no runtime call"
                                     ));
                                 }
-                                let result = call
+                                let arguments = call
                                     .strip_prefix("return ")
-                                    .and_then(|r| r.strip_suffix(';'))
+                                    .and_then(|r| r.strip_suffix(");"))
                                     .ok_or_else(|| {
                                         format!("copied spine `{sym}` has no return expression")
                                     })?;
-                                s = format!("V result = {result}; for (V node = result; node != {stop}; node = OBJ(node)->f[1]) {{ fwp_rc_fresh(node); {duplicate} }}");
-                                if tail.is_some() {
-                                    let _ = write!(s, " fwp_rc_dup({stop});");
-                                }
-                                s.push_str(" return result;");
+                                let descriptor = self.desc(&result_type);
+                                s = format!(
+                                    "V result = {arguments}, {descriptor}); return result;"
+                                );
                             }
                             ResultOwnership::MapOperation { .. } => {
                                 let map = if matches!(

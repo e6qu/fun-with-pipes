@@ -5,22 +5,24 @@ reserve ARC for sharing and remove tracing. JIT is excluded.
 
 ## Current action
 
-**Next:** publish the [ordered-sort experiment](measurements/map-order-protocol.md)
-and run `map-order` on both native Linux architectures. Its two candidates are
-changes to saved generated C only; no runtime optimization is adopted yet.
+**Next:** finish the [list-copy cleanup repair](measurements/list-copy-cleanup.md)
+and run its six-host focused checks. Keep #209's final head unchanged while its
+production acceptance and binary review finish. The ordered-sort experiment has
+passed both jobs; independently inspect its evidence before interpreting screens.
 
 Checkout `/private/tmp/fwp-checked-peer-comparison`, branch
 `checked-peer-comparison`, based on `b298665da6ac97fe4bcc05318c66e671fed7a5a4`.
 This is independent preparation while [PR #209](https://github.com/e6qu/fun-with-pipes/pull/209)
 finishes. Keep one active PR; do not disturb its final head. #209's benchmark and
-documentation gates pass; all eight native jobs were running at the latest audit.
+documentation gates pass; both macOS ARM64 jobs also pass; the remaining native jobs are still running.
 Its 35 benchmark images and corruption/leak controls passed independent review.
 
 ## Prepared changes
 
 [Checked peers](measurements/checked-peers.md) make C/Rust signed calculations
 explicitly checked, retain fwp evaluation order in the loop and repair failed
-C allocations. The compiler/runtime are unchanged. Saved native probes cover
+C allocations. Those peer changes do not alter the compiler/runtime. The current preparation
+also repairs interrupted list construction and callback-key cleanup. Saved native probes cover
 51 dynamic inputs, six deliberately removed arithmetic checks and a missing
 partial cleanup. Both native Linux jobs in `40084725349` pass on source
 `31ee015e943517e9e3e24714001a6f2f616a01b7`; complete logs and 92 actual images were
@@ -80,3 +82,10 @@ below 1 GiB and the 180-second deadline. Do not bypass or increase those limits.
 | 5 | In progress | Validate CPU numerical kernels |
 | 6 | In progress | Stabilize comparisons and set workload budgets |
 | 7 | In progress | Complete the application acceptance suite |
+
+The known `sort-by` failure leaked 80 managed bytes despite returning the correct
+error. Local runtime repair and deliberate missing-key control evidence are in
+`/private/tmp/fwp-sort-callback-leak`. Current-source regression acceptance remains
+required. The new focused workflow also tests neighboring list/array construction,
+selection cleanup and the complete Rust library suite. Every discovered failure
+must be fixed before publication; this is not a deferred roadmap item.

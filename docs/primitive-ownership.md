@@ -319,7 +319,10 @@ released explicitly. Scalar bits never select a reference destructor.
 The internal result labels describe distinct promises:
 
 - `FreshSpine`: new list cells adopt already owned elements.
-- `CopiedSpine`: new list cells retain borrowed elements.
+- `CopiedSpine`: the runtime counts each new list cell immediately and retains
+  its borrowed element by type. Scoped cleanup owns the partial list, any
+  pending element and scratch until construction succeeds. An appended suffix
+  gets one owner before copying starts. See [list-copy failure checks](measurements/list-copy-cleanup.md).
 - `FreshOuter`: one new wrapper retains its pointer-bearing fields.
 - `FreshTree`: every reachable allocation is new and independently owned.
 
