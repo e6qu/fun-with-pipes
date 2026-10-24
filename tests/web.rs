@@ -219,6 +219,7 @@ fn start_command(mut cmd: Command, tls: bool, env: &[(&str, &str)]) -> Option<Se
             "listening on http://"
         },
         Duration::from_secs(60),
+        std::process::Stdio::null(),
     )
     .unwrap();
     Some(Server {
@@ -1197,7 +1198,6 @@ fn http_server_function_capture_allocation_profile() {
 // ------------------------------------------------------- raw WebSocket
 
 struct Ws {
-    s: TcpStream,
     r: BufReader<TcpStream>,
 }
 
@@ -1217,7 +1217,7 @@ fn ws_open_with(addr: &str, headers: &str) -> (Ws, String) {
         addr, key, headers
     )
     .unwrap();
-    let mut r = BufReader::new(s.try_clone().unwrap());
+    let mut r = BufReader::new(s);
     let mut head = String::new();
     loop {
         let mut l = String::new();
@@ -1236,7 +1236,7 @@ fn ws_open_with(addr: &str, headers: &str) -> (Ws, String) {
         "accept key: {}",
         head
     );
-    (Ws { s, r }, lower)
+    (Ws { r }, lower)
 }
 
 /// A client frame: masked unless `unmasked`.
@@ -1265,7 +1265,7 @@ fn frame(fin: bool, op: u8, payload: &[u8], unmasked: bool) -> Vec<u8> {
 
 impl Ws {
     fn send(&mut self, f: &[u8]) {
-        self.s.write_all(f).unwrap();
+        self.r.get_mut().write_all(f).unwrap();
     }
 
     /// The next frame from the server: (FIN, opcode, payload); servers do

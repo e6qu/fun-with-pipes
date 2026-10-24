@@ -1139,7 +1139,20 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
         t->stack = (char *)mmap(0, t->stack_size, PROT_READ | PROT_WRITE,
                                 MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0);
         if (t->stack == MAP_FAILED) fwp_trap("cannot allocate a task stack");
-        mprotect(t->stack, (size_t)sysconf(_SC_PAGESIZE), PROT_NONE); /* guard page */
+#ifdef __linux__
+        /* These large virtual mappings usually touch only a few pages. Huge
+         * pages would commit megabytes per small task, including pooled stacks.
+         * EINVAL also means the kernel was built without transparent huge pages;
+         * that kernel already provides the ordinary pages we want. */
+        if (madvise(t->stack, t->stack_size, MADV_NOHUGEPAGE) && errno != EINVAL) {
+            munmap(t->stack, t->stack_size);
+            fwp_trap("cannot set task stack page policy");
+        }
+#endif
+        if (mprotect(t->stack, (size_t)sysconf(_SC_PAGESIZE), PROT_NONE)) {
+            munmap(t->stack, t->stack_size);
+            fwp_trap("cannot protect task stack guard page");
+        }
     }
 #endif
     t->gc_next = fwp_gc_tasks;

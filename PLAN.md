@@ -76,7 +76,7 @@ ownership and removal of GC are the primary design priority.
 | 2 | Remove avoidable costs from functional code | Define and test a representative set of pipes, partial applications, closures, records, variants, iteration and state patterns whose known targets/lifetimes permit direct calls, loops and elimination of intermediate heap objects; establish constant-stack execution for eligible self-tail recursion in native code and the interpreter; report necessary storage, dispatch and sharing costs outside those patterns. |
 | 3 | Improve machine-level performance | Set per-workload budgets from repeated equivalent-work C/Rust baselines on named ARM64/AMD64 hosts; diagnose known regressions and meet those budgets without hiding slower results; inspect register use, spills, vector instructions and layout while preserving arithmetic and failure rules. |
 | 4 | Improve differentiation speed, memory and precision | Validate supported derivative operations and precision; meet measured time/memory budgets for selected sizes and nesting depths; resolve known regressions; report recording, recomputation, output and workspace costs separately. No constant-memory or zero-overhead promise for arbitrary differentiation. |
-| 5 | Strengthen numerical kernels | Meet accuracy and measured time/memory budgets for selected CPU arrays, reductions and matrix products. Remove runtime device compilation; keep GPU execution outside this CPU roadmap. |
+| 5 | Strengthen numerical kernels | Meet accuracy and measured time/memory budgets for selected CPU arrays, reductions and matrix products. Keep GPU execution outside this CPU roadmap. |
 | 6 | Make performance comparisons dependable | Establish a reproducible comparison protocol with current revisions, comparable algorithms and explicit arithmetic rules; retain repeated samples and environment details; report timing, memory, compilation/startup and binary-size costs; define regression thresholds and how inconclusive results are investigated. |
 | 7 | Validate the language with larger programs | Select a finite acceptance suite of numerical, collection-heavy and long-running applications; test its supported targets and memory modes, including failure/cancellation and bounded-live repeated work; fix observed implementation and usability issues. Add coverage as features expand, without treating this suite as proof for all programs. |
 
@@ -139,7 +139,9 @@ outside the benchmark suite.
    and buffer costs. The [inline experiment](docs/measurements/descent-call-costs.md)
    failed its predeclared speed screen and does not justify an inlining rule.
    Resource-owning tail frames and mutual recursion need separate lifetime proofs.
-3. Complete the [application acceptance suite](docs/application-acceptance.md) and use equivalent-work measurements
+3. Deliver the [API memory scenario](docs/measurements/http-application-memory.md),
+   including stack-page and test-client socket fixes, then complete the
+   [application acceptance suite](docs/application-acceptance.md) and use equivalent-work measurements
    to choose the next costs to remove: dynamic calls, input copies, container
    layout, numerical workspace and derivative recording. Establish workload-specific
    time/memory budgets before claiming improvement. Native command ownership,

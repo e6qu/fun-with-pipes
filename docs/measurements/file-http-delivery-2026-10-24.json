@@ -1,0 +1,461 @@
+{
+  "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+  "merge": "46a7235a81c46d30d0c155f319913e6b7fe4ddbc",
+  "parent": "8cd5153b3ed7084ec46601cfd5b2551825f64057",
+  "tree": "5b8c35987b5ea010fdb31d03912f78fc54f33805",
+  "subject": "Expand file cleanup coverage and harden HTTP application tests",
+  "productionRun": 40064764447,
+  "documentationRun": 40064764348,
+  "savedBinaryFiles": 8406,
+  "fileExecutions": 480,
+  "fileCheckpoints": 23040,
+  "stackObjects": 12,
+  "layoutReviews": 144,
+  "checks": [
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T06:49:47Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40064764447/job/120785568734",
+      "name": "windows / native (windows-2025)",
+      "startedAt": "2026-10-24T05:03:31Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T05:04:01Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40064764348/job/120785568133",
+      "name": "roadmap_docs",
+      "startedAt": "2026-10-24T05:03:32Z",
+      "status": "COMPLETED",
+      "workflowName": "Roadmap documentation"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T06:33:51Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40064764447/job/120785568625",
+      "name": "windows / native (windows-11-arm)",
+      "startedAt": "2026-10-24T05:03:32Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T05:43:10Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40064764447/job/120785568607",
+      "name": "macos (macos-15)",
+      "startedAt": "2026-10-24T05:03:32Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T06:25:21Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40064764447/job/120785568619",
+      "name": "macos (macos-15-intel)",
+      "startedAt": "2026-10-24T05:03:31Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T05:50:14Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40064764447/job/120785568714",
+      "name": "macos_gc (macos-15)",
+      "startedAt": "2026-10-24T05:03:33Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T06:06:49Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40064764447/job/120785568589",
+      "name": "macos_gc (macos-15-intel)",
+      "startedAt": "2026-10-24T05:03:32Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T07:09:49Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40064764447/job/120785568571",
+      "name": "test (ubuntu-latest)",
+      "startedAt": "2026-10-24T05:03:31Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T06:46:02Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40064764447/job/120785568474",
+      "name": "test (ubuntu-24.04-arm)",
+      "startedAt": "2026-10-24T05:03:33Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T05:05:25Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40064764447/job/120785568630",
+      "name": "bench",
+      "startedAt": "2026-10-24T05:03:32Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    }
+  ],
+  "reports": [
+    {
+      "kind": "ownership",
+      "host": "ubuntu-latest",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551294146,
+      "archiveSha256": "95e5f91bc3fac9ec7429117a5a7427e0d4c5c03b2205b2e56d3c180244c01e9b",
+      "reportSha256": "808ded0916f989945c306e2b46fbb4972c41155d7ee2d69acd7f8913ae7e9d76"
+    },
+    {
+      "kind": "ownership",
+      "host": "ubuntu-24.04-arm",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551019037,
+      "archiveSha256": "4a9e4592a4c33fb1d486dca8e2dd383d1d2d3067c105f5f9d5135756487218e8",
+      "reportSha256": "3db4e36013926d3c364b8ec162dfd7e2808c562f2247153537f0bd77cb9d8f09"
+    },
+    {
+      "kind": "ownership",
+      "host": "windows-2025",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12550983085,
+      "archiveSha256": "0e2e408b8cbb07ebb448a7c47e1b4b8960d3dd5b9b16b995bb413d84b0f1b16a",
+      "reportSha256": "418d73a200c3c56d12420011a6d51bba81916064355bdd768518416f79e10110"
+    },
+    {
+      "kind": "ownership",
+      "host": "windows-11-arm",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12550234553,
+      "archiveSha256": "6405da4718d83a838c77664361ce85c542cb7d5e02c6d2bb7a553904185857a6",
+      "reportSha256": "ca2aceb40208528e6e96d3f4e88060c8d498d7dc891179b26f319485ada5f3c9"
+    },
+    {
+      "kind": "ownership",
+      "host": "macos-15",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12549746456,
+      "archiveSha256": "b3988bb8aa563cadb345864a0743e4abd92f4ce345fb70d26330a943559694d8",
+      "reportSha256": "847d1d10a8365c7e25ad6736c72b703a5a6c9ef1aa651be5b870264689e51861"
+    },
+    {
+      "kind": "ownership",
+      "host": "macos-15-intel",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551240275,
+      "archiveSha256": "1ea6a3f023f5c9f50565b8d060b822b3b7322efc733e99473ac8cf2596f780e2",
+      "reportSha256": "daf80597b9f66bbbe662854d02f7cfe6bf30e54748d495cc7f4f2e1dfc56c60a"
+    },
+    {
+      "kind": "floats",
+      "host": "ubuntu-latest",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551294146,
+      "archiveSha256": "95e5f91bc3fac9ec7429117a5a7427e0d4c5c03b2205b2e56d3c180244c01e9b",
+      "reportSha256": "50ca9132cf73576eaf5b045e106f850e21cf42b99afeb5c2cdfce9d729817de5"
+    },
+    {
+      "kind": "floats",
+      "host": "ubuntu-24.04-arm",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551019037,
+      "archiveSha256": "4a9e4592a4c33fb1d486dca8e2dd383d1d2d3067c105f5f9d5135756487218e8",
+      "reportSha256": "1184c356f69ae2d30feb9e8730d89338f12d4163b7efb6ea76dcebe69d984914"
+    },
+    {
+      "kind": "floats",
+      "host": "windows-2025",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12550983085,
+      "archiveSha256": "0e2e408b8cbb07ebb448a7c47e1b4b8960d3dd5b9b16b995bb413d84b0f1b16a",
+      "reportSha256": "e28f856390f7233354a6f3705b61079e7d00a6c9e8a7b4a26d4d03c4bb1b4f9c"
+    },
+    {
+      "kind": "floats",
+      "host": "windows-11-arm",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12550234553,
+      "archiveSha256": "6405da4718d83a838c77664361ce85c542cb7d5e02c6d2bb7a553904185857a6",
+      "reportSha256": "6f5c25d85124a26be2ba5facf3e96f6931d194486ba199541b193c5c24afd275"
+    },
+    {
+      "kind": "floats",
+      "host": "macos-15",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12549746456,
+      "archiveSha256": "b3988bb8aa563cadb345864a0743e4abd92f4ce345fb70d26330a943559694d8",
+      "reportSha256": "6339194243a1c939c7f41000abf22d4fb81eb38572f603cf3dc04a78ff648d54"
+    },
+    {
+      "kind": "floats",
+      "host": "macos-15-intel",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551240275,
+      "archiveSha256": "1ea6a3f023f5c9f50565b8d060b822b3b7322efc733e99473ac8cf2596f780e2",
+      "reportSha256": "5eb9a479fd83f3680dd2f5ee4f9844eb3b47a65be47a2c03cd71ca7e5e07ab9e"
+    },
+    {
+      "kind": "controls",
+      "host": "ubuntu-latest",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551219009,
+      "archiveSha256": "a88871ac8217c63cc6a54e5cdc81d50a94189851caf2a326043a67930b8800e7",
+      "reportSha256": "e4bdf50d7fa9a7a661d7500121170cf69e1360630f5a0e9d545374823c2b00a7"
+    },
+    {
+      "kind": "controls",
+      "host": "ubuntu-24.04-arm",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12550798207,
+      "archiveSha256": "c7dbca2a50d9306e67a8abdb71d146a7ffeb6913a7b359be66e2d485d7b2edf0",
+      "reportSha256": "eb884fc0cdba7fe0a4f9165a9f6ce463eec13d52454ccef9eb6eec1012020011"
+    },
+    {
+      "kind": "arrays",
+      "host": "ubuntu-latest",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551294146,
+      "archiveSha256": "95e5f91bc3fac9ec7429117a5a7427e0d4c5c03b2205b2e56d3c180244c01e9b",
+      "reportSha256": "6df585574d9eb60305efc436c06d8ad9dd9ea3c90d00c05996200e284bc541cb"
+    },
+    {
+      "kind": "arrays",
+      "host": "ubuntu-24.04-arm",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551019037,
+      "archiveSha256": "4a9e4592a4c33fb1d486dca8e2dd383d1d2d3067c105f5f9d5135756487218e8",
+      "reportSha256": "34133f3cd80701bcd5eccda0c7b838cde2db3476ff3654eb10507f6fe82590ac"
+    },
+    {
+      "kind": "arrays",
+      "host": "windows-2025",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12550983085,
+      "archiveSha256": "0e2e408b8cbb07ebb448a7c47e1b4b8960d3dd5b9b16b995bb413d84b0f1b16a",
+      "reportSha256": "efd31dcd95bd93f443eba8a0dd31e7a93d124ebd3b9108f5fe6ca7a7ff0a19cd"
+    },
+    {
+      "kind": "arrays",
+      "host": "windows-11-arm",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12550234553,
+      "archiveSha256": "6405da4718d83a838c77664361ce85c542cb7d5e02c6d2bb7a553904185857a6",
+      "reportSha256": "cdfd0070ed71a62c260e8f3dd69df8d8e7559c13ea88c73995c10dbaa71655b3"
+    },
+    {
+      "kind": "arrays",
+      "host": "macos-15",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12549746456,
+      "archiveSha256": "b3988bb8aa563cadb345864a0743e4abd92f4ce345fb70d26330a943559694d8",
+      "reportSha256": "b3bc9cc8385d64b63e983763c64b4aa8466eb59002ac84c4258166ecb4df82fe"
+    },
+    {
+      "kind": "arrays",
+      "host": "macos-15-intel",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551240275,
+      "archiveSha256": "1ea6a3f023f5c9f50565b8d060b822b3b7322efc733e99473ac8cf2596f780e2",
+      "reportSha256": "467350e2396b02120a2f059405e6a6f34a288c522f21a3671cf3ace3736f1e2f"
+    },
+    {
+      "kind": "stack",
+      "host": "ubuntu-latest",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551294146,
+      "archiveSha256": "95e5f91bc3fac9ec7429117a5a7427e0d4c5c03b2205b2e56d3c180244c01e9b",
+      "reportSha256": "57f6446c4cbf8a547dfde9f38e11aa9c8a8eda3c3724e3ac376b0661b00fbc79"
+    },
+    {
+      "kind": "stack",
+      "host": "ubuntu-24.04-arm",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551019037,
+      "archiveSha256": "4a9e4592a4c33fb1d486dca8e2dd383d1d2d3067c105f5f9d5135756487218e8",
+      "reportSha256": "1a9c752b883d6a0371c90c24046987d06223623adfb468fc3c7e3b4fd2a0ba7a"
+    },
+    {
+      "kind": "stack",
+      "host": "windows-2025",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12550983085,
+      "archiveSha256": "0e2e408b8cbb07ebb448a7c47e1b4b8960d3dd5b9b16b995bb413d84b0f1b16a",
+      "reportSha256": "9a6c8b97a2b4f9aed31e756804cb8fdb4602a48be5b05bd3a8df99565ed0a27c"
+    },
+    {
+      "kind": "stack",
+      "host": "windows-11-arm",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12550234553,
+      "archiveSha256": "6405da4718d83a838c77664361ce85c542cb7d5e02c6d2bb7a553904185857a6",
+      "reportSha256": "9e47f7a29560bb9c1a8568fe0ae1c1153e10a87edcc05a4afd1d04621dfb4abc"
+    },
+    {
+      "kind": "stack",
+      "host": "macos-15",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12549746456,
+      "archiveSha256": "b3988bb8aa563cadb345864a0743e4abd92f4ce345fb70d26330a943559694d8",
+      "reportSha256": "b8855535ca52ffb7ec80b1ae3dfb1fb0dd3de38b56f97940176c7da1254e45e2"
+    },
+    {
+      "kind": "stack",
+      "host": "macos-15-intel",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551240275,
+      "archiveSha256": "1ea6a3f023f5c9f50565b8d060b822b3b7322efc733e99473ac8cf2596f780e2",
+      "reportSha256": "d62acf8d465282e7ac92e28e32f68aaa3646b1b9db924ba39b41f62a9b390b2f"
+    },
+    {
+      "kind": "layout",
+      "host": "ubuntu-latest",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551294146,
+      "archiveSha256": null,
+      "reportSha256": "47cb70fd8d29648f26d8421328b0a2eb11d7264ed8ddd9fe79b35529d41a39e4"
+    },
+    {
+      "kind": "layout",
+      "host": "ubuntu-24.04-arm",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551019037,
+      "archiveSha256": null,
+      "reportSha256": "2af201f4adaa462bda1f8899a72f73a76f9cd7586ca7f2f97ed165056140eb26"
+    },
+    {
+      "kind": "layout",
+      "host": "windows-2025",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12550983085,
+      "archiveSha256": null,
+      "reportSha256": "b103d9ef1c95fc32d593ebf4eca4b36abdeb8f283969641c7773a7782e0440a2"
+    },
+    {
+      "kind": "layout",
+      "host": "windows-11-arm",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12550234553,
+      "archiveSha256": null,
+      "reportSha256": "136735ac964b54d07f9350209bb8e8a88d10df811e6e4454476e08d7a410c775"
+    },
+    {
+      "kind": "layout",
+      "host": "macos-15",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12549746456,
+      "archiveSha256": null,
+      "reportSha256": "39fc7c9ffcded47317ec6bf5451b1eb196ba42cef0caeb9e3f5017445ceb2648"
+    },
+    {
+      "kind": "layout",
+      "host": "macos-15-intel",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551240275,
+      "archiveSha256": null,
+      "reportSha256": "b0eec67c19ef197621adfda6b022ae5788f7388bff9eadbad317194e582df572"
+    },
+    {
+      "kind": "files",
+      "host": "ubuntu-latest",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551294146,
+      "archiveSha256": "95e5f91bc3fac9ec7429117a5a7427e0d4c5c03b2205b2e56d3c180244c01e9b",
+      "reportSha256": "1ae506eeb5b545d63cb854a9812ead348bc1c4db141a5561b034f3442b191a28"
+    },
+    {
+      "kind": "files",
+      "host": "ubuntu-24.04-arm",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551019037,
+      "archiveSha256": "4a9e4592a4c33fb1d486dca8e2dd383d1d2d3067c105f5f9d5135756487218e8",
+      "reportSha256": "0481c1f736ceebbb19d5064c4fbae65844d904d047ca6bf9c179b365f7391650"
+    },
+    {
+      "kind": "files",
+      "host": "windows-2025",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12550983085,
+      "archiveSha256": "0e2e408b8cbb07ebb448a7c47e1b4b8960d3dd5b9b16b995bb413d84b0f1b16a",
+      "reportSha256": "dbd03e90b507951f824cbfdbc7eb5c96f3263e22073e388f7dab1c71073f97d2"
+    },
+    {
+      "kind": "files",
+      "host": "windows-11-arm",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12550234553,
+      "archiveSha256": "6405da4718d83a838c77664361ce85c542cb7d5e02c6d2bb7a553904185857a6",
+      "reportSha256": "40f420fd24a8c44986a4b891fe71650b7f1f2bc05974007d0ef9fa6ded366aa3"
+    },
+    {
+      "kind": "files",
+      "host": "macos-15",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12549746456,
+      "archiveSha256": "b3988bb8aa563cadb345864a0743e4abd92f4ce345fb70d26330a943559694d8",
+      "reportSha256": "1b3fb47c2fb6648a1a6ee36b319052aa994ca8190e78d46d336fc0845840a32f"
+    },
+    {
+      "kind": "files",
+      "host": "macos-15-intel",
+      "source": "bd0dc0100a516099590c340c012f74b7b666ebd2",
+      "run": 40064764447,
+      "artifact": 12551240275,
+      "archiveSha256": "1ea6a3f023f5c9f50565b8d060b822b3b7322efc733e99473ac8cf2596f780e2",
+      "reportSha256": "16596feb61cec1a0db84a39c20123785265f50c1ccc9cab95f192567062aad4f"
+    }
+  ],
+  "scope": "PR 207 exact-head delivery evidence. Saved outcomes are not distinct source programs; layout reviews overlap array outcomes. No downloaded executable was run locally."
+}

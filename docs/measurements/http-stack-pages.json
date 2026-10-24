@@ -1,0 +1,1994 @@
+{
+  "scope": "Eight-client maintained API, 3440 checked replies plus disconnect/shutdown groups. Three fresh processes per O1/O2 per Linux host per revision. RSS and smaps counts differ in accounting; do not add them. Task stacks identified by 256 MiB reservation minus one guard page. These are memory observations, not timing comparisons or same-machine paired benchmarks. The original 8212 KiB growth failure remains in run 40066708867.",
+  "budgetKiB": 8192,
+  "records": [
+    {
+      "workflowSource": "b2d34d058d49fc663fb642492e21186e50c0c06f",
+      "programSource": "027be46eaa8aed59a049c1fc0d112bfc4a1869e8",
+      "run": 40067908998,
+      "artifact": 12550395703,
+      "archiveDigest": "sha256:cc9ac885a1bc24848c770382badab7506d4fb722731194e5fe5b4df71a52a1e5",
+      "version": "before",
+      "host": "ubuntu-latest",
+      "optimizations": {
+        "O1": {
+          "binarySha256": "5027edcca3bf4f7f34632c672c2062998a1b7db9ee0985f3db06050f33d9849a",
+          "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+          "repetitions": [
+            {
+              "repetition": 0,
+              "rssGrowthKiB": 2052,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 45344,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 45348,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 47396,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 47396,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 47396,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 47396,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 47396,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 47396,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                }
+              ]
+            },
+            {
+              "repetition": 1,
+              "rssGrowthKiB": 2052,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 45320,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 45324,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 47372,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 47372,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 47372,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 47372,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 47372,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 47372,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                }
+              ]
+            },
+            {
+              "repetition": 2,
+              "rssGrowthKiB": 2056,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 45348,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 45356,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 47404,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 47404,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 47404,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 47404,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 47404,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 47404,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                }
+              ]
+            }
+          ]
+        },
+        "O2": {
+          "binarySha256": "fc1c5c404d30a5ada0c360c3ce9ccccce1d90fc9d787fca499b1b0820a8b1843",
+          "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+          "repetitions": [
+            {
+              "repetition": 0,
+              "rssGrowthKiB": 8,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 45228,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 45236,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 45236,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 45236,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 45236,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 45236,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 45236,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 45236,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                }
+              ]
+            },
+            {
+              "repetition": 1,
+              "rssGrowthKiB": 2064,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 45228,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 45240,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 47288,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 47288,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 47292,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 47292,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 47292,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 47292,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                }
+              ]
+            },
+            {
+              "repetition": 2,
+              "rssGrowthKiB": 2052,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 45192,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 45196,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 45196,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 45196,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 32768,
+                  "taskStackHugeKiB": 32768,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 34816
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 47244,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 47244,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 47244,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 47244,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 34816,
+                  "taskStackHugeKiB": 34816,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 36864
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "workflowSource": "b2d34d058d49fc663fb642492e21186e50c0c06f",
+      "programSource": "027be46eaa8aed59a049c1fc0d112bfc4a1869e8",
+      "run": 40067908998,
+      "artifact": 12549838307,
+      "archiveDigest": "sha256:a6c2e740c3912a78790d0eb29e1a754cbea216412e841372ae6587aa7be98325",
+      "version": "before",
+      "host": "ubuntu-24.04-arm",
+      "optimizations": {
+        "O1": {
+          "binarySha256": "276e8e3c1e6cfbec912f242b65d7571367f1d62a24b6965b117b66ab5a344797",
+          "platform": "Linux-6.17.0-1022-azure-aarch64-with-glibc2.39",
+          "repetitions": [
+            {
+              "repetition": 0,
+              "rssGrowthKiB": 180,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 12436,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 656,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 12496,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 712,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 12536,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 752,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 12536,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 752,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 12536,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 752,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 12596,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 812,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 12596,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 812,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 12616,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 832,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                }
+              ]
+            },
+            {
+              "repetition": 1,
+              "rssGrowthKiB": 128,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 12408,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 660,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 12456,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 700,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 12496,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 12496,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 12516,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 760,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 12516,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 760,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 12516,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 760,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 12536,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 780,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                }
+              ]
+            },
+            {
+              "repetition": 2,
+              "rssGrowthKiB": 104,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 12420,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 660,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 12424,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 660,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 12464,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 700,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 12484,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 720,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 12504,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 12504,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 12504,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 12524,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 760,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                }
+              ]
+            }
+          ]
+        },
+        "O2": {
+          "binarySha256": "160492e097ba822e8fd661a1b5fb9f754973df8a76670ff05a87fbb584acc33f",
+          "platform": "Linux-6.17.0-1022-azure-aarch64-with-glibc2.39",
+          "repetitions": [
+            {
+              "repetition": 0,
+              "rssGrowthKiB": 180,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 12040,
+                  "taskStackMappings": 15,
+                  "taskStackRssKiB": 628,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 12120,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 700,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 12140,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 720,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 12160,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 12200,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 780,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 12220,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 800,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 12220,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 800,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 12220,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 800,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                }
+              ]
+            },
+            {
+              "repetition": 1,
+              "rssGrowthKiB": 148,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 12036,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 656,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 12052,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 660,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 12084,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 680,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 12144,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 12144,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 12164,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 760,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 12164,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 760,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 12184,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 780,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                }
+              ]
+            },
+            {
+              "repetition": 2,
+              "rssGrowthKiB": 124,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 12056,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 660,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 12100,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 700,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 12140,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 12160,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 760,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 12160,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 760,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 12180,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 780,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 12180,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 780,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 12180,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 780,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": false,
+                  "processAnonHugeKiB": 0
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "workflowSource": "4fc97ca1f1c28e0dd2561c6b14000d13d1b7f4f0",
+      "programSource": "4fc97ca1f1c28e0dd2561c6b14000d13d1b7f4f0",
+      "run": 40069848297,
+      "artifact": 12550409990,
+      "archiveDigest": "sha256:1711649e685c4458ee6e22bff7ea3f9f7cfc8277cc49d04bfb15d36187eed1af",
+      "version": "ordinary-stack-pages",
+      "host": "ubuntu-latest",
+      "optimizations": {
+        "O1": {
+          "binarySha256": "9b7741694948425ffb07259a715aeba7d7ae5893a180ef502a118cd5d7fdaaea",
+          "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+          "repetitions": [
+            {
+              "repetition": 0,
+              "rssGrowthKiB": 180,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 13204,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 652,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 13252,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 696,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 13304,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 748,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 13304,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 748,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 13344,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 788,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 13384,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 828,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 13384,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 828,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 13384,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 828,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                }
+              ]
+            },
+            {
+              "repetition": 1,
+              "rssGrowthKiB": 160,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 13224,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 652,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 13252,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 676,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 13304,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 728,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 13344,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 768,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 13364,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 788,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 13364,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 788,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 13364,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 788,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 13384,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 808,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                }
+              ]
+            },
+            {
+              "repetition": 2,
+              "rssGrowthKiB": 196,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 13248,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 656,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 13292,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 696,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 13364,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 768,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 13384,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 788,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 13424,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 828,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 13424,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 828,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 13424,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 828,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 13444,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 848,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                }
+              ]
+            }
+          ]
+        },
+        "O2": {
+          "binarySha256": "a323b8306770ac5734c6129ee559871610d3d3ec47883784449557cc917d00c3",
+          "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+          "repetitions": [
+            {
+              "repetition": 0,
+              "rssGrowthKiB": 176,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 13112,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 656,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 13136,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 676,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 13136,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 676,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 13176,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 716,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 13228,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 768,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 13268,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 808,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 13268,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 808,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 13288,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 828,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                }
+              ]
+            },
+            {
+              "repetition": 1,
+              "rssGrowthKiB": 128,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 13092,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 656,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 13120,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 676,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 13140,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 696,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 13180,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 736,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 13180,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 736,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 13180,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 736,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 13180,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 736,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 13220,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 776,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                }
+              ]
+            },
+            {
+              "repetition": 2,
+              "rssGrowthKiB": 144,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 13128,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 656,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 13152,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 676,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 13172,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 696,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 13232,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 756,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 13232,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 756,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 13232,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 756,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 13232,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 756,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 13272,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 796,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 2048
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "workflowSource": "4fc97ca1f1c28e0dd2561c6b14000d13d1b7f4f0",
+      "programSource": "4fc97ca1f1c28e0dd2561c6b14000d13d1b7f4f0",
+      "run": 40069848297,
+      "artifact": 12551000767,
+      "archiveDigest": "sha256:1ff882405aa4e76a11ef5b41789d75561ce9ee196405cd03534e65ccac8133fd",
+      "version": "ordinary-stack-pages",
+      "host": "ubuntu-24.04-arm",
+      "optimizations": {
+        "O1": {
+          "binarySha256": "e987715c378ca3c19ef58bce9e65efb44304c9cfa8252b95e2abcd6be8678800",
+          "platform": "Linux-6.17.0-1022-azure-aarch64-with-glibc2.39",
+          "repetitions": [
+            {
+              "repetition": 0,
+              "rssGrowthKiB": 180,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 12416,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 660,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 12512,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 752,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 12512,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 752,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 12532,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 772,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 12552,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 792,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 12572,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 812,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 12576,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 812,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 12596,
+                  "taskStackMappings": 17,
+                  "taskStackRssKiB": 832,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                }
+              ]
+            },
+            {
+              "repetition": 1,
+              "rssGrowthKiB": 120,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 12372,
+                  "taskStackMappings": 15,
+                  "taskStackRssKiB": 628,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 12452,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 700,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 12492,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 12492,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 12492,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 12492,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 12492,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 12492,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                }
+              ]
+            },
+            {
+              "repetition": 2,
+              "rssGrowthKiB": 124,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 12412,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 660,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 12436,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 680,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 12476,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 720,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 12516,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 760,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 12516,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 760,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 12536,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 780,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 12536,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 780,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 12536,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 780,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                }
+              ]
+            }
+          ]
+        },
+        "O2": {
+          "binarySha256": "f8e50ae0ae99fc6ad12c993a98dc6acde7b87f3b75e12acc0a40aeac48f531a4",
+          "platform": "Linux-6.17.0-1022-azure-aarch64-with-glibc2.39",
+          "repetitions": [
+            {
+              "repetition": 0,
+              "rssGrowthKiB": 144,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 12016,
+                  "taskStackMappings": 15,
+                  "taskStackRssKiB": 628,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 12060,
+                  "taskStackMappings": 15,
+                  "taskStackRssKiB": 668,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 12112,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 720,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 12112,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 720,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 12132,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 12132,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 12136,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 12160,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 760,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                }
+              ]
+            },
+            {
+              "repetition": 1,
+              "rssGrowthKiB": 152,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 12020,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 656,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 12068,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 700,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 12112,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 12132,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 760,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 12152,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 780,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 12172,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 800,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 12172,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 800,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 12172,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 800,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                }
+              ]
+            },
+            {
+              "repetition": 2,
+              "rssGrowthKiB": 168,
+              "budgetExceeded": false,
+              "samples": [
+                {
+                  "checkpoint": 8,
+                  "rssKiB": 12004,
+                  "taskStackMappings": 15,
+                  "taskStackRssKiB": 628,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 16,
+                  "rssKiB": 12032,
+                  "taskStackMappings": 15,
+                  "taskStackRssKiB": 648,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 24,
+                  "rssKiB": 12092,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 700,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 32,
+                  "rssKiB": 12132,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 740,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 40,
+                  "rssKiB": 12152,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 760,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 48,
+                  "rssKiB": 12172,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 780,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 56,
+                  "rssKiB": 12172,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 780,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                },
+                {
+                  "checkpoint": 64,
+                  "rssKiB": 12172,
+                  "taskStackMappings": 16,
+                  "taskStackRssKiB": 780,
+                  "taskStackHugeKiB": 0,
+                  "allTaskStacksNoHuge": true,
+                  "processAnonHugeKiB": 0
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

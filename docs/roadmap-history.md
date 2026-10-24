@@ -12,6 +12,23 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## File cleanup and HTTP example checks (PR #207)
+
+Task-file tests repeat edits and errors at 128 and 4,096 UTF-8 items. Deliberately
+missing frees and closes must fail; output and final file contents are checked.
+HTTP example tests bound startup/shutdown, verify the slow handler entered before
+shutdown and clean up children after failure. Measurement docs distinguish
+allocator charge, process memory and binary section size from speed comparisons.
+
+[PR #207](https://github.com/e6qu/fun-with-pipes/pull/207) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40064764447)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40064764348)
+at `bd0dc0100a516099590c340c012f74b7b666ebd2`. Review covered 8,166 core outcomes,
+240 file binaries, 480 file executions and 23,040 checkpoints, plus twelve stack
+objects and 144 layout checks. The [acceptance record](measurements/file-http-delivery-2026-10-24.json)
+retains source, artifacts and inspection hashes. Squash `46a7235a81c46d30d0c155f319913e6b7fe4ddbc`
+has the same tree and one subject without a body. All seven roadmap areas remain open.
+
 ## Array output, storage and startup stack (PR #206)
 
 Eligible array display/JSON operations no longer build temporary lists. Numeric

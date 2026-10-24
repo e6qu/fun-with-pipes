@@ -106,6 +106,26 @@ class Coverage(unittest.TestCase):
                       environment)
         self.assertIn("ownership-evidence/", steps)
 
+    def test_http_application_artifacts_follow_the_native_shards(self):
+        workflow = (SHARDS.ROOT / ".github/workflows/ci.yml").read_text()
+        schedule = SHARDS.assignment(SHARDS.SCHEDULE)
+        targets = {"http_server"}
+        jobs = {"test"}
+        jobs.update({"regular": "macos", "gc": "macos_gc"}[shard]
+                    for shard, names in schedule.items() if targets & set(names))
+        for job in jobs:
+            body = re.search(rf"^  {job}:\n(.*?)(?=^  \w+:\n|\Z)",
+                             workflow, re.M | re.S).group(1)
+            environment, steps = body.split("    steps:", 1)
+            self.assertIn("FWP_HTTP_APPLICATION_ARTIFACTS: ownership-evidence/http-application",
+                          environment, job)
+            self.assertIn("path: ownership-evidence/", steps, job)
+        windows = (SHARDS.ROOT / ".github/workflows/windows.yml").read_text()
+        environment, steps = windows.split("    steps:", 1)
+        self.assertIn("FWP_HTTP_APPLICATION_ARTIFACTS: ownership-evidence/http-application",
+                      environment)
+        self.assertIn("ownership-evidence/", steps)
+
     def test_repository_targets_are_assigned_exactly_once(self):
         value = json.loads(subprocess.check_output(
             ["cargo", "metadata", "--no-deps", "--format-version", "1"], cwd=SHARDS.ROOT))
