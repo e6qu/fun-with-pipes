@@ -127,6 +127,9 @@ jobs:
       - name: Array and fold callbacks, capture storage and unwind cleanup
         if: ${{ !cancelled() && steps.native_compiler.outcome == 'success' }}
         run: python scripts/run-native-tests.py --targets array_element_ownership array_unwind_ownership fold_ownership right_fold_ownership fold_unwind_ownership --idle-timeout 600 --logs windows-callback-tests
+      - name: Inspect array-sort ownership and wide-value controls
+        if: ${{ !cancelled() && steps.native_compiler.outcome == 'success' }}
+        run: python scripts/inspect-array-sort.py --input ownership-evidence/arc/array-sort --source "${{ github.event.pull_request.head.sha || github.sha }}" --system Windows --arch "$env:RUNNER_ARCH" --objdump llvm-objdump --output ownership-evidence/array-sort-inspection.json
       - name: CPU kernel size validation order
         shell: pwsh
         run: |

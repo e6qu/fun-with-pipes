@@ -1,6 +1,6 @@
 # Reusing an unshared array during sorting
 
-This is an unverified preparation. The current accepted behavior copies the
+This preparation passes focused native checks; full delivery is still required. The current accepted behavior copies the
 array and retains its elements before sorting. The proposed change consumes
 one array reference: it reuses storage when there is only one owner, and copies
 when another owner or a view needs the original values. Source code stays
@@ -41,5 +41,23 @@ children. Views retain their original backing until sorting has finished.
   [existing sort-storage comparison](list-sort-storage.md). Do not infer elapsed
   speed or C/Rust parity from allocation savings.
 
-No measured result or delivery support is claimed yet. PR #210's final head stays
+The count comparison has three rows: list scratch buffers, array scratch buffers,
+and array ownership. The last row uses the same generated program twice, changing
+only the sort's uniqueness decision to force a copy. Inputs contain 0, 1, 32 or
+4,096 words; each case records three identical observations at O1/O2. Counting
+starts after constant initialization and includes parsing, construction, output
+and language cleanup. It excludes allocator metadata, raw runtime buffers and
+stack storage. Empty/singleton arrays transfer their reference in both variants.
+
+A separate comparison compiles the ordinary string/128-bit fixture into four
+objects: reuse and forced-copy variants at O1/O2. It saves compiler stack reports
+and inspects the actual object bytes. External floating-library code is not in
+these objects; per-function stack reports do not measure maximum call-stack use.
+Executable correctness comes from the native tests, not these unlinked objects.
+
+Focused source `e78069765ac5798f71d7e11d216bcb71d6850d21` passes all six native
+jobs in [run 40095196564](https://github.com/e6qu/fun-with-pipes/actions/runs/40095196564).
+Every completed log is clean. Independent executable review has passed on Windows
+AMD64 and Linux ARM64; the other four reviews are pending. No measured storage or
+layout result, timing gain or final delivery support is claimed yet. PR #210's final head stays
 unchanged while this work is prepared separately.

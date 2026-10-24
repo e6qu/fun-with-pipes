@@ -292,6 +292,20 @@ also keep their storage; the transformation requires an immediate range input.
 `FWP_MAP_BUILD=0` disables this transformation for controlled comparisons.
 [PR #173](roadmap-history.md#direct-integer-range-sets-pr-173) records acceptance.
 
+## Sorting an owned array
+
+The array-sort preparation consumes one array reference. If it is the only owner,
+sorting may reuse the storage; a shared array or view needs a copy so earlier
+values remain unchanged. Empty and singleton arrays transfer their reference.
+Input, result and temporary buffers have cleanup owners throughout the operation.
+
+For ordinary elements, sort keys hold their values. A 128-bit key points into its
+original array slot. Reusing that array therefore applies the sorted permutation
+in cycles, with one sixteen-byte temporary, rather than overwriting slots whose
+values have not moved yet. [The protocol](measurements/array-sort-ownership.md)
+records required alias, bit-pattern, interruption and cost checks. This preparation
+still needs full delivery acceptance.
+
 ## Borrowing array data inside loops
 
 An array slice can store a pointer into another array rather than copying its

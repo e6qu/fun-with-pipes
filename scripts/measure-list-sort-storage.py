@@ -42,6 +42,22 @@ def separate_lanes(code, kind):
     return code[:start] + body.replace(old, new) + code[end:]
 
 
+def copy_array(code):
+    """Force only sorting to copy its array; leave input construction unchanged."""
+    start = code.index('static V fwp_p_array_sort_typed(')
+    end = code.index('\n}\n', start) + 3
+    body = code[start:end]
+    before = 'int unique = fwp_array_is_view(a) ? 0 : fwp_rc_unique_mut(a);'
+    assert body.count(before) == 1
+    return code[:start] + body.replace(before, 'int unique = 0;') + code[end:]
+
+
+def variants(code, kind):
+    if kind == 'array-owned':
+        return [('reuse', code), ('copy-control', copy_array(code))]
+    return [('shared', code), ('separate-control', separate_lanes(code, kind))]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', type=Path, required=True)
@@ -75,10 +91,12 @@ def main():
                         'constant initialization through language cleanup. Input parsing, result '
                         'construction and output are included. Counts exclude raw runtime buffers, '
                         'allocator metadata and stacks. No timing or C/Rust comparison. The control '
-                        'restores redundant scratch lanes only, retaining the cleanup repair.', programs=[])
+                        'restores redundant scratch lanes for list/array rows. The array-owned row '
+                        'forces only sorting to copy its input. Both controls retain cleanup.', programs=[])
     for kind, expression, primitive, removed in [
         ('list', 'sort | length', 'fwp_p_sort_copied', 2),
         ('array', 'array.from-list | array.sort | array.length', 'fwp_p_array_sort_typed', 1),
+        ('array-owned', 'array.from-list | array.sort | array.length', 'fwp_p_array_sort_typed', 1),
     ]:
         source = args.output / f'{kind}.fwp'
         source.write_text(f'main = read-all () | words | {expression} | echo\n')
@@ -89,7 +107,7 @@ def main():
         assert re.search(r'(?:return|V result =) ' + primitive + r'\(l', code)
         row = dict(name=kind, languageSha256=digest(source), generatedSha256=digest(generated),
                    variants={}, observations=[])
-        for variant, text in [('shared', code), ('separate-control', separate_lanes(code, kind))]:
+        for variant, text in variants(code, kind):
             for optimization in ['-O1', '-O2']:
                 label = f'{kind}-{variant}{optimization}'
                 ordinary = args.output / (label + '.c')
@@ -131,12 +149,13 @@ def main():
                 assert samples[0]['finalChargedBytes'] == samples[0]['collections'] == 0
                 observed['variants'][variant] = samples
             for optimization in ['-O1', '-O2']:
-                shared = observed['variants']['shared' + optimization][0]
-                separate = observed['variants']['separate-control' + optimization][0]
+                normal, control = [name for name, _ in variants(code, kind)]
+                shared = observed['variants'][normal + optimization][0]
+                separate = observed['variants'][control + optimization][0]
                 extra = removed if count > 1 else 0
                 assert separate['requests'] - shared['requests'] == extra
                 assert separate['requestedBytes'] - shared['requestedBytes'] == extra * (count + 1) * 8
-                assert separate['retains'] == shared['retains']
+                assert separate['retains'] - shared['retains'] == (count if kind == 'array-owned' and count > 1 else 0)
                 assert separate['peakChargedBytes'] >= shared['peakChargedBytes']
             row['observations'].append(observed)
         report['programs'].append(row)

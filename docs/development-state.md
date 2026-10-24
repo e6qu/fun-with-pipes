@@ -5,15 +5,15 @@ reserve ARC for sharing and remove tracing. JIT is excluded.
 
 ## Current action
 
-**Next:** publish and audit the six-host array-sort preparation while finishing
-exact-head CI and binary acceptance for
+**Next:** audit array-sort preparation and batch repairs/measurements while
+finishing exact-head CI and binary acceptance for
 [PR #210](https://github.com/e6qu/fun-with-pipes/pull/210), then squash-merge only
 when all nine production jobs and docs pass. Use one subject of at most eighty
 characters, an empty body and no trailers. Continue the plan with one active PR.
 
 Delivery checkout `/private/tmp/fwp-checked-peer-comparison`, branch
 `list-copy-delivery`, CLEAN at `281b54d9193b432bb808b4387cc0a4dad34dacba`.
-Production run `40091968517`; docs `40091968459`. Docs, benchmarks and regular macOS ARM64 pass; other jobs are running.
+Production run `40091968517`; docs `40091968459`. Docs, benchmarks and both macOS ARM64 shards pass; other jobs are running.
 Completed logs are clean; no failed job is known. Keep the final head unchanged while its gates run unless
 a repair is necessary. Audit every failed job and completed target before pushing.
 
@@ -30,7 +30,9 @@ Preparation, publication and run discovery are COMPLETE; never rerun them.
 Audit with `fwp-audit-list-copy-delivery-final.py`. Strict merge/after-merge helpers
 are prepared but UNRUN. They require ten exact-head gates and 8,798 actual
 binary files: the inherited 8,627 plus 144 list-copy, eleven checked-peer and
-sixteen sort-storage images. Host reviews are UNRUN. Benchmark review is COMPLETE:
+sixteen sort-storage images. Host reviews: macOS ARM64 downloads and 1,161 ownership images pass; arrays
+are being reviewed. Other phases/hosts are UNRUN.
+Benchmark review is COMPLETE:
 62 actual executables, five corruption controls and seven leak controls pass.
 
 Use `fwp-review-list-copy-delivery-host.py --host HOST --phase PHASE` serially.
@@ -52,7 +54,9 @@ not yet exercised on final artifacts. Repair stale assumptions without weakening
 ## Independent next group
 
 Checkout `/private/tmp/fwp-array-sort-ownership`, branch `array-sort-ownership`,
-starts at `281b54d9193b`. Its unpublished prototype consumes the sort input,
+started at `281b54d9193b`. Published preparation
+`e78069765ac5798f71d7e11d216bcb71d6850d21` runs six-host focused CI
+`40095196564` (all six jobs pass; every completed log is clean). Its prototype consumes the sort input,
 reuses unique arrays and copies shared arrays/views. A cycle permutation protects
 128-bit values from overwriting unread keys. Cleanup covers input, result and
 scratch on failure/cancellation. This is NOT accepted native behavior yet.
@@ -62,8 +66,17 @@ interrupted allocation/retain/comparison sites and six deliberate broken control
 It targets ARC/tracing, O1/O2 and reuse verification, with 42 saved binaries/host.
 `inspect-array-sort.py` independently reconstructs the instrumentation and inspects
 actual binaries. The `array-sort` focused workflow uses all six native hosts.
-Next preparation work: validate/publish focused checks, audit all results, measure
-copy/retain savings and code/stack costs, then add production inspection coverage.
+Next preparation work: publish/run the storage and layout measurements, and
+finish four remaining independent binary reviews. Windows AMD64 and Linux ARM64
+reviews pass: 84 actual images, 24 observations and 48 broken controls. No
+preparation failure remains.
+Unpublished follow-up files add production inspection, a third array-ownership
+count comparison, and ordinary 128-bit fixture object/stack measurements on both
+Linux architectures. Their Python syntax, actionlint and focused coverage assertion
+pass; the full 19 native-runner controls also pass. Interpreter output matches the
+new inspector's expected handled-error text. These
+measurements have no accepted result yet. Helpers/receipts use
+`fwp-array-sort-preparation`; publication is COMPLETE, audit is repeatable.
 No second PR is open. Keep PR #210's tested head unchanged.
 
 Bounded prototype checks: inventory passes (392/382/0); Rust formatting passes;

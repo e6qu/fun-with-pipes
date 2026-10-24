@@ -4023,6 +4023,8 @@ jobs:
         run: |
           python3 scripts/measure-list-sort-storage.py --compiler target/release/fwp --cc gcc --source "$GITHUB_SHA" --output target/list-sort-storage
           python3 scripts/inspect-list-sort-storage.py --input target/list-sort-storage --source "$GITHUB_SHA" --arch "$RUNNER_ARCH" --objdump objdump --output target/list-sort-inspection.json
+          FWP_FREE=1 FWP_STACK=0 FWP_REUSE=1 FWP_ARRAY_FUSION=0 FWP_PACKED_ARRAYS=1 target/release/fwp build --gc arc --memory dynamic -O2 --emit-c tests/fixtures/array_sort_reuse.fwp -o target/array-sort-wide.c
+          python3 scripts/measure-array-sort-layout.py measure --program target/array-sort-wide.c --cc gcc --directory target/array-sort-layout --source "$GITHUB_SHA" --system Linux --arch "$RUNNER_ARCH" --objdump objdump --output target/array-sort-layout-inspection.json
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -4039,6 +4041,9 @@ jobs:
             target/map-order-inspection.json
             target/list-sort-storage/
             target/list-sort-inspection.json
+            target/array-sort-wide.c
+            target/array-sort-layout/
+            target/array-sort-layout-inspection.json
             target/checked-bounds/
             target/checked-bounds-inspection.json
             target/bench-evidence/
