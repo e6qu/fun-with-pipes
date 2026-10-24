@@ -44,6 +44,7 @@ def host_report(artifacts, host, source):
     report = (root / 'bench.md').read_text()
     assert (directory / 'report.md').read_text() == report
     assert f'Source commit: `{source}`. Host: `linux/{architecture}`.' in report
+    assert 'fwp build flags: `--gc tracing -O2`' in report, 'scalar-text requires its explicit tracing baseline'
     medians = re.findall(
         r'^\| (\S+) \| ([\d.]+) ms \| ([\d.]+) ms \| ([\d.]+) ms \|',
         report.split('## Raw elapsed samples')[0], re.M)
@@ -73,6 +74,7 @@ def host_report(artifacts, host, source):
             assert input_path.read_bytes() == original, input_path
             files[input_path.name] = {'sha256': digest(input_path)}
         generated = directory / f'{program}-generated.c'
+        assert '#define FWP_ARC_ONLY 1' not in generated.read_text(), 'wrong memory mode in scalar-text evidence'
         files[generated.name] = {'sha256': digest(generated)}
         programs.append({'program': program, 'medianProcessMs': times,
                          'processSamplesMs': samples[program],

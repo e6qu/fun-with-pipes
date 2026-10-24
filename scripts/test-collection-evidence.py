@@ -12,6 +12,11 @@ SPEC = importlib.util.spec_from_file_location(
 REPORT = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(REPORT)
 
+MAP_SPEC = importlib.util.spec_from_file_location(
+    "map_report", Path(__file__).with_name("summarize-map-failures.py"))
+MAP_REPORT = importlib.util.module_from_spec(MAP_SPEC)
+MAP_SPEC.loader.exec_module(MAP_REPORT)
+
 # Cargo emits headers on stderr and test summaries on stdout. This order occurs
 # in the real Linux ARM64 log: the second header arrives before the first summary.
 LOG = """Running tests/cached_map_borrows.rs (target/debug/deps/borrow)
@@ -23,9 +28,9 @@ Running tests/decoder_partial.rs (target/debug/deps/decoder)
 test result: ok. 3 passed; 0 failed; 0 ignored;
 test result: ok. 1 passed; 0 failed; 0 ignored;
 Running tests/inline_caf_ownership.rs (target/debug/deps/inline)
-test result: ok. 2 passed; 0 failed; 0 ignored;
-Running tests/map_set_ownership.rs (target/debug/deps/maps)
 test result: ok. 6 passed; 0 failed; 0 ignored;
+Running tests/map_set_ownership.rs (target/debug/deps/maps)
+test result: ok. 7 passed; 0 failed; 0 ignored;
 Running tests/mapped_array_construction.rs (target/debug/deps/arrays)
 test result: ok. 3 passed; 0 failed; 0 ignored;
 Running tests/numeric_array_fusion.rs (target/debug/deps/fusion)
@@ -42,6 +47,30 @@ test result: ok. 1 passed; 0 failed; 0 ignored;
 
 
 class CollectionEvidence(unittest.TestCase):
+    def test_map_peak_evidence_requires_exact_peak_cleanup_and_exit(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            for kind, limit, extra in [('map', 65544, 65536), ('set', 32776, 32768)]:
+                for late in [False, True]:
+                    peak = limit + extra if late else limit
+                    status = '241' if late else '0'
+                    path = directory / f'probe-{kind}.txt'
+                    exit_path = directory / f'probe-{kind}.status'
+                    good = f'{kind} peak={peak} limit={limit} final=0\n'
+                    path.write_text(good)
+                    exit_path.write_text(status)
+                    MAP_REPORT.sort_observation(directory, 'probe', kind, late)
+                    for bad in [good.replace(f'peak={peak}', f'peak={peak+8}'),
+                                good.replace('final=0', 'final=8'), good + good,
+                                good.replace(f'limit={limit}', f'limit={limit*2}')]:
+                        path.write_text(bad)
+                        with self.assertRaises(AssertionError):
+                            MAP_REPORT.sort_observation(directory, 'probe', kind, late)
+                    path.write_text(good)
+                    exit_path.write_text('0' if late else '241')
+                    with self.assertRaises(AssertionError):
+                        MAP_REPORT.sort_observation(directory, 'probe', kind, late)
+
     def test_range_requests_reject_extra_allocations_and_incomplete_sizes(self):
         for direct in [False, True]:
             good = "\n".join(
@@ -98,7 +127,13 @@ class CollectionEvidence(unittest.TestCase):
     def test_interleaved_streams_and_windows_paths(self):
         for log in [LOG, LOG.replace("tests/", "tests\\").replace(
                 "Running", "\x1b[1;32mRunning\x1b[0m")]:
-            self.assertEqual(sum(REPORT.audit_tests(log).values()), 44)
+            self.assertEqual(sum(REPORT.audit_tests(log).values()), 49)
+
+    def test_expected_counts_cover_the_current_test_sources(self):
+        for name, count in REPORT.audit_tests(LOG).items():
+            source = (Path(__file__).resolve().parent.parent / 'tests' / (name + '.rs')).read_text()
+            self.assertEqual(source.count('#[test]'), count, name)
+            self.assertNotIn('#[ignore', source, name)
 
     def test_missing_wrong_and_duplicate_targets(self):
         for log in [LOG.rsplit("Running tests/", 1)[0],

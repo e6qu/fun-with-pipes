@@ -1,0 +1,4246 @@
+{
+  "source": "4c294917006b2688a491d088a0cab297b07d274c",
+  "run": 40079580345,
+  "complete_native_matrix": true,
+  "scope": "Failure cleanup and typed ownership, not a timing or code-size comparison. Instrumented programs execute on native CI hosts; this collector only reads their files. ARC counted bytes exclude allocator capacity and process RSS. Tracing retains collector code and deliberately poisons released objects under reuse verification.",
+  "hosts": [
+    {
+      "host": "ubuntu-latest",
+      "job": 120830135994,
+      "settings": [
+        "OS=Linux",
+        "architecture=X64",
+        "runner=ubuntu-latest",
+        "ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off",
+        "tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1",
+        "22 operations; every allocation, retain and comparison fails once; independent aliases; two missing-cleanup controls",
+        "No timing comparison or C/Rust speed claim"
+      ],
+      "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "runs": [
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": true,
+          "injected_failures": 138
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": true,
+          "injected_failures": 138
+        }
+      ],
+      "controls": {
+        "missing-result-owner": "map operation 0 failure 2/5: 213",
+        "missing-scratch-owner": "map operation 8 failure 3/9: 213",
+        "compact-wasted-slot-control": "set 1: requested 24, expected 16"
+      },
+      "binaries": [
+        {
+          "file": "faults-arc-O1.bin",
+          "sha256": "3dad5319409713062237a8897236fab17a82879ec09a52f2c497c048bd91fd87",
+          "bytes": 124512,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 240,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O1.bin",
+          "sha256": "d0df88df94d6bdffe98a7a2fc8cc3b85d2f6194d802ce967ea375d339b241386",
+          "bytes": 118840,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 228,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-arc-O2.bin",
+          "sha256": "6ea197d3a1c1108d56ce83f571c8c6d65915691c69d0153156f80f46ecc0f62e",
+          "bytes": 137200,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 246,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O2.bin",
+          "sha256": "a336552ddc6b868105bbc70e6089d58a8afab65ce08d3d339735951fb4f42c5b",
+          "bytes": 131512,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 235,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-tracing-O1.bin",
+          "sha256": "de8d74cb5acc81f3db59f2b39440eb6d7527d6a0d78ea890a9ac90eb0174cac9",
+          "bytes": 133496,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 251,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O1.bin",
+          "sha256": "94bc63826ce8d8e27b4b8f5686babf8c47cc3c18d071363d7d9eca3e150e7690",
+          "bytes": 123680,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 238,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan"
+          ]
+        },
+        {
+          "file": "faults-tracing-O2.bin",
+          "sha256": "839dd03e06064b41910b3da8968cd32e12bca7da83d3acebd71668a3aaadb774",
+          "bytes": 146080,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 256,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O2.bin",
+          "sha256": "06b4caa487d30bf74bfdffa85c4622f3d2994ea56d3faafaa2d9c51549fd4a44",
+          "bytes": 136024,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 240,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan"
+          ]
+        },
+        {
+          "file": "missing-result-owner.bin",
+          "sha256": "be8464fa057c8b822e5e59911795d6345f8e29cf1ee955b5aea1e4d6cb877597",
+          "bytes": 124512,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 240,
+          "tracing_symbols": []
+        },
+        {
+          "file": "missing-scratch-owner.bin",
+          "sha256": "aabcd148d31fd0ea51041bba6393b0245ce3f3bc8dfd3dee0ae72ede9c500c7a",
+          "bytes": 124560,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 240,
+          "tracing_symbols": []
+        },
+        {
+          "file": "compact-wasted-slot-control.bin",
+          "sha256": "827c83b5f4ba902e5861ac72c6649dde91151db5c6b38f2e84b2ac7ccc9c3e45",
+          "bytes": 418704,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 904,
+          "tracing_symbols": []
+        }
+      ],
+      "compactSets": {
+        "runs": [
+          {
+            "mode": "arc",
+            "optimization": "-O0",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7619779e806f497e241008ad9d4831d9687dc113475afeff81cbd4fecd6fd86f",
+            "binaryInspection": {
+              "file": "compact-arc-O0.exe",
+              "sha256": "db0f92a0c6ff1477ed2ed99b369b538f1f5a136f3ac8cf09214186fa57fa4643",
+              "bytes": 418704,
+              "format": "elf64-x86-64",
+              "sections": {
+                ".interp": 28,
+                ".note.gnu.property": 48,
+                ".note.gnu.build-id": 36,
+                ".note.ABI-tag": 32,
+                ".gnu.hash": 64,
+                ".dynsym": 4776,
+                ".dynstr": 1859,
+                ".gnu.version": 398,
+                ".gnu.version_r": 288,
+                ".rela.dyn": 1728,
+                ".rela.plt": 4488,
+                ".init": 27,
+                ".plt": 3008,
+                ".plt.got": 32,
+                ".plt.sec": 2992,
+                ".text": 282514,
+                ".fini": 13,
+                ".rodata": 11768,
+                ".eh_frame_hdr": 7068,
+                ".eh_frame": 28664,
+                ".tbss": 8,
+                ".init_array": 8,
+                ".fini_array": 8,
+                ".data.rel.ro": 1400,
+                ".dynamic": 512,
+                ".got": 1568,
+                ".data": 6792,
+                ".bss": 199816,
+                ".comment": 45
+              },
+              "tracingSymbols": [],
+              "internalRuntimeSymbols": 904
+            }
+          },
+          {
+            "mode": "arc",
+            "optimization": "-O2",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7619779e806f497e241008ad9d4831d9687dc113475afeff81cbd4fecd6fd86f",
+            "binaryInspection": {
+              "file": "compact-arc-O2.exe",
+              "sha256": "0f5e2f9daac4fc6fa872702911f647ebc1047d41e171a9a460a14cf893fed477",
+              "bytes": 116240,
+              "format": "elf64-x86-64",
+              "sections": {
+                ".interp": 28,
+                ".note.gnu.property": 48,
+                ".note.gnu.build-id": 36,
+                ".note.ABI-tag": 32,
+                ".gnu.hash": 52,
+                ".dynsym": 2184,
+                ".dynstr": 935,
+                ".gnu.version": 182,
+                ".gnu.version_r": 144,
+                ".rela.dyn": 1344,
+                ".rela.plt": 1968,
+                ".init": 27,
+                ".plt": 1328,
+                ".plt.got": 16,
+                ".plt.sec": 1312,
+                ".text": 65778,
+                ".fini": 13,
+                ".rodata": 6144,
+                ".eh_frame_hdr": 1028,
+                ".eh_frame": 6152,
+                ".tbss": 8,
+                ".init_array": 8,
+                ".fini_array": 8,
+                ".data.rel.ro": 912,
+                ".dynamic": 496,
+                ".got": 720,
+                ".data": 6752,
+                ".bss": 198544,
+                ".comment": 45
+              },
+              "tracingSymbols": [],
+              "internalRuntimeSymbols": 167
+            }
+          },
+          {
+            "mode": "tracing",
+            "optimization": "-O0",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7bbf6b7003fc981f63810fa4bada8ffec248ce209969311439cadc945582bb9c",
+            "binaryInspection": {
+              "file": "compact-tracing-O0.exe",
+              "sha256": "9e7cd91fadfeb7e3c655ecb032b118c565cf9459e80d705b135752adb2d02eef",
+              "bytes": 427840,
+              "format": "elf64-x86-64",
+              "sections": {
+                ".interp": 28,
+                ".note.gnu.property": 48,
+                ".note.gnu.build-id": 36,
+                ".note.ABI-tag": 32,
+                ".gnu.hash": 64,
+                ".dynsym": 4896,
+                ".dynstr": 1950,
+                ".gnu.version": 408,
+                ".gnu.version_r": 288,
+                ".rela.dyn": 1728,
+                ".rela.plt": 4608,
+                ".init": 27,
+                ".plt": 3088,
+                ".plt.got": 32,
+                ".plt.sec": 3072,
+                ".text": 291122,
+                ".fini": 13,
+                ".rodata": 11832,
+                ".eh_frame_hdr": 7196,
+                ".eh_frame": 29192,
+                ".tbss": 8,
+                ".init_array": 8,
+                ".fini_array": 8,
+                ".data.rel.ro": 1400,
+                ".dynamic": 512,
+                ".got": 1608,
+                ".data": 6800,
+                ".bss": 199816,
+                ".comment": 45
+              },
+              "tracingSymbols": [
+                "fwp_gc_mark_all",
+                "fwp_gc_scan",
+                "fwp_gc_sweep"
+              ],
+              "internalRuntimeSymbols": 920
+            }
+          },
+          {
+            "mode": "tracing",
+            "optimization": "-O2",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7bbf6b7003fc981f63810fa4bada8ffec248ce209969311439cadc945582bb9c",
+            "binaryInspection": {
+              "file": "compact-tracing-O2.exe",
+              "sha256": "a03d6f9af0135e8eacef0ae35a49c083feb4a6803994e12d2bacacd3e1ab71d9",
+              "bytes": 129176,
+              "format": "elf64-x86-64",
+              "sections": {
+                ".interp": 28,
+                ".note.gnu.property": 48,
+                ".note.gnu.build-id": 36,
+                ".note.ABI-tag": 32,
+                ".gnu.hash": 52,
+                ".dynsym": 2328,
+                ".dynstr": 1045,
+                ".gnu.version": 194,
+                ".gnu.version_r": 160,
+                ".rela.dyn": 1344,
+                ".rela.plt": 2112,
+                ".init": 27,
+                ".plt": 1424,
+                ".plt.got": 16,
+                ".plt.sec": 1408,
+                ".text": 74210,
+                ".fini": 13,
+                ".rodata": 6192,
+                ".eh_frame_hdr": 1100,
+                ".eh_frame": 6792,
+                ".tbss": 8,
+                ".init_array": 8,
+                ".fini_array": 8,
+                ".data.rel.ro": 912,
+                ".dynamic": 496,
+                ".got": 768,
+                ".data": 6752,
+                ".bss": 198544,
+                ".comment": 45
+              },
+              "tracingSymbols": [
+                "fwp_gc_mark_all",
+                "fwp_gc_scan"
+              ],
+              "internalRuntimeSymbols": 175
+            }
+          }
+        ],
+        "wastedSlotControl": "set 1: requested 24, expected 16",
+        "scope": "Observed requests to the managed allocator for a freshly built I64 set. Charged bytes include allocator rounding, not process RAM or child storage. Empty sets use static storage. The previous 8 + 16*n layout is calculated from its representation, not timed here. ARC charge returns to its starting value after each result is freed; tracing does not assert that ledger. These instrumented executions are not a speed benchmark."
+      },
+      "sortStorage": [
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "control": "ordinary",
+          "sourceSha256": "982f2914a06188fa27c69acebc2b12bf7d9c57284ae5cbf8fa25197686639f52",
+          "binary": {
+            "file": "sort-storage-arc-ordinary-O1.bin",
+            "sha256": "2d0ceb01a9b3db1101a8a2e78f9f4c1cb5b58174c40e790bd146978bcdf01ef2",
+            "bytes": 119168,
+            "format": "elf64-x86-64",
+            "internal_runtime_symbols": 229,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "control": "ordinary",
+          "sourceSha256": "982f2914a06188fa27c69acebc2b12bf7d9c57284ae5cbf8fa25197686639f52",
+          "binary": {
+            "file": "sort-storage-arc-ordinary-O2.bin",
+            "sha256": "cca1fcc22a90cc0bdf62b9c1977102562657e0dcffcb5c2a0793eeb414c5ad7f",
+            "bytes": 131720,
+            "format": "elf64-x86-64",
+            "internal_runtime_symbols": 234,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "control": "late-release",
+          "sourceSha256": "7ee81ea899a57548eb160f16abc293da4224e02f4eb83d56b914f615060fa382",
+          "binary": {
+            "file": "sort-storage-arc-late-release-O1.bin",
+            "sha256": "ff075148446070f716585fa3601ea23cc6c5fab0af1fc498a830783b82e2bbc1",
+            "bytes": 119168,
+            "format": "elf64-x86-64",
+            "internal_runtime_symbols": 229,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "control": "late-release",
+          "sourceSha256": "7ee81ea899a57548eb160f16abc293da4224e02f4eb83d56b914f615060fa382",
+          "binary": {
+            "file": "sort-storage-arc-late-release-O2.bin",
+            "sha256": "45eff0a8b70c16c8d3c22b692d3e7021851f4b9315a6ab408f9161ed373476a0",
+            "bytes": 131664,
+            "format": "elf64-x86-64",
+            "internal_runtime_symbols": 233,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "control": "ordinary",
+          "sourceSha256": "4309cea621ed374548b51c6c256c27555aab359ac7ba490ca5b1c7f194150110",
+          "binary": {
+            "file": "sort-storage-tracing-ordinary-O1.bin",
+            "sha256": "64712587e9a49c769446be2c95bab97839c1dfadf33573c87437961ec0182357",
+            "bytes": 128096,
+            "format": "elf64-x86-64",
+            "internal_runtime_symbols": 239,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "control": "ordinary",
+          "sourceSha256": "4309cea621ed374548b51c6c256c27555aab359ac7ba490ca5b1c7f194150110",
+          "binary": {
+            "file": "sort-storage-tracing-ordinary-O2.bin",
+            "sha256": "469ccb9b19b5e3fa0327c935fdd3c8318f7d2a6eb6057f636dc17d0c9df842a7",
+            "bytes": 136360,
+            "format": "elf64-x86-64",
+            "internal_runtime_symbols": 241,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "control": "late-release",
+          "sourceSha256": "9a352fbb5216e1509c2f7341cf9492b091b2429fa429e4ad0da0e0b9a6199d7a",
+          "binary": {
+            "file": "sort-storage-tracing-late-release-O1.bin",
+            "sha256": "449d121f7871e771e7c02f60ce884a1ef111edb07b78caa42b844714c58481de",
+            "bytes": 128096,
+            "format": "elf64-x86-64",
+            "internal_runtime_symbols": 239,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "control": "late-release",
+          "sourceSha256": "9a352fbb5216e1509c2f7341cf9492b091b2429fa429e4ad0da0e0b9a6199d7a",
+          "binary": {
+            "file": "sort-storage-tracing-late-release-O2.bin",
+            "sha256": "4242341439c352509203004c0df5a2eb8bc6f8a2b22178dda754d7eb81953ad0",
+            "bytes": 136360,
+            "format": "elf64-x86-64",
+            "internal_runtime_symbols": 241,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        }
+      ],
+      "callback_outputs_match_interpreter": true,
+      "arc_shutdown_counted_bytes": 0
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "job": 120830136000,
+      "settings": [
+        "OS=Linux",
+        "architecture=ARM64",
+        "runner=ubuntu-24.04-arm",
+        "ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off",
+        "tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1",
+        "22 operations; every allocation, retain and comparison fails once; independent aliases; two missing-cleanup controls",
+        "No timing comparison or C/Rust speed claim"
+      ],
+      "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "runs": [
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": true,
+          "injected_failures": 138
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": true,
+          "injected_failures": 138
+        }
+      ],
+      "controls": {
+        "missing-result-owner": "map operation 0 failure 2/5: 213",
+        "missing-scratch-owner": "map operation 8 failure 3/9: 213",
+        "compact-wasted-slot-control": "set 1: requested 24, expected 16"
+      },
+      "binaries": [
+        {
+          "file": "faults-arc-O1.bin",
+          "sha256": "dc12156653d23c383077820bf9f4979a966deaf94ecbaf26ce997faba0954052",
+          "bytes": 159288,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 240,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O1.bin",
+          "sha256": "19b2d642d4712c8d2be4f547365120746812122edfcd76543a070302d47880b6",
+          "bytes": 157504,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 227,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-arc-O2.bin",
+          "sha256": "20b6e935697ca653fad68ae5b1c04385a4d02e29b0384a867a4fadd0e4747ee5",
+          "bytes": 158904,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 233,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O2.bin",
+          "sha256": "6c5c11bc27bc9aebec3e91e6912f3585e7acfb31476552b6a633f4f270526e66",
+          "bytes": 157304,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 222,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-tracing-O1.bin",
+          "sha256": "5ad2b29cbe9faff6adc6d98d046a36433c878bc16c66185f6fd665e3ba7f9da6",
+          "bytes": 160072,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 251,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O1.bin",
+          "sha256": "d13ed01e8f16ef3b103f4fc10dbe00dde3ae9b9f6853c8e86569f89ddd16b168",
+          "bytes": 158240,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 237,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan"
+          ]
+        },
+        {
+          "file": "faults-tracing-O2.bin",
+          "sha256": "9b4fb71367066e021c5939071c0404386c13ad9db266cc683c0edec98cab1ea2",
+          "bytes": 159624,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 244,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O2.bin",
+          "sha256": "b740ca3e661879c85aa917d9498f227a027c5cf22d02a60569230047b0e2c5d8",
+          "bytes": 158120,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 235,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan"
+          ]
+        },
+        {
+          "file": "missing-result-owner.bin",
+          "sha256": "8ec392426a4260c46a4c68931ea0f571df564aeb1bf66020ce843bc98a1ffdd8",
+          "bytes": 159288,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 240,
+          "tracing_symbols": []
+        },
+        {
+          "file": "missing-scratch-owner.bin",
+          "sha256": "ec0b04571b9bbd1c836364b91e97171cda94b66562445f485aea3e98c2e9fc7a",
+          "bytes": 159344,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 240,
+          "tracing_symbols": []
+        },
+        {
+          "file": "compact-wasted-slot-control.bin",
+          "sha256": "a4308e02bea56f37d59831665bcb5506a5ab055dc26fa2c986fb9cf858ee1197",
+          "bytes": 454576,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 904,
+          "tracing_symbols": []
+        }
+      ],
+      "compactSets": {
+        "runs": [
+          {
+            "mode": "arc",
+            "optimization": "-O0",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7619779e806f497e241008ad9d4831d9687dc113475afeff81cbd4fecd6fd86f",
+            "binaryInspection": {
+              "file": "compact-arc-O0.exe",
+              "sha256": "04c3f26852a3ca75381a5eb87788f25a5d2c602651b24260206b3b27b93bf65c",
+              "bytes": 454576,
+              "format": "elf64-littleaarch64",
+              "sections": {
+                ".interp": 27,
+                ".note.gnu.build-id": 36,
+                ".note.ABI-tag": 32,
+                ".gnu.hash": 28,
+                ".dynsym": 4872,
+                ".dynstr": 1835,
+                ".gnu.version": 406,
+                ".gnu.version_r": 208,
+                ".rela.dyn": 1776,
+                ".rela.plt": 4608,
+                ".init": 24,
+                ".plt": 3104,
+                ".text": 290940,
+                ".fini": 20,
+                ".rodata": 11952,
+                ".eh_frame_hdr": 7140,
+                ".eh_frame": 29260,
+                ".tbss": 8,
+                ".init_array": 16,
+                ".fini_array": 8,
+                ".data.rel.ro": 1248,
+                ".dynamic": 528,
+                ".got": 1656,
+                ".data": 6776,
+                ".bss": 203304,
+                ".comment": 45
+              },
+              "tracingSymbols": [],
+              "internalRuntimeSymbols": 904
+            }
+          },
+          {
+            "mode": "arc",
+            "optimization": "-O2",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7619779e806f497e241008ad9d4831d9687dc113475afeff81cbd4fecd6fd86f",
+            "binaryInspection": {
+              "file": "compact-arc-O2.exe",
+              "sha256": "3c58e1abd205f2d68419c963fd8c3aa87017b23657b995f0054ae15c141e288e",
+              "bytes": 154344,
+              "format": "elf64-littleaarch64",
+              "sections": {
+                ".interp": 27,
+                ".note.gnu.build-id": 36,
+                ".note.ABI-tag": 32,
+                ".gnu.hash": 28,
+                ".dynsym": 2280,
+                ".dynstr": 932,
+                ".gnu.version": 190,
+                ".gnu.version_r": 96,
+                ".rela.dyn": 1392,
+                ".rela.plt": 2064,
+                ".init": 24,
+                ".plt": 1408,
+                ".text": 62556,
+                ".fini": 20,
+                ".rodata": 6008,
+                ".eh_frame_hdr": 932,
+                ".eh_frame": 7612,
+                ".tbss": 8,
+                ".init_array": 16,
+                ".fini_array": 8,
+                ".data.rel.ro": 864,
+                ".dynamic": 512,
+                ".got": 792,
+                ".data": 6736,
+                ".bss": 202072,
+                ".comment": 45
+              },
+              "tracingSymbols": [],
+              "internalRuntimeSymbols": 152
+            }
+          },
+          {
+            "mode": "tracing",
+            "optimization": "-O0",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7bbf6b7003fc981f63810fa4bada8ffec248ce209969311439cadc945582bb9c",
+            "binaryInspection": {
+              "file": "compact-tracing-O0.exe",
+              "sha256": "3ad155208b120d8fded84acca7943a5db00aacc112fde41c21707a67e5849122",
+              "bytes": 455504,
+              "format": "elf64-littleaarch64",
+              "sections": {
+                ".interp": 27,
+                ".note.gnu.build-id": 36,
+                ".note.ABI-tag": 32,
+                ".gnu.hash": 28,
+                ".dynsym": 4992,
+                ".dynstr": 1926,
+                ".gnu.version": 416,
+                ".gnu.version_r": 208,
+                ".rela.dyn": 1776,
+                ".rela.plt": 4728,
+                ".init": 24,
+                ".plt": 3184,
+                ".text": 304876,
+                ".fini": 20,
+                ".rodata": 11936,
+                ".eh_frame_hdr": 7260,
+                ".eh_frame": 29812,
+                ".tbss": 8,
+                ".init_array": 16,
+                ".fini_array": 8,
+                ".data.rel.ro": 1248,
+                ".dynamic": 528,
+                ".got": 1696,
+                ".data": 6784,
+                ".bss": 203304,
+                ".comment": 45
+              },
+              "tracingSymbols": [
+                "fwp_gc_mark_all",
+                "fwp_gc_scan",
+                "fwp_gc_sweep"
+              ],
+              "internalRuntimeSymbols": 920
+            }
+          },
+          {
+            "mode": "tracing",
+            "optimization": "-O2",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7bbf6b7003fc981f63810fa4bada8ffec248ce209969311439cadc945582bb9c",
+            "binaryInspection": {
+              "file": "compact-tracing-O2.exe",
+              "sha256": "bed3a95246433ec26330e4edb28f92ca01feb5bbf5ed39e3547c52dd459446ce",
+              "bytes": 154952,
+              "format": "elf64-littleaarch64",
+              "sections": {
+                ".interp": 27,
+                ".note.gnu.build-id": 36,
+                ".note.ABI-tag": 32,
+                ".gnu.hash": 28,
+                ".dynsym": 2424,
+                ".dynstr": 1042,
+                ".gnu.version": 202,
+                ".gnu.version_r": 112,
+                ".rela.dyn": 1392,
+                ".rela.plt": 2208,
+                ".init": 24,
+                ".plt": 1504,
+                ".text": 69756,
+                ".fini": 20,
+                ".rodata": 6032,
+                ".eh_frame_hdr": 996,
+                ".eh_frame": 8324,
+                ".tbss": 8,
+                ".init_array": 16,
+                ".fini_array": 8,
+                ".data.rel.ro": 864,
+                ".dynamic": 512,
+                ".got": 840,
+                ".data": 6744,
+                ".bss": 202072,
+                ".comment": 45
+              },
+              "tracingSymbols": [
+                "fwp_gc_mark_all",
+                "fwp_gc_scan"
+              ],
+              "internalRuntimeSymbols": 160
+            }
+          }
+        ],
+        "wastedSlotControl": "set 1: requested 24, expected 16",
+        "scope": "Observed requests to the managed allocator for a freshly built I64 set. Charged bytes include allocator rounding, not process RAM or child storage. Empty sets use static storage. The previous 8 + 16*n layout is calculated from its representation, not timed here. ARC charge returns to its starting value after each result is freed; tracing does not assert that ledger. These instrumented executions are not a speed benchmark."
+      },
+      "sortStorage": [
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "control": "ordinary",
+          "sourceSha256": "982f2914a06188fa27c69acebc2b12bf7d9c57284ae5cbf8fa25197686639f52",
+          "binary": {
+            "file": "sort-storage-arc-ordinary-O1.bin",
+            "sha256": "10557fde2f890c423e2d35f712c89b489d95acec0f079a8cd79e7578670be0de",
+            "bytes": 157832,
+            "format": "elf64-littleaarch64",
+            "internal_runtime_symbols": 228,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "control": "ordinary",
+          "sourceSha256": "982f2914a06188fa27c69acebc2b12bf7d9c57284ae5cbf8fa25197686639f52",
+          "binary": {
+            "file": "sort-storage-arc-ordinary-O2.bin",
+            "sha256": "91bbc1d5b8599d90e8e0d2ea1d7c3c9201d4aa8481418b469f9f3b0ee7914609",
+            "bytes": 157616,
+            "format": "elf64-littleaarch64",
+            "internal_runtime_symbols": 223,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "control": "late-release",
+          "sourceSha256": "7ee81ea899a57548eb160f16abc293da4224e02f4eb83d56b914f615060fa382",
+          "binary": {
+            "file": "sort-storage-arc-late-release-O1.bin",
+            "sha256": "324dc23d266323fa112e510fc9e4d55f4233c218e9fa1ddb9b8b6e572bcd3c76",
+            "bytes": 157832,
+            "format": "elf64-littleaarch64",
+            "internal_runtime_symbols": 228,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "control": "late-release",
+          "sourceSha256": "7ee81ea899a57548eb160f16abc293da4224e02f4eb83d56b914f615060fa382",
+          "binary": {
+            "file": "sort-storage-arc-late-release-O2.bin",
+            "sha256": "88e1c6b8033900981cc69b458e5242e8a062fc4eeeea1fb0809eb2f20c46a694",
+            "bytes": 157616,
+            "format": "elf64-littleaarch64",
+            "internal_runtime_symbols": 223,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "control": "ordinary",
+          "sourceSha256": "4309cea621ed374548b51c6c256c27555aab359ac7ba490ca5b1c7f194150110",
+          "binary": {
+            "file": "sort-storage-tracing-ordinary-O1.bin",
+            "sha256": "77904e105957a4417fd25cf485743e91ddfd972f5e4b2011e414d784d154e7a4",
+            "bytes": 158544,
+            "format": "elf64-littleaarch64",
+            "internal_runtime_symbols": 238,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "control": "ordinary",
+          "sourceSha256": "4309cea621ed374548b51c6c256c27555aab359ac7ba490ca5b1c7f194150110",
+          "binary": {
+            "file": "sort-storage-tracing-ordinary-O2.bin",
+            "sha256": "079f4a5cd96126e1a994e36212c876fdc0295c9d0b543fd5356b9f1f6a7f29e5",
+            "bytes": 158392,
+            "format": "elf64-littleaarch64",
+            "internal_runtime_symbols": 235,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "control": "late-release",
+          "sourceSha256": "9a352fbb5216e1509c2f7341cf9492b091b2429fa429e4ad0da0e0b9a6199d7a",
+          "binary": {
+            "file": "sort-storage-tracing-late-release-O1.bin",
+            "sha256": "9db97b8c881885787675622041c294fbc9419a037c3e94a3f0044284b3209ba1",
+            "bytes": 158544,
+            "format": "elf64-littleaarch64",
+            "internal_runtime_symbols": 238,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "control": "late-release",
+          "sourceSha256": "9a352fbb5216e1509c2f7341cf9492b091b2429fa429e4ad0da0e0b9a6199d7a",
+          "binary": {
+            "file": "sort-storage-tracing-late-release-O2.bin",
+            "sha256": "d4cb2265e3802b87199cd02717753ed2c0cd9d91d3f5574848ff89a5e13ef45d",
+            "bytes": 158392,
+            "format": "elf64-littleaarch64",
+            "internal_runtime_symbols": 235,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        }
+      ],
+      "callback_outputs_match_interpreter": true,
+      "arc_shutdown_counted_bytes": 0
+    },
+    {
+      "host": "macos-15",
+      "job": 120830136052,
+      "settings": [
+        "OS=macOS",
+        "architecture=ARM64",
+        "runner=macos-15",
+        "ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off",
+        "tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1",
+        "22 operations; every allocation, retain and comparison fails once; independent aliases; two missing-cleanup controls",
+        "No timing comparison or C/Rust speed claim"
+      ],
+      "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "runs": [
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": true,
+          "injected_failures": 138
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": true,
+          "injected_failures": 138
+        }
+      ],
+      "controls": {
+        "missing-result-owner": "map operation 0 failure 2/5: 213",
+        "missing-scratch-owner": "map operation 8 failure 3/9: 213",
+        "compact-wasted-slot-control": "set 1: requested 24, expected 16"
+      },
+      "binaries": [
+        {
+          "file": "faults-arc-O1.bin",
+          "sha256": "63df2663edf7f6f9a7b05675499dc3bff4667eb95c14b2d73b3149263af4f4ef",
+          "bytes": 128080,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 204,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O1.bin",
+          "sha256": "856ed373d574d3a384f20362b876b345483feda2832b11279b447ffa04006ccd",
+          "bytes": 110400,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 193,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-arc-O2.bin",
+          "sha256": "8cf51d35dce3d003374d29086a685858e02567f4092cb9c42fbccccafeedb2d5",
+          "bytes": 128064,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 205,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O2.bin",
+          "sha256": "f01be3ea121f850180c72b4074240599361544504f6873d28a9a06b1f1038abe",
+          "bytes": 110400,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 193,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-tracing-O1.bin",
+          "sha256": "a2dc3cf4ce84c490d773a2054150ddcee9c66cccc5ea57a0b707a9b35e3127e3",
+          "bytes": 129104,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 218,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O1.bin",
+          "sha256": "33c241b5409817ec321be33741d4d8e2ec6ec352598af5a6471aaa11ea68e12c",
+          "bytes": 127784,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 202,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "faults-tracing-O2.bin",
+          "sha256": "913dca391b22644f7459cc3e544b85b50be766b673a7369e5200acfb1e2d2794",
+          "bytes": 129280,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 220,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O2.bin",
+          "sha256": "dee15fb65717afa39c7a319904ed903e4f04e4de1cbfc8d61a2540edeaf41f6b",
+          "bytes": 127896,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 203,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "missing-result-owner.bin",
+          "sha256": "8b843dbe308a2d3ce7f81041a77e6c76e4adf040047fa12613d4c7ec9e056b87",
+          "bytes": 128032,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 203,
+          "tracing_symbols": []
+        },
+        {
+          "file": "missing-scratch-owner.bin",
+          "sha256": "c42b8bbbc7c9c1c6e430db0cd5d1af3c1397865b057460827182c58fb7a744a4",
+          "bytes": 128152,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 204,
+          "tracing_symbols": []
+        },
+        {
+          "file": "compact-wasted-slot-control.bin",
+          "sha256": "0ec32bbe70e36b93c9a846744b3da4a00b2da587565bd07d6fb797d59c7d30c6",
+          "bytes": 146472,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 274,
+          "tracing_symbols": []
+        }
+      ],
+      "compactSets": {
+        "runs": [
+          {
+            "mode": "arc",
+            "optimization": "-O0",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7619779e806f497e241008ad9d4831d9687dc113475afeff81cbd4fecd6fd86f",
+            "binaryInspection": {
+              "file": "compact-arc-O0.exe",
+              "sha256": "dc68fcd46c211c98af3a4657cbaedb5ff47b2fc9e059fa63ee8ff1b574c48e13",
+              "bytes": 146472,
+              "format": "mach-o arm64",
+              "sections": {
+                "__text": 84664,
+                "__stubs": 780,
+                "__cstring": 4666,
+                "__const": 1589,
+                "__unwind_info": 576,
+                "__got": 560,
+                "__data": 6708,
+                "__thread_vars": 24,
+                "__thread_bss": 8,
+                "__bss": 67408
+              },
+              "tracingSymbols": [],
+              "internalRuntimeSymbols": 274
+            }
+          },
+          {
+            "mode": "arc",
+            "optimization": "-O2",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7619779e806f497e241008ad9d4831d9687dc113475afeff81cbd4fecd6fd86f",
+            "binaryInspection": {
+              "file": "compact-arc-O2.exe",
+              "sha256": "9565ef06ad4c93fa81db59ef3a40e8c311f9a599fa4e26c77688ca2b9e9b3717",
+              "bytes": 106280,
+              "format": "mach-o arm64",
+              "sections": {
+                "__text": 51348,
+                "__stubs": 684,
+                "__const": 1957,
+                "__cstring": 4134,
+                "__unwind_info": 360,
+                "__got": 504,
+                "__data": 6696,
+                "__thread_vars": 24,
+                "__thread_bss": 8,
+                "__bss": 65672
+              },
+              "tracingSymbols": [],
+              "internalRuntimeSymbols": 83
+            }
+          },
+          {
+            "mode": "tracing",
+            "optimization": "-O0",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7bbf6b7003fc981f63810fa4bada8ffec248ce209969311439cadc945582bb9c",
+            "binaryInspection": {
+              "file": "compact-tracing-O0.exe",
+              "sha256": "511a3d60880c309a5cd3d12f9158e25e83a41cb351cd8fc0fd7a83deeeeaad81",
+              "bytes": 164008,
+              "format": "mach-o arm64",
+              "sections": {
+                "__text": 92820,
+                "__stubs": 864,
+                "__cstring": 4707,
+                "__const": 1589,
+                "__unwind_info": 600,
+                "__got": 616,
+                "__data": 6712,
+                "__thread_vars": 24,
+                "__thread_bss": 8,
+                "__bss": 67408
+              },
+              "tracingSymbols": [
+                "fwp_gc_mark_all",
+                "fwp_gc_scan",
+                "fwp_gc_sweep"
+              ],
+              "internalRuntimeSymbols": 291
+            }
+          },
+          {
+            "mode": "tracing",
+            "optimization": "-O2",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7bbf6b7003fc981f63810fa4bada8ffec248ce209969311439cadc945582bb9c",
+            "binaryInspection": {
+              "file": "compact-tracing-O2.exe",
+              "sha256": "c5855b34fc4fd66ec81f2fac4d945e691a379427386f0bc67b980c7299606e61",
+              "bytes": 107256,
+              "format": "mach-o arm64",
+              "sections": {
+                "__text": 56764,
+                "__stubs": 768,
+                "__const": 1973,
+                "__cstring": 4175,
+                "__unwind_info": 400,
+                "__got": 560,
+                "__data": 6700,
+                "__thread_vars": 24,
+                "__thread_bss": 8,
+                "__bss": 65672
+              },
+              "tracingSymbols": [
+                "fwp_gc_mark_all",
+                "fwp_gc_scan",
+                "fwp_gc_sweep"
+              ],
+              "internalRuntimeSymbols": 94
+            }
+          }
+        ],
+        "wastedSlotControl": "set 1: requested 24, expected 16",
+        "scope": "Observed requests to the managed allocator for a freshly built I64 set. Charged bytes include allocator rounding, not process RAM or child storage. Empty sets use static storage. The previous 8 + 16*n layout is calculated from its representation, not timed here. ARC charge returns to its starting value after each result is freed; tracing does not assert that ledger. These instrumented executions are not a speed benchmark."
+      },
+      "sortStorage": [
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "control": "ordinary",
+          "sourceSha256": "982f2914a06188fa27c69acebc2b12bf7d9c57284ae5cbf8fa25197686639f52",
+          "binary": {
+            "file": "sort-storage-arc-ordinary-O1.bin",
+            "sha256": "806fa4c6ca13f5121502b21fd1e85333d95e829e83b445e262b1e256b98ba364",
+            "bytes": 110592,
+            "format": "mach-o arm64",
+            "internal_runtime_symbols": 193,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "control": "ordinary",
+          "sourceSha256": "982f2914a06188fa27c69acebc2b12bf7d9c57284ae5cbf8fa25197686639f52",
+          "binary": {
+            "file": "sort-storage-arc-ordinary-O2.bin",
+            "sha256": "24e6b5e01e95a4c4379c06cf6abf93d8cb09392c1e457f9f113e8c39eb8d3357",
+            "bytes": 110592,
+            "format": "mach-o arm64",
+            "internal_runtime_symbols": 193,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "control": "late-release",
+          "sourceSha256": "7ee81ea899a57548eb160f16abc293da4224e02f4eb83d56b914f615060fa382",
+          "binary": {
+            "file": "sort-storage-arc-late-release-O1.bin",
+            "sha256": "a36d26b338118f611188ea191f2625f3b49a94641b59d2deb73772bf29993479",
+            "bytes": 110592,
+            "format": "mach-o arm64",
+            "internal_runtime_symbols": 193,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "control": "late-release",
+          "sourceSha256": "7ee81ea899a57548eb160f16abc293da4224e02f4eb83d56b914f615060fa382",
+          "binary": {
+            "file": "sort-storage-arc-late-release-O2.bin",
+            "sha256": "45adc4aa594af8f775bde38113531cf014cb4ee50caf23a60369122b6195f9bc",
+            "bytes": 110592,
+            "format": "mach-o arm64",
+            "internal_runtime_symbols": 193,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "control": "ordinary",
+          "sourceSha256": "4309cea621ed374548b51c6c256c27555aab359ac7ba490ca5b1c7f194150110",
+          "binary": {
+            "file": "sort-storage-tracing-ordinary-O1.bin",
+            "sha256": "e187cc58ed37134894f38b7c59aa3de848e69c1b082df06531a69b4092bfca6e",
+            "bytes": 128032,
+            "format": "mach-o arm64",
+            "internal_runtime_symbols": 204,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan",
+              "fwp_gc_sweep"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "control": "ordinary",
+          "sourceSha256": "4309cea621ed374548b51c6c256c27555aab359ac7ba490ca5b1c7f194150110",
+          "binary": {
+            "file": "sort-storage-tracing-ordinary-O2.bin",
+            "sha256": "3038e48da86032fa5a6cea2612626119384f2d74ddb4b4d273e6e7303e8681b4",
+            "bytes": 128192,
+            "format": "mach-o arm64",
+            "internal_runtime_symbols": 205,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan",
+              "fwp_gc_sweep"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "control": "late-release",
+          "sourceSha256": "9a352fbb5216e1509c2f7341cf9492b091b2429fa429e4ad0da0e0b9a6199d7a",
+          "binary": {
+            "file": "sort-storage-tracing-late-release-O1.bin",
+            "sha256": "4f6f22a53fba7b04c0c13919d895993ff84830a657d641e18bcf6bd69c88bb51",
+            "bytes": 128032,
+            "format": "mach-o arm64",
+            "internal_runtime_symbols": 204,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan",
+              "fwp_gc_sweep"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "control": "late-release",
+          "sourceSha256": "9a352fbb5216e1509c2f7341cf9492b091b2429fa429e4ad0da0e0b9a6199d7a",
+          "binary": {
+            "file": "sort-storage-tracing-late-release-O2.bin",
+            "sha256": "1fe49a42f7492569dfd3acae717f7e80fd12eb087f1fb83b1a6a8c443c21a670",
+            "bytes": 128192,
+            "format": "mach-o arm64",
+            "internal_runtime_symbols": 205,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan",
+              "fwp_gc_sweep"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        }
+      ],
+      "callback_outputs_match_interpreter": true,
+      "arc_shutdown_counted_bytes": 0
+    },
+    {
+      "host": "macos-15-intel",
+      "job": 120830136073,
+      "settings": [
+        "OS=macOS",
+        "architecture=X64",
+        "runner=macos-15-intel",
+        "ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off",
+        "tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1",
+        "22 operations; every allocation, retain and comparison fails once; independent aliases; two missing-cleanup controls",
+        "No timing comparison or C/Rust speed claim"
+      ],
+      "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "runs": [
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": true,
+          "injected_failures": 138
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": true,
+          "injected_failures": 138
+        }
+      ],
+      "controls": {
+        "missing-result-owner": "map operation 0 failure 2/5: 213",
+        "missing-scratch-owner": "map operation 8 failure 3/9: 213",
+        "compact-wasted-slot-control": "set 1: requested 24, expected 16"
+      },
+      "binaries": [
+        {
+          "file": "faults-arc-O1.bin",
+          "sha256": "8f2647f05c58d5a4d430e2363bda07be2191c3e918862c240a0d50625b35aa7c",
+          "bytes": 110600,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 204,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O1.bin",
+          "sha256": "5e49a8e8570a4e704ae9ad99ffdc0c5edba1d71184326cdac1013e334c93ff4b",
+          "bytes": 93056,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 193,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-arc-O2.bin",
+          "sha256": "fa4d63b6cd076407f63080f597302ab12998b4f4e237e35245dc9e2628a7256a",
+          "bytes": 110600,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 205,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O2.bin",
+          "sha256": "65609815f69480c7c58736055f7052f8b772c5d3d3ff41e89c2468306bb52a23",
+          "bytes": 101248,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 193,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-tracing-O1.bin",
+          "sha256": "39285bd4ce2b26a0f512a6f79120531b079b73f48b9681460ce05e35dd4ce2e0",
+          "bytes": 119712,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 218,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O1.bin",
+          "sha256": "70d03b95fbb51d263ad38cd47161d153c537769654c33ab7bfddf20e89798415",
+          "bytes": 110208,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 202,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "faults-tracing-O2.bin",
+          "sha256": "c049e87a8e04668bdeefc2d9329e68f161a26c66304b63138291670ada428a3d",
+          "bytes": 123944,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 220,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O2.bin",
+          "sha256": "8f449ad3076f2be643ff1fec24616ab106ea576edd9c15875fc8cb63c5642396",
+          "bytes": 114400,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 203,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "missing-result-owner.bin",
+          "sha256": "e798db9c584073a8a34b5a973407264033bc0e204fe7bc4d5f1e65fcc803d443",
+          "bytes": 110568,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 203,
+          "tracing_symbols": []
+        },
+        {
+          "file": "missing-scratch-owner.bin",
+          "sha256": "14c40ec38b006f88cdabfcb837112bd7ed6a2413739a28430b141a520b18c0d9",
+          "bytes": 110640,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 204,
+          "tracing_symbols": []
+        },
+        {
+          "file": "compact-wasted-slot-control.bin",
+          "sha256": "1a0d470458397b0f7df2ad7c80d71a27488e21978e190f549412de2c3b74af98",
+          "bytes": 112368,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 274,
+          "tracing_symbols": []
+        }
+      ],
+      "compactSets": {
+        "runs": [
+          {
+            "mode": "arc",
+            "optimization": "-O0",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7619779e806f497e241008ad9d4831d9687dc113475afeff81cbd4fecd6fd86f",
+            "binaryInspection": {
+              "file": "compact-arc-O0.exe",
+              "sha256": "13a7d61af2eeade4863cb82e5615ff09543722dd9bfccc0eef33432f9a8a75e2",
+              "bytes": 112368,
+              "format": "mach-o 64-bit x86-64",
+              "sections": {
+                "__text": 76634,
+                "__stubs": 390,
+                "__const": 1752,
+                "__cstring": 4666,
+                "__unwind_info": 104,
+                "__got": 552,
+                "__data": 6708,
+                "__thread_vars": 24,
+                "__thread_bss": 8,
+                "__bss": 67440
+              },
+              "tracingSymbols": [],
+              "internalRuntimeSymbols": 274
+            }
+          },
+          {
+            "mode": "arc",
+            "optimization": "-O2",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7619779e806f497e241008ad9d4831d9687dc113475afeff81cbd4fecd6fd86f",
+            "binaryInspection": {
+              "file": "compact-arc-O2.exe",
+              "sha256": "14e037f401bcbc540f797e2f9bbb0705aeed1ba569018ea1c6275c8758994d70",
+              "bytes": 88960,
+              "format": "mach-o 64-bit x86-64",
+              "sections": {
+                "__text": 58212,
+                "__stubs": 348,
+                "__const": 1944,
+                "__cstring": 4132,
+                "__unwind_info": 320,
+                "__got": 504,
+                "__data": 6696,
+                "__thread_vars": 24,
+                "__thread_bss": 8,
+                "__bss": 65688
+              },
+              "tracingSymbols": [],
+              "internalRuntimeSymbols": 83
+            }
+          },
+          {
+            "mode": "tracing",
+            "optimization": "-O0",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7bbf6b7003fc981f63810fa4bada8ffec248ce209969311439cadc945582bb9c",
+            "binaryInspection": {
+              "file": "compact-tracing-O0.exe",
+              "sha256": "6850e8ca5f8c77ba6d24b5828924753a52a38e4fe1eb2f6fd5d190282e8ba9f4",
+              "bytes": 121552,
+              "format": "mach-o 64-bit x86-64",
+              "sections": {
+                "__text": 83583,
+                "__stubs": 426,
+                "__const": 1768,
+                "__cstring": 4707,
+                "__unwind_info": 120,
+                "__got": 600,
+                "__data": 6712,
+                "__thread_vars": 24,
+                "__thread_bss": 8,
+                "__bss": 67440
+              },
+              "tracingSymbols": [
+                "fwp_gc_mark_all",
+                "fwp_gc_scan",
+                "fwp_gc_sweep"
+              ],
+              "internalRuntimeSymbols": 291
+            }
+          },
+          {
+            "mode": "tracing",
+            "optimization": "-O2",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7bbf6b7003fc981f63810fa4bada8ffec248ce209969311439cadc945582bb9c",
+            "binaryInspection": {
+              "file": "compact-tracing-O2.exe",
+              "sha256": "64b5bafefe280278ee66814aa565348ddf160a09deea24b32f36bba64aae48a6",
+              "bytes": 93928,
+              "format": "mach-o 64-bit x86-64",
+              "sections": {
+                "__text": 65079,
+                "__stubs": 390,
+                "__const": 2008,
+                "__cstring": 4173,
+                "__unwind_info": 360,
+                "__got": 560,
+                "__data": 6700,
+                "__thread_vars": 24,
+                "__thread_bss": 8,
+                "__bss": 65688
+              },
+              "tracingSymbols": [
+                "fwp_gc_mark_all",
+                "fwp_gc_scan",
+                "fwp_gc_sweep"
+              ],
+              "internalRuntimeSymbols": 94
+            }
+          }
+        ],
+        "wastedSlotControl": "set 1: requested 24, expected 16",
+        "scope": "Observed requests to the managed allocator for a freshly built I64 set. Charged bytes include allocator rounding, not process RAM or child storage. Empty sets use static storage. The previous 8 + 16*n layout is calculated from its representation, not timed here. ARC charge returns to its starting value after each result is freed; tracing does not assert that ledger. These instrumented executions are not a speed benchmark."
+      },
+      "sortStorage": [
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "control": "ordinary",
+          "sourceSha256": "982f2914a06188fa27c69acebc2b12bf7d9c57284ae5cbf8fa25197686639f52",
+          "binary": {
+            "file": "sort-storage-arc-ordinary-O1.bin",
+            "sha256": "fedac88a9251e188ba803f0647643132069d507983fe727e5a7ba0bb90621a21",
+            "bytes": 97344,
+            "format": "mach-o 64-bit x86-64",
+            "internal_runtime_symbols": 193,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "control": "ordinary",
+          "sourceSha256": "982f2914a06188fa27c69acebc2b12bf7d9c57284ae5cbf8fa25197686639f52",
+          "binary": {
+            "file": "sort-storage-arc-ordinary-O2.bin",
+            "sha256": "2a67e98dda1cc6c06d35924aac8f24bfd2c62bb0fcf73b809fa868b7fbb08f65",
+            "bytes": 101440,
+            "format": "mach-o 64-bit x86-64",
+            "internal_runtime_symbols": 193,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "control": "late-release",
+          "sourceSha256": "7ee81ea899a57548eb160f16abc293da4224e02f4eb83d56b914f615060fa382",
+          "binary": {
+            "file": "sort-storage-arc-late-release-O1.bin",
+            "sha256": "caef253a29be27b2110156ea2aef232106af0e2a4d85bc95e6ec076114f41d0c",
+            "bytes": 97344,
+            "format": "mach-o 64-bit x86-64",
+            "internal_runtime_symbols": 193,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "control": "late-release",
+          "sourceSha256": "7ee81ea899a57548eb160f16abc293da4224e02f4eb83d56b914f615060fa382",
+          "binary": {
+            "file": "sort-storage-arc-late-release-O2.bin",
+            "sha256": "0b51d139e87daea4a939dc5e171bee54a58d0ab81c308063ce1d8fd325708f0a",
+            "bytes": 101440,
+            "format": "mach-o 64-bit x86-64",
+            "internal_runtime_symbols": 193,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "control": "ordinary",
+          "sourceSha256": "4309cea621ed374548b51c6c256c27555aab359ac7ba490ca5b1c7f194150110",
+          "binary": {
+            "file": "sort-storage-tracing-ordinary-O1.bin",
+            "sha256": "9f6a28c3c241f9683ee7be240bb940f4dd732dfdcdfe939721c42bd62cc4db64",
+            "bytes": 114576,
+            "format": "mach-o 64-bit x86-64",
+            "internal_runtime_symbols": 204,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan",
+              "fwp_gc_sweep"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "control": "ordinary",
+          "sourceSha256": "4309cea621ed374548b51c6c256c27555aab359ac7ba490ca5b1c7f194150110",
+          "binary": {
+            "file": "sort-storage-tracing-ordinary-O2.bin",
+            "sha256": "58c4b10889d4e27141678f9ce60492ecdd4ce25caea51884c685ee959796a8dd",
+            "bytes": 114672,
+            "format": "mach-o 64-bit x86-64",
+            "internal_runtime_symbols": 205,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan",
+              "fwp_gc_sweep"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "control": "late-release",
+          "sourceSha256": "9a352fbb5216e1509c2f7341cf9492b091b2429fa429e4ad0da0e0b9a6199d7a",
+          "binary": {
+            "file": "sort-storage-tracing-late-release-O1.bin",
+            "sha256": "8eb4dcf906aeff7104bbe28523caac86ca415f0c4eadaffe67473c0d842e398a",
+            "bytes": 114576,
+            "format": "mach-o 64-bit x86-64",
+            "internal_runtime_symbols": 204,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan",
+              "fwp_gc_sweep"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "control": "late-release",
+          "sourceSha256": "9a352fbb5216e1509c2f7341cf9492b091b2429fa429e4ad0da0e0b9a6199d7a",
+          "binary": {
+            "file": "sort-storage-tracing-late-release-O2.bin",
+            "sha256": "c6e9ea3e2a8c100559cb0c2a98e3d83e775e87db07a63cf2ba566f13a93ada95",
+            "bytes": 114672,
+            "format": "mach-o 64-bit x86-64",
+            "internal_runtime_symbols": 205,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan",
+              "fwp_gc_sweep"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        }
+      ],
+      "callback_outputs_match_interpreter": true,
+      "arc_shutdown_counted_bytes": 0
+    },
+    {
+      "host": "windows-2025",
+      "job": 120830136038,
+      "settings": [
+        "OS=Windows",
+        "architecture=X64",
+        "runner=windows-2025",
+        "ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off",
+        "tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1",
+        "22 operations; every allocation, retain and comparison fails once; independent aliases; two missing-cleanup controls",
+        "No timing comparison or C/Rust speed claim"
+      ],
+      "compiler": "clang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin\nConfiguration file: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin/x86_64-w64-windows-gnu.cfg",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "runs": [
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": true,
+          "injected_failures": 138
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": true,
+          "injected_failures": 138
+        }
+      ],
+      "controls": {
+        "missing-result-owner": "map operation 0 failure 2/5: 213",
+        "missing-scratch-owner": "map operation 8 failure 3/9: 213",
+        "compact-wasted-slot-control": "set 1: requested 24, expected 16"
+      },
+      "binaries": [
+        {
+          "file": "faults-arc-O1.bin",
+          "sha256": "b7cde809051747cdfffed979d506c9ccb0d5bdd011d1641f5745d37adeb94081",
+          "bytes": 173056,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 198,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O1.bin",
+          "sha256": "e326873e0ecbc5ea0e2581f2c0bbd1b607c3a3771ea07f30ece8b1c231cdafd4",
+          "bytes": 157184,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 186,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-arc-O2.bin",
+          "sha256": "ffbdf69f8921b38f0511fce6ad0e0a9a80004648af6cc3569500e576f1f720e8",
+          "bytes": 182784,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 199,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O2.bin",
+          "sha256": "540f9bf361db32094f051cbe8bd664be5c4ea1db01862fca382c24bfa067fcb5",
+          "bytes": 161792,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 186,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-tracing-O1.bin",
+          "sha256": "174ad1604ebdbc929409cab8cbbf8d01b61ccdb18a1ec0f4dd30fbe78a8fec9b",
+          "bytes": 183296,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 206,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O1.bin",
+          "sha256": "595c89e4bc3c3e7200d935dff86b262fdf53aa58dc1cbccd7a4f249f1b521b1d",
+          "bytes": 171520,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 193,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "faults-tracing-O2.bin",
+          "sha256": "8f1c48c9d9831ea1dc64b58dca73e2f47fa3dcc94939e60281547faa907876b1",
+          "bytes": 189440,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 208,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O2.bin",
+          "sha256": "7390b5eacc6aadc3665bec3d624c3c4eabd6ef421898278275d6512ffc24422b",
+          "bytes": 175616,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 194,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "missing-result-owner.bin",
+          "sha256": "6b0d96e60791259df940d2f96b168c8b8bcfa5683312655cb2be0ddd0a2afe28",
+          "bytes": 174592,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 197,
+          "tracing_symbols": []
+        },
+        {
+          "file": "missing-scratch-owner.bin",
+          "sha256": "1ffcf0dd295c08dfb76d005c6c0c51365457b99cf2317075ac8e168ef54453b9",
+          "bytes": 173056,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 198,
+          "tracing_symbols": []
+        },
+        {
+          "file": "compact-wasted-slot-control.bin",
+          "sha256": "a8fc932ed0d8b56b288a7162c315a93cbba84c3321ef24e78069681aca6a1a41",
+          "bytes": 198656,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 276,
+          "tracing_symbols": []
+        }
+      ],
+      "compactSets": {
+        "runs": [
+          {
+            "mode": "arc",
+            "optimization": "-O0",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7619779e806f497e241008ad9d4831d9687dc113475afeff81cbd4fecd6fd86f",
+            "binaryInspection": {
+              "file": "compact-arc-O0.exe",
+              "sha256": "16309d2c7362697b73f46b779e54522b639cd9c7fcf57614470b8de68c11916e",
+              "bytes": 198656,
+              "format": "coff-x86-64",
+              "sections": {
+                ".text": 91078,
+                ".rdata": 14776,
+                ".buildid": 53,
+                ".data": 7168,
+                ".pdata": 3240,
+                ".tls": 24,
+                ".reloc": 204,
+                ".debug_abbrev": 6698,
+                ".debug_aranges": 48,
+                ".debug_info": 18044,
+                ".debug_line": 9766,
+                ".debug_loc": 5691,
+                ".debug_ranges": 288,
+                ".debug_str": 17736
+              },
+              "tracingSymbols": [],
+              "internalRuntimeSymbols": 276
+            }
+          },
+          {
+            "mode": "arc",
+            "optimization": "-O2",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7619779e806f497e241008ad9d4831d9687dc113475afeff81cbd4fecd6fd86f",
+            "binaryInspection": {
+              "file": "compact-arc-O2.exe",
+              "sha256": "cf20aad579e43a81eefe2a01c214d2319c150811d04b495ea882f4af4629b31f",
+              "bytes": 155648,
+              "format": "coff-x86-64",
+              "sections": {
+                ".text": 63494,
+                ".rdata": 13784,
+                ".buildid": 53,
+                ".data": 7008,
+                ".pdata": 1044,
+                ".tls": 24,
+                ".reloc": 200,
+                ".debug_abbrev": 5852,
+                ".debug_aranges": 48,
+                ".debug_info": 16863,
+                ".debug_line": 8813,
+                ".debug_loc": 5352,
+                ".debug_ranges": 288,
+                ".debug_str": 16036
+              },
+              "tracingSymbols": [],
+              "internalRuntimeSymbols": 77
+            }
+          },
+          {
+            "mode": "tracing",
+            "optimization": "-O0",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7bbf6b7003fc981f63810fa4bada8ffec248ce209969311439cadc945582bb9c",
+            "binaryInspection": {
+              "file": "compact-tracing-O0.exe",
+              "sha256": "a6fc14bb6d07ee4addcaf2d632456c37cbe4c019f8d6438b46f8e273c4290be1",
+              "bytes": 208384,
+              "format": "coff-x86-64",
+              "sections": {
+                ".text": 99190,
+                ".rdata": 15264,
+                ".buildid": 53,
+                ".data": 7168,
+                ".pdata": 3444,
+                ".tls": 24,
+                ".reloc": 204,
+                ".debug_abbrev": 6698,
+                ".debug_aranges": 48,
+                ".debug_info": 18044,
+                ".debug_line": 9766,
+                ".debug_loc": 5691,
+                ".debug_ranges": 288,
+                ".debug_str": 17736
+              },
+              "tracingSymbols": [
+                "fwp_gc_mark_all",
+                "fwp_gc_scan",
+                "fwp_gc_sweep"
+              ],
+              "internalRuntimeSymbols": 294
+            }
+          },
+          {
+            "mode": "tracing",
+            "optimization": "-O2",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7bbf6b7003fc981f63810fa4bada8ffec248ce209969311439cadc945582bb9c",
+            "binaryInspection": {
+              "file": "compact-tracing-O2.exe",
+              "sha256": "3a0fb30161ec3b4b4c5205a9616a999828b6af121f748834c06ea6d7818bbf36",
+              "bytes": 162816,
+              "format": "coff-x86-64",
+              "sections": {
+                ".text": 70470,
+                ".rdata": 14320,
+                ".buildid": 53,
+                ".data": 7024,
+                ".pdata": 1116,
+                ".tls": 24,
+                ".reloc": 196,
+                ".debug_abbrev": 5852,
+                ".debug_aranges": 48,
+                ".debug_info": 16863,
+                ".debug_line": 8813,
+                ".debug_loc": 5352,
+                ".debug_ranges": 288,
+                ".debug_str": 16036
+              },
+              "tracingSymbols": [
+                "fwp_gc_mark_all",
+                "fwp_gc_scan",
+                "fwp_gc_sweep"
+              ],
+              "internalRuntimeSymbols": 86
+            }
+          }
+        ],
+        "wastedSlotControl": "set 1: requested 24, expected 16",
+        "scope": "Observed requests to the managed allocator for a freshly built I64 set. Charged bytes include allocator rounding, not process RAM or child storage. Empty sets use static storage. The previous 8 + 16*n layout is calculated from its representation, not timed here. ARC charge returns to its starting value after each result is freed; tracing does not assert that ledger. These instrumented executions are not a speed benchmark."
+      },
+      "sortStorage": [
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "control": "ordinary",
+          "sourceSha256": "982f2914a06188fa27c69acebc2b12bf7d9c57284ae5cbf8fa25197686639f52",
+          "binary": {
+            "file": "sort-storage-arc-ordinary-O1.bin",
+            "sha256": "d67f507d852e77b268ead7041b4bdbfcad16acb9b983a453ee736e43fa86d289",
+            "bytes": 161280,
+            "format": "coff-x86-64",
+            "internal_runtime_symbols": 187,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "control": "ordinary",
+          "sourceSha256": "982f2914a06188fa27c69acebc2b12bf7d9c57284ae5cbf8fa25197686639f52",
+          "binary": {
+            "file": "sort-storage-arc-ordinary-O2.bin",
+            "sha256": "9f24b29d2a6a6324ae7c36df1a591d5c82af56df305dcfaeb74b984db0b9c48b",
+            "bytes": 173056,
+            "format": "coff-x86-64",
+            "internal_runtime_symbols": 186,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "control": "late-release",
+          "sourceSha256": "7ee81ea899a57548eb160f16abc293da4224e02f4eb83d56b914f615060fa382",
+          "binary": {
+            "file": "sort-storage-arc-late-release-O1.bin",
+            "sha256": "1720b0ce5d02308abb4b480ba25bce847e2471b8a8e5a2c81f978c3638ee8239",
+            "bytes": 161792,
+            "format": "coff-x86-64",
+            "internal_runtime_symbols": 187,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "control": "late-release",
+          "sourceSha256": "7ee81ea899a57548eb160f16abc293da4224e02f4eb83d56b914f615060fa382",
+          "binary": {
+            "file": "sort-storage-arc-late-release-O2.bin",
+            "sha256": "f1440e8d2a97bb27ef441cce51901e9bd0a2c679a06c7b22e08b9cbfe5124a6a",
+            "bytes": 173056,
+            "format": "coff-x86-64",
+            "internal_runtime_symbols": 186,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "control": "ordinary",
+          "sourceSha256": "4309cea621ed374548b51c6c256c27555aab359ac7ba490ca5b1c7f194150110",
+          "binary": {
+            "file": "sort-storage-tracing-ordinary-O1.bin",
+            "sha256": "4fea16c0a29c9aa35f7e35231b43626fc235d83928d9b6d8e52b72c365d46a75",
+            "bytes": 176128,
+            "format": "coff-x86-64",
+            "internal_runtime_symbols": 195,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan",
+              "fwp_gc_sweep"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "control": "ordinary",
+          "sourceSha256": "4309cea621ed374548b51c6c256c27555aab359ac7ba490ca5b1c7f194150110",
+          "binary": {
+            "file": "sort-storage-tracing-ordinary-O2.bin",
+            "sha256": "4313ad0ff351901fb755bdf7ae6b9b0b3bab5d20dea594f77ef2785d7399cedf",
+            "bytes": 187392,
+            "format": "coff-x86-64",
+            "internal_runtime_symbols": 195,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan",
+              "fwp_gc_sweep"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "control": "late-release",
+          "sourceSha256": "9a352fbb5216e1509c2f7341cf9492b091b2429fa429e4ad0da0e0b9a6199d7a",
+          "binary": {
+            "file": "sort-storage-tracing-late-release-O1.bin",
+            "sha256": "07bd825f89cc90c0ab1d1bed3b654e7c394feacafc1d35043df9693346696fb8",
+            "bytes": 176128,
+            "format": "coff-x86-64",
+            "internal_runtime_symbols": 195,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan",
+              "fwp_gc_sweep"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "control": "late-release",
+          "sourceSha256": "9a352fbb5216e1509c2f7341cf9492b091b2429fa429e4ad0da0e0b9a6199d7a",
+          "binary": {
+            "file": "sort-storage-tracing-late-release-O2.bin",
+            "sha256": "1a837198f922256df672a34393c44723844771b65e303159b92bc9c9df617120",
+            "bytes": 187392,
+            "format": "coff-x86-64",
+            "internal_runtime_symbols": 195,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan",
+              "fwp_gc_sweep"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        }
+      ],
+      "callback_outputs_match_interpreter": true,
+      "arc_shutdown_counted_bytes": 0
+    },
+    {
+      "host": "windows-11-arm",
+      "job": 120830136087,
+      "settings": [
+        "OS=Windows",
+        "architecture=ARM64",
+        "runner=windows-11-arm",
+        "ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off",
+        "tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1",
+        "22 operations; every allocation, retain and comparison fails once; independent aliases; two missing-cleanup controls",
+        "No timing comparison or C/Rust speed claim"
+      ],
+      "compiler": "clang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: aarch64-w64-windows-gnu\nThread model: posix\nInstalledDir: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin\nConfiguration file: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin/aarch64-w64-windows-gnu.cfg",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "runs": [
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": true,
+          "injected_failures": 138
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 136
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": true,
+          "injected_failures": 138
+        }
+      ],
+      "controls": {
+        "missing-result-owner": "map operation 0 failure 2/5: 213",
+        "missing-scratch-owner": "map operation 8 failure 3/9: 213",
+        "compact-wasted-slot-control": "set 1: requested 24, expected 16"
+      },
+      "binaries": [
+        {
+          "file": "faults-arc-O1.bin",
+          "sha256": "903c6608938127c0a5cf5a49997b63dd7fb215c3a4e01fc8fd13a77544db378f",
+          "bytes": 163328,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 198,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O1.bin",
+          "sha256": "a7d9942e30f678eb13155031ad5e0b917d3412a3dba1fbf734d19cb299f48887",
+          "bytes": 147456,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 186,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-arc-O2.bin",
+          "sha256": "95831ad873f7da69b63e181ae39eaa6c8d6bba1b7f8edc2c928a30b489ed69c8",
+          "bytes": 165888,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 199,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O2.bin",
+          "sha256": "58cddc8714d937d41a9c3ea49975264e46ef08e2a6ad6156d29b9f6b11b98ac0",
+          "bytes": 148992,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 186,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-tracing-O1.bin",
+          "sha256": "c8ee2ab15dc17991d671ebed9cd36c11e42909ef9fa6c8303be4a17fae58a263",
+          "bytes": 171520,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 206,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O1.bin",
+          "sha256": "e01738129ce98e547df3467b5f524dc95c6661abf61854c5d60dcf8d3719625f",
+          "bytes": 159744,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 193,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "faults-tracing-O2.bin",
+          "sha256": "10f6d622328a6ecad8f52e612ff9069122805f7d8af0177c8fbd6d65a46f44d5",
+          "bytes": 173056,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 208,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O2.bin",
+          "sha256": "b83eafc5ed411bb6cd9a91000e08c0be41200efc8d5c3191c3de26a58d4a9dc3",
+          "bytes": 159744,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 194,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "missing-result-owner.bin",
+          "sha256": "1d8ec3117bccf71aadfdd61ed35a58989676477843a615e9da3dce443b56e849",
+          "bytes": 163840,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 197,
+          "tracing_symbols": []
+        },
+        {
+          "file": "missing-scratch-owner.bin",
+          "sha256": "23426b2f44a89c8e345620c676767cf9007c902a15543f15eb26a035db544c57",
+          "bytes": 163840,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 198,
+          "tracing_symbols": []
+        },
+        {
+          "file": "compact-wasted-slot-control.bin",
+          "sha256": "597d8770d96b21f7c91c362277a2cc4911ae2ce0c99f1a18375f501993469b06",
+          "bytes": 193536,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 276,
+          "tracing_symbols": []
+        }
+      ],
+      "compactSets": {
+        "runs": [
+          {
+            "mode": "arc",
+            "optimization": "-O0",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7619779e806f497e241008ad9d4831d9687dc113475afeff81cbd4fecd6fd86f",
+            "binaryInspection": {
+              "file": "compact-arc-O0.exe",
+              "sha256": "c67d7e21a788ecb80051e35fc995e4b382048e1040090e125db946f91d0bc472",
+              "bytes": 193536,
+              "format": "coff-arm64",
+              "sections": {
+                ".text": 89220,
+                ".rdata": 14064,
+                ".buildid": 53,
+                ".data": 7168,
+                ".pdata": 2160,
+                ".tls": 24,
+                ".reloc": 200,
+                ".debug_abbrev": 6517,
+                ".debug_info": 17265,
+                ".debug_line": 9852,
+                ".debug_loc": 6304,
+                ".debug_ranges": 512,
+                ".debug_str": 17105
+              },
+              "tracingSymbols": [],
+              "internalRuntimeSymbols": 276
+            }
+          },
+          {
+            "mode": "arc",
+            "optimization": "-O2",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7619779e806f497e241008ad9d4831d9687dc113475afeff81cbd4fecd6fd86f",
+            "binaryInspection": {
+              "file": "compact-arc-O2.exe",
+              "sha256": "016037c0b896f7b9087d6409ebf681648fed9005b4218f9f0e5dcbc5a8fb619f",
+              "bytes": 144384,
+              "format": "coff-arm64",
+              "sections": {
+                ".text": 56664,
+                ".rdata": 11916,
+                ".buildid": 53,
+                ".data": 7000,
+                ".pdata": 688,
+                ".tls": 24,
+                ".reloc": 184,
+                ".debug_abbrev": 5716,
+                ".debug_info": 16062,
+                ".debug_line": 8884,
+                ".debug_loc": 5392,
+                ".debug_ranges": 512,
+                ".debug_str": 15399
+              },
+              "tracingSymbols": [],
+              "internalRuntimeSymbols": 77
+            }
+          },
+          {
+            "mode": "tracing",
+            "optimization": "-O0",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7bbf6b7003fc981f63810fa4bada8ffec248ce209969311439cadc945582bb9c",
+            "binaryInspection": {
+              "file": "compact-tracing-O0.exe",
+              "sha256": "f5dcd955ce10d4dd567946ed8b0f3db31b4519c1ed2fb7aafbbb7763d80f8e28",
+              "bytes": 203264,
+              "format": "coff-arm64",
+              "sections": {
+                ".text": 97356,
+                ".rdata": 14484,
+                ".buildid": 53,
+                ".data": 7168,
+                ".pdata": 2296,
+                ".tls": 24,
+                ".reloc": 200,
+                ".debug_abbrev": 6517,
+                ".debug_info": 17265,
+                ".debug_line": 9852,
+                ".debug_loc": 6304,
+                ".debug_ranges": 512,
+                ".debug_str": 17105
+              },
+              "tracingSymbols": [
+                "fwp_gc_mark_all",
+                "fwp_gc_scan",
+                "fwp_gc_sweep"
+              ],
+              "internalRuntimeSymbols": 294
+            }
+          },
+          {
+            "mode": "tracing",
+            "optimization": "-O2",
+            "sizes": [
+              {
+                "keys": 0,
+                "requestedBytes": 0,
+                "chargedBytes": 0,
+                "previousLayoutRequestBytes": 0
+              },
+              {
+                "keys": 1,
+                "requestedBytes": 16,
+                "chargedBytes": 16,
+                "previousLayoutRequestBytes": 24
+              },
+              {
+                "keys": 7,
+                "requestedBytes": 64,
+                "chargedBytes": 64,
+                "previousLayoutRequestBytes": 120
+              },
+              {
+                "keys": 257,
+                "requestedBytes": 2064,
+                "chargedBytes": 2560,
+                "previousLayoutRequestBytes": 4120
+              },
+              {
+                "keys": 4096,
+                "requestedBytes": 32776,
+                "chargedBytes": 32776,
+                "previousLayoutRequestBytes": 65544
+              }
+            ],
+            "generatedSha256": "7bbf6b7003fc981f63810fa4bada8ffec248ce209969311439cadc945582bb9c",
+            "binaryInspection": {
+              "file": "compact-tracing-O2.exe",
+              "sha256": "5e93e2210f3f89a7df4453688bd1f70b634bca8f11b087731df1f7f6d8e2b3eb",
+              "bytes": 151552,
+              "format": "coff-arm64",
+              "sections": {
+                ".text": 62664,
+                ".rdata": 12360,
+                ".buildid": 53,
+                ".data": 7008,
+                ".pdata": 736,
+                ".tls": 24,
+                ".reloc": 184,
+                ".debug_abbrev": 5716,
+                ".debug_info": 16062,
+                ".debug_line": 8884,
+                ".debug_loc": 5392,
+                ".debug_ranges": 512,
+                ".debug_str": 15399
+              },
+              "tracingSymbols": [
+                "fwp_gc_mark_all",
+                "fwp_gc_scan",
+                "fwp_gc_sweep"
+              ],
+              "internalRuntimeSymbols": 86
+            }
+          }
+        ],
+        "wastedSlotControl": "set 1: requested 24, expected 16",
+        "scope": "Observed requests to the managed allocator for a freshly built I64 set. Charged bytes include allocator rounding, not process RAM or child storage. Empty sets use static storage. The previous 8 + 16*n layout is calculated from its representation, not timed here. ARC charge returns to its starting value after each result is freed; tracing does not assert that ledger. These instrumented executions are not a speed benchmark."
+      },
+      "sortStorage": [
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "control": "ordinary",
+          "sourceSha256": "982f2914a06188fa27c69acebc2b12bf7d9c57284ae5cbf8fa25197686639f52",
+          "binary": {
+            "file": "sort-storage-arc-ordinary-O1.bin",
+            "sha256": "e52624e2b81b1ba0088006cac717858d178fe56caf5fdd71954968fcb5d05d49",
+            "bytes": 151552,
+            "format": "coff-arm64",
+            "internal_runtime_symbols": 187,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "control": "ordinary",
+          "sourceSha256": "982f2914a06188fa27c69acebc2b12bf7d9c57284ae5cbf8fa25197686639f52",
+          "binary": {
+            "file": "sort-storage-arc-ordinary-O2.bin",
+            "sha256": "83ee88044f49ffda71eab41d052d1005aefb1a315aafeb92b715150e1d3e365b",
+            "bytes": 160256,
+            "format": "coff-arm64",
+            "internal_runtime_symbols": 186,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "control": "late-release",
+          "sourceSha256": "7ee81ea899a57548eb160f16abc293da4224e02f4eb83d56b914f615060fa382",
+          "binary": {
+            "file": "sort-storage-arc-late-release-O1.bin",
+            "sha256": "4a1e92bc96e4cf78d7250850cc706406dbad6cbe8461d6c9f58ac37a4002e16c",
+            "bytes": 151552,
+            "format": "coff-arm64",
+            "internal_runtime_symbols": 187,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "control": "late-release",
+          "sourceSha256": "7ee81ea899a57548eb160f16abc293da4224e02f4eb83d56b914f615060fa382",
+          "binary": {
+            "file": "sort-storage-arc-late-release-O2.bin",
+            "sha256": "7b1fef0f79a61f89d49a9fcff3caca8d53d7062cda5a97c4a5cdab8920c423e5",
+            "bytes": 160256,
+            "format": "coff-arm64",
+            "internal_runtime_symbols": 186,
+            "tracing_symbols": []
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "control": "ordinary",
+          "sourceSha256": "4309cea621ed374548b51c6c256c27555aab359ac7ba490ca5b1c7f194150110",
+          "binary": {
+            "file": "sort-storage-tracing-ordinary-O1.bin",
+            "sha256": "73a210f47e789f1a421209ead0e6b25a9608c4d9e9369883f44684f60736270b",
+            "bytes": 163840,
+            "format": "coff-arm64",
+            "internal_runtime_symbols": 195,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan",
+              "fwp_gc_sweep"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "control": "ordinary",
+          "sourceSha256": "4309cea621ed374548b51c6c256c27555aab359ac7ba490ca5b1c7f194150110",
+          "binary": {
+            "file": "sort-storage-tracing-ordinary-O2.bin",
+            "sha256": "8d98718aaccc8d18846574f2412c9ea0665248972b147be3e9817ed164cd7b93",
+            "bytes": 171520,
+            "format": "coff-arm64",
+            "internal_runtime_symbols": 195,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan",
+              "fwp_gc_sweep"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 65544,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 32776,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 0
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "control": "late-release",
+          "sourceSha256": "9a352fbb5216e1509c2f7341cf9492b091b2429fa429e4ad0da0e0b9a6199d7a",
+          "binary": {
+            "file": "sort-storage-tracing-late-release-O1.bin",
+            "sha256": "ff052df1d2766d1b8dc528995bbb83060219ace25cd5ddff56dcbcbf770784f1",
+            "bytes": 163840,
+            "format": "coff-arm64",
+            "internal_runtime_symbols": 195,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan",
+              "fwp_gc_sweep"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "control": "late-release",
+          "sourceSha256": "9a352fbb5216e1509c2f7341cf9492b091b2429fa429e4ad0da0e0b9a6199d7a",
+          "binary": {
+            "file": "sort-storage-tracing-late-release-O2.bin",
+            "sha256": "b58f493c0b25cf9aaab9d83f8ef7fdb1493c3dc5a69385b60951bc92c680f3d6",
+            "bytes": 171520,
+            "format": "coff-arm64",
+            "internal_runtime_symbols": 195,
+            "tracing_symbols": [
+              "fwp_gc_mark_all",
+              "fwp_gc_scan",
+              "fwp_gc_sweep"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "map",
+              "peakChargedBytes": 131080,
+              "limit": 65544,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            },
+            {
+              "kind": "set",
+              "peakChargedBytes": 65544,
+              "limit": 32776,
+              "finalChargedBytes": 0,
+              "exitStatus": 241
+            }
+          ]
+        }
+      ],
+      "callback_outputs_match_interpreter": true,
+      "arc_shutdown_counted_bytes": 0
+    }
+  ],
+  "archives": [
+    {
+      "source": "4c294917006b2688a491d088a0cab297b07d274c",
+      "run": 40079580345,
+      "artifact": 12554309126,
+      "bytes": 5569184,
+      "sha256": "9f07bbe816cb67227f52f0bc12d10ca9c67c95a92bab62a3d23f8d85b6d9b82f",
+      "initialBytes": 0,
+      "ranges": [
+        {
+          "start": 0,
+          "end": 5569183,
+          "sha256": "9f07bbe816cb67227f52f0bc12d10ca9c67c95a92bab62a3d23f8d85b6d9b82f"
+        }
+      ]
+    },
+    {
+      "source": "4c294917006b2688a491d088a0cab297b07d274c",
+      "run": 40079580345,
+      "artifact": 12554339036,
+      "bytes": 5365103,
+      "sha256": "b3e2c4bca8890761a4668ccd0ae64ba0e77671b25c0cf4d0a34251e58d90c999",
+      "initialBytes": 0,
+      "ranges": [
+        {
+          "start": 0,
+          "end": 5365102,
+          "sha256": "b3e2c4bca8890761a4668ccd0ae64ba0e77671b25c0cf4d0a34251e58d90c999"
+        }
+      ]
+    },
+    {
+      "source": "4c294917006b2688a491d088a0cab297b07d274c",
+      "run": 40079580345,
+      "artifact": 12554094719,
+      "bytes": 3858281,
+      "sha256": "9cb88668c1901a64f1f42440473464bb027b27dd363457f250fdc81cab10e7df",
+      "initialBytes": 0,
+      "ranges": [
+        {
+          "start": 0,
+          "end": 3858280,
+          "sha256": "9cb88668c1901a64f1f42440473464bb027b27dd363457f250fdc81cab10e7df"
+        }
+      ]
+    },
+    {
+      "source": "4c294917006b2688a491d088a0cab297b07d274c",
+      "run": 40079580345,
+      "artifact": 12555240150,
+      "bytes": 3917918,
+      "sha256": "77b24c5f6791256d6dc9510b5217891088804ae19b272becdc4a9177b102d5f6",
+      "initialBytes": 0,
+      "ranges": [
+        {
+          "start": 0,
+          "end": 3917917,
+          "sha256": "77b24c5f6791256d6dc9510b5217891088804ae19b272becdc4a9177b102d5f6"
+        }
+      ]
+    },
+    {
+      "source": "4c294917006b2688a491d088a0cab297b07d274c",
+      "run": 40079580345,
+      "artifact": 12554408927,
+      "bytes": 4866428,
+      "sha256": "b1f71f2e1345dec57c3b9027fcb6a846fdfabf746a8a971db6ae4d873f3893a3",
+      "initialBytes": 0,
+      "ranges": [
+        {
+          "start": 0,
+          "end": 4866427,
+          "sha256": "b1f71f2e1345dec57c3b9027fcb6a846fdfabf746a8a971db6ae4d873f3893a3"
+        }
+      ]
+    },
+    {
+      "source": "4c294917006b2688a491d088a0cab297b07d274c",
+      "run": 40079580345,
+      "artifact": 12554408896,
+      "bytes": 4651607,
+      "sha256": "07e0cbba6cc5c00253ecda68eb64925a971061cc799c5e67e00c7fbc5122bc53",
+      "initialBytes": 0,
+      "ranges": [
+        {
+          "start": 0,
+          "end": 4651606,
+          "sha256": "07e0cbba6cc5c00253ecda68eb64925a971061cc799c5e67e00c7fbc5122bc53"
+        }
+      ]
+    }
+  ]
+}

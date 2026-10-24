@@ -509,6 +509,11 @@ fn map_failure_probe(emitted: &str) -> String {
     let body = runtime[start..end].replace("fwp_gc_alloc(n, 0)", "map_test_allocate(n, 0)");
     runtime.replace_range(start..end, &body);
     runtime.insert_str(start + body.len(), "\nstatic inline void *fwp_alloc_init(size_t n) { map_test_tick(); void *p = map_test_allocate_init(n); map_test_record(p); return p; }\n");
+    // Comparison can fail while sort scratch is live, and during compaction
+    // after it is released. Exercise both cleanup boundaries independently.
+    let compare = "static int fwp_cmp(V a, V b, const fwp_desc *d) {";
+    assert_eq!(runtime.matches(compare).count(), 1);
+    runtime = runtime.replace(compare, &format!("{compare} map_test_tick();"));
     runtime = runtime
         .replace(
             "static inline void fwp_rc_dup(V v) {",
@@ -590,6 +595,8 @@ fn map_set_failures_release_partial_storage_and_preserve_aliases() {
                 .join("missing-owner")
                 .with_extension(std::env::consts::EXE_EXTENSION);
             fwp::cgen::compile_c(&broken, &exe, "-O1").unwrap();
+            save_map_evidence("missing-result-owner.c", broken.as_bytes());
+            save_map_evidence("missing-result-owner.bin", &std::fs::read(&exe).unwrap());
             let out = Command::new(exe)
                 .env_remove("FWP_GC")
                 .env("FWP_GC_STRESS", "0")
@@ -604,8 +611,12 @@ fn map_set_failures_release_partial_storage_and_preserve_aliases() {
                 String::from_utf8_lossy(&out.stderr)
             );
             save_map_evidence("missing-result-owner.txt", &out.stderr);
+            save_map_evidence(
+                "missing-result-owner.status",
+                out.status.code().unwrap().to_string().as_bytes(),
+            );
             // Protecting the map alone is insufficient when an earlier scratch
-            // allocation survives failure of the next allocation.
+            // allocation survives a comparison failure during sorting.
             let start = source.find("static V fwp_map_build_typed(").unwrap();
             let end = start + source[start..].find("\n}\n").unwrap() + 3;
             let body = source[start..end].replace(
@@ -620,6 +631,8 @@ fn map_set_failures_release_partial_storage_and_preserve_aliases() {
                 .join("missing-scratch-owner")
                 .with_extension(std::env::consts::EXE_EXTENSION);
             fwp::cgen::compile_c(&broken, &exe, "-O1").unwrap();
+            save_map_evidence("missing-scratch-owner.c", broken.as_bytes());
+            save_map_evidence("missing-scratch-owner.bin", &std::fs::read(&exe).unwrap());
             let out = Command::new(exe)
                 .env_remove("FWP_GC")
                 .env("FWP_GC_STRESS", "0")
@@ -634,6 +647,10 @@ fn map_set_failures_release_partial_storage_and_preserve_aliases() {
                 String::from_utf8_lossy(&out.stderr)
             );
             save_map_evidence("missing-scratch-owner.txt", &out.stderr);
+            save_map_evidence(
+                "missing-scratch-owner.status",
+                out.status.code().unwrap().to_string().as_bytes(),
+            );
         }
     }
 }
@@ -801,6 +818,11 @@ fn compact_sets_preserve_values_and_request_only_key_storage() {
                     "fwp_alloc(sizeof(fwp_map) + (columns + 1) * len * sizeof(V))",
                 );
                 fwp::cgen::compile_c(&wasteful, &exe, opt).unwrap();
+                save_map_evidence("compact-wasted-slot-control.c", wasteful.as_bytes());
+                save_map_evidence(
+                    "compact-wasted-slot-control.bin",
+                    &std::fs::read(&exe).unwrap(),
+                );
                 let failed = Command::new(&exe)
                     .env_remove("FWP_GC")
                     .env("FWP_GC_STRESS", "0")
@@ -810,6 +832,87 @@ fn compact_sets_preserve_values_and_request_only_key_storage() {
                     .unwrap();
                 assert_eq!(failed.status.code(), Some(211), "{failed:?}");
                 save_map_evidence("compact-wasted-slot-control.txt", &failed.stderr);
+                save_map_evidence(
+                    "compact-wasted-slot-control.status",
+                    failed.status.code().unwrap().to_string().as_bytes(),
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn map_sort_scratch_does_not_overlap_result_storage() {
+    let dir = Scratch::new("sort-storage");
+    for mode in ["arc", "tracing"] {
+        let source = map_failure_source(&dir, mode);
+        let allocation = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+        assert_eq!(source.matches(allocation).count(), 1);
+        let mut measured = source.replace(
+            "typedef uint64_t V;",
+            "typedef uint64_t V;\nstatic int map_storage_active;\nstatic double map_storage_start, map_storage_peak;\nstatic void map_storage_sample(void);",
+        ).replace(allocation, "static inline void *map_storage_allocate(size_t n, int leaf) {");
+        let start = measured
+            .find("static inline void *map_storage_allocate(")
+            .unwrap();
+        let end = start + measured[start..].find("\n}\n").unwrap() + 3;
+        measured.insert_str(end, "\nstatic inline void *fwp_gc_alloc(size_t n, int leaf) { void *p = map_storage_allocate(n, leaf); map_storage_sample(); return p; }\n");
+        measured = measured.replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        );
+        measured.push_str(include_str!("fixtures/map_sort_storage.c"));
+        let start = measured.find("static V fwp_map_build_typed(").unwrap();
+        let end = start + measured[start..].find("\n}\n").unwrap() + 3;
+        let body = &measured[start..end];
+        let release = "    fwp_scratch_finish(&tk, &tk_cleanup);\n";
+        assert_eq!(body.matches(release).count(), 1);
+        let late = body.replace(release, "").replace(
+            "    fwp_value_finish(&owner, &cleanup);\n",
+            &format!("    fwp_value_finish(&owner, &cleanup);\n{release}"),
+        );
+        let mut control = measured.clone();
+        control.replace_range(start..end, &late);
+        for (label, code, status) in [("ordinary", &measured, 0), ("late-release", &control, 241)] {
+            save_map_evidence(&format!("sort-storage-{mode}-{label}.c"), code.as_bytes());
+            for opt in ["-O1", "-O2"] {
+                let exe = dir
+                    .0
+                    .join("sort-storage")
+                    .with_extension(std::env::consts::EXE_EXTENSION);
+                fwp::cgen::compile_c(code, &exe, opt).unwrap();
+                save_map_evidence(
+                    &format!("sort-storage-{mode}-{label}{opt}.bin"),
+                    &std::fs::read(&exe).unwrap(),
+                );
+                for kind in ["map", "set"] {
+                    let out = Command::new(&exe)
+                        .arg(kind)
+                        .env_remove("FWP_GC")
+                        .env("FWP_GC_STRESS", "0")
+                        .env("FWP_GC_VERIFY", "0")
+                        .env("FWP_REUSE_VERIFY", "0")
+                        .output()
+                        .unwrap();
+                    assert_eq!(
+                        out.status.code(),
+                        Some(status),
+                        "{mode}/{label}/{opt}/{kind}: {out:?}"
+                    );
+                    assert!(out.stderr.is_empty(), "{out:?}");
+                    save_map_evidence(
+                        &format!("sort-storage-{mode}-{label}{opt}-{kind}.txt"),
+                        &out.stdout,
+                    );
+                    save_map_evidence(
+                        &format!("sort-storage-{mode}-{label}{opt}-{kind}.status"),
+                        out.status.code().unwrap().to_string().as_bytes(),
+                    );
+                    println!(
+                        "{mode}/{label}/{opt}/{}",
+                        String::from_utf8(out.stdout).unwrap().trim()
+                    );
+                }
             }
         }
     }

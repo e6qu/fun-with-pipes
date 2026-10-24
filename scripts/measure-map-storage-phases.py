@@ -96,7 +96,10 @@ def main():
     report = {key: baseline[key] for key in ['source', 'controlSource', 'hardware', 'cpu', 'compiler']}
     report.update({'cases': results, 'scope':
         'Separate diagnostic executables compare joined and original separate storage on the same host. '
-        'Construction-only probes record six phases and allocation addresses for both layouts, so an '
+        'The historical builder also retains scratch longer; this is not a layout-only comparison. '
+        'Phase labels follow statement boundaries: sort includes early scratch release in the '
+        'current builder; release-scratch includes it in the historical builder. Deduplicate '
+        'addresses name input lanes. Construction probes record six phases and addresses, so an '
         'unreproduced slow control cannot establish a repair. Full-work probes time the actual '
         'table construction and subsequent query loop separately, without changing evaluation order. '
         'The maintained program constructs its table before printing its size and starting queries; '

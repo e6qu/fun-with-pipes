@@ -2892,12 +2892,16 @@ static V fwp_map_build_typed(V *keys, V *vals, size_t n, const fwp_map_ops *ops,
     fwp_scratch_protect(&tk, &tk_cleanup);
     V *tv = vals ? tk + n : NULL;
     fwp_msort(keys, vals ? vals : keys, n, kd, tk, tv ? tv : tk);
+    /* Sorting is complete. Compact the borrowed words into their input lanes;
+     * len never exceeds i, so no unread key/value is overwritten. Callers keep
+     * the source owners alive and discard these scratch lanes after return. */
+    fwp_scratch_finish(&tk, &tk_cleanup);
     size_t len = 0;
     for (size_t i = 0; i < n; len++) {
         size_t j = i + 1;
         while (j < n && fwp_cmp(keys[j], keys[i], kd) == 0) j++;
-        tk[len] = keys[i];
-        if (tv) tv[len] = vals[j - 1];
+        keys[len] = keys[i];
+        if (vals) vals[len] = vals[j - 1];
         i = j;
     }
     V result = fwp_map_typed_new(len, ops->columns);
@@ -2906,15 +2910,14 @@ static V fwp_map_build_typed(V *keys, V *vals, size_t n, const fwp_map_ops *ops,
     fwp_cleanup cleanup;
     fwp_value_protect(&owner, &cleanup);
     for (size_t i = 0; i < len; i++) {
-        if (ops->dup_key) ops->dup_key(tk[i]);
-        MAP(result)->d[ops->columns * i] = tk[i];
+        if (ops->dup_key) ops->dup_key(keys[i]);
+        MAP(result)->d[ops->columns * i] = keys[i];
         MAP(result)->len = i + 1;
-        V value = tv ? tv[i] : 0;
+        V value = vals ? vals[i] : 0;
         if (ops->dup_value) ops->dup_value(value);
         if (ops->columns == 2) MAP(result)->d[ops->columns * i + 1] = value;
     }
     fwp_value_finish(&owner, &cleanup);
-    fwp_scratch_finish(&tk, &tk_cleanup);
     FWP_KEEP_ALIVE(keys); FWP_KEEP_ALIVE(vals);
     return result;
 }

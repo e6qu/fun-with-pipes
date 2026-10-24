@@ -1,11 +1,13 @@
 //! Benchmarks against C and Rust (`bench/<name>/main.{fwp,c,rs}`): each
-//! program is built with `fwp build --gc tracing -O2`, `cc -O2` and `rustc -O`, the
+//! program uses an explicit `FWP_BENCH_OWNERSHIP` (arc or tracing), `CC -O2`
+//! and `rustc -O`. fwp receives the selected mode and `-O2`; the
 //! three must print the same, and the median of six runs in rotating order is
 //! reported with raw samples, compiler/host metadata and ratios to both baselines
 //! (on stdout, in target/bench.md, and in the GitHub
 //! Actions job summary). Actual executables, inputs and separately emitted C
 //! remain in target/bench-evidence for inspection. Timings are not asserted:
-//! shared machines are too noisy. Run with `cargo test --release --test bench benchmarks -- --ignored
+//! shared machines are too noisy. On runners, use `CC=gcc FWP_LTO=0 FWP_BENCH_OWNERSHIP=arc
+//! cargo test --release --test bench benchmarks -- --ignored
 //! --exact --nocapture`.
 
 use std::io::Write;
@@ -63,7 +65,7 @@ fn entry_check_arrangement_measurement() {
     );
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("scope.txt"), "Compare ordinary compiler-selected inlining with an explicit noinline attribute on the existing native fwp_rc_share ownership check. Both variants use identical checked-ARC generated C, -O2, the ordinary fwp optimizer and -ffp-contract=off. No check is removed or relaxed. Whole binary sizes include linking/runtime choices; archived binaries permit separate instruction-section inspection. Numerical inputs are the maintained loop, pipeline and map benchmarks at their declared sizes; C implementations establish output only, not a timed performance baseline here. After one warm-up, six whole-process samples per fwp variant alternate run order; startup, allocation, execution, output and shutdown are included. Separate instrumented binaries count calls to the ownership check through entry execution and cached-value cleanup; these binaries are excluded from timing and size comparison. Counting can prevent elimination/inlining and does not establish ordinary machine-call frequency. HTTP client/server variants are compiled for size only in this experiment; network behavior has separate tests. This is a code-arrangement experiment at one source revision, not evidence of C/Rust speed parity.\n").unwrap();
-    let cc = std::env::var("CC").unwrap_or_else(|_| "cc".into());
+    let cc = std::env::var("CC").expect("set CC explicitly to the native C compiler");
     std::fs::write(dir.join("c.txt"), command_output(&cc, &["--version"])).unwrap();
     std::fs::write(dir.join("rust.txt"), command_output("rustc", &["-Vv"])).unwrap();
     let mut sizes = String::from("program\tvariant\tfile_bytes\n");
@@ -163,6 +165,14 @@ fn entry_check_arrangement_measurement() {
 #[test]
 #[ignore]
 fn benchmarks() {
+    let ownership = std::env::var("FWP_BENCH_OWNERSHIP")
+        .expect("set FWP_BENCH_OWNERSHIP explicitly to arc or tracing");
+    assert!(
+        matches!(ownership.as_str(), "arc" | "tracing"),
+        "FWP_BENCH_OWNERSHIP must be arc or tracing"
+    );
+    let lto = std::env::var("FWP_LTO").expect("set FWP_LTO=0 for this comparison");
+    assert_eq!(lto, "0", "this comparison requires FWP_LTO=0");
     let source = command_output("git", &["rev-parse", "HEAD"]);
     let parent = root().join("target/bench-evidence").join(&source);
     std::fs::create_dir_all(&parent).unwrap();
@@ -175,7 +185,7 @@ fn benchmarks() {
         .filter(|n| root().join("bench").join(n).join("main.fwp").exists())
         .collect();
     names.sort();
-    let cc = std::env::var("CC").unwrap_or_else(|_| "cc".into());
+    let cc = std::env::var("CC").expect("set CC explicitly to the native C compiler");
     let ms = |d: Duration| format!("{:.3} ms", d.as_secs_f64() * 1000.0);
     let comparison = |fwp: Duration, baseline: Duration| {
         let ratio = fwp.as_secs_f64() / baseline.as_secs_f64();
@@ -188,7 +198,8 @@ fn benchmarks() {
          C/Rust/fwp, Rust/fwp/C, fwp/C/Rust, twice; each implementation occupies\n\
          every position twice. The table uses the median. Samples include startup, input\n\
          construction, computation, allocation and output; compilation is excluded.\n\
-         These runs use native fwp, not the interpreter or checked ARC mode.\n\n\
+         Native fwp memory mode: `{ownership}`. ARC releases a value when its last\n\
+         owner releases it; tracing enables the tracing collector. The interpreter is not timed.\n\n\
          A ratio above 1 means fwp took longer. The percentage is\n\
          `(fwp / baseline - 1) * 100`, not a separately measured language cost.\n\
          Matching output does not imply equal work: maps use sorted pairs in\n\
@@ -204,7 +215,8 @@ fn benchmarks() {
          that extra emission is excluded from execution and compilation timings.\n\n\
          C compiler (`{cc} -O2`):\n\n```text\n{}\n```\n\n\
          Rust compiler (`rustc -O`):\n\n```text\n{}\n```\n\n\
-         fwp build flags: `--gc tracing -O2`; fwp compiles through the system C toolchain.\n\n\
+         fwp build flags: `--gc {ownership} -O2`, `FWP_LTO=0`; generated C is compiled\n\
+         as one source file, without link-time optimization.\n\n\
          | Program | C | Rust | fwp | fwp / C (extra time) | fwp / Rust (extra time) |\n\
          |---|--:|--:|--:|--:|--:|\n",
         source,
@@ -239,7 +251,7 @@ fn benchmarks() {
         );
         let fwp_build = build(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", "--gc", "tracing"])
+                .args(["build", "--gc", ownership.as_str()])
                 .arg(src.join("main.fwp"))
                 .args(["-O2", "-o"])
                 .arg(&fw),
@@ -249,6 +261,7 @@ fn benchmarks() {
         for exe in [&rs, &fw] {
             assert_eq!(measure(exe).0, reference, "{name}: warmup output differs");
         }
+        std::fs::write(dir.join(format!("{name}-stdout.txt")), &reference).unwrap();
         let mut samples: [Vec<Duration>; 3] = std::array::from_fn(|_| Vec::new());
         for round in 0..6 {
             for position in 0..3 {
@@ -301,10 +314,16 @@ fn benchmarks() {
         // This separate emission is outside all reported build/execution times.
         build(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", "--gc", "tracing"])
+                .args(["build", "--gc", ownership.as_str()])
                 .arg(src.join("main.fwp"))
                 .args(["-O2", "--emit-c", "-o"])
                 .arg(dir.join(format!("{name}-generated.c"))),
+        );
+        let generated = std::fs::read_to_string(dir.join(format!("{name}-generated.c"))).unwrap();
+        assert_eq!(
+            generated.contains("#define FWP_ARC_ONLY 1"),
+            ownership == "arc",
+            "{name}: generated C has the wrong memory mode"
         );
     }
     table.push_str(&raw);

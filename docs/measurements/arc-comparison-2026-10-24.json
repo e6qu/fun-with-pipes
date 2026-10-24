@@ -1,0 +1,1038 @@
+{
+  "source": "617bb2319760ccade91afea2bb0045c1984abbdf",
+  "tag": "roadmap/revision-arc-benchmark-617bb2319760",
+  "run": 40075912779,
+  "scope": "One six-sample session per architecture. Checked-ARC complete processes compared with C and Rust; not isolated language overhead, paired ARC/tracing, memory usage or a performance acceptance threshold.",
+  "hosts": [
+    {
+      "host": "ubuntu-latest",
+      "review": {
+        "source": "617bb2319760ccade91afea2bb0045c1984abbdf",
+        "memory": "arc",
+        "architecture": "x86_64",
+        "reportSha256": "f2d974358fb6dc0d25ec8c8e5a51ee35497902062013ee72c6e1f3d78049b540",
+        "tool": "Apple LLVM version 17.0.0\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64    - AArch64 (little endian)\n    aarch64_32 - AArch64 (little endian ILP32)\n    aarch64_be - AArch64 (big endian)\n    arm        - ARM\n    arm64      - ARM64 (little endian)\n    arm64_32   - ARM64 (little endian ILP32)\n    armeb      - ARM (big endian)\n    thumb      - Thumb\n    thumbeb    - Thumb (big endian)\n    x86        - 32-bit X86: Pentium-Pro and above\n    x86-64     - 64-bit X86: EM64T and AMD64\n",
+        "scope": "Static inspection of actual measured binaries; no re-execution. Complete-process elapsed samples, not isolated compiler overhead. Text-section sizes include padding; no allocation/RSS measurement.",
+        "programs": [
+          {
+            "name": "fib",
+            "medianMs": {
+              "c": 10.102,
+              "rs": 17.842,
+              "fwp": 8.699
+            },
+            "samplesMs": {
+              "c": [
+                10.372,
+                10.288,
+                10.115,
+                9.98,
+                10.088,
+                10.074
+              ],
+              "rs": [
+                17.674,
+                17.912,
+                17.862,
+                17.661,
+                17.83,
+                17.854
+              ],
+              "fwp": [
+                8.816,
+                7.971,
+                8.581,
+                11.195,
+                11.717,
+                8.207
+              ]
+            },
+            "fwpOverC": 0.8611166105721639,
+            "fwpOverRust": 0.48755744871651163,
+            "stdout": "9227465\n",
+            "files": {
+              "c": {
+                "sourceSha256": "f4e8e59d2b2a2d8261cbae1254038dfc1b1adfa4f7a62027a0e7e23143ec35af",
+                "binarySha256": "ae736fce3ac88018bb92e5e742570caa6959c2dc983cf794d9ede18f9792d012",
+                "fileBytes": 15992,
+                "textSectionBytes": 1540,
+                "disassemblySha256": "f688d5a958e1cbbc330c1169f4630220f10eeebaae5252c8b15eb4bfc803f520",
+                "symbolsSha256": "61f8dd779cce74f287f1a10ff906ef221ca0a8265f37931ef2539ef031230f5d"
+              },
+              "rs": {
+                "sourceSha256": "8686b813d20111476775dcc1c8ca19b5443ca6e1c968caf5bb33875466b38feb",
+                "binarySha256": "09d6bd15ffc35febe9f45acea3c0e40d1ecc43f26bf6e5391242023d28c6e942",
+                "fileBytes": 4537784,
+                "textSectionBytes": 242035,
+                "disassemblySha256": "5ca8663dd6d09e13bde4327b99f85a66b918a373ae61587eba0a4f1a7ca0b4b1",
+                "symbolsSha256": "e7948ee56fd4f2f0f2c32bd597309d9a84a1ac84f1dd790082d1b6499a25554d"
+              },
+              "fwp": {
+                "sourceSha256": "f355a0193f3fc1ac38c993185fc5fbf255ed79cb0e21935e7306b82339d629a5",
+                "binarySha256": "50378441473828ee7611333fe77e89b676d8d8d450fa703aa19934ac7d48487e",
+                "fileBytes": 34544,
+                "textSectionBytes": 7954,
+                "disassemblySha256": "e4b9a616b9deadedce650bb9aa5976d219f5348133ae0978bac465af0acc661a",
+                "symbolsSha256": "6c1923f07282be1bc93ab6e8771bcac1a0ef9bc2e17cac3a84cb889f7ecb5a7f"
+              }
+            },
+            "generatedCSha256": "4414ad2fc00c10174eed6c14bcfd19cb6408b5c60c2cf10f86bc3827d5b42797"
+          },
+          {
+            "name": "loop",
+            "medianMs": {
+              "c": 54.258,
+              "rs": 65.664,
+              "fwp": 73.49
+            },
+            "samplesMs": {
+              "c": [
+                54.248,
+                54.316,
+                54.305,
+                54.229,
+                54.208,
+                54.269
+              ],
+              "rs": [
+                65.664,
+                65.676,
+                65.665,
+                65.62,
+                65.629,
+                65.713
+              ],
+              "fwp": [
+                73.484,
+                73.032,
+                73.496,
+                73.225,
+                73.575,
+                76.686
+              ]
+            },
+            "fwpOverC": 1.3544546426333441,
+            "fwpOverRust": 1.1191825048732942,
+            "stdout": "300000003\n",
+            "files": {
+              "c": {
+                "sourceSha256": "4cd663537f57bb18ba9245f201ec855052b4bc7918351b8ff3f1ff3ef606e20c",
+                "binarySha256": "167ff809619a3c92da183f397c536f495755104569fbeab6bb5efc0c1b946c30",
+                "fileBytes": 15968,
+                "textSectionBytes": 345,
+                "disassemblySha256": "1cb20627f453bcd803bbdb7f94a34c40a61927c1623160ad069898bc6d82a240",
+                "symbolsSha256": "e55c3814093b6e485574303f6350e8649c47e64eedf81f60d2d06b77ab313f31"
+              },
+              "rs": {
+                "sourceSha256": "e8227ad3408f53486a35d2d08bf9ceddd68cf5e68dd2c397b07c83c8584731c0",
+                "binarySha256": "be6598f5cfdd88dc1294ae6417a4d0c61d2e41b17feaf5c35f434e29e2bef8b2",
+                "fileBytes": 4537896,
+                "textSectionBytes": 242211,
+                "disassemblySha256": "55b75cb6246430620fb30117fc0148fcd844969968025e4f0e60d4bf722d4bcf",
+                "symbolsSha256": "9887a699f89d419d6c7a2a16bce5540eea13ce99553eabbf5bcf10b7d1f59410"
+              },
+              "fwp": {
+                "sourceSha256": "9bdaa22b8a61325f5b441352434608acba2a272ace83f15a1a1dd063b1c6c365",
+                "binarySha256": "f546e3fe252f9cd6fe95267a9b030cfa986511f8ba843956a8ade8792e10569b",
+                "fileBytes": 43496,
+                "textSectionBytes": 11714,
+                "disassemblySha256": "0ab16ac882a8f33a051f38173b119e22218511a8ef8e6bd6e48d160205918600",
+                "symbolsSha256": "3c29d89d40683f6b957a90d11b8f60696e3591970c105fcf3a5100f7770af4f7"
+              }
+            },
+            "generatedCSha256": "6e3e3e5d3599b80063b6f21967bb9df9511562bd0e8a659cde8063af39febfcc"
+          },
+          {
+            "name": "map",
+            "medianMs": {
+              "c": 269.431,
+              "rs": 231.702,
+              "fwp": 239.911
+            },
+            "samplesMs": {
+              "c": [
+                268.753,
+                271.692,
+                268.973,
+                269.128,
+                269.733,
+                271.012
+              ],
+              "rs": [
+                232.858,
+                230.644,
+                232.778,
+                231.005,
+                231.523,
+                231.88
+              ],
+              "fwp": [
+                244.534,
+                242.286,
+                239.463,
+                240.359,
+                235.696,
+                233.073
+              ]
+            },
+            "fwpOverC": 0.8904357701971934,
+            "fwpOverRust": 1.035429128794745,
+            "stdout": "500000\n249999500000\n",
+            "files": {
+              "c": {
+                "sourceSha256": "f4ec5f7877e0d9718174e1900a89dd215eb8c3058c3e4397a45f471da6cfd5ee",
+                "binarySha256": "f4300eb2b4af54dd579acc84f9d7bdaac68c8696e009b62d3fccb59c5170c5fb",
+                "fileBytes": 16120,
+                "textSectionBytes": 633,
+                "disassemblySha256": "6ec8452c897f68bb2cdec43c044a4b2201e66b8a29ef47221c3b600977a46e54",
+                "symbolsSha256": "43c79fcc4c9088752daa26909935d46b9a89201b50cf92dbd8a68fd26bbe33de"
+              },
+              "rs": {
+                "sourceSha256": "ce78c2e0df3778070af8b6a3ef27b9e8aa3ae0788fb2032c33c1a6fee036039c",
+                "binarySha256": "a0103293322c57aa73e3cfb14c3cbe1efc17688e4e6aed5f29bf4791866f08e7",
+                "fileBytes": 4543344,
+                "textSectionBytes": 246243,
+                "disassemblySha256": "e2bb22fb6cadc22cf5d44ba9e31c74f9a899fea8eebccc4984d171cd07b24abe",
+                "symbolsSha256": "6b1aaa06ab59bb9744b7e480a88b063b9536e26c5f915894762e06fe4b204daf"
+              },
+              "fwp": {
+                "sourceSha256": "d5caa814fbf1fef79b86429c13c764c60fef2c8fe20eefdb9415f431b550f00b",
+                "binarySha256": "ebfcafd5e740a2ccf8d4f98a6f5f769f2d2fb77accdbeb6639344f96c2cc7845",
+                "fileBytes": 48240,
+                "textSectionBytes": 14290,
+                "disassemblySha256": "1b3ac356d12cc8d2b40b56038e14cef8502274a116304ad658c14c0892d2a419",
+                "symbolsSha256": "634af4f389b39d8b0881192ccc37b51cfd74d130171bd8b236ca56941aa30021"
+              }
+            },
+            "generatedCSha256": "a640aadaf4ce88651ae79f01661619deb6307c4a9b02ec4186fb18863b0bdc13"
+          },
+          {
+            "name": "pipeline",
+            "medianMs": {
+              "c": 13.437,
+              "rs": 10.123,
+              "fwp": 7.267
+            },
+            "samplesMs": {
+              "c": [
+                13.278,
+                13.648,
+                13.536,
+                13.253,
+                13.389,
+                13.485
+              ],
+              "rs": [
+                9.011,
+                10.104,
+                10.142,
+                9.156,
+                12.215,
+                10.544
+              ],
+              "fwp": [
+                7.287,
+                7.789,
+                7.247,
+                12.52,
+                7.136,
+                7.186
+              ]
+            },
+            "fwpOverC": 0.5408201235394806,
+            "fwpOverRust": 0.717870196582041,
+            "stdout": "14999970000000\n",
+            "files": {
+              "c": {
+                "sourceSha256": "c978deaa089f0e837cd5601e9d142368afcc7cf28a23963ebd6449c918c1bc41",
+                "binarySha256": "1678a74d7a43ad983b00cb4a74caff962ff9cb05342ca38b63e19443ee095762",
+                "fileBytes": 16048,
+                "textSectionBytes": 457,
+                "disassemblySha256": "578889b8347200327bdb0dd93f4f10ecc73723ef4734b2e3c569bc7d32063298",
+                "symbolsSha256": "ca506b8edd51e8db3ac7352194014229761e7b7341c663cf932bf9de46ad014c"
+              },
+              "rs": {
+                "sourceSha256": "8cb2b664d27bb078331d981f525ff9a504388943e19cbc4947a99b2f78e3fccb",
+                "binarySha256": "2ab20f101fe18c0b609211d54db8e1c4d0634d4d7af326fc1f7377c1f2778d9d",
+                "fileBytes": 4538088,
+                "textSectionBytes": 242387,
+                "disassemblySha256": "1522bf4bd43992def845ffdbeecab8ffc120a8b764805dd593a2d2edf168df99",
+                "symbolsSha256": "21b45f9818bc863f229adacd86599494ad78918b66e7d3e2344ab40c04ade22e"
+              },
+              "fwp": {
+                "sourceSha256": "67f2496bf898971c60fc854ca1bd52889902ba8edc817788977f3501ee184456",
+                "binarySha256": "7b3b1b56d42550de216abc6e773781dc8ed2f781e107b23835a36668b3a0a5c5",
+                "fileBytes": 48000,
+                "textSectionBytes": 12578,
+                "disassemblySha256": "d8f0ba0f6d1d55d18f8ab7071e86986c8a7e1ebdd37dbb1366fb5e6ec2d77893",
+                "symbolsSha256": "423af8509f08ef1db0167febfde5ac4603436a0563e6ac9d7c7b82af75fd85d8"
+              }
+            },
+            "generatedCSha256": "205b7e99af0514d0a9724301907d4077ee169bb01f885d2240b1e22907562b24"
+          },
+          {
+            "name": "range-set",
+            "medianMs": {
+              "c": 8.73,
+              "rs": 8.783,
+              "fwp": 8.762
+            },
+            "samplesMs": {
+              "c": [
+                8.773,
+                8.953,
+                8.728,
+                8.394,
+                8.655,
+                8.732
+              ],
+              "rs": [
+                8.776,
+                8.884,
+                8.789,
+                8.41,
+                8.822,
+                8.602
+              ],
+              "fwp": [
+                9.04,
+                8.813,
+                8.712,
+                8.619,
+                8.825,
+                8.706
+              ]
+            },
+            "fwpOverC": 1.0036655211912944,
+            "fwpOverRust": 0.9976090174200161,
+            "stdout": "1936776283564329556\n",
+            "files": {
+              "c": {
+                "sourceSha256": "c875255b715d55852c713a513c171f45960ae0930cdabfd5cc42dcc6169571a4",
+                "binarySha256": "bfe66c1daf8321835766a6518c9b800f2a695b45d93538fa09a05fbad81869d9",
+                "fileBytes": 16048,
+                "textSectionBytes": 409,
+                "disassemblySha256": "5bafdb1d05c65511708e0b86d63ce10e79a07288f335798dccffd84b2bcbef7f",
+                "symbolsSha256": "ea79232a1a87dbb584cafca950faedeefda651cf934cf06dae316bd106bccfd0"
+              },
+              "rs": {
+                "sourceSha256": "530f3958e4c5a58e0f4eca27c48859875cf9e20c62a2ceed6ba2bb9cf0b4e5b6",
+                "binarySha256": "4b8f85ad9af49b00fd84a5289b988e1a7d471d416f85acea124f2cc1b692786e",
+                "fileBytes": 4537696,
+                "textSectionBytes": 242147,
+                "disassemblySha256": "0dde81a9217d265dbcd2761c07ea3d65116349e582c5c66cbd31dafdee1a37f7",
+                "symbolsSha256": "330f4c8f77a416777a2793c33d9a82ebba64570c3325a8b45757f1668d9a44a7"
+              },
+              "fwp": {
+                "sourceSha256": "b18037978057f904f2af9d3911471180886b4e2d99e441c3b5e4d488abad9bce",
+                "binarySha256": "0bb0dd0fa86d33b02976ec91dd479176964e773bf8be10b12d27a16408f3001e",
+                "fileBytes": 34816,
+                "textSectionBytes": 9746,
+                "disassemblySha256": "b3e32c141aad850d696bc4089a0a4aff64efbcd569d59f7bb9ed8e6e854f2670",
+                "symbolsSha256": "03a6572560423ec31a874ac4ee8935ecad89f9ae54f374d2af51062d46789790"
+              }
+            },
+            "generatedCSha256": "626d55959f4da3680f85b909dc5823677e4b12ca65fa0281dc9583935ce546a4"
+          },
+          {
+            "name": "strings",
+            "medianMs": {
+              "c": 72.418,
+              "rs": 86.898,
+              "fwp": 3.931
+            },
+            "samplesMs": {
+              "c": [
+                72.556,
+                71.971,
+                72.342,
+                72.494,
+                73.11,
+                72.299
+              ],
+              "rs": [
+                85.196,
+                87.355,
+                87.512,
+                87.108,
+                86.687,
+                85.557
+              ],
+              "fwp": [
+                3.981,
+                3.875,
+                3.999,
+                3.73,
+                4.0,
+                3.88
+              ]
+            },
+            "fwpOverC": 0.054282084564611005,
+            "fwpOverRust": 0.04523694446362402,
+            "stdout": "28518516\n",
+            "files": {
+              "c": {
+                "sourceSha256": "cc33677fa6cfca033b5704c58b7adb3c203225fc8ddd65e59b9992cb769a94c1",
+                "binarySha256": "8db181cb67b68abded8e3d19ce875432a5a8a73569b15f462ddba379325e9bf3",
+                "fileBytes": 16112,
+                "textSectionBytes": 409,
+                "disassemblySha256": "6e487eec8cac5f685bc5785c8ba6ed1bedf781344f9e4e15cb9d4bf4cba0c68a",
+                "symbolsSha256": "3da757044cffe6a35eb805f6ed9b92bbd6db35fc62bb3608581b36489ea1a9d8"
+              },
+              "rs": {
+                "sourceSha256": "1ff725f04caaddffe45e3e9f297483aa5ffbc286c45ac6641e52dcd9a2d6b132",
+                "binarySha256": "26c8e594461ccf142c69a5484dde8163a54517bfe80ed79e8cf8fa356758e818",
+                "fileBytes": 4540016,
+                "textSectionBytes": 243011,
+                "disassemblySha256": "964817cc044ceaf81ea66b0e559376d63cf05bc0bc7c836fd3aa8d851aa198ba",
+                "symbolsSha256": "5ed3390fcb309c1d4ecf286dc0c649a5328ec941dde107b6e8dd7c35252a40db"
+              },
+              "fwp": {
+                "sourceSha256": "92583f3601f22be8045078ca167e07a9a3f709ae71e14f062116e64c6533b21c",
+                "binarySha256": "f821e4943ee43762ce39b471979c300dc3ecc803c576a173fc2787c970df14fc",
+                "fileBytes": 47704,
+                "textSectionBytes": 12530,
+                "disassemblySha256": "cdd8ffe59a10ef6730f4148ba4427ce8005daf836ac1d5d9efb28c6277763250",
+                "symbolsSha256": "6891e6d90a00222b8b0009d67c9d82a37cd1e0eb3ad63f3313604c91787ec757"
+              }
+            },
+            "generatedCSha256": "cdff01565b4f1fcfc90099fea5dc62b2688d180987c012998c0d88b93fe6381b"
+          },
+          {
+            "name": "text-length",
+            "medianMs": {
+              "c": 2.45,
+              "rs": 4.147,
+              "fwp": 3.748
+            },
+            "samplesMs": {
+              "c": [
+                2.401,
+                2.421,
+                2.586,
+                2.451,
+                2.449,
+                2.477
+              ],
+              "rs": [
+                4.164,
+                4.17,
+                4.197,
+                4.08,
+                4.129,
+                4.097
+              ],
+              "fwp": [
+                3.924,
+                3.685,
+                3.957,
+                3.644,
+                3.811,
+                3.641
+              ]
+            },
+            "fwpOverC": 1.5297959183673469,
+            "fwpOverRust": 0.9037858693031107,
+            "stdout": "28518516\n",
+            "files": {
+              "c": {
+                "sourceSha256": "0db1225be1688b712065edb343f25519be3771efe3120d2d0c4fcd86af499c16",
+                "binarySha256": "ee5e6bce595904db73333302985e4191d5e48a43e96670a00e37bf3d1051b27c",
+                "fileBytes": 16040,
+                "textSectionBytes": 585,
+                "disassemblySha256": "f28382b82a9117464baccf19f2261898de3908143e2de6b0a629aaf7b063695e",
+                "symbolsSha256": "ea6756aed0445c7d5b1ce69242e4fe28c6f010524846c4cbbc26fe7fa2dd5d57"
+              },
+              "rs": {
+                "sourceSha256": "acff66bf1919bf53b5f42e8138f4bfa2c37cfd5d43f115afaeaf6b4861e87684",
+                "binarySha256": "1ec3bc18189667a43e4e45d297ebcd1ee342e1e1731e1792c7980ef59ca461df",
+                "fileBytes": 4537984,
+                "textSectionBytes": 242195,
+                "disassemblySha256": "a3590a6f2eac2e0a4b79c1d512669e48b011650e2cb9e26012eefd411af88bff",
+                "symbolsSha256": "7132074d119a8bd62507c6159cca7405108f4e415348ec407ff95ac97f48a32b"
+              },
+              "fwp": {
+                "sourceSha256": "532f5f77f4d79f2802f3f54329ce4d84b7e45a66d5680ad9754ad3bf12e56810",
+                "binarySha256": "0126fdf511bf3af408fa26a97bae892fc22fbc2ab46469de628efe8e39bf03a5",
+                "fileBytes": 47712,
+                "textSectionBytes": 12530,
+                "disassemblySha256": "5818e566d942d76c030900e661efc703f9d89382adf4b6803720059681bb3eb1",
+                "symbolsSha256": "de1e589ac06c8202ed77daf2f8900a86c1101cf70b850ce593e1baf7d55699bc"
+              }
+            },
+            "generatedCSha256": "cdff01565b4f1fcfc90099fea5dc62b2688d180987c012998c0d88b93fe6381b"
+          }
+        ],
+        "host": "ubuntu-latest",
+        "run": 40075912779,
+        "archive": {
+          "source": "617bb2319760ccade91afea2bb0045c1984abbdf",
+          "run": 40075912779,
+          "artifact": 12553242449,
+          "bytes": 9427302,
+          "sha256": "beb5ec0f788358a400feb7ac8174b138f58e61729bb44c90653ec5b857bf3944",
+          "initialBytes": 0,
+          "ranges": [
+            {
+              "start": 0,
+              "end": 9427301,
+              "sha256": "beb5ec0f788358a400feb7ac8174b138f58e61729bb44c90653ec5b857bf3944"
+            }
+          ]
+        },
+        "cpu": "AMD EPYC 9V45 96-Core Processor",
+        "controls": [
+          {
+            "case": "wrong-mode",
+            "expected": "declared benchmark memory mode differs",
+            "exitStatus": 1,
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/inspect-benchmark-binaries.py\", line 26, in <module>\n    assert f'Native fwp memory mode: `{args.memory}`.' in report, 'declared benchmark memory mode differs'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: declared benchmark memory mode differs\n",
+            "changedSha256": "f2d974358fb6dc0d25ec8c8e5a51ee35497902062013ee72c6e1f3d78049b540"
+          },
+          {
+            "case": "wrong-machine",
+            "expected": "benchmark binary has wrong architecture",
+            "exitStatus": 1,
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/inspect-benchmark-binaries.py\", line 69, in <module>\n    assert struct.unpack_from('<H', data, 18)[0] == machine, 'benchmark binary has wrong architecture'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: benchmark binary has wrong architecture\n",
+            "changedSha256": "9903aa7ed1ff0026b2a3671500de2928e77fb500a453439f2221fc5e1b175a59"
+          },
+          {
+            "case": "object-file",
+            "expected": "benchmark image is not executable",
+            "exitStatus": 1,
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/inspect-benchmark-binaries.py\", line 70, in <module>\n    assert struct.unpack_from('<H', data, 16)[0] in {2, 3}, 'benchmark image is not executable'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: benchmark image is not executable\n",
+            "changedSha256": "d33542c2a794b43dc7f7c090a9063cf7614e7214abed99ca1746aa9db2f2925b"
+          },
+          {
+            "case": "missing-sample",
+            "expected": "need six positive timing samples",
+            "exitStatus": 1,
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/inspect-benchmark-binaries.py\", line 55, in <module>\n    assert len(values) == 6 and all(value > 0 for value in values), 'need six positive timing samples'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: need six positive timing samples\n",
+            "changedSha256": "29ee38d3234937990da9810a72be0d419024452552bc93497ffc636f08491da0"
+          }
+        ],
+        "ciInspectionSha256": "d7853fdea644653ab1d122bbcf7e153b44980974ee61485d31d5643e604c96b6"
+      },
+      "report": "# fwp, C and Rust: complete-program elapsed time\n\nSource commit: `617bb2319760ccade91afea2bb0045c1984abbdf`. Host: `linux/x86_64`.\n\nEach executable has one warmup and six measured runs. Orders rotate\nC/Rust/fwp, Rust/fwp/C, fwp/C/Rust, twice; each implementation occupies\nevery position twice. The table uses the median. Samples include startup, input\nconstruction, computation, allocation and output; compilation is excluded.\nNative fwp memory mode: `arc`. ARC releases a value when its last\nowner releases it; tracing enables the tracing collector. The interpreter is not timed.\n\nA ratio above 1 means fwp took longer. The percentage is\n`(fwp / baseline - 1) * 100`, not a separately measured language cost.\nMatching output does not imply equal work: maps use sorted pairs in\nall three but sorting implementations differ; pipelines can remove collections, and\nfwp can remove string formatting when only its length is needed.\nfwp checks integer overflow; except for text-length, the C and optimized\nRust baselines do not provide the same overflow guarantees. text-length\ncounts decimal digits directly in C/Rust and checks multiplication/sums.\nNo allocation or peak-memory\ncounters are collected by this comparison. See docs/benchmarks.md.\n\nThe measured executables and source inputs are retained in `target/bench-evidence`.\nGenerated fwp C is emitted separately after timing with the same compiler/settings;\nthat extra emission is excluded from execution and compilation timings.\n\nC compiler (`gcc -O2`):\n\n```text\ngcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n```\n\nRust compiler (`rustc -O`):\n\n```text\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n```\n\nfwp build flags: `--gc arc -O2`, `FWP_LTO=0`; generated C is compiled\nas one source file, without link-time optimization.\n\n| Program | C | Rust | fwp | fwp / C (extra time) | fwp / Rust (extra time) |\n|---|--:|--:|--:|--:|--:|\n| fib | 10.102 ms | 17.842 ms | 8.699 ms | 0.861\u00d7 (-13.9%) | 0.488\u00d7 (-51.2%) |\n| loop | 54.258 ms | 65.664 ms | 73.490 ms | 1.354\u00d7 (+35.4%) | 1.119\u00d7 (+11.9%) |\n| map | 269.431 ms | 231.702 ms | 239.911 ms | 0.890\u00d7 (-11.0%) | 1.035\u00d7 (+3.5%) |\n| pipeline | 13.437 ms | 10.123 ms | 7.267 ms | 0.541\u00d7 (-45.9%) | 0.718\u00d7 (-28.2%) |\n| range-set | 8.730 ms | 8.783 ms | 8.762 ms | 1.004\u00d7 (+0.4%) | 0.998\u00d7 (-0.2%) |\n| strings | 72.418 ms | 86.898 ms | 3.931 ms | 0.054\u00d7 (-94.6%) | 0.045\u00d7 (-95.5%) |\n| text-length | 2.450 ms | 4.147 ms | 3.748 ms | 1.530\u00d7 (+53.0%) | 0.904\u00d7 (-9.6%) |\n\n## Raw elapsed samples\n\nAll samples below are milliseconds, in execution order.\n\n| Program | C | Rust | fwp |\n|---|---|---|---|\n| fib | 10.372 ms, 10.288 ms, 10.115 ms, 9.980 ms, 10.088 ms, 10.074 ms | 17.674 ms, 17.912 ms, 17.862 ms, 17.661 ms, 17.830 ms, 17.854 ms | 8.816 ms, 7.971 ms, 8.581 ms, 11.195 ms, 11.717 ms, 8.207 ms |\n| loop | 54.248 ms, 54.316 ms, 54.305 ms, 54.229 ms, 54.208 ms, 54.269 ms | 65.664 ms, 65.676 ms, 65.665 ms, 65.620 ms, 65.629 ms, 65.713 ms | 73.484 ms, 73.032 ms, 73.496 ms, 73.225 ms, 73.575 ms, 76.686 ms |\n| map | 268.753 ms, 271.692 ms, 268.973 ms, 269.128 ms, 269.733 ms, 271.012 ms | 232.858 ms, 230.644 ms, 232.778 ms, 231.005 ms, 231.523 ms, 231.880 ms | 244.534 ms, 242.286 ms, 239.463 ms, 240.359 ms, 235.696 ms, 233.073 ms |\n| pipeline | 13.278 ms, 13.648 ms, 13.536 ms, 13.253 ms, 13.389 ms, 13.485 ms | 9.011 ms, 10.104 ms, 10.142 ms, 9.156 ms, 12.215 ms, 10.544 ms | 7.287 ms, 7.789 ms, 7.247 ms, 12.520 ms, 7.136 ms, 7.186 ms |\n| range-set | 8.773 ms, 8.953 ms, 8.728 ms, 8.394 ms, 8.655 ms, 8.732 ms | 8.776 ms, 8.884 ms, 8.789 ms, 8.410 ms, 8.822 ms, 8.602 ms | 9.040 ms, 8.813 ms, 8.712 ms, 8.619 ms, 8.825 ms, 8.706 ms |\n| strings | 72.556 ms, 71.971 ms, 72.342 ms, 72.494 ms, 73.110 ms, 72.299 ms | 85.196 ms, 87.355 ms, 87.512 ms, 87.108 ms, 86.687 ms, 85.557 ms | 3.981 ms, 3.875 ms, 3.999 ms, 3.730 ms, 4.000 ms, 3.880 ms |\n| text-length | 2.401 ms, 2.421 ms, 2.586 ms, 2.451 ms, 2.449 ms, 2.477 ms | 4.164 ms, 4.170 ms, 4.197 ms, 4.080 ms, 4.129 ms, 4.097 ms | 3.924 ms, 3.685 ms, 3.957 ms, 3.644 ms, 3.811 ms, 3.641 ms |\n\n## Compilation and binary size\n\nOne build per implementation; elapsed time includes compiler startup and linking.\nThe fwp compiler itself is already built. Binary sizes include each toolchain's\nruntime and linking choices; they are not executable-code sizes alone.\n\n| Program | C build | Rust build | fwp build | C bytes | Rust bytes | fwp bytes |\n|---|---:|---:|---:|---:|---:|---:|\n| fib | 88.066 ms | 42.213 ms | 649.991 ms | 15992 | 4537784 | 34544 |\n| loop | 25.715 ms | 43.018 ms | 479.441 ms | 15968 | 4537896 | 43496 |\n| map | 34.170 ms | 116.994 ms | 552.274 ms | 16120 | 4543344 | 48240 |\n| pipeline | 32.092 ms | 67.669 ms | 515.602 ms | 16048 | 4538088 | 48000 |\n| range-set | 36.038 ms | 59.209 ms | 444.803 ms | 16048 | 4537696 | 34816 |\n| strings | 33.797 ms | 48.590 ms | 505.074 ms | 16112 | 4540016 | 47704 |\n| text-length | 32.826 ms | 46.419 ms | 504.853 ms | 16040 | 4537984 | 47712 |\n\n## Processor\n\n```text\nArchitecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V45 96-Core Processor\nCPU family:                              26\nModel:                                   2\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.24\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n```\n"
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "review": {
+        "source": "617bb2319760ccade91afea2bb0045c1984abbdf",
+        "memory": "arc",
+        "architecture": "aarch64",
+        "reportSha256": "e1b3e1d07f1a3e28d4f112c0488efb1f906af40c11d3768c6ef544491f56465a",
+        "tool": "Apple LLVM version 17.0.0\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64    - AArch64 (little endian)\n    aarch64_32 - AArch64 (little endian ILP32)\n    aarch64_be - AArch64 (big endian)\n    arm        - ARM\n    arm64      - ARM64 (little endian)\n    arm64_32   - ARM64 (little endian ILP32)\n    armeb      - ARM (big endian)\n    thumb      - Thumb\n    thumbeb    - Thumb (big endian)\n    x86        - 32-bit X86: Pentium-Pro and above\n    x86-64     - 64-bit X86: EM64T and AMD64\n",
+        "scope": "Static inspection of actual measured binaries; no re-execution. Complete-process elapsed samples, not isolated compiler overhead. Text-section sizes include padding; no allocation/RSS measurement.",
+        "programs": [
+          {
+            "name": "fib",
+            "medianMs": {
+              "c": 17.636,
+              "rs": 21.578,
+              "fwp": 6.79
+            },
+            "samplesMs": {
+              "c": [
+                17.603,
+                17.685,
+                17.66,
+                17.638,
+                17.634,
+                17.609
+              ],
+              "rs": [
+                21.538,
+                21.584,
+                21.571,
+                21.544,
+                21.626,
+                21.716
+              ],
+              "fwp": [
+                6.85,
+                6.919,
+                6.747,
+                6.746,
+                6.785,
+                6.796
+              ]
+            },
+            "fwpOverC": 0.3850079383080064,
+            "fwpOverRust": 0.3146723514690889,
+            "stdout": "9227465\n",
+            "files": {
+              "c": {
+                "sourceSha256": "f4e8e59d2b2a2d8261cbae1254038dfc1b1adfa4f7a62027a0e7e23143ec35af",
+                "binarySha256": "8be3880cd5067ea66388d985142c864bad1b379f467a1eb9cbb541bfa02cbced",
+                "fileBytes": 70376,
+                "textSectionBytes": 1504,
+                "disassemblySha256": "77d4207cfdc8e34bd78424e157825242998accd8994cfa356b4b083eaf38b3fd",
+                "symbolsSha256": "6971f91b0978e1cef104a2a4514e915b5c9d36b7cc76464541ce22b7f4341149"
+              },
+              "rs": {
+                "sourceSha256": "8686b813d20111476775dcc1c8ca19b5443ca6e1c968caf5bb33875466b38feb",
+                "binarySha256": "c8ffdaa059dd2920439d8774292972b5e03d5785577f68e7e14fe477c66e9a17",
+                "fileBytes": 4620856,
+                "textSectionBytes": 218780,
+                "disassemblySha256": "afe91493aa2f4fcc18dc042a12a7d4f889292a008a9fb4cd02b376a8c3a243c1",
+                "symbolsSha256": "5140c428dae3a1167b94fb0777bb7b2dacd1542d1c6ce8f2a2a5d3bb1444dc36"
+              },
+              "fwp": {
+                "sourceSha256": "f355a0193f3fc1ac38c993185fc5fbf255ed79cb0e21935e7306b82339d629a5",
+                "binarySha256": "da7d75c72efccb54eab49aeebcdda18e1b6ac76ff797219e78801f715c391896",
+                "fileBytes": 80760,
+                "textSectionBytes": 7212,
+                "disassemblySha256": "286e4338db707616a4abbd1249d6ab5761b1b195cef0db353fca2e16eb7872ac",
+                "symbolsSha256": "3966a19d68fdb73e40ff46c7f7fd434cbaea6a9f69ce0f6af6d6d0d577fa0468"
+              }
+            },
+            "generatedCSha256": "4414ad2fc00c10174eed6c14bcfd19cb6408b5c60c2cf10f86bc3827d5b42797"
+          },
+          {
+            "name": "loop",
+            "medianMs": {
+              "c": 90.515,
+              "rs": 86.569,
+              "fwp": 130.616
+            },
+            "samplesMs": {
+              "c": [
+                90.554,
+                93.713,
+                90.565,
+                90.188,
+                90.476,
+                90.415
+              ],
+              "rs": [
+                86.543,
+                86.663,
+                86.595,
+                86.547,
+                86.591,
+                86.527
+              ],
+              "fwp": [
+                130.584,
+                130.426,
+                130.648,
+                130.749,
+                130.688,
+                130.575
+              ]
+            },
+            "fwpOverC": 1.4430315417334145,
+            "fwpOverRust": 1.508808002864767,
+            "stdout": "300000003\n",
+            "files": {
+              "c": {
+                "sourceSha256": "4cd663537f57bb18ba9245f201ec855052b4bc7918351b8ff3f1ff3ef606e20c",
+                "binarySha256": "98e2241d9f25e57a0786413b9cc4856f0d53f8ec557700ca1833bb7042d14b88",
+                "fileBytes": 70320,
+                "textSectionBytes": 408,
+                "disassemblySha256": "483ff46a2d8b552d363f43d676956f55869380a0eccfa7f686b6195cd45b2d18",
+                "symbolsSha256": "403f3a6bd1f7e9dc00523047496b69545b6f51a0638784928672eaa1c112a37b"
+              },
+              "rs": {
+                "sourceSha256": "e8227ad3408f53486a35d2d08bf9ceddd68cf5e68dd2c397b07c83c8584731c0",
+                "binarySha256": "c48a6b57263792427523259b1374cea63153c3ded3b44a83e2068720b92116b1",
+                "fileBytes": 4620776,
+                "textSectionBytes": 219068,
+                "disassemblySha256": "7cfb2f662f2126bc9735a654d3d2b57987bec34e561dca5c8ff6b53e7d44d6d3",
+                "symbolsSha256": "db5827e24c1f0d63949d49b087799606eba691094cec69dd147987468a347525"
+              },
+              "fwp": {
+                "sourceSha256": "9bdaa22b8a61325f5b441352434608acba2a272ace83f15a1a1dd063b1c6c365",
+                "binarySha256": "ae01c53696a4afbaf3e57e81e35ba9d839125e601424c8022f97314e7646c17e",
+                "fileBytes": 81512,
+                "textSectionBytes": 11036,
+                "disassemblySha256": "6cb2309e7111116c45fd9a3e4a467cb038bb34ec1d5a6283f6a15b52db3f9099",
+                "symbolsSha256": "19df7706742fad7926a8418c2a754a8706769025a6c9ffcbf966afc05f763c09"
+              }
+            },
+            "generatedCSha256": "6e3e3e5d3599b80063b6f21967bb9df9511562bd0e8a659cde8063af39febfcc"
+          },
+          {
+            "name": "map",
+            "medianMs": {
+              "c": 493.731,
+              "rs": 449.293,
+              "fwp": 449.415
+            },
+            "samplesMs": {
+              "c": [
+                504.712,
+                496.506,
+                493.482,
+                493.981,
+                492.722,
+                485.291
+              ],
+              "rs": [
+                451.795,
+                446.791,
+                453.133,
+                442.542,
+                458.611,
+                442.279
+              ],
+              "fwp": [
+                458.131,
+                456.085,
+                446.42,
+                443.232,
+                447.875,
+                450.956
+              ]
+            },
+            "fwpOverC": 0.910242621994568,
+            "fwpOverRust": 1.0002715377270512,
+            "stdout": "500000\n249999500000\n",
+            "files": {
+              "c": {
+                "sourceSha256": "f4ec5f7877e0d9718174e1900a89dd215eb8c3058c3e4397a45f471da6cfd5ee",
+                "binarySha256": "666b84c3ad1465de2382c96ac7ab7851fdd2b0cda1a2abf2b3781a508081e17b",
+                "fileBytes": 70496,
+                "textSectionBytes": 760,
+                "disassemblySha256": "6749132adadb355390240a80b1ed9819f31e2e11655d3967e7b00673752489a2",
+                "symbolsSha256": "819002d33c5efcf8b3dd83f4979d30fdced62845464d0a35a415e67cca359ef9"
+              },
+              "rs": {
+                "sourceSha256": "ce78c2e0df3778070af8b6a3ef27b9e8aa3ae0788fb2032c33c1a6fee036039c",
+                "binarySha256": "f06c581d3b3afaf86b3c2284f12ebf18c9a91707755c867daba128c1642c8a30",
+                "fileBytes": 4621880,
+                "textSectionBytes": 222476,
+                "disassemblySha256": "a28537e72affca1628b2a686d409a150ba16f1f9ac23567d144b2dc998d59b32",
+                "symbolsSha256": "646ec5704151b820c5ffbd6259548c4785a8e6f45324b6592317910a251379ed"
+              },
+              "fwp": {
+                "sourceSha256": "d5caa814fbf1fef79b86429c13c764c60fef2c8fe20eefdb9415f431b550f00b",
+                "binarySha256": "422f6a092566f3d4e93463327dee09314b106728f448c17933fb06f02c70bfec",
+                "fileBytes": 82128,
+                "textSectionBytes": 13612,
+                "disassemblySha256": "716f5d72bb62ef733930ed2c013dd4ac4955f47af1db7f5cb524c82d187303a5",
+                "symbolsSha256": "028f7ed0b00d2e8f633374428bd7d704c0173e93d64e6baa25f59fb228a6605b"
+              }
+            },
+            "generatedCSha256": "a640aadaf4ce88651ae79f01661619deb6307c4a9b02ec4186fb18863b0bdc13"
+          },
+          {
+            "name": "pipeline",
+            "medianMs": {
+              "c": 26.636,
+              "rs": 19.578,
+              "fwp": 15.692
+            },
+            "samplesMs": {
+              "c": [
+                26.751,
+                26.6,
+                26.255,
+                26.316,
+                26.673,
+                26.792
+              ],
+              "rs": [
+                19.701,
+                20.02,
+                19.591,
+                19.564,
+                19.259,
+                19.373
+              ],
+              "fwp": [
+                15.66,
+                15.698,
+                15.717,
+                15.693,
+                15.692,
+                15.685
+              ]
+            },
+            "fwpOverC": 0.5891274966211143,
+            "fwpOverRust": 0.8015119011134948,
+            "stdout": "14999970000000\n",
+            "files": {
+              "c": {
+                "sourceSha256": "c978deaa089f0e837cd5601e9d142368afcc7cf28a23963ebd6449c918c1bc41",
+                "binarySha256": "c12c20900851a329db4b23385b930e72a934f960d80c3153a93bb1a287e341ca",
+                "fileBytes": 70400,
+                "textSectionBytes": 536,
+                "disassemblySha256": "330b1ecb22b2b3783155fe3b86ee134c16ef17f20d58f1f83834e29b2d49d949",
+                "symbolsSha256": "046b8d0d83bb0b6750e02c76d78dce8644799e2779559d186b214cd433d5be89"
+              },
+              "rs": {
+                "sourceSha256": "8cb2b664d27bb078331d981f525ff9a504388943e19cbc4947a99b2f78e3fccb",
+                "binarySha256": "687c62c4262046b55d9261582ba2f6105f0e06a09d448e8f255e6eab0f68032c",
+                "fileBytes": 4620776,
+                "textSectionBytes": 219036,
+                "disassemblySha256": "298fd039913b6c12d46d003f51f371417d481879ad2196a275c16d64ccd6867a",
+                "symbolsSha256": "d19589173454583601dd8699061b1c2fe4ae7a21ab0ea3a86dc0d9c0fab3fbba"
+              },
+              "fwp": {
+                "sourceSha256": "67f2496bf898971c60fc854ca1bd52889902ba8edc817788977f3501ee184456",
+                "binarySha256": "4912924492642d69bde4280792d44f901fb81666dce339652d9c74a5efec2b2d",
+                "fileBytes": 81928,
+                "textSectionBytes": 11964,
+                "disassemblySha256": "634d2ad786681bfe1b9f283f0ac502fbaf78aae298fe511fe6be984aa61844f7",
+                "symbolsSha256": "9b60e0da7ef9647aa751326d60d80b0b5a5d3c40619b1c1fdd7e3e731901a0aa"
+              }
+            },
+            "generatedCSha256": "205b7e99af0514d0a9724301907d4077ee169bb01f885d2240b1e22907562b24"
+          },
+          {
+            "name": "range-set",
+            "medianMs": {
+              "c": 11.086,
+              "rs": 11.09,
+              "fwp": 11.918
+            },
+            "samplesMs": {
+              "c": [
+                10.804,
+                11.142,
+                11.761,
+                11.563,
+                10.94,
+                11.029
+              ],
+              "rs": [
+                10.907,
+                11.1,
+                11.861,
+                11.887,
+                11.081,
+                10.985
+              ],
+              "fwp": [
+                11.973,
+                10.959,
+                11.967,
+                11.985,
+                11.87,
+                11.63
+              ]
+            },
+            "fwpOverC": 1.0750496121233988,
+            "fwpOverRust": 1.0746618575293057,
+            "stdout": "1936776283564329556\n",
+            "files": {
+              "c": {
+                "sourceSha256": "c875255b715d55852c713a513c171f45960ae0930cdabfd5cc42dcc6169571a4",
+                "binarySha256": "ba190c0ebc087facf7a8311fb4c24e6f10787de522dc277d25b743d596990c7e",
+                "fileBytes": 70400,
+                "textSectionBytes": 536,
+                "disassemblySha256": "d9b46c4f89a2ff5daf95804659696e68e7d1f67cd181b96b039002d1f4b9ee7e",
+                "symbolsSha256": "003961efd7e68311d0d1fb7e91de5254aeaf3772f1e2d89da992ce24487f296f"
+              },
+              "rs": {
+                "sourceSha256": "530f3958e4c5a58e0f4eca27c48859875cf9e20c62a2ceed6ba2bb9cf0b4e5b6",
+                "binarySha256": "acac077f669a507019883cc7dead7e76906d9b7f13ce0ff3ca1d114de066ae13",
+                "fileBytes": 4620600,
+                "textSectionBytes": 218620,
+                "disassemblySha256": "95fa8ae55a0e66e8eb6454a8f7f5e15eeb57e5973e6220a4a838eb30c0377b7b",
+                "symbolsSha256": "a07d529c3c8451513b368df0c2e773ce5647466ed4b03a68dbad45af9b9c3517"
+              },
+              "fwp": {
+                "sourceSha256": "b18037978057f904f2af9d3911471180886b4e2d99e441c3b5e4d488abad9bce",
+                "binarySha256": "bbdee9d3bccb7a6fd1a6704b5df899d36b97d68e0aa63e643b182bc8f2190cf6",
+                "fileBytes": 81040,
+                "textSectionBytes": 9052,
+                "disassemblySha256": "4ab07710de340ed396f3d687eefbeb125576950b1f2ca55bf140c88fc30d84c1",
+                "symbolsSha256": "fc7466770dedb5a34c85738d50e8412ac870f238e2cff2c0e06686cc1cd3c906"
+              }
+            },
+            "generatedCSha256": "626d55959f4da3680f85b909dc5823677e4b12ca65fa0281dc9583935ce546a4"
+          },
+          {
+            "name": "strings",
+            "medianMs": {
+              "c": 141.342,
+              "rs": 147.241,
+              "fwp": 6.179
+            },
+            "samplesMs": {
+              "c": [
+                140.448,
+                142.157,
+                142.087,
+                140.596,
+                142.445,
+                140.385
+              ],
+              "rs": [
+                147.337,
+                147.095,
+                147.278,
+                147.146,
+                149.763,
+                147.205
+              ],
+              "fwp": [
+                6.174,
+                6.183,
+                6.152,
+                6.229,
+                6.141,
+                6.195
+              ]
+            },
+            "fwpOverC": 0.04371665888412503,
+            "fwpOverRust": 0.04196521349352422,
+            "stdout": "28518516\n",
+            "files": {
+              "c": {
+                "sourceSha256": "cc33677fa6cfca033b5704c58b7adb3c203225fc8ddd65e59b9992cb769a94c1",
+                "binarySha256": "378b771832858689c9c8c5bc9d701f3c1f7f7bf73234ea78692e7b44b71fdd13",
+                "fileBytes": 70520,
+                "textSectionBytes": 536,
+                "disassemblySha256": "d498dd3f63c7639ea42cbf4c4441080bd0a04cb22811a33508c2fcb7a8d5cb96",
+                "symbolsSha256": "383b7a0cb854b97640f464965135258effd3e2043b5a44e97e187ec98919d02b"
+              },
+              "rs": {
+                "sourceSha256": "1ff725f04caaddffe45e3e9f297483aa5ffbc286c45ac6641e52dcd9a2d6b132",
+                "binarySha256": "ef6b363235db5b62314e27cea574e329f125a6d9c4705bddbc0734ed65cb4610",
+                "fileBytes": 4621480,
+                "textSectionBytes": 219740,
+                "disassemblySha256": "2f2e0ee7cb73c1727804f2d840e842f6cc9e3f978ae4c556a33a660a133ce588",
+                "symbolsSha256": "565cc74692c9a3c5b46381940dc4e2793e3886ec69efc6d17454e8d4db8bd49b"
+              },
+              "fwp": {
+                "sourceSha256": "92583f3601f22be8045078ca167e07a9a3f709ae71e14f062116e64c6533b21c",
+                "binarySha256": "75ac1816a12e03416db4511f4f99a1f7ff78ed58e0382c9d823301281cddc35e",
+                "fileBytes": 81624,
+                "textSectionBytes": 11836,
+                "disassemblySha256": "96b6ee370b1eba7351d46fda6beae50fc8e1ce45b42a28e280513d25ac043ed3",
+                "symbolsSha256": "b3fad62d50296fdf6c683be801e36e9d32e9f88acb5743408047c07950e1ec7e"
+              }
+            },
+            "generatedCSha256": "cdff01565b4f1fcfc90099fea5dc62b2688d180987c012998c0d88b93fe6381b"
+          },
+          {
+            "name": "text-length",
+            "medianMs": {
+              "c": 3.037,
+              "rs": 5.621,
+              "fwp": 5.954
+            },
+            "samplesMs": {
+              "c": [
+                3.041,
+                3.056,
+                3.025,
+                3.028,
+                3.059,
+                3.033
+              ],
+              "rs": [
+                5.587,
+                5.68,
+                5.606,
+                5.636,
+                5.643,
+                5.606
+              ],
+              "fwp": [
+                6.045,
+                5.988,
+                5.895,
+                6.009,
+                5.902,
+                5.921
+              ]
+            },
+            "fwpOverC": 1.9604873230161344,
+            "fwpOverRust": 1.0592421277352784,
+            "stdout": "28518516\n",
+            "files": {
+              "c": {
+                "sourceSha256": "0db1225be1688b712065edb343f25519be3771efe3120d2d0c4fcd86af499c16",
+                "binarySha256": "cf9a5561af3ae37fa4cd4479c40eb32eda5c9f26d3eb7f0fd0189a3d860fe043",
+                "fileBytes": 70320,
+                "textSectionBytes": 600,
+                "disassemblySha256": "58ca7a5d71e61f632b91c17857400bf8a43bc6c79a5a801af1692a5e69aa450b",
+                "symbolsSha256": "653bb3ea1d55abb339f6bca4865791c85f5d2608309829f9276082320c0ce11e"
+              },
+              "rs": {
+                "sourceSha256": "acff66bf1919bf53b5f42e8138f4bfa2c37cfd5d43f115afaeaf6b4861e87684",
+                "binarySha256": "28b9867839ff3a861bcdef45bf82a0cf4ced0e7007490de58cf4eb87d456c55a",
+                "fileBytes": 4620824,
+                "textSectionBytes": 218876,
+                "disassemblySha256": "425fb88182c70b92410df013fd44dc20f2783f3629799e5d09c07a8adb5dfa7b",
+                "symbolsSha256": "76da0cd745be83fddf5131f3afb2def19a645e34c13d969471bc70674b3dcc85"
+              },
+              "fwp": {
+                "sourceSha256": "532f5f77f4d79f2802f3f54329ce4d84b7e45a66d5680ad9754ad3bf12e56810",
+                "binarySha256": "d71ca2c482f295e10fef54b833ec95d139cdeb7483594765561a72bb4fd57874",
+                "fileBytes": 81632,
+                "textSectionBytes": 11836,
+                "disassemblySha256": "673ae8dda786cff2c89533fdd83070800f3b817572c15ee7314c6fd190c35820",
+                "symbolsSha256": "92ac650107b30638ed6f1af985366775872a332f84daf23bdd6f4208a66d9467"
+              }
+            },
+            "generatedCSha256": "cdff01565b4f1fcfc90099fea5dc62b2688d180987c012998c0d88b93fe6381b"
+          }
+        ],
+        "host": "ubuntu-24.04-arm",
+        "run": 40075912779,
+        "archive": {
+          "source": "617bb2319760ccade91afea2bb0045c1984abbdf",
+          "run": 40075912779,
+          "artifact": 12553247365,
+          "bytes": 8048334,
+          "sha256": "c18452e24edc64d58f5ba77fd2e44e5484bb64076c3e74f26dbbf592de9d3612",
+          "initialBytes": 0,
+          "ranges": [
+            {
+              "start": 0,
+              "end": 8048333,
+              "sha256": "c18452e24edc64d58f5ba77fd2e44e5484bb64076c3e74f26dbbf592de9d3612"
+            }
+          ]
+        },
+        "cpu": "Neoverse-N2",
+        "controls": [
+          {
+            "case": "wrong-mode",
+            "expected": "declared benchmark memory mode differs",
+            "exitStatus": 1,
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/inspect-benchmark-binaries.py\", line 26, in <module>\n    assert f'Native fwp memory mode: `{args.memory}`.' in report, 'declared benchmark memory mode differs'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: declared benchmark memory mode differs\n",
+            "changedSha256": "e1b3e1d07f1a3e28d4f112c0488efb1f906af40c11d3768c6ef544491f56465a"
+          },
+          {
+            "case": "wrong-machine",
+            "expected": "benchmark binary has wrong architecture",
+            "exitStatus": 1,
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/inspect-benchmark-binaries.py\", line 69, in <module>\n    assert struct.unpack_from('<H', data, 18)[0] == machine, 'benchmark binary has wrong architecture'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: benchmark binary has wrong architecture\n",
+            "changedSha256": "05c310acf472cae46bf081e9fc216f28e6d4dcc1703196929fc79ddab59a6c53"
+          },
+          {
+            "case": "object-file",
+            "expected": "benchmark image is not executable",
+            "exitStatus": 1,
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/inspect-benchmark-binaries.py\", line 70, in <module>\n    assert struct.unpack_from('<H', data, 16)[0] in {2, 3}, 'benchmark image is not executable'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: benchmark image is not executable\n",
+            "changedSha256": "de2d906174e0a3b86ab4539a9d8d2cae6b7a6ee0550374b13f4490b088da3efa"
+          },
+          {
+            "case": "missing-sample",
+            "expected": "need six positive timing samples",
+            "exitStatus": 1,
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/inspect-benchmark-binaries.py\", line 55, in <module>\n    assert len(values) == 6 and all(value > 0 for value in values), 'need six positive timing samples'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: need six positive timing samples\n",
+            "changedSha256": "554f75bb53240831b26c656215db3142754a051ed534bbc7b4eeef061d65e6a9"
+          }
+        ],
+        "ciInspectionSha256": "4fbe6cbc5e96e6e07e5d1a98a01b448872fffbeb74abea7e943a753050423724"
+      },
+      "report": "# fwp, C and Rust: complete-program elapsed time\n\nSource commit: `617bb2319760ccade91afea2bb0045c1984abbdf`. Host: `linux/aarch64`.\n\nEach executable has one warmup and six measured runs. Orders rotate\nC/Rust/fwp, Rust/fwp/C, fwp/C/Rust, twice; each implementation occupies\nevery position twice. The table uses the median. Samples include startup, input\nconstruction, computation, allocation and output; compilation is excluded.\nNative fwp memory mode: `arc`. ARC releases a value when its last\nowner releases it; tracing enables the tracing collector. The interpreter is not timed.\n\nA ratio above 1 means fwp took longer. The percentage is\n`(fwp / baseline - 1) * 100`, not a separately measured language cost.\nMatching output does not imply equal work: maps use sorted pairs in\nall three but sorting implementations differ; pipelines can remove collections, and\nfwp can remove string formatting when only its length is needed.\nfwp checks integer overflow; except for text-length, the C and optimized\nRust baselines do not provide the same overflow guarantees. text-length\ncounts decimal digits directly in C/Rust and checks multiplication/sums.\nNo allocation or peak-memory\ncounters are collected by this comparison. See docs/benchmarks.md.\n\nThe measured executables and source inputs are retained in `target/bench-evidence`.\nGenerated fwp C is emitted separately after timing with the same compiler/settings;\nthat extra emission is excluded from execution and compilation timings.\n\nC compiler (`gcc -O2`):\n\n```text\ngcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n```\n\nRust compiler (`rustc -O`):\n\n```text\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n```\n\nfwp build flags: `--gc arc -O2`, `FWP_LTO=0`; generated C is compiled\nas one source file, without link-time optimization.\n\n| Program | C | Rust | fwp | fwp / C (extra time) | fwp / Rust (extra time) |\n|---|--:|--:|--:|--:|--:|\n| fib | 17.636 ms | 21.578 ms | 6.790 ms | 0.385\u00d7 (-61.5%) | 0.315\u00d7 (-68.5%) |\n| loop | 90.515 ms | 86.569 ms | 130.616 ms | 1.443\u00d7 (+44.3%) | 1.509\u00d7 (+50.9%) |\n| map | 493.731 ms | 449.293 ms | 449.415 ms | 0.910\u00d7 (-9.0%) | 1.000\u00d7 (+0.0%) |\n| pipeline | 26.636 ms | 19.578 ms | 15.692 ms | 0.589\u00d7 (-41.1%) | 0.802\u00d7 (-19.8%) |\n| range-set | 11.086 ms | 11.090 ms | 11.918 ms | 1.075\u00d7 (+7.5%) | 1.075\u00d7 (+7.5%) |\n| strings | 141.342 ms | 147.241 ms | 6.179 ms | 0.044\u00d7 (-95.6%) | 0.042\u00d7 (-95.8%) |\n| text-length | 3.037 ms | 5.621 ms | 5.954 ms | 1.961\u00d7 (+96.1%) | 1.059\u00d7 (+5.9%) |\n\n## Raw elapsed samples\n\nAll samples below are milliseconds, in execution order.\n\n| Program | C | Rust | fwp |\n|---|---|---|---|\n| fib | 17.603 ms, 17.685 ms, 17.660 ms, 17.638 ms, 17.634 ms, 17.609 ms | 21.538 ms, 21.584 ms, 21.571 ms, 21.544 ms, 21.626 ms, 21.716 ms | 6.850 ms, 6.919 ms, 6.747 ms, 6.746 ms, 6.785 ms, 6.796 ms |\n| loop | 90.554 ms, 93.713 ms, 90.565 ms, 90.188 ms, 90.476 ms, 90.415 ms | 86.543 ms, 86.663 ms, 86.595 ms, 86.547 ms, 86.591 ms, 86.527 ms | 130.584 ms, 130.426 ms, 130.648 ms, 130.749 ms, 130.688 ms, 130.575 ms |\n| map | 504.712 ms, 496.506 ms, 493.482 ms, 493.981 ms, 492.722 ms, 485.291 ms | 451.795 ms, 446.791 ms, 453.133 ms, 442.542 ms, 458.611 ms, 442.279 ms | 458.131 ms, 456.085 ms, 446.420 ms, 443.232 ms, 447.875 ms, 450.956 ms |\n| pipeline | 26.751 ms, 26.600 ms, 26.255 ms, 26.316 ms, 26.673 ms, 26.792 ms | 19.701 ms, 20.020 ms, 19.591 ms, 19.564 ms, 19.259 ms, 19.373 ms | 15.660 ms, 15.698 ms, 15.717 ms, 15.693 ms, 15.692 ms, 15.685 ms |\n| range-set | 10.804 ms, 11.142 ms, 11.761 ms, 11.563 ms, 10.940 ms, 11.029 ms | 10.907 ms, 11.100 ms, 11.861 ms, 11.887 ms, 11.081 ms, 10.985 ms | 11.973 ms, 10.959 ms, 11.967 ms, 11.985 ms, 11.870 ms, 11.630 ms |\n| strings | 140.448 ms, 142.157 ms, 142.087 ms, 140.596 ms, 142.445 ms, 140.385 ms | 147.337 ms, 147.095 ms, 147.278 ms, 147.146 ms, 149.763 ms, 147.205 ms | 6.174 ms, 6.183 ms, 6.152 ms, 6.229 ms, 6.141 ms, 6.195 ms |\n| text-length | 3.041 ms, 3.056 ms, 3.025 ms, 3.028 ms, 3.059 ms, 3.033 ms | 5.587 ms, 5.680 ms, 5.606 ms, 5.636 ms, 5.643 ms, 5.606 ms | 6.045 ms, 5.988 ms, 5.895 ms, 6.009 ms, 5.902 ms, 5.921 ms |\n\n## Compilation and binary size\n\nOne build per implementation; elapsed time includes compiler startup and linking.\nThe fwp compiler itself is already built. Binary sizes include each toolchain's\nruntime and linking choices; they are not executable-code sizes alone.\n\n| Program | C build | Rust build | fwp build | C bytes | Rust bytes | fwp bytes |\n|---|---:|---:|---:|---:|---:|---:|\n| fib | 54.104 ms | 113.727 ms | 815.975 ms | 70376 | 4620856 | 80760 |\n| loop | 32.369 ms | 119.325 ms | 687.370 ms | 70320 | 4620776 | 81512 |\n| map | 43.763 ms | 225.767 ms | 798.030 ms | 70496 | 4621880 | 82128 |\n| pipeline | 41.716 ms | 158.758 ms | 732.796 ms | 70400 | 4620776 | 81928 |\n| range-set | 48.601 ms | 140.610 ms | 656.808 ms | 70400 | 4620600 | 81040 |\n| strings | 34.922 ms | 127.417 ms | 713.743 ms | 70520 | 4621480 | 81624 |\n| text-length | 41.302 ms | 120.801 ms | 717.394 ms | 70320 | 4620824 | 81632 |\n\n## Processor\n\n```text\nArchitecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n```\n"
+    }
+  ]
+}

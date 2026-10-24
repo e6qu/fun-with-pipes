@@ -30,7 +30,7 @@ static uint64_t map_probe_stamp(const char *stage, uint64_t before, size_t n, co
     for before, label, pointers in [
         ('    fwp_msort(keys,', 'scratch-allocation', 'tk, tv'),
         ('    size_t len = 0;', 'sort', 'keys, vals'),
-        ('    V result = fwp_map_typed_new(len, ops->columns);', 'deduplicate', 'tk, tv'),
+        ('    V result = fwp_map_typed_new(len, ops->columns);', 'deduplicate', 'keys, vals'),
         ('    MAP(result)->len = 0;', 'result-allocation', '(void *)(uintptr_t)result, NULL'),
         ('    fwp_value_finish(&owner, &cleanup);', 'materialize', '(void *)(uintptr_t)result, NULL'),
         ('    FWP_KEEP_ALIVE(keys); FWP_KEEP_ALIVE(vals);', 'release-scratch', 'NULL, NULL'),
@@ -100,9 +100,11 @@ def main():
               'executionOrder': orders, 'variants': variants,
               'scope': 'Separate instrumented construction-only programs locate phase variation. '
                        'Clock reads and stderr reporting perturb execution; these samples are not '
-                       'ordinary benchmark timings. Six builder phases and every large managed '
-                       'allocation record durations and addresses. Large allocation timings overlap '
-                       'enclosing phase timings and must not be added twice. Sixteen fresh processes '
+                       'ordinary benchmark timings. Phase labels follow saved statement boundaries: '
+                       'sort includes early scratch release in the current builder; the historical '
+                       'builder releases it in release-scratch. Deduplicate addresses name input lanes. '
+                       'Large-allocation timings overlap their enclosing phases; do not add them twice. '
+                       'Sixteen fresh processes '
                        'per variant rotate execution order. Input is 500,000 entries; all print '
                        'the expected map size. Actual instrumented binaries and disassembly retained.'}
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')

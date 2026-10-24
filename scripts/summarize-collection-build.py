@@ -59,7 +59,7 @@ def audit_tests(log):
     log = re.sub(r'\x1b\[[0-9;]*[A-Za-z]', '', log)
     expected = {'cached_map_borrows': 3, 'caf_ownership': 3,
                 'collection_construction': 3, 'decoder_partial': 1,
-                'inline_caf_ownership': 2, 'map_set_ownership': 6,
+                'inline_caf_ownership': 6, 'map_set_ownership': 7,
                 'mapped_array_construction': 3, 'numeric_array_fusion': 2,
                 'protocol': 9, 'range_set': 3, 'repl': 8, 'static_constants': 1}
     # Cargo's target headers use stderr; harness summaries use stdout. GitHub

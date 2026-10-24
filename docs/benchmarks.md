@@ -160,7 +160,13 @@ storage. Neither cost is quantified by the countdown comparison.
 
 Each directory in [`bench/`](../bench) contains `main.fwp`, `main.c` and
 `main.rs`. The programs must print the same result. The runner builds native
-executables with `fwp build --gc tracing -O2`, `cc -O2` and `rustc -O`. After one warmup per
+executables with `fwp build --gc MODE -O2`, the explicitly selected `CC -O2`,
+and `rustc -O`. `FWP_BENCH_OWNERSHIP` must name `arc` or `tracing`; there is
+no implicit measurement mode. `CC` must name the compiler and `FWP_LTO=0`
+keeps generated C in one source file without link-time optimization.
+Production CI selects checked ARC, matching the
+language's current native default. The scalar-text historical comparison explicitly
+selects tracing. After one warmup per
 executable, it measures six runs each and reports the median: the average of
 the two middle times after sorting. Execution order rotates C/Rust/fwp,
 Rust/fwp/C and fwp/C/Rust, twice. “Native” means machine code;
@@ -172,8 +178,9 @@ inner calculation, startup alone or peak memory. The report separately records
 one compilation time and the executable file size for each implementation.
 Compilation includes tool startup and linking; it excludes building the fwp
 compiler itself. Binary sizes include differing runtime and linking choices.
-The fwp build explicitly selects tracing, matching earlier runs' native memory
-mode; this is not a comparison of checked ARC against Rust.
+The report names its memory mode and build flags. Older snapshots below use
+tracing; they are not checked-ARC measurements and do not become such when the
+runner changes. Do not infer an ARC speedup from different runs or hosts.
 ARC means automatic reference counting, which releases objects when their last
 owning reference disappears.
 
@@ -185,6 +192,16 @@ that extra emission is outside both execution and reported compilation times.
 Both benchmark workflows upload this evidence. Earlier timing-only artifacts
 cannot establish what their machine instructions looked like.
 
+Production benchmarks and the focused `benchmark-comparison` suite also measure
+peak process memory with
+GNU time in three separate runs of each actual timed executable. Separate fwp
+binaries count managed allocations, retain operations and charged live storage;
+these exclude raw buffers, stack storage and allocator metadata. Each instrumented
+program is paired with an intentional unreleased allocation that the observer
+must detect. Their timings are not used. Saved C, binaries, observations and
+stack reports permit inspection; those stack reports describe the instrumented
+images, not the original timed programs. C/Rust allocation counts are not measured.
+
 ### What each program actually does
 
 | Program | Input and work | Important differences between implementations |
@@ -192,7 +209,7 @@ cannot establish what their machine instructions looked like.
 | `fib` | Compute `fib(35)`, with `fib(0)=0`, `fib(1)=1`, otherwise `fib(n-1)+fib(n-2)` | Same recurrence. Compilers can transform calls differently. fwp checks integer overflow; these C and optimized Rust builds do not have the same overflow guarantees. These inputs fit all three. |
 | `loop` | Start `(i, sum)=(100000000, 0)`; add `(i*3)%7`, decrement `i`, stop at zero | fwp expresses the loop state as a pair; its compiler can turn that into local variables. C and Rust write the loop directly. Checked arithmetic and generated code can still differ. |
 | `map` | Build `(key(i), i)` for `i=0..499999`, where `key(i)=(i*7919)%1000003`; sum 2 million lookups using the same key formula, missing values as zero | All three use contiguous sorted pairs searched by bisection. C uses `qsort`, Rust `sort_unstable_by_key`, fwp its map builder; construction/sorting costs differ. This compares complete implementations, not an isolated lookup operation. |
-| `range-set` | Build the distinct keys `0..999999`, then compute FNV-1a over the canonical set encoding: unsigned LEB128 count followed by eight little-endian bytes per key | All three start with ordered keys and need no sorting. C uses a heap buffer, Rust a vector, fwp a set. Hash multiplication wraps modulo 2^64 in all three. Optimizers may remove storage or combine loops; inspect retained binaries before claiming equal allocations. Runtime startup, allocation, hashing and output are timed together; the general runner uses fwp's tracing mode. |
+| `range-set` | Build the distinct keys `0..999999`, then compute FNV-1a over the canonical set encoding: unsigned LEB128 count followed by eight little-endian bytes per key | All three start with ordered keys and need no sorting. C uses a heap buffer, Rust a vector, fwp a set. Hash multiplication wraps modulo 2^64 in all three. Optimizers may remove storage or combine loops; inspect retained binaries before claiming equal allocations. Runtime startup, allocation, hashing and output are timed together; the report explicitly names its ARC or tracing mode. |
 | `pipeline` | For `0..999999`, multiply by 3, keep even results and sum; sum 20 rounds | fwp can combine the stages into one traversal without intermediate lists. C explicitly fills arrays; Rust constructs vectors and filters them. Eliminating that work can outweigh language overhead. |
 | `strings` | For `i=0..1999999`, concatenate decimal `i`, decimal `3*i` and `#`; sum text lengths | fwp can calculate some formatted lengths without creating the string. C uses `snprintf` and `strlen`; Rust uses `format!` and byte length. All characters here are ASCII, so the lengths agree. The programs need not perform the same formatting or allocation work. |
 | `text-length` | The same input, fwp pipeline and result as `strings`; C and Rust count decimal digits in groups of 16, 8, 4, 2 and 1, without formatting text | This compares fwp's elimination of temporary text against handwritten counting. All three check multiplication and sums for overflow; the inputs fit. The C/Rust failure messages differ and are not exercised. Startup, output, scheduling and remaining ownership work are still included; matching algorithms do not establish equal machine instructions. |
@@ -205,7 +222,19 @@ The [integer-text report](measurements/integer-text.md) records the first
 two-host direct-counting comparison and its raw samples. Older six-program
 measurements do not include this new peer comparison.
 
-### Recorded example and overhead
+### Current ARC baseline
+
+The [two-host ARC comparison](measurements/arc-comparison.md) records all seven
+programs, samples and inspected executables on AMD EPYC 9V45 and Neoverse-N2.
+It preserves slower loop and text-length results and explains unequal arithmetic
+guarantees. It is a descriptive baseline, not a measured ARC speedup.
+
+The [checked-arithmetic experiment](measurements/checked-bounds-protocol.md)
+tests whether return expressions preserve useful bounds. Its screen is fixed
+before results. The [first result](measurements/checked-bounds-results.md)
+does not pass on both hosts, so the compiler remains unchanged.
+
+### Historical tracing example and overhead
 
 The [2026-10-18 report](measurements/complete-programs-2026-10-18.json) records
 source `7c2b5638881cea6b476997b333aa61006dba1381` and this passing
@@ -855,14 +884,21 @@ slower cases. No local timings were used.
 
 ## Running comparisons
 
-Full benchmarks run on GitHub runners. The C/Rust comparison command is:
+Full benchmarks run on GitHub runners. For the native Linux C/Rust comparison:
 
 ```sh
-cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
+CC=gcc FWP_LTO=0 FWP_BENCH_OWNERSHIP=arc cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
 ```
 
 It writes the report to standard output, `target/bench.md` and the `bench` job
-summary. The per-change experiments have their own scripts and explicit controls:
+summary. The `benchmark-comparison` focused suite runs this checked-ARC comparison
+on native Linux AMD64/ARM64 with GCC. Both it and production CI inspect the actual
+C/Rust/fwp binaries with the [binary reviewer](../scripts/inspect-benchmark-binaries.py),
+check input hashes and timing summaries, and require checked-ARC
+fwp images to exclude tracing scans. The inspection does not execute downloaded
+binaries or turn these descriptive timings into a speed guarantee.
+[Corruption controls](../scripts/test-benchmark-evidence.py) must reject a wrong
+memory label, wrong machine architecture, object file and missing timing sample. The per-change experiments have their own scripts and explicit controls:
 
 | Comparison | Runner command |
 |---|---|
@@ -2019,7 +2055,9 @@ scratch-array cleanup must fail the probe. ARC shutdown charge is zero.
 Counts exclude allocator capacity/process RAM; binary sizes identify the tested
 files, not a claimed code-size improvement. No elapsed-time/C/Rust comparison
 was made. [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
-records acceptance; `scripts/summarize-map-failures.py` audits the artifacts.
+records acceptance. Use `scripts/summarize-map-failures.py` from that recorded
+revision to audit its historical artifacts. The current collector also checks
+comparison failures, compact sets and [sort-storage peaks](measurements/arc-comparison.md#releasing-map-sort-storage-sooner).
 
 ## Building numeric maps and sets without temporary lists
 
