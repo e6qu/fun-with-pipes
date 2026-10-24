@@ -5,64 +5,65 @@ and reserve ARC for necessary sharing. JIT is excluded.
 
 ## Current action
 
-**Next:** finish PR #205 at `51c295e02a8037f985fe9f662b8e1000fcd97798`; preserve its final
-head while production `40037426686` and docs `40037426647` complete. Seven of ten
-gates passed at the last audit. Both macOS architectures passed 2,346 saved binary
-outcomes. Linux AMD64 passed its full log audit; its binary inspection is next.
-Use the primary checkout's handoff and `/private/tmp/fwp-float-delivery-*` receipts
-for exact acceptance progress. Merge only after all ten gates and 7,158 inspections.
+**Next:** finish the array/iteration preparation and its measurement repair,
+inspect the native binaries, then publish one substantial PR with the results.
+PR #205 is merged at `336692f4329d9f628c05d6a42a7353c1702bdc09`; all ten checks
+and 7,158 binary outcomes passed. Its raw commit message is one line, without
+body or trailers. Redundant main CI `40048973688` was cancelled. Receipts and
+inspection reports remain under `/private/tmp/fwp-float-delivery-*`.
 
-## Next grouped delivery
+## Current preparation
 
 This branch adds static numeric literal arrays, direct list-style array display,
 JSON fusion, String display-copy removal and flat array iterator state. See
 [the protocol](measurements/array-text.md) for examples, restrictions and budgets.
-No new performance or allocation claim is accepted until the focused native jobs,
-actual binary review and final production delivery pass.
+Source `dbef97e1a9e843c1ffcfc8806650741782f10487` passes all six native jobs and
+complete logs in `40047565887`: every one of the fifteen test targets passes.
+The earlier iterator type-loss failure is repaired by projecting typed state
+fields directly. Array tests also collect compilation failures across settings.
+Actual inspection of all 1,008 focused outcomes and final production CI remain
+required. Preserve this passing compiler/runtime code while repairing measurements.
 
-Preparation `41f6438cf6fb04137aa8b97a05deb460df4702e3`, native run `40045988997`,
-exposed a type-loss bug in the new iterator state: reconstructing an array/index
-record before projecting a field lost the record's type. ARC rejected it; tracing
-C generation panicked. The repair reads the typed state fields directly. Array
-checks now collect compiler failures across configurations instead of stopping at
-the first one. Existing allocation and iterator cases cover the regression.
+The current output run `40047568819` passes AMD64 but fails ARM64 compiling the
+largest checksum input. GCC O2 exceeded the shared 60-second command deadline.
+The failed C input is byte-identical to the inspected successful input from
+`40045991255` (source `41f6438cf6fb`). This was a compilation timeout before that
+input's timing, not an output or lifetime failure. The partial artifact and both
+complete logs are retained. Diagnosis: `/private/tmp/fwp-array-timeout-diagnostics`
+and `fwp-array-state-output-audit.json`.
 
-A local reproduction uses the actual IR declarations, type functions and old/new
-state projections. It reproduces both unknown old field types and verifies the
-repaired array, index, accumulator, two counters and String capture (1.40s).
-Its first two diagnostic-harness attempts had Rust lifetime errors; those were
-fixed in the harness. This bounded check does not replace compilation/native CI.
-Receipt: `/private/tmp/fwp-iterator-state-type-check.json`.
+The repair separates explicit compilation and execution deadlines: 180 seconds
+for CI builds, unchanged 60 seconds for execution. Every build records wall time,
+status and diagnostics immediately; timeout handling terminates compiler children.
+Four focused controls pass (1.25s), including a real child-process timeout. Local
+resource limits are unchanged. See the [measurement protocol](measurements/descent-output-protocol.md).
+The compiler/runtime files are unchanged by this repair; publication must verify
+that identity before rerunning both measurements.
 
-All six complete logs are audited in `/private/tmp/fwp-array-cost-repair-audit.json`.
-Each host has the same four failures in two targets; the other thirteen targets
-pass. Both output measurement logs and their controls also pass, recorded in
-`fwp-array-cost-output-audit.json`; binary inspection remains outstanding. Earlier failure audits:
-`fwp-array-preparation-audit.json`, `fwp-array-repair-audit.json`,
-`fwp-array-borrow-repair-audit.json`. Keep their unique archives and logs.
-The prior compiler's output-script repairs passed eighteen local Clang controls;
-GCC and the new transformations remain native CI responsibilities.
+First measurement run `40045991255` passed both logs and 338 binary inspections.
+Largest observed counts: 200 full-output / 199 checksum requests per solve,
+zero count increments or retained managed bytes, peak charged bytes 4,352 / 2,560.
+CPU models are EPYC 9V45 and Neoverse-N2. The AMD64 3:1 checksum copy control
+fails its fixed 2% noise limit and stays inconclusive. Current-source repeats,
+static-data/code/stack review and final delivery remain required. Managed memory
+excludes static inputs, raw text capacity, runtime metadata and library allocations;
+peer buffer counts cover a different scope. No before/after speed or parity claim.
 
-Output measurement `40045991255` tests the same published source. Its fixed
-protocol uses six inputs, 48 samples, four warmups and 2% identical-copy checks.
-Report full output and checksum separately against C/Rust, including startup,
-actual allocation/live storage, static data and code/stack costs. Static input
-initialization remains once per process inside total timing. Predicted largest
-counts (200 full / 199 checksum) are not accepted measurements. Do not infer a
-speed improvement from earlier runs on different hardware.
+Useful `/private/tmp` receipts and tools:
 
-Prepared inspectors in `/private/tmp`:
+- `fwp-array-state-repair-{publication,audit}.json`: six native jobs at `dbef97e1`.
+- `fwp-array-output-first-results.json`: concise first-run observations; full raw
+  reports are in `fwp-array-output-evidence/41f6438cf6fb`.
+- `fwp-inspect-array-preparation.py`: inspect 168 outcomes per host.
+- `fwp-review-array-layout.py`: save 24 paired O2 layout/code reviews per host;
+  manually interpret stack prologues.
+- `fwp-inspect-array-output.py`: inspect 169 measurement/control files per Linux
+  host. Verify the explicit build deadline and new timing records in repaired runs.
 
-- `fwp-inspect-array-preparation.py`: 168 outcomes per native host.
-- `fwp-review-array-layout.py`: 24 paired O2 code/layout reviews per host;
-  manually interpret prologues for stack cost.
-- `fwp-inspect-array-output.py`: 169 files per Linux host, including coordinate
-  omission and between-solve lifetime controls.
-
-Keep one PR active. After #205 merges, bundle these changes, every verified repair
-and readable results in the next substantial PR. Full builds and benchmarks run
-on GitHub; focused local checks use the guard without changing its limits.
-All seven [plan](../PLAN.md) areas remain open; JIT is excluded.
+Keep unique failure archives and logs. Prune only inspected duplicate archives
+with verified remote originals. Full builds and measurements run on GitHub;
+focused local checks use the guard without changing its limits. All seven
+[plan](../PLAN.md) areas remain open; JIT is excluded.
 
 ## Roadmap status
 

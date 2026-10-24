@@ -276,6 +276,8 @@ jobs:
         run: >-
           python3 scripts/test-coordinate-work.py --cc gcc --rustc rustc
           --c-arch "${{ matrix.c_arch }}" --output coordinate-controls.json
+      - name: Verify compiler deadlines and failure records
+        run: python3 scripts/test-measurement-build.py
       - name: Compare full output with a shared result consumer
         run: >-
           python3 scripts/measure-descent-output.py
@@ -284,7 +286,7 @@ jobs:
           --case 3:0:32768 --case 3:1:32768 --case 3:199:4096
           --case 3:1999:4096 --case 33:199:4096 --case 129:199:4096
           --warmups 4 --samples 48 --order-seed 20261023
-          --timeout 60 --control-max-difference 0.02
+          --timeout 60 --build-timeout 180 --control-max-difference 0.02
           --host "${{ matrix.runner }}" --output descent-output-evidence
       - uses: actions/upload-artifact@v7
         if: always()

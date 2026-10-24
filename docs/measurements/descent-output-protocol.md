@@ -90,6 +90,15 @@ positions and ordered immediate predecessors; block boundaries are not balanced.
 Compilation, validation and memory probes are untimed. Elapsed time covers the
 whole process, including captured output and final shutdown.
 
+The workflow explicitly allows 180 seconds per compiler command and 60 seconds
+per execution. Compilation has a separate deadline because GCC exceeded the old
+shared 60-second limit on an ARM64 input that was byte-identical to an earlier
+successful build. This does not change measured-program limits or local resource
+limits. `build-commands.json` records each build's command, elapsed wall time,
+status and diagnostics, including failed attempts. A timed-out compiler and its
+children are terminated. Build times include host scheduling delays and remain
+outside the program timing samples; report them separately.
+
 Report checksum/full ratios within each language and fwp/C and fwp/Rust ratios
 for both output modes. A ratio of 2 means twice the time, or 100% extra time.
 Preserve every sample, slowdown and failing control. Both identical-fwp ratios
