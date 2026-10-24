@@ -16,6 +16,7 @@
     "float_linking",
     "wide_workers",
     "float_formats",
+    "array_text",
     "golden_check",
     "services",
     "hash_ownership",

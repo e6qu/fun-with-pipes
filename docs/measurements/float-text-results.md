@@ -11,7 +11,10 @@ Each solve creates a vector, applies explicit gradient formulas, and prints ever
 result. It does not build an automatic-differentiation tape. Only the formatter
 body differs between the old and new fwp binaries; their output must match the
 raw interpreter byte for byte. C/Rust use equivalent formulas and reuse buffers,
-but use their own float printers. Ratios compare complete implementations.
+but use their own float printers: C uses `printf("%.17g", value)` and Rust uses
+ordinary `Display`. fwp searches precisions for text that parses back to the
+original float. Cross-language checks compare numerical values, not identical
+text. Ratios include these formatting differences and compare complete programs.
 
 Timing includes process start, input creation, arithmetic, captured output and
 cleanup. It excludes compilation, correctness checks and separate memory probes.

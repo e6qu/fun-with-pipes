@@ -1,81 +1,134 @@
 # Session handoff
 
-All seven PLAN.md areas remain open. Remove tracing, prefer ownership and borrowing,
-and reserve ARC for necessary sharing. JIT is excluded.
+All seven [plan](../PLAN.md) areas remain open. Remove tracing, prefer ownership
+and borrowing, and reserve ARC for necessary sharing. JIT is excluded.
 
 ## Current action
 
-**Next:** finish this grouped formatter/output delivery: audit all nine final-head
-production jobs and documentation, then inspect the native binaries. Require
-7,158 saved files: 6,966 ownership/cleanup files, 72 float cases and 120 Linux
-output/lifetime controls. The publication receipt under `/private/tmp` records
-the final source, PR and run IDs; preparation evidence does not replace them.
-Squash merge only after final acceptance, with one subject at most eighty
-characters and an explicit empty body. Continue the roadmap after that merge.
+**Next:** audit the running stack repair on every native host, inspect its
+new frame reports and Linux measurements, then finish the grouped delivery PR
+against verified main `336692f4329d9f628c05d6a42a7353c1702bdc09`. Require all nine
+production jobs, docs and binary inspection at the final head before squash merge.
+The grouped draft uses branch `array-pipeline-delivery`. Its URL and current head
+are recorded in `/private/tmp/fwp-array-delivery-publication.json` once published.
+Standing publication/merge authorization remains active.
 
-Worktree `/private/tmp/fwp-float-delivery`, branch `float-output-delivery`, is based
-on verified #204 squash `2ba458a9a8049a33c2fa5c73a374c83c8fe34e10`.
-Compiler/runtime, language tests, measurement scripts and workflows match
-preparation `d7ad3e55f38685d3abaaa9c87badc3a8fc4a045f`, apart from removing one
-extra final blank line in the frozen test oracle. The local resource guard
-also repairs an exit/signalling race; six regression and disk tests pass with
-all resource limits unchanged.
-Documentation includes its accepted measurements and #204's final evidence.
-Local source identity, roadmap/link, Python syntax and workflow checks passed
-(3.13s). The guard repair passed six tests (1.65s); repeated inspection then
-passed all 120 AMD64 binaries (13.68s). Real permission failures still stop work.
-All inspected preparation ZIP caches were pruned after checking remote originals.
+Delivery worktree `/private/tmp/fwp-array-pipeline-delivery`, branch
+`array-pipeline-delivery`. Preparation `/private/tmp/fwp-array-list` retains the
+original source and documentation copies; continue edits in the delivery checkout.
+Published head `19addb905e762a0a06e7a8ba970e2e40b89f565c`, immutable tag
+`roadmap/revision-array-stack-19addb905e76`. Six-host native run `40051283361`
+and Linux measurement run `40051285670` are active. Publication passed in 6.73s;
+checks passed in 13.90s (formatting, docs, primitive inventory, native runner
+controls and measurement-build controls). Receipt: `fwp-array-stack-repair-publication.json`.
+This delivery records #205 acceptance, simplifies PLAN priorities and explains all
+intermediate array measurements.
+Local helper paths below are `/private/tmp`.
 
-Use `fwp-float-delivery-publication.json`, `fwp-audit-float-delivery-final.py` and
-`fwp-inspect-float-delivery-{ownership,text,controls}.py` under `/private/tmp`.
-`fwp-merge-float-delivery.py` requires every final gate and inspection before its
-one-line squash; `fwp-after-merge-float-delivery.py` verifies the primary guard
-repair before preserving the handoff and advancing to that merge.
+## Completed delivery
 
-## Scope and verified preparation
+[PR #205](https://github.com/e6qu/fun-with-pipes/pull/205) merged as `336692f4329d9f628c05d6a42a7353c1702bdc09`.
+Tested head `51c295e02a8037f985fe9f662b8e1000fcd97798`; exact tree and sole parent
+verified. Subject: `Speed up float printing and explain numerical performance costs`.
+The raw commit message has one line and no body or trailers.
+All nine production jobs (`40037426686`) and docs (`40037426647`) passed; complete
+logs audited. Independent inspection passed 7,158 saved outcomes, plus sixteen
+coordinate observations per Linux host. Same-tree main CI `40048973688` cancelled.
+Receipts: `fwp-float-delivery-{publication,final-acceptance,merge,merge-runs}.json`.
+Do not rerun completed merge helpers. Integrate acceptance into history in this PR.
 
-The formatter reuses already-rounded scientific digits for fixed decimal output.
-The [report](measurements/float-text-results.md) explains why this saves work,
-all input timings, matching-model acceptance, the remaining C/Rust gap and the
-larger stack/code costs. Allocation counts and per-solve live storage are unchanged.
-Six native jobs pass at `550ef3157720`; twelve saved cases per host cover exact
-ordinary/JSON output, rounding and deliberately corrupted results. The first
-Windows attempt found an LF-only summary assertion; its repaired line parser
-passes both Windows hosts. Runtime and measurement sources did not change.
+## Array group and evidence
 
-Timing sources `5476466183f7` and `d7ad3e55f386` have identical runtime and benchmark
-inputs. Runs `40027402138`, `40027406689`, `40032008445` retain five measurements,
-including unmatched CPU models. Matching pairs satisfy the original 2% copy-control
-limit and 5% largest-case reduction on both architectures. All 600 timing/control
-images and 72 native correctness images passed independent binary inspection.
-The first mixed workflow retains its old Windows failures; its timing jobs passed.
-Later six-host correctness evidence verifies the repair. Do not label that entire
-initial workflow successful or replace final-head gates with preparation evidence.
+[Array examples and test scope](measurements/array-text.md) explain literal-array
+storage, direct array-to-text output, immutable String reuse and flat iterator
+state. The production compiler still needs final acceptance for this group.
 
-The [output diagnostic](measurements/descent-output-longer.md) separately compares
-ordinary printing with a shared checksum consumer. It passed 676 binary checks;
-nine of twelve input/host pairs pass repeated controls. Three smaller AMD64 pairs
-remain inconclusive and cannot set budgets. Initial results and all samples remain
-linked. Checksum work is not pure arithmetic or isolated formatting time.
+Native run `40047565887` at `dbef97e1a9e8`: all six hosts and all fifteen targets
+pass, with complete logs audited. All **1,008 saved outcomes** pass independent
+inspection (168 per host). Expanded reviews retain 24 paired O2 binaries and C
+files per host, with assembly, section data and symbols:
+`fwp-array-layout-review/dbef97e1a9e8`. Reports:
+`fwp-array-native-evidence/dbef97e1a9e8`; log audit:
+`fwp-array-state-repair-audit.json`. Verified ZIP caches were pruned; originals
+remain on GitHub. Preserve unique failure archives.
 
-## Accepted preceding delivery
+Binary review found about 15 KiB entry frames on Clang. Constant initialization
+emitted a separate temporary type descriptor per element. The repair uses one
+block-local descriptor per array; stores only read it and never retain it.
+Local saved-C check at Apple Clang 17: O1 frame 15,040 → 720 bytes; O2 remains
+704 bytes. Exact output and allocation/cleanup results agree. Initial diagnostic
+incorrectly required improvement at both levels; corrected to retain the unchanged
+O2 result. Recheck passed in 1.23s: `fwp-array-init-stack-check/results.json`.
+The native test adds O1/O2 compiler frame reports and object files, with a 4 KiB
+individual startup-frame bound for this fixture. New Rust/native execution is
+still required on CI. This is not a total-call-stack bound.
 
-[PR #204](https://github.com/e6qu/fun-with-pipes/pull/204) passed nine production
-jobs, docs and 6,966 binary inspections at `80c89baa53567839dce0599d88f18d5791285943`.
-[History](roadmap-history.md#derivative-storage-arrays-and-borrowed-callbacks-pr-204)
-and the [inspection record](measurements/derivative-array-cleanup-2026-10-24.json)
-retain source, merge, logs and six-host outcomes. Cleanup checks remain required
-when the runtime changes; they do not establish complete removal of tracing.
+Windows layout inspection also needed repair: PE can place zero-initialized data
+in a virtual tail of `.data`, absent from stored bytes. The inspector now validates
+actual PE section bounds before treating those bytes as loader-zeroed. Both
+Windows reviews pass. AMD64: 168 outcomes followed by corrected 24-layout review
+(1.12s); ARM64 full download/inspection/review/pruning (26.37s). The incomplete
+AMD64 review remains separately named; it is not acceptance evidence.
 
-## Resume rules
+## Measurements
 
-Use `python3 scripts/local-guard.py COMMAND...` serially; full builds, suites and
-benchmarks stay on GitHub. Keep at least 64 GiB free disk and never raise limits.
-Read receipts before mutations. Preserve failure evidence, unique results and
-immutable source tags; prune only inspected duplicate caches after remote checks.
-Keep one active PR. Publication and squash merge after passing final gates are
-authorized; every commit is one line, at most eighty characters, without trailers
-or attribution. Python package initializers stay empty; imports stay at file top.
+Latest `6516169a0768` run `40049587794`: both Linux jobs and complete logs pass
+(4.37s audit), including explicit compiler deadlines and child cleanup controls.
+Audit: `fwp-array-build-time-output-audit.json`. AMD64's 169 binaries and build journal pass independent inspection (28.38s).
+Its 121 build commands took 17.99s total wall time, longest 0.500s. The 3:1
+checksum copy ratio 1.03681 again fails the 2% noise limit; process medians are
+1.56ms versus 1.50ms. Retain as inconclusive. ARM64's 169 binaries and journal also pass (13.89s): 121 commands, 27.36s
+total, longest 0.747s. Its 3:0 checksum control fails the 2% limit (ratio 0.96840).
+Both verified archive caches are pruned. The readable report and all four older
+job reports are prepared in `docs/measurements/array-output-results.md` and its
+linked raw JSON. New-source results still need review; do not rerun completed
+`fwp-record-array-output-results.py` after expanding that report.
+
+Previous `40047568819` passed AMD64; ARM64 exceeded its former 60-second compiler
+limit before the largest timing input. Failed C is byte-identical to a previously
+successful source. Unique archive retained in `fwp-array-measurement-failure-evidence`;
+identity is in `fwp-array-timeout-diagnostics`. Repair separates an explicit
+180-second CI build deadline from the unchanged 60-second execution deadline,
+records every command's elapsed time/status/diagnostics and kills its process group
+on timeout. Four actual controls pass. Local guard limits remain unchanged.
+
+First run `40045991255` at `41f6438cf6fb`: both logs and 338 binary inspections pass.
+Largest input: 200 full-output / 199 checksum managed requests, zero count increments
+or retained managed storage; charged peaks 4,352 / 2,560 bytes. EPYC 9V45 full-output
+ratios are 8.535× C / 9.313× Rust; Neoverse-N2 ratios 7.192× / 8.289×.
+AMD64 3:1 checksum copy ratio 1.02758 fails the fixed 2% noise limit; retain it as
+inconclusive. This intermediate source had a separate iterator failure; these
+numerical results do not establish general compiler acceptance.
+Reports: `fwp-array-output-evidence/41f6438cf6fb`; extraction:
+`fwp-array-output-first-results.json`. Current comparisons include formatter
+algorithm differences and are not paired before/after speed claims. New full
+output formats arrays directly; it creates no output list. Managed counts exclude
+static inputs, text capacity, runtime metadata and library allocations.
+
+## Earlier failures repaired
+
+| Source | Diagnosis and repair |
+|---|---|
+| `5f3efa1ea150` | Folding invalidated a dynamic probe; cached entry hid repeated work; nested display was missed. Corrected all three checks/traversals. |
+| `c3a479d55a17` | Rust mutable-traversal borrow failure; compute the match before borrowing. Save compiler artifacts only when built. |
+| `4aadfc11a8c5` | Extra String copy and iterator state tuples; removed those costs. Benchmark helpers now handle nonempty initialization and fused output. |
+| `41f6438cf6fb` | Reconstructed iterator state lost field types; directly project typed fields. All six hosts verified the repair at `dbef97e1a9e8`. |
+
+All failed native jobs and completed targets were audited before each repair.
+Unique failure archives remain in `fwp-array-{initial,borrow,cost}-failure-evidence`.
+Earlier source/run identities and complete logs remain in the corresponding
+`fwp-array-*-audit.json` receipts. Do not reinterpret failed sources as support.
+
+## Resources and verification
+
+Use `python3 scripts/local-guard.py COMMAND...` serially. Full builds, tests and
+measurements run on GitHub. Preserve 64 GiB free space and all other guard limits.
+Merged clean checkouts #198–204 and verified duplicate archives were pruned with
+receipts `fwp-pruned-*.json`. The clean #205 checkout was also pruned after merge/tree/tag verification
+(1.58s); receipt `fwp-pruned-delivery-205.json`. Free space afterward: 64.75 GiB.
+Do not rerun completed helpers that reference removed checkouts. Never remove dirty preparation worktrees
+or unique failed evidence. Primary checkout is detached at main with a modified
+handoff only. Backup: `fwp-handoff-before-float-delivery-merge.md`.
 
 ## Roadmap status
 

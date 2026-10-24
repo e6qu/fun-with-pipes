@@ -1,0 +1,269 @@
+{
+  "source": "51c295e02a8037f985fe9f662b8e1000fcd97798",
+  "merge": "336692f4329d9f628c05d6a42a7353c1702bdc09",
+  "parent": "2ba458a9a8049a33c2fa5c73a374c83c8fe34e10",
+  "tree": "2d7e3d92077229726b2cd6fb2ba788bb01b425e8",
+  "subject": "Speed up float printing and explain numerical performance costs",
+  "productionRun": 40037426686,
+  "documentationRun": 40037426647,
+  "savedBinaryFiles": 7158,
+  "checks": [
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T01:11:51Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40037426686/job/120700228457",
+      "name": "windows / native (windows-2025)",
+      "startedAt": "2026-10-23T23:24:42Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-23T23:23:02Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40037426647/job/120700227961",
+      "name": "roadmap_docs",
+      "startedAt": "2026-10-23T23:22:32Z",
+      "status": "COMPLETED",
+      "workflowName": "Roadmap documentation"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T00:56:49Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40037426686/job/120700228363",
+      "name": "windows / native (windows-11-arm)",
+      "startedAt": "2026-10-23T23:26:45Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T00:05:40Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40037426686/job/120700228320",
+      "name": "macos (macos-15)",
+      "startedAt": "2026-10-23T23:25:54Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T00:43:13Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40037426686/job/120700228397",
+      "name": "macos (macos-15-intel)",
+      "startedAt": "2026-10-23T23:25:24Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T00:10:17Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40037426686/job/120700228484",
+      "name": "macos_gc (macos-15)",
+      "startedAt": "2026-10-23T23:31:17Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T00:40:16Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40037426686/job/120700228374",
+      "name": "macos_gc (macos-15-intel)",
+      "startedAt": "2026-10-23T23:25:20Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T00:47:29Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40037426686/job/120700228376",
+      "name": "test (ubuntu-latest)",
+      "startedAt": "2026-10-23T23:30:10Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-24T01:05:59Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40037426686/job/120700228354",
+      "name": "test (ubuntu-24.04-arm)",
+      "startedAt": "2026-10-23T23:24:04Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-23T23:26:48Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/e6qu/fun-with-pipes/actions/runs/40037426686/job/120700228159",
+      "name": "bench",
+      "startedAt": "2026-10-23T23:24:49Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    }
+  ],
+  "reports": [
+    {
+      "kind": "ownership",
+      "host": "ubuntu-latest",
+      "source": "51c295e02a8037f985fe9f662b8e1000fcd97798",
+      "run": 40037426686,
+      "artifact": 12541602636,
+      "archiveSha256": "671508a239e14faf450fcfae987e3811f8a2db15f174021388c4ffb2a72c792b",
+      "reportSha256": "3095ef2892c7f3718a88707862cdfcafd23e3549b1408e78e2b48477376e9df4",
+      "savedFiles": null,
+      "observations": null
+    },
+    {
+      "kind": "ownership",
+      "host": "ubuntu-24.04-arm",
+      "source": "51c295e02a8037f985fe9f662b8e1000fcd97798",
+      "run": 40037426686,
+      "artifact": 12542212126,
+      "archiveSha256": "364a7e41cd65feefdbc3d674e91c04e8edbc00f86e6a4e8fa6a6be73aad97cbd",
+      "reportSha256": "4fa08dd60e91e559d0f523c6a8e6c1d036a60f638f3045e1d5d869b374a75a39",
+      "savedFiles": null,
+      "observations": null
+    },
+    {
+      "kind": "ownership",
+      "host": "windows-2025",
+      "source": "51c295e02a8037f985fe9f662b8e1000fcd97798",
+      "run": 40037426686,
+      "artifact": 12542277575,
+      "archiveSha256": "02d83177eb6ea3446dc5e7b90b8d13dcfce95a9f13b70c9c9fb20c8a4973ef22",
+      "reportSha256": "b9988076730ee0cffb4f16fee4c94cf1dc25ba29a7d66125741f9938612cc70f",
+      "savedFiles": null,
+      "observations": null
+    },
+    {
+      "kind": "ownership",
+      "host": "windows-11-arm",
+      "source": "51c295e02a8037f985fe9f662b8e1000fcd97798",
+      "run": 40037426686,
+      "artifact": 12541419651,
+      "archiveSha256": "e4a8c587a91e0b4ddc7ade1d26e5c3f2a7c63ffa0933f24c476e7e9f3b7dcef6",
+      "reportSha256": "ed8149d89c18b8f5a99267ddb97ec05ee5874ca85495995dd0ca96a37318e885",
+      "savedFiles": null,
+      "observations": null
+    },
+    {
+      "kind": "ownership",
+      "host": "macos-15",
+      "source": "51c295e02a8037f985fe9f662b8e1000fcd97798",
+      "run": 40037426686,
+      "artifact": 12539359316,
+      "archiveSha256": "418b34ef6eac8ba036b46c2021533472a757f4fc2caa52671e479355a8f152cb",
+      "reportSha256": "b4386e4e498ae53080ec4ea92552c59f5ba2d431cbbdb00579b5c3ef6bafa8ae",
+      "savedFiles": null,
+      "observations": null
+    },
+    {
+      "kind": "ownership",
+      "host": "macos-15-intel",
+      "source": "51c295e02a8037f985fe9f662b8e1000fcd97798",
+      "run": 40037426686,
+      "artifact": 12541054244,
+      "archiveSha256": "8c0e78e3cc146a57c1f7e8d8d8fd6f7d8bcd36dd2e13593a064b9fed69c18002",
+      "reportSha256": "cdeac26a9bb7e27f33ba0a752e0c54c757abe1ec605408c048cb58dc0fe7669f",
+      "savedFiles": null,
+      "observations": null
+    },
+    {
+      "kind": "floats",
+      "host": "ubuntu-latest",
+      "source": "51c295e02a8037f985fe9f662b8e1000fcd97798",
+      "run": 40037426686,
+      "artifact": 12541602636,
+      "archiveSha256": "671508a239e14faf450fcfae987e3811f8a2db15f174021388c4ffb2a72c792b",
+      "reportSha256": "4ce39b5ad3e88716237bf827ba51669d30144d526dc5305dc1cfb1c99f1dc57f",
+      "savedFiles": 12,
+      "observations": null
+    },
+    {
+      "kind": "floats",
+      "host": "ubuntu-24.04-arm",
+      "source": "51c295e02a8037f985fe9f662b8e1000fcd97798",
+      "run": 40037426686,
+      "artifact": 12542212126,
+      "archiveSha256": "364a7e41cd65feefdbc3d674e91c04e8edbc00f86e6a4e8fa6a6be73aad97cbd",
+      "reportSha256": "3b0c0b990159d3ab9ef6ca2db9320f8d240f4fc13e32c2b00e3c0ec9345f02e8",
+      "savedFiles": 12,
+      "observations": null
+    },
+    {
+      "kind": "floats",
+      "host": "windows-2025",
+      "source": "51c295e02a8037f985fe9f662b8e1000fcd97798",
+      "run": 40037426686,
+      "artifact": 12542277575,
+      "archiveSha256": "02d83177eb6ea3446dc5e7b90b8d13dcfce95a9f13b70c9c9fb20c8a4973ef22",
+      "reportSha256": "527b287af4fae981698ed0f883143f8c7589b5e7d0d2e13d10500358729f07d6",
+      "savedFiles": 12,
+      "observations": null
+    },
+    {
+      "kind": "floats",
+      "host": "windows-11-arm",
+      "source": "51c295e02a8037f985fe9f662b8e1000fcd97798",
+      "run": 40037426686,
+      "artifact": 12541419651,
+      "archiveSha256": "e4a8c587a91e0b4ddc7ade1d26e5c3f2a7c63ffa0933f24c476e7e9f3b7dcef6",
+      "reportSha256": "9854d225c0b1e1db81b205548e1591dcfca359b8e917f35798841b650059560f",
+      "savedFiles": 12,
+      "observations": null
+    },
+    {
+      "kind": "floats",
+      "host": "macos-15",
+      "source": "51c295e02a8037f985fe9f662b8e1000fcd97798",
+      "run": 40037426686,
+      "artifact": 12539359316,
+      "archiveSha256": "418b34ef6eac8ba036b46c2021533472a757f4fc2caa52671e479355a8f152cb",
+      "reportSha256": "e8cbe3a734590263c7e0f88bed79ae67a06119445c76e063b567c67e80d25306",
+      "savedFiles": 12,
+      "observations": null
+    },
+    {
+      "kind": "floats",
+      "host": "macos-15-intel",
+      "source": "51c295e02a8037f985fe9f662b8e1000fcd97798",
+      "run": 40037426686,
+      "artifact": 12541054244,
+      "archiveSha256": "8c0e78e3cc146a57c1f7e8d8d8fd6f7d8bcd36dd2e13593a064b9fed69c18002",
+      "reportSha256": "3188edb33cf93643d82a3ec14767e7d38e4ce283614767b3c7aa1bbf7f79f6e9",
+      "savedFiles": 12,
+      "observations": null
+    },
+    {
+      "kind": "output",
+      "host": "ubuntu-latest",
+      "source": "51c295e02a8037f985fe9f662b8e1000fcd97798",
+      "run": 40037426686,
+      "artifact": 12541308533,
+      "archiveSha256": "a040698b24df9a75e76f8c162e6d8846ff03a2a35706e1f44960e8696fe082dc",
+      "reportSha256": "14766ce6516b611cefbb435d897a2862c5e5f63ce4be1cc6630b869829b55428",
+      "savedFiles": 60,
+      "observations": null
+    },
+    {
+      "kind": "output",
+      "host": "ubuntu-24.04-arm",
+      "source": "51c295e02a8037f985fe9f662b8e1000fcd97798",
+      "run": 40037426686,
+      "artifact": 12541679745,
+      "archiveSha256": "26860bb82bccd18987a96b6c232cd970f5b424229fd238b4cd89b074a4468dfa",
+      "reportSha256": "a225f8114543c56af8ab7706de753b5a8f4ed51c4b863e11c8a1106d8573e4b7",
+      "savedFiles": 60,
+      "observations": null
+    }
+  ],
+  "scope": "All production and documentation jobs passed. Independent source/output/binary inspections cover 6966 ownership outcomes, 72 float cases and 120 output/lifetime controls; Linux hosts each also pass 16 coordinate observations. Detailed saved artifacts remain with the named GitHub runs; report hashes identify the local independent inspections."
+}

@@ -368,6 +368,20 @@ static V fwp_show(V v, const fwp_desc *d) {
     return buf_to_str(&b);
 }
 
+/* The compiler proves that array.to-list is used only by show. Read the
+ * borrowed numeric array directly while preserving the list's text syntax. */
+static V fwp_show_array_list(V array, const fwp_desc *elem) {
+    fwp_buf b = {0};
+    buf_putc(&b, '[');
+    uint64_t count = fwp_array_len(array);
+    for (uint64_t i = 0; i < count; i++) {
+        if (i) buf_puts(&b, ", ");
+        fwp_write(&b, fwp_array_load(array, i, elem), elem, 0);
+    }
+    buf_putc(&b, ']');
+    return buf_to_str(&b);
+}
+
 /* integers up to 64 bits: digits written backwards into a buffer, and
  * their count, without formatting through a descriptor */
 static int fwp_u64_fmt(char *end, uint64_t x) {

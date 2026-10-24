@@ -21,7 +21,10 @@ coordinate from its previous, current and next input coordinates. New
 boundary cases. The original C/Rust peers compute each adjacent pair's residual
 once and add its contributions to both coordinates; they remain separate entries.
 Both C/Rust arrangements reuse two buffers. fwp builds a new immutable array per
-update. Formatting and checked indexing also differ.
+update. Checked indexing also differs. fwp searches decimal precisions for a
+representation that parses back to the original float; the coordinate-based C
+peer uses `printf("%.17g", value)` and Rust uses its ordinary `Display` formatter.
+The checks compare numerical values, not identical printed text across languages.
 
 There are six timed entries: fwp, a byte-identical copy of fwp, coordinate-based
 C/Rust, and the original edge-based C/Rust. Each process performs 512 fresh solves,

@@ -25,7 +25,8 @@ cases; the initial 512-solve run had several failing timing controls.
 For each language, compare:
 
 - **Full output:** the existing program prints every coordinate after each solve.
-  fwp converts the final array to a list, formats it as text and prints it.
+  fwp's source converts the final array to a list for display, but numeric-array
+  fusion removes that intermediate list and formats the array directly.
   The C and Rust peers format their final numerical buffer directly.
 - **Checksum output:** a separately compiled C function reads every coordinate
   before its owner releases the buffer. It mixes the exact float bits into a
@@ -37,10 +38,17 @@ For each language, compare:
 The checksum prevents unused results from being discarded. It also costs time;
 its final print can use internal C-library storage, outside the numerical-buffer
 observer's scope.
+The formatters differ: fwp searches decimal precisions until parsing the result
+returns the original float, C uses `printf("%.17g", value)`, and Rust uses its
+ordinary `Display` formatter. Checks compare parsed coordinates, not identical
+text across languages. Full-output ratios therefore include different formatting
+algorithms; they do not isolate compiler overhead.
 Therefore, subtracting these timings does **not** give pure formatting time.
 The checksum variant still includes input creation, all updates, bounds checks,
-allocation, cleanup, runtime startup and the checksum itself. In fwp it removes
-output-list construction as well as formatting; in C/Rust it removes formatting.
+allocation, cleanup, runtime startup and the checksum itself. With numeric-array
+text fusion enabled, neither fwp mode builds an output list. The older results
+before this optimization also included list construction in their full-output
+mode; keep that difference explicit when comparing revisions.
 
 The [fwp program](../../tests/fixtures/descent_packed.fwp) and coordinate-based
 [C](../../tests/fixtures/descent_coordinate.c) and
@@ -89,6 +97,15 @@ Use four warmups, 48 samples and seed 20261023. Every eight-sample block balance
 positions and ordered immediate predecessors; block boundaries are not balanced.
 Compilation, validation and memory probes are untimed. Elapsed time covers the
 whole process, including captured output and final shutdown.
+
+The workflow explicitly allows 180 seconds per compiler command and 60 seconds
+per execution. Compilation has a separate deadline because GCC exceeded the old
+shared 60-second limit on an ARM64 input that was byte-identical to an earlier
+successful build. This does not change measured-program limits or local resource
+limits. `build-commands.json` records each build's command, elapsed wall time,
+status and diagnostics, including failed attempts. A timed-out compiler and its
+children are terminated. Build times include host scheduling delays and remain
+outside the program timing samples; report them separately.
 
 Report checksum/full ratios within each language and fwp/C and fwp/Rust ratios
 for both output modes. A ratio of 2 means twice the time, or 100% extra time.

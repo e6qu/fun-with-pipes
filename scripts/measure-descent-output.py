@@ -13,6 +13,7 @@ import platform
 import random
 import re
 import shutil
+import signal
 import statistics
 import struct
 import subprocess
@@ -29,12 +30,46 @@ def digest(raw):
     return hashlib.sha256(raw).hexdigest()
 
 
+def build(command, environment, timeout, commands, directory):
+    """Record compiler wall time separately; terminate its children on failure."""
+    command = [str(p) for p in command]
+    started = time.perf_counter_ns()
+    failure = None
+    process = None
+    stdout, stderr = b'', b''
+    try:
+        with subprocess.Popen(command, env=environment, stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE, start_new_session=True) as process:
+            try:
+                stdout, stderr = process.communicate(timeout=timeout)
+            except BaseException:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                stdout, stderr = process.communicate()
+                raise
+    except BaseException as error:
+        failure = error
+    returncode = process.returncode if process is not None else None
+    commands.append(dict(command=command, stdout=stdout.decode(errors='replace'),
+                         stderr=stderr.decode(errors='replace'), returncode=returncode,
+                         elapsedNs=time.perf_counter_ns()-started, timeoutSeconds=timeout,
+                         failure=type(failure).__name__ if failure else None,
+                         failureMessage=str(failure) if failure else None))
+    (directory / 'build-commands.json').write_text(json.dumps(commands, indent=2) + '\n')
+    if failure is not None:
+        raise failure
+    if returncode:
+        raise subprocess.CalledProcessError(returncode, command, stdout, stderr)
+
+
 def output_variant(code, language):
     """Replace only this benchmark's final output, keeping its result release."""
     if language == 'fwp':
         assert '#define FWP_ARC_ONLY 1' in code
         ids = []
-        for name in ['array.to-list', 'show', 'print']:
+        for name in ['array._show-list', 'print']:
             match, = re.findall(r'/\* ' + re.escape(name) + r' : [^\n]+ \*/\nstatic V (f\d+)\(', code)
             ids.append(match)
         body, = re.findall(r'^static V f0\(void\) \{\n(.*?)^\}', code, re.M | re.S)
@@ -151,13 +186,13 @@ def main():
         parser.add_argument('--' + name, required=True, type=Path)
     for name in ['host', 'cc', 'rustc', 'c-arch', 'objdump', 'nm', 'time']:
         parser.add_argument('--' + name, required=True)
-    for name in ['samples', 'warmups', 'order-seed', 'timeout']:
+    for name in ['samples', 'warmups', 'order-seed', 'timeout', 'build-timeout']:
         parser.add_argument('--' + name, required=True, type=int)
     parser.add_argument('--control-max-difference', required=True, type=float)
     parser.add_argument('--case', required=True, action='append', metavar='COORDINATES:UPDATES:SOLVES')
     args = parser.parse_args()
     assert platform.system() == 'Linux'
-    assert min(args.samples, args.warmups, args.timeout) > 0
+    assert min(args.samples, args.warmups, args.timeout, args.build_timeout) > 0
     assert args.samples % 8 == 0 and 0 < args.control_max_difference < 1
     plans = [tuple(map(int, case.split(':'))) for case in args.case]
     assert all(len(plan) == 3 and plan[2] > 0 for plan in plans)
@@ -177,10 +212,6 @@ def main():
         assert result.returncode == 0, (command, result.returncode, result.stderr.decode(errors='replace'))
         return result
 
-    def build(command):
-        actual = run(command, environment)
-        commands.append(dict(command=[str(p) for p in command], stdout=actual.stdout.decode(), stderr=actual.stderr.decode()))
-
     labels = ['fwp-full', 'fwp-sink', 'fwp-full-identical', 'fwp-sink-identical', 'c-full', 'c-sink', 'rust-full', 'rust-sink']
     results = {}
     for points, updates, repetitions in plans:
@@ -196,7 +227,8 @@ def main():
         COORDINATE.check_vectors(reference.stdout, expected, 1)
         (directory / 'interpreter.stdout').write_bytes(reference.stdout)
         generated = directory / 'input.c'
-        build([args.compiler.resolve(), 'build', '--gc', 'arc', '--memory', 'dynamic', '--emit-c', '-O2', source, '-o', generated])
+        build([args.compiler.resolve(), 'build', '--gc', 'arc', '--memory', 'dynamic', '--emit-c', '-O2', source, '-o', generated],
+              environment, args.build_timeout, commands, out)
         originals = {'fwp': generated.read_text()}
         originals['c'] = f'#define DIMENSIONS {points}\n#define UPDATES {updates}\n' + (ROOT / 'tests/fixtures/descent_coordinate.c').read_text()
         originals['rust'] = (ROOT / 'tests/fixtures/descent_coordinate.rs').read_text().replace(
@@ -205,7 +237,8 @@ def main():
         for mode, dump, omit in [('hash', 0, 0), ('dump', 1, 0), ('omit', 0, 1)]:
             obj = directory / ('sink-' + mode + '.o')
             build([args.cc, *flags, '-Wall', '-Wextra', '-Werror', '-DDESCENT_SINK_DUMP=' + str(dump),
-                   '-DDESCENT_SINK_OMIT_LAST=' + str(omit), '-c', ROOT / 'tests/fixtures/descent_output_sink.c', '-o', obj])
+                   '-DDESCENT_SINK_OMIT_LAST=' + str(omit), '-c', ROOT / 'tests/fixtures/descent_output_sink.c', '-o', obj],
+                  environment, args.build_timeout, commands, out)
             sink_objects[mode] = obj
         binaries, outputs, metadata, profiles, controls, peer_profiles, statuses = {}, {}, {}, {}, {}, {}, {}
 
@@ -223,7 +256,7 @@ def main():
             else:
                 command = [args.cc, *flags, *(['-w'] if language == 'fwp' else ['-Wall', '-Wextra', '-Werror']),
                            path, *objects, '-o', binary, '-lm', '-lpthread', '-ldl']
-            build(command)
+            build(command, environment, args.build_timeout, commands, out)
             binaries[label] = binary
             actual = subprocess.run([str(binary)], env=environment, capture_output=True, timeout=args.timeout)
             assert actual.returncode == status, (label, actual.returncode, actual.stderr.decode(errors='replace'))
@@ -355,10 +388,13 @@ def main():
         configuration={k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
         settings={k: v for k, v in environment.items() if k.startswith('FWP_') or k == 'CC'}, results=results,
         scope='Complete repeated solves with ordinary formatted output or a shared external checksum consumer. '
-        'The sink removes output-list construction and formatting in fwp, and formatting in C/Rust, but adds checksum work. '
+        'Full-output fwp formats the numeric array directly; neither fwp mode creates an output list. '
+        'The sink replaces formatted output with checksum work in all three implementations. '
         'This difference is not pure output time or pure arithmetic time. Arithmetic, input creation, update buffers, '
         'bounds checks and cleanup remain. No LTO; the same separately compiled C consumer reads every result coordinate. '
         'Compilation, dump validation, memory profiles and RSS probes are excluded from timed samples. '
+        'Each compiler command has a separate explicit deadline and recorded wall time; build-commands.json '
+        'is updated after each attempt, including failures. These wall times include host scheduling delays. '
         'C/Rust reuse two numerical buffers; fwp constructs immutable arrays. Memory profiles cover fwp managed/raw storage '
         'and only the numerical buffers in C/Rust; those scopes are not directly comparable. Instrumentation can prevent '
         'allocation elimination, so its counts are not an allocation trace of the timed executable. Process RSS covers each complete '

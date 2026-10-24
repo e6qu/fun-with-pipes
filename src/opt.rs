@@ -578,6 +578,15 @@ impl<'p> Opt<'p> {
 
     fn call(&mut self, id: FuncId, args: Vec<Expr>, depth: usize) -> Expr {
         let callee = &self.funcs[id];
+        // Top-level display of a string preserves its bytes. Eliminate the
+        // copy before ownership lowering so aliases receive ordinary owners.
+        // Strings nested inside other displayed values still need escaping.
+        if matches!(&callee.body, Body::Prim(symbol) if symbol == "show")
+            && args.len() == 1
+            && callee.ty.params(1).0[0] == &MT::con("std::String")
+        {
+            return args.into_iter().next().unwrap();
+        }
         if let Body::Ctor(tag) = callee.body {
             return Expr::Construct(tag, args);
         }

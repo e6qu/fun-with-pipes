@@ -33,7 +33,11 @@ def edit_source(code, language, repetitions):
     if language == 'fwp':
         # Only this saved pure numerical entry may bypass its one-shot CAF.
         assert re.findall(r'^static V caf[0-9]+\(void\)', code, re.M) == ['static V caf0(void)']
-        assert 'static void fwp_init_consts(void) {\n}' in code
+        # Literal numerical arrays initialize static storage once per process.
+        # Keep that startup work before the repeated solves, inside total timing.
+        assert code.count('static void fwp_init_consts(void) {\n') == 1
+        assert code.count('    fwp_init_consts();\n') == 1
+        assert code.index('    fwp_init_consts();\n') < code.index('    V r = caf0();')
         old = '    V r = caf0();'
         new = f'    V r = FWP_UNIT; for (size_t batch = 0; batch < {repetitions}; ++batch) {{ r = f0(); }}'
     elif language == 'c':

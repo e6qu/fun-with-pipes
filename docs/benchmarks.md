@@ -81,6 +81,12 @@ decimal digits while preserving exact output. Matching-model repetitions pass
 the predeclared speed screen on both architectures. The report retains all
 inputs, C/Rust gaps, unchanged allocation counts and increased stack/code size.
 
+The next [array/text group](measurements/array-text.md) removes temporary lists,
+String copies and initial iterator tuples. Its allocation tests and [complete
+C/Rust comparisons](measurements/array-output-results.md) are separate evidence: fewer heap requests alone do not prove
+a timing gain. Final delivery checks remain open; [the handoff](development-state.md)
+records sources, current measurements, noisy rows and the startup-stack repair.
+
 ## Choose the question first
 
 | Question | Read | What the number means |
