@@ -45,8 +45,11 @@ The `http-application` focused suite checks this example alone. The full
 fit the existing 25-minute job limit. All twelve jobs passed on six native hosts
 in [run 40062164443](https://github.com/e6qu/fun-with-pipes/actions/runs/40062164443).
 Production CI keeps both HTTP test suites. These checks do not supply the
-long-running service memory measurements still required above. Printed request
-counts are correctness results, not throughput benchmarks.
+long-running service memory measurements still required above. The next
+[API memory check](measurements/http-application-memory.md) samples between
+completed request groups, including disconnects and forced shutdown; its native
+results are pending. Printed request counts are correctness results, not
+throughput benchmarks.
 
 Timing budgets remain unset until repeated baselines identify ordinary variation.
 Record the chosen host/input budget before optimizing, retain slower results and

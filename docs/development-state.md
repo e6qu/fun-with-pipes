@@ -5,16 +5,28 @@ and borrowing, with ARC for necessary sharing. JIT is excluded.
 
 ## Current action
 
-**Next:** finish the grouped file-application and HTTP delivery on branch
-`file-http-delivery`: audit every focused and production job, inspect the saved
-application binaries, repair every observed failure, then squash-merge only after
-all nine production jobs, documentation and binary review pass for the exact head.
+**Next:** run the prepared [API memory checks](measurements/http-application-memory.md)
+on GitHub, audit every host and fix all observed failures. This checkout is
+`/private/tmp/fwp-http-application-memory`, branch `http-application-memory`,
+prepared from `bd0dc0100a516099590c340c012f74b7b666ebd2`.
 
-The delivery checkout is `/private/tmp/fwp-file-http-delivery`. Publication and
-acceptance receipts under `/private/tmp/fwp-file-http-delivery-*` record the PR,
-source and runs when published. Keep one active PR. Standing publication and
-merge authorization remains active; use one subject at most 80 characters and
-an empty body, then verify the merge tree and message.
+[PR #207](https://github.com/e6qu/fun-with-pipes/pull/207) remains the only active
+PR. Its production run `40064764447` and documentation run `40064764348` require
+all ten exact-head gates plus independent binary review before squash merge.
+Benchmark/docs pass; eight native jobs are still running, with no observed failure.
+Keep its delivery checkout `/private/tmp/fwp-file-http-delivery` unchanged.
+Do not open another PR until #207 is verified and merged. Standing publication
+and merge authorization remains active: one subject at most 80 characters,
+empty body, verified merge tree and message.
+
+The API observer covers idle managed charge, accepted sockets, metric storage,
+RSS, partial-body disconnects and forced shutdown; missing-free/close controls
+must fail. Eight concurrent clients exercise repeated success/error/streaming
+requests. Native execution and binary review remain pending. Formatting and
+16 native-runner controls pass (1.61s and 7.67s). The verified #206 compiler
+emitted C (18.66s); local Clang O1 exceeded the fixed 1 GiB aggregate RSS guard
+and was stopped. Move validation to GitHub, never raise or bypass that limit.
+Compiler receipt: `/private/tmp/fwp-verified-206-compiler/receipt.json`.
 
 ## What changed and what passed
 

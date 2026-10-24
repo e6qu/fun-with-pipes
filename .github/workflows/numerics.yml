@@ -2205,6 +2205,7 @@ jobs:
       CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
       FWP_UDP_ARTIFACTS: server-check-evidence/udp
       FWP_SERVER_ENTRY_ARTIFACTS: server-check-evidence/entries
+      FWP_HTTP_APPLICATION_ARTIFACTS: server-check-evidence/http-application
       FWP_ENTRY_INTERFACE: ${{ matrix.part == 'http-rest' && 'rest' || matrix.part == 'http-mcp' && 'mcp' || '' }}
     steps:
       - name: Require the exact source commit for a recheck
@@ -2277,7 +2278,7 @@ jobs:
               cpu = subprocess.check_output(['powershell', '-NoProfile', '-Command', 'Get-CimInstance Win32_Processor | Select-Object Name,Manufacturer,NumberOfCores,NumberOfLogicalProcessors | ConvertTo-Json'], text=True)
           (evidence / 'cpu.txt').write_text(platform.platform() + '\n' + platform.machine() + '\n' + cpu)
           files = sorted(p for directory in ['src', 'lib', 'runtime'] for p in Path(directory).rglob('*') if p.is_file())
-          files += [Path(name) for name in ['tests/http_server.rs', 'tests/web.rs', 'tests/support/http_server_process.rs', 'examples/server/api.fwp', 'tests/web/server.fwp', 'tests/server_entry_ownership.rs', 'tests/fixtures/server_entries.fwp', 'tests/fixtures/server_entry_client.fwp', 'tests/support/client_allocations.rs', 'tests/support/process_memory.rs', 'scripts/summarize-server-entries.py', '.github/workflows/numerics.yml']]
+          files += [Path(name) for name in ['tests/http_server.rs', 'tests/web.rs', 'tests/support/http_server_process.rs', 'tests/support/http_application.rs', 'tests/support/http_application_memory.rs', 'tests/fixtures/http_app_memory.c', 'examples/server/api.fwp', 'tests/web/server.fwp', 'tests/server_entry_ownership.rs', 'tests/fixtures/server_entries.fwp', 'tests/fixtures/server_entry_client.fwp', 'tests/support/client_allocations.rs', 'tests/support/process_memory.rs', 'scripts/summarize-server-entries.py', '.github/workflows/numerics.yml']]
           Path('server-check-evidence/source-sha256.json').write_text(json.dumps({p.as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in files}, indent=2) + '\n')
           PY
       - run: cargo fmt --all -- --check

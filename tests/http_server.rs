@@ -12,6 +12,9 @@ use std::time::{Duration, Instant};
 #[path = "support/http_server_process.rs"]
 mod http_server_process;
 
+#[path = "support/http_application.rs"]
+mod http_application;
+
 fn fwp() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_fwp"))
 }
@@ -35,9 +38,13 @@ impl Drop for Server {
 
 fn start(mut cmd: Command) -> Server {
     cmd.env("FWP_ADDR", "127.0.0.1:0");
-    let (child, addr, stderr) =
-        http_server_process::start(&mut cmd, "listening on http://", Duration::from_secs(60))
-            .unwrap();
+    let (child, addr, stderr) = http_server_process::start(
+        &mut cmd,
+        "listening on http://",
+        Duration::from_secs(60),
+        std::process::Stdio::null(),
+    )
+    .unwrap();
     Server {
         child,
         addr,

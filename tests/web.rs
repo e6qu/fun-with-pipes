@@ -219,6 +219,7 @@ fn start_command(mut cmd: Command, tls: bool, env: &[(&str, &str)]) -> Option<Se
             "listening on http://"
         },
         Duration::from_secs(60),
+        std::process::Stdio::null(),
     )
     .unwrap();
     Some(Server {

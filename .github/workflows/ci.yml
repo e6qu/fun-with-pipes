@@ -39,6 +39,7 @@ jobs:
       RUST_TEST_THREADS: 2
       FWP_ARC_ARTIFACTS: ownership-evidence/arc
       FWP_FILE_APPLICATION_ARTIFACTS: ownership-evidence/file-applications
+      FWP_HTTP_APPLICATION_ARTIFACTS: ownership-evidence/http-application
       FWP_TAIL_ARTIFACTS: ownership-evidence/tail
       FWP_AD_WORKSPACE_ARTIFACTS: ownership-evidence/workspaces
       FWP_AD_SCOPE_ARTIFACTS: ownership-evidence/scopes
@@ -176,6 +177,7 @@ jobs:
       RUST_TEST_THREADS: 2
       FWP_ARC_ARTIFACTS: ownership-evidence/arc
       FWP_FILE_APPLICATION_ARTIFACTS: ownership-evidence/file-applications
+      FWP_HTTP_APPLICATION_ARTIFACTS: ownership-evidence/http-application
       FWP_TAIL_ARTIFACTS: ownership-evidence/tail
       FWP_AD_WORKSPACE_ARTIFACTS: ownership-evidence/workspaces
       FWP_AD_SCOPE_ARTIFACTS: ownership-evidence/scopes
@@ -259,6 +261,7 @@ jobs:
     env:
       FWP_ARC_ARTIFACTS: ownership-evidence/arc
       FWP_FILE_APPLICATION_ARTIFACTS: ownership-evidence/file-applications
+      FWP_HTTP_APPLICATION_ARTIFACTS: ownership-evidence/http-application
       FWP_TAIL_ARTIFACTS: ownership-evidence/tail
       FWP_AD_WORKSPACE_ARTIFACTS: ownership-evidence/workspaces
       FWP_AD_SCOPE_ARTIFACTS: ownership-evidence/scopes
