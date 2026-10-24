@@ -265,6 +265,7 @@ jobs:
       FWP_FILE_APPLICATION_ARTIFACTS: ownership-evidence/file-applications
       FWP_HTTP_APPLICATION_ARTIFACTS: ownership-evidence/http-application
       FWP_STATIC_GUARD_ARTIFACTS: ownership-evidence/static-guards
+      FWP_TASK_CONTEXT_ARTIFACTS: ownership-evidence/task-context
       FWP_TAIL_ARTIFACTS: ownership-evidence/tail
       FWP_AD_WORKSPACE_ARTIFACTS: ownership-evidence/workspaces
       FWP_AD_SCOPE_ARTIFACTS: ownership-evidence/scopes

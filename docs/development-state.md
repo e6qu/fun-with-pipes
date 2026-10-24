@@ -45,10 +45,13 @@ used 64 KiB fixture stacks on the runners above; final native checks cover this
 portable fixture adjustment. The runtime change is unchanged apart from comments.
 
 Final acceptance requires exact-head API binaries on all six native hosts and
-static guard binaries on four Unix hosts, as well as the existing ownership,
+static guard binaries on four Unix hosts, Linux page-policy/failure binaries,
+as well as the existing ownership,
 file, numerical, stack and layout evidence. `scripts/inspect-http-application.py`
 checks saved API images/records. CI preserves guard evidence in
-`ownership-evidence/static-guards`. A skipped target never establishes support.
+`ownership-evidence/static-guards` and Linux allocation-block evidence in
+`ownership-evidence/task-context/pages`. A wiring regression checks both uploads.
+A skipped target never establishes support.
 
 Publication and acceptance receipts use `/private/tmp/fwp-http-memory-delivery-*`.
 Record the resulting PR, final source and run IDs after publication. All earlier
@@ -77,7 +80,7 @@ Use `python3 scripts/local-guard.py COMMAND...` serially. Full builds/suites and
 benchmarks stay on GitHub. Keep 64 GiB free, target below 2 GiB and sampled RSS
 below 1 GiB. A local full API Clang build exceeded RSS and was stopped; do not
 retry or raise limits. Focused guard checks pass at Clang O1/O2 (1.39s), native
-runner coverage/failure controls pass (sixteen cases, 7.66s), and formatting,
+runner coverage/artifact/failure controls pass (seventeen cases, 7.57s), and formatting,
 workflow syntax and docs checks pass. Local Clang does not establish GCC support.
 
 Only verified duplicate caches and clean published checkout copies were pruned.

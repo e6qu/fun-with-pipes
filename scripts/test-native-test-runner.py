@@ -126,6 +126,23 @@ class Coverage(unittest.TestCase):
                       environment)
         self.assertIn("ownership-evidence/", steps)
 
+    def test_stack_guard_artifacts_follow_the_native_shards(self):
+        workflow = (SHARDS.ROOT / ".github/workflows/ci.yml").read_text()
+        schedule = SHARDS.assignment(SHARDS.SCHEDULE)
+        jobs = {"test"}
+        jobs.update({"regular": "macos", "gc": "macos_gc"}[shard]
+                    for shard, names in schedule.items() if "static_memory" in names)
+        for job in jobs:
+            body = re.search(rf"^  {job}:\n(.*?)(?=^  \w+:\n|\Z)",
+                             workflow, re.M | re.S).group(1)
+            environment, steps = body.split("    steps:", 1)
+            self.assertIn("FWP_STATIC_GUARD_ARTIFACTS: ownership-evidence/static-guards",
+                          environment, job)
+            if job == "test":
+                self.assertIn("FWP_TASK_CONTEXT_ARTIFACTS: ownership-evidence/task-context",
+                              environment, job)
+            self.assertIn("path: ownership-evidence/", steps, job)
+
     def test_repository_targets_are_assigned_exactly_once(self):
         value = json.loads(subprocess.check_output(
             ["cargo", "metadata", "--no-deps", "--format-version", "1"], cwd=SHARDS.ROOT))
