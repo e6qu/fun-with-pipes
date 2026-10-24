@@ -228,6 +228,10 @@ programs, samples and inspected executables on AMD EPYC 9V45 and Neoverse-N2.
 It preserves slower loop and text-length results and explains unequal arithmetic
 guarantees. It is a descriptive baseline, not a measured ARC speedup.
 
+The [checked-arithmetic experiment](measurements/checked-bounds-protocol.md)
+tests whether return expressions preserve useful bounds. Its screen is fixed
+before results; it does not change the compiler.
+
 ### Historical tracing example and overhead
 
 The [2026-10-18 report](measurements/complete-programs-2026-10-18.json) records

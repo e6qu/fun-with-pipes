@@ -125,8 +125,27 @@ still have C/Rust gaps. No compiler speedup or memory-count claim is made.
 A related preparation now adds separate peak-process-memory measurements for
 C/Rust/fwp and fwp managed allocation/retain/live-storage counts, with seven
 intentional leak controls. Local template checks passed for all fourteen retained
-generated C programs (2.99s including syntax/docs); native measurement is pending.
+generated C programs (2.99s including syntax/docs); native run `40076674217` PASSES on both hosts at `b16ed5e33f29`.
 The full measurements remain runner-only and do not change PR #208's passing head.
+
+
+Memory run `40076674217` at `b16ed5e33f29774c2d56e5500c8d7548ea52ce06` passes;
+both complete logs and all 70 actual binaries are independently reviewed (1.22s
+AMD64 and 1.22s ARM64). All fourteen injected leaks are detected. `map` records
+four managed requests, 24,000,032 requested bytes, one retain and 24,000,008 peak
+charged bytes; other scalar/pipeline cases have zero requests/retains. All ordinary
+profiles end with zero additional charge. These are scoped managed counts, not
+C/Rust allocator counts or process memory. Evidence and exact timings are under
+`/private/tmp/fwp-benchmark-memory-evidence/b16ed5e33f29`.
+
+
+The next prepared experiment edits generated C only: preserve successful signed
+subtraction/addition expressions after their existing overflow checks. The
+checked-bounds protocol fixes 32 samples, two warmups, all allowed CPUs, an
+identical-binary control within 3%, at least 5% loop improvement and no more than
+3% slowdown elsewhere. Both wall and child CPU time must pass on both hosts.
+No compiler change is selected. Protocol and runner are prepared; publication
+and native execution remain pending.
 
 ## Local limits
 

@@ -91,3 +91,66 @@ linking but excluding the build of the fwp compiler itself.
 Use the [explicit reproduction command](../benchmarks.md#running-comparisons)
 and retain the native artifacts. Focused verification is not the nine-job
 production acceptance required for the next PR.
+
+## Separate memory measurements
+
+[Run 40076674217](https://github.com/e6qu/fun-with-pipes/actions/runs/40076674217)
+passes both native hosts at source `b16ed5e33f29774c2d56e5500c8d7548ea52ce06`.
+It repeats timing and adds separate memory measurements. AMD64 now reports EPYC
+9V74, not the earlier 9V45; ARM64 reports Neoverse-N2. The compiler, runtime and
+benchmark programs are unchanged. [Both complete reports and reviews](arc-memory-2026-10-24.json)
+retain the new timing samples, including AMD64 pipeline's slower result than
+Rust. Different host/session times do not measure a compiler change.
+
+GNU time records peak resident set size (RSS), the physical pages resident for
+the process, in three fresh runs of each actual timed executable. The table
+shows ranges in KiB, where 1 KiB is 1,024 bytes. It includes runtime/startup
+storage; it is not an allocation count or maximum logical live payload.
+
+| Host | Program | C peak KiB | Rust peak KiB | fwp peak KiB |
+|---|---|---:|---:|---:|
+| AMD64 | `fib` | 1640–1704 | 2024 | 1972 |
+| AMD64 | `loop` | 1636–1640 | 2024–2152 | 1980–2108 |
+| AMD64 | `map` | 16860–16864 | 9820–9912 | 28104 |
+| AMD64 | `pipeline` | 14816–14820 | 9844–9960 | 1980 |
+| AMD64 | `range-set` | 9420–9428 | 9792–9808 | 10532–10648 |
+| AMD64 | `strings` | 1640–1704 | 2028–2272 | 1784–1912 |
+| AMD64 | `text-length` | 1640–1704 | 2024–2152 | 1780–1784 |
+| ARM64 | `fib` | 1364–1380 | 1572–1696 | 1376–1392 |
+| ARM64 | `loop` | 1316–1380 | 1572–1696 | 1652 |
+| ARM64 | `map` | 16420–16484 | 9312–9440 | 26488 |
+| ARM64 | `pipeline` | 13028 | 9472–9488 | 1652 |
+| ARM64 | `range-set` | 9060–9124 | 9316–9380 | 9568–9584 |
+| ARM64 | `strings` | 1368–1380 | 1568–1692 | 1396 |
+| ARM64 | `text-length` | 1316–1380 | 1568–1688 | 1396 |
+
+The map's fwp process uses more peak memory than both peers. The next storage
+investigation should distinguish construction/sort workspace from the final
+sorted table before selecting a change. The pipeline uses much less because
+fwp removes intermediate collections that its peers construct.
+
+Separate instrumented fwp executables count from **after constant initialization
+through language cleanup**. A managed request is a request for runtime-owned
+value storage, not necessarily a system allocator call. Charged bytes are the
+runtime's accounting for that storage, excluding raw runtime buffers, allocator
+metadata and stacks. Both hosts report the same counts:
+
+| Programs | Requests | Requested bytes | Retains | Peak charged bytes | Final added charged bytes |
+|---|---:|---:|---:|---:|---:|
+| `fib`, `loop`, `pipeline`, `strings`, `text-length` | 0 | 0 | 0 | 0 | 0 |
+| `map` | 4 | 24,000,032 | 1 | 24,000,008 | 0 |
+| `range-set` | 1 | 8,000,008 | 0 | 8,000,008 | 0 |
+
+Every ordinary profile performs zero tracing collections. Each has a paired
+control that deliberately leaves a 16-byte managed allocation unreleased. All
+fourteen controls across both hosts record one extra request, sixteen extra
+requested bytes and sixteen final charged bytes. Thus the observer notices the
+introduced retention. This is not proof that every allocation path is covered.
+C/Rust managed-allocation counts are not measured.
+
+Independent review covers **42 timed images and 28 separate instrumented images**,
+the exact generated-C transformations, all RSS/profile samples, fourteen leak
+controls and eight corrupted-artifact controls. Instrumented binary sizes and
+compiler stack reports are retained separately; they cannot describe the original
+timed program's stack use. No instrumented or GNU-time run contributes to the
+elapsed-time table above.
