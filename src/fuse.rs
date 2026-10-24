@@ -1903,18 +1903,18 @@ fn first_evaluated(e: &mut Expr) -> &mut Expr {
             .position(|field| !matches!(field, Expr::Local(_) | Expr::Const(_))),
         _ => None,
     };
-    match (e, first_field) {
-        (Expr::Call(_, args), _)
-            if args.len() == 1 && matches!(args[0], Expr::Call(..) | Expr::Let(..)) =>
-        {
+    let first_argument = matches!(e, Expr::Call(_, args)
+        if args.len() == 1 && matches!(args[0], Expr::Call(..) | Expr::Let(..)));
+    match (e, first_field, first_argument) {
+        (Expr::Call(_, args), _, true) => {
             // A statically known unary call evaluates its sole argument first.
             // This exposes show inside print without crossing an earlier effect
             // or a resource frame. Multi-argument calls retain their ordering.
             first_evaluated(&mut args[0])
         }
-        (Expr::Let(_, v, _), _) => first_evaluated(v),
-        (Expr::Record(fields), Some(first)) => first_evaluated(&mut fields[first]),
-        (e, _) => e,
+        (Expr::Let(_, v, _), _, _) => first_evaluated(v),
+        (Expr::Record(fields), Some(first), _) => first_evaluated(&mut fields[first]),
+        (e, _, _) => e,
     }
 }
 

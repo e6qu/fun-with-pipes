@@ -108,7 +108,7 @@ jobs:
       - name: Contracts, semantics, allocation and cleanup controls
         run: cargo test --no-fail-fast --lib --test array_text --test numeric_array_fusion --test mapped_array_construction --test static_constants --test array_element_ownership --test array_unwind_ownership --test iterator_fusion --test float_formats
       - name: Save compiler for bounded macOS ARM64 diagnostics
-        if: ${{ always() && runner.os == 'macOS' && runner.arch == 'ARM64' }}
+        if: ${{ always() && runner.os == 'macOS' && runner.arch == 'ARM64' && hashFiles('target/debug/fwp') != '' }}
         run: |
           test -x target/debug/fwp
           cp target/debug/fwp array-text-evidence/fwp

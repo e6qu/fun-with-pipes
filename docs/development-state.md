@@ -5,8 +5,8 @@ and reserve ARC for necessary sharing. JIT is excluded.
 
 ## Current action
 
-**Next:** publish the consolidated repair batch, then require passing six-host
-reruns and inspect their saved binaries. All initial jobs have been audited.
+**Next:** publish the Rust borrowing repair, then require passing six-host
+reruns and inspect their saved binaries. All completed failed jobs are audited.
 Keep active PR #205 unchanged; this is a separate preparation branch with no PR.
 
 Worktree `/private/tmp/fwp-array-list`, branch `array-list-preparation`, starts at
@@ -60,8 +60,8 @@ repeats the actual workload behind its cached entry, and lets fusion reach `show
 inside a unary `print` call without moving earlier effects. A new shared-list
 case checks that multiple consumers retain their list. Generated C is now saved
 before structural assertions, and a missed lowering no longer hides later cases.
-The focused macOS ARM64 job will also save its compiler for bounded diagnostics;
-full builds remain on GitHub.
+The focused macOS ARM64 job saves its compiler, when built, for bounded
+diagnostics; full builds remain on GitHub.
 
 The repaired observer passes local production Clang O1/O2 checks using the accepted
 #199 compiler (3.58s): 260 requests for the original 129-element program, zero
@@ -72,6 +72,16 @@ cases require zero increments. This does not measure every bookkeeping instructi
 An actual intermediate
 representation dump confirms the nested unary display case (0.26s). New compiler
 runtime checks and binary inspection still require CI.
+
+The first repair, `c3a479d55a17e4a2830d03fd701051dab9468081`, failed Rust
+compilation on all six hosts in run `40043545777`: the guarded mutable match in
+`first_evaluated` caused E0505. No runtime tests ran. All logs are audited in
+`fwp-array-repair-audit.json`. The next repair decides whether to descend before
+borrowing the mutable node. A bounded check compiles the exact function and
+expression enum: it reproduces the old error and verifies six ordering boundaries
+with the corrected function. Unused payload types are opaque in this local
+check; it does not replace full compilation. The optional compiler-artifact step
+now runs only when the file exists, avoiding a second error after a failed build.
 
 ## Scope and verified preparation
 
