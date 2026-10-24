@@ -41,8 +41,11 @@ Sender completion waits for its cancelled task to release captures.
 panic during cleanup itself from escaping with live borrowed tasks. A subprocess
 control checks that boundary. Shutdown also drains connections registered while
 it waits for workers; a real-socket regression checks closure and owner release.
-The preceding focused run is audited; publish these fixes together and rerun
-the focused suite. The workflow now publishes cleanup results before longer tests.
+Focused run `40122286598` at `e479c9db553c94c5b611001ecadd5224aaef70d0`
+was superseded after both Clippy steps passed. Do not count its unfinished suites
+as passes. The final guard uses explicit completion state and tests entry calls
+from a destructor during an existing Rust unwind, as well as cleanup failure.
+Publish that refinement and audit the new focused run before integration. The workflow now publishes cleanup results before longer tests.
 
 The macro regression was reproduced against
 `/private/tmp/fwp-verified-array-construction-compiler/fwp`: two macro invocations

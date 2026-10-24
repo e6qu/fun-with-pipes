@@ -92,10 +92,12 @@ unsafe impl<T> Send for Baton<T> {}
 /// An entry cannot unwind past unfinished borrowed tasks. Ordinary evaluation
 /// panics are caught and propagated after cleanup; a second panic during
 /// cleanup must end the process instead of letting those borrows escape.
-struct AbortIncompleteCleanup;
+struct AbortIncompleteCleanup {
+    armed: bool,
+}
 impl Drop for AbortIncompleteCleanup {
     fn drop(&mut self) {
-        if std::thread::panicking() {
+        if self.armed {
             eprintln!("fwp: interpreter cleanup panicked; aborting");
             std::process::abort();
         }
@@ -560,7 +562,28 @@ mod lifetime_tests {
     #[test]
     fn cleanup_panic_aborts_before_borrowed_tasks_escape() {
         const CONTROL: &str = "FWP_TEST_CLEANUP_ABORT";
-        if std::env::var_os(CONTROL).is_some() {
+        if let Ok(control) = std::env::var(CONTROL) {
+            if control == "unwind" {
+                struct EvaluateOnDrop;
+                impl Drop for EvaluateOnDrop {
+                    fn drop(&mut self) {
+                        let program = Program::default();
+                        let mut it = Interp::new(&program, Box::new(std::io::sink())).unwrap();
+                        it.run_entry(|it| {
+                            it.spawn_rust(Box::new(|_| {}), None, false);
+                            Ok(())
+                        })
+                        .unwrap();
+                    }
+                }
+                assert!(catch_unwind(|| {
+                    let _evaluation = EvaluateOnDrop;
+                    panic!("outer panic control");
+                })
+                .is_err());
+                return;
+            }
+            assert_eq!(control, "1");
             let program = Program::default();
             let mut it = Interp::new(&program, Box::new(std::io::sink())).unwrap();
             let _: R<()> = it.run_entry(|it| {
@@ -570,22 +593,28 @@ mod lifetime_tests {
             });
             unreachable!();
         }
-        let output = Command::new(std::env::current_exe().unwrap())
-            .args([
-                "--exact",
-                "sched::lifetime_tests::cleanup_panic_aborts_before_borrowed_tasks_escape",
-                "--nocapture",
-            ])
-            .env(CONTROL, "1")
-            .output()
-            .unwrap();
-        assert!(!output.status.success());
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        assert!(
-            stderr.contains("fwp: interpreter cleanup panicked; aborting"),
-            "{stderr}"
-        );
-        assert!(!String::from_utf8_lossy(&output.stdout).contains("test result:"));
+        for control in ["1", "unwind"] {
+            let output = Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "sched::lifetime_tests::cleanup_panic_aborts_before_borrowed_tasks_escape",
+                    "--nocapture",
+                ])
+                .env(CONTROL, control)
+                .output()
+                .unwrap();
+            if control == "unwind" {
+                assert!(output.status.success(), "{output:?}");
+                continue;
+            }
+            assert!(!output.status.success());
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            assert!(
+                stderr.contains("fwp: interpreter cleanup panicked; aborting"),
+                "{stderr}"
+            );
+            assert!(!String::from_utf8_lossy(&output.stdout).contains("test result:"));
+        }
     }
 
     #[test]
@@ -799,7 +828,7 @@ pub(crate) fn wrap(n: Native) -> Value {
 /// Run a task's body with the baton, wait for its children and record its
 /// result; a failure that is not a cancellation ends the process.
 fn run_task(mut it: Interp<'static>, body: TaskBody, world: &World) {
-    let _cleanup = AbortIncompleteCleanup;
+    let mut cleanup = AbortIncompleteCleanup { armed: true };
     new_slice();
     let outcome = catch_unwind(AssertUnwindSafe(|| {
         if it.check_cancel().is_err() {
@@ -844,6 +873,7 @@ fn run_task(mut it: Interp<'static>, body: TaskBody, world: &World) {
     }
     drop(task);
     world.event();
+    cleanup.armed = false;
 }
 
 impl<'p> Interp<'p> {
@@ -851,7 +881,7 @@ impl<'p> Interp<'p> {
     /// panic must join them before borrowed program data or writers can expire.
     pub(crate) fn run_entry<T>(&mut self, run: impl FnOnce(&mut Self) -> R<T>) -> R<T> {
         assert!(!self.entry_active, "nested interpreter entry");
-        let cleanup = AbortIncompleteCleanup;
+        let mut cleanup = AbortIncompleteCleanup { armed: true };
         self.entry_active = true;
         self.world.stopping.store(false, AO::SeqCst);
         self.task.cancelled.store(false, AO::SeqCst);
@@ -882,7 +912,7 @@ impl<'p> Interp<'p> {
         }
         self.entry_active = false;
         let child_panic = self.world.panic.lock().unwrap().take();
-        drop(cleanup);
+        cleanup.armed = false;
         match outcome {
             Err(panic) => resume_unwind(panic),
             Ok(result) => match child_panic {
