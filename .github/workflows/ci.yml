@@ -15,6 +15,9 @@ env:
   CARGO_PROFILE_TEST_OPT_LEVEL: '1'
   CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
   CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
+  # macOS suppresses allocator error messages when stderr is captured unless
+  # reporting is explicit. Preserve the original error in each failed test log.
+  MallocDebugReport: stderr
   FWP_CALLBACK_CAPTURE_ARTIFACTS: ownership-evidence/direct-captures
   FWP_ARRAY_CAPTURE_ARTIFACTS: ownership-evidence/array-captures
 
@@ -159,7 +162,9 @@ jobs:
         if: failure() && runner.os == 'macOS'
         with:
           name: compiler-crashes-regular-${{ matrix.runner }}
-          path: ~/Library/Logs/DiagnosticReports/fwp*
+          path: |
+            ~/Library/Logs/DiagnosticReports/fwp*
+            target/debug/fwp
           if-no-files-found: ignore
 
   # Split the integration targets between the two existing macOS jobs.
@@ -259,7 +264,9 @@ jobs:
         if: failure() && runner.os == 'macOS'
         with:
           name: compiler-crashes-gc-${{ matrix.runner }}
-          path: ~/Library/Logs/DiagnosticReports/fwp*
+          path: |
+            ~/Library/Logs/DiagnosticReports/fwp*
+            target/debug/fwp
           if-no-files-found: ignore
 
   test:

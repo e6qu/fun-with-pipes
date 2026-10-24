@@ -5,8 +5,10 @@ reserve ARC for sharing and remove tracing. JIT is excluded.
 
 ## Current action
 
-**Next:** publish the grouped list-copy/benchmark PR from `list-copy-delivery`,
-then verify its exact final head: nine production jobs, docs and saved binaries.
+**Next:** diagnose and repair PR #210's Intel macOS compiler allocator abort.
+The current changes preserve allocator messages, named inputs and the compiler
+image during the full CI run. They do not establish a runtime repair. Then verify
+the final head: nine production jobs, docs and saved binaries.
 Keep one active PR. Squash-merge only after every gate passes, with one subject
 of at most 80 characters and an empty body, then continue the plan.
 
@@ -15,6 +17,46 @@ Prepared from verified #209 merge `2520d136b7036ab878cac0ef48947b581c81b84a` and
 `e5983ace1cc9fff7176482eeadb106d7a13a61e0`. Compiler/runtime/library sources match focused `883f1c140089`;
 the Windows test repair and measured results use `851c7a774b92`.
 The preparation branch and immutable source tags are retained.
+
+## Unresolved compiler abort
+
+[PR #210](https://github.com/e6qu/fun-with-pipes/pull/210)'s original head
+`281b54d9193b432bb808b4387cc0a4dad34dacba` passed nine of ten gates. All completed
+logs were audited; only the Intel macOS GC job failed, in
+`console_input_matches_raw_interpretation`. The Rust compiler aborted in type
+inference, before generated C ran. Preserve [the original failure](https://github.com/e6qu/fun-with-pipes/actions/runs/40091968517/job/120866324330).
+
+The saved production compiler has the crash report's exact UUID
+`42cd802d-3482-3779-acce-42251ea4f37d`. Disassembly places the failure in ordinary
+system `free`, releasing a boxed function result type. Its owning type-checker
+code and library inputs are unchanged from the passing base. This narrows the
+investigation; it does not identify the cause.
+
+[Completed diagnostics](https://github.com/e6qu/fun-with-pipes/actions/runs/40103957497)
+pass 360 production compilations, 90 nightly AddressSanitizer compilations and
+three runs of the original two-worker test neighborhood. Their logs and artifact
+hashes were independently reviewed. Earlier partial runs and heap-check results
+are retained. Passing reruns do not repair the original crash.
+
+[A guarded-allocation diagnostic](https://github.com/e6qu/fun-with-pipes/actions/runs/40105746847)
+reuses the matching compiler binary. Ordinary allocations pass; Guard Malloc
+cannot create the requested 4 GiB worker stack and stops before inference with
+EAGAIN. This distinct diagnostic limitation does not explain the original abort.
+The saved system allocator UUID also matches the crash. Inspect its internal
+free path and obtain a failing allocation history before changing ownership code.
+
+macOS can suppress malloc error messages when stderr is captured. CI now explicitly
+requests those messages and preserves the debug compiler with crash reports.
+The console test logs each source body and uses a distinct filename for each case.
+No retry or ignored failure is added.
+
+Local investigation records use `fwp-console-*` and `fwp-list-copy-console-failure`
+under `/private/tmp`; completed publication/review helpers must not be rerun.
+The independently verified next array-sort/construction group is checkpointed at
+`9824e22e827cfd6116c55ac2fcc2651ed02a7dcc`, tested source `e0c4dd51bae3`, on
+`array-sort-ownership`. Six native jobs and both Linux cost jobs pass; 504 native
+executables and 128 cost executables were reviewed. It remains the next grouped
+delivery after this failure is resolved. Keep one active PR.
 
 ## Grouped changes and evidence
 
