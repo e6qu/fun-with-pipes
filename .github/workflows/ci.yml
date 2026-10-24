@@ -40,6 +40,7 @@ jobs:
       FWP_ARC_ARTIFACTS: ownership-evidence/arc
       FWP_FILE_APPLICATION_ARTIFACTS: ownership-evidence/file-applications
       FWP_HTTP_APPLICATION_ARTIFACTS: ownership-evidence/http-application
+      FWP_MAP_FAILURE_ARTIFACTS: ownership-evidence/maps
       FWP_STATIC_GUARD_ARTIFACTS: ownership-evidence/static-guards
       FWP_TAIL_ARTIFACTS: ownership-evidence/tail
       FWP_AD_WORKSPACE_ARTIFACTS: ownership-evidence/workspaces
@@ -264,6 +265,7 @@ jobs:
       FWP_ARC_ARTIFACTS: ownership-evidence/arc
       FWP_FILE_APPLICATION_ARTIFACTS: ownership-evidence/file-applications
       FWP_HTTP_APPLICATION_ARTIFACTS: ownership-evidence/http-application
+      FWP_MAP_FAILURE_ARTIFACTS: ownership-evidence/maps
       FWP_STATIC_GUARD_ARTIFACTS: ownership-evidence/static-guards
       FWP_TASK_CONTEXT_ARTIFACTS: ownership-evidence/task-context
       FWP_TAIL_ARTIFACTS: ownership-evidence/tail
@@ -441,7 +443,7 @@ jobs:
           cargo fetch --locked
           echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
       - name: OpenSSL headers (TLS)
-        run: sudo apt-get update && sudo apt-get install -y libssl-dev
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev binutils time
       - name: Benchmark build failure and metadata controls
         run: python3 scripts/test-measurement-build.py
       - name: Numerical measurement requirement controls
@@ -462,6 +464,10 @@ jobs:
         run: python3 scripts/inspect-benchmark-binaries.py --input target/bench-evidence --source "${{ github.event.pull_request.head.sha || github.sha }}" --memory arc --arch x86_64 --objdump objdump --output target/bench-inspection.json
       - name: Reject wrong benchmark modes, binaries and missing samples
         run: python3 scripts/test-benchmark-evidence.py --input target/bench-evidence --source "${{ github.event.pull_request.head.sha || github.sha }}" --memory arc --arch x86_64 --objdump objdump --output target/bench-controls.json
+      - name: Measure process memory and separate managed storage
+        run: python3 scripts/measure-benchmark-memory.py --input target/bench-evidence --inspection target/bench-inspection.json --source "${{ github.event.pull_request.head.sha || github.sha }}" --cc gcc --time /usr/bin/time --samples 3 --output target/bench-memory
+      - name: Inspect managed-storage images and leak controls
+        run: python3 scripts/inspect-benchmark-memory.py --input target/bench-memory --benchmarks target/bench-evidence --inspection target/bench-inspection.json --source "${{ github.event.pull_request.head.sha || github.sha }}" --arch x86_64 --objdump objdump --output target/bench-memory-inspection.json
       - name: Preserve benchmark comparisons and measured executables
         if: always()
         uses: actions/upload-artifact@v7
@@ -471,5 +477,7 @@ jobs:
             target/bench.md
             target/bench-inspection.json
             target/bench-controls.json
+            target/bench-memory/
+            target/bench-memory-inspection.json
             target/bench-evidence/
           if-no-files-found: error

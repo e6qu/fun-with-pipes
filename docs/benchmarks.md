@@ -192,7 +192,8 @@ that extra emission is outside both execution and reported compilation times.
 Both benchmark workflows upload this evidence. Earlier timing-only artifacts
 cannot establish what their machine instructions looked like.
 
-The focused `benchmark-comparison` suite also measures peak process memory with
+Production benchmarks and the focused `benchmark-comparison` suite also measure
+peak process memory with
 GNU time in three separate runs of each actual timed executable. Separate fwp
 binaries count managed allocations, retain operations and charged live storage;
 these exclude raw buffers, stack storage and allocator metadata. Each instrumented
@@ -230,7 +231,8 @@ guarantees. It is a descriptive baseline, not a measured ARC speedup.
 
 The [checked-arithmetic experiment](measurements/checked-bounds-protocol.md)
 tests whether return expressions preserve useful bounds. Its screen is fixed
-before results; it does not change the compiler.
+before results. The [first result](measurements/checked-bounds-results.md)
+does not pass on both hosts, so the compiler remains unchanged.
 
 ### Historical tracing example and overhead
 

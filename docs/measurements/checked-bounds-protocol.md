@@ -56,4 +56,5 @@ it cannot establish parity with C/Rust or isolate universal language overhead.
 
 Run `numerics.yml` with `suite=checked-bounds` and `native_runner=all`.
 The implementation is [measure-checked-bounds.py](../../scripts/measure-checked-bounds.py).
-No timing claim exists until its native artifacts have been reviewed.
+The [first reviewed result](checked-bounds-results.md) fails the combined
+two-host screen; no arithmetic compiler change is selected.

@@ -1,189 +1,119 @@
 # Session handoff
 
 All seven [plan](../PLAN.md) areas remain open. Remove tracing; prefer ownership
-and borrowing, with ARC for necessary sharing. JIT is excluded.
+and borrowing, with ARC only for necessary sharing. JIT is excluded.
 
 ## Current action
 
-**Next:** finish exact-head acceptance of [PR #208](https://github.com/e6qu/fun-with-pipes/pull/208),
-squash-merge after all nine production jobs, documentation and binary reviews
-pass, then continue ownership checks and measured numerical costs. Keep one active
-PR; use one subject at most 80 characters and an empty body, and verify the merge.
+**Next:** complete exact-head acceptance of [PR #208](https://github.com/e6qu/fun-with-pipes/pull/208),
+squash-merge after its nine production jobs, documentation and binary reviews
+pass, then deliver the grouped benchmark/map work. One active PR at a time.
+Use one subject of at most 80 characters and an empty body; verify the merge.
 
-## Current grouped delivery
+## Active PR: API memory and stack cleanup
 
 Checkout `/private/tmp/fwp-http-application-memory`, branch `http-memory-delivery`,
-clean at `227e671257d885185e54b3f915f6d1ebf470b3ea`. Initial `d8fc00eb` runs
-`40073914806` and `40073914646` were superseded and cancelled after auditing
-all jobs for failures. The repair retains Linux stack-page binaries in production
-and adds an upload-wiring regression; all seventeen runner controls pass.
-Publication, preparation and wiring-repair helpers are COMPLETE; do not rerun.
-Receipts: `fwp-http-memory-delivery-{preparation,publication}.json` and
-`fwp-stack-artifact-wiring-publication.json` under `/private/tmp`.
-It adds API memory/cancellation acceptance, ordinary Linux task-stack pages,
-checked dynamic/static Unix guard setup, single-owner HTTP/WebSocket test sockets,
-physical-page diagnostics and clearer measurement records. The
-[API report](measurements/http-application-memory.md) defines the workload,
-unchanged budgets and limitations. No throughput or C/Rust parity claim is made.
+clean at `227e671257d885185e54b3f915f6d1ebf470b3ea`.
+Production `40074183388`: bench and both macOS ARM64 shards pass; six other jobs
+are still running. Docs `40074183289` passes. Complete finished logs are audited;
+no known failures. Audit again with `fwp-audit-http-memory-delivery-final.py`.
+Receipts and helpers are under `/private/tmp`, prefixed `fwp-http-memory-delivery`.
 
-Prepared source `cf3a11e4995cf228db9d2b783d20583da5a056f5` passes all six
-focused API jobs in run `40072655673`, including Linux page-policy checks and
-Linux/macOS static guard faults/failure cleanup. Eight actual static-guard
-binaries and forty outcomes pass independent review. Client/protocol run
-`40070408748` at `05de0f65` passes all twelve jobs, including Linux repeated
-HTTP/REST memory checks. Complete logs are audited.
+The group adds bounded API request/disconnect/shutdown checks, ordinary Linux
+task-stack pages, checked Unix guard setup and single-owner Windows test sockets.
+The source retains unchanged API budgets and complete failed/repaired evidence.
+The delivery guard fixture uses 1 MiB stacks; final-head checks must cover that
+adjustment. Focused evidence at `cf3a11e4` does not replace final acceptance.
 
-The earlier `4fc97ca1` API run `40069237866` passes on all six native hosts;
-all 36 API binaries and their saved execution records pass independent review.
-Mapping run `40069848297` confirms ordinary Linux task-stack pages in all 96
-repaired idle samples. AMD64 process memory is about 13 MiB versus 44–46 MiB
-in baseline diagnostics. The [raw page samples](measurements/http-stack-pages.json)
-and [focused evidence](measurements/http-memory-focused-2026-10-24.json) retain
-exact sources and hashes. Earlier evidence does not replace final-head acceptance.
+Final binary review is COMPLETE for `macos-15`: ownership, arrays, layouts,
+floating output, files, six API images and two static-guard images. Its verified
+ZIP copies were pruned (341.7 MiB), retaining reviews and download hashes.
+Other hosts are unreviewed. Use `fwp-review-http-memory-delivery-host.py --host HOST
+--phase PHASE`: download, ownership, arrays, floats, Linux-only controls, files,
+services, prune. Both Mac shards must pass before that host's download.
+Review reports: `fwp-http-memory-delivery-evidence/227e671257d8` and layout directory.
+The merge/after-merge helpers are syntax checked but UNRUN. Never merge before
+all ten gates and six-host reviews pass. Earlier publication/wiring helpers are
+COMPLETE. Initial `d8fc00eb` cancelled runs are not acceptance of this head.
 
-Native Windows probe `40070406753` confirms duplicated Rust sockets inherit into
-unrelated children. Both actual PE binaries and all six observations pass review.
-Clients now borrow one owned socket for writes; the regression requires closure
-while a separate child remains alive. No scheduler changes or relaxed deadlines.
+## Next grouped PR: explicit benchmarks and lower map peak memory
 
-The delivery fixture uses 1 MiB task stacks, matching the production static
-default and leaving writable body pages on 64 KiB-page hosts. Focused source
-used 64 KiB fixture stacks on the runners above; final native checks cover this
-portable fixture adjustment. The runtime change is unchanged apart from comments.
+Checkout `/private/tmp/fwp-arc-benchmark-comparison`, branch `arc-benchmark-comparison`,
+HEAD `6a6e8eea325cc3183e39cd472209cd452c497089`, with additional review/docs/artifact
+changes still uncommitted. No second PR is open. The old clean #207 checkout was
+moved here; `/private/tmp/fwp-file-http-delivery` no longer exists. Its branches,
+commits and reports remain. Do not rerun completed #207 helpers.
 
-Final acceptance requires exact-head API binaries on all six native hosts and
-static guard binaries on four Unix hosts, Linux page-policy/failure binaries,
-as well as the existing ownership,
-file, numerical, stack and layout evidence. `scripts/inspect-http-application.py`
-checks saved API images/records. CI preserves guard evidence in
-`ownership-evidence/static-guards` and Linux allocation-block evidence in
-`ownership-evidence/task-context/pages`. A wiring regression checks both uploads.
-A skipped target never establishes support.
+The general C/Rust comparison explicitly requires `CC`, memory mode and `FWP_LTO=0`.
+Production now measures checked ARC. Historical scalar measurement explicitly
+selects tracing. Inspect actual images and raw samples; reject wrong modes,
+architectures, object files and missing samples. Separate GNU-time RSS runs and
+instrumented fwp binaries measure memory without entering the ordinary timer.
 
-Publication and acceptance receipts use `/private/tmp/fwp-http-memory-delivery-*`.
-Repeatable final audit: `/private/tmp/fwp-audit-http-memory-delivery-final.py`.
-Production run `40074183388`; documentation run `40074183289` PASSES.
-All final-head binary reviews are unrun. Use
-`fwp-review-http-memory-delivery-host.py`: download, ownership, arrays, floats,
-Linux-only controls, files, services, prune. The services phase verifies six API
-binaries per host, two static guard images per Unix host and two page-policy
-images per Linux host. Pruning requires those reports. Initial source
-`d8fc00eb` publication/audit receipts are archived separately; never use them as
-acceptance of `227e6712`. Review helpers have syntax/path checks; saved-artifact
-execution begins only after the corresponding production host passes. All earlier
-publication helpers through `fwp-publish-static-stack-guards.py` are COMPLETE;
-never rerun them. Preparation helpers also have receipts; inspect before retrying.
+Verified preparations (all publication helpers are COMPLETE; inspect JSON receipts):
 
-## Previous delivery and retained failures
+| Source | Run | Result |
+|---|---|---|
+| `617bb2319760` | `40075912779` | Both Linux hosts pass; 42 actual baseline images and eight corrupted-copy controls reviewed |
+| `b16ed5e33f29` | `40076674217` | Both pass; 70 timed/profile images, all RSS/count samples and fourteen leak controls reviewed |
+| `18ac20729402` | `40077293691` | Both output checks pass; 98 baseline/experiment images reviewed. Arithmetic screen passes ARM64 but fails AMD64; no compiler rule selected |
+| `6a6e8eea325c` | `40078374681`, `40078376733` | All six map jobs and both Linux benchmarks pass with complete logs audited; final artifact review pending |
 
-PR #207 is verified and merged at `46a7235a81c46d30d0c155f319913e6b7fe4ddbc`. Source
-`bd0dc0100a516099590c340c012f74b7b666ebd2` passed production `40064764447`
-and docs `40064764348`. Review covered 8,166 core outcomes, 240 file binaries,
-480 file executions, 23,040 checkpoints, twelve stack objects and 144 layouts.
-The [delivery record](measurements/file-http-delivery-2026-10-24.json) retains
-identities and review hashes. Its completed helpers must not be rerun.
+The arithmetic experiment retains all noisy/slower rows and a fixed screen.
+Its new portable inspector and readable result report are uncommitted. Loop
+speed alone does not pass the all-program screen. See the preparation's
+`docs/measurements/checked-bounds-results.md` and `arc-comparison.md`.
 
-Keep original failed evidence: `ef66ca99` misparsed floating metric text;
-`027be46e` exceeded Linux RSS by 20 KiB and timed out on Windows; `10626760`
-incorrectly rejected a connection reset in the socket diagnostic. All failures
-were audited and repaired. Isolated Windows repeats passed but were not repairs.
-Unique archives remain under `/private/tmp/fwp-http-memory-failures-027be46e`
-and the mapping/socket diagnostic directories. Do not delete them as caches.
+Map/set builders compact sorted borrowed words in their input scratch lanes and
+free sort scratch before result allocation. Callers keep original owners alive
+or use unboxed words, and discard these lanes after return. Duplicate-key identity
+and last-value rules stay unchanged. Failure injection now includes comparisons
+while scratch is live and after release. A 4,096-key regression uses exact large
+allocations; delayed scratch release must exceed its peak budget. Six-host ARC,
+tracing, reuse and failure checks pass at GCC on Linux and Clang elsewhere.
 
-## Independent benchmark preparation
+Linux profiles at `6a6e8eea` show map peak charged bytes 24,000,008 → 16,000,008;
+four requests, 24,000,032 requested bytes and one retain remain unchanged.
+Ordinary final charge is zero and injected leaks are detected. These scoped
+managed counts exclude raw buffers, allocator metadata and stacks. No timing
+improvement or universal C/Rust parity is claimed. Current-source benchmark
+archives are fully reviewed under `fwp-map-scratch-benchmark-evidence/6a6e8eea325c`.
 
-Checkout `/private/tmp/fwp-arc-benchmark-comparison`, branch
-`arc-benchmark-comparison`, based on PR #208 source `227e6712`. No second PR.
-The clean merged #207 checkout was moved here; its old path
-`/private/tmp/fwp-file-http-delivery` no longer exists. Branches, commits and
-reports remain; completed #207 helpers must not be rerun.
+Before the next publication, finish the known evidence repairs already in the tree:
+save three previously omitted cleanup/control binaries, upload map evidence in
+production, keep separate memory measurements in the production benchmark job,
+and update the map and collection reports' stale test counts (inline CAF 2 → 6; maps
+6 → 7). The new count guard caught a local path typo, fixed immediately; all
+seven original collection controls pass (0.13s). A new peak/cleanup/exit control
+also checks that incorrect map evidence is rejected. All eighteen native coverage/upload/
+failure controls pass (7.67s). Repeat focused map CI for the additional saved
+binaries, then review them. Do not restart PR #208 for these independent changes.
 
-The general comparison now requires `CC`, `FWP_BENCH_OWNERSHIP` and `FWP_LTO=0`.
-Production selects checked ARC; the scalar-text historical protocol explicitly
-selects tracing and rejects wrong-mode evidence. Descriptive six-sample timings
-retain their existing scope and arithmetic differences. Actual binaries, input
-hashes and sample summaries are inspected; four corrupted-artifact controls must
-fail. Native Linux AMD64/ARM64 focused run `40075912779` PASSES at source
-`617bb2319760ccade91afea2bb0045c1984abbdf`. Publication is COMPLETE; do not
-rerun `fwp-publish-arc-benchmark-preparation.py`.
+## Previous delivery and retained evidence
 
-The saved verified #206 compiler accepts all seven benchmark programs under
-checked ARC and emits C (3.15s total with formatting/workflow/Python checks).
-Compiler/library/program inputs match the current branch, but embedded runtime
-is older; this is admission diagnostics, not current-source native acceptance or
-a timing result. Receipt: `/private/tmp/fwp-arc-benchmark-admission/receipt.json`.
-The active PR #208 stays unchanged while this preparation runs.
+PR #207 is verified and merged at `46a7235a81c46d30d0c155f319913e6b7fe4ddbc`.
+Tested `bd0dc0100a516099590c340c012f74b7b666ebd2` passed all ten checks and
+8,406 binary reviews. Primary checkout is detached at that merge; only this
+operational handoff is dirty. Preserve it when advancing after #208.
 
+Keep unique failed evidence: `ef66ca99` metric parsing; `027be46e` Linux RSS and
+Windows idle timeout; `10626760` socket-reset diagnostic. All were repaired;
+original archives remain in `/private/tmp/fwp-http-memory-failures-027be46e` and
+mapping/socket directories. Isolated Windows repeats were not the repair.
+Completed publications/downloads/reviews require inspecting receipts before retry.
 
-Both complete logs are audited; independent review of all 42 measured native
-binaries and eight corruption-control failures passes (0.97s AMD64, 0.96s ARM64).
-Reports: `/private/tmp/fwp-arc-benchmark-evidence/617bb2319760`.
-The preparation now documents all seven results and their limits in
-`docs/measurements/arc-comparison.md`; the integer loop and direct text counting
-still have C/Rust gaps. No compiler speedup or memory-count claim is made.
+## Local limits and checks
 
-A related preparation now adds separate peak-process-memory measurements for
-C/Rust/fwp and fwp managed allocation/retain/live-storage counts, with seven
-intentional leak controls. Local template checks passed for all fourteen retained
-generated C programs (2.99s including syntax/docs); native run `40076674217` PASSES on both hosts at `b16ed5e33f29`.
-The full measurements remain runner-only and do not change PR #208's passing head.
+Use `python3 scripts/local-guard.py COMMAND...` serially. Full builds, suites and
+benchmarks stay on GitHub. Keep 64 GiB free, target below 2 GiB and workload RSS
+below 1 GiB. A full local API Clang build exceeded RSS earlier: never retry it
+or raise limits. Only verified duplicate caches/clean published copies were pruned.
+Keep dirty work, source tags and unique failures. Check disk before downloads.
 
-
-Memory run `40076674217` at `b16ed5e33f29774c2d56e5500c8d7548ea52ce06` passes;
-both complete logs and all 70 actual binaries are independently reviewed (1.22s
-AMD64 and 1.22s ARM64). All fourteen injected leaks are detected. `map` records
-four managed requests, 24,000,032 requested bytes, one retain and 24,000,008 peak
-charged bytes; other scalar/pipeline cases have zero requests/retains. All ordinary
-profiles end with zero additional charge. These are scoped managed counts, not
-C/Rust allocator counts or process memory. Evidence and exact timings are under
-`/private/tmp/fwp-benchmark-memory-evidence/b16ed5e33f29`.
-
-
-The next prepared experiment edits generated C only: preserve successful signed
-subtraction/addition expressions after their existing overflow checks. The
-checked-bounds protocol fixes 32 samples, two warmups, all allowed CPUs, an
-identical-binary control within 3%, at least 5% loop improvement and no more than
-3% slowdown elsewhere. Both wall and child CPU time must pass on both hosts.
-No compiler change is selected. Protocol and runner are prepared; publication
-and native execution remain pending.
-
-
-## Prepared map storage reduction
-
-The benchmark branch now compacts typed map/set borrowed words into their input
-scratch lanes and frees sort scratch before result allocation. All three runtime
-callers and the numeric compiler builder keep source owners alive or use unboxed
-words; their input scratch is discarded after return. Source and hash/layout
-semantics remain unchanged. Do not compact an owning container without proving
-its cleanup contract.
-
-Map/set failure injection now includes every comparison, so the existing missing
-scratch-owner control remains meaningful during sorting. A new regression in the
-existing `map_set_ownership` target checks map/set peak charge at O1/O2 in ARC and
-tracing, with a delayed-release control that must exceed the budget. It uses
-4,096 entries so both buffers use exact large-object charges, avoiding small-slot
-rounding. The map-focused workflow now uses production GCC on Linux and Clang
-elsewhere, and records the actual selected C compiler.
-
-Local formatting passes (1.47s). Native compilation, memory measurements and
-six-host failure/reuse acceptance are pending publication. The prior arithmetic
-experiment passed correctness on both hosts, but its screen failed on AMD64 due
-to noisy controls and some slower rows; ARM64 passed. No arithmetic compiler
-change is selected. Full binary/sample review of that experiment remains pending.
-
-## Local limits
-
-Use `python3 scripts/local-guard.py COMMAND...` serially. Full builds/suites and
-benchmarks stay on GitHub. Keep 64 GiB free, target below 2 GiB and sampled RSS
-below 1 GiB. A local full API Clang build exceeded RSS and was stopped; do not
-retry or raise limits. Focused guard checks pass at Clang O1/O2 (1.39s), native
-runner coverage/artifact/failure controls pass (seventeen cases, 7.57s), and formatting,
-workflow syntax and docs checks pass. Local Clang does not establish GCC support.
-
-Only verified duplicate caches and clean published checkout copies were pruned.
-Dirty trees, commits, tags and unique failures remain. Current disk space is close
-to the reserve; inspect it before downloading. Completed evidence reviewers and
-downloaders are not repeatable unless their receipt explicitly says so.
+Map preparation formatting/workflow/Python/docs checks pass (4.45s); native
+acceptance uses the runs above. Arithmetic and benchmark binary inspections use
+LLVM without executing downloaded images. The primary handoff's prior version
+is saved at `/private/tmp/fwp-handoff-before-benchmark-consolidation.md`.
 
 ## Roadmap status
 

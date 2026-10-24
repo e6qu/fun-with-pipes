@@ -3892,7 +3892,15 @@ jobs:
           python3 scripts/inspect-benchmark-memory.py --input target/bench-memory --benchmarks target/bench-evidence --inspection target/bench-inspection.json --source "$GITHUB_SHA" --arch "$architecture" --objdump objdump --output target/bench-memory-inspection.json
       - name: Measure checked-expression candidates and identical controls
         if: ${{ !cancelled() && steps.evidence.outcome == 'success' && inputs.suite == 'checked-bounds' }}
-        run: python3 scripts/measure-checked-bounds.py --input target/bench-evidence --inspection target/bench-inspection.json --source "$GITHUB_SHA" --cc gcc --samples 32 --warmups 2 --cpu-policy all --max-control-change-percent 3 --min-loop-gain-percent 5 --max-other-slowdown-percent 3 --output target/checked-bounds
+        shell: bash
+        run: |
+          case "$RUNNER_ARCH" in
+            X64) architecture=x86_64 ;;
+            ARM64) architecture=aarch64 ;;
+            *) echo "Unsupported benchmark architecture: $RUNNER_ARCH" >&2; exit 1 ;;
+          esac
+          python3 scripts/measure-checked-bounds.py --input target/bench-evidence --inspection target/bench-inspection.json --source "$GITHUB_SHA" --cc gcc --samples 32 --warmups 2 --cpu-policy all --max-control-change-percent 3 --min-loop-gain-percent 5 --max-other-slowdown-percent 3 --output target/checked-bounds
+          python3 scripts/inspect-checked-bounds.py --input target/checked-bounds --benchmarks target/bench-evidence --inspection target/bench-inspection.json --source "$GITHUB_SHA" --arch "$architecture" --objdump objdump --output target/checked-bounds-inspection.json
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -3904,6 +3912,7 @@ jobs:
             target/bench-memory/
             target/bench-memory-inspection.json
             target/checked-bounds/
+            target/checked-bounds-inspection.json
             target/bench-evidence/
           if-no-files-found: error
   performance:

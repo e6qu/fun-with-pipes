@@ -595,6 +595,8 @@ fn map_set_failures_release_partial_storage_and_preserve_aliases() {
                 .join("missing-owner")
                 .with_extension(std::env::consts::EXE_EXTENSION);
             fwp::cgen::compile_c(&broken, &exe, "-O1").unwrap();
+            save_map_evidence("missing-result-owner.c", broken.as_bytes());
+            save_map_evidence("missing-result-owner.bin", &std::fs::read(&exe).unwrap());
             let out = Command::new(exe)
                 .env_remove("FWP_GC")
                 .env("FWP_GC_STRESS", "0")
@@ -609,6 +611,10 @@ fn map_set_failures_release_partial_storage_and_preserve_aliases() {
                 String::from_utf8_lossy(&out.stderr)
             );
             save_map_evidence("missing-result-owner.txt", &out.stderr);
+            save_map_evidence(
+                "missing-result-owner.status",
+                out.status.code().unwrap().to_string().as_bytes(),
+            );
             // Protecting the map alone is insufficient when an earlier scratch
             // allocation survives a comparison failure during sorting.
             let start = source.find("static V fwp_map_build_typed(").unwrap();
@@ -625,6 +631,8 @@ fn map_set_failures_release_partial_storage_and_preserve_aliases() {
                 .join("missing-scratch-owner")
                 .with_extension(std::env::consts::EXE_EXTENSION);
             fwp::cgen::compile_c(&broken, &exe, "-O1").unwrap();
+            save_map_evidence("missing-scratch-owner.c", broken.as_bytes());
+            save_map_evidence("missing-scratch-owner.bin", &std::fs::read(&exe).unwrap());
             let out = Command::new(exe)
                 .env_remove("FWP_GC")
                 .env("FWP_GC_STRESS", "0")
@@ -639,6 +647,10 @@ fn map_set_failures_release_partial_storage_and_preserve_aliases() {
                 String::from_utf8_lossy(&out.stderr)
             );
             save_map_evidence("missing-scratch-owner.txt", &out.stderr);
+            save_map_evidence(
+                "missing-scratch-owner.status",
+                out.status.code().unwrap().to_string().as_bytes(),
+            );
         }
     }
 }
@@ -806,6 +818,11 @@ fn compact_sets_preserve_values_and_request_only_key_storage() {
                     "fwp_alloc(sizeof(fwp_map) + (columns + 1) * len * sizeof(V))",
                 );
                 fwp::cgen::compile_c(&wasteful, &exe, opt).unwrap();
+                save_map_evidence("compact-wasted-slot-control.c", wasteful.as_bytes());
+                save_map_evidence(
+                    "compact-wasted-slot-control.bin",
+                    &std::fs::read(&exe).unwrap(),
+                );
                 let failed = Command::new(&exe)
                     .env_remove("FWP_GC")
                     .env("FWP_GC_STRESS", "0")
@@ -815,6 +832,10 @@ fn compact_sets_preserve_values_and_request_only_key_storage() {
                     .unwrap();
                 assert_eq!(failed.status.code(), Some(211), "{failed:?}");
                 save_map_evidence("compact-wasted-slot-control.txt", &failed.stderr);
+                save_map_evidence(
+                    "compact-wasted-slot-control.status",
+                    failed.status.code().unwrap().to_string().as_bytes(),
+                );
             }
         }
     }
@@ -882,6 +903,10 @@ fn map_sort_scratch_does_not_overlap_result_storage() {
                     save_map_evidence(
                         &format!("sort-storage-{mode}-{label}{opt}-{kind}.txt"),
                         &out.stdout,
+                    );
+                    save_map_evidence(
+                        &format!("sort-storage-{mode}-{label}{opt}-{kind}.status"),
+                        out.status.code().unwrap().to_string().as_bytes(),
                     );
                     println!(
                         "{mode}/{label}/{opt}/{}",

@@ -124,9 +124,8 @@ storage; it is not an allocation count or maximum logical live payload.
 | ARM64 | `strings` | 1368–1380 | 1568–1692 | 1396 |
 | ARM64 | `text-length` | 1316–1380 | 1568–1688 | 1396 |
 
-The map's fwp process uses more peak memory than both peers. The next storage
-investigation should distinguish construction/sort workspace from the final
-sorted table before selecting a change. The pipeline uses much less because
+In this baseline, the map's fwp process uses more peak memory than both peers.
+The storage change below separates sort workspace from final result storage. The pipeline uses much less because
 fwp removes intermediate collections that its peers construct.
 
 Separate instrumented fwp executables count from **after constant initialization
@@ -155,19 +154,43 @@ compiler stack reports are retained separately; they cannot describe the origina
 timed program's stack use. No instrumented or GNU-time run contributes to the
 elapsed-time table above.
 
-## Next storage change under test
+## Releasing map sort storage sooner
 
-The typed map builder currently keeps input, sort scratch and result buffers
-alive together. The candidate compacts the sorted borrowed words into the input
-lanes and releases sort scratch before allocating the result. All callers keep
-the original owners alive and discard those scratch lanes after the call;
-numeric builders contain unboxed values. First-key/last-value duplicate handling
-must remain unchanged. Expected whole-program map peak falls from 24,000,008 to
-16,000,008 charged bytes; this is a prediction until current-source measurement.
+The typed map builder used to keep input, sort scratch and result buffers alive
+together. It now compacts sorted borrowed words into the input lanes and releases
+sort scratch before allocating the result. Callers keep the original owners alive
+and discard the lanes after the call; numeric builders contain unboxed values.
+First-key identity and last-value duplicate handling stay unchanged.
 
-A focused regression uses 4,096 unordered unique integer keys with stack input
-lanes. Its observed budget covers one sort/result buffer at a time. A control
-that delays scratch release must exceed that budget. Existing alias tests also
-inject every comparison failure, including sorting while scratch is live and
-compaction after release. Native success, failure, tracing stress and reuse
-checks remain required on all six targets. No timing improvement is assumed.
+[Run 40078376733](https://github.com/e6qu/fun-with-pipes/actions/runs/40078376733)
+measured source `6a6e8eea325cc3183e39cd472209cd452c497089` on EPYC 9V74 and
+Neoverse-N2, with the same GCC O2, ARC and measurement scopes defined above.
+On both hosts, the map's peak managed charge fell **24,000,008 → 16,000,008 bytes**.
+It still requests four allocations totalling 24,000,032 bytes, performs one retain
+and returns to zero final added charge. This change reduces overlapping storage;
+it does not eliminate allocations or counting.
+
+| Host | Earlier map peak RSS KiB | New map peak RSS KiB | New C / Rust peak RSS KiB |
+|---|---:|---:|---:|
+| AMD64 | 28104 | 19420 | 16860–16864 / 9784–9892 |
+| ARM64 | 26488 | 18160–18168 | 16420–16484 / 9440–9504 |
+
+RSS observations come from different processes and runner sessions; they are not
+a controlled timing comparison. The [complete reports](map-scratch-2026-10-24.json)
+retain all seven programs, their new elapsed samples, RSS, charged-storage counts,
+source/binary hashes and stack reports. Review covers 42 timed images, 28 separate
+instrumented images, fourteen detected leaks and eight corrupted-artifact controls.
+No timing improvement or general C/Rust parity is claimed.
+
+[Six-host map checks](https://github.com/e6qu/fun-with-pipes/actions/runs/40078374681)
+pass thirteen tests per host, using GCC on Linux and Clang elsewhere. Each checks
+ARC and tracing, aliases, duplicate handling, callback failures and reuse. Fault
+injection covers 136 failures normally and 138 with tracing reuse verification,
+including comparisons during sorting and compaction after scratch release.
+
+A separate 4,096-key fixture puts its input lanes on the stack to isolate builder
+storage. Ordinary map/set peaks are 65,544 / 32,776 charged bytes, ending at zero.
+Deliberately delaying scratch release raises them to 131,080 / 65,544 and must
+fail the budget with exit 241. These fixture peaks exclude the input lanes; the
+whole-program profile above includes its heap input. The additional saved control
+binaries need another focused run and independent review before delivery.
