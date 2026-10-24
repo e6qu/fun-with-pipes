@@ -71,19 +71,25 @@ fn array_list_text_preserves_values_views_aliases_and_effect_order() {
                 ("1", "tracing"),
             ] {
                 let cfile = directory.join("program.c");
-                checked(
-                    Command::new(compiler)
-                        .env_remove("FWP_NO_OPT")
-                        .env("FWP_ARRAY_FUSION", fusion)
-                        .env("FWP_PACKED_ARRAYS", packed)
-                        .env("FWP_LTO", "0")
-                        .args([
-                            "build", "--gc", ownership, "--memory", "dynamic", "--emit-c", "-O2",
-                        ])
-                        .arg(&input)
-                        .arg("-o")
-                        .arg(&cfile),
-                );
+                let build = Command::new(compiler)
+                    .env_remove("FWP_NO_OPT")
+                    .env("FWP_ARRAY_FUSION", fusion)
+                    .env("FWP_PACKED_ARRAYS", packed)
+                    .env("FWP_LTO", "0")
+                    .args([
+                        "build", "--gc", ownership, "--memory", "dynamic", "--emit-c", "-O2",
+                    ])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&cfile)
+                    .output()
+                    .unwrap();
+                if !build.status.success() {
+                    failures.push(format!(
+                        "{name}/{ownership}/fusion{fusion}/packed{packed}: compiler: {build:?}"
+                    ));
+                    continue;
+                }
                 let code = std::fs::read_to_string(cfile).unwrap();
                 if let Some(root) = std::env::var_os("FWP_ARC_ARTIFACTS") {
                     let path = std::path::Path::new(&root).join("array-text-source");
@@ -171,19 +177,25 @@ fn array_text_counts_allocations_and_releases_every_iteration() {
         for fusion in ["0", "1"] {
             for packed in ["0", "1"] {
                 let cfile = directory.join("counts.c");
-                checked(
-                    Command::new(compiler)
-                        .env_remove("FWP_NO_OPT")
-                        .env("FWP_ARRAY_FUSION", fusion)
-                        .env("FWP_PACKED_ARRAYS", packed)
-                        .env("FWP_LTO", "0")
-                        .args([
-                            "build", "--gc", "arc", "--memory", "dynamic", "--emit-c", "-O2",
-                        ])
-                        .arg(&input)
-                        .arg("-o")
-                        .arg(&cfile),
-                );
+                let build = Command::new(compiler)
+                    .env_remove("FWP_NO_OPT")
+                    .env("FWP_ARRAY_FUSION", fusion)
+                    .env("FWP_PACKED_ARRAYS", packed)
+                    .env("FWP_LTO", "0")
+                    .args([
+                        "build", "--gc", "arc", "--memory", "dynamic", "--emit-c", "-O2",
+                    ])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&cfile)
+                    .output()
+                    .unwrap();
+                if !build.status.success() {
+                    failures.push(format!(
+                        "{name}/fusion{fusion}/packed{packed}: compiler: {build:?}"
+                    ));
+                    continue;
+                }
                 let mut code = std::fs::read_to_string(cfile).unwrap();
                 if let Some(root) = std::env::var_os("FWP_ARC_ARTIFACTS") {
                     let path = std::path::Path::new(&root).join("array-text-source");

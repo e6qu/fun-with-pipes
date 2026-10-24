@@ -5,129 +5,64 @@ and reserve ARC for necessary sharing. JIT is excluded.
 
 ## Current action
 
-**Next:** audit the remaining native and benchmark jobs, publish the string-copy,
-iterator-state and measurement repairs together, then inspect passing reruns.
-Keep active PR #205 unchanged; this is a separate preparation branch with no PR.
+**Next:** finish PR #205 at `51c295e02a8037f985fe9f662b8e1000fcd97798`; preserve its final
+head while production `40037426686` and docs `40037426647` complete. Seven of ten
+gates passed at the last audit. Both macOS architectures passed 2,346 saved binary
+outcomes. Linux AMD64 passed its full log audit; its binary inspection is next.
+Use the primary checkout's handoff and `/private/tmp/fwp-float-delivery-*` receipts
+for exact acceptance progress. Merge only after all ten gates and 7,158 inspections.
 
-Worktree `/private/tmp/fwp-array-list`, branch `array-list-preparation`, starts at
-`51c295e02a8037f985fe9f662b8e1000fcd97798`. #205's production run `40037426686` and
-docs run `40037426647` remain the current delivery gates. Primary handoff records
-their latest audit and prepared merge/inspection helpers.
+## Next grouped delivery
 
-Saved generated C for the 129-coordinate descent case builds 129 input list
-nodes before `array.from-list`, and 129 output nodes before `show`. Its measured
-459 managed allocation requests include these temporary values. Removing them
-is a proposed compiler improvement, not measured support yet.
+This branch adds static numeric literal arrays, direct list-style array display,
+JSON fusion, String display-copy removal and flat array iterator state. See
+[the protocol](measurements/array-text.md) for examples, restrictions and budgets.
+No new performance or allocation claim is accepted until the focused native jobs,
+actual binary review and final production delivery pass.
 
-Planned checks: constant numeric input construction; direct list-style text and
-JSON output from numeric arrays; empty/sliced/aliased arrays; unchanged formatting,
-effect/trap order and older values after updates; managed/raw cleanup and actual
-machine code on all six native targets. Numeric constants may use existing static
-storage; this must not retain dynamic values permanently. Report static-data,
-stack/code size and allocation costs, and compare complete programs before making
-speed claims. Keep resource-owning/boxed cases outside a transformation until
-its lifetime/representation proof covers them. No new surface syntax is planned.
+Preparation `41f6438cf6fb04137aa8b97a05deb460df4702e3`, native run `40045988997`,
+exposed a type-loss bug in the new iterator state: reconstructing an array/index
+record before projecting a field lost the record's type. ARC rejected it; tracing
+C generation panicked. The repair reads the typed state fields directly. Array
+checks now collect compiler failures across configurations instead of stopping at
+the first one. Existing allocation and iterator cases cover the regression.
 
-Implementation is not accepted yet: fusion recognizes immediate numeric
-`array.to-list | show` / `json.write`; native/interpreted list-style display reads
-the borrowed array directly. Its internal primitive has an explicit nonescaping
-borrow/fresh-string contract. Fixed-width numeric literal lists consumed by
-`array.from-list` become existing static array constants; target-sized integers
-are excluded. The display writer's unused argument was removed. Constant arrays
-exposed an existing type reconstruction error: an array map/fold could reconstruct
-a List type, and iterator fusion could lose the array type entirely. Both now
-derive the correct array type; the new allocation checks exercise those neighbors.
+A local reproduction uses the actual IR declarations, type functions and old/new
+state projections. It reproduces both unknown old field types and verifies the
+repaired array, index, accumulator, two counters and String capture (1.40s).
+Its first two diagnostic-harness attempts had Rust lifetime errors; those were
+fixed in the harness. This bounded check does not replace compilation/native CI.
+Receipt: `/private/tmp/fwp-iterator-state-type-check.json`.
 
-`tests/array_text.rs` now adds 120 semantic outcomes across modes/layouts/settings and
-48 allocation/cleanup outcomes, including eight deliberate missing-release
-controls. Each balanced allocation case repeats 64 times. Tests compare raw and
-optimized interpreters with O1/O2 native programs. The new target is assigned to
-regular macOS and native Windows; Linux discovers all targets. The preparation
-[protocol](measurements/array-text.md) fixes expectations before measurements.
+All six complete logs are audited in `/private/tmp/fwp-array-cost-repair-audit.json`.
+Each host has the same four failures in two targets; the other thirteen targets
+pass. Both output measurement logs and their controls also pass, recorded in
+`fwp-array-cost-output-audit.json`; binary inspection remains outstanding. Earlier failure audits:
+`fwp-array-preparation-audit.json`, `fwp-array-repair-audit.json`,
+`fwp-array-borrow-repair-audit.json`. Keep their unique archives and logs.
+The prior compiler's output-script repairs passed eighteen local Clang controls;
+GCC and the new transformations remain native CI responsibilities.
 
-Local guarded checks: reference fixture execution with the accepted #199 compiler
-passed (0.26s; syntax/reference behavior only, not the new compiler); frozen
-primitive inventory passed (1.37s, 392 declarations/382 symbols); all fourteen
-native-runner coverage and failure controls passed (7.70s). Formatting passed.
-The initial source `5f3efa1ea15065c8f9ced617309b76112d096e7a` compiles and passes
-lint, but all six native jobs fail the same three checks. Full logs and all
-other target results are retained in `fwp-array-preparation-audit.json`. The unit
-tests and six other integration targets pass on every host; all three failures
-are addressed together below.
+Output measurement `40045991255` tests the same published source. Its fixed
+protocol uses six inputs, 48 samples, four warmups and 2% identical-copy checks.
+Report full output and checksum separately against C/Rust, including startup,
+actual allocation/live storage, static data and code/stack costs. Static input
+initialization remains once per process inside total timing. Predicted largest
+counts (200 full / 199 checksum) are not accepted measurements. Do not infer a
+speed improvement from earlier runs on different hardware.
 
-The repair keeps the dynamic-primitive ownership probe on explicit unfused input,
-repeats the actual workload behind its cached entry, and lets fusion reach `show`
-inside a unary `print` call without moving earlier effects. A new shared-list
-case checks that multiple consumers retain their list. Generated C is now saved
-before structural assertions, and a missed lowering no longer hides later cases.
-The focused macOS ARM64 job saves its compiler, when built, for bounded
-diagnostics; full builds remain on GitHub.
+Prepared inspectors in `/private/tmp`:
 
-The repaired observer passes local production Clang O1/O2 checks using the accepted
-#199 compiler (3.58s): 260 requests for the original 129-element program, zero
-retained managed/text-buffer storage, and both omitted releases detected. This
-checks instrumentation, not the new Rust optimization. Adding actual reference-count
-increments to the same observer also passes all six controls (3.17s); optimized
-cases require zero increments. This does not measure every bookkeeping instruction.
-An actual intermediate
-representation dump confirms the nested unary display case (0.26s). New compiler
-runtime checks and binary inspection still require CI.
+- `fwp-inspect-array-preparation.py`: 168 outcomes per native host.
+- `fwp-review-array-layout.py`: 24 paired O2 code/layout reviews per host;
+  manually interpret prologues for stack cost.
+- `fwp-inspect-array-output.py`: 169 files per Linux host, including coordinate
+  omission and between-solve lifetime controls.
 
-The first repair, `c3a479d55a17e4a2830d03fd701051dab9468081`, failed Rust
-compilation on all six hosts in run `40043545777`: the guarded mutable match in
-`first_evaluated` caused E0505. No runtime tests ran. All logs are audited in
-`fwp-array-repair-audit.json`. The next repair decides whether to descend before
-borrowing the mutable node. A bounded check compiles the exact function and
-expression enum: it reproduces the old error and verifies six ordering boundaries
-with the corrected function. Unused payload types are opaque in this local
-check; it does not replace full compilation. The optional compiler-artifact step
-now runs only when the file exists, avoiding a second error after a failed build.
-
-## Remaining repair and measurement
-
-`4aadfc11a8c590c6e626bdb4f203ce55ca74c40e`, run `40044090119`, compiles.
-All six complete native jobs pass the value/effect test and adjacent targets, but
-report two allocation failures: JSON followed by `echo` copies the resulting
-string, and an array iterator allocates two initial state records. The new
-repair removes top-level string-display copies before ownership lowering and
-puts array/index/accumulator directly in the iterator's state fields. Nested
-string escaping remains unchanged. Added shared string examples and expanded
-focused loop, iteration and string cleanup checks. All six full logs are audited.
-
-The matching C/Rust experiment `40044793534` failed both jobs before timing;
-both full logs are audited. It uses the same source. Its existing
-helpers assume an empty static initializer and an unfused array-to-list display
-sequence. Both assumptions need updating for the new compiler. A local check
-with the verified CI-built compiler passes eighteen Clang O1/O2 full-output,
-checksum-dump and omitted-coordinate controls after the script repair (8.64s).
-This validates the scripts, not the new Rust optimization or GCC execution.
-The original failed source and artifacts remain retained. No timings accepted.
-
-Compiler and generated C are in `/private/tmp/fwp-array-borrow-diagnostics`,
-with their source/digest in `identity.json`; use them only for bounded diagnosis.
-The source archive is `fwp-array-borrow-failure-evidence/macos-15-40044090119-12539959368.zip`.
-New raw/value and allocation/retention checks remain required on all six hosts.
-The published formatter evidence belongs to active #205; see its worktree and
-the primary handoff for delivery gates and verified measurement reports.
-
-## Accepted preceding delivery
-
-[PR #204](https://github.com/e6qu/fun-with-pipes/pull/204) passed nine production
-jobs, docs and 6,966 binary inspections at `80c89baa53567839dce0599d88f18d5791285943`.
-[History](roadmap-history.md#derivative-storage-arrays-and-borrowed-callbacks-pr-204)
-and the [inspection record](measurements/derivative-array-cleanup-2026-10-24.json)
-retain source, merge, logs and six-host outcomes. Cleanup checks remain required
-when the runtime changes; they do not establish complete removal of tracing.
-
-## Resume rules
-
-Use `python3 scripts/local-guard.py COMMAND...` serially; full builds, suites and
-benchmarks stay on GitHub. Keep at least 64 GiB free disk and never raise limits.
-Read receipts before mutations. Preserve failure evidence, unique results and
-immutable source tags; prune only inspected duplicate caches after remote checks.
-Keep one active PR. Publication and squash merge after passing final gates are
-authorized; every commit is one line, at most eighty characters, without trailers
-or attribution. Python package initializers stay empty; imports stay at file top.
+Keep one PR active. After #205 merges, bundle these changes, every verified repair
+and readable results in the next substantial PR. Full builds and benchmarks run
+on GitHub; focused local checks use the guard without changing its limits.
+All seven [plan](../PLAN.md) areas remain open; JIT is excluded.
 
 ## Roadmap status
 

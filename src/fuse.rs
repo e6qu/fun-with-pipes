@@ -783,14 +783,8 @@ impl Fuser<'_> {
             }
         };
         let st = |i: usize| {
-            if array_source && i == 0 {
-                Expr::Record(vec![
-                    Expr::Field(Box::new(Expr::Local(0)), 0),
-                    Expr::Field(Box::new(Expr::Local(0)), 1),
-                ])
-            } else {
-                Expr::Field(Box::new(Expr::Local(0)), (i + source_width - 1) as u32)
-            }
+            let index = if i == 0 { 0 } else { i + source_width - 1 };
+            Expr::Field(Box::new(Expr::Local(0)), index as u32)
         };
         let mut calls: Vec<Option<Expr>> = Vec::new();
         for s in &stages {
@@ -845,9 +839,7 @@ impl Fuser<'_> {
                     ),
                 ]),
                 Some(Source::List(_)) => Expr::Local(t),
-                Some(Source::Array(_)) => {
-                    Expr::Record(vec![Expr::Field(Box::new(st(0)), 0), Expr::Local(t)])
-                }
+                Some(Source::Array(_)) => Expr::Record(vec![st(0), Expr::Local(t)]),
                 _ => Expr::Apply(Box::new(Expr::Local(t)), vec![unit.clone()]),
             };
             let mut fs = if array_source {
@@ -980,12 +972,11 @@ impl Fuser<'_> {
                 )),
             )
         } else if let Some((get, next)) = array_access {
-            let index = Expr::Field(Box::new(st(0)), 1);
+            // Project the typed state directly. Reconstructing an array/index
+            // record here loses its field types before ownership lowering.
+            let index = Expr::Field(Box::new(Expr::Local(0)), 1);
             Expr::Match(
-                Box::new(Expr::Call(
-                    get,
-                    vec![index.clone(), Expr::Field(Box::new(st(0)), 0)],
-                )),
+                Box::new(Expr::Call(get, vec![index.clone(), st(0)])),
                 vec![
                     (
                         Pat::Construct(1, vec![Pat::Bind(h)]),
