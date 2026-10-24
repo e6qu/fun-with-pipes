@@ -5,30 +5,28 @@ reserve ARC for necessary sharing, and remove tracing. JIT is excluded.
 
 ## Current action
 
-**Next:** finish the interpreter shutdown repair, validate it on runners, then integrate it
-into [PR #210](https://github.com/e6qu/fun-with-pipes/pull/210). Audit every failed
-job and completed target before publishing the batch. Keep one active PR.
+**Next:** publish the combined interpreter shutdown repair in
+[PR #210](https://github.com/e6qu/fun-with-pipes/pull/210), then audit all nine
+production jobs, documentation and final-head binary evidence. Audit every failed
+job and completed target before another repair push. Keep one active PR.
 The user stopped disassembly-led diagnosis: do not resume allocator-cookie work.
 The original Intel macOS compiler abort remains unexplained; these source repairs
 are not an established explanation for it.
 
 ## Source repair and checks
 
-Checkout `/private/tmp/fwp-checked-peer-comparison`, branch
-`compiler-lifetime-review`, is published at
-`6cefdf2346ade8fcd9e3130ad7bab21e38589429`.
-Focused run [40121036264](https://github.com/e6qu/fun-with-pipes/actions/runs/40121036264)
-passed on Linux AMD64 and native Intel macOS: 234 checks per host and all-target
-Clippy. Complete logs are audited. This includes the shared writers, late-task
-cleanup and separate REPL output buffers.
+Checkout `/private/tmp/fwp-checked-peer-comparison` is being integrated into
+`list-copy-delivery`. Tested source
+`0ad90b5a0a6a1653a66e2890586d1d5e56ea6296` passes focused run
+[40122813261](https://github.com/e6qu/fun-with-pipes/actions/runs/40122813261)
+on Linux AMD64 and native Intel macOS: 236 checks per host and all-target Clippy.
+Both complete logs are audited. Six gRPC measurements are explicitly ignored,
+not claimed as validation. Both early cleanup artifacts have verified digests and
+source IDs; `/private/tmp/fwp-compiler-lifetimes-v4-review.json` and
+`/private/tmp/fwp-compiler-lifetime-cleanup-v4-review.json` are COMPLETE.
+These focused checks do not replace final production acceptance.
 
-The earlier candidate `2f20e7fe075e2beb0fa6fae3f3950ebfc6953a9e` passed
-[40119693758](https://github.com/e6qu/fun-with-pipes/actions/runs/40119693758):
-232 checks per host, complete logs audited. Six explicitly ignored gRPC
-measurement tests are not claimed as validation. These runs do not replace the
-nine production jobs, documentation gate or final-head acceptance.
-
-The candidate makes every public interpreter evaluation enter a cleanup boundary:
+The repair makes every public interpreter evaluation enter a cleanup boundary:
 ordinary children finish; background workers are cancelled and joined; connection
 pools close; only then does evaluation return or propagate a Rust panic. Blocking
 calls restore the scheduler turn during unwinding. Low-level evaluation and raw
@@ -37,15 +35,17 @@ require `Send` and use shared locked ownership, replacing raw writer pointers.
 Macros, `comptime`, command execution and exported constants use this boundary.
 Sender completion waits for its cancelled task to release captures.
 
-**Final shutdown follow-up, validation pending:** an abort guard prevents a
-panic during cleanup itself from escaping with live borrowed tasks. A subprocess
-control checks that boundary. Shutdown also drains connections registered while
+**Shutdown regressions pass:** an abort guard prevents a
+panic during cleanup itself from escaping with live borrowed tasks. A test makes
+cleanup panic in a child process and checks that it stops instead of returning. Shutdown also drains connections registered while
 it waits for workers; a real-socket regression checks closure and owner release.
 Focused run `40122286598` at `e479c9db553c94c5b611001ecadd5224aaef70d0`
-was superseded after both Clippy steps passed. Do not count its unfinished suites
-as passes. The final guard uses explicit completion state and tests entry calls
-from a destructor during an existing Rust unwind, as well as cleanup failure.
-Publish that refinement and audit the new focused run before integration. The workflow now publishes cleanup results before longer tests.
+was cancelled after both Clippy steps and 184 unit checks per host passed. Its
+completed logs are audited; interrupted suites are not counted as passes. The
+final guard tracks completion and tests entry calls from a destructor during an
+existing Rust unwind, as well as cleanup failure.
+The final focused run above passes these controls on both hosts. The workflow
+publishes cleanup results before longer tests.
 
 The macro regression was reproduced against
 `/private/tmp/fwp-verified-array-construction-compiler/fwp`: two macro invocations
@@ -53,7 +53,7 @@ spawn printing children, but the old compiler prints neither message. The new
 regression passes on both focused hosts. Repeated tests also cover capture release,
 background shutdown, root/child panics while blocked, output ownership and tasks
 created during cleanup. The three-cell REPL fixture was checked against the saved
-baseline; the follow-up suite checks the changed implementation.
+baseline; the passing focused suite checks the changed implementation.
 
 Local checks used `python3 scripts/local-guard.py`: Rust formatting, actionlint,
 127 documentation link sets and the frozen primitive inventory (392 declarations,
@@ -61,12 +61,12 @@ Local checks used `python3 scripts/local-guard.py`: Rust formatting, actionlint,
 
 ## Active PR and original abort
 
-The PR branch `list-copy-delivery` remains at
-`2fa14cac340aeece7b2676ab43056315520f8269`. The source repair is not yet in it.
+The preceding PR head is `2fa14cac340aeece7b2676ab43056315520f8269`.
+The combined repair must receive a new production run after publication.
 Production [40114747612](https://github.com/e6qu/fun-with-pipes/actions/runs/40114747612)
-is running. Both ARM Mac jobs, regular Intel macOS, Windows ARM64 and benchmarks pass; their
-complete logs were audited without error markers. Documentation `40114747617`
-passes. The remaining production jobs have reported no failure so far.
+has eight passing production jobs; every completed log is audited. Only Linux
+AMD64 remains running. Documentation `40114747617` passes. No new failure has
+been reported. This run checks the earlier PR source, not the shutdown repair.
 
 Earlier-head `40106524885` is completely audited: six failures were repaired by
 `ff1aca3e` and `85df5485`; both Windows jobs and benchmarks pass. The repairs fix
