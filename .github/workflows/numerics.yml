@@ -2346,7 +2346,7 @@ jobs:
               cpu = subprocess.check_output(['powershell', '-NoProfile', '-Command', 'Get-CimInstance Win32_Processor | Select-Object Name,Manufacturer,NumberOfCores,NumberOfLogicalProcessors | ConvertTo-Json'], text=True)
           (evidence / 'cpu.txt').write_text(platform.platform() + '\n' + platform.machine() + '\n' + cpu)
           files = sorted(p for directory in ['src', 'lib', 'runtime'] for p in Path(directory).rglob('*') if p.is_file())
-          files += [Path(name) for name in ['tests/http_server.rs', 'tests/web.rs', 'tests/support/http_server_process.rs', 'tests/support/http_application.rs', 'tests/support/http_application_memory.rs', 'tests/fixtures/http_app_memory.c', 'examples/server/api.fwp', 'tests/web/server.fwp', 'tests/server_entry_ownership.rs', 'tests/fixtures/server_entries.fwp', 'tests/fixtures/server_entry_client.fwp', 'tests/support/client_allocations.rs', 'tests/support/process_memory.rs', 'scripts/summarize-server-entries.py', '.github/workflows/numerics.yml']]
+          files += [Path(name) for name in ['tests/http_server.rs', 'tests/web.rs', 'tests/support/http_server_process.rs', 'tests/support/http_application.rs', 'tests/support/http_application_memory.rs', 'tests/fixtures/http_app_memory.c', 'tests/task_context_storage.rs', 'tests/fixtures/task_stack_pages.c', 'examples/server/api.fwp', 'tests/web/server.fwp', 'tests/server_entry_ownership.rs', 'tests/fixtures/server_entries.fwp', 'tests/fixtures/server_entry_client.fwp', 'tests/support/client_allocations.rs', 'tests/support/process_memory.rs', 'scripts/summarize-server-entries.py', '.github/workflows/numerics.yml']]
           Path('server-check-evidence/source-sha256.json').write_text(json.dumps({p.as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in files}, indent=2) + '\n')
           PY
       - run: cargo fmt --all -- --check
@@ -2362,15 +2362,24 @@ jobs:
       - name: Maintained HTTP application and shutdown handshake
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-application' }}
         run: cargo test --test http_server -- --nocapture
-      - name: Three complete O2 idle-memory attempts with all failures retained
+      - name: Compile the O2 diagnostic and check both negative controls
+        id: idle_binary
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-idle-checks' }}
+        run: cargo test --test http_server http_application::api_live_memory_o2 -- --exact --nocapture
+      - name: Thirty-two fresh O2 processes with all failures retained
+        if: ${{ !cancelled() && inputs.suite == 'http-idle-checks' && steps.idle_binary.outcome == 'success' }}
         shell: bash
         run: |
           result=0
-          for attempt in 1 2 3; do
-            FWP_HTTP_APPLICATION_ARTIFACTS="server-check-evidence/attempt-$attempt" cargo test --test http_server http_application::api_live_memory_o2 -- --exact --nocapture || result=1
+          for attempt in $(seq 1 32); do
+            FWP_HTTP_APPLICATION_BINARY="server-check-evidence/http-application/api-healthyO2.exe" FWP_HTTP_APPLICATION_ARTIFACTS="server-check-evidence/attempt-$attempt" cargo test --test http_server http_application::api_saved_binary_idle_memory -- --exact --ignored --nocapture || result=1
           done
           exit "$result"
+      - name: Linux task-stack page policy, reuse and setup errors
+        if: ${{ !cancelled() && runner.os == 'Linux' && inputs.suite == 'http-application' }}
+        env:
+          FWP_TASK_CONTEXT_ARTIFACTS: server-check-evidence/task-context
+        run: cargo test --test task_context_storage task_stack_pages_guard_reuse_and_setup_failures -- --exact --nocapture
       - name: Generated entry results and ownership restrictions
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && (inputs.suite == 'server-entries' || inputs.suite == 'server-recheck') && matrix.part == 'checks' }}
         run: cargo test --no-fail-fast --test server_entry_ownership --test arc_execution -- --nocapture

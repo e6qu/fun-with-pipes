@@ -288,6 +288,50 @@ fn cancel_pending(server: &mut Observed) {
     }
 }
 
+fn exercise(binary: &Path, artifact: PathBuf, variant: &str) {
+    let mut server = Observed::start(binary, artifact);
+    cohort(&server.address, 1, false);
+    server.checkpoint(8, true);
+    cohort(&server.address, 4, false);
+    server.checkpoint(16, variant == "healthy");
+    if variant != "healthy" {
+        assert_eq!(server.wait().code(), Some(241), "broken observer control");
+        if let Some(reader) = server.reader.take() {
+            reader.join().unwrap();
+        }
+        let log = server.log.lock().unwrap().clone();
+        assert!(log.contains("http-memory changed"), "{log}");
+        return;
+    }
+    for (i, repeats) in [16, 1, 16, 4].into_iter().enumerate() {
+        cohort(&server.address, repeats, false);
+        server.checkpoint((i + 3) * 8, true);
+    }
+    cohort(&server.address, 0, true);
+    server.checkpoint(56, true);
+    cohort(&server.address, 1, false);
+    server.checkpoint(64, true);
+    cancel_pending(&mut server);
+    if let Some(reader) = server.reader.take() {
+        reader.join().unwrap();
+    }
+    let log = server.log.lock().unwrap().clone();
+    assert!(log.contains("http-shutdown\t1\n"), "{log}");
+    assert!(log.contains("http-final\t72\t72\t0\t"), "{log}");
+    assert!(log.ends_with("http-metrics-final\t0\n"), "{log}");
+    let samples: Vec<u64> = server
+        .resident
+        .lines()
+        .skip(1)
+        .map(|line| line.split_once('\t').unwrap().1.parse().unwrap())
+        .collect();
+    assert_eq!(samples.len(), 8);
+    assert!(
+        samples.iter().all(|rss| *rss <= samples[0] + 8192),
+        "RSS exceeded the predeclared warm-baseline + 8 MiB budget: {samples:?}"
+    );
+}
+
 fn measure(opt: &str) {
     let temporary = fwp::cgen::TempDir::new("http-application-memory").unwrap();
     let artifacts = std::env::var_os("FWP_HTTP_APPLICATION_ARTIFACTS")
@@ -326,47 +370,7 @@ fn measure(opt: &str) {
         std::fs::write(artifact.with_extension("c"), &code).unwrap();
         let binary = artifact.with_extension("exe");
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-        let mut server = Observed::start(&binary, artifact);
-        cohort(&server.address, 1, false);
-        server.checkpoint(8, true);
-        cohort(&server.address, 4, false);
-        server.checkpoint(16, variant == "healthy");
-        if variant != "healthy" {
-            assert_eq!(server.wait().code(), Some(241), "broken observer control");
-            if let Some(reader) = server.reader.take() {
-                reader.join().unwrap();
-            }
-            let log = server.log.lock().unwrap().clone();
-            assert!(log.contains("http-memory changed"), "{log}");
-            continue;
-        }
-        for (i, repeats) in [16, 1, 16, 4].into_iter().enumerate() {
-            cohort(&server.address, repeats, false);
-            server.checkpoint((i + 3) * 8, true);
-        }
-        cohort(&server.address, 0, true);
-        server.checkpoint(56, true);
-        cohort(&server.address, 1, false);
-        server.checkpoint(64, true);
-        cancel_pending(&mut server);
-        if let Some(reader) = server.reader.take() {
-            reader.join().unwrap();
-        }
-        let log = server.log.lock().unwrap().clone();
-        assert!(log.contains("http-shutdown\t1\n"), "{log}");
-        assert!(log.contains("http-final\t72\t72\t0\t"), "{log}");
-        assert!(log.ends_with("http-metrics-final\t0\n"), "{log}");
-        let samples: Vec<u64> = server
-            .resident
-            .lines()
-            .skip(1)
-            .map(|line| line.split_once('\t').unwrap().1.parse().unwrap())
-            .collect();
-        assert_eq!(samples.len(), 8);
-        assert!(
-            samples.iter().all(|rss| *rss <= samples[0] + 8192),
-            "RSS exceeded the predeclared warm-baseline + 8 MiB budget: {samples:?}"
-        );
+        exercise(&binary, artifact, variant);
     }
 }
 
@@ -397,4 +401,15 @@ fn api_live_memory_o1() {
 #[test]
 fn api_live_memory_o2() {
     measure("-O2");
+}
+
+// Diagnostic entry only: exercise an explicitly selected saved executable.
+// It does not replace the ordinary tests that compile this revision.
+#[test]
+#[ignore = "requires a saved native API binary and a fresh artifact directory"]
+fn api_saved_binary_idle_memory() {
+    let binary = PathBuf::from(std::env::var_os("FWP_HTTP_APPLICATION_BINARY").unwrap());
+    let artifacts = PathBuf::from(std::env::var_os("FWP_HTTP_APPLICATION_ARTIFACTS").unwrap());
+    std::fs::create_dir(&artifacts).unwrap();
+    exercise(&binary, artifacts.join("api-saved"), "healthy");
 }

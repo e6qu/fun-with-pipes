@@ -1,7 +1,8 @@
 # Memory between JSON API requests
 
-Status: Linux ARM64 passes the first complete native run. Linux AMD64 O1 exceeds
-the RSS budget; Windows ARM64 O2 has an idle-checkpoint timeout. Repairs and the
+Status: source `027be46e` passes all seven checks on Linux ARM64, both macOS
+architectures and Windows AMD64. Linux AMD64 O1 exceeds the RSS budget; Windows
+ARM64 O2 has an intermittent idle-checkpoint timeout. The stack-page repair and
 complete native matrix remain pending. Neither limit has been relaxed.
 This extends the [application acceptance suite](../application-acceptance.md).
 It is a correctness and memory check, not a throughput benchmark or a comparison
@@ -66,5 +67,58 @@ For the open Linux failure, `http-mappings` runs the saved O1/O2 executables in
 three fresh native processes each and records `/proc/PID/smaps` at every idle
 checkpoint. Those snapshots identify resident mappings and large physical pages;
 a successful diagnostic run does not turn an exceeded budget into a pass.
-`http-idle-checks` repeats the O2 check three times with task/socket wait records.
-It preserves every attempt and fails if any attempt fails.
+`http-idle-checks` compiles O2 once, verifies both negative controls, then starts
+32 fresh processes from that executable with task/socket wait records. It keeps
+every attempt and fails if any attempt fails. Reusing the binary avoids repeated
+C compilation; each process still starts with fresh application state.
+
+## Linux physical pages and stack reuse
+
+The original AMD64 O1 run grew from 39,184 to 47,396 KiB RSS: 8,212 KiB, exceeding
+its 8,192 KiB allowance by 20 KiB. All eight idle checkpoints still had exactly
+3,120 bytes of managed charge, one listener task and no unclosed connections.
+Final shutdown closed all 72 connections and released the managed charge. These
+counters exclude task stacks, so they could not explain the RSS change alone.
+
+[Mapping run 40067908998](https://github.com/e6qu/fun-with-pipes/actions/runs/40067908998)
+used saved `027be46e` binaries, with diagnostic workflow `b2d34d05`. It recorded
+three fresh processes at each optimization level on each Linux architecture.
+These diagnostic reruns stayed within the budget; they do not erase the original
+failure. They identified the large allocations:
+
+| Native runner | Task-stack physical pages | Whole-process anonymous huge pages |
+|---|---|---|
+| Linux AMD64 | 2,048 KiB resident in lightly used 256 MiB stack mappings | 34–36 MiB |
+| Linux ARM64 | Ordinary pages; representative stack mapping 52 KiB resident | Zero |
+
+A virtual mapping reserves addresses. Resident pages are the physical memory
+actually backing those addresses. Linux can back a small touched part of a large
+mapping with a 2 MiB transparent huge page. That is wasteful for shallow task
+stacks even though it can benefit dense arrays. See the
+[Linux memory advice documentation](https://www.kernel.org/pub/linux/docs/man-pages/book/man-pages-6.8.pdf).
+
+The repair requests `MADV_NOHUGEPAGE` when allocating a Linux task stack, before
+using it. Reused stacks keep that policy. It preserves the 256 MiB virtual limit,
+guard page and stack pool; it does not disable large pages for other storage.
+A kernel built without transparent-huge-page support rejects the advice with
+`EINVAL` and already uses ordinary pages. Other advice errors and guard-page
+setup errors release the mapping and trap before publishing a runnable task.
+Previously the guard-page setup result was ignored.
+
+`task_stack_pages_guard_reuse_and_setup_failures` compiles the actual runtime
+allocation block at O1/O2. It checks Linux mappings, guard permissions, reuse,
+unsupported advice, allocation/advice/protection errors and cleanup. Deliberately
+omitting advice or protection must be detected. The complete API run and new
+mapping snapshots must confirm application RSS after the repair. No throughput
+or C/Rust performance claim follows from this memory change.
+
+## Windows timeout investigation
+
+The original Windows ARM64 O2 process completed checkpoint 40 but did not reach
+48 within 20 seconds. This was a normal-request group, before the partial-body
+disconnect group at 56. Its recorded managed charge was stable at 2,576 bytes.
+All three O2 attempts in [diagnostic run 40067911096](https://github.com/e6qu/fun-with-pipes/actions/runs/40067911096)
+passed, including negative controls. That does not establish a repair: the
+original timeout remains open while repeated saved-binary runs gather task and
+socket state. Neither the checkpoint deadline nor connection-close expectations
+have changed.
