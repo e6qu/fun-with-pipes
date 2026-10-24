@@ -103,7 +103,9 @@ Production selects checked ARC; the scalar-text historical protocol explicitly
 selects tracing and rejects wrong-mode evidence. Descriptive six-sample timings
 retain their existing scope and arithmetic differences. Actual binaries, input
 hashes and sample summaries are inspected; four corrupted-artifact controls must
-fail. Native Linux AMD64/ARM64 focused verification is pending publication.
+fail. Native Linux AMD64/ARM64 focused run `40075912779` PASSES at source
+`617bb2319760ccade91afea2bb0045c1984abbdf`. Publication is COMPLETE; do not
+rerun `fwp-publish-arc-benchmark-preparation.py`.
 
 The saved verified #206 compiler accepts all seven benchmark programs under
 checked ARC and emits C (3.15s total with formatting/workflow/Python checks).
@@ -111,6 +113,20 @@ Compiler/library/program inputs match the current branch, but embedded runtime
 is older; this is admission diagnostics, not current-source native acceptance or
 a timing result. Receipt: `/private/tmp/fwp-arc-benchmark-admission/receipt.json`.
 The active PR #208 stays unchanged while this preparation runs.
+
+
+Both complete logs are audited; independent review of all 42 measured native
+binaries and eight corruption-control failures passes (0.97s AMD64, 0.96s ARM64).
+Reports: `/private/tmp/fwp-arc-benchmark-evidence/617bb2319760`.
+The preparation now documents all seven results and their limits in
+`docs/measurements/arc-comparison.md`; the integer loop and direct text counting
+still have C/Rust gaps. No compiler speedup or memory-count claim is made.
+
+A related preparation now adds separate peak-process-memory measurements for
+C/Rust/fwp and fwp managed allocation/retain/live-storage counts, with seven
+intentional leak controls. Local template checks passed for all fourteen retained
+generated C programs (2.99s including syntax/docs); native measurement is pending.
+The full measurements remain runner-only and do not change PR #208's passing head.
 
 ## Local limits
 

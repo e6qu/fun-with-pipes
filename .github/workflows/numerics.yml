@@ -3859,7 +3859,7 @@ jobs:
         with:
           components: rustfmt, clippy
       - name: OpenSSL headers and native binary tools
-        run: sudo apt-get update && sudo apt-get install -y libssl-dev binutils
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev binutils time
       - name: Formatting and benchmark types
         run: |
           cargo fmt --all -- --check
@@ -3868,6 +3868,7 @@ jobs:
         id: comparison
         run: cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
       - name: Inspect every measured executable and sample record
+        id: evidence
         if: ${{ !cancelled() && steps.comparison.outcome == 'success' }}
         shell: bash
         run: |
@@ -3878,6 +3879,17 @@ jobs:
           esac
           python3 scripts/inspect-benchmark-binaries.py --input target/bench-evidence --source "$GITHUB_SHA" --memory arc --arch "$architecture" --objdump objdump --output target/bench-inspection.json
           python3 scripts/test-benchmark-evidence.py --input target/bench-evidence --source "$GITHUB_SHA" --memory arc --arch "$architecture" --objdump objdump --output target/bench-controls.json
+      - name: Measure memory separately and detect intentional leaks
+        if: ${{ !cancelled() && steps.evidence.outcome == 'success' }}
+        shell: bash
+        run: |
+          case "$RUNNER_ARCH" in
+            X64) architecture=x86_64 ;;
+            ARM64) architecture=aarch64 ;;
+            *) echo "Unsupported benchmark architecture: $RUNNER_ARCH" >&2; exit 1 ;;
+          esac
+          python3 scripts/measure-benchmark-memory.py --input target/bench-evidence --inspection target/bench-inspection.json --source "$GITHUB_SHA" --cc gcc --time /usr/bin/time --samples 3 --output target/bench-memory
+          python3 scripts/inspect-benchmark-memory.py --input target/bench-memory --benchmarks target/bench-evidence --inspection target/bench-inspection.json --source "$GITHUB_SHA" --arch "$architecture" --objdump objdump --output target/bench-memory-inspection.json
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -3886,6 +3898,8 @@ jobs:
             target/bench.md
             target/bench-inspection.json
             target/bench-controls.json
+            target/bench-memory/
+            target/bench-memory-inspection.json
             target/bench-evidence/
           if-no-files-found: error
   performance:
