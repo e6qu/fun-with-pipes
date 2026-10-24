@@ -10,6 +10,73 @@ fn checked(command: &mut Command) -> Output {
     output
 }
 
+fn check_startup_frames(usage: &str, entry: &str) -> Result<(), String> {
+    let mut entry_found = false;
+    for line in usage.lines() {
+        let fields: Vec<_> = line.split('\t').collect();
+        if fields.len() < 3 {
+            return Err(format!("malformed frame report: {line}"));
+        }
+        let function = fields[0]
+            .rsplit(':')
+            .next()
+            .unwrap()
+            .split('.')
+            .next()
+            .unwrap();
+        if [
+            "fwp_main_thread",
+            "fwp_windows_main_thread",
+            "fwp_init_consts",
+            "main",
+        ]
+        .contains(&function)
+        {
+            entry_found |= function == entry;
+            let bytes: usize = fields[1]
+                .parse()
+                .map_err(|_| format!("invalid frame size: {line}"))?;
+            if bytes > 4096 || fields[2] != "static" {
+                return Err(format!("startup frame exceeds 4 KiB or is dynamic: {line}"));
+            }
+        }
+    }
+    if !entry_found {
+        return Err(format!("missing platform entry {entry}: {usage}"));
+    }
+    Ok(())
+}
+
+#[test]
+fn startup_frame_checks_cover_inlining_and_reject_missing_or_large_frames() {
+    let windows = "C:\\work\\constant.c:10:fwp_windows_main_thread\t672\tstatic\n";
+    let unix = "/tmp/constant.c:10:fwp_main_thread.constprop.0\t304\tstatic\n";
+    assert!(check_startup_frames(windows, "fwp_windows_main_thread").is_ok());
+    assert!(check_startup_frames(unix, "fwp_main_thread").is_ok());
+    assert!(check_startup_frames(windows, "fwp_main_thread").is_err());
+    assert!(check_startup_frames("x.c:1:main\t80\tstatic\n", "fwp_windows_main_thread").is_err());
+    for function in [
+        "fwp_init_consts",
+        "fwp_main_thread",
+        "fwp_windows_main_thread",
+        "main",
+    ] {
+        let oversized = format!("{windows}x.c:1:{function}\t15040\tstatic\n");
+        assert!(check_startup_frames(&oversized, "fwp_windows_main_thread").is_err());
+    }
+    assert!(check_startup_frames(
+        &windows.replace("static", "dynamic"),
+        "fwp_windows_main_thread"
+    )
+    .is_err());
+    assert!(check_startup_frames(
+        &windows.replace("672", "invalid"),
+        "fwp_windows_main_thread"
+    )
+    .is_err());
+    assert!(check_startup_frames("malformed", "fwp_windows_main_thread").is_err());
+}
+
 // Compile the same C with production optimization settings and ask the native
 // compiler for actual frame sizes. A 129-element constant used to reserve about
 // 15 KiB on Clang because each store had a separate temporary type descriptor.
@@ -34,31 +101,19 @@ fn check_constant_stack(code: &str, directory: &std::path::Path, opt: &str) {
             .arg(&object),
     );
     let usage = std::fs::read_to_string(object.with_extension("su")).unwrap();
-    let mut entry_found = false;
-    for line in usage.lines() {
-        let fields: Vec<_> = line.split('\t').collect();
-        assert!(fields.len() >= 3, "{line}");
-        let function = fields[0]
-            .rsplit(':')
-            .next()
-            .unwrap()
-            .split('.')
-            .next()
-            .unwrap();
-        if ["fwp_main_thread", "fwp_init_consts", "main"].contains(&function) {
-            entry_found |= function == "fwp_main_thread";
-            let bytes: usize = fields[1].parse().unwrap();
-            assert!(bytes <= 4096, "{opt}: startup frame exceeds 4 KiB: {line}");
-        }
-    }
-    assert!(entry_found, "missing entry frame: {usage}");
     if let Some(root) = std::env::var_os("FWP_ARC_ARTIFACTS") {
         let path = std::path::Path::new(&root).join("array-text-stack");
         std::fs::create_dir_all(&path).unwrap();
-        std::fs::write(path.join(format!("constant{opt}.su")), usage).unwrap();
+        std::fs::write(path.join(format!("constant{opt}.su")), &usage).unwrap();
         std::fs::write(path.join(format!("constant{opt}.c")), code).unwrap();
         std::fs::copy(object, path.join(format!("constant{opt}.o"))).unwrap();
     }
+    let entry = if cfg!(windows) {
+        "fwp_windows_main_thread"
+    } else {
+        "fwp_main_thread"
+    };
+    check_startup_frames(&usage, entry).unwrap_or_else(|error| panic!("{opt}: {error}"));
 }
 
 #[test]

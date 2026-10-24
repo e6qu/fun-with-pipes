@@ -113,3 +113,10 @@ allocation counts and cleanup agree. These are local observations, not six-host
 acceptance. The native test now records compiler stack-usage reports and object
 files at O1/O2, requiring entry and constant-initialization frames at most 4 KiB
 for this fixture. That bound covers individual frames, not the full call stack.
+
+On Windows, Clang may inline the language entry into the operating-system thread
+entry. The test requires that platform entry and checks every surviving startup
+function, including a separate constant initializer. It rejects missing reports,
+frames over 4 KiB and dynamic frames. Reports and object files are saved before
+assertions so a failure retains the evidence. Parser controls cover inlining,
+Windows paths, specialized function names and deliberate invalid reports.

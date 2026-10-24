@@ -5,12 +5,15 @@ and borrowing, and reserve ARC for necessary sharing. JIT is excluded.
 
 ## Current action
 
-**Next:** audit the running stack repair on every native host, inspect its
-new frame reports and Linux measurements, then finish the grouped delivery PR
+**Next:** publish the Windows frame-check repair in PR #206, rerun the six
+native hosts, then inspect their evidence and the unchanged-compiler measurements
 against verified main `336692f4329d9f628c05d6a42a7353c1702bdc09`. Require all nine
 production jobs, docs and binary inspection at the final head before squash merge.
-The grouped draft uses branch `array-pipeline-delivery`. Its URL and current head
-are recorded in `/private/tmp/fwp-array-delivery-publication.json` once published.
+[PR #206](https://github.com/e6qu/fun-with-pipes/pull/206) is the only open PR,
+initial draft at `cbbaeade32f1b305f7448bc91dd65269e12fd1c9`, branch
+`array-pipeline-delivery`. Publication/checks passed in 10.07s. Receipt:
+`/private/tmp/fwp-array-delivery-publication.json`. Immutable revision tag:
+`roadmap/revision-array-delivery-cbbaeade32f1`.
 Standing publication/merge authorization remains active.
 
 Delivery worktree `/private/tmp/fwp-array-pipeline-delivery`, branch
@@ -69,6 +72,43 @@ actual PE section bounds before treating those bytes as loader-zeroed. Both
 Windows reviews pass. AMD64: 168 outcomes followed by corrected 24-layout review
 (1.12s); ARM64 full download/inspection/review/pruning (26.37s). The incomplete
 AMD64 review remains separately named; it is not acceptance evidence.
+
+## Stack repair validation in progress
+
+Source `19addb905e76`, native run `40051283361`: macOS ARM64 and both Linux jobs
+pass all fifteen targets and complete-log audits. Their artifacts each pass 168
+outcome inspections, two compiler stack reports/object inspections and 24 O2
+layout reviews. Verified ZIP caches pruned. Mac ARM entry frames: O1 720 / O2 704
+bytes; GCC AMD initializer 160, entry 304 bytes; GCC ARM initializer 176, entry
+O1 288 / O2 320 bytes. Individual frames, not total call-stack bounds.
+Guarded whole-host review durations: Mac ARM 25.51s, Linux AMD 24.71s, Linux ARM
+25.95s. All six complete logs are now audited. Intel macOS also passes all fifteen
+targets. Both Windows jobs fail only the new frame-check assertion: Clang inlines
+`fwp_main_thread` into `fwp_windows_main_thread`, whose observed O1 frame is 728
+bytes on AMD64 / 672 on ARM64. Fourteen other targets and array semantic checks
+pass on each Windows host. The compiler repair is unchanged; the test required
+a symbol that need not remain after valid inlining.
+
+The uncommitted test repair explicitly selects the platform entry, checks all
+surviving startup functions, rejects missing/oversized/dynamic frames and saves
+reports before asserting. Exact Rust parser controls pass at production Rust O1
+with checks enabled (2.24s), including Windows paths, specialized function names
+and negative controls. No compiler/runtime/library/build files changed from
+`19addb905e76`; keep that measurement run rather than repeating identical code.
+Audit: `fwp-array-stack-repair-audit.json`; reproduction:
+`fwp-check-array-frame-parser.py`. Next native run must still execute the full
+suite on every host. Do not treat the two failed jobs as passes.
+Reports: `fwp-array-native-evidence/19addb905e76`; layouts:
+`fwp-array-layout-review/19addb905e76`. Helper
+`fwp-inspect-array-stack-host.py --host HOST` runs only once per uninspected host.
+
+Final-delivery inspection/audit helpers are prepared but UNRUN:
+`fwp-{audit,discover,inspect}-array-delivery-*.py`,
+`fwp-prune-inspected-array-delivery-host.py`, and
+`fwp-prune-array-delivery-controls.py`. They use the new delivery checkout and
+require its exact publication source/run. Array final inspection additionally
+requires explicit artifact/job names; preserve 168 outcomes, two stack objects
+and 24 physical-layout reviews per host. Do not rerun completed #205 helpers.
 
 ## Measurements
 
