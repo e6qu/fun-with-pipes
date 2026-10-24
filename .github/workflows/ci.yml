@@ -18,6 +18,7 @@ env:
   # macOS suppresses allocator error messages when stderr is captured unless
   # reporting is explicit. Preserve the original error in each failed test log.
   MallocDebugReport: stderr
+  FWP_KERNEL_BOUNDS_ARTIFACTS: ownership-evidence/kernel-bounds
   FWP_CALLBACK_CAPTURE_ARTIFACTS: ownership-evidence/direct-captures
   FWP_ARRAY_CAPTURE_ARTIFACTS: ownership-evidence/array-captures
 
