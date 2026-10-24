@@ -27,6 +27,9 @@ mod client_allocations;
 #[path = "support/entry_checks.rs"]
 mod entry_checks;
 
+#[path = "support/http_server_process.rs"]
+mod http_server_process;
+
 #[path = "support/process_memory.rs"]
 mod process_memory;
 #[cfg(any(target_os = "linux", target_os = "macos", windows))]
@@ -207,29 +210,17 @@ fn start_command(mut cmd: Command, tls: bool, env: &[(&str, &str)]) -> Option<Se
     for (k, v) in env {
         cmd.env(k, v);
     }
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt;
-        cmd.creation_flags(0x00000200); // isolate CTRL_BREAK to this server
-    }
-    let mut child = cmd
-        .env("FWP_ADDR", "127.0.0.1:0")
-        .stdout(Stdio::null())
-        .stderr(Stdio::piped())
-        .spawn()
-        .expect("start server");
-    let mut stderr = BufReader::new(child.stderr.take().unwrap());
-    let mut line = String::new();
-    stderr.read_line(&mut line).expect("read address");
-    let addr = line
-        .trim()
-        .strip_prefix(if tls {
+    cmd.env("FWP_ADDR", "127.0.0.1:0");
+    let (child, addr, stderr) = http_server_process::start(
+        &mut cmd,
+        if tls {
             "listening on https://"
         } else {
             "listening on http://"
-        })
-        .unwrap_or_else(|| panic!("unexpected first line: {:?}", line))
-        .to_string();
+        },
+        Duration::from_secs(60),
+    )
+    .unwrap();
     Some(Server {
         child,
         addr,
@@ -539,25 +530,7 @@ fn h2_graceful_shutdown() {
             curl(&["--http2-prior-knowledge", "-w", "|%{http_code}", &u])
         });
         std::thread::sleep(Duration::from_millis(150));
-        #[cfg(unix)]
-        assert!(Command::new("kill")
-            .args(["-TERM", &srv.child.id().to_string()])
-            .status()
-            .unwrap()
-            .success());
-        #[cfg(windows)]
-        {
-            #[link(name = "kernel32")]
-            extern "system" {
-                fn GenerateConsoleCtrlEvent(event: u32, group: u32) -> i32;
-            }
-            assert_ne!(
-                unsafe { GenerateConsoleCtrlEvent(1, srv.child.id()) },
-                0,
-                "send CTRL_BREAK: {}",
-                std::io::Error::last_os_error()
-            );
-        }
+        http_server_process::terminate(&srv.child).unwrap();
         assert_eq!(slow.join().unwrap(), "slow|200", "{:?}", b);
         let st = srv.child.wait().unwrap();
         assert!(st.success(), "{:?}: {}", b, st);

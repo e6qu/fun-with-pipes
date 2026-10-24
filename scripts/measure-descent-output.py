@@ -354,7 +354,7 @@ def main():
             sizes = re.findall(rb'^\s*\d+\s+\.text\s+([0-9a-fA-F]+)\s', headers, re.M)
             assert sizes
             metadata[label] = dict(bytes=len(raw), sha256=digest(raw), sourceSha256=digest(path.read_bytes()), expectedStatus=statuses[label],
-                                   disassemblySha256=digest(asm), instructionBytes=sum(int(s, 16) for s in sizes))
+                                   disassemblySha256=digest(asm), textSectionBytes=sum(int(s, 16) for s in sizes))
         assert len(metadata) == (24 if (points, updates) == (33, 199) else 17)
         sequence = orders(labels, args.samples, args.order_seed)
         for _ in range(args.warmups):

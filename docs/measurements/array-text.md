@@ -2,8 +2,8 @@
 
 Status: focused checks and binary review pass on all six native targets.
 [Recorded allocation, layout and stack results](array-native-results.md) support
-the named cases; final production acceptance remains open. [The handoff](../development-state.md)
-records the source and checks; [the plan](../../PLAN.md) remains open.
+the named cases. [PR #206](../roadmap-history.md#array-output-storage-and-startup-stack-pr-206)
+passed final production acceptance; [the plan](../../PLAN.md) remains open.
 
 An array stores adjacent numbers in one buffer. A list stores a separate node for
 each element. Without the new optimization, this program creates a list, copies it into an
@@ -76,13 +76,14 @@ The neighboring map/fold and iterator cases must retain their loop
 optimizations after literal folding; introducing an array constant must not hide
 its element type from later compiler steps.
 
-## Evidence needed for acceptance
+## Checks to preserve
 
 Run the focused checks on native Linux, macOS and Windows, each on ARM64/AMD64.
 Keep generated C, executable files, output, status and source identity. Inspect
 the actual machine types, static array bytes/alignment, calls and instructions;
-report executable, code, static-data and stack costs. Final delivery still needs
-all production jobs and documentation at its exact commit.
+report executable, code, static-data and stack costs. PR #206 passed these
+checks and all final production/documentation jobs. Future changes need the same
+coverage for their exact commit.
 
 These checks establish allocation and lifetime behavior for the named programs,
 not speed. Before a timing claim, compare complete equivalent-work programs using

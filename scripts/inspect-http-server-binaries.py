@@ -50,7 +50,7 @@ for root, relative, mode, opt, workload in cases:
     rows.append({
         'artifact': root.name, 'file': str(relative), 'revision': revision,
         'mode': mode, 'optimization': opt, 'workload': workload,
-        'file_bytes': binary.stat().st_size, 'instruction_section_bytes': text_bytes,
+        'file_bytes': binary.stat().st_size, 'text_section_bytes': text_bytes,
         'sha256': hashlib.sha256(binary.read_bytes()).hexdigest(),
         'source_sha256': hashlib.sha256(source.read_bytes()).hexdigest(),
         'sections': sizes, 'tracing_symbols': found,
@@ -61,7 +61,7 @@ for root, relative, mode, opt, workload in cases:
                              ['w_start', 'w_handle', 'w_job_finish', 'g_call_value',
                               'g_call_drop', 'w_server_release', 'http2_serve'])],
     })
-    print(relative, text_bytes, 'instruction bytes; tracing control passed', flush=True)
+    print(relative, text_bytes, 'text-section bytes (including padding); tracing control passed', flush=True)
 report = {'revision': revision, 'binaries': rows,
           'method': 'Static LLVM symbols, section sizes and disassembly; no local execution.'}
 (args.memory / 'server-binary-review.json').write_text(json.dumps(report, indent=2) + '\n')

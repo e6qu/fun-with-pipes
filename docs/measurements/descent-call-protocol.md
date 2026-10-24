@@ -76,7 +76,7 @@ passes the initial screen if:
 
 - Both unchanged-code controls have median ratios within 0.98–1.02.
 - Its median is at most 0.95 of the unchanged fwp executable's median.
-- Its instruction-section size is at most 1.02 of the unchanged executable's size.
+- Its `.text` section size, including padding, is at most 1.02 of the unchanged executable's size.
 - All correctness and storage requirements pass for every input.
 
 Require the screen on both architectures in two independent runs, matching CPU
@@ -88,5 +88,5 @@ If short-process noise defeats the controls, establish a longer equivalent-work
 protocol before making a speed claim; do not silently change these inputs.
 
 A bounded local Clang diagnostic preserved output and storage while forced
-inlining removed four static call sites and added 144 instruction bytes. That
+inlining removed four static call sites and added 144 bytes to its text section. That
 motivates this GCC experiment; it is not Linux timing or compiler-change evidence.

@@ -12,6 +12,28 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Array output, storage and startup stack (PR #206)
+
+Eligible array display/JSON operations no longer build temporary lists. Numeric
+literal arrays use static storage; unchanged strings and iterator state avoid
+copies. One reusable type descriptor per array removes the earlier roughly
+15 KiB startup frame. [Examples](measurements/array-text.md) explain the eligible
+patterns; [native results](measurements/array-native-results.md) retain allocation,
+layout, code-size and stack costs. [C/Rust comparisons](measurements/array-output-results.md)
+still show substantial complete-program gaps, especially with full output.
+
+[PR #206](https://github.com/e6qu/fun-with-pipes/pull/206) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40055774892)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40055774862)
+at `35932a77bc5fdad42350c6376059b5e0d88b3c3d`. Complete logs and 8,166 saved
+outcomes passed review, with twelve startup stack objects and 144 physical-layout
+checks on six native hosts. Measurement failures retain their evidence; compiler
+children are stopped after unsuccessful exits as well as timeout/interruption.
+The [acceptance record](measurements/array-delivery-2026-10-24.json) identifies
+artifacts and inspection hashes. Squash `8cd5153b3ed7084ec46601cfd5b2551825f64057`
+has the tested tree and one subject without a body or trailers. All seven roadmap
+areas remain open.
+
 ## Float printing and numerical cost measurements (PR #205)
 
 Float printing searches fewer candidate decimal formats while preserving the

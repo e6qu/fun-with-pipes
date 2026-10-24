@@ -254,7 +254,7 @@ def main():
                 (directory / (binary.name + '.symbols')).write_bytes(symbols)
                 source = binary.with_suffix('.rs' if binary.name == 'rust-explicit' else '.c')
                 metadata[binary.name] = dict(sha256=digest(raw), bytes=len(raw), sourceSha256=digest(source.read_bytes()),
-                    disassemblySha256=digest(assembly), instructionBytes=sum(int(size, 16) for size in sizes))
+                    disassemblySha256=digest(assembly), textSectionBytes=sum(int(size, 16) for size in sizes))
             assert len(metadata) == (12 if controls else 8)
             orders = batch_orders(labels, args.samples, args.order_seed)
             for _ in range(args.warmups):

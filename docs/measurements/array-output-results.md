@@ -8,7 +8,8 @@ Formatting and storage choices still contribute to the time difference.
 These measurements compare complete fwp, C and Rust programs. They do not
 measure an isolated language overhead or prove a before/after speedup. The
 [array change](array-text.md) reduces heap requests; the comparison below shows
-what still costs time. Final delivery remains open; the current compiler includes the startup-stack repair.
+what still costs time. The compiler includes the startup-stack repair and
+passed [#206 delivery](../roadmap-history.md#array-output-storage-and-startup-stack-pr-206).
 
 ## Programs and timing
 
@@ -61,7 +62,9 @@ frame reports and process RSS are in the [raw record](array-output-2026-10-24.js
   [run 40051285670](https://github.com/e6qu/fun-with-pipes/actions/runs/40051285670).
   It includes the stack repair. Revision `64c487652a28` changes its Windows
   frame-check test and documentation, with identical compiler/runtime/library
-  and build files. That test correction still needs full native verification.
+  and build files. The correction passes the [six-host focused checks](array-native-results.md);
+  [#206](../roadmap-history.md#array-output-storage-and-startup-stack-pr-206)
+  records final production acceptance.
 
 Each job passed independent inspection of 169 saved binaries, their source
 hashes, machine architecture, consumer calls and lifetime controls. That is 1,014
@@ -115,7 +118,7 @@ execution deadlines; it also kills compiler children on timeout.
 
 The [array report](array-text.md#startup-stack-repair) explains the Clang frame
 issue found during binary review. The new repair keeps one descriptor per array.
-Native frame reports and all final-head production checks still gate delivery.
+Native frame reports and all final-head production checks passed #206 delivery.
 Fewer requests and these repeated observations do not complete the performance
 roadmap; output formatting and smaller-case checksum costs remain substantial.
 

@@ -84,14 +84,15 @@ inputs, C/Rust gaps, unchanged allocation counts and increased stack/code size.
 The current [array/text group](measurements/array-text.md) removes temporary lists,
 String copies and initial iterator tuples. Its [allocation and binary results](measurements/array-native-results.md) and [complete
 C/Rust comparisons](measurements/array-output-results.md) are separate evidence: fewer heap requests alone do not prove
-a timing gain. Final delivery checks remain open; [the handoff](development-state.md)
-records sources, current measurements, noisy rows and the startup-stack repair.
+a timing gain. [PR #206](roadmap-history.md#array-output-storage-and-startup-stack-pr-206)
+passed final delivery checks. The reports retain source identities, noisy rows
+and the startup-stack repair.
 
 ## Choose the question first
 
 | Question | Read | What the number means |
 |---|---|---|
-| How much slower/faster than C or Rust? | [Complete programs](#fwp-compared-with-c-and-rust), [arrays/matrices](#current-numerical-comparison-and-record-moves), [derivative descent](measurements/descent-peers.md), [hashing](#repeating-the-allocation-and-borrowing-changes-together), [vector lanes](#fixed-size-lane-calculations-against-c-and-rust) | Ratio against the named C/Rust implementation for that input and timing boundary |
+| How much slower/faster than C or Rust? | [Complete programs](#fwp-compared-with-c-and-rust), [arrays/matrices](#numerical-kernels-and-record-moves), [derivative descent](measurements/descent-peers.md), [hashing](#repeating-the-allocation-and-borrowing-changes-together), [vector lanes](#fixed-size-lane-calculations-against-c-and-rust) | Ratio against the named C/Rust implementation for that input and timing boundary |
 | Did a compiler change help? | [Iteration](#list-iteration-compared-with-its-previous-definition), [derivatives](#paired-autodiff-metadata-allocations), [HTTP functions](#fixed-function-values-in-the-http-server), [maps](#larger-maps-exposed-a-storage-layout-problem) | New fwp / baseline fwp; not overhead against another language |
 | How much ownership work does a channel exchange need? | [Method and baseline](measurements/channel-transfer-protocol.md), [matched payloads](measurements/channel-variant-moves.md), [direct-call borrowing](measurements/channel-direct-borrows.md), [function channels](measurements/function-channel-borrows.md) | Allocations, retains and actual binary/frame sizes; no execution-time or C/Rust comparison |
 | Can task records use less heap storage? | [Saved CPU state in task stacks](measurements/task-contexts.md) | Matched fwp layouts: managed bytes, process memory, complete-process time and actual binary/static sizes |
@@ -247,7 +248,7 @@ disagreement is a failure.
 
 ## Numerical workloads compared with C and Rust
 
-Use the [latest recorded numerical comparison](#current-numerical-comparison-and-record-moves)
+Use the [latest recorded numerical comparison](#numerical-kernels-and-record-moves)
 for the array and matrix results. It separates calculation time from construction
 and cleanup, and compares both tracing and checked ARC against C and Rust.
 “Latest recorded” names a dated report, not a new measurement of today's checkout.
@@ -257,6 +258,12 @@ used five samples and tracing mode only. For example, its Linux AMD64 array
 calculation took 2.66 times the C time; Intel macOS matrix calculation took
 3.24 times C. Its raw times and memory profiles remain available, but its old
 compiler and smaller sample count make it unsuitable as the current baseline.
+
+Code-size reports distinguish the whole executable from its `.text`/`__text`
+section, which contains machine code and padding. A section byte total is not a
+decoded instruction count. Historical numerical JSON records call this total
+`instructionBytes`; new records use `textSectionBytes`. Keep old measurements
+under their original source identity instead of rewriting them as new data.
 
 ## Understanding memory measurements
 
@@ -365,17 +372,19 @@ source, all six hosts make 1,706 allocation requests and 1,069 retains. Heap
 records and peak managed charge shrink, while entry frames grow. Actual binary
 sizes include unchanged and larger results. The report names the workload,
 compiler settings and stack-cost calculation; it makes no timing claim.
-The related Windows collector-snapshot removal is under test and has separate
-controls, so its results must not be inferred from the cancellation measurements.
+The related Windows collector-snapshot removal passed repaired native checks
+in [PR #189](roadmap-history.md#compact-task-records-and-repaired-native-validation-pr-189).
+Its separate controls must not be inferred from the cancellation measurements.
 
-### Current numerical comparison and record moves
+### Numerical kernels and record moves
 
 [The record-move report](measurements/numerical-record-moves-2026-10-16.json)
-retains current fwp/C/Rust results at `a3d8f16e` on Linux/macOS ARM64/AMD64,
+retains the fwp/C/Rust sample at `a3d8f16e` on Linux/macOS ARM64/AMD64,
 plus a separate experiment that restores the removed ownership operations.
 All four hosts pass both the [numerical run](https://github.com/e6qu/fun-with-pipes/actions/runs/38817877068)
 and [paired experiment](https://github.com/e6qu/fun-with-pipes/actions/runs/38821156704).
-These component measurements precede the combined delivery's final acceptance.
+These measurements describe that preserved source and settings; later
+deliveries have separate [acceptance records](roadmap-history.md).
 Processors, compilers, flags, build commands, source hashes, raw samples and
 allocation profiles are retained. Checked ARC binaries exclude tracing symbols.
 

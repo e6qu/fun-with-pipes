@@ -41,8 +41,8 @@ no fast-math, disabled floating contraction and no Rust LTO. CPU models differ
 from some earlier runs; only programs timed together are compared here.
 
 The code-size goal, recorded in the preparation handoff before measurement, was
-smaller instructions for 129×199 on both architectures and no instruction growth
-in other packed cases. Both hosts meet it. Generic adapters fall from 18 to two;
+a smaller `.text` section for 129×199 on both architectures and no growth in that
+section for other packed cases. Both hosts meet it. Generic adapters fall from 18 to two;
 the remaining stack function values still retain ownership metadata. The
 `next-contribution` helper loses its generic adapter, but the array callback's
 stack function value still keeps one. Four static calls to the numerical helper
@@ -50,12 +50,14 @@ remain, down from five; this is not a count of dynamically executed calls.
 
 ## All measured cases
 
-Instruction bytes count executable instructions, not the whole file. Ratios divide
+The byte counts measure the ELF `.text` section, including padding, not decoded
+instruction counts or whole-file size. Historical raw records call this field
+`instructionBytes`; new measurements use `textSectionBytes`. Ratios divide
 new packed fwp's median by the named peer's median. Below one is faster;
 `2.0× C` means twice the C time. The identical-copy column should be near one;
 its difference cannot be caused by a compiler optimization.
 
-| Host | Coordinates-updates | Old instructions | New instructions | New / old | New / identical | New / C | New / Rust |
+| Host | Coordinates-updates | Old text bytes | New text bytes | New / old | New / identical | New / C | New / Rust |
 |---|---|---:|---:|---:|---:|---:|---:|
 | x86_64 | 3-0 | 30418 | 23266 | 1.2419 | 1.2184 | 1.6136 | 1.3189 |
 | x86_64 | 3-1 | 30498 | 23314 | 1.1558 | 1.1199 | 1.7943 | 1.4809 |
@@ -70,7 +72,7 @@ its difference cannot be caused by a compiler optimization.
 | aarch64 | 33-199 | 35292 | 28508 | 1.0526 | 1.0171 | 1.7693 | 1.4506 |
 | aarch64 | 129-199 | 40172 | 32508 | 1.0014 | 1.0060 | 2.2964 | 1.9013 |
 
-The largest instruction sections shrink about 18% on AMD64 and 19% on ARM64.
+The largest text sections shrink about 18% on AMD64 and 19% on ARM64.
 The largest managed profile stays at 459 requests, 216,925 requested bytes,
 zero retains and a 7,200-byte peak. All six packed cases preserve zero retains;
 managed and raw storage finish at zero with no tracing collections. Allocation

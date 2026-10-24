@@ -347,27 +347,18 @@ fn scaled_directory_reports_bound_live_storage_and_release_error_paths() {
                     .env("FWP_GC_VERIFY", "0")
                     .env("FWP_REUSE_VERIFY", "0"),
             );
+            file_application_memory::save_execution(
+                "directory",
+                files,
+                "measured",
+                opt,
+                &actual,
+                &resident,
+            );
             assert!(actual.status.success(), "{actual:?}");
+            assert_eq!(resident.lines().count(), 10, "{actual:?}");
             assert_eq!(actual.stdout, reference.stdout);
             file_application_memory::check_observations(&actual.stderr);
-            if let Some(path) = std::env::var_os("FWP_FILE_APPLICATION_ARTIFACTS") {
-                let path = std::path::PathBuf::from(path);
-                std::fs::write(
-                    path.join(format!("directory-{files}{opt}.rss.tsv")),
-                    resident,
-                )
-                .unwrap();
-                std::fs::write(
-                    path.join(format!("directory-{files}{opt}.stdout")),
-                    &actual.stdout,
-                )
-                .unwrap();
-                std::fs::write(
-                    path.join(format!("directory-{files}{opt}.memory")),
-                    &actual.stderr,
-                )
-                .unwrap();
-            }
             for (name, executable) in [
                 ("missing-release", &control),
                 ("missing-close", &handle_control),
@@ -381,6 +372,7 @@ fn scaled_directory_reports_bound_live_storage_and_release_error_paths() {
                     .env("FWP_REUSE_VERIFY", "0")
                     .output()
                     .unwrap();
+                file_application_memory::save_execution("directory", files, name, opt, &broken, "");
                 assert_eq!(
                     broken.status.code(),
                     Some(241),

@@ -38,6 +38,7 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
       FWP_ARC_ARTIFACTS: ownership-evidence/arc
+      FWP_FILE_APPLICATION_ARTIFACTS: ownership-evidence/file-applications
       FWP_TAIL_ARTIFACTS: ownership-evidence/tail
       FWP_AD_WORKSPACE_ARTIFACTS: ownership-evidence/workspaces
       FWP_AD_SCOPE_ARTIFACTS: ownership-evidence/scopes
@@ -174,6 +175,7 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
       FWP_ARC_ARTIFACTS: ownership-evidence/arc
+      FWP_FILE_APPLICATION_ARTIFACTS: ownership-evidence/file-applications
       FWP_TAIL_ARTIFACTS: ownership-evidence/tail
       FWP_AD_WORKSPACE_ARTIFACTS: ownership-evidence/workspaces
       FWP_AD_SCOPE_ARTIFACTS: ownership-evidence/scopes
@@ -256,6 +258,7 @@ jobs:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     env:
       FWP_ARC_ARTIFACTS: ownership-evidence/arc
+      FWP_FILE_APPLICATION_ARTIFACTS: ownership-evidence/file-applications
       FWP_TAIL_ARTIFACTS: ownership-evidence/tail
       FWP_AD_WORKSPACE_ARTIFACTS: ownership-evidence/workspaces
       FWP_AD_SCOPE_ARTIFACTS: ownership-evidence/scopes
