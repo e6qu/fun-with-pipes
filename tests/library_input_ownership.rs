@@ -162,23 +162,29 @@ fn library_input_copies_transfer_or_release_exactly_once() {
     let p = program();
     let mut interp = fwp::interp::Interp::new(&p, Box::new(Vec::new())).unwrap();
     assert_eq!(
-        interp.call(0, vec![Value::Str("héllo".into())]).unwrap(),
-        Value::I64(5)
-    );
-    assert_eq!(
-        interp.call(1, vec![Value::Str("héllo".into())]).unwrap(),
+        interp
+            .call_root(0, vec![Value::Str("héllo".into())])
+            .unwrap(),
         Value::I64(5)
     );
     assert_eq!(
         interp
-            .call(
+            .call_root(1, vec![Value::Str("héllo".into())])
+            .unwrap(),
+        Value::I64(5)
+    );
+    assert_eq!(
+        interp
+            .call_root(
                 5,
                 vec![Value::Str("first".into()), Value::Str("second".into())]
             )
             .unwrap(),
         Value::Str("second".into())
     );
-    assert!(interp.call(9, vec![Value::Str("prior".into())]).is_err());
+    assert!(interp
+        .call_root(9, vec![Value::Str("prior".into())])
+        .is_err());
     let (source, _) = fwp::cgen::generate_library(&p, "inputs").unwrap();
     let observed = source
         .replace("static V fwp_data(uint32_t", "static V strings[32], data[32]; static unsigned drops[32]; static int ns, nd, fail_record;\nstatic V fwp_data(uint32_t")

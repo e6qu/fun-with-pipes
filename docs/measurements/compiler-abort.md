@@ -41,7 +41,7 @@ do not establish stack exhaustion, out-of-memory failure, or its cause.
 | [40106733779](https://github.com/e6qu/fun-with-pipes/actions/runs/40106733779) | C creates 64–4,096 MiB stacks successively in one process; debugger experiment times out | Earlier stack allocations may affect later ones; no passing guarded compilation |
 | [40107961231](https://github.com/e6qu/fun-with-pipes/actions/runs/40107961231) | Asynchronous debugger confirms Guard Malloc startup failure with the unchanged 4 GiB request | No heap corruption observed; inference was not reached |
 | [40113866689](https://github.com/e6qu/fun-with-pipes/actions/runs/40113866689) | Fresh C processes pass both sizes; Rust passes 256 MiB but fails 4 GiB only under Guard Malloc. The smaller-stack compiler reaches declaration collection, then hits its 120-second deadline | No invalid access was reported; inference was not reached, so this is not a passing heap check or an abort repair |
-| [40114625111](https://github.com/e6qu/fun-with-pipes/actions/runs/40114625111) | Pending: ASan with production Rust 1.99.1, O1 and checking settings | Removes the earlier nightly-toolchain difference; instrumentation still changes generated instructions |
+| [40114625111](https://github.com/e6qu/fun-with-pipes/actions/runs/40114625111) | All 90 compilations passed with production Rust 1.99.1, O1 and checking settings; full log has no sanitizer finding; archive review pending | Removes the earlier nightly-toolchain difference; instrumentation still changes generated instructions |
 
 Guard Malloc places allocations beside protected pages to expose invalid memory
 access. Its extra memory requirements can change startup behavior. ASan
@@ -66,6 +66,28 @@ The diagnostic change also introduced a Clippy needless-borrow error. That is
 repaired. Native tests now run even if lint fails, and Python SDK checks explicitly
 build their required compiler, so an earlier failure cannot hide independent test
 results. Final-head CI is still required.
+
+## Source lifetime review
+
+The investigation now follows source ownership and cleanup, at the user's request.
+No further allocator-cookie or disassembly-led experiments are planned.
+
+Macro invocation bypassed the interpreter entry method that joins child tasks on
+success and cancels them on failure. A regression invokes two macros that spawn
+printing children. The existing compiler accepts the program but prints neither
+child message. The candidate routes macros through `call_root`, with their
+explicit arguments, and uses the same entry method for `comptime`. The original
+nine failing-test inputs do not invoke macros: this repair is not a causal
+explanation of that abort. Candidate compiler validation remains pending.
+
+The wider review found background gRPC workers excluded from child joining even
+though they borrow the program and writers. The candidate now closes the pool,
+cancels and joins background workers before entry return, and propagates Rust
+panics only after cleanup. Blocking calls restore the scheduling turn during
+unwinding. Public entry methods enforce this boundary; writers require `Send`,
+and task handles cannot cross arbitrary Rust threads. Repeated cleanup, panic
+and writer-lifetime tests accompany these changes. They remain unverified until
+the focused runner checks pass; full delivery acceptance is also required.
 
 ## Saved evidence
 

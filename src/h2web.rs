@@ -907,7 +907,7 @@ pub fn ws_close_parse(p: &[u8]) -> (i64, String) {
 // =============================================================== primitives
 
 /// The `http2.*`, `zlib.*` and `ws.*` primitives.
-pub fn prim(it: &mut Interp, sym: &str, a: &mut [Value]) -> R<Value> {
+pub(crate) fn prim(it: &mut Interp, sym: &str, a: &mut [Value]) -> R<Value> {
     let b = |v: &[u8]| Value::Bytes(Rc::from(v));
     match sym {
         "http2.serve" => serve(it, a),

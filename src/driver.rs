@@ -504,10 +504,13 @@ pub fn with_big_stack<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static)
 }
 
 /// Run the tests of a program; returns (passed, failed).
-pub fn run_tests(prog: &crate::ir::Program, out: &mut dyn std::io::Write) -> (usize, usize) {
+pub fn run_tests(
+    prog: &crate::ir::Program,
+    out: &mut (dyn std::io::Write + Send),
+) -> (usize, usize) {
     let (mut pass, mut fail) = (0, 0);
     for (name, id) in &prog.tests {
-        let r = Interp::new(prog, Box::new(&mut *out)).and_then(|mut it| it.call_root(*id));
+        let r = Interp::new(prog, Box::new(&mut *out)).and_then(|mut it| it.call_root(*id, vec![]));
         let status = match r {
             Ok(v) if v.as_bool() => {
                 pass += 1;

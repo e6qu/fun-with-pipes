@@ -85,6 +85,14 @@ pub struct Shared {
     pool: HashMap<String, ConnRef>,
 }
 
+/// An entry cannot keep borrowed connection workers alive for the next entry.
+pub(crate) fn close_connections(it: &mut Interp) {
+    let connections = std::mem::take(&mut it.world.grpc.lock().unwrap().0.pool);
+    for connection in connections.into_values() {
+        conn_dead(it, &connection, "interpreter execution finished");
+    }
+}
+
 /// The gRPC context of a task, inherited by the tasks it starts.
 #[derive(Clone, Default)]
 pub struct TaskCtx {
@@ -651,6 +659,9 @@ fn reader(it: &mut Interp, c: ConnRef) {
     let fd = c.borrow().fd;
     let mut buf = vec![0u8; 65536];
     loop {
+        if it.check_cancel().is_err() {
+            return conn_dead(it, &c, "cancelled");
+        }
         if c.borrow().dead.is_some() {
             return;
         }
@@ -727,6 +738,9 @@ fn flush_now(it: &mut Interp, c: &ConnRef) {
 fn writer(it: &mut Interp, c: ConnRef) {
     let fd = c.borrow().fd;
     loop {
+        if it.check_cancel().is_err() {
+            return conn_dead(it, &c, "cancelled");
+        }
         let r = {
             let mut cb = c.borrow_mut();
             if cb.dead.is_some() {
@@ -1037,10 +1051,8 @@ fn connect(it: &mut Interp, given: &str, key: &str) -> R<Result<ConnRef, String>
         return Ok(Err(format!("cannot connect to {}: {}", addr, e)));
     }
     let (r, w) = (c.clone(), c.clone());
-    let r = crate::sched::Baton(r);
-    let w = crate::sched::Baton(w);
-    it.spawn_rust(Box::new(move |it| reader(it, r.0)), None, true);
-    it.spawn_rust(Box::new(move |it| writer(it, w.0)), None, true);
+    it.spawn_rust(Box::new(move |it| reader(it, r)), None, true);
+    it.spawn_rust(Box::new(move |it| writer(it, w)), None, true);
     it.world
         .grpc
         .lock()
@@ -1312,11 +1324,11 @@ struct Sender {
 
 fn spawn_sender(it: &mut Interp, c: &ConnRef, s: &StreamRef, iter: Value, enc: Encoder) -> Sender {
     let failed = Rc::new(RefCell::new(None));
-    let job = crate::sched::Baton((c.clone(), s.clone(), iter, enc, failed.clone()));
+    let job = (c.clone(), s.clone(), iter, enc, failed.clone());
     let task = it.spawn_rust(
         Box::new(move |it| {
             let job = job;
-            let crate::sched::Baton((c, s, mut cur, enc, failed)) = job;
+            let (c, s, mut cur, enc, failed) = job;
             let r = (|| -> R<()> {
                 it.check_cancel()?;
                 loop {
@@ -1359,6 +1371,7 @@ impl Sender {
     fn finish(self, it: &mut Interp) -> Option<Ctl> {
         self.task.cancel();
         it.world.event();
+        it.join_task(&self.task);
         self.failed.borrow_mut().take()
     }
 }
@@ -1375,7 +1388,7 @@ fn iter_next(it: &mut Interp, v: Value) -> R<Option<(Value, Value)>> {
 }
 
 /// A call to a function served by another process (a split build).
-pub fn call_remote(it: &mut Interp, id: FuncId, r: &RemoteFn, args: Vec<Value>) -> R<Value> {
+pub(crate) fn call_remote(it: &mut Interp, id: FuncId, r: &RemoteFn, args: Vec<Value>) -> R<Value> {
     let prog = it.prog;
     let f = &prog.funcs[id];
     let shape = rpc::shape(&f.ty, f.arity as usize, r.error.as_ref());
@@ -1799,7 +1812,7 @@ pub struct Sink {
 }
 
 /// `channel.send` on a sink: `false` when the stream is closed.
-pub fn sink_send(it: &mut Interp, s: &Rc<Sink>, x: Value) -> R<bool> {
+pub(crate) fn sink_send(it: &mut Interp, s: &Rc<Sink>, x: Value) -> R<bool> {
     let msg = encode_msg(it, &s.enc, &x)?;
     send_msg(it, &s.conn, &s.stream, &msg, false)
 }
@@ -1903,11 +1916,11 @@ fn start_call(it: &mut Interp, c: &ConnRef, s: StreamRef, server: Rc<Server>) {
             now.checked_add(Duration::from_nanos(ns))
                 .unwrap_or(now + Duration::from_secs(100 * 365 * 86400))
         });
-    let job = crate::sched::Baton((c.clone(), s.clone(), server));
+    let job = (c.clone(), s.clone(), server);
     let t = it.spawn_rust(
         Box::new(move |it| {
             let job = job;
-            let crate::sched::Baton((c, s, server)) = job;
+            let (c, s, server) = job;
             handle(it, c, s, server)
         }),
         deadline,
@@ -2516,11 +2529,11 @@ fn accept_loop(
                     Some(server.clone()),
                 )));
                 c.borrow_mut().tls = session;
-                let job = crate::sched::Baton(c);
+                let job = c;
                 it.spawn_rust(
                     Box::new(move |it| {
                         let job = job;
-                        serve_conn(it, job.0)
+                        serve_conn(it, job)
                     }),
                     None,
                     false,
@@ -2549,11 +2562,11 @@ fn serve_conn(it: &mut Interp, c: ConnRef) {
         Ok(Err(e)) => return conn_dead(it, &c, &e),
         Err(_) => return conn_dead(it, &c, "cancelled"),
     }
-    let w = crate::sched::Baton(c.clone());
+    let w = c.clone();
     it.spawn_rust(
         Box::new(move |it| {
             let w = w;
-            writer(it, w.0)
+            writer(it, w)
         }),
         None,
         false,
@@ -2620,7 +2633,7 @@ pub fn serve(prog: &Program, listen: Option<String>, tls: Option<tls::ServerFile
         "fwp: service {} listening on {}{}",
         server.module, scheme, local
     );
-    match accept_loop(&mut it, l, server, ctx) {
+    match it.run_entry(|it| accept_loop(it, l, server, ctx)) {
         Ok(()) => 0,
         Err(_) => 1,
     }
@@ -2664,7 +2677,7 @@ fn field(prog: &Program, v: &Value, ty: &str, name: &str) -> Value {
 }
 
 /// The `grpc.*` and `pb.*` primitives.
-pub fn prim(it: &mut Interp, id: FuncId, sym: &str, a: &mut [Value]) -> R<Value> {
+pub(crate) fn prim(it: &mut Interp, id: FuncId, sym: &str, a: &mut [Value]) -> R<Value> {
     let _ = id;
     match sym {
         // ----- context
@@ -3010,45 +3023,49 @@ mod stream_source_tests {
         let program = Program::default();
         for cancelled in [false, true] {
             let mut it = Interp::new(&program, Box::new(std::io::sink())).unwrap();
-            let source = queued(&program, 0, false, OK);
-            source.stream.borrow_mut().remote_end = false;
-            let before = source.conn.borrow().out.clone();
-            // Invalid continuation and encoder must remain untouched after
-            // cancellation. The uncancelled case proves evaluation is detectable.
-            let input = Value::data(1, vec![Value::I64(7), Value::unit()]);
-            let Value::Data(_, fields) = &input else {
-                unreachable!()
-            };
-            let weak = Rc::downgrade(fields);
-            let sender = spawn_sender(
-                &mut it,
-                &source.conn,
-                &source.stream,
-                input,
-                Encoder::Fwp(Value::unit()),
-            );
-            if cancelled {
-                sender.task.cancel();
-            }
-            let deadline = Instant::now() + Duration::from_secs(10);
-            while !sender.task.done() {
-                assert!(Instant::now() < deadline, "sender did not finish");
-                it.world.park(Some(deadline));
-            }
-            assert!(
-                weak.upgrade().is_none(),
-                "finished sender must release input"
-            );
-            let failure = sender.finish(&mut it);
-            if cancelled {
-                assert!(failure.is_none(), "cancelled sender evaluated its input");
-                assert!(source.stream.borrow().reset.is_none());
-                assert_eq!(source.conn.borrow().out, before);
-            } else {
-                assert!(matches!(failure, Some(Ctl::Trap(_))));
-                assert!(source.stream.borrow().reset.is_some());
-                assert!(source.conn.borrow().out.len() > before.len());
-            }
+            it.run_entry(|it| {
+                let source = queued(&program, 0, false, OK);
+                source.stream.borrow_mut().remote_end = false;
+                let before = source.conn.borrow().out.clone();
+                // Invalid continuation and encoder must remain untouched after
+                // cancellation. The uncancelled case proves evaluation is detectable.
+                let input = Value::data(1, vec![Value::I64(7), Value::unit()]);
+                let Value::Data(_, fields) = &input else {
+                    unreachable!()
+                };
+                let weak = Rc::downgrade(fields);
+                let sender = spawn_sender(
+                    it,
+                    &source.conn,
+                    &source.stream,
+                    input,
+                    Encoder::Fwp(Value::unit()),
+                );
+                if cancelled {
+                    sender.task.cancel();
+                }
+                let deadline = Instant::now() + Duration::from_secs(10);
+                while !sender.task.done() {
+                    assert!(Instant::now() < deadline, "sender did not finish");
+                    it.world.park(Some(deadline));
+                }
+                assert!(
+                    weak.upgrade().is_none(),
+                    "finished sender must release input"
+                );
+                let failure = sender.finish(it);
+                if cancelled {
+                    assert!(failure.is_none(), "cancelled sender evaluated its input");
+                    assert!(source.stream.borrow().reset.is_none());
+                    assert_eq!(source.conn.borrow().out, before);
+                } else {
+                    assert!(matches!(failure, Some(Ctl::Trap(_))));
+                    assert!(source.stream.borrow().reset.is_some());
+                    assert!(source.conn.borrow().out.len() > before.len());
+                }
+                Ok(())
+            })
+            .unwrap();
         }
     }
 

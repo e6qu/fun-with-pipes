@@ -13,7 +13,7 @@ use std::collections::{HashMap, HashSet};
 use crate::ast::*;
 use crate::diag::{Diagnostic, Span};
 use crate::interp::{Ctl, Interp};
-use crate::value::{display, Closure, Value};
+use crate::value::display;
 
 pub type Modules = Vec<(String, HashSet<String>, Vec<Decl>)>;
 
@@ -410,17 +410,8 @@ impl Expander<'_> {
         for a in args {
             vals.push(crate::syntax::to_value(a)?);
         }
-        let r = Interp::new(self.prog, Box::new(std::io::stderr())).and_then(|mut it| {
-            if arity == 0 {
-                it.call(fid, vec![])
-            } else {
-                let f = Value::Closure(std::rc::Rc::new(Closure {
-                    func: fid,
-                    args: vec![],
-                }));
-                it.apply(f, vals)
-            }
-        });
+        let r = Interp::new(self.prog, Box::new(std::io::stderr()))
+            .and_then(|mut it| it.call_root(fid, vals));
         let v = r.map_err(|c| {
             let msg = match c {
                 Ctl::Fail(v, t) => display(&v, &t, self.prog, true),

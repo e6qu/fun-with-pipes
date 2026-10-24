@@ -98,7 +98,7 @@ fn value_of(prog: &Program, name: &str, arg: Value) -> Value {
         func: *id,
         args: vec![],
     }));
-    it.apply(f, vec![arg]).ok().unwrap()
+    it.apply_root(f, vec![arg]).ok().unwrap()
 }
 
 #[test]

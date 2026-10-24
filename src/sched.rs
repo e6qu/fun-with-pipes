@@ -21,10 +21,13 @@
 //! waiting for it. Native programs count the same entries (cgen's
 //! `FWP_TICK`), so a deterministic program interleaves alike on both.
 
+use std::any::Any;
 use std::cell::{Cell, RefCell};
 use std::collections::{BTreeMap, VecDeque};
 use std::io::{Read, Write};
+use std::marker::PhantomData;
 use std::net::{TcpListener, TcpStream, ToSocketAddrs, UdpSocket};
+use std::panic::{catch_unwind, resume_unwind, AssertUnwindSafe};
 
 use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering as AO};
@@ -83,9 +86,8 @@ pub(crate) fn start_slice() {
 }
 
 /// Contents only accessed by the thread holding the baton.
-pub struct Baton<T>(pub T);
+pub(crate) struct Baton<T>(pub(crate) T);
 unsafe impl<T> Send for Baton<T> {}
-unsafe impl<T> Sync for Baton<T> {}
 
 #[cfg(not(target_family = "wasm"))]
 struct Turns {
@@ -104,7 +106,7 @@ struct Fibers {
 }
 
 /// The threads of one program.
-pub struct World {
+pub(crate) struct World {
     #[cfg(not(target_family = "wasm"))]
     turn: Mutex<Turns>,
     #[cfg(not(target_family = "wasm"))]
@@ -116,6 +118,9 @@ pub struct World {
     metrics: Mutex<BTreeMap<String, (&'static str, f64)>>,
     /// gRPC client connections, shared by the program's tasks.
     pub(crate) grpc: Mutex<Baton<crate::grpc::Shared>>,
+    background: Mutex<Baton<Vec<Arc<TaskShared>>>>,
+    panic: Mutex<Option<Box<dyn Any + Send>>>,
+    stopping: AtomicBool,
 }
 
 impl World {
@@ -135,6 +140,9 @@ impl World {
             fibers: Mutex::new(Fibers::default()),
             metrics: Mutex::new(BTreeMap::new()),
             grpc: Mutex::new(Baton(Default::default())),
+            background: Mutex::new(Baton(Vec::new())),
+            panic: Mutex::new(None),
+            stopping: AtomicBool::new(false),
         })
     }
 
@@ -214,11 +222,16 @@ impl World {
     /// Run `f` (which must not touch values) without the baton.
     #[cfg(not(target_family = "wasm"))]
     pub(crate) fn blocking<T>(&self, f: impl FnOnce() -> T) -> T {
+        struct Resume<'a>(&'a World);
+        impl Drop for Resume<'_> {
+            fn drop(&mut self) {
+                self.0.acquire();
+                new_slice();
+            }
+        }
         self.release();
-        let r = f();
-        self.acquire();
-        new_slice();
-        r
+        let _resume = Resume(self);
+        f()
     }
 
     /// Shared state changed: parked fibers become ready, to re-check.
@@ -295,10 +308,19 @@ impl World {
     }
 }
 
+/// A task handle's result may share non-atomic reference counts with its caller.
+/// Handles cannot be transferred outside the interpreter's scheduler:
+/// ```compile_fail
+/// let task = fwp::sched::TaskShared::new();
+/// std::thread::spawn(move || drop(task));
+/// ```
 pub struct TaskShared {
     cancelled: AtomicBool,
     deadline: Mutex<Option<Instant>>,
     st: Mutex<Baton<TaskState>>,
+    // A public task handle must not let callers drop Rc-backed results from
+    // another thread outside this scheduler's exclusive turn.
+    local: PhantomData<Rc<()>>,
 }
 
 #[derive(Default)]
@@ -309,11 +331,15 @@ struct TaskState {
 }
 
 impl TaskShared {
+    // Scheduler threads transfer this Arc through Baton, not through safe
+    // arbitrary-thread access. Task results remain local to that protocol.
+    #[allow(clippy::arc_with_non_send_sync)]
     pub fn new() -> Arc<TaskShared> {
         Arc::new(TaskShared {
             cancelled: AtomicBool::new(false),
             deadline: Mutex::new(None),
             st: Mutex::new(Baton(TaskState::default())),
+            local: PhantomData,
         })
     }
 
@@ -511,8 +537,112 @@ mod socket_tests {
     }
 }
 
+#[cfg(all(test, not(target_family = "wasm")))]
+mod lifetime_tests {
+    use super::*;
+    use crate::ir::{Body, Expr, Func, Program};
+
+    #[test]
+    fn root_calls_release_child_captures_on_success_and_failure() {
+        for fails in [false, true] {
+            let text = MT::con("std::String");
+            let program = Program {
+                funcs: vec![Func {
+                    name: "root".into(),
+                    arity: 1,
+                    locals: vec![text.clone()],
+                    ty: MT::Fun(Box::new(text.clone()), Box::new(text)),
+                    body: if fails {
+                        Body::Prim("prim.trap".into())
+                    } else {
+                        Body::Expr(Expr::Local(0))
+                    },
+                }],
+                ..Program::default()
+            };
+            let mut it = Interp::new(&program, Box::new(std::io::sink())).unwrap();
+            let captured = Rc::new(());
+            let weak = Rc::downgrade(&captured);
+            let cancelled = Rc::new(Cell::new(None));
+            let observed = cancelled.clone();
+            let mut task = None;
+            let result = it.run_entry(|it| {
+                task = Some(it.spawn_rust(
+                    Box::new(move |child| {
+                        observed.set(Some(child.check_cancel().is_err()));
+                        drop(captured);
+                    }),
+                    None,
+                    false,
+                ));
+                it.call(0, vec![Value::str("root result")])
+            });
+            if fails {
+                assert!(matches!(result, Err(Ctl::Trap(message)) if message == "root result"));
+            } else {
+                assert_eq!(result.unwrap(), Value::str("root result"));
+            }
+            assert!(task.unwrap().done());
+            assert_eq!(cancelled.get(), if fails { None } else { Some(false) });
+            assert!(weak.upgrade().is_none(), "child capture outlived root call");
+        }
+    }
+
+    #[test]
+    fn background_tasks_finish_before_entry_writers_expire_even_on_panics() {
+        let program = Program::default();
+        let mut output = Vec::new();
+        let mut it = Interp::new(&program, Box::new(&mut output)).unwrap();
+        for mode in 0..4 {
+            for _ in 0..8 {
+                let captured = Rc::new(());
+                let weak = Rc::downgrade(&captured);
+                let result = catch_unwind(AssertUnwindSafe(|| {
+                    it.run_entry(|it| {
+                        it.spawn_rust(
+                            Box::new(move |child| {
+                                child.out.write_all(b"started\n").unwrap();
+                                if mode == 3 {
+                                    child.world.blocking(|| panic!("child panic control"));
+                                }
+                                while child.check_cancel().is_ok() {
+                                    child.world.park(None);
+                                }
+                                drop(captured);
+                            }),
+                            None,
+                            true,
+                        );
+                        it.world.park(Some(Instant::now()));
+                        match mode {
+                            1 => Err(Ctl::Trap("entry failure control".into())),
+                            2 => it.world.blocking(|| panic!("entry panic control")),
+                            _ => Ok(()),
+                        }
+                    })
+                }));
+                match mode {
+                    0 => assert!(matches!(result, Ok(Ok(())))),
+                    1 => assert!(matches!(result, Ok(Err(Ctl::Trap(_))))),
+                    _ => assert!(result.is_err(), "Rust panic must reach the caller"),
+                }
+                assert!(weak.upgrade().is_none(), "background capture leaked");
+                assert!(it.world.background.lock().unwrap().0.is_empty());
+                let turn = it.world.turn.lock().unwrap();
+                assert_eq!(turn.next, turn.serving + 1, "entry lost its turn");
+                drop(turn);
+            }
+        }
+        drop(it);
+        assert_eq!(output, b"started\n".repeat(32));
+    }
+}
+
 /// Output shared with the root task's writer.
-struct Forward<'p>(*mut (dyn Write + 'p));
+struct Forward<'p>(*mut (dyn Write + Send + 'p));
+// Only scheduler tasks construct this writer. Its Send pointee remains alive
+// until the entry joins every task; the scheduling turn excludes other writes.
+unsafe impl Send for Forward<'_> {}
 
 impl Write for Forward<'_> {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
@@ -604,18 +734,36 @@ pub(crate) fn wrap(n: Native) -> Value {
 /// result; a failure that is not a cancellation ends the process.
 fn run_task(mut it: Interp<'static>, body: TaskBody, world: &World) {
     new_slice();
-    let result = match body {
-        TaskBody::Thunk(thunk) => match it.apply(thunk, vec![Value::unit()]) {
-            Ok(v) => Some(v),
-            Err(Ctl::Cancelled) => None,
-            Err(e) => {
-                let _ = it.out.flush();
-                let code = crate::interp::report(&Err(e), it.prog);
-                std::process::exit(code);
+    let outcome = catch_unwind(AssertUnwindSafe(|| {
+        if it.check_cancel().is_err() {
+            return None;
+        }
+        match body {
+            TaskBody::Thunk(thunk) => match it.apply(thunk, vec![Value::unit()]) {
+                Ok(v) => Some(v),
+                Err(Ctl::Cancelled) => None,
+                Err(e) => {
+                    let _ = it.out.flush();
+                    let code = crate::interp::report(&Err(e), it.prog);
+                    std::process::exit(code);
+                }
+            },
+            TaskBody::Rust(f) => {
+                f(&mut it);
+                None
             }
-        },
-        TaskBody::Rust(f) => {
-            f(&mut it);
+        }
+    }));
+    let result = match outcome {
+        Ok(result) => result,
+        Err(panic) => {
+            let mut failure = world.panic.lock().unwrap();
+            if failure.is_none() {
+                *failure = Some(panic);
+            }
+            drop(failure);
+            world.stopping.store(true, AO::SeqCst);
+            it.cancel_children();
             None
         }
     };
@@ -632,8 +780,59 @@ fn run_task(mut it: Interp<'static>, body: TaskBody, world: &World) {
 }
 
 impl<'p> Interp<'p> {
+    /// The only boundary at which evaluation may start tasks. Even a Rust
+    /// panic must join them before borrowed program data or writers can expire.
+    pub(crate) fn run_entry<T>(&mut self, run: impl FnOnce(&mut Self) -> R<T>) -> R<T> {
+        assert!(!self.entry_active, "nested interpreter entry");
+        self.entry_active = true;
+        self.world.stopping.store(false, AO::SeqCst);
+        self.task.cancelled.store(false, AO::SeqCst);
+        *self.task.deadline.lock().unwrap() = None;
+        start_slice();
+        let outcome = catch_unwind(AssertUnwindSafe(|| run(self)));
+        if matches!(outcome, Ok(Ok(_))) {
+            self.join_children();
+        } else {
+            self.cancel_children();
+        }
+        self.world.stopping.store(true, AO::SeqCst);
+        crate::grpc::close_connections(self);
+        loop {
+            let pending = std::mem::take(&mut self.world.background.lock().unwrap().0);
+            if pending.is_empty() {
+                break;
+            }
+            for task in &pending {
+                task.cancel();
+            }
+            self.world.event();
+            for task in pending {
+                self.join_task(&task);
+            }
+        }
+        self.entry_active = false;
+        let child_panic = self.world.panic.lock().unwrap().take();
+        match outcome {
+            Err(panic) => resume_unwind(panic),
+            Ok(result) => match child_panic {
+                Some(panic) => resume_unwind(panic),
+                None => result,
+            },
+        }
+    }
+
+    /// Cleanup waits through cancellation; it must not abandon a borrowed task.
+    pub(crate) fn join_task(&self, task: &TaskShared) {
+        while !task.done() {
+            self.world.park(None);
+        }
+    }
+
     /// Cancel the current task if its deadline passed; unwind if cancelled.
     pub(crate) fn check_cancel(&self) -> R<()> {
+        if self.world.stopping.load(AO::SeqCst) {
+            self.task.cancel();
+        }
         if let Some(d) = self.task.deadline() {
             if Instant::now() >= d && !self.task.cancelled.load(AO::SeqCst) {
                 self.task.cancel();
@@ -709,8 +908,11 @@ impl<'p> Interp<'p> {
 
     /// Wait for all children of the current task. Cancellation of this task
     /// (or its deadline) cancels them; waiting continues until they unwound.
-    pub fn join_children(&mut self) {
+    pub(crate) fn join_children(&mut self) {
         loop {
+            if self.world.stopping.load(AO::SeqCst) {
+                self.task.cancel();
+            }
             let pending = {
                 let mut st = self.task.st.lock().unwrap();
                 st.0.children.retain(|c| !c.done());
@@ -740,7 +942,7 @@ impl<'p> Interp<'p> {
     }
 
     /// Cancel every child of the current task and wait for them.
-    pub fn cancel_children(&mut self) {
+    pub(crate) fn cancel_children(&mut self) {
         let children = self.task.st.lock().unwrap().0.children.clone();
         for c in children {
             c.cancel();
@@ -754,8 +956,8 @@ impl<'p> Interp<'p> {
     }
 
     /// Start a task running Rust code (gRPC connections and calls). A
-    /// detached task is not a child of the current one: nothing waits for
-    /// it or cancels it.
+    /// background task belongs to the entry instead of the current task. The
+    /// entry cancels and joins it before releasing its program and writers.
     pub(crate) fn spawn_rust(
         &mut self,
         body: Box<dyn for<'x> FnOnce(&mut Interp<'x>)>,
@@ -771,6 +973,10 @@ impl<'p> Interp<'p> {
         deadline: Option<Instant>,
         detached: bool,
     ) -> Arc<TaskShared> {
+        assert!(
+            self.entry_active,
+            "task started outside an interpreter entry"
+        );
         #[cfg(target_family = "wasm")]
         if !crate::fiber::available() {
             // No fibers: `fwp run` rejects programs with tasks before they
@@ -782,6 +988,14 @@ impl<'p> Interp<'p> {
         }
         let task = TaskShared::new();
         *task.deadline.lock().unwrap() = deadline;
+        if self.world.stopping.load(AO::SeqCst) {
+            task.cancelled.store(true, AO::SeqCst);
+        }
+        if detached {
+            let mut background = self.world.background.lock().unwrap();
+            background.0.retain(|task| !task.done());
+            background.0.push(task.clone());
+        }
         if !detached {
             if self.task.cancelled.load(AO::SeqCst) {
                 task.cancelled.store(true, AO::SeqCst);
@@ -797,6 +1011,7 @@ impl<'p> Interp<'p> {
         }
         let child = Interp {
             prog: self.prog,
+            entry_active: true,
             control_stdin: self.control_stdin,
             debugger: self.debugger.clone(),
             cafs: self.cafs.clone(),
@@ -813,8 +1028,9 @@ impl<'p> Interp<'p> {
             ffi: self.ffi.clone(),
             grpc: self.grpc.clone(),
         };
-        // The baton guarantees exclusive access; the parent outlives its
-        // children because every task joins its children before finishing.
+        // The turn guarantees exclusive value access. run_entry joins ordinary
+        // children and background tasks, including on panic, before returning;
+        // low-level evaluation cannot be called outside that boundary publicly.
         let child: Interp<'static> = unsafe { std::mem::transmute(child) };
         let job = Baton((child, body));
         let world = self.world.clone();

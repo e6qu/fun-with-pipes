@@ -5,34 +5,40 @@ reserve ARC for necessary sharing and remove tracing. JIT is excluded.
 
 ## Current action
 
-**Next:** resolve PR #210's Intel macOS compiler abort. Continue the targeted
-allocator investigation; repair the cause
-before repeating final-head acceptance. The independently verified array group
+**Next:** review compiler-side lifetime safety and validate the macro task-cleanup
+repair. The user explicitly stopped disassembly-led diagnosis; do not resume
+allocator-cookie experiments. The original Intel macOS abort remains unexplained.
+The independently verified array group
 is checkpointed for its next delivery. Keep one active PR. Squash-merge only after
 acceptance, with one subject line of at most eighty characters and no body/trailers.
 
 ## Active PR #210
 
 [PR #210](https://github.com/e6qu/fun-with-pipes/pull/210) is the active delivery.
-Checkout `/private/tmp/fwp-checked-peer-comparison`, branch `list-copy-delivery`,
-contains the CI repair batch (`ff1aca3e`, `85df5485`) and this updated investigation.
-Final-head CI and the compiler-abort repair remain required.
+Published branch `list-copy-delivery` is at
+`2fa14cac340aeece7b2676ab43056315520f8269`, including
+the CI repair batch (`ff1aca3e`, `85df5485`) and the updated investigation.
+Repair-head production `40114747612` is running; docs `40114747617` passed.
+Both ARM Mac jobs and benchmarks passed; no new failed job has been reported.
+Final acceptance and the compiler-abort repair remain required.
 It fixes interrupted list copies, removes redundant sort buffers, aligns benchmark
 peer arithmetic and repairs Windows test coverage.
 
 The [compiler-abort investigation](measurements/compiler-abort.md) records the
 original failure, matching compiler, experiments and evidence locations. The cause
-is unresolved. No compiler/runtime repair has been made for that abort; successful
-reruns cannot establish one. Diagnostic run `40113866689`, source
+is unresolved. No compiler/runtime repair has been established for that abort;
+successful reruns cannot establish one. Diagnostic run `40113866689`, source
 `bbab290503962a272398c95882724e2208c86adf`, has completed on native Intel macOS.
 It isolates the Guard Malloc startup failure to Rust's 4 GiB thread; the smaller
 stack reaches declaration collection but hits the diagnostic deadline. No invalid
-access reported and no passing guarded inference run. No production stack change. A new sanitizer run, `40114625111`, uses exact
+access reported and no passing guarded inference run. No production stack change.
+Sanitizer run `40114625111` passed all 90 compilations using exact
 production Rust 1.99.1 from diagnostic source
 `39e6b19fa4a0b3b8b2c7ca5049e190d0cd8b098c`; the earlier sanitizer run used nightly.
 This diagnostic-only build enables ASan flags with `RUSTC_BOOTSTRAP=1`; neither
-production compiler flags nor its stack policy change. Review the full job log
-and archive before drawing conclusions. Earlier diagnostic helpers are COMPLETE;
+production compiler flags nor its stack policy change. Its full log was reviewed
+without findings; artifact `12567799982` still needs archive/hash/counter review.
+Earlier diagnostic helpers are COMPLETE;
 do not repeat their downloads or publication.
 
 Earlier-head production `40106524885` has six audited failures: four regular
@@ -40,10 +46,45 @@ Mac/Linux jobs fail the introduced Clippy borrow lint and then lack SDK compiler
 or inspection artifacts; both Mac GC jobs reject ASan's nano-zone warning.
 Local checkpoints `ff1aca3e` and `85df5485` repair these causes and preserve kernel
 probe artifacts. Documentation `40106524851`, benchmark and Windows ARM64 pass;
-completed logs audited. Windows AMD64 is still running and remains part of the
-audit. Publishing this batch does not cancel that job: the workflow has no
-cancel-in-progress policy. Audit its remaining results alongside the repaired
-head, and fix any additional failures in this PR.
+completed logs audited. Windows AMD64 also passed; its full saved log contains
+no failed tests or compiler errors. This completes the prior-head job audit.
+The workflow has no cancel-in-progress policy. Continue auditing every completed
+job on the repaired head and fix additional failures in this PR.
+
+### Source review in progress
+
+Checkout `/private/tmp/fwp-checked-peer-comparison`, branch
+`compiler-lifetime-review`, contains the candidate repair. It is separate from
+the current PR head while those production gates finish. No second PR is open.
+
+Every public interpreter evaluation now enters a cleanup boundary. It joins
+ordinary children, cancels and joins background connection tasks, closes the
+connection pool and only then returns or resumes a Rust panic. Blocking calls
+restore the scheduling turn during unwinding. Lower-level evaluation and raw
+transfer are internal; task handles cannot cross arbitrary Rust threads. Output
+writers require `Send`; debugger writers use a mutex. Macros, `comptime`, command
+execution and exported constants use the same entry boundary. Sender completion
+also waits for its cancelled task to release captures.
+
+The macro regression is reproduced against the saved compiler at
+`/private/tmp/fwp-verified-array-construction-compiler/fwp`: two macro invocations
+spawn printing children, but `check` produces neither message. Its relevant
+sources match the candidate's base. The standalone regression compiled under the
+guard at Rust O1 with assertions/overflow checks and failed at exactly that
+assertion, as expected. New unit tests cover child capture release, repeated
+background shutdown, root/child panics while blocked, writer lifetimes and
+restoration of the scheduling turn. A compile-fail example protects task handles
+from escaping the scheduler.
+
+Formatting and actionlint pass under `scripts/local-guard.py`. The candidate
+compiler has NOT yet been built or tested. The `compiler-lifetimes` workflow
+suite runs all-target Clippy, unit/doc tests and existing macro, REPL, debugger,
+command, preemption and gRPC regressions on Linux AMD64 and native Intel macOS
+with production Rust O1/assertions/overflow settings. Full production acceptance
+is still required after integrating the repair into PR #210.
+
+The original nine console inputs do not invoke macros. These source-level
+repairs are not an established cause or fix for the original compiler abort.
 
 Focused checks passed under `scripts/local-guard.py`: standalone kernel test
 compiled with production Rust O1/assertions/overflow checks; sanitized C at O1/O2,

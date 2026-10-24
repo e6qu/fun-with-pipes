@@ -127,7 +127,7 @@ fn returned_variant_aliases_transfer_fields_once() {
         fwp::ir::check_locals(&p).unwrap();
         let result = fwp::interp::Interp::new(&p, Box::new(Vec::new()))
             .unwrap()
-            .call(
+            .call_root(
                 1,
                 vec![
                     Value::Str("first".into()),
@@ -491,15 +491,15 @@ fn matching_one_variant_payload_moves_its_owner_in_all_result_forms() {
         fwp::ir::check_locals(&program).unwrap();
         let mut interpreter = fwp::interp::Interp::new(&program, Box::new(Vec::new())).unwrap();
         assert_eq!(
-            interpreter.call(1, vec![Value::str("value")]).unwrap(),
+            interpreter.call_root(1, vec![Value::str("value")]).unwrap(),
             Value::str("value")
         );
         assert_eq!(
-            interpreter.call(2, vec![Value::str("value")]).unwrap(),
+            interpreter.call_root(2, vec![Value::str("value")]).unwrap(),
             Value::Record(vec![Value::str("value"), Value::I64(17)].into())
         );
         assert_eq!(
-            interpreter.call(3, vec![Value::str("value")]).unwrap(),
+            interpreter.call_root(3, vec![Value::str("value")]).unwrap(),
             Value::Data(0, vec![Value::str("value")].into())
         );
         let emitted = fwp::cgen::generate(&program).unwrap();

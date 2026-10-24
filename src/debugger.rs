@@ -8,7 +8,7 @@ use crate::value::Value;
 use std::collections::{HashMap, HashSet};
 use std::io::{BufRead, Write};
 
-pub type Shared = std::rc::Rc<std::cell::RefCell<Debugger>>;
+pub type Shared = std::sync::Arc<std::sync::Mutex<Debugger>>;
 
 #[derive(Clone)]
 struct Frame {
@@ -25,9 +25,9 @@ enum Motion {
 }
 
 pub struct Debugger {
-    input: Box<dyn BufRead>,
-    program_input: Option<Box<dyn BufRead>>,
-    output: Box<dyn Write>,
+    input: Box<dyn BufRead + Send>,
+    program_input: Option<Box<dyn BufRead + Send>>,
+    output: Box<dyn Write + Send>,
     json: bool,
     frames: HashMap<usize, Vec<Frame>>,
     breakpoints: HashSet<String>,
@@ -49,8 +49,8 @@ fn field<'a>(json: &'a Json, name: &str) -> &'a str {
 
 impl Debugger {
     pub fn new(
-        input: Box<dyn BufRead>,
-        output: Box<dyn Write>,
+        input: Box<dyn BufRead + Send>,
+        output: Box<dyn Write + Send>,
         json: bool,
         sources: SourceMap,
         spans: HashMap<FuncId, crate::diag::Span>,
@@ -562,7 +562,7 @@ pub fn run(args: &[String]) -> i32 {
                 match std::fs::File::open(path) {
                     Ok(file) => {
                         program_input =
-                            Some(Box::new(std::io::BufReader::new(file)) as Box<dyn BufRead>)
+                            Some(Box::new(std::io::BufReader::new(file)) as Box<dyn BufRead + Send>)
                     }
                     Err(e) => {
                         eprintln!("{path}: {e}");
@@ -622,7 +622,7 @@ pub fn run(args: &[String]) -> i32 {
         eprintln!("program has no main");
         return 1;
     };
-    let debugger = std::rc::Rc::new(std::cell::RefCell::new(Debugger::new(
+    let debugger = std::sync::Arc::new(std::sync::Mutex::new(Debugger::new(
         Box::new(std::io::BufReader::new(std::io::stdin())),
         Box::new(std::io::stdout()),
         json,
@@ -630,7 +630,7 @@ pub fn run(args: &[String]) -> i32 {
         spans,
         &program,
     )));
-    debugger.borrow_mut().program_input = program_input;
+    debugger.lock().unwrap().program_input = program_input;
     let mut interpreter = match crate::interp::Interp::new(
         &program,
         Box::new(ProgramOutput(debugger.clone(), "output")),
@@ -640,13 +640,13 @@ pub fn run(args: &[String]) -> i32 {
     };
     interpreter.set_error_writer(Box::new(ProgramOutput(debugger.clone(), "stderr")));
     interpreter.debugger = Some(debugger.clone());
-    let result = interpreter.call_root(main);
+    let result = interpreter.call_root(main, vec![]);
     let status = match &result {
         Ok(_) => 0,
         Err(Ctl::Exit(n)) => *n,
         Err(_) => 1,
     };
-    let _ = debugger.borrow_mut().send(&Json::obj(vec![
+    let _ = debugger.lock().unwrap().send(&Json::obj(vec![
         ("event", Json::str("finished")),
         ("status", number(status)),
         (
@@ -662,7 +662,7 @@ pub fn run(args: &[String]) -> i32 {
 struct ProgramOutput(Shared, &'static str);
 impl Write for ProgramOutput {
     fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
-        let mut debugger = self.0.borrow_mut();
+        let mut debugger = self.0.lock().unwrap();
         if debugger.json {
             debugger
                 .send(&Json::obj(vec![
@@ -676,6 +676,6 @@ impl Write for ProgramOutput {
         Ok(bytes.len())
     }
     fn flush(&mut self) -> std::io::Result<()> {
-        self.0.borrow_mut().output.flush()
+        self.0.lock().unwrap().output.flush()
     }
 }

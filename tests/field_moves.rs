@@ -108,13 +108,13 @@ fn moved_fields_preserve_aliases_siblings_and_failure_cleanup() {
     for (id, expected) in [(2, "abcabc"), (4, "abc")] {
         let value = fwp::interp::Interp::new(&p, Box::new(Vec::new()))
             .unwrap()
-            .call(id, vec![Value::str("abc")])
+            .call_root(id, vec![Value::str("abc")])
             .unwrap();
         assert_eq!(value, Value::str(expected));
     }
     assert!(fwp::interp::Interp::new(&p, Box::new(Vec::new()))
         .unwrap()
-        .call(6, vec![Value::str("abc")])
+        .call_root(6, vec![Value::str("abc")])
         .is_err());
     let dir = fwp::cgen::TempDir::new("field-moves").unwrap();
     let binary = dir.join("probe.exe");

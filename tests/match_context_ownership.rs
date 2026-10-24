@@ -82,7 +82,7 @@ fn discarded_effectful_constructor_fields_keep_their_nominal_types() {
         fwp::ir::check_locals(&p).unwrap();
         let reference = fwp::interp::Interp::new(&p, Box::new(Vec::new()))
             .unwrap()
-            .call(0, vec![Value::Str("input".into())])
+            .call_root(0, vec![Value::Str("input".into())])
             .unwrap();
         assert_eq!(reference, Value::I64(17));
         fwp::opt::optimize(&mut p);
@@ -99,7 +99,7 @@ fn discarded_effectful_constructor_fields_keep_their_nominal_types() {
         );
         let result = fwp::interp::Interp::new(&p, Box::new(Vec::new()))
             .unwrap()
-            .call(0, vec![Value::Str("input".into())])
+            .call_root(0, vec![Value::Str("input".into())])
             .unwrap();
         assert_eq!(result, reference);
         // Keep the tested function reachable without re-running inlining on its entry.
