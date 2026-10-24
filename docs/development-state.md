@@ -1,81 +1,96 @@
 # Session handoff
 
-All seven PLAN.md areas remain open. Remove tracing, prefer ownership and borrowing,
-and reserve ARC for necessary sharing. JIT is excluded.
+All seven [plan](../PLAN.md) areas remain open. Remove tracing, prefer ownership
+and borrowing, and use ARC only for necessary sharing. JIT is excluded.
 
 ## Current action
 
-**Next:** finish this grouped formatter/output delivery: audit all nine final-head
-production jobs and documentation, then inspect the native binaries. Require
-7,158 saved files: 6,966 ownership/cleanup files, 72 float cases and 120 Linux
-output/lifetime controls. The publication receipt under `/private/tmp` records
-the final source, PR and run IDs; preparation evidence does not replace them.
-Squash merge only after final acceptance, with one subject at most eighty
-characters and an explicit empty body. Continue the roadmap after that merge.
+**Next:** audit the final-head production jobs for
+[PR #206](https://github.com/e6qu/fun-with-pipes/pull/206), then inspect their artifacts.
+The consolidated change is ready; the publication receipt identifies the current
+head and runs. A final failure-path review also repaired cleanup after a compiler
+exits unsuccessfully with a child that closed its output pipes. Require all nine production jobs, docs and exact-head binary
+inspection before the authorized one-line squash merge.
 
-Worktree `/private/tmp/fwp-float-delivery`, branch `float-output-delivery`, is based
-on verified #204 squash `2ba458a9a8049a33c2fa5c73a374c83c8fe34e10`.
-Compiler/runtime, language tests, measurement scripts and workflows match
-preparation `d7ad3e55f38685d3abaaa9c87badc3a8fc4a045f`, apart from removing one
-extra final blank line in the frozen test oracle. The local resource guard
-also repairs an exit/signalling race; six regression and disk tests pass with
-all resource limits unchanged.
-Documentation includes its accepted measurements and #204's final evidence.
-Local source identity, roadmap/link, Python syntax and workflow checks passed
-(3.13s). The guard repair passed six tests (1.65s); repeated inspection then
-passed all 120 AMD64 binaries (13.68s). Real permission failures still stop work.
-All inspected preparation ZIP caches were pruned after checking remote originals.
+Delivery: `/private/tmp/fwp-array-pipeline-delivery`, branch `array-pipeline-delivery`.
+Last focused head: `64c487652a2861ccff5dcb64f56604f43bc7ee47`.
+The final publication receipt below records the consolidated head and CI run IDs.
+Base: verified #205 merge `336692f4329d9f628c05d6a42a7353c1702bdc09`.
+The consolidated delivery includes measurement reports, metadata recording,
+CI control wiring and documentation changes. Continue in this checkout.
+Preparation `/private/tmp/fwp-array-list` retains earlier source/docs copies.
+Primary checkout stays detached at the base, with only this handoff modified.
 
-Use `fwp-float-delivery-publication.json`, `fwp-audit-float-delivery-final.py` and
-`fwp-inspect-float-delivery-{ownership,text,controls}.py` under `/private/tmp`.
-`fwp-merge-float-delivery.py` requires every final gate and inspection before its
-one-line squash; `fwp-after-merge-float-delivery.py` verifies the primary guard
-repair before preserving the handoff and advancing to that merge.
+## Evidence and repairs
 
-## Scope and verified preparation
+- Native focused run `40052749788` at the focused head passes all six
+  hosts and all fifteen targets. All complete logs are audited. All six hosts pass independent
+  review of 168 outcomes, two stack reports and 24 physical layout cases each.
+  [Native results](measurements/array-native-results.md) retain the costs and source IDs.
+- Compiler/runtime/library/build files match measured source
+  `19addb905e762a0a06e7a8ba970e2e40b89f565c`. Measurement run `40051285670` passes
+  both Linux logs and 338 binary inspections. The report retains seven complete
+  jobs across four runs (1,183 inspected files), plus five explicitly uninspected
+  ARM64 rows from an interrupted run. CPU changes and noisy controls are explicit.
+- Constant-array initialization now reuses one temporary descriptor per array.
+  Clang's roughly 15 KiB frame is removed. Measured individual frames include
+  Mac ARM entry O1/O2 720/704 bytes, Windows ARM entry 672/672, GCC AMD initializer
+  160 and GCC ARM initializer 176. These are not whole-call-stack bounds.
+- The initial Windows frame check wrongly required a function that Clang had
+  inlined into the Windows thread entry. Both failed jobs and all other targets
+  were audited before repair. The test now selects the platform entry, checks all
+  surviving startup frames and saves evidence before asserting. Parser controls
+  reject missing, malformed, oversized and dynamic reports. Rust O1 controls pass.
+- An earlier ARM64 measurement exceeded a 60-second compiler deadline. Failed C
+  matched a successful source. Builds now have an explicit 180-second CI deadline,
+  separate execution deadlines, command journals and compiler-child cleanup.
+  The local guard's limits are unchanged.
+- Interrupted runs also lacked final hardware/toolchain records. The reporting repair
+  writes `environment.json` before workloads and uses a separate `run_record`
+  for final reporting. The original five failure/cleanup controls passed (1.97s); comparison
+  of parsed Python code confirms settings, flags, workloads and timed loops are
+  unchanged. The existing production benchmark job runs these controls. A sixth real-child
+  control covers unsuccessful compiler exit with closed output pipes. All six
+  controls pass; the previous implementation fails that new control (5.26s
+  combined check). Only build-failure cleanup changed; measured code, settings
+  and timed loops are identical. Receipt: `fwp-array-child-repair-check.json`. Formatting, docs,
+  frozen primitive contracts and fourteen native runner controls pass (12.87s).
+  Publication separately audits all real Cargo targets against both native shards.
 
-The formatter reuses already-rounded scientific digits for fixed decimal output.
-The [report](measurements/float-text-results.md) explains why this saves work,
-all input timings, matching-model acceptance, the remaining C/Rust gap and the
-larger stack/code costs. Allocation counts and per-solve live storage are unchanged.
-Six native jobs pass at `550ef3157720`; twelve saved cases per host cover exact
-ordinary/JSON output, rounding and deliberately corrupted results. The first
-Windows attempt found an LF-only summary assertion; its repaired line parser
-passes both Windows hosts. Runtime and measurement sources did not change.
+[Array examples](measurements/array-text.md) explain construction, display,
+String reuse and iterator state. [Numerical results](measurements/array-output-results.md)
+name programs, tolerances, timing boundaries, CPU models, memory scope and every
+observed row. Fewer allocations are not a C/Rust parity or timing claim.
 
-Timing sources `5476466183f7` and `d7ad3e55f386` have identical runtime and benchmark
-inputs. Runs `40027402138`, `40027406689`, `40032008445` retain five measurements,
-including unmatched CPU models. Matching pairs satisfy the original 2% copy-control
-limit and 5% largest-case reduction on both architectures. All 600 timing/control
-images and 72 native correctness images passed independent binary inspection.
-The first mixed workflow retains its old Windows failures; its timing jobs passed.
-Later six-host correctness evidence verifies the repair. Do not label that entire
-initial workflow successful or replace final-head gates with preparation evidence.
+## Receipts and tools
 
-The [output diagnostic](measurements/descent-output-longer.md) separately compares
-ordinary printing with a shared checksum consumer. It passed 676 binary checks;
-nine of twelve input/host pairs pass repeated controls. Three smaller AMD64 pairs
-remain inconclusive and cannot set budgets. Initial results and all samples remain
-linked. Checksum work is not pure arithmetic or isolated formatting time.
+Paths below are under `/private/tmp`; full source IDs are retained in receipts.
 
-## Accepted preceding delivery
+- `fwp-array-delivery-publication.json`: current PR/head;
+  `fwp-array-delivery-final-publication.json`: consolidated publication and checks;
+  `fwp-array-child-repair-publication.json`: final compiler-child cleanup repair; initial receipt backed up
+  as `fwp-array-delivery-initial-publication.json`.
+- `fwp-array-frame-check-{publication,audit}.json`: current native run.
+  `fwp-inspect-array-frame-host.py --host HOST` runs once per uninspected host.
+- `fwp-array-native-evidence/64c487652a28` and
+  `fwp-array-layout-review/64c487652a28`: current native reports and saved binaries.
+- `fwp-array-output-evidence/{41f6438cf6fb,dbef97e1a9e8,6516169a0768,19addb905e76}`:
+  completed measurement inspections. Reporting-repair check:
+  `fwp-array-reporting-repair-check.json`.
+- Final-delivery audit/discovery/inspection and pruning helpers named
+  `fwp-*-array-delivery-*.py` are prepared, not yet run. They read the publication
+  receipt and require the final source/runs. Discovery distinguishes draft skips
+  from the required nine production jobs; skipped jobs never establish support.
+- Unique failed archives remain in `fwp-array-*-failure-evidence`. Do not discard
+  them. Verified duplicate ZIPs were pruned only after checking remote originals.
 
-[PR #204](https://github.com/e6qu/fun-with-pipes/pull/204) passed nine production
-jobs, docs and 6,966 binary inspections at `80c89baa53567839dce0599d88f18d5791285943`.
-[History](roadmap-history.md#derivative-storage-arrays-and-borrowed-callbacks-pr-204)
-and the [inspection record](measurements/derivative-array-cleanup-2026-10-24.json)
-retain source, merge, logs and six-host outcomes. Cleanup checks remain required
-when the runtime changes; they do not establish complete removal of tracing.
-
-## Resume rules
-
-Use `python3 scripts/local-guard.py COMMAND...` serially; full builds, suites and
-benchmarks stay on GitHub. Keep at least 64 GiB free disk and never raise limits.
-Read receipts before mutations. Preserve failure evidence, unique results and
-immutable source tags; prune only inspected duplicate caches after remote checks.
-Keep one active PR. Publication and squash merge after passing final gates are
-authorized; every commit is one line, at most eighty characters, without trailers
-or attribution. Python package initializers stay empty; imports stay at file top.
+#205's nine production jobs, docs, 7,158 inspected outcomes and exact squash tree
+passed. [History](roadmap-history.md#float-printing-and-numerical-cost-measurements-pr-205)
+records it; duplicate main CI was cancelled. Clean merged checkouts #198–205 were
+pruned with receipts. Do not rerun helpers referencing those removed checkouts.
+Use the local guard serially; full builds/tests/benchmarks stay on GitHub. Preserve
+64 GiB free disk and all other limits. Prior detailed handoff:
+`fwp-array-handoff-before-final-summary.md`.
 
 ## Roadmap status
 

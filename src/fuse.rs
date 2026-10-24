@@ -20,6 +20,7 @@
 //! unknown functions, primitives not listed here).
 
 use std::collections::{BTreeSet, HashMap};
+use std::rc::Rc;
 
 use crate::ir::*;
 use crate::value::Value;
@@ -233,9 +234,9 @@ fn prim(sym: &str, ty: &MT, args: &[Expr]) -> Traps {
         },
         // total, and with no effect but allocation (running out of memory
         // is not a trap a program can tell from another)
-        "show" | "concat" | "string.length" | "string.byte-length" | "string.chars" | "split"
-        | "join" | "lower" | "upper" | "trim" | "trim-start" | "trim-end" | "length"
-        | "reverse" | "not" | "and" | "or" | "range" => none(),
+        "show" | "array._show-list" | "concat" | "string.length" | "string.byte-length"
+        | "string.chars" | "split" | "join" | "lower" | "upper" | "trim" | "trim-start"
+        | "trim-end" | "length" | "reverse" | "not" | "and" | "or" | "range" => none(),
         // ordered maps and sets: structural comparisons of keys
         s if (s.starts_with("map.") || s.starts_with("set."))
             && !matches!(s, "map.update" | "map.map-values") =>
@@ -273,6 +274,39 @@ fn unboxed_numeric(ty: &MT) -> bool {
                 | "F32"
                 | "F64"
         )
+}
+
+fn numeric_literal_list(mut expression: &Expr) -> Option<Vec<Value>> {
+    let mut values = Vec::new();
+    loop {
+        match expression {
+            Expr::Construct(0, fields) if fields.is_empty() => return Some(values),
+            Expr::Const(Value::Data(0, fields)) if fields.is_empty() => return Some(values),
+            Expr::Construct(1, fields) if fields.len() == 2 => {
+                let Expr::Const(value) = &fields[0] else {
+                    return None;
+                };
+                if !matches!(
+                    value,
+                    Value::I8(_)
+                        | Value::U8(_)
+                        | Value::I16(_)
+                        | Value::U16(_)
+                        | Value::I32(_)
+                        | Value::U32(_)
+                        | Value::I64(_)
+                        | Value::U64(_)
+                        | Value::F32(_)
+                        | Value::F64(_)
+                ) {
+                    return None;
+                }
+                values.push(value.clone());
+                expression = &fields[1];
+            }
+            _ => return None,
+        }
+    }
 }
 
 /// A stage of a fused pipeline, outermost first as written in the IR.
@@ -633,17 +667,16 @@ impl Fuser<'_> {
                 ("1".into(), src_elem.clone()),
             ]),
             Some(Source::List(source)) => self.ty_in(&self.locals, source)?,
-            Some(Source::Array(source)) => MT::Record(vec![
-                ("0".into(), self.ty_in(&self.locals, source)?),
-                ("1".into(), i64.clone()),
-            ]),
+            Some(Source::Array(_)) => MT::Con("std::Array".into(), vec![src_elem.clone()]),
             _ => iterator_ty.clone(),
         };
         // An immutable array has no observable work when converted to a list
         // except allocating that list. Keep its owner and read in index order;
         // an option match preserves the existing checked access operation.
-        let array_access = if let Some(Source::Array(source)) = &producer {
-            let array = self.ty_in(&self.locals, source)?;
+        let array_access = if let Some(Source::Array(_)) = &producer {
+            // The iterator's element type also describes its original array,
+            // including a constant array with no expression-level type tag.
+            let array = MT::Con("std::Array".into(), vec![src_elem.clone()]);
             let option = MT::Con("std::Option".into(), vec![src_elem.clone()]);
             self.shapes.entry(option.clone()).or_insert_with(|| {
                 TypeShape::Adt(vec![
@@ -718,9 +751,7 @@ impl Fuser<'_> {
                 ])
             }
             Some(Source::List(list)) => list.clone(),
-            Some(Source::Array(array)) => {
-                Expr::Record(vec![array.clone(), Expr::Const(Value::I64(0))])
-            }
+            Some(Source::Array(array)) => array.clone(),
             _ => cur.clone(),
         };
         let src = {
@@ -731,6 +762,10 @@ impl Fuser<'_> {
         // the state: the iterator, the list so far (reversed), the take
         // counters, then captured locals
         let nt = takes.len();
+        // Keep an array and its index in separate state fields. Nesting the
+        // pair would allocate two initial records before the flat native loop.
+        let array_source = matches!(producer, Some(Source::Array(_)));
+        let source_width = if array_source { 2 } else { 1 };
         let mut outer: Vec<Local> = Vec::new();
         let mut field = |e: &Expr| -> Expr {
             match e {
@@ -742,12 +777,15 @@ impl Fuser<'_> {
                             outer.len() - 1
                         }
                     };
-                    Expr::Field(Box::new(Expr::Local(0)), (2 + nt + i) as u32)
+                    Expr::Field(Box::new(Expr::Local(0)), (source_width + 1 + nt + i) as u32)
                 }
                 _ => e.clone(),
             }
         };
-        let st = |i: usize| Expr::Field(Box::new(Expr::Local(0)), i as u32);
+        let st = |i: usize| {
+            let index = if i == 0 { 0 } else { i + source_width - 1 };
+            Expr::Field(Box::new(Expr::Local(0)), index as u32)
+        };
         let mut calls: Vec<Option<Expr>> = Vec::new();
         for s in &stages {
             calls.push(match s {
@@ -761,17 +799,18 @@ impl Fuser<'_> {
             _ => None,
         };
         let nout = outer.len();
-        let mut fields = vec![
-            ("0".to_string(), src_ty.clone()),
-            ("1".to_string(), result_ty.clone()),
-        ];
-        fields.extend((0..nt).map(|i| ((i + 2).to_string(), i64.clone())));
-        fields.extend(
-            outer
-                .iter()
-                .enumerate()
-                .map(|(i, l)| ((i + 2 + nt).to_string(), self.locals[*l as usize].clone())),
-        );
+        let mut fields = vec![("0".to_string(), src_ty.clone())];
+        if array_source {
+            fields.push(("1".to_string(), i64.clone()));
+        }
+        fields.push((source_width.to_string(), result_ty.clone()));
+        fields.extend((0..nt).map(|i| ((i + source_width + 1).to_string(), i64.clone())));
+        fields.extend(outer.iter().enumerate().map(|(i, l)| {
+            (
+                (i + source_width + 1 + nt).to_string(),
+                self.locals[*l as usize].clone(),
+            )
+        }));
         MT::sort_fields(&mut fields);
         let state_ty = MT::Record(fields);
         // step locals: the state, the source's head and tail, then the
@@ -800,12 +839,18 @@ impl Fuser<'_> {
                     ),
                 ]),
                 Some(Source::List(_)) => Expr::Local(t),
-                Some(Source::Array(_)) => {
-                    Expr::Record(vec![Expr::Field(Box::new(st(0)), 0), Expr::Local(t)])
-                }
+                Some(Source::Array(_)) => Expr::Record(vec![st(0), Expr::Local(t)]),
                 _ => Expr::Apply(Box::new(Expr::Local(t)), vec![unit.clone()]),
             };
-            let mut fs = vec![tail, acc.clone()];
+            let mut fs = if array_source {
+                let Expr::Record(fields) = tail else {
+                    unreachable!("array iterator tail contains its array and index");
+                };
+                fields
+            } else {
+                vec![tail]
+            };
+            fs.push(acc.clone());
             fs.extend(counters.iter().cloned());
             fs.extend((0..nout).map(|i| st(2 + nt + i)));
             let mut e = Expr::Construct(0, vec![Expr::Record(fs)]);
@@ -927,12 +972,11 @@ impl Fuser<'_> {
                 )),
             )
         } else if let Some((get, next)) = array_access {
-            let index = Expr::Field(Box::new(st(0)), 1);
+            // Project the typed state directly. Reconstructing an array/index
+            // record here loses its field types before ownership lowering.
+            let index = Expr::Field(Box::new(Expr::Local(0)), 1);
             Expr::Match(
-                Box::new(Expr::Call(
-                    get,
-                    vec![index.clone(), Expr::Field(Box::new(st(0)), 0)],
-                )),
+                Box::new(Expr::Call(get, vec![index.clone(), st(0)])),
                 vec![
                     (
                         Pat::Construct(1, vec![Pat::Bind(h)]),
@@ -984,7 +1028,11 @@ impl Fuser<'_> {
             ),
             2,
         );
-        let mut init = vec![src, initial];
+        let mut init = vec![src];
+        if array_source {
+            init.push(Expr::Const(Value::I64(0)));
+        }
+        init.push(initial);
         init.extend(takes);
         init.extend(outer.into_iter().map(Expr::Local));
         let mut out = Expr::Call(loop_id, vec![Expr::Func(step), Expr::Record(init)]);
@@ -1000,6 +1048,11 @@ impl Fuser<'_> {
     /// The primitive a fused pipeline can end in, if `id` is one.
     fn consumer(&self, id: FuncId, args: &[Expr]) -> Option<&'static str> {
         match (prim_sym(self.funcs, id)?, args.len()) {
+            ("show" | "json.write", 1)
+                if std::env::var("FWP_ARRAY_FUSION").map_or(true, |v| v != "0") =>
+            {
+                Some("array-list-text")
+            }
             ("array.from-list", 1)
                 if std::env::var("FWP_ARRAY_FUSION").map_or(true, |v| v != "0") =>
             {
@@ -1053,6 +1106,33 @@ impl Fuser<'_> {
                 return Some(Expr::Let(*local, value.clone(), Box::new(consumed)));
             }
             return None;
+        }
+        if kind == "array-list-text" {
+            let Expr::Call(producer, inputs) = &args[0] else {
+                return None;
+            };
+            if prim_sym(self.funcs, *producer) != Some("array.to-list") || inputs.len() != 1 {
+                return None;
+            }
+            let parameter = self.funcs[*producer].ty.params(1).0[0];
+            let MT::Con(name, elements) = parameter else {
+                return None;
+            };
+            if name != "std::Array" || elements.len() != 1 || !unboxed_numeric(&elements[0]) {
+                return None;
+            }
+            // Array evaluation still finishes before formatting. Inline numeric
+            // elements have no resource finalizers or temporary boxed owners.
+            // The array remains borrowed until the complete string is built.
+            let symbol = if prim_sym(self.funcs, cons_id) == Some("show") {
+                "array._show-list"
+            } else {
+                "json.write"
+            };
+            let result = self.funcs[cons_id].ty.params(1).1.clone();
+            let ty = MT::Fun(Box::new(parameter.clone()), Box::new(result));
+            let direct = self.prim(symbol, ty, 1);
+            return Some(Expr::Call(direct, inputs.clone()));
         }
         if kind == "lane-dot" {
             let Expr::Call(multiply, inputs) = &args[0] else {
@@ -1138,6 +1218,15 @@ impl Fuser<'_> {
             };
             if name != "std::Array" || elements.len() != 1 || !unboxed_numeric(&elements[0]) {
                 return None;
+            }
+            // Only literal fixed-width numbers move into existing static array
+            // storage. No calls, effects, traps or dynamically owned values are
+            // evaluated early. Target-sized integers keep their target's layout.
+            if !matches!(&elements[0], MT::Con(name, _) if matches!(name.as_str(), "std::ISize" | "std::USize"))
+            {
+                if let Some(values) = numeric_literal_list(&args[0]) {
+                    return Some(Expr::Const(Value::Array(Rc::new(values))));
+                }
             }
             if let Expr::Call(range, bounds) = &args[0] {
                 if prim_sym(self.funcs, *range) == Some("range") && bounds.len() == 2 {
@@ -1457,7 +1546,10 @@ impl Fuser<'_> {
                 None => {
                     let (id, caps) = fns.last()?;
                     let (ps, _) = funcs[*id].ty.params(caps.len() + 1);
-                    MT::Con("std::List".into(), vec![(*ps.last()?).clone()])
+                    MT::Con(
+                        if array { "std::Array" } else { "std::List" }.into(),
+                        vec![(*ps.last()?).clone()],
+                    )
                 }
             },
         };
@@ -1810,7 +1902,7 @@ fn map_locals(e: &Expr, f: &mut dyn FnMut(&Expr) -> Expr) -> Expr {
     }
 }
 
-/// The first evaluated operation, through lets and trivial record prefixes.
+/// The first evaluated operation, through unary calls, lets and trivial record prefixes.
 /// Reading a local/constant cannot move an effect or a resource frame. Stop at
 /// every other preceding expression, even a function value of unknown arity.
 fn first_evaluated(e: &mut Expr) -> &mut Expr {
@@ -1820,10 +1912,18 @@ fn first_evaluated(e: &mut Expr) -> &mut Expr {
             .position(|field| !matches!(field, Expr::Local(_) | Expr::Const(_))),
         _ => None,
     };
-    match (e, first_field) {
-        (Expr::Let(_, v, _), _) => first_evaluated(v),
-        (Expr::Record(fields), Some(first)) => first_evaluated(&mut fields[first]),
-        (e, _) => e,
+    let first_argument = matches!(e, Expr::Call(_, args)
+        if args.len() == 1 && matches!(args[0], Expr::Call(..) | Expr::Let(..)));
+    match (e, first_field, first_argument) {
+        (Expr::Call(_, args), _, true) => {
+            // A statically known unary call evaluates its sole argument first.
+            // This exposes show inside print without crossing an earlier effect
+            // or a resource frame. Multi-argument calls retain their ordering.
+            first_evaluated(&mut args[0])
+        }
+        (Expr::Let(_, v, _), _, _) => first_evaluated(v),
+        (Expr::Record(fields), Some(first), _) => first_evaluated(&mut fields[first]),
+        (e, _, _) => e,
     }
 }
 

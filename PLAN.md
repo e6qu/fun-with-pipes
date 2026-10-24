@@ -120,31 +120,23 @@ outside the benchmark suite.
    collector-specific checks before removing tracing; completed groups are
    evidence, not a backlog.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
-   [Integer counting](docs/measurements/integer-counting.md) and
-   [checked products](docs/measurements/checked-products.md) preserve slower
-   controls and optimization-level differences. For numerical descent,
-   [packed arrays](docs/measurements/packed-descent.md) reduce the largest case to
-   459 allocation requests; [borrowing](docs/measurements/array-capture-descent.md)
-   removes its retains without increasing the 7,200-byte managed peak.
-   [Callback locals](docs/measurements/callback-locals.md) reduce instructions and
-   generator frames further; #198 passed final native acceptance.
-   The [matched-formula comparison](docs/measurements/coordinate-work.md) still
-   measures 10.40–13.69× C time and 11.86–14.07× Rust time for the largest case.
-   Eleven of twelve identical-copy controls pass; one remains inconclusive.
-   These are complete implementations, not isolated compiler overhead.
-   The [repeated output diagnostic](docs/measurements/descent-output-longer.md)
-   identifies output construction and float printing as major costs. Nine of
-   twelve input/host pairs pass repeated controls; three smaller AMD64 pairs
-   remain inconclusive. It compares full output with a checksum consumer, not
-   isolated arithmetic. The [formatter change](docs/measurements/float-text.md)
-   passes six-host correctness and the [repeated speed screen](docs/measurements/float-text-results.md),
-   with stack and code-size costs reported. Its final delivery gates remain
-   required. Next measure the remaining
-   callback, checked-indexing and buffer costs against equivalent-work budgets.
-   Preserve arithmetic/trap order and inspect real code, stack frames and cleanup.
-   The [inline experiment](docs/measurements/descent-call-costs.md) failed its
-   predeclared speed screen; it does not justify an inlining rule. Resource-owning
-   tail frames and mutual recursion need separate lifetime proofs.
+   The [benchmark index](docs/benchmarks.md) links inputs, algorithms, arithmetic
+   rules and current limitations. Integer counting and checked products retain
+   slower results and optimization-level differences. Numerical descent still has
+   substantial whole-program gaps; it computes an explicit gradient, not an
+   automatic-differentiation recording. Output formatting algorithms also differ
+   between languages, so their complete-program ratio is not isolated compiler
+   overhead.
+   [Float printing](docs/measurements/float-text-results.md) passed #205 delivery.
+   The next [array/iteration group](docs/measurements/array-text.md) removes
+   temporary lists, String copies and initial iterator tuples.
+   [Focused six-host results](docs/measurements/array-native-results.md) record
+   counts, physical layout, code size and stack frames; final delivery remains open. Measure allocation, live storage, startup, code size and
+   stack frames alongside elapsed time. Keep noisy copy controls inconclusive.
+   Then use equivalent-work budgets to select remaining callback, checked-indexing
+   and buffer costs. The [inline experiment](docs/measurements/descent-call-costs.md)
+   failed its predeclared speed screen and does not justify an inlining rule.
+   Resource-owning tail frames and mutual recursion need separate lifetime proofs.
 3. Complete the [application acceptance suite](docs/application-acceptance.md) and use equivalent-work measurements
    to choose the next costs to remove: dynamic calls, input copies, container
    layout, numerical workspace and derivative recording. Establish workload-specific

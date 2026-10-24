@@ -12,6 +12,28 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Float printing and numerical cost measurements (PR #205)
+
+Float printing searches fewer candidate decimal formats while preserving the
+round-trip value and existing output. The [formatter report](measurements/float-text.md)
+explains the algorithm and edge cases; the [timing report](measurements/float-text-results.md)
+retains repeated controls, slower/noisy results, and stack/code costs. Whole
+numerical programs still take substantially longer than the C/Rust comparisons.
+Their output/checksum experiments separate output work from other costs without
+calling the checksum program pure arithmetic. A local process-monitor race is
+also repaired and covered by controls.
+
+[PR #205](https://github.com/e6qu/fun-with-pipes/pull/205) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40037426686)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40037426647)
+at `51c295e02a8037f985fe9f662b8e1000fcd97798`. Complete logs and 7,158 saved
+outcomes passed independent review: 6,966 ownership cases, 72 float cases and
+120 output/lifetime controls. Each Linux host also passed sixteen coordinate
+observations. The [acceptance record](measurements/float-output-delivery-2026-10-24.json)
+identifies artifacts and inspection hashes. Verified squash
+`336692f4329d9f628c05d6a42a7353c1702bdc09` has the tested tree and one subject,
+with no body or trailers. All seven roadmap areas remain open.
+
 ## Derivative storage, arrays and borrowed callbacks (PR #204)
 
 Six groups extend cleanup checks to derivative buffers and scopes, borrowed

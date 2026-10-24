@@ -527,7 +527,7 @@ pub trait Shapes {
 /// strings are shown raw (top level) or quoted (nested).
 pub fn display(v: &Value, mt: &MT, shapes: &dyn Shapes, top: bool) -> String {
     let mut out = String::new();
-    write_value(&mut out, v, mt, shapes, top, false);
+    write_value(&mut out, v, mt, shapes, top);
     out
 }
 
@@ -551,7 +551,7 @@ fn needs_parens(v: &Value, mt: &MT, shapes: &dyn Shapes) -> bool {
     }
 }
 
-fn write_value(out: &mut String, v: &Value, mt: &MT, shapes: &dyn Shapes, top: bool, _arg: bool) {
+pub(crate) fn write_value(out: &mut String, v: &Value, mt: &MT, shapes: &dyn Shapes, top: bool) {
     match v {
         Value::I8(x) => out.push_str(&x.to_string()),
         Value::I16(x) => out.push_str(&x.to_string()),
@@ -614,7 +614,7 @@ fn write_value(out: &mut String, v: &Value, mt: &MT, shapes: &dyn Shapes, top: b
                 if i > 0 {
                     out.push_str(", ");
                 }
-                write_value(out, x, &elem, shapes, false, false);
+                write_value(out, x, &elem, shapes, false);
             }
             out.push(']');
         }
@@ -628,7 +628,7 @@ fn write_value(out: &mut String, v: &Value, mt: &MT, shapes: &dyn Shapes, top: b
                 if i > 0 {
                     out.push_str(", ");
                 }
-                write_value(out, value, &key, shapes, false, false);
+                write_value(out, value, &key, shapes, false);
             }
             out.push('}');
         }
@@ -642,9 +642,9 @@ fn write_value(out: &mut String, v: &Value, mt: &MT, shapes: &dyn Shapes, top: b
                 if i > 0 {
                     out.push_str(", ");
                 }
-                write_value(out, key, &k, shapes, false, false);
+                write_value(out, key, &k, shapes, false);
                 out.push_str(": ");
-                write_value(out, val, &vt, shapes, false, false);
+                write_value(out, val, &vt, shapes, false);
             }
             out.push('}');
         }
@@ -690,7 +690,7 @@ fn write_value(out: &mut String, v: &Value, mt: &MT, shapes: &dyn Shapes, top: b
                     out.push_str(&l);
                     out.push_str(" = ");
                 }
-                write_value(out, x, &t, shapes, false, false);
+                write_value(out, x, &t, shapes, false);
             }
             out.push(if is_tuple { ')' } else { '}' });
         }
@@ -703,7 +703,7 @@ fn write_value(out: &mut String, v: &Value, mt: &MT, shapes: &dyn Shapes, top: b
                         if i > 0 {
                             out.push_str(", ");
                         }
-                        write_value(out, x, &elem, shapes, false, false);
+                        write_value(out, x, &elem, shapes, false);
                     }
                     out.push(']');
                     return;
@@ -717,10 +717,10 @@ fn write_value(out: &mut String, v: &Value, mt: &MT, shapes: &dyn Shapes, top: b
                         out.push(' ');
                         if needs_parens(x, t, shapes) {
                             out.push('(');
-                            write_value(out, x, t, shapes, false, true);
+                            write_value(out, x, t, shapes, false);
                             out.push(')');
                         } else {
-                            write_value(out, x, t, shapes, false, true);
+                            write_value(out, x, t, shapes, false);
                         }
                     }
                 }

@@ -309,6 +309,21 @@ separate this optimization from changes in runner hardware/load.
 
 ### Numeric lists immediately converted to arrays
 
+The compiler folds eligible literal fixed-width numeric lists into static
+arrays and reads numeric arrays directly when their only list consumer is text
+or JSON output.
+For example, `[1.0, 2.0] | array.from-list | array.to-list | show` must still
+produce the string `[1.0, 2.0]`. The compiler can read the array while its owner
+stays alive, avoiding output list nodes. This is internal lowering, with no new
+surface primitive. [The examples and protocol](measurements/array-text.md) explain the restrictions.
+The same change removes copies from
+top-level string display (nested strings still use quoting and escaping), and
+stores an array iterator's array, index and accumulator as separate state fields.
+Those fields let existing loop lowering avoid the initial nested tuple objects.
+[Six-host focused evidence](measurements/array-native-results.md) records
+allocation, physical-layout and stack costs; final production acceptance remains
+open.
+
 The compiler recognizes `map f | array.from-list` when each mapped
 result is an inline integer, F32 or F64. It runs the same callbacks in the same
 order, stores their numeric results in temporary storage, then packs the array.
