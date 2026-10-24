@@ -5,18 +5,19 @@ reserve ARC for necessary sharing, and remove tracing. JIT is excluded.
 
 ## Current action
 
-**Next:** publish the combined interpreter shutdown repair in
-[PR #210](https://github.com/e6qu/fun-with-pipes/pull/210), then audit all nine
-production jobs, documentation and final-head binary evidence. Audit every failed
-job and completed target before another repair push. Keep one active PR.
+**Next:** publish the evidence-count correction with the verified interpreter
+shutdown repair in [PR #210](https://github.com/e6qu/fun-with-pipes/pull/210),
+then audit all nine production jobs, documentation and final-head binary evidence.
+Audit every failed job and completed target before another repair push.
+Keep one active PR.
 The user stopped disassembly-led diagnosis: do not resume allocator-cookie work.
 The original Intel macOS compiler abort remains unexplained; these source repairs
 are not an established explanation for it.
 
 ## Source repair and checks
 
-Checkout `/private/tmp/fwp-checked-peer-comparison` is being integrated into
-`list-copy-delivery`. Tested source
+Checkout `/private/tmp/fwp-checked-peer-comparison`, branch `list-copy-delivery`,
+contains the published repair. Tested source
 `0ad90b5a0a6a1653a66e2890586d1d5e56ea6296` passes focused run
 [40122813261](https://github.com/e6qu/fun-with-pipes/actions/runs/40122813261)
 on Linux AMD64 and native Intel macOS: 236 checks per host and all-target Clippy.
@@ -61,12 +62,21 @@ Local checks used `python3 scripts/local-guard.py`: Rust formatting, actionlint,
 
 ## Active PR and original abort
 
-The preceding PR head is `2fa14cac340aeece7b2676ab43056315520f8269`.
-The combined repair must receive a new production run after publication.
-Production [40114747612](https://github.com/e6qu/fun-with-pipes/actions/runs/40114747612)
-has eight passing production jobs; every completed log is audited. Only Linux
-AMD64 remains running. Documentation `40114747617` passes. No new failure has
-been reported. This run checks the earlier PR source, not the shutdown repair.
+The combined shutdown repair was published at
+`a1babc65fbdca55b2e8e964aecd12f5641567aad`.
+Production [40124325827](https://github.com/e6qu/fun-with-pipes/actions/runs/40124325827)
+is running; benchmarks pass and their complete log is audited. Documentation
+[40124325877](https://github.com/e6qu/fun-with-pipes/actions/runs/40124325877)
+failed its final check: the collection-evidence auditor still expected eight
+REPL tests after the ninth was added. The auditor, fixture and total are corrected;
+all eight checker tests pass locally under the guard. The focused workflow now
+checks those counts too; actionlint passes. Earlier documentation steps passed.
+No production failure has been reported; audit the unfinished jobs too.
+
+Preceding source `2fa14cac340aeece7b2676ab43056315520f8269` has eight passing
+production jobs in `40114747612`; all completed logs are audited. Linux AMD64
+remains running. Documentation `40114747617` passes. Do not cancel its final job
+before auditing the result, or treat those checks as final-head acceptance.
 
 Earlier-head `40106524885` is completely audited: six failures were repaired by
 `ff1aca3e` and `85df5485`; both Windows jobs and benchmarks pass. The repairs fix

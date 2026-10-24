@@ -68,6 +68,8 @@ jobs:
           git rev-parse HEAD > compiler-lifetime-evidence/source.txt
           rustc -Vv > compiler-lifetime-evidence/rust.txt
           "$CC" --version > compiler-lifetime-evidence/cc.txt
+      - name: Evidence counts match current regression targets
+        run: python3 scripts/test-collection-evidence.py
       - run: cargo fmt --all -- --check
       - name: Compile every target and audit Rust warnings
         run: |
