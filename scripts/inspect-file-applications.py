@@ -50,7 +50,8 @@ report['rss_source'] = {'Linux': '/proc/PID/status VmRSS', 'macOS': 'ps -o rss='
                         'Windows': 'K32GetProcessMemoryInfo WorkingSetSize / 1024'}[system]
 expected = {f'{program}-{variant}-O{opt}' for program, variants in [
     ('directory', ['measured', 'missing-release', 'missing-close']),
-    *[(name, ['measured', 'missing-release', 'missing-close', 'missing-buffer-free']) for name in ['wc', 'grep', 'csv']]]
+    *[(name, ['measured', 'missing-release', 'missing-close', 'missing-buffer-free']) for name in ['wc', 'grep', 'csv']],
+    ('todo', ['measured', 'missing-release', 'missing-close', 'missing-buffer-free', 'missing-write-close'])]
     for variant in variants for opt in [1, 2]}
 for binary in sorted(root.glob('*.bin')):
     label = binary.stem
@@ -85,7 +86,7 @@ if original is not None:
     for name, binary in report['binaries'].items():
         for key in ['machine', 'bytes', 'sha256', 'c_sha256']:
             assert binary[key] == original['binaries'][name][key], (name, key)
-for program, sizes in [('directory', [64, 1024]), *[(name, [128, 4096]) for name in ['wc', 'grep', 'csv']]]:
+for program, sizes in [('directory', [64, 1024]), *[(name, [128, 4096]) for name in ['wc', 'grep', 'csv', 'todo']]]:
     for size in sizes:
         for opt in [1, 2]:
             label = f'{program}-{size}-O{opt}'
@@ -104,7 +105,7 @@ for program, sizes in [('directory', [64, 1024]), *[(name, [128, 4096]) for name
             assert [(p, r) for p, r, _ in samples] == [(p, r) for p in range(3) for r in [64, 32, 1]]
             assert all(rss > 0 for _, _, rss in samples)
             report['observations'][label] = dict(managed_charge_by_phase=charge,
-                open_directory_and_read_handles=0, file_read_scratch_bytes=0, rss_samples=samples,
+                open_directory_and_file_handles=0, file_read_scratch_bytes=0, rss_samples=samples,
                 stdout=root.joinpath(label + '.stdout').read_text(encoding='utf-8'))
 root.joinpath('inspection.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
-print(f'Inspected {len(expected)} native binaries and sixteen memory series on {system} {architecture}')
+print(f"Inspected {len(expected)} native binaries and {len(report['observations'])} memory series on {system} {architecture}")

@@ -87,3 +87,15 @@ C emission alone does not establish native execution, physical reclamation or
 support for every library/service entry. This inventory identified the pointer
 work that #193 delivered; its old rejection is not an outstanding task. The
 runtime checks and remaining [ownership boundaries](../ownership.md) still apply.
+
+## Task-file extension in preparation
+
+The [expanded protocol](../application-acceptance.md#repeated-directory-and-file-work)
+adds 128- and 4,096-item task files, repeated edits, failed writes after partial
+success and invalid UTF-8 after a successful read. It also observes write-handle
+closes, with an independent missing-write-close control. The historical counts
+above describe the four accepted programs and do not include this extension.
+A three-item local check passes raw interpretation and Apple Clang O1/O2 with
+the previously verified compiler; native execution of the current source at both
+scaled sizes on all six hosts remains required. These are cleanup checks, with
+no timing or C/Rust performance claim.

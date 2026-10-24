@@ -126,5 +126,7 @@ images, including actual architecture, instructions, immutable sources and absen
 of tracing scan/mark/sweep code from ARC binaries. Counts describe saved outcomes,
 not 672 distinct source programs. The runtime and benchmark sources are identical
 across the measurement commits; the later commit only repairs test reporting and
-permits selecting the one host that needs repetition. Final delivery still needs
-its own complete production matrix and documentation audit.
+permits selecting the one host that needs repetition.
+[PR #205](../roadmap-history.md#float-printing-and-numerical-cost-measurements-pr-205)
+subsequently passed all nine production jobs, documentation and final-head binary
+inspection; that delivery is complete. The broader roadmap remains open.

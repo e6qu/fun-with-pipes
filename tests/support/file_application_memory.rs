@@ -1,4 +1,4 @@
-//! Observe managed storage, file-read scratch, handles and resident memory.
+//! Observe managed storage, file-read scratch, read/write handles and resident memory.
 use std::io::{BufRead, BufReader, Read, Write};
 use std::process::{Command, Output, Stdio};
 
@@ -56,7 +56,7 @@ pub fn observe(original: &str) -> String {
     let mut code = original.to_string();
     let marker = "typedef uint64_t V;";
     assert_eq!(code.matches(marker).count(), 1);
-    code = code.replace(marker, &format!("{marker}\nstatic int file_app_active;\n#define FILE_APP_OMIT_CLOSE 0\nstatic uint64_t file_app_opened, file_app_closed, file_app_raw;\n#define FILE_APP_OMIT_RAW_FREE 0"));
+    code = code.replace(marker, &format!("{marker}\nstatic int file_app_active;\n#define FILE_APP_OMIT_CLOSE 0\n#define FILE_APP_OMIT_WRITE_CLOSE 0\nstatic uint64_t file_app_opened, file_app_closed, file_app_raw;\n#define FILE_APP_OMIT_RAW_FREE 0"));
     // Record actual successful handle acquisition and closing on each platform.
     for (before, after) in [
         ("DIR *directory=opendir(STR(path)->d);", "DIR *directory=opendir(STR(path)->d); if(directory) file_app_opened++;"),
@@ -106,6 +106,24 @@ pub fn observe(original: &str) -> String {
         "    fwp_buf b = {0};\n    file_app_buffer = &b;",
     );
     code.replace_range(read_start..read_end, &reader);
+    // Flush the write-only omission control so later reads still see the bytes;
+    // only its close is omitted, independently of read-handle controls.
+    for signature in [
+        "static V fwp_p_file_write_new(",
+        "static V fwp_p_file_append(",
+        "static V fwp_p_file_write_bytes(",
+    ] {
+        let start = code.find(signature).unwrap();
+        let end = start + code[start..].find("\n}").unwrap() + 2;
+        let body = &code[start..end];
+        let opened = "    if (!f) return fwp_io_error_path(\"write\", STR(path)->d, err);";
+        let closed = "    if (fclose(f) != 0 && !error) error = errno;";
+        assert_eq!(body.matches(opened).count(), 1, "{signature}");
+        assert_eq!(body.matches(closed).count(), 1, "{signature}");
+        let body = body.replace(opened, &format!("{opened}\n    file_app_opened++;"))
+            .replace(closed, "    if (!FILE_APP_OMIT_WRITE_CLOSE || !file_app_active) { int close_error = fclose(f); file_app_closed++; if(close_error && !error) error = errno; } else if(fflush(f) != 0 && !error) error = errno;");
+        code.replace_range(start..end, &body);
+    }
     let marker = "static void *fwp_main_thread(void *arg) {";
     assert_eq!(code.matches(marker).count(), 1);
     code = code.replace(

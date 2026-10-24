@@ -12,7 +12,7 @@ performance and platform requirements in the last column.
 |---|---|---|---|
 | [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [C/Rust baseline](measurements/wordfreq.md) and [paired/repeated text comparison](measurements/unchanged-text.md) on two Linux hosts | Set time/memory budgets; validate the current runtime and preserve six-platform cleanup evidence |
 | [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and a small tracing control | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | Preserve these observations as ownership changes; allocation-failure coverage remains |
-| [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scaled counting/filtering/CSV cleanup passes on six hosts; separate input/output costs and extend task-file coverage |
+| [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scaled counting/filtering/CSV cleanup passes on six hosts; task-file checks are in preparation; separate input/output costs |
 | Numerical pipeline | Map/reduce 65,537 elements and multiply 65×67 by 67×63 matrices, eight rounds | [Existing C/Rust comparison](benchmarks.md#current-numerical-comparison-and-record-moves) | Repeat current-revision comparisons; set per-size budgets; include a larger numerical application |
 | Derivative application | Rosenbrock descent at 3, 33 and 129 dimensions; 199 updates plus zero/one/1,999-update controls | [AD storage](measurements/ad-application.md), [C/Rust peers](measurements/descent-peers.md), [packed arrays](measurements/packed-descent.md) and [array-owner moves](measurements/array-owner-moves.md) and [borrowed captures](measurements/array-capture-descent.md) on two Linux hosts | Stabilize identical-code timing controls and set per-input budgets; extend nested and platform evidence |
 | Long-running service | Existing HTTP/gRPC clients, handlers, streams and task cancellation | [Service ownership](ownership.md#http-ownership) and [service measurements](benchmarks.md#server-memory-after-completed-remote-calls) | Consolidate one repeatable service scenario with bounded concurrency, disconnects and repeated live-memory samples |
@@ -233,13 +233,23 @@ expected rows. Repeated failures cover a missing second file, invalid UTF-8 and
 a requested column absent from a successfully parsed table. Output is drained
 while observing memory, so a large report cannot fill a pipe and stall the test.
 
-All four programs must match raw interpretation. Native checks compile fwp at O1
+The task-file extension is in preparation; its six-host execution is not yet
+verified. It seeds 128 or 4,096 Unicode tasks, lists them, marks the first task,
+rejects item zero, clears completed tasks and appends a new task. Rust computes
+the full expected listing and final file contents independently. Every successful
+round restores the seed, keeping the on-disk input size bounded. Three phases
+repeat edits, a failed second append into a missing directory, and a failed
+second read containing invalid UTF-8. Partial results and successful first writes
+must survive or be released according to their ordinary semantics.
+
+All five programs must match raw interpretation. Native checks compile fwp at O1
 and generated C at O1 and O2 with LTO disabled. Existing small tracing/stress
 checks remain; the larger observations use checked ARC. Each checkpoint records:
 
 - Managed allocator charge after the preceding operation. It must stay constant
   within each phase and return to its initial value before runtime teardown.
-- Successfully opened directory/file-read handles minus actual closes: zero.
+- Successfully opened directory, file-read and file-write handles minus actual
+  closes: zero. Write counters cover append, byte writes and replacement writes.
 - C scratch bytes belonging to `file.read`: zero. This excludes other C buffers.
 - Process resident memory at rounds 0, 32 and 63 of each phase, while the child
   waits at the checkpoint. RSS includes allocator pages, libraries, stacks and
@@ -247,8 +257,12 @@ checks remain; the larger observations use checked ARC. Each checkpoint records:
   threshold or claim that managed charge represents the whole process.
 
 Controls deliberately omit managed releases, handle closes and file-read scratch
-frees. Each must fail the observer before shutdown. The tests retain generated C,
-30 native binaries, disassembly, output and sixteen memory series per host. Machine headers verify
+frees. A separate task-file control omits only write closes while flushing their
+bytes, so later reads still see the same data. It must fail the handle observer,
+not an unrelated output assertion. Each control must fail before shutdown.
+The expanded suite retains generated C, 40 native binaries, disassembly, output
+and twenty memory series per host. The earlier four-program report retains its
+original 30 binaries and sixteen series; it does not verify this extension. Machine headers verify
 that artifacts target the runner's actual architecture. These cases do not yet
 cover forced allocation failure or every file operation and do not complete the
 application suite.
