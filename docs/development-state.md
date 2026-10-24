@@ -19,7 +19,8 @@ Published branch `list-copy-delivery` is at
 `2fa14cac340aeece7b2676ab43056315520f8269`, including
 the CI repair batch (`ff1aca3e`, `85df5485`) and the updated investigation.
 Repair-head production `40114747612` is running; docs `40114747617` passed.
-Both ARM Mac jobs and benchmarks passed; no new failed job has been reported.
+Both ARM Mac jobs, regular Intel macOS and benchmarks passed; their complete logs
+were audited without error markers. No new failed job has been reported.
 Final acceptance and the compiler-abort repair remain required.
 It fixes interrupted list copies, removes redundant sort buffers, aligns benchmark
 peer arithmetic and repairs Windows test coverage.
@@ -37,7 +38,10 @@ production Rust 1.99.1 from diagnostic source
 `39e6b19fa4a0b3b8b2c7ca5049e190d0cd8b098c`; the earlier sanitizer run used nightly.
 This diagnostic-only build enables ASan flags with `RUSTC_BOOTSTRAP=1`; neither
 production compiler flags nor its stack policy change. Its full log was reviewed
-without findings; artifact `12567799982` still needs archive/hash/counter review.
+without findings. Archive `12567799982`, its compiler hash and all 90 attempt
+combinations are verified; `/private/tmp/fwp-console-stable-asan-review.json` is
+COMPLETE. The archive SHA-256 is
+`14f8d2424e72c992edb2f9a80d1b478cd39ce7ad6177ef1a2ec974cb9be71d8e`.
 Earlier diagnostic helpers are COMPLETE;
 do not repeat their downloads or publication.
 
@@ -54,15 +58,25 @@ job on the repaired head and fix additional failures in this PR.
 ### Source review in progress
 
 Checkout `/private/tmp/fwp-checked-peer-comparison`, branch
-`compiler-lifetime-review`, contains the candidate repair. It is separate from
-the current PR head while those production gates finish. No second PR is open.
+`compiler-lifetime-review`, has published candidate
+`2f20e7fe075e2beb0fa6fae3f3950ebfc6953a9e`. Focused run `40119693758` is
+complete on Linux AMD64 and native Intel macOS. Both passed all-target Clippy
+and 232 unit, integration and documentation checks each. Six explicitly ignored
+gRPC measurement tests are not claimed as validation. Full logs were audited. It is separate from the current PR head
+while production gates finish. No second PR is open. The follow-up changes
+replace raw writer pointers with shared locked writers, test late background
+registration during shutdown, and test three REPL cells with separate output
+buffers. Follow-up validation is pending; the prior run does not validate these changes.
+Blocking closures now also require `Send`, preventing accidental captures of
+scheduler-local values while the turn is released.
 
 Every public interpreter evaluation now enters a cleanup boundary. It joins
 ordinary children, cancels and joins background connection tasks, closes the
 connection pool and only then returns or resumes a Rust panic. Blocking calls
 restore the scheduling turn during unwinding. Lower-level evaluation and raw
 transfer are internal; task handles cannot cross arbitrary Rust threads. Output
-writers require `Send`; debugger writers use a mutex. Macros, `comptime`, command
+writers require `Send` and are shared through locked owners; debugger writers
+also use a mutex. Macros, `comptime`, command
 execution and exported constants use the same entry boundary. Sender completion
 also waits for its cancelled task to release captures.
 
@@ -76,11 +90,14 @@ background shutdown, root/child panics while blocked, writer lifetimes and
 restoration of the scheduling turn. A compile-fail example protects task handles
 from escaping the scheduler.
 
-Formatting and actionlint pass under `scripts/local-guard.py`. The candidate
-compiler has NOT yet been built or tested. The `compiler-lifetimes` workflow
+Formatting, actionlint and the frozen primitive inventory pass under
+`scripts/local-guard.py` (392 declarations, 382 symbols, no unclassified items).
+The three-cell REPL fixture was also checked against the saved baseline compiler.
+The `compiler-lifetimes` workflow
 suite runs all-target Clippy, unit/doc tests and existing macro, REPL, debugger,
 command, preemption and gRPC regressions on Linux AMD64 and native Intel macOS
-with production Rust O1/assertions/overflow settings. Full production acceptance
+with production Rust O1/assertions/overflow settings. The next version publishes
+cleanup results before the broader suites to expose failures sooner. Full production acceptance
 is still required after integrating the repair into PR #210.
 
 The original nine console inputs do not invoke macros. These source-level

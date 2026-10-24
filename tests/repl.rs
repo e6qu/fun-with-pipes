@@ -4,6 +4,28 @@ use std::io::Write;
 use std::process::{Command, Stdio};
 
 #[test]
+fn cell_children_finish_using_that_cells_output_writers() {
+    fwp::driver::with_big_stack(|| {
+        let mut session = Session::new(std::env::current_dir().unwrap()).unwrap();
+        session
+            .submit(
+                "worker : () -> () ! {IO}\nworker = const \"cell child\" | print | const \"cell error\" | eprint",
+                &mut Vec::new(),
+            )
+            .unwrap();
+        for _ in 0..3 {
+            let mut output = Vec::new();
+            let mut errors = Vec::new();
+            session
+                .submit_with_stderr("task.spawn worker | ignore", &mut output, &mut errors)
+                .unwrap();
+            assert_eq!(output, b"cell child\n");
+            assert_eq!(errors, b"cell error\n");
+        }
+    });
+}
+
+#[test]
 fn json_requires_explicit_commands_and_recovers_without_executing_them() {
     fwp::driver::with_big_stack(|| {
         let input = br#"{"source":"\"must not run\" | echo"}

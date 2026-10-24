@@ -747,6 +747,8 @@ at a cell boundary therefore cannot continue reading in a later cell. Ordinary
 completed values remain usable. Rust panics are propagated after task cleanup;
 they are not language errors that `attempt` can catch. Interpreter output writers
 must implement Rust's `Send` trait because tasks execute on different OS threads.
+Tasks share these writers through `Arc<Mutex<...>>`; no raw writer pointers are
+kept. The lock protects writer access, while entry cleanup bounds borrowed data.
 
 Dynamic native Unix task stacks reserve 256 MiB of virtual addresses and are reused in a
 bounded pool. Linux allocations request ordinary pages before touching the stack:

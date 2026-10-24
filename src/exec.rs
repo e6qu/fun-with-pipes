@@ -436,7 +436,7 @@ pub fn exec_command(prog: &Program, cmd: &cli::Command, argv: &[String]) -> i32 
                 it.apply_root(fv.clone(), args)
             };
             // program output written with `print` goes before the result
-            let _ = it.out.flush();
+            let _ = it.out.lock().unwrap().flush();
             match r {
                 Ok(v) => {
                     let res = em.emit_result(&v, output, prog);
@@ -516,7 +516,7 @@ pub fn exec_command(prog: &Program, cmd: &cli::Command, argv: &[String]) -> i32 
                 }
             }
         }
-        let _ = it.out.flush();
+        let _ = it.out.lock().unwrap().flush();
         code
     };
     if binary {

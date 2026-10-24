@@ -73,16 +73,28 @@ jobs:
         run: |
           set -o pipefail
           cargo clippy --locked --all-targets -- -D warnings 2>&1 | tee compiler-lifetime-evidence/clippy.log
-      - name: Entry lifetimes and existing execution regressions
+      - name: Entry cleanup, macro tasks and panic controls
         if: ${{ !cancelled() }}
         run: |
           set -o pipefail
-          cargo test --locked --no-fail-fast --lib --test task_timer_order --test golden_check --test repl --test debugger --test protocol --test exec --test cli --test preempt --test grpc 2>&1 | tee compiler-lifetime-evidence/tests.log
+          cargo test --locked --no-fail-fast --lib --test task_timer_order 2>&1 | tee compiler-lifetime-evidence/cleanup.log
       - name: Public task handles cannot leave their scheduler
         if: ${{ !cancelled() }}
         run: |
           set -o pipefail
           cargo test --locked --doc 2>&1 | tee compiler-lifetime-evidence/doc-tests.log
+      - name: Publish cleanup results before broader tests
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: compiler-lifetime-cleanup-${{ matrix.runner }}
+          path: compiler-lifetime-evidence/
+          if-no-files-found: error
+      - name: Existing compiler and execution regressions
+        if: ${{ !cancelled() }}
+        run: |
+          set -o pipefail
+          cargo test --locked --no-fail-fast --test golden_check --test repl --test debugger --test protocol --test exec --test cli --test preempt --test grpc 2>&1 | tee compiler-lifetime-evidence/tests.log
       - uses: actions/upload-artifact@v7
         if: always()
         with:

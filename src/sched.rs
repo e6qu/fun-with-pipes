@@ -219,9 +219,10 @@ impl World {
         t.next > t.serving + 1
     }
 
-    /// Run `f` (which must not touch values) without the baton.
+    /// Run `f` without the baton. Send forbids capturing non-Send values;
+    /// the closure must not access scheduler-owned state through other paths.
     #[cfg(not(target_family = "wasm"))]
-    pub(crate) fn blocking<T>(&self, f: impl FnOnce() -> T) -> T {
+    pub(crate) fn blocking<T>(&self, f: impl FnOnce() -> T + Send) -> T {
         struct Resume<'a>(&'a World);
         impl Drop for Resume<'_> {
             fn drop(&mut self) {
@@ -301,7 +302,7 @@ impl World {
 
     /// Run `f` (WebAssembly has no sockets to wait for).
     #[cfg(target_family = "wasm")]
-    pub(crate) fn blocking<T>(&self, f: impl FnOnce() -> T) -> T {
+    pub(crate) fn blocking<T>(&self, f: impl FnOnce() -> T + Send) -> T {
         let r = f();
         new_slice();
         r
@@ -601,7 +602,7 @@ mod lifetime_tests {
                     it.run_entry(|it| {
                         it.spawn_rust(
                             Box::new(move |child| {
-                                child.out.write_all(b"started\n").unwrap();
+                                child.out.lock().unwrap().write_all(b"started\n").unwrap();
                                 if mode == 3 {
                                     child.world.blocking(|| panic!("child panic control"));
                                 }
@@ -628,6 +629,8 @@ mod lifetime_tests {
                 }
                 assert!(weak.upgrade().is_none(), "background capture leaked");
                 assert!(it.world.background.lock().unwrap().0.is_empty());
+                assert_eq!(Arc::strong_count(&it.out), 1, "task kept the output writer");
+                assert_eq!(Arc::strong_count(&it.err), 1, "task kept the error writer");
                 let turn = it.world.turn.lock().unwrap();
                 assert_eq!(turn.next, turn.serving + 1, "entry lost its turn");
                 drop(turn);
@@ -636,20 +639,38 @@ mod lifetime_tests {
         drop(it);
         assert_eq!(output, b"started\n".repeat(32));
     }
-}
 
-/// Output shared with the root task's writer.
-struct Forward<'p>(*mut (dyn Write + Send + 'p));
-// Only scheduler tasks construct this writer. Its Send pointee remains alive
-// until the entry joins every task; the scheduling turn excludes other writes.
-unsafe impl Send for Forward<'_> {}
-
-impl Write for Forward<'_> {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        unsafe { (*self.0).write(buf) }
-    }
-    fn flush(&mut self) -> std::io::Result<()> {
-        unsafe { (*self.0).flush() }
+    #[test]
+    fn shutdown_joins_background_tasks_created_by_cleanup() {
+        let program = Program::default();
+        let mut it = Interp::new(&program, Box::new(std::io::sink())).unwrap();
+        let captured = Rc::new(());
+        let weak = Rc::downgrade(&captured);
+        it.run_entry(|it| {
+            it.spawn_rust(
+                Box::new(move |child| {
+                    while child.check_cancel().is_ok() {
+                        child.world.park(None);
+                    }
+                    child.spawn_rust(
+                        Box::new(move |_| {
+                            drop(captured);
+                            panic!("a task created during shutdown must not run");
+                        }),
+                        None,
+                        true,
+                    );
+                }),
+                None,
+                true,
+            );
+            it.world.park(Some(Instant::now()));
+            Ok(())
+        })
+        .unwrap();
+        assert!(weak.upgrade().is_none(), "late task capture leaked");
+        assert!(it.world.background.lock().unwrap().0.is_empty());
+        assert_eq!(Arc::strong_count(&it.out), 1);
     }
 }
 
@@ -743,7 +764,7 @@ fn run_task(mut it: Interp<'static>, body: TaskBody, world: &World) {
                 Ok(v) => Some(v),
                 Err(Ctl::Cancelled) => None,
                 Err(e) => {
-                    let _ = it.out.flush();
+                    let _ = it.out.lock().unwrap().flush();
                     let code = crate::interp::report(&Err(e), it.prog);
                     std::process::exit(code);
                 }
@@ -982,7 +1003,7 @@ impl<'p> Interp<'p> {
             // No fibers: `fwp run` rejects programs with tasks before they
             // start (`driver::wasm_host_unsupported`); this is the last
             // line of defense (a task started by `comptime` code).
-            let _ = self.out.flush();
+            let _ = self.out.lock().unwrap().flush();
             eprintln!("fwp: trap: {}", crate::driver::WASM_NO_TASKS);
             std::process::exit(101);
         }
@@ -1017,13 +1038,11 @@ impl<'p> Interp<'p> {
             cafs: self.cafs.clone(),
             state: Vec::new(),
             rng: self.rng ^ (Arc::as_ptr(&task) as u64).rotate_left(17),
-            out: Box::new(Forward(self.root_out)),
-            err: Box::new(Forward(self.root_err)),
+            out: self.out.clone(),
+            err: self.err.clone(),
             args: self.args.clone(),
             world: self.world.clone(),
             task: task.clone(),
-            root_out: self.root_out,
-            root_err: self.root_err,
             scopes: Vec::new(),
             ffi: self.ffi.clone(),
             grpc: self.grpc.clone(),

@@ -944,26 +944,28 @@ impl<'p> Interp<'p> {
                 "write" => {
                     let s = a[0].as_str().to_string();
                     self.out
+                        .lock()
+                        .unwrap()
                         .write_all(s.as_bytes())
                         .map_err(|e| Ctl::Trap(e.to_string()))?;
                     Value::unit()
                 }
                 "eprint" => {
-                    let _ = self.out.flush();
-                    writeln!(self.err, "{}", a[0].as_str())
+                    let _ = self.out.lock().unwrap().flush();
+                    writeln!(self.err.lock().unwrap(), "{}", a[0].as_str())
                         .map_err(|e| Ctl::Trap(e.to_string()))?;
                     Value::unit()
                 }
                 "ewrite" => {
-                    let _ = self.out.flush();
-                    self.err
-                        .write_all(a[0].as_str().as_bytes())
-                        .and_then(|()| self.err.flush())
+                    let _ = self.out.lock().unwrap().flush();
+                    let mut err = self.err.lock().unwrap();
+                    err.write_all(a[0].as_str().as_bytes())
+                        .and_then(|()| err.flush())
                         .map_err(|e| Ctl::Trap(e.to_string()))?;
                     Value::unit()
                 }
                 "read-line" => {
-                    let _ = self.out.flush();
+                    let _ = self.out.lock().unwrap().flush();
                     let mut line = Vec::new();
                     match std::io::stdin().lock().read_until(b'\n', &mut line) {
                         Ok(0) | Err(_) => none(),
@@ -979,7 +981,7 @@ impl<'p> Interp<'p> {
                     }
                 }
                 "read-all" | "read-lines" => {
-                    let _ = self.out.flush();
+                    let _ = self.out.lock().unwrap().flush();
                     let mut bytes = Vec::new();
                     let _ = std::io::stdin().lock().read_to_end(&mut bytes);
                     let s = lossy(&bytes);

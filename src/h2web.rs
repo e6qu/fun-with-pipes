@@ -114,11 +114,11 @@ fn start(it: &mut Interp, c: &ConnRef, s: StreamRef, w: &Rc<Web>) {
             match it.apply(h, vec![call]) {
                 Ok(_) | Err(Ctl::Cancelled) => {}
                 Err(Ctl::Exit(code)) => {
-                    let _ = it.out.flush();
+                    let _ = it.out.lock().unwrap().flush();
                     std::process::exit(code);
                 }
                 Err(e) => {
-                    let _ = it.out.flush();
+                    let _ = it.out.lock().unwrap().flush();
                     let code = crate::interp::report(&Err(e), it.prog);
                     std::process::exit(code);
                 }

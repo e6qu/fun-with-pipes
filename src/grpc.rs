@@ -1976,7 +1976,7 @@ fn handle(it: &mut Interp, c: ConnRef, s: StreamRef, server: Rc<Server>) {
         }
         Some(Route::Reflection) => reflect(it, &c, &s, &server),
     };
-    let _ = it.out.flush();
+    let _ = it.out.lock().unwrap().flush();
     let status = match r {
         Ok(Ok(())) => None,
         Ok(Err(st)) => Some(st),
@@ -2003,7 +2003,7 @@ fn handle(it: &mut Interp, c: ConnRef, s: StreamRef, server: Rc<Server>) {
             Some(Status::new(INTERNAL, format!("trap: {}", msg)))
         }
         Err(Ctl::Exit(code)) => {
-            let _ = it.out.flush();
+            let _ = it.out.lock().unwrap().flush();
             std::process::exit(code);
         }
         Err(Ctl::Fail(e, t)) => {
@@ -2118,12 +2118,12 @@ fn outcome(
         }
         Err(Ctl::Trap(msg)) => {
             it.cancel_children();
-            let _ = it.out.flush();
+            let _ = it.out.lock().unwrap().flush();
             eprintln!("fwp: trap: {} (in {})", msg, what);
             Ok(Err(Err(Status::new(INTERNAL, format!("trap: {}", msg)))))
         }
         Err(Ctl::Exit(code)) => {
-            let _ = it.out.flush();
+            let _ = it.out.lock().unwrap().flush();
             std::process::exit(code);
         }
         Err(Ctl::Cancelled) => {

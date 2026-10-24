@@ -17,7 +17,7 @@ The saved crash report identifies a system allocator abort while freeing a
 56-byte boxed return type. `TypeTable::open_call` had cloned a function type to
 inspect its shape; destroying that temporary reached the failing `free`.
 The front-end files are unchanged from the accepted base, and the examined path
-uses owned Rust values. No incorrect clone instruction has been identified.
+uses owned Rust values. No source lifetime defect has been identified there.
 
 The recovered compiler has the crash report's exact Mach-O UUID
 `42cd802d-3482-3779-acce-42251ea4f37d`, SHA-256
@@ -41,7 +41,7 @@ do not establish stack exhaustion, out-of-memory failure, or its cause.
 | [40106733779](https://github.com/e6qu/fun-with-pipes/actions/runs/40106733779) | C creates 64–4,096 MiB stacks successively in one process; debugger experiment times out | Earlier stack allocations may affect later ones; no passing guarded compilation |
 | [40107961231](https://github.com/e6qu/fun-with-pipes/actions/runs/40107961231) | Asynchronous debugger confirms Guard Malloc startup failure with the unchanged 4 GiB request | No heap corruption observed; inference was not reached |
 | [40113866689](https://github.com/e6qu/fun-with-pipes/actions/runs/40113866689) | Fresh C processes pass both sizes; Rust passes 256 MiB but fails 4 GiB only under Guard Malloc. The smaller-stack compiler reaches declaration collection, then hits its 120-second deadline | No invalid access was reported; inference was not reached, so this is not a passing heap check or an abort repair |
-| [40114625111](https://github.com/e6qu/fun-with-pipes/actions/runs/40114625111) | All 90 compilations passed with production Rust 1.99.1, O1 and checking settings; full log has no sanitizer finding; archive review pending | Removes the earlier nightly-toolchain difference; instrumentation still changes generated instructions |
+| [40114625111](https://github.com/e6qu/fun-with-pipes/actions/runs/40114625111) | All 90 compilations passed with production Rust 1.99.1, O1 and checking settings; full log and verified archive have no finding | Removes the earlier nightly-toolchain difference; instrumentation still changes generated instructions |
 
 Guard Malloc places allocations beside protected pages to expose invalid memory
 access. Its extra memory requirements can change startup behavior. ASan
@@ -85,9 +85,22 @@ though they borrow the program and writers. The candidate now closes the pool,
 cancels and joins background workers before entry return, and propagates Rust
 panics only after cleanup. Blocking calls restore the scheduling turn during
 unwinding. Public entry methods enforce this boundary; writers require `Send`,
-and task handles cannot cross arbitrary Rust threads. Repeated cleanup, panic
-and writer-lifetime tests accompany these changes. They remain unverified until
-the focused runner checks pass; full delivery acceptance is also required.
+and task handles cannot cross arbitrary Rust threads. Shared, locked writers
+replace raw pointers. Repeated cleanup, panic
+and writer-lifetime tests accompany these changes. The core cleanup
+passed 232 focused checks on each of Linux AMD64 and Intel macOS in run
+[40119693758](https://github.com/e6qu/fun-with-pipes/actions/runs/40119693758),
+source `2f20e7fe075e2beb0fa6fae3f3950ebfc6953a9e`. The shared-writer follow-up
+still needs runner checks; full delivery acceptance is also required.
+
+For the original console inputs, source review follows `main::build` through
+`driver::compile_file`, parsing, macro expansion and type checking. There are no
+macro invocations, so expansion does not construct an interpreter or foreign
+bridge. Decimal C conversions happen later during lowering. The reviewed parser,
+environment, inference and type-table code uses owned Rust data, without unsafe
+blocks or custom allocation. `open_call` and `resolve` clone and move owned types;
+no source lifetime defect was found there. This narrows the review but does not
+prove an allocator or compiler-toolchain fault.
 
 ## Saved evidence
 
@@ -99,6 +112,9 @@ GitHub artifacts are the remote originals. Local verified copies are under
 Their `artifact.json` files and retained ZIPs record SHA-256 verification.
 Local kernel failure/fix evidence is in
 `/private/tmp/fwp-kernel-malloc-report{,-fixed}`.
+The production-toolchain ASan archive and completed coverage/hash receipt are
+`/private/tmp/fwp-console-stable-asan.zip` and
+`/private/tmp/fwp-console-stable-asan-review.json`.
 
 The historical #146 abort remains unexplained too. Five available cancelled Intel
 logs gave no additional cause; three old logs were unavailable. Those results are
