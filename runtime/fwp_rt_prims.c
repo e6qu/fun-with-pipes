@@ -2199,18 +2199,35 @@ static V fwp_array_typed_copy(V a, size_t extra, void (*dup)(V), const fwp_desc 
     FWP_KEEP_ALIVE(a);
     return fwp_array_builder_finish(&result, &cleanup);
 }
-static V fwp_p_array_from_list_typed(V xs, void (*dup)(V), const fwp_desc *elem) {
-    V source = xs;
+static V fwp_p_array_from_list_typed(V xs, void (*dup)(V),
+                                    void (*drop_list)(V), const fwp_desc *elem) {
+    fwp_value_owner input = {xs, drop_list};
+    fwp_cleanup input_cleanup; fwp_value_protect(&input, &input_cleanup);
     fwp_array_builder result = {fwp_array_typed_new(fwp_list_len(xs), elem), 0, elem};
     fwp_cleanup cleanup; fwp_array_builder_protect(&result, &cleanup);
-    for (size_t i = 0; xs; i++, xs = OBJ(xs)->f[1]) {
-        V value = OBJ(xs)->f[0];
-        if (dup && elem->kind != K_F128) dup(value);
-        fwp_array_store(result.value, i, value, elem);
-        result.filled++;
+    int move_prefix = 1;
+    for (size_t i = 0; xs; i++) {
+        V node = xs, value = OBJ(node)->f[0], tail = OBJ(node)->f[1];
+        if (move_prefix && fwp_rc_last(node)) {
+            /* Transfer both children before freeing only this list node.
+             * Wide scalars are copied into inline array slots and released. */
+            input.value = tail;
+            fwp_array_store_owned(result.value, i, value, elem);
+            result.filled++;
+            fwp_rc_free_obj(node);
+        } else {
+            /* A shared node also shares access to its descendants, even when
+             * their own counts are one. Keep this whole tail owned. */
+            move_prefix = 0;
+            if (dup && elem->kind != K_F128) dup(value);
+            fwp_array_store(result.value, i, value, elem);
+            result.filled++;
+        }
+        xs = tail;
     }
-    FWP_KEEP_ALIVE(source);
-    return fwp_array_builder_finish(&result, &cleanup);
+    V array = fwp_array_builder_finish(&result, &cleanup);
+    drop_list(fwp_value_finish(&input, &input_cleanup));
+    return array;
 }
 /* Compiler-only inline integer range immediately consumed as an array. Wide
  * arithmetic computes the distance without signed overflow or WASI truncation.
@@ -2416,26 +2433,56 @@ static V fwp_p_array_append_typed(V b, V a, void (*dup)(V), const fwp_desc *elem
     FWP_KEEP_ALIVE(b);
     return fwp_array_builder_finish(&result, &cleanup);
 }
-static V fwp_p_array_sort_typed(V a, void (*dup)(V), const fwp_desc *elem) {
-    V result = fwp_array_typed_copy(a, 0, dup, elem);
-    size_t n = fwp_array_len(result);
-    fwp_array_builder owner = {result, n, elem};
-    fwp_cleanup cleanup; fwp_array_builder_protect(&owner, &cleanup);
-    if (n > 1) {
-        V *keys = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
-        fwp_cleanup key_cleanup; fwp_scratch_protect(&keys, &key_cleanup);
-        V *tk = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
-        fwp_cleanup tk_cleanup; fwp_scratch_protect(&tk, &tk_cleanup);
-        for (size_t i = 0; i < n; i++) keys[i] = fwp_array_load(a, i, elem);
-        fwp_msort(keys, keys, n, elem, tk, tk);
+static V fwp_p_array_sort_typed(V a, void (*dup)(V),
+                               void (*drop_array)(V), const fwp_desc *elem) {
+    fwp_value_owner input = {a, drop_array};
+    fwp_cleanup input_cleanup; fwp_value_protect(&input, &input_cleanup);
+    size_t n = fwp_array_len(a);
+    if (n < 2) return fwp_value_finish(&input, &input_cleanup);
+    int unique = fwp_array_is_view(a) ? 0 : fwp_rc_unique_mut(a);
+    V result = unique == 1 ? a : fwp_array_typed_copy(a, 0, unique ? NULL : dup, elem);
+    /* Verification can require copying unique storage. Transfer its children
+     * without retaining them, keeping the old bytes alive until sorting ends. */
+    if (unique && unique != 1) fwp_array_set_len(a, 0);
+    fwp_value_owner owner = {result, drop_array};
+    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);
+    if (result == a) input.value = 0;
+    V *keys = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+    fwp_cleanup key_cleanup; fwp_scratch_protect(&keys, &key_cleanup);
+    V *tk = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+    fwp_cleanup tk_cleanup; fwp_scratch_protect(&tk, &tk_cleanup);
+    for (size_t i = 0; i < n; i++) keys[i] = fwp_array_load(a, i, elem);
+    fwp_msort(keys, keys, n, elem, tk, tk);
+    if (result == a && fwp_array_stride(elem) == 16) {
+        /* Wide keys borrow original array slots. Apply their permutation
+         * in cycles so writing one slot cannot overwrite a later key. */
+        unsigned char saved[16];
+        unsigned char *data = (unsigned char *)(uintptr_t)a + sizeof(fwp_arr);
+        for (size_t i = 0; i < n; i++) {
+            V original = PTR(data + i * 16);
+            if (keys[i] == original) continue;
+            memcpy(saved, data + i * 16, sizeof saved);
+            size_t position = i;
+            while (keys[position] != original) {
+                size_t from = (size_t)(keys[position] - PTR(data)) / 16;
+                memmove(data + position * 16, data + from * 16, sizeof saved);
+                keys[position] = PTR(data + position * 16);
+                position = from;
+            }
+            memcpy(data + position * 16, saved, sizeof saved);
+            keys[position] = PTR(data + position * 16);
+        }
+    } else {
         for (size_t i = 0; i < n; i++) fwp_array_store(result, i, keys[i], elem);
-        FWP_KEEP_ALIVE(keys);
-        FWP_KEEP_ALIVE(tk);
-        fwp_scratch_finish(&tk, &tk_cleanup);
-        fwp_scratch_finish(&keys, &key_cleanup);
     }
+    FWP_KEEP_ALIVE(keys);
+    FWP_KEEP_ALIVE(tk);
+    fwp_scratch_finish(&tk, &tk_cleanup);
+    fwp_scratch_finish(&keys, &key_cleanup);
     FWP_KEEP_ALIVE(a);
-    return fwp_array_builder_finish(&owner, &cleanup);
+    V sorted = fwp_value_finish(&owner, &cleanup);
+    drop_array(fwp_value_finish(&input, &input_cleanup));
+    return sorted;
 }
 
 /* ------------------------------------------------------------ maps, sets */

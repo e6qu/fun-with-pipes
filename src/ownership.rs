@@ -598,9 +598,15 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         | "string._integer-length" => (&[B], R, None, &[]),
         "string.contains" | "starts-with" | "ends-with" | "eq" | "ne" | "lt" | "le" | "gt"
         | "ge" | "compare" => (&[B, B], R, None, &[]),
-        "array.from-list" | "array.to-list" | "array.sort" => (
+        "array.to-list" => (
             &[B],
             ResultOwnership::ArrayOperation { consumed: None },
+            None,
+            &[0],
+        ),
+        "array.from-list" | "array.sort" => (
+            &[C],
+            ResultOwnership::ArrayOperation { consumed: Some(0) },
             None,
             &[0],
         ),

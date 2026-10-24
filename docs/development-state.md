@@ -1,38 +1,29 @@
 # Current work
 
-**Next:** finish all ten final-revision CI gates for documentation
-[PR #211](https://github.com/e6qu/fun-with-pipes/pull/211) on `docs-overhaul`
-in `/private/tmp/fwp-docs-overhaul`, then squash-merge under the standing
-authorization. Base: merged main
-`380fa8412327e52db420b96918d20e2528bbfc7c`. Fix every failed check before merging.
-The squash message must be one line, at most 80 characters, with an empty body
-and no trailers or attribution. After delivery, publish integrated task **A1** below.
+**Next:** publish and validate plan **A1**, the combined array conversion/sorting
+change, from `/private/tmp/fwp-array-moves-delivery`, branch `array-moves-delivery`.
+Require all nine production jobs, documentation and the source/binary ownership
+review on the final revision before squash merge. Use the single-line subject
+`Move unshared list elements and reuse unique arrays when sorting`, an empty
+body and no trailers. After delivery, continue G1's supported-execution matrix;
+the concrete requirements are in [PLAN.md](../PLAN.md).
 
-The first published revision `29edbc03931de2a7e2f71744092a191fb3a21c85` passed
-documentation `40138325016` and the benchmark job in production `40138325017`.
-A final review corrected an overlooked tracing-default statement in the service
-guide. The updated revision needs all gates; do not use those earlier passes as
-its acceptance evidence. Check the PR for the current head and runs.
-
-The overhaul makes [PLAN.md](../PLAN.md) the detailed backlog: GC tasks G1–G5,
-ARC tasks A1–A5 and the six other milestone groups have concrete inputs, code/test
-locations, dependencies and completion evidence. Ownership and architecture guides
-state current contracts; benchmarks explain comparisons and link historical
-protocols/results. Preparation IDs and raw measurements retain their identities.
-Tutorial corrections cover browser dependencies/tail calls, proved task/channel
-captures, explicit interpreter commands and navigation. The reference now includes
-Windows and distinguishes ARC from tracing in static-memory builds.
+The prepared implementation applies cleanly to current compiler/runtime source.
+Two workflow conflicts are resolved by retaining #210's SDK compiler prerequisites
+and interpreter-lifetime suite alongside the added array checks. Raw preparation
+measurements are copied unchanged. Focused integration checks pass; full native
+delivery checks remain pending. The historical runs do not validate this branch's
+whole compiler.
 
 ## Baseline and unresolved issue
 
-The user merged [#210](https://github.com/e6qu/fun-with-pipes/pull/210) on
-2026-10-24. Tested head `36924807f0343c79c38ef42c4254a721afa60613` and merge
-`380fa8412327e52db420b96918d20e2528bbfc7c` have identical trees.
-All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40124698815)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40124698740)
-passed. The 236-check Linux/Intel macOS interpreter suite also passed before
-publication. Final-head independent binary review was not completed before the
-user merged; do not turn the passing CI record into a claim that it was.
+The user merged [#211](https://github.com/e6qu/fun-with-pipes/pull/211) on
+2026-10-25. Tested head `9f36f2f5ae4a1a2361a2c9ed8cb8bcc27a7680b3` and merge
+`afebaac99f9b45235df369a6460f8e4c081ec5b3` have identical trees.
+All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40139343820)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40139343796)
+passed. This branch is rebased onto that merge; the service-guide correction
+and all interpreter cleanup repairs remain present.
 
 The original intermittent Intel macOS compiler abort remains unexplained.
 [Its investigation](measurements/compiler-abort.md) records source review and
@@ -40,7 +31,7 @@ preserved evidence. The interpreter lifetime fixes are not an established cause
 or cure. The user requested source-level safety review; do not resume allocator-
 cookie experiments or disassembly-led diagnosis.
 
-## Prepared work after this overhaul
+## Applicable preparation evidence
 
 Plan task **A1** is already prepared in `/private/tmp/fwp-array-sort-ownership`,
 branch `array-sort-ownership`, checkpoint `9824e22e827cfd6116c55ac2fcc2651ed02a7dcc`.
@@ -49,36 +40,33 @@ It moves unshared list prefixes into arrays and reuses unique arrays for sorting
 All six native jobs in `40100508025` and both Linux cost jobs in `40100509770`
 passed; focused logs and independent reviews are complete. The report in that
 checkout is `docs/measurements/array-sort-ownership.md`.
-The integration is saved separately in `/private/tmp/fwp-array-moves-delivery`,
-branch `array-moves-delivery`, commit `f4359dc82b19629a8779f3d5d175f082e8bdf4b7`.
-It keeps #210's CI repairs. Guarded formatting, workflow lint, primitive inventory,
-19 native-runner controls and 155 documentation link sets pass. After #211 merges,
-move it onto the merged tree, preserve this service-guide correction, update its
-handoff, and run final delivery checks. Do not repeat finished preparation or
-claim this code is already merged.
+The integrated runtime, code generation, ownership contracts and native array
+probes match that tested preparation. Final integrated validation is still
+required; do not repeat finished preparation or claim this code is merged.
 
-## Verification for this documentation change
+## Verification for the integrated array change
 
-Focused checks passed under `python3 scripts/local-guard.py`:
+The following focused checks passed under `python3 scripts/local-guard.py` on
+the integrated working tree:
 
-- `python3 scripts/test-roadmap.py`: four controls. Code comments inside fenced
-  examples can no longer masquerade as linkable headings.
-- `python3 scripts/check-roadmap.py`: 154 Markdown link sets, 106 immutable
-  preparation pairs/tags, eight plan/handoff milestones and commit rules.
-- Standalone `tests/examples.rs`: `tutorial_readmes_match_their_programs` passes.
-- Standalone `tests/stdlib_doc.rs`: `stdlib_doc_is_current` passes without blessing.
-- `actionlint .github/workflows/roadmap.yml` passes.
+- `cargo fmt --all -- --check`.
+- `actionlint .github/workflows/ci.yml .github/workflows/numerics.yml .github/workflows/windows.yml`.
+- `python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /private/tmp/fwp-array-delivery-inventory.json`:
+  392 declarations, 382 symbols, 40 aliases, 371 contracts, 19 IR and two flat
+  entries; no unreviewed contract.
+- `python3 scripts/test-native-test-runner.py`: all 19 coverage/runner controls.
+- `python3 scripts/check-roadmap.py`: 155 Markdown link sets, 106 immutable
+  preparation records and eight milestones.
 
-Both standalone checkers were compiled with Rust O1, debug assertions and overflow
-checks, without building the compiler. No tutorial execution, full local suite or
-benchmark was run. Full production checks remain required on GitHub. The generated
-library reference and vendored license/provenance documents needed no edits.
+These working-tree checks are not final-commit evidence. Full compiler builds
+and native semantic checks run on GitHub; do not repeat the prepared measurements
+unless changed behavior invalidates their applicability. Final production
+evidence must name the integrated source, including actual binaries and
+deliberately broken cleanup controls.
 
-The primary checkout remains detached at #209. Its operational handoff points
-here, and its local abort report is preserved. Earlier operational notes were
-saved to `/private/tmp/fwp-primary-handoff-before-docs.md`; relevant source/run IDs
-are recorded here and in the abort report. Old publication/merge/pruning helpers
-under `/private/tmp` are source-specific; do not rerun them unchanged.
+The primary checkout remains detached at #209, with its local handoff pointing
+here and the abort report preserved. Do not use its older plan. Keep actual
+published source/run IDs there while final gates run without changing their head.
 
 ## Roadmap status
 

@@ -44,7 +44,8 @@ outside the checked contract.
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
 |---|---|---|---|
-| array.from-list; array.to-list | borrow input | counted output retaining typed elements | none |
+| array.from-list | consume list | move unshared prefix elements; retain shared-tail elements; copy inline wide bits | none |
+| array.to-list | borrow array | counted list retaining typed elements | none |
 | array.length | borrow array | scalar | none |
 | array.get | borrow index and array | owned Option retaining selected typed element | none |
 | array.set | borrow index/value, consume array | owned optional container; retains inserted value and copied aliases | none |
@@ -54,7 +55,7 @@ outside the checked contract.
 | array.map | borrow callback/array | counted container adopting owned callback results | argument0 borrows typed elements |
 | array.fold | borrow callback/array, consume accumulator | transfers owned accumulator/result | argument0 borrows elements |
 | array.slice | borrow arguments | numeric backing view or small copy; pointer/resource elements copy retaining typed aliases | none |
-| array.sort | borrow array | copied sorted storage retaining typed aliases | none |
+| array.sort | consume array | reuse unique owning storage; shared arrays/views copy; empty/singleton input transfers unchanged | none |
 | array.append | borrow both arrays | copied storage retaining typed aliases | none |
 
 Array destruction releases typed children before outer storage; views release

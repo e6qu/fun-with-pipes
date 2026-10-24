@@ -233,6 +233,28 @@ allocate or fail. Boxed I128/U128 keys keep ordinary construction. Aliased lists
 also keep their storage; the transformation requires an immediate range input.
 `FWP_MAP_BUILD=0` disables this transformation for controlled comparisons.
 
+## Moving list elements and sorting an owned array
+
+`array.from-list` consumes a list reference. An unshared prefix transfers its
+values into array slots and releases its nodes. Once a shared node is reached,
+the remaining tail stays owned until conversion finishes, and copied elements
+are retained. Descendants can have counts of one yet remain reachable through a
+shared ancestor; conversion must not resume moving within that tail. Inline
+128-bit elements copy their bits and release the old scalar boxes. Input and
+partially filled result owners handle interrupted allocation or retention.
+
+Array sorting consumes one array reference. If it is the only owner,
+sorting may reuse the storage; a shared array or view needs a copy so earlier
+values remain unchanged. Empty and singleton arrays transfer their reference.
+Input, result and temporary buffers have cleanup owners throughout the operation.
+
+For ordinary elements, sort keys hold their values. A 128-bit key points into its
+original array slot. Reusing that array therefore applies the sorted permutation
+in cycles, with one sixteen-byte temporary, rather than overwriting slots whose
+values have not moved yet. [The protocol](measurements/array-sort-ownership.md)
+records the prepared alias, bit-pattern, interruption and cost checks. Integrated
+production validation remains pending in [the handoff](development-state.md).
+
 ## Compile-time values in static storage
 
 A value produced by `comptime` is already known when C is generated. For example,

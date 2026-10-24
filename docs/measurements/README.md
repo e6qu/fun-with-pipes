@@ -69,6 +69,7 @@ These establish selected ownership, allocation, layout or cleanup properties. Co
 - [Memory between JSON API requests](http-application-memory.md)
 - [Cleaning up interrupted list copies](list-copy-cleanup.md)
 - [List and array sort storage](list-sort-storage.md)
+- [Moving list elements and reusing array storage](array-sort-ownership.md)
 - [C pointers without tracing collection](manual-pointers.md)
 - [Checking queued callbacks and handled errors](queued-callbacks.md)
 - [Checking callbacks that retain data queues](queued-data-channels.md)

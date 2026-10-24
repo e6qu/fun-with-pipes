@@ -6,6 +6,20 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Concrete roadmap and documentation overhaul (PR #211)
+
+The plan separates GC removal from ARC minimization into concrete implementation
+tasks and acceptance checks. Guides distinguish current behavior from proposals;
+benchmark protocols and historical results have separate, linked explanations.
+Tutorials correct stale platform and ownership claims. The link audit now ignores
+headings inside code examples. Compiler and runtime behavior are unchanged.
+
+The user merged `afebaac99f9b45235df369a6460f8e4c081ec5b3`, with the same tree
+as tested head `9f36f2f5ae4a1a2361a2c9ed8cb8bcc27a7680b3`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40139343820)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40139343796)
+passed. [PR #211](https://github.com/e6qu/fun-with-pipes/pull/211).
+
 ## Collection cleanup and interpreter shutdown (PR #210)
 
 Interrupted list copies and sorting release partial values and scratch storage.
