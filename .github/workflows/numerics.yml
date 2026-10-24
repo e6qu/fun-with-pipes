@@ -74,14 +74,29 @@ jobs:
         run: |
           lldb -b -o 'target create allocation-evidence/fwp' \
             -o 'image list -u libsystem_malloc.dylib' \
-            -o 'disassemble -n free' \
+            -o 'disassemble -n _free' \
+            -o 'disassemble -n find_zone_and_free' \
             -o 'disassemble -n malloc_report' \
             -o 'disassemble -n malloc_vreport' \
             > allocation-evidence/allocator-disassembly.txt 2>&1
       - name: Check ordinary allocation with visible errors
         run: python3 scripts/check-console-compiler.py --compiler allocation-evidence/fwp --rounds 1 --max-seconds 180 --allocator ordinary --output allocation-evidence/ordinary
-      - name: Check the same machine code with guarded allocations
-        run: python3 scripts/check-console-compiler.py --compiler allocation-evidence/fwp --rounds 1 --max-seconds 1200 --allocator guard --output allocation-evidence/guard
+      - name: Isolate stack reservation with and without Guard Malloc
+        run: |
+          clang -O1 -Wall -Wextra -Werror tests/fixtures/compiler_thread_stack.c -o allocation-evidence/stack-probe
+          allocation-evidence/stack-probe > allocation-evidence/stack-ordinary.txt
+          DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib allocation-evidence/stack-probe > allocation-evidence/stack-guard.txt 2>&1
+      - name: Inspect guarded compilation with an explicit diagnostic stack
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+          with Path('allocation-evidence/debugger.log').open('w') as log:
+              subprocess.run(['lldb', '-b', '-o', 'command script import scripts/compiler_allocator_probe.py',
+                              '-o', 'script compiler_allocator_probe.run(lldb.debugger)'],
+                             stdout=log, stderr=subprocess.STDOUT, timeout=180, check=True)
+          assert Path('allocation-evidence/debugger-guard/result.txt').read_text() == 'pass\n'
+          PY
       - name: Preserve memory state
         if: always()
         run: vm_stat > allocation-evidence/vm-after.txt
