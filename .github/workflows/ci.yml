@@ -98,6 +98,7 @@ jobs:
       - name: Language formatting preflight
         run: cargo run --bin fwp -- fmt --check lib examples docs/tutorials bench
       - name: Regular macOS test shard
+        if: ${{ !cancelled() }}
         run: python3 scripts/run-native-tests.py --idle-timeout 1800 --shard regular --logs "$RUNNER_TEMP/macos-regular-tests"
       - name: Publish individual regular test logs
         if: always()
@@ -106,8 +107,12 @@ jobs:
           name: macos-regular-tests-${{ matrix.runner }}
           path: ${{ runner.temp }}/macos-regular-tests/
           if-no-files-found: warn
-      - name: Python SDK and native disassembly
+      - name: Build compiler for Python SDK checks
+        id: sdk_compiler
         if: ${{ !cancelled() }}
+        run: cargo build --locked --bin fwp
+      - name: Python SDK and native disassembly
+        if: ${{ !cancelled() && steps.sdk_compiler.outcome == 'success' }}
         env:
           PYTHONPATH: sdk/python
           FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
@@ -347,6 +352,7 @@ jobs:
       - name: Language formatting preflight
         run: cargo run --bin fwp -- fmt --check lib examples docs/tutorials bench
       - name: test
+        if: ${{ !cancelled() }}
         env:
           FWP_REQUIRE_WASM_RESOURCE_COUNTS: "1"
           FWP_REQUIRE_WASI_COUNTS: "1"
@@ -363,8 +369,12 @@ jobs:
           name: native-test-logs-${{ matrix.runner }}
           path: ${{ runner.temp }}/linux-tests/
           if-no-files-found: ignore
-      - name: Python SDK and native disassembly
+      - name: Build compiler for Python SDK checks
+        id: sdk_compiler
         if: ${{ !cancelled() }}
+        run: cargo build --locked --bin fwp
+      - name: Python SDK and native disassembly
+        if: ${{ !cancelled() && steps.sdk_compiler.outcome == 'success' }}
         env:
           PYTHONPATH: sdk/python
           FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp

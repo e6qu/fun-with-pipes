@@ -45,7 +45,7 @@ fn console_input_matches_raw_interpretation() {
             r#"[env.get "FWP_ENV_COPY", env.get "FWP_ENV_EMPTY", env.get "FWP_ENV_ABSENT", env.get "FWP_ENV_COPY\0suffix"] | echo"#,
         ),
     ] {
-        let source = dir.join(&format!("{name}.fwp"));
+        let source = dir.join(format!("{name}.fwp"));
         eprintln!("console input {name}: main = {body}");
         std::fs::write(&source, format!("main = {body}\n")).unwrap();
         let all_cases = [bytes.as_slice(), b"", b"\n", b"last\r", b"a\0b\n"];
