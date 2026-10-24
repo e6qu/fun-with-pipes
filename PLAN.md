@@ -125,14 +125,16 @@ outside the benchmark suite.
    failed their screen and are rejected. Deliver the [list-copy cleanup](docs/measurements/list-copy-cleanup.md)
    and [sort buffer savings](docs/measurements/list-sort-storage.md), then select
    the next measured cost; fewer allocations alone do not prove faster execution.
-   [Array-sort ownership](docs/measurements/array-sort-ownership.md) passes six-host
-   focused checks and both Linux cost comparisons: one fewer copy and no per-element
-   retains for unshared sorts. Deliver it with the recorded alias/failure controls
-   and code/stack costs; full final-head acceptance is still required.
+   [List moves and array-sort ownership](docs/measurements/array-sort-ownership.md)
+   pass six-host focused checks and both Linux cost comparisons. Deliver these
+   together: move unshared list elements into arrays and reuse unshared sort storage,
+   preserving shared tails and wide values. The measured word example has no
+   retains; it still allocates and checks ownership. Keep the recorded cleanup
+   controls and code/stack costs; full final-head acceptance remains required.
    The [explicit ARC baseline](docs/measurements/arc-comparison.md) compares seven
    complete programs with C/Rust and measures process and managed memory separately.
-   Focused measurements support reducing map peak storage by releasing sort scratch
-   sooner; final delivery remains tracked in the handoff. The
+   [PR #209](docs/roadmap-history.md#map-peak-storage-and-explicit-benchmarks-pr-209)
+   delivered lower map peak storage by releasing sort scratch sooner. The
    [checked-arithmetic experiment](docs/measurements/checked-bounds-results.md) fails
    its full performance screen, so no compiler rule is adopted. Use these baselines
    to set equivalent-work budgets for the remaining costs. Keep historical tracing

@@ -5,113 +5,91 @@ reserve ARC for necessary sharing and remove tracing. JIT is excluded.
 
 ## Current action
 
-**Next:** diagnose and repair PR #210's Intel macOS compiler abort, audit every
-remaining job, and repeat acceptance for the repaired head. Then
-squash-merge only after acceptance. Publish the prepared array-sort group as the
-next substantial PR; keep one active PR. Use a one-line subject of at most eighty
-characters, an empty body and no trailers. Continue the plan after verified merges.
+**Next:** resolve PR #210's Intel macOS compiler abort. Finish the pending
+instrumented diagnostics, preserve any failing input, and repair the cause before
+repeating final-head acceptance. Checkpoint the prepared array group’s completed binary reviews and readable
+results for its next delivery. Keep one active PR. Squash-merge only after
+acceptance, with one subject line of at most eighty characters and no body/trailers.
 
-[PR #210](https://github.com/e6qu/fun-with-pipes/pull/210) is unchanged at
+## Active PR #210
+
+[PR #210](https://github.com/e6qu/fun-with-pipes/pull/210) remains at
 `281b54d9193b432bb808b4387cc0a4dad34dacba`. Checkout
 `/private/tmp/fwp-checked-peer-comparison`, branch `list-copy-delivery`, is clean.
-Production run `40091968517`; docs `40091968459`. Eight gates pass; Windows AMD64
-is finishing. Intel macOS GC job `120866324330` failed only
-`console_input_matches_raw_interpretation`: the compiler aborted during type
-inference, before C generation. The native crash report shows `malloc_report`
-under `TypeTable::open_call`; its cause is unresolved. Keep the crash/report ZIPs
-and extracted logs in `/private/tmp/fwp-list-copy-console-failure`. Do not treat
-a successful retry as a repair. Focused diagnostic source
-`359f680d147bb931dcffd6a91d7ded541efd5993` is running in `40100186269`: production
-Rust 1.99.1, allocator heap checks, and nightly AddressSanitizer. The active PR
-is unchanged. A bounded eighteen-input driver check and a stop-on-failure control
-passed locally; native diagnostics run only on GitHub. Audit all completed logs before a repair push.
+It fixes interrupted list copies, removes redundant sort buffers, aligns benchmark
+peer arithmetic and repairs Windows test coverage.
 
-The PR fixes interrupted list copies, removes redundant sort buffers, aligns
-benchmark peer arithmetic, fixes Windows test coverage and records rejected sort
-experiments. Its preparation evidence is in the checkout's measurement reports.
+Production `40091968517` and docs `40091968459` are complete: nine of ten gates
+pass. Every completed job log was audited. Intel macOS GC job `120866324330` fails
+only `console_input_matches_raw_interpretation`. The compiler aborts during type
+inference, before C generation. Its crash report shows `malloc_report` beneath
+`TypeTable::open_call`; the cause is unresolved. Crash ZIPs, digests and extracted
+logs are in `/private/tmp/fwp-list-copy-console-failure`. Never count a passing
+retry as a repair or discard this evidence.
 
-## Final-head reviews for #210
+Diagnostic source `359f680d147bb931dcffd6a91d7ded541efd5993`, branch
+`console-inference-diagnostic`, run `40100186269`, repeats named inputs with Rust
+1.99.1, allocator heap checks and nightly AddressSanitizer. The production console
+test and all 360 heap-check compilations pass; inspected allocator logs are empty.
+The 3,600-call production and sanitizer loops are still active. Their artifacts
+and review receipts use `/private/tmp/fwp-console-diagnostic-evidence`.
+`fwp-review-console-diagnostics.py` safely visits newly completed jobs. The bounded
+local driver check passed eighteen compilations and a stop-on-first-failure control.
 
-All macOS ARM64 phases pass, including 1,161 ownership images, 168 array outcomes,
-24 layout comparisons and 24 list-copy binaries. Its duplicate ZIP copies are
-pruned after matching remote digests. The benchmark review passes 62 executables,
-five corruption controls and seven leak controls. Other host reviews are UNRUN.
+Final-head independent reviews for #210 are complete only for macOS ARM64 and the
+benchmark job. Other hosts are UNRUN. Helpers/receipts use `fwp-list-copy-delivery`.
+The audit helper is repeatable. Publication and completed reviews must not be
+rerun; merge/after-merge helpers are UNRUN and require all ten gates plus the full
+binary review. A repair needs new source-specific acceptance, preserving old results.
 
-Helpers/receipts under `/private/tmp` use `fwp-list-copy-delivery`.
-Publication/discovery and benchmark download/review are COMPLETE; never rerun.
-Repeat `fwp-audit-list-copy-delivery-final.py` for the exact-head gate/log audit.
-Strict merge/after-merge helpers are prepared, UNRUN, and require all ten gates
-plus 8,798 actual binary files. They preserve the tested tree and verify the
-one-line squash message. The after-merge helper cancels duplicate same-tree CI.
-
-Use `fwp-review-list-copy-delivery-host.py --host HOST --phase PHASE` serially.
-Hosts: ubuntu-latest, ubuntu-24.04-arm, macos-15-intel, windows-2025, windows-11-arm.
-Phases: download, ownership, arrays, floats, Linux-only controls, files, services,
-maps, lists, prune. List inspection uses macOS GC artifacts; other hosts use their
-normal artifacts. Pruning requires every review. File inspection allows exactly
-the known source changes and publication hashes; repair stale assumptions without
-weakening source/count checks. The adapted tools already pass on macOS ARM64.
-
-## Prepared next delivery: array sorting
+## Prepared next group: array sorting and construction
 
 Checkout `/private/tmp/fwp-array-sort-ownership`, branch `array-sort-ownership`,
-started from #210's head. It consumes the sort input, reuses unique arrays and
-copies shared arrays/views. A cycle permutation protects 128-bit values from
-being overwritten before they move. Input, result and scratch cleanup cover
-failure/cancellation. No surface syntax changes. Full delivery is still pending.
+is clean at `e0c4dd51bae37c0e09be10fcb373dd035279f815`. No second PR is open.
+Sorting reuses unique arrays and preserves shared arrays/views; permutation cycles
+protect inline 128-bit values. List conversion now moves an unshared prefix and
+copies the shared tail. Both changes protect cleanup through failure/cancellation.
+No surface syntax changes.
 
-Focused source `e78069765ac5798f71d7e11d216bcb71d6850d21` passes all six jobs in
-`40095196564`, with clean logs and independent review of 252 executables,
-72 repeated observations and 144 deliberately broken controls. Each observation
-checks 540 alias/bit-pattern cases and 232–272 interrupted operations.
+All six focused jobs in `40100508025` and both Linux cost jobs in `40100509770`
+pass with clean logs. All six independent native reviews are complete: 504 executable variants. Each host
+has 84 sort/construction executables, 24 repeated observations and 48 deliberately
+broken controls. Each construction observation checks 208 alias/bit-pattern cases
+and 88 interrupted operations.
 
-Follow-up `d763c34c824fc8aaf7d4e76aba9ae29cbf950d9e` adds production inspection and
-cost measurements, with unchanged compiler/runtime/library/tests. Both Linux jobs
-in `40096410788` and independent reviews pass: 112 executables plus eight ordinary
-wide-sort objects. At 4,096 words both architectures/O1/O2 save one allocation,
-32,776 requested bytes and 4,096 retains. Peak is unchanged; final charge is zero.
-Code/stack costs and slower C/Rust rows remain in the report. No timing gain claim.
+Both cost reviews pass: 128 executables and eight wide-sort objects in total.
+At 4,096 words, moving list elements removes the remaining 4,096 retains; requests,
+requested bytes and peak are unchanged, final charge and collections are zero.
+This is not zero allocation or proof of zero ARC overhead. Instruction bytes grow
+by 176–336 on ARM64 and 224–272 on AMD64; the ARM64 O1 entry frame grows 16 bytes.
+The readable measurement report now records these costs and slower C/Rust rows.
+Current native/cost JSON uses `array-construction-*-2026-10-24.json`; earlier
+sort-only records remain linked. `fwp-record-array-construction.py` is COMPLETE.
 
-Readable results and raw JSON are in `docs/measurements/array-sort-ownership.md`,
-`array-sort-native-2026-10-24.json` and `array-sort-costs-2026-10-24.json` in that
-checkout, checkpointed and published as `07a565fb6287213b194f468ab9aeaea3e6a5b84f`.
-The checkout now also holds an UNPUBLISHED, UNVERIFIED list-to-array move
-prototype. It transfers only the unshared prefix, preserves shared tails, and
-adds String/F128 failure/cancellation and cost checks. Preserve these dirty files
-while repairing #210. Focused publication is next after formatting, inventory, workflow and documentation
-checks. It needs compilation, six-host checks, measurements and
-binary review before acceptance. No second PR is open.
+Helpers/receipts use `fwp-array-construction`. Publication is COMPLETE. Audit
+helpers are repeatable. All six host download/review/prune phases are COMPLETE; never repeat them.
+The verified compiler is `/private/tmp/fwp-verified-array-construction-compiler/fwp`. Reviews retain source hashes and compare actual binaries with CI reports.
+Cost download/review helpers are COMPLETE for both Linux hosts. Full delivery
+acceptance remains pending, after #210 is repaired and merged.
 
-Helpers/receipts use `fwp-array-sort-preparation`, `fwp-array-sort-measurement`
-and `fwp-array-sort-costs`. All publication, download and independent review work
-is COMPLETE. Both `fwp-record-array-sort-native.py` and
-`fwp-record-array-sort-costs.py` are COMPLETE; never rerun over edited reports.
-`fwp-prune-array-sort-preparation.py` is COMPLETE: matching GitHub originals and
-all reports remain; six duplicate ZIPs are removed. The verified ARM64 compiler
-is `/private/tmp/fwp-verified-array-sort-compiler/fwp`, with its source/digest receipt.
-Cost archives remain. Audit helpers are repeatable; completed reviews are not.
+Bounded checks pass: Rust formatting, Python syntax, frozen inventory (392
+primitive declarations, 382 symbols, zero unclassified), 19 native-runner controls,
+workflow actionlint and 127 documentation link sets. Full builds/tests run on GitHub.
 
-Bounded checks pass: frozen inventory (392 declarations, 382 symbols, zero
-unclassified), Rust formatting, Python syntax, 19 native-runner controls,
-workflow actionlint and 127 documentation link sets. The inventory's first check
-caught an overbroad exception-list edit; correcting it passed. Full builds/tests
-ran only on GitHub. New report links still need the final documentation check.
+## Resources and accepted baseline
 
-## Resources and last accepted delivery
+Use `python3 scripts/local-guard.py COMMAND...` serially. Preserve 64 GiB free,
+target data below 2 GiB, sampled workload RSS below 1 GiB and the 180-second limit.
+Free space is near 64.5 GiB; download/review/prune one host at a time. Preserve
+failed evidence, reports, actual layout objects and dirty older checkouts.
+`fwp-prune-reviewed-list-copy.py` is COMPLETE: six matching remote originals and
+the retained compiler were verified before removing 144,736,394 duplicate ZIP bytes.
+Never rerun completed archive pruning, APFS clone or publication helpers.
 
-Use `python3 scripts/local-guard.py COMMAND...` serially. Keep 64 GiB free, target
-below 2 GiB, sampled workload RSS below 1 GiB and the 180-second deadline; never
-raise or bypass limits. Full suites, builds and benchmarks run on GitHub.
-About 66 GiB is free after verified duplicate pruning. Earlier APFS clones
-preserved identical files; receipts are `fwp-evidence-clones-oct24.json` and
-`fwp-checkout-clones-oct24-verified.json`. Keep unique failed evidence, reports,
-layout images and dirty old checkouts. Never rerun completed clone passes.
-
-#209 passed all ten gates and 8,627 binary reviews, then merged with the tested
-tree as `2520d136b7036ab878cac0ef48947b581c81b84a`. Its merge/after-merge helpers
-are COMPLETE, and duplicate main run `40091501837` was cancelled. The primary
-checkout is detached there with only this operational handoff dirty. Preserve it.
-[History](roadmap-history.md) contains the detailed evidence.
+#209 passed all ten gates and its binary reviews, then merged with the tested tree
+as `2520d136b7036ab878cac0ef48947b581c81b84a`; duplicate main CI was cancelled.
+The primary checkout is detached there with only this operational handoff dirty.
+Preserve it. [History](roadmap-history.md) records accepted deliveries.
 
 ## Roadmap status
 

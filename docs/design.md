@@ -292,7 +292,15 @@ also keep their storage; the transformation requires an immediate range input.
 `FWP_MAP_BUILD=0` disables this transformation for controlled comparisons.
 [PR #173](roadmap-history.md#direct-integer-range-sets-pr-173) records acceptance.
 
-## Sorting an owned array
+## Moving list elements and sorting an owned array
+
+`array.from-list` consumes a list reference. An unshared prefix transfers its
+values into array slots and releases its nodes. Once a shared node is reached,
+the remaining tail stays owned until conversion finishes, and copied elements
+are retained. Descendants can have counts of one yet remain reachable through a
+shared ancestor; conversion must not resume moving within that tail. Inline
+128-bit elements copy their bits and release the old scalar boxes. Input and
+partially filled result owners handle interrupted allocation or retention.
 
 The array-sort preparation consumes one array reference. If it is the only owner,
 sorting may reuse the storage; a shared array or view needs a copy so earlier
