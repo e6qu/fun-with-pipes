@@ -62,3 +62,6 @@ and stores sources, binaries, correctness observations and raw samples.
 [`inspect-map-order.py`](../../scripts/inspect-map-order.py) checks exact source
 edits, actual executable architectures, observations and recomputed screens.
 No new result or optimization is accepted yet.
+
+[Results](map-order-results.md): both candidates fail the full screen on both
+native Linux hosts. No sorting shortcut was adopted.

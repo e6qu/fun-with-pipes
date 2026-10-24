@@ -247,6 +247,9 @@ static void scalar_key_caps(V f, int duplicate) { (void)f; (void)duplicate; }
 static const fwp_owned_fninfo scalar_owned = {scalar_key_entry, scalar_key_caps, scalar_key_args};
 static const fwp_fninfo scalar_fns[] = {{1, scalar_key_entry, "scalar key", &scalar_owned}};
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
     fwp_gc_start(__builtin_frame_address(0));
     fwp_fns = scalar_fns;
     V bits = fwp_rc_fresh(fwp_cstr("numeric bits"));

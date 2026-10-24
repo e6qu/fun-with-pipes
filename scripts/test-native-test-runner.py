@@ -55,8 +55,13 @@ class Coverage(unittest.TestCase):
         unix, windows = [selection.split() for selection in selections]
         self.assertEqual(unix, windows)
         self.assertEqual(len(unix), len(set(unix)), "duplicate focused target")
+        list_job = re.search(r"^  list_copy:\n(.*?)(?=^  \w+:\n|\Z)",
+                             workflow, re.M | re.S).group(1)
+        list_targets = set(re.findall(r"--test ([a-zA-Z0-9_]+)(?=\s|$)", list_job))
+        self.assertTrue({"list_copy_ownership", "list_order_ownership",
+                         "sort_callback_ownership"} <= list_targets)
         schedule = SHARDS.assignment(SHARDS.SCHEDULE)
-        for target in unix:
+        for target in set(unix) | list_targets:
             self.assertEqual(sum(target in names for names in schedule.values()), 1,
                              f"missing or duplicated macOS assignment: {target}")
 
@@ -82,7 +87,7 @@ class Coverage(unittest.TestCase):
         # Linux's /proc/strace suite does not establish Windows execution.
         # Windows uses its own native storage checks, not a skipped Linux test.
         required = {"windows_static_memory" if target == "static_memory" else target
-                    for target in unix}
+                    for target in unix} | list_targets
         self.assertFalse(required - selected,
                          f"focused targets absent from Windows production: {sorted(required - selected)}")
 

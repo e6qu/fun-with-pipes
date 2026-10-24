@@ -112,7 +112,7 @@ jobs:
             'cpu_kernel_ownership', 'numerics', 'metrics_ownership', 'ternary_ownership', 'udp_ownership',
             'dns_ownership', 'vector_ownership', 'range_array', 'range_set', 'hash_ownership',
             'mapped_array_construction', 'zip_map_fusion', 'unzip_cleanup', 'list_construction_cleanup', 'list_generation_ownership',
-            'list_structure_ownership', 'state_sequence_ownership', 'map_unwind_ownership', 'map_set_ownership', 'collection_construction',
+            'list_structure_ownership', 'list_copy_ownership', 'list_order_ownership', 'sort_callback_ownership', 'state_sequence_ownership', 'map_unwind_ownership', 'map_set_ownership', 'collection_construction',
             'cached_map_borrows', 'caf_ownership', 'inline_caf_ownership', 'selection_unwind_ownership', 'zip_unwind_ownership',
             'windows_runtime', 'windows_static_memory', 'loop_unwind_ownership', 'path_validation', 'io_error_ownership',
             'system_snapshots', 'file_values', 'text_file_tools', 'text_transform_ownership', 'file_construction_ownership',

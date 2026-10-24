@@ -50,5 +50,17 @@ The local runtime-only reproduction passes on macOS ARM64 Clang O1: handled
 failures and success end at zero managed charge; omitting key release leaks
 16, 32 or 48 bytes. It uses saved #206 emitted C with the current runtime and new
 call applied explicitly. It does **not** validate current Rust code generation,
-GCC or other hosts. The `list-copy` focused workflow runs current source at
-production compiler settings on six native hosts; acceptance is pending.
+GCC or other hosts. The `list-copy` focused run `40088243982` tests source `883f1c140089` at
+production settings. Linux and macOS pass on both architectures. Both Windows
+jobs pass the new cleanup tests but expose a scalar-key probe that expected LF
+while writing through Windows text mode. It now selects binary stdout, matching
+the generated program convention. All three list targets are added to Windows
+production coverage. Their repair runs and full delivery remain pending.
+
+The separate `list-copy-costs` measurement uses 0, 1, 32 and 4,096 input words
+through `read-all | words | sort | length` and the analogous array conversion.
+It compares the repair with extra separate scratch lanes restored, keeping the
+new cleanup in both. Counts include parsing, result construction and output;
+ordinary and instrumented binaries are separate, each at O1/O2. Three fresh
+processes must agree on counts and finish with zero managed charge. No timing
+measurement is inferred from these instrumented runs. Results are pending.

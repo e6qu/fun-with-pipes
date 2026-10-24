@@ -2381,3 +2381,6 @@ optimization. [All repeat samples and profiles](measurements/cached-map-repeat-2
 are retained. Joined borrowing is faster in both modes on all five samples;
 separate-layout borrowing remains slower on both Xeon tracing samples (4.83%
 and 3.65%) and EPYC 9V74 tracing/ARC (8.29% and 4.65%).
+
+The [ordered-sort experiment](measurements/map-order-results.md) retains both
+failed screens and their raw samples. Neither shortcut was adopted.
