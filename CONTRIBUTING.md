@@ -11,7 +11,7 @@ separate measurable goals from promises the compiler cannot make.
 Before work, read [the plan](PLAN.md) and [session handoff](docs/development-state.md)
 to avoid repeating completed tasks. The handoff records actual checks, unresolved
 failures and one next action. [Delivery history](docs/roadmap-history.md) preserves
-accepted evidence; [preparation commits](docs/roadmap-queue.md) are historical
+accepted evidence; [preparation commits](docs/preparation-records.md) are historical
 identities, not a backlog to execute again.
 
 ## Setting up
@@ -47,178 +47,110 @@ Use the bounded guard below for focused local checks.
 
 ## Before you open a pull request
 
-Run focused checks locally through `python3 scripts/local-guard.py COMMAND...`,
-serially and at low priority, with sampled resource monitoring. Stop at 1 GiB aggregate RSS, 2 GiB generated target
-data, less than 64 GiB free disk or a 180-second workload deadline.
-Full builds, full test gates, large evidence regeneration and benchmarks
-belong on GitHub runners. A local refusal moves that work to CI; do not
-raise limits to complete it. See [AGENTS.md](AGENTS.md) for session rules.
+Use `python3 scripts/local-guard.py COMMAND...` for serial, focused local checks.
+Its fixed limits are 1 GiB sampled aggregate RSS, 2 GiB generated target data,
+64 GiB free disk and 180 seconds. If refused, move the workload to GitHub.
+Full builds, suites, benchmarks and large regeneration belong on runners.
 
-Running saved generated C checks that executable. It does not compile or lint
-the Rust test that generates it, check its imports, or prove CI saves its artifacts.
-Review the test wiring before publication; require focused CI to compile and lint
-the affected targets and verify their collected artifacts.
+Run `python3 scripts/local-guard.py python3 scripts/check-roadmap.py` for Markdown
+links, plan/handoff agreement and preparation identities. A clean clone needs
+full history and the immutable `roadmap/preparation-*` tags, fetched without
+force. Referenced pre-amend revisions need remote retention tags; local objects
+alone do not make a fresh clone reproducible. This audit checks commit messages
+and ancestry, not whether a linked CI job passed.
 
-Audit the handoff and tracked Markdown links with
-`python3 scripts/local-guard.py python3 scripts/check-roadmap.py`. A clean clone
-needs full history and the immutable `roadmap/preparation-*` tags; fetch them
-without force before checking. The audit verifies tag identity, ancestry, queue
-order and whole commit messages. It also checks that plan and handoff step numbers agree and statuses use the
-defined values. It does not establish that a recorded CI run passed; verify that
-run separately against the actual commit being merged.
-CI checks the actual PR head and fetches review
-heads so merged preparation references remain available.
-Retain any pre-amend revision referenced by a frozen documentation snapshot
-under a remote revision tag before publication. A local object alone does not
-prove that a fresh CI clone can resolve the recorded head.
+CI requires these checks with the supported tools installed:
 
-During a combined delivery, draft PRs use explicitly dispatched focused checks.
-Marking the PR ready runs the complete production matrix; every final-head
-production job must pass before merge. Draft skips are never acceptance gates. Production jobs and the task-storage/WebAssembly focused suites cache Cargo's
-registry by lockfile and host, fetch the locked dependencies first, then build
-and test with Cargo offline. This prevents later compiler invocations from
-refreshing the registry. A failed initial fetch remains a failed job; no alternate
-registry or dependency version is selected. Network behavior inside fwp tests is
-unchanged.
-
-For an early native probe in `numerics.yml`, `native_runner` selects one runner
-instead of the suite's native matrix. In `kernels` and `queued-sockets`, a named
-runner also omits the two WebAssembly jobs; `native_runner=all` runs those jobs
-alongside all six native hosts. This lets a CPU-only test repair run promptly.
-Use `all` for complete focused evidence; report collectors still require every
-expected host. Production acceptance continues to require its full matrix,
-including both Linux WebAssembly suites.
-The task/channel proof and WebAssembly jobs use production's Rust O1 compiler/test
-profile with debug assertions and overflow checks enabled. Generated C still uses
-the explicit O0/O1/O2 settings requested by each test. The native ownership batch
-publishes its complete log before the longer transport tests; those tests still
-run after a batch failure, so audit their results before publishing a repair.
-For the `server-entries` suite, `server_entry_part=all` runs five parts on
-each selected host. An explicit `checks` selection runs two jobs: entry/codec
-checks and the larger REST API checks. Splitting them keeps the existing
-25-minute limit without dropping tests. `api` runs only that API job. Neither
-selection repeats unchanged memory measurements. Retain their original source
-and verify that compiler/runtime/library and measurement behavior still match;
-this selector does not reduce the required production matrix.
-A `server-recheck` requires the full 40-character `source_revision`. It runs both
-functional parts from that exact checkout and records it separately from the
-workflow revision. Use it to repair a focused job's scheduling while preserving
-a healthy production head. Audit both replacement jobs; a cancelled original
-job is not a pass. All nine production jobs and docs still require the actual
-PR head.
-
-Windows dependency setup uses an exact cache key for each architecture and setup
-script. The [dependency-only workflow](.github/workflows/windows-dependencies.yml)
-builds and validates these dependencies on `main` after setup changes merge, so
-later branches can reuse them. It also supports manual dispatch after cache
-eviction. GitHub permits reuse from the default branch, but not between sibling
-branches; see its [cache access rules](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching#restrictions-for-accessing-a-cache).
-This workflow does not run compiler tests and is not a production acceptance
-gate. Keep it running when cancelling duplicate postmerge production CI.
-Native test jobs still validate restored libraries and their architecture.
-
-CI runs these, and all of them must pass:
-
-```
+```sh
 cargo fmt --all -- --check
 cargo clippy --all-targets -- -D warnings
 cargo clippy --target wasm32-wasip1 -- -D warnings
 cargo test --all-targets
 ```
 
-A separate CI job runs the C/Rust comparison
-(`CC=gcc FWP_LTO=0 FWP_BENCH_OWNERSHIP=arc cargo test --release --test bench benchmarks -- --ignored --exact --nocapture`). It
-reports times without failing on them, but it does fail when fwp, C and
-Rust print different results.
+Production builds the compiler/test harness at Rust O1, with debug assertions and
+overflow checks enabled. Tests still select their explicit generated-C levels.
+Use the same production compilers for focused probes: Clang success does not
+verify GCC behavior. Running saved generated C also does not compile/lint the
+Rust test that produces it or verify artifact export.
 
-All nine exact-head production jobs and the roadmap documentation audit are
-required before merging: Linux ARM64/AMD64, bench, regular macOS arm64/x86-64 and separate
-GC stress jobs on both macOS architectures, plus native Windows ARM64/AMD64.
-The supported platform matrix is Linux, macOS and Windows on ARM64 and AMD64,
-with separate binaries. The reusable Windows workflow runs both native Windows
-architectures. Preserve the complete matrix for each accepted revision; see
-[the platform matrix](PLAN.md#platform-objective-and-current-evidence).
-Linux builds every Cargo test target once, then runs two test executables at a
-time with one harness thread each. All Linux stress tests remain enabled. Each
-executable has an uploaded log, and any failure fails the job. The explicit
-`--idle-timeout 1800` limit allows 30 minutes without a completed test case.
-Completed cases renew the deadline; arbitrary output does not. A large target
-can keep making progress without being cut off by its total duration. A timeout
-kills its process group, records failure and lets the remaining targets run; it never counts as a
-pass or a skip. The runner checks
-that Cargo produced every requested executable before starting tests. This
-scheduling change passed PR #154's complete acceptance matrix; that establishes
-coverage, not a measured speedup.
+All **nine production jobs and documentation** must pass for the exact final head:
 
-Focused runner checks can select integration targets explicitly, for example:
+| Jobs | Coverage |
+|---|---|
+| Linux AMD64 and ARM64 | Native suite, stress checks and the declared WebAssembly tests |
+| macOS AMD64 and ARM64, regular and GC jobs | Four jobs whose explicit test assignments together cover each architecture |
+| Windows AMD64 and ARM64 | Two native jobs, including library/TLS/packaging checks |
+| C/Rust benchmarks | Equivalent-output checks, paired arithmetic controls and retained measurements |
+| Documentation audit | Links, immutable records, tutorial copies and test-runner/evidence controls |
+
+A skip, cancelled job, emulated execution or draft-PR skip is not a passing gate.
+Draft PRs use dispatched focused checks; marking ready starts the full matrix.
+Before a repair push, audit every failed job and completed target, then batch all
+known fixes. Preserve a passing final head while its remaining gates run.
+
+### Focused runner checks
+
+`Numerical and ownership evidence` in `.github/workflows/numerics.yml` exposes
+named suites; use that workflow's inputs and the relevant measurement protocol.
+A selected `native_runner` runs one host. `native_runner=all` provides the full
+six-host native matrix; for `kernels` and `queued-sockets` it also includes their
+two WebAssembly jobs. Partial runs supplement, never replace, complete evidence.
+
+For `server-entries`, `server_entry_part=all` runs five parts per selected host.
+`checks` runs both functional jobs (entry/codec and REST API); `api` runs the API
+job alone. Unchanged measurements retain their original source IDs and must be
+checked for applicable source equivalence. `server-recheck` requires a full
+`source_revision`: record that tested checkout separately from workflow source.
+
+Run explicit integration targets on a runner with:
 
 ```sh
 python scripts/run-native-tests.py --targets aot std_tests --idle-timeout 600 --logs command-tests
 ```
 
-This runs every test in the named targets and still audits the complete target
-inventory. Unknown or repeated names fail before compilation. The command checks
-use this ten-minute no-progress limit on all six hosts. On Windows, a timeout
-terminates the test process tree, including launched native programs; Unix uses
-its process group. Synthetic stuck-child controls verify termination and continued
-execution of the other targets. Focused checks supplement the full merge gates.
+The runner audits the Cargo target inventory and rejects unknown/repeated names.
+Production Linux runs two executables at a time with one harness thread each;
+macOS/Windows use their declared assignments. The production idle timeout is
+1,800 seconds. Only completed test cases renew it. A timeout kills the process
+group/tree, records failure and lets remaining targets run. Synthetic stuck-child
+controls check that behavior. Keep every test's log and artifacts, including
+partial results on failure; a completed test step cannot turn a cancelled job
+into a pass.
 
-For each macOS architecture, the two jobs use the explicit integration-target
-lists in `scripts/macos-test-shards.json`, read by `scripts/run-native-tests.py`.
-The native-runner control tests also require each focused ownership target in
-production macOS and Windows coverage. Linux static-memory tests use `/proc` and
-`strace`; Windows has its own `windows_static_memory` target. A skipped Linux
-test does not establish Windows support.
-List order is execution priority: long targets start early so one worker is less
-likely to wait for the other's final target. The ordering comes from recorded
-CI target times; [the scheduling estimate](docs/measurements/ci-scheduling-2026-10-18.json)
-is a simulation using those times, not a measured speedup for the new order.
-New targets must be assigned deliberately; adding one must not move unrelated
-tests between jobs. Remove obsolete entries when deleting targets. The runner
-rejects missing, duplicate, obsolete or unknown targets. Unit, example and
-benchmark targets run in regular; the GC job also runs its separate stress suite.
-Both ordinary shards skip `golden_programs_under_gc_stress` so that dedicated
-stress invocation runs exactly once. Each shard builds its selected test
-executables once, verifies Cargo produced every requested target, then runs two
-executables concurrently with one harness thread each. Tests keep their existing
-internal workers. Every executable gets a separate uploaded log; any failed test
-fails the job after the remaining targets run. This avoids leaving the runner
-idle between the many single-test executables. Target assignments stay fixed.
-macOS and Windows production jobs allow 150 minutes for tests, compiler builds
-and artifact cleanup. This scheduling limit neither makes tests faster nor
-relaxes assertions or local resource limits. Every delivery still requires its
-own complete passing matrix; a cancelled job is not a passing gate, even if its
-test steps finished.
+Production/focused jobs fetch locked Cargo dependencies first, then compile/test
+offline. A fetch failure is a failed job. Windows caches use exact architecture
+and setup-script keys. The dependency-only workflow populates main's caches after
+setup changes; keep it running when cancelling duplicate postmerge CI. Restored
+libraries still require architecture and execution checks. It is not a compiler
+acceptance gate.
 
-The documentation job verifies the real Cargo target set, artifact coverage,
-assignment stability, concurrent execution and failure propagation. The stress
-queue starts its two longest measured programs first; [the observed timings](docs/measurements/gc-stress-scheduling-2026-10-16.json)
-explain that ordering without claiming a measured total-CI speedup.
-[Recorded timings](docs/measurements/macos-shards-2026-10-16.json) explain the
-initial balance, including the GC job's separate workload; estimates are not
-passing gates or promises about future runner speed.
-Optional-tool skips are not platform coverage. Some older memory suites
-still require Linux `/proc` or `strace`; Darwin-specific regressions in
-`tests/macos.rs` assert that collection is armed and really runs, rather
-than accepting a stress variable with collection disabled.
+### Contract and evidence checks
 
-Production CI builds the Rust compiler and test harnesses at optimization level 1
-with debug assertions and overflow checks explicitly enabled. The measured selected tests run faster with this setting, while initial builds
-take longer; see the [profile comparison](docs/measurements/ci-compiler-profiles-2026-10-16.json).
-PR #152 passed the complete matrix within existing limits. This setting does not
-change test cases, generated-C flags, stress settings or local Cargo defaults,
-and does not guarantee the duration of future runs. [Cargo's profile settings](https://doc.rust-lang.org/cargo/reference/profiles.html)
-define these independent switches.
+Before changing primitive contracts, run this on a runner or through the local
+guard if it fits:
 
-CI runs a primitive inventory at the exact source commit
-before the regular Linux and ARM/Intel macOS gates. Its standalone Rust reader
-uses the actual ownership module; the Python audit compares declarations with
-the immutable `tests/fixtures/primitive-inventory-baseline.json` baseline and
-preserves observed rows on failure.
-Run it through the local guard when its limits permit, or on GitHub:
-`python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /tmp/fwp-inventory.json`.
-Inventory agreement
-does not substitute for runtime alias/unwind controls or full CI.
+```sh
+python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /tmp/fwp-inventory.json
+```
+
+The reader uses the actual ownership module. The audit compares declarations,
+symbols and aliases with the frozen baseline and preserves failed observations.
+It does not replace alias, failure, cancellation and runtime cleanup tests.
+New test targets also need the native shard-coverage check; do not omit them
+from a platform to shorten its gate.
+
+For memory/representation changes, keep actual C/binaries, source/toolchain IDs,
+complete measurements and independent review. Deliberately broken controls must
+fail their intended observer. Preserve stress/verification/reuse coverage until
+[ownership replacements](PLAN.md#1-remove-tracing-gc) detect the same defects.
+Optional-tool skips do not establish platform support.
+
+The separate benchmark job runs
+`CC=gcc FWP_LTO=0 FWP_BENCH_OWNERSHIP=arc cargo test --release --test bench benchmarks -- --ignored --exact --nocapture`.
+It fails on different program results, but currently reports rather than gates
+on timing. [The benchmark guide](docs/benchmarks.md) defines what each comparison
+includes; [B1–B2](PLAN.md#7-reproducible-comparisons) define the remaining budgets.
 
 ## Rules the code follows
 
@@ -254,11 +186,11 @@ can infer the suffix when launching a program; symbol readers and file APIs cann
   HTTP/2, gzip, protobuf, JSON and YAML are implemented here.
   The C runtime uses the C library, pthreads,
   OpenSSL for TLS.
-- **The interpreter is the reference.** Every feature works in both
-  engines, the interpreter (`src/interp.rs`) and the C backend
-  (`src/cgen.rs`, `runtime/*.c`), and the two agree byte for byte on
-  stdout, stderr and the exit code. A change to one engine comes with the
-  same change to the other. Optimizer changes also need an unoptimized
+- **Compare the execution engines.** For shared language features, compare
+  the interpreter (`src/interp.rs`) and generated C (`src/cgen.rs`,
+  `runtime/*.c`): stdout, stderr, exit status and cleanup must agree.
+  Host interfaces and debugger execution have documented capability limits;
+  do not claim that every interface exists in both engines. Optimizer changes also need an unoptimized
   reference: `FWP_NO_OPT=1 fwp run --interp program.fwp`, or interpretation
   of the original typed IR before the pass. Ordinary `--interp` also uses
   the optimizer, so agreement between optimized engines alone can miss

@@ -38,8 +38,8 @@ ordinary and counter-instrumented executables separately at O1 and O2, with
 and no link-time optimization (LTO). Three fresh
 instrumented processes per input/version/optimization must report identical
 counts. Independent review checked all 32 sort executables, source changes,
-machine instructions, stack reports and observations. Final production acceptance
-is separate from these focused results.
+machine instructions, stack reports and observations. [PR #210](../roadmap-history.md#collection-cleanup-and-interpreter-shutdown-pr-210) records the later passing final CI and user merge;
+independent final-head binary review was not completed before that merge.
 
 ## Allocation and live storage
 

@@ -8,7 +8,7 @@ Read [PLAN.md](PLAN.md), [the handoff](docs/development-state.md) and relevant
 [design](docs/design.md) sections before changing code. Keep one current next
 action in the handoff, with actual checks, unresolved failures and source IDs.
 Remove obsolete directions. [History](docs/roadmap-history.md) and immutable
-[preparation anchors](docs/roadmap-queue.md) are evidence, not a backlog.
+[preparation anchors](docs/preparation-records.md) are evidence, not a backlog.
 Use [CONTRIBUTING.md](CONTRIBUTING.md) for repository conventions and test locations.
 
 ## Language and performance goals

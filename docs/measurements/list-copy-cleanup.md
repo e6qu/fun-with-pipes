@@ -64,8 +64,8 @@ and [Windows ARM64](https://github.com/e6qu/fun-with-pipes/actions/runs/40089548
 All completed logs are audited. Independent review covers [144 actual binaries](list-copy-native-2026-10-24.json)
 across the six hosts: six balanced observations and twelve deliberately missing
 cleanup controls per host. Windows uses the repaired test revision; compiler,
-runtime and library sources match the four Unix jobs. Full delivery still
-requires the final PR head.
+runtime and library sources match the four Unix jobs. [PR #210](../roadmap-history.md#collection-cleanup-and-interpreter-shutdown-pr-210) records the later passing final CI and user merge.
+Independent final-head binary review was not completed before that merge.
 
 The separate `list-copy-costs` measurement uses 0, 1, 32 and 4,096 input words
 through `read-all | words | sort | length` and the analogous array conversion.

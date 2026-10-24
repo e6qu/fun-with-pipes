@@ -1,16 +1,27 @@
-# Delivery evidence
+# Delivery history
 
-This is an index of completed deliveries and their test records. Current work
-belongs in [the plan](../PLAN.md) and [session handoff](development-state.md).
-Each entry states the change and any important limitation. Detailed samples live
-in the linked reports; old fixes are not new tasks. The [preparation table](roadmap-queue.md) preserves original commit IDs.
+A compact index of merged changes. [PLAN.md](../PLAN.md) lists unfinished tasks;
+[the handoff](development-state.md) records current work. A merge, focused check
+and complete platform validation are different events. Measurements retain their
+original source and settings; old numbers are not measurements of current main.
+The linked PRs, runs and data records supply the detailed evidence.
 
-A PR is a proposed change. Its **tested head** is the exact commit checked by CI
-(continuous integration on GitHub runners). A **squash merge** makes one main-branch
-commit from the PR. “Same files” means the tested head and merge have identical
-Git trees, even though their commit IDs differ. A focused test run checks a subset;
-production acceptance requires every platform job applicable to that delivery.
-Cancelled, skipped or partially passing runs are not acceptance.
+## Collection cleanup and interpreter shutdown (PR #210)
+
+Interrupted list copies and sorting release partial values and scratch storage.
+Redundant sort buffers are removed. Interpreter entries join child/background
+tasks before borrowed program data or writers expire, including panic cleanup.
+The benchmark peers now check signed arithmetic consistently. The original Intel
+macOS allocator abort remains [unexplained](measurements/compiler-abort.md).
+
+[PR #210](https://github.com/e6qu/fun-with-pipes/pull/210) was merged by the user as
+`380fa8412327e52db420b96918d20e2528bbfc7c`, with the same tree as tested head
+`36924807f0343c79c38ef42c4254a721afa60613`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40124698815)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40124698740)
+passed. Independent final-head binary review was not completed before that merge.
+Details: [list copying](measurements/list-copy-cleanup.md),
+[sort storage](measurements/list-sort-storage.md), [checked peers](measurements/checked-peers.md).
 
 ## Map peak storage and explicit benchmarks (PR #209)
 
@@ -22,15 +33,7 @@ explicit compiler/memory settings; no speedup is claimed. The
 [comparison report](measurements/arc-comparison.md) preserves algorithms,
 arithmetic differences, slower rows and rejected arithmetic experiments.
 
-[PR #209](https://github.com/e6qu/fun-with-pipes/pull/209) passes all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40082867710)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40082867648)
-at `b298665da6ac97fe4bcc05318c66e671fed7a5a4`. All logs and 8,627 actual binary files pass independent
-review, including 138 map/set images, cleanup controls and benchmark memory checks.
-[Acceptance records](measurements/arc-map-delivery-2026-10-24.json) preserve the
-sources, artifact/report hashes and check results. Squash `2520d136b7036ab878cac0ef48947b581c81b84a`
-has the identical tested tree and a one-line message without a body or trailers.
-All seven plan areas remain open.
+[PR #209](https://github.com/e6qu/fun-with-pipes/pull/209) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40082867710) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40082867648) · [Acceptance records](measurements/arc-map-delivery-2026-10-24.json)
 
 ## API memory, stack guards and connection cleanup (PR #208)
 
@@ -40,15 +43,7 @@ mapping before exit, and Windows test clients keep one socket owner so unrelated
 compiler children cannot inherit a duplicate connection. Memory budgets and
 deadlines remain unchanged; deliberately missing frees and closes are detected.
 
-[PR #208](https://github.com/e6qu/fun-with-pipes/pull/208) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40074183388)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40074183289)
-at `227e671257d885185e54b3f915f6d1ebf470b3ea`. Review covered 8,454 actual binary files,
-including 36 API, eight static-guard and four Linux page-policy images.
-The [acceptance record](measurements/http-memory-delivery-2026-10-24.json)
-retains their observations, source/artifact hashes and gate results. Squash
-`058dc4e5954571ed222ca4d26af4403a52a8516b` has the identical tested tree and one subject with an empty
-body. All seven roadmap areas remain open.
+[PR #208](https://github.com/e6qu/fun-with-pipes/pull/208) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40074183388) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40074183289) · [acceptance record](measurements/http-memory-delivery-2026-10-24.json)
 
 ## File cleanup and HTTP example checks (PR #207)
 
@@ -58,14 +53,7 @@ HTTP example tests bound startup/shutdown, verify the slow handler entered befor
 shutdown and clean up children after failure. Measurement docs distinguish
 allocator charge, process memory and binary section size from speed comparisons.
 
-[PR #207](https://github.com/e6qu/fun-with-pipes/pull/207) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40064764447)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40064764348)
-at `bd0dc0100a516099590c340c012f74b7b666ebd2`. Review covered 8,166 core outcomes,
-240 file binaries, 480 file executions and 23,040 checkpoints, plus twelve stack
-objects and 144 layout checks. The [acceptance record](measurements/file-http-delivery-2026-10-24.json)
-retains source, artifacts and inspection hashes. Squash `46a7235a81c46d30d0c155f319913e6b7fe4ddbc`
-has the same tree and one subject without a body. All seven roadmap areas remain open.
+[PR #207](https://github.com/e6qu/fun-with-pipes/pull/207) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40064764447) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40064764348) · [acceptance record](measurements/file-http-delivery-2026-10-24.json)
 
 ## Array output, storage and startup stack (PR #206)
 
@@ -77,17 +65,7 @@ patterns; [native results](measurements/array-native-results.md) retain allocati
 layout, code-size and stack costs. [C/Rust comparisons](measurements/array-output-results.md)
 still show substantial complete-program gaps, especially with full output.
 
-[PR #206](https://github.com/e6qu/fun-with-pipes/pull/206) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40055774892)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40055774862)
-at `35932a77bc5fdad42350c6376059b5e0d88b3c3d`. Complete logs and 8,166 saved
-outcomes passed review, with twelve startup stack objects and 144 physical-layout
-checks on six native hosts. Measurement failures retain their evidence; compiler
-children are stopped after unsuccessful exits as well as timeout/interruption.
-The [acceptance record](measurements/array-delivery-2026-10-24.json) identifies
-artifacts and inspection hashes. Squash `8cd5153b3ed7084ec46601cfd5b2551825f64057`
-has the tested tree and one subject without a body or trailers. All seven roadmap
-areas remain open.
+[PR #206](https://github.com/e6qu/fun-with-pipes/pull/206) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40055774892) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40055774862) · [acceptance record](measurements/array-delivery-2026-10-24.json)
 
 ## Float printing and numerical cost measurements (PR #205)
 
@@ -100,16 +78,7 @@ Their output/checksum experiments separate output work from other costs without
 calling the checksum program pure arithmetic. A local process-monitor race is
 also repaired and covered by controls.
 
-[PR #205](https://github.com/e6qu/fun-with-pipes/pull/205) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40037426686)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40037426647)
-at `51c295e02a8037f985fe9f662b8e1000fcd97798`. Complete logs and 7,158 saved
-outcomes passed independent review: 6,966 ownership cases, 72 float cases and
-120 output/lifetime controls. Each Linux host also passed sixteen coordinate
-observations. The [acceptance record](measurements/float-output-delivery-2026-10-24.json)
-identifies artifacts and inspection hashes. Verified squash
-`336692f4329d9f628c05d6a42a7353c1702bdc09` has the tested tree and one subject,
-with no body or trailers. All seven roadmap areas remain open.
+[PR #205](https://github.com/e6qu/fun-with-pipes/pull/205) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40037426686) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40037426647) · [acceptance record](measurements/float-output-delivery-2026-10-24.json)
 
 ## Derivative storage, arrays and borrowed callbacks (PR #204)
 
@@ -119,15 +88,7 @@ computations must release their temporary values; deliberately omitted cleanup
 must fail. The examples explain what owns each value. Compiler/runtime behavior
 is unchanged; these are correctness checks, not a timing improvement.
 
-[PR #204](https://github.com/e6qu/fun-with-pipes/pull/204) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40019873535)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40019873426)
-at `80c89baa53567839dce0599d88f18d5791285943`, with complete logs audited.
-The [inspection record](measurements/derivative-array-cleanup-2026-10-24.json)
-contains 6,966 saved binaries on six native hosts, including 6,876 aggregate cleanup
-outcomes and 360 allocator observations. Counts describe saved outcomes, not
-unique source programs. Verified squash `2ba458a9a8049a33c2fa5c73a374c83c8fe34e10` has the tested tree
-and one subject without a body or trailers. All seven roadmap areas remain open.
+[PR #204](https://github.com/e6qu/fun-with-pipes/pull/204) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40019873535) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40019873426) · [inspection record](measurements/derivative-array-cleanup-2026-10-24.json)
 
 ## Tasks, state and runtime call cleanup (PR #203)
 
@@ -137,15 +98,7 @@ omitted-release controls detect retained values after completion, errors and
 cancellation. Fixtures explicitly own their injected tasks, durations and strings.
 The cleanup guide introduces notation and examples; compiler/runtime are unchanged.
 
-[PR #203](https://github.com/e6qu/fun-with-pipes/pull/203) passed nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40002922119)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40002921896)
-at `460e847b34a7b2691b69f89a4dfea84ea25950b7`. Full logs passed audit. The
-[inspection record](measurements/task-cleanup-2026-10-23.json) covers 5,118
-saved binaries on six hosts, including 5,028 aggregate cleanup outcomes and
-360 allocator observations. Verified squash `3e3ebd2717f4d77c8d8331e7df1936768546d1ed` has the same
-tree and one subject without a body or trailers. These checks establish cleanup
-for the named cases, not speed or complete removal of tracing.
+[PR #203](https://github.com/e6qu/fun-with-pipes/pull/203) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40002922119) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40002921896) · [inspection record](measurements/task-cleanup-2026-10-23.json)
 
 ## Cached values, aliases and failed calls (PR #202)
 
@@ -155,15 +108,7 @@ escaping functions and temporary containers. Repeated byte balances and delibera
 missing releases detect retained storage. Windows gained five omitted test groups;
 a runner control now checks production coverage. Compiler/runtime are unchanged.
 
-[PR #202](https://github.com/e6qu/fun-with-pipes/pull/202) passed nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39981747930)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39981747884)
-at `46c26002b5f748529a2c6ad5977891cdc1593c06`. Complete logs passed audit. The
-[inspection record](measurements/call-cleanup-2026-10-23.json) covers 3,414
-saved binaries across six hosts, including 3,324 aggregate cleanup outcomes and
-360 allocator observations. Verified squash `ff1bfcc8a294a488b9cb043622143233a903d068` has the same
-tree and a one-line message with no body or trailers. [The guide](measurements/record-cleanup.md)
-explains the checks; they do not establish speed or complete removal of tracing.
+[PR #202](https://github.com/e6qu/fun-with-pipes/pull/202) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39981747930) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39981747884) · [inspection record](measurements/call-cleanup-2026-10-23.json) · [The guide](measurements/record-cleanup.md)
 
 ## Failed loops and collection cleanup (PR #201)
 
@@ -173,16 +118,7 @@ Deliberately omitted buffer cleanup and final releases must fail. Thirteen
 related tests save generated C, binaries and results before asserting success,
 so a failing run retains its evidence. Compiler behavior is unchanged.
 
-[PR #201](https://github.com/e6qu/fun-with-pipes/pull/201) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39955074782)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39955074824)
-at `c6ad1aaf6d2f58fa41e11e326fe83ac8a5156f31`. Complete logs passed audit. The
-[inspection record](measurements/collection-cleanup-2026-10-23.json) covers 1,986
-saved binaries across six native hosts: 1,896 aggregate cleanup outcomes,
-360 allocator observations and eighteen default-program builds. Squash merge
-`c56f85547610b14bd1b8af9a9ad96413f3c494e9` has the same tree and a verified one-line message without
-body or trailers. [The guide](measurements/collection-cleanup.md) explains the
-failure cases. These checks establish cleanup, not speed or complete GC removal.
+[PR #201](https://github.com/e6qu/fun-with-pipes/pull/201) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39955074782) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39955074824) · [inspection record](measurements/collection-cleanup-2026-10-23.json) · [The guide](measurements/collection-cleanup.md)
 
 ## Repeated constructor and call cleanup (PR #200)
 
@@ -193,16 +129,7 @@ bug had run the variant case twice instead of checking the record case. Distinct
 failure statuses now prevent that false pass. Windows gained the missing
 constructor-allocation test and exact binary output handling.
 
-[PR #200](https://github.com/e6qu/fun-with-pipes/pull/200) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39939679368)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39937419223)
-at `69c3b1e0135dd95961dba3729911ec27dc1736b6`. Complete logs were audited. The
-[inspection record](measurements/constructor-cleanup-2026-10-23.json) covers 1,050
-saved binaries, 960 aggregate outcomes and 360 allocator observations across six
-native hosts. Squash merge `a57a2593a11178934cba33dffb3f0e2fafa15fcc` has the same tree and a verified
-one-line message without a body or trailers. These are cleanup checks, not speed
-benchmarks or completion of tracing removal. See the
-[explained examples](measurements/record-cleanup.md).
+[PR #200](https://github.com/e6qu/fun-with-pipes/pull/200) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39939679368) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39937419223) · [inspection record](measurements/constructor-cleanup-2026-10-23.json) · [explained examples](measurements/record-cleanup.md)
 
 ## Checked native defaults and ARC metadata (PR #199)
 
@@ -212,20 +139,7 @@ age checks, collector stack discovery and late poisoned-storage diagnostics.
 [Page metadata](measurements/arc-metadata.md) falls from 4,648 to 4,128 bytes,
 with the 4,096 count bytes unchanged. This establishes layout, not a timing gain.
 
-The delivery also repairs static-heap pressure collection and reuse of freed
-slots. Repeated [record cleanup checks](measurements/record-cleanup.md) found and
-fixed five overflow-fixture cleanup errors. Windows gained missing record tests
-and complete ownership artifact uploads. Documentation distinguishes the checked
-default from the remaining work to remove tracing and limit counting.
-
-[PR #199](https://github.com/e6qu/fun-with-pipes/pull/199) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39924646271)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39924644039)
-at `5e17fc10e860b1971ffc9cd9cb57fcb795ccad24`. Complete logs were audited. The
-[inspection record](measurements/native-default-2026-10-23.json) covers 570 saved
-native binaries, 360 allocator observations and 480 record outcomes across six
-hosts. Squash merge `aedafcd909b3bff01ca1a1da00d57cdcf0ba028e` has identical files, #198 as its sole
-parent and the verified one-line subject with no body or trailers.
+[PR #199](https://github.com/e6qu/fun-with-pipes/pull/199) · [record cleanup checks](measurements/record-cleanup.md) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39924646271) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39924644039) · [inspection record](measurements/native-default-2026-10-23.json)
 
 ## Local callback captures and repeated numerical work (PR #198)
 
@@ -234,22 +148,7 @@ retain unused generic adapters. Boundary tests preserve stored/reused callbacks,
 effects, empty inputs and cleanup on failure/cancellation. Windows gained missing
 callback coverage and corrected saved-executable paths.
 
-[Callback measurements](measurements/callback-locals.md) show fewer instructions
-and a 96-to-48-byte generator frame, with unchanged requests and live memory.
-[Per-solve observers](measurements/descent-observers.md) detect delayed cleanup
-that final-only observations miss. [Matched C/Rust formulas](measurements/coordinate-work.md)
-still show substantial numerical timing gaps; noisy controls remain recorded.
-These results do not establish a compiler speedup or complete any PLAN area.
-
-[PR #198](https://github.com/e6qu/fun-with-pipes/pull/198) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39845348815)
-and [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39845348589) at
-`30c6d65c10b3cc33cfeb72f523e4d47624508896`. Final-head inspection covered
-480 native binaries and 816 execution observations. The first ARM64 macOS stress
-attempt received no runner; its retry passed. Squash merge
-`27a3e009b83e28f06130a5d686a3196b9934e53f` has identical files, #197 as its sole
-parent and the verified one-line message with no body or trailers. Redundant
-same-tree main production run `39871314012` was cancelled; docs were preserved.
+[PR #198](https://github.com/e6qu/fun-with-pipes/pull/198) · [Callback measurements](measurements/callback-locals.md) · [Per-solve observers](measurements/descent-observers.md) · [Matched C/Rust formulas](measurements/coordinate-work.md) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39845348815) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39845348589)
 
 ## Borrowed array captures (PR #197)
 
@@ -258,19 +157,7 @@ parameter records and last-read aliases no longer add owners; escaped values,
 recursive callbacks and resource scopes keep their required ownership. Tests
 preserve effect order, aliases, errors, cancellation and partial-array cleanup.
 
-The [ownership report](measurements/array-capture-borrows.md) retains 558 inspected
-native images and twelve executed WASI modules. The
-[numerical comparison](measurements/array-capture-descent.md) reduces largest-case
-retains from 25,671 to zero with unchanged 459 allocation requests and 7,200-byte
-managed peak. Noisy controls and remaining C/Rust timing gaps are retained.
-
-[PR #197](https://github.com/e6qu/fun-with-pipes/pull/197) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39793823991)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39793823875)
-at `0367e81941a213b96de14dbe175143ff0a121f77`. All completed logs were audited.
-The user's squash merge `b94710c9212cbbfc3e39409835e539b371069b36` has identical
-files, #196 as its sole parent and a one-line message under 80 characters without
-trailers. The direct-call extension followed in #198.
+[PR #197](https://github.com/e6qu/fun-with-pipes/pull/197) · [ownership report](measurements/array-capture-borrows.md) · [numerical comparison](measurements/array-capture-descent.md) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39793823991) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39793823875)
 
 ## Array-owner moves and copied callback strings (PR #196)
 
@@ -280,45 +167,17 @@ transfer its sole numeric-array owner instead of retaining it again. Shared alia
 and observable failure/cancellation behavior are preserved. The C-interop tutorial
 now includes its complete callback program and console sessions.
 
-[Ownership checks](measurements/stack-array-ownership.md) cover all six native
-hosts; [copied-input checks](measurements/callback-inputs.md) cover C callbacks.
-The [C/Rust derivative comparison](measurements/descent-peers.md),
-[packed arrays](measurements/packed-descent.md) and
-[array-owner measurements](measurements/array-owner-moves.md) separate allocation,
-count and timing costs. The largest packed case halves retains to 25,671 without
-increasing allocation requests or managed peak. Timing remains inconclusive;
-reports preserve slower controls and a larger ARM64 callback frame.
-
-[PR #196](https://github.com/e6qu/fun-with-pipes/pull/196) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39775586712)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39775586540)
-at `7bb4b5d49341fc67f9b76840feeeb8e479c3392e`. Complete logs and the exact-head
-PR check list were audited: every check was completed successfully, even while
-GitHub's workflow summary still said running. Squash merge
-`abc2636d164632ea25ab5709455ab193a3df9479` has identical files, the expected
-parent and one subject under 80 characters with no body or trailers. Redundant
-same-tree production CI was cancelled; documentation was preserved.
+[PR #196](https://github.com/e6qu/fun-with-pipes/pull/196) · [Ownership checks](measurements/stack-array-ownership.md) · [copied-input checks](measurements/callback-inputs.md) · [C/Rust derivative comparison](measurements/descent-peers.md) · [packed arrays](measurements/packed-descent.md) · [array-owner measurements](measurements/array-owner-moves.md) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39775586712) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39775586540)
 
 ## Native commands and test recovery (PR #195)
 
 Native run/exec/test/serve/pipe commands accept explicit ARC or tracing selection.
 Root test failures release error messages, state and pending task owners before
-continuing to the next test. Child traps/exits remain process-fatal, and tracing
-remains the default. Concurrent executable publication and Windows server/cache
+continuing to the next test. Child traps/exits remain process-fatal. Tracing was still the default at this
+revision; #199 later switched native commands to checked ARC. Concurrent executable publication and Windows server/cache
 cleanup are repaired. Missing C compilers fail explicitly.
 
-[Command checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39752987389)
-pass on all six native hosts, with
-84 inspected images. [Derivative-storage measurements](measurements/ad-application.md)
-separate managed storage, raw workspace and process memory; 104 images were
-inspected. They do not establish a runtime speedup or complete GC removal.
-
-[PR #195](https://github.com/e6qu/fun-with-pipes/pull/195) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39753716407)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39753716342)
-at `a284eb0a338cae4efdd9534fd2d67c60a4f04e82`. All complete logs were audited.
-Squash merge `40dda0795fd150feb3dc0543052c3bf041e865c8` has the same files,
-the expected parent and one subject under 80 characters with no body or trailers.
+[PR #195](https://github.com/e6qu/fun-with-pipes/pull/195) · [Command checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39752987389) · [Derivative-storage measurements](measurements/ad-application.md) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39753716407) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39753716342)
 
 ## String map ownership and native reuse checks (PR #194)
 
@@ -328,18 +187,7 @@ allocation age checks are repaired; Windows reuse tests execute instead of
 silently skipping when native compilation fails. WASI tests verify physical
 cleanup as well as output.
 
-For 65,536 words, allocation requests fall from 248,807 to 226,961 and retains
-from 138,250 to 72,714. Larger ARC cases take 6.2–7.7% less time than previous
-fwp, but still 2.57–3.05× C time and 1.98–2.12× Rust time. Smaller AMD64 ARC is
-3.6% slower, and generated code grows. The [report](measurements/string-map-ownership.md)
-retains complete samples, inspected binaries and deliberately broken controls.
-
-[PR #194](https://github.com/e6qu/fun-with-pipes/pull/194) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39737931809)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39737931776)
-at `489d8414e68678e30829df525982ce8790a4aadc`. All complete logs were audited.
-Squash merge `f74c9d2998d595b4a3c15ee4a225a49963c1a6ea` has identical files,
-the expected parent and one subject under 80 characters with no body or trailers.
+[PR #194](https://github.com/e6qu/fun-with-pipes/pull/194) · [report](measurements/string-map-ownership.md) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39737931809) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39737931776)
 
 ## Manual C pointers and foreign storage cleanup (PR #193)
 
@@ -348,19 +196,7 @@ callbacks and exported libraries. Pointers do not own their pointees; callers
 must keep addresses valid and release raw storage. Managed C-string callback
 results still require a separate lifetime contract.
 
-Interpreter temporary C strings now release after results are copied, including
-reentrant calls and errors. Raw allocation bounds are checked before 32-bit
-narrowing; ISize/USize use the target pointer width and I128/U128 access preserves
-all bits. The [report](measurements/manual-pointers.md) retains six-host native
-and actual 32-bit interpreter/WASI evidence, including inspected binaries and
-cleanup controls.
-
-[PR #193](https://github.com/e6qu/fun-with-pipes/pull/193) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39725180238)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39725180233)
-at `91502f538d2265f3f7afd8606760dfcc4a088005`. Complete logs were audited.
-Squash merge `13680b82e6bd96371d0978bc6a23d5069f5adb93` has identical files, one subject
-under 80 characters and no body, trailers or attribution.
+[PR #193](https://github.com/e6qu/fun-with-pipes/pull/193) · [report](measurements/manual-pointers.md) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39725180238) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39725180233)
 
 ## String ownership and repeated file cleanup (PR #192)
 
@@ -370,19 +206,7 @@ The [word-frequency comparison](measurements/unchanged-text.md) records fewer
 allocation requests and lower medians, while retaining the remaining C/Rust gaps
 and differences in normalization work. It does not establish C/Rust parity.
 
-[Repeated file programs](measurements/file-applications.md) check managed storage,
-handles and scratch buffers after each completed round, with failure controls and
-separate process-memory samples on all six native hosts. Windows permission checks
-and UTF-8 report decoding are repaired. The [autodiff application](measurements/ad-application.md)
-compares the same 199 updates with and without retaining intermediate vectors.
-
-[PR #192](https://github.com/e6qu/fun-with-pipes/pull/192) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39714665578)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39714665552)
-at `36998a99f689b254edfc127bbbc8e8aac054c509`. Complete logs were audited.
-Squash merge `3003e2cdebf6e98f45b06b4f523d8dd21d8150c5` has identical files and the
-verified single-line subject “Reduce string copies and verify repeated file cleanup”,
-with no body or trailers.
+[PR #192](https://github.com/e6qu/fun-with-pipes/pull/192) · [Repeated file programs](measurements/file-applications.md) · [autodiff application](measurements/ad-application.md) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39714665578) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39714665552)
 
 ## Task results and explicit CPU execution (PR #191)
 
@@ -392,17 +216,7 @@ retains and peak storage; [the report](measurements/task-await-fields.md) record
 the native/WebAssembly controls and limits. State callback scopes, Jacobian tape
 cleanup and C-interop buffer releases are also repaired.
 
-CPU kernels use explicit worker limits and no longer compile OpenCL source at
-runtime. The GPU API is removed. Interpreter foreign-call bridges are prepared
-before program effects, so calling foreign code does not start a compiler.
-
-[PR #191](https://github.com/e6qu/fun-with-pipes/pull/191) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39688998592),
-[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39688998567)
-and the [focused GCC check](https://github.com/e6qu/fun-with-pipes/actions/runs/39688997806)
-at `12be5afcee7c81f1b98ffed2081d698e1124b000`. All complete logs were audited.
-Squash merge `19f3afbcbed22802a96f092d9d0ee3d7913335e3` has the identical tree
-and a verified one-line message without body or trailers.
+[PR #191](https://github.com/e6qu/fun-with-pipes/pull/191) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39688998592) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39688998567) · [focused GCC check](https://github.com/e6qu/fun-with-pipes/actions/runs/39688997806)
 
 ## Queued task owners and callback transfers (PR #190)
 
@@ -413,11 +227,7 @@ creation transfers callback ownership directly: the five-task comparison uses
 and [callback measurements](measurements/queued-task-handles.md) record the limits,
 all eight focused jobs, and independent native/WebAssembly binary inspection.
 
-[PR #190](https://github.com/e6qu/fun-with-pipes/pull/190) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39673092514)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39673088884)
-at `4cdf8afa8647cfdaecbc338429bf8a1c1a158210`. Every complete log was audited. Squash merge `a2b9130fa1811c32e8807ba8cf61a8647fbcba60`
-has the identical tree and verified one-line message without body or trailers.
+[PR #190](https://github.com/e6qu/fun-with-pipes/pull/190) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39673092514) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39673088884)
 
 ## Compact task records and repaired native validation (PR #189)
 
@@ -427,12 +237,7 @@ and retain counts stay unchanged; allocator size classes make peak savings vary.
 results and actual binary inspection. Windows output assertions and dependency
 fetching are repaired without dropping checks.
 
-[PR #189](https://github.com/e6qu/fun-with-pipes/pull/189) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39641372026)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39641321443)
-at `4dfc2be31c62c9e54271692ac8638fbb66ca786b`. Every complete log was audited.
-Squash merge `030fa3374e36459d9a774379e2116ac42ed5db1d` has the identical tree,
-expected parent and verified single-line message without body or trailers.
+[PR #189](https://github.com/e6qu/fun-with-pipes/pull/189) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39641372026) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39641321443)
 
 ## Cancellation buffers and Windows ARC fibers (PR #188)
 
@@ -452,6 +257,8 @@ and dependency fetching, and reruns every variant with the
 [compact-record measurements](measurements/task-records.md). PR #189 has full production
 acceptance as recorded above; this earlier merge alone does not.
 
+[PR #188](https://github.com/e6qu/fun-with-pipes/pull/188)
+
 ## Smaller Linux task heap records (PR #187)
 
 Saved CPU state moves from heap task records into existing child stacks and root
@@ -460,12 +267,7 @@ separately and retains mixed timings, larger files and remaining ARC operations.
 This is a storage improvement for the measured programs, not GC removal or
 proof of C/Rust performance parity.
 
-[PR #187](https://github.com/e6qu/fun-with-pipes/pull/187) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39613713414)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39613713402)
-at `81bb3efa8e3f2cc5f3dd9f0ae9952709088c2905`. Every complete log was audited.
-Squash merge `eb9ba7e828a5ab8ef0f7579b7f6fe1263e752c8c` has the identical tree, the expected sole parent,
-and a verified one-line message without a body or trailers.
+[PR #187](https://github.com/e6qu/fun-with-pipes/pull/187) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39613713414) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39613713402)
 
 ## Queued service responses and bounded server startup (PR #186)
 
@@ -476,13 +278,7 @@ failure and cancellation checks release request owners; the
 REST startup now kills and reaps a silent child, and tests reuse compiled fixtures
 while starting fresh server processes.
 
-[PR #186](https://github.com/e6qu/fun-with-pipes/pull/186) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39597478599)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39597478465)
-at `fa2d5098573220833bda06e30af9f534181edc0d`. Complete logs were audited.
-Squash merge `d516a0919a3f24a7c28817a32782908df77dd95d` has the identical tree
-and a verified one-line message without body or trailers. This extends checked
-ARC eligibility; allocation and shared-owner counting costs remain.
+[PR #186](https://github.com/e6qu/fun-with-pipes/pull/186) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39597478599) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39597478465)
 
 ## Queued callbacks retaining data queues (PR #185)
 
@@ -493,13 +289,7 @@ origin merely by sharing a type. The [report](measurements/queued-data-channels.
 records native and WebAssembly cleanup and deliberate missing-release controls.
 This extends checked ARC support without changing runtime layouts or syntax.
 
-[PR #185](https://github.com/e6qu/fun-with-pipes/pull/185) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39584128319)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39584128240)
-at `73850bd3b6ac460a7e077cea8cd1128f9913aea0`. Every complete log was audited.
-Squash merge `f9bd49d9f9416b471326090f1a423282d476b1a9` has the identical tree
-`a51eac8ca22b93ab45dfb053285d3654eca03e68`. Its message is exactly
-`Allow queued callbacks to retain locally created data queues`, one line with no body or trailers.
+[PR #185](https://github.com/e6qu/fun-with-pipes/pull/185) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39584128319) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39584128240)
 
 ## Queued socket callbacks and handler inference (PR #184)
 
@@ -511,13 +301,7 @@ and returned records, while keeping unrelated effects required. The
 actual-binary inspection and WASI handler checks; these are correctness results,
 not timing or C/Rust parity claims.
 
-[PR #184](https://github.com/e6qu/fun-with-pipes/pull/184) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39570320517)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39570319685)
-at `0509937311ffd94171da9e2213c387d23e81739a`. Every complete log was audited.
-Squash merge `b3401149955ff6e0aaa1d70044b527aec20f2e5f` has the identical tree
-`fe039ae7fafb9252b8a3d1177d89f0d632dec9d8`. Its message is exactly
-`Support queued socket callbacks and correct handler inference`, one line with no body or trailers.
+[PR #184](https://github.com/e6qu/fun-with-pipes/pull/184) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39570320517) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39570319685)
 
 ## Checked-product bounds (PR #183)
 
@@ -528,15 +312,7 @@ sections and removal of AMD64's normal entry frame. Matched C remains faster;
 AMD64 comparisons with Rust vary by CPU. O0/O1 emit an extra product. These
 limits remain part of the result, and tracing is still present.
 
-[PR #183](https://github.com/e6qu/fun-with-pipes/pull/183) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39543123372)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39543123369)
-at `3606d072d0f708b600f44050ab9cafe1390bceee`; every complete log was audited.
-Squash merge `447a18f8b1ac4b7faa2c655fa2ea7a24d4e0c44c` has the identical tree
-`40b47a0670c38bc0b05c6dbd1afefd3ad5f7d7c5`. Its verified message is exactly
-`Preserve numeric bounds after checked multiplication`, one line with no body,
-trailers or attribution. Runtime-input, interpreter/native and sanitizer controls
-preserve successful results, overflow traps and effect order.
+[PR #183](https://github.com/e6qu/fun-with-pipes/pull/183) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39543123372) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39543123369)
 
 ## Grouped integer counting and U32 overflow (PR #182)
 
@@ -546,20 +322,7 @@ records roughly 48% less child CPU time on Xeon 8573C/N2, remaining matched
 C/Rust gaps, a larger instruction section and AMD64's fixed 40-byte entry frame.
 Managed counting-workload allocations remain zero; tracing remains in the binary.
 
-The same delivery fixes U32 multiplication: every U32 product fits an unsigned
-64-bit intermediate, while some overflowed the former signed intermediate before
-fwp could trap. Runtime-input and sanitizer controls preserve results, effect
-order and overflow behavior, including a deliberately faulty signed control.
-
-[PR #182](https://github.com/e6qu/fun-with-pipes/pull/182) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39533108586)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39532459370)
-at `817805a18bd97e90090b36e7baf589d011048fd6`; every complete log was audited.
-Squash merge `36fbb04097e8ab3d09a02b0eebf9060002e4fe91` has the identical tree
-`18912402dff52e3c5a535de2dc560f1d447193cd`. Its verified message is
-`Count integer digits in groups and fix U32 multiplication overflow`: one line,
-64 characters, with no body or trailers. Duplicate post-merge production
-`39542814814` and documentation `39542814748` were cancelled.
+[PR #182](https://github.com/e6qu/fun-with-pipes/pull/182) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39533108586) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39532459370)
 
 ## Temporary channel borrows and failure cleanup (PR #181)
 
@@ -571,15 +334,7 @@ fields also remain valid after C `longjmp`, preserving failure/cancellation clea
 [The report](measurements/channel-local-borrows.md) records counts, actual stack
 frames and code sizes, plus C/Rust timing gaps that remain unexplained.
 
-[PR #181](https://github.com/e6qu/fun-with-pipes/pull/181) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39488574062)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39488538767)
-at `2038c926246cfcf8f741df7fdf0324fefc568b58`; every complete log was audited.
-Squash merge `c98da7a5b3d859fee69120cf3452dcdecc904979` has the identical tree
-`2fc33e8e7b238402acfc30efe3aee753ac4a018c`. Its verified message is exactly
-`Borrow temporary channel names and preserve failure cleanup`: one line,
-59 characters, without a body or trailers. Duplicate post-merge production
-`39503544541` was cancelled; post-merge documentation `39503544342` had passed.
+[PR #181](https://github.com/e6qu/fun-with-pipes/pull/181) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39488574062) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39488538767)
 
 ## Function-channel borrows and integer text (PR #180)
 
@@ -588,20 +343,7 @@ keeps the queue and callback data alive. In the measured fresh-function program,
 this removes one retain/release pair per message, with unchanged allocation and
 peak storage. Capture, cycle and resource-scope checks remain.
 
-`show | string.length` and eligible concatenations count integer characters
-without creating text. The equivalent-work C/Rust comparison still shows time
-and whole-process memory gaps. The [integer-text report](measurements/integer-text.md)
-retains timings, managed-allocation controls, RSS and actual machine code;
-[channel measurements](measurements/function-channel-borrows.md) record count,
-frame and binary changes. These are specific improvements, not removal of GC.
-
-[PR #180](https://github.com/e6qu/fun-with-pipes/pull/180) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39457866569)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39457866666)
-at `64cfa0081dab2f6b19b6157e844c49481749a605`; complete logs were audited.
-Squash merge `fe491a97466d9b6d972059553c95886ad850aacb` has the identical tree
-and a verified one-line message without trailers. Duplicate post-merge
-production `39470377254` and documentation `39470376880` were cancelled.
+[PR #180](https://github.com/e6qu/fun-with-pipes/pull/180) · [integer-text report](measurements/integer-text.md) · [channel measurements](measurements/function-channel-borrows.md) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39457866569) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39457866666)
 
 ## Matched payload moves and direct-call borrows (PR #179)
 
@@ -610,20 +352,7 @@ call can borrow input storage when every caller still needs that same storage
 afterward. Last uses consume their inputs; generic entries retain their ordinary
 ownership rules. Failure, cancellation and original resource scopes stay covered.
 
-[The channel comparison](measurements/channel-direct-borrows.md) removes the
-remaining fresh-text retain, without changing allocations or peak accounted
-storage. The report records smaller frames and actual binary changes; it makes
-no timing claim. Compile-time evaluation also rejects runtime handles instead
-of silently generating an invalid native constant. File contents can still
-be read at compile time and embedded as data.
-
-[PR #179](https://github.com/e6qu/fun-with-pipes/pull/179) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39438167856)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39438167895)
-on `63a129f25cfb9a3b940baf7786036265bfdf831d`; complete logs were audited.
-Squash merge `2f2e3fa1baa3b8b298781d109bb4d6eb11a822d7` has the same tree
-and a one-line message without trailers. Duplicate post-merge production
-`39456604708` was cancelled; post-merge documentation had already passed.
+[PR #179](https://github.com/e6qu/fun-with-pipes/pull/179) · [The channel comparison](measurements/channel-direct-borrows.md) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39438167856) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39438167895)
 
 ## Direct matches and callbacks (PR #178)
 
@@ -632,19 +361,7 @@ evaluating every field once in order. This exposes known callback calls and
 receives whose tag and payload can stay in locals. Ignored constants still
 evaluate and trap; whole-tuple uses and original resource scopes stay protected.
 
-[The five-program comparison](measurements/channel-match-results.md) measures
-three fewer allocations per fresh-function message and two fewer per
-shared-function message, with one fewer retain each. The other cases are
-unchanged. Exchange frames shrink on both architectures; the report keeps
-ARM64 layout growth. These counts do not establish a timing or C/Rust improvement.
-
-[PR #178](https://github.com/e6qu/fun-with-pipes/pull/178) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39397311012)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39397297724)
-on `732984c3fb6b8646f6f3ee4932c123eadb7f3555`; all complete logs were audited.
-The user's merge `2ee0159b941d7887d70f5d86342cfad08e4e35c2` has the same tree
-and a one-line message without trailers. Only duplicate post-merge production
-`39417022563` was cancelled; post-merge documentation had already passed.
+[PR #178](https://github.com/e6qu/fun-with-pipes/pull/178) · [The five-program comparison](measurements/channel-match-results.md) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39397311012) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39397297724)
 
 ## Receive results without temporary wrappers (PR #177)
 
@@ -654,20 +371,7 @@ Whole-value uses remain boxed. Both use the same receive loop and preserve
 timeout, cancellation and cleanup. Boxed receives allocate before dequeue;
 this also repairs retry after allocation failure in uncounted tracing mode.
 
-[Counts and binary inspection](measurements/channel-receive-results.md) show
-fresh-text allocations falling from two to one per additional message, and shared
-text from one to zero, on both Linux architectures. Function-message costs and
-retains are unchanged. The selected struct return reduces ARC code size further;
-the report retains helper-stack growth and one larger ARM64 tracing code section.
-No timing or C/Rust parity claim is made.
-
-[PR #177](https://github.com/e6qu/fun-with-pipes/pull/177) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39374128066)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39374119890)
-on `a5828518f92da3112fde13157a0dcc964d6c3cb9`; complete logs were audited.
-The user merged it as `44f9eb6eeb787df378b159b33f113bffd69b216e` with the same
-tree and a one-line message without trailers. Duplicate post-merge production
-was cancelled; post-merge documentation had already completed.
+[PR #177](https://github.com/e6qu/fun-with-pipes/pull/177) · [Counts and binary inspection](measurements/channel-receive-results.md) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39374128066) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39374119890)
 
 ## Loop state and known function calls (PR #176)
 
@@ -682,21 +386,7 @@ The alias change saves no further allocations or retains; it removes generic
 dispatch and reduces the fresh-text exchange frame by 48 bytes on both hosts.
 These are fwp count/representation comparisons, not timing or C/Rust parity claims.
 
-Focused ownership `39366497033` passes 62 integrations plus all compiler units
-on each of six native hosts and 18 checks on each WASI host. Counts `39366501786`
-pass both Linux architectures. Resource-field runs `39365324259`/`39365327202`
-pass 37 tests each with GCC. GC-reporting run `39368181540` passes on both Linux
-and macOS architectures: Linux-only resident-memory checks now explicitly report
-their restriction on macOS, and missing/failing compilers fail GC checks.
-
-The user merged [PR #176](https://github.com/e6qu/fun-with-pipes/pull/176) as
-`90f0ab9f6b30da75682f598ef5afd8f9fef7bfed` before production CI completed.
-Its tree equals head `ddff413a940b2c37e6ea3349b443fe59a232d953`, and its verified
-message is one line without trailers. [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39371117507)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39371117707)
-now pass on that exact head; all nine production jobs and complete logs were
-audited. Only duplicate post-merge runs `39372193646` and `39372193575` were
-cancelled after tree verification.
+[PR #176](https://github.com/e6qu/fun-with-pipes/pull/176) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39371117507) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39371117707)
 
 ## Function queues and cheaper sends (PR #175)
 
@@ -708,27 +398,7 @@ Sends move an existing owner into the queue, preserving aliases and cleanup on
 failure/cancellation. A `tap` optimization also removes a temporary argument tuple.
 ARC preprocessing excludes tracing routines even with GCC at O0.
 
-[Measurements](measurements/channel-transfer-protocol.md) compare five fwp
-programs at 0/16/1024 messages on Linux ARM64/AMD64. Fresh sends save one retain;
-successful exchanges save one allocation request after `tap` simplification.
-Shared cases retain their required owners. All ARC samples end with zero charged
-storage. The report preserves code-size and stack tradeoffs; it makes no timing
-or C/Rust parity claim. Loop-state tuples still allocate in this delivery.
-
-Focused checks pass on all six native platforms and both WASI hosts, covering
-aliases, closed queues, failures, cancellation and actual binaries. Full acceptance
-also verifies repairs to autodiff proofs, recursive type comparisons, callback
-effect inference, GCC collector exclusion and Windows output checks. Default
-native mode still includes tracing; [the memory roadmap](../PLAN.md) remains open.
-
-[PR #175](https://github.com/e6qu/fun-with-pipes/pull/175) merged as
-`b9cfbbe656baacf30864c8a84b0184ca683ff5b6`, with identical files to tested head
-`6511a50fb99167b60f0b03a96c8a36cfa0c55e46`. All nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39363423392)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39363423384)
-passed before the squash merge; its tree and one-line message were verified.
-Only redundant post-merge production `39370566486` and documentation `39370566329`
-were cancelled after verification.
+[PR #175](https://github.com/e6qu/fun-with-pipes/pull/175) · [Measurements](measurements/channel-transfer-protocol.md) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39363423392) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39363423384)
 
 ## Numeric hashing and integer output (PR #174)
 
@@ -741,25 +411,7 @@ passed before squash merge. The verified message is one line, 73 characters,
 with no body or trailers. Only redundant post-merge production `39351187907`
 was cancelled after checking the identical tree.
 
-Eligible numeric hashes avoid repeated per-element type dispatch. Integer
-printing avoids a temporary String. A GCC optimization failure exposed invalid
-aliasing assumptions in five runtime object views; those views now explicitly
-permit aliasing, without changing their layouts or disabling strict aliasing
-globally. The original failed-head measurements remain labeled as historical.
-
-Focused validation passed 456 tests across six native hosts and 24 tests on each
-WASI runner. Separate aliasing checks covered both Linux architectures with GCC
-and Clang at O1/O2/O3. Reports retain 96 hash correctness binaries, 48 allocation
-measurement binaries and 144 output binaries, including actual disassembly.
-The [hash/output measurements](benchmarks.md#numeric-hash-specialization) distinguish
-saved dispatch/count work from elapsed time: only the repeated Linux ARM64 large
-array/set cases establish separated timing ranges; other comparisons overlap.
-
-The [final C/Rust comparison](measurements/numeric-output-peers-2026-10-20.md)
-still shows gaps: its checked fwp loop costs 38.3% more median whole-process time
-than C and 3.9% more than Rust, and its string workload costs 15.7%/16.5% more.
-These six-sample comparisons identify work to investigate; they do not prove
-universal parity, a regression from the previous delivery or complete GC removal.
+[PR #174](https://github.com/e6qu/fun-with-pipes/pull/174) · [final C/Rust comparison](measurements/numeric-output-peers-2026-10-20.md)
 
 ## Direct integer range sets (PR #173)
 
@@ -771,19 +423,7 @@ and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39312560
 passed before squash merge. The one-line message and identical tree were checked;
 only redundant post-merge production run `39328932163` was cancelled.
 
-`range lo hi | set.from-list` writes eligible integer ranges directly into their
-final buffer. For 4,096 keys, construction falls from 4,099 requests / 196,624 bytes
-to one request / 32,776 bytes. Empty/descending ranges allocate nothing. Bounds
-keep their order; size checks include actual 32-bit WASI execution. Boxed integers
-and shared input lists keep their ordinary construction paths.
-
-Focused checks passed 264 tests across six native hosts and 24 WASI tests per
-Linux architecture. The [binary audit](https://github.com/e6qu/fun-with-pipes/actions/runs/39311772543)
-checked 228 actual binaries. [Measurements](benchmarks.md#direct-integer-range-sets)
-retain slower small-case medians and overlapping Windows samples. A separate
-[million-key comparison](measurements/range-set-peers-2026-10-19.md) measured
-tracing fwp at 6.1%/6.9% more whole-process median time than C/Rust on its Linux
-AMD64 runner. This removes construction intermediates, not all collection costs.
+[PR #173](https://github.com/e6qu/fun-with-pipes/pull/173) · [binary audit](https://github.com/e6qu/fun-with-pipes/actions/runs/39311772543) · [million-key comparison](measurements/range-set-peers-2026-10-19.md)
 
 ## Compact set storage (PR #172)
 
@@ -794,19 +434,7 @@ AMD64 runner. This removes construction intermediates, not all collection costs.
 and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39297062240)
 passed before the squash merge.
 
-Sets store one word per key instead of a key plus an unused value word. Maps
-keep both words. A freshly built 4,096-key integer set requests 32,776 container
-bytes rather than the former layout's 65,544; empty sets skip temporary allocation.
-Constants, updates, nested keys, decoders, hashing and cleanup use the new layout.
-Temporary construction storage and separately allocated keys are additional.
-
-All 41 focused tests passed on each of six native hosts, with none ignored.
-The [binary audit](https://github.com/e6qu/fun-with-pipes/actions/runs/39301336981)
-checked 144 executables. [Measured storage](benchmarks.md#compact-set-storage-measured-allocation-size)
-records exact counts and inspected key spacing. Production also exercised WASI.
-This establishes compact storage and cleanup, not a timing improvement or removal
-of all collection allocations. Redundant post-merge production run `39311332528`
-was cancelled only after verifying that the merged tree matched the tested tree.
+[PR #172](https://github.com/e6qu/fun-with-pipes/pull/172) · [binary audit](https://github.com/e6qu/fun-with-pipes/actions/runs/39301336981)
 
 ## Mixed tail recursion (PR #171)
 
@@ -817,13 +445,7 @@ was cancelled only after verifying that the merged tree matched the tested tree.
 and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39276733233)
 passed.
 
-A function can now reuse its frame for eligible self-tail calls even if another
-branch makes ordinary recursive calls. Tests cover a 200,000-step countdown,
-shared strings, argument and trap order, cancellation, REPL linking and debugger
-frames in the interpreter, native execution and WASI. Generated C and machine
-code accompany the checks. Calls with work left afterward retain their frames;
-resource-owning frames and mutual recursion still need separate proofs.
-This establishes bounded tail transfers, not zero allocation or C/Rust speed parity.
+[PR #171](https://github.com/e6qu/fun-with-pipes/pull/171)
 
 ## Acyclic nested channel ownership (PR #170)
 
@@ -834,14 +456,7 @@ This establishes bounded tail transfers, not zero allocation or C/Rust speed par
 and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39259766267)
 passed before the squash merge.
 
-Checked ARC now accepts a queue containing another channel when payload types
-prove that ownership cannot loop back. Native and WebAssembly tests cover aliases,
-undrained queues, failure and cancellation. Both Windows checks were repaired to
-use the compiler's explicit `.exe` filename for execution and symbol inspection.
-The preceding run's only failures were that filename mismatch on Windows.
-This removes a compile-time rejection, not allocation or reference-count work;
-unknown captures and arbitrary owning cycles remain excluded. Lesson 23 explains
-the accepted routing pattern.
+[PR #170](https://github.com/e6qu/fun-with-pipes/pull/170)
 
 ## Static constants and complete shutdown checks (PR #169)
 
@@ -854,14 +469,7 @@ All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/3
 and [Linux/ARM Mac/Intel Mac shutdown checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39232331253)
 passed before the merge.
 
-Compile-time records, arrays, maps, wide numbers and captures now use static
-storage instead of retained startup heap objects. Tests check zero startup
-allocation requests, immutable updates and final ARC cleanup. O0 float linking
-and cleanup probes were repaired. The native runner times out stalled tests
-without killing a long suite that continues completing cases. This closes the
-failures left by #168. Tracing was still the default at that revision;
-[PR #199](#checked-native-defaults-and-arc-metadata-pr-199) later changed it to
-checked ARC. These allocation results do not establish a timing gain over C/Rust.
+[PR #169](https://github.com/e6qu/fun-with-pipes/pull/169)
 
 ## Self-tail recursion and shutdown repairs (PR #168)
 
@@ -871,24 +479,9 @@ as `5258c6efd0418f19add23f5e2a763563178af823`, with the same tree as
 It adds eligible self-tail frame reuse in both engines, cycle-proof diagnostics,
 lesson 23, scheduler disposal and network connection closure before task draining.
 
-[Language/tools](https://github.com/e6qu/fun-with-pipes/actions/runs/39211377606)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39211352992)
-passed. [Shutdown checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39211372965)
-finished on Linux AMD64 and macOS ARM64: network stalls were resolved, but stricter
-allocation ledgers exposed startup constants retained on the heap. Three generated-C
-instrumentation anchors also matched unrelated runtime calls. PR #169 repaired
-these failures and established full acceptance for the resulting code; the
-original #168 merge alone was **not full platform acceptance**.
-Duplicate full runs `39215835611` and `39215850976` were cancelled on this known
-failing tree.
+[PR #168](https://github.com/e6qu/fun-with-pipes/pull/168) · [Language/tools](https://github.com/e6qu/fun-with-pipes/actions/runs/39211377606) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39211352992) · [Shutdown checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39211372965)
 
-The countdown measurements compare two fwp implementations. O0 executes both
-loops; O2 eliminates the recursive countdown but retains the explicit loop, so
-its timings do not measure equivalent executed work. See the
-[measurement method](benchmarks.md#self-tail-recursion-compared-with-an-explicit-loop).
-
-## Accepted deliveries
-
+## Earlier delivery table
 Earlier deliveries established native macOS ([PR #74](https://github.com/e6qu/fun-with-pipes/pull/74)),
 ownership and representation ([#124](https://github.com/e6qu/fun-with-pipes/pull/124),
 [#125](https://github.com/e6qu/fun-with-pipes/pull/125),
@@ -929,23 +522,10 @@ Cached numeric-map reads avoid repeated retains: 2,000,001 become one in the
 500,000-entry/two-million-query workload. The matching Xeon 8573C comparison
 reproduces PR #166's layout penalty and measures the combined change 2.67% faster
 than the old separate-layout program. These are fwp-versus-fwp results, not C/Rust
-parity; [the benchmark report](benchmarks.md#rechecking-the-original-xeon-slowdown)
+parity; [the benchmark report](measurements/numeric-collections.md#rechecking-the-original-xeon-slowdown)
 retains slower cases, repeated samples and binary evidence.
 
-The delivery also adds comparisons/scalar math, a persistent REPL, local notebook,
-interpreter debugger/Python SDK and generated-C/machine-code inspection. Toolchain,
-timeout, target, notebook directory/port and REPL mode settings are explicit.
-Guides explain parsing, compiler stages, examples and benchmark scope. Weak
-references and guaranteed tail recursion were proposals at this revision;
-tracing was still the default then. [PR #199](#checked-native-defaults-and-arc-metadata-pr-199)
-later made checked ARC the default; complete tracing removal remains work.
-
-- Same files: merge `e8e22f1901e5396e1bf3555073ebeb9d5c65da41`, tested `7cb899faa86d3cafb1192529d7fd357e7067ca4b`.
-- Passing [nine production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39141587973)
-  and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39141587926).
-- Passing [four-host terminal probes](https://github.com/e6qu/fun-with-pipes/actions/runs/39141595653)
-  and [language, Python, disassembly and browser checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39141618594).
-  Cross-target object inspection is not evidence of native execution.
+[PR #167](https://github.com/e6qu/fun-with-pipes/pull/167) · [nine production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39141587973) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39141587926) · [four-host terminal probes](https://github.com/e6qu/fun-with-pipes/actions/runs/39141595653) · [language, Python, disassembly and browser checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39141618594)
 
 ## Numeric map and set construction (PR #166)
 
@@ -958,11 +538,7 @@ was 4.4–4.6% slower**; allocation savings do not resolve that result. Cached-m
 borrowing candidate `774d838c` is not part of this merge. PR #167 above supplies
 the subsequent implementation and matching-host repair evidence.
 
-[PR #166](https://github.com/e6qu/fun-with-pipes/pull/166): merge `de678a7d42af803948835cfbc43b4862b63164da`, tested `91c8923fa68a754c29b85eb963f7f3b965b158d8`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39109626103) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39109626314) pass; merged files match.
-
-[Benchmark guide](benchmarks.md) explains the relevant measurements and limits.
+[PR #166](https://github.com/e6qu/fun-with-pipes/pull/166) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39109626103) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39109626314)
 
 ## Owned C results and failure cleanup (PR #165)
 
@@ -975,11 +551,7 @@ newlines, executable paths and cancellation fixtures were repaired before the
 final gate; six original production failures and eight focused failures were
 not counted as passes.
 
-[PR #165](https://github.com/e6qu/fun-with-pipes/pull/165): merge `695907781c5efff02e0f202f8b7fa99283df5ef4`, tested `836f39b30079ec52f56b41d81baf468e8384a71b`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39094927776) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39094927727) pass; merged files match.
-
-Evidence: [library-results-2026-10-18](measurements/library-results-2026-10-18.json), [map-failures-2026-10-18](measurements/map-failures-2026-10-18.json).
+[PR #165](https://github.com/e6qu/fun-with-pipes/pull/165) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39094927776) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39094927727) · [library-results-2026-10-18](measurements/library-results-2026-10-18.json) · [map-failures-2026-10-18](measurements/map-failures-2026-10-18.json)
 
 ## Server entries, exact JSON and WebAssembly task owners (PR #164)
 
@@ -992,11 +564,7 @@ compiler/header identity. CSV goldens, Intel scheduling and a failed artifact
 upload were repaired/retried before acceptance. The scheduling report is a
 simulation, not a measured speedup.
 
-[PR #164](https://github.com/e6qu/fun-with-pipes/pull/164): merge `25f95f9c6cb157b7f4e2d74760f6f1e27be83f47`, tested `a845e0c5e9a37dad185c99566ddc6ce413b4293b`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39087594221) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39087594154) pass; merged files match.
-
-Evidence: [server-entries-2026-10-18](measurements/server-entries-2026-10-18.json), [wasm-host-owners-2026-10-18](measurements/wasm-host-owners-2026-10-18.json), [ci-scheduling-2026-10-18](measurements/ci-scheduling-2026-10-18.json).
+[PR #164](https://github.com/e6qu/fun-with-pipes/pull/164) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39087594221) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39087594154) · [server-entries-2026-10-18](measurements/server-entries-2026-10-18.json) · [wasm-host-owners-2026-10-18](measurements/wasm-host-owners-2026-10-18.json) · [ci-scheduling-2026-10-18](measurements/ci-scheduling-2026-10-18.json)
 
 ## HTTP server owners and fixed function storage (PR #163)
 
@@ -1009,11 +577,7 @@ allocations and 2,318 → 1,901 retains per HTTP request. Paired Linux request
 measurements are 4–6% faster than older fwp, not a C/Rust comparison. Failure
 injection and UDP counter fixtures were repaired before acceptance.
 
-[PR #163](https://github.com/e6qu/fun-with-pipes/pull/163): merge `0a468c9d0ee3283bd5de6a7cbc05126379ed3ee5`, tested `c998ce68b6beff90b0ba1097e92ede7a154f00f3`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39073022259) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39073022233) pass; merged files match.
-
-Evidence: [fixed-functions-2026-10-18](measurements/fixed-functions-2026-10-18.json).
+[PR #163](https://github.com/e6qu/fun-with-pipes/pull/163) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39073022259) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39073022233) · [fixed-functions-2026-10-18](measurements/fixed-functions-2026-10-18.json)
 
 ## HTTP client owners and complete connection keys (PR #162)
 
@@ -1025,11 +589,7 @@ later shared-check placement addresses that. Windows socket/loading/header-order
 fixtures and a stale cleanup injection were fixed before the full passing gate.
 HTTP server acceptance follows in #163.
 
-[PR #162](https://github.com/e6qu/fun-with-pipes/pull/162): merge `1b542f32f352ecd34553f17fcce2de25b6f0bbb2`, tested `99d70deb9c9daa8fc041964f9cbee51e48047c38`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39055466891) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39055442588) pass; merged files match.
-
-Evidence: [http-client-owners-2026-10-17](measurements/http-client-owners-2026-10-17.json).
+[PR #162](https://github.com/e6qu/fun-with-pipes/pull/162) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39055466891) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39055442588) · [http-client-owners-2026-10-17](measurements/http-client-owners-2026-10-17.json)
 
 ## Remote calls without tracing and record-field moves (PR #161)
 
@@ -1039,11 +599,7 @@ move into compiled calls; shared records retain independent owners. A greeting
 needs two retains instead of three, plus one per connection. Memory counts stay
 bounded, but code size grows; no elapsed-time or C/Rust parity claim follows.
 
-[PR #161](https://github.com/e6qu/fun-with-pipes/pull/161): merge `fd25a10c`, tested `0e162dcd7544c9fce9aede02f9196fc061e6d258`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39044644736) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39044644846) pass; merged files match.
-
-Evidence: [remote-arc-field-moves-2026-10-17](measurements/remote-arc-field-moves-2026-10-17.json).
+[PR #161](https://github.com/e6qu/fun-with-pipes/pull/161) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39044644736) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39044644846) · [remote-arc-field-moves-2026-10-17](measurements/remote-arc-field-moves-2026-10-17.json)
 
 ## Server cleanup and borrowed fold values (PR #160)
 
@@ -1055,11 +611,7 @@ Known fold callbacks borrow captures, removing 64 retain/release pairs per
 growth missed by narrower counters; the complete repair passes its unchanged
 8 MiB growth bound.
 
-[PR #160](https://github.com/e6qu/fun-with-pipes/pull/160): merge `8ae595df`, tested `a8fa519d`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39030633846) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39030633906) pass; merged files match.
-
-[Benchmark guide](benchmarks.md) explains the relevant measurements and limits.
+[PR #160](https://github.com/e6qu/fun-with-pipes/pull/160) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39030633846) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39030633906)
 
 ## Streamed input cleanup and continuation moves (PR #159)
 
@@ -1071,11 +623,7 @@ tracing-dependent implementation. Those percentages measure count operations,
 not elapsed time. Early completion records actual input work because scheduling
 can change how much is sent.
 
-[PR #159](https://github.com/e6qu/fun-with-pipes/pull/159): merge `7c463441`, tested `91398527`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39016595534) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39016595480) pass; merged files match.
-
-[Benchmark guide](benchmarks.md) explains the relevant measurements and limits.
+[PR #159](https://github.com/e6qu/fun-with-pipes/pull/159) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39016595534) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39016595480)
 
 ## Closed connections and completed I/O tasks (PR #158)
 
@@ -1086,11 +634,7 @@ Shared connections add three retains per connection; uniquely owned internal
 tasks free without task count updates. Failure/cancellation and recoverable TLS
 startup errors remain covered.
 
-[PR #158](https://github.com/e6qu/fun-with-pipes/pull/158): merge `a96871c9`, tested `30036a15`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39011071759) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39011071706) pass; merged files match.
-
-Evidence: [closed-remote-ownership-2026-10-17](measurements/closed-remote-ownership-2026-10-17.json).
+[PR #158](https://github.com/e6qu/fun-with-pipes/pull/158) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39011071759) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39011071706) · [closed-remote-ownership-2026-10-17](measurements/closed-remote-ownership-2026-10-17.json)
 
 ## Freed requests and transferred selected fields (PR #157)
 
@@ -1101,11 +645,7 @@ combined path uses 50,178 retains rather than 66,562 after request cleanup alone
 Allocation counts are unchanged. TLS-settings partial-construction cleanup is
 also checked.
 
-[PR #157](https://github.com/e6qu/fun-with-pipes/pull/157): merge `30668bf8`, tested `57d2a09e`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39004098429) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39004095234) pass; merged files match.
-
-Evidence: [remote-projection-moves-2026-10-17](measurements/remote-projection-moves-2026-10-17.json).
+[PR #157](https://github.com/e6qu/fun-with-pipes/pull/157) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39004098429) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/39004095234) · [remote-projection-moves-2026-10-17](measurements/remote-projection-moves-2026-10-17.json)
 
 ## Released stream caches and moved closure captures (PR #156)
 
@@ -1116,11 +656,7 @@ separate owners. At 16,384 received integers, retain counts fall from 81,921 to
 49,154 versus cache ownership alone. Counts remain higher than the earlier
 tracing-dependent path; connection/queue ownership follows in later deliveries.
 
-[PR #156](https://github.com/e6qu/fun-with-pipes/pull/156): merge `29302bae`, tested `d19ab045`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38996879616) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38996879603) pass; merged files match.
-
-Evidence: [remote-client-capture-moves-2026-10-17](measurements/remote-client-capture-moves-2026-10-17.json).
+[PR #156](https://github.com/e6qu/fun-with-pipes/pull/156) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38996879616) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38996879603) · [remote-client-capture-moves-2026-10-17](measurements/remote-client-capture-moves-2026-10-17.json)
 
 ## Shared remote reads and bounded chain cleanup (PR #155)
 
@@ -1130,11 +666,7 @@ Record/optional/tuple chains release through loops rather than one recursive
 cleanup call per link, with aliases preserved. This bounds the measured cleanup
 stack growth; it does not guarantee constant stack for arbitrary source recursion.
 
-[PR #155](https://github.com/e6qu/fun-with-pipes/pull/155): merge `45410bea`, tested `e71a2295`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38990872293) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38990872208) pass; merged files match.
-
-Evidence: [remote-stream-compact-2026-10-17](measurements/remote-stream-compact-2026-10-17.json), [wrapped-chain-cleanup-2026-10-17](measurements/wrapped-chain-cleanup-2026-10-17.json).
+[PR #155](https://github.com/e6qu/fun-with-pipes/pull/155) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38990872293) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38990872208) · [remote-stream-compact-2026-10-17](measurements/remote-stream-compact-2026-10-17.json) · [wrapped-chain-cleanup-2026-10-17](measurements/wrapped-chain-cleanup-2026-10-17.json)
 
 ## Service settings and iteration storage (PR #154)
 
@@ -1145,11 +677,7 @@ about half the elapsed time and one fewer result-node allocation per element
 than the repaired old-definition control. The first attempt was slower; known
 callback specialization resolved that measured regression.
 
-[PR #154](https://github.com/e6qu/fun-with-pipes/pull/154): merge `11ae0f63`, tested `51354d10`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38977201910) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38977126983) pass; merged files match.
-
-Evidence: [service-context-iteration-2026-10-16](measurements/service-context-iteration-2026-10-16.json).
+[PR #154](https://github.com/e6qu/fun-with-pipes/pull/154) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38977201910) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38977126983) · [service-context-iteration-2026-10-16](measurements/service-context-iteration-2026-10-16.json)
 
 ## Owned decoded values and network resources (PR #153)
 
@@ -1159,11 +687,7 @@ result array: 8,193 F64 outputs no longer need a separate 65,544-byte temporary
 and full copy. Input/workspace storage remains; this was a memory comparison,
 not a timing comparison with C/Rust.
 
-[PR #153](https://github.com/e6qu/fun-with-pipes/pull/153): merge `9bf203d7`, tested `f6dc9940`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38958379514) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38955543617) pass; merged files match.
-
-Evidence: [service-values-2026-10-16](measurements/service-values-2026-10-16.json).
+[PR #153](https://github.com/e6qu/fun-with-pipes/pull/153) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38958379514) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38955543617) · [service-values-2026-10-16](measurements/service-values-2026-10-16.json)
 
 ## Less temporary memory in hashing and numerics (PR #152)
 
@@ -1174,11 +698,7 @@ storage; actual loops use registers/vector instructions. Paired C/Rust reports
 retain remaining overhead and slower samples. These specific programs do not
 establish free abstractions for arbitrary vectors or callbacks.
 
-[PR #152](https://github.com/e6qu/fun-with-pipes/pull/152): merge `1fa0fec6`, tested `48566579`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38901011355) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38901011298) pass; merged files match.
-
-Evidence: [vector-paired-2026-10-16](measurements/vector-paired-2026-10-16.json).
+[PR #152](https://github.com/e6qu/fun-with-pipes/pull/152) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38901011355) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38901011298) · [vector-paired-2026-10-16](measurements/vector-paired-2026-10-16.json)
 
 ## Synchronous WASI ownership and streaming hashes (PR #151)
 
@@ -1188,11 +708,7 @@ into FNV-1a instead of allocating an encoded buffer; output still agrees with
 the interpreter. Hash-buffer allocation disappears, while surrounding pipeline
 costs remain at this revision.
 
-[PR #151](https://github.com/e6qu/fun-with-pipes/pull/151): merge `3dff03b6`, tested `27cdc7ff`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38872161681) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38872161673) pass; merged files match.
-
-[Benchmark guide](benchmarks.md) explains the relevant measurements and limits.
+[PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38872161681) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38872161673)
 
 ## Numeric zip intermediates and owned list/text results (PR #150)
 
@@ -1202,11 +718,7 @@ failure cleanup; WASI size checks preserve 32-bit request limits. Derivative
 allocation/count savings are measured separately from timing; small cases can
 still be slower.
 
-[PR #150](https://github.com/e6qu/fun-with-pipes/pull/150): merge `729db67f71386750aad0bbe477f546e5276b0223`, tested `7a7b40e1878ea062f64eceded6ae029b4124f976`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38851567232) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38851565415) pass; merged files match.
-
-Evidence: [zip-maps-2026-10-16](measurements/zip-maps-2026-10-16.json), [zip-map-cpu-2026-10-16](measurements/zip-map-cpu-2026-10-16.json).
+[PR #150](https://github.com/e6qu/fun-with-pipes/pull/150) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38851567232) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38851565415) · [zip-maps-2026-10-16](measurements/zip-maps-2026-10-16.json) · [zip-map-cpu-2026-10-16](measurements/zip-map-cpu-2026-10-16.json)
 
 ## Owned processes and numeric mapped arrays (PR #149)
 
@@ -1216,11 +728,7 @@ preserving callbacks and traps. Direct numeric work improves substantially;
 repeated derivative and tiny nested cases have their own mixed timings. Windows
 process probes use native executable and handle rules.
 
-[PR #149](https://github.com/e6qu/fun-with-pipes/pull/149): merge `58ed740cc785382b0cd818d4af970a1fa49516e6`, tested `5748f7496a8f1db0e93145c53e380a0703affc2f`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38841142126) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38841118993) pass; merged files match.
-
-[Benchmark guide](benchmarks.md) explains the relevant measurements and limits.
+[PR #149](https://github.com/e6qu/fun-with-pipes/pull/149) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38841142126) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38841118993)
 
 ## Record moves and application utilities (PR #148)
 
@@ -1230,11 +738,7 @@ Missing directories report errors in both engines and logs emit one newline.
 The matrix output-pointer experiment was not adopted: smaller code did not give
 a dependable speed improvement.
 
-[PR #148](https://github.com/e6qu/fun-with-pipes/pull/148): merge `853d6669dbf7dea78483376865190c218c9fece6`, tested `93b1741abcf5ab2a61460746c0077564e0328c0e`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38825629531) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38825487182) pass; merged files match.
-
-[Benchmark guide](benchmarks.md) explains the relevant measurements and limits.
+[PR #148](https://github.com/e6qu/fun-with-pipes/pull/148) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38825629531) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38825487182)
 
 ## Numerical precision and filesystem ownership (PR #147)
 
@@ -1244,11 +748,7 @@ derivatives without narrowing through F64. Console/environment/filesystem result
 clean up on failure; paths reject embedded zero bytes before OS access. This
 preserves precision and ownership, not universal numerical speed parity.
 
-[PR #147](https://github.com/e6qu/fun-with-pipes/pull/147): merge `c9127d2d`, tested `71c612d0`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38814786923) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38814787519) pass; merged files match.
-
-[Benchmark guide](benchmarks.md) explains the relevant measurements and limits.
+[PR #147](https://github.com/e6qu/fun-with-pipes/pull/147) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38814786923) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38814787519)
 
 ## Checked boundaries and numerical kernels (PR #146)
 
@@ -1259,11 +759,7 @@ charging includes its first small allocation. Fixed-size copies expose matrix
 vectorization and proved taskless programs omit scheduler ticks. An Intel
 compiler abort passed an unchanged retry; its historical cause remains unknown.
 
-[PR #146](https://github.com/e6qu/fun-with-pipes/pull/146): merge `be890914`, tested `19b14d0b`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349673) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349640) pass; merged files match.
-
-Evidence: [numerical-memory-modes-2026-10-15](measurements/numerical-memory-modes-2026-10-15.json).
+[PR #146](https://github.com/e6qu/fun-with-pipes/pull/146) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349673) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349640) · [numerical-memory-modes-2026-10-15](measurements/numerical-memory-modes-2026-10-15.json)
 
 ## Infix arithmetic and numeric loop cleanup (PR #145)
 
@@ -1274,11 +770,7 @@ rotated, and tutorial source/output copies agree again. The sampled fused
 reductions allocate no intermediate storage; changed timing methods prevent an
 isolated before/after speed claim.
 
-[PR #145](https://github.com/e6qu/fun-with-pipes/pull/145): merge `e51b8570`, tested `1ee7d581`.
-[Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38779284746) and
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38779284697) pass; merged files match.
-
-Evidence: [ownership-performance-2026-10-15](measurements/ownership-performance-2026-10-15.json).
+[PR #145](https://github.com/e6qu/fun-with-pipes/pull/145) · [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/38779284746) · [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38779284697) · [ownership-performance-2026-10-15](measurements/ownership-performance-2026-10-15.json)
 
 ## Documentation rewrite (PR #142)
 
@@ -1291,6 +783,8 @@ also has its own record. PR #143 supplied the fixture repair; later accepted
 #145 includes the corrected documentation/tutorial checks. The early merge
 itself is not passing platform evidence.
 
+[PR #142](https://github.com/e6qu/fun-with-pipes/pull/142)
+
 ## Accepted paired metadata allocations (PR #141)
 
 [PR #141](https://github.com/e6qu/fun-with-pipes/pull/141) merged as
@@ -1301,21 +795,12 @@ and [both WebAssembly checks](https://github.com/e6qu/fun-with-pipes/actions/run
 passed at runtime revision `24620eadbcc8c03fa1aefc2190bf1af483720840`.
 The final production/docs gates are in the table above.
 
-[Recorded measurements](measurements/ad-metadata-2026-10-15.json) compare two fwp
-storage layouts. Pairing buffers reduces allocation requests, but growth copies
-more bytes in some cases. Timings are mixed, including regressions; the
-[benchmark guide](benchmarks.md#paired-autodiff-metadata-allocations) states the
-comparison and limits. This is not a measurement against another language.
+[PR #141](https://github.com/e6qu/fun-with-pipes/pull/141) · [Recorded measurements](measurements/ad-metadata-2026-10-15.json)
 
-## Earlier records
+## Source identities
 
-[The pre-cleanup record](https://github.com/e6qu/fun-with-pipes/blob/de678a7d42af803948835cfbc43b4862b63164da/docs/roadmap-history.md)
-retains detailed gate audits, test counts and resolved development failures for
-these deliveries. Commit identities and measurement files are preserved here;
-obsolete next-action instructions are not carried forward.
-
-
-[The immutable historical snapshot](https://github.com/e6qu/fun-with-pipes/blob/41f30475c5e59951e784fe686aa6c69c7f2738e3/docs/roadmap-history.md)
-retains earlier development runs, recovery details and superseded instructions.
-The [measurement index](benchmarks.md#measurement-report-index) links the raw
-reports that still support current claims. Consult the live plan for new work.
+[Preparation records](preparation-records.md) retain the immutable commit/tag
+mapping used by the documentation audit. The detailed pre-overhaul narrative is
+available in [the merged source](https://github.com/e6qu/fun-with-pipes/blob/380fa8412327e52db420b96918d20e2528bbfc7c/docs/roadmap-history.md).
+It is historical evidence, not instructions for current work. Numerical samples
+and acceptance records remain in the repository with their original identities.

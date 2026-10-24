@@ -4,8 +4,7 @@ The cancellation-storage comparison passed focused checks on all six native
 platforms and both WebAssembly runners. The repaired Windows ARC checks also
 passed on both architectures in
 [PR #189](../roadmap-history.md#compact-task-records-and-repaired-native-validation-pr-189),
-which completed all nine production gates and documentation. The
-[session handoff](../development-state.md) records current work.
+which completed all nine production gates and documentation.
 
 A [task](../concurrency.md) is a computation scheduled alongside others. It can
 pause while waiting for another task, a timer or a channel (a queue for passing

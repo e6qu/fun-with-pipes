@@ -546,7 +546,7 @@ pointer element widths use the same representation (2/2/16 bytes).
   declares the matching release functions; scalar-only results need none.
   Native teardown cancels library tasks and releases cached values and
   runtime regions at unload (or static-archive process exit). The host must finish
-  all calls before unloading; see [ownership coverage](ownership.md#ownership-coverage)
+  all calls before unloading; see [ownership coverage](ownership.md#ownership-contract-checks)
   and [current validation](development-state.md).
   Scalar/struct results are copied into C values. A nullable pointer copies the
   raw pointer; the pointee follows its own allocation/lifetime contract.
@@ -699,7 +699,8 @@ from a misspelled option.
 
 ### Checked reference counting
 
-The `--gc arc` mode checks memory ownership and excludes tracing collection.
+Native builds select `--gc arc` by default. This mode checks memory ownership
+and excludes tracing collection; `--gc tracing` explicitly selects the collector.
 Supported entries include native main/CLI/function executables, synchronous WASI
 executables, and C libraries whose inputs are copied and whose results contain
 scalars or explicitly released strings. The [gRPC extension](services.md#building-without-tracing-collection)
@@ -721,7 +722,7 @@ before library unload. [PR #165](roadmap-history.md#owned-c-results-and-failure-
 records passing six-platform and production checks for these library results.
 The mode rejects unproved ownership or cycles. Browser-loader and WASI task
 extensions pass actual-module JSPI and Asyncify cleanup checks on both Linux
-hosts; [the measurements](benchmarks.md#webassembly-task-and-browser-loader-ownership)
+hosts; [the measurements](measurements/wasm-host-storage.md#webassembly-task-and-browser-loader-ownership)
 record their scope and remaining costs. Generated REST and MCP entries also use
 checked ownership; [PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164)
 records their passing functional, memory and production checks.
@@ -758,7 +759,7 @@ still be paged out by the OS. The configured parts are:
 
 | Part | Option | Default | What uses it |
 |---|---|---|---|
-| heap | `--heap S` | 64M | fwp values; still collected, but it never grows: when it is full the collector runs before giving up |
+| heap | `--heap S` | 64M | fwp values; fixed capacity. ARC reclaims through owners; only explicit tracing mode runs a collector |
 | pool | `--pool S` | 32M | Runtime buffers and decimal overflow scratch; Linux interposes allocation functions, Windows uses a private allocator |
 | main stack | `--stack S` | 16M | the main task |
 | task stacks | `--tasks N`, `--task-stack S` | 64 of 1M | tasks: at most N run at once, each with a guard page |
@@ -772,7 +773,8 @@ fwp: out of memory: the static heap (1024 KiB) is full; build with a larger --he
 ```
 
 `FWP_MEMORY_REPORT=1` prints, at exit, the size of each part and how much
-of it was used at most, which is how to size them:
+of it was used at most. This example is from an explicit tracing build; ARC
+reports zero collections:
 
 ```
 fwp: static memory: 124448 KiB mapped at startup
@@ -794,17 +796,18 @@ startup.
 
 | Target | Output | Runtime |
 |---|---|---|
-| native | an executable for the host | Linux and native macOS on Apple Silicon/Intel ([verified baseline](development-state.md)). TLS programs link OpenSSL 3 and need its headers; on macOS set `FWP_OPENSSL_DIR` ([tls.md](tls.md#openssl)) |
+| native | an executable for the host | Linux, macOS and Windows on ARM64/AMD64, one compiler package per combination ([delivery evidence](roadmap-history.md)). TLS programs link OpenSSL 3 and need its headers; on macOS set `FWP_OPENSSL_DIR` ([tls.md](tls.md#openssl)) |
 | `wasm32-wasi` | a module for wasmtime or `node:wasi` | needs clang with a WASI sysroot; no sockets or processes, and programs that use them are rejected at compile time; files only in preopened directories; tasks need a JavaScript host with JSPI, or `--wasm-async=asyncify` (see below) |
-| `wasm32-browser` | the module plus a JavaScript loader (`run({ stdout, stderr, args, env, stdin })`, resolving to the exit code) | as `wasm32-wasi`, but no files: standard streams, clocks and random numbers; the page must be served over HTTP; tasks run in browsers with JSPI, or in any browser with `--wasm-async=asyncify` (see below) |
+| `wasm32-browser` | the module plus a JavaScript loader (`run({ stdout, stderr, args, env, stdin })`, resolving to the exit code) | as `wasm32-wasi`, but no files: standard streams, clocks and random numbers; the page must be served over HTTP; tasks run in browsers with JSPI, or with `--wasm-async=asyncify` on a compatible host (see below) |
 | `<arch>-linux` | an executable for another 64-bit little-endian Linux: `x86_64`, `aarch64` (or `arm64`), `riscv64`, `powerpc64le`, `loongarch64`; `-gnu` and Rust's `-unknown-linux-gnu` spellings are accepted | all features, as native. See [Cross-compiling](#cross-compiling) |
 | `--fat` (x86-64) | variants for x86-64, x86-64-v2 and x86-64-v3 | the best variant the CPU supports runs; `FWP_VARIANT=name` forces one, `FWP_VARIANT_SHOW=1` reports the choice |
 | `--static` | an executable linked with static libraries | runs on any Linux of the same architecture. A program that uses TLS needs OpenSSL's static libraries (`libssl.a`) to build; the C library's name resolution (`getaddrinfo`) still loads the system's NSS modules when it runs |
 | `--pgo` (GCC) | an executable optimized with a profile of one training run | `fwp build --pgo main.fwp -- 1000` runs the instrumented program as `main 1000`, discarding its output, then compiles again with the branch and call counts it recorded. The training run should exercise the program as it is used |
 
-The interpreter and every compiled target produce the same output for the
-same program, including float formatting and trap messages. The test suite
-checks this.
+For a program within both hosts' supported capabilities, the tests compare
+interpreter/native output, float formatting and traps. Target-specific foreign
+code, host math libraries and externally scheduled events have separate contracts;
+this is not a promise that every target can execute every program.
 
 ### Cross-compiling
 
@@ -842,11 +845,11 @@ needs an OpenSSL built for musl.
 Cross targets currently name 64-bit little-endian Linux systems. Native
 macOS on Apple Silicon and Intel passed the full native CI gate: use
 `--target native` with Apple Clang and consult
-[development-state.md](development-state.md) for verification. Shared libraries
+[delivery history](roadmap-history.md) for verification. Shared libraries
 use `.dylib`; native `--static` linking is rejected. Build a separate binary
 for each supported OS/architecture; universal binaries are outside project scope.
-The desired platform matrix is Linux, macOS and Windows on ARM64 (`aarch64`)
-and AMD64 (`x86_64`); see [current acceptance](../PLAN.md#platform-objective-and-current-evidence).
+The verified native platform matrix is Linux, macOS and Windows on ARM64 (`aarch64`)
+and AMD64 (`x86_64`); see [current acceptance](../README.md#supported-platforms).
 Native Windows ARM64/AMD64 is accepted. Darwin cross targets are not implemented;
 `--pgo` requires GCC.
 For TLS set `FWP_OPENSSL_DIR` as described in [tls.md](tls.md#openssl).
@@ -877,9 +880,8 @@ A module that uses tasks exports `fwp_fiber_hooks`, `fwp_fiber_stack`,
 `fwp_fiber_entry`, its stack pointer and its function table, into which
 the host installs the switching functions; it imports nothing beyond WASI,
 so it still instantiates in any WASI runtime. Programs without tasks are
-unchanged. A fiber's stack is as large as the engine makes it (in
-browsers about as large as a page's, a few thousand nested calls); running
-out is the trap `fwp: trap: stack overflow`.
+unchanged. The host engine limits nested calls independently of the reserved fiber memory.
+Running out of call-stack space is the trap `fwp: trap: stack overflow`.
 
 `fwp build --target wasm32-wasi|wasm32-browser --wasm-async=asyncify`
 builds a program with tasks for engines without JSPI: binaryen's Asyncify
@@ -1152,4 +1154,5 @@ written by the test itself.
 For example, `test "stop" = 7 | exit` reports `FAILED (exit 7)` and the runner
 continues. This recovery belongs to the test runner: ordinary programs still
 exit. A trap or exit inside a child task remains process-fatal in both engines.
-The [handoff](development-state.md) records platform validation of these changes.
+The [delivery history](roadmap-history.md) records platform validation. The
+[plan](../PLAN.md#1-remove-tracing-gc) specifies the remaining collector removal.

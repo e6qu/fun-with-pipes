@@ -116,8 +116,9 @@ Err (library.NotAvailable {isbn = "978-9", reason = "no such book"})
 ```
 
 The output is the same as the single executable's. The interpreter does
-the same: `fwp serve main.fwp library` serves the module, and
-`fwp run --service library main.fwp` runs `main` against it. Native and
+the same with explicit `--interp`: `fwp serve --interp main.fwp library`
+serves the module, and `fwp run --interp --service library main.fwp` runs `main`
+against it. Native and
 interpreted servers and clients mix freely.
 
 ## The wire format

@@ -113,4 +113,4 @@ one-line summary; the Rust test parses a line rather than requiring LF bytes.
 Ordinary fwp output still requires exact agreement with the interpreter.
 
 See [benchmark guidance](../benchmarks.md) for interpreting ratios and
-[the handoff](../development-state.md) for current source and run identities.
+[PR #205](../roadmap-history.md#float-printing-and-numerical-cost-measurements-pr-205) for the passing delivery gates and retained source identities.

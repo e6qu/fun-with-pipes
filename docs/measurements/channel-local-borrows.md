@@ -95,7 +95,7 @@ The same batch fixes C fields changed between `setjmp` and `longjmp`, the
 runtime's mechanism for returning to an error handler without ordinary returns.
 Changed error payload/type fields and task-scope child-list metadata now use
 `volatile`, so they remain valid after the jump. Unchanged links stay ordinary
-fields. See [the runtime design](../design.md#runtime) for the C rule.
+fields. See [the runtime design](../design.md#runtime-representation-and-c-safety) for the C rule.
 
 Each Linux host passes 217 checks: 161 compiler tests, 54 integration tests,
 the channel measurement and the seven-program benchmark. Full logs are clean.

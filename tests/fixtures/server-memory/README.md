@@ -42,3 +42,6 @@ task becomes ready. The measurement wakes the existing listener once, after
 the connection closes and all spawned tasks finish, so the ordinary scheduler
 can retire that final task before sampling. This adds no task or connection;
 comparisons must use the same wake and drain boundary.
+
+[Recorded protocol and results](../../../docs/measurements/remote-server-storage.md) name the
+measured revisions. [The plan](../../../PLAN.md) tracks current acceptance work.

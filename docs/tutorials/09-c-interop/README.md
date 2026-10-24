@@ -95,8 +95,9 @@ fwp build geom.fwp --staticlib -o libgeom.a
 program that use such a library.
 
 On macOS the shared-library form (`--cdylib`) uses `.dylib` and the
-interpreter loads a Darwin FFI shim. Native portability and verification
-are tracked in [the session handoff](../../development-state.md).
+interpreter loads a Darwin foreign-call bridge. The
+[ownership contract](../../ownership.md#c-library-results-and-foreign-calls)
+applies to both native library formats.
 
 On Windows, generated libraries use LLVM-MinGW and the Universal C Runtime
 (UCRT). A Rust caller must use the matching native
@@ -170,8 +171,9 @@ The same manual lifetime applies in tracing and ARC modes. ARC counts the
 option and any owned strings, never the raw pointee. Foreign host storage uses
 its host's release operation, not necessarily `mem.free`. If adding failure or
 cancellation inside this sequence, provide cleanup for those paths too; a raw
-pointer has no automatic destructor. The pointer extension's native acceptance
-is tracked in [the handoff](../../development-state.md).
+pointer has no automatic destructor. The
+[manual-pointer report](../../measurements/manual-pointers.md) records the
+lifetime checks for this example.
 
 ## The program
 

@@ -123,10 +123,6 @@ build an executable with `fwp build docs/tutorials/13-tooling/main.fwp -o toolin
 `fwp fmt --check docs/tutorials/13-tooling` and
 `fwp lint docs/tutorials/13-tooling` both succeed on it.
 
----
-
-Previous: [Numerics](../12-numerics/README.md) · [All tutorials](../README.md) · Next: [Services](../14-services/README.md)
-
 
 ## Explore a running program
 
@@ -144,3 +140,7 @@ input and step through expressions. Its Python SDK can record execution events.
 The same guide shows how to compare emitted C with actual machine instructions
 at `O0` through `O3` on explicitly selected targets. This inspection does not run
 a cross-target binary or measure its speed.
+
+---
+
+Previous: [Numerics](../12-numerics/README.md) · [All tutorials](../README.md) · Next: [Services](../14-services/README.md)

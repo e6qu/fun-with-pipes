@@ -35,8 +35,9 @@ arbitrary recursion use constant stack space.
 Resource cleanup, task/channel owners and unknown closure captures can prevent
 this proof. `FWP_DUMP_IR=1` explains lowering decisions. The raw interpreter
 (`FWP_NO_OPT=1`) and source debugger preserve original recursive calls; use the
-small four-step examples in those modes. See [the handoff](../../development-state.md)
-for validation of the current compiler revision.
+small four-step examples in those modes. The
+[tail-call contract](../../design.md#tail-calls-and-recursion) lists the supported
+cases and cleanup restrictions.
 
 ## An explicit loop
 
@@ -143,4 +144,4 @@ implemented frame reuse, remaining limits and cleanup rules.
 
 ---
 
-Previous: [MCP tools](../21-mcp/README.md) · [All tutorials](../README.md)
+Previous: [MCP tools](../21-mcp/README.md) · Next: [Ownership scopes](../23-ownership-scopes/README.md) · [All tutorials](../README.md)

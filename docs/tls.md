@@ -49,8 +49,8 @@ The compiler uses the prefix's `include` and `lib` directories and records
 the library search path in the executable. The interpreter tries libraries
 in its `lib` directory before ordinary loader names. The prefix is included
 in the native compile-cache key. It is ignored for Linux cross builds,
-which need the target's libraries. Current Darwin validation is recorded
-in [development-state.md](development-state.md).
+which need the target's libraries. [Contributing](../CONTRIBUTING.md#setting-up)
+lists the supported native toolchains.
 
 The Windows implementation uses LLVM-MinGW for generated programs and matching
 OpenSSL 3 COFF import libraries (`lib/libssl.lib`, `lib/libcrypto.lib`) under
@@ -58,7 +58,7 @@ OpenSSL 3 COFF import libraries (`lib/libssl.lib`, `lib/libcrypto.lib`) under
 directory to `PATH` for generated programs; PE has no embedded rpath. The
 interpreter loads DLLs from the prefix's `bin` directory. The Windows runner
 setup pins a vcpkg revision, verifies native PE architectures and requires TLS
-execution; acceptance remains recorded in the handoff.
+execution in both native Windows production jobs.
 
 | | |
 |---|---|
@@ -90,7 +90,7 @@ connection. `tcp.close` closes it for every copy; automatic cleanup closes it
 when its final owner finishes. A function or task that captures the connection
 keeps it alive. Closing a listener does not close connections it has already
 accepted: those connections retain the TLS configuration they still need.
-[Ownership](ownership.md#tcp-and-tls-socket-owners) describes the accepted
+[Ownership](ownership.md#original-resource-semantics) describes the accepted
 TCP/TLS ownership checks and the remaining limits for whole services.
 
 | Function | |

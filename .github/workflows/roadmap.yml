@@ -19,6 +19,8 @@ jobs:
           fetch-depth: 0
       - name: Retain review heads for preparation references
         run: git fetch origin "+refs/pull/*/head:refs/remotes/origin/review/*"
+      - name: Documentation audit controls
+        run: python3 scripts/test-roadmap.py
       - name: Documentation, immutable tags and commit messages
         run: python3 scripts/check-roadmap.py
       - uses: dtolnay/rust-toolchain@stable

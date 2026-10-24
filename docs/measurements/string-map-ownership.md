@@ -121,5 +121,5 @@ Only tests and documentation differ from the measured native source. It exercise
 the same five map inputs, shared list/tail/string aliases, dynamic callbacks and
 caught errors. Eight independently inspected O0/O2 modules cover correct physical
 cleanup and a deliberately omitted free, with exact interpreter output checks.
-Final production and documentation acceptance remains recorded in the
-[session handoff](../development-state.md), separately from focused evidence.
+[PR #194](../roadmap-history.md#string-map-ownership-and-native-reuse-checks-pr-194) records passing final production and documentation gates.
+The focused evidence above retains its original revision.

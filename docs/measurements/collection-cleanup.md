@@ -66,8 +66,8 @@ arbitrary programs.
 CI saves generated C, executables, output and exit status under `record-ownership/`.
 The related record, constructor and collection probes now save unexpected
 outcomes before asserting success, so a failed check leaves its evidence intact.
-The compiler and runtime are unchanged. [The handoff](../development-state.md)
-records current delivery work; accepted results are recorded below.
+This test extension did not change the compiler or runtime. Its accepted
+results are recorded below.
 
 See [record cleanup](record-cleanup.md) for constructors and field conversions,
 [ownership](../ownership.md) for the memory contract and [PLAN.md](../../PLAN.md)

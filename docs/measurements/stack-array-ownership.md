@@ -66,6 +66,5 @@ and the deliberately broken cleanup controls.
 These results establish correctness for the tested rule and cases. They do not
 establish a general speedup, zero heap use or zero ARC. The [numerical comparison](array-owner-moves.md)
 compares the candidate with the previously accepted generated C,
-including slower small cases and ARM64's larger callback frame. Delivery acceptance
-still requires all production jobs and documentation for the final PR commit;
-see the [handoff](../development-state.md).
+including slower small cases and ARM64's larger callback frame.
+[PR #196](../roadmap-history.md#array-owner-moves-and-copied-callback-strings-pr-196) records the subsequent passing production and documentation gates.
