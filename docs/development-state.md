@@ -28,6 +28,18 @@ emitted C (18.66s); local Clang O1 exceeded the fixed 1 GiB aggregate RSS guard
 and was stopped. Move validation to GitHub, never raise or bypass that limit.
 Compiler receipt: `/private/tmp/fwp-verified-206-compiler/receipt.json`.
 
+Focused source `ef66ca9973ffe55a9d246db4d6ae8373bd7749ad`, run `40066024251`,
+exposed a test-driver bug: API counters use floating text such as `80.0`.
+Five completed hosts pass five older tests and fail both new memory tests at
+this parser. Their complete logs show no other cause. Intel macOS is still running;
+continue auditing its original job while the combined repair runs.
+The corrected parser checks finite, integral floating values. An 80-response raw
+interpreter probe passes (0.50s); startup's three real-child controls pass (4.90s).
+Observer insertion anchors pass (2.71s). Native memory results remain unverified.
+The repair also prevents sampling handshakes after shutdown begins, records
+portable exit codes and adds independent binary/record inspection.
+
+
 ## What changed and what passed
 
 Task files now have repeated 128/4,096-item UTF-8 edit checks, partial read/write

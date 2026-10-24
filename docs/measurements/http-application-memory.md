@@ -17,7 +17,9 @@ The first group warms routes, metrics and reusable storage. Next, eight clients
 disconnect partway through request bodies; eight more complete one normal round.
 Finally, seven slow handlers enter before shutdown. The application's three-second
 shutdown grace is shorter than its five-second handler timeout. The test requires
-successful shutdown, closed sockets and released managed storage.
+successful shutdown, closed sockets and released managed storage. A runtime
+observation confirms that shutdown cancelled the listener's task group; merely
+waiting for handler timeouts does not satisfy this check.
 
 After each of the first eight groups, the listener's existing 100 ms accept
 timeout provides an observation point. Sampling waits until only the listener
@@ -51,4 +53,8 @@ and the `http-application` focused workflow retain C, native binaries, diagnosti
 logs, exit status and RSS samples for every variant. Native Linux uses GCC;
 macOS and Windows use their production Clang toolchains. Passing one host does
 not establish the others. Review actual binaries before making tracing-removal
-or representation claims.
+or representation claims. The [saved-binary inspector](../../scripts/inspect-http-application.py)
+checks architecture, executable sections, tracing symbols, all checkpoint records,
+RSS limits and the negative controls. It reads binaries as data, without executing
+another host's code. Final acceptance still requires the exact delivery source's
+complete production matrix and documentation audit.

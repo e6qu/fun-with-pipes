@@ -12,6 +12,8 @@ static size_t http_app_metric_bytes(void) {
     return bytes;
 }
 static void http_app_checkpoint(void) {
+    /* Shutdown must drain tasks without waiting for another sampling handshake. */
+    if (fwp_shutdown) return;
     if (!http_app_opened || http_app_opened == http_app_sampled || http_app_opened % 8) return;
     size_t tasks = 0;
     for (fwp_task *t = fwp_gc_tasks; t; t = t->gc_next) tasks++;
@@ -20,6 +22,7 @@ static void http_app_checkpoint(void) {
     double charge = http_app_charge() - http_app_start;
     size_t metrics = http_app_metric_bytes();
     if (!http_app_active) {
+        http_app_listener = fwp_cur;
         http_app_baseline = charge;
         http_app_metric_baseline = metrics;
     }
@@ -39,9 +42,10 @@ static void http_app_checkpoint(void) {
 }
 static void http_app_finish(void) {
     double charge = http_app_charge() - http_app_start;
+    fprintf(stderr, "http-shutdown\t%u\n", http_app_shutdown_cancelled);
     fprintf(stderr, "http-final\t%llu\t%llu\t%.0f\t%zu\n",
         http_app_opened, http_app_closed, charge, http_app_metric_bytes());
-    if (!http_app_active || http_app_opened != http_app_closed || charge ||
+    if (!http_app_active || http_app_shutdown_cancelled != 1 || http_app_opened != http_app_closed || charge ||
         http_app_metric_bytes() != http_app_metric_baseline || fwp_gc_tasks || fwp_gc.ncollect) exit(241);
     /* Executable metrics storage is released by its existing atexit callback;
        its separate final record must follow this pre-teardown observation. */

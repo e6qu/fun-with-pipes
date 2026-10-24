@@ -104,11 +104,13 @@ impl Drop for Observed {
         )
         .unwrap();
         std::fs::write(self.artifact.with_extension("rss.tsv"), &self.resident).unwrap();
-        std::fs::write(
-            self.artifact.with_extension("status"),
-            format!("{status:?}\n"),
-        )
-        .unwrap();
+        let status = match status {
+            Ok(status) => status
+                .code()
+                .map_or_else(|| status.to_string(), |code| code.to_string()),
+            Err(error) => format!("wait failed: {error}"),
+        };
+        std::fs::write(self.artifact.with_extension("status"), status).unwrap();
     }
 }
 
@@ -191,15 +193,21 @@ fn send(stream: &mut TcpStream, method: &str, path: &str, headers: &str, body: &
     .unwrap();
 }
 
-fn metrics(stream: &mut TcpStream, reader: &mut BufReader<TcpStream>) -> usize {
+fn metrics(stream: &mut TcpStream, reader: &mut BufReader<TcpStream>) -> f64 {
     send(stream, "GET", "/metrics", "", "");
     let (status, body) = response(reader);
     assert_eq!(status, 200);
-    body.lines()
+    let count: f64 = body
+        .lines()
         .find_map(|line| line.strip_prefix("http_requests_total "))
-        .unwrap()
+        .expect("request counter")
         .parse()
-        .unwrap()
+        .expect("numeric request counter");
+    assert!(
+        count.is_finite() && count >= 1.0 && count.fract() == 0.0,
+        "{body}"
+    );
+    count
 }
 
 fn cohort(address: &str, repeats: usize, disconnect: bool) {
@@ -225,7 +233,7 @@ fn cohort(address: &str, repeats: usize, disconnect: bool) {
                     send(&mut stream, method, path, headers, body);
                     assert_eq!(response(&mut reader), (code, expected.into()), "{method} {path}");
                 }
-                assert!(metrics(&mut stream, &mut reader) > 0);
+                assert!(metrics(&mut stream, &mut reader) > 0.0);
             }
         })).collect();
         for worker in workers {
@@ -245,7 +253,7 @@ fn cancel_pending(server: &mut Observed) {
     }
     let deadline = Instant::now() + Duration::from_secs(10);
     for polls in 1.. {
-        if metrics(&mut control, &mut reader) == baseline + polls + 7 {
+        if metrics(&mut control, &mut reader) == baseline + f64::from(polls) + 7.0 {
             break;
         }
         assert!(Instant::now() < deadline, "slow handlers did not enter");
@@ -259,7 +267,9 @@ fn cancel_pending(server: &mut Observed) {
     // incomplete requests must lose their connection; no successful slow reply.
     for (_, mut reader) in pending {
         let mut bytes = Vec::new();
-        reader.read_to_end(&mut bytes).unwrap();
+        if let Err(error) = reader.read_to_end(&mut bytes) {
+            assert_eq!(error.kind(), std::io::ErrorKind::ConnectionReset, "{error}");
+        }
         assert!(!String::from_utf8_lossy(&bytes).contains("slept 60000 ms"));
     }
 }
@@ -309,6 +319,11 @@ fn measure(opt: &str) {
         server.checkpoint(16, variant == "healthy");
         if variant != "healthy" {
             assert_eq!(server.wait().code(), Some(241), "broken observer control");
+            if let Some(reader) = server.reader.take() {
+                reader.join().unwrap();
+            }
+            let log = server.log.lock().unwrap().clone();
+            assert!(log.contains("http-memory changed"), "{log}");
             continue;
         }
         for (i, repeats) in [16, 1, 16, 4].into_iter().enumerate() {
@@ -324,6 +339,7 @@ fn measure(opt: &str) {
             reader.join().unwrap();
         }
         let log = server.log.lock().unwrap().clone();
+        assert!(log.contains("http-shutdown\t1\n"), "{log}");
         assert!(log.contains("http-final\t72\t72\t0\t"), "{log}");
         assert!(log.ends_with("http-metrics-final\t0\n"), "{log}");
         let samples: Vec<u64> = server

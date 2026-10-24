@@ -5,6 +5,7 @@ pub fn instrument(original: &str) -> String {
         ("typedef uint64_t V;", concat!("typedef uint64_t V;\n",
             "static unsigned long long http_app_opened, http_app_closed, http_app_sampled;\n",
             "static int http_app_active;\n",
+            "static void *http_app_listener;\nstatic unsigned http_app_shutdown_cancelled;\n",
             "#define HTTP_APP_OMIT_FREE 0\n#define HTTP_APP_OMIT_CLOSE 0\n",
             "static void http_app_checkpoint(void);\n")),
         ("    s->refs = 1;", "    s->refs = 1;\n    if (kind == 1) http_app_opened++;"),
@@ -16,6 +17,8 @@ pub fn instrument(original: &str) -> String {
          "static void fwp_rc_free_obj(V v) {\n    if (!fwp_rc_last(v)) return;\n    if (HTTP_APP_OMIT_FREE && http_app_active) return;"),
         ("    V c = fwp_accept(l, fwp_after(d), err);\n    if (!c) return FWP_NONE;",
          "    V c = fwp_accept(l, fwp_after(d), err);\n    if (!c) { http_app_checkpoint(); return FWP_NONE; }"),
+        ("static void fwp_cancel_tree(fwp_task *t) {\n    if (t->done) return;",
+         "static void fwp_cancel_tree(fwp_task *t) {\n    if (t->done) return;\n    if (http_app_listener == t && fwp_shutdown && !t->cancelled) http_app_shutdown_cancelled++;"),
         ("    fwp_nmetrics = fwp_metrics_cap = 0;", "    fwp_nmetrics = fwp_metrics_cap = 0;\n    if (http_app_active) fprintf(stderr, \"http-metrics-final\\t0\\n\");"),
     ] {
         assert_eq!(code.matches(before).count(), 1, "{before}");
