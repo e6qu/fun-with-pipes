@@ -207,8 +207,8 @@ C uses overflow builtins and Rust uses `checked_*`; fixed input bounds keep
 ordinary loop/index increments within range. The hash in `range-set` deliberately
 wraps modulo 2^64. Failure messages differ and are outside these fixed-input
 timings. The [peer-check protocol](measurements/checked-peers.md) describes dynamic
-boundary inputs, failure order and allocation-failure controls. Its new runner
-results are pending; dated reports below retain their original arithmetic rules.
+boundary inputs, failure order and allocation-failure controls. Its [two-host results](measurements/checked-peers.md#native-linux-results) retain
+all samples and remaining gaps; dated reports below retain their original rules.
 Changing a peer does not demonstrate a compiler speedup.
 
 ### What each program actually does

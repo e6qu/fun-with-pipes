@@ -5,9 +5,9 @@ reserve ARC for sharing and remove tracing. JIT is excluded.
 
 ## Current action
 
-**Next:** publish this checked-peer preparation and run `benchmark-comparison`
-on both native Linux architectures. Audit both complete logs and inspect the
-saved binaries before accepting new measurements.
+**Next:** publish the [ordered-sort experiment](measurements/map-order-protocol.md)
+and run `map-order` on both native Linux architectures. Its two candidates are
+changes to saved generated C only; no runtime optimization is adopted yet.
 
 Checkout `/private/tmp/fwp-checked-peer-comparison`, branch
 `checked-peer-comparison`, based on `b298665da6ac97fe4bcc05318c66e671fed7a5a4`.
@@ -22,16 +22,32 @@ Its 35 benchmark images and corruption/leak controls passed independent review.
 explicitly checked, retain fwp evaluation order in the loop and repair failed
 C allocations. The compiler/runtime are unchanged. Saved native probes cover
 51 dynamic inputs, six deliberately removed arithmetic checks and a missing
-partial cleanup. These controls and the new timings remain unverified.
+partial cleanup. Both native Linux jobs in `40084725349` pass on source
+`31ee015e943517e9e3e24714001a6f2f616a01b7`; complete logs and 92 actual images were
+independently reviewed. [Results](measurements/checked-peers.md#native-linux-results)
+keep all samples and slower comparisons.
 
-Local guarded checks pass Python syntax, workflow parsing, Rust formatting and
-whitespace. A command-edit mistake that passed C-only flags to `fwp build` was
-caught during diff review and fixed before publication. Native GCC/Rust checks,
-all seven output comparisons and artifact review belong on GitHub runners.
+Local guarded checks pass Python syntax, workflow parsing, Rust formatting,
+whitespace and all 122 tracked documentation link sets. The source and immutable
+revision tag are published. Both focused jobs and independent binary reviews pass. A command-edit mistake that passed C-only flags to `fwp build` was
+caught during diff review and fixed before publication. Both hosts passed native GCC/Rust checks and all seven output comparisons.
+
+A source review also found stale ownership documentation: parsing already
+returns owned numeric trees, and trim/case/replace consume source owners.
+Those tables now match `src/ownership.rs`; tracing-only age restrictions are
+labeled explicitly. No compiler contract changed. The frozen inventory check passes: 392
+declarations, 382 distinct symbols and no unclassified contracts.
 
 Keep the [dated ARC comparison](measurements/arc-comparison.md) and its original
 peer rules. Changed peer timing is not a compiler speedup. Sorting, storage and
-formatting algorithms still differ. No new performance ratio is accepted yet.
+formatting algorithms still differ. The loop remains slower than Rust and direct character counting slower than C.
+These comparisons are one session per architecture, not universal overhead.
+
+The AMD64 map executable already specializes integer comparisons. The next
+experiment therefore tests skipping already ordered merge work, with a separate
+stability/alias probe and deliberately omitted merge. The screen requires a 5%
+map gain, at most 3% slowdown elsewhere and identical-copy controls within 3%,
+on both elapsed and child CPU time for every allowed CPU. Keep failed screens.
 
 ## Delivery state
 

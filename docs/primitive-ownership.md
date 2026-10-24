@@ -132,9 +132,8 @@ LIFO order before failure, trap or cancellation invalidates their frames. It
 stops at the catching handler boundary; task switches preserve separate chains.
 Normal transfer unlinks registrations without releasing a transferred value.
 Compiler caller/reuse-token, runtime application/capture preparation and
-synchronous callback registrations preserve partially acquired owners. Boundaries
-not yet covered by these proofs still use tracing roots; this does not establish
-complete cleanup or tracing-free support.
+synchronous callback registrations preserve partially acquired owners. Unproved
+boundaries remain available only under explicit tracing; checked ARC rejects them. Cleanup registrations alone do not establish their ownership.
 
 ## Conservative reconstruction and external boundaries
 
@@ -184,8 +183,10 @@ enforces its lifetime and cycle rules, rejecting unproved shared boundaries.
 
 ## Complete runtime sharing
 
-Sharing promotes the reachable graph to the tracing lifetime policy. It is
-different from merely increasing an exact reference count.
+In explicit tracing mode, runtime sharing can promote a reachable graph to
+tracing-managed storage. This differs from adding an ordinary counted owner.
+Checked ARC rejects calls requiring that promotion; normal ARC sharing keeps
+exact counts and typed cleanup.
 
 Native counts 1–254 fit the existing byte. At 255, rare exact size_t side
 entries keyed by canonical metadata slots track additional owners without new
@@ -197,28 +198,33 @@ counts while recursing. Large fanout no longer forces automatic sharing.
 
 Eligible counted storage reclaims at last release at any age. Returning a cell
 clears old marks; verification clears stale child words before linking the free
-slot. In-place record reuse/updates retain their young-cell restriction. Shared runtime graphs remain on tracing. The tracing churn fixture explicitly
-disables both counted freeing and reuse so real collection remains tested.
+slot. The young-cell restriction on record reuse applies to tracing builds. ARC
+objects do not age through collections; unique counted objects remain eligible
+for reuse. Unproved shared graphs require explicit tracing. The tracing churn
+fixture explicitly disables both counted freeing and reuse so real collection
+remains tested.
 
 ## Selected String/Bytes boundaries
 
-All arguments below borrow for the duration of the call. Generated native
-calls retain borrowed pointer arguments as conservative roots until return:
+The table identifies calls that borrow inputs and those that consume a source
+owner. Generated native calls protect borrowed pointer arguments until return:
 inlining must not discard an allocation address while its later drop has
 been reduced to metadata accesses. Constructors returning
 fresh storage establish a count; aliases acquire a count on the same allocation.
 A shared input remains shared when duplicated. Slices copy and retain no view.
 
-| Primitives | Result ownership |
-|---|---|
-| trim/start/end; lower/upper; string.reverse | Fresh copied leaf |
-| concat; bytes.append; string.repeat; bytes.from-list | Fresh copied leaf |
-| string.slice; bytes.slice | Fresh copied leaf |
-| string.to-bytes | Identity alias of argument 0; duplicate its reference |
-| pad-left/right; replace | Fresh leaf or no-op alias of argument 2 |
-| string.length/byte-length; bytes.length; print/write/eprint/ewrite | Scalar/unit result |
-| string.contains; starts-with/ends-with | Scalar comparison result |
-| eq/ne/lt/le/gt/ge/compare | Read-only comparison, scalar result |
+| Primitives | Arguments | Result ownership |
+|---|---|---|
+| trim; trim-start; trim-end; lower; upper | Consume source | Transfer unchanged source, reuse eligible unique storage, or own a copy and release source |
+| replace | Borrow pattern/replacement; consume source (argument 2) | Transfer unchanged source or own changed text; preserve independent aliases |
+| string.reverse | Borrow source | Fresh copied leaf |
+| concat; bytes.append; string.repeat; bytes.from-list | Borrow inputs | Fresh copied leaf |
+| string.slice; bytes.slice | Borrow bounds/source | Fresh copied leaf |
+| string.to-bytes | Borrow source | Identity alias of argument 0; duplicate its reference |
+| pad-left; pad-right | Borrow width/padding/source | Fresh leaf or retained no-op alias of argument 2 |
+| string.length/byte-length; bytes.length; print/write/eprint/ewrite | Borrow input | Scalar/unit result |
+| string.contains; starts-with/ends-with | Borrow inputs | Scalar comparison result |
+| eq/ne/lt/le/gt/ge/compare | Borrow inputs | Read-only comparison, scalar result |
 
 ## Fresh copied text result trees
 
@@ -241,7 +247,7 @@ count. This contract cannot be reused for views, caches or callback results.
 | string.find; bytes.find; bytes.get | Option of an inline scalar, or None |
 | join; format; show | Fresh String leaf; arguments borrow |
 | length | Read-only list length; scalar result |
-| parse-int; parse-float | Borrow input text; result remains shared, including boxed numeric cases |
+| parse-int; parse-float | Borrow input text; fresh owned Option tree, including any boxed numeric payload, or immediate None |
 
 Character, codepoint and byte-list conversions release their temporary arrays
 once the list is constructed. Those arrays use `fwp_mem_alloc`/`fwp_mem_free`:
@@ -317,8 +323,9 @@ The internal result labels describe distinct promises:
 - `FreshOuter`: one new wrapper retains its pointer-bearing fields.
 - `FreshTree`: every reachable allocation is new and independently owned.
 
-None needs no allocation. These contracts preserve aliasing and immutable values;
-they do not establish complete exception or retained-callback ownership.
+`None` is an immediate tag and needs no allocation. These contracts preserve
+aliasing and immutable values; they do not establish complete exception or
+retained-callback ownership.
 
 Repeat borrows value/count and retains each typed alias in fresh counted list
 nodes. Range borrows bounds and owns fresh nodes and wide numeric elements;
