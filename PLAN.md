@@ -99,7 +99,7 @@ outside the benchmark suite.
    extensions are baselines, not new tasks. Prefer borrowing and scoped cleanup.
    Weak handles remain a proposal. Distinguish missing proofs from definite cycles,
    and reject unproved retention instead of silently enabling tracing.
-   The [execution-example inventory](docs/measurements/file-applications.md#which-maintained-examples-pass-arcs-checks)
+   The [execution-example inventory](docs/measurements/file-applications.md#which-execution-examples-pass-arcs-checks)
    records accepted programs and remaining exclusions. Keep
    programmer-managed `Unsafe` obligations explicit; do not admit invalid
    inter-task derivative lifetimes merely to increase the accepted count.

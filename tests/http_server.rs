@@ -87,6 +87,18 @@ fn request(conn: &mut TcpStream, reader: &mut BufReader<TcpStream>, path: &str) 
     (code, String::from_utf8(body).unwrap())
 }
 
+fn request_count(report: &str) -> f64 {
+    let body = report.strip_suffix(" [200]").expect("metrics HTTP status");
+    let count: f64 = body
+        .lines()
+        .find_map(|line| line.strip_prefix("http_requests_total "))
+        .expect("request counter")
+        .parse()
+        .unwrap();
+    assert!(count.is_finite() && count >= 1.0);
+    count
+}
+
 fn exercise(name: &str, cmd: Command, clients: usize, per_client: usize) {
     let mut srv = start(cmd);
     let base = format!("http://{}", srv.addr);
@@ -158,8 +170,9 @@ fn exercise(name: &str, cmd: Command, clients: usize, per_client: usize) {
         metrics
     );
 
-    // graceful shutdown: an in-flight request finishes, then the process
-    // exits; new connections are refused
+    // The request counter increments before the handler starts its sleep.
+    // Observe that increment before shutdown instead of guessing from a delay.
+    let baseline = request_count(&metrics);
     let addr = srv.addr.clone();
     let slow = std::thread::spawn(move || {
         let mut conn =
@@ -169,12 +182,30 @@ fn exercise(name: &str, cmd: Command, clients: usize, per_client: usize) {
         conn.set_write_timeout(Some(Duration::from_secs(20)))
             .unwrap();
         let mut reader = BufReader::new(conn.try_clone().unwrap());
-        request(&mut conn, &mut reader, "/slow?ms=800")
+        request(&mut conn, &mut reader, "/slow?ms=2000")
     });
-    std::thread::sleep(Duration::from_millis(200));
+    let until = Instant::now() + Duration::from_secs(20);
+    let mut polls = 0.0;
+    loop {
+        polls += 1.0;
+        let count = request_count(&curl(&[&format!("{base}/metrics")]));
+        assert!(count == baseline + polls || count == baseline + polls + 1.0);
+        if count == baseline + polls + 1.0 {
+            break;
+        }
+        assert!(
+            Instant::now() < until,
+            "slow request did not enter its handler"
+        );
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    assert!(
+        !slow.is_finished(),
+        "slow request finished before the shutdown check"
+    );
     http_server_process::terminate(&srv.child).unwrap();
     let (code, body) = slow.join().unwrap();
-    assert_eq!((code, body.as_str()), (200, "slept 800 ms"));
+    assert_eq!((code, body.as_str()), (200, "slept 2000 ms"));
     let until = Instant::now() + Duration::from_secs(30);
     let status = loop {
         if let Some(status) = srv.child.try_wait().unwrap() {

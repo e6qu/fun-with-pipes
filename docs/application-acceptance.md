@@ -12,7 +12,7 @@ performance and platform requirements in the last column.
 |---|---|---|---|
 | [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [C/Rust baseline](measurements/wordfreq.md) and [paired/repeated text comparison](measurements/unchanged-text.md) on two Linux hosts | Set time/memory budgets; validate the current runtime and preserve six-platform cleanup evidence |
 | [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and a small tracing control | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | Preserve these observations as ownership changes; allocation-failure coverage remains |
-| [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scaled counting/filtering/CSV cleanup passes on six hosts; task-file checks are in preparation; separate input/output costs |
+| [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scaled counting/filtering/CSV/task-file cleanup passes on six hosts; preserve current delivery coverage and separate input/output costs |
 | Numerical pipeline | Map/reduce 65,537 elements and multiply 65×67 by 67×63 matrices, eight rounds | [Existing C/Rust comparison](benchmarks.md#current-numerical-comparison-and-record-moves) | Repeat current-revision comparisons; set per-size budgets; include a larger numerical application |
 | Derivative application | Rosenbrock descent at 3, 33 and 129 dimensions; 199 updates plus zero/one/1,999-update controls | [AD storage](measurements/ad-application.md), [C/Rust peers](measurements/descent-peers.md), [packed arrays](measurements/packed-descent.md) and [array-owner moves](measurements/array-owner-moves.md) and [borrowed captures](measurements/array-capture-descent.md) on two Linux hosts | Stabilize identical-code timing controls and set per-input budgets; extend nested and platform evidence |
 | Long-running service | Existing HTTP/gRPC clients, handlers, streams and task cancellation | [Service ownership](ownership.md#http-ownership) and [service measurements](benchmarks.md#server-memory-after-completed-remote-calls) | Consolidate one repeatable service scenario with bounded concurrency, disconnects and repeated live-memory samples |
@@ -35,9 +35,16 @@ keep-alive and graceful-shutdown tests. Their harness requires curl/compiler
 success, bounds startup and shutdown, and kills/reaps children on failure.
 Shared startup controls cover silence, partial lines, invalid addresses, early
 exit and preserved diagnostics. Windows uses an isolated CTRL_BREAK group.
-These checks are being extended to all six hosts; they do not supply the
-long-running service memory measurements still required above. Printed request
-counts are correctness results, not throughput benchmarks.
+The shutdown test observes the request counter to establish handler entry before
+signaling; it also requires the slow reply to remain unfinished at that point.
+Use the explicit `http-application` focused suite to check this example without
+rerunning the unchanged HTTP/2 and connection suites. Final production keeps
+both HTTP targets. The full focused `server-checks` suite separates the HTTP
+protocol tests from the application/connection tests so Intel macOS can finish
+within its existing 25-minute job limit. Five hosts passed the earlier combined
+job; Intel macOS reached that limit during its last native compilation. The split
+jobs require a fresh six-host run. These checks do not supply the long-running
+service memory measurements still required above. Printed request counts are correctness results, not throughput benchmarks.
 
 Timing budgets remain unset until repeated baselines identify ordinary variation.
 Record the chosen host/input budget before optimizing, retain slower results and
@@ -296,7 +303,7 @@ commands' diagnostics, and these categories:
 
 - **Both accepted:** both modes emit C. This alone does not verify execution or cleanup.
 - **ARC rejected:** tracing emits C, but ARC rejects the ownership contract. Investigate
-  each diagnostic before changing the default memory mode.
+  each diagnostic before admitting a new ownership pattern.
 - **Tracing rejected:** the program fails ordinary compilation too, including
   intentional diagnostic fixtures. This is not an ARC migration failure.
 
@@ -304,11 +311,12 @@ Timeouts, compiler crashes and mismatched emitted memory modes fail the inventor
 Recorded ARC rejections are discovery results, not accepted language coverage.
 The ordinary execution snapshots and the runtime ownership tests remain necessary.
 
-The [pre-extension inventory](measurements/file-applications.md#which-maintained-examples-pass-arcs-checks)
-identified the raw-pointer gap and distinguished it from an intentionally invalid
-inter-task derivative lifetime. [PR #193](roadmap-history.md#manual-c-pointers-and-foreign-storage-cleanup-pr-193)
-records the accepted manual-pointer extension. Existing `arc_corpus` tests execute admitted programs
-and check their final managed storage; extend that coverage as admissions change.
+The [current inventory](measurements/file-applications.md#which-execution-examples-pass-arcs-checks)
+accepts 81 examples in both modes, including manual pointers with explicit caller
+obligations. Three intentionally invalid examples fail ordinary compilation; the
+expired inter-task derivative remains rejected by ARC. Existing `arc_corpus`
+tests execute admitted programs and check their final managed storage; extend
+that coverage as admissions change.
 
 ## Separating derivative and representation costs
 
