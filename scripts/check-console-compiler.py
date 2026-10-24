@@ -29,7 +29,7 @@ def main():
     parser.add_argument('--compiler', type=Path, required=True)
     parser.add_argument('--rounds', type=int, required=True)
     parser.add_argument('--max-seconds', type=int, required=True)
-    parser.add_argument('--allocator', choices=('ordinary', 'checked'), required=True)
+    parser.add_argument('--allocator', choices=('ordinary', 'checked', 'guard'), required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     if args.rounds < 1 or args.max_seconds < 1:
@@ -39,10 +39,14 @@ def main():
     output.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ)
     env.pop('FWP_NO_OPT', None)
+    # macOS otherwise suppresses malloc errors when stderr is a pipe/file.
+    env['MallocDebugReport'] = 'stderr'
     if args.allocator == 'checked':
         env.update(MallocScribble='1', MallocCheckHeapStart='1',
                    MallocCheckHeapEach='1000', MallocCheckHeapAbort='1',
                    MallocErrorAbort='1', MallocLogFile=str(output / 'malloc.log'))
+    if args.allocator == 'guard':
+        env['DYLD_INSERT_LIBRARIES'] = '/usr/lib/libgmalloc.dylib'
     metadata = dict(compiler=str(compiler), sha256=hashlib.sha256(compiler.read_bytes()).hexdigest(),
                     rounds=args.rounds, maxSeconds=args.max_seconds, allocator=args.allocator,
                     source=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip())
