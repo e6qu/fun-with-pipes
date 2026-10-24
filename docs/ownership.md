@@ -146,6 +146,10 @@ partly prepared iteration state and temporary storage for mapping, filtering and
 zipping. They preserve independent aliases and scalar bits across failure and
 cancellation, with repeated ARC storage checks and deliberately missing releases.
 
+[Array-sort preparation](measurements/array-sort-ownership.md) consumes its input
+reference and reuses only unshared storage. Six-host checks preserve live aliases,
+128-bit values and cleanup on failure/cancellation; full delivery remains pending.
+
 | Value family | Current representation or ownership | Important boundary |
 |---|---|---|
 | Small scalars and empty variants | Inline words or concrete C scalars | Bits resembling addresses remain numbers |

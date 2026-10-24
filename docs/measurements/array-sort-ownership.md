@@ -1,63 +1,136 @@
 # Reusing an unshared array during sorting
 
-This preparation passes focused native checks; full delivery is still required. The current accepted behavior copies the
-array and retains its elements before sorting. The proposed change consumes
-one array reference: it reuses storage when there is only one owner, and copies
-when another owner or a view needs the original values. Source code stays
-immutable; using an array again makes the compiler preserve that owner.
+Sorting can reuse an array when no other owner needs its original values. This
+preparation removes one array copy and its per-element reference increments.
+Six-host correctness checks and both Linux cost comparisons pass. Full delivery
+acceptance is still required; no timing speedup or C/Rust parity is claimed.
 
-For example, `words | array.from-list | array.sort` can hand its intermediate
-array directly to sorting. If a program keeps the unsorted array too, sorting
-must leave it unchanged. Empty and singleton arrays are already sorted and can
-transfer the existing reference without copying.
+## Behavior
 
-## Representation and cleanup
+```fwp
+main = read-all () | words | array.from-list | array.sort | array.length | echo
+```
 
-A sort key for an ordinary element fits in one machine word. A 128-bit float
-instead uses a pointer into the array's original bytes. Writing sorted values
-back one by one could overwrite a value still needed later. The preparation
-applies the sorted permutation in cycles, saving one sixteen-byte value on the
-stack. This must preserve every bit, including stable ordering of equal values.
+`words` splits input into a list; `array.from-list` makes an array. Sorting puts
+its elements in order, and `array.length` counts them. Thus `c a b c a` prints `5`.
+The intermediate array has one owner, so sorting can reuse its storage. If a
+program also keeps the unsorted array, sorting must copy and preserve that alias.
+An array view also keeps its backing values unchanged. Empty and singleton arrays
+are already sorted and transfer their existing reference.
 
-The input, output and both temporary buffers need explicit cleanup on allocation,
-comparison failure and cancellation. Reuse verification may require copying unique
-storage; that copy transfers children without extra retains. Shared copies retain
-children. Views retain their original backing until sorting has finished.
+A retain increments an ownership count so another owner can keep a value alive.
+Moving an unshared array does not need to retain each element. Shared copies still
+do. This is an internal ownership change: ordinary immutable source semantics and
+single-argument functions stay the same.
 
-## Required checks before acceptance
+A 128-bit floating-point sort key borrows its original array slot. Writing sorted
+values back one by one could overwrite a value still needed later. The new code
+applies the permutation in cycles, using one sixteen-byte temporary. Input, result
+and scratch buffers have cleanup owners through allocation, comparison and
+cancellation. Reuse verification can force a copy of unique storage; that copy
+transfers children without extra retains.
 
-- Compare current native output with the interpreter without optimizations, using
-  dynamic strings, small integers and 128-bit floats; include empty, singleton,
-  sorted, reversed, duplicate and mixed inputs.
-- Check live aliases, array views, distinct permutations and unchanged original
-  values. Detect deliberately unsafe wide-value overwrites and shared mutation.
-- Interrupt allocation/retain/comparison sites and cancellation; require repeated
-  zero managed balances. Keep tracing stress, verification and reuse controls.
-- Run production GCC/Clang at O1/O2 on all six native targets. Inspect actual
-  executables and retain source, status and toolchain metadata.
-- Measure requests, requested bytes, retains, peak and final charge against an
-  explicit control that restores copying. Record ordinary code sizes and stack
-  frames separately from instrumented counts. Use the same input family as the
-  [existing sort-storage comparison](list-sort-storage.md). Do not infer elapsed
-  speed or C/Rust parity from allocation savings.
+## Native correctness
 
-The count comparison has three rows: list scratch buffers, array scratch buffers,
-and array ownership. The last row uses the same generated program twice, changing
-only the sort's uniqueness decision to force a copy. Inputs contain 0, 1, 32 or
-4,096 words; each case records three identical observations at O1/O2. Counting
-starts after constant initialization and includes parsing, construction, output
-and language cleanup. It excludes allocator metadata, raw runtime buffers and
-stack storage. Empty/singleton arrays transfer their reference in both variants.
+Source `e78069765ac5798f71d7e11d216bcb71d6850d21` passes all six native jobs in
+[run 40095196564](https://github.com/e6qu/fun-with-pipes/actions/runs/40095196564).
+Independent review checks [252 actual executables](array-sort-native-2026-10-24.json),
+72 repeated observations and 144 deliberately broken controls. Every job log is
+clean. Tests use production GCC/Clang at O1/O2, automatic reference counting (ARC),
+tracing stress/verification, and reuse enabled, disabled or checked.
 
-A separate comparison compiles the ordinary string/128-bit fixture into four
-objects: reuse and forced-copy variants at O1/O2. It saves compiler stack reports
-and inspects the actual object bytes. External floating-library code is not in
-these objects; per-function stack reports do not measure maximum call-stack use.
-Executable correctness comes from the native tests, not these unlinked objects.
+Each observation checks 540 alias/bit-pattern cases, including 0, 1, 2, 3, 17 and
+257 elements, distinct string identities, numeric views and 128-bit values.
+An independent insertion-sort oracle checks ordering and unchanged aliases.
+Each observation also cleans up 232–272 injected allocation/retain/comparison
+failures and cancellations. Controls must detect shared mutation, overwritten
+wide values, missing input/result/scratch cleanup and missing retains. Programs
+are compared with the interpreter with optimizations disabled.
 
-Focused source `e78069765ac5798f71d7e11d216bcb71d6850d21` passes all six native
-jobs in [run 40095196564](https://github.com/e6qu/fun-with-pipes/actions/runs/40095196564).
-Every completed log is clean. Independent executable review has passed on Windows
-AMD64 and Linux ARM64; the other four reviews are pending. No measured storage or
-layout result, timing gain or final delivery support is claimed yet. PR #210's final head stays
-unchanged while this work is prepared separately.
+## Allocation comparison
+
+Source `d763c34c824fc8aaf7d4e76aba9ae29cbf950d9e` passes
+[run 40096410788](https://github.com/e6qu/fun-with-pipes/actions/runs/40096410788).
+Its compiler/runtime/tests are unchanged from the correctness source. The hosts
+are AMD EPYC 7763 and ARM Neoverse-N2, both using GCC 13.3. O1/O2 use
+`-std=gnu11 -ffp-contract=off -fstack-usage`, with link-time optimization disabled.
+
+The program above runs normally and with only the sort's uniqueness decision
+changed to force a copy. Input word `i`, starting at zero, is `word` followed by
+`(i * 17) % 103` as three digits; words are space-separated with a final newline.
+Both variants return the same count as the interpreter. Separate native tests,
+not this count output, check sorted element values and stability.
+
+Three fresh processes per input/version/optimization produce identical counts.
+Counting starts after constant initialization and includes input parsing,
+construction, sorting, output and language cleanup. It excludes allocator
+metadata, raw runtime buffers, stacks and complete process memory. Both hosts
+and O1/O2 agree. Entries show **forced copy → reuse**.
+
+| Words | Allocation requests | Requested bytes | Retains | Peak charged bytes, unchanged |
+|---|---:|---:|---:|---:|
+| 0 | 3 → 3 | 82 → 82 | 0 → 0 | 80 |
+| 1 | 5 → 5 | 137 → 137 | 1 → 1 | 144 |
+| 32 | 72 → 71 | 3,049 → 2,785 | 64 → 32 | 2,112 |
+| 4,096 | 8,207 → 8,206 | 393,193 → 360,417 | 8,192 → 4,096 | 262,153 |
+
+At 4,096 words, sorting saves one request, 32,776 requested bytes and 4,096
+retains. Other phases still determine whole-program peak memory. Every process
+finishes at zero additional managed charge with no collection. Empty/singleton
+inputs transfer directly in both variants; this control does not restore their
+older unnecessary copy. The raw report also repeats the separate
+[list/array scratch-buffer comparison](list-sort-storage.md).
+
+## Code and stack costs
+
+The word-count program's ordinary executable is compiled separately from its
+counter-instrumented version. Code size below is its instruction section; the
+frame is the generated language entry's compiler-reported stack size.
+Entries remain **forced copy → reuse**, in bytes.
+
+| Host | Optimization | Instruction bytes | Entry frame bytes |
+|---|---|---:|---:|
+| AMD64 | O1 | 16,610 → 16,802 | 368 → 368 |
+| AMD64 | O2 | 17,186 → 17,282 | 352 → 352 |
+| ARM64 | O1 | 16,892 → 17,100 | 336 → 336 |
+| ARM64 | O2 | 15,436 → 15,420 | 368 → 368 |
+
+A separate ordinary fixture contains string and 128-bit sorts. Its unlinked
+objects expose the wide permutation's code and stack costs. External floating
+libraries are excluded; a function frame is not maximum call-stack use.
+
+| Host | Optimization | Object instruction bytes | Sort function frame bytes |
+|---|---|---:|---:|
+| AMD64 | O1 | 34,775 → 34,931 | 256 → 256 |
+| AMD64 | O2 | 42,918 → 43,174 | 304 → 304 |
+| ARM64 | O1 | 35,300 → 35,436 | 256 → 256 |
+| ARM64 | O2 | 39,196 → 39,324 | 304 → 288 |
+
+The wide fixture adds code; its measured sort frame stays unchanged except for
+a sixteen-byte reduction at ARM64 O2. These costs accompany the allocation/count
+savings and are not a timing result. Independent review checks all 48 sort-storage
+executables and eight wide objects across both hosts.
+
+## Separate C/Rust timings
+
+The same runs repeat the [checked-arithmetic complete-program comparison](checked-peers.md).
+These seven workloads are different from the array-sort counter fixture. Ratios
+below compare whole-process elapsed medians, including startup and output;
+`1.19` means fwp takes 19% more time. Runtime setup, algorithms and language rules
+also contribute, so the ratio is not pure compiler overhead.
+
+| Program | AMD64 fwp/C | AMD64 fwp/Rust | ARM64 fwp/C | ARM64 fwp/Rust |
+|---|---:|---:|---:|---:|
+| fib | 0.318 | 0.351 | 0.202 | 0.219 |
+| loop | 1.014 | 1.191 | 0.744 | 1.148 |
+| map | 0.882 | 1.093 | 0.913 | 1.021 |
+| pipeline | 0.774 | 1.047 | 0.579 | 0.705 |
+| range-set | 1.039 | 1.041 | 1.051 | 1.056 |
+| strings | 0.047 | 0.048 | 0.042 | 0.042 |
+| text-length | 1.427 | 0.939 | 1.952 | 1.063 |
+
+Slower loop, range and character-counting results remain visible. These separate
+runs do not establish that array reuse improves elapsed time. The [raw evidence](array-sort-costs-2026-10-24.json)
+contains all samples, inputs, flags, compiler/hardware details, stack reports and
+independent reviews of 112 executables plus eight objects. Full production gates
+and final-head binary review remain required before merge.
