@@ -160,7 +160,13 @@ storage. Neither cost is quantified by the countdown comparison.
 
 Each directory in [`bench/`](../bench) contains `main.fwp`, `main.c` and
 `main.rs`. The programs must print the same result. The runner builds native
-executables with `fwp build --gc tracing -O2`, `cc -O2` and `rustc -O`. After one warmup per
+executables with `fwp build --gc MODE -O2`, the explicitly selected `CC -O2`,
+and `rustc -O`. `FWP_BENCH_OWNERSHIP` must name `arc` or `tracing`; there is
+no implicit measurement mode. `CC` must name the compiler and `FWP_LTO=0`
+keeps generated C in one source file without link-time optimization.
+Production CI selects checked ARC, matching the
+language's current native default. The scalar-text historical comparison explicitly
+selects tracing. After one warmup per
 executable, it measures six runs each and reports the median: the average of
 the two middle times after sorting. Execution order rotates C/Rust/fwp,
 Rust/fwp/C and fwp/C/Rust, twice. “Native” means machine code;
@@ -172,8 +178,9 @@ inner calculation, startup alone or peak memory. The report separately records
 one compilation time and the executable file size for each implementation.
 Compilation includes tool startup and linking; it excludes building the fwp
 compiler itself. Binary sizes include differing runtime and linking choices.
-The fwp build explicitly selects tracing, matching earlier runs' native memory
-mode; this is not a comparison of checked ARC against Rust.
+The report names its memory mode and build flags. Older snapshots below use
+tracing; they are not checked-ARC measurements and do not become such when the
+runner changes. Do not infer an ARC speedup from different runs or hosts.
 ARC means automatic reference counting, which releases objects when their last
 owning reference disappears.
 
@@ -855,14 +862,21 @@ slower cases. No local timings were used.
 
 ## Running comparisons
 
-Full benchmarks run on GitHub runners. The C/Rust comparison command is:
+Full benchmarks run on GitHub runners. For the native Linux C/Rust comparison:
 
 ```sh
-cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
+CC=gcc FWP_LTO=0 FWP_BENCH_OWNERSHIP=arc cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
 ```
 
 It writes the report to standard output, `target/bench.md` and the `bench` job
-summary. The per-change experiments have their own scripts and explicit controls:
+summary. The `benchmark-comparison` focused suite runs this checked-ARC comparison
+on native Linux AMD64/ARM64 with GCC. Both it and production CI inspect the actual
+C/Rust/fwp binaries with the [binary reviewer](../scripts/inspect-benchmark-binaries.py),
+check input hashes and timing summaries, and require checked-ARC
+fwp images to exclude tracing scans. The inspection does not execute downloaded
+binaries or turn these descriptive timings into a speed guarantee.
+[Corruption controls](../scripts/test-benchmark-evidence.py) must reject a wrong
+memory label, wrong machine architecture, object file and missing timing sample. The per-change experiments have their own scripts and explicit controls:
 
 | Comparison | Runner command |
 |---|---|

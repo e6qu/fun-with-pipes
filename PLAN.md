@@ -120,6 +120,10 @@ outside the benchmark suite.
    collector-specific checks before removing tracing; completed groups are
    evidence, not a backlog.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
+   Verify the general benchmark with explicitly selected checked ARC, the current
+   native default. Keep historical tracing snapshots identified as tracing; do not
+   infer a mode speedup from different hosts or runs. Use those current baselines
+   before selecting another optimization.
    The [benchmark index](docs/benchmarks.md) links inputs, algorithms, arithmetic
    rules and current limitations. Integer counting and checked products retain
    slower results and optimization-level differences. Numerical descent still has

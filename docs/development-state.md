@@ -5,14 +5,21 @@ and borrowing, with ARC for necessary sharing. JIT is excluded.
 
 ## Current action
 
-**Next:** finish production acceptance of the `http-memory-delivery` branch,
+**Next:** finish exact-head acceptance of [PR #208](https://github.com/e6qu/fun-with-pipes/pull/208),
 squash-merge after all nine production jobs, documentation and binary reviews
 pass, then continue ownership checks and measured numerical costs. Keep one active
 PR; use one subject at most 80 characters and an empty body, and verify the merge.
 
 ## Current grouped delivery
 
-Checkout `/private/tmp/fwp-http-application-memory`, branch `http-memory-delivery`.
+Checkout `/private/tmp/fwp-http-application-memory`, branch `http-memory-delivery`,
+clean at `227e671257d885185e54b3f915f6d1ebf470b3ea`. Initial `d8fc00eb` runs
+`40073914806` and `40073914646` were superseded and cancelled after auditing
+all jobs for failures. The repair retains Linux stack-page binaries in production
+and adds an upload-wiring regression; all seventeen runner controls pass.
+Publication, preparation and wiring-repair helpers are COMPLETE; do not rerun.
+Receipts: `fwp-http-memory-delivery-{preparation,publication}.json` and
+`fwp-stack-artifact-wiring-publication.json` under `/private/tmp`.
 It adds API memory/cancellation acceptance, ordinary Linux task-stack pages,
 checked dynamic/static Unix guard setup, single-owner HTTP/WebSocket test sockets,
 physical-page diagnostics and clearer measurement records. The
@@ -54,7 +61,16 @@ checks saved API images/records. CI preserves guard evidence in
 A skipped target never establishes support.
 
 Publication and acceptance receipts use `/private/tmp/fwp-http-memory-delivery-*`.
-Record the resulting PR, final source and run IDs after publication. All earlier
+Repeatable final audit: `/private/tmp/fwp-audit-http-memory-delivery-final.py`.
+Production run `40074183388`; documentation run `40074183289` PASSES.
+All final-head binary reviews are unrun. Use
+`fwp-review-http-memory-delivery-host.py`: download, ownership, arrays, floats,
+Linux-only controls, files, services, prune. The services phase verifies six API
+binaries per host, two static guard images per Unix host and two page-policy
+images per Linux host. Pruning requires those reports. Initial source
+`d8fc00eb` publication/audit receipts are archived separately; never use them as
+acceptance of `227e6712`. Review helpers have syntax/path checks; saved-artifact
+execution begins only after the corresponding production host passes. All earlier
 publication helpers through `fwp-publish-static-stack-guards.py` are COMPLETE;
 never rerun them. Preparation helpers also have receipts; inspect before retrying.
 
@@ -73,6 +89,28 @@ incorrectly rejected a connection reset in the socket diagnostic. All failures
 were audited and repaired. Isolated Windows repeats passed but were not repairs.
 Unique archives remain under `/private/tmp/fwp-http-memory-failures-027be46e`
 and the mapping/socket diagnostic directories. Do not delete them as caches.
+
+## Independent benchmark preparation
+
+Checkout `/private/tmp/fwp-arc-benchmark-comparison`, branch
+`arc-benchmark-comparison`, based on PR #208 source `227e6712`. No second PR.
+The clean merged #207 checkout was moved here; its old path
+`/private/tmp/fwp-file-http-delivery` no longer exists. Branches, commits and
+reports remain; completed #207 helpers must not be rerun.
+
+The general comparison now requires `CC`, `FWP_BENCH_OWNERSHIP` and `FWP_LTO=0`.
+Production selects checked ARC; the scalar-text historical protocol explicitly
+selects tracing and rejects wrong-mode evidence. Descriptive six-sample timings
+retain their existing scope and arithmetic differences. Actual binaries, input
+hashes and sample summaries are inspected; four corrupted-artifact controls must
+fail. Native Linux AMD64/ARM64 focused verification is pending publication.
+
+The saved verified #206 compiler accepts all seven benchmark programs under
+checked ARC and emits C (3.15s total with formatting/workflow/Python checks).
+Compiler/library/program inputs match the current branch, but embedded runtime
+is older; this is admission diagnostics, not current-source native acceptance or
+a timing result. Receipt: `/private/tmp/fwp-arc-benchmark-admission/receipt.json`.
+The active PR #208 stays unchanged while this preparation runs.
 
 ## Local limits
 

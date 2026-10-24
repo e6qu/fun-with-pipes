@@ -453,7 +453,15 @@ jobs:
       - name: Language formatting preflight
         run: cargo run --release --bin fwp -- fmt --check lib examples docs/tutorials bench
       - name: benchmarks against C and Rust (docs/benchmarks.md)
+        env:
+          CC: gcc
+          FWP_BENCH_OWNERSHIP: arc
+          FWP_LTO: '0'
         run: cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
+      - name: Inspect measured C, Rust and checked-ARC binaries
+        run: python3 scripts/inspect-benchmark-binaries.py --input target/bench-evidence --source "${{ github.event.pull_request.head.sha || github.sha }}" --memory arc --arch x86_64 --objdump objdump --output target/bench-inspection.json
+      - name: Reject wrong benchmark modes, binaries and missing samples
+        run: python3 scripts/test-benchmark-evidence.py --input target/bench-evidence --source "${{ github.event.pull_request.head.sha || github.sha }}" --memory arc --arch x86_64 --objdump objdump --output target/bench-controls.json
       - name: Preserve benchmark comparisons and measured executables
         if: always()
         uses: actions/upload-artifact@v7
@@ -461,5 +469,7 @@ jobs:
           name: benchmarks
           path: |
             target/bench.md
+            target/bench-inspection.json
+            target/bench-controls.json
             target/bench-evidence/
           if-no-files-found: error

@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -1333,6 +1333,8 @@ jobs:
           done
       - name: Compare complete programs with C and Rust
         if: ${{ !cancelled() && inputs.suite == 'scalar-text' }}
+        env:
+          FWP_BENCH_OWNERSHIP: tracing
         run: cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
       - uses: actions/upload-artifact@v7
         if: ${{ always() && inputs.suite == 'scalar-text' }}
@@ -3830,6 +3832,62 @@ jobs:
           name: remote-arc-ubuntu-latest
           path: remote-arc-evidence/
           if-no-files-found: ignore
+  benchmark_comparison:
+    if: inputs.suite == 'benchmark-comparison'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: ${{ fromJSON(inputs.native_runner != 'all' && format('["{0}"]', inputs.native_runner) || '["ubuntu-latest","ubuntu-24.04-arm"]') }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    env:
+      CC: gcc
+      CARGO_BUILD_JOBS: 2
+      FWP_BENCH_OWNERSHIP: arc
+      FWP_LTO: '0'
+    steps:
+      - name: Require a supported native Linux runner
+        shell: bash
+        run: |
+          test "$RUNNER_OS" = Linux
+          case "$RUNNER_ARCH" in
+            X64|ARM64) ;;
+            *) echo "Unsupported benchmark architecture: $RUNNER_ARCH" >&2; exit 1 ;;
+          esac
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: OpenSSL headers and native binary tools
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev binutils
+      - name: Formatting and benchmark types
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --test bench -- -D warnings
+      - name: Compare checked ARC with C and Rust
+        id: comparison
+        run: cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
+      - name: Inspect every measured executable and sample record
+        if: ${{ !cancelled() && steps.comparison.outcome == 'success' }}
+        shell: bash
+        run: |
+          case "$RUNNER_ARCH" in
+            X64) architecture=x86_64 ;;
+            ARM64) architecture=aarch64 ;;
+            *) echo "Unsupported benchmark architecture: $RUNNER_ARCH" >&2; exit 1 ;;
+          esac
+          python3 scripts/inspect-benchmark-binaries.py --input target/bench-evidence --source "$GITHUB_SHA" --memory arc --arch "$architecture" --objdump objdump --output target/bench-inspection.json
+          python3 scripts/test-benchmark-evidence.py --input target/bench-evidence --source "$GITHUB_SHA" --memory arc --arch "$architecture" --objdump objdump --output target/bench-controls.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: benchmark-comparison-${{ matrix.runner }}
+          path: |
+            target/bench.md
+            target/bench-inspection.json
+            target/bench-controls.json
+            target/bench-evidence/
+          if-no-files-found: error
   performance:
     if: inputs.suite == 'performance'
     strategy:
@@ -3870,6 +3928,9 @@ jobs:
         run: python3 scripts/measure-ad-metadata.py --output performance-evidence/metadata
       - name: Complete-program C and Rust comparison
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        env:
+          FWP_BENCH_OWNERSHIP: arc
+          FWP_LTO: '0'
         run: cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
       - uses: actions/upload-artifact@v7
         if: always()
