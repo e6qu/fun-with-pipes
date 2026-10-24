@@ -2851,6 +2851,40 @@ mod pool_identity_tests {
 mod stream_source_tests {
     use super::*;
 
+    #[test]
+    fn entry_closes_connections_registered_during_shutdown() {
+        let program = Program::default();
+        let mut it = Interp::new(&program, Box::new(std::io::sink())).unwrap();
+        let source = queued(&program, 0, false, OK);
+        let connection = source.conn.clone();
+        it.run_entry(|it| {
+            it.spawn_rust(
+                Box::new(move |child| {
+                    while child.check_cancel().is_ok() {
+                        child.world.park(None);
+                    }
+                    child
+                        .world
+                        .grpc
+                        .lock()
+                        .unwrap()
+                        .0
+                        .pool
+                        .insert("late".into(), connection);
+                }),
+                None,
+                true,
+            );
+            it.world.park(Some(Instant::now()));
+            Ok(())
+        })
+        .unwrap();
+        assert!(it.world.grpc.lock().unwrap().0.pool.is_empty());
+        assert!(source.conn.borrow().sock.is_none());
+        assert!(source.conn.borrow().dead.is_some());
+        assert_eq!(Rc::strong_count(&source.conn), 1);
+    }
+
     fn queued(program: &Program, count: usize, results: bool, status: u32) -> Rc<Incoming> {
         // A real socket supplies the connection's platform handle. All receive
         // data is already queued, so these tests neither start tasks nor wait.

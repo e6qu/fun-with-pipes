@@ -91,7 +91,11 @@ and writer-lifetime tests accompany these changes. The core cleanup
 passed 232 focused checks on each of Linux AMD64 and Intel macOS in run
 [40119693758](https://github.com/e6qu/fun-with-pipes/actions/runs/40119693758),
 source `2f20e7fe075e2beb0fa6fae3f3950ebfc6953a9e`. The shared-writer follow-up
-still needs runner checks; full delivery acceptance is also required.
+`6cefdf2346ade8fcd9e3130ad7bab21e38589429` passed 234 checks per host in
+[40121036264](https://github.com/e6qu/fun-with-pipes/actions/runs/40121036264).
+The final shutdown batch adds an abort guard for a panic during cleanup itself
+and drains connections registered while shutdown waits for workers. Its focused
+checks and full delivery acceptance remain pending.
 
 For the original console inputs, source review follows `main::build` through
 `driver::compile_file`, parsing, macro expansion and type checking. There are no

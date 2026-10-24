@@ -89,6 +89,19 @@ pub(crate) fn start_slice() {
 pub(crate) struct Baton<T>(pub(crate) T);
 unsafe impl<T> Send for Baton<T> {}
 
+/// An entry cannot unwind past unfinished borrowed tasks. Ordinary evaluation
+/// panics are caught and propagated after cleanup; a second panic during
+/// cleanup must end the process instead of letting those borrows escape.
+struct AbortIncompleteCleanup;
+impl Drop for AbortIncompleteCleanup {
+    fn drop(&mut self) {
+        if std::thread::panicking() {
+            eprintln!("fwp: interpreter cleanup panicked; aborting");
+            std::process::abort();
+        }
+    }
+}
+
 #[cfg(not(target_family = "wasm"))]
 struct Turns {
     next: u64,
@@ -542,6 +555,38 @@ mod socket_tests {
 mod lifetime_tests {
     use super::*;
     use crate::ir::{Body, Expr, Func, Program};
+    use std::process::Command;
+
+    #[test]
+    fn cleanup_panic_aborts_before_borrowed_tasks_escape() {
+        const CONTROL: &str = "FWP_TEST_CLEANUP_ABORT";
+        if std::env::var_os(CONTROL).is_some() {
+            let program = Program::default();
+            let mut it = Interp::new(&program, Box::new(std::io::sink())).unwrap();
+            let _: R<()> = it.run_entry(|it| {
+                it.spawn_rust(Box::new(|_| {}), None, true);
+                let _pool = it.world.grpc.lock().unwrap();
+                panic!("cleanup failure control");
+            });
+            unreachable!();
+        }
+        let output = Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "sched::lifetime_tests::cleanup_panic_aborts_before_borrowed_tasks_escape",
+                "--nocapture",
+            ])
+            .env(CONTROL, "1")
+            .output()
+            .unwrap();
+        assert!(!output.status.success());
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(
+            stderr.contains("fwp: interpreter cleanup panicked; aborting"),
+            "{stderr}"
+        );
+        assert!(!String::from_utf8_lossy(&output.stdout).contains("test result:"));
+    }
 
     #[test]
     fn root_calls_release_child_captures_on_success_and_failure() {
@@ -754,6 +799,7 @@ pub(crate) fn wrap(n: Native) -> Value {
 /// Run a task's body with the baton, wait for its children and record its
 /// result; a failure that is not a cancellation ends the process.
 fn run_task(mut it: Interp<'static>, body: TaskBody, world: &World) {
+    let _cleanup = AbortIncompleteCleanup;
     new_slice();
     let outcome = catch_unwind(AssertUnwindSafe(|| {
         if it.check_cancel().is_err() {
@@ -805,6 +851,7 @@ impl<'p> Interp<'p> {
     /// panic must join them before borrowed program data or writers can expire.
     pub(crate) fn run_entry<T>(&mut self, run: impl FnOnce(&mut Self) -> R<T>) -> R<T> {
         assert!(!self.entry_active, "nested interpreter entry");
+        let cleanup = AbortIncompleteCleanup;
         self.entry_active = true;
         self.world.stopping.store(false, AO::SeqCst);
         self.task.cancelled.store(false, AO::SeqCst);
@@ -817,8 +864,10 @@ impl<'p> Interp<'p> {
             self.cancel_children();
         }
         self.world.stopping.store(true, AO::SeqCst);
-        crate::grpc::close_connections(self);
         loop {
+            // A worker resuming from blocking I/O can finish registering a
+            // connection while shutdown waits for it. Drain those owners too.
+            crate::grpc::close_connections(self);
             let pending = std::mem::take(&mut self.world.background.lock().unwrap().0);
             if pending.is_empty() {
                 break;
@@ -833,6 +882,7 @@ impl<'p> Interp<'p> {
         }
         self.entry_active = false;
         let child_panic = self.world.panic.lock().unwrap().take();
+        drop(cleanup);
         match outcome {
             Err(panic) => resume_unwind(panic),
             Ok(result) => match child_panic {

@@ -749,6 +749,9 @@ they are not language errors that `attempt` can catch. Interpreter output writer
 must implement Rust's `Send` trait because tasks execute on different OS threads.
 Tasks share these writers through `Arc<Mutex<...>>`; no raw writer pointers are
 kept. The lock protects writer access, while entry cleanup bounds borrowed data.
+If cleanup itself panics, the process aborts: returning with live borrowed tasks
+would violate that lifetime boundary. Shutdown also drains connections that
+workers finish registering while cancellation is in progress.
 
 Dynamic native Unix task stacks reserve 256 MiB of virtual addresses and are reused in a
 bounded pool. Linux allocations request ordinary pages before touching the stack:
