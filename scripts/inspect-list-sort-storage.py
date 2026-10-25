@@ -27,7 +27,7 @@ assert report['architecture'] == ('aarch64' if args.arch == 'ARM64' else 'x86_64
 for name in ['scripts/measure-list-sort-storage.py', 'scripts/measure-iteration.py']:
     assert (ROOT / name).read_bytes() == subprocess.check_output(['git', 'show', args.source + ':' + name])
 runtime = subprocess.check_output(['git', 'show', args.source + ':runtime/fwp_rt_prims.c'], text=True)
-assert [row['name'] for row in report['programs']] == ['list', 'array']
+assert [row['name'] for row in report['programs']] == ['list', 'array', 'array-owned', 'array-built']
 images = []
 observations = []
 for row in report['programs']:
@@ -37,11 +37,13 @@ for row in report['programs']:
     assert generated.count(runtime) == 1 and '#define FWP_ARC_ONLY 1' in generated
     language = (args.input / (kind + '.fwp')).read_bytes()
     assert hashlib.sha256(language).hexdigest() == row['languageSha256']
-    expected = {variant + opt for variant in ['shared', 'separate-control'] for opt in ['-O1', '-O2']}
+    variants = dict(measurement.variants(generated, kind))
+    normal, control = variants
+    expected = {variant + opt for variant in variants for opt in ['-O1', '-O2']}
     assert set(row['variants']) == expected
     for variant, scopes in row['variants'].items():
         assert set(scopes) == {'ordinary', 'profile'}
-        expected_code = generated if variant.startswith('shared') else measurement.separate_lanes(generated, kind)
+        expected_code = variants[variant[:-3]]
         for scope, recorded in scopes.items():
             binary = args.input / recorded['binary']
             assert binary.name == f'{kind}-{variant}' + ('-profile' if scope == 'profile' else '')
@@ -79,18 +81,18 @@ for row in report['programs']:
             assert len(samples) == 3 and all(sample == samples[0] for sample in samples)
             assert samples[0]['finalChargedBytes'] == samples[0]['collections'] == 0
         for opt in ['-O1', '-O2']:
-            shared = entry['variants']['shared' + opt][0]
-            separate = entry['variants']['separate-control' + opt][0]
-            extra = (2 if kind == 'list' else 1) if count > 1 else 0
+            shared = entry['variants'][normal + opt][0]
+            separate = entry['variants'][control + opt][0]
+            extra = (2 if kind == 'list' else 0 if kind == 'array-built' else 1) if count > 1 else 0
             assert separate['requests'] - shared['requests'] == extra
             assert separate['requestedBytes'] - shared['requestedBytes'] == extra * (count + 1) * 8
-            assert separate['retains'] == shared['retains']
+            assert separate['retains'] - shared['retains'] == (count if kind == 'array-built' or (kind == 'array-owned' and count > 1) else 0)
             assert separate['peakChargedBytes'] >= shared['peakChargedBytes']
             observations.append(dict(program=kind, elements=count, optimization=opt,
-                                     shared=shared, separate=separate))
-assert len(images) == len(observations) == 16
+                                     normalVariant=normal, controlVariant=control, normal=shared, control=separate))
+assert len(images) == len(observations) == 32
 args.output.parent.mkdir(parents=True, exist_ok=True)
 args.output.write_text(json.dumps(dict(source=args.source, architecture=report['architecture'],
     reportSha256=hashlib.sha256((args.input / 'report.json').read_bytes()).hexdigest(),
     images=images, observations=observations), indent=2) + '\n')
-print('Inspected 16 actual sort-storage images and 16 repeated count comparisons')
+print('Inspected 32 actual sort-storage images and 32 repeated count comparisons')

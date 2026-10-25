@@ -41,6 +41,9 @@ still cost space or time.
 
 ### What remains
 
+The [entry and rejection checklist](ownership-admission.md) names supported
+execution forms, their tests and the remaining lifetime decisions.
+
 - Define or reject the remaining cycle/retention cases: recursive channel owners,
   queued HTTP stream handles, unknown callback/task producers and retained foreign
   callbacks. See [the proposed policy](#proposed-cycle-policy).
@@ -132,6 +135,17 @@ whole-value and unknown-call uses may still box them. Eligible closure captures
 can move into their last consuming call. Every case needs the alias, effect and
 cleanup proof, not just syntactic last use. See the
 [compiler design](design.md) and [primitive contracts](primitive-ownership.md).
+
+### Array construction and sorting
+
+`array.from-list` takes one list owner. Nodes before the first shared node can
+transfer their elements into the array; the shared tail must retain copied
+owners even if later individual nodes have counts of one. `array.sort` takes
+one array owner and can reuse uniquely owned storage. Shared arrays and views
+preserve their original contents. Inline wide values keep all their bits.
+The [comparison](measurements/array-sort-ownership.md) explains alias and cleanup
+controls, count savings, and additional code/stack costs. Its prepared six-host
+checks are complete; integrated delivery still requires final CI.
 
 ## Tasks and channels
 

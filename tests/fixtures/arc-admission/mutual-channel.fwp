@@ -1,0 +1,7 @@
+Left =
+    | L Channel[Right]
+Right =
+    | R Left
+links : I64 -> Channel[Left] ! {Async}
+links = channel.make
+main = links 1 | channel.close

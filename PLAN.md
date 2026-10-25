@@ -12,8 +12,8 @@ checked arithmetic, and observable effect/failure order.
 
 ## Where we are
 
-PR #210 is merged. Its final revision passed all nine production jobs and the
-documentation gate. Native packages cover Linux, macOS and Windows on ARM64 and
+PR #211's documentation overhaul is merged. Its final revision passed all nine
+production jobs and the documentation gate. Native packages cover Linux, macOS and Windows on ARM64 and
 AMD64, one binary per target. [The handoff](docs/development-state.md) records
 source IDs, the current task and checks still needing review.
 
@@ -31,13 +31,13 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. Finish the documentation overhaul requested after #210. Reconcile every guide,
-   tutorial and status record with source; remove duplicated delivery narratives.
-2. Deliver the prepared array sorting/conversion group against current main.
-   This is task **A1** below, not a new experiment to repeat from scratch.
-3. Complete **G1–G3** before choosing new lifetime APIs or deleting tracing.
+1. Deliver array sorting/conversion (**A1**) and the entry/rejection checklist
+   (**G1**) together in PR #212. Wait for the array-only revision's running gates,
+   then add the prepared checklist/tests and validate the combined head before
+   merging. Keep its source and measurement identities separate from preparation.
+2. Complete **G2–G3** before choosing new lifetime APIs or deleting tracing.
    Work on measured ARC costs in parallel with those design/proof tasks.
-4. Use **B1** to set per-workload timing budgets before selecting further CPU or
+3. Use **B1** to set per-workload timing budgets before selecting further CPU or
    differentiation optimizations. Keep slower and inconclusive results visible.
 
 The original intermittent Intel macOS compiler abort remains an open defect.
@@ -63,8 +63,12 @@ The table is an index; the concrete work follows it.
 
 ## 1. Remove tracing GC
 
-**G1 — Freeze the supported execution matrix.** Extend the existing admission
-records, rather than recounting completed primitive contracts. Use
+**G1 — Freeze the supported execution matrix.** The
+[entry and rejection checklist](docs/ownership-admission.md) maps maintained
+entries to execution tests and separates invalid scopes, unproved graphs and
+C host obligations. Seven named source fixtures now check raw/optimized rejection
+against tracing emission; integrated validation remains. Extend this matrix,
+rather than recounting completed primitive contracts. Use
 `tests/arc_corpus.rs`, `tests/wasm_arc.rs`, the library/foreign-callback tests,
 and HTTP/gRPC tests to list each maintained entry: executable, command, native
 library, synchronous/asynchronous WASI, browser loader and service. For each
@@ -120,8 +124,10 @@ programs counts as removal without an explicitly agreed language restriction.
 
 ## 2. Minimize ARC in named unshared paths
 
-**A1 — Deliver prepared list-to-array moves and array-sort reuse.** Integrate the
-prepared branch recorded in the handoff; update it for current contracts and CI.
+**A1 — Deliver list-to-array moves and array-sort reuse.** The implementation is
+integrated with current main; final production validation remains. The
+[measurement report](docs/measurements/array-sort-ownership.md) records source IDs,
+controls, count savings and code/stack costs.
 An unshared list prefix transfers elements into the array; the first shared node
 and its descendants retain independent owners. Sorting reuses only an eligible
 unique array; aliases/views preserve their original contents. Inline 128-bit

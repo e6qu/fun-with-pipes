@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [compiler-lifetimes, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [compiler-lifetimes, array-sort, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -195,7 +195,7 @@ jobs:
           path: mapping-evidence/
           if-no-files-found: error
   list_copy:
-    if: inputs.suite == 'list-copy'
+    if: inputs.suite == 'list-copy' || inputs.suite == 'array-sort'
     strategy:
       fail-fast: false
       matrix:
@@ -270,13 +270,15 @@ jobs:
           python scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output list-copy-evidence/primitive-inventory.json
           python scripts/test-native-test-runner.py
       - name: Contracts, semantics, allocation and cleanup controls
-        run: cargo test --no-fail-fast --lib --test sort_callback_ownership --test list_copy_ownership --test list_order_ownership --test array_element_ownership --test array_unwind_ownership --test collection_construction --test map_set_ownership --test selection_unwind_ownership -- --nocapture
+        run: cargo test --no-fail-fast --lib --test sort_callback_ownership --test list_copy_ownership --test list_order_ownership --test array_element_ownership --test array_unwind_ownership --test collection_construction --test map_set_ownership --test selection_unwind_ownership --test float_formats -- --nocapture
       - name: Inspect list-copy executables and missing-cleanup controls
         shell: bash
         run: |
           inspector=objdump
           if [ "$RUNNER_OS" = Windows ]; then inspector=llvm-objdump; fi
           python scripts/inspect-list-copy.py --input list-copy-evidence/arc/list-copy --source "$GITHUB_SHA" --system "$RUNNER_OS" --arch "$RUNNER_ARCH" --objdump "$inspector" --output list-copy-evidence/inspection.json
+          python scripts/inspect-array-sort.py --input list-copy-evidence/arc/array-sort --source "$GITHUB_SHA" --system "$RUNNER_OS" --arch "$RUNNER_ARCH" --objdump "$inspector" --output list-copy-evidence/array-sort-inspection.json
+          python scripts/inspect-array-construction.py --input list-copy-evidence/arc/array-construction --source "$GITHUB_SHA" --system "$RUNNER_OS" --arch "$RUNNER_ARCH" --objdump "$inspector" --output list-copy-evidence/array-construction-inspection.json
       - name: Save compiler for bounded macOS ARM64 diagnostics
         if: ${{ always() && runner.os == 'macOS' && runner.arch == 'ARM64' && hashFiles('target/debug/fwp') != '' }}
         run: |
@@ -4092,6 +4094,8 @@ jobs:
         run: |
           python3 scripts/measure-list-sort-storage.py --compiler target/release/fwp --cc gcc --source "$GITHUB_SHA" --output target/list-sort-storage
           python3 scripts/inspect-list-sort-storage.py --input target/list-sort-storage --source "$GITHUB_SHA" --arch "$RUNNER_ARCH" --objdump objdump --output target/list-sort-inspection.json
+          FWP_FREE=1 FWP_STACK=0 FWP_REUSE=1 FWP_ARRAY_FUSION=0 FWP_PACKED_ARRAYS=1 target/release/fwp build --gc arc --memory dynamic -O2 --emit-c tests/fixtures/array_sort_reuse.fwp -o target/array-sort-wide.c
+          python3 scripts/measure-array-sort-layout.py measure --program target/array-sort-wide.c --cc gcc --directory target/array-sort-layout --source "$GITHUB_SHA" --system Linux --arch "$RUNNER_ARCH" --objdump objdump --output target/array-sort-layout-inspection.json
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -4108,6 +4112,9 @@ jobs:
             target/map-order-inspection.json
             target/list-sort-storage/
             target/list-sort-inspection.json
+            target/array-sort-wide.c
+            target/array-sort-layout/
+            target/array-sort-layout-inspection.json
             target/checked-bounds/
             target/checked-bounds-inspection.json
             target/bench-evidence/

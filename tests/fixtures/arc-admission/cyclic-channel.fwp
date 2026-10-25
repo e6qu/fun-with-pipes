@@ -1,0 +1,5 @@
+Link =
+    | Node Channel[Link]
+links : I64 -> Channel[Link] ! {Async}
+links = channel.make
+main = links 1 | channel.close

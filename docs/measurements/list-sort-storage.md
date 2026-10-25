@@ -4,6 +4,10 @@ Removing redundant sort buffers saves allocation requests and requested bytes.
 The measured whole-program peak and retain counts do not change. This compares
 two versions of fwp; it does not measure speed or overhead against C/Rust.
 
+These are the historical scratch-buffer results. The later
+[array ownership comparison](array-sort-ownership.md) separately removes the
+result copy and per-element retains; it preserves these observations.
+
 ## Programs and comparison
 
 Both programs read words from standard input, sort them, and print their count:

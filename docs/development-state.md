@@ -1,84 +1,74 @@
 # Current work
 
-**Next:** finish all ten final-revision CI gates for documentation
-[PR #211](https://github.com/e6qu/fun-with-pipes/pull/211) on `docs-overhaul`
-in `/private/tmp/fwp-docs-overhaul`, then squash-merge under the standing
-authorization. Base: merged main
-`380fa8412327e52db420b96918d20e2528bbfc7c`. Fix every failed check before merging.
-The squash message must be one line, at most 80 characters, with an empty body
-and no trailers or attribution. After delivery, publish integrated task **A1** below.
+**Next:** add G1's entry/rejection checklist and tests to the same PR as A1,
+after the current PR #212 revision passes CI. Preparation is in
+`/private/tmp/fwp-ownership-admission`, branch `ownership-admission`.
+[PR #212](https://github.com/e6qu/fun-with-pipes/pull/212) is the only active PR:
+head `6666b5ea488f8d990ef17a8c038174c85cc3ddba`, production `40151422882`,
+documentation `40151422775`. The user explicitly requested bundling the next task
+into #212 once this run passes: do not merge the array-only revision or create
+another PR. After its ten gates pass, fast-forward `array-moves-delivery` to this
+preparation, update #212's title/description and push the combined changes.
+Require all nine production jobs and documentation again for the combined head,
+plus ownership review. Squash with
+`Reduce array ownership costs and define GC removal checks`, an empty body and
+no trailers. Then record A1/G1's actual acceptance and continue G2–G3.
 
-The first published revision `29edbc03931de2a7e2f71744092a191fb3a21c85` passed
-documentation `40138325016` and the benchmark job in production `40138325017`.
-A final review corrected an overlooked tracing-default statement in the service
-guide. The updated revision needs all gates; do not use those earlier passes as
-its acceptance evidence. Check the PR for the current head and runs.
+## G1 preparation
 
-The overhaul makes [PLAN.md](../PLAN.md) the detailed backlog: GC tasks G1–G5,
-ARC tasks A1–A5 and the six other milestone groups have concrete inputs, code/test
-locations, dependencies and completion evidence. Ownership and architecture guides
-state current contracts; benchmarks explain comparisons and link historical
-protocols/results. Preparation IDs and raw measurements retain their identities.
-Tutorial corrections cover browser dependencies/tail calls, proved task/channel
-captures, explicit interpreter commands and navigation. The reference now includes
-Windows and distinguishes ARC from tracing in static-memory builds.
+[The matrix](ownership-admission.md) maps executable, command, C-library, foreign,
+HTTP/gRPC/REST/MCP, WASI and browser-loader entries to actual tests. It separates
+invalid derivative scopes, conservative cycle rejection and C host obligations.
+Unknown producer controls are explicitly internal-IR tests, not invented source
+syntax. Scoped C callbacks do not establish a retained-callback release contract.
+
+Seven existing rejection examples now have named source fixtures. Their test
+requires tracing emission and precise ARC rejection in both raw/optimized IR;
+rejected builds must return status 1 without emitting C. Invalid scope examples
+are never executed just because tracing emits them. No compiler/runtime behavior
+or supported lifetime API changed in this preparation.
+
+Focused checks through `python3 scripts/local-guard.py`:
+
+- Verified/downloaded the macOS ARM64 package from #211's passing production run
+  `40139343820`: source `9f36f2f5ae4a1a2361a2c9ed8cb8bcc27a7680b3`, compiler SHA-256
+  `ac389632d50137a880371d2ea05ad7a22d7f01e6aa5884acbecf440f9054db10`.
+  Package is `/private/tmp/fwp-compiler-211/fwp-macos-arm64/fwp`.
+- Formatted the seven fixtures with that compiler and ran all 28 compile-only
+  admission observations with expected results (14 tracing emissions, 14 ARC
+  rejections), plus no unexpected stdout.
+- `cargo fmt --all` passed.
+- Extracted the exact changed Rust test function to `/private/tmp/fwp-admission-test.rs`,
+  changing only fixture include paths to absolute paths. Compiled it with Rust O1,
+  debug assertions and overflow checks, then ran
+  `arc_rejects_unproved_runtime_boundaries_and_disabled_counting`: one test passed,
+  including disabled-counting controls. This is not a full Rust-target build.
+
+- `python3 scripts/check-roadmap.py`: 156 Markdown link sets, 106 immutable
+  preparation records and eight milestones passed; whitespace check passed.
+
+Pending: final whole-target compilation/clippy and native execution in CI.
+No full local build/suite/benchmark was run. The downloaded
+compiler predates A1; it validates the unchanged admission implementation, not
+A1's runtime change. The seven production/source fixtures remain in the repo.
 
 ## Baseline and unresolved issue
 
-The user merged [#210](https://github.com/e6qu/fun-with-pipes/pull/210) on
-2026-10-24. Tested head `36924807f0343c79c38ef42c4254a721afa60613` and merge
-`380fa8412327e52db420b96918d20e2528bbfc7c` have identical trees.
-All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40124698815)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40124698740)
-passed. The 236-check Linux/Intel macOS interpreter suite also passed before
-publication. Final-head independent binary review was not completed before the
-user merged; do not turn the passing CI record into a claim that it was.
+The user merged #211 as `afebaac99f9b45235df369a6460f8e4c081ec5b3`, with the
+same tree as tested head `9f36f2f5ae4a1a2361a2c9ed8cb8bcc27a7680b3`. All nine
+production jobs `40139343820` and documentation `40139343796` passed. #212 is
+based on that merge; this preparation is based on #212's head.
+
+A1's focused six-host/native and Linux cost evidence is in
+[the array report](measurements/array-sort-ownership.md). It still needs final
+integrated acceptance. Do not repeat unchanged finished measurements.
 
 The original intermittent Intel macOS compiler abort remains unexplained.
-[Its investigation](measurements/compiler-abort.md) records source review and
-preserved evidence. The interpreter lifetime fixes are not an established cause
-or cure. The user requested source-level safety review; do not resume allocator-
-cookie experiments or disassembly-led diagnosis.
-
-## Prepared work after this overhaul
-
-Plan task **A1** is already prepared in `/private/tmp/fwp-array-sort-ownership`,
-branch `array-sort-ownership`, checkpoint `9824e22e827cfd6116c55ac2fcc2651ed02a7dcc`.
-Tested source is `e0c4dd51bae37c0e09be10fcb373dd035279f815`.
-It moves unshared list prefixes into arrays and reuses unique arrays for sorting.
-All six native jobs in `40100508025` and both Linux cost jobs in `40100509770`
-passed; focused logs and independent reviews are complete. The report in that
-checkout is `docs/measurements/array-sort-ownership.md`.
-The integration is saved separately in `/private/tmp/fwp-array-moves-delivery`,
-branch `array-moves-delivery`, commit `f4359dc82b19629a8779f3d5d175f082e8bdf4b7`.
-It keeps #210's CI repairs. Guarded formatting, workflow lint, primitive inventory,
-19 native-runner controls and 155 documentation link sets pass. After #211 merges,
-move it onto the merged tree, preserve this service-guide correction, update its
-handoff, and run final delivery checks. Do not repeat finished preparation or
-claim this code is already merged.
-
-## Verification for this documentation change
-
-Focused checks passed under `python3 scripts/local-guard.py`:
-
-- `python3 scripts/test-roadmap.py`: four controls. Code comments inside fenced
-  examples can no longer masquerade as linkable headings.
-- `python3 scripts/check-roadmap.py`: 154 Markdown link sets, 106 immutable
-  preparation pairs/tags, eight plan/handoff milestones and commit rules.
-- Standalone `tests/examples.rs`: `tutorial_readmes_match_their_programs` passes.
-- Standalone `tests/stdlib_doc.rs`: `stdlib_doc_is_current` passes without blessing.
-- `actionlint .github/workflows/roadmap.yml` passes.
-
-Both standalone checkers were compiled with Rust O1, debug assertions and overflow
-checks, without building the compiler. No tutorial execution, full local suite or
-benchmark was run. Full production checks remain required on GitHub. The generated
-library reference and vendored license/provenance documents needed no edits.
-
-The primary checkout remains detached at #209. Its operational handoff points
-here, and its local abort report is preserved. Earlier operational notes were
-saved to `/private/tmp/fwp-primary-handoff-before-docs.md`; relevant source/run IDs
-are recorded here and in the abort report. Old publication/merge/pruning helpers
-under `/private/tmp` are source-specific; do not rerun them unchanged.
+[The investigation](measurements/compiler-abort.md) preserves evidence; #210's
+interpreter lifetime repairs are not an established cause or cure. The user
+requested source-first review; do not restart allocator-cookie/disassembly-led
+experiments. The primary checkout is still detached at #209 with an operational
+handoff pointing to these worktrees; do not use its obsolete plan.
 
 ## Roadmap status
 
