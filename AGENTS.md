@@ -37,8 +37,8 @@ Use [CONTRIBUTING.md](CONTRIBUTING.md) for repository conventions and test locat
 
 ## Early pre-alpha: no backward compatibility requirement
 
-Source APIs, internal layouts, calling conventions, binary formats and the ABI
-may change. Do not preserve old representations or add adapters, wrappers,
+All APIs, layouts, calling conventions and binary formats may break freely.
+Builds must not depend on a previous fwp version or self-hosting. Do not add adapters,
 fallbacks or migration paths solely for older code or already compiled binaries.
 Rebuild affected programs/libraries with the matching compiler, and update tests,
 examples and docs together. Preserve agreed semantics, memory safety and correct

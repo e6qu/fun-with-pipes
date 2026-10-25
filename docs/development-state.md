@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** finish the remaining G4 diagnostic mapping and review the retained-C
-callback test target, then run the combined G3/G4 validation. The callback
+**Next:** finish the G4 mapping for remaining tracing/poisoning-only tests,
+starting with unwind and scoped-file probes, then run combined G3/G4 validation. The callback
 implementation and integration tests are prepared, including actual library
 unload; candidate Rust/C generation and platform validation have not run.
 Keep this as one PR. Do not restart the old publisher or launch a partial full
@@ -101,8 +101,8 @@ now releases empty State scratch and the root explicitly before clearing its
 pointers. Source review also found idle Linux descriptor-wait metadata relying
 on heap teardown when the external host keeps its descriptor open. Both native
 and library shutdown now release that metadata after all waiters finish; the
-new Linux fault control removes a waiter release and requires status 205. The final allocation ledger can therefore verify these owners before
-bulk allocator teardown. This applies to ordinary libraries too.
+new Linux fault control removes a waiter release and requires status 205. The
+final allocation ledger can verify these owners before bulk allocator teardown. This applies to ordinary libraries too.
 
 Focused checks under `scripts/local-guard.py`:
 
@@ -124,6 +124,27 @@ Focused checks under `scripts/local-guard.py`:
   161 doc link sets, 106 preparation pairs/tags and eight roadmap steps.
 - After waiter cleanup changed, the focused Clang O2 integration probe passed
   again. Linux-specific waiter execution is pending the native Linux runners.
+
+## Direct C-library diagnostics
+
+After callback checkpoint `d276d112`, `library_input_ownership` and
+`library_result_ownership` now retain their tracing/poisoning runs and add ARC
+runs using allocation identity. Their checks no longer infer physical release
+from a zero count in ARC. The result test checks liveness before reading a
+potentially prematurely freed result. Failed assertions exit immediately so
+library teardown cannot replace their specific fault status with a later leak
+status. The ARC duplicate-release control requires the ledger's status 203.
+Both test executables now have explicit `.exe` names for Windows.
+
+Their independent signature-error tests no longer reset the process-global
+native settings: those errors occur before generation, and concurrent resets
+could change the positive test's selected ownership mode. Formatting passed;
+the new executions remain part of the pending combined validation.
+
+The user's API clarification is now explicit in AGENTS.md and PLAN.md: every API
+may break, and builds must not depend on a previous fwp version or self-hosting.
+The saved #213 executable used for optional bounded development probes is not a
+repository build dependency. Production builds compile the current Rust sources.
 
 ## Prepared group
 

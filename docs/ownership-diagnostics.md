@@ -153,6 +153,14 @@ identity through reentry, errors, cancellation and partial construction. Removed
 capture/context cleanup, premature destruction and missing active-call completion
 have distinct fault controls; integrated validation is pending.
 
+The direct [library input](../tests/library_input_ownership.rs) and
+[result](../tests/library_result_ownership.rs) tests also add ARC execution.
+Their missing input/field/result release controls and repeated-evaluation control
+remain; freed-value checks use allocation identity in ARC. Premature returned
+string release is checked before reading its bytes. A deliberately duplicated
+release must stop at the ledger with 203. These runs are prepared and await the
+combined compiler/platform gate.
+
 The same preparation extends existing external-owner probes to ARC as well as
 tracing. They retain their original failure controls:
 

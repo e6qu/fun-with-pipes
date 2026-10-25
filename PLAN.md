@@ -5,8 +5,9 @@ immutable values and predictable memory use. Prefer moves, borrows and direct
 values; use automatic reference counting (ARC) only for necessary sharing.
 Remove the tracing garbage collector (GC). JIT compilation is excluded.
 
-This is early pre-alpha: source, layouts and calling conventions may change.
-Preserve language behavior, not backward compatibility. Keep single-argument,
+This is early pre-alpha: every API, layout and calling convention may change.
+Builds must not require a previous fwp version or self-hosting. Preserve agreed
+language behavior; backward compatibility is not a goal. Keep single-argument,
 curried, data-last functions, ordinary type inference, explicit generic signatures,
 checked arithmetic, and observable effect/failure order.
 
