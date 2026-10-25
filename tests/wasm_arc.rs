@@ -197,7 +197,7 @@ fn wasi_allocator_frees_graphs_and_rejects_escaped_counts() {
         let binary = dir.join(if target == fwp::cgen::Target::Wasi {
             "probe.wasm"
         } else {
-            "probe"
+            "probe.exe"
         });
         for opt in ["-O1", "-O2"] {
             for (candidate, status) in [(&code, 0), (&missing_free, 237), (&missing_guard, 239)] {

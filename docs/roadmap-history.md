@@ -6,6 +6,21 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Scoped subscriber lifetimes (PR #213)
+
+[Lesson 24](tutorials/24-subscriptions/README.md) uses an independently owned task
+and a data queue for a persistent subscriber. Native checks cover finish, failure,
+active/unstarted cancellation, child-task cleanup and reentry. Eight and 64 rounds
+restore their memory balance; omitted release/join controls fail. Task docs now
+explain that cancellation does not erase a result already produced.
+
+All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40177475991)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40177475958)
+passed at `0ac1f6f714a1a9a5f62d3d4b14a8db806358d140`. The guarded merge
+produced `11a0f5ac3baea83609577c00d9a9dd7a67f627a3`, with an identical tree
+and the verified single-line subject `Verify scoped subscription lifetimes and cleanup`.
+[PR #213](https://github.com/e6qu/fun-with-pipes/pull/213).
+
 ## Array moves and the GC-removal checklist (PR #212)
 
 List-to-array conversion moves an unshared prefix; array sorting reuses eligible

@@ -1,83 +1,77 @@
 # Current work
 
-**Next:** verify all nine production jobs and documentation for the delivery
-PR from `scoped-lifetimes`, fix every failure, then squash-merge its exact passing head. Worktree:
-`/private/tmp/fwp-scoped-lifetimes`. Squash only after those gates pass, with subject
-`Verify scoped subscription lifetimes and cleanup`, empty body and no trailers.
-Do not repeat A1/G1 or merge based only on local macOS checks.
+**Next:** verify the delivery PR from `ownership-diagnostics`. Require all nine
+production jobs plus documentation on its exact final head,
+fix every failure, then squash with `Check native ownership without retaining freed storage`,
+empty body and no trailers. Worktree: `/private/tmp/fwp-ownership-diagnostics`.
 
 ## This group
 
-[Lesson 24](tutorials/24-subscriptions/README.md) builds a streaming subscriber
-from existing task/channel primitives. The task owns its callback; its queue holds
-data. Finish closes/drains through the worker, then joins. Stop closes, cancels
-and joins, preserving messages held by other queue owners. No new lifetime API,
-weak handle or implicit cleanup policy is introduced.
+[The diagnostic guide](ownership-diagnostics.md) explains the test-only live-address
+table, which detects duplicate/invalid frees, stale count operations, invalid shared
+reuse and allocations left at cleanup. It runs alongside existing byte-balance
+checks, including a control that records a free but omits physical reclamation.
+The table removes freed entries and retains no objects or dead-address history.
+It does not detect arbitrary raw reads or distinguish a stale pointer after its
+address has been allocated again. Do not call it a complete borrow checker.
 
-`subscriptions_join_active_callbacks_and_release_each_round` in `tests/arc_tasks.rs`
-checks success, callback failure, cancellation before entry and during a callback
-with a child task, callback reentry, scope failure and cancellation after completion.
-Eight and 64 rounds must restore their initial managed-byte balance after every
-outer scope and reach zero charge after scheduler cleanup. Four omitted-release/
-join mutations must fail at C O1/O2. ARC binaries are checked for absent collector
-symbols; tracing stress/reuse controls retain their existing coverage.
+The helper now covers the native ARC golden corpus and execution tests, plus
+O1/O2 dynamic/static probes. Eight and 1,024 rounds exercise allocation paths,
+collision deletion and capacity bounds. Existing tracing stress and poisoning
+coverage remains. The workflow records every collector-setting mention with source
+revision, file hash and line text; this is an inventory, not replacement coverage.
+An incidental native WASI allocator-probe filename now explicitly ends in `.exe`.
 
-The task documentation now states that cancellation does not erase a result
-already produced. Library reference regeneration comes from `lib/task.fwp`.
-[The cycle contract](ownership.md#cycle-and-retention-contract) spells out graph-ID
-deletion and the unsupported C-retention case. It does not claim arbitrary C
-violations can be diagnosed. Remaining tracing-only graph decisions are still
-explicitly listed in [the admission matrix](ownership-admission.md).
+## Baseline and checks
 
-## Checks and source
+PR #213 passed all nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40177475991)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40177475958)
+at `0ac1f6f714a1a9a5f62d3d4b14a8db806358d140`. The guarded merge produced
+`11a0f5ac3baea83609577c00d9a9dd7a67f627a3`, with the same tree and verified
+one-line subject. The old merge watcher finished; do not restart it. Duplicate
+postmerge production `40184730062` was cancelled; documentation `40184730066` passed.
 
-Baseline is #212's merge `eff5146e8d6d373771d18cb2f206d40bc36c6e06`, whose tree
-matches tested head `dc9cf3bfb846d5a6632fbd6424cc8509b5d560cb`. All nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40159979066)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40159979067)
-passed. Duplicate postmerge production `40175968644` was cancelled;
-postmerge documentation `40175968599` passed. A1 and G1 are delivered.
+Focused local work uses `python3 scripts/local-guard.py`:
 
-All local workloads use `python3 scripts/local-guard.py`:
+- Downloaded and verified #213's macOS ARM64 compiler against its package manifest,
+  SHA-256 `faf994ee0067f5249da86877a7f450efe7cedcfdd433084ebee046319fff47fa`.
+  Package: `/private/tmp/fwp-compiler-213/fwp-macos-arm64/fwp`.
+- Extracted the two changed Rust test functions, preserving their bodies and using
+  a local temporary-directory/C-compiler shim with production C flags. Built at
+  Rust O1 with debug/overflow checks. The full existing ARC execution test passed
+  at native O0/O1/O2, including aliases, failures, scheduler cleanup and the updated
+  missing-release controls. This does not compile the full Cargo target.
+- The new dynamic/static ledger probe passed at O1/O2, including all fault controls.
+  Wraparound and artifact-capture checks also pass; evidence is retained under
+  `/private/tmp/fwp-ownership-ledger-local/record-ownership/ownership-ledger`.
+- Formatting, whitespace and workflow lint pass. Documentation audit passes:
+  158 link sets, 106 immutable preparation records and eight roadmap steps.
+- Collector-setting inventory: 283 tracked files and 2,756 matching lines. File
+  hashes/line contexts and wrong-revision rejection pass. Local report:
+  `/private/tmp/fwp-ownership-ledger-local/memory-diagnostics.json` (dirty checkout
+  recorded explicitly). CI regenerates it for the exact committed revision.
 
-- Verified the #212 macOS ARM64 package against its manifest: compiler SHA-256
-  `7019362859a59005dabe4869f973df3d225539ce6eeea188febb4ba1f0091990`.
-  Path: `/private/tmp/fwp-compiler-212/fwp-macos-arm64/fwp`.
-- Formatted the two new programs; raw interpretation matches their expected output.
-- Extracted the new Rust test body and built it at Rust O1 with debug/overflow
-  checks. Its local-only shim supplies a temporary directory and invokes Apple
-  Clang with the production C flags. O1/O2 ARC and tracing stress runs, per-round
-  ledgers and all four broken cleanup controls pass. Artifacts are under
-  `/private/tmp/fwp-subscription-checks-final/subscriptions`. This is not a full
-  Cargo-target build and does not verify GCC or Windows.
-- `cargo fmt --all` passed. Built the actual `tests/stdlib_doc.rs` standalone,
-  regenerated the reference with `FWP_BLESS=1`, then passed without blessing.
+No full local build, golden corpus or benchmark was run. Integrated CI must compile
+actual Rust targets and execute the entire instrumented ARC corpus on all six hosts;
+local Clang checks do not verify GCC or Windows.
 
-- Tutorial README/source/output copies pass the exact extracted comparison test.
-  Lesson 24 matches raw/optimized interpretation and native ARC at O1/O2.
-- Primitive inventory passes its frozen baseline: 392 declarations, 382 symbols,
-  371 contracts, 19 lowered templates and two flat scalar signatures; no review
-  symbols. Report: `/private/tmp/fwp-scoped-lifetime-inventory/candidate.json`.
+## Remaining decisions and preserved work
 
-- Documentation audit passes: 157 link sets, 106 immutable preparation records
-  and eight roadmap steps. Formatting and whitespace checks pass.
+The earlier cycle-policy question remains unanswered: retain current ARC restrictions
+with scopes/IDs when deleting tracing, or first add an explicit cycle-breaking API.
+Do not infer an answer from silence. This does not block independent G4 work.
+Next after integration: finish the reuse/borrow fault matrix, then the separate
+WASI/external-resource mapping in [the diagnostic guide](ownership-diagnostics.md).
 
-Integrated native CI remains. No full local
-build, suite or benchmark was run. Required CI will compile the actual Rust target
-and use production compilers on all six native hosts.
-
-## Unresolved issue and preserved work
-
-The intermittent Intel macOS compiler abort remains unexplained. Preserve
-[its evidence](measurements/compiler-abort.md); earlier interpreter repairs and
-passing reruns are not an established cure. Investigate source lifetimes on
-recurrence, without restarting allocator-cookie/disassembly-led experiments.
+The original intermittent Intel macOS compiler abort remains unexplained. Preserve
+[its evidence](measurements/compiler-abort.md); previous repairs and passing reruns
+are not an established cure. Investigate source lifetimes on recurrence, without
+allocator-cookie/disassembly-led experiments.
 
 The primary checkout remains detached at #209 with an operational handoff and an
-untracked abort report; preserve it. Old #212 worktrees remain at their delivered
-head. Its conditional publisher completed; do not restart it. Independent Linux
-benchmark inspection passed, but a separate manual review of every final platform
-artifact was not completed before user merge; see [history](roadmap-history.md).
+untracked abort report. Preserve both. Old delivery worktrees and their measurements
+are evidence; do not repeat completed preparation. The initial G4 textual inventory
+and notes under `/private/tmp/fwp-g4-*` predate this branch's new ledger.
 
 ## Roadmap status
 
@@ -85,7 +79,7 @@ Concrete unfinished tasks and acceptance criteria live in [PLAN.md](../PLAN.md).
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | G2–G3: finish lifetime decisions/checks; G4 replace diagnostics; G5 delete tracing |
+| 1 | In progress | G2–G3: settle remaining graph policy; G4 complete diagnostic replacements; G5 delete tracing |
 | 2 | In progress | A2–A5: account for residual counts, remove redundant ownership work/boxes, prove count-free unique storage |
 | 3 | In progress | F1–F3: cost fixtures, proved tail-frame extensions and mutual-recursion decision |
 | 4 | In progress | P1–P3: checked comparisons and per-workload CPU budgets |
