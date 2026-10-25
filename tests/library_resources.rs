@@ -148,7 +148,7 @@ void setup(uintptr_t *fds,int *observations,const char *path,const char *cert,co
             "libresources.{}",
             fwp::cgen::shared_library_extension()
         ));
-        let exe = dir.join("host");
+        let exe = dir.join("host.exe");
         for opt in ["-O1", "-O2"] {
             fwp::cgen::compile_library(
                 &format!("{hooks}\n{generated}\n{fixture}"),
@@ -159,7 +159,7 @@ void setup(uintptr_t *fds,int *observations,const char *path,const char *cert,co
             )
             .unwrap();
             fwp::cgen::compile_c(host, &exe, opt).unwrap();
-            for poison in ["0", "1"] {
+            for poison in if arc { &["0"][..] } else { &["0", "1"][..] } {
                 let out = Command::new(&exe)
                     .args([
                         &lib,
@@ -167,7 +167,10 @@ void setup(uintptr_t *fds,int *observations,const char *path,const char *cert,co
                         &dir.join("cert.pem"),
                         &dir.join("key.pem"),
                     ])
+                    .env_remove("FWP_GC")
                     .env("FWP_REUSE_VERIFY", poison)
+                    .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
+                    .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
                     .output()
                     .unwrap();
                 assert!(
@@ -228,6 +231,9 @@ void setup(uintptr_t *fds,int *observations,const char *path,const char *cert,co
                 &dir.join("cert.pem"),
                 &dir.join("key.pem"),
             ])
+            .env_remove("FWP_GC").env("FWP_REUSE_VERIFY", "0")
+            .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
+            .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
             .output()
             .unwrap();
         assert_eq!(

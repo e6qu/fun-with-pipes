@@ -4,6 +4,8 @@ use std::process::{Command, Output};
 
 #[path = "support/ownership_ledger.rs"]
 mod ownership_ledger;
+#[path = "support/record_probe.rs"]
+mod record_probe;
 
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
@@ -343,6 +345,13 @@ fn arc_wide_counts_release_values_and_metadata_each_round() {
                     .env("FWP_REUSE_VERIFY", "0")
                     .output()
                     .unwrap();
+                record_probe::save(
+                    "wide_counts",
+                    &format!("{memory}{opt}-{mode}"),
+                    &code,
+                    &exe,
+                    &output,
+                );
                 assert_eq!(
                     output.status.code(),
                     Some(status),
@@ -367,6 +376,13 @@ fn arc_wide_counts_release_values_and_metadata_each_round() {
             .env("FWP_REUSE_VERIFY", "0")
             .output()
             .unwrap();
+        record_probe::save(
+            "wide_counts",
+            &format!("{memory}-missing-wide-free"),
+            &missing_free,
+            &exe,
+            &output,
+        );
         assert_eq!(output.status.code(), Some(239), "{memory}: {output:?}");
     }
 }

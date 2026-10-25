@@ -69,20 +69,22 @@ jobs:
       - name: Native socket and library execution
         shell: pwsh
         run: |
+          $nativeStatus = 0
           cargo test --lib socket_tests -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($LASTEXITCODE -ne 0) { $nativeStatus = 1 }
           cargo test --lib dylib::tests -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($LASTEXITCODE -ne 0) { $nativeStatus = 1 }
           cargo test --lib softfloat:: -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($LASTEXITCODE -ne 0) { $nativeStatus = 1 }
           cargo test --lib sys::tty::tests::native_console -- --exact 2>&1 | Tee-Object -Append windows-native.log
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($LASTEXITCODE -ne 0) { $nativeStatus = 1 }
           cargo test --no-fail-fast --test softfloat_core --test float_math --test scalar_math --test scalar_traps --test integer_output --test static_constants --test tail_recursion --test repl --test debugger --test infix -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($LASTEXITCODE -ne 0) { $nativeStatus = 1 }
           cargo test --no-fail-fast --test compiler_options --test native_allocator --test windows_context --test native_sockets --test library_unload -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($LASTEXITCODE -ne 0) { $nativeStatus = 1 }
           cargo build --bin fwp 2>&1 | Tee-Object -Append windows-native.log
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($LASTEXITCODE -ne 0) { $nativeStatus = 1 }
+          exit $nativeStatus
       - name: Python SDK and native disassembly
         if: ${{ !cancelled() && steps.native_compiler.outcome == 'success' }}
         env:
@@ -91,21 +93,25 @@ jobs:
           FWP_OBJDUMP: llvm-objdump
         run: python -W error::ResourceWarning -m unittest discover -s sdk/python/tests -v
       - name: Language formatting preflight
+        if: ${{ !cancelled() && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: |
           ./target/debug/fwp.exe fmt --check lib examples docs/tutorials bench
           exit $LASTEXITCODE
       - name: Interpreter golden outputs and exit statuses
+        if: ${{ !cancelled() && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: |
           cargo test --test golden_run interpreter_snapshots -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           exit $LASTEXITCODE
       - name: Queued function captures, receive ownership and callback effects
+        if: ${{ !cancelled() && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: |
           cargo test --no-fail-fast --test queued_functions --test channel_queue_ownership --test channel_cycle_ownership --test task_ownership --test task_handle_ownership --test task_timer_order --test within_thunk_ownership --test borrowed_callbacks --test call_effects --test variant_alias_ownership --test variant_conversion_ownership -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           exit $LASTEXITCODE
       - name: Generated programs with native resources and ownership stress
+        if: ${{ !cancelled() && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: |
           $testTargets = @(
@@ -134,11 +140,13 @@ jobs:
         if: ${{ !cancelled() && steps.native_compiler.outcome == 'success' }}
         run: python scripts/inspect-array-construction.py --input ownership-evidence/arc/array-construction --source "${{ github.event.pull_request.head.sha || github.sha }}" --system Windows --arch "$env:RUNNER_ARCH" --objdump llvm-objdump --output ownership-evidence/array-construction-inspection.json
       - name: CPU kernel size validation order
+        if: ${{ !cancelled() && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: |
           cargo test --test device_bounds device_output_limits_preserve_kernel_validation_order -- --exact
           exit $LASTEXITCODE
       - name: Array bounds and retained GC failure artifacts
+        if: ${{ !cancelled() && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: |
           cargo test --test array_size_limits array_size_limits_agree_with_raw_interpreter_and_generic_wrappers -- --exact --nocapture

@@ -178,7 +178,13 @@ fn socket_scratch_is_released_on_cancel_and_allocation_failure() {
             ] {
                 let binary = dir.join("socket-scratch.exe");
                 fwp::cgen::compile_c(source, &binary, opt).unwrap();
-                let output = Command::new(&binary).env("FWP_GC", "off").output().unwrap();
+                let output = Command::new(&binary)
+                    .env("FWP_GC", "off")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
                 assert_eq!(
                     output.status.code(),
                     Some(expected),
@@ -328,7 +334,13 @@ static void *tcp_header_alloc(size_t);
                 }
                 let binary = dir.join("tcp-constructor.exe");
                 fwp::cgen::compile_c(&candidate, &binary, opt).unwrap();
-                let output = Command::new(&binary).env("FWP_GC", "off").output().unwrap();
+                let output = Command::new(&binary)
+                    .env("FWP_GC", "off")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
                 if omitted.is_none() {
                     if let Some(path) = std::env::var_os("FWP_TCP_CONSTRUCTOR_ARTIFACTS") {
                         let path = std::path::PathBuf::from(path);

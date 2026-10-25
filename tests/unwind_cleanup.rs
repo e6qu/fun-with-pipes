@@ -4,6 +4,8 @@ use std::process::{Command, Output};
 
 #[path = "support/ownership_ledger.rs"]
 mod ownership_ledger;
+#[path = "support/record_probe.rs"]
+mod record_probe;
 
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
@@ -415,15 +417,18 @@ fn owned_unwind_releases_values_files_and_tasks_without_tracing() {
             let binary = dir.0.join(format!("{memory}{opt}.exe"));
             fwp::cgen::compile_c(&source, &binary, opt).unwrap();
             for rounds in ["8", "1024"] {
-                checked(
-                    Command::new(&binary)
-                        .arg(&file)
-                        .arg(rounds)
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "0")
-                        .env("FWP_REUSE_VERIFY", "0"),
-                );
+                let result = Command::new(&binary)
+                    .arg(&file)
+                    .arg(rounds)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                let label = format!("{memory}{opt}-{rounds}");
+                record_probe::save("unwind_cleanup", &label, &source, &binary, &result);
+                assert!(result.status.success(), "{label}: {result:?}");
             }
         }
         for (name, broken, expected) in [
@@ -466,6 +471,13 @@ fn owned_unwind_releases_values_files_and_tasks_without_tracing() {
                 .env("FWP_REUSE_VERIFY", "0")
                 .output()
                 .unwrap();
+            record_probe::save(
+                "unwind_cleanup",
+                &format!("{memory}-{name}"),
+                &broken,
+                &binary,
+                &result,
+            );
             assert_eq!(
                 result.status.code(),
                 Some(expected),

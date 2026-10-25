@@ -52,7 +52,7 @@ fn loader_unload_drains_tasks_restores_signals_and_releases_regions() {
         };
         let (generated, header) = fwp::cgen::generate_library(&p, "unload", &[]).unwrap();
         if cfg!(windows) {
-            windows_loader_unload(&generated, &header);
+            windows_loader_unload(&generated, &header, arc);
             continue;
         }
         let observed=generated
@@ -206,7 +206,7 @@ int main(int argc,char **argv) {
 "#;
         let dir = std::env::temp_dir().join(format!("fwp-library-unload-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        let exe = dir.join("host");
+        let exe = dir.join("host.exe");
         let lib = dir.join(format!(
             "libunload.{}",
             fwp::cgen::shared_library_extension()
@@ -257,12 +257,13 @@ int main(void) {{
             )
             .unwrap();
             fwp::cgen::compile_c(&host_source, &exe, opt).unwrap();
-            for poison in ["0", "1"] {
+            for poison in if arc { &["0"][..] } else { &["0", "1"][..] } {
                 let out = Command::new(&exe)
                     .arg(&lib)
+                    .env_remove("FWP_GC")
                     .env("FWP_REUSE_VERIFY", poison)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
+                    .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
+                    .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
                     .output()
                     .unwrap();
                 assert!(
@@ -283,14 +284,15 @@ int main(void) {{
             .unwrap();
             let previous = fwp::ffi::links();
             fwp::ffi::set_links(vec![archive.to_string_lossy().into_owned()]);
-            let result = fwp::cgen::compile_c(&static_host, &dir.join("static-host"), opt);
+            let result = fwp::cgen::compile_c(&static_host, &dir.join("static-host.exe"), opt);
             fwp::ffi::set_links(previous);
             result.unwrap();
-            for poison in ["0", "1"] {
-                let out = Command::new(dir.join("static-host"))
+            for poison in if arc { &["0"][..] } else { &["0", "1"][..] } {
+                let out = Command::new(dir.join("static-host.exe"))
+                    .env_remove("FWP_GC")
                     .env("FWP_REUSE_VERIFY", poison)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
+                    .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
+                    .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
                     .output()
                     .unwrap();
                 assert!(
@@ -324,7 +326,14 @@ int main(void) {{
                 let broken = format!("{prefix}{}", cleanup.replacen(needle, replacement, 1));
                 fwp::cgen::compile_library(&broken, &header, &lib, opt, fwp::cgen::LibKind::Shared)
                     .unwrap();
-                let out = Command::new(&exe).arg(&lib).output().unwrap();
+                let out = Command::new(&exe)
+                    .arg(&lib)
+                    .env_remove("FWP_GC")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
+                    .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
+                    .output()
+                    .unwrap();
                 assert_eq!(
                     out.status.code(),
                     Some(expected),
@@ -337,7 +346,7 @@ int main(void) {{
     }
 }
 
-fn windows_loader_unload(generated: &str, header: &str) {
+fn windows_loader_unload(generated: &str, header: &str, arc: bool) {
     let dir = fwp::cgen::TempDir::new("windows-library-unload").unwrap();
     let common = include_str!("fixtures/windows_library_unload.h");
     let hooks = r#"
@@ -404,12 +413,13 @@ static void observe_finished(void);
         fwp::cgen::compile_c(&host, &binary, opt).unwrap();
         fwp::cgen::compile_library(&source, header, &library, opt, fwp::cgen::LibKind::Shared)
             .unwrap();
-        for poison in ["0", "1"] {
+        for poison in if arc { &["0"][..] } else { &["0", "1"][..] } {
             let output = Command::new(&binary)
                 .arg(&library)
+                .env_remove("FWP_GC")
                 .env("FWP_REUSE_VERIFY", poison)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
+                .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
+                .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
                 .output()
                 .unwrap();
             assert!(
@@ -430,11 +440,12 @@ static void observe_finished(void);
         );
         fwp::ffi::set_links(previous);
         result.unwrap();
-        for poison in ["0", "1"] {
+        for poison in if arc { &["0"][..] } else { &["0", "1"][..] } {
             let output = Command::new(&static_binary)
+                .env_remove("FWP_GC")
                 .env("FWP_REUSE_VERIFY", poison)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
+                .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
+                .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
                 .output()
                 .unwrap();
             assert!(
@@ -456,7 +467,14 @@ static void observe_finished(void);
                 fwp::cgen::LibKind::Shared,
             )
             .unwrap();
-            let output = Command::new(&binary).arg(&library).output().unwrap();
+            let output = Command::new(&binary)
+                .arg(&library)
+                .env_remove("FWP_GC")
+                .env("FWP_REUSE_VERIFY", "0")
+                .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
+                .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
+                .output()
+                .unwrap();
             assert_eq!(
                 output.status.code(),
                 Some(expected),

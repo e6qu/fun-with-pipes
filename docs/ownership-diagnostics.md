@@ -144,7 +144,9 @@ and static O1/O2 runs use 8 and 1,024 rounds, restoring both live allocations an
 charged bytes each round. Omitting a value free, unwind cleanup, OS close or
 file-object release must produce 231, 232, 235 or 236 respectively. The source
 file-handler example also compares ARC/tracing output with the raw interpreter.
-These prepared tests await integrated compiler/platform validation.
+C, executables, output and status are retained under
+`record-ownership/unwind_cleanup`. These prepared tests await integrated
+compiler/platform validation.
 
 ## Wide reference counts
 
@@ -163,7 +165,8 @@ allocate metadata must terminate with 102. Normal rounds return managed bytes,
 managed allocations and metadata allocations to baseline. The source-level
 high-fanout string/function example now runs in ARC and tracing, with stack
 placement enabled and disabled, against the raw interpreter. Sweep/mark-specific
-checks remain only for the collector that still exists.
+checks remain only for the collector that still exists. Probe artifacts use
+`record-ownership/wide_counts`.
 
 ## Candidate weak and external-boundary checks
 

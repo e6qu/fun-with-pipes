@@ -19,9 +19,38 @@ executable used for bounded probes is not a build dependency.
 
 ## Delivery state
 
-PR #215 was opened as a draft to record this final handoff before enabling the
-production run. No full candidate compiler build or candidate matrix has run yet.
-Mark it ready after pushing this handoff; skipped draft jobs are not acceptance. Full builds/suites run on GitHub; local checks stay serial under
+PR #215 is ready for review. Production run `40212350477` and documentation
+`40212350054` test `aab769dd1b3fefe290d6cd285ceb83c8f05d70c1`. All nine production
+jobs are scheduled. The C/Rust benchmark job passed; all eight native jobs are still running.
+Windows ARM64 reported a failed socket/library step; its log is unavailable until
+the job completes. Linux ARM64 passed native and WASM Clippy. Skipped draft jobs are not acceptance.
+
+Draft documentation `40212299724` found a stale protocol-suite count: the evidence
+report expected nine tests after two identity-serialization tests were added. The
+local repair updates the report and log fixture to 11 (total 52); all eight
+`test-collection-evidence.py` controls pass under the guard. Keep this repair in
+the batch while auditing every completed production target; it is not pushed yet. Final-head docs failed on the same count. The batch also
+connects the unwind/wide-count probes to the existing evidence helper, preserving
+C, executables, output and status before assertions. Formatting and the native
+schedule audit passed after that addition.
+
+Source review found ARC variants in `library_resources`/`library_unload` still
+enabling tracing/poisoning, including both Windows library paths. They now use
+explicit mode-correct settings for normal and deliberately broken runs. Socket
+scratch/constructor probes also override inherited stress/verification/poisoning.
+`/private/tmp/extract-fwp-socket-faults.py` passed both extracted tests at O1/O2 in
+ARC and tracing with all three settings initially inherited as `1` (14.67 seconds).
+This checks saved #213 C with the current probe, not the candidate generator. The
+library changes still require integrated execution.
+
+Both Windows jobs now report socket/library and list-copy inspection failures.
+The workflow skipped independent producers after the first failure; their missing
+artifacts then caused secondary inspection failures. The candidate workflow now
+runs those independent suites after a successful compiler check and accumulates
+failures across the early Cargo groups. All 19 native-runner tests and targeted
+Windows `actionlint` passed under the guard. No repair push yet; audit remaining
+jobs and completed targets first. Do not assume all reported Windows failures
+have the same cause until their retained logs are read. Full builds/suites run on GitHub; local checks stay serial under
 `scripts/local-guard.py`. Standing authorization covers publication and squash merge
 only after all nine production jobs and documentation pass for the final commit.
 Follow [AGENTS.md](../AGENTS.md) for the one-line, at-most-80-character merge subject
