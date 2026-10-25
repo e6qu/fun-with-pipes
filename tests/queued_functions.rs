@@ -3,6 +3,8 @@ use std::process::{Command, Output};
 
 #[path = "support/ownership_ledger.rs"]
 mod ownership_ledger;
+#[path = "support/record_probe.rs"]
+mod record_probe;
 
 #[test]
 fn weak_channels_preserve_expiration_and_reject_recreated_cycles() {
@@ -142,12 +144,12 @@ fn weak_channel_metadata_expires_before_child_cleanup_and_survives_address_reuse
     assert_eq!(code.matches(unprotect).count(), 1);
     let no_result_cleanup = code.replace(protect, "").replace(unprotect, "");
     for opt in ["-O1", "-O2"] {
-        for (candidate, status) in [
-            (&code, 0),
-            (&no_expire, 221),
-            (&no_release, 222),
-            (&early_retain, 231),
-            (&no_result_cleanup, 235),
+        for (label, candidate, status) in [
+            ("normal", &code, 0),
+            ("missing-expiration", &no_expire, 221),
+            ("missing-metadata-release", &no_release, 222),
+            ("early-retain", &early_retain, 231),
+            ("missing-result-cleanup", &no_result_cleanup, 235),
         ] {
             let binary = dir.join("lifetime.exe");
             fwp::cgen::compile_c(candidate, &binary, opt).unwrap();
@@ -158,6 +160,13 @@ fn weak_channel_metadata_expires_before_child_cleanup_and_survives_address_reuse
                 .env("FWP_REUSE_VERIFY", "0")
                 .output()
                 .unwrap();
+            record_probe::save(
+                "weak_channels",
+                &format!("{label}{opt}"),
+                candidate,
+                &binary,
+                &result,
+            );
             assert_eq!(result.status.code(), Some(status), "{opt}: {result:?}");
         }
     }

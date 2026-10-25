@@ -1,240 +1,149 @@
 # Current work
 
-**Next:** finish auditing the consolidated validation for [PR #215](https://github.com/e6qu/fun-with-pipes/pull/215), the combined G3/G4 candidate.
-Fix all failures from that run together before repeating affected checks. Do not
-restart the old publisher or split this preparation into smaller PRs. G5 follows
-once the replacement ownership checks pass; tracing has not been deleted.
+**Next:** finish auditing production run `40212350477`, fix any additional failures,
+then push one complete repair batch to [PR #215](https://github.com/e6qu/fun-with-pipes/pull/215).
+Run the required gates on that repaired commit. Squash-merge only when all nine
+production jobs and documentation pass. Then continue to G5 tracing deletion.
 
 Worktree: `/private/tmp/fwp-ownership-fault-matrix`; branch: `ownership-fault-matrix`.
-Implementation checkpoint: `d4a2ca37` adds ARC unwind/file cancellation, wide-count
-metadata checks, a recursive weak-channel example and the finite deletion map.
-Earlier checkpoints after reparenting: `40a194ea` (weak channels), `b29efcb5`
-(graph/serialization), `c900d301` (retained C callbacks), `201df98b` (direct libraries).
+The primary checkout is detached at #209; preserve its operational handoff and
+untracked compiler-abort report. Read [PLAN.md](../PLAN.md) for remaining tasks.
+G3/G4 stay together in this PR. Tracing has **not** been deleted.
 
-The accepted direction is inferred moves/borrows, count-free unique storage,
-ARC for sharing, explicit weak links and rejection of unproved owning cycles.
-Preserve returned functions and partial application. Every API may break; builds
-must not depend on a previous fwp version or self-hosting. The optional old
-executable used for bounded probes is not a build dependency.
+## Delivery and source IDs
 
-## Delivery state
+Production `40212350477` and documentation `40212350054` test remote head
+`aab769dd1b3fefe290d6cd285ceb83c8f05d70c1`. Documentation failed on a stale evidence
+count, repaired locally. The benchmark passed. Both macOS ARM64 jobs finished
+with failures covered below; Linux, Intel macOS and Windows are still running.
+The previous verified run took about 107–133 minutes on Linux and 95–119 minutes
+on Windows; elapsed time alone is not evidence of a stalled suite.
 
-PR #215 is ready for review. Production run `40212350477` and documentation
-`40212350054` test `aab769dd1b3fefe290d6cd285ceb83c8f05d70c1`. All nine production
-jobs were scheduled. The C/Rust benchmark job passed. Regular macOS ARM64 finished
-with four failing targets. The ARM64 stress shard finished with three failures
-in two targets; six native jobs are still running.
-Both Windows native artifacts confirm the same `library_unload` settings trap.
-All other completed targets in those artifacts passed, including the five
-callback/unwind targets. Artifacts: `/private/tmp/fwp-215-ci/windows-native-`
-`windows-11-arm` and `windows-2025`; GitHub IDs `12607120914` and `12606727507`. Linux ARM64 passed native and WASM Clippy. Skipped draft jobs are not acceptance.
+Unpushed repair checkpoints:
 
-Draft documentation `40212299724` found a stale protocol-suite count: the evidence
-report expected nine tests after two identity-serialization tests were added. The
-local repair updates the report and log fixture to 11 (total 52); all eight
-`test-collection-evidence.py` controls pass under the guard. Keep this repair in
-the batch while auditing every completed production target; it is not pushed yet. Final-head docs failed on the same count. The batch also
-connects the unwind/wide-count probes to the existing evidence helper, preserving
-C, executables, output and status before assertions. Formatting and the native
-schedule audit passed after that addition.
-
-Source review found ARC variants in `library_resources`/`library_unload` still
-enabling tracing/poisoning, including both Windows library paths. They now use
-explicit mode-correct settings for normal and deliberately broken runs. Socket
-scratch/constructor probes also override inherited stress/verification/poisoning.
-`/private/tmp/extract-fwp-socket-faults.py` passed both extracted tests at O1/O2 in
-ARC and tracing with all three settings initially inherited as `1` (14.67 seconds).
-This checks saved #213 C with the current probe, not the candidate generator. The
-library changes still require integrated execution.
-
-Both Windows jobs now report socket/library and list-copy inspection failures.
-The workflow skipped independent producers after the first failure; their missing
-artifacts then caused secondary inspection failures. The candidate workflow now
-runs those independent suites after a successful compiler check and accumulates
-failures across the early Cargo groups. All 19 native-runner tests and targeted
-Windows `actionlint` passed under the guard. No repair push yet; audit remaining
-jobs and completed targets first. The early native artifacts were audited on both Windows architectures; later
-TLS/ownership jobs are still running and need their own audit. Full builds/suites run on GitHub; local checks stay serial under
-`scripts/local-guard.py`. Standing authorization covers publication and squash merge
-only after all nine production jobs and documentation pass for the final commit.
-Follow [AGENTS.md](../AGENTS.md) for the one-line, at-most-80-character merge subject
-and empty body. No trailers or attribution.
-
-PR #214 passed [all nine production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40187394961)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40187394939).
-Its verified squash merge is `6ee33396459986a0fa08464b182d23fd2fe6c136`, subject
-`Check native ownership without retaining freed storage`, empty body. Its tree
-`91f1a23c02328554986d703bf48fdf84a27e85c7` matches tested head
-`1591ec72553a1168bc52d5745d1865059c15fede`. This preparation is now reparented onto that identical merge tree; comparison
-with the pre-reparent implementation found no tree changes. Duplicate postmerge production run
-`40197117132` completed/cancelled; postmerge docs `40197117071` passed.
-
-Both old automation scripts must stay stopped. The #214 watcher recorded
-`merged-and-verified` in `/private/tmp/fwp-214-merge-status.json`. The follow-on
-publisher recorded `stopped-for-combined-gc-removal` in
-`/private/tmp/fwp-fault-matrix-delivery-status.json`; restarting it would overwrite
-newer docs and publish the wrong preparation.
-
-## Current repair batch
-
-Local commit `b481a269` fixes the stale evidence count, inherited tracing settings,
-Windows test continuation and missing unwind/wide-count artifacts. It is not yet
-pushed. The remaining macOS ARM64 failures are now repaired locally too:
-
-- `library_input_ownership` and `library_result_ownership` referenced the absent
-  tracing-only `fwp_reuse_verify` flag. ARC now requires physical frees
-  unconditionally; only tracing with poisoning may defer them.
-- `library_resources` used the nonexistent `http2.connect` primitive to include
-  the web runtime. It now uses the actual `http2.pooled : String -> Bool`
-  declaration and checks the constructed IR. ARC admission stays unchanged.
-- `library_unload` hit the mode/settings mismatch already repaired in `b481a269`.
-
-All 132 regular macOS ARM64 target logs were audited; only those four failed.
-`retained_callbacks` and all 19 `wasm_arc` tests passed. Artifact `12607301746`
-is retained in `/private/tmp/fwp-215-ci/macos-regular-tests-macos-15`.
-Crash artifact `12607154104` identifies the deliberate abort in
-`sched::lifetime_tests::cleanup_panic_aborts_before_borrowed_tasks_escape`, which
-passed; it is not a recurrence of the unexplained compiler abort.
-
-The candidate compiler from artifact `12607845652` has SHA-256
-`376eff66114e396e045b455113e58b6511b3544e397f1c00701cf659ce3fa361`.
-Guarded `/private/tmp/check-fwp-library-resources.py` used it to generate a library
-from the real TLS/HTTP declarations, then ran the unchanged resource C probe and
-host: ARC/tracing O1/O2 passed, and all six omitted-cleanup controls failed with
-the expected status in each mode. CPU 11.70 seconds, elapsed 23.92 seconds.
-This verifies candidate runtime teardown and the extracted probe; the repaired
-Rust test's direct IR construction still needs the next CI run. The temporary
-source fixture first needed its Network effect and checked library declaration
-corrected; no compiler rule was weakened to admit it.
-
-The macOS ARM64 stress artifact `12607841519` has 124 target logs, all audited.
-`grpc_response_encoding` and `queued_functions` were the only failed targets:
-
-- The output-channel fault control matched both channel and retained-callback
-  `drop(context)` calls. It now identifies the channel's preceding owner reset;
-  the related queue probe uses the same precise, single-occurrence match.
-- The task-owner probe expected two root-release sites. There are now three:
-  WASI, native executable and loaded-library shutdown. Each is still observed.
-- The weak-cycle negative fixture used the reserved word `make` as a name. After
-  renaming it, the candidate rejects its captured channel in both raw and
-  optimized compilation, as intended (`check-fwp-weak-cycle.py`, CPU 0.16 seconds).
-
-All 33 other dummy `http2.connect` declarations in ownership fixtures now use
-`http2.pooled` with its actual signature, preserving HTTP/2 runtime inclusion.
-The extracted output-channel probe passed normal and deliberately broken cases
-at O1/O2 with candidate-generated C (`check-fwp-output-channel.py`, CPU 8.75,
-elapsed 17.71 seconds). The weak metadata, all four unwind and all four wide-count
-tests passed across the two ARM64 shards. Remaining hosts and the repaired final
-head are still required. The affected task-handle fixture also passed ARC/tracing
-at O0/O2 with the candidate compiler (`check-fwp-queued-task-root.py`, CPU 2.45,
-elapsed 4.99 seconds). No broad validation restart or repair push yet.
-
-Source review also found a runtime gap beyond the CI fixture failures:
-`channel.upgrade` allocated `Some(target)` before retaining `target`, but did not
-release that outer cell if the retain trapped. It now protects the unfinished
-cell with the existing cleanup mechanism and disarms it after the retain. The
-new regression forces actual wide-count overflow, checks the target is still
-borrowed, restores its count and verifies exact live-storage balance. Omitting
-that cleanup fails with 235. Guarded `check-fwp-weak-upgrade-cleanup.py` passed
-O1/O2 normal and all four faulty variants in 24.39 seconds (CPU 12.11). It uses
-candidate-generated C with this runtime function replaced; final integrated and
-WASI checks are still required.
-
-## Included implementation
-
-- **Weak channels:** interpreter, ownership rules and native/WASI runtime for
-  explicit downgrade/upgrade. Final release expires metadata before destroying
-  queued children. Upgrade allocates its result before retaining the target.
-  Original strong-owner function frames survive optimization so expiration stays
-  observable in the same order. Acquired owners still face conservative cycle
-  checks. [The contract](weak-channels.md) explains identity and restrictions.
-- **Six boundary examples:** weak queued callbacks; task-owned subscriptions;
-  graph IDs with checked generations and 64 slot reuses; explicit retained C
-  registrations; returned captures; existing bounded State/AD lifetime rules.
-  New count-free parser regions remain A6. The admission matrix now states the
-  accepted queue/task/stream restrictions instead of reopening their policy.
-- **Retained C callbacks:** `--c-callback NAME` for selected native ARC exports.
-  Registration owns copied leading arguments; invocation supplies the final
-  argument. Close blocks new entry; release consumes the host owner; active calls
-  defer capture destruction until return/unwind. Calls use the first caller's OS
-  thread. Results have independent generated release functions. The host must
-  stop delivery before release and finish all owners before library unload.
-  [The guide](retained-callbacks.md) gives the complete protocol.
-- **Replacement diagnostics:** native live-address and physical-byte checks;
-  child/borrow/reuse faults; weak metadata; actual file/socket handles; unwind and
-  cancellation; real library unload; WASI allocation/count tables. Wide-count
-  metadata now has an independent physical malloc/free observer. The
-  [diagnostic guide](ownership-diagnostics.md) maps deliberate faults and states
-  exactly which collector-only assertions retire in G5.
-
-## Repairs included with this work
-
-Empty callback slices no longer use null pointer arithmetic or null `memcpy`
-arguments. Library shutdown explicitly releases scheduler-root/State storage;
-native and library shutdown release idle Linux descriptor-wait metadata. These
-owners previously relied on complete heap teardown.
-
-The WASI allocation observer now searches beyond empty slots before deciding an
-address is new; holes are reused without hiding duplicate registration. Runtime
-identities no longer satisfy Encode/Decode/canonical Hash. The old interpreter
-accepted a channel through `json.write` and printed `null`; candidate protocol
-tests reject direct/list/record forms. Weak equality compares target identity,
-including expired targets and function-bearing payloads.
-
-Direct library tests now run ARC alongside tracing and check allocation identity
-before reading returned storage. Their signature-error tests no longer race with
-positive tests by resetting process-global native settings. Native probe paths
-use `.exe`; scoped-file tests use actual Windows handles and escaped source paths.
-`retained_callbacks`, `stack_ownership`, `unwind_cleanup` and `wide_counts` are in
-the Windows native lists. The macOS schedule assigns all 254 integration targets.
-
-## Checks actually run
-
-All local commands use `python3 scripts/local-guard.py`, serially. No full local
-build, corpus or benchmark ran. Optional saved compiler: verified #213 at
-`/private/tmp/fwp-compiler-213/fwp-macos-arm64/fwp`, SHA-256
-`faf994ee0067f5249da86877a7f450efe7cedcfdd433084ebee046319fff47fa`.
-Extracted probes validate the specified runtime/test fragments with Clang, not
-the candidate Rust compiler, GCC, Windows or WASI.
-
-| Check | Result and retained driver/evidence |
+| Commit | Repair |
 |---|---|
-| Stack children, callback slices, reuse tokens, variant aliases and file owners | Passed their focused normal/fault cases; drivers `/private/tmp/extract-callback-tests.py`, `/private/tmp/check-variant-ledger.rs`; evidence `/private/tmp/fwp-{stack,callback,token,variant,file}-matrix-evidence` |
-| Weak metadata | Clang O2, 1,024 rounds, missing expiration 221, missing anchor release 222, early retain on allocation failure 231; `/private/tmp/check-weak-allocation-failures.py` |
-| WASI physical ledger's native control | Clang O1/O2: reuse 0, duplicate registration 245, duplicate removal 243; `/private/tmp/check-wasi-ledger-regression.py`; actual WASI pending |
-| Retained runtime | 1,024 nested rounds; normal 0, early destruction 242, missing capture/context 241, missing completion 243; `/private/tmp/check-fwp-retained-runtime.py` |
-| Retained integration | Adapted saved export bodies plus candidate runtime, Clang O2; first exposed root leak 205, passed after repair, including allocation errors/cancellation; `/private/tmp/check-fwp-retained-integration.py`; Linux waiter execution pending |
-| ARC unwind/file cancellation | Dynamic/static O1/O2, 8/1,024 rounds; missing value/unwind/OS close/storage produce 231/232/235/236; `/private/tmp/extract-fwp-unwind.py owned_unwind_releases_values_files_and_tasks_without_tracing` |
-| Scoped file source behavior | ARC/tracing O1/O2 matches raw interpreter; same extraction driver with `scoped_file_handlers_match_interpreter` |
-| ARC wide counts | Dynamic/static O1/O2, 8/1,024 rounds, overflow 101, allocation failure 102, missing physical metadata free 239; `/private/tmp/extract-fwp-wide.py arc_wide_counts_release_values_and_metadata_each_round` |
-| Graph fixture | Old raw interpreter matches nine expected lines, including 64 reuses and old snapshot |
-| Primitive inventory | Frozen baseline passed: 394 declarations, 384 distinct, 40 aliases, 373 contracts, 19 templates, no review entries; `/private/tmp/fwp-weak-channel-inventory.json` |
-| Documentation | Audit passed after retaining the required status table: 161 link sets, 106 immutable preparation pairs/tags, eight roadmap steps and commit messages |
-| Formatting and scheduling | `/private/tmp/check-fwp-callback-preparation.py` passed after the unwind/wide-count edits; 254 targets assigned and whitespace clean |
+| `b481a269` | Evidence count, explicit ARC/tracing probe settings, Windows failure continuation, unwind/wide-count artifacts |
+| `f05d5cd0` | Direct library free assertions and the real HTTP/2 primitive declaration |
+| `f42ad617` | Precise fault injection, task-root accounting, valid weak-cycle fixture, remaining HTTP/2 test declarations |
+| `4d642b47` | Release an unfinished weak-upgrade result when retaining its target traps |
 
-The unwind probe initially used incomplete typed callback metadata, causing an
-ARC escape trap. Correcting the probe's actual File-argument ownership fixed it;
-the runtime contract was not weakened. The new wide-count probe initially called
-a library-only teardown function from an executable probe; that call was removed.
-All listed final focused runs passed. New weak recursive/class cases, candidate
-C generation, retained shared-library loading and direct library ARC runs still
-need the consolidated compiler/platform gate. Do not cite #214 as their evidence.
+The working changes also preserve weak-regression C, executables, output and
+status with the existing helper, under `record-ownership/weak_channels`.
+No repair push yet: audit all completed targets and remaining job results first.
 
-## Remaining roadmap work
+PR #214 passed all nine production jobs (`40187394961`) and docs (`40187394939`).
+Verified squash merge: `6ee33396459986a0fa08464b182d23fd2fe6c136`, subject
+`Check native ownership without retaining freed storage`, empty body. Its tree
+matches tested head `1591ec72553a1168bc52d5745d1865059c15fede`; this branch was
+reparented onto that merge without changing its implementation tree.
 
-[PLAN.md](../PLAN.md) is the task list. G2's ownership-analysis N/2N/4N baseline and
-numeric regression budgets are still unmeasured; do not expand analysis precision
-or claim linear cost without them. G3/G4 now need integrated acceptance. G5 removes
-tracing selection, roots/mark/sweep code and collector-only assertions, converts the
-named allocation/RSS comparisons to ARC, updates reporting, and checks binaries.
-ARC minimization A2–A6, functional overhead, CPU/numerics/AD work and application
-scale criteria remain separate milestones after GC removal.
+Keep the old automation stopped. `/private/tmp/fwp-214-merge-status.json` records
+`merged-and-verified`; `/private/tmp/fwp-fault-matrix-delivery-status.json` records
+`stopped-for-combined-gc-removal`. Restarting the old publisher would overwrite
+newer work. No replacement publisher or merge watcher is running.
 
-Preserve [the unexplained Intel macOS compiler-abort evidence](measurements/compiler-abort.md).
-Diagnose any recurrence from source lifetimes and inputs; passing reruns did not
-establish its cause. The primary checkout remains detached at #209 with an
-operational handoff and untracked abort report; preserve both. Earlier worktrees
-and immutable preparation records are evidence, not a backlog to repeat.
+## Full-run audit
+
+Artifacts are retained under `/private/tmp/fwp-215-ci/`. Every target log in each
+listed artifact was checked, including passing targets. Remaining suites still
+need their own audit; do not infer their results from another architecture.
+
+| Artifact | Audited result |
+|---|---|
+| `12607301746`, `macos-regular-tests-macos-15` | 132 logs; failures only in library input/result ownership, resource unload and library unload |
+| `12607841519`, `macos-gc-tests-macos-15` | 124 logs; failures only in `grpc_response_encoding` and two `queued_functions` tests |
+| `12607120914`, `windows-native-windows-11-arm` | Early native groups: only library unload failed; five callback/unwind targets passed |
+| `12606727507`, `windows-native-windows-2025` | Same early failure; all other completed targets passed |
+| `12608117743`, `windows-tls_tests-windows-11-arm` | 98 target logs; failures only in output-channel control and library input/result/resource probes |
+
+Retained callbacks passed on macOS and Windows ARM64, including real shared-library
+loading. All four unwind tests passed on both. All four wide-count tests and all
+19 `wasm_arc` tests passed on macOS ARM64. Weak metadata checks passed there;
+the negative cycle fixture failed to parse before reaching its expected rejection.
+These are partial results for the remote head, not acceptance of the local repairs.
+
+Mac regular crash artifact `12607154104` identifies the intentional abort in the
+passing `cleanup_panic_aborts_before_borrowed_tasks_escape` test. The GC crash
+artifact `12607482264` contains a compiler binary but no crash report. Neither
+establishes recurrence of the [unexplained Intel abort](measurements/compiler-abort.md).
+
+## Repairs and focused evidence
+
+All local workloads use `python3 scripts/local-guard.py`, serially. No full local
+build, suite or benchmark ran. Current CI-built compiler: artifact `12607845652`,
+`/private/tmp/fwp-215-compiler/fwp-macos-arm64/fwp`, SHA-256
+`376eff66114e396e045b455113e58b6511b3544e397f1c00701cf659ce3fa361`.
+
+| Problem and repair | Verification so far |
+|---|---|
+| Evidence report expected nine protocol tests after two were added; counts are now 11/52 | All eight collection-evidence controls passed |
+| ARC library/socket probes inherited tracing or poison settings; select settings explicitly for each mode | Extracted socket scratch/constructor tests passed O1/O2 in both modes with hostile inherited settings; uses saved #213 C |
+| ARC direct library probes referenced absent `fwp_reuse_verify`; require physical frees unconditionally in ARC | Source/format review; repaired Rust targets need final CI |
+| Resource fixtures requested nonexistent `http2.connect`; use `http2.pooled : String -> Bool` throughout | Candidate-generated TLS/HTTP library plus unchanged resource C probe passed ARC/tracing O1/O2 and all six omitted-cleanup controls; `check-fwp-library-resources.py`, 23.92 seconds |
+| Output-channel control also matched retained-callback cleanup; match the channel owner reset and release together, including the related queue probe | Extracted output-channel test passed O1/O2, all normal/fault cases; `check-fwp-output-channel.py`, 17.71 seconds |
+| Task-owner probe expected two root-release sites; WASI, native and library shutdown now have three | Affected task-handle fixture passed ARC/tracing O0/O2 with candidate compiler; `check-fwp-queued-task-root.py`, 4.99 seconds |
+| Negative weak-cycle fixture used reserved `make`; renamed to `new-queue` | Candidate rejects the captured channel before/after optimization; `check-fwp-weak-cycle.py`, 0.38 seconds |
+| Weak upgrade allocated its result before a potentially trapping retain without protecting that cell | Actual wide-count overflow preserves the borrowed target and releases the unfinished result; missing cleanup fails with 235. O1/O2 normal plus four broken variants passed; `check-fwp-weak-upgrade-cleanup.py`, 24.39 seconds |
+| Early Windows failure skipped independent producers and caused missing list-copy artifacts | Workflow accumulates early group failures and continues independent suites after compiler success; 19 runner controls and targeted actionlint passed |
+| New unwind/wide-count/weak probes needed retained failure evidence | Existing evidence helper now saves C, executable, output and status before assertions |
+
+Drivers above are in `/private/tmp/`. The weak-upgrade check substitutes the repaired
+runtime function into candidate-generated C. The resource/output-channel checks
+use generated source equivalents of the direct IR fixtures. These checks do not
+verify the repaired Rust generator integration, GCC, Windows or WASI. The first
+temporary resource source needed its Network effect and checked library declaration
+corrected; no compiler admission rule was weakened.
+
+Earlier bounded preparation checks passed stack-child, callback-slice, reuse-token,
+variant-alias, file-owner, weak metadata, retained-callback, ARC unwind, wide-count
+and WASI-ledger controls. Their saved-compiler fragments are supporting evidence;
+current integrated runs take precedence. The optional #213 executable is not a
+build dependency. Builds must never require an older fwp version or self-hosting.
+
+Primitive inventory passed its frozen baseline: 394 declarations, 384 distinct,
+40 aliases, 373 contracts, 19 templates, no review entries
+(`/private/tmp/fwp-weak-channel-inventory.json`). Native schedule audit assigns all
+254 targets. Formatting/whitespace checks passed. Documentation audit passed 161
+link sets, 106 immutable preparation pairs/tags, eight roadmap rows and commit
+messages. Repeat only checks justified by subsequent changes or unresolved failures.
+
+## Included G3/G4 work
+
+- [Weak channels](weak-channels.md): explicit downgrade/upgrade, expiration before
+  queued-child destruction, identity and address reuse, preserved function-frame
+  lifetimes, conservative checks on stores/captures of acquired owners.
+- [Retained C callbacks](retained-callbacks.md): explicit export registration,
+  copied leading arguments, active-call cleanup, reentrant close/release,
+  independent result ownership and one calling OS thread.
+- [Boundary examples](gc-removal-design.md#six-implementation-examples): weak
+  callbacks, task-owned subscriptions, graph IDs with checked generations,
+  retained C registrations, returned captures and bounded State/AD lifetimes.
+- [Replacement diagnostics](ownership-diagnostics.md): live-address and physical
+  storage checks, exact wide counts, unwind/cancellation, actual OS handles,
+  library unload, WASI allocation tables and independent missing-cleanup controls.
+  The deletion table identifies which collector assertions retire in G5.
+
+Included runtime repairs also remove null pointer arithmetic/copies for empty
+callback arguments, release library scheduler-root/State storage and idle Linux
+wait metadata, and fix WASI duplicate-address detection after an empty table slot.
+Runtime identities no longer satisfy serialization or canonical hashing.
+
+## Remaining work and delivery rules
+
+G2's N/2N/4N ownership-analysis baseline and numeric regression budgets remain
+unmeasured. Do not widen proof precision or claim linear analysis cost without them.
+G3/G4 need complete final-head acceptance. G5 deletes tracing selection, roots,
+marking/sweeping and collector-only assertions; preserves the listed allocation,
+RSS and resource checks; applies the lifetime policy to interpreter entries; and
+checks actual binaries. ARC minimization A2–A6 and later milestones remain separate.
+
+Follow [AGENTS.md](../AGENTS.md): one active PR, fix every encountered issue,
+no compatibility adapters, no JIT, guarded focused local work, broad gates on
+GitHub. Standing publication/merge authorization applies. Squash only after nine
+production jobs and docs pass the exact head; use an explicit one-line subject
+of at most 80 characters and empty body, with no trailers or attribution. Verify
+that merge result. A completed PR does not finish the roadmap.
 
 ## Roadmap status
 
