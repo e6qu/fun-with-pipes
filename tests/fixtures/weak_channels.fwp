@@ -49,7 +49,25 @@ WeakBox[a] = { link: WeakChannel[a] }
 boxed : WeakChannel[a] -> WeakBox[a]
 boxed = make { link = id }
 
+# A recursive payload can point back weakly without owning its queue.
+WeakLink = | Back (WeakChannel[WeakLink])
+link-channel : I64 -> Channel[WeakLink] ! {Async}
+link-channel = channel.make
+post-link : Channel[WeakLink] -> Channel[WeakLink] ! {Async}
+post-link = tap (both id (channel.downgrade | Back) | uncurry channel.send | ignore)
+unlink : WeakLink -> WeakChannel[WeakLink]
+unlink = match
+    Back _ -> id
+closed-link : Channel[WeakLink] -> Option[Bool] ! {Async}
+closed-link = post-link | tap channel.close | channel.recv
+    | option.map (unlink | channel.upgrade | option.is-some)
+escaped-link : () -> Option[WeakChannel[WeakLink]] ! {Async}
+escaped-link = const 1 | link-channel | post-link | tap channel.close
+    | channel.recv | option.map unlink
+
 main = [
+    link-channel 1 | closed-link | echo,
+    escaped-link () | option.map (channel.upgrade | option.is-none) | echo,
     word-channel 1 | weak-pair | uncurry eq | echo,
     expired-pair () | uncurry eq | echo,
     both expired expired () | uncurry eq | echo,

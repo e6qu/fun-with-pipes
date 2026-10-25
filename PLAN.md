@@ -101,8 +101,8 @@ and [lesson 24](docs/tutorials/24-subscriptions/README.md) specify a streaming,
 task-owned subscriber using existing primitives. `tests/arc_tasks.rs` now checks
 failure, active/unstarted cancellation, reentry, repeated awaits and per-round
 reclamation, with deliberately broken cleanup controls. All nine production jobs
-and documentation passed. The tracing-only queue/task/stream decisions in
-[the admission matrix](docs/ownership-admission.md) remain separate unfinished work.
+and documentation passed. The [admission matrix](docs/ownership-admission.md) records the accepted
+queue/task/stream restrictions; weak alternatives await integrated validation.
 
 **G3 — Implement weak references and the boundary contracts.** The first
 [weak-channel implementation](docs/weak-channels.md) is in the current preparation,
@@ -136,18 +136,15 @@ failure controls are the starting point, not missing features to reimplement.
 repeat counts grow while post-operation storage stays at the declared baseline.
 Do not replace a diagnostic with permanent poisoned-object retention.
 
-Current G4 group: [the diagnostic guide](docs/ownership-diagnostics.md) specifies
-the live-address ledger, existing byte checks, deliberately broken controls and
-remaining gaps. It is applied to the native ARC corpus and dynamic/static probes.
-The inventory retains source/hash/line evidence; it is not itself a coverage proof.
-The next preparation extends the ledger to callback, reuse-token, variant and
-stack-child checks. It adds missing-child and duplicate-destruction controls and
-repairs null empty-argument operations in the C runtime. A native ARC file probe
-checks actual OS closure, shutdown deregistration and byte reclamation separately.
-The diagnostic guide maps
-each deliberate fault to its observer; full platform validation remains required.
-Next: complete the separate WASI/external-resource mapping, including cancellation
-and external callback entry, before removing any collector diagnostics.
+Current G4 group: [the diagnostic guide](docs/ownership-diagnostics.md) maps
+live-address/physical-byte checks, wide-count metadata, child/borrow/reuse faults,
+unwind/cancellation, weak references, OS handles, retained callbacks, library
+unload and WASI allocation tables to independent deliberately broken controls.
+Its deletion table separates collector-only assertions from semantic, allocation
+and bounded-memory checks that must survive. Candidate execution on the complete
+platform matrix remains pending. The inventory records source/hash/line evidence;
+it is not itself a coverage proof. Do not keep expanding diagnostic scaffolding
+instead of running the combined G3/G4 gate and then deleting tracing.
 
 **G5 — Delete tracing.** After G1–G4, remove tracing selection and code from
 `src/main.rs`, code generation, runtime allocator/root discovery, host adapters,

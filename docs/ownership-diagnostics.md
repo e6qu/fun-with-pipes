@@ -135,10 +135,35 @@ omitting close, registration removal, or storage release produces statuses
 210, 211, or 212 respectively. Checks stop before a stale registration can revisit
 freed storage. Saved artifacts use `record-ownership/file_storage_disposal`.
 
-This covers normal last-owner release and explicit close in native ARC library
-runtime code. It does not yet replace the separate construction-failure, I/O-error,
-actual library-unload, socket, or WASI descriptor checks. Keep those tests and their
-fault controls; extend their ownership coverage before deleting tracing diagnostics.
+The separate [unwind probe](../tests/unwind_cleanup.rs),
+`owned_unwind_releases_values_files_and_tasks_without_tracing`, checks normal
+return, nested language errors, recoverable traps and suspended-task cancellation.
+An outer owner must survive an inner unwind; inner owners release in reverse
+order. File closure and file-object release have separate observers. Dynamic
+and static O1/O2 runs use 8 and 1,024 rounds, restoring both live allocations and
+charged bytes each round. Omitting a value free, unwind cleanup, OS close or
+file-object release must produce 231, 232, 235 or 236 respectively. The source
+file-handler example also compares ARC/tracing output with the raw interpreter.
+These prepared tests await integrated compiler/platform validation.
+
+## Wide reference counts
+
+Most counts fit in the allocator's byte-sized slot. More than 254 owners require
+a separate exact count; saturation must not silently turn a value into an
+unreclaimed object. [The ARC probe](../tests/wide_counts.rs),
+`arc_wide_counts_release_values_and_metadata_each_round`, creates 601 owners of
+small text, a function capturing text, and large text. It verifies the contents
+before release, returns to one owner, and finally releases storage. Dynamic and
+static O1/O2 runs repeat 8 and 1,024 times.
+
+A separate observer counts actual metadata `malloc`/`free` events, outside the
+managed allocation ledger. Removing the metadata free while still decrementing
+its logical count must fail with 239. Overflow must trap with 101; failure to
+allocate metadata must terminate with 102. Normal rounds return managed bytes,
+managed allocations and metadata allocations to baseline. The source-level
+high-fanout string/function example now runs in ARC and tracing, with stack
+placement enabled and disabled, against the raw interpreter. Sweep/mark-specific
+checks remain only for the collector that still exists.
 
 ## Candidate weak and external-boundary checks
 
@@ -204,26 +229,51 @@ and runtime-selected values remain visible; a mention is not proof of coverage.
 | `FWP_GC` | Select/disable collector behavior in a generated tracing runtime | Remove the selector with tracing; preserve tests proving physical reclamation and zero collections. Disabling collection alone is not GC removal. |
 | `FWP_GC_STATS` | Print allocation, reclamation, collection and process-memory observations | Preserve allocation/live-byte observations in the collector-free reporting path. Update consumers and their malformed/missing-evidence tests together. |
 
-Some checks test only collector implementation details. For example,
-`tests/reuse.rs::large_and_small_objects_obey_collection_age` checks large-object
-age bits. It stays while that collector exists; a collector-free runtime does not
-need an age-bit replacement. In contrast, the golden alias/reuse programs in the
-same file describe language behavior and must remain covered.
+### Collector-specific tests and retained assertions
 
-## Remaining concrete work
+This is the deletion map for the mixed collector/ownership test families. Keep
+the old assertions until G5 removes their implementation; do not treat a filename
+containing `gc` as permission to delete its complete test target.
 
-1. Classify the inventory's positive controls by defect and owner boundary.
-   Distinguish enabling a check from setting it to zero, and preserve dynamic
-   settings until their actual test cases have been reviewed. Do not bulk-delete
-   matching lines or treat an inventory count as a coverage claim.
-2. Validate the reuse/borrow matrix above on all six native hosts. Extend the
-   same accounting to cancellation and external callback entry before retiring
-   poisoning coverage; the four bounded probes are not the entire inventory.
-3. Complete the separate boundaries: `tests/wasm_arc.rs` already has missing-free,
-   count-table and scheduler controls; library/foreign callback tests check copied
-   inputs and scoped captures; file/socket/task tests must observe actual resource
-   release. A zero native byte balance cannot substitute for these checks.
-4. Only after that mapping and all native/WASI gates pass, replace the old
-   workflow settings and remove collector-only assertions with the collector.
-   Keep the [cycle-contract implementation](ownership-admission.md#contract-work-before-collector-deletion)
-   separate: better diagnostics do not admit an unproved owning cycle.
+| Current family | Retire with tracing | Keep without tracing |
+|---|---|---|
+| [native_allocator](../tests/native_allocator.rs) | Image/stack root discovery, collector-scratch exclusion and forced-major reclamation | First allocation/free without initialization; small/large and static-pool allocation; `arc_metadata_and_reclamation_do_not_depend_on_tracing_options`; ledger missing-physical-free control |
+| [old_reclamation](../tests/old_reclamation.rs) | Major/minor marking, old-to-young transitions, intentionally unowned shared graphs and age-gated-free comparison | `tasks.fwp` output remains in the ARC corpus; typed array/map/closure child cleanup remains in the array/map/callback fault suites; small/large physical release remains in the native ledger and wide-count probes |
+| [wide_counts](../tests/wide_counts.rs) | Sweeping wide entries and automatic promotion to tracing sharing | Exact counts, overflow/allocation failure, actual metadata release and high-fanout outputs described above |
+| [reuse](../tests/reuse.rs) | Collection-age assertions and the `FWP_FREE=0` collector-only comparison | Golden aliases remain in `arc_corpus`; record/variant/array/map allocation comparisons remain, using ARC; invalid uniqueness is caught by ledger fault 204 and alias outputs |
+| [gc](../tests/gc.rs) | Deliberately disabling both ownership freeing and reuse to require collection | Golden outputs/errors, compiler-failure and artifact-retention controls, long-loop RSS and HTTP/REST/gRPC bounded-memory checks; use ARC for their ordinary runs |
+| [channel_cycle_ownership](../tests/channel_cycle_ownership.rs) | Executing an unproved strong recursive queue graph | The same graph remains an explicit admission rejection; `weak_channels.fwp` tests a recursive weak back-edge, close preserving a queued message, live upgrade while its outside owner survives, and expiration after that owner returns |
+| Callback, stack-child, variant and reuse-token probes | Poisoned-storage inspection | The fault matrix above: captured owners, child destruction, duplicate destruction, interrupted reconstruction and original semantic outputs |
+| Unwind, files, sockets and loaded libraries | Collector rooting/poisoning around resource owners | Actual descriptors/handles, construction errors, nested unwind, cancellation, close-before-free, active callbacks and real library unload, with the independent faults above |
+| [WASI ARC](../tests/wasm_arc.rs) | No native root/mark substitute applies | Physical allocations, count-table entries, task stacks/scheduler, host errors and both JSPI/Asyncify paths; omitted free/table cleanup/scheduler release must still fail |
+
+Other semantic/numeric/protocol suites keep their inputs, expected outputs,
+error ordering and cleanup assertions. A positive stress/poison setting there
+is an execution variant, not an independent language requirement. G5 removes
+that variant only after its ARC run passes; a `0` setting is merely disabling a
+check. The source inventory retains exact locations, including dynamically
+selected settings, so that deletion can be reviewed without guessing from names.
+
+The allocation-comparison and ordinary bounded-memory tests named above still
+select tracing today. Converting them to ARC is a specific G5 edit, not evidence
+that the conversion has already passed. Never delete their numeric assertions
+or replace them with successful program termination. Reports must retain
+allocation/live-byte/RSS fields and malformed/missing-report controls when
+collector-only statistics are removed.
+
+## Remaining acceptance
+
+The combined candidate must compile and pass all nine production jobs and the
+documentation audit, including actual native Windows and WASI execution. The
+new fault controls, source fixtures and external-library paths are written;
+[the handoff](development-state.md) distinguishes bounded development probes
+from candidate-compiler results. Do not repeat passing local probes as a
+substitute for that gate.
+
+After the gate, G5 follows the deletion map above, updates report consumers and
+workflow settings together, and verifies binaries lack tracing. Preserve all
+non-collector assertions and deliberately broken ownership controls. Neither an
+address table nor zero charged bytes proves arbitrary raw borrowed reads safe;
+compiler lifetime checks and alias/output comparisons remain necessary. The
+[admission contract](ownership-admission.md#contract-work-before-collector-deletion)
+keeps unproved owning cycles rejected.

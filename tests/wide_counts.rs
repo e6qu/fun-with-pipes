@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/ownership_ledger.rs"]
+mod ownership_ledger;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -24,13 +27,13 @@ impl Drop for Scratch {
         let _ = std::fs::remove_dir_all(&self.0);
     }
 }
-fn emitted(dir: &Scratch, source: &str) -> String {
+fn emitted(dir: &Scratch, source: &str, ownership: &str, memory: &str) -> String {
     let path = dir.0.join("probe.fwp");
     let cfile = dir.0.join("probe.c");
     std::fs::write(&path, source).unwrap();
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "tracing"])
+            .args(["build", "--gc", ownership, "--memory", memory])
             .arg(&path)
             .args(["--emit-c", "-o"])
             .arg(&cfile)
@@ -42,7 +45,7 @@ fn emitted(dir: &Scratch, source: &str) -> String {
 #[test]
 fn wide_counts_release_aliases_and_clear_gc_metadata() {
     let dir = Scratch::new("runtime");
-    let runtime = emitted(&dir, "discard : String -> I64\ndiscard = const 1\nmain = read-all () | string.repeat 2 | discard | echo\n");
+    let runtime = emitted(&dir, "discard : String -> I64\ndiscard = const 1\nmain = read-all () | string.repeat 2 | discard | echo\n", "tracing", "dynamic");
     let marker = "/* String */\nstatic void fwp_drop";
     let start = runtime
         .find(marker)
@@ -71,6 +74,10 @@ static void probe_caps(V f, int duplicate) {
 static const fwp_owned_fninfo probe_owned = {probe_entry, probe_caps, probe_args};
 static const fwp_fninfo probe_fns[] = {{1, probe_entry, "probe", &probe_owned}};
 int main(int argc, char **argv) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0 ||
+        _setmode(_fileno(stderr), _O_BINARY) < 0) return 253;
+#endif
     fwp_gc_start(__builtin_frame_address(0));
     V leaf = fwp_rc_fresh(fwp_cstr("alias"));
     wide_many(leaf);
@@ -148,7 +155,7 @@ int main(int argc, char **argv) {
     .replace("DROP_LEAF", &format!("fwp_drop{number}"));
     let source = format!("{runtime}\n{probe}");
     for opt in ["-O1", "-O2"] {
-        let exe = dir.0.join(format!("runtime{opt}"));
+        let exe = dir.0.join(format!("runtime{opt}.exe"));
         fwp::cgen::compile_c(&source, &exe, opt).unwrap();
         let got = checked(
             Command::new(&exe)
@@ -166,7 +173,7 @@ int main(int argc, char **argv) {
     }
     let fail = source.replace("(gc_rc_wide *)malloc(sizeof *entry)", "(gc_rc_wide *)NULL");
     assert!(fail != source, "wide allocation failure was not injected");
-    let exe = dir.0.join("oom");
+    let exe = dir.0.join("oom.exe");
     fwp::cgen::compile_c(&fail, &exe, "-O1").unwrap();
     let got = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
     assert_eq!(got.status.code(), Some(102));
@@ -184,7 +191,7 @@ step = if (.0 | eq 0) (.1 | Stop)
     (make { 0 = .0 | sub 1, 1 = fork add .1 (.0 | size) } | Again)
 main = (3000, 0) | loop step | echo
 "#;
-    let owned = emitted(&dir, source);
+    let owned = emitted(&dir, source, "tracing", "dynamic");
     let reference = checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env("FWP_NO_OPT", "1")
@@ -201,7 +208,7 @@ main = (3000, 0) | loop step | echo
     );
     let mut freed = Vec::new();
     for (name, code) in [("shared", shared), ("wide", owned)] {
-        let exe = dir.0.join(name);
+        let exe = dir.0.join(format!("{name}.exe"));
         fwp::cgen::compile_c(&code, &exe, "-O1").unwrap();
         let got = checked(
             Command::new(&exe)
@@ -253,29 +260,113 @@ main = [
             .args(["run", "--interp"])
             .arg(&source),
     );
-    for opt in ["-O1", "-O2"] {
-        for stack in ["0", "1"] {
-            let exe = dir.0.join(format!("stress{opt}-{stack}"));
-            checked(
-                Command::new(fwp)
-                    .args(["build", "--gc", "tracing"])
-                    .arg(&source)
-                    .args([opt, "-o"])
-                    .arg(&exe)
-                    .env("FWP_STACK", stack),
-            );
-            for poison in ["0", "1"] {
-                let got = checked(
-                    Command::new(&exe)
-                        .env("FWP_GC_STRESS", "17")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison),
+    for ownership in ["arc", "tracing"] {
+        for opt in ["-O1", "-O2"] {
+            for stack in ["0", "1"] {
+                let exe = dir.0.join(format!("stress-{ownership}{opt}-{stack}.exe"));
+                checked(
+                    Command::new(fwp)
+                        .args(["build", "--gc", ownership])
+                        .arg(&source)
+                        .args([opt, "-o"])
+                        .arg(&exe)
+                        .env("FWP_STACK", stack),
                 );
-                assert_eq!(
-                    got.stdout, reference.stdout,
-                    "{opt}, stack {stack}, poison {poison}"
-                );
+                let poisons: &[&str] = if ownership == "arc" {
+                    &["0"]
+                } else {
+                    &["0", "1"]
+                };
+                for poison in poisons {
+                    let got = checked(
+                        Command::new(&exe)
+                            .env_remove("FWP_GC")
+                            .env("FWP_GC_STRESS", if ownership == "arc" { "0" } else { "17" })
+                            .env("FWP_GC_VERIFY", if ownership == "arc" { "0" } else { "1" })
+                            .env("FWP_REUSE_VERIFY", poison),
+                    );
+                    assert_eq!(
+                        got.stdout, reference.stdout,
+                        "{ownership}, {opt}, stack {stack}, poison {poison}"
+                    );
+                }
             }
         }
+    }
+}
+
+#[test]
+fn arc_wide_counts_release_values_and_metadata_each_round() {
+    let dir = Scratch::new("arc");
+    let program = "discard : String -> I64\ndiscard = const 1\nmain = read-all () | string.repeat 2 | discard | echo\n";
+    for memory in ["dynamic", "static"] {
+        let code = emitted(&dir, program, "arc", memory);
+        let marker = "/* String */\nstatic void fwp_drop";
+        let start = code.find(marker).unwrap() + marker.len();
+        let drop = format!("fwp_drop{}", code[start..].split('(').next().unwrap());
+        let code = ownership_ledger::instrument_native(&code, 65536).replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        );
+        let probe = include_str!("fixtures/owned_wide_counts.c").replace("DROP_LEAF", &drop);
+        let code = code
+            .replace(
+                "(gc_rc_wide *)malloc(sizeof *entry)",
+                "(gc_rc_wide *)wide_allocate(sizeof *entry)",
+            )
+            .replace(
+                "    free(entry);\n    fwp_gc.rc_wide_len--;",
+                "    wide_free(entry);\n    fwp_gc.rc_wide_len--;",
+            );
+        let code = code.replace(
+            "typedef struct gc_rc_wide {",
+            &format!(
+                "{}\ntypedef struct gc_rc_wide {{",
+                include_str!("fixtures/wide_count_allocator.c")
+            ),
+        );
+        let code = format!("{code}\n{probe}");
+        let missing_free = code.replace(
+            "    wide_free(entry);\n    fwp_gc.rc_wide_len--;",
+            "    /* omit physical wide-count metadata release */\n    fwp_gc.rc_wide_len--;",
+        );
+        assert_ne!(missing_free, code);
+        for opt in ["-O1", "-O2"] {
+            let exe = dir.0.join(format!("{memory}{opt}.exe"));
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+            for (mode, status) in [("8", 0), ("1024", 0), ("overflow", 101), ("oom", 102)] {
+                let output = Command::new(&exe)
+                    .arg(mode)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    output.status.code(),
+                    Some(status),
+                    "{memory}/{opt}/{mode}: {output:?}"
+                );
+                if mode == "overflow" {
+                    assert_eq!(output.stderr, b"fwp: trap: reference count overflow\n");
+                } else if mode == "oom" {
+                    assert_eq!(output.stderr, b"fwp: out of memory\n");
+                } else {
+                    assert!(output.stderr.is_empty(), "{output:?}");
+                }
+            }
+        }
+        let exe = dir.0.join(format!("{memory}-missing-wide-free.exe"));
+        fwp::cgen::compile_c(&missing_free, &exe, "-O2").unwrap();
+        let output = Command::new(&exe)
+            .arg("8")
+            .env_remove("FWP_GC")
+            .env("FWP_GC_STRESS", "0")
+            .env("FWP_GC_VERIFY", "0")
+            .env("FWP_REUSE_VERIFY", "0")
+            .output()
+            .unwrap();
+        assert_eq!(output.status.code(), Some(239), "{memory}: {output:?}");
     }
 }

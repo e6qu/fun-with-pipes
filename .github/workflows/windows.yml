@@ -117,7 +117,7 @@ jobs:
             'windows_runtime', 'windows_static_memory', 'loop_unwind_ownership', 'path_validation', 'io_error_ownership',
             'system_snapshots', 'file_values', 'text_file_tools', 'text_transform_ownership', 'file_construction_ownership',
             'file_inline_path', 'file_storage_disposal', 'record_update_ownership', 'general_record_update_ownership',
-            'constructor_unwind_ownership', 'stack_ownership'
+            'constructor_unwind_ownership', 'stack_ownership', 'wide_counts'
           )
           python scripts/run-native-tests.py --targets $testTargets --idle-timeout 600 --logs windows-resource-tests 2>&1 | Tee-Object -Append windows-native.log
           exit $LASTEXITCODE
@@ -200,7 +200,7 @@ jobs:
             'loop_preparation_ownership', 'nested_loop_boxing', 'field_moves', 'boxed_projection_ownership', 'boxed_field_moves',
             'field_context_ownership', 'match_context_ownership', 'unboxed_worker_locals', 'compiler_call_liveness', 'worker_preparation_ownership', 'worker_boxing_ownership',
             'ffi', 'raw_memory_ownership', 'library_input_ownership', 'library_result_ownership', 'record_conversion_ownership',
-            'resource_frames', 'resource_frame_fields', 'resource_frame_variants', 'resource_match_context', 'foreign_callback_ownership', 'retained_callbacks',
+            'resource_frames', 'resource_frame_fields', 'resource_frame_variants', 'resource_match_context', 'foreign_callback_ownership', 'retained_callbacks', 'unwind_cleanup',
             'float_formats', 'array_text', 'float_linking', 'protocol', 'blocked_matrix', 'wide_workers'
           )
           python scripts/run-native-tests.py --targets $testTargets --idle-timeout 600 --logs windows-tls-tests 2>&1 | Tee-Object windows-tls_tests.log
