@@ -194,7 +194,10 @@ int main(void) {
  fwp_release_string(held); fwp_release_text(t);
  if(!dead_string(held_owner) || !dead_string(text_owner)) _Exit(12);
  fwp_rc_free_obj(bits);
- if(!fwp_reuse_verify && fwp_gc.freed < 32) _Exit(10);
+#ifndef FWP_ARC_ONLY
+ if(!fwp_reuse_verify)
+#endif
+ if(fwp_gc.freed < 32) _Exit(10);
  return 0;
 }
 "#;

@@ -1,6 +1,6 @@
 # Current work
 
-**Next:** run consolidated validation for [PR #215](https://github.com/e6qu/fun-with-pipes/pull/215), the combined G3/G4 candidate.
+**Next:** finish auditing the consolidated validation for [PR #215](https://github.com/e6qu/fun-with-pipes/pull/215), the combined G3/G4 candidate.
 Fix all failures from that run together before repeating affected checks. Do not
 restart the old publisher or split this preparation into smaller PRs. G5 follows
 once the replacement ownership checks pass; tracing has not been deleted.
@@ -21,9 +21,12 @@ executable used for bounded probes is not a build dependency.
 
 PR #215 is ready for review. Production run `40212350477` and documentation
 `40212350054` test `aab769dd1b3fefe290d6cd285ceb83c8f05d70c1`. All nine production
-jobs are scheduled. The C/Rust benchmark job passed; all eight native jobs are still running.
-Windows ARM64 reported a failed socket/library step; its log is unavailable until
-the job completes. Linux ARM64 passed native and WASM Clippy. Skipped draft jobs are not acceptance.
+jobs were scheduled. The C/Rust benchmark job passed. Regular macOS ARM64 finished
+with four failing targets; the other seven native jobs are still running.
+Both Windows native artifacts confirm the same `library_unload` settings trap.
+All other completed targets in those artifacts passed, including the five
+callback/unwind targets. Artifacts: `/private/tmp/fwp-215-ci/windows-native-`
+`windows-11-arm` and `windows-2025`; GitHub IDs `12607120914` and `12606727507`. Linux ARM64 passed native and WASM Clippy. Skipped draft jobs are not acceptance.
 
 Draft documentation `40212299724` found a stale protocol-suite count: the evidence
 report expected nine tests after two identity-serialization tests were added. The
@@ -49,8 +52,8 @@ artifacts then caused secondary inspection failures. The candidate workflow now
 runs those independent suites after a successful compiler check and accumulates
 failures across the early Cargo groups. All 19 native-runner tests and targeted
 Windows `actionlint` passed under the guard. No repair push yet; audit remaining
-jobs and completed targets first. Do not assume all reported Windows failures
-have the same cause until their retained logs are read. Full builds/suites run on GitHub; local checks stay serial under
+jobs and completed targets first. The early native artifacts were audited on both Windows architectures; later
+TLS/ownership jobs are still running and need their own audit. Full builds/suites run on GitHub; local checks stay serial under
 `scripts/local-guard.py`. Standing authorization covers publication and squash merge
 only after all nine production jobs and documentation pass for the final commit.
 Follow [AGENTS.md](../AGENTS.md) for the one-line, at-most-80-character merge subject
@@ -70,6 +73,38 @@ Both old automation scripts must stay stopped. The #214 watcher recorded
 publisher recorded `stopped-for-combined-gc-removal` in
 `/private/tmp/fwp-fault-matrix-delivery-status.json`; restarting it would overwrite
 newer docs and publish the wrong preparation.
+
+## Current repair batch
+
+Local commit `b481a269` fixes the stale evidence count, inherited tracing settings,
+Windows test continuation and missing unwind/wide-count artifacts. It is not yet
+pushed. The remaining macOS ARM64 failures are now repaired locally too:
+
+- `library_input_ownership` and `library_result_ownership` referenced the absent
+  tracing-only `fwp_reuse_verify` flag. ARC now requires physical frees
+  unconditionally; only tracing with poisoning may defer them.
+- `library_resources` used the nonexistent `http2.connect` primitive to include
+  the web runtime. It now uses the actual `http2.pooled : String -> Bool`
+  declaration and checks the constructed IR. ARC admission stays unchanged.
+- `library_unload` hit the mode/settings mismatch already repaired in `b481a269`.
+
+All 132 regular macOS ARM64 target logs were audited; only those four failed.
+`retained_callbacks` and all 19 `wasm_arc` tests passed. Artifact `12607301746`
+is retained in `/private/tmp/fwp-215-ci/macos-regular-tests-macos-15`.
+Crash artifact `12607154104` identifies the deliberate abort in
+`sched::lifetime_tests::cleanup_panic_aborts_before_borrowed_tasks_escape`, which
+passed; it is not a recurrence of the unexplained compiler abort.
+
+The candidate compiler from artifact `12607845652` has SHA-256
+`376eff66114e396e045b455113e58b6511b3544e397f1c00701cf659ce3fa361`.
+Guarded `/private/tmp/check-fwp-library-resources.py` used it to generate a library
+from the real TLS/HTTP declarations, then ran the unchanged resource C probe and
+host: ARC/tracing O1/O2 passed, and all six omitted-cleanup controls failed with
+the expected status in each mode. CPU 11.70 seconds, elapsed 23.92 seconds.
+This verifies candidate runtime teardown and the extracted probe; the repaired
+Rust test's direct IR construction still needs the next CI run. The temporary
+source fixture first needed its Network effect and checked library declaration
+corrected; no compiler rule was weakened to admit it.
 
 ## Included implementation
 

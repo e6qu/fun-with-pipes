@@ -19,17 +19,23 @@ fn unload_closes_owned_files_sessions_and_transferred_http2_handles() {
                     ty: MT::Fun(Box::new(unit.clone()), Box::new(MT::con("std::Bool"))),
                     body: Body::Prim("tls.available".into()),
                 },
+                // Include HTTP/2 through an actual primitive and its declared
+                // signature, so ARC checks the same contract as source code.
                 Func {
-                    name: "web".into(),
-                    arity: 0,
-                    locals: vec![],
-                    ty: unit,
-                    body: Body::Prim("http2.connect".into()),
+                    name: "pooled".into(),
+                    arity: 1,
+                    locals: vec![MT::con("std::String")],
+                    ty: MT::Fun(
+                        Box::new(MT::con("std::String")),
+                        Box::new(MT::con("std::Bool")),
+                    ),
+                    body: Body::Prim("http2.pooled".into()),
                 },
             ],
             exports: vec![("available".into(), 0)],
             ..Program::default()
         };
+        fwp::ir::check_locals(&p).unwrap();
         let (generated, header) = fwp::cgen::generate_library(&p, "resources", &[]).unwrap();
         let hooks = r#"
 #if defined(_WIN32) && !defined(_WIN32_WINNT)
