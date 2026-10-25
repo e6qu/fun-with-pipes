@@ -1,0 +1,33 @@
+Handler = I64 -> () ! {Async, IO, Network, FileIO}
+Worker = (Handler, Channel[I64])
+
+step : Worker -> Step[Worker, ()] ! {Async, IO, Network, FileIO}
+step = both (.1 | channel.recv) id | match
+    (None, _) -> const () | Stop
+    (Some _, _) -> curry (tap (fork apply .0 (.1 | .0)) | .1 | Again)
+
+serve : Worker -> () -> () ! {Async, IO, Network, FileIO}
+serve = flip (const (loop step))
+
+subscribe : Handler -> Channel[I64] -> Task[()] ! {Async}
+subscribe = curry (serve | task.spawn)
+
+finish : (Channel[I64], Task[()]) -> Option[()] ! {Async}
+finish = tap (.0 | channel.close) | .1 | task.await
+
+stop : (Channel[I64], Task[()]) -> Option[()] ! {Async}
+stop = tap (.0 | channel.close) | .1 | tap task.cancel | task.await
+
+main =
+    2
+    | channel.make
+    | both id (subscribe (add 10 | echo))
+    | tap (.0 | flip channel.send 1)
+    | tap (.0 | flip channel.send 2)
+    | finish
+    | echo
+    | const 1
+    | channel.make
+    | both id (subscribe echo)
+    | stop
+    | echo

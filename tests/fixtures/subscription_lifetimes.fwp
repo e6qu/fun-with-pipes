@@ -1,0 +1,135 @@
+Handler = String -> () ! {Async, IO, Network, FileIO, Error[String]}
+Worker = (Handler, Channel[String])
+
+step : Worker -> Step[Worker, ()] ! {Async, IO, Network, FileIO, Error[String]}
+step = both (.1 | channel.recv) id | match
+    (None, _) -> const () | Stop
+    (Some _, _) -> curry (tap (fork apply .0 (.1 | .0)) | .1 | Again)
+serve : Worker -> () -> Result[(), String] ! {Async, IO, Network, FileIO}
+serve = flip (const (attempt (loop step)))
+subscribe : Handler -> Channel[String] -> Task[Result[(), String]] ! {Async}
+subscribe = curry (serve | task.spawn)
+text-channel : I64 -> Channel[String] ! {Async}
+text-channel = channel.make
+ready-channel : I64 -> Channel[()] ! {Async}
+ready-channel = channel.make
+
+finish : (Channel[String], Task[Result[(), String]]) -> Option[Result[(), String]] ! {Async}
+finish = tap (.0 | channel.close) | .1 | task.await
+stop : (Channel[String], Task[Result[(), String]]) -> Option[Result[(), String]] ! {Async}
+stop = tap (.0 | channel.close) | .1 | tap task.cancel | task.await
+
+success : () -> () ! {Async, IO}
+success =
+    const 2
+    | text-channel
+    | both id (subscribe (flip concat ("prefix" | string.repeat 2) | echo))
+    | tap (.0 | flip channel.send "a")
+    | tap (.0 | flip channel.send "b")
+    | finish
+    | echo
+
+failed : String -> () ! {Error[String]}
+failed = const "callback failed" | fail
+failure : () -> () ! {Async, IO}
+failure =
+    const 2
+    | text-channel
+    | both id (subscribe failed)
+    | tap (.0 | flip channel.send "first")
+    | tap (.0 | flip channel.send "queued")
+    | tap (.1 | task.await | echo)
+    | tap (.0 | channel.close)
+    | both (.0 | channel.recv) (.0 | flip channel.send "late")
+    | echo
+
+child : (String, Channel[()]) -> () -> () ! {Async, IO, Network, FileIO}
+child = flip (const
+    (tap (.1 | flip channel.send ()) | tap (const 1h | task.sleep) | .0 | echo))
+blocked : (String, Channel[()]) -> String -> () ! {Async, IO, Network, FileIO}
+blocked = curry (.0
+    | child
+    | task.spawn
+    | tap (const 1h | task.sleep)
+    | task.await
+    | ignore)
+start-blocked : (Channel[String], Channel[()]) -> Task[Result[(), String]] ! {Async}
+start-blocked =
+    both (.1 | both (const "capture" | string.repeat 3) id | blocked) .0
+    | serve
+    | task.spawn
+cancel-active : () -> () ! {Async, IO}
+cancel-active =
+    const 3
+    | text-channel
+    | both id (const 1 | ready-channel)
+    | both id start-blocked
+    | tap (.0 | .0 | flip channel.send "active")
+    | tap (.0 | .0 | flip channel.send "pending")
+    | tap (.0 | .0 | flip channel.send ("unread" | string.repeat 2))
+    | tap (.0 | .1 | channel.recv | echo)
+    | tap (both (.0 | .0) .1 | stop | echo)
+    | both (.1 | task.await) (.0 | .0 | channel.recv)
+    | echo
+
+again : Channel[String] -> String -> () ! {Async, IO}
+again = curry (tap (.1 | echo)
+    | if
+        (.1 | eq "again")
+        (.0 | tap (flip channel.send "last") | channel.close)
+        ignore)
+reenter : () -> () ! {Async, IO}
+reenter =
+    const 1
+    | text-channel
+    | both id (both again id | serve | task.spawn)
+    | tap (.0 | flip channel.send "again")
+    | .1
+    | task.await
+    | echo
+
+scope-body : () -> () ! {Async, IO, Error[String]}
+scope-body =
+    const 1
+    | text-channel
+    | both id (const 1 | ready-channel)
+    | tap start-blocked
+    | tap (.0 | flip channel.send "active")
+    | .1
+    | channel.recv
+    | ignore
+    | const "scope failed"
+    | fail
+scope-failure : () -> () ! {Async, IO}
+scope-failure = const scope-body | attempt task.scope | echo
+
+cancel-before-entry : () -> () ! {Async, IO}
+cancel-before-entry =
+    const 1
+    | text-channel
+    | both id (subscribe (flip concat ("unstarted" | string.repeat 2) | echo))
+    | stop
+    | echo
+
+cancel-completed : () -> () ! {Async, IO}
+cancel-completed =
+    const 1
+    | text-channel
+    | both id (subscribe ignore)
+    | tap (.0 | channel.close)
+    | .1
+    | tap (task.await | echo)
+    | tap task.cancel
+    | task.await
+    | echo
+
+round : () -> () ! {Async, IO}
+round =
+    success
+    | failure
+    | cancel-active
+    | reenter
+    | scope-failure
+    | cancel-before-entry
+    | cancel-completed
+main = range 0 8 | each (const round | task.scope)

@@ -25,9 +25,9 @@ the channel has been supplied, without running the work during partial applicati
 `tap` performs an action while preserving its input channel. Closing the channel
 stops future sends but preserves queued messages: the two receives therefore
 produce `Some 7`, then `None`. The callback owner is the scope, and the queue holds
-only data. A persistent event subscription would need the same independent
-registration owner plus explicit disconnect/active-callback rules; this example
-does not implement that larger API.
+only data. A persistent subscriber needs the same independent owner and explicit stop/join
+rules. [Lesson 24](../24-subscriptions/README.md) builds one using tasks and a
+data-only queue.
 
 ## A worker and cancellation
 
@@ -211,5 +211,5 @@ main = [
 ] | ignore
 ```
 
-See [ownership contracts](../../ownership.md#proposed-cycle-policy) for the design
-limits and the distinction between current checked ARC and proposed weak handles.
+See [ownership contracts](../../ownership.md#cycle-and-retention-contract) for the design
+limits and the distinction between scoped ownership and hypothetical weak handles.

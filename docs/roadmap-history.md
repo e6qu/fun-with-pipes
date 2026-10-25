@@ -6,6 +6,24 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Array moves and the GC-removal checklist (PR #212)
+
+List-to-array conversion moves an unshared prefix; array sorting reuses eligible
+unique storage while preserving aliases and wide-number bits. The 4,096-word
+conversion removes 4,096 retains. A separate sort control removes a 32,776-byte
+copy request and 4,096 retains. Peak storage does not fall; code/stack costs are
+reported without a timing claim in [the array report](measurements/array-sort-ownership.md).
+The [entry checklist](ownership-admission.md) maps supported entries and precise
+rejections to tests, including raw/optimized rejection controls.
+
+The user merged `eff5146e8d6d373771d18cb2f206d40bc36c6e06`, with the same tree
+as tested head `dc9cf3bfb846d5a6632fbd6424cc8509b5d560cb`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40159979066)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40159979067)
+passed. Production inspectors passed; independent Linux benchmark binary review
+also passed. A separate manual review of every final platform artifact was not
+completed before merge. [PR #212](https://github.com/e6qu/fun-with-pipes/pull/212).
+
 ## Concrete roadmap and documentation overhaul (PR #211)
 
 The plan separates GC removal from ARC minimization into concrete implementation
