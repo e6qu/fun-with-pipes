@@ -88,7 +88,7 @@ fn read_temporaries_and_write_errors_have_precise_stream_ownership() {
         exports: vec![("probe".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&p, "file_io").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&p, "file_io", &[]).unwrap();
     let hooks = r#"
 #include <stdio.h>
 #include <stdlib.h>

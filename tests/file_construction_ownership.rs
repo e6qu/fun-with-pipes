@@ -36,7 +36,7 @@ fn construction_failures_close_streams_once_and_clear_finalized_handles() {
         exports: vec![("probe".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&p, "file_owner").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&p, "file_owner", &[]).unwrap();
     let hooks = r#"
 #ifdef _WIN32
 #ifndef _WIN32_WINNT

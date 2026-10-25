@@ -28,7 +28,7 @@ fn runtime() -> String {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_environment").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_environment", &[]).unwrap();
     assert!(generated.contains("#define FWP_GCTX_OWNERS 1"));
     generated
 }

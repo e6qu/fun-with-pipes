@@ -31,7 +31,8 @@ fn receive_runtime() -> String {
         arc: false,
         ..Default::default()
     });
-    let (generated, _) = fwp::cgen::generate_library(&receive_program(), "grpc_receive").unwrap();
+    let (generated, _) =
+        fwp::cgen::generate_library(&receive_program(), "grpc_receive", &[]).unwrap();
     generated
 }
 

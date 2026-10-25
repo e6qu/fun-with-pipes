@@ -31,7 +31,7 @@ fn serving_peer_owner_survives_children_and_releases_at_completion() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_peer").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_peer", &[]).unwrap();
     let subject = "j->sv.peer = c->ssl ? fwp_tls_peer_subject(c->ssl) : 0;";
     let handle = "    g_job *j = (g_job *)arg;\n    int code = -1;";
     let spawn = "    s->task = fwp_spawn_task(0, g_handle, j, g_parse_timeout(h2_get(&s->headers, \"grpc-timeout\")), 0);";

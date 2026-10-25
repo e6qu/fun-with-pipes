@@ -29,7 +29,7 @@ fn tls_cache_allocation_failures_release_partial_owners_and_allow_retry() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _header) = fwp::cgen::generate_library(&p, "resources").unwrap();
+    let (generated, _header) = fwp::cgen::generate_library(&p, "resources", &[]).unwrap();
     let hooks = r#"
 #include <stdlib.h>
 #include <string.h>

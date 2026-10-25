@@ -81,6 +81,10 @@ callback remains outside ARC's contract because its C-side lifetime needs a
 separate rule. Passing text into a callback and returning text from one are
 different ownership boundaries.
 
+For a C host that calls later, the candidate [retained export API](../../retained-callbacks.md)
+uses a separate context and explicit registration/result releases. Its integrated
+validation is pending; it does not extend these scoped callback lifetimes.
+
 ## fwp as a C library
 
 The other direction works too. `--staticlib` and `--cdylib` build the

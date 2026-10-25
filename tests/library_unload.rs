@@ -50,7 +50,7 @@ fn loader_unload_drains_tasks_restores_signals_and_releases_regions() {
             exports: vec![("cached".into(), 0)],
             ..Program::default()
         };
-        let (generated, header) = fwp::cgen::generate_library(&p, "unload").unwrap();
+        let (generated, header) = fwp::cgen::generate_library(&p, "unload", &[]).unwrap();
         if cfg!(windows) {
             windows_loader_unload(&generated, &header);
             continue;

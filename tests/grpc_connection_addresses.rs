@@ -29,7 +29,7 @@ fn connection_addresses_preserve_long_pool_keys_in_one_allocation() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_addresses").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_addresses", &[]).unwrap();
     assert!(generated.contains("#define FWP_GCTX_OWNERS 1"));
     let start = generated.find("struct g_conn {").unwrap();
     let end = start + generated[start..].find("\n};").unwrap() + 3;

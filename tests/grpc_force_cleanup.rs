@@ -29,7 +29,7 @@ fn forced_cells_release_received_storage_and_decoder_failure_text() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_force").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_force", &[]).unwrap();
     let decode = "g_decode(&src->dec, g->m->d, g->m->n, &x, &why)";
     assert_eq!(generated.matches(decode).count(), 2);
     let generated = generated.replace(decode, "observed_decode(&x, &why)");

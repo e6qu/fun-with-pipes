@@ -20,7 +20,7 @@ fn constructor_failures_release_storage_and_preserve_finalizer_registry() {
         exports: vec![("probe".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&p, "construction_disposal").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&p, "construction_disposal", &[]).unwrap();
     let allocation = "realloc(fwp_gc.fins, cap * sizeof(gc_fin))";
     assert_eq!(generated.matches(allocation).count(), 1);
     let runtime = generated.replacen(

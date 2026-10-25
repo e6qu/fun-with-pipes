@@ -29,7 +29,7 @@ fn grpc_context_restores_on_nested_failures_and_cancelled_callbacks() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_context").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_context", &[]).unwrap();
     let start = generated.find("static V g_with_ctx(").unwrap();
     let end = start
         + generated[start..]

@@ -29,7 +29,7 @@ fn cancelled_connect_and_handshake_release_completed_resource_owners() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _header) = fwp::cgen::generate_library(&p, "resources").unwrap();
+    let (generated, _header) = fwp::cgen::generate_library(&p, "resources", &[]).unwrap();
     let generated=generated
         .replace("            fwp_wait_fd(fd, 1, 0);", "            if(mode==1){phase=1;fwp_park(0,0);fwp_check_cancel();} fwp_wait_fd(fd,1,0);")
         .replace("    V result = fwp_sock_new(fd, 1);", "    if(mode==3){phase=1;fwp_park(0,0);fwp_check_cancel();} V result = fwp_sock_new(fd,1);")

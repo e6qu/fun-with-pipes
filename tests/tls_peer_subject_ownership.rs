@@ -29,7 +29,7 @@ fn peer_subject_failures_and_copy_traps_release_temporary_owners() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _header) = fwp::cgen::generate_library(&p, "resources").unwrap();
+    let (generated, _header) = fwp::cgen::generate_library(&p, "resources", &[]).unwrap();
     let needle = "    V v = fwp_rc_fresh(fwp_cstr(s));";
     assert!(generated.contains(needle), "missing subject-copy hook");
     let generated = generated.replace(needle, "    V v = fwp_rc_fresh(subject_copy(s));");

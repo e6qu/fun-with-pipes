@@ -29,7 +29,7 @@ fn grpc_connection_startup_releases_failed_task_reservations() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&p, "grpc_startup").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&p, "grpc_startup", &[]).unwrap();
     let mut generated = generated;
     for (before,after) in [
         ("static void g_conn_final(void *p) {", "static void g_conn_final(void *p) { if(p==pending)finalized++;"),

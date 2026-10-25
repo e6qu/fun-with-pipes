@@ -112,7 +112,10 @@ where permitted sharing requires it. Then cover the six G2 examples and all
 remaining admission rows. Add proof rules in `src/arc_scope.rs`/`src/arc.rs`,
 ownership operations in `src/ownership.rs`/`src/rc/`, and runtime teardown.
 Check stores/captures of acquired owners, not just the acquisition's scope.
-Prove unregister/cancel waits for active users before releasing captures.
+Prove close/release prevents new entry and defers capture destruction until
+active users finish or unwind, including reentrant release. The candidate
+[retained C API](docs/retained-callbacks.md) and its tests are prepared; integrated
+validation is pending.
 Use finite dependency-driven summaries for any added precision, with the G2
 scaling gate; unknown producers remain rejected until ownership is demonstrated.
 **Done:** success, failure, cancellation, reentry and repeated bounded-live work

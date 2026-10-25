@@ -29,7 +29,7 @@ fn cancelling_grpc_server_releases_listener_and_preserves_accepted_owners() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _header) = fwp::cgen::generate_library(&p, "resources").unwrap();
+    let (generated, _header) = fwp::cgen::generate_library(&p, "resources", &[]).unwrap();
     let generated = generated
         .replace("    if (failed) return 1;", "    if (failed) return 1; watched_ctx=tls;if(tls){fwp_tls_server_owner *o=SSL_CTX_get_app_data(tls);watched_wire=o->alpn.w;watched_owner=o;}")
         .replace("fwp_socket_t fd = h2_listen(hostport, bound, sizeof bound);", "fwp_socket_t fd = h2_listen(hostport, bound, sizeof bound); watched_fd=fd;")

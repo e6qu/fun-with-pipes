@@ -137,7 +137,7 @@ pub fn generated() -> String {
         ],
         ..Program::default()
     };
-    let (code, _) = fwp::cgen::generate_library(&program, "http2_values").unwrap();
+    let (code, _) = fwp::cgen::generate_library(&program, "http2_values", &[]).unwrap();
     if let Some(path) = std::env::var_os("FWP_SERVICE_ARTIFACTS") {
         let path = std::path::PathBuf::from(path);
         std::fs::create_dir_all(&path).unwrap();

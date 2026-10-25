@@ -1,10 +1,11 @@
 # Current work
 
-**Next:** finish the explicit retained-C callback registration design in
-[the boundary contracts](gc-removal-design.md#six-implementation-examples), then
-implement its context lifetime and active-call/unregister test. Existing scoped
-trampolines cannot outlive their foreign call. Keep this G3 work and the remaining
-G4 mapping in one PR before broad validation.
+**Next:** finish the remaining G4 diagnostic mapping and review the retained-C
+callback test target, then run the combined G3/G4 validation. The callback
+implementation and integration tests are prepared, including actual library
+unload; candidate Rust/C generation and platform validation have not run.
+Keep this as one PR. Do not restart the old publisher or launch a partial full
+matrix before the included implementation is ready.
 Worktree `/private/tmp/fwp-ownership-fault-matrix`, branch `ownership-fault-matrix`.
 Committed preparation: `517de6e1`; accepted roadmap: `f850cafe`; batching policy:
 `14acc686`. Checkpoint `87662ee5` adds weak channels and G4 probes; integrated
@@ -45,7 +46,8 @@ Postmerge documentation `40197117071` passed. Duplicate production run
 `40197117132` has the same verified merge tree. Its completed jobs (benchmark and
 both macOS ARM64 jobs) passed; no failed job was reported. Cancellation was
 requested through GitHub to avoid repeating the full matrix. The last API check
-still reported `in_progress`; confirm completion before calling it cancelled.
+reported `in_progress` at that time. A later API check confirmed
+`status: completed`, `conclusion: cancelled`.
 No full CI has been launched for the later G3/G4 preparation.
 
 ## Candidate weak channels and G4 repairs
@@ -72,6 +74,56 @@ before examining later live entries. It now scans all occupied slots, reuses the
 first hole, and trims its high-water mark. A native/WASI regression test checks
 duplicate registration, duplicate removal and ordinary reuse. These integrated
 tests are written but have not yet run with the modified compiler.
+
+## Candidate retained C callbacks
+
+`--c-callback NAME` explicitly selects a C export when building a native checked
+ARC library. Registration copies leading arguments once; invocation supplies the
+last argument. One host owner and an active-call count govern the context.
+Close prevents entry; release consumes the host owner; active calls defer capture
+and context destruction until return or unwind. All library calls and releases
+use the first caller's OS thread. Owned results use existing result-release
+functions and can survive registration release. Arbitrary closure-valued C APIs
+and scoped callbacks retain their existing restrictions. See the
+[contract and example](retained-callbacks.md).
+
+`tests/retained_callbacks.rs` and its three fixtures cover a separately compiled
+host/header, static and shared libraries at O1/O2, repeated real unload, 8/1,024
+rounds, nested release, language error, task cancellation, partial construction,
+allocation failure, invalid result pointers, wrong-thread entry and outstanding
+registrations at unload. Independent omitted capture/context/active-call/root
+cleanup controls are included. The target is assigned to macOS regular and the
+Windows native list; integrated execution is pending.
+
+The focused integration probe exposed library scheduler-root storage that was
+only reclaimed with the complete heap reservation. `fwp_library_tasks_finish`
+now releases empty State scratch and the root explicitly before clearing its
+pointers. Source review also found idle Linux descriptor-wait metadata relying
+on heap teardown when the external host keeps its descriptor open. Both native
+and library shutdown now release that metadata after all waiters finish; the
+new Linux fault control removes a waiter release and requires status 205. The final allocation ledger can therefore verify these owners before
+bulk allocator teardown. This applies to ordinary libraries too.
+
+Focused checks under `scripts/local-guard.py`:
+
+- Verified #213 compiler: `check tests/fixtures/retained_callbacks.fwp` and
+  `build --gc arc --staticlib --emit-c` passed. This checks source typing and
+  existing ARC admission, not the candidate registration flag/generator.
+- `/private/tmp/check-fwp-retained-runtime.py`: candidate context runtime in
+  saved #213 C, Clang O2, 1,024 nested-call rounds. Normal 0; premature teardown
+  242; omitted capture/context release 241; omitted active completion 243.
+- `/private/tmp/check-fwp-retained-integration.py` adapts saved #213 export bodies
+  to the new protocol and uses the candidate runtime/probe. It does not compile
+  candidate Rust or establish GCC/platform support. Its first run found the root
+  teardown mismatch (205); after explicit root cleanup the 1,024-round Clang O2
+  rerun passed, including errors, cancellation and injected allocation failures.
+- `/private/tmp/check-fwp-callback-preparation.py` passed Rust formatting,
+  whitespace and native scheduling audit: all 254 integration targets assigned,
+  including the new target on macOS and Windows. No suites were run.
+- `python3 scripts/check-roadmap.py` passed after staging the new guide:
+  161 doc link sets, 106 preparation pairs/tags and eight roadmap steps.
+- After waiter cleanup changed, the focused Clang O2 integration probe passed
+  again. Linux-specific waiter execution is pending the native Linux runners.
 
 ## Prepared group
 

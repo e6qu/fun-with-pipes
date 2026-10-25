@@ -29,7 +29,7 @@ fn tls_pool_keys_distinguish_complete_options_and_survive_scope_release() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_pool_identity").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_pool_identity", &[]).unwrap();
     assert!(generated.contains("#define FWP_GCTX_OWNERS 1"));
     let mut generated = generated;
     for (before, after) in [

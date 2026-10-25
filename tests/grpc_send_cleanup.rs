@@ -29,7 +29,7 @@ fn encoded_messages_release_on_cancel_and_preserve_plain_and_gzip_frames() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_send").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_send", &[]).unwrap();
     let send = "int r = g_send_data(c, s, b.d, b.len, end);";
     assert_eq!(generated.matches(send).count(), 1);
     let generated = generated.replacen(

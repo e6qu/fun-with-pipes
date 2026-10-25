@@ -29,7 +29,7 @@ fn alpn_preparation_bounds_storage_and_closes_connection_on_failure() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _header) = fwp::cgen::generate_library(&p, "resources").unwrap();
+    let (generated, _header) = fwp::cgen::generate_library(&p, "resources", &[]).unwrap();
     let expected =
         fwp::tls::alpn_wire(&["h2".into(), "".into(), "a".repeat(256), "http/1.1".into()]);
     assert_eq!(expected, b"\x02h2\x08http/1.1");

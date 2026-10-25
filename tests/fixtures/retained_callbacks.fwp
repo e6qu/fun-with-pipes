@@ -1,0 +1,31 @@
+# Selected exports become context-bearing C callbacks at library build time.
+foreign "C" callback-hook : () -> () ! {IO} = "callback_hook"
+foreign "C" retained-fail : () -> String ! {IO, Error[String]} = "retained_fail"
+foreign "C" retained-block : () -> () ! {IO, Async} = "retained_block"
+
+export keep : String -> () -> String
+keep = const
+export count : String -> I64 -> I64
+count = curry (fork add (.0 | string.length) .1)
+export second : String -> String -> () -> String
+second = const const
+export unary : I64 -> I64
+unary = add 1
+export discard : String -> () -> ()
+discard = const (const ())
+repr(C) Words = { first: String, second: String }
+export words : Words -> () -> Words
+words = const
+
+export inside : String -> () -> String ! {IO}
+inside = curry (.0 | tap (const () | callback-hook))
+export failing : String -> () -> String ! {IO, Error[String]}
+failing = curry (.0 | tap (const () | callback-hook) | fail)
+export blocked : String -> () -> String ! {IO, Async}
+blocked = curry (.0 | tap (const () | callback-hook) | tap (const 1h | task.sleep))
+export caught : () -> Bool ! {IO}
+caught = attempt retained-fail | match
+    Err _ -> const True
+    Ok _ -> const False
+export cancel : () -> () ! {IO, Async}
+cancel = const retained-block | task.spawn | tap (const () | task.yield) | tap task.cancel | task.await | ignore

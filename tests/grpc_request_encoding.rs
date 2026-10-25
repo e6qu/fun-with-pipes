@@ -28,7 +28,7 @@ fn request_runtime() -> String {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_request").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_request", &[]).unwrap();
     generated
 }
 

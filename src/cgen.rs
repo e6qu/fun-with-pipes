@@ -30,6 +30,7 @@ const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt_socket.c"),
     include_str!("../runtime/fwp_rt_context_win.c"),
     include_str!("../runtime/fwp_rt_task.c"),
+    include_str!("../runtime/fwp_rt_callback.c"),
     include_str!("../runtime/fwp_rt_sys.c"),
     include_str!("../runtime/fwp_rt_sys_windows.c"),
     include_str!("../runtime/fwp_rt_decode.c"),
@@ -9509,7 +9510,7 @@ enum Mode<'a> {
     /// commands of a multi-command program with this name.
     Exec(Vec<crate::cli::Command>, Option<&'a str>),
     /// Exported functions as C functions of a library.
-    Library,
+    Library(&'a [String]),
     /// A module's exported functions as a gRPC service.
     Service,
 }
@@ -9580,12 +9581,43 @@ fn export_sigs(prog: &Program) -> Result<Vec<ExportSig>, String> {
 }
 
 /// A C library of the exported functions: its source and its header.
-pub fn generate_library(prog: &Program, lib_name: &str) -> Result<(String, String), String> {
+pub fn generate_library(
+    prog: &Program,
+    lib_name: &str,
+    callbacks: &[String],
+) -> Result<(String, String), String> {
     let sigs = export_sigs(prog)?;
     if sigs.is_empty() {
         return Err("the library exports no functions (mark them with `export`)".into());
     }
-    let src = generate_mode(prog, Mode::Library)?;
+    if !callbacks.is_empty() && !native_options().arc {
+        return Err("retained C callbacks require checked ownership; select --gc arc".into());
+    }
+    let mut public_names = std::collections::HashSet::new();
+    for (name, _, _, result) in &sigs {
+        public_names.insert(name.clone());
+        if library_result_needs_release(result) {
+            public_names.insert(format!("fwp_release_{name}"));
+        }
+    }
+    for callback in callbacks {
+        let (_, fid, _, _) = sigs
+            .iter()
+            .find(|(name, _, _, _)| name == callback)
+            .ok_or_else(|| format!("unknown C callback export `{callback}`"))?;
+        if prog.funcs[*fid].arity == 0 {
+            return Err(format!("C callback export `{callback}` needs a final argument; constants cannot be registered"));
+        }
+        for operation in ["register", "invoke", "close", "release_callback"] {
+            let generated = format!("fwp_{operation}_{callback}");
+            if !public_names.insert(generated.clone()) {
+                return Err(format!(
+                    "duplicate or conflicting C callback symbol `{generated}`"
+                ));
+            }
+        }
+    }
+    let src = generate_mode(prog, Mode::Library(callbacks))?;
     let guard: String = lib_name
         .chars()
         .map(|c| {
@@ -9618,7 +9650,10 @@ pub fn generate_library(prog: &Program, lib_name: &str) -> Result<(String, Strin
     if !seen.is_empty() {
         h.push('\n');
     }
-    for (cname, _, ps, r) in &sigs {
+    if !callbacks.is_empty() {
+        h.push_str("/* Retained callbacks: all calls into this library, including result releases,\n * must run on the OS thread of its first call. register copies leading inputs;\n * invoke supplies the final input and returns 1 after writing the result, or 0\n * when closed (the result slot is untouched). close is idempotent and prevents\n * new calls. release_callback consumes the one host owner and also closes;\n * active calls keep captures alive until return/unwind. Do not use a released\n * registration again. Stop host delivery before release. Release all registrations\n * and owned results before unloading. Captured raw pointees remain host-owned.\n * Unhandled errors/traps retain the ordinary export policy; invoke is not an\n * error handler. Owned invoke results use fwp_release_NAME, as ordinary results do. */\n\n");
+    }
+    for (cname, fid, ps, r) in &sigs {
         let params: Vec<String> = ps.iter().map(|(_, c)| crate::ffi::c_name(c)).collect();
         let _ = writeln!(
             h,
@@ -9631,6 +9666,22 @@ pub fn generate_library(prog: &Program, lib_name: &str) -> Result<(String, Strin
                 params.join(", ")
             }
         );
+        if callbacks.contains(cname) {
+            let last = prog.funcs[*fid].arity as usize - 1;
+            let captures = ps
+                .iter()
+                .filter(|(i, _)| *i < last)
+                .map(|(_, c)| crate::ffi::c_name(c))
+                .collect::<Vec<_>>();
+            let mut invoke = vec![format!("struct fwp_callback_{cname} *")];
+            if let Some((_, c)) = ps.iter().find(|(i, _)| *i == last) {
+                invoke.push(crate::ffi::c_name(c));
+            }
+            if *r != CType::Void {
+                invoke.push(format!("{} *", crate::ffi::c_name(r)));
+            }
+            let _ = writeln!(h, "struct fwp_callback_{cname};\nstruct fwp_callback_{cname} *fwp_register_{cname}({});\nint fwp_invoke_{cname}({});\nvoid fwp_close_{cname}(struct fwp_callback_{cname} *);\nvoid fwp_release_callback_{cname}(struct fwp_callback_{cname} *);", if captures.is_empty() { "void".into() } else { captures.join(", ") }, invoke.join(", "));
+        }
         if library_result_needs_release(r) {
             let _ = writeln!(
                 h,
@@ -9641,6 +9692,261 @@ pub fn generate_library(prog: &Program, lib_name: &str) -> Result<(String, Strin
     }
     h.push_str("\n#ifdef __cplusplus\n}\n#endif\n\n#endif\n");
     Ok((src, h))
+}
+
+impl Gen<'_> {
+    fn library_registration(&mut self, cname: &str, fid: FuncId, ps: &[(usize, CType)]) -> String {
+        let prog = self.prog;
+        let f = &prog.funcs[fid];
+        let captures = f.arity as usize - 1;
+        let types = f.ty.params(f.arity as usize).0;
+        let attribute = "#ifdef _WIN32\n__declspec(dllexport)\n#endif\n";
+        let mut out = format!("struct fwp_callback_{cname};\nstatic void fwp_callback_drop_{cname}(fwp_callback_context *context) {{\n");
+        for (i, ty) in types.iter().take(captures).enumerate() {
+            if crate::rc::needs_rc(&prog.shapes, ty) {
+                let drop = self.value_drop(ty);
+                let _ = writeln!(out, "    V capture{i} = context->captures[{i}]; context->captures[{i}] = 0; {drop}(capture{i});");
+            }
+        }
+        out.push_str("    (void)context;\n}\n");
+        let decl = ps
+            .iter()
+            .filter(|(i, _)| *i < captures)
+            .map(|(i, c)| format!("{} a{i}", crate::ffi::c_name(c)))
+            .collect::<Vec<_>>();
+        let _ = writeln!(out, "{attribute}struct fwp_callback_{cname} *fwp_register_{cname}({}) {{\n    fwp_lib_init();\n    fwp_callback_context *context = fwp_callback_create({captures}, fwp_callback_drop_{cname});\n    fwp_cleanup registration_cleanup;\n    fwp_cleanup_push(&registration_cleanup, fwp_callback_release, context);", if decl.is_empty() { "void".into() } else { decl.join(", ") });
+        for (i, ty) in types.iter().take(captures).enumerate() {
+            if let Some((_, c)) = ps.iter().find(|(j, _)| *j == i) {
+                self.library_arg(&mut out, &format!("capture{i}"), c, ty, &format!("a{i}"));
+                let _ = writeln!(out, "    context->captures[{i}] = capture{i};");
+            } else {
+                let _ = writeln!(out, "    context->captures[{i}] = FWP_UNIT;");
+            }
+        }
+        let _ = writeln!(out, "    fwp_cleanup_pop(&registration_cleanup);\n    return (struct fwp_callback_{cname} *)context;\n}}\n{attribute}void fwp_close_{cname}(struct fwp_callback_{cname} *registration) {{\n    fwp_callback_close((fwp_callback_context *)registration);\n}}\n{attribute}void fwp_release_callback_{cname}(struct fwp_callback_{cname} *registration) {{\n    fwp_callback_release(registration);\n}}\n");
+        out
+    }
+
+    /// Direct C exports and retained invocations share input/result ownership.
+    fn library_entry(
+        &mut self,
+        cname: &str,
+        fid: FuncId,
+        ps: &[(usize, CType)],
+        result: &CType,
+        callback: bool,
+    ) -> String {
+        let prog = self.prog;
+        let r = result.clone();
+        let export_attribute = "#ifdef _WIN32\n__declspec(dllexport)\n#endif\n";
+        let mut out = String::new();
+        let f = &prog.funcs[fid];
+        let args: Vec<String> = (0..f.arity as usize)
+            .map(|i| format!("input_arg{i}"))
+            .collect();
+        let call = if f.arity == 0 {
+            format!("caf{}()", fid)
+        } else {
+            format!("f{}({})", fid, args.join(", "))
+        };
+        let mut decl: Vec<String> = ps
+            .iter()
+            .filter(|(i, _)| !callback || *i == f.arity as usize - 1)
+            .map(|(i, c)| format!("{} a{i}", crate::ffi::c_name(c)))
+            .collect();
+        if callback {
+            decl.insert(0, format!("struct fwp_callback_{cname} *registration"));
+            if r != CType::Void {
+                decl.push(format!("{} *result_out", crate::ffi::c_name(&r)));
+            }
+            let _ = writeln!(out, "{export_attribute}int fwp_invoke_{cname}({}) {{\n    fwp_lib_init();\n    fwp_callback_context *context = (fwp_callback_context *)registration;\n    if (!fwp_callback_enter(context)) return 0;\n    fwp_cleanup callback_cleanup;\n    fwp_cleanup_push(&callback_cleanup, fwp_callback_leave, context);", decl.join(", "));
+            if r != CType::Void {
+                out.push_str(
+                    "    if (!result_out) fwp_trap(\"callback result pointer is null\");\n",
+                );
+            }
+        } else {
+            let _ = writeln!(
+                out,
+                "{export_attribute}{} {cname}({}) {{\n    fwp_lib_init();",
+                crate::ffi::c_name(&r),
+                if decl.is_empty() {
+                    "void".into()
+                } else {
+                    decl.join(", ")
+                }
+            );
+        }
+        let finish_callback = if callback {
+            "    fwp_cleanup_pop(&callback_cleanup); fwp_callback_leave(context);\n"
+        } else {
+            ""
+        };
+        let return_result = if callback {
+            format!("    *result_out = converted;\n{finish_callback}    return 1;\n}}\n\n")
+        } else {
+            "    return converted;\n}\n\n".into()
+        };
+        let types = f.ty.params(f.arity as usize).0;
+        let empty: Vec<_> = types.iter().map(|ty| ("0".into(), (*ty).clone())).collect();
+        let protection = self.protect_values(&empty, "inputs_owner", "inputs_cleanup");
+        let _ = writeln!(out, "    {protection}");
+        let mut slot = 0;
+        let mut consumed_slots = Vec::new();
+        for (i, ty) in types.iter().enumerate() {
+            let captured = callback && i + 1 < f.arity as usize;
+            let consumes = crate::rc::consumes_arg(prog, fid, i);
+            if captured {
+                if consumes && crate::rc::needs_rc(&prog.shapes, ty) {
+                    let duplicate = self.value_dup(ty);
+                    let _ = writeln!(out, "    {duplicate}(context->captures[{i}]);");
+                }
+                let _ = writeln!(out, "    V {} = context->captures[{i}];", args[i]);
+            } else if let Some((_, c)) = ps.iter().find(|(j, _)| *j == i) {
+                self.library_arg(&mut out, &args[i], c, ty, &format!("a{i}"));
+            } else {
+                let _ = writeln!(out, "    V {} = FWP_UNIT;", args[i]);
+            }
+            if !protection.is_empty() && crate::rc::needs_rc(&prog.shapes, ty) {
+                if !captured || consumes {
+                    let _ = writeln!(out, "    inputs_owner.v{slot} = {};", args[i]);
+                }
+                if crate::rc::consumes_arg(prog, fid, i) {
+                    consumed_slots.push(slot);
+                }
+                slot += 1;
+            }
+        }
+        for slot in consumed_slots {
+            let _ = writeln!(out, "    inputs_owner.v{slot} = 0;");
+        }
+        let finish_inputs = if protection.is_empty() {
+            ""
+        } else {
+            "    fwp_cleanup_pop(&inputs_cleanup); inputs_cleanup.release(inputs_cleanup.arg);\n"
+        };
+        let direct = self.abis[fid]
+            .as_ref()
+            .filter(|abi| {
+                matches!(r, crate::ffi::CType::Struct { .. })
+                    && abi.ret.is_some()
+                    && abi.params.iter().all(Option::is_none)
+            })
+            .cloned();
+        if r == crate::ffi::CType::Void {
+            let _ = writeln!(
+                out,
+                "    (void){call};\n{finish_inputs}{finish_callback}{}\n}}\n",
+                if callback { "    return 1;" } else { "" }
+            );
+        } else if let Some(abi) = direct {
+            // The worker already returns fields. Transfer those owners
+            // directly into the C result rather than boxing then unpacking.
+            let args = abi.args_decode_words(prog, fid, args.clone());
+            let _ = writeln!(
+                out,
+                "    fwp_wr{fid} result = w{fid}({});\n{finish_inputs}",
+                args.join(", ")
+            );
+            let values = abi.result_words(prog, fid, "result");
+            let result_ty = f.ty.params(f.arity as usize).1;
+            let fields = record_fields(&prog.shapes, result_ty).expect("record export result");
+            let owners = fields
+                .iter()
+                .enumerate()
+                .map(|(i, (_, ty))| (values[i].clone(), ty.clone()))
+                .collect::<Vec<_>>();
+            let protect = self.protect_values(&owners, "result_fields", "result_cleanup");
+            let _ = writeln!(
+                out,
+                "    {protect}\n    {} converted;",
+                crate::ffi::c_name(&r)
+            );
+            let crate::ffi::CType::Struct {
+                fields: c_fields, ..
+            } = &r
+            else {
+                unreachable!()
+            };
+            for (name, index, ty) in c_fields {
+                let _ = writeln!(
+                    out,
+                    "    converted.{name} = {};",
+                    ffi_to_c(ty, &values[*index])
+                );
+            }
+            if !protect.is_empty() {
+                out.push_str("    fwp_cleanup_pop(&result_cleanup);\n");
+            }
+            out.push_str("    /* move C result fields */\n");
+            if self.reuse {
+                for (_, index, ty) in c_fields {
+                    let (_, field_ty) = &fields[*index];
+                    if *ty != crate::ffi::CType::Str && crate::rc::needs_rc(&prog.shapes, field_ty)
+                    {
+                        let drop = self.value_drop(field_ty);
+                        let _ = writeln!(out, "    {drop}({});", values[*index]);
+                    }
+                }
+            }
+            out.push_str(&return_result);
+        } else {
+            // Evaluate once and protect the full result until every C
+            // string conversion succeeds. Then transfer string owners to
+            // the host, which releases them through the matching export.
+            let result_ty = f.ty.params(f.arity as usize).1.clone();
+            let drop = if self.reuse {
+                self.value_drop(&result_ty)
+            } else {
+                "NULL".into()
+            };
+            let _ = writeln!(out,
+                    "    V result = {call};\n{finish_inputs}    fwp_value_owner owner = {{result, {drop}}}; fwp_cleanup cleanup;\n    fwp_value_protect(&owner, &cleanup);\n    {} converted = {};",
+                    crate::ffi::c_name(&r), ffi_to_c(&r, "result"));
+            if self.reuse {
+                match &r {
+                    crate::ffi::CType::Str => {
+                        // The result already owns its string: no copy or
+                        // retain is needed to give that owner to C.
+                    }
+                    crate::ffi::CType::Struct { fields, .. } => {
+                        let strings: Vec<_> = fields
+                            .iter()
+                            .filter(|(_, _, ty)| *ty == crate::ffi::CType::Str)
+                            .collect();
+                        if !strings.is_empty() {
+                            out.push_str(
+                                "    if (fwp_rc_last(result)) { /* move C result strings */\n",
+                            );
+                            for (_, index, _) in &strings {
+                                let _ = writeln!(out, "        OBJ(result)->f[{index}] = 0;");
+                            }
+                            out.push_str("    } else {\n");
+                            let values = strings
+                                .iter()
+                                .map(|(_, index, _)| {
+                                    (format!("OBJ(result)->f[{index}]"), MT::con("std::String"))
+                                })
+                                .collect::<Vec<_>>();
+                            let retained = self.duplicate_values(
+                                &values,
+                                "result_strings",
+                                "result_strings_cleanup",
+                            );
+                            let _ = writeln!(out, "        {retained}\n    }}");
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            out.push_str("    (void)fwp_value_finish(&owner, &cleanup);\n");
+            if r != crate::ffi::CType::Str {
+                out.push_str("    owner.value = result; fwp_value_release(&owner);\n");
+            }
+            out.push_str(&return_result);
+        }
+        out
+    }
 }
 
 /// Generate the complete C program running `main`.
@@ -9878,7 +10184,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
                 .iter()
                 .map(|m| m.func)
                 .collect(),
-            Mode::Library => {
+            Mode::Library(_) => {
                 let signatures = export_sigs(prog)?;
                 for (name, _, params, result) in &signatures {
                     if !params.iter().all(|(_, ty)| crate::ffi::copied_result(ty))
@@ -9933,7 +10239,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             || uses_async(prog)
             || uses_services(prog)
             || tests
-            || matches!(mode, Mode::Library | Mode::Service | Mode::Exec(..))
+            || matches!(mode, Mode::Library(_) | Mode::Service | Mode::Exec(..))
             || prog.funcs.iter().any(|f| {
                 matches!(&f.body, Body::Prim(s) if s == "attempt" || s == "run-state")
                     || matches!(&f.body, Body::ForeignC { .. })
@@ -10043,7 +10349,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         li += 1;
     }
     let mut lib_defs = String::new();
-    if let Mode::Library = mode {
+    if let Mode::Library(callbacks) = mode {
         // Windows automatic exports omit names also present in import
         // libraries (for example CRT `norm`). Export the language interface
         // explicitly, including its ownership release functions.
@@ -10052,186 +10358,21 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         // Darwin terminates dlopened images before archive destructors. The
         // guarded finish also runs at dynamic unload; repeated calls are safe.
         lib_defs.push_str(
-            "static int fwp_lib_ready = 0;\n#if FWP_GC\nstatic void fwp_lib_finish(void);\n#endif\n\nstatic void fwp_lib_init(void) {\n    if (fwp_lib_ready) return;\n#if FWP_GC\n    if (atexit(fwp_lib_finish)) fwp_trap(\"cannot register library cleanup\");\n    fwp_closure_drop_init();\n#endif\n    fwp_lib_ready = 1;\n    fwp_fns = fwp_fn_table;\n    fwp_prog_out = stdout;\n    fwp_start_time = fwp_now_ns();\n    fwp_seed_rng();\n    fwp_init_consts();\n}\n\n",
+            "static int fwp_lib_ready = 0;\n#if FWP_GC\nstatic void fwp_lib_finish(void);\n#endif\n\nstatic void fwp_lib_init(void) {\n    if (fwp_lib_ready) {\n#ifdef FWP_RETAINED_CALLBACKS\n        fwp_callback_check_thread();\n#endif\n        return;\n    }\n#ifdef FWP_RETAINED_CALLBACKS\n    fwp_callback_runtime_init();\n#endif\n#if FWP_GC\n    if (atexit(fwp_lib_finish)) fwp_trap(\"cannot register library cleanup\");\n    fwp_closure_drop_init();\n#endif\n    fwp_lib_ready = 1;\n    fwp_fns = fwp_fn_table;\n    fwp_prog_out = stdout;\n    fwp_start_time = fwp_now_ns();\n    fwp_seed_rng();\n    fwp_init_consts();\n}\n\n",
         );
         for (cname, fid, ps, r) in export_sigs(prog)? {
             let mut all: Vec<crate::ffi::CType> = ps.iter().map(|(_, c)| c.clone()).collect();
             all.push(r.clone());
             g.ffi_structs(&all);
-            let decl: Vec<String> = ps
-                .iter()
-                .map(|(i, c)| format!("{} a{}", crate::ffi::c_name(c), i))
-                .collect();
-            let f = &prog.funcs[fid];
-            let args: Vec<String> = (0..f.arity as usize)
-                .map(|i| format!("input_arg{i}"))
-                .collect();
-            let call = if f.arity == 0 {
-                format!("caf{}()", fid)
-            } else {
-                format!("f{}({})", fid, args.join(", "))
-            };
-            let _ = writeln!(
-                lib_defs,
-                "{export_attribute}{} {}({}) {{\n    fwp_lib_init();",
-                crate::ffi::c_name(&r),
-                cname,
-                if decl.is_empty() {
-                    "void".into()
-                } else {
-                    decl.join(", ")
-                }
-            );
-            let types = f.ty.params(f.arity as usize).0;
-            let empty: Vec<_> = types.iter().map(|ty| ("0".into(), (*ty).clone())).collect();
-            let protection = g.protect_values(&empty, "inputs_owner", "inputs_cleanup");
-            let _ = writeln!(lib_defs, "    {protection}");
-            let mut slot = 0;
-            let mut consumed_slots = Vec::new();
-            for (i, ty) in types.iter().enumerate() {
-                if let Some((_, c)) = ps.iter().find(|(j, _)| *j == i) {
-                    g.library_arg(&mut lib_defs, &args[i], c, ty, &format!("a{i}"));
-                } else {
-                    let _ = writeln!(lib_defs, "    V {} = FWP_UNIT;", args[i]);
-                }
-                if !protection.is_empty() && crate::rc::needs_rc(&prog.shapes, ty) {
-                    let _ = writeln!(lib_defs, "    inputs_owner.v{slot} = {};", args[i]);
-                    if crate::rc::consumes_arg(prog, fid, i) {
-                        consumed_slots.push(slot);
-                    }
-                    slot += 1;
-                }
-            }
-            for slot in consumed_slots {
-                let _ = writeln!(lib_defs, "    inputs_owner.v{slot} = 0;");
-            }
-            let finish_inputs = if protection.is_empty() {
-                ""
-            } else {
-                "    fwp_cleanup_pop(&inputs_cleanup); inputs_cleanup.release(inputs_cleanup.arg);\n"
-            };
-            let direct = g.abis[fid]
-                .as_ref()
-                .filter(|abi| {
-                    matches!(r, crate::ffi::CType::Struct { .. })
-                        && abi.ret.is_some()
-                        && abi.params.iter().all(Option::is_none)
-                })
-                .cloned();
-            if r == crate::ffi::CType::Void {
-                let _ = writeln!(lib_defs, "    (void){call};\n{finish_inputs}}}\n");
-            } else if let Some(abi) = direct {
-                // The worker already returns fields. Transfer those owners
-                // directly into the C result rather than boxing then unpacking.
-                let args = abi.args_decode_words(prog, fid, args.clone());
-                let _ = writeln!(
-                    lib_defs,
-                    "    fwp_wr{fid} result = w{fid}({});\n{finish_inputs}",
-                    args.join(", ")
-                );
-                let values = abi.result_words(prog, fid, "result");
-                let result_ty = f.ty.params(f.arity as usize).1;
-                let fields = record_fields(&prog.shapes, result_ty).expect("record export result");
-                let owners = fields
-                    .iter()
-                    .enumerate()
-                    .map(|(i, (_, ty))| (values[i].clone(), ty.clone()))
-                    .collect::<Vec<_>>();
-                let protect = g.protect_values(&owners, "result_fields", "result_cleanup");
-                let _ = writeln!(
-                    lib_defs,
-                    "    {protect}\n    {} converted;",
-                    crate::ffi::c_name(&r)
-                );
-                let crate::ffi::CType::Struct {
-                    fields: c_fields, ..
-                } = &r
-                else {
-                    unreachable!()
-                };
-                for (name, index, ty) in c_fields {
-                    let _ = writeln!(
-                        lib_defs,
-                        "    converted.{name} = {};",
-                        ffi_to_c(ty, &values[*index])
-                    );
-                }
-                if !protect.is_empty() {
-                    lib_defs.push_str("    fwp_cleanup_pop(&result_cleanup);\n");
-                }
-                lib_defs.push_str("    /* move C result fields */\n");
-                if g.reuse {
-                    for (_, index, ty) in c_fields {
-                        let (_, field_ty) = &fields[*index];
-                        if *ty != crate::ffi::CType::Str
-                            && crate::rc::needs_rc(&prog.shapes, field_ty)
-                        {
-                            let drop = g.value_drop(field_ty);
-                            let _ = writeln!(lib_defs, "    {drop}({});", values[*index]);
-                        }
-                    }
-                }
-                lib_defs.push_str("    return converted;\n}\n\n");
-            } else {
-                // Evaluate once and protect the full result until every C
-                // string conversion succeeds. Then transfer string owners to
-                // the host, which releases them through the matching export.
-                let result_ty = f.ty.params(f.arity as usize).1.clone();
-                let drop = if g.reuse {
-                    g.value_drop(&result_ty)
-                } else {
-                    "NULL".into()
-                };
-                let _ = writeln!(lib_defs,
-                    "    V result = {call};\n{finish_inputs}    fwp_value_owner owner = {{result, {drop}}}; fwp_cleanup cleanup;\n    fwp_value_protect(&owner, &cleanup);\n    {} converted = {};",
-                    crate::ffi::c_name(&r), ffi_to_c(&r, "result"));
-                if g.reuse {
-                    match &r {
-                        crate::ffi::CType::Str => {
-                            // The result already owns its string: no copy or
-                            // retain is needed to give that owner to C.
-                        }
-                        crate::ffi::CType::Struct { fields, .. } => {
-                            let strings: Vec<_> = fields
-                                .iter()
-                                .filter(|(_, _, ty)| *ty == crate::ffi::CType::Str)
-                                .collect();
-                            if !strings.is_empty() {
-                                lib_defs.push_str(
-                                    "    if (fwp_rc_last(result)) { /* move C result strings */\n",
-                                );
-                                for (_, index, _) in &strings {
-                                    let _ =
-                                        writeln!(lib_defs, "        OBJ(result)->f[{index}] = 0;");
-                                }
-                                lib_defs.push_str("    } else {\n");
-                                let values = strings
-                                    .iter()
-                                    .map(|(_, index, _)| {
-                                        (format!("OBJ(result)->f[{index}]"), MT::con("std::String"))
-                                    })
-                                    .collect::<Vec<_>>();
-                                let retained = g.duplicate_values(
-                                    &values,
-                                    "result_strings",
-                                    "result_strings_cleanup",
-                                );
-                                let _ = writeln!(lib_defs, "        {retained}\n    }}");
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-                lib_defs.push_str("    (void)fwp_value_finish(&owner, &cleanup);\n");
-                if r != crate::ffi::CType::Str {
-                    lib_defs.push_str("    owner.value = result; fwp_value_release(&owner);\n");
-                }
-                lib_defs.push_str("    return converted;\n}\n\n");
+            lib_defs.push_str(&g.library_entry(&cname, fid, &ps, &r, false));
+            if callbacks.contains(&cname) {
+                lib_defs.push_str(&g.library_registration(&cname, fid, &ps));
+                lib_defs.push_str(&g.library_entry(&cname, fid, &ps, &r, true));
             }
             if library_result_needs_release(&r) {
                 let _ = writeln!(
                     lib_defs,
-                    "{export_attribute}void fwp_release_{cname}({} result) {{",
+                    "{export_attribute}void fwp_release_{cname}({} result) {{\n#ifdef FWP_RETAINED_CALLBACKS\n    fwp_callback_check_thread();\n#endif",
                     crate::ffi::c_name(&r)
                 );
                 if g.reuse {
@@ -10707,7 +10848,10 @@ static const fwp_exec_spec exec_spec{i} = {{
     if tests {
         out.push_str("#define FWP_TESTS 1\n");
     }
-    if matches!(mode, Mode::Library) {
+    if matches!(&mode, Mode::Library(callbacks) if !callbacks.is_empty()) {
+        out.push_str("#define FWP_RETAINED_CALLBACKS 1\n");
+    }
+    if matches!(mode, Mode::Library(_)) {
         out.push_str("#define FWP_LIBRARY 1\n");
     }
     let _ = writeln!(out, "#define FWP_UNWIND {}", u8::from(g.unwind));
@@ -11016,10 +11160,10 @@ static const fwp_exec_spec exec_spec{i} = {{
     out.push_str(&remote_defs);
     out.push_str(&g.cli_defs);
     out.push_str(&bodies);
-    if let Mode::Library = mode {
+    if let Mode::Library(_) = mode {
         let _ = write!(
             out,
-            "static void fwp_init_consts(void) {{\n{}}}\n\n{}\n#if FWP_GC\nstatic void __attribute__((destructor)) fwp_lib_finish(void) {{\n    if (!fwp_lib_ready) return;\n    fwp_lib_ready = 0;\n#ifdef FWP_GCTX_OWNERS\n    g_connections_finish();\n#endif\n    fwp_library_tasks_finish();\n    fwp_caf_finish();\n    /* Ownership observation point: before runtime teardown. */\n    fwp_tape_finish();\n    fwp_gc_finish();\n#ifdef FWP_GCTX_OWNERS\n    g_environment_finish();\n#endif\n#ifdef FWP_TLS\n    fwp_tls_clients_finish();\n#endif\n    fwp_closure_drop_finish();\n    fwp_sockets_finish();\n}}\n#endif\n",
+            "static void fwp_init_consts(void) {{\n{}}}\n\n{}\n#if FWP_GC\nstatic void __attribute__((destructor)) fwp_lib_finish(void) {{\n    if (!fwp_lib_ready) return;\n#ifdef FWP_RETAINED_CALLBACKS\n    fwp_callback_runtime_finish();\n#endif\n    fwp_lib_ready = 0;\n#ifdef FWP_GCTX_OWNERS\n    g_connections_finish();\n#endif\n    fwp_library_tasks_finish();\n    fwp_caf_finish();\n    /* Ownership observation point: before runtime teardown. */\n    fwp_tape_finish();\n    fwp_gc_finish();\n#ifdef FWP_GCTX_OWNERS\n    g_environment_finish();\n#endif\n#ifdef FWP_TLS\n    fwp_tls_clients_finish();\n#endif\n    fwp_closure_drop_finish();\n    fwp_sockets_finish();\n}}\n#endif\n",
             g.const_init, lib_defs
         );
         return Ok(out);

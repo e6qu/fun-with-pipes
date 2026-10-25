@@ -29,7 +29,7 @@ fn alpn_string_allocation_keeps_the_owning_session_live() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _header) = fwp::cgen::generate_library(&p, "resources").unwrap();
+    let (generated, _header) = fwp::cgen::generate_library(&p, "resources", &[]).unwrap();
     // A real major trace at the copy boundary removes reliance on GC timing.
     let generated = generated.replace(
         "static V fwp_str_new(const char *s, size_t len) {",

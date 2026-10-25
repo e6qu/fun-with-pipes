@@ -29,7 +29,7 @@ fn client_received_buffers_release_on_retry_errors_and_cancelled_waits() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_client_receive").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_client_receive", &[]).unwrap();
     let start = generated.find("static V fwp_remote_call(").unwrap();
     let end = start + generated[start..].find("\n/*").unwrap();
     let mut method = generated[start..end].to_owned();

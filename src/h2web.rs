@@ -1153,7 +1153,7 @@ mod tests {
             arc: false,
             ..previous.clone()
         });
-        let generated = crate::cgen::generate_library(&program, "body_bounds");
+        let generated = crate::cgen::generate_library(&program, "body_bounds", &[]);
         crate::cgen::set_native_options(previous);
         let (generated, _) = generated.unwrap();
         let descriptor = generated

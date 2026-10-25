@@ -1099,7 +1099,7 @@ fn native_tls_preserves_socket_errors_and_clean_shutdown() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "tls_errors").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "tls_errors", &[]).unwrap();
     let hooks = r#"
 #if defined(_WIN32) && !defined(_WIN32_WINNT)
 #define _WIN32_WINNT 0x0a00

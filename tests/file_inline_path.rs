@@ -20,7 +20,7 @@ fn inline_paths_preserve_display_and_reduce_constructor_allocations() {
         exports: vec![("probe".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "inline_file").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "inline_file", &[]).unwrap();
     let start = generated
         .find("static V fwp_file_value(FILE *f, const char *path) {")
         .unwrap();

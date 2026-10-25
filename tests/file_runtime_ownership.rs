@@ -21,7 +21,7 @@ fn file_aliases_and_borrowed_io_unwind_preserve_stream_owners() {
         exports: vec![("probe".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&p, "file_owners").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&p, "file_owners", &[]).unwrap();
     let hooks = r#"
 #include <stdio.h>
 #include <stdlib.h>

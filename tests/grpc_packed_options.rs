@@ -29,7 +29,7 @@ fn tls_options_use_one_allocation_and_release_after_the_last_owner() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_packed").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_packed", &[]).unwrap();
     assert!(generated.contains("#define FWP_GCTX_OWNERS 1"));
     let hooks = r#"
 #if defined(_WIN32) && !defined(_WIN32_WINNT)

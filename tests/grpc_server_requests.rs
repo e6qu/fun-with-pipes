@@ -29,7 +29,7 @@ fn served_requests_survive_resets_jobs_and_retained_inputs() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "request_owners").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "request_owners", &[]).unwrap();
     let finalizer = "static void g_stream_final(void *p) {";
     assert_eq!(generated.matches(finalizer).count(), 1);
     let generated = generated.replace(finalizer, &format!("{finalizer}\n    request_finals++;"));

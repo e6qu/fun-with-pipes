@@ -142,7 +142,7 @@ fn exported_boxes_are_reclaimed_and_host_strings_survive() {
         interp.call_root(6, vec![Value::I64(0)]).unwrap(),
         Value::Str("okok".into())
     );
-    let (source, _) = fwp::cgen::generate_library(&program, "ownership").unwrap();
+    let (source, _) = fwp::cgen::generate_library(&program, "ownership", &[]).unwrap();
     let observed = source
         .replace("static V fwp_data(uint32_t", "static V observed_data, observed_string; static size_t data_calls;\nstatic V fwp_data(uint32_t")
         .replacen("return PTR(o);", "data_calls++; observed_data = PTR(o); return PTR(o);", 1)
@@ -255,7 +255,7 @@ fn exported_names_cannot_collide_with_result_release_functions() {
     });
     let mut p = program();
     p.exports.push(("fwp_release_text".into(), 0));
-    let error = fwp::cgen::generate_library(&p, "collision").unwrap_err();
+    let error = fwp::cgen::generate_library(&p, "collision", &[]).unwrap_err();
     assert!(
         error.contains("generated result release `fwp_release_text`"),
         "{error}"
@@ -263,6 +263,6 @@ fn exported_names_cannot_collide_with_result_release_functions() {
     let mut p = program();
     p.exports.push(("same-name".into(), 0));
     p.exports.push(("same_name".into(), 0));
-    let error = fwp::cgen::generate_library(&p, "collision").unwrap_err();
+    let error = fwp::cgen::generate_library(&p, "collision", &[]).unwrap_err();
     assert!(error.contains("same C name `same_name`"), "{error}");
 }

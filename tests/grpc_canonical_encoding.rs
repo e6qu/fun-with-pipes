@@ -29,7 +29,7 @@ fn canonical_encoding_scratch_releases_on_partial_and_transcoder_failure() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_canonical").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_canonical", &[]).unwrap();
     let mut generated = generated;
     for (before, after) in [
         (
@@ -149,7 +149,7 @@ fn canonical_decoding_scratch_releases_on_malformed_values_and_allocation_traps(
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (mut generated, _) = fwp::cgen::generate_library(&program, "grpc_decode").unwrap();
+    let (mut generated, _) = fwp::cgen::generate_library(&program, "grpc_decode", &[]).unwrap();
     for (before, after) in [
         (
             "pb_decode(k->schema, k->node, msg, n, &canon)",

@@ -185,7 +185,7 @@ fn library_input_copies_transfer_or_release_exactly_once() {
     assert!(interp
         .call_root(9, vec![Value::Str("prior".into())])
         .is_err());
-    let (source, _) = fwp::cgen::generate_library(&p, "inputs").unwrap();
+    let (source, _) = fwp::cgen::generate_library(&p, "inputs", &[]).unwrap();
     let observed = source
         .replace("static V fwp_data(uint32_t", "static V strings[32], data[32]; static unsigned drops[32]; static int ns, nd, fail_record;\nstatic V fwp_data(uint32_t")
         .replacen("return PTR(o);", "if(nd<32) data[nd++]=PTR(o); return PTR(o);", 1)
@@ -349,7 +349,7 @@ fn byte_pointer_export_parameters_report_the_missing_length() {
         fwp::ffi::CType::Bytes
     );
     assert_eq!(
-        fwp::cgen::generate_library(&p, "bytes").unwrap_err(),
+        fwp::cgen::generate_library(&p, "bytes", &[]).unwrap_err(),
         "exported function `size`: `Bytes` parameters have no length in the C export ABI"
     );
 }

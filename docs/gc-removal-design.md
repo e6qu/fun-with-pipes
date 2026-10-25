@@ -158,29 +158,21 @@ applications likewise keep their captures; weak observation must not shorten
 that lifetime. The parser/AD row preserves current scoped guarantees; A6 adds
 the new count-free parser region after GC removal.
 
-**Retained C callbacks remain the next boundary to design and implement.** A
-plain C function pointer cannot carry a closure's captures. The current scoped
-trampoline looks up its context on the active foreign-call stack, which expires
-at return. Simply retaining the closure would leave that lookup invalid. An
-explicit context-bearing protocol must own the closure, stop accepting new
-calls on unregister, and release captures only after active calls finish or
-unwind. Reentrant unregister must not wait for its own active call. Host calls,
-registration and release must use the owning scheduler; arbitrary external
-thread entry is not currently supported. Managed results need independent,
-explicit release, just as existing exported string results do. Reuse the export
-conversion/release machinery where applicable, but do not silently reinterpret
-a scoped callback or introduce generated executable trampolines.
+**Retained C callbacks have an explicit candidate protocol.**
+[Selected C exports](retained-callbacks.md) can register copied leading arguments
+and invoke the final argument later. One host owner controls registration;
+active calls borrow its captures. Close prevents entry; release consumes that
+owner; destruction waits for active calls to return or unwind. Neither blocks
+inside reentry. Host delivery must stop before release, and all calls/results/
+registrations must finish before unload. Calls use the OS thread of first entry.
+The compiler cannot infer arbitrary C retention or raw-pointee lifetimes.
 
-Exported function values are currently rejected by `export_sigs` in
-`src/cgen.rs`, and `repr(C)` records reject function fields in `src/ffi.rs`.
-Monomorphization flattens a function's arrow chain into C arguments, so an
-ordinary returned partial application does not by itself establish a retained
-C ABI. Decide the explicit registration representation before changing those
-checks. The required first test is: register a captured value, return from the
-creating fwp call, invoke twice from C, unregister during reentry, complete the
-active call, and prove exactly one capture release. Repeat with cancellation,
-language failure and a managed result released after unregister. No current
-entry or lifecycle guarantee is claimed for this unimplemented protocol.
+Managed results retain their existing independent release functions. The native
+fixture covers repeated calls, nested release, language failure, cancellation,
+partial construction and results surviving registration release. Implementation
+and tests are prepared; integrated validation remains pending. Arbitrary
+runtime-created functions still cannot cross C as values; function fields in
+`repr(C)` records remain rejected. Ordinary scoped callbacks retain their scope.
 
 For remaining rows, G2 records precise ownership and observable release points;
 G3 supplies raw-interpreter/native positive and negative tests. Map every existing tracing-only admission fixture to one of

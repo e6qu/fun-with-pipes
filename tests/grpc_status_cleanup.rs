@@ -29,7 +29,7 @@ fn served_status_messages_release_after_encoding_and_on_cancellation() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_status").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_status", &[]).unwrap();
     let finish = "    g_finish(j->c, j->s, code, msg);";
     assert_eq!(generated.matches(finish).count(), 1);
     let generated = generated.replacen(finish,

@@ -29,7 +29,7 @@ fn grpc_connect_and_handshake_release_pending_resources_on_cancellation() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&p, "grpc_connect").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&p, "grpc_connect", &[]).unwrap();
     let start = generated.find("static g_conn *g_connect(").unwrap();
     let end = start
         + generated[start..]

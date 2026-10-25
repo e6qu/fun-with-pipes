@@ -30,7 +30,7 @@ fn accepted_connections_release_after_startup_io_jobs_and_channels() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (mut code, _) = fwp::cgen::generate_library(&program, "accepted_owners").unwrap();
+    let (mut code, _) = fwp::cgen::generate_library(&program, "accepted_owners", &[]).unwrap();
     for (before, after) in [
         ("static void g_conn_final(void *p) {", "static void g_conn_final(void *p) { if(p==seen_connection)connection_finals++;"),
         ("static void g_accept_loop(fwp_socket_t lfd, const g_server *srv) {", "static fwp_socket_t seen_fd;\nstatic fwp_socket_t connection_accept(fwp_socket_t,struct sockaddr *,socklen_t *);\nstatic SSL *connection_tls(SSL_CTX *,fwp_socket_t);\nstatic void connection_reader(void *,int);\nstatic void g_accept_loop(fwp_socket_t lfd, const g_server *srv) {"),

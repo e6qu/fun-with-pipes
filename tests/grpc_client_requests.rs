@@ -29,7 +29,7 @@ fn client_request_buffers_release_on_encode_trap_and_cancelled_send() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_client_request").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_client_request", &[]).unwrap();
     let mut generated = generated;
     for (before, after, count) in [
         (

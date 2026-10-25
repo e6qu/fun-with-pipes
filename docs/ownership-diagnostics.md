@@ -146,7 +146,12 @@ The current preparation adds the live-address ledger to scoped foreign callback
 entry, nested calls, suspension/cancellation and copied-input tests in
 [foreign_callback_ownership.rs](../tests/foreign_callback_ownership.rs). Existing
 physical-byte checks and deliberately missing-release controls remain independent.
-This does not implement C-retained callbacks.
+Scoped callbacks retain their call-limited contract. The separate
+[retained callback API](retained-callbacks.md) adds a unique registration owner
+and active-call cleanup. Its candidate test checks physical bytes and allocation
+identity through reentry, errors, cancellation and partial construction. Removed
+capture/context cleanup, premature destruction and missing active-call completion
+have distinct fault controls; integrated validation is pending.
 
 The same preparation extends existing external-owner probes to ARC as well as
 tracing. They retain their original failure controls:

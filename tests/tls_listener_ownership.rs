@@ -30,7 +30,7 @@ fn listener_stop_releases_context_after_accepted_sessions_finish() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "tls_owners").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "tls_owners", &[]).unwrap();
     let hooks = r#"
 #include <stdlib.h>
 #include <openssl/ssl.h>

@@ -23,7 +23,7 @@ fn file_storage_disposal_removes_finalizers_before_reuse() {
         exports: vec![("probe".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&p, "file_disposal").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&p, "file_disposal", &[]).unwrap();
     let fixture = r#"
 #include <sys/stat.h>
 static volatile V root, retained;

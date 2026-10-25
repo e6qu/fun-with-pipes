@@ -30,7 +30,7 @@ fn unload_closes_owned_files_sessions_and_transferred_http2_handles() {
             exports: vec![("available".into(), 0)],
             ..Program::default()
         };
-        let (generated, header) = fwp::cgen::generate_library(&p, "resources").unwrap();
+        let (generated, header) = fwp::cgen::generate_library(&p, "resources", &[]).unwrap();
         let hooks = r#"
 #if defined(_WIN32) && !defined(_WIN32_WINNT)
 #define _WIN32_WINNT 0x0a00
