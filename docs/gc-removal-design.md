@@ -195,8 +195,11 @@ direction yet. The first measurement must establish that baseline.
    Preserve the allocator and deterministic resource functions still needed.
    Check repeated work and deliberate cleanup faults, then inspect actual
    binaries for the claimed removal. No dormant compatibility collector.
-5. **Validate the combined result once ready.** Focused checks during steps 1–4;
-   final production matrix and documentation audit for the completed PR. Audit
+5. **Validate the combined result once ready.** G3 and G4 belong in one PR.
+   During implementation run only focused checks needed for a specific change
+   or defect. Once G4 and all included changes are complete, run consolidated
+   local checks within the resource guard, then the final production matrix and
+   documentation audit. Work that exceeds local limits runs on GitHub. Audit
    and batch every failure before a repair push. GC removal completes when the
    agreed entry matrix works without tracing and without unexplained retention.
 

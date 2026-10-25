@@ -38,8 +38,9 @@ collector is not the same as removing these costs. The
    weak references and rejection of unproved owning cycles. Specify the weak
    API and six acceptance examples. Current APIs and layouts are replaceable;
    returned functions and partial applications remain supported.
-2. Implement **G3**, finish the finite **G4** diagnostic gaps and delete tracing
-   in **G5** as one combined batch where practical. Reuse the prepared fault
+2. Implement **G3** and finish **G4** in the same PR; do not publish or validate
+   G3 as a separate completed batch. Include tracing deletion **G5** where
+   practical. Reuse the prepared fault
    checks; do not repeatedly expand diagnostics instead of removing tracing.
    Keep existing stress checks until replacement coverage is demonstrated.
    ARC minimization **A2–A6** is distinct from completing GC removal.
@@ -351,13 +352,22 @@ rules; [feasibility limits](docs/design-limits.md) bound the guarantees.
 
 ## Delivery and acceptance
 
-Keep the remaining GC-removal work in one combined PR where practical. Iterate
-with focused tests on a draft branch/PR; run the complete production matrix at
-final acceptance, not for each internal step. Batch all known repairs before
-repeating that final gate. Existing #214 validation can finish independently.
+G3 and G4 must ship in the same PR. Keep the remaining GC-removal work together
+where practical. During implementation, run only checks justified by a changed
+contract, a specific defect or an unresolved concern; do not repeat passing suites
+after every edit or launch full CI for intermediate commits. Write the required
+tests alongside the implementation, even when their broad execution is deferred.
+
+After G4 and all other changes included in the PR are complete, perform one
+consolidated local validation, then the full final-head CI matrix. Local checks
+remain serial and resource-guarded; record checks that cannot fit the limits and
+run those on GitHub rather than bypassing the guard. Batch all known repairs
+before repeating affected checks and required final gates. Existing #214
+validation can finish independently.
 Follow [AGENTS.md](AGENTS.md) and
 [Contributing](CONTRIBUTING.md): all nine final-head production jobs plus the
 documentation gate must pass. Memory claims also need the relevant failure,
 cancellation, reuse and actual-binary evidence. A merge is not proof that every
 roadmap milestone is complete. Full builds and measurements run on GitHub;
-local focused checks use `scripts/local-guard.py` without raising its limits.
+the consolidated local checks use `scripts/local-guard.py` without raising its
+limits. Local resource limits do not waive final CI coverage.

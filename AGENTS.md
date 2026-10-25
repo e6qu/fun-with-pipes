@@ -50,8 +50,8 @@ implementation of currently supported external protocols.
   at a time. Fix every encountered issue immediately, including unrelated or
   pre-existing issues, regardless of who caused them. Do not hide or defer fixes;
   record the repair and verification. Queued CI gates merging, not independent work.
-- Iterate with focused checks on a draft branch/PR; reserve the full production
-  matrix for the completed combined batch. Do not run all suites per small change.
+- Bundle G3/G4 in one PR. Run only necessary focused checks during implementation;
+  after G4, validate locally under the guard and run the full final-head CI matrix.
 - Before pushing a CI repair, audit every failed job and completed test target,
   fix underlying causes and check affected callers. Batch all known fixes into
   one push; preserve passing final heads while their remaining gates run.

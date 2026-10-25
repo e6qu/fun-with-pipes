@@ -10,8 +10,13 @@ use regions for bounded work. Preserve returned functions and partial applicatio
 Current APIs and layouts are replaceable; the weak API is not implemented.
 Worktree `/private/tmp/fwp-ownership-fault-matrix`, branch `ownership-fault-matrix`,
 starts from preparation `517de6e1e77c05ce7dc3577e21258ea605363168` on #214's head.
-Use focused checks while developing; keep the eventual PR draft until the batch
-is ready for all final production gates. Do not run full suites per internal step.
+G3 and G4 must be in the same PR. Keep it draft until both and all other included
+changes are complete. During development run only checks justified by a changed
+contract or specific issue; do not rerun passing suites or full CI per edit.
+Then perform one consolidated local validation under the existing resource guard
+and the full final-head CI matrix. Record any workloads moved to CI because they
+cannot fit local limits. Add tests with the code; defer broad execution, not
+coverage. Include G5 in the same group where practical.
 
 The follow-on publisher PID 46922 was stopped on October 25 at the user's request
 to consolidate this work. Its status is `stopped-for-combined-gc-removal` in
