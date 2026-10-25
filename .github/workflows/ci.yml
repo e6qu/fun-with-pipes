@@ -87,6 +87,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/ownership-inventory"
           rustc --version > "$RUNNER_TEMP/ownership-inventory/rustc.txt"
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output "$RUNNER_TEMP/ownership-inventory/candidate.json" 2>&1 | tee "$RUNNER_TEMP/ownership-inventory/audit.log"
+          python3 scripts/inventory-memory-diagnostics.py --source "$FWP_INVENTORY_EXPECTED_HEAD" --output "$RUNNER_TEMP/ownership-inventory/memory-diagnostics.json"
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -345,6 +346,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/ownership-inventory"
           rustc --version > "$RUNNER_TEMP/ownership-inventory/rustc.txt"
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output "$RUNNER_TEMP/ownership-inventory/candidate.json" 2>&1 | tee "$RUNNER_TEMP/ownership-inventory/audit.log"
+          python3 scripts/inventory-memory-diagnostics.py --source "$FWP_INVENTORY_EXPECTED_HEAD" --output "$RUNNER_TEMP/ownership-inventory/memory-diagnostics.json"
       - uses: actions/upload-artifact@v7
         if: always()
         with:

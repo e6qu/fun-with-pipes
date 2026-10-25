@@ -10,6 +10,12 @@ fn checked(command: &mut Command) -> Output {
     output
 }
 
+#[path = "support/ownership_ledger.rs"]
+mod ownership_ledger;
+
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
 #[test]
 fn arc_programs_match_raw_interpreter_and_reclaim_escaped_values() {
     let dir = std::env::temp_dir().join(format!("fwp-arc-{}", std::process::id()));
@@ -113,6 +119,7 @@ main = range 0 129 | map (choose | checks) | length | echo
             let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t arc_budget = fwp_gc.budget;\n")
                 .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < arc_budget || fwp_gc.freed <= 0) { fprintf(stderr,\"ARC unreclaimed bytes: %ld\\n\",(long)(arc_budget-fwp_gc.budget)); exit(193); }\n");
             let measured = format!("{runtime}{main}");
+            let measured = ownership_ledger::instrument_native(&measured, 1 << 20);
             if let Some(path) = std::env::var_os("FWP_ARC_ARTIFACTS") {
                 let destination = std::path::PathBuf::from(path);
                 std::fs::create_dir_all(&destination).unwrap();
@@ -190,7 +197,7 @@ main = range 0 129 | map (choose | checks) | length | echo
                     .unwrap();
                 assert_eq!(
                     actual.status.code(),
-                    Some(193),
+                    Some(205),
                     "scheduler retention must fail the ledger: {actual:?}"
                 );
             }
@@ -212,7 +219,7 @@ main = range 0 129 | map (choose | checks) | length | echo
                     .unwrap();
                 assert_eq!(
                     actual.status.code(),
-                    Some(193),
+                    Some(205),
                     "physical-free omission must fail the ledger"
                 );
                 let forced = measured.replace(
@@ -662,5 +669,164 @@ int main(void) {
             "recursive control: {failed:?}"
         );
         std::fs::remove_dir_all(dir).unwrap();
+    }
+}
+
+#[test]
+fn native_ownership_ledger_detects_bad_events_without_retaining_storage() {
+    let dir = fwp::cgen::TempDir::new("ownership-ledger").unwrap();
+    let source = dir.join("main.fwp");
+    std::fs::write(&source, "main = ()\n").unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    for memory in ["dynamic", "static"] {
+        let cfile = dir.join(format!("{memory}.c"));
+        checked(
+            Command::new(compiler)
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_REUSE", "1")
+                .args([
+                    "build", "--gc", "arc", "--memory", memory, "--emit-c", "-O1",
+                ])
+                .arg(&source)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let emitted = std::fs::read_to_string(cfile).unwrap();
+        let mut code = ownership_ledger::instrument_native(&emitted, 64);
+        let main = "static void *fwp_main_thread(void *arg) {";
+        assert_eq!(code.matches(main).count(), 1);
+        code = code.replace(
+            main,
+            &format!(
+                "{}\n{main}",
+                include_str!("fixtures/ownership_ledger_probe.c")
+            ),
+        );
+        let start = "    fwp_init_consts();\n";
+        assert_eq!(code.matches(start).count(), 1);
+        code = code.replace(start, &format!("{start}    run_owner_ledger_probe();\n"));
+        let finish = "    owner_ledger_finish();\n";
+        assert_eq!(code.matches(finish).count(), 1);
+        code = code.replace(finish, &format!("{finish}    if (fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget != fwp_gc.budget_given) owner_ledger_error(207, \"physical allocation balance differs\");\n"));
+        for opt in ["-O1", "-O2"] {
+            let binary = dir.join(format!("{memory}{opt}.exe"));
+            let run = |executable: &std::path::Path, case: &str, rounds: &str| {
+                Command::new(executable)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .env("FWP_LEDGER_CASE", case)
+                    .env("FWP_LEDGER_ROUNDS", rounds)
+                    .output()
+                    .unwrap()
+            };
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            for rounds in ["8", "1024"] {
+                let output = run(&binary, "exercise", rounds);
+                record_probe::save(
+                    "ownership-ledger",
+                    &format!("{memory}{opt}-exercise-{rounds}"),
+                    &code,
+                    &binary,
+                    &output,
+                );
+                assert!(
+                    output.status.success(),
+                    "{memory}/{opt}/{rounds}: {output:?}"
+                );
+                assert!(output.stdout.is_empty() && output.stderr.is_empty());
+            }
+            for (case, expected, diagnostic) in [
+                ("shared-object", 0, ""),
+                ("shared-array", 0, ""),
+                ("physical-free", 0, ""),
+                ("duplicate-address", 201, "still live"),
+                ("double-free", 202, "free of a dead"),
+                ("interior-free", 202, "interior"),
+                ("stale-dup", 203, "count operation on a dead"),
+                ("stale-drop", 203, "count operation on a dead"),
+                ("stale-last", 203, "count operation on a dead"),
+                ("missing-release", 205, "live allocations remain"),
+                ("capacity", 206, "capacity exceeded"),
+            ] {
+                let output = run(&binary, case, "8");
+                record_probe::save(
+                    "ownership-ledger",
+                    &format!("{memory}{opt}-{case}"),
+                    &code,
+                    &binary,
+                    &output,
+                );
+                assert_eq!(
+                    output.status.code(),
+                    Some(expected),
+                    "{memory}/{opt}/{case}: {output:?}"
+                );
+                assert!(output.stdout.is_empty());
+                if expected == 0 {
+                    assert!(output.stderr.is_empty());
+                } else {
+                    assert!(String::from_utf8_lossy(&output.stderr).contains(diagnostic));
+                }
+            }
+            for (name, case) in [
+                ("fwp_rc_unique", "shared-object"),
+                ("fwp_rc_unique_mut", "shared-array"),
+            ] {
+                let start = code
+                    .find(&format!("static inline int {name}_observed_body(V v) {{"))
+                    .unwrap();
+                let end = start + code[start..].find("\n}").unwrap();
+                let guard = "if (!c || *c != 1) return 0;";
+                assert_eq!(code[start..end].matches(guard).count(), 1);
+                let mut broken = code.clone();
+                broken.replace_range(
+                    start..end,
+                    &code[start..end].replace(guard, "if (!c || !*c) return 0;"),
+                );
+                let binary = dir.join(format!("{memory}-{case}{opt}.exe"));
+                fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
+                let output = run(&binary, case, "8");
+                record_probe::save(
+                    "ownership-ledger",
+                    &format!("{memory}{opt}-broken-{case}"),
+                    &broken,
+                    &binary,
+                    &output,
+                );
+                assert_eq!(
+                    output.status.code(),
+                    Some(204),
+                    "{memory}/{opt}/{case}: {output:?}"
+                );
+                assert!(String::from_utf8_lossy(&output.stderr)
+                    .contains("reuse selected without one live counted owner"));
+            }
+            let needle = "    owner_ledger_free(p);\n";
+            assert_eq!(code.matches(needle).count(), 1);
+            let broken = code.replace(
+                needle,
+                &format!("{needle}    return; /* deliberately omit physical free */\n"),
+            );
+            let binary = dir.join(format!("{memory}-missing-physical-free{opt}.exe"));
+            fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
+            let output = run(&binary, "physical-free", "8");
+            record_probe::save(
+                "ownership-ledger",
+                &format!("{memory}{opt}-missing-physical-free"),
+                &broken,
+                &binary,
+                &output,
+            );
+            assert_eq!(
+                output.status.code(),
+                Some(207),
+                "{memory}/{opt}: {output:?}"
+            );
+            assert!(String::from_utf8_lossy(&output.stderr)
+                .contains("physical allocation balance differs"));
+        }
     }
 }

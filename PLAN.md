@@ -12,11 +12,12 @@ checked arithmetic, and observable effect/failure order.
 
 ## Where we are
 
-PR #212 delivered list-to-array moves, array-sort reuse (**A1**) and the supported
-entry/rejection checklist (**G1**). Its final revision passed all nine production
-jobs and the documentation gate. Native packages cover Linux, macOS and Windows on ARM64 and
-AMD64, one binary per target. [The handoff](docs/development-state.md) records
-source IDs, the current task and checks still needing review.
+PR #213 delivered the scoped subscriber and its success/failure/cancellation/
+reentry checks on all six native targets. A1's array moves/reuse and G1's entry
+matrix were delivered in #212. All final-head production and documentation gates
+passed for both. [The handoff](docs/development-state.md) records exact source IDs
+and current checks. Native packages cover Linux, macOS and Windows on ARM64 and
+AMD64, one binary per target.
 
 **GC removal is incomplete.** Native execution defaults to checked ARC;
 accepted programs omit tracing code. Explicit tracing mode and collector-specific
@@ -32,13 +33,15 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. Complete **G2–G3**: specify cycle/retention rules and verify each accepted
-   lifetime. The current group adds a task-owned, streaming subscription with
-   normal finish, callback failure, cancellation, reentry and per-round cleanup
-   controls. It uses existing task/channel APIs; native integrated checks remain.
-2. Resolve the remaining tracing-only graph cases explicitly before deleting
-   tracing. Then complete **G4**'s diagnostic replacement inventory and controls.
-   Continue **A2**'s measured count accounting alongside this ownership work.
+1. Continue **G4** with collector-independent memory checks. The current group
+   adds native live-allocation and reuse diagnostics, faulty-implementation
+   controls and an inventory of collector settings. Keep existing stress and
+   poisoning checks until their replacement coverage is demonstrated.
+2. Finish **G2–G3**'s remaining graph decision before **G5** deletes tracing:
+   retain the current ARC restrictions with scoped tasks/graph IDs, or add an
+   explicit cycle-breaking API first. The user's answer is still pending; the
+   scoped subscriber is already supported. Continue **A2**'s count accounting
+   independently of that decision.
 3. Use **B1** to set per-workload timing budgets before selecting further CPU or
    differentiation optimizations. Keep slower and inconclusive results visible.
 
@@ -65,21 +68,9 @@ The table is an index; the concrete work follows it.
 
 ## 1. Remove tracing GC
 
-**G1 — Supported execution matrix (delivered in #212).** The
-[entry and rejection checklist](docs/ownership-admission.md) maps maintained
-entries to execution tests and separates invalid scopes, unproved graphs and
-C host obligations. Seven named source fixtures now check raw/optimized rejection
-against tracing emission; all final-head gates passed. Extend this matrix,
-rather than recounting completed primitive contracts. Use
-`tests/arc_corpus.rs`, `tests/wasm_arc.rs`, the library/foreign-callback tests,
-and HTTP/gRPC tests to list each maintained entry: executable, command, native
-library, synchronous/asynchronous WASI, browser loader and service. For each
-rejection record the smallest source example, diagnostic, owner that is missing,
-and whether the example is invalid or needs a supported lifetime contract.
-Include recursive channel payloads, queued `H2Stream` handles, unknown task or
-callback producers, retained C callbacks and managed callback results.
-**Done:** every row has an executed check or an explicit rejection test; no
-unexpected ARC rejection is accepted merely by counting it.
+**G1 — Delivered in #212.** The [entry/rejection matrix](docs/ownership-admission.md)
+maps maintained entries to executed checks and precise raw/optimized rejection
+controls. Extend it when adding entries; do not repeat the completed inventory.
 
 **G2 — Set the cycle and retention contract.** Review `src/arc.rs`,
 `src/arc_scope.rs` and the channel/foreign interfaces against G1. Write concrete
@@ -94,12 +85,12 @@ and prevention of reintroducing a strong cycle after acquisition.
 **Done:** each example has an agreed accepted form or precise rejection, with
 no promise to infer arbitrary foreign lifetimes or reclaim arbitrary ARC cycles.
 
-Current G2–G3 group: [the cycle contract](docs/ownership.md#cycle-and-retention-contract)
+Delivered G2–G3 subset (#213): [the cycle contract](docs/ownership.md#cycle-and-retention-contract)
 and [lesson 24](docs/tutorials/24-subscriptions/README.md) specify a streaming,
 task-owned subscriber using existing primitives. `tests/arc_tasks.rs` now checks
 failure, active/unstarted cancellation, reentry, repeated awaits and per-round
-reclamation, with deliberately broken cleanup controls. Focused macOS checks pass;
-final integrated CI remains. The tracing-only queue/task/stream decisions in
+reclamation, with deliberately broken cleanup controls. All nine production jobs
+and documentation passed. The tracing-only queue/task/stream decisions in
 [the admission matrix](docs/ownership-admission.md) remain separate unfinished work.
 
 **G3 — Implement the missing agreed contracts.** For each accepted G2 form, add
@@ -122,6 +113,13 @@ failure controls are the starting point, not missing features to reimplement.
 **Done:** every replacement detects an intentionally broken implementation;
 repeat counts grow while post-operation storage stays at the declared baseline.
 Do not replace a diagnostic with permanent poisoned-object retention.
+
+Current G4 group: [the diagnostic guide](docs/ownership-diagnostics.md) specifies
+the live-address ledger, existing byte checks, deliberately broken controls and
+remaining gaps. It is applied to the native ARC corpus and dynamic/static probes.
+The inventory retains source/hash/line evidence; it is not itself a coverage proof.
+Next after integration: complete the reuse/borrow fault matrix, then the separate
+WASI/external-resource mapping before removing any collector diagnostics.
 
 **G5 — Delete tracing.** After G1–G4, remove tracing selection and code from
 `src/main.rs`, code generation, runtime allocator/root discovery, host adapters,

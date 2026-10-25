@@ -47,8 +47,9 @@ execution forms, their tests and the remaining lifetime decisions.
 - Define or reject the remaining cycle/retention cases: recursive channel owners,
   queued HTTP stream handles, unknown callback/task producers and retained foreign
   callbacks. See [the cycle contract](#cycle-and-retention-contract).
-- Replace collector-dependent diagnostics with tested ownership checks, then
-  remove tracing selection, root scanning, marking and sweeping.
+- Finish [collector-independent diagnostics](ownership-diagnostics.md), including
+  the native live-allocation ledger and separate borrow/WASI/resource checks,
+  then remove tracing selection, root scanning, marking and sweeping.
 - Remove avoidable counts and boxes from named unshared paths. A zero-retain
   fixture may still allocate or check a count when freeing storage. A completely
   unique heap ownership path without count metadata is separate planned work.

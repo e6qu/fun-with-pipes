@@ -2,6 +2,9 @@
 use std::io::Write;
 use std::process::{Command, Output, Stdio};
 
+#[path = "support/ownership_ledger.rs"]
+mod ownership_ledger;
+
 #[test]
 fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/run");
@@ -108,6 +111,7 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
             );
             let late_option = include_str!("fixtures/arc_late_option.c");
             let measured = format!("{runtime}{late_option}\n{main}");
+            let measured = ownership_ledger::instrument_native(&measured, 1 << 20);
             let binary = scratch.join(format!("{name}.exe"));
             if let Err(error) = fwp::cgen::compile_c(&measured, &binary, "-O1") {
                 failures.push(format!("native ARC build of {name}: {error}"));
