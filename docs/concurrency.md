@@ -112,8 +112,9 @@ when an effect must occur after another task's effect.
 A native task-enabled program adds a counter decrement and branch at safe
 points, and switches when its slice expires. That is real scheduling overhead;
 the old isolated Fibonacci observation does not establish its cost for other
-workloads. The collector finds the values of a task that is switched out at a safe point
-as at any other switch: on its stack and in its saved registers.
+workloads. In explicit tracing mode, the collector finds suspended task values
+on their stacks and in saved registers. Default checked ARC releases values
+through their owners instead of scanning stacks.
 
 On glibc Linux, the saved register image occupies an aligned region
 at the top of each child's existing stack allocation; active call frames use
@@ -165,7 +166,7 @@ tasks waiting on it, which then fail with a "closed" error.
 A UDP socket can have several owners: for example, the caller and a function
 that captures it for a task. Closing one copy closes the shared socket. Otherwise
 it stays open until its final owner finishes. Returned address strings and received
-bytes are independent values. The [ownership notes](ownership.md#udp-socket-owners)
+bytes are independent values. The [ownership notes](ownership.md#original-resource-semantics)
 separate the lifetime rule from current implementation and validation status.
 
 `signal.shutdown-requested ()` becomes true after SIGINT or SIGTERM (its

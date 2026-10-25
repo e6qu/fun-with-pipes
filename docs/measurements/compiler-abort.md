@@ -2,9 +2,8 @@
 
 The compiler aborted while checking a console program in [PR #210's original
 CI run](https://github.com/e6qu/fun-with-pipes/actions/runs/40091968517/job/120866324330).
-**The cause remains unknown. Passing reruns are not a repair.** This investigation
-must finish before accepting that PR. See [the handoff](../development-state.md)
-for the current action.
+**The cause remains unknown. Passing reruns are not a repair.** The user merged that PR after its final CI passed; the abort itself remains an
+open defect. See [the handoff](../development-state.md) for current work.
 
 ## What the crash establishes
 
@@ -65,7 +64,8 @@ fails. CI retains their C, binaries, stderr and exit statuses.
 The diagnostic change also introduced a Clippy needless-borrow error. That is
 repaired. Native tests now run even if lint fails, and Python SDK checks explicitly
 build their required compiler, so an earlier failure cannot hide independent test
-results. Final-head CI is still required.
+results. The final #210 production and documentation jobs passed; the original
+abort remains unexplained.
 
 ## Source lifetime review
 
@@ -75,14 +75,13 @@ No further allocator-cookie or disassembly-led experiments are planned.
 Macro invocation bypassed the interpreter entry method that joins child tasks on
 success and cancels them on failure. A regression invokes two macros that spawn
 printing children. The existing compiler accepts the program but prints neither
-child message. The candidate routes macros through `call_root`, with their
+child message. The merged repair routes macros through `call_root`, with their
 explicit arguments, and uses the same entry method for `comptime`. The original
 nine failing-test inputs do not invoke macros: this repair is not a causal
-explanation of that abort. Both focused hosts pass the macro regression; full
-delivery acceptance remains pending.
+explanation of that abort. Both focused hosts pass the macro regression; the final #210 production matrix also passed.
 
 The wider review found background gRPC workers excluded from child joining even
-though they borrow the program and writers. The candidate now closes the pool,
+though they borrow the program and writers. The merged repair closes the pool,
 cancels and joins background workers before entry return, and propagates Rust
 panics only after cleanup. Blocking calls restore the scheduling turn during
 unwinding. Public entry methods enforce this boundary; writers require `Send`,
@@ -100,7 +99,8 @@ and drains connections registered while shutdown waits for workers. Source
 on Linux AMD64 and Intel macOS in
 [40122813261](https://github.com/e6qu/fun-with-pipes/actions/runs/40122813261).
 The guard also permits an entry to finish from a Rust destructor during an outer
-panic. Both complete logs are audited; full delivery acceptance remains pending.
+panic. Both complete logs are audited. The final #210 production matrix passed;
+independent final-head binary review was not completed before the user merged.
 The six ignored gRPC measurements are not counted as validation.
 
 For the original console inputs, source review follows `main::build` through

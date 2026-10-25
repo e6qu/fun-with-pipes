@@ -146,5 +146,4 @@ compile commands/times, process RSS, binary hashes, static frames, machine-code
 inspection and failed-attempt evidence. Reporting source `d1467854766fd93fa6e6c768d42f35e83fec3c1a`
 uses unchanged compiler/native-test source `80d8f27e1bf57e4665503d6d1ed1af261f7dc672`;
 [run 39786472473](https://github.com/e6qu/fun-with-pipes/actions/runs/39786472473)
-passes both numerical jobs. The [handoff](../development-state.md) separately tracks
-focused platform coverage and exact-head production acceptance.
+passes both numerical jobs. [PR #197](../roadmap-history.md#borrowed-array-captures-pr-197) records the separate final-head production acceptance.

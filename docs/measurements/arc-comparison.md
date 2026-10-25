@@ -221,4 +221,4 @@ passes all six hosts at `4c294917006b2688a491d088a0cab297b07d274c`.
 96 peak observations, comparison/cleanup failures and reuse controls. Saved C
 matches the recorded builder, and each negative-control source makes exactly its
 intended change. ARC images exclude tracing symbols; tracing controls include them.
-Full production acceptance of the eventual PR remains separate.
+[PR #209](../roadmap-history.md#map-peak-storage-and-explicit-benchmarks-pr-209) records subsequent passing production and documentation checks.

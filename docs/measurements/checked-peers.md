@@ -58,7 +58,9 @@ on AMD64 (AMD EPYC 9V45) and ARM64 (Neoverse-N2), using GCC 13.3.0 and
 Rust 1.99.1. Both complete logs are clean. Independent review covers 92 actual
 executables: 42 timed, 28 managed-storage and 22 peer-control images. Every
 missing-check, missing-cleanup, leak and corrupted-artifact control is detected.
-Full production acceptance of this preparation is still required.
+[PR #210](../roadmap-history.md#collection-cleanup-and-interpreter-shutdown-pr-210) subsequently passed all nine production jobs and documentation.
+The user merged it before independent final-head binary review was completed;
+the focused reviews above do not claim that missing final review.
 
 These are one session per architecture, with the inputs and timing scope above.
 Times are milliseconds. Extra time is `(fwp / peer - 1) × 100%`; negative means

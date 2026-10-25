@@ -20,7 +20,7 @@ These run native ownership/count checks, the actual 32-bit Rust interpreter,
 generated WASI programs and the paired word-frequency measurement. The
 [full report and inspection](unchanged-text-bounds-2026-10-22.json) cover twelve
 comparison binaries, 36 native ownership/size controls and 24 WASI modules.
-Final production acceptance remains separate.
+[PR #192](../roadmap-history.md#string-ownership-and-repeated-file-cleanup-pr-192) records the subsequent passing production and documentation gates.
 
 The same six-variant protocol compares the original `74263bccf8e2` baseline with
 this runtime, using GCC O2 and 24 samples after two warmups. AMD64 is now EPYC
@@ -63,7 +63,7 @@ Candidate `67b684506bb4a7220ed56aec82c45a6c44b09fb0` is retained as
 hardware/compiler details and independent inspection of twelve measured binaries
 and 24 ownership controls. Native O0/O2 tests compare raw/optimized interpretation,
 ARC and stressed tracing. Separate missing trap/cancellation owners must fail.
-WASI and final platform acceptance are tracked in the [handoff](../development-state.md).
+[PR #192](../roadmap-history.md#string-ownership-and-repeated-file-cleanup-pr-192) records the final platform checks, including WASI coverage.
 
 The baseline is the saved generated C from
 `74263bccf8e2e67865e1863e2c04a296a97877bb`. Both versions are compiled with the
@@ -112,8 +112,7 @@ arguments referring to one string, as well as unchanged and changed results.
 and binary hashes of 24 native cleanup controls and four executed WASI modules.
 The WASI exports, memory limits and code sections are decoded from the binaries;
 none contains named tracing collector functions. These focused results precede
-the later large-count repairs and final production validation. Their status is
-recorded in the [handoff](../development-state.md).
+the later large-count repairs and final production validation. Those later gates are recorded in [PR #192](../roadmap-history.md#string-ownership-and-repeated-file-cleanup-pr-192).
 
 ## Allocation counts and earlier code/stack measurements
 

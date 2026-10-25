@@ -56,7 +56,9 @@ over that option receives `Some 42` from the inbox. The result is therefore
 
 Checked ARC accepts this ownership direction. The routing queue can own the
 inbox, but the inbox holds only integers and cannot refer back. Recursive channel
-types and queued task or HTTP stream handles still lack the required proof.
+types and queued HTTP/2 streams remain rejected. Known task handles have a
+separate proof that follows their computation, captures and result owners; an
+unknown task producer is still rejected.
 Closing a queue does not discard its messages,
 and receiving transfers the queued owner. Dropping the last owner releases any
 messages that remain; no implicit drain operation is added.
@@ -86,8 +88,9 @@ permits immutable captures, including strings, containers and other proved
 functions. The compiler also admits shared socket handles (`UdpSocket`,
 `Listener`, `Conn`): they cannot own a queue or callback. The
 [socket example and validation status](../../ownership.md#functions-stored-in-channels)
-explain their lifetime and current checks. Captured channels, tasks and HTTP/2
-streams remain rejected. Files have a separate single-use rule that forbids
+explain their lifetime and current checks. Known data-only channels and task computations can also pass when their
+captures and results cannot lead back to the queue. Unknown producers and
+unproved HTTP/2 stream contexts remain rejected. Files have a separate single-use rule that forbids
 capturing them in reusable functions; pass a file as the last argument instead.
 A function using State
 or autodiff must still run inside the required scope after it is received; sending
@@ -130,9 +133,9 @@ Some 8
 ```
 
 The integration checks compare raw interpretation with counted native execution
-and verify reclamation after teardown. Passing evidence for the current revision
-belongs in the [handoff](../../development-state.md); this example alone does not
-prove arbitrary callbacks or graphs safe.
+and verify reclamation after teardown. The [ownership guide](../../ownership.md#functions-stored-in-channels) links the
+separate channel, task and callback checks. This example alone does not prove
+arbitrary callbacks or graphs safe.
 
 [`main.fwp`](main.fwp):
 

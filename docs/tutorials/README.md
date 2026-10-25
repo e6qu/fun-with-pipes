@@ -15,7 +15,7 @@ of the basics.
 | Generated code and editor tooling | 11, 13 |
 | Numerical calculations and derivatives | 12, then 20 |
 | Split a program into services | 6–8, then 14 and optionally 18 |
-| Recursion and memory use | 22 |
+| Recursion and memory use | 22, then 23 for callback/task ownership and graphs |
 | Expose functions as tools | 21; 8 for its HTTP transport |
 
 ## Running the examples

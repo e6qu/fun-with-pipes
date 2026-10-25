@@ -163,5 +163,4 @@ the check for unexpected memory mappings actually executes.
 Reproduce with `.github/workflows/numerics.yml`, `suite=task-contexts` and
 `native_runner=all` at the recorded source. Each host artifact contains 40 binaries
 and 72 process samples, with generated C, symbols, disassembly and toolchain data.
-Full production acceptance remains required; see
-[the handoff](../development-state.md).
+[PR #189](../roadmap-history.md#compact-task-records-and-repaired-native-validation-pr-189) records the subsequent passing production and documentation checks.

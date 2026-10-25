@@ -77,6 +77,6 @@ memory. The counts equal 512 times the accepted single-solve profile.
 
 This initial run checks peak and final storage only. The [subsequent observer](descent-observers.md) passes measurements after every
 solve and controls that deliberately retain a value until exit. This run does not verify that observer or the later capture-local compiler
-changes. Their acceptance is tracked in [the handoff](../development-state.md).
+changes. [PR #198](../roadmap-history.md#local-callback-captures-and-repeated-numerical-work-pr-198) records their later production validation.
 The remaining C/Rust gap needs investigation of computation, checked accesses,
 allocation and output costs; smaller instruction sections do not resolve it.

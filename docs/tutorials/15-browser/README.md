@@ -41,14 +41,14 @@ a WASI sysroot. Tasks need a host that can suspend and resume their execution.
 JavaScript Promise Integration (JSPI) provides that ability directly. On a host
 without JSPI, build with `--wasm-async=asyncify`: Binaryen's `wasm-opt` transforms
 the module to save and restore its execution state. That transformation adds
-code and memory costs; see the [measured example](../../benchmarks.md#webassembly-task-and-browser-loader-ownership).
+code and memory costs; see the [measured example](../../measurements/wasm-host-storage.md#webassembly-task-and-browser-loader-ownership).
 The loader checks here run under Node; they do not establish support in every
 browser engine.
 
 ## fwp itself, in the browser
 
-fwp is written in Rust without dependencies, so it also builds for
-WebAssembly. `scripts/build-playground.sh` builds `web/fwp.wasm` and
+The compiler has a WebAssembly build with host-specific capabilities disabled.
+Its interpreter runs fwp directly; the page does not compile machine code. `scripts/build-playground.sh` builds `web/fwp.wasm` and
 `web/examples/`; serve `web/` and open http://localhost:8000:
 
 ```
@@ -85,11 +85,12 @@ cannot load C code. A program that needs sockets or foreign C functions, or task
 without the required host suspension support, is rejected
 before it starts, with an error that names what is missing. `fwp build` (except
 `--emit-c`), `fwp pipe` and `fwp serve` say that they are not available.
-Deep recursion is limited by the engine's stack, which in a browser is a
-few hundred to a few thousand nested calls; beyond that, the program traps
-with `stack overflow`. The interpreter does not guarantee tail-call elimination.
-Use `loop` or collection consumers for long traversals. List length is limited
-by memory, not inherently by call depth; callbacks can still recurse.
+Ordinary recursion uses the host engine's call stack; its limit depends on the
+engine and program. Eligible direct self-tail calls reuse their frame in the
+interpreter, while the raw interpreter and source debugger retain recursive calls.
+[Lesson 22](../22-recursion-and-sharing/README.md) explains that distinction.
+Use `loop` for explicit bounded-stack iteration. Its callback can still recurse
+or retain growing data; list length alone is not a call-depth limit.
 
 ## Reading the example
 

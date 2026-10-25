@@ -78,7 +78,7 @@ transfers the event to the caller; `.read | apply ()` invokes its callback.
 The captured task remains owned until the callback is released, so receiving an
 event does not invalidate its handle. Raw interpretation and focused native/ARC
 checks pass at the measured source below. The later direct-task-message extension
-has separate validation in [the handoff](../development-state.md).
+has separate validation in [the task-message report](task-channels.md).
 
 ## Programs under test
 

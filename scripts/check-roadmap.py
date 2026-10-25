@@ -17,11 +17,29 @@ def git(*args):
     return subprocess.check_output(["git", *args], cwd=ROOT, text=True)
 
 
+def markdown_headings(text):
+    """Yield ATX headings outside fenced examples, as rendered in the docs."""
+    fence = None
+    for line in text.splitlines():
+        marker = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
+        if fence is not None:
+            if (marker and marker[1][0] == fence[0]
+                    and len(marker[1]) >= len(fence) and not marker[2].strip()):
+                fence = None
+            continue
+        if marker and (marker[1][0] == "~" or "`" not in marker[2]):
+            fence = marker[1]
+            continue
+        heading = re.match(r"^ {0,3}#{1,6} +(.+)$", line)
+        if heading:
+            yield re.sub(r" +#+ *$", "", heading[1]).strip()
+
+
 @lru_cache(maxsize=None)
 def headings(path):
     anchors = set()
     counts = {}
-    for heading in re.findall(r"^#{1,6} +(.+)$", path.read_text(), re.M):
+    for heading in markdown_headings(path.read_text()):
         anchor = re.sub(r"[^\w -]", "", heading.lower()).replace(" ", "-")
         count = counts.get(anchor, 0)
         counts[anchor] = count + 1
@@ -73,7 +91,7 @@ def main():
         check_links(name)
     revisions = {"HEAD"}
     rows = []
-    for row in (ROOT / "docs/roadmap-queue.md").read_text().splitlines():
+    for row in (ROOT / "docs/preparation-records.md").read_text().splitlines():
         if not re.match(r"\| \d+ \|", row):
             continue
         fields = [field.strip().strip("`") for field in row.split("|")]
@@ -87,11 +105,11 @@ def main():
         assert git("rev-parse", tag).strip() == git("rev-parse", old).strip(), (number, tag)
         revisions.update((current, old))
         rows.append(number)
-    assert rows == list(range(rows[0], rows[-1] + 1)), ("queue order", rows)
+    assert rows == list(range(rows[0], rows[-1] + 1)), ("preparation order", rows)
     for revision in sorted(revisions):
         check_subject(revision)
     live = check_handoff()
-    print(f"{len(files)} doc link sets, {len(rows)} immutable queue pairs/tags and "
+    print(f"{len(files)} doc link sets, {len(rows)} immutable preparation pairs/tags and "
           f"{live} roadmap steps pass; commit messages pass")
 
 

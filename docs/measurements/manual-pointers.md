@@ -75,8 +75,7 @@ copying and missing OpenSSL setup on Windows/ARM macOS. The corpus now records
 native compilation errors while continuing through later cases. The new string
 allocation test initially omitted its exported entries; the repaired test checks
 that all four probes are compiled before calling them. Every native target and
-completed job was audited before the combined repair. Earlier preparation runs
-are retained in the handoff's receipts; the source and results above supersede them.
+completed job was audited before the combined repair. The source and results above supersede the earlier preparation runs.
 
 Selecting `native_runner=all` also runs the `pointer_width` job. It compiles the
 Rust interpreter tests for `wasm32-wasip1` and executes them in Node, then runs

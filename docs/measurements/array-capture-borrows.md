@@ -109,7 +109,5 @@ WASI modules. These preserve the existing foreign-storage boundary; they are not
 native-platform evidence or a new WASI array-generation benchmark.
 
 Application measurements must separately establish the declared zero-retain
-requirement, allocation/peak budgets and remaining C/Rust costs. Final delivery
-also needs all production gates and documentation at the exact PR head. The
-[handoff](../development-state.md) records that status; passing this focused
-matrix alone does not authorize a merge.
+requirement, allocation/peak budgets and remaining C/Rust costs. [PR #197](../roadmap-history.md#borrowed-array-captures-pr-197) records passing final-head production and documentation.
+Those delivery checks are separate from the focused measurements above.

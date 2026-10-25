@@ -35,8 +35,7 @@ documentation; you do not need to learn them all before writing a program.
 - **Checked native ownership.** Native builds use checked automatic reference
   counting (ARC), with borrowing and moves where proved. Unproved lifetimes are
   compile errors. `--gc tracing` explicitly selects the tracing collector; its
-  complete removal remains a project goal. The [handoff](docs/development-state.md)
-  records validation of the new default.
+  complete removal remains a project goal. See [memory status](docs/ownership.md#existing-implementation) for its limits.
 - **Numerical programming.** The library includes vectors, matrices, several
   floating-point formats, and automatic differentiation: computing how a
   function's output changes when its inputs change.
@@ -58,8 +57,10 @@ borrowing and storage reuse. It also covers measured CPU performance,
 differentiation, numerical kernels and larger example applications. These are
 active goals; the capabilities and limitations above describe today's compiler.
 The [design limits](docs/design-limits.md) explain achievable guarantees and
-tradeoffs. General cycle prevention and guaranteed tail recursion remain design
-work; use existing checked ARC contracts and `loop` today.
+tradeoffs. Eligible direct self-tail calls already reuse stack frames in native code and
+the interpreter. Resource-bearing frames and general mutual recursion have
+stricter limits; see [tail calls](docs/design.md#tail-calls-and-recursion).
+General owning-cycle support and complete collector removal remain unfinished.
 
 ## Supported platforms
 

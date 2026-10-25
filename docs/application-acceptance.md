@@ -13,9 +13,9 @@ performance and platform requirements in the last column.
 | [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [C/Rust baseline](measurements/wordfreq.md) and [paired/repeated text comparison](measurements/unchanged-text.md) on two Linux hosts | Set time/memory budgets; validate the current runtime and preserve six-platform cleanup evidence |
 | [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and a small tracing control | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | Preserve these observations as ownership changes; allocation-failure coverage remains |
 | [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scaled counting/filtering/CSV/task-file cleanup passes on six hosts; preserve current delivery coverage and separate input/output costs |
-| Numerical pipeline | Map/reduce 65,537 elements and multiply 65×67 by 67×63 matrices, eight rounds | [Existing C/Rust comparison](benchmarks.md#numerical-kernels-and-record-moves) | Repeat current-revision comparisons; set per-size budgets; include a larger numerical application |
+| Numerical pipeline | Map/reduce 65,537 elements and multiply 65×67 by 67×63 matrices, eight rounds | [Existing C/Rust comparison](measurements/numerical-kernels.md#array-and-matrix-kernels-recorded-comparison) | Repeat against current source; add 262,145 elements and 257×259 by 259×255 matrices; set N1 budgets |
 | Derivative application | Rosenbrock descent at 3, 33 and 129 dimensions; 199 updates plus zero/one/1,999-update controls | [AD storage](measurements/ad-application.md), [C/Rust peers](measurements/descent-peers.md), [packed arrays](measurements/packed-descent.md) and [array-owner moves](measurements/array-owner-moves.md) and [borrowed captures](measurements/array-capture-descent.md) on two Linux hosts | Stabilize identical-code timing controls and set per-input budgets; extend nested and platform evidence |
-| Long-running service | Existing HTTP/gRPC clients, handlers, streams and task cancellation | [Service ownership](ownership.md#http-ownership) and [service measurements](benchmarks.md#server-memory-after-completed-remote-calls) | The [API memory scenario](measurements/http-application-memory.md) passed #208 delivery; preserve failure/cancellation and repeated-memory coverage as ownership changes |
+| Long-running service | Existing HTTP/gRPC clients, handlers, streams and task cancellation | [Service ownership](ownership.md#http-ownership) and [service measurements](measurements/remote-server-storage.md#server-memory-after-completed-remote-calls) | The [API memory scenario](measurements/http-application-memory.md) passed #208 delivery; preserve failure/cancellation and repeated-memory coverage as ownership changes |
 
 Before declaring this suite accepted, name the exact revisions, inputs and native
 hosts for each row. Require identical observable results against an independent
@@ -101,10 +101,10 @@ are not resident memory or C/Rust allocation counts. Profiled execution times
 never enter the timing comparison. ARC binaries must omit tracing symbols and
 finish with zero managed charge and collections.
 
-**Status:** the [first Linux C/Rust baseline](measurements/wordfreq.md) passes
-with independently inspected binaries. The [text candidate](measurements/unchanged-text.md)
-adds paired measurements and explicit count requirements. See the
-[session handoff](development-state.md) for the actual validation state.
+The [Linux C/Rust baseline](measurements/wordfreq.md) and
+[paired text comparison](measurements/unchanged-text.md) retain the observed
+counts and timing limits. [B1–B2](../PLAN.md#7-reproducible-comparisons) specify
+how to turn repeated measurements into enforceable budgets.
 
 ## Descent with and without a saved history
 
@@ -173,8 +173,8 @@ budgets remain open. [Per-solve observations](measurements/descent-observers.md)
 require zero managed/raw live storage after every solve and catch a deliberately
 delayed release that final-only checks miss. These finite counts stay below
 tape-generation exhaustion and do not prove a memory bound for arbitrary nesting
-or indefinitely long runs. The [handoff](development-state.md) records current
-delivery gates and the next measurement.
+or indefinitely long runs. [D1–D3](../PLAN.md#5-differentiation) specify the next
+cost and correctness checks.
 
 The [matched-formula comparison](measurements/coordinate-work.md) uses the expanded
 callback-local compiler and adds C/Rust versions of fwp's coordinate formula.
@@ -196,7 +196,7 @@ and deliberately corrupted profiles.
 
 ## Testing unchanged string ownership
 
-The text candidate consumes the source owner for ASCII case conversion,
+The implemented text transformation consumes the source owner for ASCII case conversion,
 trimming and replacement. If bytes do not change, the result receives that owner;
 if bytes change, a new string is created before the old owner is released.
 Other aliases retain their original bytes. Failure and cancellation must release
@@ -222,8 +222,9 @@ disassembly and size records. The explicit baseline source is
 The `file-applications` workflow suite checks larger inputs with the current
 compiler on all six native hosts. It is a cleanup experiment, **not a timing
 comparison or evidence of C/Rust parity**. The [six-host report](measurements/file-applications.md) records focused acceptance,
-actual memory observations and binary inspection. Full delivery status stays in
-the [handoff](development-state.md).
+actual memory observations and binary inspection.
+[PR #207](roadmap-history.md#file-cleanup-and-http-example-checks-pr-207) records
+its complete production validation.
 
 The directory case creates 64 and 1,024 files spread among sixteen visible
 folders and a hidden folder. Names include Unicode, hidden files and five
@@ -317,7 +318,7 @@ Timeouts, compiler crashes and mismatched emitted memory modes fail the inventor
 Recorded ARC rejections are discovery results, not accepted language coverage.
 The ordinary execution snapshots and the runtime ownership tests remain necessary.
 
-The [current inventory](measurements/file-applications.md#which-execution-examples-pass-arcs-checks)
+The [recorded 85-program inventory](measurements/file-applications.md#which-execution-examples-pass-arcs-checks)
 accepts 81 examples in both modes, including manual pointers with explicit caller
 obligations. Three intentionally invalid examples fail ordinary compilation; the
 expired inter-task derivative remains rejected by ARC. Existing `arc_corpus`
@@ -361,7 +362,7 @@ all four variants. Those peaks must not be added.
 The [first baseline](measurements/descent-peers.md) passes both Linux hosts with
 72 independently inspected images. Workload budgets and repeated-host timing
 acceptance remain open. Preserve these samples and slower results before
-choosing the next optimization; the session handoff records ongoing work.
+choosing the next optimization under [D1–D3](../PLAN.md#5-differentiation).
 
 The [packed comparison](measurements/packed-descent.md) adds a fifth implementation: explicit fwp derivatives with
 packed `Array[F64]` storage. Each update reads the previous immutable array at
