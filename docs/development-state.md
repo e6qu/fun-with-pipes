@@ -1,9 +1,10 @@
 # Current work
 
-**Next:** finish auditing production run `40212350477`, fix any additional failures,
-then push one complete repair batch to [PR #215](https://github.com/e6qu/fun-with-pipes/pull/215).
-Run the required gates on that repaired commit. Squash-merge only when all nine
-production jobs and documentation pass. Then continue to G5 tracing deletion.
+**Next:** publish the audited repair batch to [PR #215](https://github.com/e6qu/fun-with-pipes/pull/215)
+and check its complete production/documentation gates. Also audit the remaining
+Linux AMD64 results from older run `40212350477` when available. Fix any additional
+failure. Squash-merge only when all nine production jobs and documentation pass
+the repaired commit. Then continue to G5 tracing deletion.
 
 Worktree: `/private/tmp/fwp-ownership-fault-matrix`; branch: `ownership-fault-matrix`.
 The primary checkout is detached at #209; preserve its operational handoff and
@@ -14,12 +15,14 @@ G3/G4 stay together in this PR. Tracing has **not** been deleted.
 
 Production `40212350477` and documentation `40212350054` test remote head
 `aab769dd1b3fefe290d6cd285ceb83c8f05d70c1`. Documentation failed on a stale evidence
-count, repaired locally. The benchmark passed. Both macOS ARM64 jobs finished
-with failures covered below; Linux, Intel macOS and Windows are still running.
+count, repaired locally. The benchmark passed. All four macOS jobs and both
+Windows jobs finished with failures covered below. Linux ARM64 tests finished
+with the same repaired failures; its later build/evidence checks passed. Linux
+AMD64 is still testing. Its target logs remain to be audited.
 The previous verified run took about 107–133 minutes on Linux and 95–119 minutes
 on Windows; elapsed time alone is not evidence of a stalled suite.
 
-Unpushed repair checkpoints:
+Repair checkpoints in the publication batch:
 
 | Commit | Repair |
 |---|---|
@@ -28,9 +31,12 @@ Unpushed repair checkpoints:
 | `f42ad617` | Precise fault injection, task-root accounting, valid weak-cycle fixture, remaining HTTP/2 test declarations |
 | `4d642b47` | Release an unfinished weak-upgrade result when retaining its target traps |
 
-The working changes also preserve weak-regression C, executables, output and
+Checkpoint `7b1368a1` also preserves weak-regression C, executables, output and
 status with the existing helper, under `record-ownership/weak_channels`.
-No repair push yet: audit all completed targets and remaining job results first.
+Every completed failed job and available target log has been audited. Publish
+the repairs now while the last old Linux job finishes: this workflow has no
+push-cancellation policy, so its remaining evidence can still be collected. The
+earlier wait was a batching choice, not a required gate on publication.
 
 PR #214 passed all nine production jobs (`40187394961`) and docs (`40187394939`).
 Verified squash merge: `6ee33396459986a0fa08464b182d23fd2fe6c136`, subject
@@ -56,8 +62,18 @@ need their own audit; do not infer their results from another architecture.
 | `12607120914`, `windows-native-windows-11-arm` | Early native groups: only library unload failed; five callback/unwind targets passed |
 | `12606727507`, `windows-native-windows-2025` | Same early failure; all other completed targets passed |
 | `12608117743`, `windows-tls_tests-windows-11-arm` | 98 target logs; failures only in output-channel control and library input/result/resource probes |
+| `12607579499`, `windows-tls_tests-windows-2025` | Same four failures across 98 target logs |
+| `12608525765`, `macos-regular-tests-macos-15-intel` | Same four library failures across 132 logs |
+| `12609426520`, `macos-gc-tests-macos-15-intel` | Same output-channel and queued-function failures across 124 logs |
+| `12609572806`, `native-test-logs-ubuntu-24.04-arm` | 256 logs; same seven failing tests in six targets, no additional failure cause |
 
-Retained callbacks passed on macOS and Windows ARM64, including real shared-library
+Completed Windows job logs were also checked beyond the target artifacts: their
+only extra failure was list-copy inspection after an earlier failure skipped its
+producer, covered by the workflow repair. Later command, remote-stream, autodiff,
+golden and reuse steps passed. Full job logs are `job-121226098232.log` and
+`job-121226098427.log` in the artifact directory.
+
+Retained callbacks passed on Linux ARM64, macOS and Windows ARM64, including real shared-library
 loading. All four unwind tests passed on both. All four wide-count tests and all
 19 `wasm_arc` tests passed on macOS ARM64. Weak metadata checks passed there;
 the negative cycle fixture failed to parse before reaching its expected rejection.
@@ -67,6 +83,8 @@ Mac regular crash artifact `12607154104` identifies the intentional abort in the
 passing `cleanup_panic_aborts_before_borrowed_tasks_escape` test. The GC crash
 artifact `12607482264` contains a compiler binary but no crash report. Neither
 establishes recurrence of the [unexplained Intel abort](measurements/compiler-abort.md).
+Intel artifacts `12608956775` and `12608643822` likewise contain only that deliberate
+cleanup-test abort (regular shard) and no crash report (GC shard), respectively.
 
 ## Repairs and focused evidence
 
