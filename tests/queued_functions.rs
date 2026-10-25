@@ -216,8 +216,8 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                 let release = "    if (!t->done || t->stack) abort();";
                 let root_release = "        fwp_mem_free(fwp_root);";
                 let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
-                // Library/WASI and executable shutdown each have a root release.
-                for (needle, count) in [(create, 1), (release, 1), (root_release, 2), (finish, 1)] {
+                // WASI, native executable and loaded-library shutdown each release the root.
+                for (needle, count) in [(create, 1), (release, 1), (root_release, 3), (finish, 1)] {
                     assert_eq!(code.matches(needle).count(), count, "{needle}");
                 }
                 code = code

@@ -30,11 +30,14 @@ fn metadata_capture_releases_after_callbacks_and_escaped_tasks() {
                 body: Body::Prim("tls.available".into()),
             },
             Func {
-                name: "web".into(),
-                arity: 0,
-                locals: vec![],
-                ty: unit,
-                body: Body::Prim("http2.connect".into()),
+                name: "pooled".into(),
+                arity: 1,
+                locals: vec![MT::con("std::String")],
+                ty: MT::Fun(
+                    Box::new(MT::con("std::String")),
+                    Box::new(MT::con("std::Bool")),
+                ),
+                body: Body::Prim("http2.pooled".into()),
             },
             Func {
                 name: "capture".into(),

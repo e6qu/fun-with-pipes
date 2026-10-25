@@ -22,7 +22,8 @@ executable used for bounded probes is not a build dependency.
 PR #215 is ready for review. Production run `40212350477` and documentation
 `40212350054` test `aab769dd1b3fefe290d6cd285ceb83c8f05d70c1`. All nine production
 jobs were scheduled. The C/Rust benchmark job passed. Regular macOS ARM64 finished
-with four failing targets; the other seven native jobs are still running.
+with four failing targets. The ARM64 stress shard finished with three failures
+in two targets; six native jobs are still running.
 Both Windows native artifacts confirm the same `library_unload` settings trap.
 All other completed targets in those artifacts passed, including the five
 callback/unwind targets. Artifacts: `/private/tmp/fwp-215-ci/windows-native-`
@@ -105,6 +106,28 @@ This verifies candidate runtime teardown and the extracted probe; the repaired
 Rust test's direct IR construction still needs the next CI run. The temporary
 source fixture first needed its Network effect and checked library declaration
 corrected; no compiler rule was weakened to admit it.
+
+The macOS ARM64 stress artifact `12607841519` has 124 target logs, all audited.
+`grpc_response_encoding` and `queued_functions` were the only failed targets:
+
+- The output-channel fault control matched both channel and retained-callback
+  `drop(context)` calls. It now identifies the channel's preceding owner reset;
+  the related queue probe uses the same precise, single-occurrence match.
+- The task-owner probe expected two root-release sites. There are now three:
+  WASI, native executable and loaded-library shutdown. Each is still observed.
+- The weak-cycle negative fixture used the reserved word `make` as a name. After
+  renaming it, the candidate rejects its captured channel in both raw and
+  optimized compilation, as intended (`check-fwp-weak-cycle.py`, CPU 0.16 seconds).
+
+All 33 other dummy `http2.connect` declarations in ownership fixtures now use
+`http2.pooled` with its actual signature, preserving HTTP/2 runtime inclusion.
+The extracted output-channel probe passed normal and deliberately broken cases
+at O1/O2 with candidate-generated C (`check-fwp-output-channel.py`, CPU 8.75,
+elapsed 17.71 seconds). The weak metadata, all four unwind and all four wide-count
+tests passed across the two ARM64 shards. Remaining hosts and the repaired final
+head are still required. The affected task-handle fixture also passed ARC/tracing
+at O0/O2 with the candidate compiler (`check-fwp-queued-task-root.py`, CPU 2.45,
+elapsed 4.99 seconds). No broad validation restart or repair push yet.
 
 ## Included implementation
 

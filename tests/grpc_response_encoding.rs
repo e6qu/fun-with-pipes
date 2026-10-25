@@ -19,11 +19,14 @@ fn served_buffers_release_on_decode_encode_traps_and_cancelled_send() {
                 body: Body::Prim("tls.available".into()),
             },
             Func {
-                name: "web".into(),
-                arity: 0,
-                locals: vec![],
-                ty: unit,
-                body: Body::Prim("http2.connect".into()),
+                name: "pooled".into(),
+                arity: 1,
+                locals: vec![MT::con("std::String")],
+                ty: MT::Fun(
+                    Box::new(MT::con("std::String")),
+                    Box::new(MT::con("std::Bool")),
+                ),
+                body: Body::Prim("http2.pooled".into()),
             },
         ],
         exports: vec![("available".into(), 0)],
@@ -238,11 +241,14 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
                 body: Body::Prim("tls.available".into()),
             },
             Func {
-                name: "web".into(),
-                arity: 0,
-                locals: vec![],
-                ty: unit.clone(),
-                body: Body::Prim("http2.connect".into()),
+                name: "pooled".into(),
+                arity: 1,
+                locals: vec![MT::con("std::String")],
+                ty: MT::Fun(
+                    Box::new(MT::con("std::String")),
+                    Box::new(MT::con("std::Bool")),
+                ),
+                body: Body::Prim("http2.pooled".into()),
             },
             // Keep concrete owning entries for the methods and continuations.
             Func {
@@ -453,11 +459,14 @@ fn native_output_channels_borrow_values_and_release_context() {
                 body: Body::Prim("tls.available".into()),
             },
             Func {
-                name: "web".into(),
-                arity: 0,
-                locals: vec![],
-                ty: unit,
-                body: Body::Prim("http2.connect".into()),
+                name: "pooled".into(),
+                arity: 1,
+                locals: vec![MT::con("std::String")],
+                ty: MT::Fun(
+                    Box::new(MT::con("std::String")),
+                    Box::new(MT::con("std::Bool")),
+                ),
+                body: Body::Prim("http2.pooled".into()),
             },
         ],
         exports: vec![("available".into(), 0)],
@@ -477,8 +486,8 @@ fn native_output_channels_borrow_values_and_release_context() {
     let fixture = include_str!("fixtures/grpc_output_channel.c");
     let controls = [
         (
-            "        drop(context);",
-            "/* omit native context release */",
+            "        c->owner.sink_drop = NULL;\n        drop(context);",
+            "        c->owner.sink_drop = NULL;\n        /* omit native context release */",
             0,
             232,
         ),
