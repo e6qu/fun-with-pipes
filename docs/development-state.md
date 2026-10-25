@@ -1,77 +1,93 @@
 # Current work
 
-**Next:** verify the delivery PR from `ownership-diagnostics`. Require all nine
-production jobs plus documentation on its exact final head,
-fix every failure, then squash with `Check native ownership without retaining freed storage`,
-empty body and no trailers. Worktree: `/private/tmp/fwp-ownership-diagnostics`.
+**Next:** finish final-head validation of [PR #214](https://github.com/e6qu/fun-with-pipes/pull/214),
+then publish the prepared ownership fault matrix as the next substantial PR.
+The preparation is `/private/tmp/fwp-ownership-fault-matrix`, branch
+`ownership-fault-matrix`, based on #214's `1591ec72553a1168bc52d5745d1865059c15fede`.
+Do not publish a second active PR or restart passing gates to add these changes.
 
-## This group
+## Delivery in progress
 
-[The diagnostic guide](ownership-diagnostics.md) explains the test-only live-address
-table, which detects duplicate/invalid frees, stale count operations, invalid shared
-reuse and allocations left at cleanup. It runs alongside existing byte-balance
-checks, including a control that records a free but omits physical reclamation.
-The table removes freed entries and retains no objects or dead-address history.
-It does not detect arbitrary raw reads or distinguish a stale pointer after its
-address has been allocated again. Do not call it a complete borrow checker.
+PR #214 adds the live-allocation ledger and collector-setting inventory.
+[Production 40187394961](https://github.com/e6qu/fun-with-pipes/actions/runs/40187394961)
+was running without reported failures when checked on October 25.
+Its regular macOS ARM64 job, benchmark and [documentation 40187394939](https://github.com/e6qu/fun-with-pipes/actions/runs/40187394939)
+passed. Seven platform jobs remain; these are not completed acceptance claims.
+The watcher `/private/tmp/fwp-214-merge-when-green.py` requires all nine production
+jobs and documentation for the exact head, then squash-merges with the single line
+`Check native ownership without retaining freed storage` and empty body.
+It verifies the resulting message and tree. Status:
+`/private/tmp/fwp-214-merge-status.json`. Stop it before a repair push; do not start
+a competing merger. Keep auditing every failed job and completed target together.
 
-The helper now covers the native ARC golden corpus and execution tests, plus
-O1/O2 dynamic/static probes. Eight and 1,024 rounds exercise allocation paths,
-collision deletion and capacity bounds. Existing tracing stress and poisoning
-coverage remains. The workflow records every collector-setting mention with source
-revision, file hash and line text; this is an inventory, not replacement coverage.
-An incidental native WASI allocator-probe filename now explicitly ends in `.exe`.
+## Prepared group
 
-## Baseline and checks
+[The diagnostic guide](ownership-diagnostics.md#borrow-child-and-reuse-fault-matrix)
+maps capture, typed-argument, reuse-token, variant-payload and stack-child faults
+to their observers. ARC probes check live allocation identities as well as physical
+bytes. Stack children now have 8/1,024-round dynamic/static checks; a missing release
+must fail. Duplicate closure destruction must stop before accessing dead metadata.
+Existing tracing/poisoning cases remain. Windows now includes `stack_ownership`;
+native probe paths explicitly end in `.exe`. An added file-owner probe checks
+actual OS closure, shutdown deregistration and byte reclamation separately over
+8/1,024 rounds. It has independent missing-close/registration/free controls.
 
-PR #213 passed all nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40177475991)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40177475958)
-at `0ac1f6f714a1a9a5f62d3d4b14a8db806358d140`. The guarded merge produced
-`11a0f5ac3baea83609577c00d9a9dd7a67f627a3`, with the same tree and verified
-one-line subject. The old merge watcher finished; do not restart it. Duplicate
-postmerge production `40184730062` was cancelled; documentation `40184730066` passed.
+The source review also found null empty-argument slices used in pointer arithmetic
+and a zero-byte `memcpy`. The C runtime now forms pointers only for nonempty cleanup
+spans and copies only nonempty arguments. The callback fixture explicitly enables
+error-handler cleanup. Restoring either old pointer calculation must fail a Unix
+Clang sanitizer check; restoring the unconditional copy must fail a portable copy
+observer. This is a source-level repair, not an explanation of the old Intel abort.
 
-Focused local work uses `python3 scripts/local-guard.py`:
+## Focused checks
 
-- Downloaded and verified #213's macOS ARM64 compiler against its package manifest,
-  SHA-256 `faf994ee0067f5249da86877a7f450efe7cedcfdd433084ebee046319fff47fa`.
-  Package: `/private/tmp/fwp-compiler-213/fwp-macos-arm64/fwp`.
-- Extracted the two changed Rust test functions, preserving their bodies and using
-  a local temporary-directory/C-compiler shim with production C flags. Built at
-  Rust O1 with debug/overflow checks. The full existing ARC execution test passed
-  at native O0/O1/O2, including aliases, failures, scheduler cleanup and the updated
-  missing-release controls. This does not compile the full Cargo target.
-- The new dynamic/static ledger probe passed at O1/O2, including all fault controls.
-  Wraparound and artifact-capture checks also pass; evidence is retained under
-  `/private/tmp/fwp-ownership-ledger-local/record-ownership/ownership-ledger`.
-- Formatting, whitespace and workflow lint pass. Documentation audit passes:
-  158 link sets, 106 immutable preparation records and eight roadmap steps.
-- Collector-setting inventory: 283 tracked files and 2,756 matching lines. File
-  hashes/line contexts and wrong-revision rejection pass. Local report:
-  `/private/tmp/fwp-ownership-ledger-local/memory-diagnostics.json` (dirty checkout
-  recorded explicitly). CI regenerates it for the exact committed revision.
+All commands use `python3 scripts/local-guard.py`, serially. No full local build,
+corpus or benchmark was run. The verified #213 compiler remains at
+`/private/tmp/fwp-compiler-213/fwp-macos-arm64/fwp`, SHA-256
+`faf994ee0067f5249da86877a7f450efe7cedcfdd433084ebee046319fff47fa`.
 
-No full local build, golden corpus or benchmark was run. Integrated CI must compile
-actual Rust targets and execute the entire instrumented ARC corpus on all six hosts;
-local Clang checks do not verify GCC or Windows.
+- Extracted stack tests: three passed, including dynamic/static O1/O2 faults and
+  the original tracing controls. Evidence: `/private/tmp/fwp-stack-matrix-evidence`.
+- Extracted callback test: passed O1/O2 ARC/tracing controls and both restored-null
+  pointer faults. The temporary harness applies exactly the three candidate runtime
+  edits to C emitted by #213; it does not rebuild the candidate compiler. Evidence:
+  `/private/tmp/fwp-callback-matrix-evidence`; extraction script:
+  `/private/tmp/extract-callback-tests.py`.
+- Extracted reuse-token test: success, failure, omitted cleanup and omitted release
+  passed O1/O2. Evidence: `/private/tmp/fwp-token-matrix-evidence`.
+- Twelve saved variant C probes from #213's macOS ARM64 artifact `12594186700`
+  pass after applying the new test instrumentation. Their native settings are
+  O1/O2 for aliases and O0/O2 for payload moves. This does not compile the changed
+  Rust generator target. Evidence: `/private/tmp/fwp-variant-matrix-evidence`;
+  checker: `/private/tmp/check-variant-ledger.rs`.
+
+The new ARC file-owner test also passed locally at O1/O2 for both repeat counts
+and all three deliberately broken controls. Evidence:
+`/private/tmp/fwp-file-matrix-evidence`. Incidental file-test fixes move an inline
+Rust import to the top and give native executables explicit `.exe` paths.
+
+Formatting, whitespace, Windows workflow lint and documentation audit passed.
+The audit checked 158 link sets, 106 immutable preparation pairs/tags and eight
+roadmap steps.
+
+Full compiler/test-target compilation, GCC, Windows, WASI and integrated platform
+coverage remain for the preparation's own final-head CI. Do not cite #214's gates
+as validation of these later changes. Required gates and merge rules are in
+[AGENTS.md](../AGENTS.md) and [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Remaining decisions and preserved work
 
-The earlier cycle-policy question remains unanswered: retain current ARC restrictions
-with scopes/IDs when deleting tracing, or first add an explicit cycle-breaking API.
-Do not infer an answer from silence. This does not block independent G4 work.
-Next after integration: finish the reuse/borrow fault matrix, then the separate
-WASI/external-resource mapping in [the diagnostic guide](ownership-diagnostics.md).
+The cycle-policy question remains unanswered: retain current ARC restrictions with
+scopes/IDs when deleting tracing, or first add an explicit cycle-breaking API.
+Do not infer an answer from silence. Independent G4 work continues: finish the
+WASI/external-resource mapping, including cancellation and external callback entry.
+Neither this matrix nor a zero byte balance proves arbitrary raw borrows safe.
 
-The original intermittent Intel macOS compiler abort remains unexplained. Preserve
-[its evidence](measurements/compiler-abort.md); previous repairs and passing reruns
-are not an established cure. Investigate source lifetimes on recurrence, without
-allocator-cookie/disassembly-led experiments.
-
-The primary checkout remains detached at #209 with an operational handoff and an
-untracked abort report. Preserve both. Old delivery worktrees and their measurements
-are evidence; do not repeat completed preparation. The initial G4 textual inventory
-and notes under `/private/tmp/fwp-g4-*` predate this branch's new ledger.
+Preserve [the unexplained Intel macOS compiler-abort evidence](measurements/compiler-abort.md).
+Investigate recurrence from source lifetimes and inputs, without allocator-cookie
+or disassembly-led experiments. The primary checkout remains detached at #209;
+its operational handoff and untracked abort report must be preserved. Prior worktrees
+and immutable preparation records are evidence, not a backlog to repeat.
 
 ## Roadmap status
 

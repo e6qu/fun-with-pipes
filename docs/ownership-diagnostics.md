@@ -62,6 +62,84 @@ Their own release checks remain required. The byte ledger and live-address table
 are complementary: a missing free can leave an address live, while a recorded free
 with a broken allocator can leave storage charged after its address was removed.
 
+## Borrow, child and reuse fault matrix
+
+The following tests check the owner's lifetime as well as the final program result.
+A *child* is heap data held by another value: for example, the text captured by a
+function or stored inside `Some`. A stack-resident parent can still own a heap
+child, so returning from its C function must release that child.
+
+| Test and boundary | Deliberate fault | Ownership observation |
+|---|---|---|
+| [Borrowed callbacks](../tests/borrowed_callbacks.rs): captured text | Omit the capture's release | The caller's text still has an extra owner; status 4 |
+| Same: typed argument slices | Treat scalar bits resembling an address as an owner | The scalar-shaped input's count changes; status 5 |
+| Same: closure/scalar cleanup | Omit the final scalar or function release | Per-round byte balance fails; status 90 |
+| Same: duplicate destruction | Destroy the empty partial application twice | The second count operation names a freed allocation; status 203, before metadata access |
+| [Reuse tokens](../tests/reuse_token_ownership.rs): failure before reconstruction | Omit the cleanup that releases the emptied outer cell | The live-address table still contains the cell; status 2 |
+| Same: normal reconstruction | Omit the completed result's physical free | Per-round byte balance fails; status 90 |
+| [Variant aliases](../tests/variant_alias_ownership.rs): transferring an existing payload | Insert an extra retain before the transfer | The supposedly consumed allocation remains live, or the payload count is too high; statuses 3/2 |
+| Same: result cleanup | Omit the result's free | Final byte balance or immediate live-address lookup fails; statuses 90/5 for the two probes |
+| [Stack children](../tests/stack_ownership.rs): temporary variant or closure | Remove the generated child release after the call | Live allocations remain at program cleanup; status 205 |
+
+The callback, reuse-token and variant probes check every completed round over 32
+rounds. Their ARC checks now consult the live-address table when checking whether
+an allocation was freed. A zero reference count alone is insufficient: the last
+owner can be released while a broken allocator leaves the storage allocated.
+The stack-child cases run 8 and 1,024 iterations, with dynamic allocation and a
+static pool at O1/O2. Their normal programs must restore both live-address and
+physical-byte balances, and match the raw interpreter. Removing the child release
+must fail at both sizes. These four test targets use explicitly bounded 65,536-slot
+tables (512 KiB on a 64-bit host), outside the managed heap.
+
+Existing tracing/poisoning cases remain alongside these ARC checks. The ordinary
+returned-alias program now also runs in ARC. Tests retain C, executable, outputs and
+status under `record-ownership/{borrowed_callbacks,reuse_token_ownership,
+variant_alias_ownership,stack_ownership}` in the ownership evidence artifacts.
+[The handoff](development-state.md) states which preparation checks have run;
+this table does not claim that unrun platform gates passed.
+
+### Empty callback argument slices
+
+Applying zero supplied arguments is an internal partial-application operation;
+it does not add zero-argument source functions to the language. Its argument slice
+may be null. C does not permit pointer arithmetic on null, even adding zero, or a
+null argument to `memcpy` merely because the byte count is zero. Cleanup now forms
+pointers only for nonempty spans, and partial application copies only nonempty data.
+
+The callback tests enable error-handler cleanup explicitly and exercise the empty
+slice. A copy observer rejects an attempted null copy on every native platform.
+On Unix hosts, separate Clang pointer-arithmetic sanitizer runs check both cleanup
+spans; restoring either old calculation must trigger the sanitizer. These extra
+Clang checks supplement the normal production-compiler tests; they do not establish
+GCC sanitizer or Windows sanitizer coverage. The runtime fix also applies to WASI,
+whose complete tests remain a separate gate.
+
+These are bounded checks for known ownership operations, not a proof that every
+possible stale raw read is detected. An address reused for a new allocation can
+still hide an old pointer. Keep alias/output comparisons and compiler lifetime
+proofs; do not replace them with the table alone.
+
+## File owners: check the OS handle separately
+
+A file value owns both an OS stream and a small heap object describing it.
+[The ARC file probe](../tests/file_storage_disposal.rs),
+`arc_file_owners_close_descriptors_and_release_storage_each_round`, checks these
+separately over 8 and 1,024 rounds at O1/O2. Each round adds and removes 300 aliases,
+then drops the last owner. A second file remains live across all rounds. Alternate
+rounds close explicitly twice before dropping the value, checking idempotent close.
+
+The test asks the OS whether the original descriptor/handle was closed: `fstat`
+on Unix, `GetHandleInformation` on Windows. It also checks that the runtime removed
+the file's shutdown registration and restored its heap-byte baseline. Deliberately
+omitting close, registration removal, or storage release produces statuses
+210, 211, or 212 respectively. Checks stop before a stale registration can revisit
+freed storage. Saved artifacts use `record-ownership/file_storage_disposal`.
+
+This covers normal last-owner release and explicit close in native ARC library
+runtime code. It does not yet replace the separate construction-failure, I/O-error,
+actual library-unload, socket, or WASI descriptor checks. Keep those tests and their
+fault controls; extend their ownership coverage before deleting tracing diagnostics.
+
 ## Which collector checks need replacement?
 
 The [inventory command](../scripts/inventory-memory-diagnostics.py) records every
@@ -91,11 +169,9 @@ same file describe language behavior and must remain covered.
    Distinguish enabling a check from setting it to zero, and preserve dynamic
    settings until their actual test cases have been reviewed. Do not bulk-delete
    matching lines or treat an inventory count as a coverage claim.
-2. Finish the reuse/borrow replacement matrix. Start with
-   `tests/borrowed_callbacks.rs`, `tests/reuse_token_ownership.rs`,
-   `tests/variant_alias_ownership.rs` and `tests/stack_ownership.rs`: record which
-   missing capture, wrong child owner, stale borrow or duplicate destruction each
-   mutation catches. Add the missing faults before retiring poisoning coverage.
+2. Validate the reuse/borrow matrix above on all six native hosts. Extend the
+   same accounting to cancellation and external callback entry before retiring
+   poisoning coverage; the four bounded probes are not the entire inventory.
 3. Complete the separate boundaries: `tests/wasm_arc.rs` already has missing-free,
    count-table and scheduler controls; library/foreign callback tests check copied
    inputs and scoped captures; file/socket/task tests must observe actual resource

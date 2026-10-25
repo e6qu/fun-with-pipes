@@ -135,7 +135,9 @@ alone do not make casts between unrelated C structure types safe.
 Native errors use `setjmp`/`longjmp` after releasing pending owners. Changed
 non-volatile automatic objects have indeterminate values after such a jump, so
 error/type fields and changing task-scope child metadata are volatile where needed.
-Unchanged links need not be. Tests must exercise the actual cleanup path at the
+Unchanged links need not be. An empty callback argument slice may be null; cleanup
+must not offset it, and partial application must not pass it to `memcpy`, even
+with a zero byte count. Tests must exercise the actual cleanup path at the
 production compiler settings; one compiler's success does not verify another.
 
 ## Ownership implementation

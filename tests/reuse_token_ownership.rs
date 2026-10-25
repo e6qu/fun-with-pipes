@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/ownership_ledger.rs"]
+mod ownership_ledger;
+
 #[path = "support/record_probe.rs"]
 mod record_probe;
 
@@ -63,6 +66,11 @@ fn compiler_tokens_transfer_release_and_unwind() {
                 .env("FWP_VRET", "0"),
         );
         let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let emitted = if mode == "arc" {
+            ownership_ledger::instrument_native(&emitted, 1 << 16)
+        } else {
+            emitted
+        };
         assert!(emitted.contains("fwp_cleanup_push(&t"));
         let wrapper = |name: &str| {
             let start = emitted.find(&format!("/* {name} :")).unwrap();
@@ -95,10 +103,12 @@ static V token_entry(V *args) {
 static const fwp_fninfo token_fns[] = {{1, token_entry, "token callback", 0}};
 static fwp_clo token_fn = {0, 0};
 static int released(V v) {
-#ifndef FWP_ARC_ONLY
+#ifdef FWP_ARC_ONLY
+    return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)];
+#else
     if (fwp_reuse_verify) return OBJ(v)->tag == 0xdead;
-#endif
     return *fwp_rc_slot(v) == 0;
+#endif
 }
 int main(void) {
 #ifdef _WIN32
@@ -144,6 +154,7 @@ int main(void) {
 #ifdef FWP_ARC_ONLY
     if (fwp_gc.freed <= before) return 10;
     if (fwp_gc.budget != baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
+    owner_ledger_finish();
 #else
     if (!fwp_reuse_verify && fwp_gc.freed <= before) return 10;
 #endif

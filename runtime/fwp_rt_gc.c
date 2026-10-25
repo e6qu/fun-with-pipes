@@ -1949,7 +1949,8 @@ static V fwp_apply_borrowed_span(V f, uint32_t n, V *args, uint32_t owned_start,
 #if FWP_UNWIND
         /* Keep the duplicated function and consumed span owned while typed
          * borrowed arguments are prepared; application takes them at entry. */
-        fwp_apply_owner pending = {first ? 0 : f, args + owned_start, fi->owned, 0, c->n + owned_start, owned_len};
+        /* An empty argument slice may be NULL; even adding zero to it is invalid C. */
+        fwp_apply_owner pending = {first ? 0 : f, owned_len ? args + owned_start : NULL, fi->owned, 0, c->n + owned_start, owned_len};
         fwp_cleanup pending_cleanup;
         uint8_t *pending_slot = fwp_rc_slot(f);
         int protected = (pending_slot && *pending_slot) ||
@@ -1972,7 +1973,7 @@ static V fwp_apply_borrowed_span(V f, uint32_t n, V *args, uint32_t owned_start,
         /* Each successful borrowed duplicate becomes owned immediately. A
          * later duplicate can fail before application consumes that prefix. */
         fwp_apply_owner before_owner = {0, args, fi->owned, 0, c->n, 0};
-        fwp_apply_owner after_owner = {0, args + before + transferred, fi->owned, 0, c->n + before + transferred, 0};
+        fwp_apply_owner after_owner = {0, after ? args + before + transferred : NULL, fi->owned, 0, c->n + before + transferred, 0};
         fwp_cleanup before_cleanup, after_cleanup;
         int protect_before = before && fi->owned->drop_arguments;
         int protect_after = after && fi->owned->drop_arguments;

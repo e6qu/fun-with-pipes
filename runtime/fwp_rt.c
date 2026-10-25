@@ -637,6 +637,6 @@ static V fwp_pap(uint32_t fn, uint32_t n, const V *args) {
     fwp_clo *r = (fwp_clo *)fwp_alloc(sizeof(fwp_clo) + n * sizeof(V));
     r->fn = fn;
     r->n = n;
-    memcpy(r->a, args, n * sizeof(V));
+    if (n) memcpy(r->a, args, n * sizeof(V));
     return PTR(r);
 }

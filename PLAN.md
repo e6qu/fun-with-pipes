@@ -118,8 +118,14 @@ Current G4 group: [the diagnostic guide](docs/ownership-diagnostics.md) specifie
 the live-address ledger, existing byte checks, deliberately broken controls and
 remaining gaps. It is applied to the native ARC corpus and dynamic/static probes.
 The inventory retains source/hash/line evidence; it is not itself a coverage proof.
-Next after integration: complete the reuse/borrow fault matrix, then the separate
-WASI/external-resource mapping before removing any collector diagnostics.
+The next preparation extends the ledger to callback, reuse-token, variant and
+stack-child checks. It adds missing-child and duplicate-destruction controls and
+repairs null empty-argument operations in the C runtime. A native ARC file probe
+checks actual OS closure, shutdown deregistration and byte reclamation separately.
+The diagnostic guide maps
+each deliberate fault to its observer; full platform validation remains required.
+Next: complete the separate WASI/external-resource mapping, including cancellation
+and external callback entry, before removing any collector diagnostics.
 
 **G5 — Delete tracing.** After G1–G4, remove tracing selection and code from
 `src/main.rs`, code generation, runtime allocator/root discovery, host adapters,

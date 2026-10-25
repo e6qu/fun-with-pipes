@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/ownership_ledger.rs"]
+mod ownership_ledger;
+
 #[path = "support/record_probe.rs"]
 mod record_probe;
 
@@ -34,7 +37,9 @@ choose : I64 -> (I64 -> String)
 choose = if (rem 2 | eq 0)
     (show | flip string.repeat)
     (add 1 | show | flip string.repeat)
-main = apply 7 (choose 3) | echo
+checked : I64 -> I64 ! {Error[String]}
+checked = if (lt 0) (const "negative input" | fail) id
+main = apply 7 (choose (read-all () | string.length | add 3 | attempt checked | result.unwrap-or 3)) | echo
 "#,
     )
     .unwrap();
@@ -56,7 +61,28 @@ main = apply 7 (choose 3) | echo
                 .args(["--emit-c", "-o"])
                 .arg(&emitted),
         );
-        let runtime = std::fs::read_to_string(&emitted).unwrap().replace(
+        let program = std::fs::read_to_string(&emitted).unwrap();
+        assert!(program.contains("#define FWP_UNWIND 1"));
+        let copy = "memcpy(r->a, args, n * sizeof(V));";
+        assert_eq!(program.matches(copy).count(), 1);
+        let program = program.replace(copy, "probe_pap_copy(r->a, args, n * sizeof(V));");
+        let program = program.replace(
+            "typedef uint64_t V;",
+            r#"typedef uint64_t V;
+/* Check the copy contract even when a libc header lacks nonnull annotations. */
+static void probe_pap_copy(void *to, const void *from, size_t size) {
+    if (!to || !from) { fputs("null partial-application copy\n", stderr); _Exit(209); }
+    memcpy(to, from, size);
+}
+"#,
+        );
+
+        let program = if memory == "arc" {
+            ownership_ledger::instrument_native(&program, 1 << 16)
+        } else {
+            program
+        };
+        let runtime = program.replace(
             "int main(int argc, char **argv)",
             "int original_main(int argc, char **argv)",
         );
@@ -158,6 +184,9 @@ int main(void) {
     fwp_closure_drop(generated_fn);
     probe_drop_leaf(generated_leaf);
     fwp_fns = probe_fns;
+    V empty_pap = fwp_rc_fresh(fwp_pap(0, 0, NULL));
+    if (CLO(empty_pap)->n || *fwp_rc_slot(empty_pap) != 1) return 22;
+    fwp_closure_drop(empty_pap);
     V leaf = fwp_rc_fresh(fwp_cstr("retained"));
     V scalar = fwp_rc_fresh(fwp_cstr("scalar bits"));
     V mixed = probe_closure(0, 0, NULL);
@@ -223,6 +252,7 @@ int main(void) {
     probe_drop_leaf(scalar);
 #ifdef FWP_ARC_ONLY
     if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+    owner_ledger_finish();
 #endif
     }
     puts("borrowed owners and typed slices preserved");
@@ -248,6 +278,13 @@ int main(void) {
             cases.push((label, probe.replace(old, new), status));
         }
         if memory == "arc" {
+            let release = "    fwp_closure_drop(empty_partial);";
+            assert_eq!(probe.matches(release).count(), 1);
+            cases.push((
+                "duplicate-closure-drop",
+                probe.replace(release, &format!("{release}\n{release}")),
+                203,
+            ));
             for (label, release) in [
                 ("missing-scalar", "probe_drop_leaf(scalar);"),
                 ("missing-factory", "fwp_closure_drop(factory);"),
@@ -257,7 +294,6 @@ int main(void) {
             }
         }
         for opt in ["-O1", "-O2"] {
-            let program = std::fs::read_to_string(&emitted).unwrap();
             let exe = dir.0.join(format!("{memory}{opt}-program.exe"));
             fwp::cgen::compile_c(&program, &exe, opt).unwrap();
             for poison in if memory == "arc" {
@@ -284,6 +320,114 @@ int main(void) {
                 assert_eq!(output.stdout, reference.stdout, "{label}");
                 assert_eq!(output.stderr, reference.stderr, "{label}");
             }
+            let copy = "if (n) probe_pap_copy(r->a, args, n * sizeof(V));";
+            assert_eq!(runtime.matches(copy).count(), 1);
+            let code = format!(
+                "{}\n{}",
+                runtime.replace(copy, "probe_pap_copy(r->a, args, n * sizeof(V));"),
+                cases[0].1
+            );
+            let exe = dir.0.join(format!("{memory}{opt}-null-copy.exe"));
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+            let out = Command::new(&exe)
+                .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
+                .env("FWP_GC_STATS", "0")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            record_probe::save(
+                "borrowed_callbacks",
+                &format!("{memory}{opt}-null-copy"),
+                &code,
+                &exe,
+                &out,
+            );
+            assert_eq!(out.status.code(), Some(209), "{memory}{opt}: {out:?}");
+            assert!(
+                String::from_utf8_lossy(&out.stderr).contains("null partial-application copy"),
+                "{memory}{opt}: {out:?}"
+            );
+            #[cfg(unix)]
+            {
+                let probe = &cases[0].1;
+                for (label, code, broken) in [
+                    ("valid", format!("{runtime}\n{probe}"), false),
+                    (
+                        "null-offset",
+                        format!(
+                            "{}\n{probe}",
+                            runtime.replace(
+                                "owned_len ? args + owned_start : NULL",
+                                "args + owned_start"
+                            )
+                        ),
+                        true,
+                    ),
+                    (
+                        "null-tail-offset",
+                        format!(
+                            "{}\n{probe}",
+                            runtime.replace(
+                                "after ? args + before + transferred : NULL",
+                                "args + before + transferred"
+                            )
+                        ),
+                        true,
+                    ),
+                ] {
+                    let cfile = dir.0.join(format!("{memory}{opt}-{label}-ubsan.c"));
+                    let exe = cfile.with_extension("exe");
+                    std::fs::write(&cfile, &code).unwrap();
+                    checked(
+                        Command::new("clang")
+                            .args([
+                                opt,
+                                "-std=gnu11",
+                                "-ffp-contract=off",
+                                "-w",
+                                "-fsanitize=pointer-overflow",
+                                "-fno-sanitize-recover=all",
+                            ])
+                            .arg(&cfile)
+                            .arg("-o")
+                            .arg(&exe)
+                            .args(["-lm", "-lpthread"]),
+                    );
+                    let out = Command::new(&exe)
+                        .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_GC_STRESS", "0")
+                        .env("FWP_GC_VERIFY", "0")
+                        .env("FWP_REUSE_VERIFY", "0")
+                        .env(
+                            "UBSAN_OPTIONS",
+                            "halt_on_error=1:abort_on_error=0:exitcode=1",
+                        )
+                        .output()
+                        .unwrap();
+                    record_probe::save(
+                        "borrowed_callbacks",
+                        &format!("{memory}{opt}-{label}-ubsan"),
+                        &code,
+                        &exe,
+                        &out,
+                    );
+                    if broken {
+                        assert_eq!(out.status.code(), Some(1), "{label}: {out:?}");
+                        let message = "applying zero offset to null pointer";
+                        assert!(
+                            String::from_utf8_lossy(&out.stderr).contains(message),
+                            "{label}: {out:?}"
+                        );
+                    } else {
+                        assert!(out.status.success(), "{label}: {out:?}");
+                        assert!(out.stderr.is_empty(), "{label}: {out:?}");
+                        assert_eq!(out.stdout, b"borrowed owners and typed slices preserved\n");
+                    }
+                }
+            }
             for (case, probe, status) in &cases {
                 let code = format!("{runtime}\n{probe}");
                 let exe = dir.0.join(format!("{memory}{opt}-{case}.exe"));
@@ -305,7 +449,15 @@ int main(void) {
                     let label = format!("{memory}{opt}-{case}-poison{poison}");
                     record_probe::save("borrowed_callbacks", &label, &code, &exe, &output);
                     assert_eq!(output.status.code(), Some(*status), "{label}: {output:?}");
-                    assert!(output.stderr.is_empty(), "{label}: {output:?}");
+                    if *status == 203 {
+                        assert!(
+                            String::from_utf8_lossy(&output.stderr)
+                                .contains("count operation on a dead or interior allocation"),
+                            "{label}: {output:?}"
+                        );
+                    } else {
+                        assert!(output.stderr.is_empty(), "{label}: {output:?}");
+                    }
                     assert_eq!(
                         output.stdout,
                         if *status == 0 {

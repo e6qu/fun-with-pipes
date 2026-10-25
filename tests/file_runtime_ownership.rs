@@ -1,5 +1,6 @@
 //! File ownership closes streams independently of tracing metadata.
 #![cfg(any(target_os = "linux", target_os = "macos"))]
+use fwp::ir::*;
 use std::process::Command;
 
 #[test]
@@ -8,7 +9,6 @@ fn file_aliases_and_borrowed_io_unwind_preserve_stream_owners() {
         arc: false,
         ..Default::default()
     });
-    use fwp::ir::*;
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![Func {
@@ -161,7 +161,7 @@ int main(int argc,char **argv){
     assert_ne!(no_text, runtime);
     let dir = std::env::temp_dir().join(format!("fwp-file-runtime-owners-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let exe = dir.join("probe");
+    let exe = dir.join("probe.exe");
     let data = dir.join("data");
     for opt in ["-O1", "-O2"] {
         for (code, expected) in [

@@ -3,6 +3,9 @@ use fwp::ir::*;
 use fwp::value::Value;
 use std::process::Command;
 
+#[path = "support/ownership_ledger.rs"]
+mod ownership_ledger;
+
 #[path = "support/record_probe.rs"]
 mod record_probe;
 
@@ -138,6 +141,11 @@ fn returned_variant_aliases_transfer_fields_once() {
             .unwrap();
         assert_eq!(result, Value::Str("laterfirst".into()));
         let emitted = fwp::cgen::generate(&p).unwrap();
+        let emitted = if arc {
+            ownership_ledger::instrument_native(&emitted, 1 << 16)
+        } else {
+            emitted
+        };
         let start = emitted.find("/* holder :").unwrap();
         let end = start + emitted[start..].find("/* concat :").unwrap();
         let holder = &emitted[start..end];
@@ -151,10 +159,12 @@ fn returned_variant_aliases_transfer_fields_once() {
         );
         let probe = r#"
 static int dead(V v) {
-#ifndef FWP_ARC_ONLY
+#ifdef FWP_ARC_ONLY
+ return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)];
+#else
  if(fwp_reuse_verify)return STR(v)->len==0;
-#endif
  return *fwp_rc_slot(v)==0;
+#endif
 }
 int main(void) {
  fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
@@ -171,6 +181,7 @@ int main(void) {
  }
 #ifdef FWP_ARC_ONLY
  if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
+ owner_ledger_finish();
 #endif
  }
  return 0;
@@ -503,6 +514,11 @@ fn matching_one_variant_payload_moves_its_owner_in_all_result_forms() {
             Value::Data(0, vec![Value::str("value")].into())
         );
         let emitted = fwp::cgen::generate(&program).unwrap();
+        let emitted = if arc {
+            ownership_ledger::instrument_native(&emitted, 1 << 16)
+        } else {
+            emitted
+        };
         let marker = "/* move matched variant payload */";
         assert_eq!(
             emitted.matches(marker).count(),
@@ -519,10 +535,12 @@ fn matching_one_variant_payload_moves_its_owner_in_all_result_forms() {
         );
         let probe = r#"
 static int dead(V v) {
-#ifndef FWP_ARC_ONLY
+#ifdef FWP_ARC_ONLY
+ return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)];
+#else
  if(fwp_reuse_verify)return STR(v)->len==0;
-#endif
  return *fwp_rc_slot(v)==0;
+#endif
 }
 int main(void) {
  fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
@@ -544,6 +562,7 @@ int main(void) {
  }
 #ifdef FWP_ARC_ONLY
  if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
+ owner_ledger_finish();
 #endif
  }
  return 0;
