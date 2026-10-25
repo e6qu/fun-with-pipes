@@ -1,0 +1,36 @@
+# A key names one incarnation of a slot in a particular graph snapshot.
+# Edges contain keys, not owners of nodes or the graph.
+Key = { slot: I64, generation: I64 }
+Node = { generation: I64, label: String, links: List[Key] }
+Graph = Map[I64, Node]
+
+same-generation : Key -> Node -> Bool
+same-generation = .generation | eq | compose .generation
+
+lookup : Key -> Graph -> Option[Node]
+lookup = curry (fork option.filter (.0 | same-generation) (fork map.get (.0 | .slot) .1))
+
+old-key : Key
+old-key = Key { slot = 0, generation = 0 }
+new-key : Key
+new-key = Key { slot = 0, generation = 1 }
+
+graph : Graph
+graph = map.empty | map.insert 0 Node { generation = 0, label = "first", links = [old-key] }
+
+# Reusing a deleted slot assigns the next checked generation. Production graph
+# operations must keep the generation even while a slot is empty; do not wrap it.
+reuse : Graph -> Graph
+reuse = map.remove 0
+    | map.insert 0 Node { generation = old-key | .generation | add 1, label = "replacement", links = [old-key] }
+
+main = [
+    graph | lookup old-key | option.map .label | echo,
+    graph | map.remove 0 | lookup old-key | option.is-none | echo,
+    graph | reuse | lookup old-key | option.is-none | echo,
+    graph | reuse | lookup new-key | option.map .label | echo,
+    graph | lookup new-key | option.is-none | echo,
+    graph | reuse | lookup new-key | option.map (.links | length) | echo,
+    graph | both id reuse | .0 | lookup old-key | option.map .label | echo,
+    range 0 64 | map (const graph | reuse | lookup old-key | option.is-none) | all id | echo,
+] | ignore

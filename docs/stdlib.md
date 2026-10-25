@@ -1094,6 +1094,9 @@ time limit. Tutorial 6 explains task scopes and ordering.
 Task[a] = builtin
 Channel[a] = builtin
 
+# A non-owning reference to a channel. It keeps only expiration metadata alive.
+WeakChannel[a] = builtin
+
 # start a task; it may perform IO but must handle its own errors
 task.spawn : (() -> a ! {Async, IO, Network, FileIO}) -> Task[a] ! {Async}
 
@@ -1124,6 +1127,14 @@ channel.send : Channel[a] -> a -> Bool ! {Async}
 channel.recv : Channel[a] -> Option[a] ! {Async}
 channel.recv-for : Duration -> Channel[a] -> Option[a] ! {Async}
 channel.close : Channel[a] -> () ! {Async}
+
+# Observe a channel without keeping its queue or captured values alive.
+# Closing a channel does not expire this reference; releasing its last owner does.
+channel.downgrade : Channel[a] -> WeakChannel[a] ! {Async}
+
+# Acquire an independent owner if the channel is still alive, otherwise None.
+# The acquired channel obeys the same owning-cycle checks as any other channel.
+channel.upgrade : WeakChannel[a] -> Option[Channel[a]] ! {Async}
 
 # every value received from a channel until it is closed and drained
 channel.drain : Channel[a] -> List[a] ! {Async}

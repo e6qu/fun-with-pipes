@@ -103,7 +103,9 @@ reclamation, with deliberately broken cleanup controls. All nine production jobs
 and documentation passed. The tracing-only queue/task/stream decisions in
 [the admission matrix](docs/ownership-admission.md) remain separate unfinished work.
 
-**G3 — Implement weak references and the boundary contracts.** First implement
+**G3 — Implement weak references and the boundary contracts.** The first
+[weak-channel implementation](docs/weak-channels.md) is in the current preparation,
+with tests written but integrated validation pending. First complete
 one complete weak path in the interpreter and native runtime: live/expired
 acquisition, final release, metadata release and address reuse. Synchronize only
 where permitted sharing requires it. Then cover the six G2 examples and all

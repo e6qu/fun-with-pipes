@@ -29,7 +29,7 @@ use std::marker::PhantomData;
 use std::net::{TcpListener, TcpStream, ToSocketAddrs, UdpSocket};
 use std::panic::{catch_unwind, resume_unwind, AssertUnwindSafe};
 
-use std::rc::Rc;
+use std::rc::{Rc, Weak};
 use std::sync::atomic::{AtomicBool, Ordering as AO};
 #[cfg(not(target_family = "wasm"))]
 use std::sync::Condvar;
@@ -405,6 +405,7 @@ impl ChanState {
 pub enum Native {
     Task(Arc<TaskShared>),
     Chan(RefCell<ChanState>),
+    WeakChan(Weak<Native>),
     /// A listener, with the TLS context of its connections (`tls.listen`).
     Listener(RefCell<Option<TcpListener>>, Option<Rc<crate::tls::Ctx>>),
     /// A connection, with its TLS session if it has one: reads and writes
@@ -429,6 +430,7 @@ impl Native {
         match self {
             Native::Task(_) => "<task>",
             Native::Chan(_) => "<channel>",
+            Native::WeakChan(_) => "<weak channel>",
             Native::Listener(..) => "<listener>",
             Native::Conn(..) => "<connection>",
             Native::Udp(_) => "<udp socket>",
@@ -1421,6 +1423,23 @@ impl<'p> Interp<'p> {
                         closed: false,
                         sink: None,
                     })))
+                }
+                "channel.downgrade" => {
+                    let Value::Native(channel) = &a[0] else {
+                        return Err(Ctl::Trap("internal: not a channel".into()));
+                    };
+                    if !matches!(channel.as_ref(), Native::Chan(_)) {
+                        return Err(Ctl::Trap("internal: not a channel".into()));
+                    }
+                    wrap(Native::WeakChan(Rc::downgrade(channel)))
+                }
+                "channel.upgrade" => {
+                    let Native::WeakChan(channel) = native(&a[0])? else {
+                        return Err(Ctl::Trap("internal: not a weak channel".into()));
+                    };
+                    // All value operations hold the scheduler baton. No task
+                    // switch occurs between checking liveness and acquiring Rc.
+                    opt(channel.upgrade().map(Value::Native))
                 }
                 "channel.send" => {
                     let ch = a[0].clone();

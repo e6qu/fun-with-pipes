@@ -890,6 +890,59 @@ main = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | igno
 }
 
 #[test]
+fn physical_allocator_observer_rejects_duplicates_after_empty_slots() {
+    let have_wasi = available();
+    let dir = fwp::cgen::TempDir::new("wasi-physical-ledger").unwrap();
+    let code = format!(
+        "{}\n{}",
+        include_str!("fixtures/wasm_arc_allocations.c"),
+        r#"
+int main(int argc, char **argv) {
+    void *first = malloc(7), *second = malloc(11);
+    if (!first || !second || wasm_arc_live != 2 || wasm_arc_bytes != 18) return 231;
+    free(first); /* leave a hole before second's live entry */
+    if (argc > 1 && argv[1][0] == 'd') wasm_arc_register(second, 11, __LINE__);
+    if (argc > 1 && argv[1][0] == 'u') {
+        wasm_arc_unregister(second);
+        wasm_arc_unregister(second);
+    }
+    void *third = malloc(13);
+    if (!third || wasm_arc_live != 2 || wasm_arc_bytes != 24) return 232;
+    free(second); free(third);
+    if (wasm_arc_live || wasm_arc_bytes) return 233;
+    return 0;
+}
+"#
+    );
+    for target in [fwp::cgen::Target::Native, fwp::cgen::Target::Wasi] {
+        if target == fwp::cgen::Target::Wasi && !have_wasi {
+            continue;
+        }
+        let binary = dir.join(if target == fwp::cgen::Target::Wasi {
+            "probe.wasm"
+        } else {
+            "probe.exe"
+        });
+        for opt in ["-O1", "-O2"] {
+            fwp::cgen::compile_for(&code, &binary, opt, target).unwrap();
+            for (mode, status) in [("normal", 0), ("duplicate", 245), ("unregister", 243)] {
+                let mut command = if target == fwp::cgen::Target::Wasi {
+                    wasi(&binary, dir.path())
+                } else {
+                    Command::new(&binary)
+                };
+                let result = command.arg(mode).output().unwrap();
+                assert_eq!(
+                    result.status.code(),
+                    Some(status),
+                    "{mode}/{opt}: {result:?}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
 fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
     if !available() {
         return;
@@ -903,6 +956,12 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
     let source = dir.join("tasks.fwp");
     let mut failures = Vec::new();
     for (fixture, program, expected, repetitions) in [
+        (
+            "weak-channels",
+            include_str!("fixtures/weak_channels.fwp"),
+            include_str!("fixtures/weak_channels.out"),
+            1,
+        ),
         (
             "tasks",
             include_str!("fixtures/task_channel_ownership.fwp"),
@@ -987,7 +1046,12 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
             let result_drop = "if (t->result_drop && result) t->result_drop(result);";
             assert_eq!(measured.matches(result_drop).count(), 1);
             let missing_result = measured.replace(result_drop, "/* omit cached result owner */");
+            let weak_release = "        fwp_weak_channel_drop(PTR(weak));";
+            assert_eq!(measured.matches(weak_release).count(), 1);
+            let missing_weak =
+                measured.replace(weak_release, "        /* omit weak metadata owner */");
             let (retained_label, retained) = match fixture {
+                "weak-channels" => ("missing-weak-metadata", &missing_weak),
                 "tasks" => ("missing-state", &missing_state),
                 "task-await-fields" => ("missing-result", &missing_result),
                 _ => ("missing-queue", &missing_queue),

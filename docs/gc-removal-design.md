@@ -1,7 +1,8 @@
 # GC removal and ownership direction
 
-Direction accepted October 25, 2026. **The direction is agreed; weak references,
-count-free unique heap storage and general region support are not implemented.**
+Direction accepted October 25, 2026. **The direction is agreed. Weak channels are implemented in the current
+preparation but await integrated validation. Count-free unique heap storage and
+general region support remain planned.**
 Existing APIs and representations may change. [PLAN.md](../PLAN.md) owns task
 order and completion checks; [ownership.md](ownership.md) describes today's code.
 
@@ -21,7 +22,8 @@ order and completion checks; [ownership.md](ownership.md) describes today's code
   acceptance of every safe program is not a requirement.
 
 Exact weak target types, API names, acquisition semantics and release timing are
-G2 design work under this contract. Do not reopen the overall direction on every
+specified for the first path in [weak channels](weak-channels.md); the remaining
+boundary contracts and analysis baseline are still G2 work. Do not reopen the overall direction on every
 iteration. If a concrete example requires a new language restriction, explain
 that tradeoff before adopting it; do not silently drop a maintained capability.
 

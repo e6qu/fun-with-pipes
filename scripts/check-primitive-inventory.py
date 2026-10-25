@@ -71,9 +71,13 @@ observed = dict(head=head, baselineHead=baseline['head'], baselineSha256=baselin
 args.output.with_suffix('.observed.json').write_text(json.dumps(observed, indent=2) + '\n')
 scalar_math = {'asin': 1, 'acos': 1, 'atan': 1, 'sinh': 1, 'cosh': 1, 'tanh': 1, 'asinh': 1, 'acosh': 1, 'atanh': 1, 'log2': 1, 'log10': 1, 'log1p': 1, 'exp2': 1, 'expm1': 1, 'atan2': 2, 'hypot': 2}
 removed_symbols = {'device.gpu-available', 'device.gpu-run'}
-assert len(rows) == len(baseline['rows']) + 5 + len(scalar_math) - len(removed_symbols)
+weak_channels = {
+    'channel.downgrade': 'Channel[a] -> WeakChannel[a] ! {Async}',
+    'channel.upgrade': 'WeakChannel[a] -> Option[Channel[a]] ! {Async}',
+}
+assert len(rows) == len(baseline['rows']) + 5 + len(scalar_math) + len(weak_channels) - len(removed_symbols)
 assert len({(row['file'], row['declared']) for row in rows}) == len(rows)
-assert len({row['symbol'] for row in rows}) == baseline['distinctSymbols'] + 5 + len(scalar_math) - len(removed_symbols)
+assert len({row['symbol'] for row in rows}) == baseline['distinctSymbols'] + 5 + len(scalar_math) + len(weak_channels) - len(removed_symbols)
 assert sum(row['aliased'] for row in rows) == 40
 raw_symbols = {'mem.alloc', 'mem.free', 'mem.string', 'ptr.cast', 'ptr.at',
                'ptr.read', 'ptr.write', 'ptr.read-string', 'ptr.address'}
@@ -92,6 +96,7 @@ service_scopes = {
     'grpc.with-response-metadata': (1, 'OwnedTree', 0),
 }
 new_keys = {('lib/prelude.fwp', name) for name in scalar_math} | scope_keys | {('lib/autodiff.fwp', name) for name in owned_tapes}
+new_keys |= {('lib/task.fwp', name) for name in weak_channels}
 leaf_symbols = {'json.encode', 'json.write', 'url.encode', 'int.to-hex', 'cli.help', 'zlib.gzip', 'zlib.gzip-chunk', 'zlib.deflate', 'ws.accept', 'ws.deflate', 'ws.key', 'zlib.gzip-end', 'ws.close-payload', 'ws.frame'}
 removed_keys = {('lib/tensor.fwp', symbol) for symbol in removed_symbols}
 assert removed_keys <= set(baseline_rows)
@@ -207,6 +212,11 @@ promoted = []
 changed_symbols = set()
 for row in rows:
     key = (row['file'], row['declared'])
+    if row['symbol'] in weak_channels:
+        assert row == dict(file='lib/task.fwp', declared=row['symbol'], symbol=row['symbol'],
+            aliased=False, bucket='contract', signature=weak_channels[row['symbol']],
+            contract='Some(Contract { arguments: [Borrow], result: OwnedResource, callback: None, aliases: [] })')
+        continue
     if row['symbol'] in owned_tapes:
         arity, result, signature = owned_tapes[row['symbol']]
         arguments = '[' + ', '.join(['Borrow'] * arity) + ']'
@@ -376,7 +386,7 @@ for row in rows:
     changed_symbols.add(row['symbol'])
 assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | set(service_scopes) | {'trim', 'trim-start', 'trim-end', 'lower', 'upper', 'replace', 'task.spawn', 'task.within', 'channel.send', 'http2.serve', 'grpc._force', 'map.empty', 'set.empty', 'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float', 'array.sort', 'array.from-list'}
 expected_counts = dict(baseline['counts'])
-expected_counts['contract'] += len(raw_symbols) + 25 + len(owned_tapes) + len(scalar_math)
+expected_counts['contract'] += len(raw_symbols) + 25 + len(owned_tapes) + len(scalar_math) + len(weak_channels)
 expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 22
 for key in removed_keys:
     expected_counts[baseline_rows[key]['bucket']] -= 1

@@ -429,6 +429,7 @@ struct RemoteSpec {
 
 struct Gen<'p> {
     resource_captures: bool,
+    weak_channels: bool,
     prog: &'p Program,
     uncounted: &'p Program,
     descs: HashMap<MT, usize>,
@@ -581,6 +582,7 @@ impl Gen<'_> {
 
     fn resource_type(&self, ty: &MT) -> bool {
         crate::resource::contains_resource(&self.prog.shapes, ty)
+            || (self.weak_channels && crate::resource::contains_channel(&self.prog.shapes, ty))
             || (self.resource_captures && crate::resource::may_hold_resource(&self.prog.shapes, ty))
     }
 
@@ -1892,6 +1894,9 @@ impl<'p> Gen<'p> {
         if matches!(mt, MT::Con(n, _) if n == "std::Channel") {
             return format!("static void fwp_drop{id}(V v) {{ fwp_channel_drop(v); }}\n");
         }
+        if matches!(mt, MT::Con(n, _) if n == "std::WeakChannel") {
+            return format!("static void fwp_drop{id}(V v) {{ fwp_weak_channel_drop(v); }}\n");
+        }
         if matches!(mt, MT::Con(n, _) if n == "std::Task") {
             return format!("static void fwp_drop{id}(V v) {{ fwp_task_drop(v); }}\n");
         }
@@ -2078,6 +2083,7 @@ impl<'p> Gen<'p> {
                     "std::Ptr" => return simple("K_U64", "Ptr"),
                     "std::Task" => return simple("K_NATIVE", "task"),
                     "std::Channel" => return simple("K_NATIVE", "channel"),
+                    "std::WeakChannel" => return simple("K_NATIVE", "weak channel"),
                     "std::Listener" => return simple("K_NATIVE", "listener"),
                     "std::H2Stream" => return simple("K_NATIVE", "HTTP/2 stream"),
                     "std::Conn" => return simple("K_NATIVE", "connection"),
@@ -2908,11 +2914,9 @@ fn unpack_loop_state(prog: &Program, f: &Func) -> Option<Func> {
     }
     let fields = record_fields(&prog.shapes, &f.locals[0])?;
     if fields.is_empty()
-        || fields.iter().any(|(_, ty)| {
-            crate::resource::contains_resource(&prog.shapes, ty)
-                || (crate::resource::may_hold_resource(&prog.shapes, ty)
-                    && crate::resource::has_socket_values(&prog.funcs, &prog.shapes))
-        })
+        || fields
+            .iter()
+            .any(|(_, ty)| crate::resource::observable_type(&prog.funcs, &prog.shapes, ty))
     {
         return None;
     }
@@ -7471,6 +7475,8 @@ impl<'p> Gen<'p> {
                     ("channel.recv", "fwp_p_channel_recv(l0)"),
                     ("channel.recv-for", "fwp_p_channel_recv_for(l0, l1)"),
                     ("channel.close", "fwp_p_channel_close(l0)"),
+                    ("channel.downgrade", "fwp_p_channel_downgrade(l0)"),
+                    ("channel.upgrade", "fwp_p_channel_upgrade(l0)"),
                     ("tcp.local-addr", "fwp_p_local_addr(l0)"),
                     ("tcp.peer-addr", "fwp_p_peer_addr(l0)"),
                     ("tcp.stop", "fwp_p_tcp_stop(l0)"),
@@ -9799,6 +9805,10 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         &scalar_text
     };
     let arc = native_options().arc;
+    let weak_channels = crate::resource::uses_weak_channels(&prog.funcs, &prog.shapes);
+    if weak_channels && !arc {
+        return Err("weak channels require checked ownership; select --gc arc".into());
+    }
     if arc && (!reuse_enabled() || !free_enabled()) {
         return Err(
             "--gc arc requires counted ownership and freeing; remove FWP_REUSE=0/FWP_FREE=0".into(),
@@ -9891,7 +9901,8 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         crate::arc::check(prog, &entries, entry_channels)?;
     }
     let mut g = Gen {
-        resource_captures: crate::resource::has_socket_values(&prog.funcs, &prog.shapes),
+        resource_captures: crate::resource::has_observable_captures(&prog.funcs, &prog.shapes),
+        weak_channels,
         prog,
         uncounted,
         descs: HashMap::new(),
@@ -10689,6 +10700,9 @@ static const fwp_exec_spec exec_spec{i} = {{
 
     if arc {
         out.push_str("#define FWP_ARC_ONLY 1\n");
+    }
+    if weak_channels {
+        out.push_str("#define FWP_WEAK_CHANNELS 1\n");
     }
     if tests {
         out.push_str("#define FWP_TESTS 1\n");

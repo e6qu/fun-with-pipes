@@ -140,6 +140,40 @@ runtime code. It does not yet replace the separate construction-failure, I/O-err
 actual library-unload, socket, or WASI descriptor checks. Keep those tests and their
 fault controls; extend their ownership coverage before deleting tracing diagnostics.
 
+## Candidate weak and external-boundary checks
+
+The current preparation adds the live-address ledger to scoped foreign callback
+entry, nested calls, suspension/cancellation and copied-input tests in
+[foreign_callback_ownership.rs](../tests/foreign_callback_ownership.rs). Existing
+physical-byte checks and deliberately missing-release controls remain independent.
+This does not implement C-retained callbacks.
+
+The same preparation extends existing external-owner probes to ARC as well as
+tracing. They retain their original failure controls:
+
+| Boundary | Test | Observed fault |
+|---|---|---|
+| Socket scratch and resolver results | `native_sockets::socket_scratch_is_released_on_cancel_and_allocation_failure` | Omitted unwind releases leave native buffers or resolver results live; status 248 |
+| TCP construction and optional results | `native_sockets::tcp_constructor_failures_release_real_descriptors` | Omitted construction/result cleanup leaves a real descriptor or charged storage; status 248 |
+| Library-owned files, TLS sessions and transferred handles | `library_resources::unload_closes_owned_files_sessions_and_transferred_http2_handles` | Independent omitted close/free controls identify each resource kind |
+| Library unload and suspended tasks | `library_unload::loader_unload_drains_tasks_restores_signals_and_releases_regions` | Omitted heap/stack release, cached-value cleanup, count-table cleanup or host-state restoration fails the corresponding observer |
+
+The last two tests use the real loader and retain their native Windows paths.
+Their new ARC runs are pending; a native allocation balance does not substitute
+for these OS-resource checks.
+
+[Weak-channel tests](../tests/queued_functions.rs) check final-release ordering,
+metadata release, reused addresses and failed acquisition. The fault controls
+omit expiration, omit the channel's metadata release, or retain the target before
+an allocation that fails. Each must fail independently. The same language fixture
+is included in dynamic/static native and WASI JSPI/Asyncify execution.
+
+The [WASI physical ledger](../tests/fixtures/wasm_arc_allocations.c) now detects
+duplicate addresses even when an earlier slot is empty. Its regression test
+checks normal reuse, duplicate registration and duplicate removal on native and
+WASI hosts. These additions await integrated compiler/platform validation; they
+do not yet close every G4 row or justify deleting collector checks.
+
 ## Which collector checks need replacement?
 
 The [inventory command](../scripts/inventory-memory-diagnostics.py) records every

@@ -14,51 +14,52 @@ struct snapshot {
 
 #[test]
 fn loader_unload_drains_tasks_restores_signals_and_releases_regions() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
-    let string = MT::con("std::String");
-    let int = MT::con("std::I64");
-    let p = Program {
-        funcs: vec![
-            Func {
-                name: "cached".into(),
-                arity: 0,
-                locals: vec![],
-                ty: string.clone(),
-                body: Body::Expr(Expr::Call(
-                    1,
-                    vec![
-                        Expr::Const(Value::I64(2)),
-                        Expr::Const(Value::Str("heap".into())),
-                    ],
-                )),
-            },
-            Func {
-                name: "repeat".into(),
-                arity: 2,
-                locals: vec![int.clone(), string.clone()],
-                ty: MT::Fun(
-                    Box::new(int),
-                    Box::new(MT::Fun(Box::new(string.clone()), Box::new(string))),
-                ),
-                body: Body::Prim("string.repeat".into()),
-            },
-        ],
-        exports: vec![("cached".into(), 0)],
-        ..Program::default()
-    };
-    let (generated, header) = fwp::cgen::generate_library(&p, "unload").unwrap();
-    if cfg!(windows) {
-        windows_loader_unload(&generated, &header);
-        return;
-    }
-    let observed=generated
+    for arc in [true, false] {
+        fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+            arc,
+            ..Default::default()
+        });
+        let string = MT::con("std::String");
+        let int = MT::con("std::I64");
+        let p = Program {
+            funcs: vec![
+                Func {
+                    name: "cached".into(),
+                    arity: 0,
+                    locals: vec![],
+                    ty: string.clone(),
+                    body: Body::Expr(Expr::Call(
+                        1,
+                        vec![
+                            Expr::Const(Value::I64(2)),
+                            Expr::Const(Value::Str("heap".into())),
+                        ],
+                    )),
+                },
+                Func {
+                    name: "repeat".into(),
+                    arity: 2,
+                    locals: vec![int.clone(), string.clone()],
+                    ty: MT::Fun(
+                        Box::new(int),
+                        Box::new(MT::Fun(Box::new(string.clone()), Box::new(string))),
+                    ),
+                    body: Body::Prim("string.repeat".into()),
+                },
+            ],
+            exports: vec![("cached".into(), 0)],
+            ..Program::default()
+        };
+        let (generated, header) = fwp::cgen::generate_library(&p, "unload").unwrap();
+        if cfg!(windows) {
+            windows_loader_unload(&generated, &header);
+            continue;
+        }
+        let observed=generated
         .replace("static void fwp_gc_init(void) {", "static char *test_reservation; static size_t test_reserved_bytes;\nstatic void fwp_gc_init(void) {")
         .replace("char *r = (char *)fwp_gc_reserve(&bytes);", "char *r = (char *)fwp_gc_reserve(&bytes); test_reservation=r;test_reserved_bytes=bytes+GC_CHUNK;")
         .replace("    fwp_closure_drop_finish();\n", "    fwp_closure_drop_finish(); observe_finished();\n");
-    let hooks = r#"
+        let hooks = r#"
 static struct snapshot *observed;
 static void observe_free(void *p);
 static int observe_key_delete(pthread_key_t key);
@@ -66,7 +67,7 @@ static void observe_finished(void);
 #define pthread_key_delete(k) observe_key_delete(k)
 #define free(p) observe_free(p)
 "#;
-    let fixture = r#"
+        let fixture = r#"
 #undef free
 #undef pthread_key_delete
 static int observe_key_delete(pthread_key_t key) {
@@ -134,10 +135,10 @@ void setup(struct snapshot *s) {
  if(s->entered!=2||s->completed!=1||s->cancelled||!fwp_stack_pool_n||fwp_gc.armed||fwp_gc.ncollect)s->order_error=1;
 }
 "#;
-    let library_source = format!(
-        "#include <stdlib.h>\n#include <pthread.h>\n{SNAPSHOT}\n{hooks}\n{observed}\n{fixture}"
-    );
-    let host = r#"
+        let library_source = format!(
+            "#include <stdlib.h>\n#include <pthread.h>\n{SNAPSHOT}\n{hooks}\n{observed}\n{fixture}"
+        );
+        let host = r#"
 #include <dlfcn.h>
 #include <signal.h>
 #include <sys/mman.h>
@@ -203,16 +204,16 @@ int main(int argc,char **argv) {
  return 0;
 }
 "#;
-    let dir = std::env::temp_dir().join(format!("fwp-library-unload-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).unwrap();
-    let exe = dir.join("host");
-    let lib = dir.join(format!(
-        "libunload.{}",
-        fwp::cgen::shared_library_extension()
-    ));
-    let host_source = format!("#include <stddef.h>\n{SNAPSHOT}\n{host}");
-    let static_host = format!(
-        r#"
+        let dir = std::env::temp_dir().join(format!("fwp-library-unload-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let exe = dir.join("host");
+        let lib = dir.join(format!(
+            "libunload.{}",
+            fwp::cgen::shared_library_extension()
+        ));
+        let host_source = format!("#include <stddef.h>\n{SNAPSHOT}\n{host}");
+        let static_host = format!(
+            r#"
 #include <stddef.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -230,8 +231,8 @@ int main(void) {{
  puts("main");return 0;
 }}
 "#
-    );
-    let mut controls=vec![
+        );
+        let mut controls=vec![
         ("if (fwp_gc.reservation) munmap(fwp_gc.reservation, fwp_gc.reservation_bytes);", "/* missing heap unmap */",1),
         ("while (fwp_stack_pool_n) munmap(fwp_stack_pool[--fwp_stack_pool_n], FWP_NATIVE_TASK_STACK);", "fwp_stack_pool_n = 0; /* leaked stacks */",2),
         ("    fwp_caf_finish();", "    /* missing cache cleanup */",3),
@@ -239,100 +240,101 @@ int main(void) {{
         ("sigaction(SIGINT, &fwp_prior_sigint, 0);", "(void)0; /* missing signal restoration */",5),
         ("pthread_key_delete(fwp_closure_drop_key);", "/* missing key deletion */",4),
     ];
-    if cfg!(all(target_os = "linux", target_env = "gnu")) {
-        controls.push((
-            "    if (fwp_root) memset(&fwp_root_context, 0, sizeof fwp_root_context);\n",
-            "    /* missing saved register cleanup */\n",
-            3,
-        ));
+        if cfg!(all(target_os = "linux", target_env = "gnu")) {
+            controls.push((
+                "    if (fwp_root) memset(&fwp_root_context, 0, sizeof fwp_root_context);\n",
+                "    /* missing saved register cleanup */\n",
+                3,
+            ));
+        }
+        for opt in ["-O1", "-O2"] {
+            fwp::cgen::compile_library(
+                &library_source,
+                &header,
+                &lib,
+                opt,
+                fwp::cgen::LibKind::Shared,
+            )
+            .unwrap();
+            fwp::cgen::compile_c(&host_source, &exe, opt).unwrap();
+            for poison in ["0", "1"] {
+                let out = Command::new(&exe)
+                    .arg(&lib)
+                    .env("FWP_REUSE_VERIFY", poison)
+                    .env("FWP_GC_STRESS", "1")
+                    .env("FWP_GC_VERIFY", "1")
+                    .output()
+                    .unwrap();
+                assert!(
+                    out.status.success(),
+                    "{opt}, poison {poison}: {:?}: {}",
+                    out.status.code(),
+                    String::from_utf8_lossy(&out.stderr)
+                );
+            }
+            let archive = dir.join("libunload.a");
+            fwp::cgen::compile_library(
+                &library_source,
+                &header,
+                &archive,
+                opt,
+                fwp::cgen::LibKind::Static,
+            )
+            .unwrap();
+            let previous = fwp::ffi::links();
+            fwp::ffi::set_links(vec![archive.to_string_lossy().into_owned()]);
+            let result = fwp::cgen::compile_c(&static_host, &dir.join("static-host"), opt);
+            fwp::ffi::set_links(previous);
+            result.unwrap();
+            for poison in ["0", "1"] {
+                let out = Command::new(dir.join("static-host"))
+                    .env("FWP_REUSE_VERIFY", poison)
+                    .env("FWP_GC_STRESS", "1")
+                    .env("FWP_GC_VERIFY", "1")
+                    .output()
+                    .unwrap();
+                assert!(
+                    out.status.success(),
+                    "static {opt}: {}",
+                    String::from_utf8_lossy(&out.stderr)
+                );
+                assert_eq!(
+                    String::from_utf8_lossy(&out.stdout),
+                    "main\nfinalized\nfinished\n"
+                );
+            }
+            for &(needle, replacement, expected) in &controls {
+                assert!(
+                    library_source.contains(needle),
+                    "missing negative control {needle}"
+                );
+                let start = if needle.starts_with("while (fwp_stack_pool_n)") {
+                    library_source
+                        .find("static void fwp_library_tasks_finish(void) {")
+                        .unwrap()
+                } else {
+                    0
+                };
+                let (prefix, cleanup) = library_source.split_at(start);
+                assert_eq!(
+                    cleanup.matches(needle).count(),
+                    1,
+                    "ambiguous control {needle}"
+                );
+                let broken = format!("{prefix}{}", cleanup.replacen(needle, replacement, 1));
+                fwp::cgen::compile_library(&broken, &header, &lib, opt, fwp::cgen::LibKind::Shared)
+                    .unwrap();
+                let out = Command::new(&exe).arg(&lib).output().unwrap();
+                assert_eq!(
+                    out.status.code(),
+                    Some(expected),
+                    "{opt}, control {needle}: {}",
+                    String::from_utf8_lossy(&out.stderr)
+                );
+            }
+        }
+        std::fs::remove_dir_all(dir).unwrap();
     }
-    for opt in ["-O1", "-O2"] {
-        fwp::cgen::compile_library(
-            &library_source,
-            &header,
-            &lib,
-            opt,
-            fwp::cgen::LibKind::Shared,
-        )
-        .unwrap();
-        fwp::cgen::compile_c(&host_source, &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = Command::new(&exe)
-                .arg(&lib)
-                .env("FWP_REUSE_VERIFY", poison)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .output()
-                .unwrap();
-            assert!(
-                out.status.success(),
-                "{opt}, poison {poison}: {:?}: {}",
-                out.status.code(),
-                String::from_utf8_lossy(&out.stderr)
-            );
-        }
-        let archive = dir.join("libunload.a");
-        fwp::cgen::compile_library(
-            &library_source,
-            &header,
-            &archive,
-            opt,
-            fwp::cgen::LibKind::Static,
-        )
-        .unwrap();
-        let previous = fwp::ffi::links();
-        fwp::ffi::set_links(vec![archive.to_string_lossy().into_owned()]);
-        let result = fwp::cgen::compile_c(&static_host, &dir.join("static-host"), opt);
-        fwp::ffi::set_links(previous);
-        result.unwrap();
-        for poison in ["0", "1"] {
-            let out = Command::new(dir.join("static-host"))
-                .env("FWP_REUSE_VERIFY", poison)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .output()
-                .unwrap();
-            assert!(
-                out.status.success(),
-                "static {opt}: {}",
-                String::from_utf8_lossy(&out.stderr)
-            );
-            assert_eq!(
-                String::from_utf8_lossy(&out.stdout),
-                "main\nfinalized\nfinished\n"
-            );
-        }
-        for &(needle, replacement, expected) in &controls {
-            assert!(
-                library_source.contains(needle),
-                "missing negative control {needle}"
-            );
-            let start = if needle.starts_with("while (fwp_stack_pool_n)") {
-                library_source
-                    .find("static void fwp_library_tasks_finish(void) {")
-                    .unwrap()
-            } else {
-                0
-            };
-            let (prefix, cleanup) = library_source.split_at(start);
-            assert_eq!(
-                cleanup.matches(needle).count(),
-                1,
-                "ambiguous control {needle}"
-            );
-            let broken = format!("{prefix}{}", cleanup.replacen(needle, replacement, 1));
-            fwp::cgen::compile_library(&broken, &header, &lib, opt, fwp::cgen::LibKind::Shared)
-                .unwrap();
-            let out = Command::new(&exe).arg(&lib).output().unwrap();
-            assert_eq!(
-                out.status.code(),
-                Some(expected),
-                "{opt}, control {needle}: {}",
-                String::from_utf8_lossy(&out.stderr)
-            );
-        }
-    }
-    std::fs::remove_dir_all(dir).unwrap();
 }
 
 fn windows_loader_unload(generated: &str, header: &str) {

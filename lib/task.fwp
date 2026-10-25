@@ -17,6 +17,8 @@
 
 Task[a] = builtin
 Channel[a] = builtin
+# A non-owning reference to a channel. It keeps only expiration metadata alive.
+WeakChannel[a] = builtin
 
 # start a task; it may perform IO but must handle its own errors
 foreign "fwp" task.spawn : (() -> a ! {Async, IO, Network, FileIO}) -> Task[a] ! {Async}
@@ -43,6 +45,13 @@ foreign "fwp" channel.send : Channel[a] -> a -> Bool ! {Async}
 foreign "fwp" channel.recv : Channel[a] -> Option[a] ! {Async}
 foreign "fwp" channel.recv-for : Duration -> Channel[a] -> Option[a] ! {Async}
 foreign "fwp" channel.close : Channel[a] -> () ! {Async}
+
+# Observe a channel without keeping its queue or captured values alive.
+# Closing a channel does not expire this reference; releasing its last owner does.
+foreign "fwp" channel.downgrade : Channel[a] -> WeakChannel[a] ! {Async}
+# Acquire an independent owner if the channel is still alive, otherwise None.
+# The acquired channel obeys the same owning-cycle checks as any other channel.
+foreign "fwp" channel.upgrade : WeakChannel[a] -> Option[Channel[a]] ! {Async}
 
 # every value received from a channel until it is closed and drained
 channel.drain : Channel[a] -> List[a] ! {Async}

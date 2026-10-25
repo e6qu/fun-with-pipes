@@ -1,15 +1,15 @@
 # Current work
 
-**Next:** complete G2's weak-reference contract and six acceptance examples in
-[the accepted ownership direction](gc-removal-design.md#six-implementation-examples),
-including target types, acquisition/expiration, final-release ordering and stores
-that could recreate a cycle. Then implement G3's first complete weak path.
-The user accepted this direction on October 25: reject unproved owning cycles,
-infer moves/borrows, use ARC for sharing, add weak links for selected objects and
-use regions for bounded work. Preserve returned functions and partial application.
-Current APIs and layouts are replaceable; the weak API is not implemented.
-Worktree `/private/tmp/fwp-ownership-fault-matrix`, branch `ownership-fault-matrix`,
-starts from preparation `517de6e1e77c05ce7dc3577e21258ea605363168` on #214's head.
+**Next:** finish the six G2 boundary contracts and their G3 tests, using the
+candidate [weak-channel implementation](weak-channels.md), then close G4's finite
+WASI/external-resource mapping. Keep both in one PR before broad validation.
+Worktree `/private/tmp/fwp-ownership-fault-matrix`, branch `ownership-fault-matrix`.
+Committed preparation: `517de6e1`; accepted roadmap: `f850cafe`; batching policy:
+`14acc686`. The following implementation checkpoint adds weak channels and
+G4 probes; integrated compiler/platform validation is pending.
+The accepted direction is inferred moves/borrows, count-free unique storage,
+ARC for sharing, explicit weak links, and rejection of unproved owning cycles.
+Preserve returned functions and partial application. Current APIs may change.
 G3 and G4 must be in the same PR. Keep it draft until both and all other included
 changes are complete. During development run only checks justified by a changed
 contract or specific issue; do not rerun passing suites or full CI per edit.
@@ -24,22 +24,44 @@ to consolidate this work. Its status is `stopped-for-combined-gc-removal` in
 it would prematurely publish and merge the earlier preparation. The separate
 #214 watcher may finish its existing validation and verified merge.
 
-## Delivery in progress
+## Last delivery
 
-PR #214 adds the live-allocation ledger and collector-setting inventory.
-[Production 40187394961](https://github.com/e6qu/fun-with-pipes/actions/runs/40187394961)
-was running without reported failures when checked on October 25.
-At the last recorded check, 12:53 UTC, all four macOS jobs, Linux ARM64,
-Windows ARM64, benchmark and
-[documentation 40187394939](https://github.com/e6qu/fun-with-pipes/actions/runs/40187394939)
-passed. Linux AMD64 and Windows AMD64 were running. Read the watcher status
-for later results; running jobs are not completed acceptance claims.
-The watcher `/private/tmp/fwp-214-merge-when-green.py` requires all nine production
-jobs and documentation for the exact head, then squash-merges with the single line
-`Check native ownership without retaining freed storage` and empty body.
-It verifies the resulting message and tree. Status:
-`/private/tmp/fwp-214-merge-status.json`. Stop it before a repair push; do not start
-a competing merger. Keep auditing every failed job and completed target together.
+PR #214 passed all nine production jobs in
+[40187394961](https://github.com/e6qu/fun-with-pipes/actions/runs/40187394961)
+and [documentation 40187394939](https://github.com/e6qu/fun-with-pipes/actions/runs/40187394939).
+The watcher verified its squash merge at 13:19 UTC on October 25:
+`6ee33396459986a0fa08464b182d23fd2fe6c136`, subject
+`Check native ownership without retaining freed storage`, empty body, tree
+`91f1a23c02328554986d703bf48fdf84a27e85c7` matching tested head
+`1591ec72553a1168bc52d5745d1865059c15fede`.
+Status: `/private/tmp/fwp-214-merge-status.json` (`merged-and-verified`).
+Do not restart that watcher. Reparent this preparation onto the verified merge
+before publication. The old follow-on publisher remains stopped.
+
+## Candidate weak channels and G4 repairs
+
+`WeakChannel[a]`, `channel.downgrade` and `channel.upgrade` now have interpreter,
+ownership-contract and native-runtime implementations. Metadata expires before
+queued child destruction; upgrade allocates its result before retaining the target.
+Weak edges are not owning edges. Acquired channels return to the existing
+conservative capture/store checks. Programs using weak channels preserve original
+channel-owner frames so optimization cannot change expiration. Tracing builds
+reject weak channels during the transition; tracing has not been deleted.
+
+Tests added to existing targets cover raw/optimized interpreter/native outputs,
+dynamic/static storage, failure/cancellation, returned captures, strong-cycle
+rejection, metadata cleanup, address reuse and allocation failure. Missing
+expiration, missing metadata release and an incorrectly early retain have separate
+fault controls. Weak equality now compares target identity in the interpreter,
+including after expiration; wrappers must not change equality.
+
+G4 now instruments foreign callback entry/cancellation with the live-allocation
+ledger and adds the weak fixture to WASI JSPI/Asyncify checks. The WASI physical
+allocation observer had a duplicate-detection bug: it stopped at an empty slot
+before examining later live entries. It now scans all occupied slots, reuses the
+first hole, and trims its high-water mark. A native/WASI regression test checks
+duplicate registration, duplicate removal and ordinary reuse. These integrated
+tests are written but have not yet run with the modified compiler.
 
 ## Prepared group
 
@@ -87,18 +109,55 @@ and all three deliberately broken controls. Evidence:
 `/private/tmp/fwp-file-matrix-evidence`. Incidental file-test fixes move an inline
 Rust import to the top and give native executables explicit `.exe` paths.
 
-Formatting, whitespace, Windows workflow lint and documentation audit passed.
+The earlier preparation passed formatting, whitespace, Windows workflow lint
+and documentation audit.
 The audit checked 158 link sets, 106 immutable preparation pairs/tags and eight
 roadmap steps.
 
 The accepted-direction revision updates the plan, ownership/design/feasibility
 guides, admission and diagnostic instructions, benchmark protocol, README and
 recursion tutorial together. It removes the pending broad cycle-policy decision.
-Exact weak API semantics remain G2 work. Guarded
+The first weak-channel contract is now specified; other G2 boundaries and the
+analysis baseline remain unfinished. Guarded
 `python3 scripts/local-guard.py python3 scripts/check-roadmap.py` passed: 159 doc
 link sets, 106 immutable preparation pairs/tags, eight roadmap steps and commit
 messages. `git diff --cached --check` passed; AGENTS.md has 99 lines. No compiler
 build or comparative benchmark was run for this documentation revision.
+
+The weak-channel C fragment was checked inside C emitted by the verified #213
+compiler, using the current `tests/support/ownership_ledger.rs` and lifetime probe.
+At Clang O2, 1,024 release/reuse rounds passed; omitted expiration failed with 221,
+omitted metadata release with 222, and retain-before-failed-allocation with 231.
+Both failed weak allocations leave owners unchanged. Driver:
+`/private/tmp/check-weak-allocation-failures.py`; extracted generator:
+`/private/tmp/fwp-weak-runtime-probe.rs`. This does not compile the candidate Rust
+compiler or establish GCC/platform coverage.
+
+The WASI physical-ledger regression's native Clang O1/O2 cases passed: normal
+reuse 0, duplicate registration 245 and duplicate removal 243. Driver:
+`/private/tmp/check-wasi-ledger-regression.py`. Actual WASI execution is pending.
+The new `graph_generations.fwp` fixture ran in #213's interpreter and matched its
+independently specified output; it now joins `arc_extensions` for integrated
+ownership checks. It distinguishes deleting/reusing a slot from keeping an older
+immutable graph snapshot alive.
+
+Standard-library docs were regenerated by compiling and running the checked-in
+`tests/stdlib_doc.rs` standalone under the guard (no compiler build). The primitive
+inventory passed against its frozen baseline after adding the two weak operations:
+394 declarations, 384 distinct, 40 aliases, 373 contracts, 19 templates and no
+review entries. Evidence: `/private/tmp/fwp-weak-channel-inventory.json`.
+Weak fixture syntax/types were checked before adding weak identity/class cases;
+those newer cases require the candidate solver and remain unverified.
+
+Socket scratch cancellation/allocation failure, TCP construction failure,
+library resource closure and loader unload now run their existing fault controls
+in both ARC and tracing modes. Their new ARC executions have not run yet. Keep
+these tests alongside the old tracing checks until final verification; adding a
+mode is not evidence that its controls pass.
+
+The candidate documentation audit passed 160 link sets, 106 immutable preparation
+pairs/tags and eight roadmap steps. Changed Rust files were formatted and staged
+whitespace checks passed. This is a local checkpoint, not a published PR.
 
 Full compiler/test-target compilation, GCC, Windows, WASI and integrated platform
 coverage remain for the preparation's own final-head CI. Do not cite #214's gates
@@ -107,9 +166,8 @@ as validation of these later changes. Required gates and merge rules are in
 
 ## Implementation direction and preserved work
 
-The ownership direction is accepted, not pending another policy question. G2
-must turn its six examples into precise contracts and establish analysis-scaling
-budgets. G3 implements weak access and ownership rules; G4 closes diagnostics;
+The ownership direction is accepted, not pending another policy question. G2 must finish its six concrete boundary contracts and establish
+analysis-scaling budgets; the first channel contract is specified. G3 implements weak access and ownership rules; G4 closes diagnostics;
 G5 deletes tracing. Finish the combined GC-removal batch before chasing every
 remaining ARC operation. Afterward, baseline and implement the count-free buffer
 (A5); use measurements to order other count/box work and the parser workspace
@@ -133,7 +191,7 @@ Concrete unfinished tasks and acceptance criteria live in [PLAN.md](../PLAN.md).
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | Direction accepted; G2 specifies weak semantics/examples; G3 implements them; G4 closes diagnostics; G5 deletes tracing |
+| 1 | In progress | Direction accepted; G2 finishes boundary contracts/baselines; G3 weak channels are unverified; G4 closes diagnostics; G5 deletes tracing |
 | 2 | In progress | A2–A6: baseline residual costs, count-free unique buffer, measured count/box removal and scoped parser workspace |
 | 3 | In progress | F1–F3: cost fixtures, proved tail-frame extensions and mutual-recursion decision |
 | 4 | In progress | P1–P3: checked comparisons and per-workload CPU budgets |
