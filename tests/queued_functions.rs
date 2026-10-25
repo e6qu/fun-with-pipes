@@ -129,16 +129,25 @@ fn weak_channel_metadata_expires_before_child_cleanup_and_survives_address_reuse
         release,
         "        /* deliberately missing metadata release */",
     );
-    let acquire = "    V result = fwp_rc_fresh((weak_alloc_checkpoint(2), fwp_some(target)));\n    fwp_rc_dup(target);";
+    let acquire = "    fwp_rc_dup(target);";
+    let result = "    V result = fwp_rc_fresh((weak_alloc_checkpoint(2), fwp_some(target)));";
     assert_eq!(code.matches(acquire).count(), 1);
-    let early_retain = code.replace(acquire,
-        "    fwp_rc_dup(target);\n    V result = fwp_rc_fresh((weak_alloc_checkpoint(2), fwp_some(target)));");
+    assert_eq!(code.matches(result).count(), 1);
+    let early_retain = code
+        .replace(acquire, "")
+        .replace(result, &format!("{acquire}\n{result}"));
+    let protect = "    fwp_cleanup_push(&weak_cleanup, fwp_rc_cleanup_cell, &result);";
+    let unprotect = "    fwp_cleanup_pop(&weak_cleanup);";
+    assert_eq!(code.matches(protect).count(), 1);
+    assert_eq!(code.matches(unprotect).count(), 1);
+    let no_result_cleanup = code.replace(protect, "").replace(unprotect, "");
     for opt in ["-O1", "-O2"] {
         for (candidate, status) in [
             (&code, 0),
             (&no_expire, 221),
             (&no_release, 222),
             (&early_retain, 231),
+            (&no_result_cleanup, 235),
         ] {
             let binary = dir.join("lifetime.exe");
             fwp::cgen::compile_c(candidate, &binary, opt).unwrap();

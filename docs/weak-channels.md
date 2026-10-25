@@ -106,7 +106,10 @@ The candidate tests in [queued_functions.rs](../tests/queued_functions.rs) cover
 raw/optimized interpretation versus native O1/O2, close versus expiration,
 returned weak captures, attempted cycle recreation, repeated metadata cleanup,
 actual address reuse, identity equality, allocation failure, language error and
-task cancellation. Dynamic/static native storage and WASI JSPI/Asyncify cases
+task cancellation. A native reference-count overflow during upgrade must release
+the unfinished `Some` cell without releasing the borrowed target. A control that
+omits that construction cleanup must fail its allocation-balance check.
+Dynamic/static native storage and WASI JSPI/Asyncify cases
 are included. Deliberately omitting expiration or the channel's
 metadata release must fail independently. The runtime probe checks expiration
 before dereferencing a deliberately invalid target.

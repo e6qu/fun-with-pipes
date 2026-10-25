@@ -1661,7 +1661,12 @@ static V fwp_p_channel_upgrade(V value) {
      * nor suspends; final release cannot run between the read and the retain.
      * Reserve the result first: allocation failure leaves ownership unchanged. */
     V result = fwp_rc_fresh(fwp_some(target));
+    /* The target becomes a child owner only after its retain succeeds. Until
+     * then, an overflowing count must release just the unfinished outer cell. */
+    fwp_cleanup weak_cleanup;
+    fwp_cleanup_push(&weak_cleanup, fwp_rc_cleanup_cell, &result);
     fwp_rc_dup(target);
+    fwp_cleanup_pop(&weak_cleanup);
     return result;
 }
 #endif

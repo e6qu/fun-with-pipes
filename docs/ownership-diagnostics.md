@@ -206,7 +206,10 @@ for these OS-resource checks.
 [Weak-channel tests](../tests/queued_functions.rs) check final-release ordering,
 metadata release, reused addresses and failed acquisition. The fault controls
 omit expiration, omit the channel's metadata release, or retain the target before
-an allocation that fails. Each must fail independently. The same language fixture
+an allocation that fails. Actual reference-count overflow checks that upgrade
+releases its unfinished result cell while preserving the borrowed channel; an
+omitted result cleanup must fail with 235. Each control must fail independently.
+The same language fixture
 is included in dynamic/static native and WASI JSPI/Asyncify execution.
 
 The [WASI physical ledger](../tests/fixtures/wasm_arc_allocations.c) now detects

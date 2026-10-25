@@ -129,6 +129,17 @@ head are still required. The affected task-handle fixture also passed ARC/tracin
 at O0/O2 with the candidate compiler (`check-fwp-queued-task-root.py`, CPU 2.45,
 elapsed 4.99 seconds). No broad validation restart or repair push yet.
 
+Source review also found a runtime gap beyond the CI fixture failures:
+`channel.upgrade` allocated `Some(target)` before retaining `target`, but did not
+release that outer cell if the retain trapped. It now protects the unfinished
+cell with the existing cleanup mechanism and disarms it after the retain. The
+new regression forces actual wide-count overflow, checks the target is still
+borrowed, restores its count and verifies exact live-storage balance. Omitting
+that cleanup fails with 235. Guarded `check-fwp-weak-upgrade-cleanup.py` passed
+O1/O2 normal and all four faulty variants in 24.39 seconds (CPU 12.11). It uses
+candidate-generated C with this runtime function replaced; final integrated and
+WASI checks are still required.
+
 ## Included implementation
 
 - **Weak channels:** interpreter, ownership rules and native/WASI runtime for

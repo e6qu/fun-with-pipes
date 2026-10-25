@@ -21,6 +21,18 @@ static int failed_allocations(void) {
     if (setjmp(weak_recovered) == 0) { fwp_p_channel_upgrade(weak); return 234; }
     if (*fwp_rc_slot(channel) != 1) return 231;
     if (fwp_gc.budget != before || owner_ledger_live != owners || fwp_cleanups) return 235;
+    /* Exercise the actual retain trap after the option was allocated. The
+     * borrowed target must survive; only the unfinished result is destroyed. */
+    for (unsigned i = 1; i < 255; i++) fwp_rc_dup(channel);
+    gc_rc_wide *wide = *fwp_rc_wide_link(fwp_rc_slot(channel));
+    if (!wide || wide->count != 255) return 236;
+    wide->count = SIZE_MAX;
+    if (setjmp(weak_recovered) == 0) { fwp_p_channel_upgrade(weak); return 237; }
+    if (wide->count != SIZE_MAX || fwp_gc.budget != before ||
+        owner_ledger_live != owners || fwp_cleanups) return 235;
+    wide->count = 255;
+    for (unsigned i = 1; i < 255; i++) fwp_channel_drop(channel);
+    if (*fwp_rc_slot(channel) != 1) return 231;
     fwp_trap_recover = 0;
     fwp_trap_jb = 0;
     fwp_channel_drop(channel);
