@@ -1,14 +1,15 @@
 # Current work
 
-**Next:** publish the combined G3/G4 candidate and run its consolidated validation.
+**Next:** run consolidated validation for [PR #215](https://github.com/e6qu/fun-with-pipes/pull/215), the combined G3/G4 candidate.
 Fix all failures from that run together before repeating affected checks. Do not
 restart the old publisher or split this preparation into smaller PRs. G5 follows
 once the replacement ownership checks pass; tracing has not been deleted.
 
 Worktree: `/private/tmp/fwp-ownership-fault-matrix`; branch: `ownership-fault-matrix`.
-Last committed checkpoint: `8b3c5ffb` (direct library ownership checks).
-The working tree adds ARC unwind/file cancellation, wide-count metadata checks,
-a recursive weak-channel example and the finite diagnostic deletion map.
+Implementation checkpoint: `d4a2ca37` adds ARC unwind/file cancellation, wide-count
+metadata checks, a recursive weak-channel example and the finite deletion map.
+Earlier checkpoints after reparenting: `40a194ea` (weak channels), `b29efcb5`
+(graph/serialization), `c900d301` (retained C callbacks), `201df98b` (direct libraries).
 
 The accepted direction is inferred moves/borrows, count-free unique storage,
 ARC for sharing, explicit weak links and rejection of unproved owning cycles.
@@ -18,8 +19,9 @@ executable used for bounded probes is not a build dependency.
 
 ## Delivery state
 
-No PR is open for this preparation. No full candidate compiler build or candidate
-CI matrix has run. Full builds/suites run on GitHub; local checks stay serial under
+PR #215 was opened as a draft to record this final handoff before enabling the
+production run. No full candidate compiler build or candidate matrix has run yet.
+Mark it ready after pushing this handoff; skipped draft jobs are not acceptance. Full builds/suites run on GitHub; local checks stay serial under
 `scripts/local-guard.py`. Standing authorization covers publication and squash merge
 only after all nine production jobs and documentation pass for the final commit.
 Follow [AGENTS.md](../AGENTS.md) for the one-line, at-most-80-character merge subject
@@ -30,8 +32,8 @@ and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40187394
 Its verified squash merge is `6ee33396459986a0fa08464b182d23fd2fe6c136`, subject
 `Check native ownership without retaining freed storage`, empty body. Its tree
 `91f1a23c02328554986d703bf48fdf84a27e85c7` matches tested head
-`1591ec72553a1168bc52d5745d1865059c15fede`. Reparent this preparation onto that
-identical merge tree before publication. Duplicate postmerge production run
+`1591ec72553a1168bc52d5745d1865059c15fede`. This preparation is now reparented onto that identical merge tree; comparison
+with the pre-reparent implementation found no tree changes. Duplicate postmerge production run
 `40197117132` completed/cancelled; postmerge docs `40197117071` passed.
 
 Both old automation scripts must stay stopped. The #214 watcher recorded
@@ -109,6 +111,7 @@ the candidate Rust compiler, GCC, Windows or WASI.
 | ARC wide counts | Dynamic/static O1/O2, 8/1,024 rounds, overflow 101, allocation failure 102, missing physical metadata free 239; `/private/tmp/extract-fwp-wide.py arc_wide_counts_release_values_and_metadata_each_round` |
 | Graph fixture | Old raw interpreter matches nine expected lines, including 64 reuses and old snapshot |
 | Primitive inventory | Frozen baseline passed: 394 declarations, 384 distinct, 40 aliases, 373 contracts, 19 templates, no review entries; `/private/tmp/fwp-weak-channel-inventory.json` |
+| Documentation | Audit passed after retaining the required status table: 161 link sets, 106 immutable preparation pairs/tags, eight roadmap steps and commit messages |
 | Formatting and scheduling | `/private/tmp/check-fwp-callback-preparation.py` passed after the unwind/wide-count edits; 254 targets assigned and whitespace clean |
 
 The unwind probe initially used incomplete typed callback metadata, causing an
