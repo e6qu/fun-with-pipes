@@ -15,8 +15,9 @@ Use [CONTRIBUTING.md](CONTRIBUTING.md) for repository conventions and test locat
 
 - Remove tracing garbage collection (GC). Prefer compile-time ownership, moves,
   borrowing, stack storage and unique reuse; reserve automatic reference
-  counting (ARC) for necessary sharing. Never substitute tracing or permanent
-  retention for a rejected lifetime proof.
+  counting (ARC) for sharing. Follow the [accepted direction](docs/gc-removal-design.md):
+  explicit weak links, reject unproved owning cycles, regions for bounded work.
+  Never replace a rejected lifetime proof with tracing or permanent retention.
 - Preserve simple tacit, curried, data-last pipes, single-argument functions,
   strong ordinary inference, explicit generic signatures and specialization.
   Keep immutable values, tracked effects, checked arithmetic and evaluation/trap
@@ -49,6 +50,8 @@ implementation of currently supported external protocols.
   at a time. Fix every encountered issue immediately, including unrelated or
   pre-existing issues, regardless of who caused them. Do not hide or defer fixes;
   record the repair and verification. Queued CI gates merging, not independent work.
+- Iterate with focused checks on a draft branch/PR; reserve the full production
+  matrix for the completed combined batch. Do not run all suites per small change.
 - Before pushing a CI repair, audit every failed job and completed test target,
   fix underlying causes and check affected callers. Batch all known fixes into
   one push; preserve passing final heads while their remaining gates run.

@@ -9,6 +9,9 @@ values and pipes.
 This page describes today's contracts. [PLAN.md](../PLAN.md) names the remaining
 implementation tasks. [Primitive ownership](primitive-ownership.md) specifies
 individual operations; [measurements](benchmarks.md) report actual costs.
+The [accepted ownership direction](gc-removal-design.md) specifies explicit weak
+links, rejection of unproved owning cycles, count-free unique storage and scoped
+regions. Current APIs may change; that direction is not implemented support.
 
 ## Existing implementation
 
@@ -54,7 +57,7 @@ execution forms, their tests and the remaining lifetime decisions.
   fixture may still allocate or check a count when freeing storage. A completely
   unique heap ownership path without count metadata is separate planned work.
 
-These are **G2–G5** and **A2–A5** in [the implementation plan](../PLAN.md), not
+These are **G2–G5** and **A2–A6** in [the implementation plan](../PLAN.md), not
 completed features. Weak handles are not implemented.
 
 ## Stable language behavior
@@ -360,10 +363,16 @@ An owning cycle is a loop of values that keep one another alive. Ordinary ARC
 cannot reclaim an unreachable strong cycle. A logical cycle represented by
 integer IDs is different: the IDs do not keep their targets alive.
 
-Checked ARC keeps its existing conservative restrictions. The supported pattern
-is an independent owner for ongoing work, data-only queues, and non-owning graph
-IDs. No new weak-handle or retained-C API is introduced. The following cases make
-that direction concrete; completing their native checks is **G3**, not deleting GC.
+The accepted direction keeps rejection of unproved owning cycles and adds
+explicit weak references before GC removal. Exact weak targets, acquisition and
+expiration rules are G2 work; weak handles are not implemented. Returned functions
+and partial application remain language features. The
+[six implementation examples](gc-removal-design.md#six-implementation-examples)
+define the required work, including retained C callbacks and node reuse.
+
+Today, independent owners, data-only queues and non-owning graph IDs provide
+supported forms. The following table describes current support, not the finished
+GC-free contract. It does not yet add C callback retention.
 
 | Use case | Supported form or restriction | Release rule |
 |---|---|---|
@@ -400,13 +409,14 @@ Unknown callback/task producers, recursive channel owners, queued HTTP/2 streams
 and task-result back-references remain rejected by checked ARC. Their maintained
 tracing-only controls are recorded in [the admission checklist](ownership-admission.md).
 Before removing tracing, each must have a proved equivalent or an explicit
-language restriction; this PR does not remove those execution paths. The scoped
+language restriction; these execution paths have not been removed. The scoped
 subscriber establishes one useful accepted form, not arbitrary cycle inference.
 
-A weak reference would not keep its target alive. `Weak`, `weak.create` and
-`weak.upgrade` are **not implemented or required by these examples**. Silently
-weakening a capture would change behavior, and acquiring a strong owner from a
-weak reference would still need a rule preventing a new unproved owning cycle.
+A weak reference will not keep its target alive. The public API names are not
+chosen and these examples use only existing features. Silently weakening a
+capture would change behavior. Acquiring an owner must not permit storing it
+where it creates a new unproved owning cycle; a scoped access operation alone
+does not establish that property.
 
 ## Ownership contract checks
 

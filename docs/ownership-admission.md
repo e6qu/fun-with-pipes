@@ -7,7 +7,8 @@ from executing the program, checking its output and proving cleanup. The
 
 Native builds select checked ARC by default. The entries below also accept
 explicit `--gc arc`. Explicit tracing remains available; deleting it requires
-deciding the remaining lifetime cases, not just deleting a command-line option.
+implementing the [accepted ownership direction](gc-removal-design.md) for the
+remaining lifetime cases, not just deleting a command-line option.
 Neither a successful C emission nor an interpreter run proves native cleanup.
 
 ## Entry points and their checks
@@ -101,7 +102,14 @@ Deliberately missing releases and child joins must be detected. Final native
 validation for that new test is recorded in [the handoff](development-state.md).
 
 Remaining G2–G3 work must resolve each maintained tracing-only graph above with
-a proved equivalent or an explicit language restriction. In particular, a scoped
+a proved equivalent or an explicit language restriction. The selected contract
+rejects unproved owning cycles and requires explicit weak references before
+collector deletion. Test acquisition followed by a store/capture that could
+recreate the cycle; checking only a weak access's duration is insufficient.
+The [six implementation examples](gc-removal-design.md#six-implementation-examples)
+also cover returned functions, graph-slot reuse and bounded workspaces. They are
+targets, not additional accepted rows in today's execution matrix.
+In particular, a scoped
 subscriber does not prove that an arbitrary queued task result or HTTP/2 stream
 cannot own its queue. A C implementation that retains a scoped callback violates
 the host contract; compiler rejection cannot reliably detect that behavior.

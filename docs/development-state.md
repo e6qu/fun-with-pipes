@@ -1,18 +1,34 @@
 # Current work
 
-**Next:** finish final-head validation of [PR #214](https://github.com/e6qu/fun-with-pipes/pull/214),
-then publish the prepared ownership fault matrix as the next substantial PR.
-The preparation is `/private/tmp/fwp-ownership-fault-matrix`, branch
-`ownership-fault-matrix`, based on #214's `1591ec72553a1168bc52d5745d1865059c15fede`.
-Do not publish a second active PR or restart passing gates to add these changes.
+**Next:** complete G2's weak-reference contract and six acceptance examples in
+[the accepted ownership direction](gc-removal-design.md#six-implementation-examples),
+including target types, acquisition/expiration, final-release ordering and stores
+that could recreate a cycle. Then implement G3's first complete weak path.
+The user accepted this direction on October 25: reject unproved owning cycles,
+infer moves/borrows, use ARC for sharing, add weak links for selected objects and
+use regions for bounded work. Preserve returned functions and partial application.
+Current APIs and layouts are replaceable; the weak API is not implemented.
+Worktree `/private/tmp/fwp-ownership-fault-matrix`, branch `ownership-fault-matrix`,
+starts from preparation `517de6e1e77c05ce7dc3577e21258ea605363168` on #214's head.
+Use focused checks while developing; keep the eventual PR draft until the batch
+is ready for all final production gates. Do not run full suites per internal step.
+
+The follow-on publisher PID 46922 was stopped on October 25 at the user's request
+to consolidate this work. Its status is `stopped-for-combined-gc-removal` in
+`/private/tmp/fwp-fault-matrix-delivery-status.json`. Do not restart the old script:
+it would prematurely publish and merge the earlier preparation. The separate
+#214 watcher may finish its existing validation and verified merge.
 
 ## Delivery in progress
 
 PR #214 adds the live-allocation ledger and collector-setting inventory.
 [Production 40187394961](https://github.com/e6qu/fun-with-pipes/actions/runs/40187394961)
 was running without reported failures when checked on October 25.
-Its regular macOS ARM64 job, benchmark and [documentation 40187394939](https://github.com/e6qu/fun-with-pipes/actions/runs/40187394939)
-passed. Seven platform jobs remain; these are not completed acceptance claims.
+At the last recorded check, 12:53 UTC, all four macOS jobs, Linux ARM64,
+Windows ARM64, benchmark and
+[documentation 40187394939](https://github.com/e6qu/fun-with-pipes/actions/runs/40187394939)
+passed. Linux AMD64 and Windows AMD64 were running. Read the watcher status
+for later results; running jobs are not completed acceptance claims.
 The watcher `/private/tmp/fwp-214-merge-when-green.py` requires all nine production
 jobs and documentation for the exact head, then squash-merges with the single line
 `Check native ownership without retaining freed storage` and empty body.
@@ -70,17 +86,34 @@ Formatting, whitespace, Windows workflow lint and documentation audit passed.
 The audit checked 158 link sets, 106 immutable preparation pairs/tags and eight
 roadmap steps.
 
+The accepted-direction revision updates the plan, ownership/design/feasibility
+guides, admission and diagnostic instructions, benchmark protocol, README and
+recursion tutorial together. It removes the pending broad cycle-policy decision.
+Exact weak API semantics remain G2 work. Guarded
+`python3 scripts/local-guard.py python3 scripts/check-roadmap.py` passed: 159 doc
+link sets, 106 immutable preparation pairs/tags, eight roadmap steps and commit
+messages. `git diff --cached --check` passed; AGENTS.md has 99 lines. No compiler
+build or comparative benchmark was run for this documentation revision.
+
 Full compiler/test-target compilation, GCC, Windows, WASI and integrated platform
 coverage remain for the preparation's own final-head CI. Do not cite #214's gates
 as validation of these later changes. Required gates and merge rules are in
 [AGENTS.md](../AGENTS.md) and [CONTRIBUTING.md](../CONTRIBUTING.md).
 
-## Remaining decisions and preserved work
+## Implementation direction and preserved work
 
-The cycle-policy question remains unanswered: retain current ARC restrictions with
-scopes/IDs when deleting tracing, or first add an explicit cycle-breaking API.
-Do not infer an answer from silence. Independent G4 work continues: finish the
-WASI/external-resource mapping, including cancellation and external callback entry.
+The ownership direction is accepted, not pending another policy question. G2
+must turn its six examples into precise contracts and establish analysis-scaling
+budgets. G3 implements weak access and ownership rules; G4 closes diagnostics;
+G5 deletes tracing. Finish the combined GC-removal batch before chasing every
+remaining ARC operation. Afterward, baseline and implement the count-free buffer
+(A5); use measurements to order other count/box work and the parser workspace
+(A6). General region inference is not a prerequisite for GC removal.
+Do not automatically weaken captures or present another language's performance
+claims as verified fwp behavior. Ask only about concrete new semantic tradeoffs
+if an example cannot meet the accepted contract.
+G4 still needs the finite WASI/external-resource mapping, including cancellation
+and external callback entry; it must not displace the GC-removal design work.
 Neither this matrix nor a zero byte balance proves arbitrary raw borrows safe.
 
 Preserve [the unexplained Intel macOS compiler-abort evidence](measurements/compiler-abort.md).
@@ -95,8 +128,8 @@ Concrete unfinished tasks and acceptance criteria live in [PLAN.md](../PLAN.md).
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | G2–G3: settle remaining graph policy; G4 complete diagnostic replacements; G5 delete tracing |
-| 2 | In progress | A2–A5: account for residual counts, remove redundant ownership work/boxes, prove count-free unique storage |
+| 1 | In progress | Direction accepted; G2 specifies weak semantics/examples; G3 implements them; G4 closes diagnostics; G5 deletes tracing |
+| 2 | In progress | A2–A6: baseline residual costs, count-free unique buffer, measured count/box removal and scoped parser workspace |
 | 3 | In progress | F1–F3: cost fixtures, proved tail-frame extensions and mutual-recursion decision |
 | 4 | In progress | P1–P3: checked comparisons and per-workload CPU budgets |
 | 5 | In progress | D1–D3: AD recording/workspace costs and precision/nesting checks |

@@ -12,9 +12,12 @@ help infer moves and borrows. Runtime-dependent sharing still needs an ownership
 mechanism; the compiler need not prove every safe lifetime to be useful. A channel
 holding a callback that captures that channel can form an owning cycle. Closing
 the channel currently preserves queued messages, so silently draining it would
-change behavior. [Plan G2](../PLAN.md#1-remove-tracing-gc) defines the remaining cycle decision: scoped/group
-owners, non-owning links or restrictions on escaping ownership are possibilities,
-not adopted semantics. Arbitrary strong cycles, ordinary ARC alone and guaranteed
+change behavior. The [accepted direction](gc-removal-design.md) rejects unproved
+owning cycles and adds explicit weak links for selected objects. Regions serve
+bounded grouped lifetimes; returned functions and partial applications remain.
+[Plan G2](../PLAN.md#1-remove-tracing-gc) must specify the exact weak API and proof
+rules. This direction is not yet implemented support. Arbitrary strong cycles,
+ordinary ARC alone and guaranteed
 automatic reclamation cannot all be promised together. Rust also permits leaked
 reference cycles; its memory-safety guarantee is not a leak-freedom guarantee.
 See [Rust's cycle explanation](https://doc.rust-lang.org/book/ch15-06-reference-cycles.html).
@@ -27,6 +30,12 @@ keeps growing its results. Prefer fewer necessary heap objects, not zero heap
 storage for unbounded or escaping data. Functional in-place reuse has research
 precedent in [Perceus](https://www.microsoft.com/en-us/research/publication/perceus-garbage-free-reference-counting-with-reuse/);
 that precedent does not establish fwp's callback/channel contracts.
+
+**Ownership analysis must have a measured cost.** Use finite function summaries
+and revisit only changed dependencies; measure time, memory and specialization
+growth as programs grow. More precise types do not decide all possible runtime
+lifetimes. Conservative rejection is permitted; unbounded search for an exact
+proof is not the compiler design. A terminating analysis need not scale linearly.
 
 **Zero-cost abstraction is a claim about named patterns.** Known curried calls
 can become direct native calls without intermediate closures. An escaping

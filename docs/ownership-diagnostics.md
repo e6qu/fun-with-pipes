@@ -178,5 +178,5 @@ same file describe language behavior and must remain covered.
    release. A zero native byte balance cannot substitute for these checks.
 4. Only after that mapping and all native/WASI gates pass, replace the old
    workflow settings and remove collector-only assertions with the collector.
-   Keep the [cycle-policy decision](ownership-admission.md#contract-work-before-collector-deletion)
+   Keep the [cycle-contract implementation](ownership-admission.md#contract-work-before-collector-deletion)
    separate: better diagnostics do not admit an unproved owning cycle.
