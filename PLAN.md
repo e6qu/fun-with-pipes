@@ -147,7 +147,9 @@ and external callback entry, before removing any collector diagnostics.
 
 **G5 — Delete tracing.** After G1–G4, remove tracing selection and code from
 `src/main.rs`, code generation, runtime allocator/root discovery, host adapters,
-CLI help and tests. Keep allocator, stack and resource functions needed without
+CLI help and tests. Apply the agreed cycle/lifetime policy to interpreter entries
+as well as compiled entries; today the ARC gate is in native code generation.
+Keep allocator, stack and resource functions needed without
 collection. Update protocols and examples together; no compatibility switch.
 **Done:** all maintained targets pass the replacement controls; actual binaries
 omit collector roots/marking/sweeping; supported programs retain their outputs,

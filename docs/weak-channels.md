@@ -11,7 +11,10 @@ A strong channel value owns its queue. `WeakChannel[a]` observes the identity of
 a channel carrying `a`, without owning that queue or its messages. It owns only
 small metadata that records whether the target still exists. Equality compares
 target identity, including after expiration: two downgrades of one channel stay
-equal, and references to different channels stay unequal. It is not a weak
+equal, and references to different channels stay unequal. Comparing, displaying or
+duplicating a weak handle does not inspect or duplicate its payload. Runtime
+identities cannot be encoded, decoded or canonically hashed; use explicit
+application keys when data must cross a serialization boundary. It is not a weak
 reference to arbitrary values; no general boxing or shared-value wrapper is added.
 
 ```fwp

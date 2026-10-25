@@ -138,9 +138,52 @@ Use existing syntax; introduce every new operation before its example.
 | Returned partial application | Captures move into or share the returned function's storage | Function survives its creating call; captures release once on every exit; a proved local callback remains borrowable |
 | Recursive parser/autodiff workspace | One bounded scope owns workspace; results own their storage or retain a proved live owner | Reject expired internal references; failure/nesting/cancellation release workspace; growing outputs still require growing memory |
 
-For each row, G2 writes the ownership relationships, observable release/expiration
-points and expected result; G3 supplies raw-interpreter/native positive and
-negative tests. Map every existing tracing-only admission fixture to one of
+The first weak queue contract is specified in [weak channels](weak-channels.md).
+A separate [graph fixture](../tests/fixtures/graph_generations.fwp) specifies
+node identity without weak pointers. A key contains a slot number and generation,
+and is interpreted against an explicit graph snapshot. The generation is a
+counter that changes each time the slot is deleted. Each slot stores its
+generation and an optional node. Deletion replaces the node with `None` and
+increments the generation using checked arithmetic; reuse keeps that new
+generation. An exhausted generation traps rather than wrapping. The fixture
+reuses one bounded slot 64 times, checks stale keys and keeps an old snapshot
+alive as a control. Its expected output is checked independently. Tombstone
+metadata remains in the slot, but deleted payloads and edges do not. An older
+immutable graph snapshot intentionally still owns its older node.
+
+The subscription contract remains [lesson 24](tutorials/24-subscriptions/README.md):
+finish drains; stop cancels and awaits; both wait for active work. The existing
+failure, reentry and cancellation tests remain required. Returned partial
+applications likewise keep their captures; weak observation must not shorten
+that lifetime. The parser/AD row preserves current scoped guarantees; A6 adds
+the new count-free parser region after GC removal.
+
+**Retained C callbacks remain the next boundary to design and implement.** A
+plain C function pointer cannot carry a closure's captures. The current scoped
+trampoline looks up its context on the active foreign-call stack, which expires
+at return. Simply retaining the closure would leave that lookup invalid. An
+explicit context-bearing protocol must own the closure, stop accepting new
+calls on unregister, and release captures only after active calls finish or
+unwind. Reentrant unregister must not wait for its own active call. Host calls,
+registration and release must use the owning scheduler; arbitrary external
+thread entry is not currently supported. Managed results need independent,
+explicit release, just as existing exported string results do. Reuse the export
+conversion/release machinery where applicable, but do not silently reinterpret
+a scoped callback or introduce generated executable trampolines.
+
+Exported function values are currently rejected by `export_sigs` in
+`src/cgen.rs`, and `repr(C)` records reject function fields in `src/ffi.rs`.
+Monomorphization flattens a function's arrow chain into C arguments, so an
+ordinary returned partial application does not by itself establish a retained
+C ABI. Decide the explicit registration representation before changing those
+checks. The required first test is: register a captured value, return from the
+creating fwp call, invoke twice from C, unregister during reentry, complete the
+active call, and prove exactly one capture release. Repeat with cancellation,
+language failure and a managed result released after unregister. No current
+entry or lifecycle guarantee is claimed for this unimplemented protocol.
+
+For remaining rows, G2 records precise ownership and observable release points;
+G3 supplies raw-interpreter/native positive and negative tests. Map every existing tracing-only admission fixture to one of
 these contracts or a documented restriction. Do not remove a fixture to make
 the table appear complete.
 For the workspace row, G3 preserves and tests the existing scoped lifetime

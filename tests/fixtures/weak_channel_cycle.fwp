@@ -8,4 +8,4 @@ capture = const | flip compose channel.close
 enqueue : Channel[() -> () ! {Async}] -> () ! {Async}
 enqueue = both id capture | uncurry channel.send | ignore
 
-main = make 1 | channel.downgrade | channel.upgrade | option.map enqueue | ignore
+main = make 1 | tap (channel.downgrade | channel.upgrade | option.map enqueue | ignore) | ignore

@@ -408,6 +408,24 @@ impl<'a> Infer<'a> {
         if def.resource {
             return false;
         }
+        // Runtime identities have no portable value encoding. Previously the
+        // opaque-type rule accepted these and JSON silently emitted null.
+        // Hash uses the canonical encoding, so it must reject them as well.
+        if matches!(class, "std::Encode" | "std::Decode" | "std::Hash")
+            && matches!(
+                name,
+                "std::Task"
+                    | "std::Channel"
+                    | "std::WeakChannel"
+                    | "std::Listener"
+                    | "std::Conn"
+                    | "std::UdpSocket"
+                    | "std::H2Stream"
+                    | "std::GrpcCell"
+            )
+        {
+            return false;
+        }
         if !visiting.insert(name.to_string()) {
             return true;
         }

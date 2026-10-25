@@ -1,11 +1,64 @@
 //! Protocol and text-format unit tests: round trips, golden bytes and
 //! fingerprint sensitivity.
 
-use fwp::driver::compile_source;
+use fwp::driver::{check_source, compile_source};
 use fwp::ir::{Program, MT};
 use fwp::mono::Roots;
 use fwp::proto;
 use fwp::value::{display, Value};
+
+#[test]
+fn runtime_identities_cannot_be_encoded_decoded_or_canonically_hashed() {
+    for handle in [
+        "Task[I64]",
+        "Channel[I64]",
+        "WeakChannel[I64]",
+        "Listener",
+        "Conn",
+        "UdpSocket",
+        "H2Stream",
+        "GrpcCell[I64]",
+    ] {
+        for ty in [
+            handle.to_string(),
+            format!("List[{handle}]"),
+            format!("Box[{handle}]"),
+        ] {
+            for (signature, body, diagnostic) in [
+                (format!("{ty} -> String"), "json.write", "cannot be encoded"),
+                (
+                    format!("String -> Result[{ty}, String]"),
+                    "json.read",
+                    "cannot be decoded",
+                ),
+                (format!("{ty} -> U64"), "hash", "cannot be hashed"),
+            ] {
+                let source = format!("Box[a] = {{ item: a }}\nbad : {signature}\nbad = {body}\n");
+                let error = match check_source("runtime-identity.fwp", &source, None) {
+                    Err(error) => error.rendered,
+                    Ok(_) => panic!("accepted {body} for {ty}"),
+                };
+                assert!(error.contains(diagnostic), "{body}/{ty}: {error}");
+            }
+        }
+    }
+}
+
+#[test]
+fn weak_identity_classes_do_not_require_payload_classes() {
+    let source = r#"
+WeakBox[a] = { link: WeakChannel[a] }
+same : WeakBox[() -> I64] -> WeakBox[() -> I64] -> Bool
+same = eq
+describe : WeakBox[() -> I64] -> String
+describe = show
+duplicate : WeakChannel[() -> I64] -> (WeakChannel[() -> I64], WeakChannel[() -> I64])
+duplicate = both id id
+"#;
+    if let Err(error) = check_source("weak-identity.fwp", source, None) {
+        panic!("{}", error.rendered);
+    }
+}
 
 #[test]
 fn zero_byte_records_round_trip_in_collections_and_corrupt_counts_fail() {
