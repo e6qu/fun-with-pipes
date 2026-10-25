@@ -1097,8 +1097,11 @@ Channel[a] = builtin
 # start a task; it may perform IO but must handle its own errors
 task.spawn : (() -> a ! {Async, IO, Network, FileIO}) -> Task[a] ! {Async}
 
-# wait for a task: `None` if it was cancelled
+# wait for a task and its children; `None` if it produced no result
+# cancelling a task does not erase a result it already produced
 task.await : Task[a] -> Option[a] ! {Async}
+
+# request cancellation of a task and its children; await to confirm completion
 task.cancel : Task[a] -> () ! {Async}
 
 # run a task with a deadline and wait for it

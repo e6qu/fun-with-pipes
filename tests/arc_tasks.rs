@@ -480,3 +480,153 @@ fn compact_task_records_preserve_scheduling_and_remove_arc_stack_markers() {
         assert!(output.stderr.is_empty(), "{label}: {output:?}");
     }
 }
+
+#[test]
+fn subscriptions_join_active_callbacks_and_release_each_round() {
+    let temporary = fwp::cgen::TempDir::new("subscription-lifetimes").unwrap();
+    let path = std::env::var_os("FWP_ARC_ARTIFACTS")
+        .map(|p| std::path::PathBuf::from(p).join("subscriptions"))
+        .unwrap_or_else(|| temporary.path().to_path_buf());
+    std::fs::create_dir_all(&path).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let program = include_str!("fixtures/subscription_lifetimes.fwp");
+    let round_output = include_str!("fixtures/subscription_lifetimes.out");
+    for rounds in [8, 64] {
+        assert_eq!(program.matches("main = range 0 8").count(), 1);
+        let source = path.join(format!("rounds-{rounds}.fwp"));
+        std::fs::write(
+            &source,
+            program.replace("main = range 0 8", &format!("main = range 0 {rounds}")),
+        )
+        .unwrap();
+        let reference = run_probe(
+            Command::new(compiler)
+                .env("FWP_NO_OPT", "1")
+                .args(["run", "--interp"])
+                .arg(&source),
+            &path,
+            &format!("reference-{rounds}"),
+            60,
+        );
+        assert!(reference.status.success(), "{reference:?}");
+        assert_eq!(reference.stdout, round_output.repeat(rounds).as_bytes());
+        assert!(reference.stderr.is_empty());
+        for memory in ["arc", "tracing"] {
+            let cfile = path.join(format!("{memory}-{rounds}.c"));
+            checked(
+                Command::new(compiler)
+                    .env_remove("FWP_NO_OPT")
+                    .args(["build", "--gc", memory, "--emit-c", "-O1"])
+                    .arg(&source)
+                    .arg("-o")
+                    .arg(&cfile),
+            );
+            let mut code = std::fs::read_to_string(&cfile).unwrap();
+            replace_once(
+                &mut code,
+                "    t->done = 1;\n    t->cleanups = 0;",
+                "    if (t->first_child || t->owns_thunk || t->base) _Exit(194);\n    t->done = 1;\n    t->cleanups = 0;",
+            );
+            if memory == "arc" {
+                replace_once(
+                    &mut code,
+                    "typedef uint64_t V;",
+                    "typedef uint64_t V;\nstatic unsigned subscription_rounds;",
+                );
+                replace_once(
+                    &mut code,
+                    "    fwp_scope s = {0, 0, 0, t->scope};",
+                    "    int subscription_outer = t == fwp_root && !t->scope;\n    intptr_t subscription_budget = fwp_gc.budget;\n    fwp_scope s = {0, 0, 0, t->scope};",
+                );
+                replace_once(
+                    &mut code,
+                    "    fwp_scope_release(&scope_owner);\n    FWP_KEEP_ALIVE(body);",
+                    "    fwp_scope_release(&scope_owner);\n    if (subscription_outer) {\n        if (t->first_child || fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget != subscription_budget) { fprintf(stderr, \"subscription retained bytes: %ld\\n\", (long)(subscription_budget-fwp_gc.budget)); _Exit(193); }\n        subscription_rounds++;\n    }\n    FWP_KEEP_ALIVE(body);",
+                );
+                replace_once(
+                    &mut code,
+                    "    /* Ownership observation point: before runtime teardown. */",
+                    &format!("    /* Ownership observation point: before runtime teardown. */\n    if (subscription_rounds != {rounds} || fwp_gc.budget != fwp_gc.budget_given || fwp_gc.ncollect) _Exit(195);"),
+                );
+            }
+            std::fs::write(&cfile, &code).unwrap();
+            for opt in ["-O1", "-O2"] {
+                let label = format!("{memory}-{rounds}{opt}");
+                let binary = path.join(format!("{label}.exe"));
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                let stress = if memory == "tracing" { "1" } else { "0" };
+                let output = run_probe(
+                    Command::new(&binary)
+                        .env_remove("FWP_GC")
+                        .env("FWP_FREE", "1")
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", stress),
+                    &path,
+                    &label,
+                    60,
+                );
+                assert!(output.status.success(), "{label}: {output:?}");
+                assert_eq!(output.stdout, reference.stdout, "{label}");
+                assert_eq!(output.stderr, reference.stderr, "{label}");
+                if memory != "arc" || rounds != 8 {
+                    continue;
+                }
+                let symbols = checked(Command::new("nm").arg(&binary));
+                for collector in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                    assert!(!String::from_utf8_lossy(&symbols.stdout).contains(collector));
+                }
+                std::fs::write(path.join(format!("{label}.symbols")), symbols.stdout).unwrap();
+                // Each mutation must be caught by an owner/active-user check,
+                // not by a collector rescuing otherwise leaked storage.
+                for (name, before, after, status) in [
+                    (
+                        "missing-scope-release",
+                        "    for (size_t i = 0; i < owner->scope->n; i++) fwp_task_drop(PTR(owner->scope->tasks[i]));",
+                        "    /* deliberately leak the scope's task owners */",
+                        193,
+                    ),
+                    (
+                        "missing-message-release",
+                        "c->owner.queue_drop(element);",
+                        "/* deliberately retain an unread message */",
+                        193,
+                    ),
+                    (
+                        "missing-unstarted-capture-release",
+                        "        fwp_closure_drop(thunk);",
+                        "        /* deliberately retain an unstarted callback */",
+                        193,
+                    ),
+                    (
+                        "missing-child-join",
+                        "    fwp_state_restore(0);\n    fwp_join_children();",
+                        "    fwp_state_restore(0);\n    /* deliberately publish completion with live children */",
+                        194,
+                    ),
+                ] {
+                    let mut broken = code.clone();
+                    replace_once(&mut broken, before, after);
+                    let label = format!("{name}{opt}");
+                    let binary = path.join(format!("{label}.exe"));
+                    std::fs::write(path.join(format!("{label}.c")), &broken).unwrap();
+                    fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
+                    let output = run_probe(
+                        Command::new(&binary)
+                            .env_remove("FWP_GC")
+                            .env("FWP_FREE", "1")
+                            .env("FWP_GC_STATS", "0")
+                            .env("FWP_GC_STRESS", "0")
+                            .env("FWP_GC_VERIFY", "0")
+                            .env("FWP_REUSE_VERIFY", "0"),
+                        &path,
+                        &label,
+                        60,
+                    );
+                    assert_eq!(output.status.code(), Some(status), "{label}: {output:?}");
+                }
+            }
+        }
+    }
+}

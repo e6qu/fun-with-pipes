@@ -2,7 +2,7 @@
 
 Two ownership changes remove unnecessary copying and reference increments when
 building and sorting an array. Focused checks pass on Linux, macOS and Windows,
-each on ARM64 and AMD64. Full delivery acceptance is still pending. These are
+each on ARM64 and AMD64. Integrated delivery passed in [PR #212](../roadmap-history.md#array-moves-and-the-gc-removal-checklist-pr-212). These are
 storage/count savings, not a measured timing speedup or proof of C/Rust parity.
 
 ## Behavior

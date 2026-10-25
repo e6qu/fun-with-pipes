@@ -82,7 +82,7 @@ obligation after a defined roadmap milestone is complete.
 
 ## Related design work
 
-[Ownership contracts](ownership.md#proposed-cycle-policy) explain callback and
+[Ownership contracts](ownership.md#cycle-and-retention-contract) explain callback and
 channel restrictions, weak references and scoped cleanup.
 [Tail calls](design.md#tail-calls-and-recursion) explain implemented self-tail
 frame reuse and the limits of extending it to other calls.

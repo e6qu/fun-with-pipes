@@ -1,86 +1,95 @@
 # Current work
 
-**Next:** add G1's entry/rejection checklist and tests to the same PR as A1,
-after the current PR #212 revision passes CI. Preparation is in
-`/private/tmp/fwp-ownership-admission`, branch `ownership-admission`.
-[PR #212](https://github.com/e6qu/fun-with-pipes/pull/212) is the only active PR:
-head `6666b5ea488f8d990ef17a8c038174c85cc3ddba`, production `40151422882`,
-documentation `40151422775`. The user explicitly requested bundling the next task
-into #212 once this run passes: do not merge the array-only revision or create
-another PR. After its ten gates pass, fast-forward `array-moves-delivery` to this
-preparation, update #212's title/description and push the combined changes.
-Require all nine production jobs and documentation again for the combined head,
-plus ownership review. Squash with
-`Reduce array ownership costs and define GC removal checks`, an empty body and
-no trailers. Then record A1/G1's actual acceptance and continue G2–G3.
+**Next:** verify all nine production jobs and documentation for the delivery
+PR from `scoped-lifetimes`, fix every failure, then squash-merge its exact passing head. Worktree:
+`/private/tmp/fwp-scoped-lifetimes`. Squash only after those gates pass, with subject
+`Verify scoped subscription lifetimes and cleanup`, empty body and no trailers.
+Do not repeat A1/G1 or merge based only on local macOS checks.
 
-## G1 preparation
+## This group
 
-[The matrix](ownership-admission.md) maps executable, command, C-library, foreign,
-HTTP/gRPC/REST/MCP, WASI and browser-loader entries to actual tests. It separates
-invalid derivative scopes, conservative cycle rejection and C host obligations.
-Unknown producer controls are explicitly internal-IR tests, not invented source
-syntax. Scoped C callbacks do not establish a retained-callback release contract.
+[Lesson 24](tutorials/24-subscriptions/README.md) builds a streaming subscriber
+from existing task/channel primitives. The task owns its callback; its queue holds
+data. Finish closes/drains through the worker, then joins. Stop closes, cancels
+and joins, preserving messages held by other queue owners. No new lifetime API,
+weak handle or implicit cleanup policy is introduced.
 
-Seven existing rejection examples now have named source fixtures. Their test
-requires tracing emission and precise ARC rejection in both raw/optimized IR;
-rejected builds must return status 1 without emitting C. Invalid scope examples
-are never executed just because tracing emits them. No compiler/runtime behavior
-or supported lifetime API changed in this preparation.
+`subscriptions_join_active_callbacks_and_release_each_round` in `tests/arc_tasks.rs`
+checks success, callback failure, cancellation before entry and during a callback
+with a child task, callback reentry, scope failure and cancellation after completion.
+Eight and 64 rounds must restore their initial managed-byte balance after every
+outer scope and reach zero charge after scheduler cleanup. Four omitted-release/
+join mutations must fail at C O1/O2. ARC binaries are checked for absent collector
+symbols; tracing stress/reuse controls retain their existing coverage.
 
-Focused checks through `python3 scripts/local-guard.py`:
+The task documentation now states that cancellation does not erase a result
+already produced. Library reference regeneration comes from `lib/task.fwp`.
+[The cycle contract](ownership.md#cycle-and-retention-contract) spells out graph-ID
+deletion and the unsupported C-retention case. It does not claim arbitrary C
+violations can be diagnosed. Remaining tracing-only graph decisions are still
+explicitly listed in [the admission matrix](ownership-admission.md).
 
-- Verified/downloaded the macOS ARM64 package from #211's passing production run
-  `40139343820`: source `9f36f2f5ae4a1a2361a2c9ed8cb8bcc27a7680b3`, compiler SHA-256
-  `ac389632d50137a880371d2ea05ad7a22d7f01e6aa5884acbecf440f9054db10`.
-  Package is `/private/tmp/fwp-compiler-211/fwp-macos-arm64/fwp`.
-- Formatted the seven fixtures with that compiler and ran all 28 compile-only
-  admission observations with expected results (14 tracing emissions, 14 ARC
-  rejections), plus no unexpected stdout.
-- `cargo fmt --all` passed.
-- Extracted the exact changed Rust test function to `/private/tmp/fwp-admission-test.rs`,
-  changing only fixture include paths to absolute paths. Compiled it with Rust O1,
-  debug assertions and overflow checks, then ran
-  `arc_rejects_unproved_runtime_boundaries_and_disabled_counting`: one test passed,
-  including disabled-counting controls. This is not a full Rust-target build.
+## Checks and source
 
-- `python3 scripts/check-roadmap.py`: 156 Markdown link sets, 106 immutable
-  preparation records and eight milestones passed; whitespace check passed.
+Baseline is #212's merge `eff5146e8d6d373771d18cb2f206d40bc36c6e06`, whose tree
+matches tested head `dc9cf3bfb846d5a6632fbd6424cc8509b5d560cb`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40159979066)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40159979067)
+passed. Duplicate postmerge production `40175968644` was cancelled;
+postmerge documentation `40175968599` passed. A1 and G1 are delivered.
 
-Pending: final whole-target compilation/clippy and native execution in CI.
-No full local build/suite/benchmark was run. The downloaded
-compiler predates A1; it validates the unchanged admission implementation, not
-A1's runtime change. The seven production/source fixtures remain in the repo.
+All local workloads use `python3 scripts/local-guard.py`:
 
-## Baseline and unresolved issue
+- Verified the #212 macOS ARM64 package against its manifest: compiler SHA-256
+  `7019362859a59005dabe4869f973df3d225539ce6eeea188febb4ba1f0091990`.
+  Path: `/private/tmp/fwp-compiler-212/fwp-macos-arm64/fwp`.
+- Formatted the two new programs; raw interpretation matches their expected output.
+- Extracted the new Rust test body and built it at Rust O1 with debug/overflow
+  checks. Its local-only shim supplies a temporary directory and invokes Apple
+  Clang with the production C flags. O1/O2 ARC and tracing stress runs, per-round
+  ledgers and all four broken cleanup controls pass. Artifacts are under
+  `/private/tmp/fwp-subscription-checks-final/subscriptions`. This is not a full
+  Cargo-target build and does not verify GCC or Windows.
+- `cargo fmt --all` passed. Built the actual `tests/stdlib_doc.rs` standalone,
+  regenerated the reference with `FWP_BLESS=1`, then passed without blessing.
 
-The user merged #211 as `afebaac99f9b45235df369a6460f8e4c081ec5b3`, with the
-same tree as tested head `9f36f2f5ae4a1a2361a2c9ed8cb8bcc27a7680b3`. All nine
-production jobs `40139343820` and documentation `40139343796` passed. #212 is
-based on that merge; this preparation is based on #212's head.
+- Tutorial README/source/output copies pass the exact extracted comparison test.
+  Lesson 24 matches raw/optimized interpretation and native ARC at O1/O2.
+- Primitive inventory passes its frozen baseline: 392 declarations, 382 symbols,
+  371 contracts, 19 lowered templates and two flat scalar signatures; no review
+  symbols. Report: `/private/tmp/fwp-scoped-lifetime-inventory/candidate.json`.
 
-A1's focused six-host/native and Linux cost evidence is in
-[the array report](measurements/array-sort-ownership.md). It still needs final
-integrated acceptance. Do not repeat unchanged finished measurements.
+- Documentation audit passes: 157 link sets, 106 immutable preparation records
+  and eight roadmap steps. Formatting and whitespace checks pass.
 
-The original intermittent Intel macOS compiler abort remains unexplained.
-[The investigation](measurements/compiler-abort.md) preserves evidence; #210's
-interpreter lifetime repairs are not an established cause or cure. The user
-requested source-first review; do not restart allocator-cookie/disassembly-led
-experiments. The primary checkout is still detached at #209 with an operational
-handoff pointing to these worktrees; do not use its obsolete plan.
+Integrated native CI remains. No full local
+build, suite or benchmark was run. Required CI will compile the actual Rust target
+and use production compilers on all six native hosts.
+
+## Unresolved issue and preserved work
+
+The intermittent Intel macOS compiler abort remains unexplained. Preserve
+[its evidence](measurements/compiler-abort.md); earlier interpreter repairs and
+passing reruns are not an established cure. Investigate source lifetimes on
+recurrence, without restarting allocator-cookie/disassembly-led experiments.
+
+The primary checkout remains detached at #209 with an operational handoff and an
+untracked abort report; preserve it. Old #212 worktrees remain at their delivered
+head. Its conditional publisher completed; do not restart it. Independent Linux
+benchmark inspection passed, but a separate manual review of every final platform
+artifact was not completed before user merge; see [history](roadmap-history.md).
 
 ## Roadmap status
 
-Detailed tasks and completion criteria live only in [the plan](../PLAN.md).
+Concrete unfinished tasks and acceptance criteria live in [PLAN.md](../PLAN.md).
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | G1–G5: close lifetime contracts, replace diagnostics, delete tracing |
-| 2 | In progress | A1–A5: deliver prepared moves/reuse and eliminate measured redundant counts |
+| 1 | In progress | G2–G3: finish lifetime decisions/checks; G4 replace diagnostics; G5 delete tracing |
+| 2 | In progress | A2–A5: account for residual counts, remove redundant ownership work/boxes, prove count-free unique storage |
 | 3 | In progress | F1–F3: cost fixtures, proved tail-frame extensions and mutual-recursion decision |
-| 4 | In progress | P1–P3: repeat checked comparisons and meet per-workload CPU budgets |
-| 5 | In progress | D1–D3: separate and reduce AD recording/workspace costs, validate nesting |
+| 4 | In progress | P1–P3: checked comparisons and per-workload CPU budgets |
+| 5 | In progress | D1–D3: AD recording/workspace costs and precision/nesting checks |
 | 6 | In progress | N1–N2: accuracy and performance budgets for selected CPU kernels |
 | 7 | In progress | B1–B2: repeated baselines and enforced evidence/budget rules |
-| 8 | In progress | V1–V2: finish and execute the finite application acceptance matrix |
+| 8 | In progress | V1–V2: execute the finite application acceptance matrix |

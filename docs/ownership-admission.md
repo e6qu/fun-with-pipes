@@ -74,7 +74,7 @@ shows a graph whose edges are integer IDs: a logical cycle without owning cycles
 
 | Relationship | Smallest maintained control | Current rule and required follow-up |
 |---|---|---|
-| A queued callback owns its receiver | `self` in [queued_functions](../tests/queued_functions.rs), `queued_functions_reject_channel_captures_including_returned_and_nested_values` | Rejects `queued function` / `captured` / `Channel`; returned/nested/caught callbacks and two queues cannot hide the owner. G2 must preserve a usable form with an independent owner. |
+| A queued callback owns its receiver | `self` in [queued_functions](../tests/queued_functions.rs), `queued_functions_reject_channel_captures_including_returned_and_nested_values` | Rejects `queued function` / `captured` / `Channel`; returned/nested/caught callbacks and two queues cannot hide the owner. [Lesson 24](tutorials/24-subscriptions/README.md) supplies the independent task-owned form; its queue holds data. |
 | A queued task owns its queue through computation or result | `computation` and `result` in `direct_task_messages_reject_computation_and_result_queue_owners` in the same test file | Rejects the captured task/function-bearing channel; tracing and interpretation execute the controls. These are maintained forms needing an explicit G2 decision, not invalid derivatives. |
 | A task's cached result owns the task itself | `task_results_reject_a_cached_self_owner_without_a_channel` in the same file | Rejects failure to prove an `acyclic task result`, even without a channel. Follow both computation and returned captures. |
 | Unknown function, task or external queue producer | Typed IR controls in [arc_scope](../src/arc_scope.rs): `joining_a_known_target_does_not_hide_an_unknown_function`, `queued_task_captures_follow_the_computation_and_unknown_inputs`, `runtime_function_producers_and_external_queues_need_known_sources` | Unknown is not an empty set of captures. These tests construct internal IR; they are not claims that every such internal primitive is available in source. Admission needs a producer/lifetime model. |
@@ -88,28 +88,31 @@ valid and using the matching release operation are `Unsafe` obligations. Passing
 an address through C does not prove that C can retain fwp-owned storage. See
 [C interop](tutorials/09-c-interop/README.md).
 
-## Decisions needed before collector deletion
+## Contract work before collector deletion
 
-G2 must resolve the valid tracing-only forms above with explicit lifetime rules
-or agreed restrictions. In particular:
+[The cycle contract](ownership.md#cycle-and-retention-contract) now gives a concrete
+accepted subscriber, graph-ID deletion and the C-retention restriction. The
+subscriber uses existing APIs; it introduces no new weak handle or hidden owner.
+Its [native lifetime test](../tests/arc_tasks.rs),
+`subscriptions_join_active_callbacks_and_release_each_round`, checks normal
+finish, error, active/unstarted cancellation, repeated awaits and callback reentry.
+Eight and 64 rounds must restore the same per-round managed-byte balance.
+Deliberately missing releases and child joins must be detected. Final native
+validation for that new test is recorded in [the handoff](development-state.md).
 
-- A persistent subscription needs an independent registration owner, a stop-new-
-  calls operation, and a rule for waiting for active callbacks before release.
-  Reentry, callback failure and cancellation must obey that same order.
-- Integer graph IDs already support deletion, with failed lookup for a removed
-  node. The example does not reuse IDs; reusable IDs need a generation policy.
-- A C-retained callback needs a host release protocol and thread/reentry rules.
-  Scoped callback support does not implement that protocol.
-- Weak handles are a design option only if a maintained example needs them.
-  Expiration and reacquisition must not reintroduce an unchecked strong cycle.
+Remaining G2–G3 work must resolve each maintained tracing-only graph above with
+a proved equivalent or an explicit language restriction. In particular, a scoped
+subscriber does not prove that an arbitrary queued task result or HTTP/2 stream
+cannot own its queue. A C implementation that retains a scoped callback violates
+the host contract; compiler rejection cannot reliably detect that behavior.
 
-G3 implements the selected contracts; G4 replaces each collector diagnostic with
-a check that detects the corresponding broken ownership behavior. G5 can delete
-tracing only after those checks and the maintained execution matrix pass. There
-is no promise to reclaim arbitrary cycles with ordinary reference counting.
+G4 replaces each collector diagnostic with a check that detects the corresponding
+broken ownership behavior. G5 can delete tracing only after those checks and the
+maintained execution matrix pass. There is no promise to reclaim arbitrary cycles
+with ordinary reference counting.
 
-The existing entry suites passed at #211's tested source
-`9f36f2f5ae4a1a2361a2c9ed8cb8bcc27a7680b3` in
-[production](https://github.com/e6qu/fun-with-pipes/actions/runs/40139343820).
-The newly extracted raw/optimized rejection matrix still needs integrated CI;
-this document is not a claim that G1–G5 or all browser coverage are complete.
+The entry suites and raw/optimized rejection matrix passed at #212's final head
+`dc9cf3bfb846d5a6632fbd6424cc8509b5d560cb` in
+[production](https://github.com/e6qu/fun-with-pipes/actions/runs/40159979066).
+This establishes G1's integrated delivery, not completion of G2–G5 or coverage
+of every browser engine.

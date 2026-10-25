@@ -17,7 +17,10 @@ Concurrency is structured. `task.spawn` starts a task as a child of the
 current one. A task finishes only after all of its children have finished,
 and a program's `main` (or a test) waits for every task it started.
 
-`task.await` returns `None` for a cancelled task. The functions are
+`task.await` waits for the task and its children. It returns `None` when no
+result was produced; cancellation does not erase an already produced result.
+`task.cancel` requests cancellation, so await afterward to confirm completion.
+The functions are
 listed in the [standard library reference](stdlib.md#tasks-and-channels).
 
 A spawned function may perform IO but must handle its own errors, because
@@ -44,9 +47,9 @@ A queued value can contain the channel itself. Closing alone does not break
 that reference cycle. The counted ownership implementation verifies explicit
 draining and typed destruction. Checked ARC currently rejects cycle-capable
 payload types; native tracing mode can collect these graphs. The
-[proposed cycle policy](ownership.md#proposed-cycle-policy) considers finer
-contracts, scoped registrations and explicit weak handles. Those APIs are not
-implemented, and `channel.close` does not discard queued messages.
+[cycle contract](ownership.md#cycle-and-retention-contract) gives supported
+alternatives: task-owned subscribers with data queues, and graphs linked by IDs.
+There is no weak-handle API, and `channel.close` does not discard queued messages.
 
 `loop : (s -> Step[s, r] ! e) -> s -> r ! e` runs a step function in
 constant stack space, which suits accept loops and other long-running

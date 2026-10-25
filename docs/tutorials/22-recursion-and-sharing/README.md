@@ -136,7 +136,7 @@ main = [
 ```
 
 Cycles are a different ownership problem: two objects can keep each other alive
-without an outside owner. fwp's [proposed cycle policy](../../ownership.md#proposed-cycle-policy)
+without an outside owner. fwp's [proposed cycle policy](../../ownership.md#cycle-and-retention-contract)
 explores scoped owners and explicit weak links. Weak-reference APIs are not
 implemented; this lesson uses only existing language features.
 The [tail-call design](../../design.md#tail-calls-and-recursion) describes the

@@ -46,14 +46,14 @@ execution forms, their tests and the remaining lifetime decisions.
 
 - Define or reject the remaining cycle/retention cases: recursive channel owners,
   queued HTTP stream handles, unknown callback/task producers and retained foreign
-  callbacks. See [the proposed policy](#proposed-cycle-policy).
+  callbacks. See [the cycle contract](#cycle-and-retention-contract).
 - Replace collector-dependent diagnostics with tested ownership checks, then
   remove tracing selection, root scanning, marking and sweeping.
 - Remove avoidable counts and boxes from named unshared paths. A zero-retain
   fixture may still allocate or check a count when freeing storage. A completely
   unique heap ownership path without count metadata is separate planned work.
 
-These are **G1–G5** and **A1–A5** in [the implementation plan](../PLAN.md), not
+These are **G2–G5** and **A2–A5** in [the implementation plan](../PLAN.md), not
 completed features. Weak handles are not implemented.
 
 ## Stable language behavior
@@ -353,32 +353,59 @@ fresh state/derivative scopes and cannot inherit a parent's proof. Raw unscoped
 operations remain restricted. See [numerics](numerics.md#reverse-mode) and the
 [AD application measurements](measurements/ad-application.md).
 
-## Proposed cycle policy
+## Cycle and retention contract
 
 An owning cycle is a loop of values that keep one another alive. Ordinary ARC
-cannot reclaim an unreachable strong cycle. The compiler also cannot infer every
-safe lifetime or prove arbitrary external code obeys a release protocol.
+cannot reclaim an unreachable strong cycle. A logical cycle represented by
+integer IDs is different: the IDs do not keep their targets alive.
 
-The planned direction is an explicit owner for each group, with borrowing or
-non-owning links where needed. These are design choices to finish in **G2**, not
-implemented subscription or weak-reference APIs:
+Checked ARC keeps its existing conservative restrictions. The supported pattern
+is an independent owner for ongoing work, data-only queues, and non-owning graph
+IDs. No new weak-handle or retained-C API is introduced. The following cases make
+that direction concrete; completing their native checks is **G3**, not deleting GC.
 
-| Use case | Proposed direction | Required rule |
+| Use case | Supported form or restriction | Release rule |
 |---|---|---|
-| Callback used within one call | Borrow captures | It cannot outlive the call without a separate owner |
-| Persistent subscription | Independent registration scope | Unregister and wait for active callbacks on success, failure and cancellation |
-| Cyclic logical graph | Graph owner with non-owning node IDs | Specify deletion and stale-ID handling; unreachable nodes may need explicit deletion |
-| Back-reference to independently owned data | Consider a weak handle only if needed | Acquisition can fail; later strong retention must not recreate an unproved cycle |
-| Retained foreign callback | Explicit host registration/release contract or rejection | C must not use the callback after release and fwp must not release it while active |
+| A queued callback owns its receiving channel | Rejected by the queued-capture proof. Put the callback in a separately owned worker and queue data instead. | Stop new sends, cancel if abandoning pending delivery, then await the worker and its children. |
+| Persistent subscription | A task owns its callback and reads a data-only queue; [lesson 24](tutorials/24-subscriptions/README.md) gives `subscribe`, `finish` and `stop`. | Normal finish closes and processes remaining messages. Stop closes, cancels and awaits; queued values survive while another channel owner exists. |
+| Graph with node deletion | A map owns nodes; edges contain IDs. [Lesson 23](tutorials/23-ownership-scopes/README.md) removes node 1 and observes `None` on lookup. | Delete nodes explicitly. Incoming IDs can become stale; lookups must handle absence. This example never reuses IDs. Reuse would need a generation policy. |
+| C-retained callback | Unsupported. The current C callback contract ends when the foreign call returns. | C must finish callback calls before returning and must not save the function/context for later use. |
 
-A weak reference would not keep its target alive. Hypothetical `weak.create`,
-`weak.upgrade` and `Weak` are **not available**. Silently weakening a capture
-would change behavior; some operations intentionally keep their source alive.
-Logical cycles, recursion and immutable sharing are not themselves forbidden.
-The ownership relationship, rather than the shape of an algorithm, is what must
-be justified. [Lesson 23](tutorials/23-ownership-scopes/README.md) demonstrates
-existing scoped callbacks and graph IDs without pretending to provide a persistent
-subscription API.
+A task handle's release does not cancel its task. A normal `task.scope` return
+waits for children; failure cancels and joins them. An active callback may suspend,
+spawn children or call another callback. Completion must wait for that work to
+finish/unwind before its owners expire. Cancellation is cooperative, not a hard
+latency bound. `attempt` handles language errors, not cancellation. A subscriber
+that catches a callback error returns the error and stops; its owner still closes
+the channel. Reentry into a bounded queue must avoid waiting on the only consumer.
+
+For example, C code like this violates the current scoped callback contract:
+
+```c
+#include <stdint.h>
+static int64_t (*saved)(int64_t);
+void remember(int64_t (*callback)(int64_t)) { saved = callback; }
+/* Calling saved after remember returns is not supported. */
+```
+
+The compiler cannot inspect arbitrary linked C and guarantee a diagnostic for
+this violation. A future retained interface would need a separately owned context,
+registration/release operations, thread/reentry rules and a wait for active calls.
+Managed callback results likewise remain rejected without a host release contract.
+Returning a copied C-library export result uses a separate, already defined API;
+it does not make all foreign callback results safe.
+
+Unknown callback/task producers, recursive channel owners, queued HTTP/2 streams
+and task-result back-references remain rejected by checked ARC. Their maintained
+tracing-only controls are recorded in [the admission checklist](ownership-admission.md).
+Before removing tracing, each must have a proved equivalent or an explicit
+language restriction; this PR does not remove those execution paths. The scoped
+subscriber establishes one useful accepted form, not arbitrary cycle inference.
+
+A weak reference would not keep its target alive. `Weak`, `weak.create` and
+`weak.upgrade` are **not implemented or required by these examples**. Silently
+weakening a capture would change behavior, and acquiring a strong owner from a
+weak reference would still need a rule preventing a new unproved owning cycle.
 
 ## Ownership contract checks
 

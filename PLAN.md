@@ -12,8 +12,9 @@ checked arithmetic, and observable effect/failure order.
 
 ## Where we are
 
-PR #211's documentation overhaul is merged. Its final revision passed all nine
-production jobs and the documentation gate. Native packages cover Linux, macOS and Windows on ARM64 and
+PR #212 delivered list-to-array moves, array-sort reuse (**A1**) and the supported
+entry/rejection checklist (**G1**). Its final revision passed all nine production
+jobs and the documentation gate. Native packages cover Linux, macOS and Windows on ARM64 and
 AMD64, one binary per target. [The handoff](docs/development-state.md) records
 source IDs, the current task and checks still needing review.
 
@@ -31,12 +32,13 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. Deliver array sorting/conversion (**A1**) and the entry/rejection checklist
-   (**G1**) together in PR #212. Wait for the array-only revision's running gates,
-   then add the prepared checklist/tests and validate the combined head before
-   merging. Keep its source and measurement identities separate from preparation.
-2. Complete **G2–G3** before choosing new lifetime APIs or deleting tracing.
-   Work on measured ARC costs in parallel with those design/proof tasks.
+1. Complete **G2–G3**: specify cycle/retention rules and verify each accepted
+   lifetime. The current group adds a task-owned, streaming subscription with
+   normal finish, callback failure, cancellation, reentry and per-round cleanup
+   controls. It uses existing task/channel APIs; native integrated checks remain.
+2. Resolve the remaining tracing-only graph cases explicitly before deleting
+   tracing. Then complete **G4**'s diagnostic replacement inventory and controls.
+   Continue **A2**'s measured count accounting alongside this ownership work.
 3. Use **B1** to set per-workload timing budgets before selecting further CPU or
    differentiation optimizations. Keep slower and inconclusive results visible.
 
@@ -63,11 +65,11 @@ The table is an index; the concrete work follows it.
 
 ## 1. Remove tracing GC
 
-**G1 — Freeze the supported execution matrix.** The
+**G1 — Supported execution matrix (delivered in #212).** The
 [entry and rejection checklist](docs/ownership-admission.md) maps maintained
 entries to execution tests and separates invalid scopes, unproved graphs and
 C host obligations. Seven named source fixtures now check raw/optimized rejection
-against tracing emission; integrated validation remains. Extend this matrix,
+against tracing emission; all final-head gates passed. Extend this matrix,
 rather than recounting completed primitive contracts. Use
 `tests/arc_corpus.rs`, `tests/wasm_arc.rs`, the library/foreign-callback tests,
 and HTTP/gRPC tests to list each maintained entry: executable, command, native
@@ -91,6 +93,14 @@ not an assumed implementation task. If selected, specify expired-target results
 and prevention of reintroducing a strong cycle after acquisition.
 **Done:** each example has an agreed accepted form or precise rejection, with
 no promise to infer arbitrary foreign lifetimes or reclaim arbitrary ARC cycles.
+
+Current G2–G3 group: [the cycle contract](docs/ownership.md#cycle-and-retention-contract)
+and [lesson 24](docs/tutorials/24-subscriptions/README.md) specify a streaming,
+task-owned subscriber using existing primitives. `tests/arc_tasks.rs` now checks
+failure, active/unstarted cancellation, reentry, repeated awaits and per-round
+reclamation, with deliberately broken cleanup controls. Focused macOS checks pass;
+final integrated CI remains. The tracing-only queue/task/stream decisions in
+[the admission matrix](docs/ownership-admission.md) remain separate unfinished work.
 
 **G3 — Implement the missing agreed contracts.** For each accepted G2 form, add
 its proof in `src/arc_scope.rs`/`src/arc.rs`, ownership operations in
@@ -124,15 +134,15 @@ programs counts as removal without an explicitly agreed language restriction.
 
 ## 2. Minimize ARC in named unshared paths
 
-**A1 — Deliver list-to-array moves and array-sort reuse.** The implementation is
-integrated with current main; final production validation remains. The
+**A1 — List-to-array moves and array-sort reuse (delivered in #212).** All nine
+production jobs and documentation passed on the integrated source. The
 [measurement report](docs/measurements/array-sort-ownership.md) records source IDs,
 controls, count savings and code/stack costs.
 An unshared list prefix transfers elements into the array; the first shared node
 and its descendants retain independent owners. Sorting reuses only an eligible
 unique array; aliases/views preserve their original contents. Inline 128-bit
 sorting must not overwrite a later key. Existing focused six-host checks and
-Linux measurements are retained; final integrated delivery still needs validation.
+Linux measurements are retained alongside the passing integrated delivery.
 **Done:** the 4,096-word conversion control removes 4,096 retains without extra
 allocations or peak charge; sort reuse removes its measured copy request. Preserve
 failure/cancellation and bit-pattern controls. Report the measured instruction

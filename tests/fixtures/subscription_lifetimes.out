@@ -1,0 +1,15 @@
+prefixprefixa
+prefixprefixb
+Some (Ok ())
+Some (Err "callback failed")
+(Some "queued", False)
+Some ()
+None
+(None, Some "pending")
+again
+last
+Some (Ok ())
+Err "scope failed"
+None
+Some (Ok ())
+Some (Ok ())

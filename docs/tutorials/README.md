@@ -15,7 +15,7 @@ of the basics.
 | Generated code and editor tooling | 11, 13 |
 | Numerical calculations and derivatives | 12, then 20 |
 | Split a program into services | 6–8, then 14 and optionally 18 |
-| Recursion and memory use | 22, then 23 for callback/task ownership and graphs |
+| Recursion and memory use | 22–24 for recursion, ownership, graphs and subscriptions |
 | Expose functions as tools | 21; 8 for its HTTP transport |
 
 ## Running the examples
@@ -70,6 +70,7 @@ prove every external deployment works.
 | 21 | [MCP tools](21-mcp/README.md) | `# expose: mcp`, `fwp build --mcp`, a stateless MCP server over stdio and HTTP, schemas from types |
 | 22 | [Recursion, loops and shared values](22-recursion-and-sharing/README.md) | Tail calls, bounded iteration and immutable sharing |
 | 23 | [Ownership scopes](23-ownership-scopes/README.md) | Scoped callbacks, workers, cancellation and graph IDs/deletion |
+| 24 | [Subscriptions](24-subscriptions/README.md) | Streaming callbacks, explicit finish/stop, active cancellation and reentry |
 
 Use the [reference](../reference.md) to look up exact syntax and the
 [glossary](../glossary.md) for terminology. Lessons introduce concepts before
