@@ -1,0 +1,2 @@
+foreign "fwp" string.repeat : I64 -> I64 -> I64
+main = 1 | string.repeat 2 | echo

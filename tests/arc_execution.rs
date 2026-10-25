@@ -285,24 +285,92 @@ fn arc_checks_reject_counted_owners_at_uncounted_boundaries() {
 fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
     let dir = std::env::temp_dir().join(format!("fwp-arc-reject-{}", std::process::id()));
     std::fs::create_dir(&dir).unwrap();
-    for (name,source,reason) in [
-        ("custom-native","foreign \"fwp\" string.repeat : I64 -> I64 -> I64\nmain = 1 | string.repeat 2 | echo\n","no checked ownership signature"),
-        ("foreign-callback","foreign \"C\" invoke : (I64 -> String) -> I64\nmain = invoke show | echo\n","foreign boundary has no checked ownership contract"),
-        ("http-stream-channel","streams : I64 -> Channel[H2Stream] ! {Async}\nstreams = channel.make\nmain = streams 1 | channel.close\n","channel payloads cannot contain"),
-        ("wrapped-http-stream-channel","streams : I64 -> Channel[List[H2Stream]] ! {Async}\nstreams = channel.make\nmain = streams 1 | channel.close\n","channel payloads cannot contain"),
-        ("cyclic-channel","Link = | Node (Channel[Link])\nlinks : I64 -> Channel[Link] ! {Async}\nlinks = channel.make\nmain = links 1 | channel.close\n","a queue can lead back to channel type"),
-        ("mutual-channel","Left = | L (Channel[Right])\nRight = | R Left\nlinks : I64 -> Channel[Left] ! {Async}\nlinks = channel.make\nmain = links 1 | channel.close\n","a queue can lead back to channel type"),
-        ("unscoped-tape","main = 1 | ad.tape | echo\n","tracing-free lifetime policy"),
+    for (name, source, reason) in [
+        (
+            "custom-native",
+            include_str!("fixtures/arc-admission/custom-native.fwp"),
+            "no checked ownership signature",
+        ),
+        (
+            "foreign-callback",
+            include_str!("fixtures/arc-admission/foreign-callback.fwp"),
+            "foreign boundary has no checked ownership contract",
+        ),
+        (
+            "http-stream-channel",
+            include_str!("fixtures/arc-admission/http-stream-channel.fwp"),
+            "channel payloads cannot contain",
+        ),
+        (
+            "wrapped-http-stream-channel",
+            include_str!("fixtures/arc-admission/wrapped-http-stream-channel.fwp"),
+            "channel payloads cannot contain",
+        ),
+        (
+            "cyclic-channel",
+            include_str!("fixtures/arc-admission/cyclic-channel.fwp"),
+            "a queue can lead back to channel type",
+        ),
+        (
+            "mutual-channel",
+            include_str!("fixtures/arc-admission/mutual-channel.fwp"),
+            "a queue can lead back to channel type",
+        ),
+        (
+            "unscoped-tape",
+            include_str!("fixtures/arc-admission/unscoped-tape.fwp"),
+            "tracing-free lifetime policy",
+        ),
     ] {
-        let input=dir.join(format!("{name}.fwp"));
-        std::fs::write(&input,source).unwrap();
-        let out=Command::new(env!("CARGO_BIN_EXE_fwp")).args(["build","--gc","arc","--emit-c"]).arg(&input).arg("-o").arg(dir.join("rejected.c")).output().unwrap();
-        assert!(!out.status.success());
-        let error=String::from_utf8_lossy(&out.stderr);
-        assert!(error.contains("--gc arc") && error.contains(reason),"{error}");
-        if name.contains("channel") {
-            assert!(error.contains("missing cycle-freedom proof, not a demonstrated cycle"), "{error}");
-            assert!(error.contains("queue data or non-owning IDs instead"), "{error}");
+        let input = dir.join(format!("{name}.fwp"));
+        std::fs::write(&input, source).unwrap();
+        // These are ownership rejections, not parser/type errors. Tracing must
+        // still emit them, but emission is not permission to execute invalid
+        // examples such as an unscoped derivative tape. Check both IR forms so
+        // optimization cannot hide the missing ownership contract.
+        for raw in [false, true] {
+            for mode in ["tracing", "arc"] {
+                let cfile = dir.join(format!("{name}-{raw}-{mode}.c"));
+                let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
+                command.env_remove("FWP_NO_OPT");
+                if raw {
+                    command.env("FWP_NO_OPT", "1");
+                }
+                let out = command
+                    .args([
+                        "build", "--gc", mode, "--memory", "dynamic", "-O1", "--emit-c",
+                    ])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&cfile)
+                    .output()
+                    .unwrap();
+                assert!(out.stdout.is_empty(), "{name} raw={raw} {mode}: {out:?}");
+                if mode == "tracing" {
+                    assert!(
+                        out.status.success() && cfile.exists(),
+                        "{name} raw={raw}: {out:?}"
+                    );
+                    continue;
+                }
+                assert_eq!(out.status.code(), Some(1), "{name} raw={raw}: {out:?}");
+                assert!(!cfile.exists(), "rejected {name} emitted C");
+                let error = String::from_utf8_lossy(&out.stderr);
+                assert!(
+                    error.contains("--gc arc") && error.contains(reason),
+                    "{name} raw={raw}: {error}"
+                );
+                if name.contains("channel") {
+                    assert!(
+                        error.contains("missing cycle-freedom proof, not a demonstrated cycle"),
+                        "{error}"
+                    );
+                    assert!(
+                        error.contains("queue data or non-owning IDs instead"),
+                        "{error}"
+                    );
+                }
+            }
         }
     }
     let input = dir.join("valid.fwp");

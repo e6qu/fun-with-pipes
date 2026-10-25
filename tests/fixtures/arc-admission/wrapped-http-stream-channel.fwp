@@ -1,0 +1,3 @@
+streams : I64 -> Channel[List[H2Stream]] ! {Async}
+streams = channel.make
+main = streams 1 | channel.close

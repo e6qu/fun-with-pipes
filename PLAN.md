@@ -31,10 +31,11 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. Finish integrated delivery of array sorting/conversion, task **A1** below.
-   The implementation, focused six-host checks and Linux measurements are ready;
-   validate the combined source against all production gates before merging.
-2. Complete **G1–G3** before choosing new lifetime APIs or deleting tracing.
+1. Deliver array sorting/conversion (**A1**) and the entry/rejection checklist
+   (**G1**) together in PR #212. Wait for the array-only revision's running gates,
+   then add the prepared checklist/tests and validate the combined head before
+   merging. Keep its source and measurement identities separate from preparation.
+2. Complete **G2–G3** before choosing new lifetime APIs or deleting tracing.
    Work on measured ARC costs in parallel with those design/proof tasks.
 3. Use **B1** to set per-workload timing budgets before selecting further CPU or
    differentiation optimizations. Keep slower and inconclusive results visible.
@@ -62,8 +63,12 @@ The table is an index; the concrete work follows it.
 
 ## 1. Remove tracing GC
 
-**G1 — Freeze the supported execution matrix.** Extend the existing admission
-records, rather than recounting completed primitive contracts. Use
+**G1 — Freeze the supported execution matrix.** The
+[entry and rejection checklist](docs/ownership-admission.md) maps maintained
+entries to execution tests and separates invalid scopes, unproved graphs and
+C host obligations. Seven named source fixtures now check raw/optimized rejection
+against tracing emission; integrated validation remains. Extend this matrix,
+rather than recounting completed primitive contracts. Use
 `tests/arc_corpus.rs`, `tests/wasm_arc.rs`, the library/foreign-callback tests,
 and HTTP/gRPC tests to list each maintained entry: executable, command, native
 library, synchronous/asynchronous WASI, browser loader and service. For each

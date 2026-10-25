@@ -41,6 +41,9 @@ still cost space or time.
 
 ### What remains
 
+The [entry and rejection checklist](ownership-admission.md) names supported
+execution forms, their tests and the remaining lifetime decisions.
+
 - Define or reject the remaining cycle/retention cases: recursive channel owners,
   queued HTTP stream handles, unknown callback/task producers and retained foreign
   callbacks. See [the proposed policy](#proposed-cycle-policy).
