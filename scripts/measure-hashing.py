@@ -107,9 +107,8 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     out = parser.parse_args().output.resolve(); out.mkdir(parents=True, exist_ok=True)
     compiler = ROOT / 'target/release/fwp'; cc = os.environ['CC']
-    env = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0',
-               FWP_ARRAY_FUSION='1', FWP_MAP_BUILD='1', FWP_DIRECT_INTEGER_PRINT='1')
-    env.pop('FWP_NO_OPT', None); env.pop('FWP_GC', None)
+    env = dict(os.environ, FWP_ARRAY_FUSION='1', FWP_MAP_BUILD='1', FWP_DIRECT_INTEGER_PRINT='1')
+    env.pop('FWP_NO_OPT', None)
     result = {}
     for name, n, repeats, collection in [('small', 16, 4096, 'array'),
                                         ('large', 4096, 1024, 'array'),
@@ -120,13 +119,12 @@ def main():
         source = directory / 'hash.fwp'; source.write_text(program)
         expected = run([compiler, 'run', '--interp', source], dict(env, FWP_NO_OPT='1')).stdout
         variants, binaries = {}, {}
-        for label in ['fwp-tracing', 'fwp-arc', 'fwp-arc-generic', 'fwp-arc-buffered', 'c', 'rust']:
+        for label in ['fwp-arc', 'fwp-arc-generic', 'fwp-arc-buffered', 'c', 'rust']:
             cfile = directory / (label+'.c'); binary = directory / label
             emit_ns = 0
             if label.startswith('fwp'):
-                memory = 'tracing' if label == 'fwp-tracing' else 'arc'
                 typed = '0' if label in ['fwp-arc-generic', 'fwp-arc-buffered'] else '1'
-                before = time.perf_counter_ns(); run([compiler, 'build', '--gc', memory, '--emit-c', source, '-o', cfile], dict(env, FWP_TYPED_HASH=typed))
+                before = time.perf_counter_ns(); run([compiler, 'build', '--emit-c', source, '-o', cfile], dict(env, FWP_TYPED_HASH=typed))
                 emit_ns = time.perf_counter_ns()-before; code = cfile.read_text()
                 assert ('/* numeric hash without type dispatch */' in code) == (typed == '1'), label
                 assert code.count('fwp_print_integer(') > 1, label
@@ -151,11 +149,13 @@ def main():
             pattern, scale = (r'(\d+)\s+maximum resident set size', 1) if platform.system() == 'Darwin' else (r'Maximum resident set size \(kbytes\):\s*(\d+)',1024)
             rss = re.search(pattern,timed.stderr); assert rss,timed.stderr
             (directory/(label+'-rss.txt')).write_text(timed.stderr)
-            measured_run = run([directory/(label+'-profile')], dict(env,FWP_GC='off') if label.startswith('fwp') else env)
+            measured_run = run([directory/(label+'-profile')], env)
             assert measured_run.stdout == expected
             counters = [json.loads(line) for line in measured_run.stderr.splitlines()]
             if label.startswith('fwp'):
-                assert len(counters) == 2 and counters[1]['finalChargedBytes'] == counters[1]['collections'] == 0,counters
+                assert len(counters) == 2 and counters[1]['finalChargedBytes'] == 0,counters
+                assert set(counters[1]) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}, counters
+                assert all(isinstance(value, int) and value >= 0 for value in counters[1].values()), counters
                 assert bool(counters[0]['hashBufferRequests']) == label.endswith('buffered'),counters
             else:
                 assert len(counters) == 1 and counters[0]['finalArrayBytes'] == 0,counters
@@ -188,7 +188,7 @@ def main():
                 cpu=run(['sysctl','-n','machdep.cpu.brand_string'] if platform.system()=='Darwin' else ['lscpu']).stdout,
                 cCompiler=run([cc,'--version']).stdout,rustCompiler=run(['rustc','--version','--verbose']).stdout,results=result,
                 generationSettings={key:env[key] for key in ['FWP_ARRAY_FUSION','FWP_MAP_BUILD','FWP_DIRECT_INTEGER_PRINT']},
-                scope='Each case builds one ordered I64 array or set containing 0..N-1, hashes the canonical tuple (iteration, collection) with wrapping FNV-1a, and XORs the hashes. C/Rust store the same ordered keys in an array/vector and encode the same schema directly; there is no sorting in any construction. fwp-tracing and fwp-arc use type-specialized loops (FWP_TYPED_HASH=1); fwp-arc-generic uses descriptor dispatch (FWP_TYPED_HASH=0). The buffered control also selects generic dispatch and restores an encoded byte buffer. The iteration prefix changes each hash. One unprofiled RSS/warmup process precedes twelve balanced rotating/reversed wall/child-CPU samples including startup, input construction and printing; compilation and allocation profiles are separate. All use optimization level 2; C uses -ffp-contract=off. All fwp variants use the same compiler with array and collection fusion explicitly enabled. fwp counters distinguish managed storage from hash encoding-buffer requests/capacity; collection is disabled only for ownership profiles. C counts its explicit successful application malloc; Rust counts actual application allocator calls while its vector is live. All fwp variants explicitly use direct integer output (FWP_DIRECT_INTEGER_PRINT=1), so these programs create no managed output string. Counts exclude allocator-internal and stdio storage. Peak RSS comes from uninstrumented programs. Ratios above one mean extra fwp time; no parity or universal speedup is assumed.')
+                scope='Each case builds one ordered I64 array or set containing 0..N-1, hashes the canonical tuple (iteration, collection) with wrapping FNV-1a, and XORs the hashes. C/Rust store the same ordered keys in an array/vector and encode the same schema directly; there is no sorting in any construction. fwp-arc uses type-specialized loops (FWP_TYPED_HASH=1); fwp-arc-generic uses descriptor dispatch (FWP_TYPED_HASH=0). The buffered control also selects generic dispatch and restores an encoded byte buffer. The iteration prefix changes each hash. One unprofiled RSS/warmup process precedes ten balanced rotating/reversed wall/child-CPU samples including startup, input construction and printing; compilation and allocation profiles are separate. All use optimization level 2; C uses -ffp-contract=off. All fwp variants use the same compiler with array and collection fusion explicitly enabled. fwp counters distinguish managed storage from hash encoding-buffer requests/capacity; counted destruction must restore the final managed-byte baseline. C counts its explicit successful application malloc; Rust counts actual application allocator calls while its vector is live. All fwp variants explicitly use direct integer output (FWP_DIRECT_INTEGER_PRINT=1), so these programs create no managed output string. Counts exclude allocator-internal and stdio storage. Peak RSS comes from uninstrumented programs. Ratios above one mean extra fwp time; no parity or universal speedup is assumed.')
     (out/'report.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps({name:case['ratios'] for name,case in result.items()},indent=2))
 
