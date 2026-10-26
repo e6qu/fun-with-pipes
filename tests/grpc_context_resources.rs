@@ -105,7 +105,7 @@ static void call(void *arg,int stop){
    fwp_cur->trap_jb=&failed;fwp_cur->trap_cleanup=fwp_cleanups;
    if(fwp_p_grpc_with_tls(PTR(arg),0,0,1,2,3,4)!=42)_Exit(15);scope_returned=1;
    if(frees!=(stage==4||stage==5||stage==8?0:1))_Exit(1);
-  }else{typed++;if(handler.desc!=&string_descriptor||strcmp(STR(handler.value)->d,"TLS typed failure"))_Exit(16);FWP_KEEP_ALIVE(handler.value);}
+  }else{typed++;if(handler.desc!=&string_descriptor||strcmp(STR(handler.value)->d,"TLS typed failure"))_Exit(16);}
  }else{trapped++;const char *expected=stage==6?"child prepare trap":stage==7?"too many TLS option owners":"TLS scope trap";if(strcmp(fwp_trap_msg,expected))_Exit(17);}
  fwp_handlers=handler.prev;fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;
  if(fwp_cur->gctx||fwp_cleanups)_Exit(1);
@@ -120,7 +120,7 @@ int main(void){
   fwp_await(task);
   if(stage==5){if(frees||!spawned||!entered||((fwp_task*)spawned)->done)return 3;fwp_make_ready(spawned);fwp_await(spawned);}
   if(!task->done||frees!=1||fwp_cleanups||cancelled!=(stage==3)||typed!=(stage==1)||trapped!=(stage==2||stage==6||stage==7)||task->gctx_owner)return 1;
-  FWP_KEEP_ALIVE(options);FWP_KEEP_ALIVE(PTR(task));FWP_KEEP_ALIVE(PTR(spawned));
+
  }
  // Read-once cache options retain their original cache lifetime.
  stage=10;frees=0;g_ctx context={0};context.tls=g_tls_new("ca",1,"name","cert","key");

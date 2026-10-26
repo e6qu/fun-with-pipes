@@ -31,7 +31,7 @@ impl Drop for Scratch {
 }
 
 #[test]
-fn loop_states_and_step_payload_aliases_under_collection() {
+fn loop_states_and_step_payload_aliases_preserve_owners() {
     let dir = Scratch::new("aliases");
     let src = dir.0.join("aliases.fwp");
     std::fs::write(
@@ -107,65 +107,30 @@ main = [
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for opt in ["-O1", "-O2"] {
-        for stack in ["0", "1"] {
-            let exe = dir.0.join(format!("aliases{opt}-{stack}"));
-            checked(
-                Command::new(fwp)
-                    .args(["build"])
-                    .arg(&src)
-                    .args([opt, "-o"])
-                    .arg(&exe)
-                    .env("FWP_STACK", stack),
-            );
-            for poison in ["0", "1"] {
-                let out = checked(
-                    Command::new(&exe)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison),
-                );
-                assert_eq!(
-                    out.stdout, reference.stdout,
-                    "{opt}, stack {stack}, poison {poison}"
-                );
+    for stack in ["0", "1"] {
+        let emitted = dir.0.join(format!("aliases-{stack}.c"));
+        checked(
+            Command::new(fwp)
+                .arg("build")
+                .arg(&src)
+                .args(["--emit-c", "-o"])
+                .arg(&emitted)
+                .env("FWP_STACK", stack),
+        );
+        let code = std::fs::read_to_string(emitted).unwrap();
+        for opt in ["-O1", "-O2"] {
+            for (name, source) in [
+                ("reuse", code.clone()),
+                ("copy", format!("#define FWP_NO_REUSE 1\n{code}")),
+            ] {
+                let exe = dir.0.join(format!("aliases{opt}-{stack}-{name}"));
+                fwp::cgen::compile_c(&source, &exe, opt).unwrap();
+                let out = checked(&mut Command::new(&exe));
+                assert_eq!(out.stdout, reference.stdout, "{opt}, stack {stack}, {name}");
+                assert_eq!(out.stderr, reference.stderr, "{opt}, stack {stack}, {name}");
             }
         }
     }
-    for flag in ["FWP_REUSE", "FWP_FREE"] {
-        let exe = dir.0.join(flag);
-        checked(
-            Command::new(fwp)
-                .args(["build"])
-                .arg(&src)
-                .args(["-O1", "-o"])
-                .arg(&exe)
-                .env(flag, "0"),
-        );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
-        assert_eq!(out.stdout, reference.stdout, "{flag}=0");
-    }
-    let exe = dir.0.join("aliases-arc-O2");
-    checked(
-        Command::new(fwp)
-            .arg("build")
-            .arg(&src)
-            .args(["-O2", "-o"])
-            .arg(&exe),
-    );
-    let out = checked(
-        Command::new(&exe)
-            .env_remove("FWP_GC")
-            .env("FWP_GC_STRESS", "0")
-            .env("FWP_GC_VERIFY", "0")
-            .env("FWP_REUSE_VERIFY", "0"),
-    );
-    assert_eq!(out.stdout, reference.stdout, "checked ARC");
 }
 
 #[test]
@@ -205,97 +170,65 @@ main = (10000, 0) | loop step | echo
             .env("FWP_STACK", "0"),
     );
     let owned = std::fs::read_to_string(&emitted).unwrap();
-    // Restore only initial-state sharing, including direct field entries.
-    // Borrowed scalar words are never treated as object addresses. The emitted
-    // entry's lifetime fences identify exactly its pointer-bearing state slots.
-    let mut changed = 0;
-    let mut flat_ids = std::collections::BTreeSet::new();
-    let mut shared = owned
-        .lines()
-        .map(|line| {
-            if let Some(call) = line.find(" = fwp_loop_fields") {
-                let start = call + " = fwp_loop_fields".len();
-                let end = start + line[start..].find('(').unwrap();
-                let id = &line[start..end];
-                assert!(id.chars().all(|c| c.is_ascii_digit()));
-                flat_ids.insert(id.to_owned());
-                changed += 1;
-                line.to_owned()
-            } else if let Some(call) = line.find(" = fwp_loop").filter(|call| {
-                line[*call + " = fwp_loop".len()..].starts_with(|c: char| c.is_ascii_digit())
-            }) {
-                let start = call + line[call..].find('(').unwrap() + 1;
-                let end = line.rfind(");").unwrap();
-                changed += 1;
-                format!(
-                    "{}fwp_rc_shared({}){}",
-                    &line[..start],
-                    &line[start..end],
-                    &line[end..]
-                )
-            } else {
-                line.to_owned()
-            }
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
-    let mut shared_fields = 0;
-    for id in &flat_ids {
-        let prefix = format!("static V fwp_loop_fields{id}(");
-        let start = shared
-            .match_indices(&prefix)
-            .find_map(|(at, _)| {
-                let end = at + shared[at..].find('\n')?;
-                shared[at..end].ends_with(" {").then_some(at)
-            })
-            .expect("called flat loop entry definition");
-        let end = start + shared[start..].find("\n}\n").unwrap();
-        let body = &shared[start..end];
-        let mut fields = std::collections::BTreeSet::new();
-        for line in body.lines() {
-            if let Some(index) = line.trim().strip_prefix("FWP_KEEP_ALIVE(st[") {
-                let index = index.strip_suffix("]);").expect("state lifetime fence");
-                fields.insert(index.parse::<usize>().unwrap());
-            }
+    // Omit typed releases only in generated loop-step bodies. This retains
+    // their allocations without changing scalar words or fabricating owners.
+    // The resulting leak must be visible in both release and live-byte totals.
+    let mut missing = owned.clone();
+    let mut position = 0;
+    let mut steps = 0;
+    let mut releases = 0;
+    while let Some(offset) =
+        missing[position..].find("static inline __attribute__((always_inline)) int fs")
+    {
+        let start = position + offset;
+        let end = start + missing[start..].find("\n}\n").expect("loop-step end");
+        let body = &missing[start..end];
+        let mut patched = String::new();
+        let mut rest = body;
+        while let Some(at) = rest.find("fwp_drop") {
+            patched.push_str(&rest[..at]);
+            let after_name = &rest[at + "fwp_drop".len()..];
+            let digits = after_name.bytes().take_while(u8::is_ascii_digit).count();
+            assert!(digits > 0 && after_name[digits..].starts_with('('));
+            patched.push_str("fwp_test_omit_drop");
+            rest = &after_name[digits..];
+            releases += 1;
         }
-        let insertion = start + body.find("    for (;;) {").unwrap();
-        let sharing: String = fields
-            .iter()
-            .map(|i| format!("    fwp_rc_share(st[{i}]);\n"))
-            .collect();
-        shared_fields += fields.len();
-        shared.insert_str(insertion, &sharing);
+        patched.push_str(rest);
+        position = start + patched.len();
+        missing.replace_range(start..end, &patched);
+        steps += 1;
     }
-    assert!(
-        changed >= 3,
-        "missing outer/fused loop call sites: {changed}"
+    assert!(steps >= 3, "missing outer/fused loop steps: {steps}");
+    assert!(releases > 0, "no typed loop releases were omitted");
+    let first_step = missing
+        .find("static inline __attribute__((always_inline)) int fs")
+        .unwrap();
+    missing.insert_str(
+        first_step,
+        "static void fwp_test_omit_drop(V value) { (void)value; }\n",
     );
-    assert!(
-        flat_ids.is_empty() || shared_fields > 0,
-        "flat entries had no counted state fields"
-    );
-    assert_ne!(shared, owned);
-    let mut freed = Vec::new();
-    for (name, code) in [("shared", &shared), ("owned", &owned)] {
-        let exe = dir.0.join(name);
-        fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_ALLOC_STATS", "1")
-                .env("FWP_REUSE_VERIFY", "0"),
+    for opt in ["-O1", "-O2"] {
+        let mut reports = Vec::new();
+        for (name, code) in [("missing-release", &missing), ("owned", &owned)] {
+            let exe = dir.0.join(format!("{name}{opt}"));
+            fwp::cgen::compile_c(code, &exe, opt).unwrap();
+            let out = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
+            assert_eq!(out.stdout, reference.stdout, "{name}{opt}");
+            reports.push(
+                allocation_report::parse(&String::from_utf8_lossy(&out.stderr))
+                    .expect("allocation report"),
+            );
+        }
+        let [missing, owned] = reports.as_slice() else {
+            unreachable!()
+        };
+        assert!(
+            owned.released > missing.released + 314_572,
+            "{opt}: {reports:?}"
         );
-        assert_eq!(out.stdout, reference.stdout);
-        let stats = String::from_utf8_lossy(&out.stderr);
-
-        freed.push(
-            allocation_report::parse(&stats)
-                .expect("allocation report")
-                .released as f64
-                / 1_048_576.0,
-        );
+        assert!(missing.live > owned.live + 314_572, "{opt}: {reports:?}");
     }
-    eprintln!("fused sequence consumer graph MiB freed by counts: {freed:?}");
-    assert!(freed[1] > freed[0] + 0.3, "{freed:?}");
 }
 
 #[test]
@@ -368,11 +301,7 @@ main = (10000, 0) | loop step | echo
     for (name, code) in [("shared", &shared), ("owned", &owned)] {
         let exe = dir.0.join(name);
         fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_ALLOC_STATS", "1")
-                .env("FWP_REUSE_VERIFY", "0"),
-        );
+        let out = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
         assert_eq!(out.stdout, reference.stdout);
         let stats = String::from_utf8_lossy(&out.stderr);
 
@@ -433,6 +362,7 @@ int main(void) {
     fwp_clo callback = {0, 0};
     V result = WRAPPER(PTR(&callback), bits);
     if (result != bits || *fwp_rc_slot(bits) != 1 || STR(bits)->len != 12) return 1;
+    fwp_rc_free_obj(bits);
     puts("scalar loop ownership preserved");
     return 0;
 }
@@ -469,12 +399,7 @@ fn loop_goldens_keep_trap_and_evaluation_order() {
                     .args([opt, "-o"])
                     .arg(&exe),
             );
-            let native = Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1")
-                .output()
-                .unwrap();
+            let native = Command::new(&exe).output().unwrap();
             assert_eq!(native.stdout, reference.stdout, "{name}, {opt} stdout");
             assert_eq!(native.stderr, reference.stderr, "{name}, {opt} stderr");
             assert_eq!(

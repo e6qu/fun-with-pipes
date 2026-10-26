@@ -63,7 +63,7 @@ int main(void) {
         fwp_trap_recover = 0; fwp_trap_jb = 0; fwp_trap_cleanup = 0;
         if (trapped != (decoder_mode == 2) || fwp_handlers || fwp_cleanups) return 192;
         if (!fwp_rc_last(function)) return 193;
-        FWP_KEEP_ALIVE(function);
+
     }
     fwp_closure_drop(function);
     double after = (double)fwp_heap.live;

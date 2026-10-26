@@ -17,7 +17,7 @@ int main(void) {
                 if(nested?(OBJ(item)->n!=2 || OBJ(item)->f[0] || OBJ(item)->f[1]):item!=0)return 157;
             }
         }else if(fwp_list_len(value)!=257)return 158;
-        FWP_KEEP_ALIVE(value);
+
     }
     const unsigned char numeric[]={3,0x80,0xff,0x7f};
     const fwp_desc numbers={.kind=K_ARRAY,.elem=&i8};V value;

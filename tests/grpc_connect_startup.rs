@@ -92,7 +92,7 @@ static void check_wait_lifetimes(void){
 #ifndef __linux__
   if(fwp_poll_waits)_Exit(43);
 #endif
-  fwp_p_tcp_stop(listener);FWP_KEEP_ALIVE(listener);
+  fwp_p_tcp_stop(listener);
  }
 }
 int main(void){
@@ -114,7 +114,7 @@ int main(void){
   }fwp_free_zombie();
   if(stage==2){if(c->refs||c->fd!=FWP_INVALID_SOCKET||finalized)return 1;g_conn_drop(c);result=0;}
   if(finalized!=1||g_pool||fwp_cleanups)return 1;
-  fwp_p_tcp_stop(listener);FWP_KEEP_ALIVE(listener);FWP_KEEP_ALIVE(PTR(task));
+  fwp_p_tcp_stop(listener);
  }
  check_wait_lifetimes();fwp_lib_finish();return 0;
 }

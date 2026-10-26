@@ -93,7 +93,7 @@ int main(int argc,char **argv){
    for(size_t i=0;i+n<=c->out.len;i++)if(!memcmp(c->out.d+i,expected_text,n)){found=1;break;}
    if(!found)_Exit(3);
   }
-  FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
+
  }
  // Replacing cancellation status copies before dropping an aliased old message.
  allocations=frees=0;memset(messages,0,sizeof messages);stage=6;
@@ -109,7 +109,7 @@ int main(int argc,char **argv){
  fwp_cur->unwinding=0;fwp_cur->gctx=0;
  g_serving_peer_release(sv);if(!sv->msg||frees!=3)_Exit(6);
  g_serving_peer_release(sv);if(frees!=4||allocations!=4)_Exit(7);
- FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
+ fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-status-cleanup").unwrap();

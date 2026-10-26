@@ -540,8 +540,8 @@ fn subscriptions_join_active_callbacks_and_release_each_round() {
                 );
                 replace_once(
                     &mut code,
-                    "    fwp_scope_release(&scope_owner);\n    FWP_KEEP_ALIVE(body);",
-                    "    fwp_scope_release(&scope_owner);\n    if (subscription_outer) {\n        if (t->first_child || fwp_heap.live != subscription_live_bytes) { fprintf(stderr, \"subscription retained bytes: %ld\\n\", (long)(fwp_heap.live - subscription_live_bytes)); _Exit(193); }\n        subscription_rounds++;\n    }\n    FWP_KEEP_ALIVE(body);",
+                    "    fwp_scope_release(&scope_owner);",
+                    "    fwp_scope_release(&scope_owner);\n    if (subscription_outer) {\n        if (t->first_child || fwp_heap.live != subscription_live_bytes) { fprintf(stderr, \"subscription retained bytes: %ld\\n\", (long)(fwp_heap.live - subscription_live_bytes)); _Exit(193); }\n        subscription_rounds++;\n    }",
                 );
                 replace_once(
                     &mut code,

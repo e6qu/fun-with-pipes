@@ -37,7 +37,7 @@ fn inline_paths_preserve_display_and_reduce_constructor_allocations() {
     char *p = (char *)observe_alloc(strlen(path) + 1, 1);
     strcpy(p, path);
     h->path = p;
-    FWP_KEEP_ALIVE(path);
+
     fwp_cleanup_pop(&cleanup);
     return PTR(h);
 }

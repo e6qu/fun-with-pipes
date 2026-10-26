@@ -34,5 +34,5 @@ int main(void) {
             if (OBJ(source)->f[0] != fwp_from_f64(1.5)) return 233;
         }
     }
-    FWP_KEEP_ALIVE(source); return 0;
+    return 0;
 }

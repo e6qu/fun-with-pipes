@@ -91,9 +91,9 @@ int main(void){
   if(stage==0||stage==5){if(result!=1)return 3;int error=check_frames(c,gzip);if(error)return error;}
   else if(stage==3||stage==4){if(result!=0)return 4;}
   free(c->dead);c->dead=0;
-  FWP_KEEP_ALIVE(PTR(t));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
+
  }
- FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
+ fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-send-cleanup").unwrap();

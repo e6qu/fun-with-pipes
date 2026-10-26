@@ -60,7 +60,7 @@ static int check_terminal_read(int failure, int shared) {
     }
     cache_observe = 0;
     if (cache_releases != 2) return 182;
-    FWP_KEEP_ALIVE(PTR(connection)); FWP_KEEP_ALIVE(PTR(stream));
+
     return 0;
 }
 int main(int argc, char **argv) {
@@ -86,8 +86,8 @@ int main(int argc, char **argv) {
             alias = mode == 2 ? root : mode == 3 ? result : pair;
             fwp_rc_dup(alias);
         }
-        FWP_KEEP_ALIVE(text); FWP_KEEP_ALIVE(pair); FWP_KEEP_ALIVE(result);
-        FWP_KEEP_ALIVE(alias); FWP_KEEP_ALIVE(PTR(source));
+
+
     }
     cache_releases = 0; cache_observe = 1;
     cache_stack_low = UINTPTR_MAX; cache_stack_high = 0;

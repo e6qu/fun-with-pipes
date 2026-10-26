@@ -100,7 +100,7 @@ static int flat_probe(void) {
         if((ap_mode==1 || ap_mode==2) && ap_list_drops!=2) return 102;
         if(ap_mode==3 && (ap_element_drops!=1 || ap_list_drops!=4)) return 103;
     }
-    FWP_KEEP_ALIVE(inputs);
+
     return 0;
 }
 
@@ -150,7 +150,7 @@ int main(void) {
         if(!setjmp(ap_recovered)) { fwp_list_ap_count(too_large[i][0],too_large[i][1]);return 88; }
         if(strcmp(fwp_trap_msg,"list.ap too large") || fwp_cleanups) return 88;
     }
-    FWP_KEEP_ALIVE(fs);FWP_KEEP_ALIVE(xs);
+
     printf("list.ap and flat-map callback and spine ownership; real collections=%zu V=%zu cleanup=%zu\n",fwp_heap.ncollect,sizeof(V),sizeof(fwp_cleanup));
     return 0;
 }

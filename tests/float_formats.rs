@@ -231,7 +231,7 @@ int main(void) {
     if(memcmp(&value,&words[2],16)) return 183;
     if(!fwp_rc_slot(saved) || *fwp_rc_slot(saved)!=1) return 184;
     quad_drop(saved);
-    FWP_KEEP_ALIVE(original);
+
     return 0;
 }
 "#;

@@ -175,13 +175,13 @@ fn solvers_preserve_values_and_reclaim_scratch_and_partial_results() {
         }
         for (before, after, expected) in [
             (
-                "if (buffer) { FWP_KEEP_ALIVE(buffer); fwp_mem_free(buffer); }",
-                "if (buffer) { FWP_KEEP_ALIVE(buffer); }",
+                "if (buffer) { fwp_mem_free(buffer); }",
+                "if (buffer) { }",
                 222,
             ),
             (
-                "if (value) { FWP_KEEP_ALIVE(value); fwp_rc_free_arr(value); }",
-                "if (value) { FWP_KEEP_ALIVE(value); }",
+                "if (value) { fwp_rc_free_arr(value); }",
+                "if (value) { }",
                 224,
             ),
         ] {

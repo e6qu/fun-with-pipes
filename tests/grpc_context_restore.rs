@@ -69,7 +69,7 @@ static void call(void *arg,int stop){
   if(!setjmp(handler.jb)){
    fwp_cur->trap_jb=&failed;fwp_cur->trap_cleanup=fwp_cleanups;
    if(g_with_ctx(inner_context,0)!=42||stage)_Exit(12);
-  }else{typed++;if(handler.desc!=&string_descriptor||strcmp(STR(handler.value)->d,"typed failure"))_Exit(13);FWP_KEEP_ALIVE(handler.value);}
+  }else{typed++;if(handler.desc!=&string_descriptor||strcmp(STR(handler.value)->d,"typed failure"))_Exit(13);}
  }else{trapped++;if(strcmp(fwp_trap_msg,"context trap"))_Exit(14);}
  fwp_handlers=handler.prev;fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;
  if(fwp_cur->gctx!=child_prior_context||fwp_cleanups)_Exit(1);
@@ -83,7 +83,7 @@ int main(void){
   if(stage==3){fwp_p_task_yield();if(!entered||task->done||task->gctx!=inner_context)return 2;fwp_p_task_cancel(PTR(task));}
   fwp_await(task);
   if(!task->done||task->gctx||task->gctx_storage.deadline||fwp_cur->gctx!=prior_context||cancelled!=(stage==3)||typed!=(stage==1||stage==5)||trapped!=(stage==2||stage==4)||fwp_cleanups)return 1;
-  FWP_KEEP_ALIVE(PTR(task));
+
  }
  fwp_cur->gctx=0;fwp_lib_finish();return 0;
 }

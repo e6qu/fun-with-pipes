@@ -170,9 +170,9 @@ int main(void){
  fwp_channel_drop(ch);if(!dead(value))return 33;
  // An old channel and buffer keep new queue elements alive through a minor GC.
  ch=fMAKE(2);value=fwp_rc_fresh(fwp_str_new("old",3));fSEND(ch,value);received=fRECV(ch);option_drop(received);
- fwp_heap_collect();fwp_heap_collect();FWP_KEEP_ALIVE(ch);
+ fwp_heap_collect();fwp_heap_collect();
  value=fwp_rc_fresh(fwp_str_new("young",5));fSEND(ch,value);value=0;
- fwp_heap.major_next=0;size_t minors=fwp_heap.nminor;fwp_heap_collect();FWP_KEEP_ALIVE(ch);
+ fwp_heap.major_next=0;size_t minors=fwp_heap.nminor;fwp_heap_collect();
  if(fwp_heap.nminor!=minors+1)return 34;received=fRECV(ch);if(STR(OBJ(received)->f[0])->len!=5)return 34;option_drop(received);fwp_channel_drop(ch);
  // Untyped queue channels and promoted handles keep tracing.
  for(int promoted=0;promoted<2;promoted++){
@@ -210,7 +210,7 @@ int main(void){
  fwp_trap_recover=0;fwp_trap_jb=0;
  if(((fwp_chan *)(uintptr_t)ch)->len!=1||((fwp_chan *)(uintptr_t)ch)->buf[((fwp_chan *)(uintptr_t)ch)->head]!=value)return 51;
  received=fwp_p_channel_recv(ch);if(OBJ(received)->f[0]!=value||STR(value)->len!=15)return 52;
- fwp_p_channel_close(ch);FWP_KEEP_ALIVE(received);
+ fwp_p_channel_close(ch);
  // A failed buffer allocation consumes the message but leaves the queue empty.
  ch=fMAKE(1);value=fwp_rc_fresh(fwp_str_new("growth",6));
  fail_grow=1;fwp_trap_recover=recover;fwp_trap_jb=&recovered;fwp_trap_cleanup=0;

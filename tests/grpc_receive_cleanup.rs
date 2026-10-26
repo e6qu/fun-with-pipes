@@ -74,7 +74,7 @@ int main(int argc,char **argv){
  if(readers!=1||writers!=1||c->refs!=2||c->dead)return 204;
  if(unpooled){g_pool=c->next_pool;c->next_pool=0;g_conn_drop(c);}
  g_conn_drop(c); // caller releases; only I/O and any pool owner remain
- FWP_KEEP_ALIVE(listener);
+
  fwp_lib_finish();
  if(connection_finalized!=1||g_pool||fwp_cur||fwp_tasks_active||fwp_heap.ready)return 205;
  return 0;
@@ -149,7 +149,7 @@ static void *watched_connection;
         ("static void fwp_native_tasks_finish(void) {".to_string(), "static void fwp_native_tasks_finish(void) { int64_t test_deadline=fwp_now_ns()+1000000000LL;".to_string()),
         ("        while (fwp_tasks_active) {".to_string(), "        while (fwp_tasks_active) { if(fwp_now_ns()>=test_deadline)_Exit(209);".to_string()),
         ("    fwp_init_consts();".to_string(), format!("    fwp_init_consts();\n{prepare}")),
-        ("\n    /* Ownership observation point: before runtime teardown. */\n".to_string(), "\n    /* Ownership observation point: before runtime teardown. */ FWP_KEEP_ALIVE(listener); if(connection_finalized!=1||g_pool||fwp_cur||fwp_tasks_active)exit(205);\n".to_string()),
+        ("\n    /* Ownership observation point: before runtime teardown. */\n".to_string(), "\n    /* Ownership observation point: before runtime teardown. */ if(connection_finalized!=1||g_pool||fwp_cur||fwp_tasks_active)exit(205);\n".to_string()),
         ("int main(int argc, char **argv)".to_string(), "int original_main(int argc, char **argv)".to_string()),
     ] {
         // The library drain is present in the runtime source, but disabled in
@@ -242,9 +242,9 @@ int main(void){
   fwp_await(t);
   int expected=stage==0?2:stage==1?3:stage==2?2:stage==3?1:stage==4?2:stage==5?1:stage==6?2:1;
   if(!t->done||allocations!=expected||frees!=expected||cancelled!=(stage==5||stage==6)||fwp_cleanups)return 1;
-  FWP_KEEP_ALIVE(PTR(t));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
+
  }
- FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
+ fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-receive-cleanup").unwrap();

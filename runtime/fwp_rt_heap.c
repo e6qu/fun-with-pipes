@@ -816,14 +816,14 @@ static void fwp_rc_cleanup_count(void *arg) {
 
 /* Compiled dynamic application consumes the function and its arguments.
  * Runtime callbacks retain the conservative shared entry in fwp_rt.c. */
-typedef struct {
+struct fwp_closure_drop_work {
     V *items;
     size_t len, cap;
     V local[64];
-} fwp_closure_drop_work;
+};
 /* WASI has no runtime threads. Native cleanup may enter through a host
  * callback, so its temporary work context is per thread. No safe point
- * or collected allocation occurs while processing this queue. */
+ * occurs while processing this queue. */
 #if defined(FWP_LIBRARY) && defined(_WIN32)
 static DWORD fwp_closure_drop_key = TLS_OUT_OF_INDEXES;
 static void fwp_closure_drop_init(void) {
@@ -879,9 +879,13 @@ static void fwp_closure_drop_push(fwp_closure_drop_work *work, V f) {
     if (work->len == work->cap) {
         if (work->cap > SIZE_MAX / 2 / sizeof(V)) fwp_trap("closure cleanup too large");
         size_t cap = work->cap * 2;
-        /* The spill buffer is explicitly released and never causes GC. */
+        /* Allocation failure is terminal, as in the value allocator. Recovery
+         * would discard pending owners after destruction has already begun. */
         V *items = (V *)malloc(cap * sizeof(V));
-        if (!items) fwp_trap("out of memory");
+        if (!items) {
+            fprintf(stderr, "fwp: out of memory\n");
+            fflush(NULL); _Exit(102);
+        }
         memcpy(items, work->items, work->len * sizeof(V));
         if (work->items != work->local) free(work->items);
         work->items = items;
@@ -890,9 +894,9 @@ static void fwp_closure_drop_push(fwp_closure_drop_work *work, V f) {
     work->items[work->len++] = f;
 }
 
-/* A recovered allocation/type trap must not leave a pointer into this
- * invocation's dead C stack. Pending unreachable values remain traceable;
- * destroying a capture is not retried after its destructor has trapped. */
+/* Clear the temporary thread context before releasing its spill buffer.
+ * Destructor traps and exhausted storage terminate rather than abandoning
+ * pending owners and resuming execution. */
 static void fwp_closure_drop_release(void *arg) {
     fwp_closure_drop_work *work = arg;
     fwp_closure_drop_set(NULL);

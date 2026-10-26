@@ -143,7 +143,7 @@ int main(void){
     if(job_frees!=1||task_frees!=1||children!=2||peer_frees!=1)_Exit(9);
    }else if(job_frees!=1||task_frees!=1||s->task||children!=1||peer_frees!=((stage<3||stage==6)?1:0)||fwp_cleanups)_Exit(7);
   }
-  FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
+
  }
  // Overflow fails before acquiring a sender owner or publishing a task.
  stage=7;peer_frees=job_frees=task_frees=task_disposals=0;observed_sender=observed_task=0;
@@ -168,7 +168,7 @@ int main(void){
  // Reuse verification deliberately poisons counted storage without freeing it.
  if(task_disposals!=1||task_frees!=(fwp_reuse_verify?0:1)||fwp_cur->scope)_Exit(42);
  if(fwp_reuse_verify&&*(uint64_t *)scoped_task)_Exit(43);
- c->ssl=ssl;FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
+ c->ssl=ssl;fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-peer-completion").unwrap();

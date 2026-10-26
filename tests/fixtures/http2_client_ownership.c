@@ -96,6 +96,6 @@ int main(void) {
     if (fwp_cleanups || c->streams || stream_finals != 1 || request_resets != 1 || *fwp_rc_slot(PTR(c)) != 1) return 10;
     waiting_request = NULL; pending_key = pending_request = 0;
     g_pool = NULL; g_conn_drop(c);
-    FWP_KEEP_ALIVE(request); FWP_KEEP_ALIVE(key);
+
     fwp_lib_finish(); return 0;
 }

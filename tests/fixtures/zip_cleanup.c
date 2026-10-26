@@ -59,5 +59,5 @@ int main(void){
         }
         if(!zip_collect&&fwp_heap.live!=before)return 249;
     }
-    FWP_KEEP_ALIVE(xs);FWP_KEEP_ALIVE(ys);zip_drop_input(xs);zip_drop_input(ys);return 0;
+    zip_drop_input(xs);zip_drop_input(ys);return 0;
 }

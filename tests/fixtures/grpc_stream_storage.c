@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
             requests != before || stream->mhead != next_message) return 34;
         position = next_cell(value, i);
         if (position->src != source) return 39;
-        FWP_KEEP_ALIVE(PTR(retained));
+
     }
     if (mode != 1) {
         g_failure failure = {0}; V error = 0; const fwp_desc *error_type = NULL;
@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
      * C roots measures retained cache storage; the complete-client and typed
      * cache-owner tests exercise the consuming release path separately. */
     position = retained = NULL; source = NULL; stream = NULL; connection = NULL;
-    FWP_KEEP_ALIVE(PTR(position)); FWP_KEEP_ALIVE(PTR(retained));
+
     double after_roots = charged();
     measured = 0;
     printf("%zu\t%d\t%zu\t%llu\t%llu\t%llu\t%llu\t%.0f\t%.0f\t%.0f\t%zu\t%zu\n",

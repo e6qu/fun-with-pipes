@@ -66,5 +66,5 @@ int main(void){
     V empty=fwp_p_unzip_owned(0,NULL,NULL,NULL,NULL,unzip_drop_strings,unzip_drop_strings);
     if(OBJ(empty)->f[0]||OBJ(empty)->f[1])return 250;
     fwp_rc_free_obj(empty);if(fwp_heap.live!=before)return 251;
-    FWP_KEEP_ALIVE(ps);unzip_drop_input(ps);return 0;
+    unzip_drop_input(ps);return 0;
 }

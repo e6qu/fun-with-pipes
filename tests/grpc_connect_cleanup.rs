@@ -123,7 +123,7 @@ int main(void){
   if(!task->done||cancelled!=1||result||backgrounds||fwp_cleanups)return 32;
   if(!socket_closed(watched_fd))return 1;
   if(res_freed!=1)return 2;if(ssl_freed!=(mode==2?1:0))return 3;
-  mode=0;fwp_p_tcp_stop(listener);FWP_KEEP_ALIVE(listener);FWP_KEEP_ALIVE(tick);
+  mode=0;fwp_p_tcp_stop(listener);
  }
  mode=0;V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);V address=fwp_p_local_addr(listener);snprintf(target,sizeof target,"%s",STR(address)->d);
  mode=4;res_freed=ssl_freed=backgrounds=0;watched_res=0;char *error=0;g_conn *c=g_connect(target,0,&error);
@@ -133,7 +133,7 @@ int main(void){
  g_conn_dead(c,"finished");g_conn_drop(c);mode=0;fwp_p_tcp_stop(listener);
  mode=4;res_freed=ssl_freed=backgrounds=0;watched_res=0;watched_fd=FWP_INVALID_SOCKET;
  c=g_connect(target,0,&error);if(c||!error||strncmp(error,"cannot connect to ",18)||res_freed!=1||ssl_freed||backgrounds||fwp_cleanups||watched_fd==FWP_INVALID_SOCKET||!socket_closed(watched_fd))return 7;free(error);
- mode=0;FWP_KEEP_ALIVE(listener);FWP_KEEP_ALIVE(tick);fwp_lib_finish();return 0;
+ mode=0;fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-connect-cleanup").unwrap();

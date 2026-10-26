@@ -77,7 +77,7 @@ int main(int argc,char **argv){
    * channel must remain safe after I/O retirement, without premature disposal. */
   if(connection_finals||c->refs||c->fd!=FWP_INVALID_SOCKET||c->streams||!c->dead||*fwp_rc_slot(PTR(c))||*fwp_rc_slot(channel))_Exit(248);
   if(fwp_p_channel_send_owned(channel,(V)1,NULL)!=FWP_FALSE)_Exit(249);
-  FWP_KEEP_ALIVE(channel);
+
  }else if(connection_stage>=2){
   if(connection_finals||c->refs||c->fd!=FWP_INVALID_SOCKET||c->streams||!c->dead||reader_failed!=(connection_stage==4))_Exit(242);
   if(*fwp_rc_slot(PTR(c))!=((retained||channel)?2:1))_Exit(243);

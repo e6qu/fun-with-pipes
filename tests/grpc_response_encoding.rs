@@ -139,9 +139,9 @@ int main(void){
   if(stage==2&&strcmp(fwp_trap_msg,"response trap"))return 5;
   if(stage==3&&strcmp(fwp_trap_msg,"canonical trap"))return 6;
   if(stage==4&&strcmp(fwp_trap_msg,"request decode trap"))return 8;
-  FWP_KEEP_ALIVE(PTR(t));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
+
  }
- FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
+ fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-response-encoding").unwrap();

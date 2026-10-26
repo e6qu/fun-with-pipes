@@ -6,6 +6,29 @@ and unsafe storage reuse without a collector keeping the affected objects alive.
 G4 passed all nine production jobs and documentation in [#215](roadmap-history.md#weak-channels-and-retained-callbacks-pr-215).
 G5 must preserve these checks when removing collector code.
 
+## Closure destruction and loop releases
+
+A closure is a function together with the values it captures. Releasing its last
+owner also releases those captured values. A temporary queue avoids recursively
+using the C stack for a long chain of captured functions.
+
+The G5 closure probe checks that normal destruction releases all captures,
+restores live bytes and clears the temporary thread context. A deliberately
+missing context reset must fail with status 94 before reading the stale pointer.
+Failure to grow the queue terminates with status 102, matching allocator
+exhaustion. A trap during destruction terminates with status 101. Neither may
+resume a server call or language test after abandoning partially released owners.
+Ordinary traps outside destruction keep their existing recovery rules.
+The focused Clang ARM64 O1/O2 probe passes; integrated target checks are pending.
+
+The loop probe compares the same 10,000-step program with and without its typed
+loop releases. Both must match the raw interpreter's output. The missing-release
+control must release at least 314,573 fewer bytes and leave at least that many
+extra live bytes. Separate alias tests cover O1/O2, stack placement on/off and
+normal reuse versus the explicit `FWP_NO_REUSE` copy control. These are memory
+correctness checks, not timing comparisons with C or Rust. Integrated validation
+of the migrated loop probe is pending.
+
 ## Native live-allocation ledger
 
 The [test helper](../tests/support/ownership_ledger.rs) adds an address table to

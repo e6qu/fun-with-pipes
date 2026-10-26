@@ -78,7 +78,7 @@ int main(void){
   V duration=fwp_rc_fresh(fwp_record(1,(V[]){cancelled?0:INT64_C(3600000000000)}));
   fwp_rc_dup(fn); /* preserve an independent alias across the consuming call */
   V result=fWITHIN(duration,fn);fwp_rc_free_obj(duration);
-  FWP_KEEP_ALIVE(fn);FWP_KEEP_ALIVE(capture);
+
   if(!fwp_rc_slot(fn)||!fwp_rc_slot(capture)||*fwp_rc_slot(fn)!=1||*fwp_rc_slot(capture)!=alias+1)return 1;
   if(cancelled){if(result!=FWP_NONE)return 2;}
   else{if(result==FWP_NONE||OBJ(result)->f[0]!=5)return 3;fwp_rc_free_obj(result);}

@@ -63,7 +63,7 @@ static int probe(void){
   if(buffer_frees!=(stage<3?1:0)){fprintf(stderr,"stage %d frees %d expected %d\n",stage,buffer_frees,stage<3?1:0);return 1;}
   if(subject_calls!=(stage==4?0:1)||fwp_cleanups){fprintf(stderr,"stage %d calls %d cleanup %p\n",stage,subject_calls,(void *)fwp_cleanups);return 2;}
  }
- c->ssl=ssl;FWP_KEEP_ALIVE(call);fwp_lib_finish();return 0;
+ c->ssl=ssl;fwp_lib_finish();return 0;
 }
 int main(void){int status=probe();if(status)_Exit(status);return 0;}
 "#;

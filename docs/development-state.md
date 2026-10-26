@@ -10,8 +10,10 @@ Base: #216 source `0db38df8bd0b3ea6f4dc1165edd985bc82c71ccb`.
 Local checkpoints: `d83f4745` (runtime deletion), `bd299fe0` (release controls),
 `dd0c2fbe` (counted probes and numeric cases), and `87d68cd1` (Windows contexts,
 client reports and nine owner-test migrations). `6e065730` records native/WASI entries and Linux context checks. Further reviewed
-edits migrate 25 owner/program targets, iterator/recursion measurements and
-HTTP/2/TLS borrowed-byte probes. Nothing here has been pushed.
+edits in `2ad9538b` migrate 25 owner/program targets, iterator/recursion measurements
+and HTTP/2/TLS borrowed-byte probes. Subsequent edits remove remaining test root
+fences, replace loop leak controls and repair closure destruction failure.
+Nothing here has been pushed.
 
 Only #216 is a public PR. Its worktree is
 `/private/tmp/fwp-ownership-fault-matrix`, branch `remove-tracing-runtime`.
@@ -42,6 +44,8 @@ must stay stopped. No merge watcher is running.
 | Linux contexts | Replaced collector-root probe with live register, rounding and signal-mask checks. Retained stack layout, clear/alignment/lifetime controls and updated the process measurement reader. |
 | Borrowed bytes | HTTP/2 and TLS probes inspect actual owners at the copy boundary and release them afterwards. Premature-release controls exit before reading freed storage; forced collection and register-clearing machinery are gone. Native validation is pending. |
 | Iterator/recursion reports | Retained matched fwp variants, inputs, optimization levels, timing scopes, allocation/live-byte counters and binary evidence. Removed the second memory mode and collection fields. |
+| Root fences and loops | Removed collector fences from 47 fixtures/targets. Replaced the last fence-dependent loop control with omitted typed releases, checking both released and live bytes. Alias cases use the real copy control. |
+| Closure destruction | Queue exhaustion now exits 102; traps during destruction exit 101 without recovery or shutdown callbacks revisiting partial owners. Normal release restores live bytes and clears the thread context. Missing reset exits 94. Integrated validation is pending. |
 | Docs | Updated ownership, native commands, tutorials and allocator/report explanations. Historical measurements retain their original source/schema; reproduction instructions distinguish their revision from current tools. |
 
 The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
@@ -50,7 +54,8 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 
 ## Remaining migration, in order
 
-1. **Finish test mode removal.** Remove variable `--gc` arguments, duplicate
+1. **Finish test mode removal.** Start with the remaining list/State fixtures in
+   `list_applicative_ownership`; its closure failure case is migrated. Remove variable `--gc` arguments, duplicate
    ARC/tracing loops, obsolete environment settings and CLI-selector tests.
    Keep every distinct semantic input, optimization/layout choice and ownership
    fault. Retain errors for unsupported current options; no compatibility aliases.
@@ -81,7 +86,10 @@ Nine owner-test candidates were reviewed and applied: constructor type/unwind,
 general/ordinary record update, loop preparation, retain unwind, variant conversion,
 worker boxing and worker preparation. Twelve more owner candidates and thirteen program candidates were reviewed,
 refined and applied. With the separate task-context migration, 49 candidates
-still match their original source hashes and remain **unreviewed**. They may
+matched their original source hashes before the latest fence/loop edits. The
+`arc_tasks`, `linalg_ownership`, `retained_thunk_ownership`,
+`within_thunk_ownership`, `loop_ownership` and `list_applicative_ownership`
+candidates are now also stale. Remaining candidates are **unreviewed**. They may
 leave obsolete helpers, boolean mode loops or artifact consumers. Check each manifest source hash
 before applying; never copy them wholesale. `task_context_storage` has been
 migrated separately, so its candidate is stale. The older `-before-client-schema`
@@ -112,6 +120,7 @@ Scripts below live in `/private/tmp` unless a repository path is given.
 | `python3 fwp-check-allocation-report.py` | Strict parser accepts valid LF/CRLF and rejects missing/duplicate fields, invalid numbers and wrong units. |
 | `python3 fwp-check-report-runtime.py` | O1/O2 actual allocator: 100,032 allocated; 32 released/100,000 live, then 100,032 released/zero live; peak 100,032 and extent 196,608. |
 | `python3 fwp-check-memory-startup.py` | Migrated harness compiles at Rust O1 with warnings denied; three helper tests pass. Does not run generated memory servers. |
+| `python3 fwp-check-closure-failure.py` | Actual allocator, cleanup queue and trap code, Clang ARM64 O1/O2: normal release passes; capture trap 101, spill OOM 102 and omitted context reset 94. A recovery callback would fail with 93. Does not establish generated-program or other-target support. |
 | `python3 fwp-check-deletion-edits.py` | Rust formatting, changed Python parsing, whitespace, 253-target native schedule and integer artifact gate checks pass. |
 | `python3 fwp-check-migration-python.py` | Ruff reports no unresolved names in all 57 changed Python files. This is a static check, not execution of measurement protocols. |
 | `python3 scripts/check-roadmap.py` | Pass after this rewrite: 162 link sets, 106 immutable preparation pairs/tags, eight roadmap rows and commit messages. |

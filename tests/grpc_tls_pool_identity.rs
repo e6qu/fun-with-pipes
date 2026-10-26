@@ -91,7 +91,7 @@ int main(void){
  while(fwp_tasks_active){fwp_make_ready(fwp_root);fwp_block();fwp_free_zombie();}fwp_free_zombie();
  if(connected->refs||connected->fd!=-1||g_pool)return 2;
  g_conn_drop(connected);connected=0;fwp_p_tcp_stop(listener);
- FWP_KEEP_ALIVE(listener);FWP_KEEP_ALIVE(PTR(task));FWP_KEEP_ALIVE(PTR(connected));
+
  fwp_lib_finish();return 0;
 }
 "#;

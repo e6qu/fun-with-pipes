@@ -94,7 +94,7 @@ int main(void){
   fwp_lib_finish();
   if(frees!=nowned||cancelled!=1||finalized!=1||order_error||g_env_options_known||g_pool||fwp_gctx_acquire||fwp_gctx_release||fwp_heap.ready)return 1;
   fwp_lib_finish();if(frees!=nowned)return 9;
-  FWP_KEEP_ALIVE(value);
+
  }
  set_environment("FWP_SERVICE_CACHE_CA","");return 0;
 }

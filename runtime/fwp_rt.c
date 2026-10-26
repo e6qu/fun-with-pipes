@@ -487,6 +487,8 @@ static jmp_buf *fwp_trap_jb = 0;
 static fwp_cleanup *fwp_trap_cleanup = 0;
 static int (*fwp_trap_recover)(void) = 0;
 static char fwp_trap_msg[1024];
+typedef struct fwp_closure_drop_work fwp_closure_drop_work;
+static fwp_closure_drop_work *fwp_closure_drop_get(void);
 
 #ifdef FWP_TESTS
 /* Only the root of an in-language test may resume after a trap or exit.
@@ -501,16 +503,20 @@ static void fwp_test_abort(int kind, const char *message, int code);
 #endif
 
 static void fwp_trap(const char *msg) {
-    if (fwp_trap_recover && fwp_trap_recover() && fwp_trap_jb) {
+    /* Destruction has already consumed owners. A failed destructor cannot
+     * resume a server call or language test with a partly released graph. */
+    int destroying = fwp_closure_drop_get() != NULL;
+    if (!destroying && fwp_trap_recover && fwp_trap_recover() && fwp_trap_jb) {
         snprintf(fwp_trap_msg, sizeof fwp_trap_msg, "%s", msg);
         fwp_cleanup_unwind(fwp_trap_cleanup);
         longjmp(*fwp_trap_jb, 1);
     }
 #ifdef FWP_TESTS
-    fwp_test_abort(1, msg, 0);
+    if (!destroying) fwp_test_abort(1, msg, 0);
 #endif
     fwp_flush();
     fprintf(stderr, "fwp: trap: %s\n", msg);
+    if (destroying) { fflush(stderr); _Exit(101); }
     exit(101);
 }
 

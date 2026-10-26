@@ -65,5 +65,5 @@ int main(int argc,char **argv){
         for(int i=0;i<5;i++)if(*fwp_rc_slot(values[i])!=1)return 248;
         if(!generation_collect&&fwp_heap.live!=before)return 249;
     }
-    FWP_KEEP_ALIVE(xs);generation_drop_list(xs);generation_drop_text(values[4]);return 0;
+    generation_drop_list(xs);generation_drop_text(values[4]);return 0;
 }

@@ -80,9 +80,9 @@ int main(void){
   if(!t->done||request_frees!=1||watched_request||wire_buffer||wire_frees!=(stage==2?0:1)||fwp_cleanups)return 1;
   if(stage==0){if(!s->local_end||s->reset)return 3;int found=0;for(size_t i=0;i+7<=c->out.len;i++)if(!memcmp(c->out.d+i,"request",7))found=1;if(!found)return 4;}
   if(stage==2&&(!s->reset||strcmp(s->reset,"trap: encode trap")))return 5;
-  FWP_KEEP_ALIVE(PTR(t));FWP_KEEP_ALIVE(PTR(x));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
+
  }
- FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
+ fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-request-encoding").unwrap();

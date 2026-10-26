@@ -165,9 +165,9 @@ int main(void){
   if(stage>=8&&delivered!=(stage==8||stage==10||stage==11||stage>=12))return 4;
   if(stage==8&&result!=FWP_UNIT)return 5;
   if(trapped){const char *expected_text=stage==1?"bad response from probe (local): more than one response message":stage==2?"bad response from probe (local): missing response message":stage==3?"service call probe (local) failed: transport failure":stage==5?"decode trap":stage==10||stage==15?"channel trap":"bad response from probe (local): malformed message";if(strcmp(fwp_trap_msg,expected_text))return 6;}
-  FWP_KEEP_ALIVE(PTR(t));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));FWP_KEEP_ALIVE(PTR(retry_stream));
+
  }
- FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
+ fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-client-receive").unwrap();

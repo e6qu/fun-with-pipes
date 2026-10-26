@@ -258,7 +258,7 @@ fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
         for (point, marker) in [
             (
                 1,
-                "    fwp_cleanup_pop(&cleanup);\n    FWP_KEEP_ALIVE(parameters);",
+                "    V base = fwp_ad_tape_new((V)n, owner);\n    fwp_cleanup_pop(&cleanup);",
             ),
             (2, "    owner->len = t->len = idx + 1;"),
             (11, "        fwp_cleanup_push(&weight_cleanup, fwp_value_release, &weight);"),

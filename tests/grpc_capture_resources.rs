@@ -167,7 +167,7 @@ static void call(void *arg,int stop){
    size_t n;V *items=fwp_list_items(OBJ(snapshot)->f[1],&n);
    if(OBJ(snapshot)->f[0]!=42||n!=1||strcmp(STR(OBJ(items[0])->f[1])->d,"before"))_Exit(18);
    if(frees!=(stage==4||stage==5||stage==8?0:1))_Exit(1);
-  }else{typed++;if(handler.desc!=&string_descriptor||strcmp(STR(handler.value)->d,"capture typed failure"))_Exit(19);FWP_KEEP_ALIVE(handler.value);}
+  }else{typed++;if(handler.desc!=&string_descriptor||strcmp(STR(handler.value)->d,"capture typed failure"))_Exit(19);}
  }else{trapped++;const char *expected=stage==6?"child prepare trap":stage==7?"too many metadata capture owners":"capture scope trap";if(strcmp(fwp_trap_msg,expected))_Exit(20);}
  fwp_handlers=handler.prev;fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;
  if(fwp_cur->gctx||fwp_cleanups)_Exit(1);
@@ -181,7 +181,7 @@ int main(void){
   fwp_await(task);
   if(stage==5){if(frees||!spawned||!entered||((fwp_task*)spawned)->done)return 3;fwp_make_ready(spawned);fwp_await(spawned);}
   if(!task->done||frees!=1||fwp_cleanups||cancelled!=(stage==3)||typed!=(stage==1)||trapped!=(stage==2||stage==6||stage==7)||task->gctx_owner)return 1;
-  FWP_KEEP_ALIVE(PTR(task));FWP_KEEP_ALIVE(PTR(spawned));if(snapshot)CAPTURE_TYPE->drop(snapshot);snapshot=0;
+  if(snapshot)CAPTURE_TYPE->drop(snapshot);snapshot=0;
  }
  // Failure to acquire capture ownership must not partially retain TLS options.
  g_tls *tls=g_tls_new("",0,"","","");tls->users=1;
@@ -196,7 +196,7 @@ int main(void){
  if(setjmp(failed))return 7;
  if(fwp_p_grpc_with_tls(options,0,0,1,2,3,4)!=42)return 7;
  if(tls_frees!=1||cap.users!=SIZE_MAX||fwp_cleanups||fwp_cur->gctx!=&context)return 8;
- fwp_cur->gctx=0;FWP_KEEP_ALIVE(options);
+ fwp_cur->gctx=0;
  // Failed capture allocation never enters the callback or installs a context.
  fail_capture=1;callback_entries=0;
  if(!setjmp(failed)){fwp_p_grpc_with_response_metadata(0,CAPTURE_TYPE);return 9;}

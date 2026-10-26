@@ -104,9 +104,9 @@ int main(void){
   if(stage==2&&strcmp(fwp_trap_msg,"client encode trap"))return 6;
   if(stage==3&&strcmp(fwp_trap_msg,"client input trap"))return 6;
   if(stage && (s->listed||!s->reset||c->out.len<13||c->out.d[c->out.len-10]!=H2_RST_STREAM))_Exit(8);
-  FWP_KEEP_ALIVE(PTR(t));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
+
  }
- FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
+ fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-client-requests").unwrap();

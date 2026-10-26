@@ -110,9 +110,9 @@ int main(void){
   if(allocations!=expected||frees!=expected||fwp_cleanups)return 1;
   if(src->reader||src->read_waiters.head)return 13;
   if(trapped&&(cell->forced||cell->src!=src))return 11;
-  FWP_KEEP_ALIVE(PTR(cell));FWP_KEEP_ALIVE(PTR(src));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
+
  }
- FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
+ fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-force-cleanup").unwrap();
@@ -313,7 +313,7 @@ int main(void) {
         (void)fwp_cstr("allocation after construction");
         if(strlen(source->what)!=length)return 1;
         for(size_t i=0;i<length;i++)if(source->what[i]!='x')return 1;
-        FWP_KEEP_ALIVE(PTR(source));
+
         fwp_mem_free(source);
     }
     const size_t lengths[]={0,1,1018,1019,1020,1021,1022,1023,1024,2048};

@@ -84,7 +84,7 @@ int main(void){
   V fn=fwp_rc_fresh(fwp_pap(mode==2?SLEEPING:PLAIN,1,&capture));
   fwp_task *t=(fwp_task *)(uintptr_t)fSPAWN(fn);
   if(*fwp_rc_slot(fn)!=1||*fwp_rc_slot(capture)!=alias+1)return 1;
-  FWP_KEEP_ALIVE(capture);FWP_KEEP_ALIVE(PTR(t));
+
   if(mode==2)fwp_p_task_yield();
   if(mode)fwp_p_task_cancel(PTR(t));
   V result=fwp_await(t);

@@ -71,9 +71,9 @@ int main(void){
   fwp_trap_recover=0;fwp_trap_jb=0;
   if(buffer_frees!=1||rendered||fwp_cleanups||cell->forced)return 1;
   if(strcmp(fwp_trap_msg,stage?"render trap":"service call probe failed: error: 42"))return 3;
-  FWP_KEEP_ALIVE(PTR(cell));FWP_KEEP_ALIVE(PTR(src));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
+
  }
- FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
+ fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-render-cleanup").unwrap();

@@ -99,6 +99,6 @@ int main(int argc,char **argv){
  fwp_await(task);
  if(finished!=1||cancelled!=((stage==4||stage==12)?1:0)||trapped!=((stage==2||stage==3||stage==11)?1:0))_Exit(252);
  int expected=(stage==1||stage==2||stage==10)?0:1;if(encoded!=expected)_Exit(253);
- FWP_KEEP_ALIVE(PTR(c));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(task));
+
  fwp_lib_finish();return 0;
 }

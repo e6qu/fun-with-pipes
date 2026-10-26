@@ -92,7 +92,7 @@ static void parent(void *arg, int stop) {
         } else {
             typed++;
             if (handler.desc != &context_error || strcmp(STR(handler.value)->d, "scope failure")) _Exit(47);
-            FWP_KEEP_ALIVE(handler.value);
+
         }
     } else {
         trapped++;
@@ -160,8 +160,8 @@ int main(void) {
         fwp_await(escaped);
         if (child_checked != 1 || !escaped->done || escaped->gctx_owner) _Exit(52);
         if (metadata_attempts != 1 || metadata_frees != 1 || metadata_block) _Exit(54);
-        FWP_KEEP_ALIVE(PTR(task)); FWP_KEEP_ALIVE(PTR(escaped));
-        FWP_KEEP_ALIVE(metadata); FWP_KEEP_ALIVE(duration);
+
+
         fwp_cur->gctx = 0;
     }
     /* Failed child ownership is atomic across headers, TLS and capture. A

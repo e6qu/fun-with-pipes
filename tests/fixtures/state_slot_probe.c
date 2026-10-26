@@ -65,12 +65,12 @@ int main(void) {
     V second=fwp_state[1],third=fwp_state[2];
     fwp_state_restore(3);
     if(fwp_state_len!=3 || fwp_state[0]!=state_outer || fwp_state[1]!=second || fwp_state[2]!=third || !state_empty_from(3)) return 106;
-    state_collect();FWP_KEEP_ALIVE(second);FWP_KEEP_ALIVE(third);
+    state_collect();
     fwp_state_restore(1);
     state_mode=0;
     V result=fwp_p_run_state(state_error,PTR(&state_callback),FWP_UNIT);
     if(fwp_state_len!=1 || !state_empty_from(1) || OBJ(result)->f[0]!=state_error || OBJ(result)->f[1]!=state_error) return 106;
-    state_collect();FWP_KEEP_ALIVE(result);
+    state_collect();
     /* An actual typed failure passes through run-state to an outer handler. */
     state_mode=1;
     fwp_handler h;h.prev=fwp_handlers;h.state_depth=fwp_state_len;h.cleanup=fwp_cleanups;

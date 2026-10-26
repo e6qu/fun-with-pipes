@@ -61,7 +61,7 @@ int main(void) {
         if (stream_finals != before_streams + (stage > 0)) return 8;
         if (tls_finals != (stage < 3)) return 11;
         fwp_closure_drop(handler); fwp_sock_drop(conn); fwp_sock_drop(peer); fwp_sock_drop(listener);
-        FWP_KEEP_ALIVE(address); FWP_KEEP_ALIVE(upgrade); FWP_KEEP_ALIVE(initial);
+
     }
     fwp_lib_finish(); return 0;
 }

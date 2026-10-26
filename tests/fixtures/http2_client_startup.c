@@ -26,14 +26,14 @@ static void connect_client(void *arg, int cancelled) {
         if (startup_stage == -2) { fwp_p_http2_serve(conn, 0, 0, 0, 0); _Exit(33); }
         V option = fwp_data(1, 1, &conn);
         connected = (g_conn *)(uintptr_t)fwp_p_http2_send(fwp_cstr(pool_key), option, 0, ERROR_TYPE, RESPONSE_TYPE);
-        FWP_KEEP_ALIVE(option);
+
     } else trapped++;
     fwp_cur->trap_jb = saved; fwp_cur->trap_cleanup = saved_cleanup;
     if (startup_stage < 0) {
         if (!transport || SOCK(transport)->fd == FWP_INVALID_SOCKET || STREAM(transport)->tls != expected_tls) _Exit(10);
         fwp_p_sock_close(transport);
     }
-    FWP_KEEP_ALIVE(transport);
+
 }
 int main(void) {
     fwp_lib_init(); fwp_heap_start(); fwp_trap_recover = g_trap_recover;
@@ -45,7 +45,7 @@ int main(void) {
         fwp_task *task = fwp_spawn_task(0, connect_client, 0, 0, 0); fwp_await(task);
         if (startup_stage < 0) {
             if (!task->done || !trapped || pending || fwp_cleanups || g_pool) return 11;
-            fwp_p_tcp_stop(listener); FWP_KEEP_ALIVE(listener); FWP_KEEP_ALIVE(PTR(task));
+            fwp_p_tcp_stop(listener);
             continue;
         }
         g_conn *c = pending;
@@ -72,7 +72,7 @@ int main(void) {
             g_conn_drop(c); connected = 0;
         }
         if (finalized != 1 || g_pool || fwp_cleanups) return 9;
-        fwp_p_tcp_stop(listener); FWP_KEEP_ALIVE(listener); FWP_KEEP_ALIVE(PTR(task));
+        fwp_p_tcp_stop(listener);
     }
     fwp_lib_finish(); return 0;
 }
