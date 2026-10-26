@@ -35,9 +35,10 @@ self calls in tail position, after preparing all next arguments. Other recursive
 calls in the same function keep ordinary frames. [The recursion contract](design.md#tail-calls-and-recursion)
 explains eligibility, preserved cleanup and the raw/debugger exceptions.
 
-`FWP_NO_OPT=1` skips the optimization stages listed above; it does not skip
+Setting `FWP_NO_OPT=1` skips the optimization stages listed above; it does not skip
 parsing, expansion, type checking, lowering or resource preservation. Native
-ownership lowering is separate. Debug builds also validate local types after
+ownership lowering is separate. Unset `FWP_NO_OPT` to enable optimization:
+its presence disables the passes, even with a value of `0`. Debug builds also validate local types after
 passes and check inserted reference operations. The interpreter uses Rust-owned
 values rather than executing the generated C reference-count machinery.
 Public interpreter entries now check queue/State/autodiff lifetimes before

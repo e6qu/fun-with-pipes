@@ -700,25 +700,28 @@ impl Proof<'_> {
     /// Aggregate fields share origins. A checked type rules out unrelated
     /// queue/function fields, but never proves an unknown origin of its own kind.
     fn refine_origins(&self, values: &mut Targets, ty: &MT) {
-        if !has_owner_channels(self.program, ty, &mut BTreeSet::new())
-            && values.remove(&Origin::UnknownOwnerQueue)
+        if values.contains(&Origin::UnknownOwnerQueue)
+            && !has_owner_channels(self.program, ty, &mut BTreeSet::new())
         {
+            values.remove(&Origin::UnknownOwnerQueue);
             values.insert(Origin::UnknownQueue);
         }
-        if matches!(ty, MT::Con(name, _) if name == "std::Task") {
-            values.retain(|origin| match origin {
-                Origin::Task(id) => crate::ir::same_type(
-                    &self.program.shapes,
-                    self.program.funcs[*id]
-                        .ty
-                        .params(self.program.funcs[*id].arity as usize)
-                        .1,
-                    ty,
-                ),
-                _ => true,
-            });
-        } else if !has_tasks(self.program, ty, &mut BTreeSet::new()) {
-            values.retain(|origin| !origin.task());
+        if values.iter().any(|origin| origin.task()) {
+            if matches!(ty, MT::Con(name, _) if name == "std::Task") {
+                values.retain(|origin| match origin {
+                    Origin::Task(id) => crate::ir::same_type(
+                        &self.program.shapes,
+                        self.program.funcs[*id]
+                            .ty
+                            .params(self.program.funcs[*id].arity as usize)
+                            .1,
+                        ty,
+                    ),
+                    _ => true,
+                });
+            } else if !has_tasks(self.program, ty, &mut BTreeSet::new()) {
+                values.retain(|origin| !origin.task());
+            }
         }
         if matches!(ty, MT::Con(name, _) if name == "std::Channel") {
             values.retain(|origin| match origin {
@@ -832,6 +835,13 @@ impl Proof<'_> {
                 self.expr(body, locals, local_types, scoped, next_site)?
             }
         };
+        // Refinement only removes origins or weakens an existing unknown
+        // queue. Empty results need no type reconstruction. Do this after
+        // visiting every child: those visits update summaries, validate scope
+        // effects and assign stable creation positions even for scalar results.
+        if result.is_empty() {
+            return Ok(result);
+        }
         if let Some(ty) = crate::ir::type_of(
             &|id| &self.program.funcs[id].ty,
             &self.program.shapes,
@@ -1257,8 +1267,10 @@ pub(crate) fn check(
     entry_channels: EntryChannels,
     sites: ClosureSites,
 ) -> Result<AnalysisStats, String> {
+    // This is one existential query over the immutable type graph. A type
+    // already visited from an earlier function cannot add a new owner edge.
+    let mut seen = BTreeSet::new();
     let queued_owners = program.funcs.iter().any(|function| {
-        let mut seen = BTreeSet::new();
         has_owner_channels(program, &function.ty, &mut seen)
             || function
                 .locals
@@ -1369,7 +1381,9 @@ pub(crate) fn check(
             })?;
             let function = &program.funcs[id];
             let result_type = function.ty.params(function.arity as usize).1;
-            if !has_functions(program, result_type, &mut BTreeSet::new()) {
+            if result.iter().any(|origin| origin.callable())
+                && !has_functions(program, result_type, &mut BTreeSet::new())
+            {
                 result.retain(|origin| !origin.callable());
             }
             proof.refine_origins(&mut result, result_type);
@@ -1853,6 +1867,37 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                 .contains("outside a State scope"));
             }
         }
+    }
+
+    #[test]
+    #[ignore = "runner-only startup analysis budget; run with FWP_NO_OPT=1"]
+    fn ownership_rest_startup_budget() {
+        assert!(std::env::var_os("FWP_NO_OPT").is_some());
+        crate::driver::with_big_stack(|| {
+            for fixture in ["tests/rest/forms.fwp", "tests/fixtures/server_entries.fwp"] {
+                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(fixture);
+                let compiling = Instant::now();
+                let (_, program) = crate::rest::compile(&path)
+                    .unwrap_or_else(|failure| panic!("{}", failure.rendered));
+                let compile_seconds = compiling.elapsed().as_secs_f64();
+                let checking = Instant::now();
+                crate::arc::check_interpreter(
+                    &program,
+                    &[program.main.expect("REST entry")],
+                    EntryChannels::Unknown,
+                )
+                .unwrap();
+                let analysis_seconds = checking.elapsed().as_secs_f64();
+                eprintln!(
+                    "rest-startup fixture={fixture} raw=true functions={} compile_seconds={compile_seconds:.6} analysis_seconds={analysis_seconds:.6} analysis_limit_seconds=10",
+                    program.funcs.len(),
+                );
+                assert!(
+                    analysis_seconds <= 10.0,
+                    "{fixture}: lifetime analysis exceeded the startup budget"
+                );
+            }
+        });
     }
 
     #[test]

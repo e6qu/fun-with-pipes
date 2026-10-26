@@ -314,18 +314,17 @@ rules; [feasibility limits](docs/design-limits.md) bound the guarantees.
 
 ## Delivery and acceptance
 
-G3 and G4 must ship in the same PR. Keep the remaining GC-removal work together
+G3 and G4 shipped together in #215. Keep the remaining GC-removal work together
 where practical. During implementation, run only checks justified by a changed
 contract, a specific defect or an unresolved concern; do not repeat passing suites
 after every edit or launch full CI for intermediate commits. Write the required
 tests alongside the implementation, even when their broad execution is deferred.
 
-After G4 and all other changes included in the PR are complete, perform one
-consolidated local validation, then the full final-head CI matrix. Local checks
+After the implementation batch is complete, perform one consolidated local
+validation, then the full final-head CI matrix. Local checks
 remain serial and resource-guarded; record checks that cannot fit the limits and
 run those on GitHub rather than bypassing the guard. Batch all known repairs
-before repeating affected checks and required final gates. Existing #214
-validation can finish independently.
+before repeating affected checks and required final gates.
 Follow [AGENTS.md](AGENTS.md) and
 [Contributing](CONTRIBUTING.md): all nine final-head production jobs plus the
 documentation gate must pass. Memory claims also need the relevant failure,

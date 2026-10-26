@@ -82,6 +82,11 @@ jobs:
             time_flags=(-v)
           fi
           /usr/bin/time "${time_flags[@]}" env FWP_NO_OPT=1 cargo test --locked --lib ownership_analysis_scaling -- --ignored --nocapture --test-threads=1 2>&1 | tee ownership-analysis-evidence/analysis-scaling.log
+      - name: Check raw REST startup analysis budgets
+        if: ${{ !cancelled() }}
+        run: |
+          set -o pipefail
+          FWP_NO_OPT=1 cargo test --locked --lib ownership_rest_startup_budget -- --ignored --nocapture --test-threads=1 2>&1 | tee ownership-analysis-evidence/rest-startup.log
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -154,7 +159,15 @@ jobs:
           status=0
           cargo test --locked --test arc_execution arc_rejects_unproved_runtime_boundaries_and_disabled_counting -- --nocapture 2>&1 | tee compiler-lifetime-evidence/admission.log || status=1
           cargo test --locked --test arc_extensions raw_ad_cannot_escape_scope_proof_through_callbacks_or_arguments -- --nocapture 2>&1 | tee compiler-lifetime-evidence/ad-scopes.log || status=1
-          cargo test --locked --no-fail-fast --test channel_cycle_ownership --test autodiff_nested --test reuse 2>&1 | tee compiler-lifetime-evidence/memory.log || status=1
+          cargo test --locked --no-fail-fast --test channel_cycle_ownership --test queued_functions --test autodiff_nested --test reuse 2>&1 | tee compiler-lifetime-evidence/memory.log || status=1
+          exit "$status"
+      - name: REST startup regressions
+        if: ${{ !cancelled() }}
+        run: |
+          set -o pipefail
+          status=0
+          cargo test --locked --test rest forms_client_round_trip -- --nocapture 2>&1 | tee compiler-lifetime-evidence/rest-forms.log || status=1
+          cargo test --locked --test server_entry_ownership generated_http_entries_preserve_results_and_disconnected_handler_owners -- --nocapture 2>&1 | tee compiler-lifetime-evidence/rest-ownership.log || status=1
           exit "$status"
       - name: Publish admission results before tool tests
         if: always()

@@ -479,6 +479,8 @@ impl HttpServer {
                 .arg("--tls-key")
                 .arg(cert.join("server.key"));
         }
+        let description = format!("{command:?}");
+        let began = Instant::now();
         let mut child = command
             .stdout(Stdio::null())
             .stderr(Stdio::piped())
@@ -504,10 +506,15 @@ impl HttpServer {
             lines,
             log: Some(log),
         };
-        let announcement = server
-            .lines
-            .recv_timeout(Duration::from_secs(30))
-            .expect("server announcement");
+        let announcement = match server.lines.recv_timeout(Duration::from_secs(30)) {
+            Ok(line) => line,
+            Err(error) => {
+                let _ = server.child.kill();
+                let _ = server.child.wait();
+                let log = server.log.take().unwrap().join().unwrap();
+                panic!("server announcement after {:?}: {error}; command: {description}; stderr: {log}", began.elapsed());
+            }
+        };
         let prefix = format!(
             "fwp: {interface} listening on {}://",
             if tls { "https" } else { "http" }

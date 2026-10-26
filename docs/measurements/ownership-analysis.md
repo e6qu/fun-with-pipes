@@ -140,3 +140,32 @@ ownership pass or establish its incremental memory cost.
 The final source must pass these budgets and the complete production correctness
 matrix. This fixture covers one mix of queues, captures, recursion and pipes;
 it does not bound all programs or establish pass-specific peak heap use.
+
+## REST startup regression
+
+The small worker fixture above did not expose the cost of repeatedly inspecting
+large generated REST types. In production run `40262766433` at
+`0db38df8bd0b3ea6f4dc1165edd985bc82c71ccb`, ARM64 macOS exceeded the existing
+60-second forms-server deadline and 30-second raw REST ownership-entry deadline.
+These deadlines remain unchanged.
+
+The captured compiler reproduced expensive interpreted forms startup locally:
+26.1 CPU seconds and 51.9 elapsed seconds under the half-core local guard. A
+one-second call-stack sample reached `check_interpreter`, `Proof::expr` and
+`refine_origins`, with repeated type traversal, comparison and allocation. This
+is diagnostic evidence, not a controlled before/after speed comparison.
+
+Refinement now inspects an owner kind only when that kind is present. Empty
+origin sets skip result-type reconstruction after every child has been visited.
+Scalar expressions still update summaries, validate scope effects and consume
+their creation positions. The initial search for owner-bearing channel types
+shares one visited set across the immutable type graph. No admission rule or
+scope requirement is weakened, and no new cache is retained.
+
+The runner-only `ownership_rest_startup_budget` check compiles
+`tests/rest/forms.fwp` and `tests/fixtures/server_entries.fwp` with optimization
+disabled. It prints compilation and lifetime-checking times separately, then
+requires each lifetime check to finish within ten seconds. Compilation, opening
+a listener and serving requests are outside that analysis timer; the ordinary
+REST tests still cover complete startup and responses. The repair and this new
+budget need final-head runner results before claiming the regression is fixed.

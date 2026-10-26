@@ -25,9 +25,10 @@ may change freely during pre-alpha.
   acceptance of every safe program is not a requirement.
 
 Exact weak target types, API names, acquisition semantics and release timing are
-specified for the first path in [weak channels](weak-channels.md); the remaining
-boundary contracts and analysis baseline are still G2 work. Do not reopen the overall direction on every
-iteration. If a concrete example requires a new language restriction, explain
+specified in [weak channels](weak-channels.md) and the six examples below.
+The [analysis report](measurements/ownership-analysis.md) records the measured
+baseline and enforced budgets. Revisit the direction only for a concrete defect
+or unsupported example. If a concrete example requires a new language restriction, explain
 that tradeoff before adopting it; do not silently drop a maintained capability.
 
 ## The choice we actually have
@@ -177,12 +178,10 @@ the full production matrix. Arbitrary
 runtime-created functions still cannot cross C as values; function fields in
 `repr(C)` records remain rejected. Ordinary scoped callbacks retain their scope.
 
-For remaining rows, G2 records precise ownership and observable release points;
-G3 supplies raw-interpreter/native positive and negative tests. Map every existing tracing-only admission fixture to one of
-these contracts or a documented restriction. Do not remove a fixture to make
-the table appear complete.
-For the workspace row, G3 preserves and tests the existing scoped lifetime
-guarantees; the new count-free parser region is A6, after GC removal. General
+The [admission matrix](ownership-admission.md) maps these contracts to execution
+and rejection tests. When removing tracing, preserve each behavior or replace
+its obsolete expectation with the agreed ownership diagnostic.
+The workspace row preserves the existing scoped lifetime guarantees; the new count-free parser region is A6, after GC removal. General
 region inference is not an extra gate on G5.
 
 ## Keep compiler cost bounded and visible

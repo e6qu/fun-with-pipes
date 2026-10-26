@@ -1,9 +1,39 @@
 # Current work
 
-**Next:** publish the recorded G2 baseline and enforced budgets for [PR #216](https://github.com/e6qu/fun-with-pipes/pull/216),
-mark it ready, and run all nine production jobs, documentation and the isolated
-`ownership-analysis` suite on that exact final head. Audit every failure before
-any repair push. Tracing has **not** been deleted.
+**Next:** run the batched repairs on focused runners while finishing the audit
+of production run `40262766433` for [PR #216](https://github.com/e6qu/fun-with-pipes/pull/216),
+previous head `0db38df8bd0b3ea6f4dc1165edd985bc82c71ccb`. Keep the PR draft during
+focused validation so another full matrix does not start prematurely. After the
+remaining old-head results and repair checks are audited, mark ready for complete
+final-head production verification. The original run continues unchanged.
+At the previous head, both Windows queue/callback steps and both ARM64 macOS shards failed; Linux and
+Intel macOS are still running. Both Windows diagnostic bundles confirm exactly
+three stale interpreter-success expectations
+in `queued_functions`: captured channels, task-bearing queues and a cached
+self-owning task result. All other targets in its early diagnostics passed.
+Logs: `/private/tmp/fwp-216-final-win-{amd64,arm64}`. The repair requires
+raw/optimized rejection in both engines, including weak acquisition and AD scope
+controls. ARM64 macOS adds two startup timeouts: REST forms client (60 seconds) and raw
+REST ownership entry (30 seconds). The captured compiler took 26.1 CPU seconds to start the forms interpreter
+under the local guard. A stack sample identifies repeated lifetime-proof type
+walks. The repair skips irrelevant result refinement, preserves child
+visits/scope checks, and shares the initial existential type traversal. It adds
+a runner-only 10-second analysis budget for both REST inputs; startup deadlines
+are unchanged. Focused runner verification is pending. Its second shard also has the same three queue failures.
+All other completed ARM64 shard targets passed. The saved ARM64 crash report
+is the intentional `cleanup_panic_aborts_before_borrowed_tasks_escape` control,
+not a recurrence of the unrelated Intel compiler abort.
+Later Windows, Linux and Intel macOS target results still need full audit.
+Previous-head documentation `40262732309`, paired analysis budgets `40262766768` and the
+production benchmark job passed. Earlier draft skip `40262732305` is not a gate.
+All ten affected queue/task fixtures passed the new rejection expectations
+with the captured final-head compiler: raw/optimized, interpreter/native emit-C
+(40 cases). This verifies expectations, not the unpublished performance repair.
+Guarded command: `python3 scripts/local-guard.py python3 /private/tmp/fwp-check-rejection-expectations.py`.
+Profile: `/private/tmp/fwp-rest-start.sample`; guarded command:
+`python3 scripts/local-guard.py python3 /private/tmp/fwp-probe-rest-start.py`.
+No merge until all nine production jobs, analysis budgets and docs pass the repaired
+final head.
 
 Worktree: `/private/tmp/fwp-ownership-fault-matrix`.
 Branch: `remove-tracing-runtime`, based on merged #215.
@@ -51,7 +81,7 @@ tests and the explicit scaling test. [The report](measurements/ownership-analysi
 records 16/32/64-worker samples, source hashes, counts, process RSS and limits.
 The old merging rule exists only as a test control. Measurement instrumentation
 is absent from production builds. Documentation run `40261345487` passed.
-The final budget assertions are newer and still require runner verification.
+Final budget assertions passed both hosts in `40262766768`.
 
 Earlier failures were fully audited and repaired: helper placement for Clippy;
 incorrect `FWP_NO_OPT=0` controls (presence disables optimization); the closure
@@ -76,6 +106,12 @@ scope issue; the runner results above verify the actual repair. No full local
 build, suite or benchmark ran. Draft production skips are not passing gates.
 
 ## After this batch
+
+The unpublished `/private/tmp/fwp-delete-tracing` checkout, branch
+`delete-tracing-collector`, starts from the current #216 head. It contains an
+incomplete collector deletion, allocator/accounting migration and updated focused
+allocator probes. Its own handoff lists the remaining test/report/caller changes;
+do not publish or claim the integrated checkout builds. Rebase it onto verified merged #216 after this repair.
 
 G5 still removes tracing selection/code, collector-only assertions and reporting
 fields, then checks actual binaries. Use the deletion map in
