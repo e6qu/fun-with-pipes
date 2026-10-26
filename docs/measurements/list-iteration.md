@@ -23,10 +23,11 @@ and returns `(result, final-state)`. Positions start at zero, so `.1` selects th
 final count and `echo` prints `3`.
 
 [`measure-list-each.py`](../../scripts/measure-list-each.py) compares both definitions
-at 10,000, 100,000 and 1,000,000 elements on Linux runners. It records seven samples
-in alternating order after a warmup. Timing includes process startup, input
+at 10,000, 100,000 and 1,000,000 elements on Linux runners. The current G5 protocol records eight samples
+in equally alternating order after a warmup; its new run is pending. The historical
+report below used seven samples. Timing includes process startup, input
 construction, updates, printing and cleanup. Both use the same C compiler and
-`-O2`, with tracing disabled and ordinary freeing enabled. The report also records
+`-O2` and counted ownership. The report also records
 peak process memory, build commands/times and binary sizes. Separate 32/128-element
 tests count allocations without contaminating timed executables with counters.
 

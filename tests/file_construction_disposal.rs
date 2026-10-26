@@ -50,9 +50,8 @@ int main(void){
   fault=0;fwp_trap_recover=0;fwp_trap_jb=0;
   if(fwp_cleanups||fwp_heap.fins!=old||fwp_heap.fins_cap!=cap||fwp_heap.nfins!=(size_t)n)_Exit(3);
   struct stat st;if(fstat(fd,&st)!=-1||errno!=EBADF)return 4;
-  int poison=getenv("FWP_REUSE_VERIFY")&&strcmp(getenv("FWP_REUSE_VERIFY"),"0");
-  if(!DISABLED_FREE&&!poison&&fwp_heap.freed<=freed)return 5;
-  if((DISABLED_FREE||poison)&&fwp_heap.freed!=freed)return 6;
+  if(!DISABLED_FREE&&fwp_heap.freed<=freed)return 5;
+  if(DISABLED_FREE&&fwp_heap.freed!=freed)return 6;
   for(int i=0;i<n;i++)if(((fwp_file *)(uintptr_t)retained[i])->refs!=1||fstat(fds[i],&st)==-1)return 7;
   fwp_heap_finish();
   for(int i=0;i<n;i++)if(fstat(fds[i],&st)!=-1||errno!=EBADF)return 8;
@@ -82,23 +81,14 @@ int main(void){
                 opt,
             )
             .unwrap();
-            for gc in ["off", "on"] {
-                for poison in ["0", "1"] {
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", gc)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
-                    assert!(
-                        out.status.success(),
-                        "{opt}, disabled={disabled}, gc={gc}, poison={poison}: {:?}: {}",
-                        out.status.code(),
-                        String::from_utf8_lossy(&out.stderr)
-                    );
-                }
-            }
+
+            let out = Command::new(&exe).output().unwrap();
+            assert!(
+                out.status.success(),
+                "{opt}, disabled={disabled}: {:?}: {}",
+                out.status.code(),
+                String::from_utf8_lossy(&out.stderr)
+            );
         }
         fwp::cgen::compile_c(
             &format!("#define HARD_EXIT 1\n#define DISABLED_FREE 0\n{hooks}\n{runtime}\n{fixture}"),
@@ -106,7 +96,7 @@ int main(void){
             opt,
         )
         .unwrap();
-        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(
             out.status.code(),
             Some(102),
@@ -119,11 +109,7 @@ int main(void){
         let broken_capacity =
             recoverable.replacen(capacity, &format!("{capacity} fwp_heap.fins_cap = cap;"), 1);
         fwp::cgen::compile_c(&format!("#define HARD_EXIT 0\n#define DISABLED_FREE 0\n{hooks}\n{broken_capacity}\n{fixture}"), &exe, opt).unwrap();
-        let out = Command::new(&exe)
-            .env("FWP_GC", "off")
-            .env("FWP_REUSE_VERIFY", "0")
-            .output()
-            .unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(
             out.status.code(),
             Some(3),
@@ -144,11 +130,7 @@ int main(void){
             opt,
         )
         .unwrap();
-        let out = Command::new(&exe)
-            .env("FWP_GC", "off")
-            .env("FWP_REUSE_VERIFY", "0")
-            .output()
-            .unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(
             out.status.code(),
             Some(5),

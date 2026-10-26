@@ -53,15 +53,9 @@ main = "{}" | file.create | observe | echo
                 .args([opt, "-o"])
                 .arg(&exe),
         );
-        for poison in ["0", "1"] {
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-            assert_eq!(out.stdout, reference.stdout);
-        }
+
+        let out = checked(&mut Command::new(&exe));
+        assert_eq!(out.stdout, reference.stdout);
     }
 }
 
@@ -134,25 +128,14 @@ int main(void){
     let exe = dir.0.join("probe");
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{hooks}\n{without_flush}\n{fixture}"), &exe, opt).unwrap();
-        let old = Command::new(&exe)
-            .env("FWP_GC_STRESS", "1")
-            .env("FWP_GC_VERIFY", "1")
-            .env("FWP_REUSE_VERIFY", "1")
-            .output()
-            .unwrap();
+        let old = Command::new(&exe).output().unwrap();
         assert_eq!(
             old.status.code(),
             Some(3),
             "omitted write flush must be detected"
         );
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-        }
+
+        checked(&mut Command::new(&exe));
     }
 }

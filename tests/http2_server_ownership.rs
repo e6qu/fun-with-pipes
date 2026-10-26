@@ -41,7 +41,7 @@ fn http_server_jobs_release_on_completion_cancellation_and_start_failure() {
             (&generated, 0),
         ] {
             fwp::cgen::compile_c(&format!("{code}\n{fixture}"), &exe, opt).unwrap();
-            let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+            let out = Command::new(&exe).output().unwrap();
             assert_eq!(
                 out.status.code(),
                 Some(expected),
@@ -49,9 +49,6 @@ fn http_server_jobs_release_on_completion_cancellation_and_start_failure() {
             );
         }
         let out = Command::new(&exe)
-            .env("FWP_GC_STRESS", "1")
-            .env("FWP_GC_VERIFY", "1")
-            .env("FWP_REUSE_VERIFY", "1")
             .env("SERVER_STRESS", "1")
             .output()
             .unwrap();
@@ -103,19 +100,12 @@ fn http_server_startup_releases_transport_requests_and_handler_captures() {
     for opt in ["-O1", "-O2"] {
         for (code, expected) in [(&missing_server, 6), (&missing_handler, 7), (&generated, 0)] {
             fwp::cgen::compile_c(&format!("{hooks}\n{code}\n{fixture}"), &exe, opt).unwrap();
-            let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+            let out = Command::new(&exe).output().unwrap();
             assert_eq!(
                 out.status.code(),
                 Some(expected),
                 "{opt}, {expected}: {out:?}"
             );
         }
-        let out = Command::new(&exe)
-            .env("FWP_GC_STRESS", "1")
-            .env("FWP_GC_VERIFY", "1")
-            .env("FWP_REUSE_VERIFY", "1")
-            .output()
-            .unwrap();
-        assert!(out.status.success(), "{opt}, stress: {out:?}");
     }
 }

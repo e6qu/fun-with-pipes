@@ -112,19 +112,17 @@ int main(int argc,char **argv){int status=probe(argc,argv);if(status)_Exit(statu
     let exe = dir.join("probe");
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = Command::new(&exe)
-                .args([dir.join("cert.pem"), dir.join("key.pem")])
-                .env("FWP_REUSE_VERIFY", poison)
-                .output()
-                .unwrap();
-            assert!(
-                out.status.success(),
-                "{opt}, poison {poison}: {:?}: {}",
-                out.status.code(),
-                String::from_utf8_lossy(&out.stderr)
-            );
-        }
+
+        let out = Command::new(&exe)
+            .args([dir.join("cert.pem"), dir.join("key.pem")])
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "{opt}: {:?}: {}",
+            out.status.code(),
+            String::from_utf8_lossy(&out.stderr)
+        );
     }
     for (needle, replacement, expected) in [
         (

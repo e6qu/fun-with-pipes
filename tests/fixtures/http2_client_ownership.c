@@ -69,7 +69,7 @@ int main(void) {
         allocation_left = response_fail_at = 0; fwp_trap_recover = NULL; fwp_trap_jb = NULL;
         if (fwp_cleanups || c->streams || stream_finals != 1 || *fwp_rc_slot(PTR(c)) != 1) return 3;
         if (!completed && request_resets != 1) return 4;
-        if (!fwp_reuse_verify && !getenv("FWP_CLIENT_STRESS") && fwp_heap.live != live_bytes) {
+        if (fwp_heap.live != live_bytes) {
             fprintf(stderr, "allocation %d: charged storage delta %lld\n", allocation, (long long)(live_bytes - fwp_heap.live)); return 5;
         }
         c->out.len = 0;
@@ -84,7 +84,7 @@ int main(void) {
     if (strcmp(STR(OBJ(error.value)->f[0])->d, "http2") || strcmp(STR(OBJ(error.value)->f[1])->d, "peer reset")) return 8;
     ERROR_TYPE->drop(error.value);
     if (fwp_cleanups || c->streams || stream_finals != 1 || request_resets != 1 || *fwp_rc_slot(PTR(c)) != 1) return 9;
-    if (!fwp_reuse_verify && !getenv("FWP_CLIENT_STRESS") && fwp_heap.live != live_bytes) return 5;
+    if (fwp_heap.live != live_bytes) return 5;
     response_mode = 2; stream_finals = request_resets = 0; waiting_request = NULL;
     pending_key = key; pending_request = request;
     fwp_task *task = fwp_spawn_task(0, pending_client, NULL, 0, 0);

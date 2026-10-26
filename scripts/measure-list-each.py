@@ -13,7 +13,7 @@ import time
 
 ROOT = Path(__file__).resolve().parent.parent
 SIZES = (10_000, 100_000, 1_000_000)
-REPEATS = 7
+REPEATS = 8
 OLD = "each-before : (a -> () ! e) -> List[a] -> () ! e\neach-before = map | flip compose ignore\n"
 
 
@@ -35,9 +35,7 @@ def main():
     args = parser.parse_args()
     assert os.environ.get("GITHUB_ACTIONS") == "true", "timing runs belong on CI"
     assert platform.system() == "Linux", "measurements require native Linux and GNU time"
-    env = dict(os.environ, LC_ALL="C", FWP_GC="off", FWP_GC_STRESS="0",
-               FWP_GC_VERIFY="0", FWP_GC_STATS="0", FWP_REUSE_VERIFY="0",
-               FWP_REUSE="1", FWP_FREE="1")
+    env = dict(os.environ, LC_ALL="C")
     env.pop("FWP_NO_OPT", None)
     compiler = args.compiler.resolve()
     out = args.output.resolve()
@@ -92,8 +90,8 @@ def main():
               f"extra time {100 * (ratio - 1):+.1f}%", flush=True)
     report = {
         "source_revision": run(["git", "rev-parse", "HEAD"], env).strip(),
-        "comparison": "Current fold-based list each versus its previous map-based definition, built by the same compiler with -O2. Both build the same integer list, update an integer state once per element and print its length. Tracing is disabled; ordinary counted freeing remains enabled.",
-        "timing_scope": "Whole process including input construction, state updates, output and teardown, plus the same GNU time launcher. One unrecorded warmup per binary; seven recorded samples, alternating implementation order. Compilation is timed separately, once per binary: fwp startup/C generation and C compilation are recorded separately with their exact commands.",
+        "comparison": "Current fold-based list each versus its previous map-based definition, built by the same compiler with -O2. Both build the same integer list, update an integer state once per element and print its length. Counted owners release storage at last use.",
+        "timing_scope": "Whole process including input construction, state updates, output and teardown, plus the same GNU time launcher. One unrecorded warmup per binary; eight recorded samples, alternating implementation order equally. Compilation is timed separately, once per binary: fwp startup/C generation and C compilation are recorded separately with their exact commands.",
         "limits": "Comparison between fwp implementations, not C/Rust parity. No timing assertion from these noisy samples. Peak RSS includes the whole native process; GNU time rounds CPU times. Allocation counts are measured separately by state_sequence_ownership at 32/128 elements; these uninstrumented binaries contain no allocation counters.",
         "environment": {"host": platform.uname()._asdict(),
                         "cpu": run(["lscpu"], env),

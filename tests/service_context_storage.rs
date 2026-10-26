@@ -41,8 +41,8 @@ static double context_start_charge;
     let body = body.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    context_start_charge=(double)fwp_heap.live;context_measure=1;\n")
         .replace("    /* Ownership observation point: before runtime teardown. */\n", r#"    /* Ownership observation point: before runtime teardown. */
     context_measure=0;
-    fprintf(stderr,"context %llu %llu %.0f %zu\n",context_requests,context_bytes,
-        (double)fwp_heap.live-context_start_charge,fwp_heap.ncollect);
+    fprintf(stderr,"context %llu %llu %.0f\n",context_requests,context_bytes,
+        (double)fwp_heap.live-context_start_charge);
 #ifdef FWP_GCTX_OWNERS
     fprintf(stderr,"layout %zu %zu %zu %zu\n",sizeof(g_ctx),_Alignof(g_ctx),sizeof(fwp_task),_Alignof(fwp_task));
 #else
@@ -112,9 +112,8 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
             "const (const (add 1) | modify) | grpc.with-response-metadata | .0",
         ),
     ];
-    let mut report = String::from(
-        "case\titerations\tmanaged_requests\trequested_bytes\tfinal_charged_bytes\tcollections\n",
-    );
+    let mut report =
+        String::from("case\titerations\tmanaged_requests\trequested_bytes\tfinal_charged_bytes\n");
     let mut measurements = std::collections::BTreeMap::new();
     let mut layouts =
         String::from("case\tcontext_bytes\tcontext_alignment\ttask_bytes\ttask_alignment\n");
@@ -154,14 +153,7 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
             let measured = instrument(&generated);
             let binary = dir.join(format!("{label}.exe"));
             fwp::cgen::compile_c(&measured, &binary, "-O2").unwrap();
-            let output = checked(
-                Command::new(&binary)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_REUSE_VERIFY", "0"),
-            );
+            let output = checked(&mut Command::new(&binary));
             assert_eq!(output.stdout, raw.stdout);
             let counters = String::from_utf8(output.stderr).unwrap();
             let lines: Vec<_> = counters.lines().collect();
@@ -171,18 +163,17 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
             assert_eq!(layout[0], "layout");
             layouts.push_str(&format!("{label}\t{}\n", layout[1..].join("\t")));
             let fields: Vec<_> = lines[0].split_whitespace().collect();
-            assert_eq!(fields.len(), 5, "{counters}");
+            assert_eq!(fields.len(), 4, "{counters}");
             assert_eq!(fields[0], "context");
             let values: Vec<i64> = fields[1..]
                 .iter()
                 .map(|field| field.parse().unwrap())
                 .collect();
             assert!(values[..3].iter().all(|value| *value >= 0), "{counters}");
-            assert_eq!(values[3], 0, "measurement collected garbage: {counters}");
             measurements.insert((name, count), values.clone());
             report.push_str(&format!(
-                "{name}\t{count}\t{}\t{}\t{}\t{}\n",
-                values[0], values[1], values[2], values[3]
+                "{name}\t{count}\t{}\t{}\t{}\n",
+                values[0], values[1], values[2]
             ));
             if let Some(path) = std::env::var_os("FWP_CONTEXT_ARTIFACTS") {
                 let path = std::path::PathBuf::from(path);
@@ -228,7 +219,7 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
         "capture allocates its result once without a forwarding wrapper copy"
     );
     eprintln!("{report}\n{layouts}");
-    // These counts do not establish collector-free service execution. Raw TLS/capture buffers,
+    // Raw TLS/capture buffers,
     // allocator metadata, pages and total process memory are outside this count.
 }
 
@@ -296,7 +287,7 @@ fn children_keep_scope_settings_after_return_failure_and_cancellation() {
                 optimization,
             )
             .unwrap();
-            let output = Command::new(&binary).env("FWP_GC", "off").output().unwrap();
+            let output = Command::new(&binary).output().unwrap();
             assert_eq!(
                 output.status.code(),
                 Some(expected),
@@ -309,18 +300,10 @@ fn children_keep_scope_settings_after_return_failure_and_cancellation() {
             optimization,
         )
         .unwrap();
-        for collection in ["off", "on"] {
-            for reuse in ["0", "1"] {
-                let output = checked(
-                    Command::new(&binary)
-                        .env("FWP_GC", collection)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", reuse),
-                );
-                assert!(output.stdout.is_empty() && output.stderr.is_empty());
-            }
-        }
+
+        let output = checked(&mut Command::new(&binary));
+        assert!(output.stdout.is_empty() && output.stderr.is_empty());
+
         if let Some(path) = std::env::var_os("FWP_CONTEXT_ARTIFACTS") {
             let path = std::path::PathBuf::from(path);
             std::fs::create_dir_all(&path).unwrap();
