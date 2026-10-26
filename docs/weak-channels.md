@@ -1,9 +1,8 @@
 # Weak channel references
 
-G2 contract and first G3 implementation, October 25, 2026. **Implementation is
-in progress; integrated compiler and platform validation has not run.** This
-does not complete G3/G4 or remove tracing. See [the plan](../PLAN.md) and
-[accepted ownership direction](gc-removal-design.md).
+Implemented and verified in [PR #215](roadmap-history.md#weak-channels-and-retained-callbacks-pr-215).
+Weak links let a queue refer back to itself without owning itself. They do not
+remove tracing from the compiler or make every cyclic design safe.
 
 ## Operations and lifetime
 
@@ -55,8 +54,8 @@ expired = const 1 | word-channel | channel.downgrade
 
 `const 1` constructs a function that ignores its input and returns `1`; here that
 number is the queue capacity. `option.is-some` returns whether an `Option` holds
-a value. These are expected results for the candidate implementation, not claims
-that a released compiler supports the new operations.
+a value. The [executable fixture](../tests/fixtures/weak_channels.fwp) checks
+these lifetimes before and after optimization.
 
 ## Cycle checks
 
@@ -97,12 +96,12 @@ active-call protocol; weak channels do not supply one implicitly.
 During the transition, native weak channels require checked ARC. A tracing build
 is rejected rather than letting a conservative scan treat the metadata's target
 address as a strong edge. G5 deletes that obsolete execution mode. Existing
-allocator/static-pool and WASI count ownership must remain correct; their
-integrated verification is still pending.
+allocator/static-pool and WASI checks passed with #215; they remain required
+when G5 removes tracing.
 
 ## Required evidence and remaining work
 
-The candidate tests in [queued_functions.rs](../tests/queued_functions.rs) cover
+The tests in [queued_functions.rs](../tests/queued_functions.rs) cover
 raw/optimized interpretation versus native O1/O2, close versus expiration,
 returned weak captures, attempted cycle recreation, repeated metadata cleanup,
 actual address reuse, identity equality, allocation failure, language error and
@@ -114,9 +113,6 @@ are included. Deliberately omitting expiration or the channel's
 metadata release must fail independently. The runtime probe checks expiration
 before dereferencing a deliberately invalid target.
 
-Before G3/G4 completion, verify those tests with the candidate compiler and
-finish active-call, aggregate/nested capture cases and the remaining
-[six boundary contracts](gc-removal-design.md#six-implementation-examples).
-Measure analysis time/memory and lifetime-preservation costs; do not claim that
-fewer count operations imply faster code. No new full suite is required per edit;
-consolidated local and CI validation follows completion of the combined batch.
+All production gates passed for #215. Further proof precision must respect
+[G2's measured analysis budgets](measurements/ownership-analysis.md). Count savings alone are not a timing
+improvement; [the benchmark guide](benchmarks.md) explains the distinction.

@@ -58,6 +58,8 @@ impl Drop for Server {
 /// Read the address without allowing a silent or partial line to defeat the
 /// startup deadline. Failed startup always kills and reaps the child.
 fn start(mut cmd: Command, timeout: Duration) -> Server {
+    let description = format!("{cmd:?}");
+    let began = Instant::now();
     let mut child = cmd
         .stdout(Stdio::null())
         .stderr(Stdio::piped())
@@ -87,7 +89,8 @@ fn start(mut cmd: Command, timeout: Duration) -> Server {
             let _ = child.wait();
             let _ = reader.join();
             panic!(
-                "REST server did not start ({error}): {}",
+                "REST server did not start after {:?} ({error}); command: {description}; stderr: {}",
+                began.elapsed(),
                 log.lock().unwrap()
             );
         }

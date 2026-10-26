@@ -105,11 +105,19 @@ jobs:
           cargo test --test golden_run interpreter_snapshots -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           exit $LASTEXITCODE
       - name: Queued function captures, receive ownership and callback effects
+        id: queued_tests
         if: ${{ !cancelled() && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: |
           cargo test --no-fail-fast --test queued_functions --test channel_queue_ownership --test channel_cycle_ownership --test task_ownership --test task_handle_ownership --test task_timer_order --test within_thunk_ownership --test borrowed_callbacks --test call_effects --test variant_alias_ownership --test variant_conversion_ownership -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           exit $LASTEXITCODE
+      - name: Publish failed queue and callback log
+        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() && steps.queued_tests.outcome == 'failure' }}
+        with:
+          name: windows-queued-tests-${{ matrix.runner }}
+          path: windows-native.log
+          if-no-files-found: error
       - name: Generated programs with native resources and ownership stress
         if: ${{ !cancelled() && steps.native_compiler.outcome == 'success' }}
         shell: pwsh

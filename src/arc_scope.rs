@@ -1,6 +1,6 @@
 //! Finite closure-flow proof for queued captures, raw AD and typed State lifetimes.
 //!
-//! Origins identify functions with their supplied arguments and creation scopes,
+//! Origins identify functions with their supplied arguments, creation sites and scopes,
 //! plus known data-queue and task producers. Unknown sources stay explicit,
 //! including task computations
 //! and results that can hide a callback owner. Captures and
@@ -10,11 +10,13 @@
 use crate::arc::EntryChannels;
 use crate::ir::{Body, Expr, FuncId, Pat, Program, TypeShape, MT};
 use crate::value::Value;
-use std::collections::{BTreeMap, BTreeSet};
+use std::cell::RefCell;
+use std::collections::hash_map::Entry;
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 enum Origin {
-    Function(FuncId, usize, u8),
+    Function(FuncId, usize, u8, Option<Site>),
     UnknownFunction,
     Queue(FuncId),
     GrpcSender(FuncId),
@@ -42,11 +44,35 @@ impl Origin {
 }
 type Targets = BTreeSet<Origin>;
 type Context = (FuncId, u8);
+// Zero is the function/runtime boundary; expression/constant positions start at one.
+// Sites are finite positions in the immutable IR, never dynamic call histories.
+type Site = (FuncId, usize);
+
+#[derive(Clone, Copy, Debug)]
+pub(crate) enum ClosureSites {
+    Separate,
+    // Test-only reconstruction of the previous capture-merging rule. There is
+    // no production option to run the less precise analysis.
+    #[cfg(test)]
+    Merged,
+}
+
 const AD: u8 = 1;
 const STATE: u8 = 2;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct TypeProperties {
+    functions: bool,
+    channels: bool,
+    tasks: bool,
+    owner_channels: bool,
+}
+
 struct Proof<'a> {
     program: &'a Program,
+    sites: ClosureSites,
+    type_cache: RefCell<HashMap<MT, TypeProperties>>,
+    expression_types: HashMap<Site, Option<MT>>,
     captures: BTreeMap<Origin, Vec<Targets>>,
     inputs: BTreeMap<Context, Vec<Targets>>,
     outputs: BTreeMap<Context, Targets>,
@@ -220,23 +246,23 @@ fn queued_capture_type(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> R
                 "?" | "std::H2Stream" | "std::GrpcCell" | "std::File"
             ) {
                 return Err(format!(
-                    "--gc arc: cannot prove a queued function's captured `{ty}` owner; queue immutable data or keep this owner outside the callback"
+                    "ownership: cannot prove a queued function's captured `{ty}` owner; queue immutable data or keep this owner outside the callback"
                 ));
             }
             if name == "std::Task" && args.len() != 1 {
-                return Err(format!("--gc arc: cannot prove a queued function's captured `{ty}` without its result type"));
+                return Err(format!("ownership: cannot prove a queued function's captured `{ty}` without its result type"));
             }
             if name == "std::Channel" {
                 let [payload] = args.as_slice() else {
                     return Err(format!(
-                        "--gc arc: captured `{ty}` requires a channel payload type"
+                        "ownership: captured `{ty}` requires a channel payload type"
                     ));
                 };
                 if has_functions(program, payload, &mut BTreeSet::new()) {
-                    return Err(format!("--gc arc: cannot prove a queued function's captured function-bearing channel `{ty}`"));
+                    return Err(format!("ownership: cannot prove a queued function's captured function-bearing channel `{ty}`"));
                 }
                 if has_tasks(program, payload, &mut BTreeSet::new()) {
-                    return Err(format!("--gc arc: cannot prove a queued owner's captured task-bearing channel `{ty}`"));
+                    return Err(format!("ownership: cannot prove a queued owner's captured task-bearing channel `{ty}`"));
                 }
             }
             for arg in args {
@@ -263,6 +289,23 @@ fn queued_capture_type(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> R
 }
 
 impl Proof<'_> {
+    fn properties(&self, ty: &MT) -> TypeProperties {
+        if let Some(properties) = self.type_cache.borrow().get(ty) {
+            return *properties;
+        }
+        // Cache only complete root queries. Caching a recursive DFS's partial
+        // negative answers could hide a callback reached through another field.
+        // Program types/shapes do not change during this proof.
+        let properties = TypeProperties {
+            functions: has_functions(self.program, ty, &mut BTreeSet::new()),
+            channels: has_channels(self.program, ty, &mut BTreeSet::new()),
+            tasks: has_tasks(self.program, ty, &mut BTreeSet::new()),
+            owner_channels: has_owner_channels(self.program, ty, &mut BTreeSet::new()),
+        };
+        self.type_cache.borrow_mut().insert(ty.clone(), properties);
+        properties
+    }
+
     fn queue_type(&self, origin: Origin) -> Option<&MT> {
         match origin {
             Origin::Queue(id) => {
@@ -284,7 +327,7 @@ impl Proof<'_> {
 
     fn captured_queues(&self, values: &Targets, seen: &mut BTreeSet<Origin>) -> Result<(), String> {
         if values.contains(&Origin::UnknownQueue) || values.contains(&Origin::UnknownOwnerQueue) {
-            return Err("--gc arc: cannot prove the producer of a queued function's captured channel; use a data queue from channel.make or a proved gRPC response channel".into());
+            return Err("ownership: cannot prove the producer of a queued function's captured channel; use a data queue from channel.make or a proved gRPC response channel".into());
         }
         for origin in values {
             let Some(channel) = self.queue_type(*origin) else {
@@ -306,8 +349,8 @@ impl Proof<'_> {
 
     fn queued_targets(&self, targets: &Targets, seen: &mut BTreeSet<Origin>) -> Result<(), String> {
         for &closure in targets.iter().filter(|origin| origin.callable()) {
-            let Origin::Function(id, supplied, _) = closure else {
-                return Err("--gc arc: cannot prove the source of a queued function".into());
+            let Origin::Function(id, supplied, _, _) = closure else {
+                return Err("ownership: cannot prove the source of a queued function".into());
             };
             if !seen.insert(closure) || supplied == 0 {
                 continue;
@@ -317,7 +360,7 @@ impl Proof<'_> {
                 .get(&closure)
                 .filter(|args| args.len() == supplied)
                 .ok_or_else(|| {
-                    "--gc arc: missing captured values for a queued function".to_string()
+                    "ownership: missing captured values for a queued function".to_string()
                 })?;
             let types = self.program.funcs[id].ty.params(supplied).0;
             for (ty, value) in types.iter().zip(captures) {
@@ -334,30 +377,30 @@ impl Proof<'_> {
         seen: &mut BTreeSet<Origin>,
     ) -> Result<(), String> {
         queued_capture_type(self.program, ty, &mut BTreeSet::new())?;
-        if has_channels(self.program, ty, &mut BTreeSet::new()) {
+        if self.properties(ty).channels {
             if matches!(ty, MT::Con(name, _) if name == "std::Channel")
                 && !value.iter().any(|origin| origin.queue())
             {
                 return Err(
-                    "--gc arc: cannot prove a queued function's captured channel producer".into(),
+                    "ownership: cannot prove a queued function's captured channel producer".into(),
                 );
             }
             self.captured_queues(value, &mut BTreeSet::new())?;
         }
         if matches!(ty, MT::Fun(..)) && value.is_empty() {
             return Err(
-                "--gc arc: cannot prove a queued function's captured function source".into(),
+                "ownership: cannot prove a queued function's captured function source".into(),
             );
         }
-        if has_functions(self.program, ty, &mut BTreeSet::new()) {
+        if self.properties(ty).functions {
             self.queued_targets(value, seen)?;
         }
-        if has_tasks(self.program, ty, &mut BTreeSet::new()) {
+        if self.properties(ty).tasks {
             if matches!(ty, MT::Con(name, _) if name == "std::Task")
                 && !value.iter().any(|origin| origin.task())
             {
                 return Err(
-                    "--gc arc: cannot prove a queued function's captured task producer".into(),
+                    "ownership: cannot prove a queued function's captured task producer".into(),
                 );
             }
             self.captured_tasks(value, seen)?;
@@ -368,7 +411,7 @@ impl Proof<'_> {
     fn captured_tasks(&self, values: &Targets, seen: &mut BTreeSet<Origin>) -> Result<(), String> {
         for &origin in values.iter().filter(|origin| origin.task()) {
             let Origin::Task(id) = origin else {
-                return Err("--gc arc: cannot prove a queued function's captured task producer; keep unknown task owners outside the callback".into());
+                return Err("ownership: cannot prove a queued function's captured task producer; keep unknown task owners outside the callback".into());
             };
             if !seen.insert(origin) {
                 continue;
@@ -376,9 +419,9 @@ impl Proof<'_> {
             let thunks = self
                 .task_thunks
                 .get(&id)
-                .ok_or("--gc arc: missing captured task computation")?;
+                .ok_or("ownership: missing captured task computation")?;
             if thunks.is_empty() {
-                return Err("--gc arc: cannot prove a captured task's computation".into());
+                return Err("ownership: cannot prove a captured task's computation".into());
             }
             // A task retains its computation until it starts, and its result
             // after completion. Both can hide an owner of the receiving queue.
@@ -390,18 +433,18 @@ impl Proof<'_> {
                 .params(self.program.funcs[id].arity as usize)
                 .1
             else {
-                return Err("--gc arc: captured task producer has no task result".into());
+                return Err("ownership: captured task producer has no task result".into());
             };
             let [result_type] = args.as_slice() else {
-                return Err("--gc arc: captured task producer has no result type".into());
+                return Err("ownership: captured task producer has no result type".into());
             };
             if name != "std::Task" {
-                return Err("--gc arc: captured task producer has no task result".into());
+                return Err("ownership: captured task producer has no task result".into());
             }
             let results = self
                 .task_results
                 .get(&id)
-                .ok_or("--gc arc: missing captured task result flow")?;
+                .ok_or("ownership: missing captured task result flow")?;
             self.queued_value(result_type, results, seen)?;
         }
         Ok(())
@@ -421,17 +464,17 @@ impl Proof<'_> {
     ) -> Result<(), String> {
         for &origin in values {
             if origin == Origin::Task(task) {
-                return Err("--gc arc: cannot prove an acyclic task result; its ownership flow can return to the producing task".into());
+                return Err("ownership: cannot prove an acyclic task result; its ownership flow can return to the producing task".into());
             }
             if !seen.insert(origin) {
                 continue;
             }
             match origin {
-                Origin::Function(_, supplied, _) if supplied > 0 => {
+                Origin::Function(_, supplied, _, _) if supplied > 0 => {
                     let captures = self
                         .captures
                         .get(&origin)
-                        .ok_or("--gc arc: missing task result function captures")?;
+                        .ok_or("ownership: missing task result function captures")?;
                     for capture in captures {
                         self.task_result_owners(task, capture, seen)?;
                     }
@@ -440,14 +483,14 @@ impl Proof<'_> {
                     for owners in [self.task_thunks.get(&other), self.task_results.get(&other)] {
                         self.task_result_owners(
                             task,
-                            owners.ok_or("--gc arc: missing task owner flow")?,
+                            owners.ok_or("ownership: missing task owner flow")?,
                             seen,
                         )?;
                     }
                 }
                 Origin::UnknownTask | Origin::UnknownFunction | Origin::UnknownOwnerQueue => {
                     return Err(
-                        "--gc arc: cannot prove the owners of an unknown task result".into(),
+                        "ownership: cannot prove the owners of an unknown task result".into(),
                     );
                 }
                 Origin::Queue(_) | Origin::GrpcSender(_) => {
@@ -481,10 +524,10 @@ impl Proof<'_> {
                 .copied(),
         );
         for &closure in steps.iter().filter(|origin| origin.callable()) {
-            let Origin::Function(target, supplied, _) = closure else {
+            let Origin::Function(target, supplied, _, _) = closure else {
                 if self.validate {
                     return Err(
-                        "--gc arc: cannot prove a received iterator's function target".into(),
+                        "ownership: cannot prove a received iterator's function target".into(),
                     );
                 }
                 continue;
@@ -494,6 +537,7 @@ impl Proof<'_> {
                 &BTreeSet::from([closure]),
                 &vec![Targets::new(); count],
                 scoped,
+                (id, 0),
             )?;
             // Later positions can introduce different continuations.
             self.changed |= join(self.callback_values.entry(key).or_default(), &next);
@@ -515,14 +559,15 @@ impl Proof<'_> {
             if shape.client_streaming() {
                 let iterator = method.iter_fn.ok_or_else(|| {
                     format!(
-                        "--gc arc: served method `{}` has no received iterator constructor",
+                        "ownership: served method `{}` has no received iterator constructor",
                         method.name
                     )
                 })?;
                 let input = self.apply(
-                    &BTreeSet::from([Origin::Function(iterator, 0, 0)]),
+                    &BTreeSet::from([Origin::Function(iterator, 0, 0, None)]),
                     &[Targets::new()],
                     0,
+                    (method.func, 0),
                 )?;
                 let mut args = vec![Targets::new(); function.arity as usize];
                 args[0] = input;
@@ -554,11 +599,26 @@ impl Proof<'_> {
         self.outputs.get(&key).cloned().unwrap_or_default()
     }
 
-    fn partial(&mut self, id: FuncId, args: Vec<Targets>, scoped: u8) -> Targets {
-        // Separate captures formed inside different dynamic handlers. This is
-        // an analysis identity, not a retained handler: apply still checks the
-        // invocation's scope, including when a partial escapes its creator.
-        let key = Origin::Function(id, args.len(), if args.is_empty() { 0 } else { scoped });
+    fn partial(&mut self, id: FuncId, args: Vec<Targets>, scoped: u8, site: Site) -> Targets {
+        // Distinct partials of the same helper can hold different callbacks,
+        // including a scope-opening wrapper and its unscoped worker. Keep
+        // their creation sites separate even when both are made outside the
+        // handler. These finite identities do not retain a handler: apply
+        // still checks the invocation's scope after a partial escapes.
+        let key = Origin::Function(
+            id,
+            args.len(),
+            if args.is_empty() { 0 } else { scoped },
+            if args.is_empty() {
+                None
+            } else {
+                match self.sites {
+                    ClosureSites::Separate => Some(site),
+                    #[cfg(test)]
+                    ClosureSites::Merged => None,
+                }
+            },
+        );
         let captured = self
             .captures
             .entry(key)
@@ -574,6 +634,7 @@ impl Proof<'_> {
         functions: &Targets,
         args: &[Targets],
         scoped: u8,
+        site: Site,
     ) -> Result<Targets, String> {
         // An empty origin set contributes no call edge: for example, mapping
         // over an empty collection never supplies a function-valued element.
@@ -581,10 +642,10 @@ impl Proof<'_> {
         // rejected below, even when joined with known targets.
         let mut result = Targets::new();
         for &closure in functions.iter().filter(|origin| origin.callable()) {
-            let Origin::Function(id, _, _) = closure else {
+            let Origin::Function(id, _, _, _) = closure else {
                 if self.validate {
                     return Err(
-                        "--gc arc: cannot prove the target of a call in an ownership program"
+                        "ownership: cannot prove the target of a call in an ownership program"
                             .into(),
                     );
                 }
@@ -595,13 +656,13 @@ impl Proof<'_> {
             all.extend_from_slice(args);
             let arity = self.program.funcs[id].arity as usize;
             let value = if all.len() < arity {
-                self.partial(id, all, scoped)
+                self.partial(id, all, scoped, site)
             } else {
                 let returned = self.request(id, scoped, &all[..arity]);
                 if all.len() == arity {
                     returned
                 } else {
-                    self.apply(&returned, &all[arity..], scoped)?
+                    self.apply(&returned, &all[arity..], scoped, site)?
                 }
             };
             join(&mut result, &value);
@@ -609,29 +670,35 @@ impl Proof<'_> {
         Ok(result)
     }
 
-    fn constant(&mut self, value: &Value) -> Targets {
+    fn constant(&mut self, value: &Value, next_site: &mut Site) -> Targets {
+        let site = *next_site;
+        next_site.1 += 1;
         match value {
             Value::Closure(closure) => {
-                let args = closure.args.iter().map(|arg| self.constant(arg)).collect();
-                self.partial(closure.func, args, 0)
+                let args = closure
+                    .args
+                    .iter()
+                    .map(|arg| self.constant(arg, next_site))
+                    .collect();
+                self.partial(closure.func, args, 0, site)
             }
             Value::Record(fields) | Value::Data(_, fields) => fields
                 .iter()
-                .flat_map(|field| self.constant(field))
+                .flat_map(|field| self.constant(field, next_site))
                 .collect(),
             Value::Array(fields) => fields
                 .iter()
-                .flat_map(|field| self.constant(field))
+                .flat_map(|field| self.constant(field, next_site))
                 .collect(),
             Value::Set(fields) => fields
                 .iter()
-                .flat_map(|field| self.constant(field))
+                .flat_map(|field| self.constant(field, next_site))
                 .collect(),
             Value::Map(fields) => fields
                 .iter()
                 .flat_map(|(key, value)| {
-                    let mut result = self.constant(key);
-                    result.extend(self.constant(value));
+                    let mut result = self.constant(key, next_site);
+                    result.extend(self.constant(value, next_site));
                     result
                 })
                 .collect(),
@@ -662,25 +729,26 @@ impl Proof<'_> {
     /// Aggregate fields share origins. A checked type rules out unrelated
     /// queue/function fields, but never proves an unknown origin of its own kind.
     fn refine_origins(&self, values: &mut Targets, ty: &MT) {
-        if !has_owner_channels(self.program, ty, &mut BTreeSet::new())
-            && values.remove(&Origin::UnknownOwnerQueue)
-        {
+        if values.contains(&Origin::UnknownOwnerQueue) && !self.properties(ty).owner_channels {
+            values.remove(&Origin::UnknownOwnerQueue);
             values.insert(Origin::UnknownQueue);
         }
-        if matches!(ty, MT::Con(name, _) if name == "std::Task") {
-            values.retain(|origin| match origin {
-                Origin::Task(id) => crate::ir::same_type(
-                    &self.program.shapes,
-                    self.program.funcs[*id]
-                        .ty
-                        .params(self.program.funcs[*id].arity as usize)
-                        .1,
-                    ty,
-                ),
-                _ => true,
-            });
-        } else if !has_tasks(self.program, ty, &mut BTreeSet::new()) {
-            values.retain(|origin| !origin.task());
+        if values.iter().any(|origin| origin.task()) {
+            if matches!(ty, MT::Con(name, _) if name == "std::Task") {
+                values.retain(|origin| match origin {
+                    Origin::Task(id) => crate::ir::same_type(
+                        &self.program.shapes,
+                        self.program.funcs[*id]
+                            .ty
+                            .params(self.program.funcs[*id].arity as usize)
+                            .1,
+                        ty,
+                    ),
+                    _ => true,
+                });
+            } else if !self.properties(ty).tasks {
+                values.retain(|origin| !origin.task());
+            }
         }
         if matches!(ty, MT::Con(name, _) if name == "std::Channel") {
             values.retain(|origin| match origin {
@@ -691,12 +759,16 @@ impl Proof<'_> {
             });
             return;
         }
-        if values.iter().any(|origin| origin.queue())
-            && !has_channels(self.program, ty, &mut BTreeSet::new())
-        {
+        if values.iter().any(|origin| origin.queue()) && !self.properties(ty).channels {
             values.retain(|origin| !origin.queue());
         }
         if !matches!(ty, MT::Fun(..)) {
+            // Fields of an aggregate initially share origins. A scalar field
+            // cannot carry its neighbor's callback into another call. Apply
+            // the same exclusion used for function results to expressions too.
+            if values.iter().any(|origin| origin.callable()) && !self.properties(ty).functions {
+                values.retain(|origin| !origin.callable());
+            }
             return;
         }
         values.retain(|closure| match closure {
@@ -707,7 +779,7 @@ impl Proof<'_> {
             | Origin::Task(_)
             | Origin::UnknownTask => false,
             Origin::UnknownFunction => true,
-            Origin::Function(id, supplied, _) => crate::ir::same_type(
+            Origin::Function(id, supplied, _, _) => crate::ir::same_type(
                 &self.program.shapes,
                 self.program.funcs[*id].ty.params(*supplied).1,
                 ty,
@@ -721,99 +793,118 @@ impl Proof<'_> {
         locals: &mut [Targets],
         local_types: &[MT],
         scoped: u8,
+        next_site: &mut Site,
     ) -> Result<Targets, String> {
+        let site = *next_site;
+        next_site.1 += 1;
         let mut result = match expr {
             Expr::Local(local) => locals[*local as usize].clone(),
-            Expr::Const(value) => self.constant(value),
+            Expr::Const(value) => self.constant(value, next_site),
             Expr::Func(id) if self.program.funcs[*id].arity == 0 => self.request(*id, scoped, &[]),
-            Expr::Func(id) => BTreeSet::from([Origin::Function(*id, 0, 0)]),
+            Expr::Func(id) => BTreeSet::from([Origin::Function(*id, 0, 0, None)]),
             Expr::Call(id, args) => {
                 let values = args
                     .iter()
-                    .map(|arg| self.expr(arg, locals, local_types, scoped))
+                    .map(|arg| self.expr(arg, locals, local_types, scoped, next_site))
                     .collect::<Result<Vec<_>, _>>()?;
                 self.request(*id, scoped, &values)
             }
-            Expr::Apply(function, args) => {
-                let function = self.expr(function, locals, local_types, scoped)?;
+            Expr::Apply(callee, args) => {
+                let targets = self.expr(callee, locals, local_types, scoped, next_site)?;
                 let args = args
                     .iter()
-                    .map(|arg| self.expr(arg, locals, local_types, scoped))
+                    .map(|arg| self.expr(arg, locals, local_types, scoped, next_site))
                     .collect::<Result<Vec<_>, _>>()?;
-                self.apply(&function, &args, scoped)?
+                self.apply(&targets, &args, scoped, site)?
             }
             Expr::Record(fields) | Expr::Construct(_, fields) => {
                 let mut result = Targets::new();
                 for field in fields {
-                    result.extend(self.expr(field, locals, local_types, scoped)?);
+                    result.extend(self.expr(field, locals, local_types, scoped, next_site)?);
                 }
                 result
             }
-            Expr::Field(value, _) => self.expr(value, locals, local_types, scoped)?,
+            Expr::Field(value, _) => self.expr(value, locals, local_types, scoped, next_site)?,
             Expr::SetFields(value, fields) => {
-                let mut result = self.expr(value, locals, local_types, scoped)?;
+                let mut result = self.expr(value, locals, local_types, scoped, next_site)?;
                 for (_, field) in fields {
-                    result.extend(self.expr(field, locals, local_types, scoped)?);
+                    result.extend(self.expr(field, locals, local_types, scoped, next_site)?);
                 }
                 result
             }
             Expr::BorrowGlobal(local, global, body) => {
                 locals[*local as usize] = self.request(*global, scoped, &[]);
-                self.expr(body, locals, local_types, scoped)?
+                self.expr(body, locals, local_types, scoped, next_site)?
             }
             Expr::Let(local, value, body) => {
-                locals[*local as usize] = self.expr(value, locals, local_types, scoped)?;
-                self.expr(body, locals, local_types, scoped)?
+                locals[*local as usize] =
+                    self.expr(value, locals, local_types, scoped, next_site)?;
+                self.expr(body, locals, local_types, scoped, next_site)?
             }
             Expr::Match(value, arms) => {
-                let value = self.expr(value, locals, local_types, scoped)?;
+                let value = self.expr(value, locals, local_types, scoped, next_site)?;
                 let mut result = Targets::new();
                 for (pattern, body) in arms {
                     let mut branch = locals.to_vec();
                     Self::bind(pattern, &value, &mut branch);
-                    result.extend(self.expr(body, &mut branch, local_types, scoped)?);
+                    result.extend(self.expr(body, &mut branch, local_types, scoped, next_site)?);
                 }
                 result
             }
             Expr::Trace(_, body)
             | Expr::Dup(_, body)
             | Expr::Drop(_, body)
-            | Expr::ResourceRegion { body, .. } => self.expr(body, locals, local_types, scoped)?,
+            | Expr::ResourceRegion { body, .. } => {
+                self.expr(body, locals, local_types, scoped, next_site)?
+            }
         };
-        if let Some(ty) = crate::ir::type_of(
-            &|id| &self.program.funcs[id].ty,
-            &self.program.shapes,
-            local_types,
-            expr,
-        ) {
-            self.refine_origins(&mut result, &ty);
+        // Refinement only removes origins or weakens an existing unknown
+        // queue. Empty results need no type reconstruction. Do this after
+        // visiting every child: those visits update summaries, validate scope
+        // effects and assign stable creation positions even for scalar results.
+        if result.is_empty() {
+            return Ok(result);
+        }
+        // Each IR position has one immutable type across all invocation
+        // scopes and fixed-point rounds. Store its reconstruction once.
+        if let Entry::Vacant(entry) = self.expression_types.entry(site) {
+            entry.insert(crate::ir::type_of(
+                &|id| &self.program.funcs[id].ty,
+                &self.program.shapes,
+                local_types,
+                expr,
+            ));
+        }
+        if let Some(Some(ty)) = self.expression_types.get(&site) {
+            self.refine_origins(&mut result, ty);
         }
         Ok(result)
     }
 
     fn function(&mut self, id: FuncId, scoped: u8, args: &[Targets]) -> Result<Targets, String> {
         let function = &self.program.funcs[id];
+        let site = (id, 0);
         match &function.body {
             Body::Expr(body) => {
                 let mut locals = vec![Targets::new(); function.locals.len()];
                 for (local, value) in locals.iter_mut().zip(args) {
                     *local = value.clone();
                 }
-                self.expr(body, &mut locals, &function.locals, scoped)
+                self.expr(body, &mut locals, &function.locals, scoped, &mut (id, 1))
             }
             Body::Prim(symbol) if matches!(symbol.as_str(), "ad.scope" | "ad.scope2") => {
-                self.apply(&args[0], &args[1..], scoped | AD)
+                self.apply(&args[0], &args[1..], scoped | AD, site)
             }
             Body::Prim(symbol) if symbol == "task.spawn" => {
                 // Fresh tasks have independent State/AD stacks. Keep their
                 // hidden owners separate from the values later returned by await.
                 self.changed |= join(self.task_thunks.entry(id).or_default(), &args[0]);
-                let result = self.apply(&args[0], &[Targets::new()], 0)?;
+                let result = self.apply(&args[0], &[Targets::new()], 0, site)?;
                 self.changed |= join(self.task_results.entry(id).or_default(), &result);
                 Ok(Targets::from([Origin::Task(id)]))
             }
             Body::Prim(symbol) if symbol == "task.within" => {
-                self.apply(&args[1], &[Targets::new()], 0)
+                self.apply(&args[1], &[Targets::new()], 0, site)
             }
             Body::Prim(symbol) if symbol == "task.await" => {
                 let mut result = Targets::new();
@@ -830,16 +921,16 @@ impl Proof<'_> {
                         }
                         Origin::UnknownTask => {
                             let ty = function.ty.params(function.arity as usize).1;
-                            if has_functions(self.program, ty, &mut BTreeSet::new()) {
+                            if self.properties(ty).functions {
                                 result.insert(Origin::UnknownFunction);
                             }
-                            if has_channels(self.program, ty, &mut BTreeSet::new()) {
+                            if self.properties(ty).channels {
                                 result.insert(unknown_queue(
                                     self.program,
                                     function.ty.params(function.arity as usize).1,
                                 ));
                             }
-                            if has_tasks(self.program, ty, &mut BTreeSet::new()) {
+                            if self.properties(ty).tasks {
                                 result.insert(Origin::UnknownTask);
                             }
                         }
@@ -851,27 +942,29 @@ impl Proof<'_> {
             Body::Prim(symbol) if symbol == "http2.serve" => {
                 // Request handlers run in new tasks, with independent State
                 // and AD stacks, even while serve's caller has a live scope.
-                self.apply(&args[3], &[Targets::new()], 0)
+                self.apply(&args[3], &[Targets::new()], 0, site)
             }
             Body::Prim(symbol) if symbol == "run-state" => {
                 // State cells are stack owners, never captured addresses. A
                 // callback can return a closure, but that closure must execute
                 // under a fresh State scope before it uses get/put/modify.
                 self.changed |= join(&mut self.state_values, &args[0]);
-                let mut result = self.apply(&args[1], &args[2..], scoped | STATE)?;
+                let mut result = self.apply(&args[1], &args[2..], scoped | STATE, site)?;
                 result.extend(self.state_values.iter().copied());
                 Ok(result)
             }
             Body::Prim(symbol) if symbol == "channel.send" => {
                 let channel = function.ty.params(function.arity as usize).0[0].clone();
                 let payload = function.ty.params(function.arity as usize).0[1];
-                if self.validate && has_functions(self.program, payload, &mut BTreeSet::new()) {
+                if self.validate && self.properties(payload).functions {
                     if matches!(payload, MT::Fun(..)) && args[1].is_empty() {
-                        return Err("--gc arc: cannot prove the source of a queued function".into());
+                        return Err(
+                            "ownership: cannot prove the source of a queued function".into()
+                        );
                     }
                     self.queued_targets(&args[1], &mut BTreeSet::new())?;
                 }
-                if self.validate && has_tasks(self.program, payload, &mut BTreeSet::new()) {
+                if self.validate && self.properties(payload).tasks {
                     self.queued_value(payload, &args[1], &mut BTreeSet::new())?;
                 }
                 self.changed |= join(self.channel_values.entry(channel).or_default(), &args[1]);
@@ -910,13 +1003,13 @@ impl Proof<'_> {
                 Ok(Targets::new())
             }
             Body::Prim(symbol) if symbol == "attempt" => {
-                let mut result = self.apply(&args[0], &args[1..], scoped)?;
+                let mut result = self.apply(&args[0], &args[1..], scoped, site)?;
                 result.extend(self.error_values.iter().copied());
                 Ok(result)
             }
             Body::Prim(symbol) if matches!(symbol.as_str(), "get" | "put" | "modify") => {
                 if scoped & STATE == 0 {
-                    return Err(format!("--gc arc: primitive `{symbol}` has no tracing-free lifetime policy outside a State scope"));
+                    return Err(format!("ownership: primitive `{symbol}` has no tracing-free lifetime policy outside a State scope"));
                 }
                 match symbol.as_str() {
                     "get" => Ok(self.state_values.clone()),
@@ -926,7 +1019,8 @@ impl Proof<'_> {
                     }
                     _ => {
                         let state = self.state_values.clone();
-                        let value = self.apply(&args[0], std::slice::from_ref(&state), scoped)?;
+                        let value =
+                            self.apply(&args[0], std::slice::from_ref(&state), scoped, site)?;
                         self.changed |= join(&mut self.state_values, &value);
                         Ok(Targets::new())
                     }
@@ -944,24 +1038,29 @@ impl Proof<'_> {
                 ) =>
             {
                 if scoped & AD == 0 {
-                    return Err(format!("--gc arc: primitive `{symbol}` has no tracing-free lifetime policy outside an autodiff scope"));
+                    return Err(format!("ownership: primitive `{symbol}` has no tracing-free lifetime policy outside an autodiff scope"));
                 }
                 if symbol == "ad.tape-owned" {
                     // Stored scalar operations may execute during a later
                     // backward call. They inherit only the proved AD scope,
                     // never the creator's transient State context.
                     if self.validate && args[0].is_empty() {
-                        return Err("--gc arc: cannot prove managed tape callbacks".into());
+                        return Err("ownership: cannot prove managed tape callbacks".into());
                     }
                     for &closure in args[0].iter().filter(|origin| origin.callable()) {
-                        let Origin::Function(target, supplied, _) = closure else {
+                        let Origin::Function(target, supplied, _, _) = closure else {
                             if self.validate {
-                                return Err("--gc arc: cannot prove managed tape callbacks".into());
+                                return Err("ownership: cannot prove managed tape callbacks".into());
                             }
                             continue;
                         };
                         let count = self.program.funcs[target].arity as usize - supplied;
-                        self.apply(&BTreeSet::from([closure]), &vec![Targets::new(); count], AD)?;
+                        self.apply(
+                            &BTreeSet::from([closure]),
+                            &vec![Targets::new(); count],
+                            AD,
+                            site,
+                        )?;
                     }
                 }
                 Ok(Targets::new())
@@ -972,11 +1071,9 @@ impl Proof<'_> {
                 // here would incorrectly run scoped work in its caller's scope.
                 let mut result: Targets = args.iter().flatten().copied().collect();
                 let contract = crate::ownership::primitive(symbol);
-                let returns_functions = has_functions(
-                    self.program,
-                    function.ty.params(function.arity as usize).1,
-                    &mut BTreeSet::new(),
-                );
+                let returns_functions = self
+                    .properties(function.ty.params(function.arity as usize).1)
+                    .functions;
                 if returns_functions {
                     match contract {
                         Some(c)
@@ -1000,11 +1097,9 @@ impl Proof<'_> {
                         }
                     }
                 }
-                let returns_channels = has_channels(
-                    self.program,
-                    function.ty.params(function.arity as usize).1,
-                    &mut BTreeSet::new(),
-                );
+                let returns_channels = self
+                    .properties(function.ty.params(function.arity as usize).1)
+                    .channels;
                 if returns_channels {
                     match contract {
                         Some(c)
@@ -1025,11 +1120,10 @@ impl Proof<'_> {
                         }
                     }
                 }
-                if has_tasks(
-                    self.program,
-                    function.ty.params(function.arity as usize).1,
-                    &mut BTreeSet::new(),
-                ) {
+                if self
+                    .properties(function.ty.params(function.arity as usize).1)
+                    .tasks
+                {
                     match contract {
                         Some(c)
                             if matches!(
@@ -1063,10 +1157,10 @@ impl Proof<'_> {
                         return Ok(result);
                     }
                     for &closure in result.clone().iter().filter(|origin| origin.callable()) {
-                        let Origin::Function(target, supplied, _) = closure else {
+                        let Origin::Function(target, supplied, _, _) = closure else {
                             if self.validate {
                                 return Err(
-                                    "--gc arc: cannot prove a runtime callback target".into()
+                                    "ownership: cannot prove a runtime callback target".into()
                                 );
                             }
                             continue;
@@ -1076,6 +1170,7 @@ impl Proof<'_> {
                             &BTreeSet::from([closure]),
                             &vec![result.clone(); count],
                             scoped,
+                            site,
                         )?);
                     }
                     return Ok(result);
@@ -1095,16 +1190,18 @@ impl Proof<'_> {
                         .copied(),
                 );
                 for &closure in functions.iter().filter(|origin| origin.callable()) {
-                    let Origin::Function(target, supplied, _) = closure else {
+                    let Origin::Function(target, supplied, _, _) = closure else {
                         if self.validate {
-                            return Err("--gc arc: cannot prove a primitive callback target".into());
+                            return Err(
+                                "ownership: cannot prove a primitive callback target".into()
+                            );
                         }
                         result.insert(Origin::UnknownFunction);
                         continue;
                     };
                     let count = self.program.funcs[target].arity as usize - supplied;
                     let values = vec![data.clone(); count];
-                    let returned = self.apply(&BTreeSet::from([closure]), &values, scoped)?;
+                    let returned = self.apply(&BTreeSet::from([closure]), &values, scoped, site)?;
                     // A fold/loop may feed a returned closure into a later
                     // iteration even if its eventual result contains none.
                     self.changed |= join(
@@ -1126,19 +1223,19 @@ impl Proof<'_> {
                             count += 1;
                             ty = result;
                         }
-                        self.apply(&args[index], &vec![Targets::new(); count], scoped)?;
+                        self.apply(&args[index], &vec![Targets::new(); count], scoped, site)?;
                     }
                 }
                 let result_type = function.ty.params(function.arity as usize).1;
-                let mut result = if has_functions(self.program, result_type, &mut BTreeSet::new()) {
+                let mut result = if self.properties(result_type).functions {
                     Targets::from([Origin::UnknownFunction])
                 } else {
                     Targets::new()
                 };
-                if has_channels(self.program, result_type, &mut BTreeSet::new()) {
+                if self.properties(result_type).channels {
                     result.insert(unknown_queue(self.program, result_type));
                 }
-                if has_tasks(self.program, result_type, &mut BTreeSet::new()) {
+                if self.properties(result_type).tasks {
                     result.insert(Origin::UnknownTask);
                 }
                 Ok(result)
@@ -1157,9 +1254,10 @@ impl Proof<'_> {
                     // The received iterator's constructor runs in the caller;
                     // its returned continuations are data until consumed.
                     self.apply(
-                        &BTreeSet::from([Origin::Function(iterator, 0, 0)]),
+                        &BTreeSet::from([Origin::Function(iterator, 0, 0, None)]),
                         &[Targets::new()],
                         scoped,
+                        site,
                     )
                 } else {
                     Ok(Targets::new())
@@ -1169,13 +1267,37 @@ impl Proof<'_> {
     }
 }
 
+/// Measurements are compiled only into the test harness, never the compiler.
+#[derive(Debug, Default, PartialEq, Eq)]
+pub(crate) struct AnalysisStats {
+    #[cfg(test)]
+    rounds: usize,
+    #[cfg(test)]
+    visits: usize,
+    #[cfg(test)]
+    summary_updates: usize,
+    #[cfg(test)]
+    contexts: usize,
+    #[cfg(test)]
+    closures: usize,
+    #[cfg(test)]
+    facts: usize,
+    #[cfg(test)]
+    cached_types: usize,
+    #[cfg(test)]
+    cached_expressions: usize,
+}
+
 pub(crate) fn check(
     program: &Program,
     entries: &[FuncId],
     entry_channels: EntryChannels,
-) -> Result<(), String> {
+    sites: ClosureSites,
+) -> Result<AnalysisStats, String> {
+    // This is one existential query over the immutable type graph. A type
+    // already visited from an earlier function cannot add a new owner edge.
+    let mut seen = BTreeSet::new();
     let queued_owners = program.funcs.iter().any(|function| {
-        let mut seen = BTreeSet::new();
         has_owner_channels(program, &function.ty, &mut seen)
             || function
                 .locals
@@ -1183,10 +1305,13 @@ pub(crate) fn check(
                 .any(|ty| has_owner_channels(program, ty, &mut seen))
     });
     if !queued_owners && !program.funcs.iter().any(|f| matches!(&f.body, Body::Prim(s) if matches!(s.as_str(), "task.spawn" | "ad.tape" | "ad.push" | "ad.backward" | "ad.tape-owned" | "ad.push-owned" | "ad.backward-owned" | "run-state" | "get" | "put" | "modify"))) {
-        return Ok(());
+        return Ok(AnalysisStats::default());
     }
     let mut proof = Proof {
         program,
+        sites,
+        type_cache: RefCell::new(HashMap::new()),
+        expression_types: HashMap::new(),
         captures: BTreeMap::new(),
         inputs: BTreeMap::new(),
         outputs: BTreeMap::new(),
@@ -1215,7 +1340,7 @@ pub(crate) fn check(
                 .service
                 .as_ref()
                 .and_then(|service| service.methods.iter().find(|method| method.func == entry))
-                .ok_or("--gc arc: gRPC entry has no served method contract")?;
+                .ok_or("ownership: gRPC entry has no served method contract")?;
             matches!(
                 crate::rpc::shape(&function.ty, function.arity as usize, method.error.as_ref())
                     .output,
@@ -1227,7 +1352,7 @@ pub(crate) fn check(
         for ty in function.ty.params(function.arity as usize).0 {
             if has_owner_channels(program, ty, &mut BTreeSet::new()) {
                 return Err(
-                    "--gc arc: external function-bearing channels or task-bearing channels have no proved queue ownership"
+                    "ownership: external function-bearing channels or task-bearing channels have no proved queue ownership"
                         .into(),
                 );
             }
@@ -1266,20 +1391,37 @@ pub(crate) fn check(
             .collect();
         proof.request(entry, 0, &args);
     }
+    #[cfg(test)]
+    let mut stats = AnalysisStats::default();
     loop {
+        #[cfg(test)]
+        {
+            stats.rounds += 1;
+        }
         proof.changed = false;
         proof.service_boundaries(entries)?;
         for ((id, scoped), args) in proof.inputs.clone() {
+            #[cfg(test)]
+            {
+                stats.visits += 1;
+            }
             let mut result = proof.function(id, scoped, &args).map_err(|error| {
                 format!("{error}\n  while checking `{}`", program.funcs[id].name)
             })?;
             let function = &program.funcs[id];
             let result_type = function.ty.params(function.arity as usize).1;
-            if !has_functions(program, result_type, &mut BTreeSet::new()) {
+            if result.iter().any(|origin| origin.callable())
+                && !proof.properties(result_type).functions
+            {
                 result.retain(|origin| !origin.callable());
             }
             proof.refine_origins(&mut result, result_type);
-            proof.changed |= join(proof.outputs.entry((id, scoped)).or_default(), &result);
+            let updated = join(proof.outputs.entry((id, scoped)).or_default(), &result);
+            proof.changed |= updated;
+            #[cfg(test)]
+            {
+                stats.summary_updates += usize::from(updated);
+            }
         }
         if !proof.changed {
             break;
@@ -1295,13 +1437,41 @@ pub(crate) fn check(
     for (&task, results) in &proof.task_results {
         proof.task_result_owners(task, results, &mut BTreeSet::new())?;
     }
-    Ok(())
+    #[cfg(test)]
+    {
+        stats.cached_types = proof.type_cache.borrow().len();
+        stats.cached_expressions = proof.expression_types.len();
+        stats.contexts = proof.inputs.len();
+        stats.closures = proof.captures.len();
+        stats.facts = proof
+            .inputs
+            .values()
+            .chain(proof.captures.values())
+            .flat_map(|slots| slots.iter())
+            .map(Targets::len)
+            .sum::<usize>()
+            + proof
+                .outputs
+                .values()
+                .chain(proof.callback_values.values())
+                .chain(proof.channel_values.values())
+                .chain(proof.task_thunks.values())
+                .chain(proof.task_results.values())
+                .map(Targets::len)
+                .sum::<usize>()
+            + proof.state_values.len()
+            + proof.error_values.len();
+        Ok(stats)
+    }
+    #[cfg(not(test))]
+    Ok(AnalysisStats {})
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::ir::{Func, ServedFn, ServiceDef};
+    use std::time::Instant;
 
     fn arrow(a: MT, b: MT) -> MT {
         MT::Fun(Box::new(a), Box::new(b))
@@ -1357,10 +1527,214 @@ mod tests {
 
     #[test]
     fn state_primitive_needs_a_proven_handler_context() {
-        assert!(check(&state_program(true), &[0], EntryChannels::Unknown).is_ok());
-        assert!(check(&state_program(false), &[0], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("tracing-free lifetime policy"));
+        assert!(check(
+            &state_program(true),
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .is_ok());
+        assert!(check(
+            &state_program(false),
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("tracing-free lifetime policy"));
+    }
+
+    #[test]
+    fn partials_created_before_a_handler_keep_distinct_callbacks() {
+        for handled in [false, true] {
+            let mut p = state_program(true);
+            let unit = MT::unit();
+            let string = MT::con("std::String");
+            let getter = p.funcs[1].ty.clone();
+            p.funcs.extend([
+                Func {
+                    name: "invoke".into(),
+                    arity: 2,
+                    locals: vec![getter.clone(), unit.clone()],
+                    ty: arrow(getter.clone(), getter),
+                    body: Body::Expr(Expr::Apply(Box::new(Expr::Local(0)), vec![Expr::Local(1)])),
+                },
+                Func {
+                    name: "plain".into(),
+                    arity: 1,
+                    locals: vec![unit],
+                    ty: arrow(MT::unit(), string.clone()),
+                    body: Body::Expr(Expr::Const(Value::str("plain"))),
+                },
+            ]);
+            let partial = |target| Expr::Apply(Box::new(Expr::Func(3)), vec![Expr::Func(target)]);
+            let invoke = |f| Expr::Apply(Box::new(f), vec![Expr::Const(Value::unit())]);
+            // Both captures are created in main, outside State, at different
+            // expression positions. Only the getter invocation needs a handler.
+            let stateful = if handled {
+                Expr::Field(
+                    Box::new(Expr::Call(
+                        2,
+                        vec![
+                            Expr::Const(Value::str("state")),
+                            partial(1),
+                            Expr::Const(Value::unit()),
+                        ],
+                    )),
+                    0,
+                )
+            } else {
+                invoke(partial(1))
+            };
+            p.funcs[0].ty = MT::Record(vec![("0".into(), string.clone()), ("1".into(), string)]);
+            p.funcs[0].body = Body::Expr(Expr::Record(vec![invoke(partial(4)), stateful]));
+            let checked = check(&p, &[0], EntryChannels::Unknown, ClosureSites::Separate);
+            if handled {
+                assert!(
+                    check(&p, &[0], EntryChannels::Unknown, ClosureSites::Merged)
+                        .unwrap_err()
+                        .contains("outside a State scope")
+                );
+                checked.unwrap();
+            } else {
+                assert!(checked.unwrap_err().contains("outside a State scope"));
+            }
+        }
+    }
+
+    // This is a compiler-analysis measurement, not a language execution benchmark.
+    // Run alone with raw lowering so optimization cannot erase its input growth.
+    #[test]
+    #[ignore = "run explicitly with FWP_NO_OPT=1 and one test thread on a runner"]
+    fn ownership_analysis_scaling() {
+        crate::driver::with_big_stack(|| {
+            assert!(std::env::var_os("FWP_NO_OPT").is_some());
+            fn nodes(e: &Expr) -> usize {
+                1 + match e {
+                    Expr::Const(_) | Expr::Local(_) | Expr::Func(_) => 0,
+                    Expr::Trace(_, e)
+                    | Expr::Dup(_, e)
+                    | Expr::Drop(_, e)
+                    | Expr::Field(e, _)
+                    | Expr::ResourceRegion { body: e, .. }
+                    | Expr::BorrowGlobal(_, _, e) => nodes(e),
+                    Expr::Call(_, args) | Expr::Construct(_, args) | Expr::Record(args) => {
+                        args.iter().map(nodes).sum()
+                    }
+                    Expr::Apply(f, args) => nodes(f) + args.iter().map(nodes).sum::<usize>(),
+                    Expr::SetFields(e, fields) => {
+                        nodes(e) + fields.iter().map(|(_, e)| nodes(e)).sum::<usize>()
+                    }
+                    Expr::Let(_, value, body) => nodes(value) + nodes(body),
+                    Expr::Match(value, arms) => {
+                        nodes(value) + arms.iter().map(|(_, e)| nodes(e)).sum::<usize>()
+                    }
+                }
+            }
+            let time_limits_ms: [u128; 3] = match (std::env::consts::OS, std::env::consts::ARCH) {
+                ("linux", "x86_64") => [20, 35, 65],
+                ("macos", "x86_64") => [55, 90, 170],
+                host => panic!("no ownership-analysis timing baseline for {host:?}"),
+            };
+            let mut failures = Vec::new();
+            for (size_index, n) in [16, 32, 64].into_iter().enumerate() {
+                let mut source = String::from(
+                    r#"
+recur : I64 -> I64
+rec recur = if (eq 0) id (sub 1 | recur)
+touch : I64 -> Channel[I64] -> () ! {Async}
+touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
+"#,
+                );
+                for i in 0..n {
+                    source.push_str(&format!("work{i} : () -> () ! {{Async}}\nwork{i} = const 1 | channel.make | tap (touch {i}) | channel.close\n"));
+                }
+                source.push_str("main = [");
+                for i in 0..n {
+                    source.push_str(&format!("() | work{i},"));
+                }
+                source.push_str("1 | ad.scope ad.tape | ignore] | ignore\n");
+                let (_, program) = crate::driver::compile_source(
+                    "ownership-scaling.fwp",
+                    &source,
+                    crate::mono::Roots {
+                        main: true,
+                        ..crate::mono::Roots::default()
+                    },
+                )
+                .unwrap_or_else(|error| panic!("{}", error.rendered));
+                let entries = [program.main.unwrap()];
+                let node_count: usize = program
+                    .funcs
+                    .iter()
+                    .map(|f| match &f.body {
+                        Body::Expr(e) => nodes(e),
+                        _ => 0,
+                    })
+                    .sum();
+                let policies = [ClosureSites::Merged, ClosureSites::Separate];
+                let expected = policies
+                    .map(|sites| check(&program, &entries, EntryChannels::Unknown, sites).unwrap());
+                let mut samples = [Vec::new(), Vec::new()];
+                // Warmups above are outside timing. Alternate the paired order;
+                // each timed check constructs and destroys a fresh proof.
+                for repeat in 0..7 {
+                    for index in if repeat % 2 == 0 { [0, 1] } else { [1, 0] } {
+                        let start = Instant::now();
+                        let actual =
+                            check(&program, &entries, EntryChannels::Unknown, policies[index])
+                                .unwrap();
+                        samples[index].push(start.elapsed().as_nanos());
+                        assert_eq!(actual, expected[index]);
+                    }
+                }
+                for (index, sites) in policies.into_iter().enumerate() {
+                    let mut sorted = samples[index].clone();
+                    sorted.sort_unstable();
+                    let stats = &expected[index];
+                    let (closures, facts) = match sites {
+                        ClosureSites::Merged => (13, 57),
+                        ClosureSites::Separate => (5 * n + 8, 10 * n + 47),
+                    };
+                    if stats.rounds > 16
+                        || stats.visits > 15 * n + 300
+                        || stats.summary_updates > 6
+                        || stats.contexts > n + 33
+                        || stats.closures > closures
+                        || stats.facts > facts
+                        || program.funcs.len() > n + 33
+                        || stats.cached_expressions > node_count
+                        || stats.cached_types
+                            > node_count
+                                + program
+                                    .funcs
+                                    .iter()
+                                    .map(|f| f.locals.len() + 1)
+                                    .sum::<usize>()
+                        || node_count > 19 * n + 126
+                    {
+                        failures.push(format!(
+                            "{sites:?} N={n}: analysis-size budget exceeded: {stats:?}"
+                        ));
+                    }
+                    if sorted[3] > time_limits_ms[size_index] * 1_000_000 {
+                        failures.push(format!(
+                            "{sites:?} N={n}: median {} ns exceeds {} ms",
+                            sorted[3], time_limits_ms[size_index]
+                        ));
+                    }
+                    println!("ownership-analysis sites={sites:?} n={n} source_bytes={} functions={} ir_nodes={node_count} median_ns={} samples_ns={:?} origin_bytes={} rounds={} visits={} summary_updates={} contexts={} closures={} facts={}", source.len(), program.funcs.len(), sorted[3], samples[index], std::mem::size_of::<Origin>(), stats.rounds, stats.visits, stats.summary_updates, stats.contexts, stats.closures, stats.facts);
+                }
+                samples[0].sort_unstable();
+                samples[1].sort_unstable();
+                if samples[1][3] * 2 > samples[0][3] * 3 {
+                    failures.push(format!(
+                        "N={n}: separate-site median exceeds 1.5 times the merged control"
+                    ));
+                }
+            }
+            assert!(failures.is_empty(), "{}", failures.join("\n"));
+        });
     }
 
     #[test]
@@ -1427,7 +1801,7 @@ mod tests {
                 invoke(partial(4)),
                 if escape { invoke(handled) } else { handled },
             ]));
-            let checked = check(&p, &[0], EntryChannels::Unknown);
+            let checked = check(&p, &[0], EntryChannels::Unknown, ClosureSites::Separate);
             if escape {
                 assert!(checked.unwrap_err().contains("outside a State scope"));
             } else {
@@ -1514,12 +1888,118 @@ mod tests {
                 )),
             ));
             if scoped {
-                check(&program, &[0], EntryChannels::Unknown).unwrap();
+                check(
+                    &program,
+                    &[0],
+                    EntryChannels::Unknown,
+                    ClosureSites::Separate,
+                )
+                .unwrap();
             } else {
-                assert!(check(&program, &[0], EntryChannels::Unknown)
-                    .unwrap_err()
-                    .contains("outside a State scope"));
+                assert!(check(
+                    &program,
+                    &[0],
+                    EntryChannels::Unknown,
+                    ClosureSites::Separate
+                )
+                .unwrap_err()
+                .contains("outside a State scope"));
             }
+        }
+    }
+
+    #[test]
+    #[ignore = "runner-only startup analysis budget; run with FWP_NO_OPT=1"]
+    fn ownership_rest_startup_budget() {
+        assert!(std::env::var_os("FWP_NO_OPT").is_some());
+        crate::driver::with_big_stack(|| {
+            let mut failures = Vec::new();
+            for fixture in ["tests/rest/forms.fwp", "tests/fixtures/server_entries.fwp"] {
+                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(fixture);
+                let compiling = Instant::now();
+                let (_, program) = crate::rest::compile(&path)
+                    .unwrap_or_else(|failure| panic!("{}", failure.rendered));
+                let compile_seconds = compiling.elapsed().as_secs_f64();
+                let checking = Instant::now();
+                let stats = crate::arc::check_interpreter(
+                    &program,
+                    &[program.main.expect("REST entry")],
+                    EntryChannels::Unknown,
+                )
+                .unwrap();
+                let analysis_seconds = checking.elapsed().as_secs_f64();
+                eprintln!(
+                    "rest-startup fixture={fixture} raw=true functions={} compile_seconds={compile_seconds:.6} analysis_seconds={analysis_seconds:.6} analysis_limit_seconds=10 stats={stats:?}",
+                    program.funcs.len(),
+                );
+                if analysis_seconds > 10.0 {
+                    failures.push(format!(
+                        "{fixture}: lifetime analysis exceeded the startup budget"
+                    ));
+                }
+            }
+            assert!(failures.is_empty(), "{}", failures.join("\n"));
+        });
+    }
+
+    #[test]
+    fn cached_type_queries_do_not_publish_partial_recursive_answers() {
+        for owning in [false, true] {
+            let mut program = Program::default();
+            let a = MT::con("A");
+            let b = MT::con("B");
+            let callback = arrow(MT::unit(), MT::unit());
+            let payload = if owning {
+                MT::Con("std::Channel".into(), vec![callback.clone()])
+            } else {
+                MT::con("std::I64")
+            };
+            program.shapes.insert(
+                a.clone(),
+                TypeShape::Record(vec![("first".into(), b.clone()), ("later".into(), payload)]),
+            );
+            program.shapes.insert(
+                b.clone(),
+                TypeShape::Record(vec![("back".into(), a.clone())]),
+            );
+            let proof = Proof {
+                program: &program,
+                sites: ClosureSites::Separate,
+                type_cache: RefCell::new(HashMap::new()),
+                expression_types: HashMap::new(),
+                captures: BTreeMap::new(),
+                inputs: BTreeMap::new(),
+                outputs: BTreeMap::new(),
+                callback_values: BTreeMap::new(),
+                channel_values: BTreeMap::new(),
+                task_thunks: BTreeMap::new(),
+                task_results: BTreeMap::new(),
+                changed: false,
+                validate: false,
+                state_values: Targets::new(),
+                error_values: Targets::new(),
+            };
+            // Visiting A first crosses B's back edge before reaching A's
+            // payload. That provisional negative result must not be cached for B.
+            let expected = TypeProperties {
+                functions: owning,
+                channels: owning,
+                tasks: false,
+                owner_channels: owning,
+            };
+            for ty in [&a, &b, &a, &b] {
+                assert_eq!(proof.properties(ty), expected);
+            }
+            assert_eq!(proof.type_cache.borrow().len(), 2);
+            assert_eq!(
+                proof.properties(&MT::Con("std::WeakChannel".into(), vec![callback])),
+                TypeProperties {
+                    functions: false,
+                    channels: false,
+                    tasks: false,
+                    owner_channels: false,
+                }
+            );
         }
     }
 
@@ -1528,6 +2008,9 @@ mod tests {
         let program = state_program(true);
         let mut proof = Proof {
             program: &program,
+            sites: ClosureSites::Separate,
+            type_cache: RefCell::new(HashMap::new()),
+            expression_types: HashMap::new(),
             captures: BTreeMap::new(),
             inputs: BTreeMap::new(),
             outputs: BTreeMap::new(),
@@ -1540,23 +2023,23 @@ mod tests {
             state_values: Targets::new(),
             error_values: Targets::new(),
         };
-        let mut functions = Targets::from([Origin::Function(1, 0, 0)]);
+        let mut functions = Targets::from([Origin::Function(1, 0, 0, None)]);
         assert!(proof
-            .apply(&Targets::new(), &[Targets::new()], STATE)
+            .apply(&Targets::new(), &[Targets::new()], STATE, (0, 0))
             .unwrap()
             .is_empty());
         assert!(join(
             &mut functions,
             &Targets::from([Origin::UnknownFunction])
         ));
-        functions.insert(Origin::Function(2, 0, 0));
+        functions.insert(Origin::Function(2, 0, 0, None));
         proof.refine_origins(&mut functions, &program.funcs[1].ty);
         assert_eq!(
             functions,
-            Targets::from([Origin::Function(1, 0, 0), Origin::UnknownFunction])
+            Targets::from([Origin::Function(1, 0, 0, None), Origin::UnknownFunction])
         );
         assert!(proof
-            .apply(&functions, &[Targets::new()], STATE)
+            .apply(&functions, &[Targets::new()], STATE, (0, 0))
             .unwrap_err()
             .contains("cannot prove the target"));
         assert!(proof
@@ -1590,7 +2073,12 @@ mod tests {
                 Box::new(Expr::Call(3, vec![Expr::Const(input)])),
                 vec![Expr::Const(Value::unit())],
             ));
-            let result = check(&program, &[0], EntryChannels::Unknown);
+            let result = check(
+                &program,
+                &[0],
+                EntryChannels::Unknown,
+                ClosureSites::Separate,
+            );
             if symbol == "unmodeled-function-producer" {
                 assert!(result.unwrap_err().contains("cannot prove"));
             } else {
@@ -1633,6 +2121,9 @@ mod tests {
             ]);
             let mut proof = Proof {
                 program: &program,
+                sites: ClosureSites::Separate,
+                type_cache: RefCell::new(HashMap::new()),
+                expression_types: HashMap::new(),
                 captures: BTreeMap::new(),
                 inputs: BTreeMap::new(),
                 outputs: BTreeMap::new(),
@@ -1645,8 +2136,8 @@ mod tests {
                 state_values: Targets::new(),
                 error_values: Targets::new(),
             };
-            let captured = proof.partial(3, vec![Targets::new()], 0);
-            let nested = proof.partial(4, vec![captured.clone()], 0);
+            let captured = proof.partial(3, vec![Targets::new()], 0, (0, 0));
+            let nested = proof.partial(4, vec![captured.clone()], 0, (0, 0));
             for value in [captured, nested] {
                 let checked = proof.queued_targets(&value, &mut BTreeSet::new());
                 if matches!(&captured_type, MT::Con(name, _) if matches!(name.as_str(),
@@ -1728,7 +2219,13 @@ mod tests {
             ],
             ..Program::default()
         };
-        check(&program, &[0], EntryChannels::Unknown).unwrap();
+        check(
+            &program,
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate,
+        )
+        .unwrap();
         let task_with_queue = Expr::Call(
             2,
             vec![Expr::Apply(Box::new(Expr::Func(6)), vec![Expr::Local(0)])],
@@ -1741,9 +2238,14 @@ mod tests {
                 vec![Expr::Local(0), capture(task_with_queue)],
             )),
         ));
-        assert!(check(&program, &[0], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("function-bearing channel"));
+        assert!(check(
+            &program,
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("function-bearing channel"));
 
         // The same Task[String] type does not prove an external task's thunk.
         program.funcs[0].arity = 1;
@@ -1751,9 +2253,14 @@ mod tests {
         program.funcs[0].ty = arrow(task, boolean);
         program.funcs[0].body =
             Body::Expr(Expr::Call(5, vec![make_queue, capture(Expr::Local(0))]));
-        assert!(check(&program, &[0], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("captured task producer"));
+        assert!(check(
+            &program,
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("captured task producer"));
 
         // A zero-capture computation can return a closure with hidden owners.
         // Inspect that result too, even when the outer callback never awaits it.
@@ -1779,9 +2286,14 @@ mod tests {
                 capture(Expr::Call(2, vec![Expr::Func(3)])),
             ],
         ));
-        assert!(check(&program, &[0], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("function-bearing channel"));
+        assert!(check(
+            &program,
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("function-bearing channel"));
     }
 
     #[test]
@@ -1858,7 +2370,13 @@ mod tests {
                 ],
                 ..Program::default()
             };
-            check(&program, &[0], EntryChannels::Unknown).unwrap();
+            check(
+                &program,
+                &[0],
+                EntryChannels::Unknown,
+                ClosureSites::Separate,
+            )
+            .unwrap();
             crate::arc::check(&program, &[0], EntryChannels::Unknown).unwrap();
             let cyclic = Expr::Call(
                 2,
@@ -1869,17 +2387,27 @@ mod tests {
                 Box::new(make.clone()),
                 Box::new(Expr::Call(4, vec![Expr::Local(0), message(cyclic)])),
             ));
-            assert!(check(&program, &[0], EntryChannels::Unknown)
-                .unwrap_err()
-                .contains("task-bearing channel"));
+            assert!(check(
+                &program,
+                &[0],
+                EntryChannels::Unknown,
+                ClosureSites::Separate
+            )
+            .unwrap_err()
+            .contains("task-bearing channel"));
 
             program.funcs[0].arity = 1;
             program.funcs[0].locals = vec![task.clone()];
             program.funcs[0].ty = arrow(task, boolean);
             program.funcs[0].body = Body::Expr(Expr::Call(4, vec![make, message(Expr::Local(0))]));
-            assert!(check(&program, &[0], EntryChannels::Unknown)
-                .unwrap_err()
-                .contains("captured task producer"));
+            assert!(check(
+                &program,
+                &[0],
+                EntryChannels::Unknown,
+                ClosureSites::Separate
+            )
+            .unwrap_err()
+            .contains("captured task producer"));
 
             // A task-bearing external queue triggers proof even without spawn.
             program.funcs = vec![Func {
@@ -1889,9 +2417,14 @@ mod tests {
                 ty: arrow(queue, unit),
                 body: Body::Expr(Expr::Const(Value::unit())),
             }];
-            assert!(check(&program, &[0], EntryChannels::Unknown)
-                .unwrap_err()
-                .contains("external function-bearing channels or task-bearing channels"));
+            assert!(check(
+                &program,
+                &[0],
+                EntryChannels::Unknown,
+                ClosureSites::Separate
+            )
+            .unwrap_err()
+            .contains("external function-bearing channels or task-bearing channels"));
         }
     }
 
@@ -1938,9 +2471,14 @@ mod tests {
             ],
             ..Program::default()
         };
-        assert!(check(&program, &[0], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("acyclic task result"));
+        assert!(check(
+            &program,
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("acyclic task result"));
         // A callback without that owner is valid, even with the same result type.
         program.funcs[2].body = Body::Expr(Expr::Record(vec![Expr::Func(4)]));
         program.funcs.push(Func {
@@ -1950,7 +2488,13 @@ mod tests {
             ty: arrow(MT::unit(), MT::unit()),
             body: Body::Expr(Expr::Const(Value::unit())),
         });
-        check(&program, &[0], EntryChannels::Unknown).unwrap();
+        check(
+            &program,
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate,
+        )
+        .unwrap();
     }
 
     #[test]
@@ -1997,9 +2541,14 @@ mod tests {
                 ),
             ],
         ));
-        assert!(check(&program, &[0], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("outside a State scope"));
+        assert!(check(
+            &program,
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("outside a State scope"));
     }
 
     #[test]
@@ -2095,9 +2644,18 @@ mod tests {
         });
         // Exercise the fixed-point summaries as well as the direct operations
         // below: a non-function result must preserve its channel producer.
-        check(&program, &[9], EntryChannels::Unknown).unwrap();
+        check(
+            &program,
+            &[9],
+            EntryChannels::Unknown,
+            ClosureSites::Separate,
+        )
+        .unwrap();
         let mut proof = Proof {
             program: &program,
+            sites: ClosureSites::Separate,
+            type_cache: RefCell::new(HashMap::new()),
+            expression_types: HashMap::new(),
             captures: BTreeMap::new(),
             inputs: BTreeMap::new(),
             outputs: BTreeMap::new(),
@@ -2112,27 +2670,27 @@ mod tests {
         };
         let queue = proof.function(0, 0, &[Targets::new()]).unwrap();
         assert_eq!(queue, Targets::from([Origin::Queue(0)]));
-        let captured = proof.partial(3, vec![queue.clone()], 0);
+        let captured = proof.partial(3, vec![queue.clone()], 0, (0, 0));
         proof
             .queued_targets(&captured, &mut BTreeSet::new())
             .unwrap();
         let outer = proof.function(1, 0, &[Targets::new()]).unwrap();
         proof.channel_values.insert(nested.clone(), queue.clone());
-        let captured_outer = proof.partial(4, vec![outer.clone()], 0);
+        let captured_outer = proof.partial(4, vec![outer.clone()], 0, (0, 0));
         proof
             .queued_targets(&captured_outer, &mut BTreeSet::new())
             .unwrap();
 
         // Empty immutable containers contain no channel owner to invent.
-        let empty = proof.partial(6, vec![Targets::new()], 0);
+        let empty = proof.partial(6, vec![Targets::new()], 0, (0, 0));
         proof.queued_targets(&empty, &mut BTreeSet::new()).unwrap();
-        let contained = proof.partial(6, vec![queue.clone()], 0);
+        let contained = proof.partial(6, vec![queue.clone()], 0, (0, 0));
         proof
             .queued_targets(&contained, &mut BTreeSet::new())
             .unwrap();
 
         let function_queue = proof.function(2, 0, &[Targets::new()]).unwrap();
-        let captured_functions = proof.partial(5, vec![function_queue], 0);
+        let captured_functions = proof.partial(5, vec![function_queue], 0, (0, 0));
         assert!(proof
             .queued_targets(&captured_functions, &mut BTreeSet::new())
             .unwrap_err()
@@ -2147,7 +2705,7 @@ mod tests {
             .queued_targets(&captured_outer, &mut BTreeSet::new())
             .unwrap_err()
             .contains("cannot prove the producer"));
-        let captured_unknown = proof.partial(3, vec![mixed], 0);
+        let captured_unknown = proof.partial(3, vec![mixed], 0, (0, 0));
         assert!(proof
             .queued_targets(&captured_unknown, &mut BTreeSet::new())
             .unwrap_err()
@@ -2161,8 +2719,16 @@ mod tests {
         fields.insert(Origin::UnknownQueue);
         proof.refine_origins(&mut fields, &leaf);
         assert!(fields.contains(&Origin::UnknownQueue));
+        fields.insert(Origin::Function(3, 0, 0, None));
+        fields.insert(Origin::UnknownFunction);
         proof.refine_origins(&mut fields, &MT::con("std::String"));
         assert!(fields.is_empty());
+        let mut functions = Targets::from([Origin::UnknownFunction]);
+        let pair = MT::Record(vec![("callback".into(), program.funcs[3].ty.clone())]);
+        proof.refine_origins(&mut functions, &pair);
+        assert!(functions.contains(&Origin::UnknownFunction));
+        proof.refine_origins(&mut functions, &MT::con("?"));
+        assert!(functions.contains(&Origin::UnknownFunction));
 
         let task_queue = MT::Con(
             "std::Channel".into(),
@@ -2252,23 +2818,44 @@ mod tests {
         };
         // The same type and service metadata do not make an external queue a
         // gRPC sender. Only the emitter that creates that sender may attest it.
-        assert!(check(&program, &[3], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("cannot prove the producer"));
-        check(&program, &[3], EntryChannels::GrpcResponses).unwrap();
+        assert!(check(
+            &program,
+            &[3],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("cannot prove the producer"));
+        check(
+            &program,
+            &[3],
+            EntryChannels::GrpcResponses,
+            ClosureSites::Separate,
+        )
+        .unwrap();
 
         // A native sender does not make another argument's owner known.
         program.funcs[3].locals[0] = channel.clone();
         program.funcs[3].ty = arrow(channel.clone(), arrow(channel, MT::unit()));
         program.funcs[3].body = Body::Expr(send(Expr::Local(0)));
-        assert!(check(&program, &[3], EntryChannels::GrpcResponses)
-            .unwrap_err()
-            .contains("cannot prove the producer"));
+        assert!(check(
+            &program,
+            &[3],
+            EntryChannels::GrpcResponses,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("cannot prove the producer"));
 
         program.service.as_mut().unwrap().methods.clear();
-        assert!(check(&program, &[3], EntryChannels::GrpcResponses)
-            .unwrap_err()
-            .contains("no served method contract"));
+        assert!(check(
+            &program,
+            &[3],
+            EntryChannels::GrpcResponses,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("no served method contract"));
     }
 
     #[test]
@@ -2285,6 +2872,9 @@ mod tests {
         });
         let mut proof = Proof {
             program: &program,
+            sites: ClosureSites::Separate,
+            type_cache: RefCell::new(HashMap::new()),
+            expression_types: HashMap::new(),
             captures: BTreeMap::new(),
             inputs: BTreeMap::new(),
             outputs: BTreeMap::new(),
@@ -2310,9 +2900,14 @@ mod tests {
             ty: arrow(channel.clone(), channel),
             body: Body::Expr(Expr::Local(0)),
         });
-        assert!(check(&program, &[4], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("external function-bearing channels"));
+        assert!(check(
+            &program,
+            &[4],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("external function-bearing channels"));
     }
 
     #[test]
@@ -2359,9 +2954,14 @@ mod tests {
                 (Pat::Wild, Expr::Const(Value::str("unused success branch"))),
             ],
         ));
-        assert!(check(&program, &[0], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("outside a State scope"));
+        assert!(check(
+            &program,
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("outside a State scope"));
     }
 
     #[test]
@@ -2422,7 +3022,7 @@ mod tests {
             };
             args[1] = Expr::Func(4);
             assert!(
-                check(&p, &[0], EntryChannels::Unknown)
+                check(&p, &[0], EntryChannels::Unknown, ClosureSites::Separate)
                     .unwrap_err()
                     .contains("outside a State scope"),
                 "{symbol}"
@@ -2526,16 +3126,18 @@ mod tests {
                     unreachable!()
                 };
                 args[1] = Expr::Func(5);
-                let checked = check(&p, &[0], EntryChannels::Unknown);
+                let checked = check(&p, &[0], EntryChannels::Unknown, ClosureSites::Separate);
                 if bidirectional {
                     assert!(checked.unwrap_err().contains("outside a State scope"));
                 } else {
                     checked.unwrap();
                 }
                 // A synchronous sender outside a handler is unsafe too.
-                assert!(check(&p, &[5], EntryChannels::Unknown)
-                    .unwrap_err()
-                    .contains("outside a State scope"));
+                assert!(
+                    check(&p, &[5], EntryChannels::Unknown, ClosureSites::Separate)
+                        .unwrap_err()
+                        .contains("outside a State scope")
+                );
                 if bidirectional {
                     // A detached producer may establish its own handler.
                     let mut inner = p.funcs[3].clone();
@@ -2552,8 +3154,8 @@ mod tests {
                         )),
                         0,
                     ));
-                    check(&p, &[0], EntryChannels::Unknown).unwrap();
-                    check(&p, &[5], EntryChannels::Unknown).unwrap();
+                    check(&p, &[0], EntryChannels::Unknown, ClosureSites::Separate).unwrap();
+                    check(&p, &[5], EntryChannels::Unknown, ClosureSites::Separate).unwrap();
                 }
             }
         }
@@ -2640,7 +3242,7 @@ mod tests {
             p.funcs[0].body = Body::Expr(Expr::Call(5, vec![Expr::Const(Value::unit())]));
             // Returning the closure alone does not invoke it. Serving this
             // result adds the runtime's later consumption outside the handler.
-            check(&p, &[5], EntryChannels::Unknown).unwrap();
+            check(&p, &[5], EntryChannels::Unknown, ClosureSites::Separate).unwrap();
             p.service = Some(crate::ir::ServiceDef {
                 module: "service".into(),
                 default_addr: String::new(),
@@ -2652,14 +3254,16 @@ mod tests {
                     iter_fn: None,
                 }],
             });
-            assert!(check(&p, &[5], EntryChannels::Unknown)
-                .unwrap_err()
-                .contains("outside a State scope"));
+            assert!(
+                check(&p, &[5], EntryChannels::Unknown, ClosureSites::Separate)
+                    .unwrap_err()
+                    .contains("outside a State scope")
+            );
             let mut inner = p.funcs[4].clone();
             inner.name = "step-with-local-state".into();
             p.funcs.push(inner);
             p.funcs[4].body = Body::Expr(local_state(7));
-            check(&p, &[5], EntryChannels::Unknown).unwrap();
+            check(&p, &[5], EntryChannels::Unknown, ClosureSites::Separate).unwrap();
 
             // Received iterator constructors must seed the method's argument
             // flow too: an identity method forwards the known continuation.
@@ -2677,15 +3281,19 @@ mod tests {
                     vec![Expr::Const(Value::str("received")), Expr::Func(4)],
                 )),
             });
-            assert!(check(&p, &[5], EntryChannels::Unknown)
-                .unwrap_err()
-                .contains("no received iterator constructor"));
+            assert!(
+                check(&p, &[5], EntryChannels::Unknown, ClosureSites::Separate)
+                    .unwrap_err()
+                    .contains("no received iterator constructor")
+            );
             p.service.as_mut().unwrap().methods[0].iter_fn = Some(8);
-            check(&p, &[5], EntryChannels::Unknown).unwrap();
+            check(&p, &[5], EntryChannels::Unknown, ClosureSites::Separate).unwrap();
             p.funcs[4].body = p.funcs[7].body.clone();
-            assert!(check(&p, &[5], EntryChannels::Unknown)
-                .unwrap_err()
-                .contains("outside a State scope"));
+            assert!(
+                check(&p, &[5], EntryChannels::Unknown, ClosureSites::Separate)
+                    .unwrap_err()
+                    .contains("outside a State scope")
+            );
         }
     }
 
@@ -2726,18 +3334,22 @@ mod tests {
             )),
             vec![Expr::Const(Value::unit())],
         ));
-        assert!(check(&p, &[0], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("tracing-free lifetime policy"));
+        assert!(
+            check(&p, &[0], EntryChannels::Unknown, ClosureSites::Separate)
+                .unwrap_err()
+                .contains("tracing-free lifetime policy")
+        );
     }
 
     #[test]
     fn every_entry_starts_without_a_dynamic_scope() {
         let p = state_program(true);
-        assert!(check(&p, &[0], EntryChannels::Unknown).is_ok());
-        assert!(check(&p, &[0, 1], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("outside a State scope"));
+        assert!(check(&p, &[0], EntryChannels::Unknown, ClosureSites::Separate).is_ok());
+        assert!(
+            check(&p, &[0, 1], EntryChannels::Unknown, ClosureSites::Separate)
+                .unwrap_err()
+                .contains("outside a State scope")
+        );
     }
 
     #[test]
@@ -2770,15 +3382,17 @@ mod tests {
         let carry = Expr::Call(4, vec![Expr::Func(3), Expr::Func(1)]);
         p.funcs[0].ty = getter;
         p.funcs[0].body = Body::Expr(carry.clone());
-        assert!(check(&p, &[0], EntryChannels::Unknown).is_ok());
+        assert!(check(&p, &[0], EntryChannels::Unknown, ClosureSites::Separate).is_ok());
         // The same closure is still rejected when actually called unscoped.
         p.funcs[0].ty = MT::con("std::String");
         p.funcs[0].body = Body::Expr(Expr::Apply(
             Box::new(carry),
             vec![Expr::Const(Value::unit())],
         ));
-        assert!(check(&p, &[0], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("outside a State scope"));
+        assert!(
+            check(&p, &[0], EntryChannels::Unknown, ClosureSites::Separate)
+                .unwrap_err()
+                .contains("outside a State scope")
+        );
     }
 }

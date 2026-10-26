@@ -10,12 +10,16 @@
 //! skipped. Clients trust the CA through `SSL_CERT_FILE` or `ca-file`.
 //! `FWP_BLESS=1` rewrites `tests/tls/streams.out`.
 
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::OnceLock;
+use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
+
+#[path = "support/http_server_process.rs"]
+mod http_server_process;
 
 fn fwp() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_fwp"))
@@ -208,12 +212,16 @@ struct Server {
     child: Child,
     /// What follows "listening on " in its first line of standard error.
     addr: String,
+    stderr: Option<JoinHandle<()>>,
 }
 
 impl Drop for Server {
     fn drop(&mut self) {
         let _ = self.child.kill();
         let _ = self.child.wait();
+        if let Some(reader) = self.stderr.take() {
+            reader.join().expect("TLS server stderr reader");
+        }
     }
 }
 
@@ -224,32 +232,19 @@ impl Server {
     }
 }
 
-/// Start a server and wait for its "listening on" line.
-// (the child is waited for when the `Server` is dropped)
-#[allow(clippy::zombie_processes)]
-fn start(mut cmd: Command) -> Server {
-    cmd.stdout(Stdio::null()).stderr(Stdio::piped());
-    let mut child = cmd.spawn().expect("start server");
-    let mut err = BufReader::new(child.stderr.take().unwrap());
-    let mut line = String::new();
-    let deadline = Instant::now() + Duration::from_secs(60);
-    loop {
-        line.clear();
-        if err.read_line(&mut line).unwrap() == 0 || Instant::now() > deadline {
-            let _ = child.kill();
-            panic!("server exited before listening: {}", line);
-        }
-        if let Some(a) = line.trim().split("listening on ").nth(1) {
-            let addr = a.to_string();
-            // keep reading its standard error, so that it never blocks
-            std::thread::spawn(move || {
-                let mut line = String::new();
-                while err.read_line(&mut line).unwrap_or(0) > 0 {
-                    line.clear();
-                }
-            });
-            return Server { child, addr };
-        }
+/// Enforce the startup deadline even for a silent or partial announcement.
+fn start(mut cmd: Command, prefix: &str) -> Server {
+    let description = format!("{cmd:?}");
+    let (child, addr, mut stderr) =
+        http_server_process::start(&mut cmd, prefix, Duration::from_secs(60), Stdio::null())
+            .unwrap_or_else(|error| panic!("{description}: {error}"));
+    let reader = std::thread::spawn(move || {
+        let _ = std::io::copy(&mut stderr, &mut std::io::sink());
+    });
+    Server {
+        child,
+        addr,
+        stderr: Some(reader),
     }
 }
 
@@ -500,7 +495,7 @@ fn api_servers(certs: &Path, d: &Path) -> Vec<Server> {
             cmd.env("FWP_ADDR", "127.0.0.1:0")
                 .env("FWP_TLS_CERT", certs.join("server.pem"))
                 .env("FWP_TLS_KEY", certs.join("server.key"));
-            start(cmd)
+            start(cmd, "listening on ")
         })
         .collect()
 }
@@ -717,7 +712,7 @@ fn rest_over_https() {
         .arg(&cert)
         .arg("--tls-key")
         .arg(&key);
-    servers.push(start(cmd));
+    servers.push(start(cmd, "fwp: rest listening on "));
     if have_cc() {
         let exe = d.join("server");
         let o = Command::new(fwp())
@@ -732,7 +727,7 @@ fn rest_over_https() {
         cmd.args(["--listen", "127.0.0.1:0"])
             .env("FWP_TLS_CERT", &cert)
             .env("FWP_TLS_KEY", &key);
-        servers.push(start(cmd));
+        servers.push(start(cmd, "fwp: rest listening on "));
     }
     let roundtrip = root().join("tests/rest/roundtrip.fwp");
     let expected = std::fs::read_to_string(root().join("tests/rest/roundtrip.out")).unwrap();
@@ -796,7 +791,7 @@ fn rest_with_client_certificates() {
             "--tls-client-ca",
             &file("ca.pem"),
         ]);
-    servers.push(start(cmd));
+    servers.push(start(cmd, "fwp: rest listening on "));
     if have_cc() {
         let exe = d.join("server");
         build(
@@ -808,7 +803,7 @@ fn rest_with_client_certificates() {
             .env("FWP_TLS_CERT", file("server.pem"))
             .env("FWP_TLS_KEY", file("server.key"))
             .env("FWP_TLS_CLIENT_CA", file("ca.pem"));
-        servers.push(start(cmd));
+        servers.push(start(cmd, "fwp: rest listening on "));
     }
     if !have_curl() {
         return;
@@ -897,7 +892,7 @@ fn grpc_with_client_certificates() {
     ])
     .args(["--tls-client-ca", &file("ca.pem")])
     .current_dir(&ex);
-    let srv = start(cmd);
+    let srv = start(cmd, "fwp: service weather listening on ");
     let client = |cert: bool| {
         let mut c = Command::new(fwp());
         c.args([
@@ -962,7 +957,7 @@ fn grpc_over_tls() {
     .arg("--tls-key")
     .arg(&key)
     .current_dir(&ex);
-    servers.push(start(cmd));
+    servers.push(start(cmd, "fwp: service weather listening on "));
     let mut clients = Vec::new();
     let mut cmd = Command::new(fwp());
     cmd.args([
@@ -990,7 +985,7 @@ fn grpc_over_tls() {
         cmd.args(["--listen", "127.0.0.1:0"])
             .env("FWP_TLS_CERT", &cert)
             .env("FWP_TLS_KEY", &key);
-        servers.push(start(cmd));
+        servers.push(start(cmd, "fwp: service weather listening on "));
         clients.push(Command::new(out.join("forecast-client")));
     }
     for srv in &servers {

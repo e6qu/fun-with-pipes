@@ -6,6 +6,32 @@ mod ownership_ledger;
 #[path = "support/record_probe.rs"]
 mod record_probe;
 
+fn rejects_in_both_engines(source: &std::path::Path, reasons: &[&str]) {
+    for raw in [false, true] {
+        for args in [
+            vec!["run", "--interp"],
+            vec!["build", "--gc", "arc", "--emit-c"],
+        ] {
+            let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
+            command.env_remove("FWP_NO_OPT");
+            if raw {
+                command.env("FWP_NO_OPT", "1");
+            }
+            let result = command.args(&args).arg(source).output().unwrap();
+            assert!(
+                !result.status.success(),
+                "{source:?}, raw={raw}, {args:?}: {result:?}"
+            );
+            assert!(result.stdout.is_empty(), "{source:?}: {result:?}");
+            let error = String::from_utf8_lossy(&result.stderr);
+            assert!(
+                error.contains("ownership:") && reasons.iter().all(|reason| error.contains(reason)),
+                "{source:?}, raw={raw}, {args:?}: {error}"
+            );
+        }
+    }
+}
+
 #[test]
 fn weak_channels_preserve_expiration_and_reject_recreated_cycles() {
     let dir = fwp::cgen::TempDir::new("weak-channels").unwrap();
@@ -59,30 +85,7 @@ fn weak_channels_preserve_expiration_and_reject_recreated_cycles() {
         }
     }
     std::fs::write(&source, include_str!("fixtures/weak_channel_cycle.fwp")).unwrap();
-    for optimize in [false, true] {
-        let mut command = Command::new(compiler);
-        if optimize {
-            command.env_remove("FWP_NO_OPT");
-        } else {
-            command.env("FWP_NO_OPT", "1");
-        }
-        let result = command
-            .args(["build", "--gc", "arc", "--emit-c"])
-            .arg(&source)
-            .arg("-o")
-            .arg(dir.join("rejected.c"))
-            .output()
-            .unwrap();
-        assert!(
-            !result.status.success(),
-            "a weak acquisition must not hide a strong cycle"
-        );
-        let error = String::from_utf8_lossy(&result.stderr);
-        assert!(
-            error.contains("captured") && error.contains("channel"),
-            "{error}"
-        );
-    }
+    rejects_in_both_engines(&source, &["captured", "channel"]);
 }
 
 #[test]
@@ -426,16 +429,7 @@ keep = then2 const channel.close
     ] {
         let source = dir.join(format!("{name}.fwp"));
         std::fs::write(&source, format!("{prefix}\n{body}")).unwrap();
-        checked(Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .env("FWP_NO_OPT", "1").args(["run", "--interp"]).arg(&source));
-        let build = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", "arc", "--emit-c"])
-            .arg(&source).arg("-o").arg(dir.join("rejected.c"))
-            .output().unwrap();
-        assert!(!build.status.success(), "{name}: accepted an unproved captured channel");
-        let error = String::from_utf8_lossy(&build.stderr);
-        assert!(error.contains("queued function") && error.contains("captured") && error.contains("Channel"), "{name}: {error}");
+        rejects_in_both_engines(&source, &["queued function", "captured", "Channel"]);
     }
 }
 
@@ -471,50 +465,8 @@ main = jobs 1 | tap (fork channel.send id start) | channel.recv | option.and-the
         ),
     ] {
         let input = dir.join(format!("{name}.fwp"));
-        let cfile = dir.join("tracing.c");
-        let compiler = env!("CARGO_BIN_EXE_fwp");
         std::fs::write(&input, source).unwrap();
-        let reference = checked(
-            Command::new(compiler)
-                .env("FWP_NO_OPT", "1")
-                .args(["run", "--interp"])
-                .arg(&input),
-        );
-        checked(
-            Command::new(compiler)
-                .args(["build", "-O1", "--gc", "tracing", "--emit-c"])
-                .arg(&input)
-                .arg("-o")
-                .arg(&cfile),
-        );
-        let code = std::fs::read_to_string(&cfile).unwrap();
-        for opt in ["-O0", "-O2"] {
-            let binary = dir.join("tracing.exe");
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let actual = checked(
-                Command::new(binary)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", "1"),
-            );
-            assert_eq!(
-                (&actual.stdout, &actual.stderr),
-                (&reference.stdout, &reference.stderr)
-            );
-        }
-        let build = Command::new(compiler)
-            .args(["build", "-O1", "--gc", "arc", "--emit-c"])
-            .arg(&input)
-            .arg("-o")
-            .arg(dir.join("rejected.c"))
-            .output()
-            .unwrap();
-        assert!(
-            !build.status.success(),
-            "{name}: accepted an unproved queue owner"
-        );
-        let error = String::from_utf8_lossy(&build.stderr);
-        assert!(error.contains(diagnostic), "{name}: {error}");
+        rejects_in_both_engines(&input, &[diagnostic]);
     }
 }
 
@@ -540,51 +492,7 @@ rec main = task.spawn work
             .arg("check")
             .arg(&source),
     );
-    let reference = checked(
-        Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .env("FWP_NO_OPT", "1")
-            .args(["run", "--interp"])
-            .arg(&source),
-    );
-    let cfile = dir.join("tracing.c");
-    checked(
-        Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "tracing", "--emit-c"])
-            .arg(&source)
-            .arg("-o")
-            .arg(&cfile),
-    );
-    let code = std::fs::read_to_string(cfile).unwrap();
-    for opt in ["-O0", "-O2"] {
-        let binary = dir.join("tracing.exe");
-        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-        let actual = checked(
-            Command::new(binary)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
-        assert_eq!(
-            (&actual.stdout, &actual.stderr),
-            (&reference.stdout, &reference.stderr)
-        );
-    }
-
-    let result = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--gc", "arc", "--emit-c"])
-        .arg(&source)
-        .arg("-o")
-        .arg(dir.join("cycle.c"))
-        .output()
-        .unwrap();
-    assert!(
-        !result.status.success(),
-        "accepted a task owning itself through its result"
-    );
-    assert!(
-        String::from_utf8_lossy(&result.stderr).contains("acyclic task result"),
-        "{result:?}"
-    );
+    rejects_in_both_engines(&source, &["acyclic task result"]);
 }
 
 #[test]
@@ -815,10 +723,7 @@ fn queued_autodiff_functions_require_the_receivers_scope() {
                 (&reference.stdout, &reference.stderr)
             );
         } else {
-            assert!(
-                String::from_utf8_lossy(&built.stderr).contains("outside an autodiff scope"),
-                "{built:?}"
-            );
+            rejects_in_both_engines(&source, &["outside an autodiff scope"]);
         }
     }
 }

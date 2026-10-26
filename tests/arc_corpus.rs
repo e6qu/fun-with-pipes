@@ -74,20 +74,13 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
         } else if !emitted.status.success() {
             let reason = String::from_utf8_lossy(&emitted.stderr);
             assert!(
-                reason.contains("--gc arc:"),
+                reason.contains("ownership:"),
                 "unexpected compilation failure for {name}: {reason}"
             );
             report.push_str(&format!("rejected\t{name}\t{reason:?}\n"));
             rejected += 1;
-            // Keep the remaining gaps explicit. Any new rejection, including
-            // a newly added example, needs a repair rather than a passing count.
-            let expected = match name {
-                "ad_task_reuse" => Some("outside an autodiff scope"),
-                _ => None,
-            };
-            if !expected.is_some_and(|message| reason.contains(message)) {
-                failures.push(format!("unexpected ARC rejection of {name}: {reason}"));
-            }
+            // Invalid lifetime fixtures live outside the supported-program corpus.
+            failures.push(format!("unexpected ARC rejection of {name}: {reason}"));
         } else {
             let code = std::fs::read_to_string(&cfile).unwrap();
             let start = code

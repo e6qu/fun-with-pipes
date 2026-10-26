@@ -6,12 +6,20 @@ owner keeps it alive. An **alias** is another reference to the same storage.
 These are mostly compiler concepts: fwp programs still use ordinary immutable
 values and pipes.
 
+**Automatic reference counting (ARC)** tracks how many owners share an object
+and releases it when the last owner goes. A **tracing garbage collector (GC)**
+finds reachable objects by following references, then reclaims unreachable ones.
+A **region** groups allocations under one lifetime so they can be released
+together. fwp aims to prove ownership at compile time, using counts only where
+sharing requires them; deleting tracing does not by itself remove count costs.
+
 This page describes today's contracts. [PLAN.md](../PLAN.md) names the remaining
 implementation tasks. [Primitive ownership](primitive-ownership.md) specifies
 individual operations; [measurements](benchmarks.md) report actual costs.
 The [accepted ownership direction](gc-removal-design.md) specifies explicit weak
 links, rejection of unproved owning cycles, count-free unique storage and scoped
-regions. Current APIs may change; that direction is not implemented support.
+regions. Weak channels and retained C registrations are implemented; count-free
+unique buffers and general regions remain planned. APIs may change.
 
 ## Existing implementation
 
@@ -47,19 +55,16 @@ still cost space or time.
 The [entry and rejection checklist](ownership-admission.md) names supported
 execution forms, their tests and the remaining lifetime decisions.
 
-- Define or reject the remaining cycle/retention cases: recursive channel owners,
-  queued HTTP stream handles, unknown callback/task producers and retained foreign
-  callbacks. See [the cycle contract](#cycle-and-retention-contract).
-- Finish [collector-independent diagnostics](ownership-diagnostics.md), including
-  the native live-allocation ledger and separate borrow/WASI/resource checks,
-  then remove tracing selection, root scanning, marking and sweeping.
-- Remove avoidable counts and boxes from named unshared paths. A zero-retain
-  fixture may still allocate or check a count when freeing storage. A completely
-  unique heap ownership path without count metadata is separate planned work.
+- Apply the agreed lifetime rules to interpreter entries, move the remaining
+  ordinary memory comparisons to ARC, then remove tracing selection, root
+  scanning, marking and sweeping. Preserve the verified [ownership checks](ownership-diagnostics.md).
+- Measure analysis scaling before increasing proof precision (G2).
+- Remove avoidable counts and boxes from named unshared paths (A2–A6). A
+  zero-retain fixture may still allocate or check a count during destruction.
+  Count-free unique heap storage is separate planned work.
 
-These are **G2–G5** and **A2–A6** in [the implementation plan](../PLAN.md), not
-completed features. The [weak-channel implementation](weak-channels.md) is in
-progress and has not passed integrated validation; released support is unchanged.
+[PLAN.md](../PLAN.md) gives concrete tasks and acceptance criteria. Weak channels
+and retained C callbacks were verified in #215; collector deletion is unfinished.
 
 ## Stable language behavior
 
@@ -149,8 +154,8 @@ owners even if later individual nodes have counts of one. `array.sort` takes
 one array owner and can reuse uniquely owned storage. Shared arrays and views
 preserve their original contents. Inline wide values keep all their bits.
 The [comparison](measurements/array-sort-ownership.md) explains alias and cleanup
-controls, count savings, and additional code/stack costs. Its prepared six-host
-checks are complete; integrated delivery still requires final CI.
+controls, count savings, and additional code/stack costs. Its six-host
+checks and final production gates passed in #212.
 
 ## Tasks and channels
 
@@ -364,24 +369,17 @@ An owning cycle is a loop of values that keep one another alive. Ordinary ARC
 cannot reclaim an unreachable strong cycle. A logical cycle represented by
 integer IDs is different: the IDs do not keep their targets alive.
 
-The accepted direction keeps rejection of unproved owning cycles and adds
-explicit weak references before GC removal. The first [weak-channel contract](weak-channels.md) specifies acquisition and
-expiration; its candidate implementation awaits integrated validation. Other
-boundary contracts remain G2 work. Returned functions
-and partial application remain language features. The
-[six implementation examples](gc-removal-design.md#six-implementation-examples)
-define the required work, including retained C callbacks and node reuse.
-
-Today, independent owners, data-only queues and non-owning graph IDs provide
-supported forms. The following table describes current support, not the finished
-GC-free contract. It does not yet add C callback retention.
+The compiler rejects unproved owning cycles. [Weak channels](weak-channels.md)
+provide explicit non-owning links; [C registrations](retained-callbacks.md) provide
+an explicit lifetime for selected retained callbacks. Both were verified in #215.
+Returned functions and partial applications retain their captures normally.
 
 | Use case | Supported form or restriction | Release rule |
 |---|---|---|
-| A queued callback owns its receiving channel | Rejected by the queued-capture proof. Put the callback in a separately owned worker and queue data instead. | Stop new sends, cancel if abandoning pending delivery, then await the worker and its children. |
-| Persistent subscription | A task owns its callback and reads a data-only queue; [lesson 24](tutorials/24-subscriptions/README.md) gives `subscribe`, `finish` and `stop`. | Normal finish closes and processes remaining messages. Stop closes, cancels and awaits; queued values survive while another channel owner exists. |
-| Graph with node deletion | A map owns nodes; edges contain IDs. [Lesson 23](tutorials/23-ownership-scopes/README.md) removes node 1 and observes `None` on lookup. | Delete nodes explicitly. Incoming IDs can become stale; lookups must handle absence. This example never reuses IDs. Reuse would need a generation policy. |
-| C-retained callback | Unsupported. The current C callback contract ends when the foreign call returns. | C must finish callback calls before returning and must not save the function/context for later use. |
+| A queued callback refers to its receiving channel | Capture a `WeakChannel`, then explicitly upgrade it before use. Capturing an unproved strong owner is rejected. | Final strong release expires weak links before destroying queued values. |
+| Persistent subscription | A task owns the handler and reads a data queue; [lesson 24](tutorials/24-subscriptions/README.md) defines `subscribe`, `finish` and `stop`. | Finish drains; stop cancels and awaits. Remaining channel aliases still own unread messages. |
+| Graph with node deletion | A map owns nodes; edges contain IDs. [Lesson 23](tutorials/23-ownership-scopes/README.md) handles a missing node. The [generation fixture](../tests/fixtures/graph_generations.fwp) checks ID reuse. | Deletion releases the node; generations distinguish a reused slot from its previous occupant. |
+| C-retained callback | Register a selected export through its generated context API. Bare foreign callback pointers remain call-scoped. | Close prevents entry; release consumes the registration owner; active calls finish before destruction. |
 
 A task handle's release does not cancel its task. A normal `task.scope` return
 waits for children; failure cancels and joins them. An active callback may suspend,
@@ -401,8 +399,8 @@ void remember(int64_t (*callback)(int64_t)) { saved = callback; }
 ```
 
 The compiler cannot inspect arbitrary linked C and guarantee a diagnostic for
-this violation. A future retained interface would need a separately owned context,
-registration/release operations, thread/reentry rules and a wait for active calls.
+this violation. Use the [retained API](retained-callbacks.md) when C must keep
+a callback: it provides the context, release operations and active-call rules.
 Managed callback results likewise remain rejected without a host release contract.
 Returning a copied C-library export result uses a separate, already defined API;
 it does not make all foreign callback results safe.
@@ -414,9 +412,8 @@ Before removing tracing, each must have a proved equivalent or an explicit
 language restriction; these execution paths have not been removed. The scoped
 subscriber establishes one useful accepted form, not arbitrary cycle inference.
 
-A weak reference does not keep its target alive. The candidate API is
-`channel.downgrade` / `channel.upgrade` for `WeakChannel[a]`; the examples above
-describe the previously verified independent-owner forms. Silently weakening a
+A weak reference does not keep its target alive. Use `channel.downgrade` and
+`channel.upgrade` explicitly; see [weak channels](weak-channels.md) for examples. Silently weakening a
 capture would change behavior. Acquiring an owner must not permit storing it
 where it creates a new unproved owning cycle; a scoped access operation alone
 does not establish that property.

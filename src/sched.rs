@@ -1113,6 +1113,7 @@ impl<'p> Interp<'p> {
             }
         }
         let child = Interp {
+            checked_entries: self.checked_entries.clone(),
             prog: self.prog,
             entry_active: true,
             control_stdin: self.control_stdin,

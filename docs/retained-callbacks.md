@@ -5,12 +5,11 @@ pointer contains an address, but no captured arguments. fwp's ordinary `foreign
 "C"` callbacks use the current foreign call's context and expire when that call
 returns. C must not save those pointers for later use.
 
-The current G3 preparation adds an explicit registration API for selected library
-exports. A **registration** owns copied leading arguments and identifies the
-function to call. C supplies its final argument on each invocation. This uses a
-normal compiled function and a context pointer, with no generated executable
-trampoline. Integrated compiler and platform validation is still pending; see
-[the handoff](development-state.md).
+Selected library exports support an explicit registration API, verified in
+[PR #215](roadmap-history.md#weak-channels-and-retained-callbacks-pr-215).
+A **registration** owns copied leading arguments and identifies the function to
+call. C supplies the final argument later. The API uses a compiled function and
+a context pointer; it does not generate executable trampolines.
 
 ## Register, call and release
 
@@ -130,6 +129,6 @@ missing active-call completion with 243. Omitting the library scheduler root
 release must fail its final allocation check with 205. On Linux, a separate
 control omits release of idle descriptor-wait metadata belonging to the library;
 the host can keep the descriptor itself open. Identity is checked before reading a
-possibly freed capture. These tests are prepared, not yet a passing six-platform
-support claim. [G4's diagnostic guide](ownership-diagnostics.md) records the other
-boundaries needed before removing tracing.
+possibly freed capture. These tests passed on the six native targets in #215.
+[Ownership diagnostics](ownership-diagnostics.md) records the other checks that
+must survive collector deletion.

@@ -30,6 +30,7 @@ fn json_requires_explicit_commands_and_recovers_without_executing_them() {
     fwp::driver::with_big_stack(|| {
         let input = br#"{"source":"\"must not run\" | echo"}
 {"command":"submit"}
+{"command":"submit","source":"\"must not run\" | echo | const 1 | ad.tape"}
 {"command":"submit","source":"6 * 7"}
 "#;
         let mut output = Vec::new();
@@ -39,16 +40,24 @@ fn json_requires_explicit_commands_and_recovers_without_executing_them() {
             .lines()
             .map(|line| fwp::json::Json::parse(line).unwrap())
             .collect();
-        assert_eq!(replies.len(), 3);
-        for reply in &replies[..2] {
+        assert_eq!(replies.len(), 4);
+        for reply in &replies[..3] {
             assert!(reply.get("error").is_some(), "{reply}");
             assert_eq!(
                 reply.get("stdout").and_then(fwp::json::Json::as_str),
                 Some("")
             );
         }
-        assert_eq!(
+        assert!(
             replies[2]
+                .get("error")
+                .and_then(fwp::json::Json::as_str)
+                .is_some_and(|error| error.contains("outside an autodiff scope")),
+            "{}",
+            replies[2]
+        );
+        assert_eq!(
+            replies[3]
                 .at(&["result", "value"])
                 .and_then(fwp::json::Json::as_str),
             Some("42")

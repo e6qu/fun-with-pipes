@@ -104,9 +104,6 @@ fn golden_programs_with_static_memory() {
                 let opts: &[&str] = match name.as_str() {
                     // Two thousand tasks at once.
                     "tasks_local" => &["--tasks", "2048", "--task-stack", "256K"],
-                    // Preserve the deliberately invalid tape's runtime trap.
-                    // arc_corpus separately requires its compile-time rejection.
-                    "ad_task_reuse" => &["--gc", "tracing"],
                     _ => &[],
                 };
                 let exe = dir.0.join(&name);

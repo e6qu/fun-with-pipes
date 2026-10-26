@@ -33,6 +33,11 @@ These reports follow different versions of derivative descent. Read the variant 
 - [Numerical output after removing temporary lists](array-output-results.md)
 - [Array and matrix kernels: recorded comparison](numerical-kernels.md)
 
+## Compiler cost
+
+- [Ownership analysis: creation-site correctness, paired cost and size budgets](ownership-analysis.md)
+- [CI compiler build cost](ci-compiler-profiles.md)
+
 ## C and Rust comparisons
 
 These compare complete implementations, including the differences each report names. Use checked-peers for the signed-overflow-aligned seven-program snapshot; older reports retain their original arithmetic rules.
@@ -121,7 +126,6 @@ intermediate implementations that have since been replaced.
 - [Fixed-size lane calculations against C and Rust](vector-lanes.md)
 - [Storage for received stream values](received-stream-storage.md)
 - [Stack use when releasing wrapped chains](chain-cleanup.md)
-- [CI compiler build cost](ci-compiler-profiles.md)
 - [Memory used by complete remote-stream clients](remote-client-storage.md)
 - [Memory left behind by repeated remote calls](repeated-remote-storage.md)
 - [Server memory after completed remote calls](remote-server-storage.md)

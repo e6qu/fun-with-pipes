@@ -20,7 +20,7 @@ changes; the pipeline below describes current implementation responsibilities.
 | Original resource lifetimes | `src/resource.rs` | Preserve disposal timing before transformations change call structure |
 | Simplification and fusion | `src/opt.rs`, `src/fuse.rs` | Preserve values, effects, termination and first failure |
 | Tail-frame reuse | `src/tailrec.rs` | Next arguments survive old-frame cleanup |
-| ARC eligibility | `src/arc.rs`, `src/arc_scope.rs` | Prove supported scope/capture lifetimes; reject unknown retention |
+| Lifetime admission | `src/arc.rs`, `src/arc_scope.rs` | Prove supported scope/capture lifetimes; reject unknown retention |
 | Ownership operations | `src/ownership.rs`, `src/rc.rs`, `src/rc/borrows.rs` | Borrow/consume/retain/result contracts agree |
 | Representation and C emission | `src/escape.rs`, `src/cgen.rs`, `src/cgen_wide.rs` | Layout, aliasing and child ownership remain valid |
 | Execution | `src/interp.rs`, `runtime/` | Interpreter and native language behavior agree |
@@ -256,8 +256,8 @@ For ordinary elements, sort keys hold their values. A 128-bit key points into it
 original array slot. Reusing that array therefore applies the sorted permutation
 in cycles, with one sixteen-byte temporary, rather than overwriting slots whose
 values have not moved yet. [The protocol](measurements/array-sort-ownership.md)
-records the prepared alias, bit-pattern, interruption and cost checks. Integrated
-production validation remains pending in [the handoff](development-state.md).
+records alias, bit-pattern, interruption and cost checks. All production gates
+passed in [#212](roadmap-history.md#array-moves-and-the-gc-removal-checklist-pr-212).
 
 ## Compile-time values in static storage
 

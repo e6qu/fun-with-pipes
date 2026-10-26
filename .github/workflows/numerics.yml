@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [compiler-lifetimes, array-sort, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -33,6 +33,66 @@ on:
         description: Exact focused API run supplying native diagnostic executables
         type: string
 jobs:
+  ownership_analysis:
+    if: inputs.suite == 'ownership-analysis'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    env:
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: OpenSSL on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+      - name: Record measurement source and host
+        run: |
+          mkdir ownership-analysis-evidence
+          git rev-parse HEAD > ownership-analysis-evidence/source.txt
+          rustc -Vv > ownership-analysis-evidence/rust.txt
+          cp src/arc_scope.rs Cargo.lock ownership-analysis-evidence/
+          if [[ "${{ runner.os }}" == "macOS" ]]; then
+            sysctl hw.model hw.memsize machdep.cpu.brand_string > ownership-analysis-evidence/hardware.txt
+          else
+            lscpu > ownership-analysis-evidence/hardware.txt
+          fi
+      - name: Build and check the analysis test harness
+        run: |
+          set -o pipefail
+          cargo test --locked --lib 2>&1 | tee ownership-analysis-evidence/build.log
+      - name: Measure both analysis rules at N, 2N and 4N
+        run: |
+          set -o pipefail
+          if [[ "${{ runner.os }}" == "macOS" ]]; then
+            time_flags=(-l)
+          else
+            time_flags=(-v)
+          fi
+          /usr/bin/time "${time_flags[@]}" env FWP_NO_OPT=1 cargo test --locked --lib ownership_analysis_scaling -- --ignored --nocapture --test-threads=1 2>&1 | tee ownership-analysis-evidence/analysis-scaling.log
+      - name: Check raw REST startup analysis budgets
+        if: ${{ !cancelled() }}
+        run: |
+          set -o pipefail
+          FWP_NO_OPT=1 cargo test --locked --lib ownership_rest_startup_budget -- --ignored --nocapture --test-threads=1 2>&1 | tee ownership-analysis-evidence/rest-startup.log
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ownership-analysis-${{ matrix.runner }}
+          path: ownership-analysis-evidence/
+          if-no-files-found: error
   compiler_lifetimes:
     if: inputs.suite == 'compiler-lifetimes'
     strategy:
@@ -90,6 +150,33 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: compiler-lifetime-cleanup-${{ matrix.runner }}
+          path: compiler-lifetime-evidence/
+          if-no-files-found: error
+      - name: Shared lifetime admission and ARC allocation controls
+        if: ${{ !cancelled() }}
+        run: |
+          set -o pipefail
+          status=0
+          cargo test --locked --test arc_execution arc_rejects_unproved_runtime_boundaries_and_disabled_counting -- --nocapture 2>&1 | tee compiler-lifetime-evidence/admission.log || status=1
+          cargo test --locked --test arc_extensions raw_ad_cannot_escape_scope_proof_through_callbacks_or_arguments -- --nocapture 2>&1 | tee compiler-lifetime-evidence/ad-scopes.log || status=1
+          cargo test --locked --no-fail-fast --test channel_cycle_ownership --test queued_functions --test autodiff_nested --test reuse 2>&1 | tee compiler-lifetime-evidence/memory.log || status=1
+          exit "$status"
+      - name: REST startup regressions
+        if: ${{ !cancelled() }}
+        run: |
+          set -o pipefail
+          status=0
+          cargo test --locked --test rest forms_client_round_trip -- --nocapture 2>&1 | tee compiler-lifetime-evidence/rest-forms.log || status=1
+          cargo test --locked --test server_entry_ownership generated_http_entries_preserve_results_and_disconnected_handler_owners -- --nocapture 2>&1 | tee compiler-lifetime-evidence/rest-ownership.log || status=1
+          cargo test --locked --test tls rest_ -- --nocapture 2>&1 | tee compiler-lifetime-evidence/rest-tls.log || status=1
+          cargo test --locked --test http_server interpreted_server -- --nocapture 2>&1 | tee compiler-lifetime-evidence/http-startup.log || status=1
+          cargo test --locked --test web curl_h2c_and_compression_interpreted -- --nocapture 2>&1 | tee compiler-lifetime-evidence/web-startup.log || status=1
+          exit "$status"
+      - name: Publish admission results before tool tests
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: compiler-lifetime-admission-${{ matrix.runner }}
           path: compiler-lifetime-evidence/
           if-no-files-found: error
       - name: Existing compiler and execution regressions

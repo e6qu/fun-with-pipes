@@ -15,11 +15,11 @@ the channel currently preserves queued messages, so silently draining it would
 change behavior. The [accepted direction](gc-removal-design.md) rejects unproved
 owning cycles and adds explicit weak links for selected objects. Regions serve
 bounded grouped lifetimes; returned functions and partial applications remain.
-[Plan G2](../PLAN.md#1-remove-tracing-gc) must specify the exact weak API and proof
-rules. This direction is not yet implemented support. Arbitrary strong cycles,
-ordinary ARC alone and guaranteed
-automatic reclamation cannot all be promised together. Rust also permits leaked
-reference cycles; its memory-safety guarantee is not a leak-freedom guarantee.
+[Weak channels](weak-channels.md) define the implemented API. General regions
+remain planned. [G2 measurements](measurements/ownership-analysis.md) bound the
+current creation-site analysis; greater precision needs its own cost comparison. Arbitrary strong cycles, ordinary
+ARC alone and guaranteed automatic reclamation cannot all be promised together.
+Rust also permits leaked reference cycles; memory safety is not leak freedom.
 See [Rust's cycle explanation](https://doc.rust-lang.org/book/ch15-06-reference-cycles.html).
 
 Ownership contracts at foreign calls must state when the host releases or stops

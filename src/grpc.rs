@@ -2590,6 +2590,16 @@ fn server_tls(files: Option<tls::ServerFiles>) -> Result<Option<Rc<tls::Ctx>>, S
 /// Serve the program's service with the interpreter (`fwp serve`), over
 /// TLS with a certificate and key.
 pub fn serve(prog: &Program, listen: Option<String>, tls: Option<tls::ServerFiles>) -> i32 {
+    let entries: Vec<_> = prog.service.as_ref().map_or_else(Vec::new, |service| {
+        service.methods.iter().map(|method| method.func).collect()
+    });
+    if let Err(error) =
+        crate::arc::check_interpreter(prog, &entries, crate::arc::EntryChannels::GrpcResponses)
+    {
+        eprintln!("fwp serve: {error}");
+        return 1;
+    }
+
     let server = match compiled_server(prog) {
         Ok(s) => Rc::new(s),
         Err(e) => {

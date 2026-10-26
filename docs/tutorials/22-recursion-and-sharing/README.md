@@ -137,9 +137,10 @@ main = [
 
 Cycles are a different ownership problem: two objects can keep each other alive
 without an outside owner. fwp's [accepted memory direction](../../gc-removal-design.md)
-rejects unproved owning cycles and plans explicit weak links. A weak link does
-not keep its target alive; access must handle an expired target. These APIs are not
-implemented; this lesson uses only existing language features.
+rejects unproved owning cycles and provides [weak channel links](../../weak-channels.md). A weak link does
+not keep its target alive; `channel.upgrade` returns `None` after expiration.
+This lesson uses integer graph IDs instead, so lookup rather than weak acquisition
+determines whether a target still exists.
 The [tail-call design](../../design.md#tail-calls-and-recursion) describes the
 implemented frame reuse, remaining limits and cleanup rules.
 

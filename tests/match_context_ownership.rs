@@ -156,7 +156,7 @@ int main(void) {
         let control = if arc {
             let error =
                 fwp::cgen::generate(&erased).expect_err("ARC must reject erased ownership types");
-            assert!(error.contains("--gc arc"), "{error}");
+            assert!(error.contains("ownership:"), "{error}");
             None
         } else {
             Some(fwp::cgen::generate(&erased).unwrap()

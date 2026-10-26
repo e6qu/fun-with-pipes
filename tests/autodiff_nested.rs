@@ -40,6 +40,55 @@ main = [
 "#;
 
 #[test]
+fn jacobian_output_count_keeps_its_callback_in_scope_without_optimization() {
+    let dir = fwp::cgen::TempDir::new("jacobian-scope").unwrap();
+    let source = dir.join("jacobian.fwp");
+    std::fs::write(
+        &source,
+        format!("{FUNCTIONS}\nmain = [2.0, 3.0] | rev.jacobian with-unused | echo\n"),
+    )
+    .unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    for raw in [false, true] {
+        let mut command = Command::new(compiler);
+        command.env_remove("FWP_NO_OPT");
+        if raw {
+            command.env("FWP_NO_OPT", "1");
+        }
+        let reference = checked(command.args(["run", "--interp"]).arg(&source));
+        assert_eq!(reference.stdout, b"[[4.0, 0.0], [0.0, 6.0]]\n");
+        assert!(reference.stderr.is_empty(), "{reference:?}");
+        let cfile = dir.join("jacobian.c");
+        let mut command = Command::new(compiler);
+        command.env_remove("FWP_NO_OPT");
+        if raw {
+            command.env("FWP_NO_OPT", "1");
+        }
+        checked(
+            command
+                .args(["build", "--gc", "arc", "--emit-c"])
+                .arg(&source)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(cfile).unwrap();
+        for opt in ["-O1", "-O2"] {
+            let binary = dir.join("jacobian.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            let actual = checked(
+                Command::new(binary)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0"),
+            );
+            assert_eq!(actual.stdout, reference.stdout);
+            assert!(actual.stderr.is_empty(), "{actual:?}");
+        }
+    }
+}
+
+#[test]
 fn nested_reverse_derivatives_match_analytic_values_and_both_engines() {
     let dir = fwp::cgen::TempDir::new("fwp-nested-reverse").unwrap();
     let source = dir.join("nested.fwp");
@@ -313,7 +362,7 @@ fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
 fn completed_task_identity_cannot_be_reused_by_a_later_task() {
     let dir = fwp::cgen::TempDir::new("fwp-tape-task-reuse").unwrap();
     let source = dir.join("reuse.fwp");
-    std::fs::write(&source, include_str!("run/ad_task_reuse.fwp")).unwrap();
+    std::fs::write(&source, include_str!("fixtures/ad_task_reuse.fwp")).unwrap();
     let compiler = env!("CARGO_BIN_EXE_fwp");
     let reference = Command::new(compiler)
         .args(["run", "--interp"])
@@ -322,6 +371,14 @@ fn completed_task_identity_cannot_be_reused_by_a_later_task() {
         .output()
         .unwrap();
     assert_eq!(reference.status.code(), Some(101), "{reference:?}");
+    assert!(reference.stdout.is_empty(), "{reference:?}");
+    assert!(
+        String::from_utf8_lossy(&reference.stderr).contains("outside an autodiff scope"),
+        "{reference:?}"
+    );
+    // Until tracing is deleted, bypass admission only to test the runtime's
+    // independent task-identity defense, including a deliberately broken ID.
+
     let cfile = dir.join("reuse.c");
     checked(
         Command::new(compiler)
@@ -348,7 +405,10 @@ fn completed_task_identity_cannot_be_reused_by_a_later_task() {
             .unwrap();
         assert_eq!(actual.status.code(), reference.status.code(), "{actual:?}");
         assert_eq!(actual.stdout, reference.stdout);
-        assert_eq!(actual.stderr, reference.stderr);
+        assert_eq!(
+            actual.stderr,
+            b"fwp: trap: autodiff: managed tape belongs to another task\n"
+        );
         fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
         assert_eq!(
             Command::new(&binary).output().unwrap().status.code(),
@@ -358,7 +418,7 @@ fn completed_task_identity_cannot_be_reused_by_a_later_task() {
 }
 
 #[test]
-fn managed_tapes_reject_cross_task_use_in_both_engines() {
+fn admission_rejects_escaped_tapes_and_runtime_checks_task_identity() {
     let dir = fwp::cgen::TempDir::new("fwp-nested-task").unwrap();
     let source = dir.join("task.fwp");
     std::fs::write(
@@ -381,7 +441,7 @@ main = [1.0] | rev._seed | .1 | rev._seed | .1
     assert_eq!(reference.status.code(), Some(101), "{reference:?}");
     let message = "autodiff: managed tape belongs to another task";
     assert!(
-        String::from_utf8_lossy(&reference.stderr).contains(message),
+        String::from_utf8_lossy(&reference.stderr).contains("outside an autodiff scope"),
         "{reference:?}"
     );
     let binary = dir.join("task.exe");
@@ -414,13 +474,6 @@ main = [1.0] | rev._seed | .1 | rev._seed | .1
 "#,
     )
     .unwrap();
-    let reference = checked(
-        Command::new(compiler)
-            .args(["run", "--interp"])
-            .arg(&source)
-            .env("FWP_NO_OPT", "1"),
-    );
-    assert_eq!(reference.stdout, b"1.0\n");
     checked(
         Command::new(compiler)
             .args(["build", "--gc", "tracing", "-O2"])
@@ -434,6 +487,6 @@ main = [1.0] | rev._seed | .1 | rev._seed | .1
             .env("FWP_GC_VERIFY", "1")
             .env("FWP_REUSE_VERIFY", "1"),
     );
-    assert_eq!(actual.stdout, reference.stdout);
-    assert_eq!(actual.stderr, reference.stderr);
+    assert_eq!(actual.stdout, b"1.0\n");
+    assert!(actual.stderr.is_empty(), "{actual:?}");
 }

@@ -152,6 +152,32 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
     }
 }
 
+/// Apply the language's queue/State/AD lifetime rules before interpreter effects.
+/// Native representation and foreign ABI checks stay in `check` below.
+pub(crate) fn check_interpreter(
+    prog: &Program,
+    entries: &[crate::ir::FuncId],
+    entry_channels: EntryChannels,
+) -> Result<crate::arc_scope::AnalysisStats, String> {
+    let live = crate::ir::reachable_functions(prog, entries)?;
+    let mut seen = HashSet::new();
+    for (id, f) in prog.funcs.iter().enumerate() {
+        if !live[id] {
+            continue;
+        }
+        for ty in std::iter::once(&f.ty).chain(&f.locals) {
+            value_type(prog, ty, &mut seen)
+                .map_err(|reason| format!("ownership: `{}`: {reason}", f.name))?;
+        }
+    }
+    crate::arc_scope::check(
+        prog,
+        entries,
+        entry_channels,
+        crate::arc_scope::ClosureSites::Separate,
+    )
+}
+
 pub(crate) fn check(
     prog: &Program,
     entries: &[crate::ir::FuncId],
@@ -159,13 +185,18 @@ pub(crate) fn check(
 ) -> Result<(), String> {
     if let Some(name) = prog.unchecked_native_declarations.first() {
         return Err(format!(
-            "--gc arc: native declaration `{name}` has no checked ownership signature"
+            "ownership: native declaration `{name}` has no checked ownership signature"
         ));
     }
-    crate::arc_scope::check(prog, entries, entry_channels)?;
+    crate::arc_scope::check(
+        prog,
+        entries,
+        entry_channels,
+        crate::arc_scope::ClosureSites::Separate,
+    )?;
     let mut seen = HashSet::new();
     for f in &prog.funcs {
-        let reject = |reason: String| format!("--gc arc: `{}`: {reason}", f.name);
+        let reject = |reason: String| format!("ownership: `{}`: {reason}", f.name);
         value_type(prog, &f.ty, &mut seen).map_err(reject)?;
         for ty in &f.locals {
             value_type(prog, ty, &mut seen).map_err(reject)?;
@@ -247,6 +278,87 @@ mod tests {
 
     fn channel(payload: MT) -> MT {
         MT::Con("std::Channel".into(), vec![payload])
+    }
+
+    #[test]
+    fn interpreter_admission_checks_only_reachable_definitions() {
+        use crate::ir::{Expr, Func};
+        use crate::value::{Closure, Value};
+        use std::rc::Rc;
+
+        let mut program = Program::default();
+        let node = MT::con("Node");
+        program.shapes.insert(
+            node.clone(),
+            TypeShape::Adt(vec![("Back".into(), vec![channel(node.clone())])]),
+        );
+        program.funcs.push(Func {
+            name: "safe".into(),
+            arity: 0,
+            locals: vec![],
+            ty: MT::con("std::I64"),
+            body: Body::Expr(Expr::Const(Value::I64(42))),
+        });
+        program.funcs.push(Func {
+            name: "unproved".into(),
+            arity: 0,
+            locals: vec![channel(node)],
+            ty: MT::con("std::I64"),
+            // Executing this body would report a different error. Admission must
+            // stop before entering it, through either public entry method.
+            body: Body::Prim("must-not-run".into()),
+        });
+        let mut output = Vec::new();
+        let mut interpreter = crate::interp::Interp::new(&program, Box::new(&mut output)).unwrap();
+        for _ in 0..2 {
+            assert_eq!(interpreter.call_root(0, vec![]).unwrap(), Value::I64(42));
+            let error = interpreter.call_root(1, vec![]).unwrap_err();
+            assert!(
+                format!("{error:?}").contains("recursive channel ownership"),
+                "{error:?}"
+            );
+            let closure = Value::Closure(Rc::new(Closure {
+                func: 1,
+                args: vec![],
+            }));
+            let error = interpreter.apply_root(closure, vec![]).unwrap_err();
+            assert!(
+                format!("{error:?}").contains("recursive channel ownership"),
+                "{error:?}"
+            );
+        }
+        assert!(interpreter.call_root(usize::MAX, vec![]).is_err());
+    }
+
+    #[test]
+    fn constant_closures_and_recursive_calls_are_reachable() {
+        use crate::ir::{Expr, Func};
+        use crate::value::{Closure, Value};
+        use std::rc::Rc;
+
+        let mut program = Program::default();
+        for id in 0..3 {
+            program.funcs.push(Func {
+                name: format!("function-{id}"),
+                arity: 0,
+                locals: vec![],
+                ty: MT::con("std::I64"),
+                body: Body::Expr(Expr::Call(id, vec![])),
+            });
+        }
+        program.funcs[0].body =
+            Body::Expr(Expr::Const(Value::Array(Rc::new(vec![Value::Closure(
+                Rc::new(Closure {
+                    func: 1,
+                    args: vec![],
+                }),
+            )]))));
+        assert_eq!(
+            crate::ir::reachable_functions(&program, &[0]).unwrap(),
+            vec![true, true, false]
+        );
+        program.funcs[1].body = Body::Expr(Expr::Call(3, vec![]));
+        assert!(crate::ir::reachable_functions(&program, &[0]).is_err());
     }
 
     #[test]

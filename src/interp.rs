@@ -82,6 +82,7 @@ pub(crate) fn set_raw_stack_limit(limit: usize) {
 pub struct Interp<'p> {
     pub(crate) prog: &'p Program,
     pub(crate) entry_active: bool,
+    pub(crate) checked_entries: Rc<RefCell<Vec<bool>>>,
     pub(crate) control_stdin: bool,
     pub(crate) debugger: Option<crate::debugger::Shared>,
     /// Values of argument-less functions, shared by all tasks.
@@ -128,6 +129,7 @@ impl<'p> Interp<'p> {
         Ok(Interp {
             prog,
             entry_active: false,
+            checked_entries: Rc::new(RefCell::new(vec![false; prog.funcs.len()])),
             control_stdin: CONTROL_STDIN.with(|flag| flag.get()),
             debugger: None,
             cafs: Rc::new(RefCell::new(vec![None; prog.funcs.len()])),
@@ -155,12 +157,26 @@ impl<'p> Interp<'p> {
     /// Call an entry function (main, a test, or compile-time code) and wait for the tasks it
     /// started; when it failed, they are cancelled first.
     pub fn call_root(&mut self, id: FuncId, args: Vec<Value>) -> R<Value> {
+        self.check_entry(id)?;
         self.run_entry(|it| it.call(id, args))
     }
 
     /// Apply a closure at an entry boundary, including task cleanup.
     pub fn apply_root(&mut self, function: Value, args: Vec<Value>) -> R<Value> {
+        if let Value::Closure(closure) = &function {
+            self.check_entry(closure.func)?;
+        }
         self.run_entry(|it| it.apply(function, args))
+    }
+
+    fn check_entry(&mut self, id: FuncId) -> R<()> {
+        if self.checked_entries.borrow().get(id) == Some(&true) {
+            return Ok(());
+        }
+        crate::arc::check_interpreter(self.prog, &[id], crate::arc::EntryChannels::Unknown)
+            .map_err(Ctl::Trap)?;
+        self.checked_entries.borrow_mut()[id] = true;
+        Ok(())
     }
 
     pub(crate) fn call(&mut self, id: FuncId, args: Vec<Value>) -> R<Value> {

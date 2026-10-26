@@ -292,7 +292,7 @@ fn arc_checks_each_exported_entry_for_unscoped_effects() {
         assert!(!output.status.success(), "{name}");
         let error = String::from_utf8_lossy(&output.stderr);
         assert!(
-            error.contains("--gc arc") && error.contains("scope"),
+            error.contains("ownership:") && error.contains("scope"),
             "{name}: {error}"
         );
     }

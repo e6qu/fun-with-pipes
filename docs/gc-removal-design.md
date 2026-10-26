@@ -1,10 +1,13 @@
 # GC removal and ownership direction
 
-Direction accepted October 25, 2026. **The direction is agreed. Weak channels are implemented in the current
-preparation but await integrated validation. Count-free unique heap storage and
-general region support remain planned.**
-Existing APIs and representations may change. [PLAN.md](../PLAN.md) owns task
-order and completion checks; [ownership.md](ownership.md) describes today's code.
+The accepted design combines inferred moves and borrows, reference counting for
+sharing, and explicit weak links where an owning cycle would otherwise form.
+Weak channels and retained C callbacks passed all production gates in #215.
+Count-free unique heap storage and general region support remain planned.
+
+[PLAN.md](../PLAN.md) gives the work order and completion checks;
+[ownership.md](ownership.md) describes current implementation. APIs and layouts
+may change freely during pre-alpha.
 
 ## Implementation contract
 
@@ -22,9 +25,10 @@ order and completion checks; [ownership.md](ownership.md) describes today's code
   acceptance of every safe program is not a requirement.
 
 Exact weak target types, API names, acquisition semantics and release timing are
-specified for the first path in [weak channels](weak-channels.md); the remaining
-boundary contracts and analysis baseline are still G2 work. Do not reopen the overall direction on every
-iteration. If a concrete example requires a new language restriction, explain
+specified in [weak channels](weak-channels.md) and the six examples below.
+The [analysis report](measurements/ownership-analysis.md) records the measured
+baseline and enforced budgets. Revisit the direction only for a concrete defect
+or unsupported example. If a concrete example requires a new language restriction, explain
 that tradeoff before adopting it; do not silently drop a maintained capability.
 
 ## The choice we actually have
@@ -126,8 +130,8 @@ this is not a promise to prove arbitrary external code safe.
 
 ## Six implementation examples
 
-These are required design/test cases, not claims that the new APIs work today.
-Use existing syntax; introduce every new operation before its example.
+These contracts and regression cases were verified in #215. Count-free parser
+regions remain a later optimization (A6), not an implemented API.
 
 | Case | Accepted shape to implement or preserve | Required rejection or cleanup check |
 |---|---|---|
@@ -158,7 +162,7 @@ applications likewise keep their captures; weak observation must not shorten
 that lifetime. The parser/AD row preserves current scoped guarantees; A6 adds
 the new count-free parser region after GC removal.
 
-**Retained C callbacks have an explicit candidate protocol.**
+**Retained C callbacks use an explicit registration protocol.**
 [Selected C exports](retained-callbacks.md) can register copied leading arguments
 and invoke the final argument later. One host owner controls registration;
 active calls borrow its captures. Close prevents entry; release consumes that
@@ -169,17 +173,15 @@ The compiler cannot infer arbitrary C retention or raw-pointee lifetimes.
 
 Managed results retain their existing independent release functions. The native
 fixture covers repeated calls, nested release, language failure, cancellation,
-partial construction and results surviving registration release. Implementation
-and tests are prepared; integrated validation remains pending. Arbitrary
+partial construction and results surviving registration release; #215 passed
+the full production matrix. Arbitrary
 runtime-created functions still cannot cross C as values; function fields in
 `repr(C)` records remain rejected. Ordinary scoped callbacks retain their scope.
 
-For remaining rows, G2 records precise ownership and observable release points;
-G3 supplies raw-interpreter/native positive and negative tests. Map every existing tracing-only admission fixture to one of
-these contracts or a documented restriction. Do not remove a fixture to make
-the table appear complete.
-For the workspace row, G3 preserves and tests the existing scoped lifetime
-guarantees; the new count-free parser region is A6, after GC removal. General
+The [admission matrix](ownership-admission.md) maps these contracts to execution
+and rejection tests. When removing tracing, preserve each behavior or replace
+its obsolete expectation with the agreed ownership diagnostic.
+The workspace row preserves the existing scoped lifetime guarantees; the new count-free parser region is A6, after GC removal. General
 region inference is not an extra gate on G5.
 
 ## Keep compiler cost bounded and visible
@@ -203,45 +205,34 @@ specialized function count for N, 2N and 4N versions of independent queues,
 nested captures, recursive calls and pipelines. Compare the same source before
 and after a change. Termination of a finite analysis is not proof of linear cost.
 Select numeric compile-time budgets from that baseline before widening analysis.
-No measured compile-time bound or comparative speed result exists for this
-direction yet. The first measurement must establish that baseline.
+The [first analysis baseline](measurements/ownership-analysis.md) measures the
+creation-site repair against the earlier merging rule and sets count/time
+ceilings. It covers one combined fixture; its process-memory peak does not isolate
+the proof heap, and three sizes do not establish an asymptotic bound.
 
 ## Finite route to deleting tracing
 
-1. **Set the contract using six examples.** A callback queued on its own channel;
-   a persistent subscription; a graph with node deletion and reuse; a callback
-   retained by C; a returned partial application; a recursive parser or autodiff
-   workspace. For each, specify an accepted program or an agreed restriction,
-   ownership edges, expiration, cancellation and cleanup under the selected
-   rejection policy. External code needs an explicit release protocol;
-   source analysis cannot infer arbitrary C retention.
-2. **Implement one complete weak-reference path.** Choose target types, precise
-   expiration semantics and whether acquisition returns an owner or a checked
-   borrow. Exercise live/dead reads, final release, address reuse, callback
-   reentry and failure. Test concurrent acquisition only where the sharing
-   contract permits concurrency. Verify interpreter/native agreement. This is a
-   design checkpoint, not a separate tiny PR or a promise to retain that API.
-3. **Finish the contract across maintained boundaries.** Implement the required
-   ownership checks and teardown for the six examples and the existing
-   [admission matrix](ownership-admission.md). Specify C registration/release and
-   outstanding calls together. Keep resource cleanup on failure/cancellation;
-   bulk memory release alone does not close files or unregister callbacks.
-4. **Delete tracing and replace its remaining checks.** Reuse the prepared
-   [diagnostics](ownership-diagnostics.md); close their finite WASI/resource gaps.
-   Remove tracing selection, roots, mark/sweep code and collector-only test modes.
-   Preserve the allocator and deterministic resource functions still needed.
-   Check repeated work and deliberate cleanup faults, then inspect actual
-   binaries for the claimed removal. No dormant compatibility collector.
-5. **Validate the combined result once ready.** G3 and G4 belong in one PR.
-   During implementation run only focused checks needed for a specific change
-   or defect. Once G4 and all included changes are complete, run consolidated
-   local checks within the resource guard, then the final production matrix and
-   documentation audit. Work that exceeds local limits runs on GitHub. Audit
-   and batch every failure before a repair push. GC removal completes when the
-   agreed entry matrix works without tracing and without unexplained retention.
+G3/G4 delivered the six contracts, weak channels, C registrations and replacement
+ownership diagnostics. G5 has three remaining implementation groups:
+
+1. **Unify admission and move ordinary memory tests to ARC.** Apply queue and
+   State/autodiff lifetime rules before interpreter entry effects, including
+   REPL/notebook and compile-time execution. Keep supported-program output tests
+   separate from deliberate rejection/runtime-defense fixtures. Compare reuse
+   against copying with reference counts enabled in both variants; retain the
+   existing allocation and process-memory limits.
+2. **Remove the collector.** Follow the [deletion table](ownership-diagnostics.md#collector-specific-tests-and-retained-assertions):
+   remove tracing selection, root discovery, marking/sweeping and collector-only
+   tests. Preserve allocation, resource cleanup and their observations. Update
+   reports and workflow settings together. There is no compatibility collector.
+3. **Verify the integrated result.** Check deliberate cleanup faults and repeated
+   work, then inspect actual binaries for collector removal. Use focused checks
+   during implementation and the complete nine-job matrix plus documentation
+   after the batch is ready. Full builds and suites run on GitHub. Audit every
+   failure before publishing a repair.
 
 Removing every possible ARC operation is a separate milestone, not a reason to
-delay step 4 indefinitely. Its next concrete target is PLAN A5: a variable-size
+delay collector deletion indefinitely. Its next concrete target is PLAN A5: a variable-size
 buffer with one owner, borrowed by callees, destroyed on all exits, with no count
 field, retain/release operations or uniqueness checks. Report actual storage,
 code size, stack use and cleanup, not just fewer retain instructions.

@@ -1,5 +1,6 @@
-//! Reuse in place (the default; `FWP_REUSE=0` when compiling turns it
-//! off): every golden program behaves the same under
+//! Allocation comparisons use ARC with and without in-place reuse.
+//! Both variants retain and release owners; FWP_NO_REUSE disables only reuse.
+//! Collector-era safety checks remain until G5 deletes tracing: goldens run under
 //! `FWP_REUSE_VERIFY=1`, which copies a value judged unique and poisons
 //! the original instead of reusing it, so that a wrong judgment changes
 //! the output (with the collector verifying itself as well). Plain reuse
@@ -10,6 +11,9 @@
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
+
+#[path = "support/record_probe.rs"]
+mod record_probe;
 
 fn fwp() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_fwp"))
@@ -53,6 +57,7 @@ fn run(exe: &Path, cwd: &Path, input: &[u8], env: &[(&str, &str)]) -> Output {
     let mut child = Command::new(exe)
         .current_dir(cwd)
         .env("FWP_SEED", "42")
+        .env_remove("FWP_GC")
         .envs(env.iter().copied())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -218,18 +223,45 @@ fn unique_records_are_updated_in_place() {
          main = (1000000, Acc { n = 0, total = 0, label = \"x\", hi = 0, lo = 0 }) | loop go | echo\n",
     )
     .unwrap();
-    let allocated = |reuse: &str| -> f64 {
+    let cfile = dir.0.join("reuse.c");
+    let emitted = Command::new(fwp())
+        .args(["build", "--gc", "arc", "--emit-c", "-O2"])
+        .arg(&src)
+        .arg("-o")
+        .arg(&cfile)
+        .env("FWP_REUSE", "1")
+        .env("FWP_FREE", "1")
+        .output()
+        .unwrap();
+    assert!(emitted.status.success(), "{emitted:?}");
+    let code = std::fs::read_to_string(cfile).unwrap();
+    let allocated = |reuse: bool| -> f64 {
         let exe = dir.0.join(format!("upd{reuse}.exe"));
-        let b = Command::new(fwp())
-            .args(["build", "--gc", "tracing"])
-            .arg(&src)
-            .arg("-o")
-            .arg(&exe)
-            .env("FWP_REUSE", reuse)
-            .output()
-            .unwrap();
-        assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
-        let o = run(&exe, &dir.0, b"", &[("FWP_GC_STATS", "1")]);
+        let measured = if reuse {
+            code.clone()
+        } else {
+            format!("#define FWP_NO_REUSE 1\n{code}")
+        };
+        fwp::cgen::compile_c(&measured, &exe, "-O2").unwrap();
+        let o = run(
+            &exe,
+            &dir.0,
+            b"",
+            &[
+                ("FWP_GC_STATS", "1"),
+                ("FWP_GC_STRESS", "0"),
+                ("FWP_GC_VERIFY", "0"),
+                ("FWP_REUSE_VERIFY", "0"),
+            ],
+        );
+        record_probe::save(
+            "reuse_allocations",
+            &format!("record-reuse-{reuse}"),
+            &measured,
+            &exe,
+            &o,
+        );
+        assert!(o.status.success(), "execution failed: {o:?}");
         assert_eq!(
             String::from_utf8_lossy(&o.stdout),
             "Acc {hi = 2000000, label = \"x\", lo = 0, n = 1000000, total = 3000000}\n"
@@ -244,7 +276,7 @@ fn unique_records_are_updated_in_place() {
             .unwrap();
         mib.parse().unwrap()
     };
-    let (copied, reused) = (allocated("0"), allocated("1"));
+    let (copied, reused) = (allocated(false), allocated(true));
     assert!(
         copied > 10.0 && reused < 1.0,
         "{} MiB copied, {} MiB with reuse",
@@ -273,18 +305,45 @@ fn variant_cells_are_reused() {
          main = (10, 16 | build) | loop step | total | echo\n",
     )
     .unwrap();
-    let allocated = |reuse: &str| -> f64 {
+    let cfile = dir.0.join("reuse.c");
+    let emitted = Command::new(fwp())
+        .args(["build", "--gc", "arc", "--emit-c", "-O2"])
+        .arg(&src)
+        .arg("-o")
+        .arg(&cfile)
+        .env("FWP_REUSE", "1")
+        .env("FWP_FREE", "1")
+        .output()
+        .unwrap();
+    assert!(emitted.status.success(), "{emitted:?}");
+    let code = std::fs::read_to_string(cfile).unwrap();
+    let allocated = |reuse: bool| -> f64 {
         let exe = dir.0.join(format!("tree{reuse}.exe"));
-        let b = Command::new(fwp())
-            .args(["build", "--gc", "tracing"])
-            .arg(&src)
-            .arg("-o")
-            .arg(&exe)
-            .env("FWP_REUSE", reuse)
-            .output()
-            .unwrap();
-        assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
-        let o = run(&exe, &dir.0, b"", &[("FWP_GC_STATS", "1")]);
+        let measured = if reuse {
+            code.clone()
+        } else {
+            format!("#define FWP_NO_REUSE 1\n{code}")
+        };
+        fwp::cgen::compile_c(&measured, &exe, "-O2").unwrap();
+        let o = run(
+            &exe,
+            &dir.0,
+            b"",
+            &[
+                ("FWP_GC_STATS", "1"),
+                ("FWP_GC_STRESS", "0"),
+                ("FWP_GC_VERIFY", "0"),
+                ("FWP_REUSE_VERIFY", "0"),
+            ],
+        );
+        record_probe::save(
+            "reuse_allocations",
+            &format!("tree-reuse-{reuse}"),
+            &measured,
+            &exe,
+            &o,
+        );
+        assert!(o.status.success(), "execution failed: {o:?}");
         assert_eq!(String::from_utf8_lossy(&o.stdout), "786404\n");
         let err = String::from_utf8_lossy(&o.stderr);
         let mib = err
@@ -296,7 +355,7 @@ fn variant_cells_are_reused() {
             .unwrap();
         mib.parse().unwrap()
     };
-    let (copied, reused) = (allocated("0"), allocated("1"));
+    let (copied, reused) = (allocated(false), allocated(true));
     // the tree itself is built once either way
     assert!(
         reused * 4.0 < copied,
@@ -319,18 +378,45 @@ fn unique_arrays_are_written_in_place() {
         ("map", "100014\n", 1000.0),
     ] {
         let src = root().join(format!("tests/reuse/{}.fwp", name));
-        let allocated = |reuse: &str| -> f64 {
+        let cfile = dir.0.join("reuse.c");
+        let emitted = Command::new(fwp())
+            .args(["build", "--gc", "arc", "--emit-c", "-O2"])
+            .arg(&src)
+            .arg("-o")
+            .arg(&cfile)
+            .env("FWP_REUSE", "1")
+            .env("FWP_FREE", "1")
+            .output()
+            .unwrap();
+        assert!(emitted.status.success(), "{emitted:?}");
+        let code = std::fs::read_to_string(cfile).unwrap();
+        let allocated = |reuse: bool| -> f64 {
             let exe = dir.0.join(format!("{name}{reuse}.exe"));
-            let b = Command::new(fwp())
-                .args(["build", "--gc", "tracing"])
-                .arg(&src)
-                .arg("-o")
-                .arg(&exe)
-                .env("FWP_REUSE", reuse)
-                .output()
-                .unwrap();
-            assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
-            let o = run(&exe, &dir.0, b"", &[("FWP_GC_STATS", "1")]);
+            let measured = if reuse {
+                code.clone()
+            } else {
+                format!("#define FWP_NO_REUSE 1\n{code}")
+            };
+            fwp::cgen::compile_c(&measured, &exe, "-O2").unwrap();
+            let o = run(
+                &exe,
+                &dir.0,
+                b"",
+                &[
+                    ("FWP_GC_STATS", "1"),
+                    ("FWP_GC_STRESS", "0"),
+                    ("FWP_GC_VERIFY", "0"),
+                    ("FWP_REUSE_VERIFY", "0"),
+                ],
+            );
+            record_probe::save(
+                "reuse_allocations",
+                &format!("{name}-reuse-{reuse}"),
+                &measured,
+                &exe,
+                &o,
+            );
+            assert!(o.status.success(), "execution failed: {o:?}");
             assert_eq!(String::from_utf8_lossy(&o.stdout), want);
             let err = String::from_utf8_lossy(&o.stderr);
             let mib = err
@@ -342,7 +428,7 @@ fn unique_arrays_are_written_in_place() {
                 .unwrap();
             mib.parse().unwrap()
         };
-        let (copied, in_place) = (allocated("0"), allocated("1"));
+        let (copied, in_place) = (allocated(false), allocated(true));
         assert!(
             copied > copied_at_least && in_place < 10.0,
             "{}: {} MiB copied, {} MiB in place",

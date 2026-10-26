@@ -1,0 +1,321 @@
+{
+  "source_revision": "092009f83a1ba217820f2495d459fdb5c3b10c74",
+  "run_id": 40261359439,
+  "profile": {
+    "rust_opt_level": 1,
+    "debug_assertions": true,
+    "overflow_checks": true,
+    "raw_lowering": true,
+    "warmups_per_policy": 1,
+    "samples_per_policy": 7,
+    "order": "alternating Merged/Separate and Separate/Merged"
+  },
+  "hosts": {
+    "linux": {
+      "runner": "ubuntu-latest",
+      "hardware": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.27\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "analysis_source_sha256": "b1c972ea5312c0054683b9df5af745765c33f562092921d5c2e3cf2edfa41178",
+      "command_peak_rss_bytes": 48615424,
+      "rows": [
+        {
+          "policy": "Merged",
+          "n": 16,
+          "source_bytes": 1862,
+          "functions": 49,
+          "ir_nodes": 430,
+          "median_ns": 8110726,
+          "samples_ns": [
+            8048532,
+            8826788,
+            8307600,
+            8130545,
+            8038808,
+            8110726,
+            8056343
+          ],
+          "origin_bytes": 48,
+          "rounds": 16,
+          "visits": 540,
+          "summary_updates": 6,
+          "contexts": 49,
+          "closures": 13,
+          "facts": 57
+        },
+        {
+          "policy": "Separate",
+          "n": 16,
+          "source_bytes": 1862,
+          "functions": 49,
+          "ir_nodes": 430,
+          "median_ns": 8620069,
+          "samples_ns": [
+            8620069,
+            8573429,
+            8665677,
+            8616784,
+            8679919,
+            8698055,
+            8596293
+          ],
+          "origin_bytes": 48,
+          "rounds": 16,
+          "visits": 540,
+          "summary_updates": 6,
+          "contexts": 49,
+          "closures": 88,
+          "facts": 207
+        },
+        {
+          "policy": "Merged",
+          "n": 32,
+          "source_bytes": 3542,
+          "functions": 65,
+          "ir_nodes": 734,
+          "median_ns": 14386190,
+          "samples_ns": [
+            14328333,
+            15372198,
+            14507602,
+            14632309,
+            14386190,
+            14359079,
+            14332750
+          ],
+          "origin_bytes": 48,
+          "rounds": 16,
+          "visits": 780,
+          "summary_updates": 6,
+          "contexts": 65,
+          "closures": 13,
+          "facts": 57
+        },
+        {
+          "policy": "Separate",
+          "n": 32,
+          "source_bytes": 3542,
+          "functions": 65,
+          "ir_nodes": 734,
+          "median_ns": 15555833,
+          "samples_ns": [
+            15612988,
+            15447951,
+            15555833,
+            15454060,
+            15629243,
+            16240960,
+            15544405
+          ],
+          "origin_bytes": 48,
+          "rounds": 16,
+          "visits": 780,
+          "summary_updates": 6,
+          "contexts": 65,
+          "closures": 168,
+          "facts": 367
+        },
+        {
+          "policy": "Merged",
+          "n": 64,
+          "source_bytes": 6902,
+          "functions": 97,
+          "ir_nodes": 1342,
+          "median_ns": 27017650,
+          "samples_ns": [
+            26831210,
+            27131721,
+            27167284,
+            27200895,
+            26999684,
+            27012062,
+            27017650
+          ],
+          "origin_bytes": 48,
+          "rounds": 16,
+          "visits": 1260,
+          "summary_updates": 6,
+          "contexts": 97,
+          "closures": 13,
+          "facts": 57
+        },
+        {
+          "policy": "Separate",
+          "n": 64,
+          "source_bytes": 6902,
+          "functions": 97,
+          "ir_nodes": 1342,
+          "median_ns": 29764517,
+          "samples_ns": [
+            30073069,
+            29504807,
+            29832689,
+            29764517,
+            29588813,
+            29734822,
+            29779289
+          ],
+          "origin_bytes": 48,
+          "rounds": 16,
+          "visits": 1260,
+          "summary_updates": 6,
+          "contexts": 97,
+          "closures": 328,
+          "facts": 687
+        }
+      ]
+    },
+    "macos": {
+      "runner": "macos-15-intel",
+      "hardware": "hw.model: Macmini6,2\nhw.memsize: 15032385536\nmachdep.cpu.brand_string: Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\n",
+      "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "analysis_source_sha256": "b1c972ea5312c0054683b9df5af745765c33f562092921d5c2e3cf2edfa41178",
+      "command_peak_rss_bytes": 52244480,
+      "rows": [
+        {
+          "policy": "Merged",
+          "n": 16,
+          "source_bytes": 1862,
+          "functions": 49,
+          "ir_nodes": 430,
+          "median_ns": 22679452,
+          "samples_ns": [
+            23110446,
+            22538731,
+            23162809,
+            23428443,
+            22679452,
+            22479173,
+            22091870
+          ],
+          "origin_bytes": 48,
+          "rounds": 16,
+          "visits": 540,
+          "summary_updates": 6,
+          "contexts": 49,
+          "closures": 13,
+          "facts": 57
+        },
+        {
+          "policy": "Separate",
+          "n": 16,
+          "source_bytes": 1862,
+          "functions": 49,
+          "ir_nodes": 430,
+          "median_ns": 24532142,
+          "samples_ns": [
+            24790094,
+            24532142,
+            25258193,
+            24824104,
+            23577728,
+            23468709,
+            23849100
+          ],
+          "origin_bytes": 48,
+          "rounds": 16,
+          "visits": 540,
+          "summary_updates": 6,
+          "contexts": 49,
+          "closures": 88,
+          "facts": 207
+        },
+        {
+          "policy": "Merged",
+          "n": 32,
+          "source_bytes": 3542,
+          "functions": 65,
+          "ir_nodes": 734,
+          "median_ns": 39639450,
+          "samples_ns": [
+            40285812,
+            39257534,
+            40181592,
+            39639450,
+            40451546,
+            38273230,
+            38233844
+          ],
+          "origin_bytes": 48,
+          "rounds": 16,
+          "visits": 780,
+          "summary_updates": 6,
+          "contexts": 65,
+          "closures": 13,
+          "facts": 57
+        },
+        {
+          "policy": "Separate",
+          "n": 32,
+          "source_bytes": 3542,
+          "functions": 65,
+          "ir_nodes": 734,
+          "median_ns": 42725249,
+          "samples_ns": [
+            41767762,
+            43045353,
+            43220974,
+            42698464,
+            40904633,
+            45361938,
+            42725249
+          ],
+          "origin_bytes": 48,
+          "rounds": 16,
+          "visits": 780,
+          "summary_updates": 6,
+          "contexts": 65,
+          "closures": 168,
+          "facts": 367
+        },
+        {
+          "policy": "Merged",
+          "n": 64,
+          "source_bytes": 6902,
+          "functions": 97,
+          "ir_nodes": 1342,
+          "median_ns": 82357407,
+          "samples_ns": [
+            73659457,
+            73260746,
+            76236451,
+            82357407,
+            83738149,
+            82485343,
+            85834374
+          ],
+          "origin_bytes": 48,
+          "rounds": 16,
+          "visits": 1260,
+          "summary_updates": 6,
+          "contexts": 97,
+          "closures": 13,
+          "facts": 57
+        },
+        {
+          "policy": "Separate",
+          "n": 64,
+          "source_bytes": 6902,
+          "functions": 97,
+          "ir_nodes": 1342,
+          "median_ns": 80790745,
+          "samples_ns": [
+            78796436,
+            78652642,
+            80790745,
+            79864606,
+            88894080,
+            93415645,
+            88087336
+          ],
+          "origin_bytes": 48,
+          "rounds": 16,
+          "visits": 1260,
+          "summary_updates": 6,
+          "contexts": 97,
+          "closures": 328,
+          "facts": 687
+        }
+      ]
+    }
+  }
+}
