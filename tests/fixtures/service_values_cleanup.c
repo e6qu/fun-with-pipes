@@ -47,20 +47,24 @@ int main(void) {
     if(fwp_heap.live!=live_bytes)return 248;
     for(int operation=0;operation<2;operation++) {
         const fwp_desc *type=operation?SUBJECT_TYPE:METADATA_TYPE;
-        int failed=0,completed=0;
-        for(int allocation=1;allocation<32;allocation++) {
+        /* Check each request directly; do not carry a second loop tally across longjmp. */
+        const int failures=operation?2:12;
+        for(int allocation=1;allocation<=failures+1;allocation++) {
             fwp_trap_recover=service_recover;fwp_trap_jb=&service_jump;fwp_trap_cleanup=fwp_cleanups;
             service_left=allocation;
             if(!setjmp(service_jump)) {
                 V result=operation?fwp_p_grpc_peer_subject(type):fwp_p_grpc_metadata(type);
-                service_left=0;type->drop(result);completed=1;
-            } else failed++;
+                service_left=0;type->drop(result);
+                if(allocation<=failures) {
+                    fprintf(stderr,"service result %d: allocation %d did not fail\n",operation,allocation);return 247;
+                }
+            } else if(allocation>failures||service_left||strcmp(fwp_trap_msg,"injected service-result allocation failure")) {
+                fprintf(stderr,"service result %d: unexpected trap at allocation %d: %s\n",operation,allocation,fwp_trap_msg);return 247;
+            }
             service_left=0;fwp_trap_recover=NULL;fwp_trap_jb=NULL;
             if(fwp_cleanups||fwp_heap.live!=live_bytes)return 248;
-            if(completed)break;
         }
-        if(!completed||failed!=(operation?2:12))return 247;
-        printf("service result %d: %d allocation failures; final charged delta 0\n",operation,failed);
+        printf("service result %d: %d allocation failures; final charged delta 0\n",operation,failures);
     }
     serving.peer=NULL;
     if(fwp_p_grpc_peer_subject(SUBJECT_TYPE)!=FWP_NONE||fwp_heap.live!=live_bytes)return 247;

@@ -19,20 +19,22 @@ for marker, hook in [('static inline void *fwp_alloc_init(size_t n) {', ' servic
     code = code.replace(marker, marker + hook)
 fixture = Path('tests/fixtures/service_values_cleanup.c').read_text()
 base = code[:code.index('int main(')] + types + '\n#line 1 "service_values_cleanup.c"\n'
-labeled = fixture
-for index, line in enumerate(fixture.splitlines()):
-    if 'return 247;' in line:
-        labeled = labeled.replace(line, line.replace('return 247;', 'return ' + str(100 + index) + ';'), 1)
-        print('assertion exit', 100 + index, 'line', index + 1, line, flush=True)
-counts = labeled.replace('if(!completed||failed!=(operation?2:12))', 'fprintf(stderr,"operation=%d failed=%d completed=%d\\n",operation,failed,completed); if(!completed||failed!=(operation?2:12))')
 subprocess.run([cc, '--version'],check=True)
-trace = counts.replace('service_left=allocation;', 'fprintf(stderr,"begin operation=%d allocation=%d failed=%d\\n",operation,allocation,failed); service_left=allocation;').replace('if(completed)break;', 'fprintf(stderr,"end allocation=%d failed=%d completed=%d\\n",allocation,failed,completed); if(completed)break;')
-for name, fixture in [('trace', trace)]:
+source = base + fixture
+broken = source.replace('if (d && d->drop) d->drop(f->values[i]);', '(void)d;')
+assert broken != source
+for name, source, expected, opts in [
+    ('repaired', source, 0, ['-O1', '-O2']),
+    ('missing-field-drop', broken, 248, ['-O1', '-O2']),
+    ('missed-injection', source.replace('if(service_left>0 && !--service_left)', 'if(0)'), 247, ['-O2']),
+    ('unrelated-trap', source.replace('fwp_trap("injected service-result allocation failure")', 'fwp_trap("unrelated failure")'), 247, ['-O2']),
+]:
     path = out / (name + '.c')
-    path.write_text(base + fixture)
-    for opt in ['-O1','-O2']:
+    path.write_text(source)
+    for opt in opts:
         exe = out / (name + opt)
-        command = [cc,opt,*(['-flto=auto','-flto-partition=balanced'] if path.stat().st_size > 1_000_000 else []),'-std=gnu11','-ffp-contract=off',str(path),'-o',str(exe),'-lssl','-lcrypto','-lm','-lpthread']
+        command = [cc,opt,*(['-flto=auto','-flto-partition=balanced'] if path.stat().st_size > 1_000_000 and 'gcc' in cc else []),'-std=gnu11','-ffp-contract=off',str(path),'-o',str(exe),'-lssl','-lcrypto','-lm','-lpthread']
         subprocess.run(command,check=True)
         result = subprocess.run([str(exe)],capture_output=True,text=True)
         print(name,opt,'exit',result.returncode, 'stdout',result.stdout,'stderr',result.stderr,flush=True)
+        assert result.returncode == expected, (name, opt, result)
