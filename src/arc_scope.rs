@@ -2188,13 +2188,7 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                 ClosureSites::Separate,
             )
             .unwrap();
-            crate::arc::check(
-                &program,
-                &[0],
-                EntryChannels::Unknown,
-                ClosureSites::Separate,
-            )
-            .unwrap();
+            crate::arc::check(&program, &[0], EntryChannels::Unknown).unwrap();
             let cyclic = Expr::Call(
                 2,
                 vec![Expr::Apply(Box::new(Expr::Func(5)), vec![Expr::Local(0)])],

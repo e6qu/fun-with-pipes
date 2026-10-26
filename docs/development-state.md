@@ -1,11 +1,11 @@
 # Current work
 
-**Next:** audit focused run `40259739899` for draft [PR #216](https://github.com/e6qu/fun-with-pipes/pull/216),
-head `bf2793f196da45fee26258b0f7aaf4ca1ad1cdb3`. Check the creation-site repair
-and initial G2 scaling results. A paired analysis comparison is local; publish it
-and use the isolated `ownership-analysis` suite, record budgets, then run the
-full final-head matrix.
-Documentation run `40259727539` passed; draft production was skipped, not verified.
+**Next:** publish the measurement-harness repair, dispatch `ownership-analysis`,
+record both hosts' paired results and budgets, then run the full final-head
+matrix for draft [PR #216](https://github.com/e6qu/fun-with-pipes/pull/216).
+The creation-site repair passed Linux focused run `40259739899`; Intel macOS
+passed its lifetime/reuse stages and was finishing tool checks. The paired run
+`40260929945` failed to compile one test caller on both hosts; see below.
 Tracing has **not** been deleted.
 
 Worktree: `/private/tmp/fwp-ownership-fault-matrix`.
@@ -80,7 +80,13 @@ are from the initial fixture, not the local paired comparison. The latter uses
 the same valid IR with the old capture-merging rule as a test-only control;
 production has no alternate mode. Its isolated suite avoids rerunning unrelated
 integration targets just to collect analysis evidence. Record results and budgets before accepting this change. Production
-builds contain no measurement counters.
+builds contain no measurement counters. Paired run `40260929945` at `cc86e2f0`
+failed because one `crate::arc::check` call received the analysis-only fourth
+argument. Both hosts reported only this compiler error and a consequent missing
+artifact directory; all failed steps were audited. The repair removes that
+argument and creates evidence before building, retaining the build log. The
+isolated suite runs the inexpensive library tests before the paired measurement.
+Failure logs: `/private/tmp/fwp-216-paired-all-failures.log`.
 
 Tutorial corrections now include macro checking order, numeric output reasoning,
 `iterate 5` meaning four updates, derivative lifetimes, and delivered weak/graph
