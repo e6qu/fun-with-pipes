@@ -1,5 +1,14 @@
 # Array and matrix kernels: recorded comparison
 
+The current G5 runner compares one counted fwp implementation with C and Rust.
+It retains the workloads and timer boundaries described below, with thirty
+uninstrumented samples per implementation: six rotating process batches of five,
+so each occupies every position twice. Separate profiles record allocations,
+counts, charged bytes and address-space reservation; collector counters are gone.
+The paired C experiments now compare two binaries in four alternating batches
+(twenty samples each). These updated protocols have not yet run on the integrated
+G5 compiler. They do not revise the historical results below.
+
 This is the 2026-10-16 experiment, not a current-revision benchmark. The protocol
 and observations below are retained so its ratios have a precise meaning.
 

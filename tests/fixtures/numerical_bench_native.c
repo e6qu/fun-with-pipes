@@ -1,10 +1,11 @@
 static uint64_t bench_clock(void){struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);return (uint64_t)t.tv_sec*1000000000+(uint64_t)t.tv_nsec;}
-static intptr_t bench_initial_charge;
+static size_t bench_initial_charge;
 static size_t bench_peak_charge;
 static void bench_sample_live(void){
 #if PROFILE
-    intptr_t used=fwp_heap.live-bench_initial_charge;
-    if(used<0)abort();if((size_t)used>bench_peak_charge)bench_peak_charge=(size_t)used;
+    if(fwp_heap.live<bench_initial_charge)abort();
+    size_t used=fwp_heap.live-bench_initial_charge;
+    if(used>bench_peak_charge)bench_peak_charge=used;
 #endif
 }
 int main(void){
@@ -13,7 +14,7 @@ int main(void){
     puts("{\"samples\":[");
     for(size_t sample=0;sample<5;sample++){
         bench_calls=bench_bytes=bench_retains=bench_nonlast_releases=bench_release_checks=0;bench_peak_charge=0;bench_kernel_ns=0;
-        bench_initial_charge=fwp_heap.live;size_t collections=fwp_heap.ncollect;
+        bench_initial_charge=fwp_heap.live;
         uint64_t hash=1469598103934665603ULL,start=bench_clock();
         for(size_t round=0;round<rounds;round++){
 #if MATRIX_BENCH
@@ -31,9 +32,10 @@ int main(void){
             hash=(hash^result)*1099511628211ULL;
 #endif
         }
-        uint64_t elapsed=bench_clock()-start;intptr_t live=fwp_heap.live-bench_initial_charge;
-        if(fwp_heap.ncollect!=collections || live){fprintf(stderr,"unexpected collection or retained charged storage: %zu %ld\n",fwp_heap.ncollect-collections,(long)live);return 224;}
-        printf("%s{\"allocationInclusiveNs\":%llu,\"kernelNs\":%llu,\"hash\":\"%016llx\",\"requests\":%llu,\"requestedBytes\":%llu,\"liveChargedBytes\":%ld,\"peakChargedBytes\":%zu,\"retains\":%llu,\"nonlastReleases\":%llu,\"releaseChecks\":%llu,\"collections\":%zu,\"collectionPauseSeconds\":%.9f,\"chunkHighWaterBytes\":%zu,\"reservedVirtualBytes\":%zu}",sample?",\n":"",(unsigned long long)elapsed,(unsigned long long)bench_kernel_ns,(unsigned long long)hash,(unsigned long long)bench_calls,(unsigned long long)bench_bytes,(long)live,bench_peak_charge,(unsigned long long)bench_retains,(unsigned long long)bench_nonlast_releases,(unsigned long long)bench_release_checks,fwp_heap.ncollect-collections,fwp_heap.pause_total,(size_t)fwp_heap.heap_bytes,fwp_heap.reservation_bytes+fwp_heap.meta_bytes);
+        uint64_t elapsed=bench_clock()-start;
+        if(fwp_heap.live!=bench_initial_charge){fprintf(stderr,"unexpected charged storage: %zu, expected %zu\n",fwp_heap.live,bench_initial_charge);return 224;}
+        size_t live=fwp_heap.live-bench_initial_charge;
+        printf("%s{\"allocationInclusiveNs\":%llu,\"kernelNs\":%llu,\"hash\":\"%016llx\",\"requests\":%llu,\"requestedBytes\":%llu,\"liveChargedBytes\":%zu,\"peakChargedBytes\":%zu,\"retains\":%llu,\"nonlastReleases\":%llu,\"releaseChecks\":%llu,\"chunkHighWaterBytes\":%zu,\"reservedVirtualBytes\":%zu}",sample?",\n":"",(unsigned long long)elapsed,(unsigned long long)bench_kernel_ns,(unsigned long long)hash,(unsigned long long)bench_calls,(unsigned long long)bench_bytes,live,bench_peak_charge,(unsigned long long)bench_retains,(unsigned long long)bench_nonlast_releases,(unsigned long long)bench_release_checks,(size_t)fwp_heap.heap_bytes,fwp_heap.reservation_bytes+fwp_heap.meta_bytes);
     }
     puts("]}");return 0;
 }

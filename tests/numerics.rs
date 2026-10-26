@@ -112,7 +112,7 @@ fn parallel_kernels_are_deterministic() {
         return;
     }
     let dir = TempDir::new("det");
-    let exe = dir.0.join("determinism");
+    let exe = dir.0.join("determinism.exe");
     build(&path, &exe);
     assert_eq!(native(&exe, &[]), got);
 }
@@ -152,35 +152,19 @@ main = () | count | CpuParallel | tap (device.available | echo) | flip {operatio
         if !have_cc() {
             continue;
         }
-        for memory in ["arc", "tracing"] {
-            // ARC must free storage immediately; tracing-only stress and
-            // retained poisoned objects are deliberately forbidden in that mode.
-            let verification = if memory == "arc" { "0" } else { "1" };
-            let collector = if memory == "arc" { "off" } else { "on" };
-            for opt in ["-O0", "-O2"] {
-                let binary = dir.0.join("workers.exe");
-                let mut command = Command::new(fwp());
-                command
-                    .env_remove("FWP_NO_OPT")
-                    .args(["build", opt, "--gc", memory]);
-                let output = command.arg(&path).arg("-o").arg(&binary).output().unwrap();
-                assert!(output.status.success(), "{memory}/{opt}: {output:?}");
-                for (setting, expected) in &references {
-                    assert_eq!(
-                        native(
-                            &binary,
-                            &[
-                                ("FWP_TEST_WORKERS", setting),
-                                ("FWP_GC", collector),
-                                ("FWP_GC_STRESS", verification),
-                                ("FWP_GC_VERIFY", verification),
-                                ("FWP_REUSE_VERIFY", verification)
-                            ]
-                        ),
-                        *expected,
-                        "{operation}/{memory}/{opt}/{setting}"
-                    );
-                }
+
+        for opt in ["-O0", "-O2"] {
+            let binary = dir.0.join("workers.exe");
+            let mut command = Command::new(fwp());
+            command.env_remove("FWP_NO_OPT").args(["build", opt]);
+            let output = command.arg(&path).arg("-o").arg(&binary).output().unwrap();
+            assert!(output.status.success(), "counted/{opt}: {output:?}");
+            for (setting, expected) in &references {
+                assert_eq!(
+                    native(&binary, &[("FWP_TEST_WORKERS", setting),]),
+                    *expected,
+                    "{operation}/counted/{opt}/{setting}"
+                );
             }
         }
     }
@@ -236,7 +220,7 @@ fn bench() {
     for (name, src) in cases {
         let path = dir.0.join("bench.fwp");
         std::fs::write(&path, &src).unwrap();
-        let exe = dir.0.join("bench");
+        let exe = dir.0.join("bench.exe");
         build(&path, &exe);
         let (a, t_native) = timed(&mut Command::new(&exe));
         let (b, t_interp) = if name.contains("4M") || name.contains("gradient n=1000") {

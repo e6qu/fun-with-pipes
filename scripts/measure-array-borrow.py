@@ -44,43 +44,40 @@ def main():
         if result.returncode:
             raise RuntimeError(f'{command}: {result.returncode}\n{result.stdout}\n{result.stderr}')
         return result
-    environment = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
-    environment.pop('FWP_GC', None)
+    environment = dict(os.environ)
     results, hashes, changed = {}, {}, {}
     for profile in [False, True]:
         suffix = 'profile' if profile else 'timing'
         binaries = {}
-        for gc, stem in [('arc', 'array-arc'), ('tracing', 'array')]:
-            filename = f'{stem}-{suffix}.c'
-            source = (args.input / filename).read_text()
-            digest = hashlib.sha256(source.encode()).hexdigest()
-            recorded = [value for key, value in evidence['sourceHashes'].items() if key.endswith('/' + filename)]
-            assert recorded == [digest], (filename, recorded, digest)
-            hashes[filename] = digest
-            assert ('#define FWP_ARC_ONLY 1' in source) == (gc == 'arc')
-            control, count = uncached(source)
-            changed[filename] = count
-            for mode, code in [('cached', source), ('per-element', control)]:
-                label = f'{gc}-{mode}-{suffix}'
-                cfile, binary = output / f'{label}.c', output / label
-                cfile.write_text(code)
-                command = [cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w',
-                           f'-DPROFILE={int(profile)}', '-DMATRIX_BENCH=0', cfile,
-                           '-o', binary, '-lm', '-lpthread']
-                run(command); commands.append(list(map(str, command)))
-                binaries[label] = binary
-                if not profile:
-                    command = ['otool', '-tvV', binary] if platform.system() == 'Darwin' else ['objdump', '-d', binary]
-                    (output / f'{label}.asm').write_text(run(command).stdout)
-                    if gc == 'arc':
-                        symbols = run(['nm', binary]).stdout
-                        assert not any(symbol in symbols for symbol in ['fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'])
+        filename = f'array-{suffix}.c'
+        source = (args.input / filename).read_text()
+        digest = hashlib.sha256(source.encode()).hexdigest()
+        recorded = [value for key, value in evidence['sourceHashes'].items() if key.endswith('/' + filename)]
+        assert recorded == [digest], (filename, recorded, digest)
+        hashes[filename] = digest
+        assert 'FWP_ARC_ONLY' not in source
+        control, count = uncached(source)
+        changed[filename] = count
+        for mode, code in [('cached', source), ('per-element', control)]:
+            label = f'{mode}-{suffix}'
+            cfile, binary = output / f'{label}.c', output / label
+            cfile.write_text(code)
+            command = [cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w',
+                       f'-DPROFILE={int(profile)}', '-DMATRIX_BENCH=0', cfile,
+                       '-o', binary, '-lm', '-lpthread']
+            run(command); commands.append(list(map(str, command)))
+            binaries[label] = binary
+            if not profile:
+                command = ['otool', '-tvV', binary] if platform.system() == 'Darwin' else ['objdump', '-d', binary]
+                (output / f'{label}.asm').write_text(run(command).stdout)
+                symbols = run(['nm', binary]).stdout
+                assert not any(symbol in symbols for symbol in ['fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'])
         labels = list(binaries)
         if not profile:
             for binary in binaries.values():
                 run([binary], environment)
-        for process in range(1 if profile else 8):
-            order = labels[process % 4:] + labels[:process % 4]
+        for process in range(1 if profile else 4):
+            order = labels[process % 2:] + labels[:process % 2]
             for label in order:
                 command = ['/usr/bin/time', '-l' if platform.system() == 'Darwin' else '-v', binaries[label]]
                 execution = run(command, environment)
@@ -96,8 +93,7 @@ def main():
     result_hashes = {sample['hash'] for record in results.values() for sample in record['samples']}
     assert len(result_hashes) == 1
     clean = lambda record: [{k: v for k, v in sample.items() if k not in ['kernelNs', 'allocationInclusiveNs']} for sample in record['samples']]
-    for gc in ['arc', 'tracing']:
-        assert clean(results[f'{gc}-cached-profile']) == clean(results[f'{gc}-per-element-profile'])
+    assert clean(results['cached-profile']) == clean(results['per-element-profile'])
     summary = {label: dict(medianKernelNs=statistics.median(row['kernelNs'] for row in record['samples']),
                           medianAllocationInclusiveNs=statistics.median(row['allocationInclusiveNs'] for row in record['samples']))
                for label, record in results.items() if label.endswith('-timing')}
@@ -106,7 +102,7 @@ def main():
     report = dict(head=os.environ['GITHUB_SHA'], emittedHead=evidence['head'], evidenceRun=os.environ['EVIDENCE_RUN'],
                   sourceHashes=hashes, replacedReads=changed, hardware=hardware, compiler=run([cc, '--version']).stdout,
                   buildCommands=commands, results=results, summary=summary,
-                  scope='Same-run F64 array comparison: one cached address versus the existing per-element array-data selection. Reuses verified emitted C, checks its recorded hashes, changes only cached load expressions, preserves arithmetic and ownership, and compares result hashes and complete allocation profiles. The compiler optimizes away unused cached-pointer parameters in the control. Both tracing and ARC use identical C flags. Forty samples per binary from eight rotating four-binary batches, after warmup; each binary occupies each position twice. Profiles are separate from timing. This isolates a generated-code change; it is not a C/Rust comparison, whole-program startup measurement or a general zero-cost claim.')
+                  scope='Same-run F64 array comparison: one cached address versus the existing per-element array-data selection. Reuses verified emitted C, checks its recorded hashes, changes only cached load expressions, preserves arithmetic and ownership, and compares result hashes and complete allocation profiles. The compiler optimizes away unused cached-pointer parameters in the control. Both variants use identical C flags. Twenty samples per binary from four alternating two-binary batches, after warmup; each binary occupies each position twice. Profiles are separate from timing. This isolates a generated-code change; it is not a C/Rust comparison, whole-program startup measurement or a general zero-cost claim.')
     (output / 'comparison.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(summary, indent=2))
 
