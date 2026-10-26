@@ -259,7 +259,7 @@ main = [3.0, 4.0] | grad energy | echo
 
 The derivatives are `[6.0, 8.0]`: the derivative of a square at `x` is `2*x`.
 The library owns the tape's lifetime. Its lower-level `ad.scope` operation gives
-raw tape handles a bounded lifetime; checked ARC requires that scope. Printing
+raw tape handles a bounded lifetime; the language requires that scope. Printing
 belongs outside this pure callback. A failed derivative must release its recorded
 operations and temporary derivative arrays just as a successful one does.
 
@@ -269,8 +269,8 @@ cancellation. They count frees of the separately allocated numeric buffers and
 check managed-array storage balance. The caller keeps an independent computation
 alive while an injected task unwinds its own cleanup chain. Expired tape handles
 and exhausted generations must remain invalid. Removing buffer cleanup, input or
-result releases must fail. This group saves 64 outcomes, including complete
-program comparisons with the interpreter at C O1/O2 in ARC and tracing.
+result releases must fail. This group saves 24 outcomes: seven runtime variants and five whole programs,
+each at C O1/O2. Whole programs compare with the interpreter.
 
 [Scope checks](../../tests/ad_tape_scopes.rs) repeat 32 rounds of nested callbacks,
 errors, cancellation and explicitly consumed tapes. They check result ownership,
@@ -278,12 +278,8 @@ release caller-owned input arrays and empty the raw tape registry. Controls omit
 scope registration, unlinking, result ownership or individual releases. Gradient
 programs, callback failures and returned aliases compare with the interpreter;
 files still cannot be duplicated through a borrowed callback. This group saves
-58 outcomes.
+22 outcomes: seven runtime variants and four whole programs, each at C O1/O2.
 
-The old fixtures left some input/result arrays to tracing. They now own and
-release those arrays explicitly. The first new raw fixture omitted the required
-scope and was repaired; its mutable recovery scope uses static storage so its
-contents remain defined across C `longjmp`. No language or runtime rule changes.
 These checks disable workspace caching explicitly to observe immediate frees;
 [workspace measurements](../numerics.md) cover the separate reuse policy. Managed
 byte balances exclude raw buffers, so both measurements are required. No new
@@ -342,7 +338,7 @@ A workspace is a bounded cache of numeric buffers for the next computation.
 Growing a buffer or the handle table can fail. Each raw buffer still needs exactly
 one owner; a failed weight transfer must release any owners it already took.
 
-Three checks exercise the generated runtime with ARC and tracing:
+Three checks exercise the generated runtime and deliberately broken cleanup:
 
 - [Growth failures](../../tests/autodiff_capacity_bounds.rs) reject impossible
   sizes before allocation and inject failures into buffer and handle-table growth.
@@ -351,7 +347,7 @@ Three checks exercise the generated runtime with ARC and tracing:
 - [Weight transfer](../../tests/autodiff_workspace.rs) fails while retaining a
   second weight. The first retain must be undone, and the tape slot must remain
   usable. Thirty-two rounds release input lists, records and arrays and return
-  ARC's managed storage charge to its starting value.
+  managed storage charge to its starting value.
 - The same workspace tests record thousands of operations after an earlier
   result, then request derivatives of that earlier result. They check its values,
   visited operations and temporary derivative-buffer size. Thirty-two rounds
@@ -363,9 +359,9 @@ backward pass does not permit removing their original effects or traps. Existing
 language examples check that distinction too.
 
 The workspace cases run with caching enabled and disabled, at C `-O1` and `-O2`.
-Tracing keeps stress and released-storage checks; ARC checks exact managed storage
-balance and deliberately omitted releases. Raw buffers and managed values are
-measured separately. These checks verify correctness and representation; they do
+Direct internal calls and callback-scoped calls both remain covered. Each checks
+exact managed storage balance; deliberately omitted releases must fail. Raw C
+buffers and managed values are measured separately. These checks verify correctness and representation; they do
 not measure execution time or establish C/Rust performance parity.
 
 ## Acceptance and limits

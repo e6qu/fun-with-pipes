@@ -1,7 +1,8 @@
 # Current work
 
-**Next:** finish the G5 test/report migration below, rebase onto verified merged
-[PR #216](https://github.com/e6qu/fun-with-pipes/pull/216), then run integrated
+**Next:** rebase onto verified merged
+[PR #216](https://github.com/e6qu/fun-with-pipes/pull/216), finish the G5 test/report
+migration below, then run integrated
 compiler and production validation. This deletion branch is incomplete and has
 not been built. Do not publish it as working code or claim GC removal is verified.
 
@@ -22,9 +23,15 @@ processes, sockets, raw buffers, working directories, text tools/transforms and
 range arrays/sets. Their inputs, optimization/fusion settings and deliberate
 faults remain. Further edits migrate console/system snapshots and collection
 builders/maps/sets, with their five-field cost reports and binary audits.
-There are 31 unchanged mode candidates left after this batch.
+The five derivative targets now use one ownership model while retaining direct
+and scoped runtime paths, workspace on/off, O1/O2, every failure control and
+interpreter comparisons. Precision reports have three checked fields; collection
+counts are removed. There are 26 unchanged mode candidates left.
 
-Only #216 is a public PR. Its worktree is
+#216 passed nine production jobs (`40274667944`), docs (`40273010537`) and both
+analysis-budget jobs (`40273030485`) on `1dd5fcaed7792b5505283b1037a9c22d788a3be5`.
+It was squash-merged as `f5621cb46828273f7ce8edf92be4062ccec0f17c`; tree/message
+verification and rebase are next. No new PR is open. Its worktree is
 `/private/tmp/fwp-ownership-fault-matrix`, branch `remove-tracing-runtime`.
 The primary checkout's handoff tracks its live CI status. Keep the final tested
 head unchanged while its gates run. The primary checkout remains detached at
@@ -67,7 +74,7 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 1. **Finish test mode removal.** The list/State/closure fixtures in
    `list_applicative_ownership` are migrated; integrated execution is pending.
    `unwind_cleanup` and typed-State reports are also migrated. Next review the
-   remaining 31 unchanged candidate files and stale candidates listed below.
+   remaining 26 unchanged candidate files and stale candidates listed below.
    Remove variable `--gc` arguments, duplicate
    ARC/tracing loops, obsolete environment settings and CLI-selector tests.
    Keep every distinct semantic input, optimization/layout choice and ownership
@@ -107,7 +114,7 @@ Nine owner-test candidates were reviewed and applied: constructor type/unwind,
 general/ordinary record update, loop preparation, retain unwind, variant conversion,
 worker boxing and worker preparation. Twelve more owner candidates and thirteen program candidates were reviewed,
 refined and applied. The typed-State and unwind candidates were also reviewed,
-refined and applied; 31 candidate files still match their source hashes. The
+refined and applied; 26 candidate files still match their source hashes. The
 `arc_tasks`, `linalg_ownership`, `retained_thunk_ownership`,
 `within_thunk_ownership`, `loop_ownership` and `list_applicative_ownership`
 candidates are now also stale. Remaining candidates are **unreviewed**. They may

@@ -55,45 +55,38 @@ fn paired_metadata_preserves_values_alignment_and_recoverable_growth() {
     );
     assert_ne!(clamped, code);
     for opt in ["-O1", "-O2"] {
-        for arc in [false, true] {
-            for (name, runtime, expected) in [
-                ("paired", &code, 0),
-                ("clamped", &clamped, 0),
-                ("missing-parents", &no_parents, 211),
-                ("missing-derivatives", &no_derivatives, 212),
-                ("full-capacity", &full_capacity, 213),
-                ("early-capacity", &early_capacity, 216),
-            ] {
-                let mode = if arc { "#define FWP_ARC_ONLY 1\n" } else { "" };
-                let source = format!(
-                    "{mode}{runtime}\n{}",
-                    include_str!("fixtures/autodiff_pairs_probe.c")
+        for (name, runtime, expected) in [
+            ("paired", &code, 0),
+            ("clamped", &clamped, 0),
+            ("missing-parents", &no_parents, 211),
+            ("missing-derivatives", &no_derivatives, 212),
+            ("full-capacity", &full_capacity, 213),
+            ("early-capacity", &early_capacity, 216),
+        ] {
+            let source = format!(
+                "{runtime}\n{}",
+                include_str!("fixtures/autodiff_pairs_probe.c")
+            );
+            let binary = directory.join(name);
+            fwp::cgen::compile_c(&source, &binary, opt).unwrap();
+            for cache in ["0", "1"] {
+                let output = Command::new(&binary)
+                    .env("FWP_AD_WORKSPACE", cache)
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    output.status.code(),
+                    Some(expected),
+                    "{name} {opt} cache={cache}: {output:?}"
                 );
-                let binary = directory.join(name);
-                fwp::cgen::compile_c(&source, &binary, opt).unwrap();
-                for cache in ["0", "1"] {
-                    let output = Command::new(&binary)
-                        .env("FWP_AD_WORKSPACE", cache)
-                        .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
-                        .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
-                        .env("FWP_REUSE_VERIFY", if arc { "0" } else { "1" })
-                        .output()
-                        .unwrap();
-                    assert_eq!(
-                        output.status.code(),
-                        Some(expected),
-                        "{name} {opt} arc={arc} cache={cache}: {output:?}"
-                    );
-                    if expected == 0 {
-                        assert!(output.stderr.is_empty(), "{output:?}");
-                    }
+                if expected == 0 {
+                    assert!(output.stderr.is_empty(), "{output:?}");
                 }
-                if let Some(path) = std::env::var_os("FWP_AD_WORKSPACE_ARTIFACTS") {
-                    let path = std::path::PathBuf::from(path);
-                    std::fs::create_dir_all(&path).unwrap();
-                    std::fs::write(path.join(format!("pairs-{name}-{opt}-arc{arc}.c")), source)
-                        .unwrap();
-                }
+            }
+            if let Some(path) = std::env::var_os("FWP_AD_WORKSPACE_ARTIFACTS") {
+                let path = std::path::PathBuf::from(path);
+                std::fs::create_dir_all(&path).unwrap();
+                std::fs::write(path.join(format!("pairs-{name}-{opt}-counted.c")), source).unwrap();
             }
         }
     }
@@ -101,7 +94,7 @@ fn paired_metadata_preserves_values_alignment_and_recoverable_growth() {
 
 #[test]
 fn tape_capacity_checks_and_realloc_failures_preserve_owners() {
-    for memory in ["arc", "tracing"] {
+    {
         let directory =
             std::env::temp_dir().join(format!("fwp-ad-capacity-{}", std::process::id()));
         std::fs::create_dir(&directory).unwrap();
@@ -109,9 +102,7 @@ fn tape_capacity_checks_and_realloc_failures_preserve_owners() {
         let cfile = directory.join("runtime.c");
         std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
         let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args([
-                "build", "--gc", memory, "--memory", "dynamic", "-O2", "--emit-c",
-            ])
+            .args(["build", "--memory", "dynamic", "-O2", "--emit-c"])
             .arg(&input)
             .env("FWP_STACK", "0")
             .arg("-o")
@@ -180,40 +171,29 @@ fn tape_capacity_checks_and_realloc_failures_preserve_owners() {
             ] {
                 let executable = directory.join(format!("{label}{}.exe", &opt[1..]));
                 fwp::cgen::compile_c(source, &executable, opt).unwrap();
-                for &reuse in if memory == "arc" {
-                    &["0"][..]
-                } else {
-                    &["0", "1"][..]
-                } {
-                    let out = Command::new(&executable)
-                        .env("FWP_AD_WORKSPACE", "0")
-                        .env("FWP_FREE", "1")
-                        .env("FWP_REUSE", "1")
-                        .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STRESS", if memory == "arc" { "0" } else { "1" })
-                        .env("FWP_GC_VERIFY", if memory == "arc" { "0" } else { "1" })
-                        .env("FWP_REUSE_VERIFY", reuse)
-                        .output()
-                        .unwrap();
-                    record_probe::save(
-                        "autodiff_capacity_bounds",
-                        &format!("capacity-{memory}{opt}-{label}-reuse{reuse}"),
-                        source,
-                        &executable,
-                        &out,
-                    );
+
+                let out = Command::new(&executable)
+                    .env("FWP_AD_WORKSPACE", "0")
+                    .output()
+                    .unwrap();
+                record_probe::save(
+                    "autodiff_capacity_bounds",
+                    &format!("capacity-counted{opt}-{label}"),
+                    source,
+                    &executable,
+                    &out,
+                );
+                assert_eq!(
+                    out.status.code(),
+                    Some(expected),
+                    "{label} {opt}: {}",
+                    String::from_utf8_lossy(&out.stderr)
+                );
+                if expected == 0 {
                     assert_eq!(
-                        out.status.code(),
-                        Some(expected),
-                        "{label} {opt}: {}",
-                        String::from_utf8_lossy(&out.stderr)
+                        String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
+                        "checked tape capacities and exact realloc failure ownership passed\n"
                     );
-                    if expected == 0 {
-                        assert_eq!(
-                            String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
-                            "checked tape capacities and exact realloc failure ownership passed\n"
-                        );
-                    }
                 }
             }
         }
@@ -278,52 +258,43 @@ fn registry_growth_preserves_tokens_scopes_and_capacity_bounds() {
     assert_ne!(restart_search, code);
     assert_ne!(missed_release, code);
     assert_ne!(stale_cursor, code);
-    for arc in ["0", "1"] {
-        for opt in ["-O1", "-O2"] {
-            for (label, runtime, expected) in [
-                ("bounded", &code, 0),
-                ("incremental", &incremental, 193),
-                ("stale-capacity", &stale_capacity, 196),
-                ("dummy-adjoint", &dummy_adjoint, 202),
-                ("restart-search", &restart_search, 205),
-                ("missed-release", &missed_release, 206),
-                ("stale-cursor", &stale_cursor, 196),
-                ("missed-owned-release", &missed_owned_release, 207),
-            ] {
-                let mode = if arc == "1" {
-                    "#define FWP_ARC_ONLY 1\n"
-                } else {
-                    ""
-                };
-                let source = format!(
-                    "{mode}{runtime}\n{}",
-                    include_str!("fixtures/autodiff_registry_probe.c")
-                );
-                let binary = directory.join(label);
-                fwp::cgen::compile_c(&source, &binary, opt).unwrap();
-                for cache in ["0", "1"] {
-                    let output = Command::new(&binary)
-                        .env("FWP_AD_WORKSPACE", cache)
-                        .env("FWP_GC_STRESS", if arc == "1" { "0" } else { "1" })
-                        .env("FWP_GC_VERIFY", if arc == "1" { "0" } else { "1" })
-                        .env("FWP_REUSE_VERIFY", if arc == "1" { "0" } else { "1" })
-                        .output()
-                        .unwrap();
-                    assert_eq!(
-                        output.status.code(),
-                        Some(expected),
-                        "{label} arc={arc} {opt} cache={cache}: {output:?}"
-                    );
-                }
-                if let Some(destination) = std::env::var_os("FWP_AD_WORKSPACE_ARTIFACTS") {
-                    let destination = std::path::PathBuf::from(destination);
-                    std::fs::create_dir_all(&destination).unwrap();
-                    std::fs::write(
-                        destination.join(format!("registry-{label}-arc{arc}{opt}.c")),
-                        &source,
-                    )
+
+    for opt in ["-O1", "-O2"] {
+        for (label, runtime, expected) in [
+            ("bounded", &code, 0),
+            ("incremental", &incremental, 193),
+            ("stale-capacity", &stale_capacity, 196),
+            ("dummy-adjoint", &dummy_adjoint, 202),
+            ("restart-search", &restart_search, 205),
+            ("missed-release", &missed_release, 206),
+            ("stale-cursor", &stale_cursor, 196),
+            ("missed-owned-release", &missed_owned_release, 207),
+        ] {
+            let source = format!(
+                "{runtime}\n{}",
+                include_str!("fixtures/autodiff_registry_probe.c")
+            );
+            let binary = directory.join(label);
+            fwp::cgen::compile_c(&source, &binary, opt).unwrap();
+            for cache in ["0", "1"] {
+                let output = Command::new(&binary)
+                    .env("FWP_AD_WORKSPACE", cache)
+                    .output()
                     .unwrap();
-                }
+                assert_eq!(
+                    output.status.code(),
+                    Some(expected),
+                    "{label} {opt} cache={cache}: {output:?}"
+                );
+            }
+            if let Some(destination) = std::env::var_os("FWP_AD_WORKSPACE_ARTIFACTS") {
+                let destination = std::path::PathBuf::from(destination);
+                std::fs::create_dir_all(&destination).unwrap();
+                std::fs::write(
+                    destination.join(format!("registry-{label}-counted{opt}.c")),
+                    &source,
+                )
+                .unwrap();
             }
         }
     }

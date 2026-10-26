@@ -5,8 +5,7 @@
  *
  * F16/BF16/F32/F64 tapes hold numeric parents and F64 partial derivatives in
  * malloc'ed buffers. F128 and nested tapes own typed weights and callbacks in
- * scanned runtime
- * storage, and execute adjoint operations on enclosing tapes. A reverse-mode
+ * owned runtime storage, and execute adjoint operations on enclosing tapes. A reverse-mode
  * value refers to its node as
  * (tape id << 32) | index, constants as -1; a tape id is
  * (generation << 16) | (slot + 1), so a value that outlives its tape is
@@ -22,8 +21,8 @@
 
 /* ------------------------------------------------------------------ tapes */
 
-/* F128 and nested reverse weights are language values. Keep them in scanned mutable
- * storage with explicit typed owners, rooted independently of the reallocable
+/* F128 and nested reverse weights are language values. Keep them in mutable
+ * storage with explicit typed owners, independent of the reallocable
  * numeric registry. Detached backward passes stay on this list across reentry. */
 typedef struct fwp_owned_tape {
     struct fwp_owned_tape *prev, *next;

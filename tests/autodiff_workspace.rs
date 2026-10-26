@@ -7,15 +7,13 @@ use std::process::Command;
 
 #[test]
 fn input_nodes_omit_metadata_and_managed_weights_transfer_atomically() {
-    for memory in ["arc", "tracing"] {
+    {
         let directory = fwp::cgen::TempDir::new("fwp-ad-operations").unwrap();
         let input = directory.join("runtime.fwp");
         let cfile = directory.join("runtime.c");
         std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
         let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args([
-                "build", "--gc", memory, "--memory", "dynamic", "-O2", "--emit-c", "-o",
-            ])
+            .args(["build", "--memory", "dynamic", "-O2", "--emit-c", "-o"])
             .arg(&cfile)
             .arg(&input)
             .env("FWP_STACK", "0")
@@ -38,44 +36,34 @@ fn input_nodes_omit_metadata_and_managed_weights_transfer_atomically() {
             ("padded", padded, probe.to_owned(), 230),
             ("unprotected", unprotected, probe.to_owned(), 237),
         ];
-        if memory == "arc" {
-            for (label, release) in [
-                ("missing-input", "fwp_rc_free_arr(operation_seeds);"),
-                ("missing-result", "fwp_rc_free_arr(result);"),
-            ] {
-                assert_eq!(probe.matches(release).count(), 1);
-                cases.push((
-                    label,
-                    code.clone(),
-                    probe.replace(release, "/* omitted release */"),
-                    90,
-                ));
-            }
+
+        for (label, release) in [
+            ("missing-input", "fwp_rc_free_arr(operation_seeds);"),
+            ("missing-result", "fwp_rc_free_arr(result);"),
+        ] {
+            assert_eq!(probe.matches(release).count(), 1);
+            cases.push((
+                label,
+                code.clone(),
+                probe.replace(release, "/* omitted release */"),
+                90,
+            ));
         }
+
         for opt in ["-O1", "-O2"] {
             for (label, runtime, probe, status) in &cases {
                 let binary = directory.join(format!("{label}.exe"));
                 let source = format!("{runtime}\n{probe}");
                 fwp::cgen::compile_c(&source, &binary, opt).unwrap();
                 for cache in ["0", "1"] {
-                    for &reuse in if memory == "arc" {
-                        &["0"][..]
-                    } else {
-                        &["0", "1"][..]
-                    } {
+                    {
                         let result = Command::new(&binary)
                             .env("FWP_AD_WORKSPACE", cache)
-                            .env("FWP_FREE", "1")
-                            .env("FWP_REUSE", "1")
-                            .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                            .env("FWP_GC_STRESS", if memory == "arc" { "0" } else { "1" })
-                            .env("FWP_GC_VERIFY", if memory == "arc" { "0" } else { "1" })
-                            .env("FWP_REUSE_VERIFY", reuse)
                             .output()
                             .unwrap();
                         record_probe::save(
                             "autodiff_workspace",
-                            &format!("operations-{memory}{opt}-{label}-cache{cache}-reuse{reuse}"),
+                            &format!("operations-counted{opt}-{label}-cache{cache}"),
                             &source,
                             &binary,
                             &result,
@@ -92,7 +80,7 @@ fn input_nodes_omit_metadata_and_managed_weights_transfer_atomically() {
                             let destination = std::path::PathBuf::from(destination);
                             std::fs::create_dir_all(&destination).unwrap();
                             std::fs::write(
-                                destination.join(format!("operations-{memory}-{label}{opt}.c")),
+                                destination.join(format!("operations-counted-{label}{opt}.c")),
                                 &source,
                             )
                             .unwrap();
@@ -149,31 +137,23 @@ fn autodiff_workspaces_reuse_bounded_storage_and_release_every_private_owner() {
       .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
     let probe = include_str!("fixtures/autodiff_workspace_probe.c");
     let mut gradients = Vec::new();
-    for arc in [0, 1] {
-        let probe = if arc == 1 {
+    for scoped in [false, true] {
+        let probe = if scoped {
             format!(
                 "{}\n{}",
-                probe.replace("int main(void)", "int tracing_probe_main(void)"),
-                include_str!("fixtures/autodiff_arc_workspace_probe.c")
+                probe.replace("int main(void)", "int unscoped_probe_main(void)"),
+                include_str!("fixtures/autodiff_scoped_workspace_probe.c")
             )
         } else {
             probe.to_owned()
         };
-        let mode = if arc == 1 {
-            "#define FWP_ARC_ONLY 1\n"
-        } else {
-            ""
-        };
-        let code = format!("{mode}{runtime}\n{probe}");
+        let code = format!("{runtime}\n{probe}");
         for opt in ["-O1", "-O2"] {
             let executable = directory.join(&opt[1..]);
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
             for cache in ["0", "1"] {
                 let output = Command::new(&executable)
                     .env("FWP_AD_WORKSPACE", cache)
-                    .env("FWP_GC_STRESS", if arc == 1 { "0" } else { "1" })
-                    .env("FWP_GC_VERIFY", if arc == 1 { "0" } else { "1" })
-                    .env("FWP_REUSE_VERIFY", "0")
                     .output()
                     .unwrap();
                 assert_eq!(
@@ -196,7 +176,7 @@ fn autodiff_workspaces_reuse_bounded_storage_and_release_every_private_owner() {
                     let destination = std::path::PathBuf::from(destination);
                     std::fs::create_dir_all(&destination).unwrap();
                     std::fs::write(
-                        destination.join(format!("native-arc{arc}{opt}-cache{cache}.json")),
+                        destination.join(format!("native-scoped{scoped}{opt}-cache{cache}.json")),
                         &output.stdout,
                     )
                     .unwrap();
@@ -213,15 +193,13 @@ fn autodiff_workspaces_reuse_bounded_storage_and_release_every_private_owner() {
 
 #[test]
 fn backward_prefix_bounds_actual_native_storage_and_scans() {
-    for memory in ["arc", "tracing"] {
+    {
         let directory = fwp::cgen::TempDir::new("fwp-ad-prefix").unwrap();
         let input = directory.join("runtime.fwp");
         let cfile = directory.join("runtime.c");
         std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
         let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args([
-                "build", "--gc", memory, "--memory", "dynamic", "-O2", "--emit-c",
-            ])
+            .args(["build", "--memory", "dynamic", "-O2", "--emit-c"])
             .arg(&input)
             .env("FWP_STACK", "0")
             .arg("-o")
@@ -259,45 +237,35 @@ fn backward_prefix_bounds_actual_native_storage_and_scans() {
             ("full-storage", full_storage, probe.to_owned(), 240),
             ("full-scan", full_scan, probe.to_owned(), 241),
         ];
-        if memory == "arc" {
-            for (label, release) in [
-                ("missing-output", "fwp_rc_free_arr(outs);"),
-                ("missing-seed", "fwp_rc_free_arr(seeds);"),
-                ("missing-result", "fwp_rc_free_arr(result);"),
-            ] {
-                assert!(probe.contains(release));
-                cases.push((
-                    label,
-                    code.clone(),
-                    probe.replace(release, "/* omitted release */"),
-                    90,
-                ));
-            }
+
+        for (label, release) in [
+            ("missing-output", "fwp_rc_free_arr(outs);"),
+            ("missing-seed", "fwp_rc_free_arr(seeds);"),
+            ("missing-result", "fwp_rc_free_arr(result);"),
+        ] {
+            assert!(probe.contains(release));
+            cases.push((
+                label,
+                code.clone(),
+                probe.replace(release, "/* omitted release */"),
+                90,
+            ));
         }
+
         for opt in ["-O1", "-O2"] {
             for (name, code, probe, status) in &cases {
                 let binary = directory.join(format!("{name}.exe"));
                 let code = format!("{code}\n{probe}");
                 fwp::cgen::compile_c(&code, &binary, opt).unwrap();
                 for cache in ["0", "1"] {
-                    for &reuse in if memory == "arc" {
-                        &["0"][..]
-                    } else {
-                        &["0", "1"][..]
-                    } {
+                    {
                         let output = Command::new(&binary)
                             .env("FWP_AD_WORKSPACE", cache)
-                            .env("FWP_FREE", "1")
-                            .env("FWP_REUSE", "1")
-                            .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                            .env("FWP_GC_STRESS", if memory == "arc" { "0" } else { "1" })
-                            .env("FWP_GC_VERIFY", if memory == "arc" { "0" } else { "1" })
-                            .env("FWP_REUSE_VERIFY", reuse)
                             .output()
                             .unwrap();
                         record_probe::save(
                             "autodiff_workspace",
-                            &format!("prefix-{memory}{opt}-{name}-cache{cache}-reuse{reuse}"),
+                            &format!("prefix-counted{opt}-{name}-cache{cache}"),
                             &code,
                             &binary,
                             &output,
@@ -305,14 +273,13 @@ fn backward_prefix_bounds_actual_native_storage_and_scans() {
                         assert_eq!(
                             output.status.code(),
                             Some(*status),
-                            "{name} {opt} cache={cache} reuse={reuse}: {output:?}"
+                            "{name} {opt} cache={cache}: {output:?}"
                         );
                         if let Some(destination) = std::env::var_os("FWP_AD_WORKSPACE_ARTIFACTS") {
                             let destination = std::path::PathBuf::from(destination);
                             std::fs::create_dir_all(&destination).unwrap();
-                            let prefix = destination.join(format!(
-                                "prefix-{memory}-{name}-{opt}-cache{cache}-reuse{reuse}"
-                            ));
+                            let prefix = destination
+                                .join(format!("prefix-counted-{name}-{opt}-cache{cache}"));
                             std::fs::write(prefix.with_extension("c"), &code).unwrap();
                             std::fs::write(
                                 prefix.with_extension("status"),
@@ -379,7 +346,7 @@ fn unused_tape_suffix_preserves_language_values_and_forward_traps() {
         } else {
             assert!(String::from_utf8_lossy(&reference.stderr).contains(diagnostic));
         }
-        for arc in [false, true] {
+
             for opt in ["-O1", "-O2"] {
                 let binary = directory.join("prefix.exe");
                 let mut build = Command::new(compiler);
@@ -389,15 +356,13 @@ fn unused_tape_suffix_preserves_language_values_and_forward_traps() {
                     .arg(opt)
                     .arg("-o")
                     .arg(&binary);
-                build.args(["--gc", if arc { "arc" } else { "tracing" }]);
                 let built = build.output().unwrap();
                 assert!(built.status.success(), "{built:?}");
                 for workspace in ["0", "1"] {
                     let output = Command::new(&binary)
                         .env("FWP_AD_WORKSPACE", workspace)
-                        .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
-                        .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
-                        .env("FWP_REUSE_VERIFY", if arc { "0" } else { "1" })
+
+
                         .output()
                         .unwrap();
                     assert_eq!(output.status.code(), reference.status.code(), "{output:?}");
@@ -409,6 +374,6 @@ fn unused_tape_suffix_preserves_language_values_and_forward_traps() {
                     }
                 }
             }
-        }
+
     }
 }

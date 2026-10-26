@@ -100,6 +100,7 @@ static const fwp_fninfo workspace_functions[]={
 };
 int main(void){
     fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+    size_t initial_live=fwp_heap.live;
     fwp_trap_recover=workspace_recover;fwp_trap_jb=&workspace_recovered;fwp_trap_cleanup=0;
     puts("{\"profiles\":[");
     workspace_mode=0;workspace_gradient(129);puts(",");
@@ -147,5 +148,6 @@ int main(void){
     fwp_rc_free_arr(workspace_outputs);fwp_rc_free_arr(workspace_seeds);
     fwp_tape_finish();
     if(workspace_live || fwp_tape_cached_bytes || fwp_ntapes || fwp_tapes)return 206;
+    if(fwp_heap.live!=initial_live)return 211;
     puts("\"cleanup\":\"bounded owners released after trap, cancellation, reentrancy and shutdown\"}");return 0;
 }
