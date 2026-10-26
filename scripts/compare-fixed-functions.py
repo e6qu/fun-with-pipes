@@ -98,23 +98,26 @@ for directory in args.memory_artifact:
         with (root / name).open() as source:
             return list(csv.DictReader(source, delimiter='\t'))
     rows, rss, entries = table('server-memory.tsv'), table('server-rss.tsv'), table('entry-checks.tsv')
-    assert len(rows) == 36 and len(rss) == 20 and len(entries) == 48
-    assert {(r['mode'], r['tls'], int(r['calls']), int(r['repetition'])) for r in rows} == set(
-        itertools.product(['tracing', 'arc'], ['false', 'true'], [1, 16, 256], range(3)))
-    assert {(r['mode'], r['tls'], int(r['batch'])) for r in rss} == set(
-        itertools.product(['tracing', 'arc'], ['false', 'true'], range(5)))
-    expected_entries = {('server', mode, tls, calls, repetition) for mode, tls, calls, repetition in
-                        itertools.product(['tracing', 'arc'], ['false', 'true'], [1, 16, 256], range(3))}
-    expected_entries.update(('client', mode, tls, calls, 0) for mode, tls, calls in
-                            itertools.product(['tracing', 'arc'], ['false', 'true'], [1, 16, 256]))
-    assert {(r['role'], r['server_mode'], r['tls'], int(r['calls']), int(r['repetition'])) for r in entries} == expected_entries
+    assert all(set(r) == {'tls', 'calls', 'repetition', 'requests', 'requested_bytes', 'retains', 'peak_charged_bytes', 'final_charged_bytes'} for r in rows)
+    assert all(set(r) == {'tls', 'batch', 'cumulative_calls', 'rss_kib'} for r in rss)
+    assert all(set(r) == {'role', 'tls', 'calls', 'repetition', 'entry_check_calls'} for r in entries)
+    assert len(rows) == 18 and len(rss) == 10 and len(entries) == 24
+    assert {(r['tls'], int(r['calls']), int(r['repetition'])) for r in rows} == set(
+        itertools.product(['false', 'true'], [1, 16, 256], range(3)))
+    assert {(r['tls'], int(r['batch'])) for r in rss} == set(
+        itertools.product(['false', 'true'], range(5)))
+    expected_entries = {('server', tls, calls, repetition) for tls, calls, repetition in
+                        itertools.product(['false', 'true'], [1, 16, 256], range(3))}
+    expected_entries.update(('client', tls, calls, 0) for tls, calls in
+                            itertools.product(['false', 'true'], [1, 16, 256]))
+    assert {(r['role'], r['tls'], int(r['calls']), int(r['repetition'])) for r in entries} == expected_entries
     assert all(int(r['entry_check_calls']) == 0 for r in entries)
     summaries = []
-    for mode, tls in itertools.product(['tracing', 'arc'], ['false', 'true']):
-        selected = [r for r in rows if (r['mode'], r['tls']) == (mode, tls)]
+    for tls in ['false', 'true']:
+        selected = [r for r in rows if r['tls'] == tls]
         finals = {int(r['final_charged_bytes']) for r in selected}
-        assert len(finals) == 1 and all(int(r['collections']) == 0 for r in selected)
-        samples = sorted((r for r in rss if (r['mode'], r['tls']) == (mode, tls)), key=lambda r: int(r['batch']))
+        assert len(finals) == 1
+        samples = sorted((r for r in rss if r['tls'] == tls), key=lambda r: int(r['batch']))
         assert [int(r['cumulative_calls']) for r in samples] == [4096 * (i + 1) for i in range(5)]
         resident = [int(r['rss_kib']) for r in samples]
         assert min(resident) > 0 and all(value < resident[0] + 8192 for value in resident[1:])
@@ -123,7 +126,7 @@ for directory in args.memory_artifact:
             medians = {calls: statistics.median(int(r[field]) for r in selected if int(r['calls']) == calls)
                        for calls in [16, 256]}
             slopes[field] = (medians[256] - medians[16]) / 240
-        summaries.append({'mode': mode, 'tls': tls == 'true', 'final_managed_bytes': next(iter(finals)),
+        summaries.append({'tls': tls == 'true', 'final_managed_bytes': next(iter(finals)),
                           'peak_managed_bytes': max(int(r['peak_charged_bytes']) for r in selected),
                           'largest_rss_growth_kib': max(resident) - resident[0],
                           'median_slopes_per_additional_call': slopes})

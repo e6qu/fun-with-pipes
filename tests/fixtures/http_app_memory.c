@@ -50,8 +50,8 @@ static void http_app_checkpoint(void) {
         http_app_baseline = charge;
         http_app_metric_baseline = metrics;
     }
-    fprintf(stderr, "http-memory\t%llu\t%llu\t%.0f\t%zu\t%zu\t%zu\n",
-        http_app_opened, http_app_closed, charge, tasks, metrics, fwp_heap.ncollect);
+    fprintf(stderr, "http-memory\t%llu\t%llu\t%.0f\t%zu\t%zu\n",
+        http_app_opened, http_app_closed, charge, tasks, metrics);
     fflush(stderr);
     if (http_app_opened != http_app_sampled + 8 || http_app_closed != http_app_opened ||
         charge != http_app_baseline || metrics != http_app_metric_baseline) {

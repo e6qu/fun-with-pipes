@@ -2994,7 +2994,7 @@ jobs:
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-clients' && matrix.part == 'comparisons' }}
         env:
           FWP_HTTP_CLIENT_ARTIFACTS: http-client-evidence
-        run: cargo test --test web checked_arc_http_matches_interpreter_with_pooled_and_tls_calls -- --exact --nocapture
+        run: cargo test --test web native_http_matches_interpreter_with_pooled_and_tls_calls -- --exact --nocapture
       - name: Repeated HTTP client memory costs
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-clients' && matrix.part == 'comparisons' }}
         env:

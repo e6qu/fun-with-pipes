@@ -1,5 +1,13 @@
 # Memory between JSON API requests
 
+G5 keeps the workloads and memory bounds below. Its current API checkpoint has
+five values after `http-memory`: opened sockets, closed sockets, charged bytes,
+live tasks and metric bytes. The collector field is removed. Ordinary HTTP/2
+server reports require 18 allocation rows, ten RSS samples and 24 ownership-entry
+rows per host across cleartext/TLS. The former stress case now runs both client
+and server with unique-storage reuse disabled. Integrated G5 execution is pending;
+the delivery evidence below describes its recorded source revision.
+
 Status: [PR #208](https://github.com/e6qu/fun-with-pipes/pull/208) passes all nine
 production jobs, documentation and independent six-host binary review at
 `227e671257d885185e54b3f915f6d1ebf470b3ea`. The [delivery record](http-memory-delivery-2026-10-24.json)

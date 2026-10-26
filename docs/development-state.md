@@ -42,7 +42,12 @@ execution is pending. Array and hash checks retain alias, effect-order, stack,
 layout, forced-copy and deliberate leak variants. Channel reports now require
 45 samples per host, and hash comparisons retain five implementations with ten
 balanced timing samples each. Their readers and protocols change together; no
-new performance result is claimed.
+new performance result is claimed. Numerical protocols now compare counted fwp
+with C/Rust in six balanced process batches (thirty samples each); paired C
+experiments use four batches (twenty samples). HTTP tests retain all transports
+and memory bounds, with forced-copy client/server coverage replacing collector
+stress. The current HTTP reader requires 18 allocation rows, ten RSS samples
+and 24 ownership-entry rows per host.
 
 ## Implemented here; integration still pending
 
@@ -80,7 +85,7 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 1. **Finish test mode removal.** The list/State/closure fixtures in
    `list_applicative_ownership` are migrated; integrated execution is pending.
    `unwind_cleanup` and typed-State reports are also migrated. Next review the
-   remaining one unchanged candidate file (`web`) and stale candidates listed below.
+   stale candidates and remaining files listed below.
    Remove variable `--gc` arguments, duplicate
    ARC/tracing loops, obsolete environment settings and CLI-selector tests.
    Keep every distinct semantic input, optimization/layout choice and ownership
@@ -119,20 +124,10 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 
 ## Candidate edits and recovery
 
-`/private/tmp/fwp-single-mode-candidates` contains 84 parsed/formatted candidates
-covering 151 duplicate-mode loops, regenerated after the client-report changes.
-Nine owner-test candidates were reviewed and applied: constructor type/unwind,
-general/ordinary record update, loop preparation, retain unwind, variant conversion,
-worker boxing and worker preparation. Twelve more owner candidates and thirteen program candidates were reviewed,
-refined and applied. The typed-State and unwind candidates were also reviewed,
-refined and applied; one candidate file (`web`) still matches their source hashes. The
-`arc_tasks`, `linalg_ownership`, `retained_thunk_ownership`,
-`within_thunk_ownership`, `loop_ownership` and `list_applicative_ownership`
-candidates are now also stale. Remaining candidates are **unreviewed**. They may
-leave obsolete helpers, boolean mode loops or artifact consumers. Check each manifest source hash
-before applying; never copy them wholesale. `task_context_storage` has been
-migrated separately, so its candidate is stale. The older `-before-client-schema`
-directory is stale. Candidate refinements also collapsed 51 single-value loops.
+The 84 previews in `/private/tmp/fwp-single-mode-candidates` have all been
+reviewed or superseded by direct edits. They no longer match current source and
+must not be reapplied. Continue from a fresh audit of actual files, including
+boolean mode parameters and generated-C/report fixtures outside that preview.
 
 Automatic approval review rejected an earlier broad rewrite because substantial
 work was uncommitted. No part of that command ran. We saved `bd299fe0`, generated
