@@ -61,9 +61,9 @@ def main():
                             (line.split('\t', 1) for line in result.stderr.splitlines())}
                     assert set(rows) == {'client-memory', 'task-layout', 'process-peak-kib'}
                     counts = dict(zip(['allocation_requests', 'requested_bytes', 'effective_retains',
-                                       'peak_charged_bytes', 'final_charged_bytes', 'collections'],
+                                       'peak_charged_bytes', 'final_charged_bytes'],
                                       rows['client-memory'], strict=True))
-                    assert counts['final_charged_bytes'] == counts['collections'] == 0
+                    assert counts['final_charged_bytes'] == 0
                     peak, = rows['process-peak-kib']
                     assert peak > 0, 'whole-process peak resident memory is unavailable'
                     samples.append(dict(memory=memory, optimization=opt, layout=layout,
@@ -91,7 +91,7 @@ def main():
         memory_scope='Linux VmHWM from /proc/self/status at the post-task-teardown checkpoint, before final allocator/process exit. This is the peak resident memory observed up to that point, including startup, runtime, code, shared library mappings and stacks; not private physical memory or a guarantee about later exit work. Allocator counters and sizeof layouts are separate. The observation opens /proc after the counted region.',
         time_scope='Parent monotonic elapsed time around spawning and waiting for each complete child, including startup, output capture and teardown. These short processes do not isolate context-switch latency; ratios are observations for this workload, not a general speed claim.',
         ratio='Candidate divided by preceding layout: 1 means equal, below 1 means less, above 1 means more. Raw samples and ranges preserve variability; no significance claim.',
-        flags='fwp emission at O1; generated C at the named O0/O2, -std=gnu11 -ffp-contract=off -w and normal runtime links. Measurement settings explicitly disable tracing collections and reuse verification and enable physical freeing.',
+        flags='fwp emission at O1; generated C at the named O0/O2, -std=gnu11 -ffp-contract=off -w and normal runtime links. Counted ownership releases storage at the last use; no tracing mode is selected.',
         instrumentation='Both variants use the same allocation-counting and final reporting hooks. Candidate-specific stack bounds, cleared pointers and root-image assertions execute in separate verification binaries, excluded from these measurements.',
         task_layout_fields=['task_record_bytes', 'task_record_alignment', 'saved_context_bytes', 'root_static_context_bytes'],
         repetitions=args.repetitions, timeout_seconds=args.timeout, binary_records=binaries,

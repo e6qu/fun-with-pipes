@@ -63,10 +63,6 @@ int main(void) {
         if (scope_mode==2) {
             scope_saved_task=fwp_cur;memset(&scope_cancelled_task,0,sizeof(scope_cancelled_task));
             scope_cancelled_task.cancelled=1;fwp_cur=&scope_cancelled_task;
-#ifdef _WIN32
-            /* This synthetic task executes on the main thread stack. */
-            scope_cancelled_task.ctx.top=fwp_heap.main_top;
-#endif
             jmp_buf scope_cancelled_task_base; scope_cancelled_task.base = &scope_cancelled_task_base;
             if (!setjmp(scope_cancelled_task_base)) { fwp_p_ad_scope(PTR(&outer_scope_callback), FWP_UNIT);return 63; }
             scope_cancelled_task.base=NULL;fwp_cur=scope_saved_task;

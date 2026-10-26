@@ -51,11 +51,10 @@ main = [task.yield (),
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .arg(&src)
                 .args(["--emit-c", "-O2", "-o"])
                 .arg(&cfile)
@@ -118,46 +117,35 @@ int main(void) {
         );
         let control = runtime.replace(&needle, "fwp_rc_drop(c->");
         for opt in ["-O1", "-O2"] {
-            if mode == "arc" {
+            {
                 let missing = probe.replace("fwp_rc_free_obj(scalar_word);", "");
                 assert_ne!(missing, probe);
                 fwp::cgen::compile_c(&format!("{runtime}\n{missing}"), &exe, opt).unwrap();
                 let out = Command::new(&exe)
                     .env_remove("FWP_PROBE_RECORD")
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
                     .output()
                     .unwrap();
                 record_probe::save(
                     "constructor_type_ownership",
-                    &format!("{mode}{opt}-missing-release"),
+                    &format!("counted{opt}-missing-release"),
                     &format!("{runtime}\n{missing}"),
                     &exe,
                     &out,
                 );
-                assert_eq!(out.status.code(), Some(90), "{mode} {opt}: {out:?}");
+                assert_eq!(out.status.code(), Some(90), "counted {opt}: {out:?}");
             }
 
             fwp::cgen::compile_c(&format!("{control}\n{probe}"), &exe, opt).unwrap();
             for record_only in [false, true] {
                 let mut command = Command::new(&exe);
-                command
-                    .env_remove("FWP_PROBE_RECORD")
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress);
+                command.env_remove("FWP_PROBE_RECORD");
                 if record_only {
                     command.env("FWP_PROBE_RECORD", "1");
                 }
                 let out = command.output().unwrap();
                 record_probe::save(
                     "constructor_type_ownership",
-                    &format!("{mode}{opt}-missing-child-record{record_only}"),
+                    &format!("counted{opt}-missing-child-record{record_only}"),
                     &format!("{control}\n{probe}"),
                     &exe,
                     &out,
@@ -169,48 +157,29 @@ int main(void) {
             );
             }
             fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-            for poison in if mode == "arc" {
-                &["0"][..]
-            } else {
-                &["0", "1"][..]
-            } {
+            {
                 let out = Command::new(&exe)
                     .env_remove("FWP_PROBE_RECORD")
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", poison)
                     .output()
                     .unwrap();
                 record_probe::save(
                     "constructor_type_ownership",
-                    &format!("{mode}{opt}-normal-poison{poison}"),
+                    &format!("counted{opt}-normal"),
                     &format!("{runtime}\n{probe}"),
                     &exe,
                     &out,
                 );
-                assert!(
-                    out.status.success(),
-                    "{mode} {opt} poison={poison}: {out:?}"
-                );
+                assert!(out.status.success(), "counted {opt}: {out:?}");
             }
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .args(["build", "--memory", "dynamic"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe)
                     .env("FWP_STACK", "0"),
             );
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
+            let out = checked(&mut Command::new(&exe));
             assert_eq!(out.stdout, reference.stdout);
         }
     }

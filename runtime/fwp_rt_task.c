@@ -295,7 +295,7 @@ static ucontext_t fwp_root_context;
 
 
 #if defined(_WIN32) && defined(FWP_STATIC_MEMORY)
-typedef struct { void *fiber; char *top; int busy; } fwp_static_fiber;
+typedef struct { void *fiber; int busy; } fwp_static_fiber;
 static fwp_static_fiber fwp_static_fibers[FWP_STATIC_TASKS];
 static void fwp_static_fibers_init(void);
 static void fwp_static_fiber_release(void *fiber) {
@@ -995,10 +995,8 @@ static void fwp_ctx_entry(void) { fwp_task_main(); }
 #ifdef _WIN32
 #ifdef FWP_STATIC_MEMORY
 static void CALLBACK fwp_win_task_entry(void *arg) {
-    fwp_static_fiber *slot = arg;
-    fwp_win_context context = {0};
-    fwp_win_context_started(&context);
-    slot->top = context.top;
+    (void)arg;
+    fwp_win_stack_started();
     fwp_static_touch_stack();
     SwitchToFiber(fwp_root->ctx.fiber);
     for (;;) fwp_task_main();
@@ -1026,8 +1024,8 @@ static void fwp_static_fibers_init(void) {
 }
 #else
 static void CALLBACK fwp_win_task_entry(void *arg) {
-    fwp_task *task = (fwp_task *)arg;
-    fwp_win_context_started(&task->ctx);
+    (void)arg;
+    fwp_win_stack_started();
     fwp_task_main();
     abort();
 }
@@ -1076,7 +1074,6 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
     if (fwp_static_fibers[slot].busy) abort();
     fwp_static_fibers[slot].busy = 1;
     t->ctx.fiber = fwp_static_fibers[slot].fiber;
-    t->ctx.top = fwp_static_fibers[slot].top;
     int busy = FWP_STATIC_TASKS - fwp_static.ntask_free;
     if (busy > fwp_static.tasks_peak) fwp_static.tasks_peak = busy;
 #else

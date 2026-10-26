@@ -35,11 +35,10 @@ main = [task.yield (), (1, "left", "right", 17) | loop step | echo] | ignore
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .env("FWP_STACK", "1")
                 .arg(&src)
                 .args(["--emit-c", "-O2", "-o"])
@@ -188,39 +187,25 @@ int main(void) {
             .replace("fwp_cleanup_pop(&preparation_cleanup);", "");
         let old_runtime = runtime.replacen(&failing, &old, 1);
         for opt in ["-O1", "-O2"] {
-            if mode == "arc" {
+            {
                 let missing = probe.replace("fwp_rc_free_obj(scalar_word);", "");
                 assert_ne!(missing, probe);
                 fwp::cgen::compile_c(&format!("{runtime}\n{missing}"), &exe, opt).unwrap();
-                let out = Command::new(&exe)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
+                let out = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "loop_preparation_ownership",
-                    &format!("{mode}{opt}-missing-release"),
+                    &format!("counted{opt}-missing-release"),
                     &format!("{runtime}\n{missing}"),
                     &exe,
                     &out,
                 );
-                assert_eq!(out.status.code(), Some(90), "{mode} {opt}: {out:?}");
+                assert_eq!(out.status.code(), Some(90), "counted {opt}: {out:?}");
             }
             fwp::cgen::compile_c(&format!("{old_runtime}\n{probe}"), &exe, opt).unwrap();
-            let control = Command::new(&exe)
-                .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                .env("FWP_GC_STATS", "0")
-                .env("FWP_GC_STRESS", stress)
-                .env("FWP_GC_VERIFY", stress)
-                .env("FWP_REUSE_VERIFY", stress)
-                .output()
-                .unwrap();
+            let control = Command::new(&exe).output().unwrap();
             record_probe::save(
                 "loop_preparation_ownership",
-                &format!("{mode}{opt}-missing-scope"),
+                &format!("counted{opt}-missing-scope"),
                 &format!("{old_runtime}\n{probe}"),
                 &exe,
                 &control,
@@ -231,48 +216,27 @@ int main(void) {
                 "missing partial cleanup must retain an extra field"
             );
             fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-            for poison in if mode == "arc" {
-                &["0"][..]
-            } else {
-                &["0", "1"][..]
-            } {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
+            {
+                let out = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "loop_preparation_ownership",
-                    &format!("{mode}{opt}-normal-poison{poison}"),
+                    &format!("counted{opt}-normal"),
                     &format!("{runtime}\n{probe}"),
                     &exe,
                     &out,
                 );
-                assert!(
-                    out.status.success(),
-                    "{mode} {opt} poison={poison}: {out:?}"
-                );
+                assert!(out.status.success(), "counted {opt}: {out:?}");
                 assert_eq!(out.stdout, b"flattened preparation releases partial fields and preserves aliases and scalar bits\n");
             }
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .args(["build", "--memory", "dynamic"])
                     .env("FWP_STACK", "1")
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe),
             );
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
+            let out = checked(&mut Command::new(&exe));
             assert_eq!(out.stdout, reference.stdout);
         }
     }

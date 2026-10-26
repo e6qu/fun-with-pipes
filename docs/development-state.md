@@ -7,8 +7,10 @@ not been built. Do not publish it as working code or claim GC removal is verifie
 
 Worktree: `/private/tmp/fwp-delete-tracing`; branch `delete-tracing-collector`.
 Base: #216 source `0db38df8bd0b3ea6f4dc1165edd985bc82c71ccb`.
-Local checkpoints: `d83f4745` (runtime deletion) and `bd299fe0` (release controls).
-Further reviewed edits are in the working tree. Nothing here has been pushed.
+Local checkpoints: `d83f4745` (runtime deletion), `bd299fe0` (release controls),
+and `dd0c2fbe` (counted probe selection and numeric cases). Further reviewed edits
+cover Windows contexts, client reports and nine owner-test migrations. Nothing
+here has been pushed.
 
 Only #216 is a public PR. Its worktree is
 `/private/tmp/fwp-ownership-fault-matrix`, branch `remove-tracing-runtime`.
@@ -32,6 +34,9 @@ must stay stopped. No merge watcher is running.
 | Wide counts | Retained exact counts, overflow/OOM, metadata-free faults and high-fanout outputs. Added live interior-address count-slot mapping and fresh counts on reused addresses. No freed payload is read. |
 | Test selection | Reviewed and selected counted C branches in 61 files. Removed collector-status terms from combined assertions while preserving live-byte, metadata and resource checks. |
 | Numeric/CLI cases | Migrated nine test files to one counted run, retaining optimization/layout choices and deliberate faults. Integer evidence gates now require six length binaries and ten product/sanitizer binaries per host; direct-output inspection requires 72 binaries across six hosts. |
+| Windows contexts | Removed collector stack bounds and root snapshots. Retained register/stack/rounding, borrowed-host-fiber and ownership-size controls at O0/O1/O2; native execution is pending. |
+| Client reports | Shared client-memory observer now reports requests, requested bytes, retains, peak-live growth and final-live growth. Updated all its Rust readers and Python consumers; no dummy collection field. |
+| Owner tests | Migrated nine constructor/record/variant/worker preparation and unwind files to one counted run, retaining alias, failure and missing-release controls. |
 | Docs | Updated ownership, native commands, tutorials and allocator/report explanations. Historical measurements retain their original source/schema; reproduction instructions distinguish their revision from current tools. |
 
 The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
@@ -46,10 +51,9 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
    fault. Retain errors for unsupported current options; no compatibility aliases.
 2. **Finish C fixtures.** Remove remaining collector fields/calls, root-fence
    anchors and escaped `FWP_ARC_ONLY` blocks. Preserve independent lifetime,
-   alias, failure/cancellation and resource assertions. Windows context/root
-   probes still reference removed stack-root fields; retain ABI/register/rounding
-   and host-fiber ownership checks, retire root-discovery-only checks.
-3. **Finish report schemas and consumers together.** Client/server/numerical
+   alias, failure/cancellation and resource assertions. Windows ABI/register/rounding and host-fiber ownership checks have been migrated;
+   the separate task-context root fixture still needs review.
+3. **Finish report schemas and consumers together.** The shared client-memory report is migrated; other server/numerical
    reports still carry collection fields. Remove them rather than printing dummy
    zeros. Update strict parsers, TSV/JSON producers, artifact audits and docs.
    Do not rewrite historical measurement JSON.
@@ -64,18 +68,16 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
    collector-absence checks. Focused Clang probes do not establish GCC, Windows,
    WASI, generated-program or integrated Rust support.
 
-Text inventory after the nine mode migrations: `--gc` occurs in 107 test files;
-collector fields/calls in 69, `FWP_ARC_ONLY` in 17 and root fences in 49.
-These are review locations, not failing-test counts: absence assertions may
-legitimately name deleted collector symbols.
-
 ## Candidate edits and recovery
 
-`/private/tmp/fwp-single-mode-candidates` contains 93 parsed/formatted candidates
-covering 165 duplicate-mode loops. Only the nine files listed above were applied.
-The others are **unreviewed**, may leave obsolete helper parameters/single-value
-loops, and do not update artifact consumers. Do not copy them wholesale.
-Regeneration would overwrite later candidate refinements; preserve reviewed edits.
+`/private/tmp/fwp-single-mode-candidates` contains 84 parsed/formatted candidates
+covering 151 duplicate-mode loops, regenerated after the client-report changes.
+Nine owner-test candidates were reviewed and applied: constructor type/unwind,
+general/ordinary record update, loop preparation, retain unwind, variant conversion,
+worker boxing and worker preparation. The remaining 75 are **unreviewed** and may
+leave obsolete helpers or artifact consumers. Check each manifest source hash
+before applying; never copy them wholesale. The older `-before-client-schema`
+directory is stale. Candidate refinements also collapsed 51 single-value loops.
 
 Automatic approval review rejected an earlier broad rewrite because substantial
 work was uncommitted. No part of that command ran. We saved `bd299fe0`, generated

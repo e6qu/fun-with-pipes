@@ -70,11 +70,10 @@ fn wrapper_preparation_failures_and_worker_entry_preserve_exact_owners() {
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .env("FWP_STACK", "1")
                 .arg(&src)
                 .args(["--emit-c", "-O2", "-o"])
@@ -130,10 +129,6 @@ int main(void) {
         prepared_copies=0;fail_field=mode<2 ? mode : mode==4 ? 2 : -1;cancel_in_worker=mode==2;
         fwp_trap_recover=recover_preparation;fwp_trap_jb=&preparation;fwp_trap_cleanup=0;
         memset(&cancelled_worker,0,sizeof cancelled_worker);
-#ifdef _WIN32
-        /* This synthetic task executes on the main thread stack. */
-        cancelled_worker.ctx.top=fwp_heap.main_top;
-#endif
         if (mode==2) { fwp_cur=&cancelled_worker;fwp_budget=1000000; }
         jmp_buf cancelled_worker_base; cancelled_worker.base=&cancelled_worker_base;
         if (!setjmp(preparation)) {
@@ -213,40 +208,26 @@ int main(void) {
             );
         let unprotected = runtime.replacen(&preparing, &old_wrapper, 1);
         for opt in ["-O1", "-O2"] {
-            if mode == "arc" {
+            {
                 let missing = probe.replace("fwp_rc_free_obj(scalar_word);", "");
                 assert_ne!(missing, probe);
                 fwp::cgen::compile_c(&format!("{runtime}\n{missing}"), &exe, opt).unwrap();
-                let out = Command::new(&exe)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
+                let out = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "worker_preparation_ownership",
-                    &format!("{mode}{opt}-missing-release"),
+                    &format!("counted{opt}-missing-release"),
                     &format!("{runtime}\n{missing}"),
                     &exe,
                     &out,
                 );
-                assert_eq!(out.status.code(), Some(90), "{mode} {opt}: {out:?}");
+                assert_eq!(out.status.code(), Some(90), "counted {opt}: {out:?}");
             }
 
             fwp::cgen::compile_c(&format!("{unprotected}\n{probe}"), &exe, opt).unwrap();
-            let old = Command::new(&exe)
-                .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                .env("FWP_GC_STATS", "0")
-                .env("FWP_GC_STRESS", stress)
-                .env("FWP_GC_VERIFY", stress)
-                .env("FWP_REUSE_VERIFY", stress)
-                .output()
-                .unwrap();
+            let old = Command::new(&exe).output().unwrap();
             record_probe::save(
                 "worker_preparation_ownership",
-                &format!("{mode}{opt}-missing-scope"),
+                &format!("counted{opt}-missing-scope"),
                 &format!("{unprotected}\n{probe}"),
                 &exe,
                 &old,
@@ -257,48 +238,27 @@ int main(void) {
                 "missing partial scope must leave an earlier shared duplicate owned"
             );
             fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-            for poison in if mode == "arc" {
-                &["0"][..]
-            } else {
-                &["0", "1"][..]
-            } {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
+            {
+                let out = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "worker_preparation_ownership",
-                    &format!("{mode}{opt}-normal-poison{poison}"),
+                    &format!("counted{opt}-normal"),
                     &format!("{runtime}\n{probe}"),
                     &exe,
                     &out,
                 );
-                assert!(
-                    out.status.success(),
-                    "{mode} {opt} poison={poison}: {out:?}"
-                );
+                assert!(out.status.success(), "counted {opt}: {out:?}");
                 assert_eq!(out.stdout,b"worker preparation and entry release exact owners while preserving aliases and scalar bits\n");
             }
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .args(["build", "--memory", "dynamic"])
                     .env("FWP_STACK", "1")
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe),
             );
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
+            let out = checked(&mut Command::new(&exe));
             assert_eq!(out.stdout, reference.stdout);
         }
     }

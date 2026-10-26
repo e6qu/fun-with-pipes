@@ -169,9 +169,9 @@ fn cancellation_state_uses_the_entry_stack_and_preserves_cleanup() {
                 };
                 let counts = numbers(lines[0], "client-memory\t");
                 let sizes = numbers(lines[1], "cancellation-layout\t");
-                assert_eq!(counts.len(), 6);
+                assert_eq!(counts.len(), 5);
                 assert_eq!(sizes.len(), 3);
-                assert_eq!(counts[4..], [0, 0], "{label}: {stderr}");
+                assert_eq!(counts[4], 0, "{label}: {stderr}");
                 results.push((counts, sizes));
                 let symbols = checked(Command::new("nm").arg(&binary));
                 if memory == "arc" {
@@ -436,9 +436,9 @@ fn compact_task_records_preserve_scheduling_and_remove_arc_stack_markers() {
                 };
                 let counts = numbers(lines[0], "client-memory\t");
                 let sizes = numbers(lines[1], "task-record\t");
-                assert_eq!(counts.len(), 6);
+                assert_eq!(counts.len(), 5);
                 assert_eq!(sizes.len(), 5);
-                assert_eq!(counts[4..], [0, 0], "{label}: {stderr}");
+                assert_eq!(counts[4], 0, "{label}: {stderr}");
                 rows.push((counts, sizes));
             }
             let (old_counts, old_sizes) = &rows[0];

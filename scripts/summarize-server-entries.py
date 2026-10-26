@@ -16,7 +16,7 @@ HOSTS = {
     'windows-2025': ('PE32+ executable', 'x86-64'),
     'windows-11-arm': ('PE32+ executable', 'Aarch64'),
 }
-COUNTERS = ['requests', 'requested_bytes', 'retains', 'peak_bytes', 'final_bytes', 'collections']
+COUNTERS = ['requests', 'requested_bytes', 'retains', 'peak_bytes', 'final_bytes']
 
 
 def sha256(path):
@@ -65,7 +65,7 @@ def stdio(directory):
     for mode, free in [('tracing', 'true'), ('arc', 'true'), ('tracing', 'false')]:
         selected = sorted((r for r in rows if (r['mode'], r['free']) == (mode, free)), key=lambda r: r['repeats'])
         assert [r['repeats'] for r in selected] == [1, 16, 128]
-        assert all(r['collections'] == 0 and r['requests'] > 0 and r['peak_bytes'] >= r['final_bytes'] for r in selected)
+        assert all(r['requests'] > 0 and r['peak_bytes'] >= r['final_bytes'] for r in selected)
         finals = [r['final_bytes'] for r in selected]
         assert (len(set(finals)) == 1 if free == 'true' else all(a < b for a, b in zip(finals, finals[1:])))
         slopes = {key: (selected[-1][key] - selected[-2][key]) / ((128 - 16) * 8)
@@ -86,7 +86,7 @@ def http(directory, interface):
         for tls in transports:
             selected = [r for r in rows if (r['interface'], r['mode'], r['tls']) == (interface, mode, tls)]
             assert sorted((r['cycles'], r['repetition']) for r in selected) == [(n, sample) for n in [1, 16, 128] for sample in range(3)]
-            assert all(r['collections'] == 0 and r['requests'] > 0 and r['peak_bytes'] >= r['final_bytes'] for r in selected)
+            assert all(r['requests'] > 0 and r['peak_bytes'] >= r['final_bytes'] for r in selected)
             assert len({r['final_bytes'] for r in selected}) == 1
             resident = sorted((r for r in rss if (r['interface'], r['mode'], r['tls']) == (interface, mode, tls)), key=lambda r: r['batch'])
             assert [r['batch'] for r in resident] == list(range(5))

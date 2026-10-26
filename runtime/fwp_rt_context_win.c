@@ -5,14 +5,10 @@
 
 typedef struct {
     void *fiber;
-    char *top;
     int converted_thread;
 } fwp_win_context;
 
-static void fwp_win_context_started(fwp_win_context *context) {
-    ULONG_PTR low, high;
-    GetCurrentThreadStackLimits(&low, &high);
-    context->top = (char *)high;
+static void fwp_win_stack_started(void) {
     ULONG guarantee = 65536;
     if (!SetThreadStackGuarantee(&guarantee))
         fwp_trap("cannot reserve stack overflow handling space");
@@ -26,7 +22,7 @@ static void fwp_win_context_root(fwp_win_context *context) {
         if (!context->fiber) fwp_trap("cannot initialize task fibers");
         context->converted_thread = 1;
     }
-    fwp_win_context_started(context);
+    fwp_win_stack_started();
 }
 
 static __attribute__((noinline)) void fwp_win_context_switch(

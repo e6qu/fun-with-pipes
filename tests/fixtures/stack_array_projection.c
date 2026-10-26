@@ -50,9 +50,6 @@ int main(void) {
         memset(&stack_array_task, 0, sizeof stack_array_task);
         if (mode) {
             stack_array_task.identity = UINT64_MAX;
-#ifdef _WIN32
-            stack_array_task.ctx.top = previous->ctx.top;
-#endif
             stack_array_task.base = &stack_array_jump; fwp_cur = &stack_array_task;
         }
         stack_array_cancel = mode;

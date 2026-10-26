@@ -120,10 +120,6 @@ int main(void){
         workspace_base=fwp_p_ad_tape(1);fwp_array_store(workspace_outputs,0,workspace_base,&index);
         if(workspace_mode==2){
             workspace_saved_task=fwp_cur;memset(&workspace_cancelled,0,sizeof(workspace_cancelled));workspace_cancelled.cancelled=1;fwp_cur=&workspace_cancelled;
-#ifdef _WIN32
-            /* This synthetic task executes on the main thread stack. */
-            workspace_cancelled.ctx.top=fwp_heap.main_top;
-#endif
             jmp_buf workspace_cancelled_base; workspace_cancelled.base = &workspace_cancelled_base;
             if (!setjmp(workspace_cancelled_base)){fwp_p_ad_backward(workspace_base,workspace_outputs,workspace_seeds);return 197;}
             workspace_cancelled.base=NULL;fwp_cur=workspace_saved_task;if(!workspace_cancelled.unwinding)return 198;

@@ -67,9 +67,6 @@ static int construct_case(int kind, size_t n, int pattern, int sharing,
     construct_saved_task = fwp_cur; memset(&construct_task, 0, sizeof construct_task);
     if (cancel) {
         fwp_cur = &construct_task;
-#ifdef _WIN32
-        construct_task.ctx.top = fwp_heap.main_top;
-#endif
     }
     fwp_budget = 1000000; construct_armed = 1; array_probe_retains = 0;
     fwp_trap_recover = construct_recover; fwp_trap_jb = &construct_jump;

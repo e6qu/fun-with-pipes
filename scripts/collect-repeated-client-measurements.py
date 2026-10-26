@@ -117,7 +117,7 @@ def main():
         summaries = []
         selected_count = 0
         for row in rows:
-            assert row["collections"] == 0 and row["requests"] > 0
+            assert row["requests"] > 0
             assert 0 <= row["final_charged_bytes"] <= row["peak_charged_bytes"]
             calls = row["batches"] * MODES[row["mode"]]
             assert row["streams_created"] == calls

@@ -37,12 +37,10 @@ main = [task.yield (), Box { first = "first", last = "last", old = "old", word =
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
-        let poisons: &[&str] = if mode == "arc" { &["0"] } else { &["0", "1"] };
+    {
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .arg(&src)
                 .args(["--emit-c", "-O2", "-o"])
                 .arg(&cfile)
@@ -180,17 +178,10 @@ int main(void) {
             for (control, expected) in &controls {
                 let controlled = runtime.replace(&modified, control);
                 fwp::cgen::compile_c(&format!("{controlled}\n{probe}"), &exe, opt).unwrap();
-                let out = Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
+                let out = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "record_update_ownership",
-                    &format!("{mode}{opt}-control{expected}"),
+                    &format!("counted{opt}-control{expected}"),
                     &format!("{controlled}\n{probe}"),
                     &exe,
                     &out,
@@ -203,66 +194,42 @@ int main(void) {
                 );
             }
             fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-            for poison in poisons {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
+            {
+                let out = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "record_update_ownership",
-                    &format!("{mode}{opt}-normal-poison{poison}"),
+                    &format!("counted{opt}-normal"),
                     &format!("{runtime}\n{probe}"),
                     &exe,
                     &out,
                 );
-                assert!(
-                    out.status.success(),
-                    "{mode} {opt} poison={poison}: {out:?}"
-                );
+                assert!(out.status.success(), "counted {opt}: {out:?}");
             }
-            if mode == "arc" {
+            {
                 // Removing scalar-bit fixture cleanup leaves an allocation that
                 // the field-count assertions do not detect. The ledger must.
                 let leaked_probe = probe.replace("fwp_rc_free_obj(word);", "");
                 assert_ne!(leaked_probe, probe);
                 fwp::cgen::compile_c(&format!("{runtime}\n{leaked_probe}"), &exe, opt).unwrap();
-                let leaked = Command::new(&exe)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
+                let leaked = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "record_update_ownership",
-                    &format!("{mode}{opt}-missing-release"),
+                    &format!("counted{opt}-missing-release"),
                     &format!("{runtime}\n{leaked_probe}"),
                     &exe,
                     &leaked,
                 );
-                assert_eq!(leaked.status.code(), Some(90), "{mode} {opt}: {leaked:?}");
+                assert_eq!(leaked.status.code(), Some(90), "counted {opt}: {leaked:?}");
             }
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .args(["build", "--memory", "dynamic"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe)
                     .env("FWP_STACK", "0"),
             );
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
+            let out = checked(&mut Command::new(&exe));
             assert_eq!(out.stdout, reference.stdout);
         }
     }

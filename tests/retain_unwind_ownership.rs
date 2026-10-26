@@ -49,11 +49,10 @@ main = [task.yield (),
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .env("FWP_STACK", "1")
                 .arg(&src)
                 .args(["--emit-c", "-O2", "-o"])
@@ -155,42 +154,28 @@ int main(void) {
         );
         let caller_control = runtime.replacen(worker, &old_worker, 1);
         for opt in ["-O1", "-O2"] {
-            if mode == "arc" {
+            {
                 let missing = probe.replace("fwp_rc_free_obj(scalar_word);", "");
                 assert_ne!(missing, probe);
                 fwp::cgen::compile_c(&format!("{runtime}\n{missing}"), &exe, opt).unwrap();
-                let out = Command::new(&exe)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
+                let out = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "retain_unwind_ownership",
-                    &format!("{mode}{opt}-missing-release"),
+                    &format!("counted{opt}-missing-release"),
                     &format!("{runtime}\n{missing}"),
                     &exe,
                     &out,
                 );
-                assert_eq!(out.status.code(), Some(90), "{mode} {opt}: {out:?}");
+                assert_eq!(out.status.code(), Some(90), "counted {opt}: {out:?}");
             }
 
             let uncleared = probe.replace("fwp_rc_fresh(first);", "wide(first)->count=1;");
             assert_ne!(uncleared, probe);
             fwp::cgen::compile_c(&format!("{runtime}\n{uncleared}"), &exe, opt).unwrap();
-            let stale = Command::new(&exe)
-                .env("FWP_GC", "off")
-                .env("FWP_GC_STATS", "0")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
+            let stale = Command::new(&exe).output().unwrap();
             record_probe::save(
                 "retain_unwind_ownership",
-                &format!("{mode}{opt}-uncleared-count"),
+                &format!("counted{opt}-uncleared-count"),
                 &format!("{runtime}\n{uncleared}"),
                 &exe,
                 &stale,
@@ -198,17 +183,10 @@ int main(void) {
             assert_eq!(stale.status.code(), Some(90), "{opt}: {stale:?}");
 
             fwp::cgen::compile_c(&format!("{caller_control}\n{probe}"), &exe, opt).unwrap();
-            let out = Command::new(&exe)
-                .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                .env("FWP_GC_STATS", "0")
-                .env("FWP_GC_STRESS", stress)
-                .env("FWP_GC_VERIFY", stress)
-                .env("FWP_REUSE_VERIFY", stress)
-                .output()
-                .unwrap();
+            let out = Command::new(&exe).output().unwrap();
             record_probe::save(
                 "retain_unwind_ownership",
-                &format!("{mode}{opt}-control7"),
+                &format!("counted{opt}-control7"),
                 &format!("{caller_control}\n{probe}"),
                 &exe,
                 &out,
@@ -220,17 +198,10 @@ int main(void) {
             );
 
             fwp::cgen::compile_c(&format!("{control}\n{probe}"), &exe, opt).unwrap();
-            let out = Command::new(&exe)
-                .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                .env("FWP_GC_STATS", "0")
-                .env("FWP_GC_STRESS", stress)
-                .env("FWP_GC_VERIFY", stress)
-                .env("FWP_REUSE_VERIFY", stress)
-                .output()
-                .unwrap();
+            let out = Command::new(&exe).output().unwrap();
             record_probe::save(
                 "retain_unwind_ownership",
-                &format!("{mode}{opt}-control3"),
+                &format!("counted{opt}-control3"),
                 &format!("{control}\n{probe}"),
                 &exe,
                 &out,
@@ -241,47 +212,26 @@ int main(void) {
                 "missing partial scope must leak the first retain"
             );
             fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-            for poison in if mode == "arc" {
-                &["0"][..]
-            } else {
-                &["0", "1"][..]
-            } {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
+            {
+                let out = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "retain_unwind_ownership",
-                    &format!("{mode}{opt}-normal-poison{poison}"),
+                    &format!("counted{opt}-normal"),
                     &format!("{runtime}\n{probe}"),
                     &exe,
                     &out,
                 );
-                assert!(
-                    out.status.success(),
-                    "{mode} {opt} poison={poison}: {out:?}"
-                );
+                assert!(out.status.success(), "counted {opt}: {out:?}");
             }
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .args(["build", "--memory", "dynamic"])
                     .env("FWP_STACK", "1")
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe),
             );
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
+            let out = checked(&mut Command::new(&exe));
             assert_eq!(out.stdout, reference.stdout);
         }
     }

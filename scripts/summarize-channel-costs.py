@@ -12,7 +12,7 @@ HOSTS = ('ubuntu-latest', 'ubuntu-24.04-arm')
 CASES = ('unique-text', 'unique-function', 'shared-text', 'shared-function',
          'closed-function')
 METRICS = ('requests', 'requested_bytes', 'retains', 'peak_charge', 'final_charge',
-           'collections', 'sends', 'accepted', 'unique_payloads', 'queue_retains',
+           'sends', 'accepted', 'unique_payloads', 'queue_retains',
            'binary_bytes')
 
 
@@ -41,12 +41,12 @@ def host_report(directory, source):
         assert row['accepted'] == (0 if row['case'] == 'closed-function' else row['messages']), row
         assert row['unique_payloads'] <= row['accepted'], row
         if row['memory'] == 'arc':
-            assert row['final_charge'] == row['collections'] == 0, row
+            assert row['final_charge'] == 0, row
         label = f"{row['case']}-{row['memory']}-O2"
         raw = (directory / f"{label}-{row['messages']}-{row['sample']}.stderr").read_text().splitlines()
         assert len(raw) == 2, raw
-        assert raw[0].split('\t') == ['client-memory', *[str(row[x]) for x in METRICS[:6]]], row
-        assert raw[1].split('\t') == ['channel-counts', *[str(row[x]) for x in METRICS[6:10]]], row
+        assert raw[0].split('\t') == ['client-memory', *[str(row[x]) for x in METRICS[:5]]], row
+        assert raw[1].split('\t') == ['channel-counts', *[str(row[x]) for x in METRICS[5:9]]], row
     for case in CASES:
         for memory in ('arc', 'tracing'):
             label = f'{case}-{memory}-O2'

@@ -343,8 +343,8 @@ fn task_context_storage_preserves_output_and_cleanup() {
                         .skip(1)
                         .map(|v| v.parse().unwrap())
                         .collect();
-                    assert_eq!(values.len(), 6);
-                    assert_eq!(values[4..], [0, 0], "{memory}/{label}: {stderr}");
+                    assert_eq!(values.len(), 5);
+                    assert_eq!(values[4], 0, "{memory}/{label}: {stderr}");
                     let peak: u64 = stderr
                         .lines()
                         .find_map(|line| line.strip_prefix("process-peak-kib\t"))

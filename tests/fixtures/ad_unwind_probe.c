@@ -65,10 +65,6 @@ int main(void) {
             /* The injected task has its own cleanup chain. The caller keeps
              * the scope containing the independent other computation. */
             fwp_cleanups=NULL;
-#ifdef _WIN32
-            /* This synthetic task executes on the main thread stack. */
-            cancelled_task.ctx.top=fwp_heap.main_top;
-#endif
             jmp_buf cancelled_task_base; cancelled_task.base = &cancelled_task_base;
             if (!setjmp(cancelled_task_base)) { fwp_p_ad_backward(selected_base,outputs,seeds);return 34; }
             cancelled_task.base=NULL;fwp_cur=saved_current;fwp_cleanups=&scope_owner;

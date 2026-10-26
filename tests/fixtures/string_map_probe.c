@@ -93,9 +93,6 @@ int main(void) {
         memset(&map_cancelled, 0, sizeof map_cancelled);
         if (kind == 2) {
             map_cancelled.identity = UINT64_MAX; map_cancelled.cancelled = 1;
-#ifdef _WIN32
-            map_cancelled.ctx.top = previous->ctx.top;
-#endif
             map_cancelled.base = &map_jump; fwp_cur = &map_cancelled;
         }
         if (!setjmp(map_jump)) {

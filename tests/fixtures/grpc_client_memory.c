@@ -16,9 +16,9 @@ static void client_measure_begin(void) {
 static void client_measure_end(void) {
     client_sample();
     client_active = 0;
-    fprintf(stderr, "client-memory\t%llu\t%llu\t%llu\t%.0f\t%.0f\t%zu\n",
+    fprintf(stderr, "client-memory\t%llu\t%llu\t%llu\t%.0f\t%.0f\n",
         (unsigned long long)client_requests,
         (unsigned long long)client_requested_bytes,
         (unsigned long long)client_retains,
-        client_peak_charge, client_charge() - client_start_charge, fwp_heap.ncollect);
+        client_peak_charge, client_charge() - client_start_charge);
 }

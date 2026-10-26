@@ -89,9 +89,6 @@ static int sort_case(int kind, size_t n, int pattern, int sharing,
     sort_saved_task = fwp_cur; memset(&sort_task, 0, sizeof sort_task);
     if (cancel) {
         fwp_cur = &sort_task;
-#ifdef _WIN32
-        sort_task.ctx.top = fwp_heap.main_top;
-#endif
     }
     fwp_budget = 1000000; sort_armed = 1;
     fwp_trap_recover = sort_recover; fwp_trap_jb = &sort_jump;

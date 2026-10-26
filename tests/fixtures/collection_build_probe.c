@@ -51,9 +51,6 @@ static int build_case(int op, int failure, int callback, int cancel, int *steps)
     memset(&build_task, 0, sizeof(build_task));
     if (cancel) {
         build_task.cancelled = 1; fwp_cur = &build_task;
-#ifdef _WIN32
-        build_task.ctx.top = fwp_heap.main_top;
-#endif
     }
     fwp_trap_recover = build_recover; fwp_trap_jb = &build_jump;
     fwp_trap_cleanup = fwp_cleanups;

@@ -93,12 +93,12 @@ for label, expected_status in sorted(expected.items()):
         lines = stderr.decode().splitlines()
         assert len(lines) == 2 and lines[0].startswith('client-memory\t')
         counts = [int(n) for n in lines[0].split('\t')[1:]]
-        assert len(counts) == 6 and lines[1].startswith(counter + '\t')
+        assert len(counts) == 5 and lines[1].startswith(counter + '\t')
         record['counters'] = dict(zip(['allocation_requests', 'requested_bytes', 'retains',
-                                      'peak_managed_charge', 'final_managed_charge', 'collections'], counts, strict=True))
+                                      'peak_managed_charge', 'final_managed_charge'], counts, strict=True))
         record['restored_pairs' if counter == 'callback-pairs' else 'restored_boxes'] = int(lines[1].split('\t')[1])
         if arc:
-            assert counts[4:] == [0, 0], (label, counts)
+            assert counts[4] == 0, (label, counts)
     else:
         assert not stderr, label
         if label.startswith('clock-owners/'):
@@ -124,6 +124,5 @@ for memory in ['arc', 'tracing']:
         assert boxed['counters']['allocation_requests'] - fields['counters']['allocation_requests'] == 34
         assert boxed['counters']['requested_bytes'] > fields['counters']['requested_bytes']
         assert boxed['counters']['retains'] == fields['counters']['retains']
-        assert boxed['counters']['collections'] == fields['counters']['collections']
 root.joinpath('task-owner-inspection.json').write_text(json.dumps(report, indent=2) + '\n')
 print(f'Inspected {len(expected)} executed task-owner binaries on {system} {architecture}')

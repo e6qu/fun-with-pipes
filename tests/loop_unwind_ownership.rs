@@ -182,11 +182,6 @@ int main(void) {
         state_box=fwp_rc_fresh(fwp_data(0,2,(V[]){scalar_word,payload}));
         wanted_tick=tick;current_tick=0;observed_text=0;observed_other=0;
         memset(&cancelled_loop,0,sizeof cancelled_loop);fwp_cur=&cancelled_loop;fwp_budget=1000000;
-#ifdef _WIN32
-        /* This synthetic task runs on main's stack. Windows tasks normally
-         * receive their scan boundary when their fiber starts. */
-        cancelled_loop.ctx.top=fwp_heap.main_top;
-#endif
         jmp_buf cancelled_loop_base; cancelled_loop.base = &cancelled_loop_base;
         if (!setjmp(cancelled_loop_base)) {
             if (mode==0) fwp_loopSTEP(state_box);

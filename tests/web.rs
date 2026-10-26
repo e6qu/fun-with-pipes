@@ -785,7 +785,7 @@ fn repeated_http_client_memory_measurement() {
         fwp::cgen::compile_c(&instrumented, &measured, "-O2").unwrap();
         binaries.push((mode, ordinary, measured));
     }
-    let mut rows = String::from("mode\ttls\tcalls\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\tcollections\n");
+    let mut rows = String::from("mode\ttls\tcalls\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\n");
     let mut final_storage = std::collections::BTreeMap::new();
     for tls in [false, true] {
         let server = start(Backend::Interp, tls, &[]).unwrap();
@@ -831,9 +831,8 @@ fn repeated_http_client_memory_measurement() {
                         let fields = stderr.trim().strip_prefix("client-memory\t").unwrap();
                         let values: Vec<u64> =
                             fields.split('\t').map(|v| v.parse().unwrap()).collect();
-                        assert_eq!(values.len(), 6);
+                        assert_eq!(values.len(), 5);
                         assert!(values[0] > 0 && values[1] > 0);
-                        assert_eq!(values[5], 0, "collections must be disabled");
                         rows.push_str(&format!("{mode}\t{tls}\t{calls}\t{repetition}\t{fields}\n"));
                         std::fs::write(artifacts.join("memory.tsv"), &rows).unwrap();
                         let first = final_storage.entry((*mode, tls)).or_insert(values[4]);
@@ -908,7 +907,7 @@ fn repeated_http_server_memory_measurement() {
         );
         out.stdout
     };
-    let mut rows = String::from("mode\ttls\tcalls\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\tcollections\n");
+    let mut rows = String::from("mode\ttls\tcalls\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\n");
     let mut rss_rows = String::from("mode\ttls\tbatch\tcumulative_calls\trss_kib\n");
     let mut entry_rows =
         String::from("role\tserver_mode\ttls\tcalls\trepetition\tentry_check_calls\n");
@@ -1002,12 +1001,11 @@ fn repeated_http_server_memory_measurement() {
                         .split('\t')
                         .map(|value| value.parse().unwrap())
                         .collect();
-                    assert_eq!(counts.len(), 6, "{stderr}");
+                    assert_eq!(counts.len(), 5, "{stderr}");
                     rows.push_str(&format!(
                         "{mode}\t{tls}\t{calls}\t{repetition}\t{counter}\n"
                     ));
                     std::fs::write(artifacts.join("server-memory.tsv"), &rows).unwrap();
-                    assert_eq!(counts[5], 0, "unexpected collection: {stderr}");
                     if let Some(before) = final_charge {
                         assert_eq!(counts[4], before, "server final managed storage changed with request count: {mode}/{tls}/{calls}");
                     } else {
@@ -1169,8 +1167,7 @@ fn http_server_function_capture_allocation_profile() {
                     .split('\t')
                     .map(|n| n.parse().unwrap())
                     .collect();
-                assert_eq!(counters.len(), 6);
-                assert_eq!(counters[5], 0);
+                assert_eq!(counters.len(), 5);
                 let profile = std::fs::read_to_string(file).unwrap();
                 let mut allocated = 0;
                 let mut bytes = 0;

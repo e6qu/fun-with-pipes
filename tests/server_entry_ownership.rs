@@ -750,7 +750,7 @@ fn generated_http_entries_release_requests_and_bound_process_memory() {
     certificate(&artifacts);
     std::fs::copy(fixture(), artifacts.join("server_entries.fwp")).unwrap();
     std::fs::write(artifacts.join("scope.txt"), "Generated REST (HTTP/TLS) and MCP (HTTP) servers at one revision, tracing versus checked ARC, with collection disabled and counted freeing enabled. An ordinary native ARC client makes three sequential pooled HTTP/2 requests per cycle: a copied record, duplicate aliases of a record, and a caught error. It prints every response status and body. A raw-interpreter server establishes output for each transport, then ordinary and instrumented native servers must match it. Managed counters cover startup after constant initialization through normal entry and cached-value cleanup; include 1/16/128 request cycles and one HTTP/1.1 shutdown request, with three fresh measured processes per case. Raw transport/TLS/OS storage, allocator metadata and client memory are excluded. Separately, ordinary persistent servers process five batches of 1024 cycles (3072 requests per batch), with a fresh client per batch; the 1000-request connection limit exercises replacement. After each client exits and 100 ms settling, Linux VmRSS/macOS ps RSS/Windows WorkingSet64 is sampled. The first batch warms caches; later samples must stay less than 8 MiB above it. These samples are not peak process memory. Native -O2, ordinary fwp optimization and separate floating multiplication/addition rounding. No timing or C/Rust parity claim.\n").unwrap();
-    let mut rows = String::from("interface\tmode\ttls\tcycles\trepetition\trequests\trequested_bytes\tretains\tpeak_bytes\tfinal_bytes\tcollections\n");
+    let mut rows = String::from("interface\tmode\ttls\tcycles\trepetition\trequests\trequested_bytes\tretains\tpeak_bytes\tfinal_bytes\n");
     let mut rss = String::from("interface\tmode\ttls\tbatch\tcumulative_requests\trss_kib\n");
     let flag = format!("--{interface}");
     let client_file = artifacts.join(format!("client-{interface}.fwp"));
@@ -842,9 +842,8 @@ fn generated_http_entries_release_requests_and_bound_process_memory() {
                     assert_eq!(reports.len(), 1);
                     let counters: Vec<u64> =
                         reports[0].split('\t').map(|n| n.parse().unwrap()).collect();
-                    assert_eq!(counters.len(), 6);
+                    assert_eq!(counters.len(), 5);
                     assert!(counters[0] > 0 && counters[3] >= counters[4]);
-                    assert_eq!(counters[5], 0);
                     assert_eq!(
                         *final_bytes.get_or_insert(counters[4]),
                         counters[4],
@@ -888,7 +887,9 @@ fn mcp_stdio_releases_repeated_requests_without_collection() {
     std::fs::create_dir_all(&artifacts).unwrap();
     std::fs::copy(fixture(), artifacts.join("server_entries.fwp")).unwrap();
     std::fs::write(artifacts.join("scope.txt"), "Repeated generated MCP standard-input server, same fixture and messages in tracing and checked ARC. One, 16 or 128 repetitions of eight replies: returned record, duplicated record aliases, successful value, caught error, explicit error result, invalid typed input, malformed JSON, and unknown method; blank lines and notifications produce no reply. Ordinary -O2 servers validate every response before the allocation-instrumented server is compared byte for byte. Collection is disabled and counted freeing enabled except in the explicit tracing build with FWP_FREE=0, which must demonstrate increasing retained storage. Managed allocation requests, payload bytes, actual count increments and peak/final charged storage cover constant initialization completion through main and cached-value cleanup, before whole-runtime disposal. Raw buffers, OS storage, allocator metadata and process RSS are excluded. No elapsed-time or C/Rust comparison.\n").unwrap();
-    let mut rows = String::from("mode\tfree\trepeats\trequests\trequested_bytes\tretains\tpeak_bytes\tfinal_bytes\tcollections\n");
+    let mut rows = String::from(
+        "mode\tfree\trepeats\trequests\trequested_bytes\tretains\tpeak_bytes\tfinal_bytes\n",
+    );
     let mut finals = Vec::new();
     for (mode, free) in [("tracing", true), ("arc", true), ("tracing", false)] {
         eprintln!("MCP memory: build {mode}, counted freeing={free}");
@@ -929,8 +930,7 @@ fn mcp_stdio_releases_repeated_requests_without_collection() {
                 .split('\t')
                 .map(|n| n.parse().unwrap())
                 .collect();
-            assert_eq!(counters.len(), 6);
-            assert_eq!(counters[5], 0);
+            assert_eq!(counters.len(), 5);
             assert!(counters[3] >= counters[4]);
             case_finals.push(counters[4]);
             rows.push_str(&format!(

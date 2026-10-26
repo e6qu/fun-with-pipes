@@ -299,6 +299,15 @@ worktree. Consumer migration and integrated validation are unfinished; see
 
 ## Remaining acceptance
 
+The shared `client-memory` report has five columns after its label: allocation
+requests, requested bytes, effective retains, peak live-byte growth and final
+live-byte growth. Measurement starts after constant initialization and ends at
+the generated ownership observation point, before full runtime shutdown. HTTP
+server probes that reuse this observer call the same row `server-memory`.
+Neither row includes collection counts. They exclude raw network buffers,
+allocator metadata, OS resources and process RSS; separate observers cover those.
+Their migrated consumers still require integrated validation.
+
 G5 must update allocation-report consumers and workflow settings, remove the
 collector-only assertions above and inspect binaries for actual tracing removal.
 Preserve all behavioral assertions and broken-ownership controls. An address

@@ -113,7 +113,7 @@ int main(void){
  fwp_trap_recover=recover;fwp_trap_jb=&rejected;fwp_trap_cleanup=0;
  if(setjmp(rejected)==0){fSPAWN(fn);return 11;}
  fwp_trap_recover=0;fwp_trap_jb=0;
- if(strcmp(fwp_trap_msg,"internal: counted owner escaped ARC contract"))return 12;
+  if(strcmp(fwp_trap_msg,"internal: task callback has no owned entry"))return 12;
  if(*fwp_rc_slot(fn)!=1||*fwp_rc_slot(capture)!=1||fwp_tasks_active||fwp_cleanups)return 13;
  fwp_fns=fwp_fn_table;fwp_closure_drop(fn);
  fwp_tasks_finish();fwp_native_tasks_finish();
@@ -451,14 +451,14 @@ fn transferred_callbacks_remove_a_retain_release_pair() {
                     .split('\t')
                     .map(|v| v.parse().unwrap())
                     .collect();
-                assert_eq!(counts.len(), 6);
+                assert_eq!(counts.len(), 5);
                 let pairs: u64 = lines[1]
                     .strip_prefix("callback-pairs\t")
                     .unwrap()
                     .parse()
                     .unwrap();
                 if memory == "arc" {
-                    assert_eq!(counts[4..], [0, 0]);
+                    assert_eq!(counts[4], 0);
                 }
                 if let Some(path) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
                     let path = std::path::PathBuf::from(path).join("callback-transfer");
@@ -488,11 +488,7 @@ fn transferred_callbacks_remove_a_retain_release_pair() {
                 retained[0..2],
                 "same allocation requests/bytes"
             );
-            assert_eq!(
-                moved[3..],
-                retained[3..],
-                "same peak/final charge and collections"
-            );
+            assert_eq!(moved[3..], retained[3..], "same peak/final charge");
             assert_eq!(
                 retained[2] - moved[2],
                 *pairs,
@@ -591,14 +587,14 @@ static fwp_option_result fwp_task_await_fields(V handle, void (*dup)(V)) {
                     .split('\t')
                     .map(|v| v.parse().unwrap())
                     .collect();
-                assert_eq!(counts.len(), 6);
+                assert_eq!(counts.len(), 5);
                 let boxes: u64 = lines[1]
                     .strip_prefix("await-boxes\t")
                     .unwrap()
                     .parse()
                     .unwrap();
                 if memory == "arc" {
-                    assert_eq!(counts[4..], [0, 0]);
+                    assert_eq!(counts[4], 0);
                 }
                 if let Some(path) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
                     let path = std::path::PathBuf::from(path).join("await-fields");
@@ -644,10 +640,6 @@ static fwp_option_result fwp_task_await_fields(V handle, void (*dup)(V)) {
             assert_eq!(
                 boxed[2], fields[2],
                 "shared results keep their required retains"
-            );
-            assert_eq!(
-                boxed[5], fields[5],
-                "same collections during count comparison"
             );
         }
     }

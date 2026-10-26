@@ -58,7 +58,7 @@ fn sequential_channel_operation_counts() {
     );
     std::fs::create_dir_all(&artifacts).unwrap();
     let mut rows = String::from(
-        "case\tmemory\toptimization\tmessages\tsample\trequests\trequested_bytes\tretains\tpeak_charge\tfinal_charge\tcollections\tsends\taccepted\tunique_payloads\tqueue_retains\tbinary_bytes\n",
+        "case\tmemory\toptimization\tmessages\tsample\trequests\trequested_bytes\tretains\tpeak_charge\tfinal_charge\tsends\taccepted\tunique_payloads\tqueue_retains\tbinary_bytes\n",
     );
     for (name, program) in [
         (
@@ -151,7 +151,7 @@ fn sequential_channel_operation_counts() {
                         .split('\t')
                         .map(|x| x.parse().unwrap())
                         .collect();
-                    assert_eq!(memory_fields.len(), 6);
+                    assert_eq!(memory_fields.len(), 5);
                     assert_eq!(queue_fields.len(), 4);
                     assert_eq!(queue_fields[0], *n, "{label}: {stderr}");
                     assert_eq!(
@@ -162,10 +162,6 @@ fn sequential_channel_operation_counts() {
                     assert!(queue_fields[2] <= queue_fields[1], "{stderr}");
                     if memory == "arc" {
                         assert_eq!(memory_fields[4], 0, "{label}: retained storage: {stderr}");
-                        assert_eq!(
-                            memory_fields[5], 0,
-                            "{label}: unexpected collection: {stderr}"
-                        );
                     }
                     if let Some(ref previous) = previous {
                         assert_eq!(&stderr, previous, "unstable operation counts: {label}/{n}");

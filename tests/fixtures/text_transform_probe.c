@@ -69,9 +69,6 @@ int main(void) {
         memset(&text_cancelled,0,sizeof text_cancelled);
         if(kind==2) {
             text_cancelled.identity=UINT64_MAX;text_cancelled.cancelled=1;
-#ifdef _WIN32
-            text_cancelled.ctx.top=previous->ctx.top;
-#endif
             text_cancelled.base=&text_jump;fwp_cur=&text_cancelled;
         }
         if(!setjmp(text_jump)) {

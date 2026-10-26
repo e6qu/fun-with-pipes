@@ -62,9 +62,6 @@ static int copy_case(int op, int failure, int callback, int cancel, int *steps) 
     memset(&copy_task, 0, sizeof copy_task);
     if (cancel) {
         fwp_cur = &copy_task;
-#ifdef _WIN32
-        copy_task.ctx.top = fwp_heap.main_top;
-#endif
     }
     fwp_budget = 1000000;
     fwp_trap_recover = copy_recover; fwp_trap_jb = &copy_jump;

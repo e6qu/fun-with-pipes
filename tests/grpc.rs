@@ -566,7 +566,7 @@ fn remote_stream_client_memory_measurement() {
     );
     std::fs::create_dir_all(&artifacts).unwrap();
     std::fs::copy(dir().join("greeter.fwp"), artifacts.join("greeter.fwp")).unwrap();
-    std::fs::write(artifacts.join("scope.txt"), "Generated standalone clients call an interpreted greeter server over real loopback HTTP/2. For each input size, raw unoptimized interpretation and an uninstrumented compiled client must print the expected result. Three separate measured client processes count managed allocation requests, requested bytes and effective retains, sampling allocator-charged storage after each allocation. Measurement starts after constant initialization and ends after entry execution and top-level cached-value cleanup, before complete runtime shutdown. GC is disabled and physical freeing enabled. Raw network/message buffers, allocator metadata/pages, process memory and server memory are excluded. No timing or C/Rust comparison. Inputs are 64, 1024 and 16384; full consumers sum 1..n, partial consumers sum the first 32, retained consumers sum then reread the initial value. The compiler uses its ordinary optimizer and native -O2; code is emitted through fwp build --service greeter --emit-c and compiled through this revision's cgen::compile_c. Compiler versions, CPU details, source, generated C and binaries accompany this report.\n").unwrap();
+    std::fs::write(artifacts.join("scope.txt"), "Generated standalone clients call an interpreted greeter server over real loopback HTTP/2. For each input size, raw unoptimized interpretation and an uninstrumented compiled client must print the expected result. Three separate measured client processes count managed allocation requests, requested bytes and effective retains, sampling allocator-charged storage after each allocation. Measurement starts after constant initialization and ends after entry execution and top-level cached-value cleanup, before complete runtime shutdown. Counted owners release storage at their last use. Raw network/message buffers, allocator metadata/pages, process memory and server memory are excluded. No timing or C/Rust comparison. Inputs are 64, 1024 and 16384; full consumers sum 1..n, partial consumers sum the first 32, retained consumers sum then reread the initial value. The compiler uses its ordinary optimizer and native -O2; code is emitted through fwp build --service greeter --emit-c and compiled through this revision's cgen::compile_c. Compiler versions, CPU details, source, generated C and binaries accompany this report.\n").unwrap();
     let d = scratch("stream-client-memory");
     std::fs::copy(dir().join("greeter.fwp"), d.join("greeter.fwp")).unwrap();
     let mut server = Command::new(fwp());
@@ -576,7 +576,7 @@ fn remote_stream_client_memory_measurement() {
         .arg("greeter")
         .args(["--listen", "127.0.0.1:0"]);
     let server = start(server, Duration::from_secs(60));
-    let mut rows = String::from("mode\telements\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\tcollections\n");
+    let mut rows = String::from("mode\telements\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\n");
     for (mode, consume) in [
         ("unique", "iter.fold add 0"),
         (
@@ -658,9 +658,8 @@ fn remote_stream_client_memory_measurement() {
                         .strip_prefix("client-memory\t")
                         .expect("only the measurement line on stderr");
                     let values: Vec<u64> = fields.split('\t').map(|v| v.parse().unwrap()).collect();
-                    assert_eq!(values.len(), 6);
+                    assert_eq!(values.len(), 5);
                     assert!(values[0] > 0 && values[1] > 0);
-                    assert_eq!(values[5], 0, "collections must be disabled");
                     rows.push_str(&format!("{mode}\t{elements}\t{repetition}\t{fields}\n"));
                 } else {
                     assert!(stderr.is_empty(), "{stderr}");
@@ -709,7 +708,7 @@ fn measure_repeated_remote_calls(close_connections: bool) {
         .arg("greeter")
         .args(["--listen", "127.0.0.1:0"]);
     let server = start(command, Duration::from_secs(60));
-    let mut rows=String::from("mode\tbatches\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\tcollections\tconnections_created\tconnections_finalized\tstreams_created\tstreams_finalized\tmessages_created\tmessages_freed\tmessage_requested_bytes\tmessage_freed_bytes\tpeak_message_bytes\n");
+    let mut rows=String::from("mode\tbatches\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\tconnections_created\tconnections_finalized\tstreams_created\tstreams_finalized\tmessages_created\tmessages_freed\tmessage_requested_bytes\tmessage_freed_bytes\tpeak_message_bytes\n");
     let mut checkpoints=String::from("mode\tbatches\trepetition\tprior_streams\tmanaged_charged_bytes\tmessage_bytes\tlive_connections\tlive_streams\n");
     let mut drains=String::from("mode\tbatches\trepetition\tconnections_created\tconnections_closed\tlive_io_tasks\tmanaged_charged_bytes\tunfinalized_connections\tunfinalized_streams\tmessage_bytes\n");
     let mut storage=String::from("mode\tbatches\trepetition\tconnection_requested_bytes\tconnection_charged_bytes\tio_task_requested_bytes\tio_task_charged_bytes\tconnection_header_bytes\ttask_bytes\n");
@@ -777,7 +776,7 @@ fn measure_repeated_remote_calls(close_connections: bool) {
                 let memory=memory.unwrap();let transport=transport.unwrap();
                 let m:Vec<u64>=memory.split('\t').map(|v|v.parse().unwrap()).collect();
                 let t:Vec<u64>=transport.split('\t').map(|v|v.parse().unwrap()).collect();
-                assert_eq!(m.len(),6);assert_eq!(m[5],0,"collection must remain disabled");
+                assert_eq!(m.len(),5);
                 assert_eq!(t.len(),9);assert!(t[0]>0&&t[0]<=count);assert_eq!(t[2],count);
                 if close_connections {assert_eq!(t[0],count);}
                 assert!(t[1]<=t[0]&&t[3]<=t[2]&&t[5]<=t[4]&&t[7]<=t[6]);
@@ -850,7 +849,7 @@ fn sender_input_memory_measurement() {
         .arg("greeter")
         .args(["--listen", "127.0.0.1:0"]);
     let server = start(command, Duration::from_secs(60));
-    let mut rows=String::from("mode\tbatches\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\tcollections\tconnections_created\tconnections_finalized\tstreams_created\tstreams_finalized\tmessages_created\tmessages_freed\tmessage_requested_bytes\tmessage_freed_bytes\tpeak_message_bytes\n");
+    let mut rows=String::from("mode\tbatches\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\tconnections_created\tconnections_finalized\tstreams_created\tstreams_finalized\tmessages_created\tmessages_freed\tmessage_requested_bytes\tmessage_freed_bytes\tpeak_message_bytes\n");
     let mut checkpoints=String::from("mode\tbatches\trepetition\tprior_streams\tmanaged_charged_bytes\tmessage_bytes\tlive_connections\tlive_streams\n");
     let mut drains=String::from("mode\tbatches\trepetition\tconnections_created\tconnections_closed\tlive_tasks\tmanaged_charged_bytes\tunfinalized_connections\tunfinalized_streams\tmessage_bytes\n");
     let mut storage=String::from("mode\tbatches\trepetition\tconnection_requested_bytes\tconnection_charged_bytes\tio_task_requested_bytes\tio_task_charged_bytes\tconnection_header_bytes\ttask_bytes\n");
@@ -988,8 +987,7 @@ fn sender_input_memory_measurement() {
                 assert_eq!(closed, batches);
                 assert_eq!(unique.len(), 4);
                 let (memory, m) = &unique["client-memory"];
-                assert_eq!(m.len(), 6);
-                assert_eq!(m[5], 0);
+                assert_eq!(m.len(), 5);
                 let (transport, t) = &unique["transport-memory"];
                 assert_eq!(t.len(), 9);
                 assert_eq!(&t[..4], &[batches, batches, batches, batches]);

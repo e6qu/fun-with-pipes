@@ -28,10 +28,6 @@ int main(int argc, char **argv) {
     fwp_trap_recover = nested_recover;
     fwp_trap_jb = &nested_recovered; fwp_trap_cleanup = NULL;
     if (nested_mode == 6) {
-#ifdef _WIN32
-        /* This injected task runs on the current stack, not a new fiber. */
-        nested_cancelled.ctx.top = saved->ctx.top;
-#endif
         fwp_cur = &nested_cancelled;
         jmp_buf nested_cancelled_base; nested_cancelled.base = &nested_cancelled_base;
         if (!setjmp(nested_cancelled_base)) { NESTED_MAIN(); return 191; }
