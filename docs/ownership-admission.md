@@ -83,7 +83,7 @@ shows a graph whose edges are integer IDs: a logical cycle without owning cycles
 | Unknown function, task or external queue producer | Typed IR controls in [arc_scope](../src/arc_scope.rs): `joining_a_known_target_does_not_hide_an_unknown_function`, `queued_task_captures_follow_the_computation_and_unknown_inputs`, `runtime_function_producers_and_external_queues_need_known_sources` | Unknown is not an empty set of captures. These tests construct internal IR; they are not claims that every such internal primitive is available in source. Admission needs a producer/lifetime model. |
 | A received function uses the sender's expired State/AD handler | `queued_autodiff_functions_require_the_receivers_scope` in [queued_functions](../tests/queued_functions.rs); [arc_extensions](../tests/arc_extensions.rs), `raw_ad_cannot_escape_scope_proof_through_callbacks_or_arguments` | Calling must install the required handler in the receiving task. Keep invalid scope use rejected. |
 | An inter-task derivative escapes its scope | [ad_task_reuse](../tests/fixtures/ad_task_reuse.fwp), checked by [autodiff_nested](../tests/autodiff_nested.rs) | Expected `outside an autodiff scope` rejection. The corpus fails any new unexpected ARC rejection; it does not just count excluded programs. |
-| Closing a cyclic channel | [channel_cycle_ownership](../tests/channel_cycle_ownership.rs), `closed_channel_cycles_keep_values_until_drain_and_then_release` | Close preserves queued messages. The tracing-only control drains explicitly and checks reclamation. Removing tracing must not quietly change close to discard messages or pretend this is current ARC admission. |
+| Closing a cyclic channel | [channel_cycle_ownership](../tests/channel_cycle_ownership.rs), `owning_cycle_is_rejected_before_effects_in_both_engines` | Both raw and optimized interpreter/native entries reject recursive owning channels before effects, even if a later drain is planned. Close still preserves queued messages in admitted programs; use weak links for a non-owning back-reference. |
 | C stores a callback after returning | Foreign declaration permits only a scoped callback; the C body is outside the ownership proof | No compiler diagnostic is promised for a C implementation violating that contract. The [retained API](retained-callbacks.md) supplies a separate context-bearing registration for selected exports, with active-call ownership and explicit release. Verified in #215; scoped callback pointers still cannot be retained. |
 
 `Ptr[T]` is a manually managed address, not a managed owner. Keeping its storage
@@ -98,7 +98,7 @@ cleanup controls passed in #215. [Delivery history](roadmap-history.md) records
 exact tested sources and runs. A passing entry does not prove arbitrary user
 programs safe; each rejection above still applies.
 
-G5 must apply the lifetime rules to all execution entries and delete collector
+G5 applies the lifetime rules to all execution entries and deletes collector
 code without losing the output, alias, failure, cancellation and memory checks.
 [The diagnostic deletion table](ownership-diagnostics.md#collector-specific-tests-and-retained-assertions)
 identifies what retires with tracing and what must remain. The runtime must not

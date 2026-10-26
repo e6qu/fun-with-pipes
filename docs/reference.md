@@ -760,12 +760,11 @@ fwp: out of memory: the static heap (1024 KiB) is full; build with a larger --he
 ```
 
 `FWP_MEMORY_REPORT=1` prints, at exit, the size of each part and how much
-of it was used at most. This example is from an explicit tracing build; ARC
-reports zero collections:
+of it was used at most. For example (illustrative sizes, not a benchmark):
 
 ```
 fwp: static memory: 124448 KiB mapped at startup
-  heap           65536 KiB, 8320 KiB used at most (4231 KiB live at most, 1 collections)
+  heap           65536 KiB, 8320 KiB used at most (4231 KiB live at most)
   pool           32768 KiB, 136 KiB used at most
   ...
 ```

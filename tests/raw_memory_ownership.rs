@@ -248,7 +248,7 @@ int main(void) {
 }
 
 #[test]
-fn pipe_string_copy_matches_raw_interpreter_under_gc_and_reuse_verification() {
+fn pipe_string_copy_matches_raw_interpreter_with_counted_owners() {
     let dir = fwp::cgen::TempDir::new("fwp-raw-memory-pipes").unwrap();
     let source = dir.join("copy.fwp");
     let cfile = dir.join("copy.c");

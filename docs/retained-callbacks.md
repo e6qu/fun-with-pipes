@@ -108,8 +108,7 @@ those obligations from an arbitrary external library.
 This API selects a known export and captures its leading C arguments. It does
 not export an arbitrary runtime-created fwp closure, admit function fields in
 `repr(C)` records, or extend the lifetime of ordinary scoped callbacks. Native
-checked-ARC libraries support this path; tracing and WebAssembly library builds
-are rejected. Existing restrictions on owning cycles still apply.
+libraries support this path; WebAssembly library builds are rejected. Existing restrictions on owning cycles still apply.
 
 ## Checks
 

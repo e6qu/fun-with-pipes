@@ -4,7 +4,8 @@ An owner keeps an allocation alive. A retain adds an owner; a release gives one
 up. Removing tracing GC requires checks that catch lost owners, premature release
 and unsafe storage reuse without a collector keeping the affected objects alive.
 G4 passed all nine production jobs and documentation in [#215](roadmap-history.md#weak-channels-and-retained-callbacks-pr-215).
-G5 must preserve these checks when removing collector code.
+The G5 branch replaces collector-specific controls while retaining these ownership
+checks. Its integrated acceptance is pending in [PR #217](https://github.com/e6qu/fun-with-pipes/pull/217).
 
 ## Closure destruction and loop releases
 
@@ -125,8 +126,8 @@ physical-byte balances, and match the raw interpreter. Removing the child releas
 must fail at both sizes. These four test targets use explicitly bounded 65,536-slot
 tables (512 KiB on a 64-bit host), outside the managed heap.
 
-Existing tracing/poisoning cases remain alongside these ARC checks. The ordinary
-returned-alias program now also runs in ARC. Tests retain C, executable, outputs and
+The returned-alias program runs with counted owners. Explicit forced-copy and
+missing-owner controls replace the old tracing/poisoning variants. Tests retain C, executable, outputs and
 status under `record-ownership/{borrowed_callbacks,reuse_token_ownership,
 variant_alias_ownership,stack_ownership}` in the ownership evidence artifacts.
 [The handoff](development-state.md) tracks verification of subsequent changes.
@@ -176,7 +177,7 @@ order. File closure and file-object release have separate observers. Dynamic
 and static O1/O2 runs use 8 and 1,024 rounds, restoring both live allocations and
 charged bytes each round. Omitting a value free, unwind cleanup, OS close or
 file-object release must produce 231, 232, 235 or 236 respectively. The source
-file-handler example also compares ARC/tracing output with the raw interpreter.
+file-handler example also compares counted native output with the raw interpreter.
 C, executables, output and status are retained under
 `record-ownership/unwind_cleanup`. These tests passed in #215.
 
@@ -225,7 +226,7 @@ remain; freed-value checks use allocation identity in ARC. Premature returned
 string release is checked before reading its bytes. A deliberately duplicated
 release must stop at the ledger with 203. These runs passed in #215.
 
-External-owner probes run in ARC and tracing, with independent fault controls:
+External-owner probes use counted ownership, with independent fault controls:
 
 | Boundary | Test | Observed fault |
 |---|---|---|
@@ -250,8 +251,8 @@ is included in dynamic/static native and WASI JSPI/Asyncify execution.
 The [WASI physical ledger](../tests/fixtures/wasm_arc_allocations.c) now detects
 duplicate addresses even when an earlier slot is empty. Its regression test
 checks normal reuse, duplicate registration and duplicate removal on native and
-WASI hosts. These checks passed in #215; collector-specific assertions remain
-until their implementation is deleted.
+WASI hosts. Their #215 results establish the starting point; the migrated G5
+controls still need integrated native and WASI validation.
 
 ## Which collector checks need replacement?
 
@@ -328,8 +329,8 @@ The strict test parser rejects missing fields, duplicate reports, wrong units
 and invalid numbers. Existing historical measurements keep their original schema
 and source identity. New measurements must identify this report format.
 
-The allocator/report code and parser probes exist in the unpublished deletion
-worktree. Consumer migration and integrated validation are unfinished; see
+The allocator/report code, parser probes and migrated consumers are published
+in draft PR #217. Integrated validation is unfinished; see
 [the handoff](development-state.md).
 
 ## Remaining acceptance
@@ -343,8 +344,8 @@ Neither row includes collection counts. They exclude raw network buffers,
 allocator metadata, OS resources and process RSS; separate observers cover those.
 Their migrated consumers still require integrated validation.
 
-G5 must update allocation-report consumers and workflow settings, remove the
-collector-only assertions above and inspect binaries for actual tracing removal.
+The report/workflow migration and collector deletion are implemented. G5 must
+verify their integrated behavior and inspect binaries for actual tracing removal.
 Preserve all behavioral assertions and broken-ownership controls. An address
 ledger cannot catch every stale raw read; compiler lifetime checks and alias/output
 comparisons remain necessary. Run all nine production jobs and documentation

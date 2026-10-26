@@ -133,7 +133,7 @@ stops at the catching handler boundary; task switches preserve separate chains.
 Normal transfer unlinks registrations without releasing a transferred value.
 Compiler caller/reuse-token, runtime application/capture preparation and
 synchronous callback registrations preserve partially acquired owners. Unproved
-boundaries remain available only under explicit tracing; checked ARC rejects them. Cleanup registrations alone do not establish their ownership.
+boundaries are rejected. Cleanup registrations alone do not establish their ownership.
 
 ## Conservative reconstruction and external boundaries
 
@@ -146,7 +146,7 @@ counted reconstruction; the runtime and failure checks establish those contracts
 Unknown primitive, foreign and remote boundaries keep explicit sharing in
 [src/ownership.rs](../src/ownership.rs). The finite review records argument,
 result, callback, retention, teardown and cycle policy for every remaining
-boundary; it does not establish tracing-free eligibility.
+boundary; declarations alone do not prove that a particular program meets those rules.
 
 | Boundary | Current lifetime policy |
 |---|---|
@@ -167,8 +167,8 @@ boundary; it does not establish tracing-free eligibility.
 | process.run-input / process.call | Borrow input/argument strings until the child finishes; captured status/output record owns both copied strings, while call returns an immediate status. Registered cleanup owns temporary buffers, pipe endpoints and child-process resources |
 | External resource contexts | Original scoped/task owners preserve teardown order; counted C context storage does not by itself prove ownership of every fwp graph |
 
-Channel close preserves queued values. Explicit drain breaks the tested counted
-cycle, while unreachable shared cycles still need tracing. Checked ARC admits
+Channel close preserves queued values; it does not break an owning cycle.
+Unproved cycles are rejected even when a later drain is planned. The compiler admits
 nested channels when following their payload types cannot lead back to the same
 channel type. HTTP stream handles remain excluded because their hidden owners
 can lead back to the queue. The [task-message extension](measurements/task-channels.md)
@@ -329,10 +329,10 @@ select reference destructors.
 ## Accepted ownership review
 
 The immutable baseline and exact contract promotions distinguish counted
-boundaries from reviewed tracing requirements. Preparation and historical
+boundaries from operations that still require a specific lifetime proof. Preparation and historical
 binary/GC/reuse/omission controls remain in [history](roadmap-history.md).
-Checked ARC has a separate [eligibility contract](ownership.md); no
-blanket no-GC claim is established.
+The [eligibility contract](ownership.md) defines allowed lifetimes. Collector
+removal remains unverified until the final integrated checks pass.
 
 ## Validation and limits
 

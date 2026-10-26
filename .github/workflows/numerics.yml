@@ -4032,7 +4032,7 @@ jobs:
       - name: Primitive ownership inventory
         run: python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output library-evidence/inventory.json
       - run: cargo build --release --bin fwp
-      - name: Compare tracing and checked ARC against C and Rust
+      - name: Compare counted fwp against C and Rust
         run: python3 scripts/measure-numerical-kernels.py
       - uses: actions/upload-artifact@v7
         if: always()
