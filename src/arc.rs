@@ -170,7 +170,13 @@ pub(crate) fn check_interpreter(
                 .map_err(|reason| format!("ownership: `{}`: {reason}", f.name))?;
         }
     }
-    crate::arc_scope::check(prog, entries, entry_channels).map(|_| ())
+    crate::arc_scope::check(
+        prog,
+        entries,
+        entry_channels,
+        crate::arc_scope::ClosureSites::Separate,
+    )
+    .map(|_| ())
 }
 
 pub(crate) fn check(
@@ -183,7 +189,12 @@ pub(crate) fn check(
             "ownership: native declaration `{name}` has no checked ownership signature"
         ));
     }
-    crate::arc_scope::check(prog, entries, entry_channels)?;
+    crate::arc_scope::check(
+        prog,
+        entries,
+        entry_channels,
+        crate::arc_scope::ClosureSites::Separate,
+    )?;
     let mut seen = HashSet::new();
     for f in &prog.funcs {
         let reject = |reason: String| format!("ownership: `{}`: {reason}", f.name);

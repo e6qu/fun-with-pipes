@@ -91,6 +91,11 @@ known fixes. Preserve a passing final head while its remaining gates run.
 
 ### Focused runner checks
 
+[The `ownership-analysis` suite](.github/workflows/numerics.yml) runs
+only the paired compiler-analysis experiment on Linux and Intel macOS. Use it
+when updating [G2 evidence](docs/measurements/ownership-analysis.md); it does not
+replace the production correctness gates.
+
 `Numerical and ownership evidence` in `.github/workflows/numerics.yml` exposes
 named suites; use that workflow's inputs and the relevant measurement protocol.
 A selected `native_runner` runs one host. `native_runner=all` provides the full

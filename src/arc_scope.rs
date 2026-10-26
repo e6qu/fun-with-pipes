@@ -45,11 +45,22 @@ type Context = (FuncId, u8);
 // Zero is the function/runtime boundary; expression/constant positions start at one.
 // Sites are finite positions in the immutable IR, never dynamic call histories.
 type Site = (FuncId, usize);
+
+#[derive(Clone, Copy, Debug)]
+pub(crate) enum ClosureSites {
+    Separate,
+    // Test-only reconstruction of the previous capture-merging rule. There is
+    // no production option to run the less precise analysis.
+    #[cfg(test)]
+    Merged,
+}
+
 const AD: u8 = 1;
 const STATE: u8 = 2;
 
 struct Proof<'a> {
     program: &'a Program,
+    sites: ClosureSites,
     captures: BTreeMap<Origin, Vec<Targets>>,
     inputs: BTreeMap<Context, Vec<Targets>>,
     outputs: BTreeMap<Context, Targets>,
@@ -569,7 +580,15 @@ impl Proof<'_> {
             id,
             args.len(),
             if args.is_empty() { 0 } else { scoped },
-            if args.is_empty() { None } else { Some(site) },
+            if args.is_empty() {
+                None
+            } else {
+                match self.sites {
+                    ClosureSites::Separate => Some(site),
+                    #[cfg(test)]
+                    ClosureSites::Merged => None,
+                }
+            },
         );
         let captured = self
             .captures
@@ -1236,6 +1255,7 @@ pub(crate) fn check(
     program: &Program,
     entries: &[FuncId],
     entry_channels: EntryChannels,
+    sites: ClosureSites,
 ) -> Result<AnalysisStats, String> {
     let queued_owners = program.funcs.iter().any(|function| {
         let mut seen = BTreeSet::new();
@@ -1250,6 +1270,7 @@ pub(crate) fn check(
     }
     let mut proof = Proof {
         program,
+        sites,
         captures: BTreeMap::new(),
         inputs: BTreeMap::new(),
         outputs: BTreeMap::new(),
@@ -1461,10 +1482,21 @@ mod tests {
 
     #[test]
     fn state_primitive_needs_a_proven_handler_context() {
-        assert!(check(&state_program(true), &[0], EntryChannels::Unknown).is_ok());
-        assert!(check(&state_program(false), &[0], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("tracing-free lifetime policy"));
+        assert!(check(
+            &state_program(true),
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .is_ok());
+        assert!(check(
+            &state_program(false),
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("tracing-free lifetime policy"));
     }
 
     #[test]
@@ -1511,8 +1543,13 @@ mod tests {
             };
             p.funcs[0].ty = MT::Record(vec![("0".into(), string.clone()), ("1".into(), string)]);
             p.funcs[0].body = Body::Expr(Expr::Record(vec![invoke(partial(4)), stateful]));
-            let checked = check(&p, &[0], EntryChannels::Unknown);
+            let checked = check(&p, &[0], EntryChannels::Unknown, ClosureSites::Separate);
             if handled {
+                assert!(
+                    check(&p, &[0], EntryChannels::Unknown, ClosureSites::Merged)
+                        .unwrap_err()
+                        .contains("outside a State scope")
+                );
                 checked.unwrap();
             } else {
                 assert!(checked.unwrap_err().contains("outside a State scope"));
@@ -1556,10 +1593,6 @@ recur : I64 -> I64
 rec recur = if (eq 0) id (sub 1 | recur)
 touch : I64 -> Channel[I64] -> () ! {Async}
 touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
-raw : I64 -> I64 -> I64
-raw = const ad.tape
-safe : I64 -> I64 -> I64
-safe = curry (ad.scope (uncurry raw))
 "#,
                 );
                 for i in 0..n {
@@ -1569,7 +1602,7 @@ safe = curry (ad.scope (uncurry raw))
                 for i in 0..n {
                     source.push_str(&format!("() | work{i},"));
                 }
-                source.push_str("(0, 1) | (uncurry safe | ignore)] | ignore\n");
+                source.push_str("1 | ad.scope ad.tape | ignore] | ignore\n");
                 let (_, program) = crate::driver::compile_source(
                     "ownership-scaling.fwp",
                     &source,
@@ -1588,18 +1621,28 @@ safe = curry (ad.scope (uncurry raw))
                         _ => 0,
                     })
                     .sum();
-                // One warmup, then seven independently reconstructed proofs. Only
-                // check() is timed: no parsing, lowering, C compilation or execution.
-                let expected = check(&program, &entries, EntryChannels::Unknown).unwrap();
-                let mut samples = Vec::new();
-                for _ in 0..7 {
-                    let start = Instant::now();
-                    let actual = check(&program, &entries, EntryChannels::Unknown).unwrap();
-                    samples.push(start.elapsed().as_nanos());
-                    assert_eq!(actual, expected);
+                let policies = [ClosureSites::Merged, ClosureSites::Separate];
+                let expected = policies
+                    .map(|sites| check(&program, &entries, EntryChannels::Unknown, sites).unwrap());
+                let mut samples = [Vec::new(), Vec::new()];
+                // Warmups above are outside timing. Alternate the paired order;
+                // each timed check constructs and destroys a fresh proof.
+                for repeat in 0..7 {
+                    for index in if repeat % 2 == 0 { [0, 1] } else { [1, 0] } {
+                        let start = Instant::now();
+                        let actual =
+                            check(&program, &entries, EntryChannels::Unknown, policies[index])
+                                .unwrap();
+                        samples[index].push(start.elapsed().as_nanos());
+                        assert_eq!(actual, expected[index]);
+                    }
                 }
-                samples.sort_unstable();
-                println!("ownership-analysis n={n} source_bytes={} functions={} ir_nodes={node_count} median_ns={} samples_ns={samples:?} origin_bytes={} rounds={} visits={} summary_updates={} contexts={} closures={} facts={}", source.len(), program.funcs.len(), samples[3], std::mem::size_of::<Origin>(), expected.rounds, expected.visits, expected.summary_updates, expected.contexts, expected.closures, expected.facts);
+                for (index, sites) in policies.into_iter().enumerate() {
+                    let mut sorted = samples[index].clone();
+                    sorted.sort_unstable();
+                    let stats = &expected[index];
+                    println!("ownership-analysis sites={sites:?} n={n} source_bytes={} functions={} ir_nodes={node_count} median_ns={} samples_ns={:?} origin_bytes={} rounds={} visits={} summary_updates={} contexts={} closures={} facts={}", source.len(), program.funcs.len(), sorted[3], samples[index], std::mem::size_of::<Origin>(), stats.rounds, stats.visits, stats.summary_updates, stats.contexts, stats.closures, stats.facts);
+                }
             }
         });
     }
@@ -1668,7 +1711,7 @@ safe = curry (ad.scope (uncurry raw))
                 invoke(partial(4)),
                 if escape { invoke(handled) } else { handled },
             ]));
-            let checked = check(&p, &[0], EntryChannels::Unknown);
+            let checked = check(&p, &[0], EntryChannels::Unknown, ClosureSites::Separate);
             if escape {
                 assert!(checked.unwrap_err().contains("outside a State scope"));
             } else {
@@ -1755,11 +1798,22 @@ safe = curry (ad.scope (uncurry raw))
                 )),
             ));
             if scoped {
-                check(&program, &[0], EntryChannels::Unknown).unwrap();
+                check(
+                    &program,
+                    &[0],
+                    EntryChannels::Unknown,
+                    ClosureSites::Separate,
+                )
+                .unwrap();
             } else {
-                assert!(check(&program, &[0], EntryChannels::Unknown)
-                    .unwrap_err()
-                    .contains("outside a State scope"));
+                assert!(check(
+                    &program,
+                    &[0],
+                    EntryChannels::Unknown,
+                    ClosureSites::Separate
+                )
+                .unwrap_err()
+                .contains("outside a State scope"));
             }
         }
     }
@@ -1769,6 +1823,7 @@ safe = curry (ad.scope (uncurry raw))
         let program = state_program(true);
         let mut proof = Proof {
             program: &program,
+            sites: ClosureSites::Separate,
             captures: BTreeMap::new(),
             inputs: BTreeMap::new(),
             outputs: BTreeMap::new(),
@@ -1831,7 +1886,12 @@ safe = curry (ad.scope (uncurry raw))
                 Box::new(Expr::Call(3, vec![Expr::Const(input)])),
                 vec![Expr::Const(Value::unit())],
             ));
-            let result = check(&program, &[0], EntryChannels::Unknown);
+            let result = check(
+                &program,
+                &[0],
+                EntryChannels::Unknown,
+                ClosureSites::Separate,
+            );
             if symbol == "unmodeled-function-producer" {
                 assert!(result.unwrap_err().contains("cannot prove"));
             } else {
@@ -1874,6 +1934,7 @@ safe = curry (ad.scope (uncurry raw))
             ]);
             let mut proof = Proof {
                 program: &program,
+                sites: ClosureSites::Separate,
                 captures: BTreeMap::new(),
                 inputs: BTreeMap::new(),
                 outputs: BTreeMap::new(),
@@ -1969,7 +2030,13 @@ safe = curry (ad.scope (uncurry raw))
             ],
             ..Program::default()
         };
-        check(&program, &[0], EntryChannels::Unknown).unwrap();
+        check(
+            &program,
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate,
+        )
+        .unwrap();
         let task_with_queue = Expr::Call(
             2,
             vec![Expr::Apply(Box::new(Expr::Func(6)), vec![Expr::Local(0)])],
@@ -1982,9 +2049,14 @@ safe = curry (ad.scope (uncurry raw))
                 vec![Expr::Local(0), capture(task_with_queue)],
             )),
         ));
-        assert!(check(&program, &[0], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("function-bearing channel"));
+        assert!(check(
+            &program,
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("function-bearing channel"));
 
         // The same Task[String] type does not prove an external task's thunk.
         program.funcs[0].arity = 1;
@@ -1992,9 +2064,14 @@ safe = curry (ad.scope (uncurry raw))
         program.funcs[0].ty = arrow(task, boolean);
         program.funcs[0].body =
             Body::Expr(Expr::Call(5, vec![make_queue, capture(Expr::Local(0))]));
-        assert!(check(&program, &[0], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("captured task producer"));
+        assert!(check(
+            &program,
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("captured task producer"));
 
         // A zero-capture computation can return a closure with hidden owners.
         // Inspect that result too, even when the outer callback never awaits it.
@@ -2020,9 +2097,14 @@ safe = curry (ad.scope (uncurry raw))
                 capture(Expr::Call(2, vec![Expr::Func(3)])),
             ],
         ));
-        assert!(check(&program, &[0], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("function-bearing channel"));
+        assert!(check(
+            &program,
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("function-bearing channel"));
     }
 
     #[test]
@@ -2099,8 +2181,20 @@ safe = curry (ad.scope (uncurry raw))
                 ],
                 ..Program::default()
             };
-            check(&program, &[0], EntryChannels::Unknown).unwrap();
-            crate::arc::check(&program, &[0], EntryChannels::Unknown).unwrap();
+            check(
+                &program,
+                &[0],
+                EntryChannels::Unknown,
+                ClosureSites::Separate,
+            )
+            .unwrap();
+            crate::arc::check(
+                &program,
+                &[0],
+                EntryChannels::Unknown,
+                ClosureSites::Separate,
+            )
+            .unwrap();
             let cyclic = Expr::Call(
                 2,
                 vec![Expr::Apply(Box::new(Expr::Func(5)), vec![Expr::Local(0)])],
@@ -2110,17 +2204,27 @@ safe = curry (ad.scope (uncurry raw))
                 Box::new(make.clone()),
                 Box::new(Expr::Call(4, vec![Expr::Local(0), message(cyclic)])),
             ));
-            assert!(check(&program, &[0], EntryChannels::Unknown)
-                .unwrap_err()
-                .contains("task-bearing channel"));
+            assert!(check(
+                &program,
+                &[0],
+                EntryChannels::Unknown,
+                ClosureSites::Separate
+            )
+            .unwrap_err()
+            .contains("task-bearing channel"));
 
             program.funcs[0].arity = 1;
             program.funcs[0].locals = vec![task.clone()];
             program.funcs[0].ty = arrow(task, boolean);
             program.funcs[0].body = Body::Expr(Expr::Call(4, vec![make, message(Expr::Local(0))]));
-            assert!(check(&program, &[0], EntryChannels::Unknown)
-                .unwrap_err()
-                .contains("captured task producer"));
+            assert!(check(
+                &program,
+                &[0],
+                EntryChannels::Unknown,
+                ClosureSites::Separate
+            )
+            .unwrap_err()
+            .contains("captured task producer"));
 
             // A task-bearing external queue triggers proof even without spawn.
             program.funcs = vec![Func {
@@ -2130,9 +2234,14 @@ safe = curry (ad.scope (uncurry raw))
                 ty: arrow(queue, unit),
                 body: Body::Expr(Expr::Const(Value::unit())),
             }];
-            assert!(check(&program, &[0], EntryChannels::Unknown)
-                .unwrap_err()
-                .contains("external function-bearing channels or task-bearing channels"));
+            assert!(check(
+                &program,
+                &[0],
+                EntryChannels::Unknown,
+                ClosureSites::Separate
+            )
+            .unwrap_err()
+            .contains("external function-bearing channels or task-bearing channels"));
         }
     }
 
@@ -2179,9 +2288,14 @@ safe = curry (ad.scope (uncurry raw))
             ],
             ..Program::default()
         };
-        assert!(check(&program, &[0], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("acyclic task result"));
+        assert!(check(
+            &program,
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("acyclic task result"));
         // A callback without that owner is valid, even with the same result type.
         program.funcs[2].body = Body::Expr(Expr::Record(vec![Expr::Func(4)]));
         program.funcs.push(Func {
@@ -2191,7 +2305,13 @@ safe = curry (ad.scope (uncurry raw))
             ty: arrow(MT::unit(), MT::unit()),
             body: Body::Expr(Expr::Const(Value::unit())),
         });
-        check(&program, &[0], EntryChannels::Unknown).unwrap();
+        check(
+            &program,
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate,
+        )
+        .unwrap();
     }
 
     #[test]
@@ -2238,9 +2358,14 @@ safe = curry (ad.scope (uncurry raw))
                 ),
             ],
         ));
-        assert!(check(&program, &[0], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("outside a State scope"));
+        assert!(check(
+            &program,
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("outside a State scope"));
     }
 
     #[test]
@@ -2336,9 +2461,16 @@ safe = curry (ad.scope (uncurry raw))
         });
         // Exercise the fixed-point summaries as well as the direct operations
         // below: a non-function result must preserve its channel producer.
-        check(&program, &[9], EntryChannels::Unknown).unwrap();
+        check(
+            &program,
+            &[9],
+            EntryChannels::Unknown,
+            ClosureSites::Separate,
+        )
+        .unwrap();
         let mut proof = Proof {
             program: &program,
+            sites: ClosureSites::Separate,
             captures: BTreeMap::new(),
             inputs: BTreeMap::new(),
             outputs: BTreeMap::new(),
@@ -2501,23 +2633,44 @@ safe = curry (ad.scope (uncurry raw))
         };
         // The same type and service metadata do not make an external queue a
         // gRPC sender. Only the emitter that creates that sender may attest it.
-        assert!(check(&program, &[3], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("cannot prove the producer"));
-        check(&program, &[3], EntryChannels::GrpcResponses).unwrap();
+        assert!(check(
+            &program,
+            &[3],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("cannot prove the producer"));
+        check(
+            &program,
+            &[3],
+            EntryChannels::GrpcResponses,
+            ClosureSites::Separate,
+        )
+        .unwrap();
 
         // A native sender does not make another argument's owner known.
         program.funcs[3].locals[0] = channel.clone();
         program.funcs[3].ty = arrow(channel.clone(), arrow(channel, MT::unit()));
         program.funcs[3].body = Body::Expr(send(Expr::Local(0)));
-        assert!(check(&program, &[3], EntryChannels::GrpcResponses)
-            .unwrap_err()
-            .contains("cannot prove the producer"));
+        assert!(check(
+            &program,
+            &[3],
+            EntryChannels::GrpcResponses,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("cannot prove the producer"));
 
         program.service.as_mut().unwrap().methods.clear();
-        assert!(check(&program, &[3], EntryChannels::GrpcResponses)
-            .unwrap_err()
-            .contains("no served method contract"));
+        assert!(check(
+            &program,
+            &[3],
+            EntryChannels::GrpcResponses,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("no served method contract"));
     }
 
     #[test]
@@ -2534,6 +2687,7 @@ safe = curry (ad.scope (uncurry raw))
         });
         let mut proof = Proof {
             program: &program,
+            sites: ClosureSites::Separate,
             captures: BTreeMap::new(),
             inputs: BTreeMap::new(),
             outputs: BTreeMap::new(),
@@ -2559,9 +2713,14 @@ safe = curry (ad.scope (uncurry raw))
             ty: arrow(channel.clone(), channel),
             body: Body::Expr(Expr::Local(0)),
         });
-        assert!(check(&program, &[4], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("external function-bearing channels"));
+        assert!(check(
+            &program,
+            &[4],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("external function-bearing channels"));
     }
 
     #[test]
@@ -2608,9 +2767,14 @@ safe = curry (ad.scope (uncurry raw))
                 (Pat::Wild, Expr::Const(Value::str("unused success branch"))),
             ],
         ));
-        assert!(check(&program, &[0], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("outside a State scope"));
+        assert!(check(
+            &program,
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("outside a State scope"));
     }
 
     #[test]
@@ -2671,7 +2835,7 @@ safe = curry (ad.scope (uncurry raw))
             };
             args[1] = Expr::Func(4);
             assert!(
-                check(&p, &[0], EntryChannels::Unknown)
+                check(&p, &[0], EntryChannels::Unknown, ClosureSites::Separate)
                     .unwrap_err()
                     .contains("outside a State scope"),
                 "{symbol}"
@@ -2775,16 +2939,18 @@ safe = curry (ad.scope (uncurry raw))
                     unreachable!()
                 };
                 args[1] = Expr::Func(5);
-                let checked = check(&p, &[0], EntryChannels::Unknown);
+                let checked = check(&p, &[0], EntryChannels::Unknown, ClosureSites::Separate);
                 if bidirectional {
                     assert!(checked.unwrap_err().contains("outside a State scope"));
                 } else {
                     checked.unwrap();
                 }
                 // A synchronous sender outside a handler is unsafe too.
-                assert!(check(&p, &[5], EntryChannels::Unknown)
-                    .unwrap_err()
-                    .contains("outside a State scope"));
+                assert!(
+                    check(&p, &[5], EntryChannels::Unknown, ClosureSites::Separate)
+                        .unwrap_err()
+                        .contains("outside a State scope")
+                );
                 if bidirectional {
                     // A detached producer may establish its own handler.
                     let mut inner = p.funcs[3].clone();
@@ -2801,8 +2967,8 @@ safe = curry (ad.scope (uncurry raw))
                         )),
                         0,
                     ));
-                    check(&p, &[0], EntryChannels::Unknown).unwrap();
-                    check(&p, &[5], EntryChannels::Unknown).unwrap();
+                    check(&p, &[0], EntryChannels::Unknown, ClosureSites::Separate).unwrap();
+                    check(&p, &[5], EntryChannels::Unknown, ClosureSites::Separate).unwrap();
                 }
             }
         }
@@ -2889,7 +3055,7 @@ safe = curry (ad.scope (uncurry raw))
             p.funcs[0].body = Body::Expr(Expr::Call(5, vec![Expr::Const(Value::unit())]));
             // Returning the closure alone does not invoke it. Serving this
             // result adds the runtime's later consumption outside the handler.
-            check(&p, &[5], EntryChannels::Unknown).unwrap();
+            check(&p, &[5], EntryChannels::Unknown, ClosureSites::Separate).unwrap();
             p.service = Some(crate::ir::ServiceDef {
                 module: "service".into(),
                 default_addr: String::new(),
@@ -2901,14 +3067,16 @@ safe = curry (ad.scope (uncurry raw))
                     iter_fn: None,
                 }],
             });
-            assert!(check(&p, &[5], EntryChannels::Unknown)
-                .unwrap_err()
-                .contains("outside a State scope"));
+            assert!(
+                check(&p, &[5], EntryChannels::Unknown, ClosureSites::Separate)
+                    .unwrap_err()
+                    .contains("outside a State scope")
+            );
             let mut inner = p.funcs[4].clone();
             inner.name = "step-with-local-state".into();
             p.funcs.push(inner);
             p.funcs[4].body = Body::Expr(local_state(7));
-            check(&p, &[5], EntryChannels::Unknown).unwrap();
+            check(&p, &[5], EntryChannels::Unknown, ClosureSites::Separate).unwrap();
 
             // Received iterator constructors must seed the method's argument
             // flow too: an identity method forwards the known continuation.
@@ -2926,15 +3094,19 @@ safe = curry (ad.scope (uncurry raw))
                     vec![Expr::Const(Value::str("received")), Expr::Func(4)],
                 )),
             });
-            assert!(check(&p, &[5], EntryChannels::Unknown)
-                .unwrap_err()
-                .contains("no received iterator constructor"));
+            assert!(
+                check(&p, &[5], EntryChannels::Unknown, ClosureSites::Separate)
+                    .unwrap_err()
+                    .contains("no received iterator constructor")
+            );
             p.service.as_mut().unwrap().methods[0].iter_fn = Some(8);
-            check(&p, &[5], EntryChannels::Unknown).unwrap();
+            check(&p, &[5], EntryChannels::Unknown, ClosureSites::Separate).unwrap();
             p.funcs[4].body = p.funcs[7].body.clone();
-            assert!(check(&p, &[5], EntryChannels::Unknown)
-                .unwrap_err()
-                .contains("outside a State scope"));
+            assert!(
+                check(&p, &[5], EntryChannels::Unknown, ClosureSites::Separate)
+                    .unwrap_err()
+                    .contains("outside a State scope")
+            );
         }
     }
 
@@ -2975,18 +3147,22 @@ safe = curry (ad.scope (uncurry raw))
             )),
             vec![Expr::Const(Value::unit())],
         ));
-        assert!(check(&p, &[0], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("tracing-free lifetime policy"));
+        assert!(
+            check(&p, &[0], EntryChannels::Unknown, ClosureSites::Separate)
+                .unwrap_err()
+                .contains("tracing-free lifetime policy")
+        );
     }
 
     #[test]
     fn every_entry_starts_without_a_dynamic_scope() {
         let p = state_program(true);
-        assert!(check(&p, &[0], EntryChannels::Unknown).is_ok());
-        assert!(check(&p, &[0, 1], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("outside a State scope"));
+        assert!(check(&p, &[0], EntryChannels::Unknown, ClosureSites::Separate).is_ok());
+        assert!(
+            check(&p, &[0, 1], EntryChannels::Unknown, ClosureSites::Separate)
+                .unwrap_err()
+                .contains("outside a State scope")
+        );
     }
 
     #[test]
@@ -3019,15 +3195,17 @@ safe = curry (ad.scope (uncurry raw))
         let carry = Expr::Call(4, vec![Expr::Func(3), Expr::Func(1)]);
         p.funcs[0].ty = getter;
         p.funcs[0].body = Body::Expr(carry.clone());
-        assert!(check(&p, &[0], EntryChannels::Unknown).is_ok());
+        assert!(check(&p, &[0], EntryChannels::Unknown, ClosureSites::Separate).is_ok());
         // The same closure is still rejected when actually called unscoped.
         p.funcs[0].ty = MT::con("std::String");
         p.funcs[0].body = Body::Expr(Expr::Apply(
             Box::new(carry),
             vec![Expr::Const(Value::unit())],
         ));
-        assert!(check(&p, &[0], EntryChannels::Unknown)
-            .unwrap_err()
-            .contains("outside a State scope"));
+        assert!(
+            check(&p, &[0], EntryChannels::Unknown, ClosureSites::Separate)
+                .unwrap_err()
+                .contains("outside a State scope")
+        );
     }
 }

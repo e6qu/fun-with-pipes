@@ -1,8 +1,11 @@
 # Current work
 
-**Next:** publish the combined creation-site repair and tutorial cleanup, then
-run `compiler-lifetimes` including the G2 scaling measurement. Audit all results
-before the full final-head matrix for draft [PR #216](https://github.com/e6qu/fun-with-pipes/pull/216).
+**Next:** audit focused run `40259739899` for draft [PR #216](https://github.com/e6qu/fun-with-pipes/pull/216),
+head `bf2793f196da45fee26258b0f7aaf4ca1ad1cdb3`. Check the creation-site repair
+and initial G2 scaling results. A paired analysis comparison is local; publish it
+and use the isolated `ownership-analysis` suite, record budgets, then run the
+full final-head matrix.
+Documentation run `40259727539` passed; draft production was skipped, not verified.
 Tracing has **not** been deleted.
 
 Worktree: `/private/tmp/fwp-ownership-fault-matrix`.
@@ -43,7 +46,7 @@ primitive inventory passed: 394 declarations, 384 symbols, 40 aliases, 373
 contracts, 19 templates, no review entries. Commands:
 `python3 scripts/local-guard.py python3 /private/tmp/check-fwp-callback-preparation.py`
 and `python3 scripts/local-guard.py python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /private/tmp/fwp-g5-primitive-inventory.json`.
-The prior documentation audit passed 161 link sets, 106 preparation pairs/tags and
+The documentation audit passed 162 link sets, 106 preparation pairs/tags and
 eight roadmap rows (`python3 scripts/local-guard.py python3 scripts/check-roadmap.py`).
 Focused run `40254088410` was fully audited on GCC/Linux and Intel macOS.
 Both passed 188 library tests, two task-timer tests, the API doctest, all completed
@@ -65,13 +68,18 @@ invents a call to the inner worker outside its real scope. A five-line `uncurry`
 example also reproduces with the saved #215 compiler. Distinct creation sites
 make the diagnostic model converge, but runner tests must verify the Rust fix.
 
-The local repair indexes partials by finite expression/constant positions as
+The current repair indexes partials by finite expression/constant positions as
 well as function, supplied argument count and creation scope. Invocation scopes
 still control admission. A new State regression distinguishes two partials
 created in the same function before a handler and rejects a real unscoped call.
-The focused workflow now records [G2 analysis measurements](measurements/ownership-analysis.md)
-at 16/32/64 workers, with raw lowering, seven timed proofs, counts and process
-peak RSS. Record results and budgets before accepting this change. Production
+The [G2 analysis measurement](measurements/ownership-analysis.md) uses 16/32/64
+workers, raw lowering, seven timed proofs, counts and process peak RSS. Linux
+passed the new State control, all seven autodiff tests and six reuse tests in
+`40259739899`; its first measurement completed at 11.5/20.0/37.3 ms. These samples
+are from the initial fixture, not the local paired comparison. The latter uses
+the same valid IR with the old capture-merging rule as a test-only control;
+production has no alternate mode. Its isolated suite avoids rerunning unrelated
+integration targets just to collect analysis evidence. Record results and budgets before accepting this change. Production
 builds contain no measurement counters.
 
 Tutorial corrections now include macro checking order, numeric output reasoning,
