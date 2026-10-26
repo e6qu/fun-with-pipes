@@ -478,7 +478,7 @@ fn immediate_await_matches_remove_only_the_temporary_option_box() {
         .find("static fwp_option_result fwp_task_await_fields(")
         .unwrap();
     let end = measured[start..]
-        .find("\nstatic V fwp_p_task_spawn(")
+        .find("\n/* Transfer the caller's callback owner to the task.")
         .unwrap()
         + start;
     // Restore the former temporary box in identical generated C. The task,

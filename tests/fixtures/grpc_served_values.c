@@ -63,6 +63,10 @@ static void owned_serve(void *arg,int stop){
  if(!setjmp(failure)){
   fwp_cur->trap_jb=&failure;fwp_cur->trap_cleanup=fwp_cleanups;
   char *message=0;int status=g_run_method(arg,&message);
+#ifdef PROBE_UNOWNED_DISPATCH
+  if(status!=GRPC_INTERNAL||!message||strcmp(message,"trap: internal: counted owner escaped ARC contract"))_Exit(254);
+  free(message);_Exit(242); /* the invalid call was rejected before producing a value */
+#endif
   if(stage==1){if(status!=GRPC_INVALID_ARGUMENT||!message)_Exit(248);}
   else if(stage==10){if(status!=GRPC_INTERNAL||!message||!strstr(message,"zero"))_Exit(248);}
   else if(status!=-1||message)_Exit(248);

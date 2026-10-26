@@ -378,6 +378,10 @@ fn run(args: &[String]) -> ExitCode {
         eprintln!("fwp run: missing file");
         return ExitCode::from(2);
     };
+    if path.starts_with('-') && path != "-" {
+        eprintln!("fwp run: unknown option `{path}`");
+        return ExitCode::from(2);
+    }
     let prog_args: Vec<String> = args[1..].to_vec();
     let roots = fwp::mono::Roots {
         main: true,

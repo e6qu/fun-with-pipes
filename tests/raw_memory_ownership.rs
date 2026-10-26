@@ -227,7 +227,7 @@ int main(void) {
             (
                 source.replace(
                     "    size_t n = STR(l0)->len;",
-                    "    fwp_rc_share(l0); size_t n = STR(l0)->len;",
+                    "    fwp_rc_dup(l0); size_t n = STR(l0)->len;",
                 ),
                 3,
             ),

@@ -195,14 +195,16 @@ int main(void){
             (&early, &[1, 6][..]),
             (&sender_omitted, &[9][..]),
             (&job_omitted, &[7][..]),
-            (&task_omitted, &[7][..]),
+            // Spawn defaults to unique ownership; omitting the promotion now
+            // fails when a scope needs a second owner after completion.
+            (&task_omitted, &[40][..]),
             (&scope_omitted, &[40][..]),
         ] {
             fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
             let out = Command::new(&exe).output().unwrap();
             assert!(
                 out.status.code().is_some_and(|code| codes.contains(&code)),
-                "omitted/early release: {out:?}"
+                "omitted/early release, expected {codes:?}: {out:?}"
             );
         }
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();

@@ -1,58 +1,55 @@
 # Current work
 
-**Next:** audit the new production, documentation and ownership-analysis runs
-on this repair commit. Fix every failure before merging. Full builds stay on CI.
+**Next:** publish the consolidated repair batch to PR #217, then audit every
+final-head gate. Keep the unfinished old platform jobs available
+for additional failures; do not treat focused C probes as full compiler validation.
 
 ## Delivery and evidence
 
 - Worktree: `/private/tmp/fwp-delete-tracing`; branch `delete-tracing-collector`.
-- [PR #217](https://github.com/e6qu/fun-with-pipes/pull/217) is open and ready.
-- Previous published source: `3e1c14826b545f799824e11c9476704d52fc4a46`.
-  The repair below is ready for publication; new exact-head run IDs will follow.
-- [Production 40322237520](https://github.com/e6qu/fun-with-pipes/actions/runs/40322237520):
-  eight native jobs failed; C/Rust benchmarks passed. All eight failed job logs
-  and completed test results were audited. Linux/macOS suite execution stopped
-  at the runner's unsupported Cargo option. Standalone Windows checks exposed
-  the runtime and fixture failures below. Missing downstream evidence is not waived.
-- [Documentation 40322237274](https://github.com/e6qu/fun-with-pipes/actions/runs/40322237274)
-  and Windows dependency cache `40322237342` passed.
-- [Ownership analysis 40322274748](https://github.com/e6qu/fun-with-pipes/actions/runs/40322274748)
-  passed both hosts, including REST admission and unchanged relative/absolute
-  limits. [Measured results](measurements/ownership-analysis.md#capture-lookup-repair)
-  replace the previous unverified performance claim.
-- Intel macOS regular also failed artifact creation with `ENOTFOUND`. A source
-  repair does not establish successful artifact delivery; the new run must pass.
-- Previous source `70e6d1b664a3714847b4ac571d3e43fb6a99abd5` failed production
-  `40318846863` and Intel analysis `40319010233`. The published repair fixed
-  compiler/test compilation and analysis costs, but introduced the unsupported
-  runner option. These are superseded failures, not accepted gates.
+- [PR #217](https://github.com/e6qu/fun-with-pipes/pull/217) is open.
+- Published source: `690610786ecb5dfec751149cefc2509dc8797331`; repairs below are local.
+- [Production 40336877625](https://github.com/e6qu/fun-with-pipes/actions/runs/40336877625):
+  macOS ARM64 regular `121620745789`, ARM64 ownership `121620745104` and Intel
+  ownership `121620745236` failed. All three logs were audited in full; completed
+  target failures are covered below. Both Windows TLS groups report the same 16
+  failing targets, also covered by this batch. Earlier Windows resource/callback
+  artifacts contain no failures. Windows command steps have failed but their logs
+  are not yet published; audit those when available. Benchmarks passed. Linux,
+  Intel regular macOS and both Windows jobs are still running.
+- [Documentation 40336877689](https://github.com/e6qu/fun-with-pipes/actions/runs/40336877689)
+  and Windows dependency cache `40336877586` passed.
+- [Ownership analysis 40336921587](https://github.com/e6qu/fun-with-pipes/actions/runs/40336921587):
+  Linux passed. Intel's 32-worker relative budget failed: 10.063/6.612 ms, 1.522×
+  against the unchanged 1.5× limit. Absolute times, counts and both REST fixtures
+  passed. [The measurement record](measurements/ownership-analysis.md#capture-lookup-repair)
+  retains this failure as well as the earlier passing source.
+- Previous repair `3e1c1482` failed production `40322237520`, but passed analysis
+  `40322274748` and docs `40322237274`. The runner, gRPC empty-call cleanup and
+  shared task fixtures were repaired in `69061078`. Current suites now execute
+  beyond those failures; this does not establish final acceptance.
 - Verified base: #216 squash `f5621cb46828273f7ce8edf92be4062ccec0f17c`, identical
   tree to tested `1dd5fcaed7792b5505283b1037a9c22d788a3be5`. Nine production jobs
   `40274667944`, docs `40273010537` and analysis jobs `40273030485` passed.
 
-### Current repair
+### Current repair and failure coverage
 
-- Removed `--keep-going` from `cargo test`, where it is unsupported. Retained it
-  for `cargo check` and `cargo clippy`. Added a tiny real Cargo package test that
-  builds two targets, executes both despite one failure, and verifies failure
-  propagation; mocks had missed the invalid option.
-- Fixed all seven reported test lints: single-element loops, an obsolete
-  verification-mode loop, and constant strings wrapped in `format!`.
-- Made gRPC call cleanup accept its valid empty states: before opening and after
-  transferring ownership to an iterator. Live readers still require ownership.
-- Repaired channel/connect fixtures that counted a shared task but left it marked
-  unique. Audited raw task spawns and gave fixtures explicit owners through their
-  final await/inspection; they release those handles afterward.
-- Repaired gRPC mock opens to transfer actual connection/reader owners. Fixtures
-  retain separate inspection owners and release them explicitly. Both ordinary
-  cleanup and deliberately omitted cleanup controls remain required.
-- Updated allocator/iterator omitted-free controls to match current source.
-  Set Windows stderr to binary mode in the AD identity fixture, matching generated
-  startup and preserving its byte-exact diagnostics.
+| Failure | Repair |
+|---|---|
+| Shared HTTP/2 generator rejects `Duration`; affected body/client/server/peer/value/context and stream-force tests | Supply the actual `Duration = { nanos: I64 }` shape in the hand-built IR fixture. Keep ownership admission strict. |
+| Record/variant resource frame tests reject temporary type `?` | Ownership lowering now retains the concrete type of scalar literal match selectors; a regression checks numeric and string selectors. Nominal values still require typed context. |
+| CLI treats `--gc` as a filename | Reject unknown leading options with usage status 2; test an unrelated unknown option too. Arguments after the program file remain program arguments. |
+| Stream-force control traps after publication and accesses a released source | Give the fixture actual stream/source/position owners, release them explicitly and observe read completion before the source can be destroyed. |
+| AD fatal allocation case traps before reaching allocation | Install the required tape scope in the test task before allocating its tape. |
+| Removed task mode and mismatched peer failure control | Use a shared-task control with its count deliberately omitted; detect missing scope promotion at the scope's post-completion ownership check. |
+| Served/output-channel/raw-string negative controls hit a different guard | Check the exact counted-boundary rejection for unowned dispatch; use an actual extra retain to test excess-reference detection. |
+| HTTP API parser expects seven fields | Read the maintained six-field memory record; remove the obsolete collector-count assertion. Producer and evidence reader already use six fields. |
+| Array-release and direct-await controls no longer find runtime code | Match the counted free statement and replace only the await-fields function, preserving the adjacent spawn implementation. |
+| Intel analysis exceeds its relative budget | Move new capture vectors into the table and skip identical fact merges. Preserve all identities, facts and limits; performance remains unverified. |
 
-**GC removal remains unverified.** Focused repaired tests pass on Clang ARM64;
-GCC, Windows, WASI, full generated-library integration and final packaging still
-need the production matrix. Successful analysis budgets are not runtime acceptance.
+**GC removal remains unverified.** Integrated Rust/compiler, generated-library,
+GCC, Windows and WASI checks must pass on the repaired source. C fixture checks
+below establish only their stated paths on Clang ARM64.
 
 ## What changed
 
@@ -186,3 +183,17 @@ changes are supplied explicitly; complete regenerated integration remains a CI g
 | `python3 /private/tmp/fwp-217-check-grpc-fixtures.py grpc_client_requests grpc_client_receive` | Both fixture bodies and omitted-owner/buffer/reset controls pass at O1/O2 after correcting mock ownership. Uses current runtime with minimal library entry metadata, not generated-library integration. The receive check was rerun alone after correcting a void-return macro expression in the repair. |
 | `python3 /private/tmp/fwp-217-check-grpc-fixtures.py grpc_send_cleanup grpc_context_restore grpc_connect_startup` | Three related fixture bodies pass at O1/O2, including cancellation, nested failure and startup cleanup controls. Same minimal-library limitation as above. |
 | `python3 /private/tmp/fwp-217-final-static-checks.py` | Rust formatting, Python parsing, all 20 runner tests and native shard coverage, frozen primitive contracts, 163 documentation link sets, 106 preparation anchors, eight roadmap rows and whitespace pass. |
+
+### Latest failure repair checks
+
+All used `python3 scripts/local-guard.py`. The standalone fixture harness assembles
+current runtime source and minimal library metadata, then executes repository test
+bodies; it does not regenerate their real library descriptors or build the compiler.
+
+| Command | Result and scope |
+|---|---|
+| `python3 /private/tmp/fwp-217-check-grpc-fixtures.py grpc_force_cleanup:forced_cells_release_received_storage_and_decoder_failure_text grpc_peer_completion` | Both fixture bodies pass at O1/O2, including missing receive/text cleanup and early/missing serving-peer/task cleanup controls. |
+| `python3 /private/tmp/fwp-217-check-grpc-fixtures.py grpc_receive_cleanup:fatal_runtime_allocations_report_errors_from_task_stacks grpc_request_encoding grpc_response_encoding:native_output_channels_borrow_values_and_release_context` | Fatal allocation cases 0–18, sender input ownership and output channel controls pass at O1/O2. The first standalone extraction failed because it omitted the runtime helper; corrected before the passing run. |
+| `python3 /private/tmp/fwp-217-check-await-control.py` | Actual await comparison passes at O0/O2: identical output, 34 restored temporary boxes, unchanged required retains and zero final live bytes. Uses CI compiler `3e1c1482` and its emitted C/exact-arithmetic sources. Initial harness links omitted those arithmetic dependencies; the complete link passes. |
+| `python3 /private/tmp/fwp-217-check-grpc-fixtures.py grpc_force_cleanup:forced_cells_release_received_storage_and_decoder_failure_text` | Rechecked at O1/O2 after preserving both cleared-reader and empty-waiter observations before source destruction; passes. |
+| `cargo fmt --all -- --check`, frozen primitive inventory, `python3 scripts/check-roadmap.py`, `git diff --check` | Pass: unchanged 394 declarations/384 symbols/40 aliases and 373 contracts; 163 link sets, 106 preparation anchors and eight roadmap rows. No compiler build. |

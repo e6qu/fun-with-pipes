@@ -78,13 +78,12 @@ impl Observed {
             }
         };
         let fields: Vec<_> = line.split('\t').collect();
-        assert_eq!(fields.len(), 7, "{line}");
+        assert_eq!(fields.len(), 6, "{line}");
         assert_eq!(fields[0], "http-memory", "{line}");
         assert_eq!(fields[1].parse::<usize>().unwrap(), connections, "{line}");
         if resume {
             assert_eq!(fields[1], fields[2], "unclosed socket: {line}");
             assert_eq!(fields[4], "1", "listener is the only remaining task");
-            assert_eq!(fields[6], "0", "collector ran: {line}");
             let rss = process_memory::process_rss_kib(self.child.id());
             assert!(rss > 0);
             self.resident.push_str(&format!("{connections}\t{rss}\n"));

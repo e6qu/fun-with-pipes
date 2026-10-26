@@ -184,7 +184,7 @@ main = range 0 129 | map (choose | checks) | length | echo
                 );
             }
             if name == "arrays" && stack == "0" {
-                let needle = "    fwp_mem_free((void *)(uintptr_t)v);";
+                let needle = "    if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);";
                 assert_eq!(measured.matches(needle).count(), 2);
                 let omitted = measured.replace(
                     needle,

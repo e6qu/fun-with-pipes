@@ -385,7 +385,7 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
             "fwp_fns[fn].owned->entry(args)",
             "fwp_fns[fn].entry(args)",
             0,
-            242, // Unowned dispatch loses the returned value's counted owner.
+            242, // Unowned dispatch must reject the counted argument at its boundary.
         ),
     ];
     let dir = fwp::cgen::TempDir::new("served-value-owners").unwrap();
@@ -400,7 +400,17 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
         for (before, after, stage, expected) in controls {
             assert_eq!(generated.matches(before).count(), 1, "{before}");
             let broken = generated.replacen(before, after, 1);
-            fwp::cgen::compile_c(&format!("{declaration}{broken}\n{fixture}"), &exe, opt).unwrap();
+            let control = if before == "fwp_fns[fn].owned->entry(args)" {
+                "#define PROBE_UNOWNED_DISPATCH 1\n"
+            } else {
+                ""
+            };
+            fwp::cgen::compile_c(
+                &format!("{control}{declaration}{broken}\n{fixture}"),
+                &exe,
+                opt,
+            )
+            .unwrap();
             let output = Command::new(&exe).arg(stage.to_string()).output().unwrap();
             assert_eq!(output.status.code(), Some(expected), "{before}: {output:?}");
         }
@@ -472,7 +482,7 @@ fn native_output_channels_borrow_values_and_release_context() {
         ),
         (
             "if (!c->closed) result = c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;",
-            "if (!c->closed) { fwp_rc_share(x); result = c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE; }",
+            "if (!c->closed) { fwp_rc_dup(x); result = c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE; }",
             0,
             231,
         ),

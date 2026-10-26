@@ -503,6 +503,8 @@ fn fatal_runtime_allocations_report_errors_from_task_stacks() {
     let fixture = r#"
 static void attempt_transport(void *arg,int cancelled){
  (void)arg;(void)cancelled;
+ fwp_tape_scope tape_scope={-1};fwp_cleanup tape_cleanup;
+ fwp_cleanup_push(&tape_cleanup,fwp_tape_scope_release,&tape_scope);
  h2_buf buffer={0};h2_hdrs headers={0};
  if(failure_kind==0)h2b_reserve(&buffer,1);
  else if(failure_kind<4)h2_hdrs_add(&headers,"name",4,"value",5);

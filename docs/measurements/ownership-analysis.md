@@ -154,6 +154,18 @@ fixtures took 6.42/3.85 seconds on Linux and 8.30/5.75 seconds on Intel macOS,
 within the unchanged ten-second limit. Production validation failed separately;
 passing analysis budgets alone does not verify collector removal.
 
+The next source, `690610786ecb5dfec751149cefc2509dc8797331`, failed Intel's
+32-worker relative gate in [run 40336921587](https://github.com/e6qu/fun-with-pipes/actions/runs/40336921587):
+10.063 ms Separate versus 6.612 ms Merged, or 1.522×. The 16/64-worker ratios,
+absolute/count limits and REST checks passed; Linux passed. A previous passing
+run does not override this failed gate.
+
+The current repair transfers newly created capture vectors into the proof
+instead of allocating another vector and copying their sets. Repeated merges
+of identical origin sets return without reinserting them. Identities, facts,
+iteration order and budgets remain unchanged. These remove redundant source-level
+work; their effect on the timing ratio still requires runner measurements.
+
 ## Reproduce and assess
 
 The [`ownership-analysis` suite](../../.github/workflows/numerics.yml)

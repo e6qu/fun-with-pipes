@@ -93,6 +93,10 @@ pub fn generated() -> String {
         ],
         shapes: [
             (
+                MT::con("std::Duration"),
+                TypeShape::Record(vec![("nanos".into(), int.clone())]),
+            ),
+            (
                 connection,
                 TypeShape::Adt(vec![
                     ("None".into(), vec![]),

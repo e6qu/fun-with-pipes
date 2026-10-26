@@ -672,6 +672,7 @@ fn native_ownership_is_unconditional_and_cached() {
         render(&rejected)
     );
     for options in [
+        vec!["--unknown-option"],
         vec!["--gc"],
         vec!["--gc=unknown"],
         vec!["--gc=arc", "--gc=tracing"],
@@ -685,6 +686,7 @@ fn native_ownership_is_unconditional_and_cached() {
             render(&rejected)
         );
         assert!(rejected.stdout.is_empty());
+        assert!(String::from_utf8_lossy(&rejected.stderr).contains("unknown option"));
     }
     // Removed options are ordinary unknown options, including after the file.
     // Rejection must not produce an output file.

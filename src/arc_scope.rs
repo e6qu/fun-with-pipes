@@ -90,6 +90,11 @@ struct Proof<'a> {
 }
 
 fn join(destination: &mut Targets, source: &Targets) -> bool {
+    // Converged summaries repeatedly present identical facts. Comparing them
+    // once avoids reinserting every origin into an already equal ordered set.
+    if source.is_empty() || destination == source {
+        return false;
+    }
     let before = destination.len();
     destination.extend(source.iter().copied());
     before != destination.len()
@@ -622,12 +627,18 @@ impl Proof<'_> {
                 }
             },
         );
-        let captured = self
-            .captures
-            .entry(key)
-            .or_insert_with(|| vec![Targets::new(); args.len()]);
-        for (slot, value) in captured.iter_mut().zip(&args) {
-            self.changed |= join(slot, value);
+        match self.captures.entry(key) {
+            std::collections::hash_map::Entry::Vacant(entry) => {
+                // The caller already owns these sets. Transfer them instead
+                // of allocating a second vector and copying every origin.
+                self.changed |= args.iter().any(|value| !value.is_empty());
+                entry.insert(args);
+            }
+            std::collections::hash_map::Entry::Occupied(mut entry) => {
+                for (slot, value) in entry.get_mut().iter_mut().zip(&args) {
+                    self.changed |= join(slot, value);
+                }
+            }
         }
         BTreeSet::from([key])
     }

@@ -43,6 +43,16 @@ fn forced_cells_release_received_storage_and_decoder_failure_text() {
         "if (c->server) { g->kind = G_END; g->code = 0; g->text = g_copy_text(\"\"); return; }";
     assert_eq!(generated.matches(end).count(), 1);
     let generated = generated.replacen(end, "if (c->server) { g->kind = G_END; g->code = 0; g->text = g_copy_text(\"\"); if(stage==11)fwp_trap(\"receive trap\"); return; }", 1);
+    let read_done = "    fwp_wake_all(&source->read_waiters);";
+    assert_eq!(generated.matches(read_done).count(), 1);
+    // Observe the source while it is still alive, before a completed position
+    // releases it. Preserve both the cleared-reader and empty-waiter checks.
+    let generated = generated.replace(
+        read_done,
+        &format!(
+            "{read_done} if(source->reader||source->read_waiters.head)_Exit(13); read_done++;"
+        ),
+    );
     let hooks = r#"
 #if defined(_WIN32) && !defined(_WIN32_WINNT)
 #define _WIN32_WINNT 0x0a00
@@ -50,7 +60,7 @@ fn forced_cells_release_received_storage_and_decoder_failure_text() {
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-static int stage,allocations,frees;
+static int stage,allocations,frees,read_done;
 static void *owned[16];
 static char *observed_strdup(const char *);
 static void observed_free(void *);
@@ -73,20 +83,27 @@ static int observed_decode(uintptr_t *out,char **why){
  *out=42;return stage==9?G_DEC_ERROR:G_DEC_OK;
 }
 static uintptr_t observed_copy(const char *p){if(stage==2||stage==10)fwp_trap("copy trap");return fwp_cstr(p);}
+static void force_element_drop(V value){
+ if(stage!=2&&stage!=4&&stage!=7&&stage!=10)return;
+ if(fwp_tag(value)==1){V error=OBJ(value)->f[0];fwp_rc_free_obj(OBJ(error)->f[1]);fwp_rc_free_obj(error);}
+ fwp_rc_free_obj(value);
+}
 static jmp_buf failed;
 static int recover(void){return 1;}
 int main(void){
  fwp_lib_init();fwp_heap_start();fwp_tasks_init();
- g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1, "", "local",&srv);
+ g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1, "", "local",&srv);fwp_rc_fresh(PTR(c));
  for(stage=0;stage<12;stage++){
-  allocations=frees=0;memset(owned,0,sizeof owned);
+  allocations=frees=read_done=0;memset(owned,0,sizeof owned);
   g_stream *s=g_stream_new(c,(uint32_t)(1+2*stage));
-  g_incoming *src=fwp_mem_alloc(sizeof *src);src->c=c;src->s=s;src->what="probe";
+  fwp_rc_fresh(PTR(s));fwp_rc_dup(PTR(s));fwp_rc_dup(PTR(s)); /* list, source, fixture */
+  fwp_rc_dup(PTR(c));
+  g_incoming *src=g_incoming_new("probe",5);src->c=c;src->s=s;
   static const fwp_desc scalar_type={.kind=K_I64};src->dec.ty=&scalar_type;src->dec.error=&scalar_type;
   src->results=stage==2||stage==4||stage==7||stage==10;
   if(stage<3)s->bad=strdup("bad request");else if(stage==3||stage==11)s->remote_end=1;
   else{g_msg *m=malloc(sizeof *m+1);if(!m)return 31;memset(m,0,sizeof *m);m->n=1;m->d[0]=42;remember(m);s->mhead=s->mtail=m;}
-  g_cell *cell=fwp_mem_alloc(sizeof *cell);cell->src=src;
+  g_cell *cell=g_cell_new(src);
   g_failure failure={0};V error=0;const fwp_desc *desc=0;volatile int trapped=0;
   fwp_trap_recover=recover;fwp_trap_jb=&failed;fwp_trap_cleanup=0;
   if(!setjmp(failed)){
@@ -108,11 +125,13 @@ int main(void){
   fwp_trap_recover=0;fwp_trap_jb=0;
   int expected=stage==4||stage==10?3:stage==5?2:1;
   if(allocations!=expected||frees!=expected||fwp_cleanups)return 1;
-  if(src->reader||src->read_waiters.head)return 13;
+  if(read_done!=1)return 13;
   if(trapped&&(cell->forced||cell->src!=src))return 11;
+  g_cell_drop(PTR(cell),force_element_drop);
+  g_unlink(c,s);g_stream_drop(s);
 
  }
- fwp_lib_finish();return 0;
+ g_conn_drop(c);fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-force-cleanup").unwrap();
