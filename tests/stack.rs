@@ -1,7 +1,6 @@
 //! Records, variants and closures that do not escape live on the stack
 //! (`src/escape.rs`; `FWP_STACK=0` when compiling turns it off). That
-//! every golden program behaves the same with them, under a stressed and
-//! verifying collector, is checked by tests/reuse.rs.
+//! tests/reuse.rs compares outputs with and without eligible storage reuse.
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -130,13 +129,13 @@ main = range 1 17 | map (flip string.repeat "seed" | alias) | echo
         "{}",
         String::from_utf8_lossy(&expected.stderr)
     );
-    for mode in ["tracing", "arc"] {
+    {
         for (opt, stack) in [("-O1", "0"), ("-O2", "1")] {
-            let exe = dir.0.join(format!("owned-{mode}-{stack}"));
+            let exe = dir.0.join(format!("owned-counted-{stack}"));
             let build = Command::new(fwp())
                 .arg("build")
                 .arg(&src)
-                .args(["--gc", mode, opt, "-o"])
+                .args([opt, "-o"])
                 .arg(&exe)
                 .env("FWP_STACK", stack)
                 .output()
@@ -146,24 +145,15 @@ main = range 1 17 | map (flip string.repeat "seed" | alias) | echo
                 "{}",
                 String::from_utf8_lossy(&build.stderr)
             );
-            let env = if mode == "tracing" {
-                vec![
-                    ("FWP_GC_STRESS", "1"),
-                    ("FWP_GC_VERIFY", "1"),
-                    ("FWP_REUSE_VERIFY", "1"),
-                ]
-            } else {
-                vec![]
-            };
-            let actual = run(&exe, &dir.0, b"", &env);
+            let actual = run(&exe, &dir.0, b"", &[]);
             assert_eq!(
                 actual.status.code(),
                 expected.status.code(),
-                "{mode}/{opt}: {}",
+                "counted/{opt}: {}",
                 String::from_utf8_lossy(&actual.stderr)
             );
-            assert_eq!(actual.stdout, expected.stdout, "{mode}/{opt}");
-            assert_eq!(actual.stderr, expected.stderr, "{mode}/{opt}");
+            assert_eq!(actual.stdout, expected.stdout, "counted/{opt}");
+            assert_eq!(actual.stderr, expected.stderr, "counted/{opt}");
         }
     }
 }

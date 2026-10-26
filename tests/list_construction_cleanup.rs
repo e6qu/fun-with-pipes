@@ -6,10 +6,10 @@ fn list_construction_releases_on_retain_callback_and_allocation_failure() {
     let dir = fwp::cgen::TempDir::new("list-construction-cleanup").unwrap();
     let source = dir.join("main.fwp");
     std::fs::write(&source, "main = [task.yield (), echo \"probe\"] | ignore\n").unwrap();
-    for gc in ["tracing", "arc"] {
+    {
         let cfile = dir.join("main.c");
         let emitted = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", gc, "--emit-c"])
+            .args(["build", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile)
@@ -70,16 +70,12 @@ fn list_construction_releases_on_retain_callback_and_allocation_failure() {
                 for operation in operations {
                     let result = Command::new(&binary)
                         .arg(operation.to_string())
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", if gc == "arc" { "0" } else { "1" })
-                        .env("FWP_REUSE_VERIFY", "0")
                         .output()
                         .unwrap();
                     assert_eq!(
                         result.status.code(),
                         Some(expected),
-                        "{gc} {opt} op={operation}: {result:?}"
+                        "counted {opt} op={operation}: {result:?}"
                     );
                 }
             }

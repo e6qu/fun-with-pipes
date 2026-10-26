@@ -43,21 +43,16 @@ fn checkpointed_vjp_matches_explicit_segment_precision_and_raw_execution() {
         "[2.0, 3.0]\n[4.0, 5.0]\n[8.0]\nTrue\nTrue\nTrue\nTrue\n[8.0, 8.0]\n"
     );
     assert!(reference.stderr.is_empty());
-    for mode in ["tracing", "arc"] {
+    {
         for opt in ["-O1", "-O2"] {
             let binary = dir.join("checkpoint.exe");
             let mut build = Command::new(compiler);
             build.arg("build").arg(&source).arg(opt);
-            build.args(["--gc", mode]);
+
             checked(build.arg("-o").arg(&binary));
-            let output = checked(
-                Command::new(&binary)
-                    .env("FWP_GC_STRESS", if mode == "arc" { "0" } else { "1" })
-                    .env("FWP_GC_VERIFY", if mode == "arc" { "0" } else { "1" })
-                    .env("FWP_REUSE_VERIFY", if mode == "arc" { "0" } else { "1" }),
-            );
-            assert_eq!(output.stdout, reference.stdout, "{mode} {opt}");
-            assert_eq!(output.stderr, reference.stderr, "{mode} {opt}");
+            let output = checked(&mut Command::new(&binary));
+            assert_eq!(output.stdout, reference.stdout, "counted {opt}");
+            assert_eq!(output.stderr, reference.stderr, "counted {opt}");
         }
     }
 }
@@ -105,11 +100,11 @@ fn checkpoint_arguments_fail_before_replay_and_reject_wrong_seed_counts() {
             String::from_utf8_lossy(&reference.stderr).contains(error),
             "{reference:?}"
         );
-        for mode in ["tracing", "arc"] {
+        {
             let binary = dir.join("error.exe");
             let mut build = Command::new(compiler);
             build.arg("build").arg(&source);
-            build.args(["--gc", mode]);
+
             checked(build.arg("-o").arg(&binary));
             let output = Command::new(binary).output().unwrap();
             assert!(!output.status.success());

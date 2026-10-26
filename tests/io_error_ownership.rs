@@ -12,11 +12,11 @@ fn repeated_errors_and_failed_error_construction_release_storage() {
     std::fs::write(&source, "export exercise : () -> () ! {FileIO}\nexercise = const \"missing\\0suffix\" | attempt (file.open | file.close) | ignore\nmain = exercise ()\n")
     .unwrap();
     let compiler = env!("CARGO_BIN_EXE_fwp");
-    for mode in ["tracing", "arc"] {
+    {
         let cfile = dir.join("error.c");
         checked(
             Command::new(compiler)
-                .args(["build", "--gc", mode, "--fn", "exercise", "--emit-c"])
+                .args(["build", "--fn", "exercise", "--emit-c"])
                 .arg(&source)
                 .arg("-o")
                 .arg(&cfile),
@@ -50,18 +50,10 @@ fn repeated_errors_and_failed_error_construction_release_storage() {
                 .replace("fEXERCISE", &format!("f{entry}")),
         );
         let binary = dir.join("probe.exe");
-        let run = |binary: &std::path::Path| {
-            let mut command = Command::new(binary);
-            command
-                .env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", if mode == "arc" { "0" } else { "1" })
-                .env("FWP_REUSE_VERIFY", "0");
-            command
-        };
+
         for opt in ["-O1", "-O2"] {
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            checked(&mut run(&binary));
+            checked(&mut Command::new(&binary));
         }
         let uncounted = code.replace(
             "V error = fwp_rc_fresh(io_record(2, fields));",
@@ -76,8 +68,8 @@ fn repeated_errors_and_failed_error_construction_release_storage() {
         for (broken, status) in [(uncounted, 231), (unprotected, 235)] {
             assert_ne!(broken, code);
             fwp::cgen::compile_c(&broken, &binary, "-O2").unwrap();
-            let result = run(&binary).output().unwrap();
-            assert_eq!(result.status.code(), Some(status), "{mode}: {result:?}");
+            let result = Command::new(&binary).output().unwrap();
+            assert_eq!(result.status.code(), Some(status), "counted: {result:?}");
         }
     }
 }

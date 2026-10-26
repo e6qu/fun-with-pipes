@@ -135,9 +135,6 @@ main = ({rounds}, 0) | loop step | echo
                         fwp::cgen::compile_c(code, &exe, opt).unwrap();
                         let out = Command::new(&exe)
                             .env("FWP_ALLOC_STATS", "0")
-                            .env("FWP_GC_STRESS", "0")
-                            .env("FWP_GC_VERIFY", "0")
-                            .env("FWP_REUSE_VERIFY", "0")
                             .output()
                             .unwrap();
                         record_probe::save("stack_ownership", &label, code, &exe, &out);
@@ -252,41 +249,28 @@ main = [
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for memory in ["arc", "tracing"] {
-        let cfile = dir.0.join(format!("{memory}.c"));
+    {
+        let cfile = dir.0.join("counted.c");
         checked(
             Command::new(fwp)
                 .env_remove("FWP_NO_OPT")
                 .env("FWP_STACK", "1")
-                .args(["build", "--gc", memory, "--memory", "dynamic", "--emit-c"])
+                .args(["build", "--memory", "dynamic", "--emit-c"])
                 .arg(&src)
                 .arg("-o")
                 .arg(&cfile),
         );
         let code = std::fs::read_to_string(&cfile).unwrap();
-        let code = if memory == "arc" {
-            ownership_ledger::instrument_native(&code, 1 << 16)
-        } else {
-            code
-        };
+        let code = ownership_ledger::instrument_native(&code, 1 << 16);
         for opt in ["-O1", "-O2"] {
-            let exe = dir.0.join(format!("{memory}{opt}.exe"));
+            let exe = dir.0.join(format!("counted{opt}.exe"));
             fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-            for poison in if memory == "arc" {
-                &["0"][..]
-            } else {
-                &["0", "1"][..]
-            } {
-                let stress = if memory == "arc" { "0" } else { "1" };
+            {
                 let out = Command::new(&exe)
-                    .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
                     .env("FWP_ALLOC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", poison)
                     .output()
                     .unwrap();
-                let label = format!("aliases-{memory}{opt}-poison{poison}");
+                let label = format!("aliases-counted{opt}");
                 record_probe::save("stack_ownership", &label, &code, &exe, &out);
                 assert!(out.status.success(), "{label}: {out:?}");
                 assert_eq!(out.stdout, expected.stdout, "{label}");

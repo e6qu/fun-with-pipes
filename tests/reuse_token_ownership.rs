@@ -54,11 +54,10 @@ fn compiler_tokens_transfer_release_and_unwind() {
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .arg(&src)
                 .args(["--emit-c", "-O2", "-o"])
                 .arg(&cfile)
@@ -66,11 +65,7 @@ fn compiler_tokens_transfer_release_and_unwind() {
                 .env("FWP_VRET", "0"),
         );
         let emitted = std::fs::read_to_string(&cfile).unwrap();
-        let emitted = if mode == "arc" {
-            ownership_ledger::instrument_native(&emitted, 1 << 16)
-        } else {
-            emitted
-        };
+        let emitted = ownership_ledger::instrument_native(&emitted, 1 << 16);
         assert!(emitted.contains("fwp_cleanup_push(&t"));
         let wrapper = |name: &str| {
             let start = emitted.find(&format!("/* {name} :")).unwrap();
@@ -154,30 +149,19 @@ int main(void) {
                 ("normal", format!("{runtime}\n{probe}"), 0),
                 ("missing-cleanup", format!("{missing_cleanup}\n{probe}"), 2),
             ];
-            if mode == "arc" {
+            {
                 let missing = probe.replace("fwp_rc_free_obj(result);", "");
                 assert_ne!(missing, probe);
                 cases.push(("missing-release", format!("{runtime}\n{missing}"), 90));
             }
             for (label, code, status) in cases {
                 fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-                let poisons = if mode == "tracing" && label == "normal" {
-                    &["0", "1"][..]
-                } else {
-                    &["0"][..]
-                };
-                for poison in poisons {
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
+
+                {
+                    let out = Command::new(&exe).output().unwrap();
                     record_probe::save(
                         "reuse_token_ownership",
-                        &format!("{mode}{opt}-token-{label}-poison{poison}"),
+                        &format!("counted{opt}-token-{label}"),
                         &code,
                         &exe,
                         &out,
@@ -185,9 +169,9 @@ int main(void) {
                     assert_eq!(
                         out.status.code(),
                         Some(status),
-                        "{mode} {opt} {label}: {out:?}"
+                        "counted {opt} {label}: {out:?}"
                     );
-                    assert!(out.stderr.is_empty(), "{mode} {opt} {label}: {out:?}");
+                    assert!(out.stderr.is_empty(), "counted {opt} {label}: {out:?}");
                     let expected = if status == 0 {
                         &b"compiler token owners release and transfer exactly once\n"[..]
                     } else {
@@ -198,28 +182,21 @@ int main(void) {
             }
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .args(["build", "--memory", "dynamic"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe)
                     .env("FWP_STACK", "0")
                     .env("FWP_VRET", "0"),
             );
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
+            let out = checked(&mut Command::new(&exe));
             assert_eq!(out.stdout, reference.stdout);
         }
     }
 }
 
 #[test]
-fn compiler_token_cleanup_respects_ownership_switches() {
+fn compiler_token_cleanup_preserves_reuse_and_stack_controls() {
     let dir = Scratch::new("switches");
     let src = dir.0.join("token.fwp");
     let exe = dir.0.join("token.exe");
@@ -238,38 +215,30 @@ fn compiler_token_cleanup_respects_ownership_switches() {
                 .args(["run", "--interp"])
                 .arg(&src),
         );
-        for mode in ["arc", "tracing"] {
-            for (flag, value) in [("FWP_FREE", "0"), ("FWP_REUSE", "0"), ("FWP_STACK", "0")] {
-                let built = Command::new(fwp)
-                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+        for stack in ["0", "1"] {
+            let cfile = dir.0.join("token.c");
+            checked(
+                Command::new(fwp)
+                    .args(["build", "--memory", "dynamic", "--emit-c", "-O1"])
                     .arg(&src)
-                    .args(["-O1", "-o"])
-                    .arg(&exe)
-                    .env(flag, value)
-                    .output()
-                    .unwrap();
-                if mode == "arc" && flag != "FWP_STACK" {
-                    assert!(!built.status.success(), "ARC must reject {flag}=0");
-                    assert!(
-                        String::from_utf8_lossy(&built.stderr)
-                            .contains("--gc arc requires counted ownership and freeing"),
-                        "{built:?}"
-                    );
-                    continue;
-                }
-                assert!(built.status.success(), "{mode} {flag}: {built:?}");
-                let stress = if mode == "arc" { "0" } else { "1" };
-                let out = checked(
-                    Command::new(&exe)
-                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", stress),
-                );
+                    .arg("-o")
+                    .arg(&cfile)
+                    .env("FWP_STACK", stack),
+            );
+            let generated = std::fs::read_to_string(&cfile).unwrap();
+            for reuse in [true, false] {
+                let code = if reuse {
+                    generated.clone()
+                } else {
+                    format!("#define FWP_NO_REUSE 1\n{generated}")
+                };
+                fwp::cgen::compile_c(&code, &exe, "-O1").unwrap();
+                let out = checked(&mut Command::new(&exe));
                 assert_eq!(
                     out.stdout, reference.stdout,
-                    "input {input}, {flag}={value}"
+                    "input {input}, stack={stack}, reuse={reuse}"
                 );
+                assert_eq!(out.stderr, reference.stderr);
             }
         }
     }
@@ -327,12 +296,12 @@ main = Box 1000000 | attempt down | echo
     );
     assert_eq!(reference.stdout, b"Ok (Box 0)\n");
     std::fs::write(&src, source).unwrap();
-    for mode in ["arc", "tracing"] {
+    {
         checked(
             Command::new(fwp)
                 .env("FWP_STACK", "0")
                 .env("FWP_VRET", "0")
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .arg(&src)
                 .args(["--emit-c", "-O2", "-o"])
                 .arg(&cfile),
@@ -342,31 +311,20 @@ main = Box 1000000 | attempt down | echo
         for opt in ["-O1", "-O2"] {
             let exe = dir.0.join(format!("token{opt}.exe"));
             fwp::cgen::compile_c(&emitted, &exe, opt).unwrap();
-            for gc in if mode == "arc" {
-                &["off"][..]
-            } else {
-                &["off", "on"][..]
-            } {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
+            {
+                let out = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "reuse_token_ownership",
-                    &format!("{mode}{opt}-tail-gc{gc}"),
+                    &format!("counted{opt}-tail"),
                     &emitted,
                     &exe,
                     &out,
                 );
                 assert!(
                     out.status.success() && out.stderr.is_empty(),
-                    "{mode} {opt}: {out:?}"
+                    "counted {opt}: {out:?}"
                 );
-                assert_eq!(out.stdout, reference.stdout, "{opt}, GC={gc}");
+                assert_eq!(out.stdout, reference.stdout, "{opt}");
             }
         }
     }

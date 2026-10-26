@@ -1,5 +1,11 @@
 //! Borrowed TLS protocol bytes keep their Conn owner live through allocation.
 use fwp::ir::*;
+#[cfg(unix)]
+use fwp::tls::{ClientOpts, Io, Session};
+#[cfg(unix)]
+use std::os::fd::AsRawFd;
+#[cfg(unix)]
+use std::os::unix::net::UnixStream;
 use std::process::Command;
 
 #[test]
@@ -29,14 +35,16 @@ fn alpn_string_allocation_keeps_the_owning_session_live() {
         ..Program::default()
     };
     let (generated, _header) = fwp::cgen::generate_library(&p, "resources", &[]).unwrap();
-    // A real major trace at the copy boundary removes reliance on GC timing.
+    // Observe the real TLS session at the borrowed-byte copy boundary.
     let generated = generated.replace(
         "static V fwp_str_new(const char *s, size_t len) {",
         "static V fwp_str_new(const char *s, size_t len) { inspect_owner();",
     );
     let hooks = r#"
 #include <openssl/ssl.h>
+#include <stdint.h>
 static SSL *watched_ssl;static int copy_active,released;
+static uintptr_t watched_connection;
 static void observe_ssl_free(SSL *ssl);
 static void inspect_owner(void);
 #define SSL_free(p) observe_ssl_free(p)
@@ -46,16 +54,19 @@ static void inspect_owner(void);
 static void observe_ssl_free(SSL *ssl){if(ssl==watched_ssl)released++;SSL_free(ssl);}
 static void inspect_owner(void){
  if(!copy_active)return;copy_active=0;
- if(!fwp_heap.armed)exit(2);size_t before=fwp_heap.ncollect;
- fwp_heap.major_next=1;fwp_heap_collect();
- if(fwp_heap.ncollect<=before)exit(3);if(released)exit(1);
+ /* A broken owner is released before any borrowed byte is read. */
+ if(PROBE_RELEASE_BEFORE_COPY)fwp_sock_drop((V)watched_connection);
+ if(released)exit(1);
 }
 static __attribute__((noinline)) V protocol(void){
- V conn=fwp_sock_new(-1,1);STREAM(conn)->tls=watched_ssl;copy_active=1;
- return fwp_p_tls_alpn(conn);
+ V conn=fwp_sock_new(-1,1);STREAM(conn)->tls=watched_ssl;
+ watched_connection=(uintptr_t)conn;copy_active=1;
+ V result=fwp_rc_fresh(fwp_p_tls_alpn(conn));
+ fwp_sock_drop(conn);watched_connection=0;
+ return result;
 }
 static int probe(int argc,char **argv){
- if(argc!=3)return 30;fwp_lib_init();fwp_heap_start();if(!fwp_heap.armed)return 31;
+ if(argc!=3)return 30;fwp_lib_init();size_t baseline=fwp_heap.live;
  unsigned char *wire=malloc(4);if(!wire)return 32;memcpy(wire,"\x02h2",4);
  SSL_CTX *ctx=fwp_tls_server_ctx(argv[1],argv[2],wire,3,"");if(!ctx)return 33;
  SSL *server=(SSL *)fwp_tls_accepted(ctx,-1);fwp_tls_server_drop(ctx);
@@ -69,7 +80,8 @@ static int probe(int argc,char **argv){
  }
  if(!SSL_is_init_finished(client)||!SSL_is_init_finished(server))return 39;
  watched_ssl=client;V result=protocol();
- if(copy_active||released||strcmp(STR(result)->d,"h2"))return 40;
+ if(copy_active||released!=1||strcmp(STR(result)->d,"h2"))return 40;
+ fwp_rc_free_obj(result);if(fwp_heap.live!=baseline)return 42;
  fwp_tls_dispose(server);fwp_lib_finish();if(released!=1)return 41;
  return 0;
 }
@@ -106,9 +118,6 @@ int main(int argc,char **argv){int status=probe(argc,argv);if(status)_Exit(statu
     );
     #[cfg(unix)]
     {
-        use fwp::tls::{ClientOpts, Io, Session};
-        use std::os::fd::AsRawFd;
-        use std::os::unix::net::UnixStream;
         let (a, b) = UnixStream::pair().unwrap();
         a.set_nonblocking(true).unwrap();
         b.set_nonblocking(true).unwrap();
@@ -149,39 +158,23 @@ int main(int argc,char **argv){int status=probe(argc,argv);if(status)_Exit(statu
     }
     let exe = dir.join("probe");
     for opt in ["-O1", "-O2"] {
-        fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
+        for premature_release in [false, true] {
+            let code = format!(
+                "#define PROBE_RELEASE_BEFORE_COPY {}\n{hooks}\n{generated}\n{fixture}",
+                usize::from(premature_release)
+            );
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
             let out = Command::new(&exe)
                 .args([dir.join("cert.pem"), dir.join("key.pem")])
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", poison)
                 .output()
                 .unwrap();
-            assert!(
-                out.status.success(),
-                "{opt}, poison {poison}: {:?}: {}",
+            assert_eq!(
                 out.status.code(),
-                String::from_utf8_lossy(&out.stderr)
+                Some(if premature_release { 1 } else { 0 }),
+                "{opt}: {out:?}"
             );
+            assert!(out.stdout.is_empty() && out.stderr.is_empty(), "{out:?}");
         }
     }
-    // A conservative trace may retain a stale register on some architectures,
-    // so removing a compiler fence does not reliably release the session.
-    // Deliberately release its actual owner before copying borrowed bytes.
-    let needle = "    V result = fwp_str_new(p ? (const char *)p : \"\", p ? n : 0);";
-    assert!(generated.contains(needle));
-    let broken = generated.replacen(needle, &format!("    fwp_sock_drop(c);\n{needle}"), 1);
-    fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, "-O1").unwrap();
-    let out = Command::new(&exe)
-        .args([dir.join("cert.pem"), dir.join("key.pem")])
-        .output()
-        .unwrap();
-    assert_eq!(
-        out.status.code(),
-        Some(1),
-        "{}",
-        String::from_utf8_lossy(&out.stderr)
-    );
     std::fs::remove_dir_all(dir).unwrap();
 }

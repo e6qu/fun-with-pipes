@@ -66,15 +66,15 @@ fn deep_self_recursion_preserves_swaps_aliases_effects_and_failure_order() {
                 "{diagnostics}"
             );
         }
-        for mode in ["tracing", "arc"] {
-            let cfile = dir.join(format!("{mode}.c"));
+        {
+            let cfile = dir.join("counted.c");
             let mut command = Command::new(compiler);
             command.env_remove("FWP_NO_OPT").args(["build", "--emit-c"]);
-            command.args(["--gc", mode]);
+
             checked(command.arg(&src).arg("-o").arg(&cfile));
             let mut code = std::fs::read_to_string(&cfile).unwrap();
             assert!(code.contains("fwp_self_again:"));
-            if mode == "arc" {
+            {
                 let start = code
                     .find("static void *fwp_main_thread(void *arg) {")
                     .unwrap();
@@ -92,23 +92,15 @@ fn deep_self_recursion_preserves_swaps_aliases_effects_and_failure_order() {
                 code = format!("{runtime}{main}");
             }
             for opt in ["-O0", "-O2"] {
-                let binary = dir.join(format!("{mode}{opt}.exe"));
+                let binary = dir.join(format!("counted{opt}.exe"));
                 fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-                let output = checked(
-                    Command::new(&binary)
-                        .env("FWP_GC_STRESS", if mode == "tracing" { "1" } else { "0" })
-                        .env("FWP_GC_VERIFY", if mode == "tracing" { "1" } else { "0" })
-                        .env(
-                            "FWP_REUSE_VERIFY",
-                            if mode == "tracing" { "1" } else { "0" },
-                        ),
-                );
-                assert_eq!(output.stdout, raw.stdout, "{name} {mode} {opt}");
-                assert_eq!(output.stderr, raw.stderr, "{name} {mode} {opt}");
+                let output = checked(&mut Command::new(&binary));
+                assert_eq!(output.stdout, raw.stdout, "{name} counted {opt}");
+                assert_eq!(output.stderr, raw.stderr, "{name} counted {opt}");
                 if let Some(path) = std::env::var_os("FWP_TAIL_ARTIFACTS") {
                     let path = std::path::PathBuf::from(path);
                     std::fs::create_dir_all(&path).unwrap();
-                    let label = format!("{name}-{mode}{opt}");
+                    let label = format!("{name}-counted{opt}");
                     std::fs::write(path.join(format!("{label}.c")), &code).unwrap();
                     std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
                     let mut disassemble = Command::new(if cfg!(target_os = "macos") {

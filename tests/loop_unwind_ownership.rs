@@ -112,12 +112,11 @@ fn current_loop_states_release_at_first_and_later_cancellation_ticks() {
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         checked(
             Command::new(fwp)
                 .env("FWP_STACK", "1")
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .arg(&src)
                 .args(["--emit-c", "-O2", "-o"])
                 .arg(&cfile),
@@ -220,7 +219,7 @@ int main(void) {
                 );
         for opt in ["-O1", "-O2"] {
             let mut cases = vec![("normal", probe.clone(), 0)];
-            if mode == "arc" {
+            {
                 let missing = probe.replace("fwp_rc_free_obj(original_text);", "");
                 assert_ne!(missing, probe);
                 cases.push(("missing-release", missing, 90));
@@ -228,22 +227,11 @@ int main(void) {
             for (label, probe, status) in cases {
                 let code = format!("{runtime}\n{probe}");
                 fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-                for poison in if mode == "tracing" && label == "normal" {
-                    &["0", "1"][..]
-                } else {
-                    &["0"][..]
-                } {
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
+                {
+                    let out = Command::new(&exe).output().unwrap();
                     record_probe::save(
                         "loop_unwind_ownership",
-                        &format!("{mode}{opt}-ticks-{label}-poison{poison}"),
+                        &format!("counted{opt}-ticks-{label}"),
                         &code,
                         &exe,
                         &out,
@@ -251,9 +239,9 @@ int main(void) {
                     assert_eq!(
                         out.status.code(),
                         Some(status),
-                        "{mode} {opt} {label}: {out:?}"
+                        "counted {opt} {label}: {out:?}"
                     );
-                    assert!(out.stderr.is_empty(), "{mode} {opt} {label}: {out:?}");
+                    assert!(out.stderr.is_empty(), "counted {opt} {label}: {out:?}");
                     let expected = if status == 0 {
                         &b"loop states release at cancellation ticks with aliases and scalar bits intact\n"[..]
                     } else {
@@ -265,19 +253,12 @@ int main(void) {
             checked(
                 Command::new(fwp)
                     .env("FWP_STACK", "1")
-                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .args(["build", "--memory", "dynamic"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe),
             );
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
+            let out = checked(&mut Command::new(&exe));
             assert_eq!(out.stdout, reference.stdout);
         }
     }
@@ -290,12 +271,11 @@ fn owned_steps_release_if_payload_preparation_fails() {
     let cfile = dir.0.join("payload.c");
     let exe = dir.0.join("payload.exe");
     std::fs::write(&src, SOURCE).unwrap();
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
                 .env("FWP_STACK", "1")
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .arg(&src)
                 .args(["--emit-c", "-O2", "-o"])
                 .arg(&cfile),
@@ -355,7 +335,7 @@ int main(void) {
         );
         for opt in ["-O1", "-O2"] {
             let mut cases = vec![("normal", probe.clone(), 0)];
-            if mode == "arc" {
+            {
                 let missing = probe.replace("fwp_rc_free_obj(original_text);", "");
                 assert_ne!(missing, probe);
                 cases.push(("missing-release", missing, 90));
@@ -363,22 +343,11 @@ int main(void) {
             for (label, probe, status) in cases {
                 let code = format!("{runtime}\n{probe}");
                 fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-                for poison in if mode == "tracing" && label == "normal" {
-                    &["0", "1"][..]
-                } else {
-                    &["0"][..]
-                } {
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
+                {
+                    let out = Command::new(&exe).output().unwrap();
                     record_probe::save(
                         "loop_unwind_ownership",
-                        &format!("{mode}{opt}-payload-{label}-poison{poison}"),
+                        &format!("counted{opt}-payload-{label}"),
                         &code,
                         &exe,
                         &out,
@@ -386,9 +355,9 @@ int main(void) {
                     assert_eq!(
                         out.status.code(),
                         Some(status),
-                        "{mode} {opt} {label}: {out:?}"
+                        "counted {opt} {label}: {out:?}"
                     );
-                    assert!(out.stderr.is_empty(), "{mode} {opt} {label}: {out:?}");
+                    assert!(out.stderr.is_empty(), "counted {opt} {label}: {out:?}");
                     let expected = if status == 0 {
                         &b"owned Steps release on payload preparation failure without losing aliases\n"[..]
                     } else {

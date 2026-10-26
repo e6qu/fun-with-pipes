@@ -59,11 +59,11 @@ fn handled_callback_application_matches_interpretation_and_native_execution() {
         include_bytes!("fixtures/handled_callbacks.out")
     );
     assert!(reference.stderr.is_empty(), "{reference:?}");
-    for memory in ["arc", "tracing"] {
+    {
         let cfile = dir.join("main.c");
         let emitted = Command::new(compiler)
             .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", memory, "--emit-c"])
+            .args(["build", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile)
@@ -74,15 +74,9 @@ fn handled_callback_application_matches_interpretation_and_native_execution() {
         for opt in ["-O0", "-O2"] {
             let binary = dir.join("main.exe");
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let stress = if memory == "arc" { "0" } else { "1" };
-            let actual = Command::new(binary)
-                .env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", stress)
-                .env("FWP_GC_VERIFY", stress)
-                .env("FWP_REUSE_VERIFY", stress)
-                .output()
-                .unwrap();
-            assert!(actual.status.success(), "{memory}/{opt}: {actual:?}");
+
+            let actual = Command::new(binary).output().unwrap();
+            assert!(actual.status.success(), "counted/{opt}: {actual:?}");
             assert_eq!(
                 (&actual.stdout, &actual.stderr),
                 (&reference.stdout, &reference.stderr)
@@ -179,8 +173,6 @@ fn comptime_file_contents_survive_removing_the_compilation_input() {
         std::fs::remove_file(&input).unwrap();
         let ran = Command::new(&executable)
             .current_dir(dir.path())
-            .env("FWP_GC_STRESS", "1")
-            .env("FWP_GC_VERIFY", "1")
             .output()
             .unwrap();
         assert!(
@@ -321,11 +313,7 @@ fn inferred_pure_callbacks_agree_with_native_execution() {
             "{}",
             String::from_utf8_lossy(&built.stderr)
         );
-        let got = Command::new(&exe)
-            .env("FWP_GC_STRESS", "1")
-            .env("FWP_GC_VERIFY", "1")
-            .output()
-            .unwrap();
+        let got = Command::new(&exe).output().unwrap();
         assert!(
             got.status.success(),
             "{}",

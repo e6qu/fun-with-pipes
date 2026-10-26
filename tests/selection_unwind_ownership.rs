@@ -90,11 +90,10 @@ fn predicates_and_partial_spines_release_selected_aliases_and_scratch() {
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .env("FWP_STACK", "1")
                 .arg(&src)
                 .args(["--emit-c", "-O2", "-o"])
@@ -199,95 +198,60 @@ int main(void) {
                 ("builder", &builder, &builder_probe),
                 ("cancelled", &cancelled, &cancelled_probe),
             ] {
-                if mode == "arc" {
+                {
                     let missing = probe.replace("fwp_rc_free_obj(input_alias);", "");
                     assert_ne!(&missing, probe);
                     fwp::cgen::compile_c(&format!("{code}\n{missing}"), &exe, opt).unwrap();
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", "off")
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "0")
-                        .env("FWP_REUSE_VERIFY", "0")
-                        .output()
-                        .unwrap();
+                    let out = Command::new(&exe).output().unwrap();
                     record_probe::save(
                         "selection_unwind_ownership",
-                        &format!("{mode}{opt}-{case}-missing-release"),
+                        &format!("counted{opt}-{case}-missing-release"),
                         &format!("{code}\n{missing}"),
                         &exe,
                         &out,
                     );
-                    assert_eq!(out.status.code(), Some(90), "{mode} {opt} {case}: {out:?}");
+                    assert_eq!(out.status.code(), Some(90), "counted {opt} {case}: {out:?}");
                 }
                 let missing_scratch =
                     code.replacen("    if (items) fwp_mem_free(items);", "    (void)items;", 1);
                 assert_ne!(&missing_scratch, code);
                 fwp::cgen::compile_c(&format!("{missing_scratch}\n{probe}"), &exe, opt).unwrap();
-                let out = Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress)
-                    .output()
-                    .unwrap();
+                let out = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "selection_unwind_ownership",
-                    &format!("{mode}{opt}-{case}-missing-scratch"),
+                    &format!("counted{opt}-{case}-missing-scratch"),
                     &format!("{missing_scratch}\n{probe}"),
                     &exe,
                     &out,
                 );
-                assert_eq!(out.status.code(), Some(3), "{mode} {opt} {case}: {out:?}");
+                assert_eq!(out.status.code(), Some(3), "counted {opt} {case}: {out:?}");
                 fwp::cgen::compile_c(&format!("{code}\n{probe}"), &exe, opt).unwrap();
-                for poison in if mode == "arc" {
-                    &["0"][..]
-                } else {
-                    &["0", "1"][..]
-                } {
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
+                {
+                    let out = Command::new(&exe).output().unwrap();
                     record_probe::save(
                         "selection_unwind_ownership",
-                        &format!("{mode}{opt}-{case}-normal-poison{poison}"),
+                        &format!("counted{opt}-{case}-normal"),
                         &format!("{code}\n{probe}"),
                         &exe,
                         &out,
                     );
-                    assert!(
-                        out.status.success(),
-                        "{mode} {opt} poison={poison}: {out:?}"
-                    );
+                    assert!(out.status.success(), "counted {opt}: {out:?}");
                     assert_eq!(
                         out.stdout,
                         b"selected aliases and scratch release across failed predicates\n"
                     );
-                    assert!(out.stderr.is_empty(), "{mode} {opt} {case}: {out:?}");
+                    assert!(out.stderr.is_empty(), "counted {opt} {case}: {out:?}");
                 }
             }
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .args(["build", "--memory", "dynamic"])
                     .env("FWP_STACK", "1")
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe),
             );
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
+            let out = checked(&mut Command::new(&exe));
             assert_eq!(out.stdout, reference.stdout);
         }
     }
@@ -301,11 +265,10 @@ fn scalar_address_bits_survive_selection_cleanup() {
     let exe = dir.0.join("scalar.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .env("FWP_STACK", "1")
                 .arg(&src)
                 .args(["--emit-c", "-O2", "-o"])
@@ -359,58 +322,37 @@ int main(void) {
         );
         for opt in ["-O1", "-O2"] {
             for (case, code, probe) in [("scalar", &runtime, &probe)] {
-                if mode == "arc" {
+                {
                     let missing = probe.replace("fwp_rc_free_obj(scalar_word);", "");
                     assert_ne!(&missing, probe);
                     fwp::cgen::compile_c(&format!("{code}\n{missing}"), &exe, opt).unwrap();
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", "off")
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "0")
-                        .env("FWP_REUSE_VERIFY", "0")
-                        .output()
-                        .unwrap();
+                    let out = Command::new(&exe).output().unwrap();
                     record_probe::save(
                         "selection_unwind_ownership",
-                        &format!("{mode}{opt}-{case}-missing-release"),
+                        &format!("counted{opt}-{case}-missing-release"),
                         &format!("{code}\n{missing}"),
                         &exe,
                         &out,
                     );
-                    assert_eq!(out.status.code(), Some(90), "{mode} {opt} {case}: {out:?}");
+                    assert_eq!(out.status.code(), Some(90), "counted {opt} {case}: {out:?}");
                 }
 
                 fwp::cgen::compile_c(&format!("{code}\n{probe}"), &exe, opt).unwrap();
-                for poison in if mode == "arc" {
-                    &["0"][..]
-                } else {
-                    &["0", "1"][..]
-                } {
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
+                {
+                    let out = Command::new(&exe).output().unwrap();
                     record_probe::save(
                         "selection_unwind_ownership",
-                        &format!("{mode}{opt}-{case}-normal-poison{poison}"),
+                        &format!("counted{opt}-{case}-normal"),
                         &format!("{code}\n{probe}"),
                         &exe,
                         &out,
                     );
-                    assert!(
-                        out.status.success(),
-                        "{mode} {opt} poison={poison}: {out:?}"
-                    );
+                    assert!(out.status.success(), "counted {opt}: {out:?}");
                     assert_eq!(
                         out.stdout,
                         b"scalar address bits remain uncounted on selection failure\n"
                     );
-                    assert!(out.stderr.is_empty(), "{mode} {opt} {case}: {out:?}");
+                    assert!(out.stderr.is_empty(), "counted {opt} {case}: {out:?}");
                 }
             }
         }

@@ -72,7 +72,7 @@ static void iteration_sample(void){if(iteration_active){double live=iteration_ch
     body = body.replace('    fwp_init_consts();\n', '    fwp_init_consts();\n    iteration_start_charge=iteration_charge();iteration_active=1;\n')
     body = body.replace('    /* Ownership observation point: before runtime teardown. */\n', '''    /* Ownership observation point: before runtime teardown. */
     iteration_active=0;
-    fprintf(stderr,"{\\"requests\\":%llu,\\"requestedBytes\\":%llu,\\"retains\\":%llu,\\"peakChargedBytes\\":%.0f,\\"finalChargedBytes\\":%.0f,\\"collections\\":%zu}\\n",(unsigned long long)iteration_requests,(unsigned long long)iteration_bytes,(unsigned long long)iteration_retains,iteration_peak,iteration_charge()-iteration_start_charge,fwp_heap.ncollect);
+    fprintf(stderr,"{\\"requests\\":%llu,\\"requestedBytes\\":%llu,\\"retains\\":%llu,\\"peakChargedBytes\\":%.0f,\\"finalChargedBytes\\":%.0f}\\n",(unsigned long long)iteration_requests,(unsigned long long)iteration_bytes,(unsigned long long)iteration_retains,iteration_peak,iteration_charge()-iteration_start_charge);
 ''')
     return prefix + sample + body
 
@@ -101,7 +101,7 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     compiler = ROOT / 'target/release/fwp'
     cc = os.environ.get('CC', 'cc')
-    environment = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+    environment = dict(os.environ)
     environment.pop('FWP_NO_OPT', None)
     results = {}
     for name, expression in CASES.items():
@@ -136,7 +136,7 @@ def main():
             measured = run([out / (label + '-profile'), '1000'], variant_env)
             assert measured.stdout == reference
             counters = json.loads(measured.stderr)
-            assert counters['collections'] == 0, (name, counters)
+            assert set(counters) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}, (name, counters)
             asm = ['otool', '-tvV', binary] if platform.system() == 'Darwin' else ['objdump', '-d', binary]
             (out / (label + '.asm')).write_text(run(asm).stdout)
             (out / (label + '.symbols')).write_text(run(['nm', binary]).stdout)
@@ -150,7 +150,7 @@ def main():
                   cpu=run(['sysctl', '-n', 'machdep.cpu.brand_string'] if platform.system() == 'Darwin' else ['lscpu']).stdout,
                   cc=run([cc, '--version']).stdout, rustc=run(['rustc', '--version', '--verbose']).stdout,
                   elements=1000, results=results,
-                  scope='Allocation-inclusive process timings include startup, runtime argument parsing and output. Memory probes are separate binaries; charged live storage excludes allocator metadata. Peak sampled after every managed allocation; zero collections required. No speed threshold or comparison with C/Rust is asserted.')
+                  scope='Allocation-inclusive process timings include startup, runtime argument parsing and output. Memory probes are separate binaries; charged live storage excludes allocator metadata. Peak sampled after every managed allocation; counted destruction must restore the live-byte baseline. No speed threshold or comparison with C/Rust is asserted.')
     report['comparisons'] = {name: {key: results[name + '-unfused']['counters'][key] - results[name]['counters'][key] for key in ('requests', 'requestedBytes', 'retains', 'peakChargedBytes')} for name in ('fold', 'each', 'find', 'pipeline', 'iterate', 'array')}
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     for name, reduction in report['comparisons'].items():

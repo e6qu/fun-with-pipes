@@ -9,9 +9,9 @@ Worktree: `/private/tmp/fwp-delete-tracing`; branch `delete-tracing-collector`.
 Base: #216 source `0db38df8bd0b3ea6f4dc1165edd985bc82c71ccb`.
 Local checkpoints: `d83f4745` (runtime deletion), `bd299fe0` (release controls),
 `dd0c2fbe` (counted probes and numeric cases), and `87d68cd1` (Windows contexts,
-client reports and nine owner-test migrations). Further reviewed edits cover
-native/WASI entries and Linux context checks. Nothing
-here has been pushed.
+client reports and nine owner-test migrations). `6e065730` records native/WASI entries and Linux context checks. Further reviewed
+edits migrate 25 owner/program targets, iterator/recursion measurements and
+HTTP/2/TLS borrowed-byte probes. Nothing here has been pushed.
 
 Only #216 is a public PR. Its worktree is
 `/private/tmp/fwp-ownership-fault-matrix`, branch `remove-tracing-runtime`.
@@ -40,6 +40,8 @@ must stay stopped. No merge watcher is running.
 | Owner tests | Migrated nine constructor/record/variant/worker preparation and unwind files to one counted run, retaining alias, failure and missing-release controls. |
 | Entry checks | Removed duplicate AOT modes and deleted-switch diagnostics; kept raw/native results, rejection-before-emission, count-boundary failures, missing-free and recursive-stack controls. Workflows use the renamed test. |
 | Linux contexts | Replaced collector-root probe with live register, rounding and signal-mask checks. Retained stack layout, clear/alignment/lifetime controls and updated the process measurement reader. |
+| Borrowed bytes | HTTP/2 and TLS probes inspect actual owners at the copy boundary and release them afterwards. Premature-release controls exit before reading freed storage; forced collection and register-clearing machinery are gone. Native validation is pending. |
+| Iterator/recursion reports | Retained matched fwp variants, inputs, optimization levels, timing scopes, allocation/live-byte counters and binary evidence. Removed the second memory mode and collection fields. |
 | Docs | Updated ownership, native commands, tutorials and allocator/report explanations. Historical measurements retain their original source/schema; reproduction instructions distinguish their revision from current tools. |
 
 The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
@@ -77,10 +79,12 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 covering 151 duplicate-mode loops, regenerated after the client-report changes.
 Nine owner-test candidates were reviewed and applied: constructor type/unwind,
 general/ordinary record update, loop preparation, retain unwind, variant conversion,
-worker boxing and worker preparation. The remaining 75 are **unreviewed** and may
-leave obsolete helpers or artifact consumers. Check each manifest source hash
-before applying; never copy them wholesale. `task_context_storage` has since been
-   migrated separately, so its candidate is stale. The older `-before-client-schema`
+worker boxing and worker preparation. Twelve more owner candidates and thirteen program candidates were reviewed,
+refined and applied. With the separate task-context migration, 49 candidates
+still match their original source hashes and remain **unreviewed**. They may
+leave obsolete helpers, boolean mode loops or artifact consumers. Check each manifest source hash
+before applying; never copy them wholesale. `task_context_storage` has been
+migrated separately, so its candidate is stale. The older `-before-client-schema`
 directory is stale. Candidate refinements also collapsed 51 single-value loops.
 
 Automatic approval review rejected an earlier broad rewrite because substantial
@@ -109,11 +113,13 @@ Scripts below live in `/private/tmp` unless a repository path is given.
 | `python3 fwp-check-report-runtime.py` | O1/O2 actual allocator: 100,032 allocated; 32 released/100,000 live, then 100,032 released/zero live; peak 100,032 and extent 196,608. |
 | `python3 fwp-check-memory-startup.py` | Migrated harness compiles at Rust O1 with warnings denied; three helper tests pass. Does not run generated memory servers. |
 | `python3 fwp-check-deletion-edits.py` | Rust formatting, changed Python parsing, whitespace, 253-target native schedule and integer artifact gate checks pass. |
+| `python3 fwp-check-migration-python.py` | Ruff reports no unresolved names in all 57 changed Python files. This is a static check, not execution of measurement protocols. |
 | `python3 scripts/check-roadmap.py` | Pass after this rewrite: 162 link sets, 106 immutable preparation pairs/tags, eight roadmap rows and commit messages. |
 
 Local harness repairs: fixed a moved expected value in the parser check and an
 unused shutdown helper in startup-only consumers. A slow edit helper was stopped,
-then rewritten and run within the guard; never raise its limits. No helper remains
+then rewritten and run within the guard; never raise its limits. A candidate-only rustfmt call initially tried to follow missing preview modules;
+rerunning with `skip_children=true` parsed all 84 previews. No helper remains
 running. Integrated runtime tests and the new wide/static/tree controls are pending.
 
 ## Verified starting point and later goals

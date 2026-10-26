@@ -149,9 +149,6 @@ int main(int argc,char **argv){
             fwp::cgen::compile_c(&code, &exe, opt).unwrap();
             let output = Command::new(&exe)
                 .env("FWP_ALLOC_STATS", "0")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
                 .output()
                 .unwrap();
             record_probe::save(
@@ -203,35 +200,20 @@ main = [
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         for opt in ["-O1", "-O2"] {
-            let exe = dir.0.join(format!("aliases-{mode}{opt}.exe"));
+            let exe = dir.0.join(format!("aliases-counted{opt}.exe"));
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .args(["build", "--memory", "dynamic"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe)
                     .env("FWP_STACK", "1"),
             );
-            for poison in if mode == "arc" {
-                &["0"][..]
-            } else {
-                &["0", "1"][..]
-            } {
-                let output = checked(
-                    Command::new(&exe)
-                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                        .env("FWP_ALLOC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", poison),
-                );
-                assert_eq!(
-                    output.stdout, reference.stdout,
-                    "{mode} {opt} poison {poison}"
-                );
+            {
+                let output = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "0"));
+                assert_eq!(output.stdout, reference.stdout, "counted {opt}");
                 assert_eq!(output.stderr, reference.stderr);
             }
         }

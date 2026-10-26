@@ -229,18 +229,18 @@ tests, scripts and workflows. CI saves `memory-diagnostics.json` in the existing
 It checks the requested revision against the checkout. Comments, disabled settings
 and runtime-selected values remain visible; a mention is not proof of coverage.
 
-| Setting/control | Purpose today | Work before deletion |
+| Retired setting/control | Former purpose | Replacement |
 |---|---|---|
 | `FWP_GC_STRESS` | Collect frequently to expose lost roots during allocation/suspension | Keep the semantic inputs and error/cancellation cases; map each to compiler ownership checks, native allocation/byte checks, or its external/WASI owner test. Values of `0` merely disable stress. |
 | `FWP_GC_VERIFY` | Compare a minor trace against a complete trace | Retire mark/age consistency checks with the collector. Preserve any independent lifetime, alias and cleanup assertions in the same tests. |
 | `FWP_REUSE_VERIFY` | Copy and poison storage instead of reusing/freeing it | Retain current controls until their alias/lifetime cases have ownership-based fault tests. The new live-allocation/reuse checks cover the faults above but not arbitrary stale reads. |
-| `FWP_GC` | Select/disable collector behavior in a generated tracing runtime | Remove the selector with tracing; preserve tests proving physical reclamation and zero collections. Disabling collection alone is not GC removal. |
+| `FWP_GC` | Select/disable collector behavior in a generated tracing runtime | Remove the selector with tracing; preserve physical-reclamation tests and verify collector code is absent. Disabling collection alone is not GC removal. |
 | `FWP_GC_STATS` | Print allocation, reclamation, collection and process-memory observations | Preserve allocation/live-byte observations in the collector-free reporting path. Update consumers and their malformed/missing-evidence tests together. |
 
 ### Collector-specific tests and retained assertions
 
 This is the deletion map for the mixed collector/ownership test families. Keep
-the old assertions until G5 removes their implementation; do not treat a filename
+independent lifetime assertions while replacing collector-specific checks; do not treat a filename
 containing `gc` as permission to delete its complete test target.
 
 | Current family | Retire with tracing | Keep without tracing |
@@ -253,6 +253,7 @@ containing `gc` as permission to delete its complete test target.
 | [channel_cycle_ownership](../tests/channel_cycle_ownership.rs) | Executing an unproved strong recursive queue graph | The same graph remains an explicit admission rejection; `weak_channels.fwp` tests a recursive weak back-edge, close preserving a queued message, live upgrade while its outside owner survives, and expiration after that owner returns |
 | Callback, stack-child, variant and reuse-token probes | Poisoned-storage inspection | The fault matrix above: captured owners, child destruction, duplicate destruction, interrupted reconstruction and original semantic outputs |
 | Unwind, files, sockets and loaded libraries | Collector rooting/poisoning around resource owners | Actual descriptors/handles, construction errors, nested unwind, cancellation, close-before-free, active callbacks and real library unload, with the independent faults above |
+| HTTP/2 body and TLS protocol copies | Forced major collections, stale-register clearing and root fences | Inspect the real stream/session at the copy boundary; release after copying, require unchanged copied bytes and zero live-byte growth. The premature-release control stops before reading freed bytes. |
 | [WASI ARC](../tests/wasm_arc.rs) | No native root/mark substitute applies | Physical allocations, count-table entries, task stacks/scheduler, host errors and both JSPI/Asyncify paths; omitted free/table cleanup/scheduler release must still fail |
 
 Other semantic/numeric/protocol suites keep their inputs, expected outputs,

@@ -85,15 +85,7 @@ main = [
     assert_eq!(worker.matches(&format!("{name}(")).count(), 1, "{worker}");
     for opt in ["-O1", "-O2"] {
         let binary = dir.join(if cfg!(windows) { "tail.exe" } else { "tail" });
-        let run = || {
-            Command::new(&binary)
-                .env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap()
-        };
+        let run = || Command::new(&binary).output().unwrap();
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
         let actual = run();
         assert!(actual.status.success(), "{opt}: {actual:?}");
@@ -170,13 +162,13 @@ main = [
             "{reference:?}"
         );
         for workers in ["0", "1"] {
-            for gc in ["tracing", "arc"] {
-                let cfile = dir.join(format!("{name}-{workers}-{gc}.c"));
+            {
+                let cfile = dir.join(format!("{name}-{workers}-counted.c"));
                 checked(
                     Command::new(env!("CARGO_BIN_EXE_fwp"))
                         .env_remove("FWP_NO_OPT")
                         .env("FWP_WIDE_WORKERS", workers)
-                        .args(["build", "--gc", gc, "--emit-c"])
+                        .args(["build", "--emit-c"])
                         .arg(&input)
                         .arg("-o")
                         .arg(&cfile),
@@ -202,24 +194,17 @@ main = [
                         .unwrap();
                     let (runtime, main) = code.split_at(start);
                     let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t wide_live_bytes=fwp_heap.live;\n")
-                        .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(!FWP_USE_GC && fwp_heap.live > wide_live_bytes) exit(193);\n");
+                        .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > wide_live_bytes) exit(193);\n");
                     code = format!("{runtime}{main}");
-                    // ARC has no collector; tracing stress intentionally changes its budget.
-                    code = code.replace("!FWP_USE_GC", if gc == "arc" { "1" } else { "0" });
                 }
                 for opt in ["-O1", "-O2"] {
-                    let binary = dir.join(format!("{name}-{workers}-{gc}{opt}"));
+                    let binary = dir.join(format!("{name}-{workers}-counted{opt}"));
                     fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-                    let actual = Command::new(binary)
-                        .env("FWP_GC_STRESS", if gc == "arc" { "0" } else { "1" })
-                        .env("FWP_GC_VERIFY", if gc == "arc" { "0" } else { "1" })
-                        .env("FWP_REUSE_VERIFY", if gc == "arc" { "0" } else { "1" })
-                        .output()
-                        .unwrap();
+                    let actual = Command::new(binary).output().unwrap();
                     assert_eq!(
                         actual.status.code(),
                         reference.status.code(),
-                        "{name}/{workers}/{gc}/{opt}: {actual:?}"
+                        "{name}/{workers}/counted/{opt}: {actual:?}"
                     );
                     assert_eq!(actual.stdout, reference.stdout);
                     assert_eq!(actual.stderr, reference.stderr);

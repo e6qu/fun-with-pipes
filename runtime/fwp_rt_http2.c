@@ -347,8 +347,7 @@ static V fwp_p_http2_body(V max, V timeout, V call, const fwp_desc *type) {
             fwp_decode_fields result;
             fwp_decode_fields_begin(&result, 1, type->vfields[0], 1, NULL);
             result.values[0] = fwp_rc_fresh(fwp_str_new((const char *)s->data.d, s->data.len));
-            /* Body bytes belong to the stream's malloc buffer, not the GC heap. */
-
+            /* The caller keeps the stream owner through the copy. */
             return fwp_decode_variant(&result, 0);
         }
         if (s->reset || k->c->dead) return w_err_code(0);

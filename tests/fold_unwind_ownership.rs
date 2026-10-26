@@ -75,12 +75,11 @@ fn right_fold_releases_accumulator_and_scratch_on_failure() {
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         checked(
             Command::new(fwp)
                 .env("FWP_STACK", "1")
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .arg(&src)
                 .args(["--emit-c", "-O2", "-o"])
                 .arg(&cfile),
@@ -217,7 +216,7 @@ int main(void) {
                 ("argument-error", &preparing, &preparation_probe),
             ] {
                 let mut cases = vec![("normal", format!("{code}\n{probe}"), 0)];
-                if mode == "arc" {
+                {
                     let missing = probe.replace("fwp_rc_free_obj(input_capture);", ";");
                     assert_ne!(missing, *probe);
                     cases.push(("missing-release", format!("{code}\n{missing}"), 90));
@@ -239,14 +238,8 @@ int main(void) {
                 }
                 for (label, code, status) in cases {
                     fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-                    let artifacts =
-                        std::env::var_os("FWP_CALLBACK_CAPTURE_ARTIFACTS").map(|path| {
-                            PathBuf::from(path).join(if mode == "arc" {
-                                "unwind-arc"
-                            } else {
-                                "unwind"
-                            })
-                        });
+                    let artifacts = std::env::var_os("FWP_CALLBACK_CAPTURE_ARTIFACTS")
+                        .map(|path| PathBuf::from(path).join("unwind"));
                     let stem = format!("{name}{opt}");
                     if label == "normal" {
                         if let Some(path) = &artifacts {
@@ -255,29 +248,18 @@ int main(void) {
                             std::fs::copy(&exe, path.join(format!("{stem}.exe"))).unwrap();
                         }
                     }
-                    for poison in if mode == "tracing" && label == "normal" {
-                        &["0", "1"][..]
-                    } else {
-                        &["0"][..]
-                    } {
-                        let out = Command::new(&exe)
-                            .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                            .env("FWP_GC_STATS", "0")
-                            .env("FWP_GC_STRESS", stress)
-                            .env("FWP_GC_VERIFY", stress)
-                            .env("FWP_REUSE_VERIFY", poison)
-                            .output()
-                            .unwrap();
+                    {
+                        let out = Command::new(&exe).output().unwrap();
                         record_probe::save(
                             "fold_unwind_ownership",
-                            &format!("{mode}{opt}-{name}-{label}-poison{poison}"),
+                            &format!("counted{opt}-{name}-{label}"),
                             &code,
                             &exe,
                             &out,
                         );
                         if label == "normal" {
                             if let Some(path) = &artifacts {
-                                let observation = format!("{stem}-{poison}");
+                                let observation = format!("{stem}-0");
                                 std::fs::write(
                                     path.join(format!("{observation}.stdout")),
                                     &out.stdout,
@@ -298,11 +280,11 @@ int main(void) {
                         assert_eq!(
                             out.status.code(),
                             Some(status),
-                            "{mode} {opt} {name}/{label}: {out:?}"
+                            "counted {opt} {name}/{label}: {out:?}"
                         );
                         assert!(
                             out.stderr.is_empty(),
-                            "{mode} {opt} {name}/{label}: {out:?}"
+                            "counted {opt} {name}/{label}: {out:?}"
                         );
                         let expected = if status == 0 {
                             &b"fold accumulator and scratch release on failure\n"[..]
@@ -316,19 +298,12 @@ int main(void) {
             checked(
                 Command::new(fwp)
                     .env("FWP_STACK", "1")
-                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .args(["build", "--memory", "dynamic"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe),
             );
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
+            let out = checked(&mut Command::new(&exe));
             assert_eq!(out.stdout, reference.stdout);
         }
     }
@@ -342,12 +317,11 @@ fn borrowed_prefix_duplicates_and_scalar_words_release_precisely() {
     let exe = dir.0.join("preparation.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         checked(
             Command::new(fwp)
                 .env("FWP_STACK", "1")
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .arg(&src)
                 .args(["--emit-c", "-O2", "-o"])
                 .arg(&cfile),
@@ -392,7 +366,7 @@ int main(void) {
         let runtime = emitted.replace(duplication,"if (i == 1) fwp_trap(\"injected second borrowed duplicate failure\"); fi->owned->arguments(args + before + transferred + i, c->n + before + transferred + i, 1);").replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
         for opt in ["-O1", "-O2"] {
             let mut cases = vec![("normal", probe.clone(), 0)];
-            if mode == "arc" {
+            {
                 let missing = probe.replace("fwp_rc_free_obj(scalar_word);", "");
                 assert_ne!(missing, probe);
                 cases.push(("missing-release", missing, 90));
@@ -400,22 +374,11 @@ int main(void) {
             for (label, probe, status) in cases {
                 let code = format!("{runtime}\n{probe}");
                 fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-                for poison in if mode == "tracing" && label == "normal" {
-                    &["0", "1"][..]
-                } else {
-                    &["0"][..]
-                } {
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
+                {
+                    let out = Command::new(&exe).output().unwrap();
                     record_probe::save(
                         "fold_unwind_ownership",
-                        &format!("{mode}{opt}-prefix-{label}-poison{poison}"),
+                        &format!("counted{opt}-prefix-{label}"),
                         &code,
                         &exe,
                         &out,
@@ -423,9 +386,9 @@ int main(void) {
                     assert_eq!(
                         out.status.code(),
                         Some(status),
-                        "{mode} {opt} {label}: {out:?}"
+                        "counted {opt} {label}: {out:?}"
                     );
-                    assert!(out.stderr.is_empty(), "{mode} {opt} {label}: {out:?}");
+                    assert!(out.stderr.is_empty(), "counted {opt} {label}: {out:?}");
                     let expected = if status == 0 {
                         &b"borrowed duplicates and scalar fold words retain exact ownership\n"[..]
                     } else {

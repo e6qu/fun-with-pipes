@@ -252,22 +252,19 @@ main = [
             .arg(&c)
             .arg(&source);
         assert_eq!(stdout(interpreted), expected);
-        for gc in ["tracing", "arc"] {
-            let binary = temp.join(format!("bits-{callbacks}-{gc}"));
+        {
+            let binary = temp.join(format!("bits-{callbacks}-counted"));
             let mut build = Command::new(fwp());
             build
                 .env_remove("FWP_NO_OPT")
-                .args(["build", "--gc", gc, "--link"])
+                .args(["build", "--link"])
                 .arg(&c)
                 .arg(&source)
                 .arg("-o")
                 .arg(&binary);
             stdout(build);
-            let mut run = Command::new(binary);
-            let verify = if gc == "arc" { "0" } else { "1" };
-            run.env("FWP_GC_STRESS", verify)
-                .env("FWP_GC_VERIFY", verify)
-                .env("FWP_REUSE_VERIFY", verify);
+            let run = Command::new(binary);
+
             assert_eq!(stdout(run), expected);
         }
     }
@@ -336,10 +333,8 @@ int main(void) {
             .args(["-lm", "-lpthread", "-o"])
             .arg(&binary);
         stdout(link);
-        let mut run = Command::new(binary);
-        run.env("FWP_GC_STRESS", "1")
-            .env("FWP_GC_VERIFY", "1")
-            .env("FWP_REUSE_VERIFY", "1");
+        let run = Command::new(binary);
+
         stdout(run);
         if kind == "--staticlib" {
             let mut members = Command::new(std::env::var("AR").unwrap_or_else(|_| "ar".into()));
@@ -459,26 +454,24 @@ fn unsupported_types_are_reported() {
         "foreign \"C\" takes-list : List[I64] -> I64 = \"abs\"\nmain = [1] | takes-list | echo\n",
     )
     .unwrap();
-    // Invalid C representations are independent of the ownership mode.
-    for options in [vec![], vec!["--gc", "arc"], vec!["--gc", "tracing"]] {
+    // Invalid foreign types fail before creating an executable.
+    {
         let executable = d
             .join("bad")
             .with_extension(std::env::consts::EXE_EXTENSION);
         let out = Command::new(fwp())
             .arg("build")
-            .args(&options)
             .arg(&src)
             .arg("-o")
             .arg(&executable)
             .output()
             .unwrap();
-        assert!(!out.status.success(), "{options:?}");
+        assert!(!out.status.success());
         assert_eq!(
             String::from_utf8_lossy(&out.stderr),
-            "fwp build: foreign function `abs`: `List[I64]` has no C representation (records need `repr(C)`)\n",
-            "{options:?}"
+            "fwp build: foreign function `abs`: `List[I64]` has no C representation (records need `repr(C)`)\n"
         );
-        assert!(!executable.exists(), "{options:?}");
+        assert!(!executable.exists());
     }
     let _ = std::fs::remove_dir_all(&d);
 }
