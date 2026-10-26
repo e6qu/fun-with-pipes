@@ -318,7 +318,7 @@ impl Proof<'_> {
         match origin {
             Origin::Queue(id) => {
                 let function = &self.program.funcs[id];
-                Some(function.ty.params(function.arity as usize).1)
+                Some(function.ty.after_args(function.arity as usize))
             }
             Origin::GrpcSender(id) => {
                 let function = &self.program.funcs[id];
@@ -438,8 +438,7 @@ impl Proof<'_> {
             self.queued_targets(thunks, seen)?;
             let MT::Con(name, args) = self.program.funcs[id]
                 .ty
-                .params(self.program.funcs[id].arity as usize)
-                .1
+                .after_args(self.program.funcs[id].arity as usize)
             else {
                 return Err("ownership: captured task producer has no task result".into());
             };
@@ -597,11 +596,11 @@ impl Proof<'_> {
 
     fn request(&mut self, id: FuncId, scoped: u8, args: &[Targets]) -> Targets {
         let key = (id, scoped);
-        if let std::collections::btree_map::Entry::Vacant(entry) = self.inputs.entry(key) {
-            entry.insert(vec![Targets::new(); self.program.funcs[id].arity as usize]);
+        let inputs = self.inputs.entry(key).or_insert_with(|| {
             self.changed = true;
-        }
-        for (slot, value) in self.inputs.get_mut(&key).unwrap().iter_mut().zip(args) {
+            vec![Targets::new(); self.program.funcs[id].arity as usize]
+        });
+        for (slot, value) in inputs.iter_mut().zip(args) {
             self.changed |= join(slot, value);
         }
         self.outputs.get(&key).cloned().unwrap_or_default()
@@ -754,8 +753,7 @@ impl Proof<'_> {
                         &self.program.shapes,
                         self.program.funcs[*id]
                             .ty
-                            .params(self.program.funcs[*id].arity as usize)
-                            .1,
+                            .after_args(self.program.funcs[*id].arity as usize),
                         ty,
                     ),
                     _ => true,
@@ -795,7 +793,7 @@ impl Proof<'_> {
             Origin::UnknownFunction => true,
             Origin::Function(id, supplied, _, _) => crate::ir::same_type(
                 &self.program.shapes,
-                self.program.funcs[*id].ty.params(*supplied).1,
+                self.program.funcs[*id].ty.after_args(*supplied),
                 ty,
             ),
         });
@@ -934,14 +932,14 @@ impl Proof<'_> {
                             );
                         }
                         Origin::UnknownTask => {
-                            let ty = function.ty.params(function.arity as usize).1;
+                            let ty = function.ty.after_args(function.arity as usize);
                             if self.properties(ty).functions {
                                 result.insert(Origin::UnknownFunction);
                             }
                             if self.properties(ty).channels {
                                 result.insert(unknown_queue(
                                     self.program,
-                                    function.ty.params(function.arity as usize).1,
+                                    function.ty.after_args(function.arity as usize),
                                 ));
                             }
                             if self.properties(ty).tasks {
@@ -1008,7 +1006,7 @@ impl Proof<'_> {
             Body::Prim(symbol) if symbol == "channel.upgrade" => {
                 Ok(Targets::from([unknown_queue(
                     self.program,
-                    function.ty.params(function.arity as usize).1,
+                    function.ty.after_args(function.arity as usize),
                 )]))
             }
             Body::Prim(symbol) if symbol == "channel.close" => Ok(Targets::new()),
@@ -1085,10 +1083,9 @@ impl Proof<'_> {
                 // here would incorrectly run scoped work in its caller's scope.
                 let mut result: Targets = args.iter().flatten().copied().collect();
                 let contract = crate::ownership::primitive(symbol);
-                let returns_functions = self
-                    .properties(function.ty.params(function.arity as usize).1)
-                    .functions;
-                if returns_functions {
+                let result_type = function.ty.after_args(function.arity as usize);
+                let properties = self.properties(result_type);
+                if properties.functions {
                     match contract {
                         Some(c)
                             if matches!(
@@ -1111,10 +1108,7 @@ impl Proof<'_> {
                         }
                     }
                 }
-                let returns_channels = self
-                    .properties(function.ty.params(function.arity as usize).1)
-                    .channels;
-                if returns_channels {
+                if properties.channels {
                     match contract {
                         Some(c)
                             if matches!(
@@ -1129,15 +1123,12 @@ impl Proof<'_> {
                         _ => {
                             result.insert(unknown_queue(
                                 self.program,
-                                function.ty.params(function.arity as usize).1,
+                                function.ty.after_args(function.arity as usize),
                             ));
                         }
                     }
                 }
-                if self
-                    .properties(function.ty.params(function.arity as usize).1)
-                    .tasks
-                {
+                if properties.tasks {
                     match contract {
                         Some(c)
                             if matches!(
@@ -1240,7 +1231,7 @@ impl Proof<'_> {
                         self.apply(&args[index], &vec![Targets::new(); count], scoped, site)?;
                     }
                 }
-                let result_type = function.ty.params(function.arity as usize).1;
+                let result_type = function.ty.after_args(function.arity as usize);
                 let mut result = if self.properties(result_type).functions {
                     Targets::from([Origin::UnknownFunction])
                 } else {
@@ -1414,7 +1405,14 @@ pub(crate) fn check(
         }
         proof.changed = false;
         proof.service_boundaries(entries)?;
-        for ((id, scoped), args) in proof.inputs.clone() {
+        // Freeze this round's inputs in the same order without rebuilding a
+        // search tree that the traversal only consumes sequentially.
+        let inputs: Vec<_> = proof
+            .inputs
+            .iter()
+            .map(|(&key, args)| (key, args.clone()))
+            .collect();
+        for ((id, scoped), args) in inputs {
             #[cfg(test)]
             {
                 stats.visits += 1;
@@ -1423,7 +1421,7 @@ pub(crate) fn check(
                 format!("{error}\n  while checking `{}`", program.funcs[id].name)
             })?;
             let function = &program.funcs[id];
-            let result_type = function.ty.params(function.arity as usize).1;
+            let result_type = function.ty.after_args(function.arity as usize);
             if result.iter().any(|origin| origin.callable())
                 && !proof.properties(result_type).functions
             {
@@ -1443,7 +1441,12 @@ pub(crate) fn check(
     }
     proof.validate = true;
     proof.service_boundaries(entries)?;
-    for ((id, scoped), args) in proof.inputs.clone() {
+    let inputs: Vec<_> = proof
+        .inputs
+        .iter()
+        .map(|(&key, args)| (key, args.clone()))
+        .collect();
+    for ((id, scoped), args) in inputs {
         proof
             .function(id, scoped, &args)
             .map_err(|error| format!("{error}\n  while checking `{}`", program.funcs[id].name))?;

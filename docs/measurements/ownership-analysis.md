@@ -160,11 +160,20 @@ The next source, `690610786ecb5dfec751149cefc2509dc8797331`, failed Intel's
 absolute/count limits and REST checks passed; Linux passed. A previous passing
 run does not override this failed gate.
 
-The current repair transfers newly created capture vectors into the proof
-instead of allocating another vector and copying their sets. Repeated merges
-of identical origin sets return without reinserting them. Identities, facts,
-iteration order and budgets remain unchanged. These remove redundant source-level
-work; their effect on the timing ratio still requires runner measurements.
+Source `4c79748ae670d90f85068a40eff0dcd37b63dc38` transfers new capture vectors
+instead of copying their sets and skips identical set merges. It still failed
+Intel in [run 40348021109](https://github.com/e6qu/fun-with-pipes/actions/runs/40348021109):
+32 workers took 53.717 ms Separate versus 33.427 ms Merged (1.607×), and raw forms
+admission took 10.146 s against the ten-second limit. The other REST fixture took
+6.685 s. Linux passed. These failures remain part of the evidence; earlier passing
+samples do not establish acceptance.
+
+The follow-up removes parameter-vector allocation from return-type queries,
+uses sequential snapshots instead of cloning the input search tree, avoids a
+second input-table lookup, and reads primitive result properties once per visit.
+Round snapshots, traversal order, identities, facts and budgets are unchanged.
+The existing acceptance/rejection tests and timing gates must verify this source;
+less allocation in the code is not yet a measured speedup.
 
 ## Reproduce and assess
 

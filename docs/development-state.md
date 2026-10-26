@@ -1,33 +1,30 @@
 # Current work
 
-**Next:** publish the consolidated repair batch to PR #217, then audit every
-final-head gate. Keep the unfinished old platform jobs available
-for additional failures; do not treat focused C probes as full compiler validation.
+**Next:** publish the cache-fixture, WASI scope and analysis-allocation repairs
+below, then audit all final-head gates. Do not claim collector removal from focused
+C probes or a previous source's passing jobs.
 
 ## Delivery and evidence
 
 - Worktree: `/private/tmp/fwp-delete-tracing`; branch `delete-tracing-collector`.
 - [PR #217](https://github.com/e6qu/fun-with-pipes/pull/217) is open.
-- Published source: `690610786ecb5dfec751149cefc2509dc8797331`; repairs below are local.
-- [Production 40336877625](https://github.com/e6qu/fun-with-pipes/actions/runs/40336877625):
-  macOS ARM64 regular `121620745789`, ARM64 ownership `121620745104` and Intel
-  ownership `121620745236` failed. All three logs were audited in full; completed
-  target failures are covered below. Both Windows TLS groups report the same 16
-  failing targets, also covered by this batch. Earlier Windows resource/callback
-  artifacts contain no failures. Windows command steps have failed but their logs
-  are not yet published; audit those when available. Benchmarks passed. Linux,
-  Intel regular macOS and both Windows jobs are still running.
-- [Documentation 40336877689](https://github.com/e6qu/fun-with-pipes/actions/runs/40336877689)
-  and Windows dependency cache `40336877586` passed.
-- [Ownership analysis 40336921587](https://github.com/e6qu/fun-with-pipes/actions/runs/40336921587):
-  Linux passed. Intel's 32-worker relative budget failed: 10.063/6.612 ms, 1.522×
-  against the unchanged 1.5× limit. Absolute times, counts and both REST fixtures
-  passed. [The measurement record](measurements/ownership-analysis.md#capture-lookup-repair)
-  retains this failure as well as the earlier passing source.
-- Previous repair `3e1c1482` failed production `40322237520`, but passed analysis
-  `40322274748` and docs `40322237274`. The runner, gRPC empty-call cleanup and
-  shared task fixtures were repaired in `69061078`. Current suites now execute
-  beyond those failures; this does not establish final acceptance.
+- Published repair: `4c79748ae670d90f85068a40eff0dcd37b63dc38`.
+- [Production 40347996836](https://github.com/e6qu/fun-with-pipes/actions/runs/40347996836):
+  regular macOS ARM64 and benchmarks pass. ARM64 ownership job `121660003716`
+  fails only `cache_owners_release_aliases_and_long_chains_without_collection`:
+  its synthetic source lacks connection/stream owners. All other completed targets
+  in that job pass. Other native jobs are still running.
+- [Docs 40347996842](https://github.com/e6qu/fun-with-pipes/actions/runs/40347996842)
+  and [analysis 40348021109](https://github.com/e6qu/fun-with-pipes/actions/runs/40348021109)
+  apply to the published source. Docs pass. Analysis: Linux passes; Intel fails the 32-worker
+  relative gate (53.717/33.427 ms, 1.607×) and forms startup (10.146 s versus 10 s).
+  Limits remain unchanged; the allocation repair below is not yet measured.
+- Older run `40336877625` now supplies Intel regular, Linux ARM64 and both Windows
+  logs. All reported failures were audited. Windows command failures are the CLI
+  issue already repaired in `4c79748a`. Linux additionally exposed an unscoped tape
+  in `wasm::autodiff_capacity_bounds_precede_actual_wasm32_allocation`, fixed below.
+  Previous failure details are in the committed handoff at `4c79748a` and
+  [analysis evidence](measurements/ownership-analysis.md).
 - Verified base: #216 squash `f5621cb46828273f7ce8edf92be4062ccec0f17c`, identical
   tree to tested `1dd5fcaed7792b5505283b1037a9c22d788a3be5`. Nine production jobs
   `40274667944`, docs `40273010537` and analysis jobs `40273030485` passed.
@@ -36,16 +33,9 @@ for additional failures; do not treat focused C probes as full compiler validati
 
 | Failure | Repair |
 |---|---|
-| Shared HTTP/2 generator rejects `Duration`; affected body/client/server/peer/value/context and stream-force tests | Supply the actual `Duration = { nanos: I64 }` shape in the hand-built IR fixture. Keep ownership admission strict. |
-| Record/variant resource frame tests reject temporary type `?` | Ownership lowering now retains the concrete type of scalar literal match selectors; a regression checks numeric and string selectors. Nominal values still require typed context. |
-| CLI treats `--gc` as a filename | Reject unknown leading options with usage status 2; test an unrelated unknown option too. Arguments after the program file remain program arguments. |
-| Stream-force control traps after publication and accesses a released source | Give the fixture actual stream/source/position owners, release them explicitly and observe read completion before the source can be destroyed. |
-| AD fatal allocation case traps before reaching allocation | Install the required tape scope in the test task before allocating its tape. |
-| Removed task mode and mismatched peer failure control | Use a shared-task control with its count deliberately omitted; detect missing scope promotion at the scope's post-completion ownership check. |
-| Served/output-channel/raw-string negative controls hit a different guard | Check the exact counted-boundary rejection for unowned dispatch; use an actual extra retain to test excess-reference detection. |
-| HTTP API parser expects seven fields | Read the maintained six-field memory record; remove the obsolete collector-count assertion. Producer and evidence reader already use six fields. |
-| Array-release and direct-await controls no longer find runtime code | Match the counted free statement and replace only the await-fields function, preserving the adjacent spawn implementation. |
-| Intel analysis exceeds its relative budget | Move new capture vectors into the table and skip identical fact merges. Preserve all identities, facts and limits; performance remains unverified. |
+| Stream-cache destruction releases an unowned response reader | Create actual connection/list/source/fixture owners in both chain and terminal-read probes. Release the transport and check final live storage as well as cache counts, aliases and bounded stack use. |
+| WASI capacity test is rejected before exercising allocation bounds | Put all three source probes inside `ad.scope`; install the matching cleanup scope in the paired-allocation C probe. Keep bounds, expected traps and deliberate overflow control unchanged. |
+| Intel analysis timing gates fail | Eliminate temporary parameter lists in result-type queries, repeated table lookups and cloned input trees. Preserve round snapshots, traversal order, proof facts and all budgets. Compiler integration and performance verification remain CI work. |
 
 **GC removal remains unverified.** Integrated Rust/compiler, generated-library,
 GCC, Windows and WASI checks must pass on the repaired source. C fixture checks
@@ -184,7 +174,7 @@ changes are supplied explicitly; complete regenerated integration remains a CI g
 | `python3 /private/tmp/fwp-217-check-grpc-fixtures.py grpc_send_cleanup grpc_context_restore grpc_connect_startup` | Three related fixture bodies pass at O1/O2, including cancellation, nested failure and startup cleanup controls. Same minimal-library limitation as above. |
 | `python3 /private/tmp/fwp-217-final-static-checks.py` | Rust formatting, Python parsing, all 20 runner tests and native shard coverage, frozen primitive contracts, 163 documentation link sets, 106 preparation anchors, eight roadmap rows and whitespace pass. |
 
-### Latest failure repair checks
+### Published failure repair checks
 
 All used `python3 scripts/local-guard.py`. The standalone fixture harness assembles
 current runtime source and minimal library metadata, then executes repository test
@@ -197,3 +187,14 @@ bodies; it does not regenerate their real library descriptors or build the compi
 | `python3 /private/tmp/fwp-217-check-await-control.py` | Actual await comparison passes at O0/O2: identical output, 34 restored temporary boxes, unchanged required retains and zero final live bytes. Uses CI compiler `3e1c1482` and its emitted C/exact-arithmetic sources. Initial harness links omitted those arithmetic dependencies; the complete link passes. |
 | `python3 /private/tmp/fwp-217-check-grpc-fixtures.py grpc_force_cleanup:forced_cells_release_received_storage_and_decoder_failure_text` | Rechecked at O1/O2 after preserving both cleared-reader and empty-waiter observations before source destruction; passes. |
 | `cargo fmt --all -- --check`, frozen primitive inventory, `python3 scripts/check-roadmap.py`, `git diff --check` | Pass: unchanged 394 declarations/384 symbols/40 aliases and 373 contracts; 163 link sets, 106 preparation anchors and eight roadmap rows. No compiler build. |
+
+### Follow-up after `4c79748a`
+
+All checks used `python3 scripts/local-guard.py`; no local compiler build or full
+suite ran.
+
+| Command | Result and scope |
+|---|---|
+| `python3 /private/tmp/fwp-217-check-grpc-fixtures.py grpc_force_cleanup:cache_owners_release_aliases_and_long_chains_without_collection` | O1/O2 pass: 50 normal runs across 64/1,024/16,384 entries, aliases and terminal failure/shared-owner modes; recursive cleanup fails 175 and omitted source release fails 171. Rechecked after adding complete transport live-storage balance. Uses current runtime and repository test body with minimal library metadata. |
+| `python3 /private/tmp/fwp-217-check-wasi-sources.py` | CI compiler `4c79748a` emits WASI C for all three corrected capacity sources. This verifies admission/generation, not actual wasm32 allocation or execution. |
+| `cargo fmt --all -- --check`, `python3 scripts/check-roadmap.py`, `git diff --check` | Pass: formatting, 163 doc link sets, 106 preparation anchors, eight roadmap rows and whitespace. New Rust call-type regression and analysis budgets remain runner checks. |

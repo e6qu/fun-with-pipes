@@ -520,7 +520,7 @@ fn autodiff_capacity_bounds_precede_actual_wasm32_allocation() {
         let source = tmp.join(format!("{label}.fwp"));
         std::fs::write(
             &source,
-            format!("main = read-all () | string.length | {operation} | ad.tape | echo\n"),
+            format!("main = read-all () | string.length | {operation} | ad.scope ad.tape | echo\n"),
         )
         .unwrap();
         for opt in ["-O1", "-O2"] {

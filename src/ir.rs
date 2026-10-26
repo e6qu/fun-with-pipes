@@ -52,6 +52,18 @@ impl MT {
         (ps, t)
     }
 
+    /// Type remaining after up to `n` arguments, without collecting parameters.
+    pub fn after_args(&self, n: usize) -> &MT {
+        let mut ty = self;
+        for _ in 0..n {
+            match ty {
+                MT::Fun(_, result) => ty = result,
+                _ => break,
+            }
+        }
+        ty
+    }
+
     pub fn record_index(&self, label: &str) -> Option<usize> {
         match self {
             MT::Record(fs) => fs.iter().position(|(l, _)| l == label),
@@ -339,8 +351,8 @@ pub fn type_of<'a>(
         | Expr::ResourceRegion { body: b, .. } => type_of(b),
         Expr::Local(l) => locals.get(*l as usize).cloned(),
         Expr::Func(id) => Some(func(*id).clone()),
-        Expr::Call(id, a) => Some(func(*id).params(a.len()).1.clone()),
-        Expr::Apply(f, a) => Some(type_of(f)?.params(a.len()).1.clone()),
+        Expr::Call(id, a) => Some(func(*id).after_args(a.len()).clone()),
+        Expr::Apply(f, a) => Some(type_of(f)?.after_args(a.len()).clone()),
         Expr::Field(r, i) => Some(
             record_fields(shapes, &type_of(r)?)?
                 .get(*i as usize)?
@@ -630,6 +642,29 @@ pub(crate) fn reachable_functions(prog: &Program, entries: &[FuncId]) -> Result<
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn call_types_preserve_remaining_curried_arguments() {
+        let result = MT::Record(vec![("value".into(), MT::con("std::I64"))]);
+        let tail = MT::Fun(Box::new(MT::con("std::String")), Box::new(result.clone()));
+        let full = MT::Fun(Box::new(MT::con("std::Bool")), Box::new(tail.clone()));
+        let shapes = Shapes::new();
+        let locals = [full.clone()];
+        for (count, expected) in [full.clone(), tail, result.clone()].into_iter().enumerate() {
+            let args = vec![Expr::Const(Value::unit()); count];
+            for call in [
+                Expr::Call(0, args.clone()),
+                Expr::Apply(Box::new(Expr::Local(0)), args),
+            ] {
+                assert_eq!(
+                    type_of(&|_| &full, &shapes, &locals, &call),
+                    Some(expected.clone())
+                );
+            }
+        }
+        assert_eq!(result.after_args(0), &result);
+        assert_eq!(full.after_args(usize::MAX), &result);
+    }
 
     #[test]
     fn recursive_record_comparison_terminates_and_checks_remaining_fields() {

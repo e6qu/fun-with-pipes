@@ -14,6 +14,8 @@ static void *wasm_pair_realloc(void *old,size_t bytes) {
 }
 int main(void) {
     if (sizeof(size_t)!=4 || fwp_tape_limit()!=268435455) return 221;
+    fwp_tape_scope scope={-1}; fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup,fwp_tape_scope_release,&scope);
     V base=fwp_p_ad_tape(0);
     fwp_tape_reserve(fwp_tape_of((int64_t)base>>32),fwp_tape_limit());
     return 223;

@@ -31,9 +31,12 @@ static jmp_buf cache_failed;
 static int recover_cache_failure(void) { return 1; }
 static int check_terminal_read(int failure, int shared) {
     fwp_tasks_init();
+    size_t initial_live = fwp_heap.live;
     g_server server = {0}; server.module = "cache-owners";
     g_conn *connection = g_conn_new(FWP_INVALID_SOCKET, "", "queued", &server);
+    fwp_rc_fresh(PTR(connection)); fwp_rc_dup(PTR(connection)); /* fixture and source */
     g_stream *stream = g_stream_new(connection, 1);
+    fwp_rc_fresh(PTR(stream)); fwp_rc_dup(PTR(stream)); fwp_rc_dup(PTR(stream)); /* list, source, fixture */
     stream->remote_end = 1;
     if (failure) stream->bad = strdup("deliberate receive failure");
     g_incoming *source = g_incoming_new("owned", 5);
@@ -60,7 +63,8 @@ static int check_terminal_read(int failure, int shared) {
     }
     cache_observe = 0;
     if (cache_releases != 2) return 182;
-
+    g_unlink(connection, stream); g_stream_drop(stream); g_conn_drop(connection);
+    if (fwp_heap.live != initial_live) return 183;
     return 0;
 }
 int main(int argc, char **argv) {
@@ -68,12 +72,19 @@ int main(int argc, char **argv) {
     int count = atoi(argv[1]), mode = atoi(argv[2]);
     if (count < 1 || count > 16384 || mode < 0 || mode > 10) return 170;
     fwp_lib_init(); fwp_heap_start();
+    size_t initial_live = fwp_heap.live;
     if (mode >= 7) {
         int status = check_terminal_read((mode-7)%2, (mode-7)/2);
         fwp_lib_finish(); return status;
     }
+    g_server server = {0}; server.module = "cache-owners";
+    g_conn *connection = g_conn_new(FWP_INVALID_SOCKET, "", "queued", &server);
+    fwp_rc_fresh(PTR(connection)); fwp_rc_dup(PTR(connection)); /* fixture and source */
+    g_stream *stream = g_stream_new(connection, 1);
+    fwp_rc_fresh(PTR(stream)); fwp_rc_dup(PTR(stream)); fwp_rc_dup(PTR(stream)); /* list, source, fixture */
     double before = (double)fwp_heap.live;
     g_incoming *source = g_incoming_new("owned", 5);
+    source->c = connection; source->s = stream;
     V root = PTR(g_cell_new(source)), alias = 0;
     for (int i = 0; i < count; i++) {
         V text = fwp_rc_fresh(fwp_cstr("value"));
@@ -86,8 +97,6 @@ int main(int argc, char **argv) {
             alias = mode == 2 ? root : mode == 3 ? result : pair;
             fwp_rc_dup(alias);
         }
-
-
     }
     cache_releases = 0; cache_observe = 1;
     cache_stack_low = UINTPTR_MAX; cache_stack_high = 0;
@@ -112,7 +121,9 @@ int main(int argc, char **argv) {
     cache_observe = 0;
     if (cache_releases != (size_t)(4*count+2) || fwp_cleanups) return 171;
     double after = (double)fwp_heap.live;
-    if ((after != before)) return 172;
+    if (after != before) return 172;
+    g_unlink(connection, stream); g_stream_drop(stream); g_conn_drop(connection);
+    if (fwp_heap.live != initial_live) return 183;
     printf("%d\t%d\t%zu\t%llu\n", count, mode, cache_releases,
         (unsigned long long)(cache_stack_high-cache_stack_low));
     fwp_lib_finish();
