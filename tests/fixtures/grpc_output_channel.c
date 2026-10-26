@@ -39,7 +39,6 @@ static void channel_overflow(V value){
 static void channel_restore(V value,unsigned count){uint8_t *slot=fwp_rc_slot(value);fwp_rc_forget_slot(slot);*slot=(uint8_t)count;}
 int main(int argc,char **argv){
  if(argc!=2)_Exit(230);channel_stage=atoi(argv[1]);
- const char *verify=getenv("FWP_REUSE_VERIFY");int poison=verify&&*verify&&strcmp(verify,"0");
  fwp_lib_init();fwp_heap_start();fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  double before=channel_charge();
  g_server server={0};server.module="probe";
@@ -57,7 +56,7 @@ int main(int argc,char **argv){
   if(strcmp(fwp_trap_msg,"reference count overflow")||fwp_cleanups)_Exit(237);
   channel_restore(overflow,channel_stage==4?2:1);
   if(*fwp_rc_slot(PTR(c))!=1||*fwp_rc_slot(PTR(s))!=2)_Exit(232);
-  if(!fwp_heap.enabled&&!poison&&channel_charge()!=pending)_Exit(238);
+  if(channel_charge()!=pending)_Exit(238);
  }else{
   channel_handle=g_sink_value(c,s,codec,0);
   if(*fwp_rc_slot(PTR(c))!=2||*fwp_rc_slot(PTR(s))!=3||!fwp_rc_last(channel_handle))_Exit(234);
@@ -77,7 +76,7 @@ int main(int argc,char **argv){
   if(*fwp_rc_slot(PTR(c))!=1||*fwp_rc_slot(PTR(s))!=2||fwp_cleanups)_Exit(232);
  }
  g_unlink(c,s);g_stream_drop(s);g_conn_drop(c);
- if(!fwp_heap.enabled&&!poison&&(channel_charge()!=before)){
+ if((channel_charge()!=before)){
   fprintf(stderr,"channel stage %d: managed bytes %.0f -> %.0f\n",channel_stage,before,channel_charge());_Exit(243);
  }
  fwp_lib_finish();return 0;

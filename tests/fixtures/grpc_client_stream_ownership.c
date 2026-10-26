@@ -96,13 +96,13 @@ int main(int argc,char **argv) {
     if(probe_stream_finals!=1)return 212;
     if(still_finalized(s))return 215;
 #ifndef FWP_RESOURCE_NO_FREE
-    if(mode<6&&!fwp_heap.enabled&&!fwp_reuse_verify&&probe_charge()!=before)return 220;
+    if(mode<6&&probe_charge()!=before)return 220;
 #endif
     if(*fwp_rc_slot(PTR(c))!=1)return 221;
     g_conn_drop(c);
     if(still_finalized(c))return 222;
 #ifndef FWP_RESOURCE_NO_FREE
-    if(mode<6&&!fwp_heap.enabled&&!fwp_reuse_verify&&probe_charge()!=before_connection)return 223;
+    if(mode<6&&probe_charge()!=before_connection)return 223;
 #endif
     fwp_lib_finish();
     if(probe_stream_finals!=1)return 215;

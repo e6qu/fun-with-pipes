@@ -90,21 +90,12 @@ int main(int argc,char **argv){
         for (source, expected) in [(&broken, 209), (&generated, 0)] {
             fwp::cgen::compile_c(&format!("{hooks}\n{source}\n{fixture}"), &binary, opt).unwrap();
             for unpooled in ["0", "1"] {
-                for gc in ["off", "on"] {
-                    let out = Command::new(&binary)
-                        .arg(unpooled)
-                        .env("FWP_GC", gc)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", "1")
-                        .output()
-                        .unwrap();
-                    assert_eq!(
-                        out.status.code(),
-                        Some(expected),
-                        "{opt}/{unpooled}/{gc}: {out:?}"
-                    );
-                }
+                let out = Command::new(&binary).arg(unpooled).output().unwrap();
+                assert_eq!(
+                    out.status.code(),
+                    Some(expected),
+                    "{opt}/{unpooled}: {out:?}"
+                );
             }
         }
     }
@@ -167,21 +158,12 @@ static void *watched_connection;
         for (source, expected) in [(&broken, 209), (&generated, 0)] {
             fwp::cgen::compile_c(source, &binary, opt).unwrap();
             for unpooled in ["0", "1"] {
-                for gc in ["off", "on"] {
-                    let out = Command::new(&binary)
-                        .arg(unpooled)
-                        .env("FWP_GC", gc)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", "1")
-                        .output()
-                        .unwrap();
-                    assert_eq!(
-                        out.status.code(),
-                        Some(expected),
-                        "{opt}/{unpooled}/{gc}: {out:?}"
-                    );
-                }
+                let out = Command::new(&binary).arg(unpooled).output().unwrap();
+                assert_eq!(
+                    out.status.code(),
+                    Some(expected),
+                    "{opt}/{unpooled}: {out:?}"
+                );
             }
         }
     }
@@ -272,22 +254,13 @@ int main(void){
     for opt in ["-O1", "-O2"] {
         for broken in [&unwind_omitted, &request_omitted, &reflection_omitted] {
             fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
-            let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+            let out = Command::new(&exe).output().unwrap();
             assert_eq!(out.status.code(), Some(1), "omitted release: {out:?}");
         }
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-            }
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
 }
 
@@ -436,14 +409,7 @@ static void observed_message_free(void *);
         let binary = dir.join("streams.exe");
         for (broken, mode, expected) in &controls {
             fwp::cgen::compile_c(broken, &binary, opt).unwrap();
-            let out = Command::new(&binary)
-                .arg(mode)
-                .env("FWP_GC", "off")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
+            let out = Command::new(&binary).arg(mode).output().unwrap();
             assert_eq!(out.status.code(), Some(*expected), "{opt}/{mode}: {out:?}");
         }
         for no_free in [false, true] {
@@ -455,22 +421,16 @@ static void observed_message_free(void *);
             fwp::cgen::compile_c(&format!("{prefix}{code}"), &binary, opt).unwrap();
             let mut layout = Vec::new();
             for mode in 0..11 {
-                for stress in [false, true] {
-                    let out = Command::new(&binary)
-                        .arg(mode.to_string())
-                        .env("FWP_GC", if stress { "on" } else { "off" })
-                        .env("FWP_GC_STRESS", if stress { "1" } else { "0" })
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", if stress { "1" } else { "0" })
-                        .output()
-                        .unwrap();
-                    assert!(
-                        out.status.success(),
-                        "{opt}/{mode}/no-free={no_free}/stress={stress}: {out:?}"
-                    );
-                    if mode == 0 && !stress {
-                        layout = out.stdout;
-                    }
+                let out = Command::new(&binary)
+                    .arg(mode.to_string())
+                    .output()
+                    .unwrap();
+                assert!(
+                    out.status.success(),
+                    "{opt}/{mode}/no-free={no_free}: {out:?}"
+                );
+                if mode == 0 {
+                    layout = out.stdout;
                 }
             }
             if let Some(path) = std::env::var_os("FWP_REPEATED_CLIENT_ARTIFACTS") {

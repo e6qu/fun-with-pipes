@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     if (argc == 2 && !strcmp(argv[1], "--layout")) {
         printf("type\tbytes\talignment\tsource_offset\tcache_offset\treader_offset\twaiters_offset\n");
         printf("cell\t%zu\t%zu\t%zu\t%zu\t-\t-\n", sizeof(g_cell), _Alignof(g_cell), offsetof(g_cell, src), offsetof(g_cell, memo));
-        printf("incoming\t%zu\t%zu\t-\t-\t%zu\t%zu\n", sizeof(g_incoming), _Alignof(g_incoming), offsetof(g_incoming, reader), offsetof(g_incoming, read_waiters));
+        printf("incoming\t%zu\t%zu\t-\t-\t%zu\n", sizeof(g_incoming), _Alignof(g_incoming), offsetof(g_incoming, reader), offsetof(g_incoming, read_waiters));
         return 0;
     }
     if (argc != 3) return 30;
@@ -35,7 +35,10 @@ int main(int argc, char **argv) {
     measured = 1;
     g_server server = {0}; server.module = "stream-storage";
     g_conn *connection = g_conn_new(FWP_INVALID_SOCKET, "", "queued", &server);
+    fwp_rc_fresh(PTR(connection)); /* transferred to the incoming source */
     g_stream *stream = g_stream_new(connection, 1);
+    fwp_rc_fresh(PTR(stream)); /* active-list owner */
+    fwp_rc_dup(PTR(stream)); /* incoming reader owner */
     stream->remote_end = 1;
     for (size_t i = 0; i < count; i++) {
         g_msg *message = malloc(sizeof *message + 18);
@@ -53,8 +56,10 @@ int main(int argc, char **argv) {
     g_incoming *source = g_incoming_new("queued.string", strlen("queued.string"));
     source->c = connection; source->s = stream;
     source->dec.schema = schema; source->dec.ty = &string_type;
-    g_cell *position = fwp_mem_alloc(sizeof *position); position->src = source;
+    g_cell *root = g_cell_new(source);
+    g_cell *position = root; /* borrowed while root owns the cache chain */
     g_cell *retained = mode == 2 ? position : NULL;
+    if (retained) fwp_rc_dup(PTR(retained));
     unsigned long long setup_requests = requests, setup_bytes = requested_bytes;
     double setup_charge = charged();
     size_t consumed = mode == 1 ? (count + 1) / 2 : count;
@@ -84,20 +89,19 @@ int main(int argc, char **argv) {
     }
     /* A 16-byte position plus decoded text and its two wrappers requests
      * at most 81 bytes per element. Keeping both source and cache exceeds it. */
-    if (!fwp_heap.ncollect && requested_bytes - setup_bytes > 81 * consumed) return 38;
+    if (requested_bytes - setup_bytes > 81 * consumed) return 38;
     double after_read = charged();
-    /* This historical fixture calls the borrowed receive helper directly. Clearing
-     * C roots measures retained cache storage; the complete-client and typed
-     * cache-owner tests exercise the consuming release path separately. */
-    position = retained = NULL; source = NULL; stream = NULL; connection = NULL;
-
-    double after_roots = charged();
+    size_t queued_before_drop = count - messages_freed;
+    g_cell_drop(PTR(root), fwp_rc_free_obj);
+    if (retained) g_cell_drop(PTR(retained), fwp_rc_free_obj);
+    double after_drop = charged();
+    if (after_drop != start || messages_freed != count) return 40;
     measured = 0;
-    printf("%zu\t%d\t%zu\t%llu\t%llu\t%llu\t%llu\t%.0f\t%.0f\t%.0f\t%zu\t%zu\n",
+    printf("%zu\t%d\t%zu\t%llu\t%llu\t%llu\t%llu\t%.0f\t%.0f\t%.0f\t%zu\n",
         count, mode, consumed, setup_requests, setup_bytes,
         requests - setup_requests, requested_bytes - setup_bytes,
-        setup_charge - start, after_read - start, after_roots - start,
-        count - messages_freed, fwp_heap.ncollect);
+        setup_charge - start, after_read - start, after_drop - start,
+        queued_before_drop);
     fwp_lib_finish();
     if (messages_freed != count) return 37;
     return 0;

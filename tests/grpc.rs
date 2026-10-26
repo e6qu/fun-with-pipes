@@ -244,7 +244,7 @@ fn greeter_servers(native_dir: Option<&Path>) -> Vec<Server> {
 
 // ------------------------------------------------------------------ calls
 
-/// Explicit ARC builds must exclude tracing from both sides of the boundary,
+/// Native builds must exclude tracing from both sides of the boundary,
 /// while retaining the existing call, failure, concurrency and alias behavior.
 #[test]
 fn arc_remote_calls_exclude_tracing_and_preserve_behavior() {
@@ -272,7 +272,7 @@ fn arc_remote_calls_exclude_tracing_and_preserve_behavior() {
         );
         for member in [name, "greeter"] {
             let code = std::fs::read_to_string(split.join(format!("{member}.c"))).unwrap();
-            assert!(code.contains("#define FWP_ARC_ONLY 1"), "{name}/{member}");
+            assert!(!code.contains("FWP_ARC_ONLY"), "{name}/{member}");
             if let Some(path) = &artifacts {
                 if member != "greeter" || name == "client" {
                     std::fs::write(path.join(format!("{member}.c")), &code).unwrap();
@@ -309,12 +309,7 @@ fn arc_remote_calls_exclude_tracing_and_preserve_behavior() {
             executables.push(binary);
         }
         let mut native = Command::new(executables.last().unwrap());
-        native
-            .args(["--listen", "127.0.0.1:0"])
-            .env_remove("FWP_GC")
-            .env("FWP_GC_STRESS", "0")
-            .env("FWP_GC_VERIFY", "0")
-            .env("FWP_REUSE_VERIFY", "0");
+        native.args(["--listen", "127.0.0.1:0"]);
         let native = start(native, Duration::from_secs(60));
         for server in [&interpreted[0], &native] {
             for (index, name) in cases.iter().enumerate() {
@@ -328,11 +323,7 @@ fn arc_remote_calls_exclude_tracing_and_preserve_behavior() {
                     } else {
                         Command::new(&executables[index])
                     };
-                    cmd.env("FWP_SERVICE_GREETER", &server.addr)
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "0")
-                        .env("FWP_REUSE_VERIFY", "0");
+                    cmd.env("FWP_SERVICE_GREETER", &server.addr);
                     let out = run(cmd, 120);
                     if *name == "input-failure" {
                         assert_eq!(out.status.code(), Some(101), "{out:?}");
@@ -390,21 +381,19 @@ fn every_kind_of_call() {
             ],
             &dir(),
         );
-        // The tracing comparison is an explicit compiler mode, selected before
-        // generation. It must not accidentally test another owned server.
+        // Force copied storage while retaining the same counted owners.
         let no_reuse = d.join("no-reuse");
         let mut compile = Command::new(fwp());
         compile
             .args(["build", "--service", "greeter", "--emit-c", "-o"])
             .arg(&no_reuse)
             .arg(&client)
-            .current_dir(dir())
-            .env("FWP_REUSE", "0");
+            .current_dir(dir());
         let generated = run(compile, 300);
         assert!(generated.status.success(), "{}", render(&generated));
         let source = std::fs::read_to_string(no_reuse.join("greeter.c")).unwrap();
-        assert!(!source.contains("#define FWP_RESOURCE_OWNERS 1"));
-        let binary = no_reuse.join("greeter");
+        let source = format!("#define FWP_NO_REUSE 1\n{source}");
+        let binary = no_reuse.join("greeter.exe");
         fwp::cgen::compile_c(&source, &binary, "-O1").unwrap();
         let mut server = Command::new(binary);
         server.args(["--listen", "127.0.0.1:0"]);
@@ -637,13 +626,7 @@ fn remote_stream_client_memory_measurement() {
                 let mut command = Command::new(exe);
                 command
                     .arg(elements.to_string())
-                    .env("FWP_SERVICE_GREETER", &server.addr)
-                    .env("FWP_FREE", "1")
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_REUSE_VERIFY", "0");
+                    .env("FWP_SERVICE_GREETER", &server.addr);
                 let result = run(command, 120);
                 assert!(
                     result.status.success(),
@@ -693,7 +676,7 @@ fn measure_repeated_remote_calls(close_connections: bool) {
     );
     std::fs::create_dir_all(&artifacts).unwrap();
     std::fs::copy(dir().join("greeter.fwp"), artifacts.join("greeter.fwp")).unwrap();
-    std::fs::write(artifacts.join("scope.txt"), "One native client process makes 1, 16 or 256 batches of remote calls over loopback HTTP/2 to an interpreted greeter. Each response contains integers 1..64. Full batches sum all 64; partial batches sum only the first 32; retained batches sum an initial stream, make and sum a second call while retaining the initial iterator, then reread its first value. Retained batches therefore make twice as many calls. Raw unoptimized interpreter and ordinary native output must agree. Three separate instrumented processes per case count managed allocations/retains/charged bytes, created/finalized connection and stream objects, and requested/freed queued-message bytes including their header and trailing byte. GC is disabled, physical freeing enabled. Counters start after constant initialization. Final counters follow root execution, joining its child tasks and cached-value cleanup, before whole-runtime shutdown. Reusable connections and detached I/O tasks are still live; the sample does not establish their destruction. Checkpoints are immediately before each new stream is allocated, after connection selection and request-header preparation; a checkpoint can deliberately include an earlier retained iterator. Excludes other raw buffers, TLS/OS/allocator metadata, server/whole-process memory and timing. Native builds use ordinary -O2. Source, generated C, executables and raw stderr are retained.\n").unwrap();
+    std::fs::write(artifacts.join("scope.txt"), "One native client process makes 1, 16 or 256 batches of remote calls over loopback HTTP/2 to an interpreted greeter. Each response contains integers 1..64. Full batches sum all 64; partial batches sum only the first 32; retained batches sum an initial stream, make and sum a second call while retaining the initial iterator, then reread its first value. Retained batches therefore make twice as many calls. Raw unoptimized interpreter and ordinary native output must agree. Three separate instrumented processes per case count managed allocations/retains/charged bytes, created/finalized connection and stream objects, and requested/freed queued-message bytes including their header and trailing byte. Counted owners release storage at last use. Counters start after constant initialization. Final counters follow root execution, joining its child tasks and cached-value cleanup, before whole-runtime shutdown. Reusable connections and detached I/O tasks are still live; the sample does not establish their destruction. Checkpoints are immediately before each new stream is allocated, after connection selection and request-header preparation; a checkpoint can deliberately include an earlier retained iterator. Excludes other raw buffers, TLS/OS/allocator metadata, server/whole-process memory and timing. Native builds use ordinary -O2. Source, generated C, executables and raw stderr are retained.\n").unwrap();
     if close_connections {
         let scope = artifacts.join("scope.txt");
         let original = std::fs::read_to_string(&scope).unwrap().replace("Reusable connections and detached I/O tasks are still live; the sample does not establish their destruction.", "Before the final sample, measurement hooks close every pooled connection and drain all detached I/O tasks.");
@@ -740,7 +723,7 @@ fn measure_repeated_remote_calls(close_connections: bool) {
             assert_eq!(String::from_utf8_lossy(&output.stdout),expected);
             for (exe,record,repetition) in [(&ordinary,false,0),(&measured,true,0),(&measured,true,1),(&measured,true,2)] {
                 let mut command=Command::new(exe);
-                command.arg(batches.to_string()).env("FWP_SERVICE_GREETER",&server.addr).env("FWP_FREE","1").env("FWP_GC","off").env("FWP_GC_STRESS","0").env("FWP_GC_VERIFY","0").env("FWP_GC_STATS","0").env("FWP_REUSE_VERIFY","0");
+                command.arg(batches.to_string()).env("FWP_SERVICE_GREETER",&server.addr);
                 let output=run(command,120);
                 assert!(output.status.success(),"{mode}/{batches}: {}",render(&output));
                 assert_eq!(String::from_utf8_lossy(&output.stdout),expected);
@@ -793,7 +776,7 @@ fn measure_repeated_remote_calls(close_connections: bool) {
                 std::fs::write(artifacts.join("missing-connection-drain.c"),&broken).unwrap();
                 fwp::cgen::compile_c(&broken,&path,"-O2").unwrap();
                 let mut command=Command::new(path);
-                command.arg("1").env("FWP_SERVICE_GREETER",&server.addr).env("FWP_FREE","1").env("FWP_GC","off").env("FWP_GC_STRESS","0").env("FWP_REUSE_VERIFY","0");
+                command.arg("1").env("FWP_SERVICE_GREETER",&server.addr);
                 let output=run(command,120);
                 assert_eq!(output.status.code(),Some(213),"missing connection drain: {}",render(&output));
                 std::fs::write(artifacts.join("missing-connection-drain.log"),render(&output)).unwrap();
@@ -806,7 +789,7 @@ fn measure_repeated_remote_calls(close_connections: bool) {
             std::fs::write(artifacts.join("missing-message-release.c"),&broken).unwrap();
             fwp::cgen::compile_c(&broken,&path,"-O2").unwrap();
             let mut command=Command::new(path);
-            command.arg("1").env("FWP_SERVICE_GREETER",&server.addr).env("FWP_FREE","1").env("FWP_GC","off").env("FWP_GC_STRESS","0").env("FWP_REUSE_VERIFY","0");
+            command.arg("1").env("FWP_SERVICE_GREETER",&server.addr);
             let output=run(command,120);assert!(output.status.success(),"{}",render(&output));
             assert_eq!(output.stdout,b"2080\n");
             let stderr=String::from_utf8(output.stderr).unwrap();
@@ -928,13 +911,7 @@ fn sender_input_memory_measurement() {
                 let mut command = Command::new(exe);
                 command
                     .arg(batches.to_string())
-                    .env("FWP_SERVICE_GREETER", &server.addr)
-                    .env("FWP_FREE", "1")
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_REUSE_VERIFY", "0");
+                    .env("FWP_SERVICE_GREETER", &server.addr);
                 let output = run(command, 120);
                 assert!(
                     output.status.success(),
@@ -1030,13 +1007,7 @@ fn sender_input_memory_measurement() {
             std::fs::write(artifacts.join("missing-sender-drain.c"), &broken).unwrap();
             fwp::cgen::compile_c(&broken, &path, "-O2").unwrap();
             let mut command = Command::new(path);
-            command
-                .arg("1")
-                .env("FWP_SERVICE_GREETER", &server.addr)
-                .env("FWP_FREE", "1")
-                .env("FWP_GC", "off")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_REUSE_VERIFY", "0");
+            command.arg("1").env("FWP_SERVICE_GREETER", &server.addr);
             let output = run(command, 120);
             assert_eq!(output.status.code(), Some(213), "{}", render(&output));
             std::fs::write(artifacts.join("missing-sender-drain.log"), render(&output)).unwrap();

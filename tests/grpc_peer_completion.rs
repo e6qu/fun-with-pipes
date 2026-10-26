@@ -165,9 +165,8 @@ int main(void){
  if(scope.n!=1||scope.tasks[0]!=scoped_task||!scoped_task->done||scoped_task->gctx)_Exit(41);
  fwp_scope_owner scope_owner={fwp_cur,&scope,fwp_handlers};
  fwp_scope_release(&scope_owner);
- // Reuse verification deliberately poisons counted storage without freeing it.
- if(task_disposals!=1||task_frees!=(fwp_reuse_verify?0:1)||fwp_cur->scope)_Exit(42);
- if(fwp_reuse_verify&&*(uint64_t *)scoped_task)_Exit(43);
+ // Scope release must dispose and physically free the completed task once.
+ if(task_disposals!=1||task_frees!=1||fwp_cur->scope)_Exit(42);
  c->ssl=ssl;fwp_lib_finish();return 0;
 }
 "#;
@@ -200,24 +199,15 @@ int main(void){
             (&scope_omitted, &[40][..]),
         ] {
             fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
-            let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+            let out = Command::new(&exe).output().unwrap();
             assert!(
                 out.status.code().is_some_and(|code| codes.contains(&code)),
                 "omitted/early release: {out:?}"
             );
         }
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-            }
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
 }

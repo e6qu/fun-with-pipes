@@ -203,7 +203,7 @@ int main(void){
             opt,
         )
         .unwrap();
-        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(
             out.status.code(),
             Some(23),
@@ -219,14 +219,14 @@ int main(void){
             opt,
         )
         .unwrap();
-        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(
             out.status.code(),
             Some(23),
             "omitted pending message cleanup: {out:?}"
         );
         fwp::cgen::compile_c(&format!("{hooks}\n{missing_abort}\n{fixture}"), &exe, opt).unwrap();
-        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(
             out.status.code(),
             Some(21),
@@ -234,7 +234,7 @@ int main(void){
         );
         for broken in &controls {
             fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
-            let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+            let out = Command::new(&exe).output().unwrap();
             assert_eq!(out.status.code(), Some(1), "omitted cleanup: {out:?}");
         }
         let call_guard = "fwp_cleanup_push(&call_cleanup, g_call_release, &call);";
@@ -251,7 +251,7 @@ int main(void){
             opt,
         )
         .unwrap();
-        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(out.status.code(), Some(20), "omitted call owner: {out:?}");
         for owned in [false, true] {
             let prefix = if owned {
@@ -265,21 +265,9 @@ int main(void){
                 opt,
             )
             .unwrap();
-            for gc in ["off", "on"] {
-                for poison in ["0", "1"] {
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", gc)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
-                    assert!(
-                        out.status.success(),
-                        "{opt}/owned={owned}/{gc}/{poison}: {out:?}"
-                    );
-                }
-            }
+
+            let out = Command::new(&exe).output().unwrap();
+            assert!(out.status.success(), "{opt}/owned={owned}: {out:?}");
         }
     }
 }

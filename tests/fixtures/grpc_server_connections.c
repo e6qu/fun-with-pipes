@@ -44,12 +44,12 @@ int main(int argc,char **argv){
  if(connection_stage<2){
   if(connection_finals!=1||seen_reader||fwp_tasks_active)_Exit(238);
  }else{
-  if(connection_finals||!seen_reader||c->refs!=1||(connection_stage==9?*fwp_rc_slot(PTR(c))!=0:!fwp_rc_last(PTR(c))))_Exit(239);
+  if(connection_finals||!seen_reader||c->refs!=1||!fwp_rc_last(PTR(c)))_Exit(239);
   fwp_rc_dup(PTR(c)); /* independently retained host alias */
   if(connection_stage==3)fwp_cancel_tree((fwp_task *)seen_reader);
   if(connection_stage>=6){
-   g_stream *s=g_stream_new(c,1);if(connection_stage!=9)fwp_rc_fresh(PTR(s));s->remote_end=1;
-   if(connection_stage==8||connection_stage==9){
+   g_stream *s=g_stream_new(c,1);fwp_rc_fresh(PTR(s));s->remote_end=1;
+   if(connection_stage==8){
     static const fwp_desc integer_type={.kind=K_I64,.name="I64"};
     static const int schema[]={PB_MSG,1,1,4,PB_SINT,8};
     g_codec codec={0};codec.ty=&integer_type;codec.schema=schema;
@@ -72,18 +72,12 @@ int main(int argc,char **argv){
  int64_t until=fwp_now_ns()+10000000000LL;
  while(fwp_tasks_active){if(fwp_now_ns()>=until)_Exit(241);fwp_park(0,fwp_now_ns()+1000000LL);fwp_free_zombie();}
  fwp_free_zombie();
- if(connection_stage==9){
-  /* Explicit no-reuse compilation leaves the callback graph traced. The
-   * channel must remain safe after I/O retirement, without premature disposal. */
-  if(connection_finals||c->refs||c->fd!=FWP_INVALID_SOCKET||c->streams||!c->dead||*fwp_rc_slot(PTR(c))||*fwp_rc_slot(channel))_Exit(248);
-  if(fwp_p_channel_send_owned(channel,(V)1,NULL)!=FWP_FALSE)_Exit(249);
-
- }else if(connection_stage>=2){
+ if(connection_stage>=2){
   if(connection_finals||c->refs||c->fd!=FWP_INVALID_SOCKET||c->streams||!c->dead||reader_failed!=(connection_stage==4))_Exit(242);
   if(*fwp_rc_slot(PTR(c))!=((retained||channel)?2:1))_Exit(243);
   g_conn_drop(c);
   if(retained){if(connection_finals||retained->sv.task||retained->s->task||!fwp_rc_last(PTR(retained->s)))_Exit(244);g_serving_peer_release(&retained->sv);}
-  if(channel){if(connection_finals)_Exit(245);fwp_channel_drop(channel);}
+  if(channel){if(connection_finals)_Exit(245);if(fwp_p_channel_send_owned(channel,(V)1,NULL)!=FWP_FALSE)_Exit(249);fwp_channel_drop(channel);}
   if(connection_finals!=1||fwp_cleanups)_Exit(246);
  }
  // All accepted sockets, including startup rejection, must be closed once.

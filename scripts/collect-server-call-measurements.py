@@ -82,9 +82,9 @@ def main():
     if args.comparison in {'server-values', 'server-owners', 'server-borrows', 'server-arc', 'server-arc-moves'}:
         checks += ['native_output_channels_borrow_values_and_release_context',
                    'channels_own_queues_and_transfer_received_values',
-                   'tasks_and_data_channels_reclaim_after_join_and_cancellation']
+                   'tasks_and_acyclic_channels_reclaim_after_join_and_cancellation']
     if args.comparison in {'server-owners', 'server-borrows', 'server-arc', 'server-arc-moves'}:
-        checks += ['inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries',
+        checks += ['inactive_state_slots_are_cleared_at_handler_and_task_boundaries',
                    'served_requests_survive_resets_jobs_and_retained_inputs',
                    'accepted_connections_release_after_startup_io_jobs_and_channels',
                    'grpc_connection_startup_releases_failed_task_reservations',
@@ -97,9 +97,7 @@ def main():
                    'right_fold_releases_accumulator_and_scratch_on_failure',
                    'borrowed_application_preserves_aliases_and_typed_argument_slices']
     if args.comparison in {'server-arc', 'server-arc-moves'}:
-        checks.remove('server_measurement::repeated_server_call_memory')
-        checks += ['server_measurement::repeated_arc_server_call_memory',
-                   'arc_remote_calls_exclude_tracing_and_preserve_behavior',
+        checks += ['arc_remote_calls_exclude_tracing_and_preserve_behavior',
                    'client_received_buffers_release_on_retry_errors_and_cancelled_waits',
                    'client_failure_text_releases_after_traps_and_typed_errors',
                    'arc_scope::tests::remote_input_continuations_use_the_actual_sender_scope',
@@ -142,7 +140,6 @@ def main():
         for check in checks:
             assert f'test {check} ... ok' in content, (host, check)
         if args.comparison in {'server-arc', 'server-arc-moves'}:
-            assert (folder / 'memory-mode.txt').read_text().strip() == 'arc'
             if host.startswith('ubuntu-'):
                 assert 'test grpc_server_runs_in_bounded_memory ... ok' in content
         inventory = json.loads((folder / 'primitive-inventory.json').read_text())
@@ -154,8 +151,12 @@ def main():
             assert len(data) == len(expected_keys) and {key(row) for row in data} == expected_keys
         assert len(checkpoints) == 4 * 3 * (1 + 16 + 256)
         for row in rows:
+            assert set(row) == {'mode', 'calls', 'repetition', 'allocations',
+                'requested_bytes', 'retains', 'peak_charged_bytes', 'final_charged_bytes',
+                'calls_started', 'calls_finished', 'connections_created', 'connections_closed',
+                'connections_finalized', 'streams_finalized', 'live_call_tasks',
+                'live_io_tasks', 'live_other_tasks'}, row
             mode, calls, rep = key(row)
-            assert row['collections'] == 0
             assert row['calls_started'] == row['calls_finished'] == calls
             assert row['connections_created'] == row['connections_closed'] == 1
             assert all(row[field] == 0 for field in
@@ -237,8 +238,6 @@ def main():
                 for row in rows]
         names = ['source.txt', 'rust.txt', 'c.txt', 'cpu.txt', 'scope.txt',
                  'greeter.fwp', 'primitive-inventory.json'] + check_logs
-        if args.comparison in {'server-arc', 'server-arc-moves'}:
-            names.append('memory-mode.txt')
         raw = {}
         for name in ['memory.tsv', 'checkpoints.tsv', 'storage.tsv']:
             names.append(name)
@@ -250,13 +249,12 @@ def main():
             names.append(mode + '.fwp')
             for variant in ['client', 'server', 'server-measured']:
                 names += [f'{mode}-{variant}.c', f'{mode}-{variant}{suffix}']
-                if args.comparison in {'server-arc', 'server-arc-moves'}:
-                    assert '#define FWP_ARC_ONLY 1' in (folder / f'{mode}-{variant}.c').read_text()
-                    symbols = folder / f'{mode}-{variant}.nm'
-                    text = symbols.read_text()
-                    assert all(symbol not in text for symbol in [
-                        'fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'])
-                    names.append(symbols.name)
+                assert 'FWP_ARC_ONLY' not in (folder / f'{mode}-{variant}.c').read_text()
+                symbols = folder / f'{mode}-{variant}.nm'
+                text = symbols.read_text()
+                assert all(symbol not in text for symbol in [
+                    'fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'])
+                names.append(symbols.name)
             names += [f'{mode}-{calls}-{rep}.log' for calls in [1, 16, 256] for rep in range(3)]
         observations = folder / 'binary-observations.json'
         inspected = json.loads(observations.read_text()) if observations.exists() else None
@@ -296,12 +294,8 @@ def main():
         'comparison_kind': args.comparison,
         'per_call_results': MODES,
         'sampling': 'Native -O2 servers receive 1, 16 or 256 calls over one reused connection, three fresh server processes per case. Counters begin after listener/routing/root setup. Per-call samples follow serving-task removal; final samples require client disconnect and no serving/I/O/other tasks while the listener remains open. A measurement-only wake of the existing listener allows retirement of the final finished task without adding a task or connection.',
-        'limits': 'Tracing is disabled and physical freeing enabled. Native clients check matching outputs against interpreted and ordinary native servers. Managed storage and cumulative allocation categories do not identify individual live objects. Raw request/wire buffers, stack pools, TLS/OS/allocator metadata, whole-process memory and timing are excluded. Lower retained storage does not establish complete server ownership, checked ARC, lower execution time, zero-cost abstractions or C/Rust parity.',
+        'limits': 'Counted owners release their storage at last use. Native clients check matching outputs against interpreted and ordinary native servers. Managed storage and cumulative allocation categories do not identify individual live objects. Raw request/wire buffers, stack pools, TLS/OS/allocator metadata, whole-process memory and timing are excluded. Lower retained storage does not establish complete server ownership, lower execution time, zero-cost abstractions or C/Rust parity.',
         'hosts': hosts}
-    if args.comparison in {'server-arc', 'server-arc-moves'}:
-        report['compiled_memory_mode'] = 'arc'
-        report['limits'] = report['limits'].replace('Tracing is disabled',
-            'Tracing code is excluded from compiled clients and servers')
     if baseline:
         report['baseline'] = {'source_revision': baseline['source_revision'],
             'run_url': baseline['run_url'], 'report': args.baseline_report.name,

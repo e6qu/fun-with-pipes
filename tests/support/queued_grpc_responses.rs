@@ -74,7 +74,7 @@ fn check_output(command: Command, label: &str, artifacts: &Path) {
     assert!(output.stderr.is_empty(), "{label}: {}", render(&output));
 }
 
-fn compile(code: &str, label: &str, opt: &str, artifacts: &Path, arc: bool) -> PathBuf {
+fn compile(code: &str, label: &str, opt: &str, artifacts: &Path) -> PathBuf {
     let binary = artifacts.join(format!("{label}.exe"));
     std::fs::write(artifacts.join(format!("{label}.c")), code).unwrap();
     fwp::cgen::compile_c(code, &binary, opt).unwrap();
@@ -136,24 +136,22 @@ fn compile(code: &str, label: &str, opt: &str, artifacts: &Path, arc: bool) -> P
     let symbols = run(symbols, 30);
     assert!(symbols.status.success(), "{}", render(&symbols));
     let text = String::from_utf8_lossy(&symbols.stdout);
-    if arc {
-        for symbol in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
-            assert!(!text.contains(symbol), "{label} retains {symbol}");
-        }
-    } else {
-        assert!(text.contains("fwp_heap_mark_all"), "{label} lacks tracing");
+
+    for symbol in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
+        assert!(!text.contains(symbol), "{label} retains {symbol}");
     }
+
     std::fs::write(artifacts.join(format!("{label}.nm")), symbols.stdout).unwrap();
     binary
 }
 
-fn check_queued_response_channels(memory: &str, opt: &str) {
+fn check_queued_response_channels(opt: &str) {
     assert!(have_cc(), "a native C compiler is required");
-    let scratch = scratch(&format!("queued-responses-{memory}{opt}"));
+    let scratch = scratch(&format!("queued-responses-counted{opt}"));
     let artifacts = std::env::var_os("FWP_QUEUED_GRPC_ARTIFACTS")
         .map(PathBuf::from)
         .unwrap_or_else(|| scratch.join("evidence"))
-        .join(format!("{memory}{opt}"));
+        .join(format!("counted{opt}"));
     std::fs::create_dir_all(&artifacts).unwrap();
     for file in ["queued.fwp", "queued-client.fwp", "queued-client.out"] {
         std::fs::copy(dir().join(file), artifacts.join(file)).unwrap();
@@ -171,11 +169,9 @@ fn check_queued_response_channels(memory: &str, opt: &str) {
         "remote-raw-interpreter",
         &artifacts,
     );
-    let split = scratch.join(memory);
+    let split = scratch.join("counted");
     build(
         &[
-            "--gc",
-            memory,
             "--service",
             "queued",
             "--emit-c",
@@ -191,35 +187,16 @@ fn check_queued_response_channels(memory: &str, opt: &str) {
     let release = "            c->owner.queue_drop(element);";
     assert_eq!(measured_code.matches(release).count(), 1);
     let broken_code = measured_code.replace(release, "            (void)element;");
-    let label = format!("{memory}{opt}");
-    let arc = memory == "arc";
-    let client_binary = compile(
-        &client_code,
-        &format!("{label}-client"),
-        opt,
-        &artifacts,
-        arc,
-    );
+    let label = format!("counted{opt}");
+    let client_binary = compile(&client_code, &format!("{label}-client"), opt, &artifacts);
     check_output(
         client(Some(&client_binary), Some(&reference.addr)),
         &format!("{label}-interpreted-server"),
         &artifacts,
     );
-    let ordinary = compile(
-        &server_code,
-        &format!("{label}-ordinary"),
-        opt,
-        &artifacts,
-        arc,
-    );
+    let ordinary = compile(&server_code, &format!("{label}-ordinary"), opt, &artifacts);
     let mut command = Command::new(&ordinary);
-    let stress = if arc { "0" } else { "1" };
-    command
-        .args(["--listen", "127.0.0.1:0"])
-        .env_remove("FWP_GC")
-        .env("FWP_GC_STRESS", stress)
-        .env("FWP_GC_VERIFY", stress)
-        .env("FWP_REUSE_VERIFY", stress);
+    command.args(["--listen", "127.0.0.1:0"]);
     let ordinary = start(command, Duration::from_secs(60));
     check_output(
         client(None, Some(&ordinary.addr)),
@@ -236,23 +213,12 @@ fn check_queued_response_channels(memory: &str, opt: &str) {
         ("measured", &measured_code),
         ("omitted-release", &broken_code),
     ] {
-        // Tracing could reclaim the intentionally leaked values. The
-        // omission control therefore belongs to checked ARC only.
-        if !arc && variant == "omitted-release" {
-            continue;
-        }
         let case = format!("{label}-{variant}");
-        let binary = compile(code, &case, opt, &artifacts, arc);
+        let binary = compile(code, &case, opt, &artifacts);
         let mut command = Command::new(&binary);
         command
             .args(["--listen", "127.0.0.1:0"])
-            .env("FWP_SERVER_MEASURE_CALLS", "72")
-            .env("FWP_GC", "off")
-            .env("FWP_FREE", "1")
-            .env("FWP_GC_STRESS", "0")
-            .env("FWP_GC_VERIFY", "0")
-            .env("FWP_REUSE_VERIFY", "0")
-            .env("FWP_GC_STATS", "0");
+            .env("FWP_SERVER_MEASURE_CALLS", "72");
         let mut server = start(command, Duration::from_secs(60));
         if variant == "omitted-release" {
             let output = run(client(Some(&client_binary), Some(&server.addr)), 120);
@@ -310,7 +276,7 @@ fn check_queued_response_channels(memory: &str, opt: &str) {
                 .split('\t')
                 .map(|n| n.parse().unwrap())
                 .collect();
-            assert_eq!(final_counts.len(), 15);
+            assert_eq!(final_counts.len(), 14);
             let listener_charge: u64 = log
                 .lines()
                 .find_map(|line| line.strip_prefix("response-listener-storage\t"))
@@ -321,9 +287,8 @@ fn check_queued_response_channels(memory: &str, opt: &str) {
                 final_counts[4], listener_charge,
                 "{case}: storage beyond the live listener remains"
             );
-            assert_eq!(final_counts[5], 0, "{case}: collector ran");
             assert_eq!(
-                &final_counts[6..],
+                &final_counts[5..],
                 &[72, 72, 1, 1, 1, 72, 0, 0, 0],
                 "{case}"
             );
@@ -342,21 +307,11 @@ fn check_queued_response_channels(memory: &str, opt: &str) {
 }
 
 #[test]
-fn queued_response_channels_arc_o0() {
-    check_queued_response_channels("arc", "-O0");
+fn queued_response_channels_o0() {
+    check_queued_response_channels("-O0");
 }
 
 #[test]
-fn queued_response_channels_arc_o2() {
-    check_queued_response_channels("arc", "-O2");
-}
-
-#[test]
-fn queued_response_channels_tracing_o0() {
-    check_queued_response_channels("tracing", "-O0");
-}
-
-#[test]
-fn queued_response_channels_tracing_o2() {
-    check_queued_response_channels("tracing", "-O2");
+fn queued_response_channels_o2() {
+    check_queued_response_channels("-O2");
 }

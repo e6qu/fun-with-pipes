@@ -5,10 +5,10 @@ function retaining the response channel: a **closure**. That retained owner must
 be released whether the function runs, is discarded, fails or is cancelled.
 These are ownership checks, not timing benchmarks or comparisons with C/Rust.
 
-Checked ARC (`--gc arc`) means automatic reference counting without a tracing
-collector. The compiler first proves the supported lifetime and cycle rules;
-runtime counts handle shared owners. A tracing collector instead searches memory
-for reachable values.
+The compiler checks supported lifetime and cycle rules; automatic reference
+counting (ARC) handles shared owners. G5 removes the tracing selector. Its current
+O0/O2 tests and fourteen-field final server report still need integrated validation;
+the recorded results below belong to the earlier two-mode implementation.
 
 ## Two channel implementations
 
@@ -77,9 +77,8 @@ the server has retained the callback. Expected output is checked independently
 of the implementation.
 
 The native test compares local and remote raw interpretation with native clients
-and servers, under checked ARC and tracing at O0/O2. Ordinary tracing servers use
-collection stress and verification. Separate measured servers disable collection
-and count response channels, completed calls, finalized streams/connections and
+and servers at O0/O2. Separate measured servers count response channels,
+completed calls, finalized streams/connections and
 remaining tasks. Allocation and retain counts cover the server's managed runtime
 and application values during those requests, starting after listener setup;
 they are not counts for closures alone. The final sample follows all 72 calls

@@ -96,21 +96,12 @@ int main(void){
     );
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{hooks}\n{omitted}\n{fixture}"), &exe, opt).unwrap();
-        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(out.status.code(), Some(1), "omitted cleanup: {out:?}");
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-            }
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
 }
 
@@ -179,8 +170,8 @@ fn input_owners_release_after_lookahead_failure_and_sender_cancellation() {
             fwp::cgen::compile_c(&broken, &exe, opt).unwrap();
             let out = Command::new(&exe)
                 .arg(stage)
-                .env("FWP_GC", "off")
-                .env("FWP_REUSE_VERIFY", "0")
+
+
                 .output()
                 .unwrap();
             assert_eq!(
@@ -190,21 +181,11 @@ fn input_owners_release_after_lookahead_failure_and_sender_cancellation() {
             );
         }
         fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                for stage in 0..7 {
-                    let out = Command::new(&exe)
-                        .arg(stage.to_string())
-                        .env("FWP_GC", gc)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
-                    assert!(out.status.success(), "{opt}/{gc}/{poison}/{stage}: {out:?}");
-                    assert!(out.stdout.is_empty() && out.stderr.is_empty(), "{out:?}");
-                }
-            }
+
+        for stage in 0..7 {
+            let out = Command::new(&exe).arg(stage.to_string()).output().unwrap();
+            assert!(out.status.success(), "{opt}/{stage}: {out:?}");
+            assert!(out.stdout.is_empty() && out.stderr.is_empty(), "{out:?}");
         }
     }
 }

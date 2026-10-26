@@ -73,11 +73,14 @@ def main():
         assert len(rows) == 9 and {(r["elements"], r["mode"]) for r in rows} == {
             (count, mode) for count in [1, 32, 128] for mode in [0, 1, 2]}
         for row in rows:
+            assert set(row) == {"elements", "mode", "consumed", "setup_requests", "setup_bytes",
+                "receive_requests", "receive_bytes", "setup_charged_bytes", "after_read_charged_bytes",
+                "after_owner_drop_charged_bytes", "queued_messages"}, row
             expected = (row["elements"] + 1) // 2 if row["mode"] == 1 else row["elements"]
-            assert row["consumed"] == expected and row["collections"] == 0
+            assert row["consumed"] == expected
             assert row["queued_messages"] == row["elements"] - expected
             assert row["receive_requests"] == 4 * expected and row["receive_bytes"] == 81 * expected
-            assert row["after_clearing_roots_charged_bytes"] == row["after_read_charged_bytes"]
+            assert row["after_owner_drop_charged_bytes"] == 0
         with (folder / "layout.tsv").open() as source:
             layout = list(csv.DictReader(source, delimiter="\t"))
         assert {item["type"] for item in layout} == {"cell", "incoming"}
@@ -101,7 +104,7 @@ def main():
         savings = []
         for row in host["rows"]:
             old = old_rows[(row["elements"], row["mode"])]
-            for key in ["consumed", "queued_messages", "collections", "receive_requests"]:
+            for key in ["consumed", "queued_messages", "receive_requests"]:
                 assert old[key] == row[key], (host["host"], key)
             assert old["receive_bytes"] - row["receive_bytes"] == 8 * row["consumed"]
             savings.append({
@@ -127,8 +130,8 @@ def main():
     report = {
         "source_revision": args.head, "run_url": run["url"],
         "workload": "Receive queued protobuf messages with 16-character strings; 1/32/128 values, full/half consumption and retained first positions. Read each position twice.",
-        "results": "Four managed requests and 81 requested bytes per received value. Completed cells no longer hold direct source references; their saved continuations can still retain the unread source. Native cached storage still needs explicit owners and is not released merely by clearing C references with collection disabled.",
-        "limits": "This is fwp representation and lifetime evidence, not a C/Rust comparison or timing benchmark. Excludes socket I/O, pooled connections, raw codec buffers and total process memory. Native services still require tracing.",
+        "results": "Four managed requests and 81 requested bytes per received value. Completed cells no longer hold direct source references; their saved continuations can still retain the unread source. The probe owns its cache chain and explicitly releases it, requiring zero remaining charged bytes and no queued messages.",
+        "limits": "This is fwp representation and lifetime evidence, not a C/Rust comparison or timing benchmark. Excludes socket I/O, pooled connections, raw codec buffers and total process memory. The fixture borrows cache reads under a retained root; complete native clients separately test consuming iteration.",
         "checks": required_tests,
         "modes": {"0": "consume all", "1": "consume ceil(elements/2)", "2": "consume all while retaining the first position"},
         "hosts": hosts,
@@ -143,7 +146,7 @@ def main():
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + "\n")
-    print(f"Retained {len(hosts)} passing host(s) at {args.head}; native cache ownership remains unfinished")
+    print(f"Retained {len(hosts)} passing host(s) at {args.head}")
 
 
 if __name__ == "__main__":

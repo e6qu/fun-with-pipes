@@ -39,19 +39,16 @@ report = dict(source=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=
                   runtime_libraries=['-lm', '-lws2_32', '-lshell32'] if system == 'Windows'
                                     else ['-lm', '-lpthread']), binaries={})
 expected = {
-    f'{memory}-{layout}{opt}'
-    for memory in ['arc', 'tracing']
+    f'counted-{layout}{opt}'
     for layout in ['heap', 'stack']
     for opt in ['-O0', '-O2']
 } | {
-    f'{memory}-{control}-O2'
-    for memory in ['arc', 'tracing']
+    f'counted-{control}-O2'
     for control in ['verified', 'missing-clear', 'missing-entry']
 }
-expected |= {f'records/{memory}-{layout}-O{opt}'
-             for memory in ['arc', 'tracing']
-             for layout in ['preceding', 'compact'] for opt in [0, 2]}
-expected |= {f'records/{memory}-verified-O2' for memory in ['arc', 'tracing']}
+expected |= {f'records/counted-{layout}-O{opt}'
+                      for layout in ['wide-flags', 'compact'] for opt in [0, 2]}
+expected.add('records/counted-verified-O2')
 if system == 'Windows':
     expected |= {f'windows-context/abi-{variant}-O{opt}'
                  for variant in ['counted', 'injected-snapshot'] for opt in range(3)}

@@ -47,9 +47,9 @@ static void server_task_finished(void (*entry)(void *,int)) {
     if(server_final_recorded || server_calls_finished!=server_expected_calls || calls || io || other)return;
     if(server_calls_started!=server_expected_calls || server_connections_created!=server_connections_closed)_Exit(243);
     server_final_recorded=1;
-    fprintf(stderr,"server-final\t%llu\t%llu\t%llu\t%.0f\t%.0f\t%zu\t%llu\t%llu\t%llu\t%llu\t%llu\t%llu\t0\t0\t0\n",
+    fprintf(stderr,"server-final\t%llu\t%llu\t%llu\t%.0f\t%.0f\t%llu\t%llu\t%llu\t%llu\t%llu\t%llu\t0\t0\t0\n",
         (unsigned long long)server_requests,(unsigned long long)server_requested_bytes,
-        (unsigned long long)server_retains,server_peak_charge,server_charge()-server_start_charge,fwp_heap.ncollect,
+        (unsigned long long)server_retains,server_peak_charge,server_charge()-server_start_charge,
         (unsigned long long)server_calls_started,(unsigned long long)server_calls_finished,
         (unsigned long long)server_connections_created,(unsigned long long)server_connections_closed,
         (unsigned long long)server_connections_finalized,(unsigned long long)server_streams_finalized);

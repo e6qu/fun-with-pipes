@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
     cache_observe = 0;
     if (cache_releases != (size_t)(4*count+2) || fwp_cleanups) return 171;
     double after = (double)fwp_heap.live;
-    if (!fwp_heap.enabled && !fwp_reuse_verify && (after != before)) return 172;
+    if ((after != before)) return 172;
     printf("%d\t%d\t%zu\t%llu\n", count, mode, cache_releases,
         (unsigned long long)(cache_stack_high-cache_stack_low));
     fwp_lib_finish();

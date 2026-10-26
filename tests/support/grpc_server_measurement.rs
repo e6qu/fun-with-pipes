@@ -58,40 +58,23 @@ fn measured_server(binary: &Path, calls: usize) -> Server {
     let mut command = Command::new(binary);
     command
         .args(["--listen", "127.0.0.1:0"])
-        .env("FWP_SERVER_MEASURE_CALLS", calls.to_string())
-        .env("FWP_GC", "off")
-        .env("FWP_FREE", "1")
-        .env("FWP_GC_STRESS", "0")
-        .env("FWP_GC_VERIFY", "0")
-        .env("FWP_REUSE_VERIFY", "0")
-        .env("FWP_GC_STATS", "0");
+        .env("FWP_SERVER_MEASURE_CALLS", calls.to_string());
     start(command, Duration::from_secs(60))
 }
 
 #[test]
 #[ignore = "native server memory evidence runs on GitHub runners"]
 fn repeated_server_call_memory() {
-    measure_server_calls("tracing");
+    measure_server_calls();
 }
 
-#[test]
-#[ignore = "native ARC server memory evidence runs on GitHub runners"]
-fn repeated_arc_server_call_memory() {
-    measure_server_calls("arc");
-}
-
-fn measure_server_calls(memory_mode: &str) {
+fn measure_server_calls() {
     assert!(have_cc(), "native compiler is required for server evidence");
     let artifacts = PathBuf::from(
         std::env::var_os("FWP_SERVER_MEMORY_ARTIFACTS").expect("server artifact directory"),
     );
     std::fs::create_dir_all(&artifacts).unwrap();
-    let d = scratch(&format!("server-memory-{memory_mode}"));
-    std::fs::write(
-        artifacts.join("memory-mode.txt"),
-        format!("{memory_mode}\n"),
-    )
-    .unwrap();
+    let d = scratch("server-memory");
     std::fs::copy(dir().join("greeter.fwp"), d.join("greeter.fwp")).unwrap();
     std::fs::copy(dir().join("greeter.fwp"), artifacts.join("greeter.fwp")).unwrap();
     std::fs::write(
@@ -106,7 +89,7 @@ fn measure_server_calls(memory_mode: &str) {
         .arg("greeter")
         .args(["--listen", "127.0.0.1:0"]);
     let interpreted_server = start(reference, Duration::from_secs(60));
-    let mut memory=String::from("mode\tcalls\trepetition\tallocations\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\tcollections\tcalls_started\tcalls_finished\tconnections_created\tconnections_closed\tconnections_finalized\tstreams_finalized\tlive_call_tasks\tlive_io_tasks\tlive_other_tasks\n");
+    let mut memory=String::from("mode\tcalls\trepetition\tallocations\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\tcalls_started\tcalls_finished\tconnections_created\tconnections_closed\tconnections_finalized\tstreams_finalized\tlive_call_tasks\tlive_io_tasks\tlive_other_tasks\n");
     let mut checkpoints=String::from("mode\tcalls\trepetition\tcompleted_calls\tmanaged_charged_bytes\tlive_call_tasks\tlive_io_tasks\tlive_other_tasks\n");
     let mut storage=String::from("mode\tcalls\trepetition\tjob_requested_bytes\tjob_charged_bytes\ttask_requested_bytes\ttask_charged_bytes\targs_requested_bytes\targs_charged_bytes\tjob_header_bytes\ttask_header_bytes\tconnection_header_bytes\tstream_header_bytes\n");
     for (mode,consume,per_call) in [
@@ -120,11 +103,11 @@ fn measure_server_calls(memory_mode: &str) {
         std::fs::write(&source,format!("import greeter\n\nconsume : {signature}\nconsume = {consume}\nstep = curry (both .0 (.1 | consume) | uncurry add)\n\nmain =\n    () | args | head | option.and-then parse-int\n    | (match\n        Some _ -> id\n        None -> \"expected a numeric call count\" | fail)\n    | flip iter.take (iter.count-from 0)\n    | iter.fold step 0\n    | echo\n")).unwrap();
         std::fs::copy(&source,artifacts.join(format!("{mode}.fwp"))).unwrap();
         let split=d.join(mode);
-        build(&["--gc",memory_mode,source.to_str().unwrap(),"--service","greeter","--emit-c","-o",split.to_str().unwrap()],&d);
+        build(&[source.to_str().unwrap(),"--service","greeter","--emit-c","-o",split.to_str().unwrap()],&d);
         let client_code=std::fs::read_to_string(split.join(format!("{mode}.c"))).unwrap();
         let server_code=std::fs::read_to_string(split.join("greeter.c")).unwrap();
         for code in [&client_code, &server_code] {
-            assert_eq!(code.contains("#define FWP_ARC_ONLY 1"), memory_mode == "arc");
+            assert!(!code.contains("FWP_ARC_ONLY"));
         }
         let measured_code=instrument(&server_code);
         std::fs::write(artifacts.join(format!("{mode}-client.c")),&client_code).unwrap();
@@ -135,7 +118,7 @@ fn measure_server_calls(memory_mode: &str) {
         let measured=artifacts.join(format!("{mode}-server-measured{}",std::env::consts::EXE_SUFFIX));
         for (code,binary) in [(&client_code,&client),(&server_code,&ordinary),(&measured_code,&measured)] {
             fwp::cgen::compile_c(code,binary,"-O2").unwrap();
-            if memory_mode == "arc" {
+
                 let mut nm = Command::new("nm"); nm.arg(binary);
                 let symbols = run(nm, 30);
                 assert!(symbols.status.success(), "{}", render(&symbols));
@@ -144,7 +127,7 @@ fn measure_server_calls(memory_mode: &str) {
                     assert!(!text.contains(tracing), "{} contains {tracing}", binary.display());
                 }
                 std::fs::write(binary.with_extension("nm"), symbols.stdout).unwrap();
-            }
+
         }
         let mut command=Command::new(&ordinary);command.args(["--listen","127.0.0.1:0"]);
         let ordinary_server=start(command,Duration::from_secs(60));
@@ -173,8 +156,8 @@ fn measure_server_calls(memory_mode: &str) {
                     } else if let Some(fields)=line.strip_prefix("server-final\t") {
                         assert!(!final_seen);final_seen=true;
                         let v:Vec<u64>=fields.split('\t').map(|n|n.parse().unwrap()).collect();
-                        assert_eq!(v.len(),15);assert_eq!(v[5],0);assert_eq!(v[6],calls as u64);assert_eq!(v[7],calls as u64);
-                        assert_eq!(v[8],1);assert_eq!(v[9],1);assert_eq!(&v[12..],&[0,0,0]);
+                        assert_eq!(v.len(),14);assert_eq!(v[5],calls as u64);assert_eq!(v[6],calls as u64);
+                        assert_eq!(v[7],1);assert_eq!(v[8],1);assert_eq!(v[9],1);assert_eq!(v[10],calls as u64);assert_eq!(&v[11..],&[0,0,0]);
                         memory.push_str(&format!("{mode}\t{calls}\t{repetition}\t{fields}\n"));
                     } else if let Some(fields)=line.strip_prefix("server-storage\t") {
                         assert!(!storage_seen);storage_seen=true;

@@ -76,7 +76,7 @@ int main(int argc,char **argv) {
         if(*fwp_rc_slot(PTR(s))!=2||*fwp_rc_slot(PTR(c))!=1)_Exit(240);
         g_unlink(c,s);g_stream_drop(s);g_conn_drop(c);
         if(dropped!=created)_Exit(221);
-        if(!fwp_heap.enabled&&!fwp_reuse_verify&&input_charge()!=before)_Exit(222);
+        if(input_charge()!=before)_Exit(222);
         fwp_lib_finish();return 0;
     }
     if(stage==1)fwp_rc_dup(original); /* separately retained original iterator */
@@ -112,6 +112,6 @@ int main(int argc,char **argv) {
     /* Reset requests have already released their active-list owner. */
     if(*fwp_rc_slot(PTR(s))!=1+s->listed||*fwp_rc_slot(PTR(c))!=1||fwp_cleanups)_Exit(236);
     g_unlink(c,s);g_stream_drop(s);g_conn_drop(c);
-    if(!fwp_heap.enabled&&!fwp_reuse_verify&&input_charge()!=before)_Exit(222);
+    if(input_charge()!=before)_Exit(222);
     fwp_lib_finish();return 0;
 }

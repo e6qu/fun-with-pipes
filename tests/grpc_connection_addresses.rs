@@ -123,7 +123,7 @@ int main(void){
             opt,
         )
         .unwrap();
-        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(
             out.status.code(),
             Some(1),
@@ -135,18 +135,9 @@ int main(void){
             opt,
         )
         .unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-            }
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
     let address = format!("grpc://127.0.0.1:1234{}", "/".repeat(4096));
     assert_eq!(fwp::tls::grpc_addr(&address), (false, "127.0.0.1:1234"));

@@ -16,49 +16,26 @@ The merge has the same tree and the required one-line message. See
 [delivery history](roadmap-history.md). Keep the primary checkout's untracked
 compiler-abort report; its handoff points here. Old publisher scripts stay stopped.
 
-The current batch preserves five derivative targets' failure controls, precision,
-workspace choices and interpreter comparisons. Direct runtime and callback-scoped
-calls are distinct tests, not memory modes. Precision reports now have three
-checked fields. Nested derivatives and queued functions are also migrated. Rejected derivative
-programs now test admission in both engines; direct C probes separately verify
-root startup, cross-task use and retired task IDs. Queue tests keep all weak-link,
-resource, capture, scope and missing-release checks. Borrowed callbacks, file
-values, task scopes and zip/map fusion are migrated too: null-pointer controls,
-partial-construction failures, raw/native comparisons, stack/fusion settings and
-omitted releases remain. File probes now check final fixture-owner balance.
-Closure, foreign-callback, string-map and runtime-call targets are also migrated.
-Closure retention is an actual omitted-free control; callback-input errors keep
-their live-allocation ledger. Runtime-call probes inspect live count metadata,
-not poisoned freed payloads, and retain all unwind/alias/cancellation controls.
-Cached-map, mapped-array and task-handle tests now preserve their owner, alias,
-construction and scheduler controls without duplicate modes. Cached-value tests
-retain initialization, reentrancy, failure order and missing-owner checks. The
-transpose probe keeps every partial-column failure, alias-count and scratch-leak
-control; it also requires final input-owner release. Task/deadline, State-sequence
-and UDP tests now keep their failure, alias, socket-close and unload controls
-without collector selectors. State copying uses `FWP_NO_REUSE`; retained-storage
-controls omit physical frees or add explicit extra result owners. Integrated
-execution is pending. Array and hash checks retain alias, effect-order, stack,
-layout, forced-copy and deliberate leak variants. Channel reports now require
-45 samples per host, and hash comparisons retain five implementations with ten
-balanced timing samples each. Their readers and protocols change together; no
-new performance result is claimed. Numerical protocols now compare counted fwp
-with C/Rust in six balanced process batches (thirty samples each); paired C
-experiments use four batches (twenty samples). HTTP tests retain all transports
-and memory bounds, with forced-copy client/server coverage replacing collector
-stress. The current HTTP reader requires 18 allocation rows, ten RSS samples
-and 24 ownership-entry rows per host. Library inputs/results now use the live
-allocation ledger in every run; static/shared unload controls still check actual
-regions, tasks, finalizers, metrics, signal handlers and thread keys. Removed only
-the deleted collector mark-stack observer. Field/projection tests retain alias,
-transfer, cancellation and missing-release controls. Decoder, vector, CPU-kernel,
-DNS, metrics and ternary-primitive tests now keep all partial-result and resource
-faults in one ownership mode. Resource frames and compiler call-lifetime tests
-keep real release/count checks instead of freed-payload poison checks. The HTTP
-fixed-function binary inspector now expects one collector-free artifact. Retained
-callbacks and task scopes now share one ownership model; the old unowned-spawn
-control is replaced by an extra callback owner. The task binary audit requires
-twenty O0/O2 binaries and preserves exact callback/await cost comparisons.
+## Latest completed edits; execution pending
+
+- Task layout/cancellation: one counted model, byte-versus-integer flags,
+  O0/O2 comparisons and missing-pointer controls. The audit requires twelve
+  binaries per host plus eight Windows ABI/context variants.
+- gRPC: retained response channels, connection/request ownership, receive/encode
+  failures and cancellation keep their distinct cases. Forced copies use
+  `FWP_NO_REUSE`, with counted owners intact. The stream fixture now releases
+  its cache and transport owners; an omitted cache drop must fail with status 40.
+- Reports: server completion has fourteen fields; stream storage has eleven.
+  Producers/readers agree and reject obsolete collection columns. Existing
+  callback/await audits require twenty O0/O2 binaries. No new benchmark result.
+- Earlier test migrations cover arrays, hashes, lists, State, cached values,
+  derivatives, file/socket/library resources, callbacks and compiler call
+  lifetimes. They preserve aliases, partial failures, cancellation, forced-copy
+  and omitted-release controls. HTTP retains all transports and RSS bounds.
+- Protocols: channel reports require 45 samples per host; hash comparisons use
+  five implementations and ten samples each; numerical comparisons use fwp/C/Rust
+  with thirty samples each. Paired numerical variants use twenty samples each.
+  Historical reports keep their original schemas and source revisions.
 
 ## Implemented here; integration still pending
 
@@ -95,8 +72,7 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 
 1. **Finish test mode removal.** The list/State/closure fixtures in
    `list_applicative_ownership` are migrated; integrated execution is pending.
-   `unwind_cleanup` and typed-State reports are also migrated. Next review the
-   stale candidates and remaining files listed below.
+   `unwind_cleanup` and typed-State reports are also migrated. Continue from a fresh source audit; do not reapply the stale candidates.
    Remove variable `--gc` arguments, duplicate
    ARC/tracing loops, obsolete environment settings and CLI-selector tests.
    Keep every distinct semantic input, optimization/layout choice and ownership
@@ -119,9 +95,9 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
    Collection measurement and audit scripts now match migrated builders and
    compact/range sets: five counter fields, 28 inspected binaries per host,
    no tracing mode or dummy collection field. Integrated execution is pending.
-   `inspect-task-owners.py` checks collector absence for every binary and reads
-   renamed raw-buffer artifacts; its task/callback label matrices still
-   need migration with the corresponding tests.
+   Task/callback label matrices and their consumers are migrated. Remaining
+   measurement scripts still need a fresh audit for old modes, collection fields
+   and artifact names.
 4. **Finish workflow coverage.** Replace collector-stress variants with the
    complete counted corpus and fault controls. Keep all nine production jobs and
    the explicit native target assignment audit. Rename obsolete shard/report
@@ -173,14 +149,15 @@ Scripts below live in `/private/tmp` unless a repository path is given.
 | `python3 scripts/test-hash-evidence.py` | All four evidence-audit tests pass, including incomplete logs, run-state rejection and saved-file tampering. New generated hash benchmarks remain unexecuted. |
 | `python3 fwp-check-server-schema.py` | Actual report reader accepts complete synthetic stdio/HTTP evidence and rejects missing/duplicate rows, an ineffective omitted-free control and excess RSS. This does not execute servers or inspect their binaries. |
 | `python3 fwp-check-deletion-edits.py` | Rust formatting, changed Python parsing, whitespace, 253-target native schedule and integer artifact gate checks pass. |
-| `python3 fwp-check-migration-python.py` | Ruff reports no unresolved names in all 61 changed Python files. This is a static check, not execution of measurement protocols. |
-| `python3 scripts/check-roadmap.py` | Pass after this rewrite: 162 link sets, 106 immutable preparation pairs/tags, eight roadmap rows and commit messages. |
+| `python3 fwp-check-migration-python.py` | Ruff reports no unresolved names in all changed Python files. This is a static check, not execution of measurement protocols. |
+| `python3 scripts/check-roadmap.py` | Pass after this rewrite: 163 link sets, 106 immutable preparation pairs/tags, eight roadmap rows and commit messages. |
 
 Local harness repairs: fixed a moved expected value in the parser check and an
 unused shutdown helper in startup-only consumers. A slow edit helper was stopped,
 then rewritten and run within the guard; never raise its limits. A candidate-only rustfmt call initially tried to follow missing preview modules;
 rerunning with `skip_children=true` parsed all 84 previews. No helper remains
-running. Integrated runtime tests and the new wide/static/tree controls are pending.
+running. Diff review also caught and repaired symbol-result shadowing and an
+overwide workflow edit; all preparation, correctness and RSS steps are retained. Integrated runtime tests and the new wide/static/tree controls are pending.
 Scope cleanup briefly removed an unrelated multiline loop brace in
 `text_file_tools`; rustfmt caught it, the original loop was restored, and the
 static checks passed. Do not reuse that broad scope-removal helper unchanged.

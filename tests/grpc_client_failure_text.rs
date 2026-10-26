@@ -56,7 +56,6 @@ int main(void){
  static const fwp_desc integer={.kind=K_I64,.name="I64"},string={.kind=K_STR,.name="String",.drop=text_drop};
  static const fwp_desc *const fields[]={&integer,&string};static const fwp_desc error={.kind=K_RECORD,.name="GrpcError",.n=2,.fields=fields,.drop=error_drop};
  fwp_remote remote={0};remote.what="probe";remote.m.grpc_error=&error;
- const char *verify=getenv("FWP_REUSE_VERIFY");int poison=verify&&*verify&&strcmp(verify,"0");
  for(int repeat=0;repeat<100;repeat++)for(int kind=0;kind<5;kind++){
   double before=charged();
   text_frees=0;const char *message=kind==1?"trap: decoder trap":kind==2||kind==4?"denied":"transport failure";
@@ -70,7 +69,7 @@ int main(void){
    if(kind<3||handler.desc!=&error||(int64_t)OBJ(handler.value)->f[0]!=(code<0?GRPC_UNAVAILABLE:code)||strcmp(STR(OBJ(handler.value)->f[1])->d,message))return 3;
    if(!fwp_rc_last(handler.value)||!fwp_rc_last(OBJ(handler.value)->f[1]))return 10;
    error_drop(handler.value);handler.value=0;
-   if(!fwp_heap.enabled&&!poison&&charged()!=before)return 11;
+   if(charged()!=before)return 11;
   }else{
    if(kind>=3)return 4;
    const char *expected=kind==1?"decoder trap":kind==2?"service call probe (local) failed: gRPC status 7: denied":"service call probe (local) failed: transport failure";
@@ -98,23 +97,14 @@ int main(void){
     assert_ne!(unowned, generated);
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{hooks}\n{unowned}\n{fixture}"), &exe, opt).unwrap();
-        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(out.status.code(), Some(10), "uncounted error text: {out:?}");
         fwp::cgen::compile_c(&format!("{hooks}\n{omitted}\n{fixture}"), &exe, opt).unwrap();
-        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(out.status.code(), Some(1), "omitted cleanup: {out:?}");
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-            }
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
 }

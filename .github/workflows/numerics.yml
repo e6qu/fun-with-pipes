@@ -3047,11 +3047,7 @@ jobs:
       - name: Check long-running server resident memory
         if: matrix.part == 'calls' && runner.os == 'Linux'
         run: |
-          if [ "${{ inputs.suite }}" = server-arc ]; then
-            cargo test --test gc grpc_server_runs_in_bounded_memory -- --exact --nocapture
-          else
-            cargo test --test gc grpc_server_runs_in_bounded_memory -- --exact --nocapture
-          fi
+          cargo test --test gc grpc_server_runs_in_bounded_memory -- --exact --nocapture
       - name: Prepare server measurements and check compiler ownership
         if: matrix.part == 'calls'
         shell: bash
@@ -3095,11 +3091,7 @@ jobs:
         env:
           FWP_SERVER_MEMORY_ARTIFACTS: server-memory-evidence
         run: |
-          if [ "${{ inputs.suite }}" = server-arc ]; then
-            cargo test --test grpc server_measurement::repeated_arc_server_call_memory -- --exact --ignored --nocapture
-          else
-            cargo test --test grpc server_measurement::repeated_server_call_memory -- --exact --ignored --nocapture
-          fi
+          cargo test --test grpc server_measurement::repeated_server_call_memory -- --exact --ignored --nocapture
       - uses: actions/upload-artifact@v7
         if: always() && matrix.part == 'calls'
         with:

@@ -194,22 +194,13 @@ int main(void){
             &received_omitted,
         ] {
             fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
-            let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+            let out = Command::new(&exe).output().unwrap();
             assert_eq!(out.status.code(), Some(1), "omitted cleanup: {out:?}");
         }
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-            }
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
 }
 
@@ -402,33 +393,14 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{declaration}{generated}\n{fixture}"), &exe, opt).unwrap();
         for stage in [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14] {
-            for gc in ["off", "on"] {
-                for poison in ["0", "1"] {
-                    let output = Command::new(&exe)
-                        .arg(stage.to_string())
-                        .env("FWP_GC", gc)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
-                    assert!(
-                        output.status.success(),
-                        "{opt}/{stage}/{gc}/{poison}: {output:?}"
-                    );
-                }
-            }
+            let output = Command::new(&exe).arg(stage.to_string()).output().unwrap();
+            assert!(output.status.success(), "{opt}/{stage}: {output:?}");
         }
         for (before, after, stage, expected) in controls {
             assert_eq!(generated.matches(before).count(), 1, "{before}");
             let broken = generated.replacen(before, after, 1);
             fwp::cgen::compile_c(&format!("{declaration}{broken}\n{fixture}"), &exe, opt).unwrap();
-            let output = Command::new(&exe)
-                .arg(stage.to_string())
-                .env("FWP_GC", "off")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
+            let output = Command::new(&exe).arg(stage.to_string()).output().unwrap();
             assert_eq!(output.status.code(), Some(expected), "{before}: {output:?}");
         }
     }
@@ -509,33 +481,14 @@ fn native_output_channels_borrow_values_and_release_context() {
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{generated}\n{fixture}"), &exe, opt).unwrap();
         for stage in 0..7 {
-            for gc in ["off", "on"] {
-                for poison in ["0", "1"] {
-                    let output = Command::new(&exe)
-                        .arg(stage.to_string())
-                        .env("FWP_GC", gc)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
-                    assert!(
-                        output.status.success(),
-                        "{opt}/{stage}/{gc}/{poison}: {output:?}"
-                    );
-                }
-            }
+            let output = Command::new(&exe).arg(stage.to_string()).output().unwrap();
+            assert!(output.status.success(), "{opt}/{stage}: {output:?}");
         }
         for (before, after, stage, expected) in controls {
             assert_eq!(generated.matches(before).count(), 1, "{before}");
             let broken = generated.replacen(before, after, 1);
             fwp::cgen::compile_c(&format!("{broken}\n{fixture}"), &exe, opt).unwrap();
-            let output = Command::new(&exe)
-                .arg(stage.to_string())
-                .env("FWP_GC", "off")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
+            let output = Command::new(&exe).arg(stage.to_string()).output().unwrap();
             assert_eq!(output.status.code(), Some(expected), "{before}: {output:?}");
         }
     }

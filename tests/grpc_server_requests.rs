@@ -116,24 +116,13 @@ fn served_requests_survive_resets_jobs_and_retained_inputs() {
     ];
     let dir = fwp::cgen::TempDir::new("grpc-request-owners").unwrap();
     let binary = dir.join("requests.exe");
-    // Replay the same low-level lifetime controls with tracing compiled out.
-    // Public service eligibility is tested separately through real split builds.
-    for (arc, opt) in [(false, "-O1"), (false, "-O2"), (true, "-O2")] {
-        let generated = if arc {
-            format!("#define FWP_ARC_ONLY 1\n{generated}")
-        } else {
-            generated.clone()
-        };
+    for opt in ["-O1", "-O2"] {
         for (needle, replacement, stage, expected) in controls {
             assert_eq!(generated.matches(needle).count(), 1, "{needle}");
             let broken = generated.replace(needle, replacement);
             fwp::cgen::compile_c(&format!("{prefix}{broken}\n{fixture}"), &binary, opt).unwrap();
             let output = Command::new(&binary)
                 .arg(stage.to_string())
-                .env("FWP_GC", "off")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
                 .output()
                 .unwrap();
             assert_eq!(
@@ -143,31 +132,13 @@ fn served_requests_survive_resets_jobs_and_retained_inputs() {
             );
         }
         fwp::cgen::compile_c(&format!("{prefix}{generated}\n{fixture}"), &binary, opt).unwrap();
-        let settings: &[(&str, &str, &str)] = if arc {
-            &[("off", "0", "0")]
-        } else {
-            &[
-                ("off", "1", "0"),
-                ("off", "1", "1"),
-                ("on", "1", "0"),
-                ("on", "1", "1"),
-            ]
-        };
-        for &(gc, verify, poison) in settings {
-            for stage in 0..11 {
-                let output = Command::new(&binary)
-                    .arg(stage.to_string())
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", verify)
-                    .env("FWP_GC_VERIFY", verify)
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(
-                    output.status.success(),
-                    "{opt}/arc={arc}/{gc}/{poison}/{stage}: {output:?}"
-                );
-            }
+
+        for stage in 0..11 {
+            let output = Command::new(&binary)
+                .arg(stage.to_string())
+                .output()
+                .unwrap();
+            assert!(output.status.success(), "{opt}/{stage}: {output:?}");
         }
     }
 }
