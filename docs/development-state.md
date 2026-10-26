@@ -1,8 +1,8 @@
 # Current work
 
-**Next:** read the focused GCC diagnosis `40390897932`, fix the Linux service
-fixture's actual failure, then publish it with the Windows header-order and CI
-setup-timeout repairs. Do not restart the full matrix for diagnosis alone.
+**Next:** audit the combined repair's final production, documentation and analysis
+runs on PR #217. Fix every failed target before another push. Squash merge only
+when all required jobs pass on the same head; then continue PLAN.md A2–A6.
 
 ## Delivery and evidence
 
@@ -24,12 +24,21 @@ setup-timeout repairs. Do not restart the full matrix for diagnosis alone.
   passes both hosts, 192 ordinary library tests and both budget tests. Limits and
   proof counts are unchanged; [measurements](measurements/ownership-analysis.md)
   record the timings. This does not replace production acceptance.
-- Focused [GCC diagnosis 40390897932](https://github.com/e6qu/fun-with-pipes/actions/runs/40390897932)
-  is queued on temporary branch `ci-service-value-diagnosis`, source
-  `094bab810aa20828ee040d96e07df78cd74c0cbd`. It uses the failing head's published
-  Linux compiler and compares original, labeled-exit and printed-counter fixtures,
-  without a Rust rebuild or
-  another PR. Diagnostic scripts are temporary, not production dependencies.
+- Native [GCC diagnosis 40390897932](https://github.com/e6qu/fun-with-pipes/actions/runs/40390897932)
+  reproduces the service fixture failure at O1/O2. Its redundant failure tally
+  reports 24 instead of 12. [Per-attempt trace 40393922521](https://github.com/e6qu/fun-with-pipes/actions/runs/40393922521)
+  reaches the expected twelve failures and one success; adding the trace changes
+  GCC's result. A separate bounded GCC experiment isolates the tally/index:
+  making either volatile restores 12; making the completion flag volatile does not.
+- The repair removes that redundant tally. Service, HTTP/2 and capture fixtures
+  require each specified allocation to fail with the injected reason, then require
+  the next attempt to succeed. Existing alias and storage checks remain. New
+  controls reject missed injections and unrelated traps.
+- Focused native [repair validation 40394950374](https://github.com/e6qu/fun-with-pipes/actions/runs/40394950374)
+  uses the failing head's compiler and repaired fixture, with O1/O2 cleanup checks
+  and deliberate missed-injection/unrelated-trap controls. It was queued at this
+  update. Temporary branch `ci-service-value-diagnosis`, source `25e033a4`;
+  no previous compiler becomes a project build dependency.
 - Verified base: #216 squash `f5621cb46828273f7ce8edf92be4062ccec0f17c`, identical
   tree to tested `1dd5fcaed7792b5505283b1037a9c22d788a3be5`. Nine production jobs
   `40274667944`, docs `40273010537` and analysis jobs `40273030485` passed.
@@ -39,12 +48,12 @@ setup-timeout repairs. Do not restart the full matrix for diagnosis alone.
 | Failure | Repair/status |
 |---|---|
 | Windows body-copy fixture includes a system header before the runtime | Insert declarations after the runtime's `V` declaration; preserve the Windows API contract and use an explicit `.exe` path. Local edit; native verification pending. |
-| Linux AMD64 service-value fixture returns ambiguous status 247 | Focused production-GCC diagnosis pending; preserve every cleanup and alias assertion. |
+| Linux AMD64 service-value fixture miscounts recovered failures | Check every allocation index and trap reason directly in all three related fixtures. GCC O1/O2 focused checks pass; native final-head integration remains required. |
 | Benchmark setup waits three hours on Ubuntu mirror | Ten-minute package-step deadlines, explicit network/lock limits and noninteractive installation; benchmark job bounded at 90 minutes. Same package limits apply to production Linux setup. No skipped dependency checks or alternate toolchain. |
 
 **GC removal remains unverified.** Integrated Rust/compiler, generated-library,
-GCC, Windows and WASI checks must pass on the repaired source. C fixture checks
-below establish only their stated paths on Clang ARM64.
+GCC, Windows and WASI checks must pass on the repaired source. Focused fixture checks
+below establish only their stated paths, not whole-platform acceptance.
 
 ## What changed
 
@@ -204,11 +213,28 @@ suite ran.
 | `python3 /private/tmp/fwp-217-check-wasi-sources.py` | CI compiler `4c79748a` emits WASI C for all three corrected capacity sources. This verifies admission/generation, not actual wasm32 allocation or execution. |
 | `cargo fmt --all -- --check`, `python3 scripts/check-roadmap.py`, `git diff --check` | Pass: formatting, 163 doc link sets, 106 preparation anchors, eight roadmap rows and whitespace. New Rust call-type regression and analysis budgets remain runner checks. |
 
-### Pending GCC repair checks
+### Combined CI repair checks
 
-- `python3 scripts/local-guard.py actionlint .github/workflows/ci.yml`: passes.
-- Guarded Rust formatting, documentation audit and whitespace checks pass.
-- The first diagnostic harness links and runs at local Clang ARM64 O1/O2 with
-  CI compiler `4c79748a`. This verifies the harness, not the GCC failure.
-- Superseded diagnostic `40388745759` was cancelled while queued; no test results
-  were discarded. Replacement `40390897932` retains an unchanged fixture first.
+All local commands used `python3 scripts/local-guard.py`; no full compiler build
+or suite ran. The local GCC checks used Ubuntu 24.04 / GCC 13.3 under AMD64
+emulation, with a half-core CPU limit, 768 MiB memory cap, 160-second deadline and
+sampled container memory. This is diagnosis, not native platform acceptance.
+
+- `actionlint .github/workflows/ci.yml`: passes after bounding package setup.
+- `python3 /private/tmp/fwp-217-container-gcc.py`: repaired service fixture passes
+  O1/O2 with 12 metadata and 2 subject failures and zero final charged bytes.
+  Missing-field-drop controls exit 248 at O1/O2; missed injection and unrelated
+  trap controls exit 247 at O2. Six checks, 73.47 seconds, sampled memory below
+  224 MiB. Uses CI compiler `4e626132` and the repository fixture.
+- The bounded toolchain setup initially lacked `libc6-dev`; adding the explicit
+  package fixed it. No guard limits were raised. The toolchain image is temporary.
+- Native diagnosis and per-attempt trace logs are retained by the linked runs.
+  No runtime algorithm or expected allocation count was changed to silence this
+  failure. The precise GCC transformation behind the old tally is not established.
+- `env CPATH=/opt/homebrew/opt/openssl@3/include LIBRARY_PATH=/opt/homebrew/opt/openssl@3/lib python3 /private/tmp/fwp-217-check-service-repair.py /private/tmp/fwp-217-4c79-compiler/fwp-macos-arm64/fwp /usr/bin/clang`:
+  the same six normal/control checks pass on Apple Clang 17 ARM64; 3.15 seconds.
+  CI compilers `4c79748a` and `4e626132` emit identical C for this source.
+- Guarded Rust formatting, workflow lint, documentation audit and whitespace
+  checks pass: 163 link sets, 106 immutable preparation anchors, eight roadmap
+  steps. Full native checks for the related HTTP/2/capture fixture edits and the
+  Windows header-order repair remain final-head CI requirements.

@@ -40,20 +40,24 @@ int main(void) {
     if(fwp_heap.live!=live_bytes){fprintf(stderr,"copied HTTP/2 result live_bytes delta: %lld\n",(long long)(live_bytes - fwp_heap.live));return 248;}
     for(int operation=0;operation<2;operation++) {
         const fwp_desc *type=operation?BODY_TYPE:REQUEST_TYPE;
-        int failed=0,completed=0;
-        for(int allocation=1;allocation<64;allocation++) {
+        /* Check each request directly; do not carry a second loop tally across longjmp. */
+        const int failures=operation?2:20;
+        for(int allocation=1;allocation<=failures+1;allocation++) {
             fwp_trap_recover=service_recover;fwp_trap_jb=&service_jump;fwp_trap_cleanup=fwp_cleanups;
             service_left=allocation;
             if(!setjmp(service_jump)) {
                 V result=operation?fwp_p_http2_body(64,PTR(&duration),PTR(&call),type):fwp_p_http2_request(PTR(&call),type);
-                service_left=0;type->drop(result);completed=1;
-            } else failed++;
+                service_left=0;type->drop(result);
+                if(allocation<=failures) {
+                    fprintf(stderr,"HTTP/2 result %d: allocation %d did not fail\n",operation,allocation);return 247;
+                }
+            } else if(allocation>failures||service_left||strcmp(fwp_trap_msg,"injected HTTP/2-result allocation failure")) {
+                fprintf(stderr,"HTTP/2 result %d: unexpected trap at allocation %d: %s\n",operation,allocation,fwp_trap_msg);return 247;
+            }
             service_left=0;fwp_trap_recover=NULL;fwp_trap_jb=NULL;
             if(fwp_cleanups||fwp_heap.live!=live_bytes)return 248;
-            if(completed)break;
         }
-        if(!completed||failed!=(operation?2:20))return 247;
-        printf("HTTP/2 result %d: %d allocation failures; final charged delta 0\n",operation,failed);
+        printf("HTTP/2 result %d: %d allocation failures; final charged delta 0\n",operation,failures);
     }
     // Existing host wins over :authority, and duplicate header order is retained.
     h2_hdrs_add(&stream.headers,"host",4,"explicit.test",13);

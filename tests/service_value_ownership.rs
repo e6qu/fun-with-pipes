@@ -78,8 +78,20 @@ fn copied_service_values_release_partial_results_and_preserve_aliases() {
         "(void)d; /* omit partially copied service fields */",
     );
     assert_ne!(code, broken);
+    let missed_failure = code.replace("if(service_left>0 && !--service_left)", "if(0)");
+    let unrelated_trap = code.replace(
+        "injected service-result allocation failure",
+        "unrelated runtime failure",
+    );
+    assert_ne!(code, missed_failure);
+    assert_ne!(code, unrelated_trap);
     for opt in ["-O1", "-O2"] {
-        for (source, expected) in [(&code, 0), (&broken, 248)] {
+        for (source, expected) in [
+            (&code, 0),
+            (&broken, 248),
+            (&missed_failure, 247),
+            (&unrelated_trap, 247),
+        ] {
             fwp::cgen::compile_c(source, &binary, opt).unwrap();
             let output = Command::new(&binary).output().unwrap();
             if expected == 0 && opt == "-O2" {
