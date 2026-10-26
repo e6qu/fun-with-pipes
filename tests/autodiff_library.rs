@@ -18,11 +18,9 @@ record : I64 -> I64
 record = ad.tape | make { 0 = id, 1 = const 1.0, 2 = const -1, 3 = const 0.0 } | ad.push
 export probe : I64 -> I64
 probe = ad.scope record
-export live : I64 -> I64
-live = record
 export managed : I64 -> I64
-managed = const [0.0] | rev._seed | .1 | rev._seed | .1
-    | map (fork mul id id) | head | option.unwrap-or zero | .vertex
+managed = ad.scope (const [0.0] | rev._seed | .1 | rev._seed | .1
+    | map (fork mul id id) | head | option.unwrap-or zero | .vertex)
 "#,
     )
     .unwrap();
@@ -75,10 +73,14 @@ managed = const [0.0] | rev._seed | .1 | rev._seed | .1
         String::from_utf8_lossy(&built.stderr)
     );
     for opt in ["-O1", "-O2"] {
-        for omit in ["none", "finish", "weights"] {
+        for omit in ["none", "finish", "weights", "scope"] {
             let c = match omit {
                 "finish" => code.replace("fwp_tape_finish();library_finished();", ""),
                 "weights" => code.replace("library_mem_free(owner->weights);", ""),
+                "scope" => code.replace(
+                    "        fwp_tape_unlink_scope(t);\n        fwp_tape_buffers buffers",
+                    "        fwp_tape_buffers buffers",
+                ),
                 _ => code.clone(),
             };
             assert_eq!(c == code, omit == "none");
@@ -91,8 +93,6 @@ managed = const [0.0] | rev._seed | .1 | rev._seed | .1
                     .arg(&report)
                     .env("FWP_AD_WORKSPACE", cache)
                     .env("FWP_AD_LIBRARY_REPORT", &report)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
                     .output()
                     .unwrap();
                 assert_eq!(
@@ -100,6 +100,7 @@ managed = const [0.0] | rev._seed | .1 | rev._seed | .1
                     Some(match omit {
                         "finish" => 182,
                         "weights" => 183,
+                        "scope" => 186,
                         _ => 0,
                     }),
                     "{opt} omit={omit} cache={cache}: {}",

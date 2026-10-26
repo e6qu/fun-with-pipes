@@ -204,10 +204,11 @@ static void fwp_tape_retire(fwp_tape *t) {
     } else fwp_tape_buffers_release(&buffers);
 }
 static void fwp_tape_finish(void) {
-    /* Shutdown releases both the bounded cache and unscoped live tapes. */
+    /* Shutdown releases the bounded cache and any unfinished scoped tapes. */
     fwp_tape_buffers_dispose(&fwp_tape_workspace);fwp_tape_cached_bytes = 0;
     for (int64_t i = 0; i < fwp_ntapes; i++) {
         fwp_tape *t = &fwp_tapes[i];
+        fwp_tape_unlink_scope(t);
         fwp_tape_buffers buffers = {t->pa, t->pb, t->da, t->db, t->adj, t->cap, t->adjcap};
         fwp_tape_buffers_dispose(&buffers);
         fwp_owned_tape_release(t->owned); t->owned = NULL;

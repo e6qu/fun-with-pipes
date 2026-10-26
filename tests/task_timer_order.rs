@@ -104,19 +104,11 @@ fn channel_orders_prints_even_when_shorter_timer_starts_late() {
                     .arg(&exe),
             );
             for slice in ["1", "37", "1000"] {
-                for poison in ["0", "1"] {
-                    let native = checked(
-                        Command::new(&exe)
-                            .env("FWP_PREEMPT", slice)
-                            .env("FWP_GC_STRESS", "1")
-                            .env("FWP_GC_VERIFY", "1")
-                            .env("FWP_REUSE_VERIFY", poison),
-                    );
-                    assert_eq!(
-                        native.stdout, reference.stdout,
-                        "delayed={delayed}, {opt}, slice={slice}, poison={poison}"
-                    );
-                }
+                let native = checked(Command::new(&exe).env("FWP_PREEMPT", slice));
+                assert_eq!(
+                    native.stdout, reference.stdout,
+                    "delayed={delayed}, {opt}, slice={slice}"
+                );
             }
         }
     }

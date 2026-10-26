@@ -1,7 +1,6 @@
-/* Exercise ownership separately from algorithm timing. Collection and injected
- * traps occur only after scratch/results have acquired a cleanup owner. */
+/* Exercise ownership separately from algorithm timing. Injected traps occur only after scratch/results have acquired a cleanup owner. */
 static jmp_buf la_failure;
-static int la_events, la_fail_at, la_collect;
+static int la_events, la_fail_at;
 static int la_recover(void) { return 1; }
 static void la_event(void) {
     if (++la_events == la_fail_at) fwp_trap("solver allocation probe");
@@ -33,8 +32,7 @@ int main(void) {
     fwp_heap_start();
     fwp_fns = fwp_fn_table;
     fwp_init_consts();
-    const char *setting = getenv("FWP_LINALG_COLLECTION");
-    la_collect = setting && !strcmp(setting, "1");
+    size_t baseline = fwp_heap.live;
     const double diagonal[] = {4, 0, 0, 9}, vector[] = {8, 18};
     const double singular[] = {1, 2, 2, 4}, indefinite[] = {1, 2, 2, 1};
     V matrix = la_input(diagonal, 4), rhs = la_input(vector, 2);
@@ -48,7 +46,7 @@ int main(void) {
             if (kind == 0 && (fwp_f64(ARR(OBJ(result)->f[0])->d[0]) != 2.0 ||
                              fwp_f64(ARR(OBJ(result)->f[0])->d[1]) != 2.0)) return 221;
             la_drop(kind, result);
-            if (!la_collect && fwp_heap.live != live_bytes) return 222;
+            if (fwp_heap.live != live_bytes) return 222;
         }
         int allocations = la_events;
         fwp_trap_recover = la_recover;
@@ -58,7 +56,7 @@ int main(void) {
             la_events = 0; la_fail_at = step;
             if (!setjmp(la_failure)) { (void)la_call(kind, matrix, rhs); return 223; }
             if (fwp_cleanups != fwp_trap_cleanup ||
-                (!la_collect && fwp_heap.live != live_bytes)) return 224;
+                (fwp_heap.live != live_bytes)) return 224;
             if (*fwp_rc_slot(matrix) != 1 || *fwp_rc_slot(rhs) != 1) return 225;
         }
         la_fail_at = 0;
@@ -68,11 +66,11 @@ int main(void) {
         fwp_p_inverse(2, bad) != FWP_NONE ||
         fwp_p_cholesky(2, negative) != FWP_NONE ||
         fwp_f64(fwp_p_det(2, bad)) != 0.0) return 226;
-    if (!la_collect && fwp_heap.live != live_bytes) return 222;
+    if (fwp_heap.live != live_bytes) return 222;
     for (size_t i = 0; i < 4; i++)
         if (fwp_f64(ARR(matrix)->d[i]) != diagonal[i]) return 227;
-    if (la_collect && !fwp_heap.ncollect) return 228;
     fwp_rc_free_arr(matrix); fwp_rc_free_arr(rhs);
     fwp_rc_free_arr(bad); fwp_rc_free_arr(negative);
+    if (fwp_heap.live != baseline) return 228;
     return 0;
 }

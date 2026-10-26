@@ -17,7 +17,7 @@ int main(int argc,char **argv){
 #define LIBRARY_SYMBOL(name) dlsym(lib,name)
 #endif
         int64_t (*probe)(int64_t)=0,(*live)(int64_t)=0,(*managed)(int64_t)=0;
-        *(void **)(&probe)=LIBRARY_SYMBOL("probe");*(void **)(&live)=LIBRARY_SYMBOL("live");
+        *(void **)(&probe)=LIBRARY_SYMBOL("probe");*(void **)(&live)=LIBRARY_SYMBOL("library_live_probe");
         *(void **)(&managed)=LIBRARY_SYMBOL("managed");
         if(!probe || !live || !managed || probe(129)<0 || live(257)<0 || managed(0)<0)return 184;
 #ifdef _WIN32

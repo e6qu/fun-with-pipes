@@ -24,8 +24,28 @@ static void library_free(void *p){
     if(!p)return;size_t i=0;while(i<64 && library_owners[i]!=p)i++;
     if(i==64)abort();library_owners[i]=0;library_live--;free(p);
 }
+/* Exercise shutdown with unfinished internal work below language admission.
+ * The static scope remains valid until unload; no language tape may escape. */
+static fwp_tape_scope library_live_scope = {-1};
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+int64_t library_live_probe(int64_t leaves) {
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_tape_scope_release, &library_live_scope);
+    V base = fwp_p_ad_tape((V)leaves);
+    fwp_tape_reserve(fwp_tape_of((int64_t)base >> 32), 2);
+    static const fwp_desc scalar = {.kind=K_I64};
+    V parameters = fwp_rc_fresh(fwp_record(4, (V[4]){0, 0, 0, 0}));
+    V owned = fwp_p_ad_tape_owned(parameters, 0, &scalar);
+    fwp_tape_reserve(fwp_tape_of((int64_t)owned >> 32), 2);
+    fwp_rc_free_obj(parameters);
+    fwp_cleanup_pop(&cleanup);
+    return 0;
+}
 static void library_finished(void){
     const char *path=getenv("FWP_AD_LIBRARY_REPORT");if(!path)abort();
     if(!library_managed_calls || fwp_owned_tapes)abort();
+    if(library_live_scope.head != -1)exit(186);
     FILE *f=fopen(path,"a");if(!f)abort();fprintf(f,"%zu %zu\n",library_live+library_managed_live,library_calls);fclose(f);
 }

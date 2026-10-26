@@ -1,13 +1,16 @@
 //! Counted channels own queued elements and transfer them into owned receive results.
 use std::process::Command;
 
+#[path = "support/ownership_ledger.rs"]
+mod ownership_ledger;
+
 #[test]
 fn channels_own_queues_and_transfer_received_values() {
     let dir = std::env::temp_dir().join(format!("fwp-channel-queue-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let source = dir.join("probe.fwp");
     let cfile = dir.join("probe.c");
-    let exe = dir.join("probe");
+    let exe = dir.join("probe.exe");
     std::fs::write(&source, r#"give : String -> () -> String
 give = const
 fn-channel : I64 -> Channel[() -> String] ! {Async}
@@ -62,7 +65,8 @@ main = [
             .unwrap()
             .to_string()
     };
-    let runtime = emitted.replace(
+    let observed = ownership_ledger::instrument_native(&emitted, 4096);
+    let runtime = observed.replace(
         "int main(int argc, char **argv)",
         "int original_main(int argc, char **argv)",
     );
@@ -90,11 +94,11 @@ static void worker(void *arg,int failed){
  else if(fRECV(blocking_ch)!=FWP_NONE)fwp_trap("expected closed receive");
  fwp_value_finish(&ch_owner,&ch_cleanup);fwp_channel_drop(blocking_ch);worker_completed=1;
 }
-static int dead(V v){return fwp_reuse_verify?STR(v)->len==0:*fwp_rc_slot(v)==0;}
+static int dead(V v){return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)];}
 static void text_drop(V v){if(fwp_rc_release_last(v))fwp_rc_free_obj(v);}
 static void option_drop(V v){if(v&&fwp_rc_release_last(v)){text_drop(OBJ(v)->f[0]);fwp_rc_free_obj(v);}}
 int main(void){
- fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();size_t baseline=fwp_heap.live;fwp_tasks_init();
  V ch=fMAKE(32);if(*fwp_rc_slot(ch)!=1)return 1;
  V values[20];for(int i=0;i<20;i++){
   values[i]=fwp_rc_fresh(fwp_str_new("input",5));
@@ -123,7 +127,9 @@ int main(void){
   blocking_ch=fMAKE(1);send_mode=mode<2;worker_completed=0;
   V queued=0;if(send_mode){queued=fwp_rc_fresh(fwp_str_new("queued",6));fSEND(blocking_ch,queued);}
   blocking_value=send_mode?fwp_rc_fresh(fwp_str_new("pending",7)):0;
-  fwp_rc_dup(blocking_ch);fwp_task *t=fwp_spawn_task(0,worker,0,0,0);fwp_p_task_yield();
+  fwp_rc_dup(blocking_ch);fwp_task *t=fwp_spawn_task(0,worker,0,0,0);
+  fwp_rc_fresh(PTR(t));fwp_rc_dup(PTR(t)); /* scheduler and fixture handle */
+  fwp_p_task_yield();
   fwp_chan *c=(fwp_chan *)(uintptr_t)blocking_ch;
   if(*fwp_rc_slot(blocking_ch)!=2||!(send_mode?c->sendq.head:c->recvq.head))return 16;
   if(send_mode&&*fwp_rc_slot(blocking_value)!=1)return 17;
@@ -136,9 +142,10 @@ int main(void){
    fwp_channel_drop(blocking_ch);
   }
   if(send_mode&&!dead(queued))return 21;
+  fwp_free_zombie();fwp_task_drop(PTR(t));
  }
  // Timed receive keeps ready values ahead of the deadline and returns None when empty.
- ch=fMAKE(1);V duration=fwp_record(1,(V[]){0});
+ ch=fMAKE(1);V duration=fwp_rc_fresh(fwp_record(1,(V[]){0}));
  if(fwp_p_channel_recv_for_owned(duration,ch,fwp_rc_dup)!=FWP_NONE||*fwp_rc_slot(ch)!=1)return 38;
  value=fwp_rc_fresh(fwp_str_new("timed",5));fSEND(ch,value);
  received=fwp_p_channel_recv_for_owned(duration,ch,fwp_rc_dup);
@@ -168,19 +175,15 @@ int main(void){
  ch=fwp_p_channel_make_owned(1,fwp_task_drop);fwp_p_channel_send_owned(ch,PTR(task),fwp_task_drop);fwp_tasks_finish();
  if(*fwp_rc_slot(PTR(task))!=1||*fwp_rc_slot(value)!=1)return 32;
  fwp_channel_drop(ch);if(!dead(value))return 33;
- // An old channel and buffer keep new queue elements alive through a minor GC.
- ch=fMAKE(2);value=fwp_rc_fresh(fwp_str_new("old",3));fSEND(ch,value);received=fRECV(ch);option_drop(received);
- fwp_heap_collect();fwp_heap_collect();
- value=fwp_rc_fresh(fwp_str_new("young",5));fSEND(ch,value);value=0;
- fwp_heap.major_next=0;size_t minors=fwp_heap.nminor;fwp_heap_collect();
- if(fwp_heap.nminor!=minors+1)return 34;received=fRECV(ch);if(STR(OBJ(received)->f[0])->len!=5)return 34;option_drop(received);fwp_channel_drop(ch);
- // Untyped queue channels and promoted handles keep tracing.
- for(int promoted=0;promoted<2;promoted++){
-  ch=promoted?fMAKE(1):fwp_p_channel_make(1);if(promoted)fwp_rc_share(ch);
-  value=fwp_rc_fresh(fwp_str_new("shared",6));fSEND(ch,value);
-  received=fRECV(ch);if(*fwp_rc_slot(value)||STR(OBJ(received)->f[0])->len!=6)return 35;
-  fwp_channel_drop(ch);option_drop(received);
+ // Reuse a drained queue while unrelated allocation slots are repeatedly reused.
+ ch=fMAKE(2);
+ for(int repeat=0;repeat<64;repeat++){
+  value=fwp_rc_fresh(fwp_str_new("queued",6));fSEND(ch,value);
+  V scratch=fwp_rc_fresh(fwp_str_new("scratch",7));text_drop(scratch);
+  received=fRECV(ch);if(OBJ(received)->f[0]!=value||STR(value)->len!=6)return 34;
+  option_drop(received);if(!dead(value))return 35;
  }
+ fwp_channel_drop(ch);
  // Native sinks borrow during the call; send releases its owner afterward.
  ch=fMAKE(1);((fwp_chan *)(uintptr_t)ch)->sink=sink;((fwp_chan *)(uintptr_t)ch)->owner.sink_drop=sink_drop;((fwp_chan *)(uintptr_t)ch)->sink_ctx=&sink_calls;
  fwp_rc_dup(ch);
@@ -203,21 +206,15 @@ int main(void){
  if(fwp_cleanups||((fwp_chan *)(uintptr_t)ch)->len!=1||*fwp_rc_slot(value)!=1)return 26;
  received=fRECV(ch);if(OBJ(received)->f[0]!=value||*fwp_rc_slot(value)!=1)return 27;
  fwp_channel_drop(ch);option_drop(received);if(!dead(value))return 28;
- // Uncounted tracing receives also preserve the queued value on allocation failure.
- ch=fwp_p_channel_make(1);value=fwp_str_new("uncounted retry",15);fwp_p_channel_send(ch,value);
- fail_option=1;fwp_trap_recover=recover;fwp_trap_jb=&recovered;fwp_trap_cleanup=0;
- if(setjmp(recovered)==0){fwp_p_channel_recv(ch);return 50;}
- fwp_trap_recover=0;fwp_trap_jb=0;
- if(((fwp_chan *)(uintptr_t)ch)->len!=1||((fwp_chan *)(uintptr_t)ch)->buf[((fwp_chan *)(uintptr_t)ch)->head]!=value)return 51;
- received=fwp_p_channel_recv(ch);if(OBJ(received)->f[0]!=value||STR(value)->len!=15)return 52;
- fwp_p_channel_close(ch);
  // A failed buffer allocation consumes the message but leaves the queue empty.
  ch=fMAKE(1);value=fwp_rc_fresh(fwp_str_new("growth",6));
  fail_grow=1;fwp_trap_recover=recover;fwp_trap_jb=&recovered;fwp_trap_cleanup=0;
  if(setjmp(recovered)==0){fSEND(ch,value);return 41;}
  fwp_trap_recover=0;fwp_trap_jb=0;
  if(fwp_cleanups||((fwp_chan *)(uintptr_t)ch)->len||!dead(value))return 42;
- fwp_channel_drop(ch);
+ fwp_channel_drop(ch);fwp_rc_free_obj(duration);
+ fwp_native_tasks_finish();
+ if(fwp_heap.live!=baseline)return 53;
  return 0;
 }
 "#.replace("GIVE",&id("give :"))
@@ -254,9 +251,9 @@ int main(void){
         "        c->owner.sink_drop = NULL;\n        /* omit native context release */",
         1,
     );
-    let traced_sink_value = runtime.replace(
+    let retained_sink_value = runtime.replace(
         "if (!c->closed) result = c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;",
-        "if (!c->closed) { result = c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE; fwp_rc_share(x); }",
+        "if (!c->closed) { result = c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE; fwp_rc_dup(x); }",
     );
     for control in [
         &extra_queue_retain,
@@ -265,7 +262,7 @@ int main(void){
         &extra_receive,
         &early_remove,
         &no_sink_drop,
-        &traced_sink_value,
+        &retained_sink_value,
     ] {
         assert_ne!(control, &runtime);
     }
@@ -277,37 +274,24 @@ int main(void){
             (&extra_receive, 4),
             (&early_remove, 26),
             (&no_sink_drop, 40),
-            (&traced_sink_value, 38),
+            (&retained_sink_value, 38),
         ] {
             fwp::cgen::compile_c(&format!("{control}\n{probe}"), &exe, opt).unwrap();
-            let out = Command::new(&exe)
-                .env("FWP_REUSE_VERIFY", "1")
-                .output()
-                .unwrap();
+            let out = Command::new(&exe).output().unwrap();
             assert_eq!(out.status.code(), Some(code));
         }
         fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", poison)
-                .output()
-                .unwrap();
-            assert!(
-                out.status.success(),
-                "exit {:?}: {}",
-                out.status.code(),
-                String::from_utf8_lossy(&out.stderr)
-            );
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(
+            out.status.success(),
+            "exit {:?}: {}",
+            out.status.code(),
+            String::from_utf8_lossy(&out.stderr)
+        );
+
         fwp::cgen::compile_c(&emitted, &exe, opt).unwrap();
-        let out = Command::new(&exe)
-            .env("FWP_GC_STRESS", "1")
-            .env("FWP_GC_VERIFY", "1")
-            .env("FWP_REUSE_VERIFY", "1")
-            .output()
-            .unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(out.status.code(), reference.status.code());
         assert_eq!(out.stdout, reference.stdout);
         assert_eq!(out.stderr, reference.stderr);

@@ -94,7 +94,7 @@ int main(void) {{
     for opt in ["-O1", "-O2"] {
         let binary = dir.join(format!("semantic{opt}"));
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-        let output = checked(Command::new(binary).env("FWP_REUSE_VERIFY", "0"));
+        let output = checked(&mut Command::new(binary));
         assert_eq!(output.stdout, reference.stdout);
         assert_eq!(output.stderr, reference.stderr);
         let measured = code.replace(
@@ -114,10 +114,7 @@ int main(void) {{
         ] {
             let binary = dir.join(format!("{label}{opt}"));
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let output = Command::new(binary)
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
+            let output = Command::new(binary).output().unwrap();
             assert_eq!(
                 output.status.code(),
                 Some(expected),

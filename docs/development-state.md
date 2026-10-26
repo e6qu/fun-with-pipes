@@ -1,9 +1,8 @@
 # Current work
 
-**Next:** migrate `linalg_ownership`, `channel_queue_ownership` and their C
-fixtures, then finish the remaining test/report/workflow audit below before
-integrated compiler and production validation on runners. This branch is incomplete and
-has not been built. Do not claim GC removal is verified.
+**Next:** finish file constructor/disposal/boundary and remaining test/report
+migrations below, then integrated compiler and production validation on runners.
+The current source has not been built as a compiler. GC removal is not verified.
 
 Worktree: `/private/tmp/fwp-delete-tracing`; branch `delete-tracing-collector`.
 Base: verified #216 squash `f5621cb46828273f7ce8edf92be4062ccec0f17c`.
@@ -19,6 +18,17 @@ compiler-abort report; its handoff points here. Old publisher scripts stay stopp
 
 ## Latest completed edits; execution pending
 
+- Linear algebra: one counted model retains all six solvers, 256 repetitions,
+  allocation-failure positions and alias controls; byte restoration is unconditional.
+  Channel queues now observe physical releases with the allocation ledger instead
+  of reading freed payloads. Cancellation, transfer, growth/retry and sink controls
+  remain; the raw C fixture gives scheduler/task handles explicit owners.
+- C libraries: shutdown reports one exact live-byte count, with matching strict
+  reader and retained static/shared, O1/O2, workspace and unload configurations.
+  Derivative exports use explicit scopes. A separate C-only fixture leaves valid
+  scoped work unfinished for unload. Fixed tape shutdown to unlink those scopes;
+  missing unlink, missing weights and missing shutdown remain deliberate faults.
+  Preemption/timer cases retain every time slice; FFI retains signed-overflow controls.
 - Task layout/cancellation: one counted model, byte-versus-integer flags,
   O0/O2 comparisons and missing-pointer controls. The audit requires twelve
   binaries per host plus eight Windows ABI/context variants.
@@ -81,7 +91,7 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 ## Remaining migration, in order
 
 1. **Finish test mode removal.** A fresh audit still finds old controls in
-   linear algebra/channel queues; file construction/discard/error/storage targets;
+   file construction/discard/error/storage targets;
    list/fold/filter/sort/map/zip targets; numeric fusion/storage/device bounds;
    process/resource frames; AOT/library/preemption/macOS checks. Review their
    actual assertions and paired C fixtures, not just environment names. The list/State/closure fixtures in
@@ -157,6 +167,8 @@ Scripts below live in `/private/tmp` unless a repository path is given.
 | `python3 fwp-check-memory-startup.py` | Migrated harness compiles at Rust O1 with warnings denied; three helper tests pass. Does not run generated memory servers. |
 | `python3 fwp-check-closure-failure.py` | Actual allocator, cleanup queue and trap code, Clang ARM64 O1/O2: normal release passes; capture trap 101, spill OOM 102 and omitted context reset 94. A recovery callback would fail with 93. Does not establish generated-program or other-target support. |
 | `python3 fwp-check-stream-owners.py` | Current runtime, Clang ARM64 O1/O2: eighteen normal size/read-mode cases end with zero charge and all messages freed; omitted cache drop exits 40 at both levels. This uses a minimal C library harness, not generated Rust/library integration or network calls. |
+| `python3 fwp-check-linalg-owners.py` | Current runtime, Clang ARM64 O1/O2: six solvers and partial-allocation failures pass; omitted scratch release exits 222 and omitted result release exits 224. Six runs; generated library/platform validation remains pending. |
+| `python3 fwp-check-library-tape-unload.py` | Current runtime, Clang ARM64 O1/O2, workspace cache off/on: repeated shutdown/restart restores scope links and live bytes. Omitted weights fail 187; omitted unlink fails 186. Twelve runs; this C harness does not verify generated libraries or dynamic unload. |
 | `python3 fwp-check-transpose-owners.py` | Current runtime, Clang ARM64 O1/O2: normal aliases and all fourteen partial-construction failures restore storage; omitted alias retain exits 201 and omitted scratch release exits 202. Six runs pass; generated-program and other-target checks remain pending. |
 | `python3 fwp-check-ad-identity.py` | Current runtime, Clang ARM64 O1/O2: root startup succeeds, cross-task and retired-task use trap 101; repeated IDs or removed checks make controls succeed. No generated Rust-program or other-target claim. |
 | `python3 fwp-check-ad-workspace.py` | Current runtime, Clang ARM64 O1/O2, explicit cache off/on, direct and callback-scoped calls: all eight runs pass, with matching six gradient hashes and cleanup after errors/cancellation. |

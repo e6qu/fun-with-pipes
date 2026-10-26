@@ -77,7 +77,6 @@ int fwp_test_probe(void) {
     fwp_trap_cleanup = 0;
     if (fwp_cleanups != boundary) return 185;
     if (fwp_heap.live > live_bytes || fwp_heap.freed <= freed) return 186;
-    if (fwp_heap.ncollect) return 187;
     fprintf(stderr, "library result retains: keep=0 twin=1; result boxes: keep=0 twin=0\n");
     printf("%lld\n%lld\n%.1f\n%lld\n", (long long)text_length("h\xc3\xa9llo"),
         (long long)summarize((struct fwp_c_Input){7, "abcd"}).count,
@@ -94,7 +93,6 @@ static void fwp_test_finished(void) {
     FILE *file = fopen(path, "ab");
     if (!file) abort();
     /* Called after typed globals and tapes finish, before the arena is freed. */
-    fprintf(file, "%ld %zu\n", (long)(fwp_heap.live),
-        (size_t)fwp_heap.ncollect);
+    fprintf(file, "%zu\n", fwp_heap.live);
     if (fclose(file)) abort();
 }

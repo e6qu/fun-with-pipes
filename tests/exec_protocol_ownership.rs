@@ -226,10 +226,6 @@ fn arc_commands_reclaim_arguments_frames_defaults_and_errors() {
         for ((args, input, binary_out, user, level), reference) in cases.iter().zip(&references) {
             let output = run(
                 Command::new(&binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
                     .env("FWP_TRANSPORT", "stdio")
                     .env("FWP_OUT", if *binary_out { "bin" } else { "text" })
                     .env("FWP_TEST_USER", user)
@@ -251,10 +247,6 @@ fn arc_commands_reclaim_arguments_frames_defaults_and_errors() {
         fwp::cgen::compile_c(&omitted, &binary, opt).unwrap();
         let output = run(
             Command::new(binary)
-                .env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
                 .env("FWP_OUT", "text")
                 .args(["relay", "prefix-"]),
             b"input\n",

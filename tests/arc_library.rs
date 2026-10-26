@@ -17,10 +17,6 @@ fn checked(command: &mut Command) -> Output {
 fn run(binary: &Path, report: &Path, cache: &str) -> Command {
     let mut command = Command::new(binary);
     command
-        .env_remove("FWP_GC")
-        .env("FWP_GC_STRESS", "0")
-        .env("FWP_GC_VERIFY", "0")
-        .env("FWP_REUSE_VERIFY", "0")
         .env("FWP_AD_WORKSPACE", cache)
         .env("FWP_ARC_LIBRARY_REPORT", report);
     command
@@ -51,7 +47,7 @@ fn copied_library_values_match_interpreter_and_reclaim_storage() {
         .unwrap()
         .contains("void fwp_release_twin(struct fwp_c_Words result);"));
     let header = std::fs::read_to_string(cfile.with_extension("h")).unwrap();
-    assert!(source.contains("#define FWP_ARC_ONLY 1"));
+    assert!(!source.contains("FWP_ARC_ONLY"));
     let needle = "    fwp_tape_finish();\n    fwp_heap_finish();";
     assert_eq!(source.matches(needle).count(), 1);
     let box_entry = "static V fwp_data(uint32_t tag, uint32_t n, const V *f) {";
@@ -174,7 +170,7 @@ fn copied_library_values_match_interpreter_and_reclaim_storage() {
                 );
                 assert_eq!(
                     std::fs::read_to_string(&report).unwrap(),
-                    "0 0\n".repeat(if shared { 3 } else { 1 })
+                    "0\n".repeat(if shared { 3 } else { 1 })
                 );
             }
         }
@@ -246,7 +242,7 @@ fn library_checks_every_export_and_rejects_escaping_storage() {
         std::fs::write(&input, source).unwrap();
         for kind in ["--staticlib", "--cdylib"] {
             let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", "--gc=arc", kind, "--emit-c"])
+                .args(["build", kind, "--emit-c"])
                 .arg(&input).arg("-o").arg(dir.path().join("rejected.c"))
                 .output().unwrap();
             assert!(!output.status.success(), "{name} admitted");
