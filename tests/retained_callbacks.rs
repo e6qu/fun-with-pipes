@@ -13,12 +13,7 @@ fn checked(command: &mut Command) -> Output {
 
 fn run(binary: &Path, mode: &str, rounds: &str) -> Command {
     let mut command = Command::new(binary);
-    command
-        .args([mode, rounds])
-        .env_remove("FWP_GC")
-        .env("FWP_REUSE_VERIFY", "0")
-        .env("FWP_GC_VERIFY", "0")
-        .env("FWP_GC_STRESS", "0");
+    command.args([mode, rounds]);
     command
 }
 
@@ -121,23 +116,11 @@ int main(int argc, char **argv) {
         fwp::cgen::compile_library(&source, &header, &shared, opt, fwp::cgen::LibKind::Shared)
             .unwrap();
         for rounds in ["8", "1024"] {
-            checked(
-                Command::new(&loader)
-                    .arg(&shared)
-                    .args(["0", rounds])
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0"),
-            );
+            checked(Command::new(&loader).arg(&shared).args(["0", rounds]));
         }
         let result = Command::new(&loader)
             .arg(&shared)
             .args(["3", "1"])
-            .env_remove("FWP_GC")
-            .env("FWP_GC_STRESS", "0")
-            .env("FWP_GC_VERIFY", "0")
-            .env("FWP_REUSE_VERIFY", "0")
             .output()
             .unwrap();
         assert!(!result.status.success());
@@ -219,11 +202,7 @@ int main(int argc, char **argv) {
     for (flags, diagnostic) in [
         (
             vec!["--c-callback", "keep"],
-            "requires --staticlib/--cdylib and --gc arc",
-        ),
-        (
-            vec!["--staticlib", "--c-callback", "keep"],
-            "requires --staticlib/--cdylib and --gc arc",
+            "requires --staticlib/--cdylib",
         ),
         (
             vec!["--staticlib", "--c-callback", "absent"],

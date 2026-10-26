@@ -30,14 +30,14 @@ commands = {
 }[system]
 expected = {f'task-handles-counted-O{opt}': 0 for opt in [0, 2]}
 expected.update({f'task-handles-counted-O{opt}-missing-queue-owner': 201 for opt in [0, 2]})
-expected.update({f'callback-transfer/{memory}-O{opt}-{variant}': 0
-                 for memory in ['arc', 'tracing'] for opt in [0, 2]
+expected.update({f'callback-transfer/counted-O{opt}-{variant}': 0
+                 for opt in [0, 2]
                  for variant in ['transfer', 'redundant-pair']})
-expected.update({f'clock-owners/{memory}-O{opt}-{variant}': status
-                 for memory in ['arc', 'tracing'] for opt in [0, 2]
+expected.update({f'clock-owners/counted-O{opt}-{variant}': status
+                 for opt in [0, 2]
                  for variant, status in [('protected', 0), ('missing-owner', 3)]})
-expected.update({f'await-fields/{memory}-O{opt}-{variant}': 0
-                 for memory in ['arc', 'tracing'] for opt in [0, 2]
+expected.update({f'await-fields/counted-O{opt}-{variant}': 0
+                 for opt in [0, 2]
                  for variant in ['fields', 'boxed-control']})
 expected.update({f'interop-buffers/counted-{variant}-O{opt}': status
                  for opt in [0, 2] for variant, status in [('released', 0), ('missing-free', 211)]})
@@ -105,21 +105,20 @@ for label, expected_status in sorted(expected.items()):
         elif expected_status == 0:
             assert stdout == b'task captures released\n', label
     report['binaries'][label] = record
-for memory in ['arc', 'tracing']:
-    for opt in [0, 2]:
-        before = report['binaries'][f'callback-transfer/{memory}-O{opt}-redundant-pair']
-        after = report['binaries'][f'callback-transfer/{memory}-O{opt}-transfer']
-        assert before['restored_pairs'] > 0 and after['restored_pairs'] == 0
-        assert before['stdout_sha256'] == after['stdout_sha256']
-        for key, value in after['counters'].items():
-            expected_value = value + before['restored_pairs'] if key == 'retains' else value
-            assert before['counters'][key] == expected_value, (memory, opt, key)
-        boxed = report['binaries'][f'await-fields/{memory}-O{opt}-boxed-control']
-        fields = report['binaries'][f'await-fields/{memory}-O{opt}-fields']
-        assert boxed['restored_boxes'] == 34 and fields['restored_boxes'] == 0
-        assert boxed['stdout_sha256'] == fields['stdout_sha256']
-        assert boxed['counters']['allocation_requests'] - fields['counters']['allocation_requests'] == 34
-        assert boxed['counters']['requested_bytes'] > fields['counters']['requested_bytes']
-        assert boxed['counters']['retains'] == fields['counters']['retains']
+for opt in [0, 2]:
+    before = report['binaries'][f'callback-transfer/counted-O{opt}-redundant-pair']
+    after = report['binaries'][f'callback-transfer/counted-O{opt}-transfer']
+    assert before['restored_pairs'] > 0 and after['restored_pairs'] == 0
+    assert before['stdout_sha256'] == after['stdout_sha256']
+    for key, value in after['counters'].items():
+        expected_value = value + before['restored_pairs'] if key == 'retains' else value
+        assert before['counters'][key] == expected_value, (opt, key)
+    boxed = report['binaries'][f'await-fields/counted-O{opt}-boxed-control']
+    fields = report['binaries'][f'await-fields/counted-O{opt}-fields']
+    assert boxed['restored_boxes'] == 34 and fields['restored_boxes'] == 0
+    assert boxed['stdout_sha256'] == fields['stdout_sha256']
+    assert boxed['counters']['allocation_requests'] - fields['counters']['allocation_requests'] == 34
+    assert boxed['counters']['requested_bytes'] > fields['counters']['requested_bytes']
+    assert boxed['counters']['retains'] == fields['counters']['retains']
 root.joinpath('task-owner-inspection.json').write_text(json.dumps(report, indent=2) + '\n')
 print(f'Inspected {len(expected)} executed task-owner binaries on {system} {architecture}')

@@ -55,7 +55,10 @@ transfer, cancellation and missing-release controls. Decoder, vector, CPU-kernel
 DNS, metrics and ternary-primitive tests now keep all partial-result and resource
 faults in one ownership mode. Resource frames and compiler call-lifetime tests
 keep real release/count checks instead of freed-payload poison checks. The HTTP
-fixed-function binary inspector now expects one collector-free artifact.
+fixed-function binary inspector now expects one collector-free artifact. Retained
+callbacks and task scopes now share one ownership model; the old unowned-spawn
+control is replaced by an extra callback owner. The task binary audit requires
+twenty O0/O2 binaries and preserves exact callback/await cost comparisons.
 
 ## Implemented here; integration still pending
 
