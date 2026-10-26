@@ -21,6 +21,32 @@ Each result belongs to its recorded revision and host. A merged change does not
 refresh an old timing sample. [Delivery history](roadmap-history.md) records merges
 and validation; [PLAN.md](../PLAN.md) owns future optimization work.
 
+## Planned ownership comparisons
+
+These four comparisons belong to plan A/B; no new measurements are claimed here.
+The [ownership direction](gc-removal-design.md) explains why each matters.
+
+| Workload | Equivalent C/Rust work | Question |
+|---|---|---|
+| Unique numeric buffer | One owned buffer, borrowed by helpers, released on every exit | Can fwp eliminate the count field, count updates and uniqueness checks? |
+| Returned partial application | Callable value with the same captured values and lifetime | What storage, dispatch and ownership cost survives specialization? |
+| Subscription with weak back-link | Same registration, expiration, active-call and cancellation rules | What do weak metadata, acquisition and teardown cost? |
+| Recursive parser workspace | Arena builds/walks the same expression graph and releases it per invocation | What does grouped ownership save, and how much dead storage stays until scope exit? |
+
+Measure construction, useful work and cleanup separately and together at small,
+cache-sized and larger inputs. Match checked arithmetic and lifetime behavior;
+report representation differences, compiler/flags/host, repeated elapsed times,
+allocations, count/weak operations, peak live bytes, committed/reserved memory,
+binary size and stack use. Count-instrumented timings are not production timings.
+Existing reports do not provide all these observations; add them before claiming
+the corresponding comparison complete.
+
+Measure the ownership-analysis pass separately from specialization, C generation
+and C compilation on N/2N/4N queues, captures, recursive calls and pipelines.
+Record analyzed IR size, summary updates, specialization count, time and memory;
+set numerical regression budgets from the baseline before increasing precision.
+External language benchmarks motivate experiments, not fwp overhead estimates.
+
 ## Reading a result
 
 Divide fwp time by the named baseline time. `1.25×` means 25% more elapsed time;

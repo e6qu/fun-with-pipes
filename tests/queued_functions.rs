@@ -1,6 +1,177 @@
 //! Queue ownership includes a proved function's captured values and call scope.
 use std::process::{Command, Output};
 
+#[path = "support/ownership_ledger.rs"]
+mod ownership_ledger;
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
+#[test]
+fn weak_channels_preserve_expiration_and_reject_recreated_cycles() {
+    let dir = fwp::cgen::TempDir::new("weak-channels").unwrap();
+    let source = dir.join("main.fwp");
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    std::fs::write(&source, include_str!("fixtures/weak_channels.fwp")).unwrap();
+    let expected = include_str!("fixtures/weak_channels.out");
+    for optimize in [false, true] {
+        let mut command = Command::new(compiler);
+        if optimize {
+            command.env_remove("FWP_NO_OPT");
+        } else {
+            command.env("FWP_NO_OPT", "1");
+        }
+        let reference = checked(command.args(["run", "--interp"]).arg(&source));
+        assert_eq!(reference.stdout, expected.as_bytes());
+        for memory in ["dynamic", "static"] {
+            let cfile = dir.join("main.c");
+            let mut command = Command::new(compiler);
+            if optimize {
+                command.env_remove("FWP_NO_OPT");
+            } else {
+                command.env("FWP_NO_OPT", "1");
+            }
+            checked(
+                command
+                    .args(["build", "--gc", "arc", "--memory", memory, "--emit-c"])
+                    .arg(&source)
+                    .arg("-o")
+                    .arg(&cfile),
+            );
+            let code = std::fs::read_to_string(cfile).unwrap();
+            assert!(code.contains("#define FWP_WEAK_CHANNELS 1"));
+            let code = ownership_ledger::instrument_native(&code, 65536);
+            for opt in ["-O1", "-O2"] {
+                let binary = dir.join("weak.exe");
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                let result = checked(
+                    Command::new(&binary)
+                        .env_remove("FWP_GC")
+                        .env("FWP_GC_STRESS", "0")
+                        .env("FWP_GC_VERIFY", "0")
+                        .env("FWP_REUSE_VERIFY", "0"),
+                );
+                assert_eq!(
+                    result.stdout,
+                    expected.as_bytes(),
+                    "{opt}, optimized={optimize}"
+                );
+            }
+        }
+    }
+    std::fs::write(&source, include_str!("fixtures/weak_channel_cycle.fwp")).unwrap();
+    for optimize in [false, true] {
+        let mut command = Command::new(compiler);
+        if optimize {
+            command.env_remove("FWP_NO_OPT");
+        } else {
+            command.env("FWP_NO_OPT", "1");
+        }
+        let result = command
+            .args(["build", "--gc", "arc", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(dir.join("rejected.c"))
+            .output()
+            .unwrap();
+        assert!(
+            !result.status.success(),
+            "a weak acquisition must not hide a strong cycle"
+        );
+        let error = String::from_utf8_lossy(&result.stderr);
+        assert!(
+            error.contains("captured") && error.contains("channel"),
+            "{error}"
+        );
+    }
+}
+
+#[test]
+fn weak_channel_metadata_expires_before_child_cleanup_and_survives_address_reuse() {
+    let dir = fwp::cgen::TempDir::new("weak-channel-runtime").unwrap();
+    let source = dir.join("main.fwp");
+    let cfile = dir.join("main.c");
+    std::fs::write(&source, include_str!("fixtures/weak_channels.fwp")).unwrap();
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--gc", "arc", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let emitted = std::fs::read_to_string(cfile).unwrap();
+    let mut runtime = ownership_ledger::instrument_native(&emitted, 65536).replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let downgrade = "static V fwp_p_channel_downgrade(V value) {";
+    assert_eq!(runtime.matches(downgrade).count(), 1);
+    runtime = runtime.replace(downgrade, &format!(
+        "static int fail_weak_allocation;\nstatic void weak_alloc_checkpoint(int stage) {{\n    if (fail_weak_allocation == stage) {{ fail_weak_allocation = 0; fwp_trap(\"weak allocation probe\"); }}\n}}\n{downgrade}"
+    ));
+    let metadata = "fwp_mem_alloc(sizeof *weak)";
+    let option = "fwp_some(target)";
+    assert_eq!(runtime.matches(metadata).count(), 1);
+    assert_eq!(runtime.matches(option).count(), 1);
+    runtime = runtime
+        .replace(
+            metadata,
+            "(weak_alloc_checkpoint(1), fwp_mem_alloc(sizeof *weak))",
+        )
+        .replace(option, "(weak_alloc_checkpoint(2), fwp_some(target))");
+    let code = format!(
+        "{runtime}\n{}",
+        include_str!("fixtures/weak_channel_lifetimes.c")
+    );
+    let expire = "        weak->target = 0;";
+    let release = "        fwp_weak_channel_drop(PTR(weak));";
+    assert_eq!(code.matches(expire).count(), 1);
+    assert_eq!(code.matches(release).count(), 1);
+    let no_expire = code.replace(expire, "        /* deliberately missing expiration */");
+    let no_release = code.replace(
+        release,
+        "        /* deliberately missing metadata release */",
+    );
+    let acquire = "    fwp_rc_dup(target);";
+    let result = "    V result = fwp_rc_fresh((weak_alloc_checkpoint(2), fwp_some(target)));";
+    assert_eq!(code.matches(acquire).count(), 1);
+    assert_eq!(code.matches(result).count(), 1);
+    let early_retain = code
+        .replace(acquire, "")
+        .replace(result, &format!("{acquire}\n{result}"));
+    let protect = "    fwp_cleanup_push(&weak_cleanup, fwp_rc_cleanup_cell, &result);";
+    let unprotect = "    fwp_cleanup_pop(&weak_cleanup);";
+    assert_eq!(code.matches(protect).count(), 1);
+    assert_eq!(code.matches(unprotect).count(), 1);
+    let no_result_cleanup = code.replace(protect, "").replace(unprotect, "");
+    for opt in ["-O1", "-O2"] {
+        for (label, candidate, status) in [
+            ("normal", &code, 0),
+            ("missing-expiration", &no_expire, 221),
+            ("missing-metadata-release", &no_release, 222),
+            ("early-retain", &early_retain, 231),
+            ("missing-result-cleanup", &no_result_cleanup, 235),
+        ] {
+            let binary = dir.join("lifetime.exe");
+            fwp::cgen::compile_c(candidate, &binary, opt).unwrap();
+            let result = Command::new(&binary)
+                .env_remove("FWP_GC")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            record_probe::save(
+                "weak_channels",
+                &format!("{label}{opt}"),
+                candidate,
+                &binary,
+                &result,
+            );
+            assert_eq!(result.status.code(), Some(status), "{opt}: {result:?}");
+        }
+    }
+}
+
 fn checked(command: &mut Command) -> Output {
     let result = command.output().unwrap();
     assert!(result.status.success(), "{command:?}: {result:?}");
@@ -63,8 +234,8 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                 let release = "    if (!t->done || t->stack) abort();";
                 let root_release = "        fwp_mem_free(fwp_root);";
                 let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
-                // Library/WASI and executable shutdown each have a root release.
-                for (needle, count) in [(create, 1), (release, 1), (root_release, 2), (finish, 1)] {
+                // WASI, native executable and loaded-library shutdown each release the root.
+                for (needle, count) in [(create, 1), (release, 1), (root_release, 3), (finish, 1)] {
                     assert_eq!(code.matches(needle).count(), count, "{needle}");
                 }
                 code = code

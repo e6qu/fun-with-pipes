@@ -49,6 +49,7 @@
     "reuse_token_ownership",
     "library_resources",
     "foreign_callback_ownership",
+    "retained_callbacks",
     "list_structure_ownership",
     "ffi",
     "map_set_ownership",

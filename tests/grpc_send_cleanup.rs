@@ -19,17 +19,20 @@ fn encoded_messages_release_on_cancel_and_preserve_plain_and_gzip_frames() {
                 body: Body::Prim("tls.available".into()),
             },
             Func {
-                name: "web".into(),
-                arity: 0,
-                locals: vec![],
-                ty: unit,
-                body: Body::Prim("http2.connect".into()),
+                name: "pooled".into(),
+                arity: 1,
+                locals: vec![MT::con("std::String")],
+                ty: MT::Fun(
+                    Box::new(MT::con("std::String")),
+                    Box::new(MT::con("std::Bool")),
+                ),
+                body: Body::Prim("http2.pooled".into()),
             },
         ],
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_send").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_send", &[]).unwrap();
     let send = "int r = g_send_data(c, s, b.d, b.len, end);";
     assert_eq!(generated.matches(send).count(), 1);
     let generated = generated.replacen(

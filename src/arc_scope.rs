@@ -75,7 +75,7 @@ fn has_functions(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> bool {
         MT::Record(fields) => fields
             .iter()
             .any(|(_, field)| has_functions(program, field, seen)),
-        MT::Con(name, _) if name == "std::Ptr" => false,
+        MT::Con(name, _) if matches!(name.as_str(), "std::Ptr" | "std::WeakChannel") => false,
         MT::Con(name, args) => {
             name == "?"
                 || args.iter().any(|arg| has_functions(program, arg, seen))
@@ -106,7 +106,7 @@ fn has_owner_channels(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> bo
         MT::Record(fields) => fields
             .iter()
             .any(|(_, field)| has_owner_channels(program, field, seen)),
-        MT::Con(name, _) if name == "std::Ptr" => false,
+        MT::Con(name, _) if matches!(name.as_str(), "std::Ptr" | "std::WeakChannel") => false,
         MT::Con(name, args) => {
             name == "?"
                 || (name == "std::Channel"
@@ -152,7 +152,7 @@ fn has_channels(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> bool {
     match ty {
         MT::Fun(..) | MT::Nat(_) => false,
         MT::Record(fields) => fields.iter().any(|(_, ty)| has_channels(program, ty, seen)),
-        MT::Con(name, _) if name == "std::Ptr" => false,
+        MT::Con(name, _) if matches!(name.as_str(), "std::Ptr" | "std::WeakChannel") => false,
         MT::Con(name, args) => {
             name == "std::Channel"
                 || name == "?"
@@ -179,7 +179,7 @@ fn has_tasks(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> bool {
     match ty {
         MT::Fun(..) | MT::Nat(_) => false,
         MT::Record(fields) => fields.iter().any(|(_, ty)| has_tasks(program, ty, seen)),
-        MT::Con(name, _) if name == "std::Ptr" => false,
+        MT::Con(name, _) if matches!(name.as_str(), "std::Ptr" | "std::WeakChannel") => false,
         MT::Con(name, args) => {
             name == "std::Task"
                 || name == "?"
@@ -213,7 +213,7 @@ fn queued_capture_type(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> R
             }
             Ok(())
         }
-        MT::Con(name, _) if name == "std::Ptr" => Ok(()),
+        MT::Con(name, _) if matches!(name.as_str(), "std::Ptr" | "std::WeakChannel") => Ok(()),
         MT::Con(name, args) => {
             if matches!(
                 name.as_str(),
@@ -892,6 +892,17 @@ impl Proof<'_> {
             }
             Body::Prim(symbol) if symbol == "channel.make" => {
                 Ok(Targets::from([Origin::Queue(id)]))
+            }
+            // A weak value owns only expiration metadata, never its target or
+            // queued payload. Upgrading restores a real owner. Until the proof
+            // tracks target identity through weak values, treat its producer as
+            // unknown, never as an empty set of captures.
+            Body::Prim(symbol) if symbol == "channel.downgrade" => Ok(Targets::new()),
+            Body::Prim(symbol) if symbol == "channel.upgrade" => {
+                Ok(Targets::from([unknown_queue(
+                    self.program,
+                    function.ty.params(function.arity as usize).1,
+                )]))
             }
             Body::Prim(symbol) if symbol == "channel.close" => Ok(Targets::new()),
             Body::Prim(symbol) if symbol == "fail" => {

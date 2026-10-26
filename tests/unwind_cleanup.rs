@@ -2,6 +2,11 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/ownership_ledger.rs"]
+mod ownership_ledger;
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -107,6 +112,9 @@ static void sleeping_body(void *arg, int cancelled) {
     abort(); /* cancellation must bypass normal return */
 }
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
     fwp_gc_start(__builtin_frame_address(0));
     fwp_fns = probe_fns;
     fwp_cleanup normal;
@@ -167,7 +175,7 @@ int main(void) {
 }
 "#;
     for opt in ["-O1", "-O2"] {
-        let exe = dir.0.join(opt);
+        let exe = dir.0.join(format!("{opt}.exe"));
         fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
         for poison in ["0", "1"] {
             let out = checked(
@@ -203,7 +211,8 @@ fn scoped_files_close_on_return_error_trap_and_cancellation() {
         "int original_main(int argc, char **argv)",
     );
     let probe = r#"
-static volatile int file_mode, open_fd, cancelled_calls;
+static volatile int file_mode, cancelled_calls;
+static intptr_t open_fd;
 static volatile V open_handle, file_path;
 static jmp_buf file_trap;
 static int file_recover(void) {
@@ -211,9 +220,26 @@ static int file_recover(void) {
     fwp_trap_cleanup = 0;
     return 1;
 }
+static void remember_file(FILE *file) {
+#ifdef _WIN32
+    open_fd = _get_osfhandle(_fileno(file));
+#else
+    open_fd = fileno(file);
+#endif
+}
+static int descriptor_closed(void) {
+#ifdef _WIN32
+    DWORD flags;
+    SetLastError(0);
+    return !GetHandleInformation((HANDLE)open_fd, &flags) && GetLastError() == ERROR_INVALID_HANDLE;
+#else
+    errno = 0;
+    return fcntl((int)open_fd, F_GETFD) == -1 && errno == EBADF;
+#endif
+}
 static V file_body(V *args) {
     open_handle = args[0];
-    open_fd = fileno(((fwp_file *)(uintptr_t)args[0])->f);
+    remember_file(((fwp_file *)(uintptr_t)args[0])->f);
     if (file_mode == 1) fwp_fail(FWP_UNIT, 0);
     if (file_mode == 2) {
         V wait = fwp_data(0, 1, (V[]){INT64_MAX});
@@ -232,9 +258,12 @@ static void file_task(void *arg, int cancelled) {
 static int closed(void) {
     errno = 0;
     return !((fwp_file *)(uintptr_t)open_handle)->f &&
-        fcntl(open_fd, F_GETFD) == -1 && errno == EBADF && !fwp_cleanups;
+        descriptor_closed() && !fwp_cleanups;
 }
 int main(int argc, char **argv) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
     if (argc != 2) return 1;
     fwp_gc_start(__builtin_frame_address(0));
     fwp_fns = file_fns;
@@ -250,7 +279,7 @@ int main(int argc, char **argv) {
     /* A recoverable failure before handle allocation must close the stream too. */
     FILE *early = tmpfile();
     if (!early) return 9;
-    open_fd = fileno(early);
+    remember_file(early);
     fwp_file_cleanup early_file = {early, 0};
     fwp_cleanup early_cleanup;
     fwp_cleanup_push(&early_cleanup, fwp_close_scoped_file, &early_file);
@@ -274,7 +303,7 @@ int main(int argc, char **argv) {
 }
 "#;
     for opt in ["-O1", "-O2"] {
-        let exe = dir.0.join(opt);
+        let exe = dir.0.join(format!("{opt}.exe"));
         fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
         for poison in ["0", "1"] {
             let out = checked(
@@ -310,10 +339,18 @@ main = [
     "{}" | file.open | file.read-all | second file.close | .0 | echo,
 ] | ignore
 "#,
-            data.display(),
-            missing.display(),
-            dir.0.join("direct.txt").display(),
-            dir.0.join("direct.txt").display()
+            data.display().to_string().replace('\\', "\\\\"),
+            missing.display().to_string().replace('\\', "\\\\"),
+            dir.0
+                .join("direct.txt")
+                .display()
+                .to_string()
+                .replace('\\', "\\\\"),
+            dir.0
+                .join("direct.txt")
+                .display()
+                .to_string()
+                .replace('\\', "\\\\")
         ),
     )
     .unwrap();
@@ -327,23 +364,125 @@ main = [
     assert!(reference
         .stdout
         .starts_with(b"Ok \"scoped file contents\"\nErr "));
-    for opt in ["-O1", "-O2"] {
-        let exe = dir.0.join(opt);
-        checked(
-            Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
-                .arg(&src)
-                .args([opt, "-o"])
-                .arg(&exe),
-        );
-        for poison in ["0", "1"] {
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
+    for mode in ["arc", "tracing"] {
+        for opt in ["-O1", "-O2"] {
+            let exe = dir.0.join(format!("{opt}.exe"));
+            checked(
+                Command::new(fwp)
+                    .args(["build", "--gc", mode])
+                    .arg(&src)
+                    .args([opt, "-o"])
+                    .arg(&exe),
             );
-            assert_eq!(out.stdout, reference.stdout, "{opt}, poison={poison}");
+            for poison in if mode == "arc" {
+                &["0"][..]
+            } else {
+                &["0", "1"][..]
+            } {
+                let out = checked(
+                    Command::new(&exe)
+                        .env_remove("FWP_GC")
+                        .env("FWP_GC_STRESS", if mode == "arc" { "0" } else { "1" })
+                        .env("FWP_GC_VERIFY", if mode == "arc" { "0" } else { "1" })
+                        .env("FWP_REUSE_VERIFY", poison),
+                );
+                assert_eq!(out.stdout, reference.stdout, "{opt}, poison={poison}");
+            }
+        }
+    }
+}
+
+#[test]
+fn owned_unwind_releases_values_files_and_tasks_without_tracing() {
+    let dir = Scratch::new("owned-unwind");
+    let src = dir.0.join("probe.fwp");
+    let cfile = dir.0.join("probe.c");
+    std::fs::write(&src, "main = task.yield () | echo\n").unwrap();
+    for memory in ["dynamic", "static"] {
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .args(["build", "--gc", "arc", "--memory", memory, "--emit-c"])
+                .arg(&src)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let runtime = ownership_ledger::instrument_native(&emitted, 65536).replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        );
+        let source = format!("{runtime}\n{}", include_str!("fixtures/owned_unwind.c"));
+        let file = dir.0.join("scoped.txt");
+        for opt in ["-O1", "-O2"] {
+            let binary = dir.0.join(format!("{memory}{opt}.exe"));
+            fwp::cgen::compile_c(&source, &binary, opt).unwrap();
+            for rounds in ["8", "1024"] {
+                let result = Command::new(&binary)
+                    .arg(&file)
+                    .arg(rounds)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                let label = format!("{memory}{opt}-{rounds}");
+                record_probe::save("unwind_cleanup", &label, &source, &binary, &result);
+                assert!(result.status.success(), "{label}: {result:?}");
+            }
+        }
+        for (name, broken, expected) in [
+            (
+                "value",
+                source.replace("    fwp_rc_free_obj(owner->value);", ""),
+                231,
+            ),
+            (
+                "unwind",
+                source.replace(
+                    "    fwp_cleanup_unwind(fwp_handlers->cleanup);",
+                    "    fwp_cleanups = fwp_handlers->cleanup; /* omit releases */",
+                ),
+                232,
+            ),
+            (
+                "close",
+                source.replace(
+                    "static V fwp_p_file_close(V h) {",
+                    "static V fwp_p_file_close(V h) { return FWP_UNIT;",
+                ),
+                235,
+            ),
+            (
+                "file-storage",
+                source.replace("    fwp_file_drop(handle);", ""),
+                236,
+            ),
+        ] {
+            assert_ne!(broken, source, "{name}");
+            let binary = dir.0.join(format!("{memory}-{name}.exe"));
+            fwp::cgen::compile_c(&broken, &binary, "-O2").unwrap();
+            let result = Command::new(&binary)
+                .arg(&file)
+                .arg("8")
+                .env_remove("FWP_GC")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            record_probe::save(
+                "unwind_cleanup",
+                &format!("{memory}-{name}"),
+                &broken,
+                &binary,
+                &result,
+            );
+            assert_eq!(
+                result.status.code(),
+                Some(expected),
+                "{memory}/{name}: {result:?}"
+            );
         }
     }
 }

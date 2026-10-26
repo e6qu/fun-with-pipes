@@ -1262,6 +1262,26 @@ static void fwp_fiber_tasks_finish(void) {
     fwp_root = fwp_cur = 0;
 }
 #else
+/* No task can still hold a descriptor wait list at scheduler shutdown.
+ * A host-owned descriptor can remain open, so close notifications cannot be
+ * responsible for releasing this library's now-unused epoll bookkeeping. */
+static void fwp_waiters_finish(void) {
+#ifdef __linux__
+    for (size_t i = 0; i < fwp_nfdws; i++) {
+        fwp_fdw *waiter = fwp_fdws[i];
+        if (!waiter) continue;
+        if (waiter->rd.head || waiter->wr.head) abort();
+        fwp_mem_free(waiter);
+    }
+    fwp_mem_free(fwp_fdws);
+    fwp_fdws = NULL;
+    fwp_nfdws = fwp_live_fdws = 0;
+#else
+    if (fwp_poll_waits || fwp_poll_fds || fwp_poll_cap) abort();
+#endif
+    if (fwp_io_waiting) abort();
+}
+
 /* Executable shutdown releases scheduler storage too. Libraries retain their
  * separate unload path; this runs only after the last command and CAF cleanup. */
 static void fwp_native_tasks_finish(void) {
@@ -1286,6 +1306,7 @@ static void fwp_native_tasks_finish(void) {
     if (fwp_epfd >= 0) close(fwp_epfd);
 #endif
     fwp_epfd = -1;
+    fwp_waiters_finish();
     if (fwp_root) {
         if (fwp_root->first_child || fwp_root->st || fwp_state_len || fwp_state_owners)
             abort();
@@ -1535,6 +1556,20 @@ static V fwp_p_task_scope_borrowed(V body, void (*drop)(V)) {
 
 /* ----- channels */
 
+#ifdef FWP_WEAK_CHANNELS
+#ifndef FWP_ARC_ONLY
+#error weak channels require checked ownership
+#endif
+/* The channel owns one metadata reference; every weak value owns another.
+ * Metadata never owns the target. Final channel release clears target before
+ * destroying any queued value, so reentrant cleanup cannot resurrect it. */
+typedef struct { V target; } fwp_weak_channel;
+
+static void fwp_weak_channel_drop(V value) {
+    if (fwp_rc_release_last(value)) fwp_rc_free_arr(value);
+}
+#endif
+
 /* a ring buffer of `size` slots, grown on demand up to the capacity
  * (so a huge capacity costs nothing until the channel fills up) */
 typedef struct {
@@ -1551,6 +1586,9 @@ typedef struct {
         void (*queue_drop)(V);
         void (*sink_drop)(void *ctx);
     } owner;
+#ifdef FWP_WEAK_CHANNELS
+    fwp_weak_channel *weak;
+#endif
 } fwp_chan;
 
 static V fwp_p_channel_make(V capv) {
@@ -1573,6 +1611,14 @@ static void fwp_channel_drop(V value) {
     if (!fwp_rc_release_last(value)) return;
     fwp_chan *c = (fwp_chan *)(uintptr_t)value;
     if (c->sendq.head || c->recvq.head) abort();
+#ifdef FWP_WEAK_CHANNELS
+    if (c->weak) {
+        fwp_weak_channel *weak = c->weak;
+        c->weak = NULL;
+        weak->target = 0;
+        fwp_weak_channel_drop(PTR(weak));
+    }
+#endif
     if (c->sink) {
         void (*drop)(void *) = c->owner.sink_drop;
         void *context = c->sink_ctx;
@@ -1593,6 +1639,37 @@ static void fwp_channel_drop(V value) {
     }
     fwp_rc_resource_free_arr(value);
 }
+
+#ifdef FWP_WEAK_CHANNELS
+static V fwp_p_channel_downgrade(V value) {
+    fwp_chan *c = (fwp_chan *)(uintptr_t)value;
+    if (!c->weak) {
+        fwp_weak_channel *weak = (fwp_weak_channel *)fwp_mem_alloc(sizeof *weak);
+        fwp_rc_fresh(PTR(weak)); /* the channel's metadata owner */
+        weak->target = value;
+        c->weak = weak;
+    }
+    fwp_rc_dup(PTR(c->weak)); /* the returned weak owner */
+    return PTR(c->weak);
+}
+
+static V fwp_p_channel_upgrade(V value) {
+    fwp_weak_channel *weak = (fwp_weak_channel *)(uintptr_t)value;
+    V target = weak->target;
+    if (!target) return FWP_NONE;
+    /* The scheduler executes one task at a time. This operation neither ticks
+     * nor suspends; final release cannot run between the read and the retain.
+     * Reserve the result first: allocation failure leaves ownership unchanged. */
+    V result = fwp_rc_fresh(fwp_some(target));
+    /* The target becomes a child owner only after its retain succeeds. Until
+     * then, an overflowing count must release just the unfinished outer cell. */
+    fwp_cleanup weak_cleanup;
+    fwp_cleanup_push(&weak_cleanup, fwp_rc_cleanup_cell, &result);
+    fwp_rc_dup(target);
+    fwp_cleanup_pop(&weak_cleanup);
+    return result;
+}
+#endif
 
 static void fwp_chan_grow(fwp_chan *c) {
     size_t n = c->size ? c->size * 2 : 16;
@@ -2427,6 +2504,7 @@ static void fwp_library_tasks_finish(void) {
         }
     }
     fwp_free_zombie();
+    fwp_tasks_finish();
 #ifdef _WIN32
     if (fwp_root) fwp_win_context_root_finish(&fwp_root->ctx);
 #elif !defined(FWP_STATIC_MEMORY)
@@ -2436,18 +2514,17 @@ static void fwp_library_tasks_finish(void) {
     if (fwp_epfd >= 0) close(fwp_epfd);
 #endif
     fwp_epfd = -1;
-#ifdef __linux__
-    fwp_fdws = 0;
-    fwp_nfdws = 0;
-    fwp_live_fdws = 0;
-#else
-    if (fwp_poll_waits) abort(); /* every parked stack was drained above */
-    if (fwp_poll_fds || fwp_poll_cap) abort();
-#endif
-    fwp_io_waiting = 0;
+    fwp_waiters_finish();
 #ifdef FWP_LIBC_CONTEXT
     if (fwp_root) memset(&fwp_root_context, 0, sizeof fwp_root_context);
 #endif
+    /* The root belongs to this loaded library, not to the heap reservation.
+     * Release it explicitly while allocation accounting is still available. */
+    if (fwp_root) {
+        if (fwp_root->first_child || fwp_root->st || fwp_state_len || fwp_state_owners)
+            abort();
+        fwp_mem_free(fwp_root);
+    }
     fwp_cur = fwp_root = fwp_zombie = 0;
     fwp_gc_tasks = fwp_ready_head = fwp_ready_tail = fwp_timers = 0;
     fwp_cleanups = 0;

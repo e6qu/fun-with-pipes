@@ -19,17 +19,20 @@ fn served_buffers_release_on_decode_encode_traps_and_cancelled_send() {
                 body: Body::Prim("tls.available".into()),
             },
             Func {
-                name: "web".into(),
-                arity: 0,
-                locals: vec![],
-                ty: unit,
-                body: Body::Prim("http2.connect".into()),
+                name: "pooled".into(),
+                arity: 1,
+                locals: vec![MT::con("std::String")],
+                ty: MT::Fun(
+                    Box::new(MT::con("std::String")),
+                    Box::new(MT::con("std::Bool")),
+                ),
+                body: Body::Prim("http2.pooled".into()),
             },
         ],
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_response").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_response", &[]).unwrap();
     let generated = generated.replacen("} fwp_owned_fninfo;",
         "} fwp_owned_fninfo;\nstatic V probe_method_entry(V *a){(void)a;return 0;}\nstatic const fwp_owned_fninfo probe_method_types={.entry=probe_method_entry};\nstatic void probe_result_drop(V value){(void)value;}", 1);
     let start = generated.find("static int g_run_method(").unwrap();
@@ -238,11 +241,14 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
                 body: Body::Prim("tls.available".into()),
             },
             Func {
-                name: "web".into(),
-                arity: 0,
-                locals: vec![],
-                ty: unit.clone(),
-                body: Body::Prim("http2.connect".into()),
+                name: "pooled".into(),
+                arity: 1,
+                locals: vec![MT::con("std::String")],
+                ty: MT::Fun(
+                    Box::new(MT::con("std::String")),
+                    Box::new(MT::con("std::Bool")),
+                ),
+                body: Body::Prim("http2.pooled".into()),
             },
             // Keep concrete owning entries for the methods and continuations.
             Func {
@@ -317,7 +323,7 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "served_values").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "served_values", &[]).unwrap();
     let begin = generated.find("static int g_run_method(").unwrap();
     let end = begin
         + generated[begin..]
@@ -453,17 +459,20 @@ fn native_output_channels_borrow_values_and_release_context() {
                 body: Body::Prim("tls.available".into()),
             },
             Func {
-                name: "web".into(),
-                arity: 0,
-                locals: vec![],
-                ty: unit,
-                body: Body::Prim("http2.connect".into()),
+                name: "pooled".into(),
+                arity: 1,
+                locals: vec![MT::con("std::String")],
+                ty: MT::Fun(
+                    Box::new(MT::con("std::String")),
+                    Box::new(MT::con("std::Bool")),
+                ),
+                body: Body::Prim("http2.pooled".into()),
             },
         ],
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "output_channels").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "output_channels", &[]).unwrap();
     let encode = "g_encode(&k->enc, x, k->tag, &b);";
     assert_eq!(generated.matches(encode).count(), 1);
     let declaration = "static void channel_encode(V,h2_buf *);\n";
@@ -477,8 +486,8 @@ fn native_output_channels_borrow_values_and_release_context() {
     let fixture = include_str!("fixtures/grpc_output_channel.c");
     let controls = [
         (
-            "        drop(context);",
-            "/* omit native context release */",
+            "        c->owner.sink_drop = NULL;\n        drop(context);",
+            "        c->owner.sink_drop = NULL;\n        /* omit native context release */",
             0,
             232,
         ),

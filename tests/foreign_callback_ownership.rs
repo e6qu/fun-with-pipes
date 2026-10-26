@@ -1,6 +1,9 @@
 //! Scoped C borrows and callbacks retain typed owners through reentry/unwind.
 use std::process::{Command, Output};
 
+#[path = "support/ownership_ledger.rs"]
+mod ownership_ledger;
+
 fn checked(command: &mut Command) -> Output {
     let output = command.output().unwrap();
     assert!(output.status.success(), "{command:?}: {output:?}");
@@ -162,6 +165,7 @@ main = [
                 ),
         );
         if gc == "arc" {
+            code = ownership_ledger::instrument_native(&code, 65536);
             let start = code
                 .find("static void *fwp_main_thread(void *arg) {")
                 .unwrap();
@@ -294,6 +298,9 @@ test "after" = True
             ..Default::default()
         });
         let mut code = fwp::cgen::generate_tests(&program).unwrap();
+        if arc {
+            code = ownership_ledger::instrument_native(&code, 65536);
+        }
         let marker = "    /* Ownership observation point: before runtime teardown. */";
         assert_eq!(code.matches(marker).count(), 1);
         let check = if arc {

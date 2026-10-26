@@ -247,9 +247,12 @@ int main(void){
     let early_remove=runtime.replace(
         "V result = form == FWP_CHANNEL_RESULT_BOXED ? fwp_rc_fresh(channel_option(x)) : x;\n            c->buf[c->head] = 0;\n            c->head = (c->head + 1) % c->size;\n            c->len--;",
         "c->buf[c->head] = 0;\n            c->head = (c->head + 1) % c->size;\n            c->len--;\n            V result = form == FWP_CHANNEL_RESULT_BOXED ? fwp_rc_fresh(channel_option(x)) : x;");
-    let no_sink_drop = runtime.replace(
-        "        drop(context);",
-        "/* omit native context release */",
+    let sink_drop = "        c->owner.sink_drop = NULL;\n        drop(context);";
+    assert_eq!(runtime.matches(sink_drop).count(), 1);
+    let no_sink_drop = runtime.replacen(
+        sink_drop,
+        "        c->owner.sink_drop = NULL;\n        /* omit native context release */",
+        1,
     );
     let traced_sink_value = runtime.replace(
         "if (!c->closed) result = c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;",

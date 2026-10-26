@@ -19,17 +19,20 @@ fn scoped_tls_options_release_after_callbacks_and_escaped_tasks() {
                 body: Body::Prim("tls.available".into()),
             },
             Func {
-                name: "web".into(),
-                arity: 0,
-                locals: vec![],
-                ty: unit,
-                body: Body::Prim("http2.connect".into()),
+                name: "pooled".into(),
+                arity: 1,
+                locals: vec![MT::con("std::String")],
+                ty: MT::Fun(
+                    Box::new(MT::con("std::String")),
+                    Box::new(MT::con("std::Bool")),
+                ),
+                body: Body::Prim("http2.pooled".into()),
             },
         ],
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_resources").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_resources", &[]).unwrap();
     assert!(generated.contains("#define FWP_GCTX_OWNERS 1"));
     let mut generated = generated;
     let start = generated.find("static g_tls *g_tls_new(").unwrap();
@@ -187,7 +190,7 @@ int main(void){
         exports: vec![("yield".into(), 0)],
         ..Program::default()
     };
-    let (plain, _) = fwp::cgen::generate_library(&pure, "plain_tasks").unwrap();
+    let (plain, _) = fwp::cgen::generate_library(&pure, "plain_tasks", &[]).unwrap();
     assert!(!plain.contains("#define FWP_GCTX_OWNERS 1"));
     fwp::cgen::compile_c(
         &format!("{plain}\nint main(void){{fwp_lib_init();fwp_lib_finish();return 0;}}"),

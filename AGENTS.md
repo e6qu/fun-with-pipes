@@ -15,8 +15,9 @@ Use [CONTRIBUTING.md](CONTRIBUTING.md) for repository conventions and test locat
 
 - Remove tracing garbage collection (GC). Prefer compile-time ownership, moves,
   borrowing, stack storage and unique reuse; reserve automatic reference
-  counting (ARC) for necessary sharing. Never substitute tracing or permanent
-  retention for a rejected lifetime proof.
+  counting (ARC) for sharing. Follow the [accepted direction](docs/gc-removal-design.md):
+  explicit weak links, reject unproved owning cycles, regions for bounded work.
+  Never replace a rejected lifetime proof with tracing or permanent retention.
 - Preserve simple tacit, curried, data-last pipes, single-argument functions,
   strong ordinary inference, explicit generic signatures and specialization.
   Keep immutable values, tracked effects, checked arithmetic and evaluation/trap
@@ -36,8 +37,8 @@ Use [CONTRIBUTING.md](CONTRIBUTING.md) for repository conventions and test locat
 
 ## Early pre-alpha: no backward compatibility requirement
 
-Source APIs, internal layouts, calling conventions, binary formats and the ABI
-may change. Do not preserve old representations or add adapters, wrappers,
+All APIs, layouts, calling conventions and binary formats may break freely.
+Builds must not depend on a previous fwp version or self-hosting. Do not add adapters,
 fallbacks or migration paths solely for older code or already compiled binaries.
 Rebuild affected programs/libraries with the matching compiler, and update tests,
 examples and docs together. Preserve agreed semantics, memory safety and correct
@@ -49,6 +50,8 @@ implementation of currently supported external protocols.
   at a time. Fix every encountered issue immediately, including unrelated or
   pre-existing issues, regardless of who caused them. Do not hide or defer fixes;
   record the repair and verification. Queued CI gates merging, not independent work.
+- Bundle G3/G4 in one PR. Run only necessary focused checks during implementation;
+  after G4, validate locally under the guard and run the full final-head CI matrix.
 - Before pushing a CI repair, audit every failed job and completed test target,
   fix underlying causes and check affected callers. Batch all known fixes into
   one push; preserve passing final heads while their remaining gates run.

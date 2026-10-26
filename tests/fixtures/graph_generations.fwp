@@ -1,0 +1,46 @@
+# A key names one incarnation of a slot in a particular graph snapshot.
+# Edges contain keys, not owners of nodes or the graph.
+Key = { slot: I64, generation: I64 }
+Node = { label: String, links: List[Key] }
+Slot = { generation: I64, node: Option[Node] }
+Graph = Map[I64, Slot]
+
+same-generation : Key -> Slot -> Bool
+same-generation = .generation | eq | compose .generation
+
+lookup : Key -> Graph -> Option[Node]
+lookup = curry (fork option.filter (.0 | same-generation) (fork map.get (.0 | .slot) .1)
+    | option.and-then .node)
+
+old-key : Key
+old-key = Key { slot = 0, generation = 0 }
+new-key : Key
+new-key = Key { slot = 0, generation = 1 }
+empty-slot : Slot
+empty-slot = Slot { generation = 0, node = None }
+
+graph : Graph
+graph = map.empty | map.insert 0 Slot { generation = 0,
+    node = Some Node { label = "first", links = [old-key] } }
+
+# This bounded example has one reusable slot. Deletion releases the node but
+# retains its generation; checked addition traps instead of wrapping identity.
+erase : Graph -> Graph
+erase = map.update 0 (update { generation = add 1, node = const None }) empty-slot
+
+reuse : Graph -> Graph
+reuse = erase | map.update 0
+    (with { node = Some Node { label = "replacement", links = [old-key] } }) empty-slot
+
+main = [
+    graph | lookup old-key | option.map .label | echo,
+    graph | erase | lookup old-key | option.is-none | echo,
+    graph | reuse | lookup old-key | option.is-none | echo,
+    graph | reuse | lookup new-key | option.map .label | echo,
+    graph | lookup new-key | option.is-none | echo,
+    graph | reuse | lookup new-key | option.map (.links | length) | echo,
+    graph | both id reuse | .0 | lookup old-key | option.map .label | echo,
+    graph | reuse | reuse | lookup new-key | option.is-none | echo,
+    range 0 64 | fold (flip (const reuse)) graph
+        | lookup Key { slot = 0, generation = 64 } | option.map .label | echo,
+] | ignore

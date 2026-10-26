@@ -468,7 +468,9 @@ fn check_expr<'a>(
                 if !seen.insert(*l) {
                     return Err(format!("duplicate resource owner local {}", l));
                 }
-                if !crate::resource::may_hold_resource(shapes, &locals[*l as usize]) {
+                if !crate::resource::may_hold_resource(shapes, &locals[*l as usize])
+                    && !crate::resource::contains_channel(shapes, &locals[*l as usize])
+                {
                     return Err(format!(
                         "resource owner local {} has nonresource type {}",
                         l, locals[*l as usize]

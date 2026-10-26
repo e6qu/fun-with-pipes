@@ -212,4 +212,6 @@ main = [
 ```
 
 See [ownership contracts](../../ownership.md#cycle-and-retention-contract) for the design
-limits and the distinction between scoped ownership and hypothetical weak handles.
+limits. The candidate [weak-channel API](../../weak-channels.md) and
+[graph generation fixture](../../../tests/fixtures/graph_generations.fwp) describe
+the next ownership work and its pending integrated validation.

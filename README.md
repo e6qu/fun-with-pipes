@@ -53,14 +53,18 @@ comparisons with C and Rust and the limits of the evidence.
 
 The remaining [project plan](PLAN.md) targets removal of tracing garbage
 collection and less reference-counting overhead through compile-time ownership,
-borrowing and storage reuse. It also covers measured CPU performance,
+borrowing and storage reuse. The [accepted memory direction](docs/gc-removal-design.md)
+adds explicit weak references for selected objects, rejects unproved owning
+cycles, and uses count-free unique storage and scoped workspaces where suitable.
+These additions are planned, not current features. It also covers measured CPU performance,
 differentiation, numerical kernels and larger example applications. These are
 active goals; the capabilities and limitations above describe today's compiler.
 The [design limits](docs/design-limits.md) explain achievable guarantees and
 tradeoffs. Eligible direct self-tail calls already reuse stack frames in native code and
 the interpreter. Resource-bearing frames and general mutual recursion have
 stricter limits; see [tail calls](docs/design.md#tail-calls-and-recursion).
-General owning-cycle support and complete collector removal remain unfinished.
+Complete collector removal remains unfinished; arbitrary strong-cycle
+reclamation through ordinary reference counting is not promised.
 
 ## Supported platforms
 

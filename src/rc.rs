@@ -59,6 +59,7 @@ pub fn needs_rc(shapes: &Shapes, t: &MT) -> bool {
                         | "std::F128"
                         | "std::Task"
                         | "std::Channel"
+                        | "std::WeakChannel"
                         | "std::GrpcCell"
                         | "std::H2Stream"
                         | "std::File"
@@ -774,7 +775,7 @@ impl Pass<'_> {
                     if !fields.is_empty()
                         && fields.iter().all(|field| matches!(field, Expr::Local(l)
                             if self.borrowed_parameters.contains(l)
-                                && !crate::resource::contains_resource(&self.prog.shapes, &self.locals[*l as usize])))
+                                && !crate::resource::observable_type(&self.prog.funcs, &self.prog.shapes, &self.locals[*l as usize])))
                     {
                         if let Some(forwarded) = self.forward_parameter_record(&body, *local, fields) {
                             // Projections can expose fresh aliases of borrowed
@@ -786,7 +787,8 @@ impl Pass<'_> {
                 if Self::plain_read(&value)
                     && record_fields(&self.prog.shapes, &self.locals[*local as usize]).is_none()
                     && borrows::parameter_type(self.prog, &self.locals[*local as usize])
-                    && !crate::resource::contains_resource(
+                    && !crate::resource::observable_type(
+                        &self.prog.funcs,
                         &self.prog.shapes,
                         &self.locals[*local as usize],
                     )

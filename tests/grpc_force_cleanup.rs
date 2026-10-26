@@ -19,17 +19,20 @@ fn forced_cells_release_received_storage_and_decoder_failure_text() {
                 body: Body::Prim("tls.available".into()),
             },
             Func {
-                name: "web".into(),
-                arity: 0,
-                locals: vec![],
-                ty: unit,
-                body: Body::Prim("http2.connect".into()),
+                name: "pooled".into(),
+                arity: 1,
+                locals: vec![MT::con("std::String")],
+                ty: MT::Fun(
+                    Box::new(MT::con("std::String")),
+                    Box::new(MT::con("std::Bool")),
+                ),
+                body: Body::Prim("http2.pooled".into()),
             },
         ],
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_force").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_force", &[]).unwrap();
     let decode = "g_decode(&src->dec, g->m->d, g->m->n, &x, &why)";
     assert_eq!(generated.matches(decode).count(), 2);
     let generated = generated.replace(decode, "observed_decode(&x, &why)");

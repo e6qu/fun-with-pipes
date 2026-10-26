@@ -19,17 +19,20 @@ fn client_received_buffers_release_on_retry_errors_and_cancelled_waits() {
                 body: Body::Prim("tls.available".into()),
             },
             Func {
-                name: "web".into(),
-                arity: 0,
-                locals: vec![],
-                ty: unit,
-                body: Body::Prim("http2.connect".into()),
+                name: "pooled".into(),
+                arity: 1,
+                locals: vec![MT::con("std::String")],
+                ty: MT::Fun(
+                    Box::new(MT::con("std::String")),
+                    Box::new(MT::con("std::Bool")),
+                ),
+                body: Body::Prim("http2.pooled".into()),
             },
         ],
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_client_receive").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_client_receive", &[]).unwrap();
     let start = generated.find("static V fwp_remote_call(").unwrap();
     let end = start + generated[start..].find("\n/*").unwrap();
     let mut method = generated[start..end].to_owned();

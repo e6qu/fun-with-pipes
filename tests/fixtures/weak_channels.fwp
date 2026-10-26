@@ -1,0 +1,85 @@
+# Weak access observes the original function frame, even after inlining.
+word-channel : I64 -> Channel[I64] ! {Async}
+word-channel = channel.make
+
+alive : Channel[I64] -> Bool ! {Async}
+alive = channel.downgrade | channel.upgrade | option.is-some
+
+closed-alive : Channel[I64] -> Bool ! {Async}
+closed-alive = tap channel.close | alive
+
+expired : () -> WeakChannel[I64] ! {Async}
+expired = const 1 | word-channel | channel.downgrade
+
+callback-channel : I64 -> Channel[() -> Bool ! {Async}] ! {Async}
+callback-channel = channel.make
+
+observe : WeakChannel[() -> Bool ! {Async}] -> () -> Bool ! {Async}
+observe = const | flip compose (channel.upgrade | option.is-some)
+
+install : Channel[() -> Bool ! {Async}] -> Channel[() -> Bool ! {Async}] ! {Async}
+install = tap (both id (channel.downgrade | observe) | uncurry channel.send | ignore)
+
+live-callback : Channel[() -> Bool ! {Async}] -> Option[Bool] ! {Async}
+live-callback = install | channel.recv | option.map (apply ())
+
+escaped-callback : () -> Option[() -> Bool ! {Async}] ! {Async}
+escaped-callback = const 1 | callback-channel | install | channel.recv
+
+wait : Channel[I64] -> () -> () ! {Async}
+wait = const | flip compose (channel.recv | ignore)
+
+spawn-channel : () -> (Task[()], WeakChannel[I64]) ! {Async}
+spawn-channel = const 1 | word-channel | both (wait | task.spawn) channel.downgrade
+
+stop : (Task[()], WeakChannel[I64]) -> Bool ! {Async}
+stop = tap (.0 | task.cancel) | tap (.0 | task.await | ignore)
+    | .1 | channel.upgrade | option.is-none
+
+fail-owner : Channel[I64] -> () ! {Async, Error[WeakChannel[I64]]}
+fail-owner = channel.downgrade | fail
+
+weak-pair : Channel[I64] -> (WeakChannel[I64], WeakChannel[I64]) ! {Async}
+weak-pair = both channel.downgrade channel.downgrade
+
+expired-pair : () -> (WeakChannel[I64], WeakChannel[I64]) ! {Async}
+expired-pair = const 1 | word-channel | weak-pair
+
+WeakBox[a] = { link: WeakChannel[a] }
+boxed : WeakChannel[a] -> WeakBox[a]
+boxed = make { link = id }
+
+# A recursive payload can point back weakly without owning its queue.
+WeakLink = | Back (WeakChannel[WeakLink])
+link-channel : I64 -> Channel[WeakLink] ! {Async}
+link-channel = channel.make
+post-link : Channel[WeakLink] -> Channel[WeakLink] ! {Async}
+post-link = tap (both id (channel.downgrade | Back) | uncurry channel.send | ignore)
+unlink : WeakLink -> WeakChannel[WeakLink]
+unlink = match
+    Back _ -> id
+closed-link : Channel[WeakLink] -> Option[Bool] ! {Async}
+closed-link = post-link | tap channel.close | channel.recv
+    | option.map (unlink | channel.upgrade | option.is-some)
+escaped-link : () -> Option[WeakChannel[WeakLink]] ! {Async}
+escaped-link = const 1 | link-channel | post-link | tap channel.close
+    | channel.recv | option.map unlink
+
+main = [
+    link-channel 1 | closed-link | echo,
+    escaped-link () | option.map (channel.upgrade | option.is-none) | echo,
+    word-channel 1 | weak-pair | uncurry eq | echo,
+    expired-pair () | uncurry eq | echo,
+    both expired expired () | uncurry eq | echo,
+    callback-channel 1 | both channel.downgrade channel.downgrade | uncurry eq | echo,
+    callback-channel 1 | channel.downgrade | boxed | both id id | uncurry eq | echo,
+    word-channel 1 | alive | echo,
+    word-channel 1 | closed-alive | echo,
+    expired () | channel.upgrade | option.is-some | echo,
+    callback-channel 1 | live-callback | echo,
+    escaped-callback () | option.map (apply ()) | echo,
+    spawn-channel () | tap (.1 | channel.upgrade | option.is-some | echo) | stop | echo,
+    word-channel 1 | attempt fail-owner | match
+        Ok _ -> const False | echo
+        Err _ -> channel.upgrade | option.is-none | echo,
+] | ignore

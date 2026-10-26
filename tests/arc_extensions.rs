@@ -13,6 +13,10 @@ fn extended_owners_match_raw_interpreter_and_reclaim() {
     std::fs::create_dir_all(&dir).unwrap();
     let cases = [
         (
+            "graph-generations",
+            include_str!("fixtures/graph_generations.fwp"),
+        ),
+        (
             "csv",
             r#"
 rows : I64 -> List[List[String]]
@@ -132,6 +136,12 @@ main = [
                 .args(["run", "--interp"])
                 .arg(&input),
         );
+        if name == "graph-generations" {
+            assert_eq!(
+                reference.stdout,
+                include_bytes!("fixtures/graph_generations.out")
+            );
+        }
         // The same counted owners coexist with generational tracing. In
         // particular, CSV's private reversed spines can acquire younger links.
         for opt in ["-O1", "-O2"] {

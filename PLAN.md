@@ -5,8 +5,9 @@ immutable values and predictable memory use. Prefer moves, borrows and direct
 values; use automatic reference counting (ARC) only for necessary sharing.
 Remove the tracing garbage collector (GC). JIT compilation is excluded.
 
-This is early pre-alpha: source, layouts and calling conventions may change.
-Preserve language behavior, not backward compatibility. Keep single-argument,
+This is early pre-alpha: every API, layout and calling convention may change.
+Builds must not require a previous fwp version or self-hosting. Preserve agreed
+language behavior; backward compatibility is not a goal. Keep single-argument,
 curried, data-last functions, ordinary type inference, explicit generic signatures,
 checked arithmetic, and observable effect/failure order.
 
@@ -33,16 +34,21 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. Continue **G4** with collector-independent memory checks. The current group
-   adds native live-allocation and reuse diagnostics, faulty-implementation
-   controls and an inventory of collector settings. Keep existing stress and
-   poisoning checks until their replacement coverage is demonstrated.
-2. Finish **G2–G3**'s remaining graph decision before **G5** deletes tracing:
-   retain the current ARC restrictions with scoped tasks/graph IDs, or add an
-   explicit cycle-breaking API first. The user's answer is still pending; the
-   scoped subscriber is already supported. Continue **A2**'s count accounting
-   independently of that decision.
-3. Use **B1** to set per-workload timing budgets before selecting further CPU or
+1. Finish **G2** under the [accepted ownership direction](docs/gc-removal-design.md):
+   inferred moves/borrows, count-free unique storage, ARC for sharing, explicit
+   weak references and rejection of unproved owning cycles. Specify the weak
+   API and six acceptance examples. Current APIs and layouts are replaceable;
+   returned functions and partial applications remain supported.
+2. Implement **G3** and finish **G4** in the same PR; do not publish or validate
+   G3 as a separate completed batch. Include tracing deletion **G5** where
+   practical. Reuse the prepared fault
+   checks; do not repeatedly expand diagnostics instead of removing tracing.
+   Keep existing stress checks until replacement coverage is demonstrated.
+   ARC minimization **A2–A6** is distinct from completing GC removal.
+3. After GC removal, take the **A2** baseline for the unique-buffer fixture and
+   implement **A5**; then use measured costs to order **A3/A4/A6**. General region
+   inference and elimination of every count are not prerequisites for deleting GC.
+4. Use **B1** to set per-workload timing budgets before selecting further CPU or
    differentiation optimizations. Keep slower and inconclusive results visible.
 
 The original intermittent Intel macOS compiler abort remains an open defect.
@@ -57,8 +63,8 @@ The table is an index; the concrete work follows it.
 
 | Step | Milestone | Completion evidence |
 |---|---|---|
-| 1 | Remove tracing GC | G1–G5: explicit supported/rejected lifetime rules, replacement diagnostics, no collector code or tracing execution mode |
-| 2 | Minimize ARC in named unshared paths | A1–A5: per-fixture allocation/count budgets met, sharing and cleanup preserved |
+| 1 | Remove tracing GC | G1–G5: explicit weak links and checked cycle rules, replacement diagnostics, no collector code or tracing execution mode |
+| 2 | Minimize ARC in named unshared paths | A1–A6: count-free unique buffer, bounded scoped workspace and per-fixture budgets; sharing and cleanup preserved |
 | 3 | Remove functional and recursion overhead | F1–F3: direct-call/loop coverage and bounded-stack proofs for stated cases |
 | 4 | Close measured CPU performance gaps | P1–P3: agreed same-host budgets met without changing arithmetic or trap order |
 | 5 | Reduce differentiation cost | D1–D3: derivative correctness and per-size time/storage budgets met |
@@ -72,36 +78,52 @@ The table is an index; the concrete work follows it.
 maps maintained entries to executed checks and precise raw/optimized rejection
 controls. Extend it when adding entries; do not repeat the completed inventory.
 
-**G2 — Set the cycle and retention contract.** Review `src/arc.rs`,
-`src/arc_scope.rs` and the channel/foreign interfaces against G1. Write concrete
-examples for (a) a queued callback owning its receiving channel, (b) a persistent
-subscription, (c) a graph with node deletion, and (d) a C-retained callback.
-Specify who unregisters, when active calls finish, and what happens after owner
-release, failure and cancellation. Keep channel close's existing queued-message
-semantics. Start with independent scopes and non-owning graph IDs. Decide whether
-any maintained use case actually requires a public weak handle; weak handles are
-not an assumed implementation task. If selected, specify expired-target results
-and prevention of reintroducing a strong cycle after acquisition.
-**Done:** each example has an agreed accepted form or precise rejection, with
-no promise to infer arbitrary foreign lifetimes or reclaim arbitrary ARC cycles.
+**G2 — Specify the accepted ownership direction.** Reject unproved owning cycles;
+do not use Swift-style strong-cycle leaks as the reclamation policy. Write the
+six examples in [the design contract](docs/gc-removal-design.md#six-implementation-examples):
+(a) a callback owning its queue,
+(b) a persistent subscription, (c) graph deletion/reuse, (d) C-retained callbacks,
+(e) returned partial applications, and (f) recursive parser/autodiff workspaces.
+Specify cleanup on release/failure/cancellation. Define weak target identities,
+expiration, acquisition versus final release, and rules for storing acquired
+owners. Scope-limited access alone does not prevent a store recreating a cycle.
+Measure current analysis time, IR size, summary updates and specialization count
+at N/2N/4N before increasing precision. Use the
+[design and removal sequence](docs/gc-removal-design.md) as the accepted direction,
+not evidence of implemented APIs.
+**Done:** a written weak contract covers target types, acquisition, expiration,
+release ordering, reuse and concurrency; all six examples have explicit expected
+behavior; the analysis baseline and numeric regression budgets are recorded.
+No promise to infer arbitrary foreign lifetimes or reclaim arbitrary ARC cycles.
 
 Delivered G2–G3 subset (#213): [the cycle contract](docs/ownership.md#cycle-and-retention-contract)
 and [lesson 24](docs/tutorials/24-subscriptions/README.md) specify a streaming,
 task-owned subscriber using existing primitives. `tests/arc_tasks.rs` now checks
 failure, active/unstarted cancellation, reentry, repeated awaits and per-round
 reclamation, with deliberately broken cleanup controls. All nine production jobs
-and documentation passed. The tracing-only queue/task/stream decisions in
-[the admission matrix](docs/ownership-admission.md) remain separate unfinished work.
+and documentation passed. The [admission matrix](docs/ownership-admission.md) records the accepted
+queue/task/stream restrictions; weak alternatives await integrated validation.
 
-**G3 — Implement the missing agreed contracts.** For each accepted G2 form, add
-its proof in `src/arc_scope.rs`/`src/arc.rs`, ownership operations in
-`src/ownership.rs`/`src/rc/`, and runtime teardown where required. Add the smallest
-positive and negative tests to the corresponding channel, task, foreign or server
-target. Prove that unregister/cancel waits for active users before releasing
-captures. Unknown producers stay rejected until their ownership is demonstrated.
+**G3 — Implement weak references and the boundary contracts.** The first
+[weak-channel implementation](docs/weak-channels.md) is in the current preparation,
+with tests written but integrated validation pending. First complete
+one complete weak path in the interpreter and native runtime: live/expired
+acquisition, final release, metadata release and address reuse. Synchronize only
+where permitted sharing requires it. Then cover the six G2 examples and all
+remaining admission rows. Add proof rules in `src/arc_scope.rs`/`src/arc.rs`,
+ownership operations in `src/ownership.rs`/`src/rc/`, and runtime teardown.
+Check stores/captures of acquired owners, not just the acquisition's scope.
+Prove close/release prevents new entry and defers capture destruction until
+active users finish or unwind, including reentrant release. The candidate
+[retained C API](docs/retained-callbacks.md) and its tests are prepared; integrated
+validation is pending.
+Use finite dependency-driven summaries for any added precision, with the G2
+scaling gate; unknown producers remain rejected until ownership is demonstrated.
 **Done:** success, failure, cancellation, reentry and repeated bounded-live work
 release the same owners; deliberately omitted cleanup is detected. Invalid
 inter-task derivative scopes remain rejected.
+Weak and counted paths preserve the agreed expiration/effect order; no reused
+address revives a dead target, and no control metadata remains after its last user.
 
 **G4 — Replace collector-dependent memory diagnostics.** Inventory each use of
 `FWP_GC_STRESS`, `FWP_GC_VERIFY`, reuse poisoning and tracing-only controls in
@@ -114,16 +136,21 @@ failure controls are the starting point, not missing features to reimplement.
 repeat counts grow while post-operation storage stays at the declared baseline.
 Do not replace a diagnostic with permanent poisoned-object retention.
 
-Current G4 group: [the diagnostic guide](docs/ownership-diagnostics.md) specifies
-the live-address ledger, existing byte checks, deliberately broken controls and
-remaining gaps. It is applied to the native ARC corpus and dynamic/static probes.
-The inventory retains source/hash/line evidence; it is not itself a coverage proof.
-Next after integration: complete the reuse/borrow fault matrix, then the separate
-WASI/external-resource mapping before removing any collector diagnostics.
+Current G4 group: [the diagnostic guide](docs/ownership-diagnostics.md) maps
+live-address/physical-byte checks, wide-count metadata, child/borrow/reuse faults,
+unwind/cancellation, weak references, OS handles, retained callbacks, library
+unload and WASI allocation tables to independent deliberately broken controls.
+Its deletion table separates collector-only assertions from semantic, allocation
+and bounded-memory checks that must survive. Candidate execution on the complete
+platform matrix remains pending. The inventory records source/hash/line evidence;
+it is not itself a coverage proof. Do not keep expanding diagnostic scaffolding
+instead of running the combined G3/G4 gate and then deleting tracing.
 
 **G5 — Delete tracing.** After G1–G4, remove tracing selection and code from
 `src/main.rs`, code generation, runtime allocator/root discovery, host adapters,
-CLI help and tests. Keep allocator, stack and resource functions needed without
+CLI help and tests. Apply the agreed cycle/lifetime policy to interpreter entries
+as well as compiled entries; today the ARC gate is in native code generation.
+Keep allocator, stack and resource functions needed without
 collection. Update protocols and examples together; no compatibility switch.
 **Done:** all maintained targets pass the replacement controls; actual binaries
 omit collector roots/marking/sweeping; supported programs retain their outputs,
@@ -181,6 +208,19 @@ just to cover more cases. No public ownership annotation is assumed.
 count checks for the named owned-buffer fixture; failure/cancellation still free
 it exactly once. Alias, captured and unknown-call controls must not select that
 representation. Measure code-size and call-boundary costs before extending it.
+Include attempted weak creation/acquisition as a control: it must not silently
+promote a unique allocation into shared ownership or invalidate the proof.
+
+**A6 — Give one workspace a region lifetime.** Use a recursive parser that builds
+and walks an expression graph inside one invocation. The invocation owns the
+storage; internal links do not own individual nodes. Return a scalar result or
+an explicitly owned copy, never an expired internal link. Add success, parse-error,
+nested invocation and cancellation cases, plus rejection of an escaping link.
+**Done:** repeated fixed-size parses restore the same live-storage baseline;
+internal node links need no reference counts. Report peak retained storage and
+construction/traversal/cleanup time against equivalent C/Rust arenas. Preserve
+alignment and resource cleanup. This establishes one scoped workspace, not a
+universal region system; D2 may extend it to AD after measuring that workload.
 
 ## 3. Functional calls and recursion
 
@@ -271,12 +311,14 @@ GPU execution and runtime compilation are outside this CPU roadmap.
 
 ## 7. Reproducible comparisons
 
-**B1 — Set budgets before optimizing.** For each P/D/N workload run the same
+**B1 — Set budgets before optimizing.** For each A/P/D/N workload run the same
 baseline on two independent sessions per named host with identical inputs,
 compiler flags and memory mode. Retain at least the protocol's existing sample
 count and execution order; include an identical-code noise control. Choose and
 record an absolute/relative regression threshold from those results before the
 candidate measurement. If the control is unstable, repair the measurement first.
+For ownership work use the [four planned comparisons](docs/benchmarks.md#planned-ownership-comparisons)
+and measure compiler analysis separately from generated-program execution.
 **Done:** a checked-in table states workload, revision, host, budget, statistic
 and treatment of inconclusive results. No invented universal percentage.
 
@@ -307,14 +349,30 @@ explain the concepts needed to reproduce the supported program.
 
 Eliminate intermediates first; then use direct values, stack storage, moves and
 borrows. Use uniquely owned heap storage for escaping or variable-size data and
-ARC for necessary sharing. Neither disabled collection nor permanent retention
-meets the objective. Keep [feasibility limits](docs/design-limits.md) explicit.
+ARC for necessary sharing. Explicit weak edges break selected cycles; scoped
+regions suit grouped lifetimes. Reject unproved owning cycles and preserve
+escaping functions. Neither disabled collection nor permanent retention meets
+the objective. The [accepted direction](docs/gc-removal-design.md) owns these
+rules; [feasibility limits](docs/design-limits.md) bound the guarantees.
 
 ## Delivery and acceptance
 
-Bundle related tasks into one PR at a time. Follow [AGENTS.md](AGENTS.md) and
+G3 and G4 must ship in the same PR. Keep the remaining GC-removal work together
+where practical. During implementation, run only checks justified by a changed
+contract, a specific defect or an unresolved concern; do not repeat passing suites
+after every edit or launch full CI for intermediate commits. Write the required
+tests alongside the implementation, even when their broad execution is deferred.
+
+After G4 and all other changes included in the PR are complete, perform one
+consolidated local validation, then the full final-head CI matrix. Local checks
+remain serial and resource-guarded; record checks that cannot fit the limits and
+run those on GitHub rather than bypassing the guard. Batch all known repairs
+before repeating affected checks and required final gates. Existing #214
+validation can finish independently.
+Follow [AGENTS.md](AGENTS.md) and
 [Contributing](CONTRIBUTING.md): all nine final-head production jobs plus the
 documentation gate must pass. Memory claims also need the relevant failure,
 cancellation, reuse and actual-binary evidence. A merge is not proof that every
 roadmap milestone is complete. Full builds and measurements run on GitHub;
-local focused checks use `scripts/local-guard.py` without raising its limits.
+the consolidated local checks use `scripts/local-guard.py` without raising its
+limits. Local resource limits do not waive final CI coverage.

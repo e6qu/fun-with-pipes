@@ -6,6 +6,8 @@ must preserve. Learn syntax through the [tutorials](tutorials/README.md).
 desugaring, macro expansion and lowering. [Ownership](ownership.md) owns memory
 contracts; [numerics](numerics.md) owns derivative and numerical semantics.
 Performance claims need [measurements](benchmarks.md), not an implementation label.
+The [accepted memory direction](gc-removal-design.md) guides upcoming ownership
+changes; the pipeline below describes current implementation responsibilities.
 
 ## Pipeline
 
@@ -135,7 +137,9 @@ alone do not make casts between unrelated C structure types safe.
 Native errors use `setjmp`/`longjmp` after releasing pending owners. Changed
 non-volatile automatic objects have indeterminate values after such a jump, so
 error/type fields and changing task-scope child metadata are volatile where needed.
-Unchanged links need not be. Tests must exercise the actual cleanup path at the
+Unchanged links need not be. An empty callback argument slice may be null; cleanup
+must not offset it, and partial application must not pass it to `memcpy`, even
+with a zero byte count. Tests must exercise the actual cleanup path at the
 production compiler settings; one compiler's success does not verify another.
 
 ## Ownership implementation
@@ -393,8 +397,10 @@ explicitly as described in [Contributing](../CONTRIBUTING.md#setting-up).
 
 ## Not implemented
 
-Complete tracing removal, general owning-cycle support and minimal ARC are
-unfinished [plan tasks](../PLAN.md). Public weak handles are not implemented.
+Complete tracing removal, explicit weak handles, count-free unique heap storage
+and the scoped-workspace target are unfinished [plan tasks](../PLAN.md).
+General strong-cycle reclamation by ordinary ARC is not a goal. The selected
+model rejects unproved owning cycles and preserves escaping functions.
 JIT compilation is excluded, not deferred. The interpreter prepares foreign-call
 bridges before language execution; CPU kernel interpretation generates no machine
 code. GPU execution, a replacement backend and distributed execution are outside

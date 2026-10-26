@@ -21,17 +21,20 @@ fn serving_peer_owner_survives_children_and_releases_at_completion() {
                 body: Body::Prim("tls.available".into()),
             },
             Func {
-                name: "web".into(),
-                arity: 0,
-                locals: vec![],
-                ty: unit,
-                body: Body::Prim("http2.connect".into()),
+                name: "pooled".into(),
+                arity: 1,
+                locals: vec![MT::con("std::String")],
+                ty: MT::Fun(
+                    Box::new(MT::con("std::String")),
+                    Box::new(MT::con("std::Bool")),
+                ),
+                body: Body::Prim("http2.pooled".into()),
             },
         ],
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_peer").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_peer", &[]).unwrap();
     let subject = "j->sv.peer = c->ssl ? fwp_tls_peer_subject(c->ssl) : 0;";
     let handle = "    g_job *j = (g_job *)arg;\n    int code = -1;";
     let spawn = "    s->task = fwp_spawn_task(0, g_handle, j, g_parse_timeout(h2_get(&s->headers, \"grpc-timeout\")), 0);";

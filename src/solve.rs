@@ -356,6 +356,11 @@ impl<'a> Infer<'a> {
     /// classes).
     fn used_params(&self, name: &str) -> Vec<bool> {
         let def = &self.env.types[name];
+        // A weak channel's metadata carries identity, not its target's payload.
+        // Comparing or duplicating the handle never compares or duplicates a.
+        if name == "std::WeakChannel" {
+            return vec![false; def.arity];
+        }
         let fields: Vec<Type> = match &def.kind {
             TypeDefKind::Opaque | TypeDefKind::Alias { .. } => return vec![true; def.arity],
             TypeDefKind::Record { .. } => self.env.table.records[name]
@@ -368,9 +373,28 @@ impl<'a> Infer<'a> {
                 .flat_map(|c| self.env.ctors[c].fields.clone())
                 .collect(),
         };
+        fn structural_vars(table: &TypeTable, ty: &Type, out: &mut Vec<TV>) {
+            match table.resolve(ty) {
+                Type::Con(name, _) if name == "std::WeakChannel" => {}
+                Type::Con(_, args) => {
+                    for arg in args {
+                        structural_vars(table, &arg, out);
+                    }
+                }
+                Type::Record(row) => {
+                    for (_, field) in row.fields {
+                        structural_vars(table, &field, out);
+                    }
+                    if let Some(tail) = row.tail {
+                        table.free_vars(&Type::Var(tail), out);
+                    }
+                }
+                other => table.free_vars(&other, out),
+            }
+        }
         let mut fv = Vec::new();
         for f in &fields {
-            self.env.table.free_vars(f, &mut fv);
+            structural_vars(&self.env.table, f, &mut fv);
         }
         def.params.iter().map(|p| fv.contains(p)).collect()
     }
@@ -382,6 +406,24 @@ impl<'a> Infer<'a> {
             return false;
         };
         if def.resource {
+            return false;
+        }
+        // Runtime identities have no portable value encoding. Previously the
+        // opaque-type rule accepted these and JSON silently emitted null.
+        // Hash uses the canonical encoding, so it must reject them as well.
+        if matches!(class, "std::Encode" | "std::Decode" | "std::Hash")
+            && matches!(
+                name,
+                "std::Task"
+                    | "std::Channel"
+                    | "std::WeakChannel"
+                    | "std::Listener"
+                    | "std::Conn"
+                    | "std::UdpSocket"
+                    | "std::H2Stream"
+                    | "std::GrpcCell"
+            )
+        {
             return false;
         }
         if !visiting.insert(name.to_string()) {
@@ -415,7 +457,8 @@ impl<'a> Infer<'a> {
                 .all(|(_, a)| self.field_ok(class, a, visiting)),
             Type::Con(n, args) => {
                 self.eligible(class, n, visiting)
-                    && args.iter().all(|a| self.field_ok(class, a, visiting))
+                    && (n == "std::WeakChannel"
+                        || args.iter().all(|a| self.field_ok(class, a, visiting)))
             }
         }
     }

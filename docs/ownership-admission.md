@@ -7,7 +7,8 @@ from executing the program, checking its output and proving cleanup. The
 
 Native builds select checked ARC by default. The entries below also accept
 explicit `--gc arc`. Explicit tracing remains available; deleting it requires
-deciding the remaining lifetime cases, not just deleting a command-line option.
+implementing the [accepted ownership direction](gc-removal-design.md) for the
+remaining lifetime cases, not just deleting a command-line option.
 Neither a successful C emission nor an interpreter run proves native cleanup.
 
 ## Entry points and their checks
@@ -49,14 +50,14 @@ Tracing must emit C, establishing that the case is not
 a syntax/type error; ARC must return status 1 with the listed diagnostic and emit
 no C. It deliberately does **not** execute invalid scope examples in tracing mode.
 
-| Source | Required diagnostic fragment | Missing contract or invalid behavior | Next decision |
+| Source | Required diagnostic fragment | Missing contract or invalid behavior | Accepted direction |
 |---|---|---|---|
 | [custom-native](../tests/fixtures/arc-admission/custom-native.fwp) | `no checked ownership signature` | An arbitrary runtime declaration has no argument/result ownership contract. A familiar primitive name does not supply one. | Keep rejected; a new runtime primitive needs a reviewed contract and cleanup tests. |
-| [foreign-callback](../tests/fixtures/arc-admission/foreign-callback.fwp) | `foreign boundary has no checked ownership contract` | A callback returns managed `String` storage to C; no host owner/release protocol is supplied. | G2 must specify a release protocol before admitting it. This is different from C calling a scalar-result callback synchronously. |
-| [http-stream-channel](../tests/fixtures/arc-admission/http-stream-channel.fwp) | `channel payloads cannot contain` | An HTTP stream can hide a handler/continuation that owns the queue. | G2 must prove an independent stream lifetime or retain a documented restriction. |
-| [wrapped-http-stream-channel](../tests/fixtures/arc-admission/wrapped-http-stream-channel.fwp) | `channel payloads cannot contain` | Wrapping the same handle in a list does not remove that possible back-reference. | Same decision; container wrapping cannot bypass the check. |
-| [cyclic-channel](../tests/fixtures/arc-admission/cyclic-channel.fwp) | `a queue can lead back to channel type` | The recursive payload type permits an owning cycle, even though this particular program only creates/closes an empty queue. | Distinguish a conservative rejection from an actual cycle. G2 must decide the accepted programming pattern. |
-| [mutual-channel](../tests/fixtures/arc-admission/mutual-channel.fwp) | `a queue can lead back to channel type` | Two type definitions hide the same possible back-reference. | Keep the transitive check when refining the proof. |
+| [foreign-callback](../tests/fixtures/arc-admission/foreign-callback.fwp) | `foreign boundary has no checked ownership contract` | A callback returns managed `String` storage to C; no host owner/release protocol is supplied. | Keep bare managed-result callbacks rejected: their signature supplies no release protocol. Use the separate [retained export API](retained-callbacks.md), whose owned results have generated release functions. |
+| [http-stream-channel](../tests/fixtures/arc-admission/http-stream-channel.fwp) | `channel payloads cannot contain` | An HTTP stream can hide a handler/continuation that owns the queue. | Keep streams out of queues until their independent lifetime is proved. Queue request data or IDs while a task scope owns the stream. |
+| [wrapped-http-stream-channel](../tests/fixtures/arc-admission/wrapped-http-stream-channel.fwp) | `channel payloads cannot contain` | Wrapping the same handle in a list does not remove that possible back-reference. | Keep the same restriction through containers; wrapping a stream cannot remove its hidden owners. |
+| [cyclic-channel](../tests/fixtures/arc-admission/cyclic-channel.fwp) | `a queue can lead back to channel type` | The recursive payload type permits an owning cycle, even though this particular program only creates/closes an empty queue. | Keep this conservative rejection. Use an explicit weak back-edge or graph ID; the candidate recursive `WeakLink` fixture exercises the weak form. |
+| [mutual-channel](../tests/fixtures/arc-admission/mutual-channel.fwp) | `a queue can lead back to channel type` | Two type definitions hide the same possible back-reference. | Keep the transitive owning-edge check; replace a back-edge with a weak reference or graph ID. |
 | [unscoped-tape](../tests/fixtures/arc-admission/unscoped-tape.fwp) | `tracing-free lifetime policy` | A raw derivative tape is created without a bounded autodiff scope. | Keep rejected; it is not a feature to recover by deleting GC. |
 
 For example, this type can describe a cycle because its queue may contain another
@@ -75,13 +76,13 @@ shows a graph whose edges are integer IDs: a logical cycle without owning cycles
 | Relationship | Smallest maintained control | Current rule and required follow-up |
 |---|---|---|
 | A queued callback owns its receiver | `self` in [queued_functions](../tests/queued_functions.rs), `queued_functions_reject_channel_captures_including_returned_and_nested_values` | Rejects `queued function` / `captured` / `Channel`; returned/nested/caught callbacks and two queues cannot hide the owner. [Lesson 24](tutorials/24-subscriptions/README.md) supplies the independent task-owned form; its queue holds data. |
-| A queued task owns its queue through computation or result | `computation` and `result` in `direct_task_messages_reject_computation_and_result_queue_owners` in the same test file | Rejects the captured task/function-bearing channel; tracing and interpretation execute the controls. These are maintained forms needing an explicit G2 decision, not invalid derivatives. |
+| A queued task owns its queue through computation or result | `computation` and `result` in `direct_task_messages_reject_computation_and_result_queue_owners` in the same test file | Rejects the captured task/function-bearing channel; tracing and interpretation execute the controls. Keep unproved owning cycles rejected. An independent task scope can own the task and queue; queue data/results or a callback holding a weak link. |
 | A task's cached result owns the task itself | `task_results_reject_a_cached_self_owner_without_a_channel` in the same file | Rejects failure to prove an `acyclic task result`, even without a channel. Follow both computation and returned captures. |
 | Unknown function, task or external queue producer | Typed IR controls in [arc_scope](../src/arc_scope.rs): `joining_a_known_target_does_not_hide_an_unknown_function`, `queued_task_captures_follow_the_computation_and_unknown_inputs`, `runtime_function_producers_and_external_queues_need_known_sources` | Unknown is not an empty set of captures. These tests construct internal IR; they are not claims that every such internal primitive is available in source. Admission needs a producer/lifetime model. |
 | A received function uses the sender's expired State/AD handler | `queued_autodiff_functions_require_the_receivers_scope` in [queued_functions](../tests/queued_functions.rs); [arc_extensions](../tests/arc_extensions.rs), `raw_ad_cannot_escape_scope_proof_through_callbacks_or_arguments` | Calling must install the required handler in the receiving task. Keep invalid scope use rejected. |
 | An inter-task derivative escapes its scope | [ad_task_reuse](../tests/run/ad_task_reuse.fwp), classified explicitly by [arc_corpus](../tests/arc_corpus.rs) | Expected `outside an autodiff scope` rejection. The corpus fails any new unexpected ARC rejection; it does not just count excluded programs. |
 | Closing a cyclic channel | [channel_cycle_ownership](../tests/channel_cycle_ownership.rs), `closed_channel_cycles_keep_values_until_drain_and_then_release` | Close preserves queued messages. The tracing-only control drains explicitly and checks reclamation. Removing tracing must not quietly change close to discard messages or pretend this is current ARC admission. |
-| C stores a callback after returning | Foreign declaration permits only a scoped callback; the C body is outside the ownership proof | No compiler diagnostic is promised for a C implementation violating that contract. A retained callback API needs explicit registration, active-call ownership and release; it is not implemented. |
+| C stores a callback after returning | Foreign declaration permits only a scoped callback; the C body is outside the ownership proof | No compiler diagnostic is promised for a C implementation violating that contract. The candidate [retained API](retained-callbacks.md) supplies a separate context-bearing registration for selected exports, with active-call ownership and explicit release. Integrated validation is pending; scoped callback pointers still cannot be retained. |
 
 `Ptr[T]` is a manually managed address, not a managed owner. Keeping its storage
 valid and using the matching release operation are `Unsafe` obligations. Passing
@@ -100,8 +101,16 @@ Eight and 64 rounds must restore the same per-round managed-byte balance.
 Deliberately missing releases and child joins must be detected. Final native
 validation for that new test is recorded in [the handoff](development-state.md).
 
-Remaining G2–G3 work must resolve each maintained tracing-only graph above with
-a proved equivalent or an explicit language restriction. In particular, a scoped
+The accepted policy keeps the unproved owning graphs above rejected. Weak links,
+independent task scopes and graph IDs supply the explicit alternatives; the new
+weak and retained-C paths still need integrated validation. The selected contract
+rejects unproved owning cycles and requires explicit weak references before
+collector deletion. Test acquisition followed by a store/capture that could
+recreate the cycle; checking only a weak access's duration is insufficient.
+The [six implementation examples](gc-removal-design.md#six-implementation-examples)
+also cover returned functions, graph-slot reuse and bounded workspaces. They are
+targets, not additional accepted rows in today's execution matrix.
+In particular, a scoped
 subscriber does not prove that an arbitrary queued task result or HTTP/2 stream
 cannot own its queue. A C implementation that retains a scoped callback violates
 the host contract; compiler rejection cannot reliably detect that behavior.

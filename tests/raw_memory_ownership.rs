@@ -188,7 +188,7 @@ fn native_string_boundaries_borrow_inputs_and_return_reclaimable_copies() {
         ..Program::default()
     };
     fwp::ir::check_locals(&program).unwrap();
-    let (source, _) = fwp::cgen::generate_library(&program, "raw_memory").unwrap();
+    let (source, _) = fwp::cgen::generate_library(&program, "raw_memory", &[]).unwrap();
     let fresh = "return fwp_rc_fresh(fwp_c_string((const char *)(uintptr_t)l0));";
     assert!(source.contains(fresh));
     let probe = r#"

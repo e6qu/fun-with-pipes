@@ -41,7 +41,7 @@ fn channel_payload(
             }
             Ok(())
         }
-        MT::Con(name, _) if name == "std::Ptr" => Ok(()),
+        MT::Con(name, _) if matches!(name.as_str(), "std::Ptr" | "std::WeakChannel") => Ok(()),
         MT::Con(name, args) => {
             let reason = match name.as_str() {
                 "std::H2Stream" => Some("stream handler captures can retain the receiving channel"),
@@ -125,7 +125,7 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
                 | "std::U64" | "std::U128" | "std::USize" | "std::F16" | "std::BF16"
                 | "std::F32" | "std::F64" | "std::F128" | "std::TInt" | "std::Trit"
                 | "std::Array" | "std::Map" | "std::Set" | "std::Task" | "std::GrpcCell"
-                | "std::H2Stream" => return Ok(()),
+                | "std::H2Stream" | "std::WeakChannel" => return Ok(()),
                 _ => {}
             }
             match prog.shapes.get(ty) {
@@ -308,6 +308,25 @@ mod tests {
             );
             assert!(error.contains("missing cycle-freedom proof"), "{error}");
         }
+    }
+
+    #[test]
+    fn weak_queue_edges_do_not_own_the_recursive_payload() {
+        let mut program = Program::default();
+        let node = MT::con("Node");
+        program.shapes.insert(
+            node.clone(),
+            TypeShape::Adt(vec![(
+                "Back".into(),
+                vec![MT::Con("std::WeakChannel".into(), vec![node.clone()])],
+            )]),
+        );
+        value_type(&program, &channel(node.clone()), &mut HashSet::new()).unwrap();
+        program.shapes.insert(
+            node.clone(),
+            TypeShape::Adt(vec![("Back".into(), vec![channel(node.clone())])]),
+        );
+        assert!(value_type(&program, &channel(node), &mut HashSet::new()).is_err());
     }
 
     #[test]

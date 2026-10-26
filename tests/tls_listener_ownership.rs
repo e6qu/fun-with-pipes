@@ -20,17 +20,20 @@ fn listener_stop_releases_context_after_accepted_sessions_finish() {
             },
             // Include the existing HTTP/2 raw-session transfer boundary.
             Func {
-                name: "web".into(),
-                arity: 0,
-                locals: vec![],
-                ty: unit,
-                body: Body::Prim("http2.connect".into()),
+                name: "pooled".into(),
+                arity: 1,
+                locals: vec![MT::con("std::String")],
+                ty: MT::Fun(
+                    Box::new(MT::con("std::String")),
+                    Box::new(MT::con("std::Bool")),
+                ),
+                body: Body::Prim("http2.pooled".into()),
             },
         ],
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _) = fwp::cgen::generate_library(&program, "tls_owners").unwrap();
+    let (generated, _) = fwp::cgen::generate_library(&program, "tls_owners", &[]).unwrap();
     let hooks = r#"
 #include <stdlib.h>
 #include <openssl/ssl.h>

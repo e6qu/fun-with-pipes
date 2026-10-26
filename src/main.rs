@@ -46,6 +46,7 @@ usage:
                                  binaryen's wasm-opt);
                                  --staticlib/--cdylib build a C library
                                  (and header) of the exported functions;
+                                 --c-callback NAME adds a retained callback API for that C export;
                                  --link adds C code for foreign functions
                                  (also accepted by run, test and exec);
                                  --service splits the program: -o names a
@@ -505,6 +506,7 @@ fn build(args: &[String]) -> ExitCode {
     let mut fat = false;
     let mut wasm_async = fwp::asyncify::WasmAsync::Jspi;
     let mut lib: Option<fwp::cgen::LibKind> = None;
+    let mut callbacks = Vec::new();
     let mut services: Vec<(String, String)> = Vec::new();
     let mut memory: Option<fwp::cgen::StaticMemory> = None;
     let mut sizes: Vec<(String, String)> = Vec::new();
@@ -602,6 +604,14 @@ fn build(args: &[String]) -> ExitCode {
             "--fat" => fat = true,
             "--staticlib" => lib = Some(fwp::cgen::LibKind::Static),
             "--cdylib" => lib = Some(fwp::cgen::LibKind::Shared),
+            "--c-callback" => {
+                i += 1;
+                let Some(name) = args.get(i).filter(|name| !name.starts_with('-')) else {
+                    eprintln!("fwp build: --c-callback needs a C export name");
+                    return ExitCode::from(2);
+                };
+                callbacks.push(name.clone());
+            }
             "--link" => {
                 i += 1;
                 let Some(l) = args.get(i) else {
@@ -749,6 +759,10 @@ fn build(args: &[String]) -> ExitCode {
         eprintln!("fwp build: --static is unavailable on macOS; use ordinary native linking or a Linux cross target");
         return ExitCode::from(2);
     }
+    if !callbacks.is_empty() && (lib.is_none() || !arc) {
+        eprintln!("fwp build: --c-callback requires --staticlib/--cdylib and --gc arc");
+        return ExitCode::from(2);
+    }
     if lib.is_some() && target.is_wasm() {
         eprintln!("fwp build: --staticlib/--cdylib require a native target");
         return ExitCode::from(2);
@@ -856,7 +870,7 @@ fn build(args: &[String]) -> ExitCode {
                 .file_stem()
                 .map(|s| s.to_string_lossy().to_string())
                 .unwrap_or_default();
-            let built = fwp::cgen::generate_library(&prog, &name).and_then(|(c, h)| {
+            let built = fwp::cgen::generate_library(&prog, &name, &callbacks).and_then(|(c, h)| {
                 if emit_c {
                     std::fs::write(out.with_extension("c"), &c).map_err(|e| e.to_string())?;
                     if c.contains(fwp::float_codegen::MARK) {

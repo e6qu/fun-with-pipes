@@ -15,6 +15,7 @@ fn contains_where(shapes: &Shapes, ty: &MT, names: fn(&str) -> bool, closures: b
         }
         match ty {
             MT::Con(name, _) if names(name) => true,
+            MT::Con(name, _) if name == "std::WeakChannel" => false,
             MT::Record(fields) => fields
                 .iter()
                 .any(|(_, ty)| visit(shapes, ty, seen, names, closures)),
@@ -70,28 +71,54 @@ pub(crate) fn may_hold_resource(shapes: &Shapes, ty: &MT) -> bool {
     )
 }
 
-/// Socket values can be captured; File values cannot. Only programs that use
-/// these handles need to preserve opaque closure holders as resource owners.
-pub(crate) fn has_socket_values(funcs: &[Func], shapes: &Shapes) -> bool {
+pub(crate) fn contains_channel(shapes: &Shapes, ty: &MT) -> bool {
+    contains_where(shapes, ty, |name| name == "std::Channel", false)
+}
+
+/// Weak observations make final channel release observable. Programs without
+/// weak channels keep their existing last-use ownership optimization.
+pub(crate) fn uses_weak_channels(funcs: &[Func], shapes: &Shapes) -> bool {
+    fn signature(shapes: &Shapes, ty: &MT) -> bool {
+        match ty {
+            MT::Fun(input, output) => signature(shapes, input) || signature(shapes, output),
+            _ => contains_where(shapes, ty, |name| name == "std::WeakChannel", false),
+        }
+    }
     funcs.iter().any(|function| {
-        function.locals.iter().any(|ty| {
-            contains_where(
-                shapes,
-                ty,
-                |name| {
-                    matches!(
-                        name,
-                        "std::UdpSocket" | "std::Conn" | "std::Listener" | "std::H2Stream"
-                    )
-                },
-                false,
-            )
-        })
+        signature(shapes, &function.ty) || function.locals.iter().any(|ty| signature(shapes, ty))
     })
 }
 
+pub(crate) fn observable_type(funcs: &[Func], shapes: &Shapes, ty: &MT) -> bool {
+    contains_resource(shapes, ty)
+        || (contains_channel(shapes, ty) && uses_weak_channels(funcs, shapes))
+        || (may_hold_resource(shapes, ty) && has_observable_captures(funcs, shapes))
+}
+
+/// Socket values can be captured; File values cannot. Only programs that use
+/// these handles need to preserve opaque closure holders as resource owners.
+pub(crate) fn has_observable_captures(funcs: &[Func], shapes: &Shapes) -> bool {
+    uses_weak_channels(funcs, shapes)
+        || funcs.iter().any(|function| {
+            function.locals.iter().any(|ty| {
+                contains_where(
+                    shapes,
+                    ty,
+                    |name| {
+                        matches!(
+                            name,
+                            "std::UdpSocket" | "std::Conn" | "std::Listener" | "std::H2Stream"
+                        )
+                    },
+                    false,
+                )
+            })
+        })
+}
+
 pub(crate) fn preserve_frames(program: &mut Program) {
-    let captures = has_socket_values(&program.funcs, &program.shapes);
+    let captures = has_observable_captures(&program.funcs, &program.shapes);
+    let weak_channels = uses_weak_channels(&program.funcs, &program.shapes);
     for function in &mut program.funcs {
         let Body::Expr(body) = &mut function.body else {
             continue;
@@ -100,6 +127,7 @@ pub(crate) fn preserve_frames(program: &mut Program) {
         let mut bindings = Vec::new();
         for (i, ty) in function.locals.iter().enumerate() {
             if contains_resource(&program.shapes, ty)
+                || (weak_channels && contains_channel(&program.shapes, ty))
                 || (captures && may_hold_resource(&program.shapes, ty))
             {
                 if i < function.arity as usize {
@@ -155,6 +183,40 @@ pub(crate) fn anchored(expr: &Expr, local: Local) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn weak_observation_preserves_channels_without_anchoring_the_weak_target() {
+        let channel = MT::Con("std::Channel".into(), vec![MT::con("std::I64")]);
+        let weak = MT::Con("std::WeakChannel".into(), vec![MT::con("std::I64")]);
+        let mut program = Program {
+            funcs: vec![Func {
+                name: "observe".into(),
+                arity: 1,
+                ty: MT::Fun(Box::new(channel.clone()), Box::new(MT::Record(vec![]))),
+                locals: vec![channel],
+                body: Body::Expr(Expr::Const(crate::value::Value::unit())),
+            }],
+            ..Program::default()
+        };
+        assert!(!uses_weak_channels(&program.funcs, &program.shapes));
+        preserve_frames(&mut program);
+        assert!(matches!(program.funcs[0].body, Body::Expr(Expr::Const(_))));
+        program.funcs[0].locals.push(weak.clone());
+        assert!(uses_weak_channels(&program.funcs, &program.shapes));
+        assert!(!contains_channel(&program.shapes, &weak));
+        preserve_frames(&mut program);
+        let Body::Expr(Expr::ResourceRegion {
+            parameters,
+            bindings,
+            ..
+        }) = &program.funcs[0].body
+        else {
+            panic!("weak observation must preserve the original channel frame");
+        };
+        assert_eq!(parameters, &[0]);
+        assert!(bindings.is_empty());
+        crate::ir::check_locals(&program).unwrap();
+    }
+
     #[test]
     fn nominal_recursive_resource_graphs_and_nonowning_arrows() {
         let node = MT::con("Node");

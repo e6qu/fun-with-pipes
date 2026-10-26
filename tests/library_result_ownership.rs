@@ -3,6 +3,9 @@ use fwp::ir::*;
 use fwp::value::Value;
 use std::process::Command;
 
+#[path = "support/ownership_ledger.rs"]
+mod ownership_ledger;
+
 fn program() -> Program {
     let int = MT::con("std::I64");
     let string = MT::con("std::String");
@@ -120,34 +123,42 @@ fn program() -> Program {
 
 #[test]
 fn exported_boxes_are_reclaimed_and_host_strings_survive() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
-    let program = program();
-    let mut interp = fwp::interp::Interp::new(&program, Box::new(Vec::new())).unwrap();
-    assert_eq!(
-        interp.call_root(0, vec![Value::I64(17)]).unwrap(),
-        Value::Record(vec![Value::I64(17), Value::I64(17)].into())
-    );
-    assert_eq!(
-        interp.call_root(2, vec![Value::I64(17)]).unwrap(),
-        Value::Record(vec![Value::I64(17), Value::Str("hihi".into())].into())
-    );
-    assert_eq!(
-        interp.call_root(5, vec![]).unwrap(),
-        Value::Record(vec![Value::I64(17), Value::I64(42)].into())
-    );
-    assert_eq!(
-        interp.call_root(6, vec![Value::I64(0)]).unwrap(),
-        Value::Str("okok".into())
-    );
-    let (source, _) = fwp::cgen::generate_library(&program, "ownership").unwrap();
-    let observed = source
+    for arc in [false, true] {
+        fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+            arc,
+            ..Default::default()
+        });
+        let program = program();
+        let mut interp = fwp::interp::Interp::new(&program, Box::new(Vec::new())).unwrap();
+        assert_eq!(
+            interp.call_root(0, vec![Value::I64(17)]).unwrap(),
+            Value::Record(vec![Value::I64(17), Value::I64(17)].into())
+        );
+        assert_eq!(
+            interp.call_root(2, vec![Value::I64(17)]).unwrap(),
+            Value::Record(vec![Value::I64(17), Value::Str("hihi".into())].into())
+        );
+        assert_eq!(
+            interp.call_root(5, vec![]).unwrap(),
+            Value::Record(vec![Value::I64(17), Value::I64(42)].into())
+        );
+        assert_eq!(
+            interp.call_root(6, vec![Value::I64(0)]).unwrap(),
+            Value::Str("okok".into())
+        );
+        let (source, _) = fwp::cgen::generate_library(&program, "ownership", &[]).unwrap();
+        let source = if arc {
+            ownership_ledger::instrument_native(&source, 65536)
+        } else {
+            source
+        };
+        let observed = source
         .replace("static V fwp_data(uint32_t", "static V observed_data, observed_string; static size_t data_calls;\nstatic V fwp_data(uint32_t")
         .replacen("return PTR(o);", "data_calls++; observed_data = PTR(o); return PTR(o);", 1)
         .replacen("return PTR(r);", "observed_string = PTR(r); return PTR(r);", 1);
-    let probe = r#"
+        // A failing assertion exits before atexit: library teardown must not
+        // replace the specific fault with its later final-leak diagnostic.
+        let probe = r#"
 static jmp_buf failure; static int recover(void) { return 1; }
 static int dead(V v) { return fwp_reuse_verify ? OBJ(v)->tag == 0xdead : *fwp_rc_slot(v) == 0; }
 static int dead_string(V v) { return fwp_reuse_verify ? STR(v)->len == 0 : *fwp_rc_slot(v) == 0; }
@@ -156,106 +167,127 @@ int main(void) {
  V bits = fwp_rc_fresh(fwp_str_new("bits",4));
  size_t pair_before = data_calls;
  struct fwp_c_Pair p = pair((int64_t)bits);
- if(p.a != (int64_t)bits || p.b != (int64_t)bits || data_calls != pair_before) return 1;
- if(*fwp_rc_slot(bits) != 1) return 2;
+ if(p.a != (int64_t)bits || p.b != (int64_t)bits || data_calls != pair_before) _Exit(1);
+ if(*fwp_rc_slot(bits) != 1) _Exit(2);
  size_t before = data_calls;
  void *raw = pointer((void *)(uintptr_t)bits);
- if(data_calls != before + 1) return 11;
- if(raw != (void *)(uintptr_t)bits || !dead(observed_data)) return 3;
- if(*fwp_rc_slot(bits) != 1) return 2;
+ if(data_calls != before + 1) _Exit(11);
+ if(raw != (void *)(uintptr_t)bits || !dead(observed_data)) _Exit(3);
+ if(*fwp_rc_slot(bits) != 1) _Exit(2);
  const char *held = string(0);
+ if(dead_string(PTR(held) - offsetof(fwp_str,d))) _Exit(6);
  struct fwp_c_Text t = text(17);
- if(t.number != 17 || strcmp(t.text,"hihi") || !dead(observed_data)) return 5;
- if(*fwp_rc_slot(observed_string) != 1 || strcmp(held,"okok")) return 6;
- for(int i=0; i<1000; i++) { p=cached(); if(p.a!=17 || p.b!=42 || *fwp_rc_slot(observed_data)!=1) return 7; }
+ if(dead_string(PTR(t.text) - offsetof(fwp_str,d))) _Exit(6);
+ if(t.number != 17 || strcmp(t.text,"hihi") || !dead(observed_data)) _Exit(5);
+ if(*fwp_rc_slot(observed_string) != 1 || strcmp(held,"okok")) _Exit(6);
+ for(int i=0; i<1000; i++) { p=cached(); if(p.a!=17 || p.b!=42 || *fwp_rc_slot(observed_data)!=1) _Exit(7); }
  fwp_cleanup *boundary = fwp_cleanups;
  fwp_trap_recover=recover; fwp_trap_jb=&failure; fwp_trap_cleanup=boundary;
  size_t before_bad = data_calls;
- if(setjmp(failure)==0) { (void)bad(0); return 8; }
- if(fwp_cleanups!=boundary || data_calls!=before_bad || !dead_string(observed_string)) return 4;
- if(setjmp(failure)==0) { (void)bad_string(0); return 8; }
- if(fwp_cleanups!=boundary || !dead_string(observed_string)) return 4;
+ if(setjmp(failure)==0) { (void)bad(0); _Exit(8); }
+ if(fwp_cleanups!=boundary || data_calls!=before_bad || !dead_string(observed_string)) _Exit(4);
+ if(setjmp(failure)==0) { (void)bad_string(0); _Exit(8); }
+ if(fwp_cleanups!=boundary || !dead_string(observed_string)) _Exit(4);
  fwp_trap_recover=0; fwp_trap_jb=0;
- if(strcmp(held,"okok") || strcmp(t.text,"hihi") || fwp_gc.armed || fwp_gc.ncollect) return 9;
+ if(strcmp(held,"okok") || strcmp(t.text,"hihi") || fwp_gc.armed || fwp_gc.ncollect) _Exit(9);
  V held_owner = PTR(held) - offsetof(fwp_str, d), text_owner = PTR(t.text) - offsetof(fwp_str, d);
  fwp_release_string(held); fwp_release_text(t);
- if(!dead_string(held_owner) || !dead_string(text_owner)) return 12;
+ if(!dead_string(held_owner) || !dead_string(text_owner)) _Exit(12);
  fwp_rc_free_obj(bits);
- if(!fwp_reuse_verify && fwp_gc.freed < 32) return 10;
+#ifndef FWP_ARC_ONLY
+ if(!fwp_reuse_verify)
+#endif
+ if(fwp_gc.freed < 32) _Exit(10);
  return 0;
 }
 "#;
-    let dir = std::env::temp_dir().join(format!("fwp-library-results-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).unwrap();
-    let exe = dir.join("probe");
-    for opt in ["-O1", "-O2"] {
-        fwp::cgen::compile_c(&format!("{observed}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = Command::new(&exe)
-                .env("FWP_REUSE_VERIFY", poison)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .output()
-                .unwrap();
-            assert!(
-                out.status.success(),
-                "{opt}, poison {poison}: {:?}: {}",
-                out.status.code(),
-                String::from_utf8_lossy(&out.stderr)
+
+        let probe = if arc {
+            probe
+                .replace(
+                    "return fwp_reuse_verify ? OBJ(v)->tag == 0xdead : *fwp_rc_slot(v) == 0;",
+                    "return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)];",
+                )
+                .replace(
+                    "return fwp_reuse_verify ? STR(v)->len == 0 : *fwp_rc_slot(v) == 0;",
+                    "return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)];",
+                )
+        } else {
+            probe.to_owned()
+        };
+        let dir = std::env::temp_dir().join(format!("fwp-library-results-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let exe = dir.join("probe.exe");
+        for opt in ["-O1", "-O2"] {
+            fwp::cgen::compile_c(&format!("{observed}\n{probe}"), &exe, opt).unwrap();
+            for poison in if arc { &["0"][..] } else { &["0", "1"][..] } {
+                let out = Command::new(&exe)
+                    .env("FWP_REUSE_VERIFY", poison)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
+                    .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
+                    .output()
+                    .unwrap();
+                assert!(
+                    out.status.success(),
+                    "{opt}, poison {poison}: {:?}: {}",
+                    out.status.code(),
+                    String::from_utf8_lossy(&out.stderr)
+                );
+            }
+            let missing_drop =
+                observed.replace("owner.value = result; fwp_value_release(&owner);", "");
+            let premature_release = observed.replace(
+                "const char * converted = fwp_c_str_arg(result);",
+                "const char * converted = fwp_c_str_arg(result); fwp_rc_free_obj(result);",
             );
+            let extra_evaluation = observed.replace(
+                "    V result = f1(input_arg0);",
+                "    V result = f1(input_arg0); (void)f1(input_arg0);",
+            );
+            let bad_start = observed.find("struct fwp_c_Text bad(int64_t a0)").unwrap();
+            let mut missing_guard = observed.clone();
+            let guard = bad_start
+                + observed[bad_start..]
+                    .find("fwp_cleanup_push(&result_cleanup,")
+                    .unwrap();
+            let end = guard + observed[guard..].find(';').unwrap() + 1;
+            missing_guard.replace_range(guard..end, "");
+            for (broken, expected) in [
+                (missing_drop, 3),
+                (premature_release, 6),
+                (missing_guard, 4),
+                (extra_evaluation, 11),
+            ] {
+                assert_ne!(
+                    broken, observed,
+                    "negative control must change generated code"
+                );
+                fwp::cgen::compile_c(&format!("{broken}\n{probe}"), &exe, opt).unwrap();
+                let out = Command::new(&exe)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
+                    .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
+                    .env("FWP_REUSE_VERIFY", if arc { "0" } else { "1" })
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    out.status.code(),
+                    Some(expected),
+                    "negative control: {}",
+                    String::from_utf8_lossy(&out.stderr)
+                );
+            }
         }
-        let missing_drop = observed.replace("owner.value = result; fwp_value_release(&owner);", "");
-        let premature_release = observed.replace(
-            "const char * converted = fwp_c_str_arg(result);",
-            "const char * converted = fwp_c_str_arg(result); fwp_rc_free_obj(result);",
-        );
-        let extra_evaluation = observed.replace(
-            "    V result = f1(input_arg0);",
-            "    V result = f1(input_arg0); (void)f1(input_arg0);",
-        );
-        let bad_start = observed.find("struct fwp_c_Text bad(int64_t a0)").unwrap();
-        let mut missing_guard = observed.clone();
-        let guard = bad_start
-            + observed[bad_start..]
-                .find("fwp_cleanup_push(&result_cleanup,")
-                .unwrap();
-        let end = guard + observed[guard..].find(';').unwrap() + 1;
-        missing_guard.replace_range(guard..end, "");
-        for (broken, expected) in [
-            (missing_drop, 3),
-            (premature_release, 6),
-            (missing_guard, 4),
-            (extra_evaluation, 11),
-        ] {
-            assert_ne!(
-                broken, observed,
-                "negative control must change generated code"
-            );
-            fwp::cgen::compile_c(&format!("{broken}\n{probe}"), &exe, opt).unwrap();
-            let out = Command::new(&exe)
-                .env("FWP_REUSE_VERIFY", "1")
-                .output()
-                .unwrap();
-            assert_eq!(
-                out.status.code(),
-                Some(expected),
-                "negative control: {}",
-                String::from_utf8_lossy(&out.stderr)
-            );
-        }
+        std::fs::remove_dir_all(dir).unwrap();
     }
-    std::fs::remove_dir_all(dir).unwrap();
 }
 
 #[test]
 fn exported_names_cannot_collide_with_result_release_functions() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let mut p = program();
     p.exports.push(("fwp_release_text".into(), 0));
-    let error = fwp::cgen::generate_library(&p, "collision").unwrap_err();
+    let error = fwp::cgen::generate_library(&p, "collision", &[]).unwrap_err();
     assert!(
         error.contains("generated result release `fwp_release_text`"),
         "{error}"
@@ -263,6 +295,6 @@ fn exported_names_cannot_collide_with_result_release_functions() {
     let mut p = program();
     p.exports.push(("same-name".into(), 0));
     p.exports.push(("same_name".into(), 0));
-    let error = fwp::cgen::generate_library(&p, "collision").unwrap_err();
+    let error = fwp::cgen::generate_library(&p, "collision", &[]).unwrap_err();
     assert!(error.contains("same C name `same_name`"), "{error}");
 }

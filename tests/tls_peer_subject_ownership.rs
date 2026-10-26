@@ -19,17 +19,20 @@ fn peer_subject_failures_and_copy_traps_release_temporary_owners() {
                 body: Body::Prim("tls.available".into()),
             },
             Func {
-                name: "web".into(),
-                arity: 0,
-                locals: vec![],
-                ty: unit,
-                body: Body::Prim("http2.connect".into()),
+                name: "pooled".into(),
+                arity: 1,
+                locals: vec![MT::con("std::String")],
+                ty: MT::Fun(
+                    Box::new(MT::con("std::String")),
+                    Box::new(MT::con("std::Bool")),
+                ),
+                body: Body::Prim("http2.pooled".into()),
             },
         ],
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
-    let (generated, _header) = fwp::cgen::generate_library(&p, "resources").unwrap();
+    let (generated, _header) = fwp::cgen::generate_library(&p, "resources", &[]).unwrap();
     let needle = "    V v = fwp_rc_fresh(fwp_cstr(s));";
     assert!(generated.contains(needle), "missing subject-copy hook");
     let generated = generated.replace(needle, "    V v = fwp_rc_fresh(subject_copy(s));");

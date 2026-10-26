@@ -321,7 +321,16 @@ impl Ord for Value {
             (Trit(a), Trit(b)) => a.cmp(b),
             (Closure(a), Closure(b)) => Rc::as_ptr(a).cmp(&Rc::as_ptr(b)),
             (File(a), File(b)) => Rc::as_ptr(a).cmp(&Rc::as_ptr(b)),
-            (Native(a), Native(b)) => Rc::as_ptr(a).cmp(&Rc::as_ptr(b)),
+            (Native(a), Native(b)) => match (a.as_ref(), b.as_ref()) {
+                // Downgrading twice creates two interpreter wrappers, but both
+                // weak values name the same identity, even after expiration.
+                (crate::sched::Native::WeakChan(a), crate::sched::Native::WeakChan(b)) => {
+                    a.as_ptr().cmp(&b.as_ptr())
+                }
+                (crate::sched::Native::WeakChan(_), _) => Ordering::Less,
+                (_, crate::sched::Native::WeakChan(_)) => Ordering::Greater,
+                _ => Rc::as_ptr(a).cmp(&Rc::as_ptr(b)),
+            },
             _ => self.rank().cmp(&other.rank()),
         }
     }
