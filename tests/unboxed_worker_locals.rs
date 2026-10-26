@@ -57,15 +57,9 @@ fn recursive_record_workers_keep_results_unboxed() {
     let exe = dir.0.join("wide");
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&generated, &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let native = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-            assert_eq!(native.stdout, reference.stdout);
-        }
+
+        let native = checked(&mut Command::new(&exe));
+        assert_eq!(native.stdout, reference.stdout);
     }
 }
 
@@ -262,7 +256,7 @@ fn transferred_record_fields_preserve_aliases_and_trap_cleanup() {
 static volatile V input,word;static jmp_buf failure;
 static int recover(void){return 1;}
 static void drop_leaf(V v){if(fwp_rc_release_last(v))fwp_rc_free_obj(v);}
-static int dead(V v){return fwp_reuse_verify?STR(v)->len==0:*fwp_rc_slot(v)==0;}
+static int dead(V v){return *fwp_rc_slot(v)==0;}
 int main(void){
  fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
  for(int mode=0;mode<4;mode++)for(int alias=0;alias<2;alias++){
@@ -287,14 +281,8 @@ int main(void){
     let exe = dir.0.join("probe");
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{runtime}\n{fixture}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-        }
+
+        checked(&mut Command::new(&exe));
     }
 }
 
@@ -451,20 +439,14 @@ int main(void){
     let binary = dir.join("forward.exe");
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
-        let output = Command::new(&binary).env("FWP_GC", "off").output().unwrap();
+        let output = Command::new(&binary).output().unwrap();
         assert_eq!(
             output.status.code(),
             Some(249),
             "extra result box: {output:?}"
         );
         fwp::cgen::compile_c(&good, &binary, opt).unwrap();
-        for poison in ["0", "1"] {
-            checked(
-                Command::new(&binary)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-        }
+
+        checked(&mut Command::new(&binary));
     }
 }

@@ -5,18 +5,13 @@ fn checked(command: &mut Command) -> Output {
     assert!(output.status.success(), "{command:?}: {output:?}");
     output
 }
-fn emitted(source: &str, arc: bool, dir: &fwp::cgen::TempDir) -> String {
+fn emitted(source: &str, dir: &fwp::cgen::TempDir) -> String {
     let input = dir.join("main.fwp");
     let cfile = dir.join("main.c");
     std::fs::write(&input, source).unwrap();
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args([
-                "build",
-                "--gc",
-                if arc { "arc" } else { "tracing" },
-                "--emit-c",
-            ])
+            .args(["build", "--emit-c"])
             .arg(input)
             .arg("-o")
             .arg(&cfile),
@@ -46,23 +41,18 @@ fn cpu_kernel_results_preserve_values_aliases_and_release_storage() {
         (&raw.stdout, &raw.stderr),
         (&optimized.stdout, &optimized.stderr)
     );
-    for arc in [false, true] {
-        let code = emitted(source, arc, &dir);
-        for opt in ["-O1", "-O2"] {
-            let binary = dir.join("cpu_kernel.exe");
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let native = checked(
-                Command::new(&binary)
-                    .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
-                    .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
-                    .env("FWP_REUSE_VERIFY", if arc { "0" } else { "1" }),
-            );
-            assert_eq!((&native.stdout, &native.stderr), (&raw.stdout, &raw.stderr));
-            let start = code
-                .find("static void *fwp_main_thread(void *arg) {")
-                .unwrap();
-            let end = start + code[start..].find("\n}\n").unwrap() + 3;
-            let body = code[start..end]
+
+    let code = emitted(source, &dir);
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join("cpu_kernel.exe");
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        let native = checked(&mut Command::new(&binary));
+        assert_eq!((&native.stdout, &native.stderr), (&raw.stdout, &raw.stderr));
+        let start = code
+            .find("static void *fwp_main_thread(void *arg) {")
+            .unwrap();
+        let end = start + code[start..].find("\n}\n").unwrap() + 3;
+        let body = code[start..end]
                 .replace(
                     "    fwp_init_consts();\n",
                     "    fwp_init_consts();\n    size_t cpu_kernel_live_bytes=fwp_heap.live;\n",
@@ -71,18 +61,11 @@ fn cpu_kernel_results_preserve_values_aliases_and_release_storage() {
                     "    /* Ownership observation point: before runtime teardown. */\n",
                     "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live!=cpu_kernel_live_bytes) exit(248);\n",
                 );
-            let mut measured = code.clone();
-            measured.replace_range(start..end, &body);
-            fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
-            let native = checked(
-                Command::new(&binary)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0"),
-            );
-            assert_eq!(native.stdout, raw.stdout);
-        }
+        let mut measured = code.clone();
+        measured.replace_range(start..end, &body);
+        fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
+        let native = checked(&mut Command::new(&binary));
+        assert_eq!(native.stdout, raw.stdout);
     }
 }
 
@@ -129,63 +112,50 @@ fn probe_code(code: String) -> String {
 fn kernels_release_output_and_scratch_after_workers_join() {
     let dir = fwp::cgen::TempDir::new("cpu-kernel-cleanup").unwrap();
     let program = include_str!("fixtures/cpu_kernel_ownership.fwp");
-    for arc in [false, true] {
-        let code = emitted(program, arc, &dir);
-        let code = probe_code(code);
-        let missing_inputs = code.replace(
-            "kernel_free((void *)owner->kernel.inputs);",
-            "/* omitted input-table disposal */",
-        );
-        let missing_output = code.replace(
-            "if (owner->output) fwp_rc_free_arr(owner->output);",
-            "/* omitted failed output disposal */",
-        );
-        assert_ne!(code, missing_inputs);
-        assert_ne!(code, missing_output);
-        for opt in ["-O1", "-O2"] {
-            for (candidate, expected) in
-                [(&code, 0), (&missing_inputs, 248), (&missing_output, 248)]
-            {
-                let binary = dir.join("cleanup.exe");
-                fwp::cgen::compile_c(candidate, &binary, opt).unwrap();
-                let output = Command::new(&binary)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
-                assert_eq!(
-                    output.status.code(),
-                    Some(expected),
-                    "{arc}/{opt}: {output:?}"
-                );
-                if expected == 0 && opt == "-O2" {
-                    if let Some(path) = std::env::var_os("FWP_KERNEL_ARTIFACTS") {
-                        let path = std::path::PathBuf::from(path);
-                        std::fs::create_dir_all(&path).unwrap();
-                        let label = format!("kernel-{}", if arc { "arc" } else { "tracing" });
-                        std::fs::write(path.join(format!("{label}.c")), candidate).unwrap();
-                        std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
-                        std::fs::write(path.join(format!("{label}.txt")), output.stdout).unwrap();
-                        let mut command = Command::new(if cfg!(target_os = "macos") {
-                            "otool"
-                        } else if cfg!(windows) {
-                            "llvm-objdump"
-                        } else {
-                            "objdump"
-                        });
-                        let assembly = checked(
-                            command
-                                .arg(if cfg!(target_os = "macos") {
-                                    "-tvV"
-                                } else {
-                                    "-d"
-                                })
-                                .arg(&binary),
-                        );
-                        std::fs::write(path.join(format!("{label}.asm")), assembly.stdout).unwrap();
-                    }
+
+    let code = emitted(program, &dir);
+    let code = probe_code(code);
+    let missing_inputs = code.replace(
+        "kernel_free((void *)owner->kernel.inputs);",
+        "/* omitted input-table disposal */",
+    );
+    let missing_output = code.replace(
+        "if (owner->output) fwp_rc_free_arr(owner->output);",
+        "/* omitted failed output disposal */",
+    );
+    assert_ne!(code, missing_inputs);
+    assert_ne!(code, missing_output);
+    for opt in ["-O1", "-O2"] {
+        for (candidate, expected) in [(&code, 0), (&missing_inputs, 248), (&missing_output, 248)] {
+            let binary = dir.join("cleanup.exe");
+            fwp::cgen::compile_c(candidate, &binary, opt).unwrap();
+            let output = Command::new(&binary).output().unwrap();
+            assert_eq!(output.status.code(), Some(expected), "{opt}: {output:?}");
+            if expected == 0 && opt == "-O2" {
+                if let Some(path) = std::env::var_os("FWP_KERNEL_ARTIFACTS") {
+                    let path = std::path::PathBuf::from(path);
+                    std::fs::create_dir_all(&path).unwrap();
+                    let label = "kernel-counted";
+                    std::fs::write(path.join(format!("{label}.c")), candidate).unwrap();
+                    std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
+                    std::fs::write(path.join(format!("{label}.txt")), output.stdout).unwrap();
+                    let mut command = Command::new(if cfg!(target_os = "macos") {
+                        "otool"
+                    } else if cfg!(windows) {
+                        "llvm-objdump"
+                    } else {
+                        "objdump"
+                    });
+                    let assembly = checked(
+                        command
+                            .arg(if cfg!(target_os = "macos") {
+                                "-tvV"
+                            } else {
+                                "-d"
+                            })
+                            .arg(&binary),
+                    );
+                    std::fs::write(path.join(format!("{label}.asm")), assembly.stdout).unwrap();
                 }
             }
         }
@@ -213,23 +183,13 @@ fn compare_kernel_allocations_with_the_immutable_runtime_baseline() {
     assert!(old_kernel.contains("memcpy(ARR(r)->d, out, n * sizeof(double));"));
     let dir = fwp::cgen::TempDir::new("cpu-kernel-baseline").unwrap();
     // Same compiled probe, inputs and accounting. Only the kernel executor is
-    // replaced. Tracing mode is common to both revisions, with collection off.
-    let mut code = emitted(
-        include_str!("fixtures/cpu_kernel_ownership.fwp"),
-        false,
-        &dir,
-    );
+    // replaced. Both versions use the current counted allocator.
+    let mut code = emitted(include_str!("fixtures/cpu_kernel_ownership.fwp"), &dir);
     code.replace_range(range(&code, "/* F64 matrix fast path:"), old_kernel);
     let code = format!("#define KERNEL_BASELINE 1\n{}", probe_code(code));
     let binary = dir.join("baseline.exe");
     fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
-    let output = checked(
-        Command::new(&binary)
-            .env("FWP_GC", "off")
-            .env("FWP_GC_STRESS", "0")
-            .env("FWP_GC_VERIFY", "0")
-            .env("FWP_REUSE_VERIFY", "0"),
-    );
+    let output = checked(&mut Command::new(&binary));
     if let Some(path) = std::env::var_os("FWP_KERNEL_ARTIFACTS") {
         let path = std::path::PathBuf::from(path);
         std::fs::create_dir_all(&path).unwrap();

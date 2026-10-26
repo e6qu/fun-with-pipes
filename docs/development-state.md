@@ -51,7 +51,11 @@ and 24 ownership-entry rows per host. Library inputs/results now use the live
 allocation ledger in every run; static/shared unload controls still check actual
 regions, tasks, finalizers, metrics, signal handlers and thread keys. Removed only
 the deleted collector mark-stack observer. Field/projection tests retain alias,
-transfer, cancellation and missing-release controls.
+transfer, cancellation and missing-release controls. Decoder, vector, CPU-kernel,
+DNS, metrics and ternary-primitive tests now keep all partial-result and resource
+faults in one ownership mode. Resource frames and compiler call-lifetime tests
+keep real release/count checks instead of freed-payload poison checks. The HTTP
+fixed-function binary inspector now expects one collector-free artifact.
 
 ## Implemented here; integration still pending
 

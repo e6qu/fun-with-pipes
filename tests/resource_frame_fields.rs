@@ -49,12 +49,7 @@ main = "{}" | file.open | pack | .file | file.close | const "closed" | echo
                 .args([opt, "-o"])
                 .arg(&exe),
         );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
+        let out = checked(&mut Command::new(&exe));
         assert_eq!(out.stdout, reference.stdout);
         assert_eq!(out.stderr, reference.stderr);
     }
@@ -139,22 +134,13 @@ main = "{}" | file.open | pack | .file | file.close | const "closed" | echo
             );
         for opt in ["-O1", "-O2"] {
             fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-            for gc in ["on", "off"] {
-                for poison in ["0", "1"] {
-                    let out = checked(
-                        Command::new(&exe)
-                            .env("FWP_GC", gc)
-                            .env("FWP_GC_STRESS", "1")
-                            .env("FWP_GC_VERIFY", "1")
-                            .env("FWP_REUSE_VERIFY", poison),
-                    );
-                    assert!(out.stdout.is_empty());
-                    eprintln!(
-                        "mode {mode}, {opt}, GC {gc}, poison {poison}: {}",
-                        String::from_utf8_lossy(&out.stderr)
-                    );
-                }
-            }
+
+            let out = checked(&mut Command::new(&exe));
+            assert!(out.stdout.is_empty());
+            eprintln!(
+                "mode {mode}, {opt}: {}",
+                String::from_utf8_lossy(&out.stderr)
+            );
         }
     }
     // Original record binders can be lets and whole-pattern bindings on
@@ -198,23 +184,14 @@ static int record_close(FILE *f){if(f==record_stream)record_closes++;return fclo
         let code = format!("{hooks}\n{code}\n{audit}");
         for opt in ["-O1", "-O2"] {
             fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-            for gc in ["off", "on"] {
-                for poison in ["0", "1"] {
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", gc)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
-                    assert!(
-                        out.status.success(),
-                        "record selector={selector}, {opt}, gc={gc}, poison={poison}: {:?}: {}",
-                        out.status.code(),
-                        String::from_utf8_lossy(&out.stderr)
-                    );
-                }
-            }
+
+            let out = Command::new(&exe).output().unwrap();
+            assert!(
+                out.status.success(),
+                "record selector={selector}, {opt}: {:?}: {}",
+                out.status.code(),
+                String::from_utf8_lossy(&out.stderr)
+            );
         }
     }
     let mut fault_program = program.clone();
@@ -309,28 +286,21 @@ int main(void){
  fwp_trap_jb=0;fwp_trap_recover=0;
  struct stat status;if(fwp_cleanups||closes!=1||fstat(fd,&status)!=-1||errno!=EBADF)return 2;
  uint8_t *slot=fwp_rc_slot(watched_text);
- if(fwp_reuse_verify){if(STR(watched_text)->len||STR(watched_text)->d[0])return 3;}
- else if(!slot||*slot)return 3;
+ if(!slot||*slot)return 3;
  return 0;
 }
 "#;
     for opt in ["-O1", "-O2"] {
         for (code, expected) in [(&omitted, 2), (&code, 0)] {
             fwp::cgen::compile_c(&format!("{hooks}\n{code}\n{fixture}"), &exe, opt).unwrap();
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert_eq!(
-                    out.status.code(),
-                    Some(expected),
-                    "{opt}, poison {poison}: {}",
-                    String::from_utf8_lossy(&out.stderr)
-                );
-            }
+
+            let out = Command::new(&exe).output().unwrap();
+            assert_eq!(
+                out.status.code(),
+                Some(expected),
+                "{opt}: {}",
+                String::from_utf8_lossy(&out.stderr)
+            );
         }
     }
 }
