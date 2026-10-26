@@ -78,7 +78,9 @@ is last, `div 3 18` means `18 / 3`, giving `6`.
 
 A tuple is one value, so taking a tuple still means taking one argument.
 It differs from taking a value and returning another function. The ordinary
-library functions `curry` and `uncurry` make that conversion explicit:
+library functions `curry` and `uncurry` make that conversion explicit.
+A **type signature** follows `:`. `I64` means a signed 64-bit integer, and `->`
+separates an input type from its result type:
 
 ```fwp
 sum-pair : (I64, I64) -> I64
@@ -88,10 +90,8 @@ sum-curried : I64 -> I64 -> I64
 sum-curried = curry sum-pair
 ```
 
-The lines with `:` are **type signatures**. `I64` is a signed 64-bit integer;
-`->` separates an input type from its result type. The first signature takes one
-pair and returns an integer. The second takes an integer and returns a function
-from another integer to an integer: `I64 -> (I64 -> I64)`.
+The first signature takes one pair and returns an integer. The second takes an
+integer and returns a function from another integer to an integer: `I64 -> (I64 -> I64)`.
 
 `(2, 3) | sum-pair` gives `5`. `3 | sum-curried 2` also gives `5`, as does
 `3 | add 2`. Ordinary curried calls need neither helper; use them when changing

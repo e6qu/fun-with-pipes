@@ -45,7 +45,9 @@ Measure the ownership-analysis pass separately from specialization, C generation
 and C compilation on N/2N/4N queues, captures, recursive calls and pipelines.
 Record analyzed IR size, summary updates, specialization count, time and memory;
 set numerical regression budgets from the baseline before increasing precision.
-External language benchmarks motivate experiments, not fwp overhead estimates.
+The [ownership-analysis protocol](measurements/ownership-analysis.md) defines the
+current N/2N/4N fixture and separates proof timing from frontend work. External
+language benchmarks motivate experiments, not fwp overhead estimates.
 
 ## Reuse tests are allocation comparisons
 

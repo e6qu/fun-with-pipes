@@ -13,6 +13,12 @@ result, but those passes store records, allocate memory and do extra arithmetic.
 It is not a promise that a gradient costs the same as evaluating `f` once.
 Floating-point rounding applies in both modes.
 
+`grad` and `vjp` create a tape scope for each call and release its temporary
+records when the call ends. A tracked `Rev` value belongs to that scope; it
+cannot be used afterward or moved to another task for calculation. Return the
+ordinary result or derivative values instead. Nested gradients use enclosing
+tapes without extending the lifetime of an expired inner tape.
+
 `value-and-grad` returns the function value as well. A vector-Jacobian product
 (`vjp`) weights several output derivatives by caller-supplied weights; the
 Jacobian is the table of derivatives of every output with respect to every input.

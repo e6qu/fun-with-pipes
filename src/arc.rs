@@ -170,7 +170,7 @@ pub(crate) fn check_interpreter(
                 .map_err(|reason| format!("ownership: `{}`: {reason}", f.name))?;
         }
     }
-    crate::arc_scope::check(prog, entries, entry_channels)
+    crate::arc_scope::check(prog, entries, entry_channels).map(|_| ())
 }
 
 pub(crate) fn check(

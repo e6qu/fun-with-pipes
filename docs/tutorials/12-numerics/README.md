@@ -1,11 +1,11 @@
 # 12. Numerics
 
-Read lessons 1–3 first. A vector is an ordered set of numbers; a matrix is a
+Read lessons 1–5 first. A vector is a fixed-length sequence of numbers; a matrix is a
 rectangular grid of numbers. Their sizes are part of their types, so incompatible
 matrix multiplication is rejected before execution. `solve a` finds `x` in the
-linear system `a * x = b`; the determinant is a scalar property of a square
-matrix. A complex number has real and imaginary parts, with the imaginary unit
-satisfying `i * i = -1`.
+linear system `a * x = b`. A square matrix's determinant measures how it changes
+area or volume; zero means it collapses at least one direction. A complex number
+has real and imaginary parts, with the imaginary unit satisfying `i * i = -1`.
 
 A derivative measures how a function's output changes near an input. A gradient
 collects one derivative for each input of a scalar-valued function. Automatic
@@ -17,13 +17,12 @@ The numeric library builds on the traits from tutorial 3, so most of it
 works for any number type.
 
 - `Vector[T, N]` and `Matrix[T, M, N]` carry their sizes in their types.
-  `matmul` of incompatible shapes is a compile-time error. The library
-  provides `solve`, `determinant`, `inverse`, `cholesky`, `qr` and the
-  conjugate gradient method `cg`.
+  `T` is the element type; `M` and `N` are dimensions. `matmul` rejects
+  incompatible shapes before execution. `solve` and `determinant` are used below.
 - `Complex[T]` implements the arithmetic traits.
-- `derivative`, `gradient`, `jacobian` and `hessian` propagate derivatives
-  with dual numbers (a value paired with its derivative, called forward mode),
-  for any function written against the numeric traits.
+- `derivative` and `gradient` use **dual numbers**: each ordinary value travels
+  with its derivative. This is **forward mode**. Numeric traits let the same
+  function work with ordinary numbers and these pairs.
 
 ```fwp
 f : t -> t where Ring[t], FromFloat[t]
@@ -40,8 +39,19 @@ numbers, matrices, complex numbers and forward differentiation.
 Here `f` computes `x² − 2`; `Ring` supplies addition/subtraction/multiplication
 and `FromFloat` converts the floating-point literal for the chosen number type.
 Its derivative is `2x`, so at 3 the program prints 6. `newton-step` applies
-`x − f(x)/f′(x)`, moving toward a root of `f`. Five steps from 1 approach √2.
+`x − f(x)/f′(x)`, moving toward a root of `f`. `iterate 5` includes the starting
+value, so four updates from 1 approach √2.
 The final function is `x² + y`, whose gradient at `(3, 4)` is `[6, 1]`.
+
+The remaining outputs follow from these calculations:
+
+| Expression | Result and reason |
+|---|---|
+| `a \| matmul a` | Multiply each row by each column: the first entry is `4*4 + 1*1 = 17`. |
+| `b \| solve a` | `Some` holds the solution `[1/11, 7/11]`; both equations give `b = [1, 2]`. `None` would mean the solver found no unique solution. |
+| `a \| determinant` | For this 2×2 matrix, `4*3 - 1*1 = 11`. |
+| Complex multiplication | `(3-i)*(1+2i) = 5+5i`, using `i*i = -1`. |
+| `last` after iteration | `Some` holds the final estimate; the list contains the initial value and four updates. |
 
 ## The program
 

@@ -92,6 +92,18 @@ jobs:
           name: compiler-lifetime-cleanup-${{ matrix.runner }}
           path: compiler-lifetime-evidence/
           if-no-files-found: error
+      - name: Measure finite ownership analysis at N, 2N and 4N
+        if: ${{ !cancelled() }}
+        run: |
+          set -o pipefail
+          if [[ "${{ runner.os }}" == "macOS" ]]; then
+            sysctl hw.model hw.memsize machdep.cpu.brand_string > compiler-lifetime-evidence/hardware.txt
+            time_flags=(-l)
+          else
+            lscpu > compiler-lifetime-evidence/hardware.txt
+            time_flags=(-v)
+          fi
+          /usr/bin/time "${time_flags[@]}" env FWP_NO_OPT=1 cargo test --locked --lib ownership_analysis_scaling -- --ignored --nocapture --test-threads=1 2>&1 | tee compiler-lifetime-evidence/analysis-scaling.log
       - name: Shared lifetime admission and ARC allocation controls
         if: ${{ !cancelled() }}
         run: |

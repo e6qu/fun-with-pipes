@@ -36,7 +36,8 @@ collector is not the same as removing these costs. The
    to ARC. Then remove tracing selection, runtime code and collector-only checks.
    Update reporting, examples and workflows together. See the finite deletion
    table in [ownership diagnostics](docs/ownership-diagnostics.md).
-2. Record **G2**'s N/2N/4N analysis baseline before widening proof precision.
+2. Complete **G2**'s [N/2N/4N analysis baseline](docs/measurements/ownership-analysis.md)
+   alongside the creation-site repair required by shared entry admission.
    Weak references and the six boundary contracts are implemented; the missing
    measurement is not a reason to keep adding diagnostic scaffolding.
 3. After GC removal, use **A2** to measure the unique-buffer fixture, then implement
@@ -76,9 +77,12 @@ controls. Extend it when adding entries; do not repeat the completed inventory.
 The [accepted design](docs/gc-removal-design.md) defines weak target identity,
 expiration, acquisition, release ordering and the six boundary examples.
 The compiler rejects unproved owning cycles; returned functions and partial
-applications remain supported. Before adding proof precision, measure analysis
-time, IR size, summary updates and specialization count at N/2N/4N, then record
-numeric regression budgets. Do not claim linear scaling without that evidence.
+applications remain supported. Shared entry admission exposed an existing false rejection: unrelated partial
+applications were merging their callbacks. The repair distinguishes finite IR
+creation positions. Measure analysis time, IR size, summary updates and concrete
+function count at N/2N/4N in this batch, then record numeric regression budgets
+before accepting it. [The protocol](docs/measurements/ownership-analysis.md)
+defines inputs and timing boundaries. Do not claim linear scaling from three sizes.
 
 **G3 — Delivered in #213/#215.**
 [Weak channels](docs/weak-channels.md) and [retained C callbacks](docs/retained-callbacks.md)

@@ -215,7 +215,9 @@ main = [
 ] | ignore
 ```
 
-See [ownership contracts](../../ownership.md#cycle-and-retention-contract) for the design
-limits. The candidate [weak-channel API](../../weak-channels.md) and
-[graph generation fixture](../../../tests/fixtures/graph_generations.fwp) describe
-the next ownership work and its pending integrated validation.
+See [ownership contracts](../../ownership.md#cycle-and-retention-contract) for the
+limits. [Weak channels](../../weak-channels.md) provide non-owning links to queues;
+[the graph generation example](../../../tests/fixtures/graph_generations.fwp)
+shows how to reject a stale ID after reusing a deleted node’s slot. Both have
+verified regression checks. [The plan](../../../PLAN.md) tracks GC removal and
+the remaining work to reduce reference counting.

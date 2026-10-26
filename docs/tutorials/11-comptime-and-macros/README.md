@@ -2,9 +2,9 @@
 
 Read lessons 1–4 first. **Compile time** is when fwp checks and builds your
 program; **runtime** is when the resulting program executes. Reflection means
-inspecting a type as data. A macro transforms program syntax before type checking;
-it does not call a runtime function with ordinary values. A syntax tree records
-how expressions are nested. These tools are useful for generating repetitive
+inspecting a type as data. A macro transforms syntax before the expanded program
+is checked. Its own implementation is type-checked first, then run by the
+compiler. A syntax tree records how expressions are nested. These tools are useful for generating repetitive
 code, but ordinary functions are simpler when no syntax transformation is needed.
 
 `comptime e` evaluates `e` while the program is compiled and puts the
@@ -26,7 +26,7 @@ serializers from a type definition.
 
 Programs are data too. `quote e` is the syntax tree of `e`, as a value of
 the ordinary type `Syntax`. A macro is a function from syntax to syntax.
-It is called with `name!(...)` and expanded before type checking:
+Call it with `name!(...)`; its returned syntax becomes part of the program:
 
 ```fwp
 macro twice = quote (unquote!(0) | unquote!(0))
