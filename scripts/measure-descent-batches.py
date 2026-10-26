@@ -118,8 +118,7 @@ def main():
     assert args.c_arch == {'x86_64': 'x86-64', 'aarch64': 'armv8-a'}[platform.machine()]
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
-    environment = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
-    environment.pop('FWP_GC', None)
+    environment = dict(os.environ)
     flags = ['-O2', '-std=gnu11', '-ffp-contract=off', '-fno-fast-math', '-fstack-usage', '-march=' + args.c_arch]
     commands = []
 
@@ -172,7 +171,8 @@ def main():
                         managed, raw = [row for row in records if 'solve' not in row]
                         assert observations == [dict(solve=i + 1, managedLiveBytes=0, rawLiveBytes=0)
                                                 for i in range(args.repetitions)]
-                        assert managed['retains'] == managed['finalChargedBytes'] == managed['collections'] == 0
+                        assert managed['retains'] == managed['finalChargedBytes'] == 0
+                        assert set(managed) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
                         single = previous['fwpProfiles'][saved]['managed']
                         assert managed['peakChargedBytes'] <= single['peakChargedBytes']
                         assert managed['requests'] <= single['requests'] * args.repetitions

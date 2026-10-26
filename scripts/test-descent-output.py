@@ -28,8 +28,7 @@ def main():
     out.mkdir(parents=True, exist_ok=False)
     environment = {k: v for k, v in os.environ.items() if not k.startswith('FWP_') and k not in {'GH_TOKEN', 'GITHUB_TOKEN'}}
     environment.update(CC=args.cc, FWP_LTO='0', FWP_AD_WORKSPACE='1', FWP_PACKED_ARRAYS='1',
-                       FWP_STACK='1', FWP_FREE='1', FWP_REUSE='1', FWP_ARRAY_FUSION='1',
-                       FWP_GC='off', FWP_GC_STATS='0', FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+                       FWP_STACK='1', FWP_ARRAY_FUSION='1')
     flags = ['-O2', '-std=gnu11', '-ffp-contract=off', '-fno-fast-math', '-fno-lto', '-march=' + args.c_arch]
     records, commands = [], []
 
@@ -138,7 +137,8 @@ def main():
                         else:
                             assert checks == [dict(solve=i, managedLiveBytes=0, rawLiveBytes=0) for i in [1, 2]]
                             managed, raw = [row for row in rows if 'solve' not in row]
-                            assert managed['retains'] == managed['finalChargedBytes'] == managed['collections'] == 0
+                            assert managed['retains'] == managed['finalChargedBytes'] == 0
+                            assert set(managed) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
                             OUTPUT.BATCHES.PEERS.AD.RAW.check_profile(raw['rawDerivativeStorage'], 0, True)
                     else:
                         assert rows == [dict(solve=i, inputRequests=2*i, inputRequestedBytes=16*points*i,

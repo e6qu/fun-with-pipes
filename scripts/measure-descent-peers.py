@@ -67,7 +67,7 @@ def ownership_budget_failures(profiles, baseline):
         current, old = profiles[label], baseline[label]
         for key in ['rawDerivativeStorage', 'expandedRawSha256']:
             checks.append((label, key, 'equal', current[key], old[key]))
-        for key in ['requests', 'requestedBytes', 'finalChargedBytes', 'collections']:
+        for key in ['requests', 'requestedBytes', 'finalChargedBytes']:
             checks.append((label, key, 'equal', current['managed'][key], old['managed'][key]))
         for key in ['retains', 'peakChargedBytes']:
             checks.append((label, key, 'at most', current['managed'][key], old['managed'][key]))
@@ -103,8 +103,7 @@ def main():
     environment = {key: value for key, value in os.environ.items()
                    if not key.startswith('FWP_') and key not in ('GH_TOKEN', 'GITHUB_TOKEN')}
     environment.update(CC=args.cc, FWP_LTO='0', FWP_AD_WORKSPACE='1',
-                       FWP_PACKED_ARRAYS='1', FWP_STACK='1', FWP_FREE='1', FWP_ARRAY_FUSION='1',
-                       FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+                       FWP_PACKED_ARRAYS='1', FWP_STACK='1', FWP_ARRAY_FUSION='1')
     baseline_bytes = args.baseline_report.read_bytes()
     baseline = json.loads(baseline_bytes)
     baseline_host, = [host for host in baseline['hosts'] if host['host'] == args.host]
@@ -170,7 +169,7 @@ def main():
             else:
                 build([args.compiler.resolve(), 'build', '--emit-c', '-O2', fwp_source, '-o', code])
             text = code.read_text()
-            assert '#define FWP_ARC_ONLY 1' in text
+            assert 'FWP_ARC_ONLY' not in text
             binary = directory / label
             build([args.cc, *cflags, '-w', code, '-o', binary, '-lm', '-lpthread', '-ldl'])
             actual = run([binary], environment)
@@ -186,7 +185,8 @@ def main():
             (directory / (label + '-profile.stderr')).write_bytes(profile.stderr)
             assert profile.stdout == actual.stdout
             managed, raw = [json.loads(line) for line in profile.stderr.splitlines()]
-            assert managed['finalChargedBytes'] == managed['collections'] == 0
+            assert managed['finalChargedBytes'] == 0
+            assert set(managed) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
             raw = raw['rawDerivativeStorage']
             AD.RAW.check_profile(raw, updates if label == 'fwp-ad' else 0, True)
             raw_hash = digest(json.dumps(raw, sort_keys=True).encode())

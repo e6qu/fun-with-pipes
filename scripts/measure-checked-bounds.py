@@ -37,8 +37,7 @@ directory, = (args.input / args.source).iterdir()
 args.output.mkdir(parents=True)
 environment = {key: value for key, value in os.environ.items()
                if not key.startswith('FWP_') and key not in {'GH_TOKEN', 'GITHUB_TOKEN'}}
-environment.update(FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0',
-                   FWP_LTO='0', LC_ALL='C')
+environment.update(FWP_LTO='0', LC_ALL='C')
 labels = ['baseline', 'identical-control', 'sub-expression', 'add-sub-expression']
 pattern = re.compile(r'(int64_t x = \(int64_t\)l1, y = \(int64_t\)l0, r;\n    '
                      r'if \(__builtin_(add|sub)_overflow\(x, y, &r\)\) '

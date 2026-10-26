@@ -44,7 +44,8 @@ def host_report(artifacts, host, source):
     report = (root / 'bench.md').read_text()
     assert (directory / 'report.md').read_text() == report
     assert f'Source commit: `{source}`. Host: `linux/{architecture}`.' in report
-    assert 'fwp build flags: `--gc tracing -O2`' in report, 'scalar-text requires its explicit tracing baseline'
+    assert 'fwp build flags: `-O2`' in report
+    assert 'Native fwp ownership: counted.' in report
     medians = re.findall(
         r'^\| (\S+) \| ([\d.]+) ms \| ([\d.]+) ms \| ([\d.]+) ms \|',
         report.split('## Raw elapsed samples')[0], re.M)
@@ -144,11 +145,11 @@ def main():
         'source': args.source, 'run': args.run, 'url': run['url'], 'hosts': hosts,
         'scope': 'Seven complete programs, one warmup and six rotating-order fresh-process '
                  'samples per implementation. Medians and samples have 0.001 ms resolution. '
-                 'Native fwp uses tracing, GCC O2 and LTO off; C uses GCC O2, Rust uses -O. '
+                 'Native fwp uses counted ownership, GCC O2 and LTO off; C uses GCC O2, Rust uses -O. '
                  'Compilation is excluded. text-length compares identical decimal-length '
                  'calculations for i=0..1999999: fwp eliminates text; C/Rust count digits '
                  'directly with checked multiplication and sums. strings peers still format. '
-                 'Separate O0/O2 ARC/tracing probes check results and zero managed leaf '
+                 'Separate O0/O2 counted-ownership probes check results and zero managed leaf '
                  'allocations after constant initialization, with allocating controls. '
                  'They do not measure total allocations, RSS, peak memory or elapsed-time '
                  'improvement over an earlier fwp revision. ELF .text includes layout costs; '

@@ -14,7 +14,7 @@ args = parser.parse_args()
 directory = args.artifact
 binary = directory / 'server.exe'
 code = (directory / 'server.c').read_text()
-assert '#define FWP_ARC_ONLY 1' in code
+assert 'FWP_ARC_ONLY' not in code
 declarations = re.findall(
     r'^static fwp_clo (fwp_static_function\d+) = \{(\d+), (\d+), \{([0, ]+)\}\};$',
     code, re.M)

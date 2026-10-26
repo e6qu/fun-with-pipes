@@ -62,8 +62,7 @@ def main():
     assert host['report']['machine'] == platform.machine()
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
-    environment = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
-    environment.pop('FWP_GC', None)
+    environment = dict(os.environ)
     flags = ['-O2', '-std=gnu11', '-ffp-contract=off', '-fno-fast-math', '-fstack-usage', '-march=' + args.c_arch]
     commands = []
 

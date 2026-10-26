@@ -128,8 +128,7 @@ def main():
     out = parser.parse_args().output.resolve()
     out.mkdir(parents=True, exist_ok=True)
     compiler = ROOT / 'target/release/fwp'
-    environment = dict(os.environ, FWP_AD_WORKSPACE='1', FWP_GC_STRESS='0',
-                       FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+    environment = dict(os.environ, FWP_AD_WORKSPACE='1')
     environment.pop('FWP_NO_OPT', None)
     results = {}
     for name in ['identity', 'map', 'sustained-map', 'nested']:
@@ -151,7 +150,8 @@ def main():
             assert measured.stdout == expected
             rows = list(map(json.loads, measured.stderr.splitlines()))
             tape, managed = rows[0], rows[-1]
-            assert tape['finalTapeBytes'] == managed['finalChargedBytes'] == managed['collections'] == 0
+            assert tape['finalTapeBytes'] == managed['finalChargedBytes'] == 0
+            assert set(managed) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
             data = dict(tape=tape, managed=managed, command=list(map(str, command)),
                 generatedSha256=hashlib.sha256(cfile.read_bytes()).hexdigest(),
                 binarySha256=hashlib.sha256(binary.read_bytes()).hexdigest())

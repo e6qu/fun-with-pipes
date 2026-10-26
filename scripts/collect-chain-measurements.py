@@ -108,7 +108,7 @@ def main():
         "workload": "Release a native chain: each record owns a five-byte string and an optional next record.",
         "comparison": "Original fwp recursive destructors versus fwp destruction loops; no C/Rust timing comparison.",
         "scope": "Stack-address span sampled at generated destructor entries, O1/O2. Instrumentation can change frames. Zero span means no address variation, not zero stack use. Excludes construction, process memory and timing.",
-        "memory_check": "Every case returns the managed allocation budget to its starting value after the last alias is dropped, with zero tracing collections. Allocation requests during cleanup are not separately counted.",
+        "memory_check": "Every case returns the managed allocation budget to its starting value after the last alias is dropped. Allocation requests during cleanup are not separately counted.",
         "alias_modes": {"0": "unique chain", "1": "retained root", "2": "retained middle record", "3": "retained middle optional wrapper", "4": "retained middle tuple (tuple case only)"},
         "limits": ["The baseline did not capture CPU/compiler metadata separately; its CI logs, generated C and binaries are retained. Do not infer timing improvements.",
                    "Only the optional case has a measured preceding-version comparison. The tuple case extends correctness and stack-scaling coverage.",

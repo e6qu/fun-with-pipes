@@ -1,10 +1,9 @@
 # Current work
 
-**Next:** finish the remaining measurement-script audit, starting with scalar/AD
-profile consumers and map/word-frequency comparisons. Then run consolidated
-compiler and production gates on runners. See the audit file below. Finish migration before
-integrated compiler and production validation on runners. The current source
-has not been built as a compiler. GC removal is not verified.
+**Next:** finish numerical/word-frequency measurement and replay protocols, then
+retire obsolete admission inventories and audit their workflow/doc callers.
+After that, run consolidated compiler and production gates on runners. The current
+source has not been built as a compiler. GC removal is not verified.
 
 Worktree: `/private/tmp/fwp-delete-tracing`; branch `delete-tracing-collector`.
 Base: verified #216 squash `f5621cb46828273f7ce8edf92be4062ccec0f17c`.
@@ -19,6 +18,16 @@ The merge has the same tree and the required one-line message. See
 compiler-abort report; its handoff points here. Old publisher scripts stay stopped.
 
 ## Latest completed edits; execution pending
+
+- Migrated 22 scalar/AD profile consumers to the five-field allocation report,
+  preserving live-byte, tape, reuse and count budgets. Map producers and replay
+  readers now agree on counted artifact names; all four replay validation tests
+  pass. The map failure reader requires 13 binaries, two failure configurations,
+  two callback runs, eight peak observations and three broken-cleanup/layout
+  controls per host. HTTP readers require four client and six server/client
+  images per host; WASI and scalar readers match the migrated producers.
+  Ruff name checks pass for 82 changed scripts. This is report validation, not
+  new generated-program or benchmark evidence.
 
 - Renamed `tests/gc.rs` to `native_memory.rs` and the second macOS shard to
   `ownership`. Its separate full golden corpus, all 253 target assignments,
@@ -209,7 +218,7 @@ work was uncommitted. No part of that command ran. We saved `bd299fe0`, generate
 separate candidates, reviewed every C-branch diff, and applied them with a clean
 checkpoint/source check. That safer action was approved. No permission is pending.
 
-The fresh measurement audit is `/private/tmp/fwp-remaining-script-modes.txt`.
+The latest measurement audit is `/private/tmp/fwp-remaining-script-modes-v2.txt`.
 It includes real stale modes/collection fields and valid absence assertions;
 classify each against its producer. Do not blindly replace historical evidence.
 
@@ -254,6 +263,7 @@ Scripts below live in `/private/tmp` unless a repository path is given.
 | `python3 fwp-check-server-schema.py` | Actual report reader accepts complete synthetic stdio/HTTP evidence and rejects missing/duplicate rows, an ineffective omitted-free control and excess RSS. This does not execute servers or inspect their binaries. |
 | `python3 fwp-check-deletion-edits.py` | Rust formatting, changed Python parsing, whitespace, 253-target native schedule and integer artifact gate checks pass. |
 | `python3 fwp-check-migration-python.py` | Ruff reports no unresolved names in all changed Python files. This is a static check, not execution of measurement protocols. |
+| `python3 scripts/test-map-replay.py` | Four tests pass: complete counted evidence accepted; wrong source/architecture, changed files, missing variants and external paths rejected without binary execution. |
 | `python3 scripts/test-native-test-runner.py` | Nineteen tests pass after the corpus/shard rename, including explicit coverage, failed target propagation, timeout handling and independent-target progress. Uses synthetic subprocesses, not the language suite. |
 | `python3 scripts/check-roadmap.py` | Pass after this rewrite: 163 link sets, 106 immutable preparation pairs/tags, eight roadmap rows and commit messages. |
 

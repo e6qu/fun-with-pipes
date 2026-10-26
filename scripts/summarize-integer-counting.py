@@ -193,7 +193,7 @@ def main():
         for label in ('rebuilt-fwp', 'candidate-fwp') + (('grouped-unhinted',) if args.comparison != 'legacy' else ()) + (('recomputed-product',) if args.comparison in ('range', 'compiled-range') else ()):
             counts = report['managedMemory'][label]
             assert all(counts[key] == 0 for key in ('requests', 'requestedBytes', 'retains',
-                       'peakChargedBytes', 'finalChargedBytes', 'collections'))
+                       'peakChargedBytes', 'finalChargedBytes'))
         control = report['managedMemory']['injected-allocation']
         assert control['requests'] == 1 and control['requestedBytes'] == 16
         assert control['peakChargedBytes'] > 0

@@ -25,8 +25,7 @@ def main():
     out = parser.parse_args().output.resolve()
     out.mkdir(parents=True, exist_ok=True)
     compiler = ROOT / 'target/release/fwp'
-    environment = dict(os.environ, FWP_AD_WORKSPACE='0', FWP_GC_STRESS='0',
-                       FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+    environment = dict(os.environ, FWP_AD_WORKSPACE='0')
     environment.pop('FWP_NO_OPT', None)
     source = out / 'prefix.fwp'
     source.write_text('main = [2.0, 3.0, 4.0] | vjp '
@@ -69,7 +68,7 @@ def main():
         assert result.stdout == reference
         prefix, tape, managed = map(json.loads, result.stderr.splitlines())
         assert tape['finalTapeBytes'] == 0 and managed['finalChargedBytes'] == 0
-        assert managed['collections'] == 0
+        assert set(managed) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
         assert prefix['recordedNodes'] == 12291, prefix
         assert prefix['activeNodes'] == (3 if label == 'bounded' else 12291), prefix
         assembly = ['otool', '-tvV', binary] if platform.system() == 'Darwin' else ['objdump', '-d', binary]

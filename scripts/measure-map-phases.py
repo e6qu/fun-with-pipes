@@ -63,22 +63,22 @@ def main():
     helper = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(helper)
     baseline = json.loads((original / 'report.json').read_text())
-    env = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+    env = dict(os.environ)
     cc = os.environ['CC']
     variants = {}
-    for mode in ['tracing', 'arc']:
-        for enabled in ['0', '1']:
-            label = f'{mode}-{enabled}'
-            source = original / f'construction-{mode}-fusion-{enabled}.c'
-            cfile = out / (label + '.c')
-            cfile.write_text(instrument(source.read_text()))
-            binary = out / label
-            command = [cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w',
-                       cfile, '-o', binary, '-lm', '-lpthread']
-            helper.run(command, env)
-            variants[label] = {**helper.inspect(binary, env), 'command': list(map(str, command)),
-                               'sourceSha256': helper.digest(source),
-                               'generatedSha256': helper.digest(cfile), 'samples': []}
+    mode = 'counted'
+    for enabled in ['0', '1']:
+        label = f'{mode}-{enabled}'
+        source = original / f'construction-{mode}-fusion-{enabled}.c'
+        cfile = out / (label + '.c')
+        cfile.write_text(instrument(source.read_text()))
+        binary = out / label
+        command = [cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w',
+                   cfile, '-o', binary, '-lm', '-lpthread']
+        helper.run(command, env)
+        variants[label] = {**helper.inspect(binary, env), 'command': list(map(str, command)),
+                           'sourceSha256': helper.digest(source),
+                           'generatedSha256': helper.digest(cfile), 'samples': []}
     labels = list(variants)
     orders = []
     for round_number in range(16):

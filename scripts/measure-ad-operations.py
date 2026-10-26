@@ -34,8 +34,7 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     compiler = ROOT / 'target/release/fwp'
     cc = os.environ.get('CC', 'cc')
-    environment = dict(os.environ, FWP_AD_WORKSPACE='0', FWP_GC_STRESS='0',
-                       FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+    environment = dict(os.environ, FWP_AD_WORKSPACE='0')
     environment.pop('FWP_NO_OPT', None)
     results = {}
     for name, (program, expected) in CASES.items():
@@ -73,7 +72,7 @@ def main():
             assert result.stdout == expected
             tape, managed = map(json.loads, result.stderr.splitlines())
             assert tape['finalTapeBytes'] == 0 and managed['finalChargedBytes'] == 0
-            assert managed['collections'] == 0
+            assert set(managed) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
             assembly = ['otool', '-tvV', binary] if platform.system() == 'Darwin' else ['objdump', '-d', binary]
             asmfile = out / (stem + '.asm')
             asmfile.write_text(run(assembly).stdout)

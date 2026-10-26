@@ -34,7 +34,7 @@ for row in report['programs']:
     kind = row['name']
     generated = (args.input / (kind + '-generated.c')).read_text()
     assert hashlib.sha256(generated.encode()).hexdigest() == row['generatedSha256']
-    assert generated.count(runtime) == 1 and '#define FWP_ARC_ONLY 1' in generated
+    assert generated.count(runtime) == 1 and 'FWP_ARC_ONLY' not in generated
     language = (args.input / (kind + '.fwp')).read_bytes()
     assert hashlib.sha256(language).hexdigest() == row['languageSha256']
     variants = dict(measurement.variants(generated, kind))
@@ -79,7 +79,8 @@ for row in report['programs']:
         assert set(entry['variants']) == expected
         for samples in entry['variants'].values():
             assert len(samples) == 3 and all(sample == samples[0] for sample in samples)
-            assert samples[0]['finalChargedBytes'] == samples[0]['collections'] == 0
+            assert samples[0]['finalChargedBytes'] == 0
+            assert set(samples[0]) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
         for opt in ['-O1', '-O2']:
             shared = entry['variants'][normal + opt][0]
             separate = entry['variants'][control + opt][0]

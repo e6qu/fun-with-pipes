@@ -66,8 +66,7 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     compiler = ROOT / 'target/release/fwp'
     cc = os.environ.get('CC', 'cc')
-    environment = dict(os.environ, FWP_AD_WORKSPACE='0', FWP_GC_STRESS='0',
-                       FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+    environment = dict(os.environ, FWP_AD_WORKSPACE='0')
     environment.pop('FWP_NO_OPT', None)
     results = {}
     for count in ([1, 256, 257, 4096] if args.comparison == 'growth' else [1, 257, 4096, 16384]):
@@ -115,7 +114,9 @@ def main():
             assert registry['registryRequests'] == (count if label == 'incremental-control' else (count - 1).bit_length() + 1)
             assert registry['unavailableSlotsScanned'] == (count * (count - 1) // 2 if label == 'restart-control' else 0)
             assert registry['cursorBytes'] == 8
-            assert tape['finalTapeBytes'] == 0 and managed['finalChargedBytes'] == 0 and managed['collections'] == 0
+            assert tape['finalTapeBytes'] == 0
+            assert managed['finalChargedBytes'] == 0
+            assert set(managed) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
             asm = out / (stem + '.asm')
             asm.write_text(run(['otool', '-tvV', binary] if platform.system() == 'Darwin' else ['objdump', '-d', binary]).stdout)
             cases[label] = dict(output=expected, registry=registry, tape=tape, managed=managed,
@@ -131,7 +132,7 @@ def main():
     report = dict(head=run(['git', 'rev-parse', 'HEAD']).stdout.strip(), hardware=platform.uname()._asdict(),
                   cpu=run(['sysctl', '-n', 'machdep.cpu.brand_string'] if platform.system() == 'Darwin' else ['lscpu']).stdout,
                   cc=run([cc, '--version']).stdout, rustc=run(['rustc', '-vV']).stdout,
-                  environment={k: environment[k] for k in ['FWP_AD_WORKSPACE', 'FWP_GC_STRESS', 'FWP_GC_VERIFY', 'FWP_REUSE_VERIFY']},
+                  environment={k: environment[k] for k in ['FWP_AD_WORKSPACE']},
                   comparison=args.comparison, results=results,
                   scope='ARC, cold numeric registry, actual equivalent gradients. Growth control restores one-slot registry growth; '
                         'search control only restarts selection at zero. Sequential creation with the cursor skips no unavailable slots; '

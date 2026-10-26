@@ -130,8 +130,8 @@ def main():
         for path in sorted(folder.glob("*.wasm")):
             entry = {"file": path.name, **module(path)}
             code = path.with_suffix(".c").read_bytes()
-            assert b"#define FWP_ARC_ONLY 1" in code
-            assert b"#define FWP_RESOURCE_OWNERS 1" in code
+            assert b"FWP_ARC_ONLY" not in code
+            assert b"FWP_RESOURCE_OWNERS" not in code
             entry["c_sha256"] = hashlib.sha256(code).hexdigest()
             if path.name.startswith("tasks-"):
                 assert path.with_suffix(".stdout").read_bytes() == expected

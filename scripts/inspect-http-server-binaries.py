@@ -17,22 +17,22 @@ args = parser.parse_args()
 revision = (args.functional / 'revision.txt').read_text().strip()
 assert revision == (args.memory / 'revision.txt').read_text().strip()
 cases = [(args.functional, Path('server') / f'{mode}{opt}.exe', mode, opt,
-          'server-functional') for mode in ['tracing', 'arc'] for opt in ['-O1', '-O2']]
+          'server-functional') for mode in ['counted'] for opt in ['-O1', '-O2']]
 cases += [(args.memory, Path('server-memory') / f'server-{mode}{suffix}.exe',
            mode, '-O2', 'server-memory' + suffix)
-          for mode in ['tracing', 'arc'] for suffix in ['', '-measured']]
-cases += [(args.memory, Path('server-memory') / f'client{suffix}.exe', 'arc',
+          for mode in ['counted'] for suffix in ['', '-measured']]
+cases += [(args.memory, Path('server-memory') / f'client{suffix}.exe', 'counted',
            '-O2', 'memory-client' + suffix) for suffix in ['', '-counted']]
 rows = []
 for root, relative, mode, opt, workload in cases:
     binary = root / relative
     source = binary.with_suffix('.c')
     code = source.read_text()
-    assert ('#define FWP_ARC_ONLY 1' in code) == (mode == 'arc')
+    assert 'FWP_ARC_ONLY' not in code
     symbols = subprocess.check_output([str(args.llvm_bin / 'llvm-nm'), str(binary)], text=True)
     found = [name for name in ['fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep']
              if name in symbols]
-    assert bool(found) == (mode == 'tracing'), (binary, found)
+    assert not found, (binary, found)
     sections = subprocess.check_output(
         [str(args.llvm_bin / 'llvm-size'), '--format=sysv', str(binary)], text=True)
     sizes = {}
@@ -61,7 +61,8 @@ for root, relative, mode, opt, workload in cases:
                              ['w_start', 'w_handle', 'w_job_finish', 'g_call_value',
                               'g_call_drop', 'w_server_release', 'http2_serve'])],
     })
-    print(relative, text_bytes, 'text-section bytes (including padding); tracing control passed', flush=True)
+    print(relative, text_bytes, 'text-section bytes (including padding); collector symbols absent', flush=True)
+assert len(rows) == 6, len(rows)
 report = {'revision': revision, 'binaries': rows,
           'method': 'Static LLVM symbols, section sizes and disassembly; no local execution.'}
 (args.memory / 'server-binary-review.json').write_text(json.dumps(report, indent=2) + '\n')
