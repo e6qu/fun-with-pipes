@@ -90,7 +90,7 @@ int main(void){
  g_tls *same=g_tls_new("ca|file",1,long_name,"cert","key");
  V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);V address=fwp_p_local_addr(listener);snprintf(target,sizeof target,"%s",STR(address)->d);
  size_t at=strlen(target);memmove(target+7,target,at+1);memcpy(target,"grpc://",7);at+=7;memset(target+at,'/',4096);target[at+4096]=0;
- options=original;fwp_task *task=fwp_spawn_task(0,client,0,0,0);fwp_await(task);
+ options=original;fwp_task *task=fwp_spawn_task(0,client,0,0,0);fwp_task_own_internal(task,1);fwp_await(task);fwp_task_drop(PTR(task));
  if(!connected||connected->refs!=2||g_pool!=connected||!g_same_tls(connected,same)||connected->tlskey==original->key)return 1;
  if(strcmp(connected->authority,target)||connected->authority!=(char*)(connected+1)||connection_allocations!=1||connection_bytes!=sizeof(g_conn)+strlen(target)+1)return 1;
  drop_options(original);options=0;

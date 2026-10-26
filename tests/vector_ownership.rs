@@ -59,8 +59,8 @@ fn vector_results_preserve_lanes_aliases_and_checked_failures() {
                 if let Some(path) = std::env::var_os("FWP_VECTOR_ARTIFACTS") {
                     let path = std::path::PathBuf::from(path);
                     std::fs::create_dir_all(&path).unwrap();
-                    std::fs::write(path.join(format!("vector-counted.c")), &code).unwrap();
-                    std::fs::copy(&binary, path.join(format!("vector-counted.exe"))).unwrap();
+                    std::fs::write(path.join("vector-counted.c"), &code).unwrap();
+                    std::fs::copy(&binary, path.join("vector-counted.exe")).unwrap();
                     let mut disassemble = Command::new(if cfg!(target_os = "macos") {
                         "otool"
                     } else if cfg!(target_os = "windows") {
@@ -77,8 +77,7 @@ fn vector_results_preserve_lanes_aliases_and_checked_failures() {
                             })
                             .arg(&binary),
                     );
-                    std::fs::write(path.join(format!("vector-counted.asm")), output.stdout)
-                        .unwrap();
+                    std::fs::write(path.join("vector-counted.asm"), output.stdout).unwrap();
                 }
             }
             let actual = Command::new(&binary).output().unwrap();

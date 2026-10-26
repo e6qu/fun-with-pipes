@@ -93,9 +93,9 @@ int main(int argc,char **argv){
  g_stream *s=g_stream_new(c,1);s->sent_headers=1;s->remote_end=1;s->local_end=stage==14;
  g_route route={0};route.kind=G_ROUTE_METHOD;route.m=&method;
  g_job job={0};job.c=c;job.s=s;job.srv=&server;job.route=&route;strcpy(job.what,"owned-values");
- fwp_task *task=fwp_spawn_task(0,owned_serve,&job,0,0);
+ fwp_task *task=fwp_spawn_task(0,owned_serve,&job,0,0);fwp_task_own_internal(task,1);
  if(stage==4||stage==12){fwp_p_task_yield();if(task->done||encoded!=1)_Exit(251);fwp_p_task_cancel(PTR(task));}
- fwp_await(task);
+ fwp_await(task);fwp_task_drop(PTR(task));
  if(finished!=1||cancelled!=((stage==4||stage==12)?1:0)||trapped!=((stage==2||stage==3||stage==11)?1:0))_Exit(252);
  int expected=(stage==1||stage==2||stage==10)?0:1;if(encoded!=expected)_Exit(253);
 

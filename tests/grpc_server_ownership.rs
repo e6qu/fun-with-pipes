@@ -103,11 +103,12 @@ int main(int argc,char **argv){
  if(argc!=3)return 30;cert=argv[1];key=argv[2];fwp_lib_init();
  for(int accepted=0;accepted<2;accepted++){
   contexts=wires=owners=cancelled=0;watched_fd=(uintptr_t)FWP_INVALID_SOCKET;watched_ctx=0;watched_wire=watched_owner=0;
-  fwp_task *task=fwp_spawn_task(0,server,0,0,0);fwp_p_task_yield();
+  fwp_task *task=fwp_spawn_task(0,server,0,0,0);fwp_task_own_internal(task,1);fwp_p_task_yield();
   if(watched_fd==(uintptr_t)FWP_INVALID_SOCKET||!watched_ctx||task->done)return 31;
   fwp_socket_t pair[2];SSL *session=0;if(accepted){if(!connected_pair(pair))return 32;session=fwp_tls_accepted(watched_ctx,pair[0]);if(!session)return 33;}
   fwp_p_task_cancel(PTR(task));fwp_await(task);
   if(!task->done||cancelled!=1||fwp_cleanups)return 34;
+  fwp_task_drop(PTR(task));
   if(!listener_closed())return 1;
   if(!accepted){if(contexts!=1||wires!=1||owners!=1)return 2;}
   else {
@@ -119,15 +120,17 @@ int main(int argc,char **argv){
  }
  for(fail_stage=1;fail_stage<=2;fail_stage++){
   contexts=wires=owners=cancelled=0;watched_fd=(uintptr_t)FWP_INVALID_SOCKET;watched_ctx=0;watched_wire=watched_owner=0;
-  fwp_task *task=fwp_spawn_task(0,server,0,0,0);fwp_await(task);
+  fwp_task *task=fwp_spawn_task(0,server,0,0,0);fwp_task_own_internal(task,1);fwp_await(task);
   if(!task->done||cancelled!=1||fwp_cleanups||contexts!=1||wires!=1||owners!=1)return 6;
+  fwp_task_drop(PTR(task));
   if(fail_stage==2&&(watched_fd==(uintptr_t)FWP_INVALID_SOCKET||!listener_closed()))return 7;
  }
  fail_stage=0;plain=1;contexts=wires=owners=cancelled=0;watched_fd=(uintptr_t)FWP_INVALID_SOCKET;watched_ctx=0;watched_wire=watched_owner=0;
- fwp_task *task=fwp_spawn_task(0,server,0,0,0);fwp_p_task_yield();
+ fwp_task *task=fwp_spawn_task(0,server,0,0,0);fwp_task_own_internal(task,1);fwp_p_task_yield();
  if(watched_fd==(uintptr_t)FWP_INVALID_SOCKET||watched_ctx||task->done)return 8;
  fwp_p_task_cancel(PTR(task));fwp_await(task);
  if(cancelled!=1||fwp_cleanups||!listener_closed()||contexts||wires||owners)return 9;
+  fwp_task_drop(PTR(task));
  return 0;
 }
 "#;

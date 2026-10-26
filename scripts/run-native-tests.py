@@ -206,7 +206,7 @@ def main():
           "integration targets", flush=True)
     print("\n".join(selected), flush=True)
     split = args.index("--")
-    build_args = args[:split] + ["--keep-going", "--no-run", "--message-format=json"]
+    build_args = args[:split] + ["--no-run", "--message-format=json"]
     print("Build: " + " ".join(build_args), flush=True)
     built = subprocess.run(build_args, cwd=ROOT, stdout=subprocess.PIPE, text=True)
     if built.returncode:

@@ -219,11 +219,12 @@ int main(void){
   if(stage==3||stage==4)s->bad=strdup("bad request");
   if(stage==6)s->reset=strdup("reset");
   g_job job={0};job.c=c;job.s=s;job.srv=&srv;
-  fwp_task *t=fwp_spawn_task(0,receive,&job,0,0);
+  fwp_task *t=fwp_spawn_task(0,receive,&job,0,0);fwp_task_own_internal(t,1);
   if(stage==5){fwp_p_task_yield();if(t->done||frees||s->mhead)_Exit(6);fwp_p_task_cancel(PTR(t));}
   fwp_await(t);
   int expected=stage==0?2:stage==1?3:stage==2?2:stage==3?1:stage==4?2:stage==5?1:stage==6?2:1;
   if(!t->done||allocations!=expected||frees!=expected||cancelled!=(stage==5||stage==6)||fwp_cleanups)return 1;
+  fwp_task_drop(PTR(t));
 
  }
  fwp_lib_finish();return 0;
@@ -296,7 +297,7 @@ static void attempt(void *arg, int cancelled) {
 int main(int argc, char **argv) {
     (void)argv; compress_test=argc>1;
     fwp_lib_init();fwp_heap_start();fwp_tasks_init();
-    fwp_task *task=fwp_spawn_task(0,attempt,0,0,0);fwp_await(task);
+    fwp_task *task=fwp_spawn_task(0,attempt,0,0,0);fwp_task_own_internal(task,1);fwp_await(task);fwp_task_drop(PTR(task));
     return 201;
 }
 "#;
@@ -531,7 +532,7 @@ int main(int argc,char **argv){
  }
  fwp_lib_init();fwp_heap_start();fwp_tasks_init();
  fputs("before fatal allocation\n",stdout);
- fwp_task *task=fwp_spawn_task(0,attempt_transport,0,0,0);fwp_await(task);
+ fwp_task *task=fwp_spawn_task(0,attempt_transport,0,0,0);fwp_task_own_internal(task,1);fwp_await(task);fwp_task_drop(PTR(task));
  return 201;
 }
 "#;

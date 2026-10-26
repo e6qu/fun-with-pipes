@@ -31,6 +31,9 @@ int main(int argc, char **argv) {
     int mode = atoi(argv[2]); /* 0: consume all; 1: stop early; 2: retain first position */
     if (!count || count > 128 || mode < 0 || mode > 2) return 31;
     fwp_lib_init(); fwp_heap_start(); fwp_tasks_init();
+    g_call_owner empty_call = {0, 0};
+    g_call_release(&empty_call);
+    g_call_release(&empty_call); /* cleanup after an owner was transferred */
     double start = charged();
     measured = 1;
     g_server server = {0}; server.module = "stream-storage";

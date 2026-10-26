@@ -80,7 +80,7 @@ int main(void){
   g_stream *s=g_stream_new(c,(uint32_t)(1+2*stage));s->sent_headers=1;s->gzip=gzip;
   if(stage==3)c->dead=strdup("closed");if(stage==4)s->reset=strdup("reset");
   g_job job={0};job.c=c;job.s=s;
-  fwp_task *t=fwp_spawn_task(0,sender,&job,0,0);
+  fwp_task *t=fwp_spawn_task(0,sender,&job,0,0);fwp_task_own_internal(t,1);
   if(stage==1||stage==2||stage==5){
    fwp_p_task_yield();if(t->done||!watched_buffer||buffer_frees||result!=-1)return 2;
    if(stage==5){c->conn_window=s->window=65535;fwp_wake_all(&c->space_wl);}
@@ -88,6 +88,7 @@ int main(void){
   }
   fwp_await(t);
   if(!t->done||buffer_frees!=1||watched_buffer||cancelled!=(stage==1||stage==2)||fwp_cleanups)return 1;
+  fwp_task_drop(PTR(t));
   if(stage==0||stage==5){if(result!=1)return 3;int error=check_frames(c,gzip);if(error)return error;}
   else if(stage==3||stage==4){if(result!=0)return 4;}
   free(c->dead);c->dead=0;

@@ -116,11 +116,12 @@ int main(void){
   mode=0;V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);V address=fwp_p_local_addr(listener);
   snprintf(target,sizeof target,"%s%s",test==2?"https://":"",STR(address)->d);
   mode=test;phase=res_freed=ssl_freed=cancelled=backgrounds=0;watched_fd=FWP_INVALID_SOCKET;watched_res=0;result=0;
-  fwp_task *task=fwp_spawn_task(0,client,0,0,0);
+  fwp_task *task=fwp_spawn_task(0,client,0,0,0);fwp_task_own_internal(task,1);
   for(int i=0;i<30&&!phase;i++)fwp_p_task_sleep(tick);
   if(!phase||task->done||watched_fd==FWP_INVALID_SOCKET)return 31;
   fwp_p_task_cancel(PTR(task));fwp_await(task);
   if(!task->done||cancelled!=1||result||backgrounds||fwp_cleanups)return 32;
+  fwp_task_drop(PTR(task));
   if(!socket_closed(watched_fd))return 1;
   if(res_freed!=1)return 2;if(ssl_freed!=(mode==2?1:0))return 3;
   mode=0;fwp_p_tcp_stop(listener);

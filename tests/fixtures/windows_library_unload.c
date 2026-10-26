@@ -67,7 +67,7 @@ __declspec(dllexport) void setup(struct snapshot *s) {
  fwp_task *detached=fwp_spawn_task(0,blocked,s,0,1);
  s->fibers[0]=child->ctx.fiber;s->fibers[1]=detached->ctx.fiber;
  (void)fwp_p_task_yield();
- fwp_task *done=fwp_spawn_task(0,completed,s,0,0);s->fibers[2]=done->ctx.fiber;
- (void)fwp_await(done);
+ fwp_task *done=fwp_spawn_task(0,completed,s,0,0);fwp_task_own_internal(done,1);s->fibers[2]=done->ctx.fiber;
+ (void)fwp_await(done);fwp_task_drop(PTR(done));
  if(s->entered!=2||s->completed!=1||s->cancelled)s->order_error=1;
 }

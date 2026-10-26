@@ -123,8 +123,8 @@ void setup(struct snapshot *s) {
  fwp_task *detached=fwp_spawn_task(0,blocked,s,0,1);
  s->stacks[0]=child->stack;s->stacks[1]=detached->stack;s->stack_bytes=child->stack_size;
  (void)fwp_p_task_yield();
- fwp_task *done=fwp_spawn_task(0,completed,s,0,0);s->stacks[2]=done->stack;
- (void)fwp_await(done);s->poll_fd=fwp_epfd;
+ fwp_task *done=fwp_spawn_task(0,completed,s,0,0);fwp_task_own_internal(done,1);s->stacks[2]=done->stack;
+ (void)fwp_await(done);fwp_task_drop(PTR(done));s->poll_fd=fwp_epfd;
  if(s->entered!=2||s->completed!=1||s->cancelled||!fwp_stack_pool_n)s->order_error=1;
 }
 "#;

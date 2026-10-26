@@ -74,10 +74,11 @@ int main(void){
   watched_request=wire_buffer=0;request_frees=wire_frees=0;c->out.len=0;c->conn_window=stage==1?0:65535;
   g_stream *s=g_stream_new(c,(uint32_t)(1+2*stage));s->sent_headers=1;
   g_sender *x=fwp_alloc(sizeof *x);x->c=c;x->s=s;x->remote=&remote;
-  fwp_task *t=fwp_spawn_task(0,g_send_all,x,0,1);
+  fwp_task *t=fwp_spawn_task(0,g_send_all,x,0,1);fwp_task_own_internal(t,1);
   if(stage==1){fwp_p_task_yield();if(t->done||!watched_request||!wire_buffer||request_frees||wire_frees)return 2;fwp_p_task_cancel(PTR(t));}
   fwp_await(t);
   if(!t->done||request_frees!=1||watched_request||wire_buffer||wire_frees!=(stage==2?0:1)||fwp_cleanups)return 1;
+  fwp_task_drop(PTR(t));
   if(stage==0){if(!s->local_end||s->reset)return 3;int found=0;for(size_t i=0;i+7<=c->out.len;i++)if(!memcmp(c->out.d+i,"request",7))found=1;if(!found)return 4;}
   if(stage==2&&(!s->reset||strcmp(s->reset,"trap: encode trap")))return 5;
 

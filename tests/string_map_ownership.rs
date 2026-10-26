@@ -128,17 +128,17 @@ fn string_maps_preserve_values_and_release_each_exit() {
         let binary = dir.join("strings.exe");
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
         for (input_index, (input, reference)) in inputs.iter().zip(&references).enumerate() {
-            for verify in { &["0"][..] } {
+            {
                 let actual = checked(Command::new(&binary).env("FWP_TEXT_INPUT", input));
                 assert_eq!(
                     (&actual.stdout, &actual.stderr),
                     (&reference.stdout, &reference.stderr),
-                    "counted {opt} {verify}"
+                    "counted {opt}"
                 );
                 if let Some(destination) = std::env::var_os("FWP_STRING_MAP_ARTIFACTS") {
                     let destination = std::path::PathBuf::from(destination);
                     std::fs::create_dir_all(&destination).unwrap();
-                    let stem = format!("language-counted-{}-{input_index}-{verify}", &opt[1..]);
+                    let stem = format!("language-counted-{}-{input_index}", &opt[1..]);
                     std::fs::write(destination.join(format!("{stem}.stdout")), actual.stdout)
                         .unwrap();
                     std::fs::write(destination.join(format!("{stem}.input")), input).unwrap();

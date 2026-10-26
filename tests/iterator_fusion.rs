@@ -201,7 +201,7 @@ main = [
             assert_eq!(output.stdout, reference.stdout, "{producers} {opt}");
             assert_eq!(output.stderr, reference.stderr, "{producers} {opt}");
             if producers == "1" {
-                let needle = "    fwp_mem_free((void *)(uintptr_t)v);";
+                let needle = "    if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);";
                 assert!(measured.contains(needle));
                 let omitted = measured.replace(needle, "/* omit physical release */");
                 fwp::cgen::compile_c(&omitted, &binary, opt).unwrap();

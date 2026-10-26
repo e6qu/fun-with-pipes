@@ -131,10 +131,11 @@ int main(void){
   const fwp_desc *request_fields[]={&descriptor};
   fwp_rpc method={0};method.result_drop=probe_result_drop;method.nreq=stage==4?1:0;method.req=request_fields;method.output=kind==1?1:0;method.resp=&descriptor;method.error=kind==2?&descriptor:0;
   g_route route={0};route.kind=G_ROUTE_METHOD;route.m=&method;g_job job={0};job.c=c;job.s=s;job.srv=&srv;job.route=&route;strcpy(job.what,"probe");
-  fwp_task *t=fwp_spawn_task(0,serve,&job,0,0);
+  fwp_task *t=fwp_spawn_task(0,serve,&job,0,0);fwp_task_own_internal(t,1);
   if(stage==1){fwp_p_task_yield();if(t->done||!watched_response||!watched_wire||response_frees||wire_frees)return 2;fwp_p_task_cancel(PTR(t));}
   fwp_await(t);
   if(!t->done||response_frees!=(stage>=3?0:1)||canonical_frees!=(kind==2&&stage!=4?1:0)||wire_frees!=(stage<2?1:0)||watched_response||watched_canonical||watched_wire||cancelled!=(stage==1)||fwp_cleanups||watched_request||request_frees!=(stage==4||kind==4?1:0))return 1;
+  fwp_task_drop(PTR(t));
   if(stage==0){if(result!=(kind==3?1:-1))return 3;int found=0;const unsigned char errorbytes[]={1,42,0,0,0,0,0,0,0};const void *expected=kind==2?(const void*)errorbytes:(const void*)"response";size_t n=kind==2?9:8;for(size_t i=0;i+n<=c->out.len;i++)if(!memcmp(c->out.d+i,expected,n))found=1;if(!found)return 4;}
   if(stage==2&&strcmp(fwp_trap_msg,"response trap"))return 5;
   if(stage==3&&strcmp(fwp_trap_msg,"canonical trap"))return 6;

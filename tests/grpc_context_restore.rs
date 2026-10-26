@@ -79,10 +79,11 @@ int main(void){
  g_ctx before={0},inside={0},nested={0};before.deadline=1;inside.deadline=2;nested.deadline=3;
  prior_context=&before;inner_context=&inside;nested_context=&nested;fwp_cur->gctx=&before;
  for(stage=0;stage<6;stage++){
-  depth=entered=cancelled=typed=trapped=0;fwp_task *task=fwp_spawn_task(0,call,0,0,0);
+  depth=entered=cancelled=typed=trapped=0;fwp_task *task=fwp_spawn_task(0,call,0,0,0);fwp_task_own_internal(task,1);
   if(stage==3){fwp_p_task_yield();if(!entered||task->done||task->gctx!=inner_context)return 2;fwp_p_task_cancel(PTR(task));}
   fwp_await(task);
   if(!task->done||task->gctx||task->gctx_storage.deadline||fwp_cur->gctx!=prior_context||cancelled!=(stage==3)||typed!=(stage==1||stage==5)||trapped!=(stage==2||stage==4)||fwp_cleanups)return 1;
+  fwp_task_drop(PTR(task));
 
  }
  fwp_cur->gctx=0;fwp_lib_finish();return 0;

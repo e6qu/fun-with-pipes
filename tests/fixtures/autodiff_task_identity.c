@@ -2,6 +2,9 @@
  * and task IDs. An ordinary program cannot send these derivatives to a worker. */
 static const fwp_desc identity_element={.kind=K_I64};
 int main(int argc,char **argv) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stderr), _O_BINARY) < 0) return 193;
+#endif
     if(argc!=2)return 190;
     int mode=atoi(argv[1]); /* 0: root startup, 1: cross-task, 2: retired task */
     if(mode<0 || mode>2)return 190;

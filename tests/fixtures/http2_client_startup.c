@@ -42,14 +42,18 @@ int main(void) {
         V listener = fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"), ERROR_TYPE);
         V address = fwp_p_local_addr(listener); snprintf(target, sizeof target, "%s", STR(address)->d);
         pending = 0; started_reader = started_writer = 0; connected = 0; trapped = finalized = 0;
-        fwp_task *task = fwp_spawn_task(0, connect_client, 0, 0, 0); fwp_await(task);
+        fwp_task *task = fwp_spawn_task(0, connect_client, 0, 0, 0);
+        fwp_task_own_internal(task, 1);
+        fwp_await(task);
         if (startup_stage < 0) {
             if (!task->done || !trapped || pending || fwp_cleanups || g_pool) return 11;
+            fwp_task_drop(PTR(task));
             fwp_p_tcp_stop(listener);
             continue;
         }
         g_conn *c = pending;
         if (!task->done || !c || fwp_cleanups || trapped != (startup_stage < 2)) return 1;
+        fwp_task_drop(PTR(task));
         if (startup_stage == 0 && (connected || g_pool || started_reader || started_writer)) return 2;
         if (startup_stage == 1 && (connected || g_pool || !started_reader || started_writer)) return 3;
         if (startup_stage == 2) {

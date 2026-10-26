@@ -78,7 +78,7 @@ static int probe(void){
   mode=0;V listener=fwp_p_tcp_listen(bind_address,0);target=fwp_rc_fresh(fwp_p_local_addr(listener));
   mode=test;phase=res_freed=ssl_freed=cancelled=0;watched_fd=-1;watched_res=0;
   fwp_task *task=fwp_spawn_task(0,client,0,0,0);
-  fwp_rc_fresh(PTR(task));fwp_rc_dup(PTR(task)); /* scheduler and fixture */
+  task->ownership=FWP_TASK_SHARED;fwp_rc_fresh(PTR(task));fwp_rc_dup(PTR(task)); /* scheduler and fixture */
   for(int i=0;i<30&&!phase;i++)fwp_p_task_sleep(tick);
   if(!phase||task->done||watched_fd<0)return 31;
   fwp_p_task_cancel(PTR(task));fwp_await(task);

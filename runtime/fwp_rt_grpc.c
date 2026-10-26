@@ -310,8 +310,9 @@ static void g_call_release(void *value) {
     g_stream *s = owner->s;
     owner->c = 0;
     owner->s = 0;
-    g_stream_reader_release(c, s);
-    g_conn_drop(c);
+    /* Empty before opening a call, and after transferring it to an iterator. */
+    if (s) g_stream_reader_release(c, s);
+    if (c) g_conn_drop(c);
 }
 
 /* Nonallocating failure marker: no stream observes an unpublished connection. */

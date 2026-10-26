@@ -77,7 +77,7 @@ int main(void){
  g_tls *original=g_tls_new("ca|file",1,long_name,"cert","key");
  g_tls *same=g_tls_new("ca|file",1,long_name,"cert","key");
  V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);V address=fwp_p_local_addr(listener);snprintf(target,sizeof target,"%s",STR(address)->d);
- options=original;fwp_task *task=fwp_spawn_task(0,client,0,0,0);fwp_await(task);
+ options=original;fwp_task *task=fwp_spawn_task(0,client,0,0,0);fwp_task_own_internal(task,1);fwp_await(task);fwp_task_drop(PTR(task));
  if(!connected||connected->refs!=2||g_pool!=connected||!g_same_tls(connected,same)||connected->tlskey==original->key)return 1;
  drop_options(original);options=0;
  g_ctx context={0};context.tls=same;fwp_cur->gctx=&context;

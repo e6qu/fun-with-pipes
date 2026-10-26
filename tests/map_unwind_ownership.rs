@@ -298,7 +298,8 @@ int main(void) {
             "int original_main(int argc, char **argv)",
         );
         for opt in ["-O1", "-O2"] {
-            for (case, code, probe) in [("scalar", &runtime, &probe)] {
+            {
+                let (case, code, probe) = ("scalar", &runtime, &probe);
                 {
                     let missing = probe.replace("fwp_rc_free_obj(scalar_word);", "");
                     assert_ne!(&missing, probe);

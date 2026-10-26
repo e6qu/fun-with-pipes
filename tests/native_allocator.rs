@@ -53,11 +53,11 @@ fn native_pages_counts_reuse_and_unload() {
     let end =
         source.find("#endif /* FWP_NATIVE_HEAP */").unwrap() + "#endif /* FWP_NATIVE_HEAP */".len();
     let allocator = &source[..end];
-    let original = "static void fwp_mem_free(void *p) {";
+    let original = "static void fwp_mem_free(void *p) {\n";
     assert_eq!(allocator.matches(original).count(), 1);
     let missing_free = allocator.replace(
         original,
-        "static void fwp_mem_free(void *p) { (void)p; return;",
+        "static void fwp_mem_free(void *p) { (void)p; return;\n",
     );
     let dir = fwp::cgen::TempDir::new("native-allocator").unwrap();
     let binary = dir.join("probe.exe");

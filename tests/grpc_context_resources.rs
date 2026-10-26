@@ -91,7 +91,7 @@ static uintptr_t observed_callback(uintptr_t f){
  if(stage==3){entered=1;fwp_park(0,0);fwp_check_cancel();_Exit(13);}
  if(stage==4||stage==5||stage==6||stage==7||stage==8){
   fwp_cleanup overflow_cleanup;if(stage==7){((g_tls*)watched_tls)->users=SIZE_MAX-1;fwp_cleanup_push(&overflow_cleanup,overflow_restore,watched_tls);}
-  fail_spawn=stage==6;spawned=fwp_spawn_task(0,child,0,0,stage==5);
+  fail_spawn=stage==6;spawned=fwp_spawn_task(0,child,0,0,stage==5);if(stage==5)fwp_task_own_internal(spawned,1);
   if(stage==6||stage==7)_Exit(14);
  }
  return 42;
@@ -115,11 +115,12 @@ int main(void){
  for(stage=0;stage<10;stage++){
   frees=entered=cancelled=trapped=typed=scope_returned=fail_spawn=borrow_depth=0;memset(owned,0,sizeof owned);watched_tls=spawned=0;
   V fields[5];fields[0]=fwp_some(fwp_cstr("ca"));fields[1]=FWP_TRUE;fields[2]=fwp_some(fwp_cstr("name"));fields[3]=fwp_some(fwp_cstr("cert"));fields[4]=fwp_some(fwp_cstr("key"));V options=fwp_record(5,fields);
-  fwp_task *task=fwp_spawn_task(0,call,(void*)(uintptr_t)options,0,0);
+  fwp_task *task=fwp_spawn_task(0,call,(void*)(uintptr_t)options,0,0);fwp_task_own_internal(task,1);
   if(stage==3){fwp_p_task_yield();if(!entered||task->done||frees)return 2;fwp_p_task_cancel(PTR(task));}
   fwp_await(task);
-  if(stage==5){if(frees||!spawned||!entered||((fwp_task*)spawned)->done)return 3;fwp_make_ready(spawned);fwp_await(spawned);}
+  if(stage==5){if(frees||!spawned||!entered||((fwp_task*)spawned)->done)return 3;fwp_make_ready(spawned);fwp_await(spawned);fwp_task_drop(PTR(spawned));}
   if(!task->done||frees!=1||fwp_cleanups||cancelled!=(stage==3)||typed!=(stage==1)||trapped!=(stage==2||stage==6||stage==7)||task->gctx_owner)return 1;
+  fwp_task_drop(PTR(task));
 
  }
  // Read-once cache options retain their original cache lifetime.

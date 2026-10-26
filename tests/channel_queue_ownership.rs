@@ -128,7 +128,7 @@ int main(void){
   V queued=0;if(send_mode){queued=fwp_rc_fresh(fwp_str_new("queued",6));fSEND(blocking_ch,queued);}
   blocking_value=send_mode?fwp_rc_fresh(fwp_str_new("pending",7)):0;
   fwp_rc_dup(blocking_ch);fwp_task *t=fwp_spawn_task(0,worker,0,0,0);
-  fwp_rc_fresh(PTR(t));fwp_rc_dup(PTR(t)); /* scheduler and fixture handle */
+  t->ownership=FWP_TASK_SHARED;fwp_rc_fresh(PTR(t));fwp_rc_dup(PTR(t)); /* scheduler and fixture handle */
   fwp_p_task_yield();
   fwp_chan *c=(fwp_chan *)(uintptr_t)blocking_ch;
   if(*fwp_rc_slot(blocking_ch)!=2||!(send_mode?c->sendq.head:c->recvq.head))return 16;
@@ -278,7 +278,7 @@ int main(void){
         ] {
             fwp::cgen::compile_c(&format!("{control}\n{probe}"), &exe, opt).unwrap();
             let out = Command::new(&exe).output().unwrap();
-            assert_eq!(out.status.code(), Some(code));
+            assert_eq!(out.status.code(), Some(code), "{opt}: {out:?}");
         }
         fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
 

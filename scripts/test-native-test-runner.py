@@ -2,6 +2,7 @@
 """Verify full native coverage, stable Mac shards and failure propagation."""
 import importlib.util
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -288,12 +289,37 @@ class Coverage(unittest.TestCase):
              patch.object(SHARDS, "run_tests", return_value=1) as run:
             self.assertEqual(SHARDS.main(), 1)
             self.assertEqual(build.call_args.args[0], ["cargo", "test", "--no-fail-fast",
-                "--test", "b", "--test", "a", "--keep-going", "--no-run", "--message-format=json"])
+                "--test", "b", "--test", "a", "--no-run", "--message-format=json"])
             self.assertEqual(run.call_args.args[0], [(("test", "b"), ["/b"]), (("test", "a"), ["/a"])])
             self.assertEqual(run.call_args.args[1], ["--nocapture"])
             with patch.object(SHARDS, "assignment", return_value={"regular": ["a"], "ownership": ["b"]}):
                 with self.assertRaises(ValueError):
                     SHARDS.main()
+
+    def test_real_cargo_build_and_test_failure_propagation(self):
+        # Exercise Cargo's actual option parser and artifact protocol. Mocked
+        # subprocesses alone cannot reject an unsupported command-line option.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            (root / "tests").mkdir()
+            (root / "Cargo.toml").write_text(
+                '[package]\nname="runner-probe"\nversion="0.0.0"\nedition="2021"\n'
+                '[workspace]\n')
+            (root / "tests/a.rs").write_text(
+                '#[test] fn fails() { panic!("intentional runner control"); }\n')
+            (root / "tests/b.rs").write_text('#[test] fn passes() {}\n')
+            schedule = root / "schedule.json"
+            schedule.write_text(json.dumps({"regular": ["a"], "ownership": ["b"]}))
+            logs = root / "logs"
+            with patch.object(SHARDS, "ROOT", root), \
+                 patch.object(SHARDS, "SCHEDULE", schedule), \
+                 patch.dict(os.environ, {"CARGO_TARGET_DIR": str(root / "target"),
+                                         "CARGO_NET_OFFLINE": "true"}), \
+                 patch("sys.argv", ["run-native-tests.py", "--targets", "a", "b",
+                                    "--logs", str(logs), "--idle-timeout", "30"]):
+                self.assertEqual(SHARDS.main(), 1)
+            self.assertIn("intentional runner control", (logs / "test-a.log").read_text())
+            self.assertIn("test passes ... ok", (logs / "test-b.log").read_text())
 
     def test_focused_unknown_or_duplicate_targets_fail_before_building(self):
         for names in [["a", "a"], ["unknown"]]:

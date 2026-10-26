@@ -177,7 +177,7 @@ int main(void){
  if(setenv("FWP_SERVICE_FAILURE_CA","test-ca",1))return 212;
 #endif
  fwp_lib_init();fwp_heap_start();fwp_tasks_init();fwp_trap_recover=g_trap_recover;
- fwp_task *task=fwp_spawn_task(0,construct,0,0,0);fwp_await(task);
+ fwp_task *task=fwp_spawn_task(0,construct,0,0,0);fwp_task_own_internal(task,1);fwp_await(task);fwp_task_drop(PTR(task));
  if(probe_error)return probe_error;
  if(fwp_cleanups||entry_allocations!=33||entry_frees!=32)return 205;
  fwp_lib_finish();

@@ -1,51 +1,58 @@
 # Current work
 
-**Next:** inspect every final-head production,
-documentation and ownership-analysis result after this repair is pushed. Fix all failures together. Merge
-only after the required jobs pass on the final commit. Full builds stay on CI.
+**Next:** audit the new production, documentation and ownership-analysis runs
+on this repair commit. Fix every failure before merging. Full builds stay on CI.
 
 ## Delivery and evidence
 
 - Worktree: `/private/tmp/fwp-delete-tracing`; branch `delete-tracing-collector`.
 - [PR #217](https://github.com/e6qu/fun-with-pipes/pull/217) is open and ready.
-- Audited failing source: `70e6d1b664a3714847b4ac571d3e43fb6a99abd5`.
-- [Production run 40318846863](https://github.com/e6qu/fun-with-pipes/actions/runs/40318846863)
-  finished: eight native jobs failed; C/Rust benchmarks passed. All eight failed
-  job logs were read. Test compilation stopped each native suite before execution;
-  missing list-copy/array inspection files are consequences, not waived gates.
-  The Python SDK and standalone compiler checks passed where they ran.
-- [Documentation 40318846877](https://github.com/e6qu/fun-with-pipes/actions/runs/40318846877)
-  and Windows dependency cache `40318846850` passed.
-- [Ownership analysis 40319010233](https://github.com/e6qu/fun-with-pipes/actions/runs/40319010233):
-  Linux AMD64 passed. Intel macOS failed the 32-worker relative timing budget
-  (20.69/11.18 ms, 1.85×; maximum 1.5×). Absolute times and fact counts passed.
-  The performance repair below remains unverified; do not raise the limits.
+- Previous published source: `3e1c14826b545f799824e11c9476704d52fc4a46`.
+  The repair below is ready for publication; new exact-head run IDs will follow.
+- [Production 40322237520](https://github.com/e6qu/fun-with-pipes/actions/runs/40322237520):
+  eight native jobs failed; C/Rust benchmarks passed. All eight failed job logs
+  and completed test results were audited. Linux/macOS suite execution stopped
+  at the runner's unsupported Cargo option. Standalone Windows checks exposed
+  the runtime and fixture failures below. Missing downstream evidence is not waived.
+- [Documentation 40322237274](https://github.com/e6qu/fun-with-pipes/actions/runs/40322237274)
+  and Windows dependency cache `40322237342` passed.
+- [Ownership analysis 40322274748](https://github.com/e6qu/fun-with-pipes/actions/runs/40322274748)
+  passed both hosts, including REST admission and unchanged relative/absolute
+  limits. [Measured results](measurements/ownership-analysis.md#capture-lookup-repair)
+  replace the previous unverified performance claim.
+- Intel macOS regular also failed artifact creation with `ENOTFOUND`. A source
+  repair does not establish successful artifact delivery; the new run must pass.
+- Previous source `70e6d1b664a3714847b4ac571d3e43fb6a99abd5` failed production
+  `40318846863` and Intel analysis `40319010233`. The published repair fixed
+  compiler/test compilation and analysis costs, but introduced the unsupported
+  runner option. These are superseded failures, not accepted gates.
 - Verified base: #216 squash `f5621cb46828273f7ce8edf92be4062ccec0f17c`, identical
   tree to tested `1dd5fcaed7792b5505283b1037a9c22d788a3be5`. Nine production jobs
   `40274667944`, docs `40273010537` and analysis jobs `40273030485` passed.
 
-### Batched repair
+### Current repair
 
-- Fixed eight lost mutable `Command` borrows across CSV, array callbacks, cached
-  map reads, descriptor limits, text tools, HTTP and working-directory tests.
-  Replaced the removed field-move `run` helper with direct execution, retaining
-  the excess-retain failure control. Removed the stale HTTP timing environment.
-- Removed unreachable/redundant compiler code left by unconditional ownership;
-  derived the existing native-options default without changing its values.
-- Removed the obsolete tracing fence from numerical negative controls and the
-  historical map-layout fixture. Updated phase probes to current allocator
-  parameters and the real return boundary; all six phase labels remain intact.
-- Replaced ordered capture lookup with a hash table. Capture identities, facts,
-  ordered origin sets and all timing/size limits remain unchanged. See
-  [the failed measurement and proposed repair](measurements/ownership-analysis.md).
-- Cargo now keeps compiling independent targets after an error in all-target
-  CI checks and the native test runner. This exposes more failures in one run;
-  build failure still fails the job and prevents incomplete suite execution.
+- Removed `--keep-going` from `cargo test`, where it is unsupported. Retained it
+  for `cargo check` and `cargo clippy`. Added a tiny real Cargo package test that
+  builds two targets, executes both despite one failure, and verifies failure
+  propagation; mocks had missed the invalid option.
+- Fixed all seven reported test lints: single-element loops, an obsolete
+  verification-mode loop, and constant strings wrapped in `format!`.
+- Made gRPC call cleanup accept its valid empty states: before opening and after
+  transferring ownership to an iterator. Live readers still require ownership.
+- Repaired channel/connect fixtures that counted a shared task but left it marked
+  unique. Audited raw task spawns and gave fixtures explicit owners through their
+  final await/inspection; they release those handles afterward.
+- Repaired gRPC mock opens to transfer actual connection/reader owners. Fixtures
+  retain separate inspection owners and release them explicitly. Both ordinary
+  cleanup and deliberately omitted cleanup controls remain required.
+- Updated allocator/iterator omitted-free controls to match current source.
+  Set Windows stderr to binary mode in the AD identity fixture, matching generated
+  startup and preserving its byte-exact diagnostics.
 
-**GC removal remains unverified.** CI built the compiler and exercised selected
-programs, but test-compilation failures prevented the native suites. Focused
-Clang controls do not establish generated-program coverage, GCC, Windows or WASI
-support. No timing gain or successful collector-removal acceptance is claimed.
+**GC removal remains unverified.** Focused repaired tests pass on Clang ARM64;
+GCC, Windows, WASI, full generated-library integration and final packaging still
+need the production matrix. Successful analysis budgets are not runtime acceptance.
 
 ## What changed
 
@@ -147,7 +154,7 @@ Scripts below live in `/private/tmp` unless a repository path is given.
 | `python3 scripts/test-collection-evidence.py` | Eight tests pass, including exact target counts and rejection of incomplete/incorrect memory observations. |
 | `python3 scripts/test-integer-output-evidence.py` | Three reader tests pass: collector symbols, incomplete/failed/ignored/duplicate logs are rejected. Synthetic evidence only. |
 | `python3 scripts/test-map-replay.py` | Four tests pass: complete counted evidence accepted; wrong source/architecture, changed files, missing variants and external paths rejected without binary execution. |
-| `python3 scripts/test-native-test-runner.py` | Nineteen tests pass after the corpus/shard rename, including explicit coverage, failed target propagation, timeout handling and independent-target progress. Uses synthetic subprocesses, not the language suite. |
+| `python3 scripts/test-native-test-runner.py` | Twenty tests pass, including a real Cargo build/artifact/failure-propagation check. Other cases cover coverage, timeouts and independent target progress; this is not the language suite. |
 | `python3 scripts/check-roadmap.py` | Pass after this rewrite: 163 link sets, 106 immutable preparation pairs/tags, eight roadmap rows and commit messages. |
 
 ## CI repair checks
@@ -157,9 +164,25 @@ compiler or ran a full suite locally.
 
 | Command | Result |
 |---|---|
-| `python3 scripts/test-native-test-runner.py` | 19 pass, including independent-target progress, failures/timeouts and the new keep-going build argument. |
+| `python3 scripts/test-native-test-runner.py` | 20 pass; real Cargo smoke check verifies supported options, artifacts and continued execution after a failing target. |
 | `python3 /private/tmp/fwp-217-check-controls.py` | Six Clang ARM64 O1/O2 runs from CI's saved 3-point/7-update generated C: normal cleanup returns zero live bytes; retained allocation exits 225; removing observation allows completion and final cleanup. GCC and full numerical matrix remain CI gates. |
 | `python3 /private/tmp/fwp-217-check-map-phases.py` | Four Clang ARM64 O1/O2 runs: joined and historical separate storage preserve sorted keys/values, emit all six phase records and restore live bytes. Uses a direct runtime probe appended to CI-generated C, not a whole-application timing comparison. |
 | `cargo fmt --all -- --check` | Entire Rust tree passes formatting; no compiler build. |
 | `python3 scripts/check-roadmap.py` | 163 doc link sets, 106 preparation anchors and eight roadmap rows pass. |
 | `python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /private/tmp/fwp-217-repair-inventory.json` | Frozen primitive contracts pass. |
+
+### Follow-up checks on the local repair
+
+All used the local guard. The downloaded macOS ARM64 compiler is the CI binary
+from `3e1c1482`, not a locally rebuilt compiler. Where used below, current runtime
+changes are supplied explicitly; complete regenerated integration remains a CI gate.
+
+| Command | Result and scope |
+|---|---|
+| `python3 /private/tmp/fwp-217-check-channel.py` | Actual channel test and ownership ledger pass at Clang O1/O2, including all seven deliberately broken ownership/order cases. CI compiler emits the program; a small standalone Rust harness supplies only C compilation. |
+| `python3 /private/tmp/fwp-217-check-release-controls.py` | Actual allocator and array-iterator test bodies pass at O1/O2, including marker assertions and omitted-free failures 27/193. Current allocator source; iterator generation uses the CI compiler. |
+| `python3 /private/tmp/fwp-check-stream-owners.py` | Current runtime stream fixture passes eighteen normal runs and both omitted-cache-drop controls at O1/O2, including repeated empty-call cleanup. Minimal C library, no network. |
+| `python3 /private/tmp/fwp-217-check-shared-stream.py` | Six network comparisons pass: O1/O2 native clients against interpreter, O1 and O2 native servers. Uses CI-emitted C with the current call-cleanup function substituted; each returns `(Some 524800, Some 524800)`. |
+| `python3 /private/tmp/fwp-217-check-grpc-fixtures.py grpc_client_requests grpc_client_receive` | Both fixture bodies and omitted-owner/buffer/reset controls pass at O1/O2 after correcting mock ownership. Uses current runtime with minimal library entry metadata, not generated-library integration. The receive check was rerun alone after correcting a void-return macro expression in the repair. |
+| `python3 /private/tmp/fwp-217-check-grpc-fixtures.py grpc_send_cleanup grpc_context_restore grpc_connect_startup` | Three related fixture bodies pass at O1/O2, including cancellation, nested failure and startup cleanup controls. Same minimal-library limitation as above. |
+| `python3 /private/tmp/fwp-217-final-static-checks.py` | Rust formatting, Python parsing, all 20 runner tests and native shard coverage, frozen primitive contracts, 163 documentation link sets, 106 preparation anchors, eight roadmap rows and whitespace pass. |
