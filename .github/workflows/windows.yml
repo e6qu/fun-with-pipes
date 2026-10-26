@@ -159,7 +159,7 @@ jobs:
         run: |
           cargo test --test array_size_limits array_size_limits_agree_with_raw_interpreter_and_generic_wrappers -- --exact --nocapture
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo test --test gc heap_failure_artifacts_retain_the_native_executable -- --exact --nocapture
+          cargo test --test native_memory native_failure_artifacts_retain_the_executable -- --exact --nocapture
           exit $LASTEXITCODE
       - name: Publish native diagnostics before dependency builds
         uses: actions/upload-artifact@v7

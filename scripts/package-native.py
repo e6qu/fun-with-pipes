@@ -85,17 +85,14 @@ def main():
         assert reference == '45\n3.75e-1\n1.5\n', reference
         env = dict(os.environ)
         env.pop('FWP_NO_OPT', None)
-        executions = {}
-        generated_dependencies = {}
-        for mode in ['tracing', 'arc']:
-            binary = work / (f'smoke-{mode}' + ('.exe' if system == 'windows' else ''))
-            run([str(compiler), 'build', '-O2', '--gc', mode, str(source), '-o', str(binary)], work, env)
-            assert architecture(binary) == arch
-            output = run([str(binary)], work, env)
-            assert output == reference, (mode, output, reference)
-            executions[mode] = output
-            if system == 'windows':
-                generated_dependencies[mode] = windows_dependencies(binary, work)
+        binary = work / ('smoke-counted' + ('.exe' if system == 'windows' else ''))
+        run([str(compiler), 'build', '-O2', str(source), '-o', str(binary)], work, env)
+        assert architecture(binary) == arch
+        output = run([str(binary)], work, env)
+        assert output == reference, (output, reference)
+        executions = {'counted': output}
+        generated_dependencies = ({'counted': windows_dependencies(binary, work)}
+                                  if system == 'windows' else {})
         dependency_command = ['otool', '-L'] if system == 'macos' else ['ldd']
         dependencies = (windows_dependencies(compiler, work) if system == 'windows'
                         else run(dependency_command + [str(compiler)], work))

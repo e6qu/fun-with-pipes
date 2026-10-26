@@ -78,8 +78,8 @@ All **nine production jobs and documentation** must pass for the exact final hea
 
 | Jobs | Coverage |
 |---|---|
-| Linux AMD64 and ARM64 | Native suite, stress checks and the declared WebAssembly tests |
-| macOS AMD64 and ARM64, regular and GC jobs | Four jobs whose explicit test assignments together cover each architecture |
+| Linux AMD64 and ARM64 | Native suite, full golden corpus and the declared WebAssembly tests |
+| macOS AMD64 and ARM64, regular and ownership jobs | Four jobs whose explicit test assignments together cover each architecture |
 | Windows AMD64 and ARM64 | Two native jobs, including library/TLS/packaging checks |
 | C/Rust benchmarks | Equivalent-output checks, paired arithmetic controls and retained measurements |
 | Documentation audit | Links, immutable records, tutorial copies and test-runner/evidence controls |
@@ -147,8 +147,8 @@ from a platform to shorten its gate.
 
 For memory/representation changes, keep actual C/binaries, source/toolchain IDs,
 complete measurements and independent review. Deliberately broken controls must
-fail their intended observer. Preserve stress/verification/reuse coverage until
-[ownership replacements](PLAN.md#1-remove-tracing-gc) detect the same defects.
+fail their intended observer. Require the complete golden corpus, reuse and physical-release controls, and
+[ownership checks](PLAN.md#1-remove-tracing-gc) for failures and cancellation.
 Optional-tool skips do not establish platform support.
 
 The separate benchmark job runs
@@ -223,7 +223,7 @@ can infer the suffix when launching a program; symbol readers and file APIs cann
 | Parse and lint snapshots | `tests/parse/`, `tests/lint/` | the parser and `fwp lint` |
 | Standard library | `test "…" = …` in `lib/*.fwp` | `fwp test --std` |
 | Tutorials and examples | `docs/tutorials/*/`, `examples/` | each tutorial runs in both engines and prints its `main.out`, and its README shows only code from the program; the examples type-check |
-| Features | `tests/*.rs` | the protocol, HTTP, TLS, gRPC, REST, CLI, FFI, the GC, the cache, the formatter, the language server, the browser build, … |
+| Features | `tests/*.rs` | the protocol, HTTP, TLS, gRPC, REST, CLI, FFI, memory ownership, the cache, the formatter, the language server, the browser build, … |
 
 A snapshot is stored expected output. After an intended behavior change, regenerate
 only the relevant snapshot and inspect the difference; blessing output does not

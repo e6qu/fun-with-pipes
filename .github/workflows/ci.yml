@@ -181,9 +181,9 @@ jobs:
           if-no-files-found: ignore
 
   # Split the integration targets between the two existing macOS jobs.
-  # Both shards exclude the stress test; this job runs it separately once.
+  # Both shards exclude the full golden corpus; this job runs it separately once.
   # Their union retains the full suite; slow runners must finish every target.
-  macos_gc:
+  macos_ownership:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     strategy:
       fail-fast: false
@@ -232,51 +232,51 @@ jobs:
           env -u FWP_BLESS "$RUNNER_TEMP/fwp-stdlib-doc-check" --exact stdlib_doc_is_current
       - name: Language formatting preflight
         run: cargo run --bin fwp -- fmt --check lib examples docs/tutorials bench
-      - name: Full GC stress and verification golden suite
+      - name: Full counted-ownership golden corpus
         run: |
           set -o pipefail
-          cargo test --test gc golden_programs_under_gc_stress -- --exact --nocapture 2>&1 | tee "$RUNNER_TEMP/gc-stress.log"
-      - name: Publish GC diagnostics before the remaining shard
+          cargo test --test native_memory golden_programs_with_counted_ownership -- --exact --nocapture 2>&1 | tee "$RUNNER_TEMP/native-corpus.log"
+      - name: Publish native-memory diagnostics before the remaining shard
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: gc-stress-log-${{ matrix.runner }}
-          path: ${{ runner.temp }}/gc-stress.log
+          name: native-corpus-log-${{ matrix.runner }}
+          path: ${{ runner.temp }}/native-corpus.log
       - name: Second macOS test shard
         if: ${{ !cancelled() }}
-        run: python3 scripts/run-native-tests.py --idle-timeout 1800 --shard gc --logs "$RUNNER_TEMP/macos-gc-tests"
+        run: python3 scripts/run-native-tests.py --idle-timeout 1800 --shard ownership --logs "$RUNNER_TEMP/macos-ownership-tests"
       - name: Inspect list-copy executables and missing-cleanup controls
         if: ${{ !cancelled() }}
         run: python3 scripts/inspect-list-copy.py --input ownership-evidence/arc/list-copy --source "${{ github.event.pull_request.head.sha || github.sha }}" --system macOS --arch "$RUNNER_ARCH" --objdump "$(xcrun --find llvm-objdump)" --output ownership-evidence/list-copy-inspection.json
-      - name: Publish individual gc test logs
+      - name: Publish individual ownership test logs
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: macos-gc-tests-${{ matrix.runner }}
-          path: ${{ runner.temp }}/macos-gc-tests/
+          name: macos-ownership-tests-${{ matrix.runner }}
+          path: ${{ runner.temp }}/macos-ownership-tests/
           if-no-files-found: warn
-      - name: Preserve failed native and GC stress binaries, C and statuses
+      - name: Preserve failed native corpus binaries, C and statuses
         if: failure()
         run: |
-          mkdir -p "$RUNNER_TEMP/gc-golden-failures"
-          find "${TMPDIR:-/tmp}" -maxdepth 1 -type f -name 'fwp-golden-*' -exec cp {} "$RUNNER_TEMP/gc-golden-failures/" ";"
+          mkdir -p "$RUNNER_TEMP/native-golden-failures"
+          find "${TMPDIR:-/tmp}" -maxdepth 1 -type f -name 'fwp-golden-*' -exec cp {} "$RUNNER_TEMP/native-golden-failures/" ";"
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: gc-golden-failures-${{ matrix.runner }}
-          path: ${{ runner.temp }}/gc-golden-failures/
+          name: native-golden-failures-${{ matrix.runner }}
+          path: ${{ runner.temp }}/native-golden-failures/
 
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: ownership-evidence-gc-${{ runner.os }}-${{ runner.arch }}
+          name: ownership-evidence-corpus-${{ runner.os }}-${{ runner.arch }}
           path: ownership-evidence/
 
       - name: Preserve compiler crash reports
         uses: actions/upload-artifact@v7
         if: failure() && runner.os == 'macOS'
         with:
-          name: compiler-crashes-gc-${{ matrix.runner }}
+          name: compiler-crashes-corpus-${{ matrix.runner }}
           path: |
             ~/Library/Logs/DiagnosticReports/fwp*
             target/debug/fwp
@@ -513,7 +513,7 @@ jobs:
         run: |
           python3 scripts/measure-list-sort-storage.py --compiler target/release/fwp --cc gcc --source "${{ github.event.pull_request.head.sha || github.sha }}" --output target/list-sort-storage
           python3 scripts/inspect-list-sort-storage.py --input target/list-sort-storage --source "${{ github.event.pull_request.head.sha || github.sha }}" --arch X64 --objdump objdump --output target/list-sort-inspection.json
-          FWP_FREE=1 FWP_STACK=0 FWP_REUSE=1 FWP_ARRAY_FUSION=0 FWP_PACKED_ARRAYS=1 target/release/fwp build --gc arc --memory dynamic -O2 --emit-c tests/fixtures/array_sort_reuse.fwp -o target/array-sort-wide.c
+          FWP_STACK=0 FWP_ARRAY_FUSION=0 FWP_PACKED_ARRAYS=1 target/release/fwp build --memory dynamic -O2 --emit-c tests/fixtures/array_sort_reuse.fwp -o target/array-sort-wide.c
           python3 scripts/measure-array-sort-layout.py measure --program target/array-sort-wide.c --cc gcc --directory target/array-sort-layout --source "${{ github.event.pull_request.head.sha || github.sha }}" --system Linux --arch "X64" --objdump objdump --output target/array-sort-layout-inspection.json
       - name: Preserve benchmark comparisons and measured executables
         if: always()

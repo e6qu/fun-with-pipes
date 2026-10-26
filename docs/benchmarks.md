@@ -66,7 +66,7 @@ the calculation, or establish language-wide overhead.
 The observation is cumulative allocator-accounted managed bytes, including construction
 and updates, reported at process exit. It is not peak live memory: a program can
 allocate a gigabyte cumulatively while keeping only a small working set alive.
-Separate [bounded-memory tests](../tests/gc.rs) retain the long-loop 64 MiB peak
+Separate [bounded-memory tests](../tests/native_memory.rs) retain the long-loop 64 MiB peak
 RSS limit and HTTP/REST growth limits of 16 MiB across 20,000 requests. RSS is
 whole-process resident memory, including allocator and runtime costs. These are
 regression limits, not claims of optimal space or performance.

@@ -75,7 +75,8 @@ for row, measured in zip(report['programs'], inspection['programs'], strict=True
         for number, counts in enumerate(records['profiles']):
             assert (args.input / f'{stem}-{number}.stdout').read_text() == measured['stdout']
             assert json.loads((args.input / f'{stem}-{number}.stderr').read_text()) == counts
-            assert counts == records['profiles'][0] and counts['collections'] == 0
+            assert counts == records['profiles'][0]
+            assert set(counts) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
         images.append(dict(program=name, variant=label, binarySha256=records['binarySha256'],
                            generatedSha256=records['generatedSha256'], fileBytes=len(data),
                            textSectionBytes=int(sections[0], 16),

@@ -37,8 +37,7 @@ args.output.mkdir(parents=True)
 # Select runtime diagnostics explicitly; keep credentials out of child programs.
 environment = {key: value for key, value in os.environ.items()
                if not key.startswith('FWP_') and key not in {'GH_TOKEN', 'GITHUB_TOKEN'}}
-environment.update(FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0',
-                   FWP_LTO='0', LC_ALL='C')
+environment.update(FWP_LTO='0', LC_ALL='C')
 
 
 def run(command):
@@ -101,7 +100,7 @@ for program in inspection['programs']:
             (args.output / f'{stem}-{number}.stdout').write_bytes(actual.stdout)
             (args.output / f'{stem}-{number}.stderr').write_bytes(actual.stderr)
             counters = json.loads(actual.stderr)
-            assert counters['collections'] == 0
+            assert set(counters) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
             profiles.append(counters)
         assert all(counts == profiles[0] for counts in profiles)
         row['managedMemory'][label] = dict(profiles=profiles, command=list(map(str, command)),

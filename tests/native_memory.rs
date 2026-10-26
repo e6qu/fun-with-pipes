@@ -40,7 +40,8 @@ struct TempDir(PathBuf);
 
 impl TempDir {
     fn new(name: &str) -> TempDir {
-        let d = std::env::temp_dir().join(format!("fwp-gc-{}-{}", name, std::process::id()));
+        let d =
+            std::env::temp_dir().join(format!("fwp-native-memory-{}-{}", name, std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         TempDir(d)
@@ -96,19 +97,19 @@ fn status_detail(status: std::process::ExitStatus) -> String {
     }
 }
 
-fn retain_stress_failure(path: &Path, dir: &Path, want: &str, got: &str) {
+fn retain_native_failure(path: &Path, dir: &Path, want: &str, got: &str) {
     let stem = path.file_stem().unwrap();
     let exe = dir
         .join(stem)
         .with_extension(std::env::consts::EXE_EXTENSION);
     let retained = std::env::temp_dir().join(format!(
-        "fwp-golden-gc-{}-{}",
+        "fwp-golden-counted-{}-{}",
         std::process::id(),
         stem.to_string_lossy()
     ));
     if exe.exists() {
         std::fs::copy(&exe, &retained).unwrap();
-        eprintln!("GC stress binary retained at {}", retained.display());
+        eprintln!("Native corpus binary retained at {}", retained.display());
     }
     std::fs::copy(
         exe.with_extension("status"),
@@ -129,18 +130,18 @@ fn retain_stress_failure(path: &Path, dir: &Path, want: &str, got: &str) {
         .output()
         .unwrap();
     if emitted.status.success() {
-        eprintln!("GC stress C retained at {}", source.display());
+        eprintln!("Native corpus C retained at {}", source.display());
     } else {
         std::fs::write(retained.with_extension("emit.log"), &emitted.stderr).unwrap();
     }
 }
 
 /// A golden program built natively: output and failure behavior must match.
-fn stressed(path: &Path, dir: &Path) -> String {
-    stressed_with_env(path, dir, &[])
+fn native_example(path: &Path, dir: &Path) -> String {
+    native_example_with_env(path, dir, &[])
 }
 
-fn stressed_with_env(path: &Path, dir: &Path, env: &[(&str, &str)]) -> String {
+fn native_example_with_env(path: &Path, dir: &Path, env: &[(&str, &str)]) -> String {
     let exe = dir
         .join(path.file_stem().unwrap())
         .with_extension(std::env::consts::EXE_EXTENSION);
@@ -181,12 +182,12 @@ fn stressed_with_env(path: &Path, dir: &Path, env: &[(&str, &str)]) -> String {
 }
 
 #[test]
-fn golden_programs_under_gc_stress() {
+fn golden_programs_with_counted_ownership() {
     assert!(
         have_cc(),
         "native ownership checks require a working C compiler"
     );
-    let dir = TempDir::new("stress");
+    let dir = TempDir::new("corpus");
     let mut entries: Vec<PathBuf> = std::fs::read_dir(root().join("tests/run"))
         .unwrap()
         .map(|e| e.unwrap().path())
@@ -212,18 +213,18 @@ fn golden_programs_under_gc_stress() {
                     break;
                 };
                 let started = std::time::Instant::now();
-                eprintln!("GC stress example started: {}", path.display());
+                eprintln!("Native corpus example started: {}", path.display());
                 let want = std::fs::read_to_string(path.with_extension("out")).unwrap_or_default();
-                let got = stressed(&path, &dir.0);
+                let got = native_example(&path, &dir.0);
                 eprintln!(
-                    "GC stress example finished: {} ({:.2}s)",
+                    "Native corpus example finished: {} ({:.2}s)",
                     path.display(),
                     started.elapsed().as_secs_f64()
                 );
                 if got != want {
-                    retain_stress_failure(&path, &dir.0, &want, &got);
+                    retain_native_failure(&path, &dir.0, &want, &got);
                     failures.lock().unwrap().push(format!(
-                        "{} (FWP_GC_STRESS=1):\n--- expected\n{}--- got\n{}",
+                        "{} (counted ownership):\n--- expected\n{}--- got\n{}",
                         path.display(),
                         want,
                         got
@@ -237,22 +238,22 @@ fn golden_programs_under_gc_stress() {
 }
 
 #[test]
-fn gc_failure_artifacts_retain_the_native_executable() {
+fn native_failure_artifacts_retain_the_executable() {
     assert!(have_cc(), "native artifact verification needs a C compiler");
     let dir = TempDir::new("native-artifact");
     let source = dir.0.join("native-artifact.fwp");
     std::fs::write(&source, "main = \"saved\" | string.repeat 2 | echo\n").unwrap();
-    let output = stressed(&source, &dir.0);
+    let output = native_example(&source, &dir.0);
     assert_eq!(output, "savedsaved\n");
     // Exercise failure retention with a deliberate snapshot mismatch, keeping
     // the native executable, its exact output/status and generated C together.
-    retain_stress_failure(&source, &dir.0, "deliberate artifact control\n", &output);
+    retain_native_failure(&source, &dir.0, "deliberate artifact control\n", &output);
     let executable = dir
         .0
         .join("native-artifact")
         .with_extension(std::env::consts::EXE_EXTENSION);
     let retained = std::env::temp_dir().join(format!(
-        "fwp-golden-gc-{}-native-artifact",
+        "fwp-golden-counted-{}-native-artifact",
         std::process::id()
     ));
     let binary = std::fs::read(&executable).unwrap();
@@ -263,7 +264,7 @@ fn gc_failure_artifacts_retain_the_native_executable() {
     let status = std::fs::read_to_string(retained.with_extension("status")).unwrap();
     assert!(status.contains("run native: code=Some(0)"));
     assert!(retained.with_extension("c").is_file());
-    if let Some(destination) = std::env::var_os("FWP_GC_DIAGNOSTICS_ARTIFACTS") {
+    if let Some(destination) = std::env::var_os("FWP_NATIVE_MEMORY_ARTIFACTS") {
         let destination = PathBuf::from(destination);
         std::fs::create_dir_all(&destination).unwrap();
         std::fs::write(destination.join("native.bin"), &binary).unwrap();
@@ -283,7 +284,7 @@ fn gc_failure_artifacts_retain_the_native_executable() {
 
 #[cfg(unix)]
 #[test]
-fn gc_stress_reports_native_compiler_failure() {
+fn native_corpus_reports_compiler_failure() {
     assert!(
         have_cc(),
         "native ownership checks require a working C compiler"
@@ -298,30 +299,30 @@ fn gc_stress_reports_native_compiler_failure() {
     )
     .unwrap();
     std::fs::set_permissions(&compiler, std::fs::Permissions::from_mode(0o755)).unwrap();
-    let got = stressed_with_env(&source, &dir.0, &[("CC", compiler.to_str().unwrap())]);
+    let got = native_example_with_env(&source, &dir.0, &[("CC", compiler.to_str().unwrap())]);
     assert!(
         got.contains("GC compiler failure control"),
         "native compiler failure was not reported: {got}"
     );
     assert!(got.contains("--- exit "), "{got}");
     assert_ne!(got, "hellohellohello\n");
-    retain_stress_failure(&source, &dir.0, "hellohellohello\n", &got);
+    retain_native_failure(&source, &dir.0, "hellohellohello\n", &got);
     let retained = std::env::temp_dir().join(format!(
-        "fwp-golden-gc-{}-gc-compiler-failure-control",
+        "fwp-golden-counted-{}-gc-compiler-failure-control",
         std::process::id()
     ));
     assert!(retained.with_extension("c").exists());
     assert!(std::fs::read_to_string(retained.with_extension("status"))
         .unwrap()
         .contains("build -O2: code=Some("));
-    let positive = stressed(&source, &dir.0);
+    let positive = native_example(&source, &dir.0);
     assert_eq!(positive, "hellohellohello\n");
     let executable = dir.0.join("gc-compiler-failure-control");
     assert!(executable.exists());
     let positive_status = std::fs::read_to_string(executable.with_extension("status")).unwrap();
     assert!(positive_status.contains("build -O2: code=Some(0)"));
     assert!(positive_status.contains("run native: code=Some(0)"));
-    if let Some(destination) = std::env::var_os("FWP_GC_DIAGNOSTICS_ARTIFACTS") {
+    if let Some(destination) = std::env::var_os("FWP_NATIVE_MEMORY_ARTIFACTS") {
         let destination = PathBuf::from(destination);
         std::fs::create_dir_all(&destination).unwrap();
         std::fs::copy(&source, destination.join("source.fwp")).unwrap();

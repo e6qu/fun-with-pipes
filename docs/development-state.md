@@ -1,7 +1,8 @@
 # Current work
 
-**Next:** finish the native-memory corpus/job rename and remaining measurement
-script audit, then run the consolidated compiler and production gates on runners. Finish migration before
+**Next:** finish the remaining measurement-script audit, starting with scalar/AD
+profile consumers and map/word-frequency comparisons. Then run consolidated
+compiler and production gates on runners. See the audit file below. Finish migration before
 integrated compiler and production validation on runners. The current source
 has not been built as a compiler. GC removal is not verified.
 
@@ -18,6 +19,15 @@ The merge has the same tree and the required one-line message. See
 compiler-abort report; its handoff points here. Old publisher scripts stay stopped.
 
 ## Latest completed edits; execution pending
+
+- Renamed `tests/gc.rs` to `native_memory.rs` and the second macOS shard to
+  `ownership`. Its separate full golden corpus, all 253 target assignments,
+  compiler-failure controls and artifact retention remain. All nineteen runner
+  unit tests pass. Fixed an outdated workflow test name and compiler-error text.
+- Package smoke checks build one counted native program, still comparing raw
+  interpreter output, architecture and Windows dependencies. Benchmark memory
+  readers now require the current five-field profile rather than a removed
+  collection count. Packaging and integrated benchmark execution remain pending.
 
 - WASI fixtures own their path strings and use actual file/pair/task/channel
   destructors. They retain physical-free, retained-storage, wide-count and
@@ -144,9 +154,10 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 
 ## Remaining migration, in order
 
-1. **Finish test mode removal.** A fresh audit still finds old controls in
-   obsolete corpus/job names. WASI/resource-count, REST, benchmarks and array/list
-   support modules are migrated with their paired readers; integration remains pending. Review their
+1. **Test mode removal is implemented, not integrated.** A fresh audit finds
+   no active tracing settings in Rust tests. Remaining occurrences are explicit
+   absence/unknown-option assertions or unrelated gRPC context ownership. Review
+   measurement consumers and workflow callers before integration. Review their
    actual assertions and paired C fixtures, not just environment names. The list/State/closure fixtures in
    `list_applicative_ownership` are migrated; integrated execution is pending.
    `unwind_cleanup` and typed-State reports are also migrated. Continue from a fresh source audit; do not reapply the stale candidates.
@@ -175,10 +186,10 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
    Task/callback label matrices and their consumers are migrated. Remaining
    measurement scripts still need a fresh audit for old modes, collection fields
    and artifact names.
-4. **Finish workflow coverage.** Replace collector-stress variants with the
-   complete counted corpus and fault controls. Keep all nine production jobs and
-   the explicit native target assignment audit. Rename obsolete shard/report
-   labels consistently; a filename alone is not grounds to delete tests.
+4. **Verify workflow coverage.** The renamed ownership shard keeps the complete
+   counted corpus and fault controls. Nine production jobs and explicit target
+   assignments remain. The nineteen runner unit tests pass; final-head native
+   execution and remaining measurement-job audits are still required.
 5. **Verify integration.** #216's final admission/cache repairs and bounded
    server helpers are incorporated.
    Compile/lint all targets on runners; fix all failures together. Then run one
@@ -197,6 +208,10 @@ Automatic approval review rejected an earlier broad rewrite because substantial
 work was uncommitted. No part of that command ran. We saved `bd299fe0`, generated
 separate candidates, reviewed every C-branch diff, and applied them with a clean
 checkpoint/source check. That safer action was approved. No permission is pending.
+
+The fresh measurement audit is `/private/tmp/fwp-remaining-script-modes.txt`.
+It includes real stale modes/collection fields and valid absence assertions;
+classify each against its producer. Do not blindly replace historical evidence.
 
 Temporary helpers in `/private/tmp` are one-shot edits, not publishers:
 `fwp-preview-counted-test-probes.py`, `fwp-apply-reviewed-test-probes.py`,
@@ -239,6 +254,7 @@ Scripts below live in `/private/tmp` unless a repository path is given.
 | `python3 fwp-check-server-schema.py` | Actual report reader accepts complete synthetic stdio/HTTP evidence and rejects missing/duplicate rows, an ineffective omitted-free control and excess RSS. This does not execute servers or inspect their binaries. |
 | `python3 fwp-check-deletion-edits.py` | Rust formatting, changed Python parsing, whitespace, 253-target native schedule and integer artifact gate checks pass. |
 | `python3 fwp-check-migration-python.py` | Ruff reports no unresolved names in all changed Python files. This is a static check, not execution of measurement protocols. |
+| `python3 scripts/test-native-test-runner.py` | Nineteen tests pass after the corpus/shard rename, including explicit coverage, failed target propagation, timeout handling and independent-target progress. Uses synthetic subprocesses, not the language suite. |
 | `python3 scripts/check-roadmap.py` | Pass after this rewrite: 163 link sets, 106 immutable preparation pairs/tags, eight roadmap rows and commit messages. |
 
 Local harness repairs: fixed a moved expected value in the parser check and an

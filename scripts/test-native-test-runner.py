@@ -41,7 +41,7 @@ class Coverage(unittest.TestCase):
             args = output[0]
             self.assertNotIn("build-script-build", args)
             self.assertIn("--no-fail-fast", args)
-            self.assertEqual(args[-3:], ["--", "--skip", "golden_programs_under_gc_stress"])
+            self.assertEqual(args[-3:], ["--", "--skip", "golden_programs_with_counted_ownership"])
             for flag in ["--lib", "--bins", "--examples", "--benches"]:
                 self.assertEqual(flag in args, shard == "regular")
             self.assertEqual([args[i + 1] for i, arg in enumerate(args) if arg == "--test"], output[2])
@@ -99,7 +99,7 @@ class Coverage(unittest.TestCase):
                               ("array-sort", "array_element_ownership"),
                               ("array-construction", "array_element_ownership")]:
             jobs = {"test"}
-            jobs.update({"regular": "macos", "gc": "macos_gc"}[shard]
+            jobs.update({"regular": "macos", "ownership": "macos_ownership"}[shard]
                         for shard, names in schedule.items() if target in names)
             for job in jobs:
                 body = re.search(rf"^  {job}:\n(.*?)(?=^  \w+:\n|\Z)",
@@ -123,7 +123,7 @@ class Coverage(unittest.TestCase):
         schedule = SHARDS.assignment(SHARDS.SCHEDULE)
         targets = {"directory_report", "text_file_tools"}
         jobs = {"test"}
-        jobs.update({"regular": "macos", "gc": "macos_gc"}[shard]
+        jobs.update({"regular": "macos", "ownership": "macos_ownership"}[shard]
                     for shard, names in schedule.items() if targets & set(names))
         for job in jobs:
             body = re.search(rf"^  {job}:\n(.*?)(?=^  \w+:\n|\Z)",
@@ -143,7 +143,7 @@ class Coverage(unittest.TestCase):
         schedule = SHARDS.assignment(SHARDS.SCHEDULE)
         targets = {"http_server"}
         jobs = {"test"}
-        jobs.update({"regular": "macos", "gc": "macos_gc"}[shard]
+        jobs.update({"regular": "macos", "ownership": "macos_ownership"}[shard]
                     for shard, names in schedule.items() if targets & set(names))
         for job in jobs:
             body = re.search(rf"^  {job}:\n(.*?)(?=^  \w+:\n|\Z)",
@@ -163,7 +163,7 @@ class Coverage(unittest.TestCase):
         schedule = SHARDS.assignment(SHARDS.SCHEDULE)
         targets = {"map_set_ownership"}
         jobs = {"test"}
-        jobs.update({"regular": "macos", "gc": "macos_gc"}[shard]
+        jobs.update({"regular": "macos", "ownership": "macos_ownership"}[shard]
                     for shard, names in schedule.items() if targets & set(names))
         for job in jobs:
             body = re.search(rf"^  {job}:\n(.*?)(?=^  \w+:\n|\Z)",
@@ -182,7 +182,7 @@ class Coverage(unittest.TestCase):
         workflow = (SHARDS.ROOT / ".github/workflows/ci.yml").read_text()
         schedule = SHARDS.assignment(SHARDS.SCHEDULE)
         jobs = {"test"}
-        jobs.update({"regular": "macos", "gc": "macos_gc"}[shard]
+        jobs.update({"regular": "macos", "ownership": "macos_ownership"}[shard]
                     for shard, names in schedule.items() if "static_memory" in names)
         for job in jobs:
             body = re.search(rf"^  {job}:\n(.*?)(?=^  \w+:\n|\Z)",
@@ -200,9 +200,9 @@ class Coverage(unittest.TestCase):
             ["cargo", "metadata", "--no-deps", "--format-version", "1"], cwd=SHARDS.ROOT))
         self.assert_coverage(value, SHARDS.assignment(SHARDS.SCHEDULE))
 
-    def test_all_targets_preserve_unit_targets_and_stress_cases(self):
+    def test_all_targets_preserve_unit_targets_and_golden_cases(self):
         value = metadata(["z", "a", "b"])
-        schedule = {"regular": ["a", "z"], "gc": ["b"]}
+        schedule = {"regular": ["a", "z"], "ownership": ["b"]}
         args, available, selected = SHARDS.command(value, "all", schedule)
         self.assertEqual(args, ["cargo", "test", "--no-fail-fast", "--all-targets", "--"])
         self.assertEqual(available, ["a", "b", "z"])
@@ -224,8 +224,8 @@ class Coverage(unittest.TestCase):
             SHARDS.command(metadata(["a", "b", "z", "new"]), "all", schedule)
 
     def test_new_targets_do_not_move_existing_work(self):
-        before = {"regular": ["a", "z"], "gc": ["b"]}
-        after = {"regular": ["a", "z"], "gc": ["b", "new"]}
+        before = {"regular": ["a", "z"], "ownership": ["b"]}
+        after = {"regular": ["a", "z"], "ownership": ["b", "new"]}
         self.assert_coverage(metadata(["z", "a", "b"]), before)
         self.assert_coverage(metadata(["new", "z", "a", "b"]), after)
         for shard in SHARDS.SHARDS:
@@ -235,8 +235,8 @@ class Coverage(unittest.TestCase):
 
     def test_explicit_order_survives_cargo_artifact_order(self):
         value = metadata(["a", "b", "z"])
-        schedule = {"regular": ["b"], "gc": ["z", "a"]}
-        args, _, selected = SHARDS.command(value, "gc", schedule)
+        schedule = {"regular": ["b"], "ownership": ["z", "a"]}
+        args, _, selected = SHARDS.command(value, "ownership", schedule)
         self.assertEqual(selected, ["z", "a"])
         self.assertEqual([args[i + 1] for i, arg in enumerate(args) if arg == "--test"],
                          ["z", "a"])
@@ -245,11 +245,11 @@ class Coverage(unittest.TestCase):
                      "profile": {"test": True}, "executable": f"/{name}"}
                     for name in ["a", "z"]]
         result = SHARDS.test_executables("\n".join(json.dumps(row) for row in messages),
-                                        value, "gc", selected)
+                                        value, "ownership", selected)
         self.assertEqual([key[1] for key, _ in result], ["z", "a"])
 
     def test_unassigned_obsolete_duplicate_and_unknown_targets_fail(self):
-        schedule = {"regular": ["a"], "gc": ["b"]}
+        schedule = {"regular": ["a"], "ownership": ["b"]}
         invalid = metadata(["a", "b"])
         invalid["packages"][0]["targets"].append({"name": "new", "kind": ["custom"]})
         for value in [invalid, metadata(["a", "a"]), metadata([]),
@@ -258,15 +258,15 @@ class Coverage(unittest.TestCase):
                 SHARDS.command(value, "regular", schedule)
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "schedule.json"
-            for schedule in [{"regular": ["a"], "gc": ["a"]},
-                             {"regular": ["a"], "gc": []}, {"regular": ["a"]}]:
+            for schedule in [{"regular": ["a"], "ownership": ["a"]},
+                             {"regular": ["a"], "ownership": []}, {"regular": ["a"]}]:
                 path.write_text(json.dumps(schedule))
                 with self.assertRaises(ValueError):
                     SHARDS.assignment(path)
 
     def test_failed_test_command_is_not_reported_as_success(self):
-        with patch("sys.argv", ["run-native-tests.py", "--shard", "gc", "--logs", "/unused", "--idle-timeout", "30"]), \
-             patch.object(SHARDS, "assignment", return_value={"regular": ["a"], "gc": ["b"]}), \
+        with patch("sys.argv", ["run-native-tests.py", "--shard", "ownership", "--logs", "/unused", "--idle-timeout", "30"]), \
+             patch.object(SHARDS, "assignment", return_value={"regular": ["a"], "ownership": ["b"]}), \
              patch.object(SHARDS.subprocess, "check_output", return_value=json.dumps(metadata(["a", "b"])).encode()), \
              patch.object(SHARDS.subprocess, "run", side_effect=subprocess.CalledProcessError(1, ["cargo", "test"])):
             with self.assertRaises(subprocess.CalledProcessError):
@@ -274,7 +274,7 @@ class Coverage(unittest.TestCase):
 
     def test_focused_targets_are_explicit_and_keep_full_inventory_checks(self):
         value = metadata(["a", "b", "z"])
-        schedule = {"regular": ["a", "z"], "gc": ["b"]}
+        schedule = {"regular": ["a", "z"], "ownership": ["b"]}
         messages = [{"reason": "compiler-artifact", "package_id": "root",
                      "target": {"kind": ["test"], "name": name},
                      "profile": {"test": True}, "executable": f"/{name}"}
@@ -291,14 +291,14 @@ class Coverage(unittest.TestCase):
                 "--test", "b", "--test", "a", "--no-run", "--message-format=json"])
             self.assertEqual(run.call_args.args[0], [(("test", "b"), ["/b"]), (("test", "a"), ["/a"])])
             self.assertEqual(run.call_args.args[1], ["--nocapture"])
-            with patch.object(SHARDS, "assignment", return_value={"regular": ["a"], "gc": ["b"]}):
+            with patch.object(SHARDS, "assignment", return_value={"regular": ["a"], "ownership": ["b"]}):
                 with self.assertRaises(ValueError):
                     SHARDS.main()
 
     def test_focused_unknown_or_duplicate_targets_fail_before_building(self):
         for names in [["a", "a"], ["unknown"]]:
             with patch("sys.argv", ["run-native-tests.py", "--targets", *names, "--logs", "/unused", "--idle-timeout", "30"]), \
-                 patch.object(SHARDS, "assignment", return_value={"regular": ["a"], "gc": ["b"]}), \
+                 patch.object(SHARDS, "assignment", return_value={"regular": ["a"], "ownership": ["b"]}), \
                  patch.object(SHARDS.subprocess, "check_output", return_value=json.dumps(metadata(["a", "b"])).encode()), \
                  patch.object(SHARDS.subprocess, "run") as build:
                 with self.assertRaises(SystemExit) as failure:
@@ -337,7 +337,7 @@ class Coverage(unittest.TestCase):
                 executable.write_text("#!/usr/bin/env python3\n" +
                     "import pathlib,sys,time\n" +
                     f"root=pathlib.Path({str(root)!r}); index={index}\n" +
-                    "assert sys.argv[1:]==['--test-threads=1','--skip','golden_programs_under_gc_stress']\n" +
+                    "assert sys.argv[1:]==['--test-threads=1','--skip','golden_programs_with_counted_ownership']\n" +
                     "(root / f'started-{index}').touch()\n" +
                     "if index<2:\n" +
                     "    limit=time.monotonic()+3\n" +
@@ -349,14 +349,14 @@ class Coverage(unittest.TestCase):
                 executable.chmod(0o755)
                 executables.append((("test", str(index)), [sys.executable, str(executable)]))
             code = SHARDS.run_tests(executables,
-                                    ["--skip", "golden_programs_under_gc_stress"], root / "logs", 10)
+                                    ["--skip", "golden_programs_with_counted_ownership"], root / "logs", 10)
             self.assertEqual(code, 1)
             for index in range(3):
                 self.assertTrue((root / f"started-{index}").exists())
                 self.assertEqual((root / "logs" / f"test-{index}.log").read_text(),
                                  f"executed {index}\n")
             self.assertEqual(SHARDS.run_tests([executables[0]],
-                ["--skip", "golden_programs_under_gc_stress"], root / "passing", 10), 0)
+                ["--skip", "golden_programs_with_counted_ownership"], root / "passing", 10), 0)
 
     def test_completed_cases_allow_a_long_target_to_continue(self):
         with tempfile.TemporaryDirectory() as directory:
