@@ -40,7 +40,7 @@ expected.update({f'clock-owners/{memory}-O{opt}-{variant}': status
 expected.update({f'await-fields/{memory}-O{opt}-{variant}': 0
                  for memory in ['arc', 'tracing'] for opt in [0, 2]
                  for variant in ['fields', 'boxed-control']})
-expected.update({f'interop-buffers/{variant}-O{opt}': status
+expected.update({f'interop-buffers/counted-{variant}-O{opt}': status
                  for opt in [0, 2] for variant, status in [('released', 0), ('missing-free', 211)]})
 observed = {p.relative_to(root).with_suffix('').as_posix() for p in root.rglob('*.exe')
             if p.relative_to(root).as_posix().startswith(
@@ -72,15 +72,14 @@ for label, expected_status in sorted(expected.items()):
         machine = struct.unpack_from('<H', data, offset + 4)[0]
         assert machine == {'X64': 0x8664, 'ARM64': 0xaa64}[architecture], (label, machine)
     code = binary.with_suffix('.c').read_bytes()
-    arc = label.startswith('task-handles-arc-') or '/arc-' in label
-    assert (b'#define FWP_ARC_ONLY 1' in code) == arc, label
+    assert b'FWP_ARC_ONLY' not in code, label
     assert binary.with_suffix('.status').read_text().strip() == f'Some({expected_status})', label
     outputs = {}
     for kind in ['assembly', 'sections', 'symbols']:
         output = subprocess.check_output([*commands[kind], str(binary)])
         binary.with_suffix('.' + kind).write_bytes(output)
         outputs[kind] = dict(command=commands[kind], sha256=hashlib.sha256(output).hexdigest())
-        if kind == 'symbols' and arc:
+        if kind == 'symbols':
             assert all(name not in output for name in [b'fwp_heap_scan', b'fwp_heap_mark_all', b'fwp_heap_sweep']), label
     stdout = binary.with_suffix('.stdout').read_bytes()
     stderr = binary.with_suffix('.stderr').read_bytes()
@@ -97,8 +96,7 @@ for label, expected_status in sorted(expected.items()):
         record['counters'] = dict(zip(['allocation_requests', 'requested_bytes', 'retains',
                                       'peak_managed_charge', 'final_managed_charge'], counts, strict=True))
         record['restored_pairs' if counter == 'callback-pairs' else 'restored_boxes'] = int(lines[1].split('\t')[1])
-        if arc:
-            assert counts[4] == 0, (label, counts)
+        assert counts[4] == 0, (label, counts)
     else:
         assert not stderr, label
         if label.startswith('clock-owners/'):

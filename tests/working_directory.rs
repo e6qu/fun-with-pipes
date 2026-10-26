@@ -1,4 +1,8 @@
 //! Working-directory lookup owns its result and reports unavailable paths.
+#[cfg(unix)]
+use std::io::{BufRead, BufReader, Read, Write};
+#[cfg(unix)]
+use std::process::Stdio;
 use std::process::{Command, Output};
 
 fn checked(command: &mut Command) -> Output {
@@ -23,40 +27,30 @@ fn working_directory_matches_raw_interpretation() {
             .arg(&source),
     );
     assert!(String::from_utf8_lossy(&reference.stdout).contains("héllo directory"));
-    for mode in ["tracing", "arc"] {
-        let cfile = dir.join("directory.c");
-        checked(
-            Command::new(compiler)
-                .args(["build", "--gc", mode, "--emit-c"])
-                .arg(&source)
-                .arg("-o")
-                .arg(&cfile),
+
+    let cfile = dir.join("directory.c");
+    checked(
+        Command::new(compiler)
+            .args(["build", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    let binary = dir.join("directory.exe");
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+
+        let actual = checked(Command::new(&binary).current_dir(&root));
+        assert_eq!(
+            (&actual.stdout, &actual.stderr),
+            (&reference.stdout, &reference.stderr)
         );
-        let code = std::fs::read_to_string(cfile).unwrap();
-        let binary = dir.join("directory.exe");
-        for opt in ["-O1", "-O2"] {
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let verify = if mode == "arc" { "0" } else { "1" };
-            let actual = checked(
-                Command::new(&binary)
-                    .current_dir(&root)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", verify)
-                    .env("FWP_GC_VERIFY", verify)
-                    .env("FWP_REUSE_VERIFY", verify),
-            );
-            assert_eq!(
-                (&actual.stdout, &actual.stderr),
-                (&reference.stdout, &reference.stderr)
-            );
-        }
     }
 }
 
 #[cfg(unix)]
 fn removed_directory(command: &mut Command, path: &std::path::Path) -> String {
-    use std::io::{BufRead, BufReader, Read, Write};
-    use std::process::Stdio;
     std::fs::create_dir(path).unwrap();
     let mut child = command
         .current_dir(path)
@@ -103,26 +97,19 @@ fn a_removed_directory_is_an_explicit_error() {
         reference.starts_with("Err ") && reference.contains("cwd"),
         "{reference}"
     );
-    for mode in ["tracing", "arc"] {
-        let binary = dir.join("removed.exe");
-        checked(
-            Command::new(compiler)
-                .args(["build", "--gc", mode, "-O2"])
-                .arg(&source)
-                .arg("-o")
-                .arg(&binary),
-        );
-        assert_eq!(
-            removed_directory(
-                Command::new(&binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_REUSE_VERIFY", "0"),
-                &dir.join("gone")
-            ),
-            reference
-        );
-    }
+
+    let binary = dir.join("removed.exe");
+    checked(
+        Command::new(compiler)
+            .args(["build", "-O2"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&binary),
+    );
+    assert_eq!(
+        removed_directory(Command::new(&binary), &dir.join("gone")),
+        reference
+    );
 }
 
 fn instrument(mut code: String) -> String {
@@ -161,48 +148,40 @@ fn directory_results_and_temporary_buffers_are_released() {
     let dir = fwp::cgen::TempDir::new("directory-ownership").unwrap();
     let source = dir.join("probe.fwp");
     std::fs::write(&source, "export exercise : () -> String ! {IO, Error[IoError]}\nexercise = env.cwd\nmain = exercise () | echo\n").unwrap();
-    for mode in ["tracing", "arc"] {
-        let cfile = dir.join("probe.c");
-        checked(
-            Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", "--gc", mode, "--fn", "exercise", "--emit-c"])
-                .arg(&source)
-                .arg("-o")
-                .arg(&cfile),
-        );
-        let emitted = std::fs::read_to_string(cfile).unwrap();
-        let entry = emitted[emitted.find("/* exercise :").unwrap()..]
-            .split("static V f")
-            .nth(1)
-            .unwrap()
-            .split('(')
-            .next()
-            .unwrap();
-        let code = instrument(emitted.clone()).replace(
-            "int main(int argc, char **argv)",
-            "int original_main(int argc, char **argv)",
-        ) + &include_str!("fixtures/working_directory_probe.c")
-            .replace("fEXERCISE", &format!("f{entry}"));
-        let binary = dir.join("probe.exe");
-        let run = || {
-            let mut cmd = Command::new(&binary);
-            cmd.env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", if mode == "arc" { "0" } else { "1" })
-                .env("FWP_REUSE_VERIFY", "0");
-            cmd
-        };
-        for opt in ["-O1", "-O2"] {
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            checked(&mut run());
-        }
-        let uncounted = code.replace("fwp_rc_fresh(fwp_p_env_cwd(", "(fwp_p_env_cwd(");
-        assert_ne!(uncounted, code);
-        let unreleased = code.replace("cwd_live--;", "/* intentionally retain scratch */");
-        for (broken, status) in [(uncounted, 219), (unreleased, 221)] {
-            fwp::cgen::compile_c(&broken, &binary, "-O2").unwrap();
-            let output = run().output().unwrap();
-            assert_eq!(output.status.code(), Some(status), "{mode}: {output:?}");
-        }
+
+    let cfile = dir.join("probe.c");
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--fn", "exercise", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let emitted = std::fs::read_to_string(cfile).unwrap();
+    let entry = emitted[emitted.find("/* exercise :").unwrap()..]
+        .split("static V f")
+        .nth(1)
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    let code = instrument(emitted.clone()).replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    ) + &include_str!("fixtures/working_directory_probe.c")
+        .replace("fEXERCISE", &format!("f{entry}"));
+    let binary = dir.join("probe.exe");
+
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        checked(&mut Command::new(&binary));
+    }
+    let uncounted = code.replace("fwp_rc_fresh(fwp_p_env_cwd(", "(fwp_p_env_cwd(");
+    assert_ne!(uncounted, code);
+    let unreleased = code.replace("cwd_live--;", "/* intentionally retain scratch */");
+    for (broken, status) in [(uncounted, 219), (unreleased, 221)] {
+        fwp::cgen::compile_c(&broken, &binary, "-O2").unwrap();
+        let output = Command::new(&binary).output().unwrap();
+        assert_eq!(output.status.code(), Some(status), "counted: {output:?}");
     }
 }

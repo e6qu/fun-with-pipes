@@ -130,15 +130,14 @@ def range_requests(path, direct):
 
 def range_sets(directory, host, llvm):
     runs = []
-    for mode in ['arc', 'tracing']:
-        for opt in ['-O0', '-O2']:
-            for direct in ['0', '1']:
-                label = f'{mode}{opt}-direct-{direct}'
-                runs.append({'mode': mode, 'optimization': opt, 'direct': direct == '1',
-                             'sizes': range_requests(directory / f'{label}.txt', direct == '1'),
-                             'generatedSha256': digest(directory / f'{label}.c'),
-                             'binaryInspection': inspect(directory / f'{label}.exe', host, mode, llvm,
-                                                         require_tracing=mode == 'tracing')})
+    for opt in ['-O0', '-O2']:
+        for direct in ['0', '1']:
+            label = f'counted{opt}-direct-{direct}'
+            runs.append({'optimization': opt, 'direct': direct == '1',
+                         'sizes': range_requests(directory / f'{label}.txt', direct == '1'),
+                         'generatedSha256': digest(directory / f'{label}.c'),
+                         'binaryInspection': inspect(directory / f'{label}.exe', host, 'arc', llvm,
+                                                     require_tracing=False)})
     return {'runs': runs,
             'scope': 'Observed managed allocation requests while an exported function builds '
                      'an I64 range set. Includes input list and scratch construction; excludes '
@@ -232,7 +231,7 @@ def main():
                      'compactSets': compact_sets(directory / 'sets', host, args.llvm_bin),
                      'rangeSets': range_sets(directory / 'sets/range-sets', host, args.llvm_bin),
                      'measurements': report})
-        print(host, sum(completed_tests.values()), 'tests, 38 actual binaries, nine cost cases verified', flush=True)
+        print(host, sum(completed_tests.values()), 'tests, 34 actual binaries, nine cost cases verified', flush=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps({
         'source': args.head, 'run': args.run,
@@ -241,7 +240,7 @@ def main():
         'scope': 'Actual binaries are inspected as data, never executed by this collector. '
                  'Each host has 44 focused tests, six failure configurations, four deliberately '
                  'broken builder cleanup controls, four compact-set configurations, an extra-slot '
-                 'control, eight range-set allocation configurations and nine paired cost cases. '
+                 'control, four range-set allocation configurations and nine paired cost cases. '
                  'Range-set tests also reject missing size guards, missing releases and ordinary '
                  'construction under a one-allocation budget. Timing compares fused and '
                  'ordinary fwp, not C/Rust. Native section sizes are recorded; assembly must be '

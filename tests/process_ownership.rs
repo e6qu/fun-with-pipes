@@ -74,46 +74,39 @@ main = range 0 32 | each exercise
     if cfg!(unix) {
         assert_eq!(text.lines().filter(|line| *line == "141").count(), 64);
     }
-    for mode in ["tracing", "arc"] {
-        let cfile = dir.join("processes.c");
-        checked(
-            Command::new(compiler)
-                .args(["build", "--gc", mode, "--emit-c"])
-                .arg(&source)
-                .arg("-o")
-                .arg(&cfile),
-        );
-        let mut code = std::fs::read_to_string(cfile).unwrap();
-        if mode == "arc" {
-            let start = code
-                .find("static void *fwp_main_thread(void *arg) {")
-                .unwrap();
-            let (runtime, main) = code.split_at(start);
-            assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
-            assert_eq!(
-                main.matches("    /* Ownership observation point: before runtime teardown. */\n")
-                    .count(),
-                1
-            );
-            let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t process_live_bytes = fwp_heap.live;\n")
+
+    let cfile = dir.join("processes.c");
+    checked(
+        Command::new(compiler)
+            .args(["build", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let mut code = std::fs::read_to_string(cfile).unwrap();
+
+    let start = code
+        .find("static void *fwp_main_thread(void *arg) {")
+        .unwrap();
+    let (runtime, main) = code.split_at(start);
+    assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
+    assert_eq!(
+        main.matches("    /* Ownership observation point: before runtime teardown. */\n")
+            .count(),
+        1
+    );
+    let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t process_live_bytes = fwp_heap.live;\n")
                 .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > process_live_bytes) exit(232);\n");
-            code = format!("{runtime}{main}");
-        }
-        retain_code(&format!("repeated-{mode}.c"), &code);
-        let binary = dir.join("processes.exe");
-        for opt in ["-O1", "-O2"] {
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let stress = if mode == "arc" { "0" } else { "1" };
-            let actual = checked(
-                Command::new(&binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
-            assert_eq!(actual.stdout, reference.stdout, "{mode} {opt}");
-            assert_eq!(actual.stderr, reference.stderr, "{mode} {opt}");
-        }
+    code = format!("{runtime}{main}");
+
+    retain_code("repeated-counted.c", &code);
+    let binary = dir.join("processes.exe");
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+
+        let actual = checked(&mut Command::new(&binary));
+        assert_eq!(actual.stdout, reference.stdout, "counted {opt}");
+        assert_eq!(actual.stderr, reference.stderr, "counted {opt}");
     }
 }
 
@@ -203,76 +196,67 @@ main = 0 | exercise | .status | echo
         ),
     )
     .unwrap();
-    for mode in ["tracing", "arc"] {
-        let cfile = dir.join("probe.c");
-        checked(
-            Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", "--gc", mode, "--fn", "exercise", "--emit-c"])
-                .arg(&source)
-                .arg("-o")
-                .arg(&cfile),
+
+    let cfile = dir.join("probe.c");
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--fn", "exercise", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let emitted = std::fs::read_to_string(cfile).unwrap();
+    let entry = emitted[emitted.find("/* exercise :").unwrap()..]
+        .split("static V f")
+        .nth(1)
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    let code = instrument(emitted.clone()).replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    ) + &include_str!("fixtures/process_ownership_probe.c")
+        .replace("fEXERCISE", &format!("f{entry}"));
+    retain_code("failures-counted.c", &code);
+    let binary = dir.join("probe.exe");
+
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        checked(&mut Command::new(&binary));
+    }
+    let uncounted = code.replace("fwp_rc_fresh(process_test_record(", "(process_test_record(");
+    assert_ne!(uncounted, code);
+    let unreleased = code
+        .replace("process_test_buf_release(&process->out);", "(void)0;")
+        .replace(
+            "process_test_free_output(process->output[i].data);",
+            "(void)0;",
         );
-        let emitted = std::fs::read_to_string(cfile).unwrap();
-        let entry = emitted[emitted.find("/* exercise :").unwrap()..]
-            .split("static V f")
-            .nth(1)
-            .unwrap()
-            .split('(')
-            .next()
-            .unwrap();
-        let code = instrument(emitted.clone()).replace(
-            "int main(int argc, char **argv)",
-            "int original_main(int argc, char **argv)",
-        ) + &include_str!("fixtures/process_ownership_probe.c")
-            .replace("fEXERCISE", &format!("f{entry}"));
-        retain_code(&format!("failures-{mode}.c"), &code);
-        let binary = dir.join("probe.exe");
-        let run = || {
-            let mut command = Command::new(&binary);
-            command
-                .env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", if mode == "arc" { "0" } else { "1" })
-                .env("FWP_REUSE_VERIFY", "0");
-            command
-        };
-        for opt in ["-O1", "-O2"] {
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            checked(&mut run());
-        }
-        let uncounted = code.replace("fwp_rc_fresh(process_test_record(", "(process_test_record(");
-        assert_ne!(uncounted, code);
-        let unreleased = code
-            .replace("process_test_buf_release(&process->out);", "(void)0;")
-            .replace(
-                "process_test_free_output(process->output[i].data);",
-                "(void)0;",
-            );
-        assert_ne!(unreleased, code);
-        // A worker may rebuild the outer record after detecting the uncounted
-        // original as shared. Then the extra child counts expose the same bug.
-        let mut controls = vec![(uncounted, &[234, 235][..]), (unreleased, &[233][..])];
-        if cfg!(unix) {
-            let signature =
-                "static ssize_t fwp_process_write(int fd, const void *bytes, size_t size) {";
-            let changed = code.replace(
-                signature,
-                &format!("{signature}\n    signal(SIGPIPE, SIG_IGN);"),
-            );
-            assert_ne!(changed, code);
-            controls.push((changed, &[246]));
-        }
-        for (broken, expected) in controls {
-            fwp::cgen::compile_c(&broken, &binary, "-O2").unwrap();
-            let actual = run().output().unwrap();
-            assert!(
-                actual
-                    .status
-                    .code()
-                    .is_some_and(|status| expected.contains(&status)),
-                "{mode}, expected {expected:?}: {actual:?}"
-            );
-        }
+    assert_ne!(unreleased, code);
+    // A worker may rebuild the outer record after detecting the uncounted
+    // original as shared. Then the extra child counts expose the same bug.
+    let mut controls = vec![(uncounted, &[234, 235][..]), (unreleased, &[233][..])];
+    if cfg!(unix) {
+        let signature =
+            "static ssize_t fwp_process_write(int fd, const void *bytes, size_t size) {";
+        let changed = code.replace(
+            signature,
+            &format!("{signature}\n    signal(SIGPIPE, SIG_IGN);"),
+        );
+        assert_ne!(changed, code);
+        controls.push((changed, &[246]));
+    }
+    for (broken, expected) in controls {
+        fwp::cgen::compile_c(&broken, &binary, "-O2").unwrap();
+        let actual = Command::new(&binary).output().unwrap();
+        assert!(
+            actual
+                .status
+                .code()
+                .is_some_and(|status| expected.contains(&status)),
+            "counted, expected {expected:?}: {actual:?}"
+        );
     }
 }
 
@@ -296,66 +280,55 @@ main = range 0 64 | map normalize
         ),
     )
     .unwrap();
-    for mode in ["tracing", "arc"] {
-        checked(
-            Command::new(compiler)
-                .args(["build", "--gc", mode, "--fn", "normalize"])
-                .arg(
-                    std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-                        .join("examples/shell/tools.fwp"),
-                )
-                .arg("-o")
-                .arg(&child),
-        );
-        let reference = checked(
-            Command::new(compiler)
-                .env("FWP_NO_OPT", "1")
-                .env_remove("FWP_OUT")
-                .args(["run", "--interp"])
-                .arg(&source),
-        );
-        let text = String::from_utf8_lossy(&reference.stdout);
-        assert_eq!(text.matches("hello").count(), 64);
-        assert_eq!(text.matches("world").count(), 64);
-        let cfile = dir.join("parent.c");
-        checked(
-            Command::new(compiler)
-                .args(["build", "--gc", mode, "--emit-c"])
-                .arg(&source)
-                .arg("-o")
-                .arg(&cfile),
-        );
-        let mut code = std::fs::read_to_string(cfile).unwrap();
-        if mode == "arc" {
-            let start = code
-                .find("static void *fwp_main_thread(void *arg) {")
-                .unwrap();
-            let (runtime, main) = code.split_at(start);
-            assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
-            assert_eq!(
-                main.matches("    /* Ownership observation point: before runtime teardown. */\n")
-                    .count(),
-                1
-            );
-            let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t process_live_bytes = fwp_heap.live;\n")
+
+    checked(
+        Command::new(compiler)
+            .args(["build", "--fn", "normalize"])
+            .arg(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("examples/shell/tools.fwp"))
+            .arg("-o")
+            .arg(&child),
+    );
+    let reference = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .env_remove("FWP_OUT")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    let text = String::from_utf8_lossy(&reference.stdout);
+    assert_eq!(text.matches("hello").count(), 64);
+    assert_eq!(text.matches("world").count(), 64);
+    let cfile = dir.join("parent.c");
+    checked(
+        Command::new(compiler)
+            .args(["build", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let mut code = std::fs::read_to_string(cfile).unwrap();
+
+    let start = code
+        .find("static void *fwp_main_thread(void *arg) {")
+        .unwrap();
+    let (runtime, main) = code.split_at(start);
+    assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
+    assert_eq!(
+        main.matches("    /* Ownership observation point: before runtime teardown. */\n")
+            .count(),
+        1
+    );
+    let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t process_live_bytes = fwp_heap.live;\n")
                 .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > process_live_bytes) exit(232);\n");
-            code = format!("{runtime}{main}");
-        }
-        retain_code(&format!("shell-parent-{mode}.c"), &code);
-        let binary = dir.join("parent.exe");
-        for opt in ["-O1", "-O2"] {
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let stress = if mode == "arc" { "0" } else { "1" };
-            let actual = checked(
-                Command::new(&binary)
-                    .env_remove("FWP_OUT")
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
-            assert_eq!(actual.stdout, reference.stdout, "{mode} {opt}");
-            assert_eq!(actual.stderr, reference.stderr, "{mode} {opt}");
-        }
+    code = format!("{runtime}{main}");
+
+    retain_code("shell-parent-counted.c", &code);
+    let binary = dir.join("parent.exe");
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+
+        let actual = checked(Command::new(&binary).env_remove("FWP_OUT"));
+        assert_eq!(actual.stdout, reference.stdout, "counted {opt}");
+        assert_eq!(actual.stderr, reference.stderr, "counted {opt}");
     }
 }

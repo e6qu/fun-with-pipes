@@ -22,24 +22,24 @@ fn interop_example_releases_sorting_and_formatting_buffers() {
         std::fs::read(source.with_extension("out")).unwrap()
     );
     assert!(reference.stderr.is_empty());
-    for gc in ["tracing", "arc"] {
-        let cfile = dir.join("interop.c");
-        let emitted = Command::new(compiler)
-            .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", gc, "--emit-c", "-O1"])
-            .arg(&source)
-            .arg("-o")
-            .arg(&cfile)
-            .output()
-            .unwrap();
-        assert!(emitted.status.success(), "{emitted:?}");
-        let original = std::fs::read_to_string(cfile).unwrap();
-        let allocation = "void *p = calloc(n, 1);\n    if (!p) fwp_trap(\"out of memory\");\n    return (V)(uintptr_t)p;";
-        let release = "free((void *)(uintptr_t)l0);\n    return FWP_UNIT;";
-        assert!(original.contains(allocation) && original.contains(release));
-        // Observe only raw mem.alloc/mem.free buffers, independently of managed
-        // runtime storage. Reentrant qsort comparators allocate their own buffers.
-        let observer = r#"
+
+    let cfile = dir.join("interop.c");
+    let emitted = Command::new(compiler)
+        .env_remove("FWP_NO_OPT")
+        .args(["build", "--emit-c", "-O1"])
+        .arg(&source)
+        .arg("-o")
+        .arg(&cfile)
+        .output()
+        .unwrap();
+    assert!(emitted.status.success(), "{emitted:?}");
+    let original = std::fs::read_to_string(cfile).unwrap();
+    let allocation = "void *p = calloc(n, 1);\n    if (!p) fwp_trap(\"out of memory\");\n    return (V)(uintptr_t)p;";
+    let release = "free((void *)(uintptr_t)l0);\n    return FWP_UNIT;";
+    assert!(original.contains(allocation) && original.contains(release));
+    // Observe only raw mem.alloc/mem.free buffers, independently of managed
+    // runtime storage. Reentrant qsort comparators allocate their own buffers.
+    let observer = r#"
 static void *interop_buffers[64];
 static unsigned interop_live, interop_created;
 static void *interop_alloc(size_t size) {
@@ -57,11 +57,11 @@ static void interop_free(void *p) {
     exit(213);
 }
 "#;
-        // Preserve the runtime's platform macros before any system header.
-        let types = "typedef uint64_t V;";
-        assert_eq!(original.matches(types).count(), 1);
-        assert_eq!(original.matches("calloc(n + 1, 1)").count(), 1);
-        let mut code = original
+    // Preserve the runtime's platform macros before any system header.
+    let types = "typedef uint64_t V;";
+    assert_eq!(original.matches(types).count(), 1);
+    assert_eq!(original.matches("calloc(n + 1, 1)").count(), 1);
+    let mut code = original
         .replacen(types, &format!("{observer}\n{types}"), 1)
         .replace(
             allocation,
@@ -76,59 +76,55 @@ static void interop_free(void *p) {
             "    /* Ownership observation point: before runtime teardown. */\n",
             "    if(interop_live || interop_created<3)exit(211);\n    /* Ownership observation point: before runtime teardown. */\n",
         );
-        assert!(code.contains("if(interop_live || interop_created<3)exit(211);"));
-        if gc == "arc" {
-            let init = "    fwp_init_consts();\n";
-            let end = "    /* Ownership observation point: before runtime teardown. */\n";
-            assert_eq!(code.matches(init).count(), 1);
-            assert_eq!(code.matches(end).count(), 1);
-            code = code
-                .replace(init, &format!("{init}    size_t raw_live_bytes=0;\n"))
-                .replace(
-                    end,
-                    &format!("{end}    if(fwp_heap.live > raw_live_bytes)exit(214);\n"),
-                );
-        }
-        for opt in ["-O0", "-O2"] {
-            for (label, candidate, status) in [
-                ("released", code.clone(), 0),
-                (
-                    "missing-free",
-                    code.replace(
-                        "interop_free((void *)(uintptr_t)l0);",
-                        "/* omit raw buffer release */",
-                    ),
-                    211,
+    assert!(code.contains("if(interop_live || interop_created<3)exit(211);"));
+
+    let init = "    fwp_init_consts();\n";
+    let end = "    /* Ownership observation point: before runtime teardown. */\n";
+    assert_eq!(code.matches(init).count(), 1);
+    assert_eq!(code.matches(end).count(), 1);
+    code = code
+        .replace(init, &format!("{init}    size_t raw_live_bytes=0;\n"))
+        .replace(
+            end,
+            &format!("{end}    if(fwp_heap.live > raw_live_bytes)exit(214);\n"),
+        );
+
+    for opt in ["-O0", "-O2"] {
+        for (label, candidate, status) in [
+            ("released", code.clone(), 0),
+            (
+                "missing-free",
+                code.replace(
+                    "interop_free((void *)(uintptr_t)l0);",
+                    "/* omit raw buffer release */",
                 ),
-            ] {
-                let binary = dir.join("interop.exe");
-                let measured = candidate;
-                fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
-                let actual = Command::new(&binary)
-                    .env("FWP_SEED", "42")
-                    .env("FWP_GC_STRESS", if gc == "arc" { "0" } else { "1" })
-                    .env("FWP_GC_VERIFY", if gc == "arc" { "0" } else { "1" })
-                    .env("FWP_REUSE_VERIFY", if gc == "arc" { "0" } else { "1" })
-                    .output()
-                    .unwrap();
-                if let Some(artifacts) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
-                    let artifacts = std::path::PathBuf::from(artifacts).join("interop-buffers");
-                    std::fs::create_dir_all(&artifacts).unwrap();
-                    let artifact = artifacts.join(format!("{gc}-{label}{opt}"));
-                    std::fs::write(artifact.with_extension("c"), &measured).unwrap();
-                    std::fs::copy(&binary, artifact.with_extension("exe")).unwrap();
-                    std::fs::write(artifact.with_extension("stdout"), &actual.stdout).unwrap();
-                    std::fs::write(artifact.with_extension("stderr"), &actual.stderr).unwrap();
-                    std::fs::write(
-                        artifact.with_extension("status"),
-                        format!("{:?}\n", actual.status.code()),
-                    )
-                    .unwrap();
-                }
-                assert_eq!(actual.status.code(), Some(status), "{opt}: {actual:?}");
-                assert_eq!(actual.stdout, reference.stdout, "{opt}");
-                assert!(actual.stderr.is_empty(), "{opt}: {actual:?}");
+                211,
+            ),
+        ] {
+            let binary = dir.join("interop.exe");
+            let measured = candidate;
+            fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
+            let actual = Command::new(&binary)
+                .env("FWP_SEED", "42")
+                .output()
+                .unwrap();
+            if let Some(artifacts) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
+                let artifacts = std::path::PathBuf::from(artifacts).join("interop-buffers");
+                std::fs::create_dir_all(&artifacts).unwrap();
+                let artifact = artifacts.join(format!("counted-{label}{opt}"));
+                std::fs::write(artifact.with_extension("c"), &measured).unwrap();
+                std::fs::copy(&binary, artifact.with_extension("exe")).unwrap();
+                std::fs::write(artifact.with_extension("stdout"), &actual.stdout).unwrap();
+                std::fs::write(artifact.with_extension("stderr"), &actual.stderr).unwrap();
+                std::fs::write(
+                    artifact.with_extension("status"),
+                    format!("{:?}\n", actual.status.code()),
+                )
+                .unwrap();
             }
+            assert_eq!(actual.status.code(), Some(status), "{opt}: {actual:?}");
+            assert_eq!(actual.stdout, reference.stdout, "{opt}");
+            assert!(actual.stderr.is_empty(), "{opt}: {actual:?}");
         }
     }
 }
@@ -205,31 +201,24 @@ int main(void) {
  if (STR(input)->len != 5 || memcmp(STR(input)->d,"hello",5)) return 6;
  double before = fwp_heap.freed;
  f3(copy); f3(input);
- if (!fwp_reuse_verify && fwp_heap.freed <= before) return 7;
- if (fwp_reuse_verify && (STR(copy)->len || STR(input)->len)) return 8;
+ if (fwp_heap.freed <= before) return 7;
  return 0;
 }
-
 
 "#;
     let dir = fwp::cgen::TempDir::new("fwp-raw-memory-ownership").unwrap();
     for opt in ["-O1", "-O2"] {
         let executable = dir.join(format!("probe{opt}"));
         fwp::cgen::compile_c(&format!("{source}\n{probe}"), &executable, opt).unwrap();
-        for poison in ["0", "1"] {
-            let result = Command::new(&executable)
-                .env("FWP_REUSE_VERIFY", poison)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .output()
-                .unwrap();
-            assert!(
-                result.status.success(),
-                "{opt}/{poison}: {}: {}",
-                result.status,
-                String::from_utf8_lossy(&result.stderr)
-            );
-        }
+
+        let result = Command::new(&executable).output().unwrap();
+        assert!(
+            result.status.success(),
+            "{opt}: {}: {}",
+            result.status,
+            String::from_utf8_lossy(&result.stderr)
+        );
+
         for (negative, expected) in [
             (
                 source.replace(fresh, "return fwp_c_string((const char *)(uintptr_t)l0);"),
@@ -294,17 +283,11 @@ fn pipe_string_copy_matches_raw_interpreter_under_gc_and_reuse_verification() {
     for opt in ["-O1", "-O2"] {
         let executable = dir.join(format!("copy{opt}"));
         fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-        for poison in ["0", "1"] {
-            let result = Command::new(&executable)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", poison)
-                .output()
-                .unwrap();
-            assert_eq!(result.status.code(), reference.status.code());
-            assert_eq!(result.stdout, reference.stdout);
-            assert_eq!(result.stderr, reference.stderr);
-        }
+
+        let result = Command::new(&executable).output().unwrap();
+        assert_eq!(result.status.code(), reference.status.code());
+        assert_eq!(result.stdout, reference.stdout);
+        assert_eq!(result.stderr, reference.stderr);
     }
 }
 
@@ -323,50 +306,44 @@ fn raw_wide_integer_storage_preserves_all_bits_and_owned_result_boxes() {
     assert!(reference.status.success(), "{reference:?}");
     assert_eq!(reference.stdout, expected);
     assert!(reference.stderr.is_empty());
-    for gc in ["tracing", "arc"] {
-        let cfile = dir.join("wide.c");
-        let emit = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", gc, "--emit-c"])
-            .arg(&source)
-            .arg("-o")
-            .arg(&cfile)
-            .output()
-            .unwrap();
-        assert!(emit.status.success(), "{emit:?}");
-        let mut code = std::fs::read_to_string(&cfile).unwrap();
-        if gc == "arc" {
-            let init = "    fwp_init_consts();\n";
-            let end = "    /* Ownership observation point: before runtime teardown. */\n";
-            assert_eq!(code.matches(init).count(), 1);
-            assert_eq!(code.matches(end).count(), 1);
-            code = code
-                .replace(init, &format!("{init}    size_t raw_live_bytes=0;\n"))
-                .replace(
-                    end,
-                    &format!("{end}    if(fwp_heap.live > raw_live_bytes)exit(214);\n"),
-                );
-        }
-        for opt in ["-O0", "-O2"] {
-            let binary = dir.join("wide.exe");
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let output = Command::new(&binary)
-                .env("FWP_GC_STRESS", if gc == "arc" { "0" } else { "1" })
-                .env("FWP_GC_VERIFY", if gc == "arc" { "0" } else { "1" })
-                .env("FWP_REUSE_VERIFY", if gc == "arc" { "0" } else { "1" })
-                .output()
-                .unwrap();
-            assert!(output.status.success(), "{gc}/{opt}: {output:?}");
-            assert_eq!(output.stdout, expected, "{gc}/{opt}");
-            assert!(output.stderr.is_empty(), "{gc}/{opt}: {output:?}");
-            if let Some(root) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
-                let path = std::path::PathBuf::from(root).join("wide-integers");
-                std::fs::create_dir_all(&path).unwrap();
-                let stem = path.join(format!("{gc}{opt}"));
-                std::fs::write(stem.with_extension("c"), &code).unwrap();
-                std::fs::copy(&binary, stem.with_extension("exe")).unwrap();
-                std::fs::write(stem.with_extension("stdout"), output.stdout).unwrap();
-                std::fs::write(stem.with_extension("stderr"), output.stderr).unwrap();
-            }
+
+    let cfile = dir.join("wide.c");
+    let emit = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .args(["build", "--emit-c"])
+        .arg(&source)
+        .arg("-o")
+        .arg(&cfile)
+        .output()
+        .unwrap();
+    assert!(emit.status.success(), "{emit:?}");
+    let mut code = std::fs::read_to_string(&cfile).unwrap();
+
+    let init = "    fwp_init_consts();\n";
+    let end = "    /* Ownership observation point: before runtime teardown. */\n";
+    assert_eq!(code.matches(init).count(), 1);
+    assert_eq!(code.matches(end).count(), 1);
+    code = code
+        .replace(init, &format!("{init}    size_t raw_live_bytes=0;\n"))
+        .replace(
+            end,
+            &format!("{end}    if(fwp_heap.live > raw_live_bytes)exit(214);\n"),
+        );
+
+    for opt in ["-O0", "-O2"] {
+        let binary = dir.join("wide.exe");
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        let output = Command::new(&binary).output().unwrap();
+        assert!(output.status.success(), "counted/{opt}: {output:?}");
+        assert_eq!(output.stdout, expected, "counted/{opt}");
+        assert!(output.stderr.is_empty(), "counted/{opt}: {output:?}");
+        if let Some(root) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
+            let path = std::path::PathBuf::from(root).join("wide-integers");
+            std::fs::create_dir_all(&path).unwrap();
+            let stem = path.join(format!("counted{opt}"));
+            std::fs::write(stem.with_extension("c"), &code).unwrap();
+            std::fs::copy(&binary, stem.with_extension("exe")).unwrap();
+            std::fs::write(stem.with_extension("stdout"), output.stdout).unwrap();
+            std::fs::write(stem.with_extension("stderr"), output.stderr).unwrap();
         }
     }
 }
