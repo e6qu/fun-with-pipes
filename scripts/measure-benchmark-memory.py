@@ -29,7 +29,7 @@ assert os.environ['GITHUB_ACTIONS'] == 'true' and platform.system() == 'Linux'
 assert args.samples >= 3 and re.fullmatch('[0-9a-f]{40}', args.source)
 assert not args.output.exists(), 'Preserve completed memory measurements'
 inspection = json.loads(args.inspection.read_text())
-assert inspection['source'] == args.source and inspection['memory'] == 'arc'
+assert inspection['source'] == args.source and inspection['ownership'] == 'counted'
 assert inspection['architecture'] == platform.machine()
 directory, = (args.input / args.source).iterdir()
 args.output.mkdir(parents=True)
@@ -52,7 +52,7 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-result = dict(source=args.source, memory='arc', architecture=platform.machine(),
+result = dict(source=args.source, ownership='counted', architecture=platform.machine(),
               inspectionSha256=digest(args.inspection), samples=args.samples,
               cCompiler=run([args.cc, '--version']).stdout.decode(),
               timeTool=run([args.time, '--version']).stdout.decode(),

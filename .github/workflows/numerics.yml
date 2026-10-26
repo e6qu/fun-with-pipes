@@ -1587,7 +1587,7 @@ jobs:
       - name: Compare complete programs with C and Rust
         if: ${{ !cancelled() && inputs.suite == 'scalar-text' }}
         env:
-          FWP_BENCH_OWNERSHIP: tracing
+          FWP_LTO: '0'
         run: cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
       - uses: actions/upload-artifact@v7
         if: ${{ always() && inputs.suite == 'scalar-text' }}
@@ -4088,7 +4088,6 @@ jobs:
     env:
       CC: gcc
       CARGO_BUILD_JOBS: 2
-      FWP_BENCH_OWNERSHIP: arc
       FWP_LTO: '0'
     steps:
       - name: Require a supported native Linux runner
@@ -4132,8 +4131,8 @@ jobs:
             ARM64) architecture=aarch64 ;;
             *) echo "Unsupported benchmark architecture: $RUNNER_ARCH" >&2; exit 1 ;;
           esac
-          python3 scripts/inspect-benchmark-binaries.py --input target/bench-evidence --source "$GITHUB_SHA" --memory arc --arch "$architecture" --objdump objdump --output target/bench-inspection.json
-          python3 scripts/test-benchmark-evidence.py --input target/bench-evidence --source "$GITHUB_SHA" --memory arc --arch "$architecture" --objdump objdump --output target/bench-controls.json
+          python3 scripts/inspect-benchmark-binaries.py --input target/bench-evidence --source "$GITHUB_SHA" --arch "$architecture" --objdump objdump --output target/bench-inspection.json
+          python3 scripts/test-benchmark-evidence.py --input target/bench-evidence --source "$GITHUB_SHA" --arch "$architecture" --objdump objdump --output target/bench-controls.json
       - name: Measure memory separately and detect intentional leaks
         if: ${{ !cancelled() && steps.evidence.outcome == 'success' && inputs.suite == 'benchmark-comparison' }}
         shell: bash
@@ -4239,7 +4238,6 @@ jobs:
       - name: Complete-program C and Rust comparison
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         env:
-          FWP_BENCH_OWNERSHIP: arc
           FWP_LTO: '0'
         run: cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
       - uses: actions/upload-artifact@v7

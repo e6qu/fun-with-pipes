@@ -1,6 +1,6 @@
 /* Run the real runtime helpers with generated String/List descriptors. The
- * allocation ledger observes physical allocations and logical frees, so tracing
- * cannot conceal a missing owner release. Inputs have independent live aliases. */
+ * allocation ledger observes allocation and release events, so a missing owner
+ * release fails independently of allocator accounting. Inputs have independent live aliases. */
 static int copy_armed, copy_step, copy_failure, copy_live, copy_calls;
 static int copy_callback_failure, copy_cancel;
 static void *copy_allocations[128];

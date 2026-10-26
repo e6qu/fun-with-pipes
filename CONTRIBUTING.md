@@ -152,7 +152,7 @@ fail their intended observer. Preserve stress/verification/reuse coverage until
 Optional-tool skips do not establish platform support.
 
 The separate benchmark job runs
-`CC=gcc FWP_LTO=0 FWP_BENCH_OWNERSHIP=arc cargo test --release --test bench benchmarks -- --ignored --exact --nocapture`.
+`CC=gcc FWP_LTO=0 cargo test --release --test bench benchmarks -- --ignored --exact --nocapture`.
 It fails on different program results, but currently reports rather than gates
 on timing. [The benchmark guide](docs/benchmarks.md) defines what each comparison
 includes; [B1–B2](PLAN.md#7-reproducible-comparisons) define the remaining budgets.

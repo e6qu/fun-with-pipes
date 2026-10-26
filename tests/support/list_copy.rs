@@ -103,98 +103,78 @@ fn partial_lists_keys_and_scratch_release_on_every_exit() {
             .args(["run", "--interp"])
             .arg(&input),
     );
-    for memory in ["arc", "tracing"] {
-        checked(
-            Command::new(fwp)
-                .args([
-                    "build", "--gc", memory, "--memory", "dynamic", "--emit-c", "-O2", "-o",
-                ])
-                .arg(&cfile)
-                .arg(&input),
-        );
-        let emitted = std::fs::read_to_string(&cfile).unwrap();
-        let probe = allocation_probe(&emitted);
-        for optimization in ["-O1", "-O2"] {
-            for (case, code, status) in [
-                ("program", emitted.clone(), 0),
-                ("balanced", probe.clone(), 0),
-                (
-                    "missing-key",
-                    probe.replace(
-                        "fwp_map_owner owner = {keys, 0, 0, drop_key, NULL};",
-                        "fwp_map_owner owner = {keys, 0, 0, NULL, NULL};",
-                    ),
-                    213,
+
+    checked(
+        Command::new(fwp)
+            .args(["build", "--memory", "dynamic", "--emit-c", "-O2", "-o"])
+            .arg(&cfile)
+            .arg(&input),
+    );
+    let emitted = std::fs::read_to_string(&cfile).unwrap();
+    let probe = allocation_probe(&emitted);
+    for optimization in ["-O1", "-O2"] {
+        for (case, code, status) in [
+            ("program", emitted.clone(), 0),
+            ("balanced", probe.clone(), 0),
+            (
+                "missing-key",
+                probe.replace(
+                    "fwp_map_owner owner = {keys, 0, 0, drop_key, NULL};",
+                    "fwp_map_owner owner = {keys, 0, 0, NULL, NULL};",
                 ),
-                (
-                    "missing-scratch",
-                    probe.replace(
-                        "static void fwp_scratch_release(void *arg) {",
-                        "static void fwp_scratch_release(void *arg) { (void)arg; return;",
-                    ),
-                    213,
+                213,
+            ),
+            (
+                "missing-scratch",
+                probe.replace(
+                    "static void fwp_scratch_release(void *arg) {",
+                    "static void fwp_scratch_release(void *arg) { (void)arg; return;",
                 ),
-                (
-                    "missing-partial",
-                    probe.replace(
-                        "fwp_value_owner result = {owned_tail, list->drop};",
-                        "fwp_value_owner result = {owned_tail, NULL};",
-                    ),
-                    213,
+                213,
+            ),
+            (
+                "missing-partial",
+                probe.replace(
+                    "fwp_value_owner result = {owned_tail, list->drop};",
+                    "fwp_value_owner result = {owned_tail, NULL};",
                 ),
-            ] {
-                if status != 0 {
-                    assert_ne!(code, probe, "{case}");
-                }
-                fwp::cgen::compile_c(&code, &binary, optimization).unwrap();
-                for reuse in if memory == "arc" || status != 0 {
-                    &["0"][..]
-                } else {
-                    &["0", "1"][..]
-                } {
-                    let stress = if memory == "tracing" && status == 0 {
-                        "1"
-                    } else {
-                        "0"
-                    };
-                    let output = Command::new(&binary)
-                        .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", reuse)
-                        .output()
-                        .unwrap();
-                    save(
-                        &format!("{memory}{optimization}-{case}-reuse{reuse}"),
-                        &code,
-                        &binary,
-                        &output,
-                    );
-                    assert_eq!(
-                        output.status.code(),
-                        Some(status),
-                        "{memory} {optimization} {case} reuse{reuse}: {output:?}"
-                    );
-                    if case == "program" {
-                        assert_eq!(output.stdout, reference.stdout);
-                    }
-                    if case == "balanced" {
-                        let text = String::from_utf8_lossy(&output.stdout);
-                        assert!(text.starts_with("7 copied-list operations: "), "{text}");
-                        assert!(text.ends_with(" allocation/retain failures and 6 callback exits cleaned; aliases preserved\n"), "{text}");
-                        eprint!("{memory} {optimization} reuse{reuse}: {text}");
-                    }
-                    if status == 0 {
-                        assert!(output.stderr.is_empty(), "{output:?}");
-                    } else {
-                        assert!(
-                            String::from_utf8_lossy(&output.stderr)
-                                .contains("copied-list live allocations:"),
-                            "{output:?}"
-                        );
-                    }
-                }
+                213,
+            ),
+        ] {
+            if status != 0 {
+                assert_ne!(code, probe, "{case}");
+            }
+            fwp::cgen::compile_c(&code, &binary, optimization).unwrap();
+
+            let output = Command::new(&binary).output().unwrap();
+            save(
+                &format!("counted{optimization}-{case}"),
+                &code,
+                &binary,
+                &output,
+            );
+            assert_eq!(
+                output.status.code(),
+                Some(status),
+                "{optimization} {case}: {output:?}"
+            );
+            if case == "program" {
+                assert_eq!(output.stdout, reference.stdout);
+            }
+            if case == "balanced" {
+                let text = String::from_utf8_lossy(&output.stdout);
+                assert!(text.starts_with("7 copied-list operations: "), "{text}");
+                assert!(text.ends_with(" allocation/retain failures and 6 callback exits cleaned; aliases preserved\n"), "{text}");
+                eprint!("{optimization}: {text}");
+            }
+            if status == 0 {
+                assert!(output.stderr.is_empty(), "{output:?}");
+            } else {
+                assert!(
+                    String::from_utf8_lossy(&output.stderr)
+                        .contains("copied-list live allocations:"),
+                    "{output:?}"
+                );
             }
         }
     }

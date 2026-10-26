@@ -1,13 +1,12 @@
 //! Benchmarks against C and Rust (`bench/<name>/main.{fwp,c,rs}`): each
-//! program uses explicit `FWP_BENCH_OWNERSHIP` (arc or tracing),
-//! `CC -std=c11 -O2 -ffp-contract=off`
-//! and `rustc --edition=2021 -O`. fwp receives the selected mode and `-O2`; the
+//! program uses counted ownership, with explicit `CC -std=c11 -O2 -ffp-contract=off`
+//! and `rustc --edition=2021 -O`. fwp receives `-O2`; the
 //! three must print the same, and the median of six runs in rotating order is
 //! reported with raw samples, compiler/host metadata and ratios to both baselines
 //! (on stdout, in target/bench.md, and in the GitHub
 //! Actions job summary). Actual executables, inputs and separately emitted C
 //! remain in target/bench-evidence for inspection. Timings are not asserted:
-//! shared machines are too noisy. On runners, use `CC=gcc FWP_LTO=0 FWP_BENCH_OWNERSHIP=arc
+//! shared machines are too noisy. On runners, use `CC=gcc FWP_LTO=0
 //! cargo test --release --test bench benchmarks -- --ignored
 //! --exact --nocapture`.
 
@@ -166,12 +165,6 @@ fn entry_check_arrangement_measurement() {
 #[test]
 #[ignore]
 fn benchmarks() {
-    let ownership = std::env::var("FWP_BENCH_OWNERSHIP")
-        .expect("set FWP_BENCH_OWNERSHIP explicitly to arc or tracing");
-    assert!(
-        matches!(ownership.as_str(), "arc" | "tracing"),
-        "FWP_BENCH_OWNERSHIP must be arc or tracing"
-    );
     let lto = std::env::var("FWP_LTO").expect("set FWP_LTO=0 for this comparison");
     assert_eq!(lto, "0", "this comparison requires FWP_LTO=0");
     let source = command_output("git", &["rev-parse", "HEAD"]);
@@ -199,8 +192,8 @@ fn benchmarks() {
          C/Rust/fwp, Rust/fwp/C, fwp/C/Rust, twice; each implementation occupies\n\
          every position twice. The table uses the median. Samples include startup, input\n\
          construction, computation, allocation and output; compilation is excluded.\n\
-         Native fwp memory mode: `{ownership}`. ARC releases a value when its last\n\
-         owner releases it; tracing enables the tracing collector. The interpreter is not timed.\n\n\
+         Native fwp ownership: counted. ARC releases a value when its last\n\
+         owner releases it. There is no tracing collector. The interpreter is not timed.\n\n\
          A ratio above 1 means fwp took longer. The percentage is\n\
          `(fwp / baseline - 1) * 100`, not a separately measured language cost.\n\
          Matching output does not imply equal work: maps use sorted pairs in\n\
@@ -218,7 +211,7 @@ fn benchmarks() {
          that extra emission is excluded from execution and compilation timings.\n\n\
          C compiler (`{cc} -std=c11 -O2 -ffp-contract=off`):\n\n```text\n{}\n```\n\n\
          Rust compiler (`rustc --edition=2021 -O`):\n\n```text\n{}\n```\n\n\
-         fwp build flags: `--gc {ownership} -O2`, `FWP_LTO=0`; generated C is compiled\n\
+         fwp build flags: `-O2`, `FWP_LTO=0`; generated C is compiled\n\
          as one source file, without link-time optimization.\n\n\
          | Program | C | Rust | fwp | fwp / C (extra time) | fwp / Rust (extra time) |\n\
          |---|--:|--:|--:|--:|--:|\n",
@@ -254,7 +247,7 @@ fn benchmarks() {
         );
         let fwp_build = build(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", "--gc", ownership.as_str()])
+                .args(["build"])
                 .arg(src.join("main.fwp"))
                 .args(["-O2", "-o"])
                 .arg(&fw),
@@ -317,16 +310,19 @@ fn benchmarks() {
         // This separate emission is outside all reported build/execution times.
         build(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", "--gc", ownership.as_str()])
+                .args(["build"])
                 .arg(src.join("main.fwp"))
                 .args(["-O2", "--emit-c", "-o"])
                 .arg(dir.join(format!("{name}-generated.c"))),
         );
         let generated = std::fs::read_to_string(dir.join(format!("{name}-generated.c"))).unwrap();
-        assert_eq!(
-            generated.contains("#define FWP_ARC_ONLY 1"),
-            ownership == "arc",
-            "{name}: generated C has the wrong memory mode"
+        assert!(
+            !generated.contains("FWP_ARC_ONLY"),
+            "{name}: obsolete memory selector"
+        );
+        assert!(
+            !generated.contains("fwp_heap_collect("),
+            "{name}: collector remains"
         );
     }
     table.push_str(&raw);

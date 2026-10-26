@@ -27,7 +27,7 @@ assert not args.output.exists()
 report = json.loads((args.input / 'report.json').read_text())
 inspection = json.loads(args.inspection.read_text())
 assert report['source'] == inspection['source'] == args.source
-assert report['memory'] == inspection['memory'] == 'arc'
+assert report['ownership'] == inspection['ownership'] == 'counted'
 assert report['architecture'] == inspection['architecture'] == args.arch
 assert report['inspectionSha256'] == hashlib.sha256(args.inspection.read_bytes()).hexdigest()
 assert report['samples'] >= 3

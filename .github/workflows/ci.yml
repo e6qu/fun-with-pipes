@@ -499,13 +499,12 @@ jobs:
       - name: benchmarks against C and Rust (docs/benchmarks.md)
         env:
           CC: gcc
-          FWP_BENCH_OWNERSHIP: arc
           FWP_LTO: '0'
         run: cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
       - name: Inspect measured C, Rust and checked-ARC binaries
-        run: python3 scripts/inspect-benchmark-binaries.py --input target/bench-evidence --source "${{ github.event.pull_request.head.sha || github.sha }}" --memory arc --arch x86_64 --objdump objdump --output target/bench-inspection.json
-      - name: Reject wrong benchmark modes, binaries and missing samples
-        run: python3 scripts/test-benchmark-evidence.py --input target/bench-evidence --source "${{ github.event.pull_request.head.sha || github.sha }}" --memory arc --arch x86_64 --objdump objdump --output target/bench-controls.json
+        run: python3 scripts/inspect-benchmark-binaries.py --input target/bench-evidence --source "${{ github.event.pull_request.head.sha || github.sha }}" --arch x86_64 --objdump objdump --output target/bench-inspection.json
+      - name: Reject incorrect benchmark claims, binaries and missing samples
+        run: python3 scripts/test-benchmark-evidence.py --input target/bench-evidence --source "${{ github.event.pull_request.head.sha || github.sha }}" --arch x86_64 --objdump objdump --output target/bench-controls.json
       - name: Measure process memory and separate managed storage
         run: python3 scripts/measure-benchmark-memory.py --input target/bench-evidence --inspection target/bench-inspection.json --source "${{ github.event.pull_request.head.sha || github.sha }}" --cc gcc --time /usr/bin/time --samples 3 --output target/bench-memory
       - name: Inspect managed-storage images and leak controls

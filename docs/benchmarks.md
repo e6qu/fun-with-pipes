@@ -89,12 +89,11 @@ the report's timer explicitly includes them.
 
 Each directory in [`bench/`](../bench) contains `main.fwp`, `main.c` and
 `main.rs`. The programs must print the same result. The runner builds native
-executables with `fwp build --gc MODE -O2`, the explicitly selected `CC -std=c11 -O2 -ffp-contract=off`,
-and `rustc --edition=2021 -O`. `FWP_BENCH_OWNERSHIP` must name `arc` or `tracing`; there is
-no implicit measurement mode. `CC` must name the compiler and `FWP_LTO=0`
+executables with `fwp build -O2`, the explicitly selected `CC -std=c11 -O2 -ffp-contract=off`,
+and `rustc --edition=2021 -O`. Native fwp uses counted ownership; there is no
+tracing mode. `CC` must name the compiler and `FWP_LTO=0`
 keeps generated C in one source file without link-time optimization.
-Production CI selects checked ARC, matching the
-language's current native default. After one warmup per executable, it measures six runs each and reports the median: the average of
+After one warmup per executable, it measures six runs each and reports the median: the average of
 the two middle times after sorting. Execution order rotates C/Rust/fwp,
 Rust/fwp/C and fwp/C/Rust, twice. “Native” means machine code;
 this comparison does not time the fwp interpreter.
@@ -249,7 +248,7 @@ source-debugger execution retain their documented limits. See
 Full benchmarks run on GitHub runners. For the native Linux C/Rust comparison:
 
 ```sh
-CC=gcc FWP_LTO=0 FWP_BENCH_OWNERSHIP=arc cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
+CC=gcc FWP_LTO=0 cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
 ```
 
 It writes the report to standard output, `target/bench.md` and the `bench` job

@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** migrate WASI/resource-count, REST and benchmark tests plus the
-array/list report producers and readers; then complete the workflow audit. Finish migration before
+**Next:** migrate WASI/resource-count tests, then finish the remaining
+measurement scripts and workflow audit before consolidated runner validation. Finish migration before
 integrated compiler and production validation on runners. The current source
 has not been built as a compiler. GC removal is not verified.
 
@@ -18,6 +18,17 @@ The merge has the same tree and the required one-line message. See
 compiler-abort report; its handoff points here. Old publisher scripts stay stopped.
 
 ## Latest completed edits; execution pending
+
+- Array construction/sort and copied-list tests now have matching counted artifact
+  readers: eighteen binaries each for construction/sort and ten for list copies.
+  O1/O2, actual forced copies, aliases, bit patterns and every interruption fault
+  remain. Collector-symbol absence is checked on every image.
+- REST retains API/authentication/forms, generated clients and raw comparisons;
+  removed the second run of the same cases under the deleted tracing selector.
+  C/Rust benchmark reports and memory readers now name counted ownership, with
+  matching workflow arguments and an incorrect-ownership-report control. Six
+  timing samples per implementation, all five corrupted-artifact controls and
+  actual binary inspections remain. No new timing results have been produced.
 
 - Resource frames/matches retain descriptor limits, raw/native comparisons,
   aliases, handled errors and forced copies. Variant failure checks observe text
@@ -124,7 +135,8 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 ## Remaining migration, in order
 
 1. **Finish test mode removal.** A fresh audit still finds old controls in
-   WASI/resource-count, REST and benchmark checks plus array/list support modules. Review their
+   WASI/resource-count checks. REST, benchmarks and array/list support modules
+   are migrated with their paired readers; integration remains pending. Review their
    actual assertions and paired C fixtures, not just environment names. The list/State/closure fixtures in
    `list_applicative_ownership` are migrated; integrated execution is pending.
    `unwind_cleanup` and typed-State reports are also migrated. Continue from a fresh source audit; do not reapply the stale candidates.

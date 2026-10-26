@@ -1,5 +1,11 @@
 # Checked ARC compared with C and Rust
 
+Current benchmark tools use counted ownership without a tracing selector. Their
+report and inspection JSON identify that ownership contract; corruption controls
+alter the reported contract, arithmetic, binary format or sample set and require
+rejection. This G5 protocol awaits runner validation. The results below belong to
+their recorded source revisions; they are not new GC-removal measurements.
+
 This comparison runs seven small programs compiled from fwp, handwritten C and
 handwritten Rust. fwp uses automatic reference counting (ARC): an object is
 released when its last owner releases it. It does not run the tracing collector.

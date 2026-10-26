@@ -14,7 +14,6 @@ ROOT = Path(__file__).resolve().parent.parent
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--input', type=Path, required=True)
 parser.add_argument('--source', required=True)
-parser.add_argument('--memory', choices=['arc', 'tracing'], required=True)
 parser.add_argument('--arch', choices=['x86_64', 'aarch64'], required=True)
 parser.add_argument('--objdump', required=True)
 parser.add_argument('--output', type=Path, required=True)
@@ -23,7 +22,7 @@ assert not args.output.exists()
 original, = (args.input / args.source).iterdir()
 records = []
 for case, expected in [
-        ('wrong-mode', 'declared benchmark memory mode differs'),
+        ('wrong-ownership', 'declared benchmark ownership differs'),
         ('wrong-arithmetic', 'declared arithmetic contract differs'),
         ('wrong-machine', 'benchmark binary has wrong architecture'),
         ('object-file', 'benchmark image is not executable'),
@@ -32,10 +31,12 @@ for case, expected in [
         temporary = Path(temporary)
         directory = temporary / args.source / original.name
         shutil.copytree(original, directory)
-        memory = args.memory
         changed = directory / 'report.md'
-        if case == 'wrong-mode':
-            memory = 'tracing' if args.memory == 'arc' else 'arc'
+        if case == 'wrong-ownership':
+            report = changed.read_text()
+            before = 'Native fwp ownership: counted.'
+            assert report.count(before) == 1
+            changed.write_text(report.replace(before, 'Native fwp ownership: tracing.'))
         elif case == 'wrong-arithmetic':
             report = changed.read_text()
             before = 'Arithmetic contract: checked signed I64 calculations in all three peers.'
@@ -67,7 +68,7 @@ for case, expected in [
             changed.write_text(before + '## Raw elapsed samples' + ''.join(lines))
         result = subprocess.run([
             sys.executable, str(ROOT / 'scripts/inspect-benchmark-binaries.py'),
-            '--input', str(temporary), '--source', args.source, '--memory', memory,
+            '--input', str(temporary), '--source', args.source,
             '--arch', args.arch, '--objdump', args.objdump,
             '--output', str(temporary / 'invalid-review.json')], capture_output=True, text=True)
         assert result.returncode != 0 and expected in result.stderr, (case, result)
@@ -76,6 +77,6 @@ for case, expected in [
                             stdout=result.stdout, stderr=result.stderr,
                             changedSha256=hashlib.sha256(changed.read_bytes()).hexdigest()))
 args.output.parent.mkdir(parents=True, exist_ok=True)
-args.output.write_text(json.dumps(dict(source=args.source, memory=args.memory,
+args.output.write_text(json.dumps(dict(source=args.source, ownership='counted',
                                      architecture=args.arch, controls=records), indent=2) + '\n')
 print('Rejected five corrupted benchmark artifact copies')
