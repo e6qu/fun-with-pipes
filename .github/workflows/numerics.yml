@@ -157,7 +157,7 @@ jobs:
         run: |
           set -o pipefail
           status=0
-          cargo test --locked --test arc_execution arc_rejects_unproved_runtime_boundaries_and_disabled_counting -- --nocapture 2>&1 | tee compiler-lifetime-evidence/admission.log || status=1
+          cargo test --locked --test arc_execution ownership_rejects_unproved_runtime_boundaries -- --nocapture 2>&1 | tee compiler-lifetime-evidence/admission.log || status=1
           cargo test --locked --test arc_extensions raw_ad_cannot_escape_scope_proof_through_callbacks_or_arguments -- --nocapture 2>&1 | tee compiler-lifetime-evidence/ad-scopes.log || status=1
           cargo test --locked --no-fail-fast --test channel_cycle_ownership --test queued_functions --test autodiff_nested --test reuse 2>&1 | tee compiler-lifetime-evidence/memory.log || status=1
           exit "$status"
@@ -1580,7 +1580,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(find channel-cost-evidence/text-length -name '*.exe' | wc -l)" -eq 12
+          test "$(find channel-cost-evidence/text-length -name '*.exe' | wc -l)" -eq 6
           for binary in channel-cost-evidence/text-length/*.exe; do
             objdump -d "$binary" > "${binary%.exe}.asm"
           done
@@ -2965,7 +2965,7 @@ jobs:
           cargo test --no-fail-fast --lib --test native_sockets --test http2_client_ownership --test http2_server_ownership --test http2_peer_cleanup --test http2_body_roots --test grpc_connect_startup --test grpc_connect_cleanup --test grpc_connection_addresses --test grpc_tls_pool_identity --test grpc_client_receive --test grpc_client_requests --test library_resources
       - name: Reject cyclic ownership at unsupported boundaries
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-clients' && matrix.part == 'ownership' }}
-        run: cargo test --test arc_execution arc_rejects_unproved_runtime_boundaries_and_disabled_counting -- --exact --nocapture
+        run: cargo test --test arc_execution ownership_rejects_unproved_runtime_boundaries -- --exact --nocapture
       - name: Preserve the counted-owner escape check
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-clients' && matrix.part == 'ownership' }}
         run: cargo test --test arc_execution arc_checks_reject_counted_owners_at_uncounted_boundaries -- --exact --nocapture

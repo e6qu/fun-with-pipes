@@ -38,11 +38,7 @@ fn wasi(binary: &Path, root: &Path) -> Command {
         .arg("--no-warnings")
         .arg(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/wasm/wasi-run.mjs"))
         .arg(binary)
-        .current_dir(root)
-        .env("FWP_GC", "off")
-        .env("FWP_GC_STRESS", "0")
-        .env("FWP_GC_VERIFY", "0")
-        .env("FWP_REUSE_VERIFY", "0");
+        .current_dir(root);
     command
 }
 fn emit(source: &Path, cfile: &Path, entry: &[&str], target: &str) -> String {
@@ -55,9 +51,8 @@ fn emit(source: &Path, cfile: &Path, entry: &[&str], target: &str) -> String {
             .arg(cfile),
     );
     let code = std::fs::read_to_string(cfile).unwrap();
-    assert!(
-        code.contains("#define FWP_ARC_ONLY 1") && code.contains("#define FWP_RESOURCE_OWNERS 1")
-    );
+    assert!(!code.contains("FWP_ARC_ONLY"));
+    assert!(!code.contains("fwp_heap_collect("));
     code
 }
 
@@ -211,31 +206,11 @@ fn wasi_allocator_frees_graphs_and_rejects_escaped_counts() {
                     if target == fwp::cgen::Target::Wasi {
                         wasi(&binary, dir.path())
                     } else {
-                        let mut c = Command::new(&binary);
-                        c.env("FWP_GC", "off")
-                            .env("FWP_GC_STRESS", "0")
-                            .env("FWP_GC_VERIFY", "0")
-                            .env("FWP_REUSE_VERIFY", "0");
-                        c
+                        Command::new(&binary)
                     }
                 };
                 let result = command().output().unwrap();
                 assert_eq!(result.status.code(), Some(status), "{opt}: {result:?}");
-                if status == 0 {
-                    for (key, value) in [
-                        ("FWP_GC", "full"),
-                        ("FWP_GC_STRESS", "1"),
-                        ("FWP_GC_VERIFY", "1"),
-                        ("FWP_REUSE_VERIFY", "1"),
-                    ] {
-                        let result = command().env(key, value).output().unwrap();
-                        assert_eq!(result.status.code(), Some(101), "{key}: {result:?}");
-                        assert!(
-                            String::from_utf8_lossy(&result.stderr).contains("--gc arc cannot"),
-                            "{result:?}"
-                        );
-                    }
-                }
             }
         }
     }
@@ -1086,11 +1061,7 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
                                     Path::new(env!("CARGO_MANIFEST_DIR"))
                                         .join("tests/wasm/browser-run.mjs"),
                                 )
-                                .arg(binary.with_extension("js"))
-                                .env("FWP_GC", "off")
-                                .env("FWP_GC_STRESS", "0")
-                                .env("FWP_GC_VERIFY", "0")
-                                .env("FWP_REUSE_VERIFY", "0");
+                                .arg(binary.with_extension("js"));
                         }
                         if asyncify {
                             command.env("FWP_NO_JSPI", "1");

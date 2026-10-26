@@ -96,7 +96,8 @@ main = range 0 129 | map (choose | checks) | length | echo
                     .arg(&cfile),
             );
             let code = std::fs::read_to_string(&cfile).unwrap();
-            assert!(code.contains("#define FWP_ARC_ONLY 1"));
+            assert!(!code.contains("FWP_ARC_ONLY"));
+            assert!(!code.contains("fwp_heap_collect("));
             if name == "borrowed-call-failure" || name == "borrowed-function-call-failure" {
                 let start = code.find("/* exchange :").expect("direct exchange worker");
                 let worker = &code[start..];
@@ -165,22 +166,9 @@ main = range 0 129 | map (choose | checks) | length | echo
                         .unwrap();
                     }
                 }
-                let actual = checked(
-                    Command::new(&binary)
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "0")
-                        .env("FWP_REUSE_VERIFY", "0"),
-                );
+                let actual = checked(&mut Command::new(&binary));
                 assert_eq!(actual.stdout, reference.stdout, "{name} {stack} {opt}");
                 assert_eq!(actual.stderr, reference.stderr, "{name} {stack} {opt}");
-                let conflict = Command::new(&binary)
-                    .env("FWP_GC_STRESS", "1")
-                    .output()
-                    .unwrap();
-                assert_eq!(conflict.status.code(), Some(101));
-                assert!(String::from_utf8_lossy(&conflict.stderr)
-                    .contains("--gc arc cannot enable tracing"));
             }
             if name == "ownership-scopes" && stack == "0" {
                 let release = "    fwp_native_tasks_finish();";
@@ -188,13 +176,7 @@ main = range 0 129 | map (choose | checks) | length | echo
                 let omitted = measured.replace(release, "    /* omit scheduler shutdown */");
                 let binary = dir.join("retained-scheduler.exe");
                 fwp::cgen::compile_c(&omitted, &binary, "-O2").unwrap();
-                let actual = Command::new(binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
+                let actual = Command::new(binary).output().unwrap();
                 assert_eq!(
                     actual.status.code(),
                     Some(205),
@@ -210,34 +192,12 @@ main = range 0 129 | map (choose | checks) | length | echo
                 );
                 let binary = dir.join("omitted-free.exe");
                 fwp::cgen::compile_c(&omitted, &binary, "-O2").unwrap();
-                let actual = Command::new(binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
+                let actual = Command::new(binary).output().unwrap();
                 assert_eq!(
                     actual.status.code(),
                     Some(205),
                     "physical-free omission must fail the ledger"
                 );
-                let forced = measured.replace(
-                    "    size_t arc_live_bytes = fwp_heap.live;",
-                    "    fwp_heap_collect();\n    size_t arc_live_bytes = fwp_heap.live;",
-                );
-                let binary = dir.join("forced-trace.exe");
-                fwp::cgen::compile_c(&forced, &binary, "-O2").unwrap();
-                let out = Command::new(binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
-                assert_eq!(out.status.code(), Some(101));
-                assert!(String::from_utf8_lossy(&out.stderr)
-                    .contains("tracing requested in an ARC executable"));
             }
         }
     }
@@ -265,11 +225,7 @@ fn arc_checks_reject_counted_owners_at_uncounted_boundaries() {
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
         for invalid in [false, true] {
             let mut command = Command::new(&binary);
-            command
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
-                .env_remove("FWP_TEST_COUNTED_ESCAPE");
+            command.env_remove("FWP_TEST_COUNTED_ESCAPE");
             if invalid {
                 command.env("FWP_TEST_COUNTED_ESCAPE", "1");
             }
@@ -289,7 +245,7 @@ fn arc_checks_reject_counted_owners_at_uncounted_boundaries() {
 }
 
 #[test]
-fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
+fn ownership_rejects_unproved_runtime_boundaries() {
     let dir = std::env::temp_dir().join(format!("fwp-arc-reject-{}", std::process::id()));
     std::fs::create_dir(&dir).unwrap();
     for (name, source, reason) in [
@@ -331,10 +287,8 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
     ] {
         let input = dir.join(format!("{name}.fwp"));
         std::fs::write(&input, source).unwrap();
-        // These are ownership rejections, not parser/type errors. Tracing must
-        // still emit them, but emission is not permission to execute invalid
-        // examples such as an unscoped derivative tape. Check both IR forms so
-        // optimization cannot hide the missing ownership contract.
+        // Check both IR forms: optimization must not hide a missing ownership
+        // contract. Rejection must precede execution and C emission.
         for raw in [false, true] {
             if !matches!(name, "custom-native" | "foreign-callback") {
                 let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
@@ -356,64 +310,39 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
                 );
             }
 
-            for mode in ["tracing", "arc"] {
-                let cfile = dir.join(format!("{name}-{raw}-{mode}.c"));
-                let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
-                command.env_remove("FWP_NO_OPT");
-                if raw {
-                    command.env("FWP_NO_OPT", "1");
-                }
-                let out = command
-                    .args([
-                        "build", "--gc", mode, "--memory", "dynamic", "-O1", "--emit-c",
-                    ])
-                    .arg(&input)
-                    .arg("-o")
-                    .arg(&cfile)
-                    .output()
-                    .unwrap();
-                assert!(out.stdout.is_empty(), "{name} raw={raw} {mode}: {out:?}");
-                if mode == "tracing" {
-                    assert!(
-                        out.status.success() && cfile.exists(),
-                        "{name} raw={raw}: {out:?}"
-                    );
-                    continue;
-                }
-                assert_eq!(out.status.code(), Some(1), "{name} raw={raw}: {out:?}");
-                assert!(!cfile.exists(), "rejected {name} emitted C");
-                let error = String::from_utf8_lossy(&out.stderr);
+            let cfile = dir.join(format!("{name}-{raw}.c"));
+            let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
+            command.env_remove("FWP_NO_OPT");
+            if raw {
+                command.env("FWP_NO_OPT", "1");
+            }
+            let out = command
+                .args(["build", "--memory", "dynamic", "-O1", "--emit-c"])
+                .arg(&input)
+                .arg("-o")
+                .arg(&cfile)
+                .output()
+                .unwrap();
+            assert!(out.stdout.is_empty(), "{name} raw={raw}: {out:?}");
+
+            assert_eq!(out.status.code(), Some(1), "{name} raw={raw}: {out:?}");
+            assert!(!cfile.exists(), "rejected {name} emitted C");
+            let error = String::from_utf8_lossy(&out.stderr);
+            assert!(
+                error.contains("ownership:") && error.contains(reason),
+                "{name} raw={raw}: {error}"
+            );
+            if name.contains("channel") {
                 assert!(
-                    error.contains("ownership:") && error.contains(reason),
-                    "{name} raw={raw}: {error}"
+                    error.contains("missing cycle-freedom proof, not a demonstrated cycle"),
+                    "{error}"
                 );
-                if name.contains("channel") {
-                    assert!(
-                        error.contains("missing cycle-freedom proof, not a demonstrated cycle"),
-                        "{error}"
-                    );
-                    assert!(
-                        error.contains("queue data or non-owning IDs instead"),
-                        "{error}"
-                    );
-                }
+                assert!(
+                    error.contains("queue data or non-owning IDs instead"),
+                    "{error}"
+                );
             }
         }
-    }
-    let input = dir.join("valid.fwp");
-    std::fs::write(&input, "main = 42 | echo\n").unwrap();
-    for flag in ["FWP_FREE", "FWP_REUSE"] {
-        let out = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .env(flag, "0")
-            .args(["build", "--gc=arc", "--emit-c"])
-            .arg(&input)
-            .arg("-o")
-            .arg(dir.join("disabled.c"))
-            .output()
-            .unwrap();
-        assert!(!out.status.success());
-        assert!(String::from_utf8_lossy(&out.stderr)
-            .contains("--gc arc requires counted ownership and freeing"));
     }
     std::fs::remove_dir_all(dir).unwrap();
 }
@@ -586,23 +515,11 @@ int main(void) {
         for opt in ["-O1", "-O2"] {
             let language = dir.join(format!("language{opt}.exe"));
             fwp::cgen::compile_c(&code, &language, opt).unwrap();
-            let actual = checked(
-                Command::new(&language)
-                    .env("FWP_GC", "0")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0"),
-            );
+            let actual = checked(&mut Command::new(&language));
             assert_eq!(actual.stdout, reference.stdout);
             let binary = dir.join(format!("chain{opt}.exe"));
             fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
-            let output = checked(
-                Command::new(&binary)
-                    .env("FWP_GC", "0")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0"),
-            );
+            let output = checked(&mut Command::new(&binary));
             let text = String::from_utf8(output.stdout).unwrap();
             let spans: Vec<u64> = text
                 .lines()
@@ -619,34 +536,6 @@ int main(void) {
                 std::fs::copy(&binary, folder.join(format!("chain{opt}.exe"))).unwrap();
                 std::fs::copy(&language, folder.join(format!("language{opt}.exe"))).unwrap();
             }
-        }
-
-        // The real program also keeps its result under collection, poisoning,
-        // and count-only execution. Physical reclamation is measured above in
-        // checked ARC, where retained-storage poisoning is intentionally illegal.
-        for free in ["0", "1"] {
-            let hybrid_c = dir.join(format!("hybrid-{free}.c"));
-            checked(
-                Command::new(fwp)
-                    .env_remove("FWP_NO_OPT")
-                    .env("FWP_STACK", "0")
-                    .env("FWP_FREE", free)
-                    .args(["build", "--emit-c"])
-                    .arg(&input)
-                    .arg("-o")
-                    .arg(&hybrid_c),
-            );
-            let hybrid = std::fs::read_to_string(&hybrid_c).unwrap();
-            let binary = dir.join(format!("hybrid-{free}.exe"));
-            fwp::cgen::compile_c(&hybrid, &binary, "-O2").unwrap();
-            let output = checked(
-                Command::new(&binary)
-                    .env("FWP_GC", "1")
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", "1"),
-            );
-            assert_eq!(output.stdout, reference.stdout, "{shape} free={free}");
         }
 
         // Restore the old recursive structure for these generated types. The
@@ -676,13 +565,7 @@ int main(void) {
         }
         let binary = dir.join("recursive-control.exe");
         fwp::cgen::compile_c(&recursive, &binary, "-O2").unwrap();
-        let failed = Command::new(&binary)
-            .env("FWP_GC", "0")
-            .env("FWP_GC_STRESS", "0")
-            .env("FWP_GC_VERIFY", "0")
-            .env("FWP_REUSE_VERIFY", "0")
-            .output()
-            .unwrap();
+        let failed = Command::new(&binary).output().unwrap();
         assert_eq!(
             failed.status.code(),
             Some(175),
@@ -730,11 +613,6 @@ fn native_ownership_ledger_detects_bad_events_without_retaining_storage() {
             let binary = dir.join(format!("{memory}{opt}.exe"));
             let run = |executable: &std::path::Path, case: &str, rounds: &str| {
                 Command::new(executable)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
                     .env("FWP_LEDGER_CASE", case)
                     .env("FWP_LEDGER_ROUNDS", rounds)
                     .output()

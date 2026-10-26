@@ -592,24 +592,19 @@ fn pipe_runs_native_stages() {
 }
 
 #[test]
-fn native_ownership_modes_are_explicit_and_part_of_the_cache() {
+fn native_ownership_is_unconditional_and_cached() {
     assert!(have_cc(), "native ownership checks require a C compiler");
     let cache = Cache::new("ownership-mode");
     let dir = fwp::cgen::TempDir::new("ownership-mode").unwrap();
     let source = dir.join("main.fwp");
     std::fs::write(&source, "main = \"abc\" | string.repeat 7 | echo\n").unwrap();
     let mut cached = Vec::new();
-    for (options, count) in [
-        (vec!["run"], 1),
-        (vec!["run"], 1),
-        (vec!["run"], 2),
-        (vec!["run"], 2),
-    ] {
-        let actual = output(cache.fwp(&options).arg(&source), b"");
+    for _ in 0..2 {
+        let actual = output(cache.fwp(&["run"]).arg(&source), b"");
         assert!(actual.status.success(), "{}", render(&actual));
         assert_eq!(actual.stdout, b"abcabcabcabcabcabcabc\n");
         let entries = cache.entries();
-        assert_eq!(entries.len(), count);
+        assert_eq!(entries.len(), 1);
         if cached.is_empty() {
             let symbols = Command::new("nm").arg(&entries[0]).output().unwrap();
             assert!(symbols.status.success(), "{}", render(&symbols));
@@ -631,7 +626,8 @@ fn native_ownership_modes_are_explicit_and_part_of_the_cache() {
         );
         assert!(built.status.success(), "{}", render(&built));
         let code = std::fs::read_to_string(&emitted).unwrap();
-        assert!(code.contains("#define FWP_ARC_ONLY 1"));
+        assert!(!code.contains("FWP_ARC_ONLY"));
+        assert!(!code.contains("fwp_heap_collect("));
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
         let ran = output(&mut Command::new(&binary), b"");
         assert!(ran.status.success(), "{}", render(&ran));
@@ -690,8 +686,8 @@ fn native_ownership_modes_are_explicit_and_part_of_the_cache() {
         );
         assert!(rejected.stdout.is_empty());
     }
-    // Build accepts options after the file too; ownership still must be chosen
-    // exactly once, and invalid modes must not produce an output file.
+    // Removed options are ordinary unknown options, including after the file.
+    // Rejection must not produce an output file.
     let emitted = dir.join("rejected.c");
     for options in [
         vec!["--gc"],
@@ -714,13 +710,8 @@ fn native_ownership_modes_are_explicit_and_part_of_the_cache() {
             render(&rejected)
         );
         assert!(rejected.stdout.is_empty());
-        let message = if options.len() > 1 {
-            "choose --gc once: arc or tracing"
-        } else {
-            "--gc requires arc or tracing"
-        };
         assert!(
-            String::from_utf8_lossy(&rejected.stderr).contains(message),
+            String::from_utf8_lossy(&rejected.stderr).contains("unknown option"),
             "{}",
             render(&rejected)
         );
@@ -728,8 +719,8 @@ fn native_ownership_modes_are_explicit_and_part_of_the_cache() {
     }
     let tools = root().join("tests/exec/tools.fwp");
     let spec = format!("{t}:scale 2 | {t}:total", t = tools.display());
-    for options in [vec!["pipe", &spec], vec!["pipe", &spec]] {
-        let pipeline = output(&mut cache.fwp(&options), b"1\n2\n");
+    for _ in 0..2 {
+        let pipeline = output(&mut cache.fwp(&["pipe", &spec]), b"1\n2\n");
         assert!(pipeline.status.success(), "{}", render(&pipeline));
         assert_eq!(pipeline.stdout, b"6\n");
     }
@@ -771,18 +762,14 @@ fn failed_native_tests_release_errors_and_print_buffers() {
         if let Some(path) = &artifacts {
             std::fs::create_dir_all(path).unwrap();
         }
-        for arc in [false, true] {
-            let mode = if arc { "arc" } else { "tracing" };
-            let native = output(cache.fwp(&["test", "--gc", mode]).arg(&file), b"");
-            assert_eq!(render(&native), render(&reference), "{mode}");
-            fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-                arc,
-                ..Default::default()
-            });
-            let code = fwp::cgen::generate_tests(&program).unwrap();
-            let marker = "static void fwp_buf_release(void *arg) { free(((fwp_buf *)arg)->d); }";
-            assert_eq!(code.matches(marker).count(), 1);
-            let measured = code.replace(marker, r#"
+
+        let native = output(cache.fwp(&["test"]).arg(&file), b"");
+        assert_eq!(render(&native), render(&reference));
+        fwp::cgen::set_native_options(Default::default());
+        let code = fwp::cgen::generate_tests(&program).unwrap();
+        let marker = "static void fwp_buf_release(void *arg) { free(((fwp_buf *)arg)->d); }";
+        assert_eq!(code.matches(marker).count(), 1);
+        let measured = code.replace(marker, r#"
 static void *test_buffers[128];
 static size_t test_live_buffers;
 static void test_buffer_register(void *pointer) {
@@ -806,111 +793,85 @@ static void fwp_buf_release(void *arg) { test_buffer_free(((fwp_buf *)arg)->d); 
                 .replace("free(fwp_test_message);", "test_buffer_free(fwp_test_message);")
                 .replace("    /* Ownership observation point: before runtime teardown. */",
                     "    /* Ownership observation point: before runtime teardown. */\n    if(test_live_buffers)exit(234);\n    if(fwp_heap.live > 0)exit(233);");
-            for opt in ["-O0", "-O2"] {
-                let mut cases = vec![("protected", measured.clone(), 1)];
-                // Exercise the root cancellation path at the exit primitive.
-                // Its expected diagnostic differs; later tests must still run.
-                let cancellation = measured.replace(
-                    "fwp_test_abort(2, NULL, (int32_t)code);",
-                    "test_cancel_root();",
+        for opt in ["-O0", "-O2"] {
+            let mut cases = vec![("protected", measured.clone(), 1)];
+            // Exercise the root cancellation path at the exit primitive.
+            // Its expected diagnostic differs; later tests must still run.
+            let cancellation = measured.replace(
+                "fwp_test_abort(2, NULL, (int32_t)code);",
+                "test_cancel_root();",
+            );
+            assert_ne!(cancellation, measured);
+            let cancellation = format!("static void test_cancel_root(void);\n{cancellation}\nstatic void test_cancel_root(void) {{ fwp_tasks_init(); fwp_cur->cancelled = 1; fwp_check_cancel(); }}\n");
+            cases.push(("root-cancellation", cancellation, 1));
+
+            cases.push((
+                "missing-error",
+                measured.replace("fwp_value_release(&error);", "/* omit error release */"),
+                233,
+            ));
+            cases.push((
+                "missing-buffer",
+                measured.replace(
+                    "test_buffer_free(((fwp_buf *)arg)->d);",
+                    "/* omit actual buffer free */",
+                ),
+                234,
+            ));
+            cases.push((
+                "missing-trap-message",
+                measured.replace(
+                    "test_buffer_free(fwp_test_message);",
+                    "/* omit actual trap message free */",
+                ),
+                234,
+            ));
+
+            for (control, generated, status) in cases {
+                let label = format!("tests-counted{opt}-{control}");
+                let binary = directory.join(format!("{label}.exe"));
+                fwp::cgen::compile_c(&generated, &binary, opt).unwrap();
+                let actual = Command::new(&binary).output().unwrap();
+                assert_eq!(
+                    actual.status.code(),
+                    Some(status),
+                    "{label}: {}",
+                    render(&actual)
                 );
-                assert_ne!(cancellation, measured);
-                let cancellation = format!("static void test_cancel_root(void);\n{cancellation}\nstatic void test_cancel_root(void) {{ fwp_tasks_init(); fwp_cur->cancelled = 1; fwp_check_cancel(); }}\n");
-                cases.push(("root-cancellation", cancellation, 1));
-                if arc {
-                    cases.push((
-                        "missing-error",
-                        measured.replace("fwp_value_release(&error);", "/* omit error release */"),
-                        233,
-                    ));
-                    cases.push((
-                        "missing-buffer",
-                        measured.replace(
-                            "test_buffer_free(((fwp_buf *)arg)->d);",
-                            "/* omit actual buffer free */",
-                        ),
-                        234,
-                    ));
-                    cases.push((
-                        "missing-trap-message",
-                        measured.replace(
-                            "test_buffer_free(fwp_test_message);",
-                            "/* omit actual trap message free */",
-                        ),
-                        234,
-                    ));
-                }
-                for (control, generated, status) in cases {
-                    let label = format!("tests-{mode}{opt}-{control}");
-                    let binary = directory.join(format!("{label}.exe"));
-                    fwp::cgen::compile_c(&generated, &binary, opt).unwrap();
-                    let actual = Command::new(&binary)
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "0")
-                        .env("FWP_REUSE_VERIFY", "0")
-                        .output()
-                        .unwrap();
-                    assert_eq!(
-                        actual.status.code(),
-                        Some(status),
-                        "{label}: {}",
-                        render(&actual)
+                let expected = if control == "root-cancellation" {
+                    String::from_utf8_lossy(&reference.stdout)
+                        .replace(
+                            "test exit ... FAILED (exit -7)",
+                            "test exit ... FAILED (cancelled)",
+                        )
+                        .into_bytes()
+                } else {
+                    reference.stdout.clone()
+                };
+                assert_eq!(actual.stdout, expected, "{label}");
+                assert_eq!(actual.stderr, reference.stderr, "{label}");
+
+                let symbols = Command::new("nm").arg(&binary).output().unwrap();
+                assert!(symbols.status.success(), "{}", render(&symbols));
+
+                for symbol in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
+                    assert!(
+                        !String::from_utf8_lossy(&symbols.stdout).contains(symbol),
+                        "{label}: {symbol}"
                     );
-                    let expected = if control == "root-cancellation" {
-                        String::from_utf8_lossy(&reference.stdout)
-                            .replace(
-                                "test exit ... FAILED (exit -7)",
-                                "test exit ... FAILED (cancelled)",
-                            )
-                            .into_bytes()
-                    } else {
-                        reference.stdout.clone()
-                    };
-                    assert_eq!(actual.stdout, expected, "{label}");
-                    assert_eq!(actual.stderr, reference.stderr, "{label}");
-                    if !arc && control == "protected" {
-                        let stressed = Command::new(&binary)
-                            .env_remove("FWP_GC")
-                            .env("FWP_GC_STRESS", "1")
-                            .env("FWP_GC_VERIFY", "1")
-                            .env("FWP_REUSE_VERIFY", "0")
-                            .output()
-                            .unwrap();
-                        assert_eq!(render(&stressed), render(&reference), "{label}, GC stress");
-                        if let Some(path) = &artifacts {
-                            std::fs::write(
-                                path.join(format!("{label}-stress.stdout")),
-                                stressed.stdout,
-                            )
-                            .unwrap();
-                            std::fs::write(path.join(format!("{label}-stress.status")), "1\n")
-                                .unwrap();
-                        }
-                    }
-                    let symbols = Command::new("nm").arg(&binary).output().unwrap();
-                    assert!(symbols.status.success(), "{}", render(&symbols));
-                    if arc {
-                        for symbol in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
-                            assert!(
-                                !String::from_utf8_lossy(&symbols.stdout).contains(symbol),
-                                "{label}: {symbol}"
-                            );
-                        }
-                    }
-                    if let Some(path) = &artifacts {
-                        std::fs::write(path.join(format!("{label}.c")), generated).unwrap();
-                        std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
-                        std::fs::write(path.join(format!("{label}.stdout")), actual.stdout)
-                            .unwrap();
-                        std::fs::write(path.join(format!("{label}.status")), format!("{status}\n"))
-                            .unwrap();
-                        std::fs::write(path.join(format!("{label}.symbols")), symbols.stdout)
-                            .unwrap();
-                    }
+                }
+
+                if let Some(path) = &artifacts {
+                    std::fs::write(path.join(format!("{label}.c")), generated).unwrap();
+                    std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
+                    std::fs::write(path.join(format!("{label}.stdout")), actual.stdout).unwrap();
+                    std::fs::write(path.join(format!("{label}.status")), format!("{status}\n"))
+                        .unwrap();
+                    std::fs::write(path.join(format!("{label}.symbols")), symbols.stdout).unwrap();
                 }
             }
         }
+
         fwp::cgen::set_native_options(Default::default());
     });
 }
@@ -935,9 +896,8 @@ fn child_task_failures_still_terminate_test_processes() {
             render(&reference)
         );
         assert!(!String::from_utf8_lossy(&reference.stdout).contains("unreachable"));
-        for mode in ["arc", "tracing"] {
-            let native = output(cache.fwp(&["test", "--gc", mode]).arg(&file), b"");
-            assert_eq!(render(&native), render(&reference), "{body}, {mode}");
-        }
+
+        let native = output(cache.fwp(&["test"]).arg(&file), b"");
+        assert_eq!(render(&native), render(&reference), "{body}");
     }
 }

@@ -8,8 +8,9 @@ not been built. Do not publish it as working code or claim GC removal is verifie
 Worktree: `/private/tmp/fwp-delete-tracing`; branch `delete-tracing-collector`.
 Base: #216 source `0db38df8bd0b3ea6f4dc1165edd985bc82c71ccb`.
 Local checkpoints: `d83f4745` (runtime deletion), `bd299fe0` (release controls),
-and `dd0c2fbe` (counted probe selection and numeric cases). Further reviewed edits
-cover Windows contexts, client reports and nine owner-test migrations. Nothing
+`dd0c2fbe` (counted probes and numeric cases), and `87d68cd1` (Windows contexts,
+client reports and nine owner-test migrations). Further reviewed edits cover
+native/WASI entries and Linux context checks. Nothing
 here has been pushed.
 
 Only #216 is a public PR. Its worktree is
@@ -37,6 +38,8 @@ must stay stopped. No merge watcher is running.
 | Windows contexts | Removed collector stack bounds and root snapshots. Retained register/stack/rounding, borrowed-host-fiber and ownership-size controls at O0/O1/O2; native execution is pending. |
 | Client reports | Shared client-memory observer now reports requests, requested bytes, retains, peak-live growth and final-live growth. Updated all its Rust readers and Python consumers; no dummy collection field. |
 | Owner tests | Migrated nine constructor/record/variant/worker preparation and unwind files to one counted run, retaining alias, failure and missing-release controls. |
+| Entry checks | Removed duplicate AOT modes and deleted-switch diagnostics; kept raw/native results, rejection-before-emission, count-boundary failures, missing-free and recursive-stack controls. Workflows use the renamed test. |
+| Linux contexts | Replaced collector-root probe with live register, rounding and signal-mask checks. Retained stack layout, clear/alignment/lifetime controls and updated the process measurement reader. |
 | Docs | Updated ownership, native commands, tutorials and allocator/report explanations. Historical measurements retain their original source/schema; reproduction instructions distinguish their revision from current tools. |
 
 The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
@@ -52,7 +55,7 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 2. **Finish C fixtures.** Remove remaining collector fields/calls, root-fence
    anchors and escaped `FWP_ARC_ONLY` blocks. Preserve independent lifetime,
    alias, failure/cancellation and resource assertions. Windows ABI/register/rounding and host-fiber ownership checks have been migrated;
-   the separate task-context root fixture still needs review.
+   the Linux context fixture now checks live values and machine state without collector roots.
 3. **Finish report schemas and consumers together.** The shared client-memory report is migrated; other server/numerical
    reports still carry collection fields. Remove them rather than printing dummy
    zeros. Update strict parsers, TSV/JSON producers, artifact audits and docs.
@@ -76,7 +79,8 @@ Nine owner-test candidates were reviewed and applied: constructor type/unwind,
 general/ordinary record update, loop preparation, retain unwind, variant conversion,
 worker boxing and worker preparation. The remaining 75 are **unreviewed** and may
 leave obsolete helpers or artifact consumers. Check each manifest source hash
-before applying; never copy them wholesale. The older `-before-client-schema`
+before applying; never copy them wholesale. `task_context_storage` has since been
+   migrated separately, so its candidate is stale. The older `-before-client-schema`
 directory is stale. Candidate refinements also collapsed 51 single-value loops.
 
 Automatic approval review rejected an earlier broad rewrite because substantial
