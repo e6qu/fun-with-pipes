@@ -328,10 +328,14 @@ jobs:
           node-version: 24
           package-manager-cache: false
       - name: WebAssembly toolchain, OpenSSL headers (TLS)
-        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32 libssl-dev openssl
+        timeout-minutes: 10
+        run: |
+          sudo apt-get -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o APT::Update::Error-Mode=any update
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o DPkg::Lock::Timeout=60 install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32 libssl-dev openssl
       - name: aarch64 cross compiler and qemu (tests/cross.rs)
         if: runner.arch == 'X64'
-        run: sudo apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user musl-tools
+        timeout-minutes: 10
+        run: sudo env DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o DPkg::Lock::Timeout=60 install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user musl-tools
       - name: binaryen's wasm-opt (`--wasm-async=asyncify`; tests skip without it)
         run: npm install -g binaryen
       - name: Generated standard-library docs preflight
@@ -462,6 +466,7 @@ jobs:
   bench:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
         with:
@@ -481,7 +486,10 @@ jobs:
           cargo fetch --locked
           echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
       - name: OpenSSL headers (TLS)
-        run: sudo apt-get update && sudo apt-get install -y libssl-dev binutils time
+        timeout-minutes: 10
+        run: |
+          sudo apt-get -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o APT::Update::Error-Mode=any update
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o DPkg::Lock::Timeout=60 install -y libssl-dev binutils time
       - name: Benchmark build failure and metadata controls
         run: python3 scripts/test-measurement-build.py
       - name: Numerical measurement requirement controls

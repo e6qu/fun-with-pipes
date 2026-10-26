@@ -1,41 +1,46 @@
 # Current work
 
-**Next:** publish the cache-fixture, WASI scope and analysis-allocation repairs
-below, then audit all final-head gates. Do not claim collector removal from focused
-C probes or a previous source's passing jobs.
+**Next:** read the focused GCC diagnosis `40390897932`, fix the Linux service
+fixture's actual failure, then publish it with the Windows header-order and CI
+setup-timeout repairs. Do not restart the full matrix for diagnosis alone.
 
 ## Delivery and evidence
 
 - Worktree: `/private/tmp/fwp-delete-tracing`; branch `delete-tracing-collector`.
 - [PR #217](https://github.com/e6qu/fun-with-pipes/pull/217) is open.
-- Published repair: `4c79748ae670d90f85068a40eff0dcd37b63dc38`.
-- [Production 40347996836](https://github.com/e6qu/fun-with-pipes/actions/runs/40347996836):
-  regular macOS ARM64 and benchmarks pass. ARM64 ownership job `121660003716`
-  fails only `cache_owners_release_aliases_and_long_chains_without_collection`:
-  its synthetic source lacks connection/stream owners. All other completed targets
-  in that job pass. Other native jobs are still running.
-- [Docs 40347996842](https://github.com/e6qu/fun-with-pipes/actions/runs/40347996842)
-  and [analysis 40348021109](https://github.com/e6qu/fun-with-pipes/actions/runs/40348021109)
-  apply to the published source. Docs pass. Analysis: Linux passes; Intel fails the 32-worker
-  relative gate (53.717/33.427 ms, 1.607×) and forms startup (10.146 s versus 10 s).
-  Limits remain unchanged; the allocation repair below is not yet measured.
-- Older run `40336877625` now supplies Intel regular, Linux ARM64 and both Windows
-  logs. All reported failures were audited. Windows command failures are the CLI
-  issue already repaired in `4c79748a`. Linux additionally exposed an unscoped tape
-  in `wasm::autodiff_capacity_bounds_precede_actual_wasm32_allocation`, fixed below.
-  Previous failure details are in the committed handoff at `4c79748a` and
-  [analysis evidence](measurements/ownership-analysis.md).
+- Published repair: `4e6261326a9baea367afa7d5a6cdb277b4535a52`.
+- [Production 40356438626](https://github.com/e6qu/fun-with-pipes/actions/runs/40356438626):
+  Linux ARM64, Intel regular macOS and both ownership macOS jobs pass. Linux AMD64
+  fails only `service_value_ownership` (exit 247 at O1); both Windows jobs fail only
+  `http2_body_roots` (system headers precede the Windows API contract).
+- Bench job `121690063677` never reached benchmarks: `apt-get update` stopped
+  making progress on `azure.archive.ubuntu.com` at 16:38 UTC and remained there
+  until cancellation at 19:38 UTC. Normal cancellation finished; a subsequent
+  force-cancel request returned 409 because the run was already complete.
+  Completed job results and artifacts remain available. Regular macOS ARM64 was
+  already cancelled with no assigned runner, step list or downloadable log; it
+  still requires a fresh passing job.
+- [Analysis 40356471366](https://github.com/e6qu/fun-with-pipes/actions/runs/40356471366)
+  passes both hosts, 192 ordinary library tests and both budget tests. Limits and
+  proof counts are unchanged; [measurements](measurements/ownership-analysis.md)
+  record the timings. This does not replace production acceptance.
+- Focused [GCC diagnosis 40390897932](https://github.com/e6qu/fun-with-pipes/actions/runs/40390897932)
+  is queued on temporary branch `ci-service-value-diagnosis`, source
+  `094bab810aa20828ee040d96e07df78cd74c0cbd`. It uses the failing head's published
+  Linux compiler and compares original, labeled-exit and printed-counter fixtures,
+  without a Rust rebuild or
+  another PR. Diagnostic scripts are temporary, not production dependencies.
 - Verified base: #216 squash `f5621cb46828273f7ce8edf92be4062ccec0f17c`, identical
   tree to tested `1dd5fcaed7792b5505283b1037a9c22d788a3be5`. Nine production jobs
   `40274667944`, docs `40273010537` and analysis jobs `40273030485` passed.
 
 ### Current repair and failure coverage
 
-| Failure | Repair |
+| Failure | Repair/status |
 |---|---|
-| Stream-cache destruction releases an unowned response reader | Create actual connection/list/source/fixture owners in both chain and terminal-read probes. Release the transport and check final live storage as well as cache counts, aliases and bounded stack use. |
-| WASI capacity test is rejected before exercising allocation bounds | Put all three source probes inside `ad.scope`; install the matching cleanup scope in the paired-allocation C probe. Keep bounds, expected traps and deliberate overflow control unchanged. |
-| Intel analysis timing gates fail | Eliminate temporary parameter lists in result-type queries, repeated table lookups and cloned input trees. Preserve round snapshots, traversal order, proof facts and all budgets. Compiler integration and performance verification remain CI work. |
+| Windows body-copy fixture includes a system header before the runtime | Insert declarations after the runtime's `V` declaration; preserve the Windows API contract and use an explicit `.exe` path. Local edit; native verification pending. |
+| Linux AMD64 service-value fixture returns ambiguous status 247 | Focused production-GCC diagnosis pending; preserve every cleanup and alias assertion. |
+| Benchmark setup waits three hours on Ubuntu mirror | Ten-minute package-step deadlines, explicit network/lock limits and noninteractive installation; benchmark job bounded at 90 minutes. Same package limits apply to production Linux setup. No skipped dependency checks or alternate toolchain. |
 
 **GC removal remains unverified.** Integrated Rust/compiler, generated-library,
 GCC, Windows and WASI checks must pass on the repaired source. C fixture checks
@@ -198,3 +203,12 @@ suite ran.
 | `python3 /private/tmp/fwp-217-check-grpc-fixtures.py grpc_force_cleanup:cache_owners_release_aliases_and_long_chains_without_collection` | O1/O2 pass: 50 normal runs across 64/1,024/16,384 entries, aliases and terminal failure/shared-owner modes; recursive cleanup fails 175 and omitted source release fails 171. Rechecked after adding complete transport live-storage balance. Uses current runtime and repository test body with minimal library metadata. |
 | `python3 /private/tmp/fwp-217-check-wasi-sources.py` | CI compiler `4c79748a` emits WASI C for all three corrected capacity sources. This verifies admission/generation, not actual wasm32 allocation or execution. |
 | `cargo fmt --all -- --check`, `python3 scripts/check-roadmap.py`, `git diff --check` | Pass: formatting, 163 doc link sets, 106 preparation anchors, eight roadmap rows and whitespace. New Rust call-type regression and analysis budgets remain runner checks. |
+
+### Pending GCC repair checks
+
+- `python3 scripts/local-guard.py actionlint .github/workflows/ci.yml`: passes.
+- Guarded Rust formatting, documentation audit and whitespace checks pass.
+- The first diagnostic harness links and runs at local Clang ARM64 O1/O2 with
+  CI compiler `4c79748a`. This verifies the harness, not the GCC failure.
+- Superseded diagnostic `40388745759` was cancelled while queued; no test results
+  were discarded. Replacement `40390897932` retains an unchanged fixture first.

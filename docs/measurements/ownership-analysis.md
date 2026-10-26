@@ -173,7 +173,16 @@ uses sequential snapshots instead of cloning the input search tree, avoids a
 second input-table lookup, and reads primitive result properties once per visit.
 Round snapshots, traversal order, identities, facts and budgets are unchanged.
 The existing acceptance/rejection tests and timing gates must verify this source;
-less allocation in the code is not yet a measured speedup.
+less allocation in the code alone is not a measured speedup.
+
+The follow-up source `4e6261326a9baea367afa7d5a6cdb277b4535a52` passes both
+hosts in [run 40356471366](https://github.com/e6qu/fun-with-pipes/actions/runs/40356471366),
+including 192 ordinary library tests and both separately executed budget tests. Separate/Merged ratios at 16/32/64 workers are
+1.267/1.337/1.393 on Linux and 1.305/1.357/1.405 on Intel macOS; the limit is 1.5.
+Forms/entry analysis takes 5.358/3.225 seconds on Linux and 7.467/4.746 seconds on
+Intel, each below ten seconds. Rounds, visits, summaries and facts match the prior
+source. Different runner sessions do not establish a paired speedup. Production
+still has separate platform-test failures; these timings do not verify GC removal.
 
 ## Reproduce and assess
 

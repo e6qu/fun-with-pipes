@@ -18,7 +18,6 @@ fn body_copy_retains_its_stream_until_the_result_is_owned() {
             &format!("{finalizer} if(((g_stream *)p)->data.d==watched_body)released++;"),
         );
     let hooks = r#"
-#include <stdint.h>
 static unsigned char *watched_body;
 static uintptr_t watched_call;
 static int copy_active,released;
@@ -60,12 +59,16 @@ static int probe(void){
 }
 int main(void){int status=probe();if(status)_Exit(status);return 0;}
 "#;
+    // Insert hooks after the runtime's platform contract and system headers.
+    let declaration = "typedef uint64_t V;";
+    assert_eq!(generated.matches(declaration).count(), 1);
+    let generated = generated.replace(declaration, &format!("{declaration}\n{hooks}"));
     let dir = fwp::cgen::TempDir::new("http2-body-lifetime").unwrap();
-    let exe = dir.join("probe");
+    let exe = dir.join("probe.exe");
     for opt in ["-O1", "-O2"] {
         for premature_release in [false, true] {
             let code = format!(
-                "#define PROBE_RELEASE_BEFORE_COPY {}\n{hooks}\n{generated}\n{fixture}",
+                "#define PROBE_RELEASE_BEFORE_COPY {}\n{generated}\n{fixture}",
                 usize::from(premature_release)
             );
             fwp::cgen::compile_c(&code, &exe, opt).unwrap();
