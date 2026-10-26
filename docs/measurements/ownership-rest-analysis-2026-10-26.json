@@ -1,0 +1,88 @@
+{
+  "source": "577249f8bc4043d7eda033e3ed433806a0e9806d",
+  "run": 40270501455,
+  "measurement": "One raw compilation per fixture followed by timed interpreter lifetime admission. Compilation is excluded from analysis_seconds. No generated program is timed.",
+  "analysis_limit_seconds": 10,
+  "samples_per_fixture_per_host": 1,
+  "limits": "Separate runner sessions are not a paired speedup measurement. Cache entries are not byte counts. Process memory is not isolated analysis memory.",
+  "hosts": [
+    {
+      "platform": "Linux AMD64",
+      "hardware": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.85\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "fixtures": [
+        {
+          "fixture": "tests/rest/forms.fwp",
+          "functions": 4063,
+          "compile_seconds": 1.756979,
+          "analysis_seconds": 6.195998,
+          "analysis_counts": {
+            "rounds": 289,
+            "visits": 591732,
+            "summary_updates": 2585,
+            "contexts": 4017,
+            "closures": 2560,
+            "facts": 25817,
+            "cached_types": 591,
+            "cached_expressions": 18379
+          }
+        },
+        {
+          "fixture": "tests/fixtures/server_entries.fwp",
+          "functions": 3345,
+          "compile_seconds": 1.485803,
+          "analysis_seconds": 3.899961,
+          "analysis_counts": {
+            "rounds": 245,
+            "visits": 379958,
+            "summary_updates": 2212,
+            "contexts": 3310,
+            "closures": 2155,
+            "facts": 22495,
+            "cached_types": 443,
+            "cached_expressions": 15031
+          }
+        }
+      ]
+    },
+    {
+      "platform": "macOS AMD64",
+      "hardware": "hw.model: Macmini6,2\nhw.memsize: 15032385536\nmachdep.cpu.brand_string: Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\n",
+      "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "fixtures": [
+        {
+          "fixture": "tests/rest/forms.fwp",
+          "functions": 4063,
+          "compile_seconds": 2.820525,
+          "analysis_seconds": 7.100793,
+          "analysis_counts": {
+            "rounds": 289,
+            "visits": 591732,
+            "summary_updates": 2585,
+            "contexts": 4017,
+            "closures": 2560,
+            "facts": 25817,
+            "cached_types": 591,
+            "cached_expressions": 18379
+          }
+        },
+        {
+          "fixture": "tests/fixtures/server_entries.fwp",
+          "functions": 3345,
+          "compile_seconds": 2.41831,
+          "analysis_seconds": 4.660691,
+          "analysis_counts": {
+            "rounds": 245,
+            "visits": 379958,
+            "summary_updates": 2212,
+            "contexts": 3310,
+            "closures": 2155,
+            "facts": 22495,
+            "cached_types": 443,
+            "cached_expressions": 15031
+          }
+        }
+      ]
+    }
+  ]
+}

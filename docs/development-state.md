@@ -1,153 +1,118 @@
 # Current work
 
-**Next:** run the batched repairs on focused runners while finishing the audit
-of production run `40262766433` for [PR #216](https://github.com/e6qu/fun-with-pipes/pull/216),
-previous head `0db38df8bd0b3ea6f4dc1165edd985bc82c71ccb`.
-Repair head: `793bf7dac78a4b70ae71ece35ec5821be0b90397`. Focused analysis
-`40268967670` failed the REST budget; compiler/lifetime/REST checks
-`40268976256` are still running. Keep the PR draft during
-focused validation so another full matrix does not start prematurely. After the
-remaining old-head results and repair checks are audited, mark ready for complete
-final-head production verification. The original run continues unchanged.
-At the previous head, all four macOS shard logs are audited: ARM64 has 925
-passing tests and five failures; Intel has 908 passing tests and 22 failures.
-The causes are the three outdated queue rejection expectations and slow
-interpreted REST/HTTP/HTTPS startup. Both Windows later TLS/entry batches add
-the same raw REST timeout; their other completed targets passed. Both Windows
-early bundles have only the three queue failures. Remaining Linux and Windows
-results and final macOS packaging/evidence steps still need audit.
+**Next:** finish auditing the cache/TLS repair's Intel macOS focused job in
+`40270503961` and the final artifact upload in `40262766433`. Once all known
+failures are repaired and focused checks pass, publish the evidence/docs update
+and mark [PR #216](https://github.com/e6qu/fun-with-pipes/pull/216) ready for all
+nine production jobs, documentation and analysis budgets on the final head.
+Draft skips do not count as acceptance. Do not raise startup or analysis limits.
 
-Repair analysis `40268967670` finished: library tests and the small scaling
-budgets pass on both hosts, but raw forms admission still takes 11.36 seconds on
-Linux and 48.92 seconds on Intel macOS, failing the unchanged ten-second budget.
-Logs: `/private/tmp/fwp-216-repair-analysis-{linux,mac}`. A second local repair
-caches complete type-property queries and expression types per finite IR position.
-It preserves scope/capture facts and adds a recursive-type cache regression. The
-startup measurement now records both fixtures before failing, with cache sizes
-and analysis counters. This second repair is not published or runner-verified.
+Worktree: `/private/tmp/fwp-ownership-fault-matrix`, branch
+`remove-tracing-runtime`. Published repair:
+`577249f8bc4043d7eda033e3ed433806a0e9806d`; PR temporarily draft.
+The primary checkout remains detached at #209; preserve its operational handoff
+and untracked compiler-abort report. [PLAN.md](../PLAN.md) owns the roadmap.
 
-The Intel logs also exposed a TLS harness defect: blocking reads could exceed its
-deadline and failed children were killed without being reaped. TLS now uses the
-existing bounded startup helper with explicit protocol prefixes and owns its
-stderr-drain thread. Its three standalone helper tests pass under the guard via
-`python3 scripts/local-guard.py python3 /private/tmp/fwp-check-server-startup.py`.
-Focused validation now includes HTTPS, plain HTTP and HTTP/2 startup callers.
+## This delivery
 
-Old-head logs: `/private/tmp/fwp-216-final-win-{amd64,arm64}`,
-`/private/tmp/fwp-216-final-mac-arm64`,
-`/private/tmp/fwp-216-final-macos-{regular,gc}-tests-macos-15-intel`,
-`/private/tmp/fwp-216-final-macos-gc-tests-macos-15`, and
-`/private/tmp/fwp-216-final-windows-tls_tests-windows-{2025,11-arm}`.
-The saved ARM64 crash report is the intentional
-`cleanup_panic_aborts_before_borrowed_tasks_escape` control, not a recurrence of
-the unrelated Intel compiler abort.
+The interpreter and native compiler now share queue, State and derivative
+lifetime checks before program effects. Coverage includes returned functions,
+macros, compile-time calls, REPL recovery and gRPC handlers. Native representation
+and C ABI checks remain separate.
 
-Documentation `40268960183` passes the repair head; production `40268959852` is
-skipped because the PR is draft. Neither is complete acceptance. Previous-head
-docs `40262732309`, analysis `40262766768` and production benchmarks passed.
+The shared check exposed a false rejection in nested differentiation: two partial
+applications were merging their captures. The repair distinguishes finite IR
+creation positions while keeping actual invocation scopes. Large raw REST inputs
+then exposed repeated type walks; the latest repair caches complete type queries
+and expression types within one proof. A recursive-type regression ensures a
+partial negative answer cannot hide a callback field.
 
-All ten affected queue/task fixtures pass the revised expectations with the
-captured old-head compiler: raw/optimized, interpreter/native emit-C (40 cases).
-Guarded command:
-`python3 scripts/local-guard.py python3 /private/tmp/fwp-check-rejection-expectations.py`.
-The old compiler's forms startup took 26.1 CPU seconds under the local guard;
-`/private/tmp/fwp-rest-start.sample` locates repeated lifetime-proof type walks.
-This was an optimized-source diagnostic, not a same-host comparison with the
-raw runner measurements. Command:
-`python3 scripts/local-guard.py python3 /private/tmp/fwp-probe-rest-start.py`.
+Allocation/reuse comparisons now use identical ARC-generated C with copying
+selected explicitly, preserving reference counts and cleanup. Plans, guides and
+tutorials explain the current weak-channel/callback contracts, numeric results,
+macro checking order and benchmark boundaries. **Tracing is not deleted yet.**
 
-No merge until all nine production jobs, analysis budgets and docs pass the final
-repaired head. Keep the existing startup deadlines; do not raise the budgets.
+## Verification
 
-Worktree: `/private/tmp/fwp-ownership-fault-matrix`.
-Branch: `remove-tracing-runtime`, based on merged #215.
-The primary checkout is detached at #209; preserve its operational handoff and
-untracked compiler-abort report. [PLAN.md](../PLAN.md) owns the remaining work.
+| Source/run | Result and scope |
+|---|---|
+| `577249f8`, analysis `40270501455` | Both hosts pass: 190 library tests, small worker scaling budgets and both raw REST budgets |
+| `577249f8`, compiler/server `40270503961` | Linux passed completely; Intel macOS server/tool checks running; Clippy passed both |
+| `793bf7da`, analysis `40268967670` | Failed: raw forms admission 11.36 s Linux, 48.92 s Intel macOS; superseded by the cache repair |
+| `793bf7da`, compiler/server `40268976256` | Both hosts passed; superseded by the cache repair |
+| `793bf7da`, docs `40268960183` | Passed; does not verify the later source |
+| `0db38df8`, production `40262766433` | Failed; all native test logs audited, only known queue/startup failures; packaging passed; final artifact upload pending |
 
-## Verified starting point
+The [analysis report](measurements/ownership-analysis.md) and its raw records
+separate compilation, lifetime checking and execution. Latest raw forms analysis:
+6.20 s Linux / 7.10 s Intel macOS; second fixture: 3.90 s / 4.66 s. Limit: 10 s
+each. These single samples from separate runner sessions are not a paired speedup
+measurement. Cache entries are not cache bytes. Full server behavior still needs
+its regression checks.
 
-PR #215 merged as `4e7b74be8e11634fac9309e67cb4efccfb34d360`.
-Its tree equals tested head `bd77d65f58d8c5117ea678cb86cf15fbcf9231f7`:
-`dad73fe097358b3f5842b5d44dcfc13b84fb6bac`.
-All nine production jobs in run `40221722197` and documentation `40221722121`
-passed. G3/G4 are delivered. [History](roadmap-history.md) records the changes.
-Duplicate main run `40252320511` was cancelled after auditing completed steps;
-its identical source tree was already verified.
+The previous full-head audit found only two failure categories so far:
 
-## This batch
+- Three outdated queue tests expected interpreter success for rejected owning
+  cycles. Revised expectations cover raw/optimized interpreter/native rejection
+  before output. All 40 captured-compiler probes and focused Linux queue tests pass.
+- Slow interpreted REST/HTTP/HTTPS startup. All four macOS shards, both Windows
+  TLS/entry batches and all 256 logs from each Linux architecture are audited. Each Linux host
+  had 932 passing tests and four failures; macOS ARM64 had 925 passes/five failures,
+  Intel had 908 passes/22 failures. Windows failures match those causes.
 
-- Share reachable-function and queue/State/autodiff lifetime checks between
-  interpreter entry calls and native generation. Check gRPC handlers before
-  opening a listener; retain separate native representation/C ABI checks.
-- Reject owning cycles before effects. Keep explicit unscoped-derivative rejection
-  and runtime-defense controls outside the supported-program corpus. Cover macros,
-  compile-time calls, REPL recovery and returned functions.
-- Fix a false rejection: two partial applications of `uncurry3` were merging
-  their captures and inventing an unscoped call. Separate finite IR creation
-  positions; keep actual invocation scopes and rejection of real escapes.
-- Compare identical ARC-generated C with reuse enabled/disabled, retaining counts
-  in both. Preserve allocation budgets and long-loop/HTTP/REST memory limits.
-- Replace stale plans and weak/callback claims. Explain tutorial concepts, numeric
-  results, macro checking order, derivative lifetimes and benchmark boundaries.
+TLS and long-running memory tests used a blocking startup read that could miss its deadline and
+killed failed children without reaping them. They now use the existing bounded
+helper, explicit announcement prefixes and an owned stderr-drain thread. The
+three standalone helper tests pass. The memory harness also compiles at Rust O1
+with warnings denied and passes its three helper tests. Its stderr drainer now
+uses a sink instead of an unbounded byte vector. Server integration verification
+is pending.
 
-## Checks and evidence
+Logs are under `/private/tmp/fwp-216-final-*`,
+`/private/tmp/fwp-216-repair-*` and `/private/tmp/fwp-216-cache-analysis-{linux,mac}`. Current Linux admission/server
+logs: `/private/tmp/fwp-216-cache-admission-linux`; TLS certificate failures there
+are expected invalid-client controls.
+Earlier creation-site verification: `40259739899`; paired analysis baseline:
+`40261359439`, source `092009f83a1ba217820f2495d459fdb5c3b10c74`.
+Keep the original measurements intact rather than relabeling them as current.
+The saved ARM64 crash was the deliberate task-cleanup abort control, not a
+recurrence of the [unexplained Intel compiler abort](measurements/compiler-abort.md).
 
-Focused run `40259739899`, source `bf2793f196da45fee26258b0f7aaf4ca1ad1cdb3`,
-passed on GCC/Linux and Intel macOS: formatting/Clippy, 189 library tests, task
-cleanup/doctests, all seven nested-autodiff cases, two cycle/macro cases, six reuse
-cases, admission controls and tool targets. Six external gRPC cases are ignored
-in this focused configuration; it does not replace full production acceptance.
-Logs: `/private/tmp/fwp-216-sites-{linux-admission,mac-complete}`.
+## Local checks
 
-Paired analysis run `40261359439`, source
-`092009f83a1ba217820f2495d459fdb5c3b10c74`, passed both hosts, including all library
-tests and the explicit scaling test. [The report](measurements/ownership-analysis.md)
-records 16/32/64-worker samples, source hashes, counts, process RSS and limits.
-The old merging rule exists only as a test control. Measurement instrumentation
-is absent from production builds. Documentation run `40261345487` passed.
-Final budget assertions passed both hosts in `40262766768`.
+No full local build or suite ran. Commands use `python3 scripts/local-guard.py`:
 
-Earlier failures were fully audited and repaired: helper placement for Clippy;
-incorrect `FWP_NO_OPT=0` controls (presence disables optimization); the closure
-capture merge above; one native-check test caller given the wrong argument; and
-missing evidence when the isolated harness failed to build. Source/log evidence
-is in `/private/tmp/fwp-216-focused/`, `/private/tmp/fwp-216-repair-*/` and
-`/private/tmp/fwp-216-paired-all-failures.log`. Passing later sources supersede
-those failed heads; scalar-origin filtering alone did not fix the scope defect.
+- `python3 /private/tmp/check-fwp-callback-preparation.py`: formatting, metadata,
+  native schedule (254 targets) and diff checks pass.
+- `python3 scripts/check-roadmap.py`: 162 link sets, 106 preparation pairs/tags,
+  eight roadmap rows and commit messages pass. The rewrite initially omitted
+  the required status index; restoring it fixed the audit.
+- `python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /private/tmp/fwp-g5-primitive-inventory.json`:
+  394 declarations, 384 symbols, 40 aliases, 373 contracts, 19 templates; no reviews.
+- `python3 /private/tmp/fwp-check-rejection-expectations.py`: 40 old-compiler
+  rejection probes pass. This does not verify the later performance repair.
+- `python3 /private/tmp/fwp-check-server-startup.py`: three bounded-startup tests pass.
+- `python3 /private/tmp/fwp-check-memory-startup.py`: changed memory harness
+  compiles with warnings denied; its three bounded-startup tests pass.
 
-Guarded formatting, metadata/native schedule audit (254 targets), primitive
-inventory and documentation checks passed during implementation. Inventory:
-394 declarations, 384 symbols, 40 aliases, 373 contracts, 19 templates, no review
-entries. Links: 162 sets, 106 preparation pairs/tags and eight roadmap rows.
-Commands use `python3 scripts/local-guard.py` with:
+## Verified base and next group
 
-- `python3 /private/tmp/check-fwp-callback-preparation.py`
-- `python3 scripts/check-roadmap.py`
-- `python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /private/tmp/fwp-g5-primitive-inventory.json`
+PR #215 merged as `4e7b74be8e11634fac9309e67cb4efccfb34d360`, with the same tree as
+tested head `bd77d65f58d8c5117ea678cb86cf15fbcf9231f7`:
+`dad73fe097358b3f5842b5d44dcfc13b84fb6bac`. Production `40221722197` and docs
+`40221722121` passed. G3/G4 are delivered; [history](roadmap-history.md) records them.
 
-Saved-compiler syntax/type checks and a reduced IR model helped diagnose the
-scope issue; the runner results above verify the actual repair. No full local
-build, suite or benchmark ran. Draft production skips are not passing gates.
+`/private/tmp/fwp-delete-tracing`, branch `delete-tracing-collector`, contains
+unpublished, incomplete G5 deletion based on `0db38df8`. Its handoff lists runtime,
+code-generation, report and test migrations. Do not claim it builds. Rebase onto
+verified merged #216 before publication; keep one active PR. The finite deletion
+map is in [ownership diagnostics](ownership-diagnostics.md). A2–A6 then address
+remaining reference counts, boxes, unique buffers and scoped workspaces.
 
-## After this batch
-
-The unpublished `/private/tmp/fwp-delete-tracing` checkout, branch
-`delete-tracing-collector`, contains an
-incomplete collector deletion, allocator/accounting migration and updated focused
-allocator probes. Its own handoff lists the remaining test/report/caller changes;
-do not publish or claim the integrated checkout builds. It starts at
-`0db38df8bd0b3ea6f4dc1165edd985bc82c71ccb`; rebase onto verified merged #216.
-
-G5 still removes tracing selection/code, collector-only assertions and reporting
-fields, then checks actual binaries. Use the deletion map in
-[ownership diagnostics](ownership-diagnostics.md). ARC minimization A2–A6 is
-separate. The [Intel compiler abort](measurements/compiler-abort.md) remains
-unexplained; investigate recurrence from source/input, not disassembly guesses.
-
-Keep old #214/#215 publisher scripts stopped; they contain obsolete docs.
-No merge watcher is running. After all exact-head gates pass, squash-merge with
-an explicit subject of at most 80 characters and an empty body, then verify it.
-Continue the plan after merging; one PR does not complete the roadmap.
+Keep old #214/#215 publishers stopped; they would overwrite newer docs. No merge
+watcher runs. After final-head gates pass, squash with an explicit single-line
+subject of at most 80 characters and empty body, verify tree/message, then continue
+PLAN.md. No trailers or AI attribution.
 
 ## Roadmap status
 

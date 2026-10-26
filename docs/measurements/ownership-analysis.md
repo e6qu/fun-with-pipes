@@ -184,4 +184,21 @@ so a temporary negative answer on a back edge cannot hide a later callback field
 All cached values are discarded with the proof. Measurements now include cache
 entry counts alongside the existing facts and visits; counts do not measure the
 bytes occupied by cloned types or hash-table storage. The ten-second budget and
-ordinary startup deadlines are unchanged. Runner verification is still pending.
+ordinary startup deadlines are unchanged.
+
+Run `40270501455` at `577249f8bc4043d7eda033e3ed433806a0e9806d` passes both
+analysis budgets and all 190 library tests on Linux AMD64 and Intel macOS.
+[The raw record](ownership-rest-analysis-2026-10-26.json) includes source, hardware,
+Rust version, compilation times and analysis counters. These are one sample per
+fixture per host; separate runner sessions do not establish a paired speedup.
+
+| Raw fixture | Linux analysis | Intel macOS analysis | Limit per host |
+|---|---:|---:|---:|
+| Forms server, 4,063 concrete functions | 6.20 s | 7.10 s | 10 s |
+| Ownership-entry server, 3,345 functions | 3.90 s | 4.66 s | 10 s |
+
+Forms caches 591 type queries and 18,379 expression types; the second fixture
+caches 443 and 15,031. Both hosts produce identical analysis counts. This is a
+compiler-cost check, not an fwp-versus-C/Rust execution benchmark. Serving requests,
+listener startup and generated-program speed are outside the timer. Full server
+regressions and final-head production checks remain required.

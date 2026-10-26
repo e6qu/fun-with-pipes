@@ -13,6 +13,11 @@ use std::os::unix::fs::PermissionsExt;
 use std::os::unix::process::ExitStatusExt;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
+use std::thread::JoinHandle;
+use std::time::Duration;
+
+#[path = "support/http_server_process.rs"]
+mod http_server_process;
 
 fn fwp() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_fwp"))
@@ -459,41 +464,32 @@ fn rss_kib(pid: u32) -> u64 {
 }
 
 /// A server, killed when dropped (also when a test fails).
-struct Running(Child);
+struct Running(Child, Option<JoinHandle<()>>);
 
 impl Drop for Running {
     fn drop(&mut self) {
         let _ = self.0.kill();
         let _ = self.0.wait();
+        if let Some(reader) = self.1.take() {
+            reader.join().expect("memory-test server stderr reader");
+        }
     }
 }
 
-/// Start a server and read the address from its first line on stderr
-/// (after `marker`).
-fn start(mut cmd: Command, marker: &str) -> (Running, String) {
-    let mut server = Running(
-        cmd.stdout(Stdio::null())
-            .stderr(Stdio::piped())
-            .spawn()
-            .unwrap(),
-    );
-    let mut stderr = BufReader::new(server.0.stderr.take().unwrap());
-    let mut line = String::new();
-    loop {
-        line.clear();
-        stderr.read_line(&mut line).unwrap();
-        assert!(!line.is_empty(), "server exited");
-        if let Some(a) = line.trim().split(marker).nth(1) {
-            let addr = a.trim_start_matches("http://").trim_end_matches('/');
-            let addr = addr.to_string();
-            // keep draining stderr so the server never blocks on it
-            std::thread::spawn(move || {
-                let mut sink = Vec::new();
-                let _ = stderr.read_to_end(&mut sink);
-            });
-            return (server, addr);
-        }
-    }
+/// Bound startup even for a silent server, and drain logs without retaining them.
+fn start(mut cmd: Command, prefix: &str) -> (Running, String) {
+    let description = format!("{cmd:?}");
+    let (child, address, mut stderr) =
+        http_server_process::start(&mut cmd, prefix, Duration::from_secs(60), Stdio::null())
+            .unwrap_or_else(|error| panic!("{description}: {error}"));
+    let address = address
+        .trim_start_matches("http://")
+        .trim_end_matches('/')
+        .to_owned();
+    let reader = std::thread::spawn(move || {
+        let _ = std::io::copy(&mut stderr, &mut std::io::sink());
+    });
+    (Running(child, Some(reader)), address)
 }
 
 /// `n` GET requests over keep-alive connections of 50 requests each,
@@ -617,7 +613,7 @@ fn rest_server_runs_in_bounded_memory() {
     cmd.args(["--listen", "127.0.0.1:0"]);
     bounded_server(
         cmd,
-        "listening on ",
+        "fwp: rest listening on ",
         &["/health", "/books/2", "/books?author=Friedman"],
         20000,
         16 * 1024,
@@ -665,7 +661,7 @@ fn grpc_server_memory(memory_mode: &str) {
             .env("FWP_GC_VERIFY", "0")
             .env("FWP_REUSE_VERIFY", "0");
     }
-    let (server, addr) = start(cmd, "listening on ");
+    let (server, addr) = start(cmd, "fwp: service greeter listening on ");
     let client = |n: &str| {
         let mut cmd = Command::new(dir.0.join("split/hammer"));
         cmd.env("FWP_SERVICE_GREETER", &addr)
