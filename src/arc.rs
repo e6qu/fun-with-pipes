@@ -158,7 +158,7 @@ pub(crate) fn check_interpreter(
     prog: &Program,
     entries: &[crate::ir::FuncId],
     entry_channels: EntryChannels,
-) -> Result<(), String> {
+) -> Result<crate::arc_scope::AnalysisStats, String> {
     let live = crate::ir::reachable_functions(prog, entries)?;
     let mut seen = HashSet::new();
     for (id, f) in prog.funcs.iter().enumerate() {
@@ -176,7 +176,6 @@ pub(crate) fn check_interpreter(
         entry_channels,
         crate::arc_scope::ClosureSites::Separate,
     )
-    .map(|_| ())
 }
 
 pub(crate) fn check(

@@ -168,6 +168,9 @@ jobs:
           status=0
           cargo test --locked --test rest forms_client_round_trip -- --nocapture 2>&1 | tee compiler-lifetime-evidence/rest-forms.log || status=1
           cargo test --locked --test server_entry_ownership generated_http_entries_preserve_results_and_disconnected_handler_owners -- --nocapture 2>&1 | tee compiler-lifetime-evidence/rest-ownership.log || status=1
+          cargo test --locked --test tls rest_ -- --nocapture 2>&1 | tee compiler-lifetime-evidence/rest-tls.log || status=1
+          cargo test --locked --test http_server interpreted_server -- --nocapture 2>&1 | tee compiler-lifetime-evidence/http-startup.log || status=1
+          cargo test --locked --test web curl_h2c_and_compression_interpreted -- --nocapture 2>&1 | tee compiler-lifetime-evidence/web-startup.log || status=1
           exit "$status"
       - name: Publish admission results before tool tests
         if: always()

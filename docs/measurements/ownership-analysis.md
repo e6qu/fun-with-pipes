@@ -160,7 +160,7 @@ origin sets skip result-type reconstruction after every child has been visited.
 Scalar expressions still update summaries, validate scope effects and consume
 their creation positions. The initial search for owner-bearing channel types
 shares one visited set across the immutable type graph. No admission rule or
-scope requirement is weakened, and no new cache is retained.
+scope requirement is weakened.
 
 The runner-only `ownership_rest_startup_budget` check compiles
 `tests/rest/forms.fwp` and `tests/fixtures/server_entries.fwp` with optimization
@@ -169,3 +169,19 @@ requires each lifetime check to finish within ten seconds. Compilation, opening
 a listener and serving requests are outside that analysis timer; the ordinary
 REST tests still cover complete startup and responses. The repair and this new
 budget need final-head runner results before claiming the regression is fixed.
+
+The first startup repair (`793bf7dac78a4b70ae71ece35ec5821be0b90397`) still failed
+this budget in run `40268967670`: the raw forms fixture has 4,063 concrete
+functions and took 11.36 seconds for admission on Linux AMD64 and 48.92 seconds
+on Intel macOS. Parsing/lowering took 1.24 and 4.72 seconds respectively. Both
+hosts passed the small worker budgets. These are different inputs/settings from
+the local diagnostic above; their ratio is not a measured speedup.
+
+The follow-up caches complete type-property queries and expression types within
+one proof. Keys are concrete types and finite IR positions; no dynamic call
+history enters the cache. Recursive queries finish before caching their answer,
+so a temporary negative answer on a back edge cannot hide a later callback field.
+All cached values are discarded with the proof. Measurements now include cache
+entry counts alongside the existing facts and visits; counts do not measure the
+bytes occupied by cloned types or hash-table storage. The ten-second budget and
+ordinary startup deadlines are unchanged. Runner verification is still pending.

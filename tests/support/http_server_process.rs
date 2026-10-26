@@ -57,6 +57,8 @@ pub fn start(
     }
 }
 
+// TLS-only tests use startup and drain stderr, then kill and reap directly.
+#[allow(dead_code)]
 pub fn terminate(child: &Child) -> Result<(), String> {
     #[cfg(unix)]
     {

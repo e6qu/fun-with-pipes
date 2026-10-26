@@ -10,7 +10,9 @@
 use crate::arc::EntryChannels;
 use crate::ir::{Body, Expr, FuncId, Pat, Program, TypeShape, MT};
 use crate::value::Value;
-use std::collections::{BTreeMap, BTreeSet};
+use std::cell::RefCell;
+use std::collections::hash_map::Entry;
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 enum Origin {
@@ -58,9 +60,19 @@ pub(crate) enum ClosureSites {
 const AD: u8 = 1;
 const STATE: u8 = 2;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct TypeProperties {
+    functions: bool,
+    channels: bool,
+    tasks: bool,
+    owner_channels: bool,
+}
+
 struct Proof<'a> {
     program: &'a Program,
     sites: ClosureSites,
+    type_cache: RefCell<HashMap<MT, TypeProperties>>,
+    expression_types: HashMap<Site, Option<MT>>,
     captures: BTreeMap<Origin, Vec<Targets>>,
     inputs: BTreeMap<Context, Vec<Targets>>,
     outputs: BTreeMap<Context, Targets>,
@@ -277,6 +289,23 @@ fn queued_capture_type(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> R
 }
 
 impl Proof<'_> {
+    fn properties(&self, ty: &MT) -> TypeProperties {
+        if let Some(properties) = self.type_cache.borrow().get(ty) {
+            return *properties;
+        }
+        // Cache only complete root queries. Caching a recursive DFS's partial
+        // negative answers could hide a callback reached through another field.
+        // Program types/shapes do not change during this proof.
+        let properties = TypeProperties {
+            functions: has_functions(self.program, ty, &mut BTreeSet::new()),
+            channels: has_channels(self.program, ty, &mut BTreeSet::new()),
+            tasks: has_tasks(self.program, ty, &mut BTreeSet::new()),
+            owner_channels: has_owner_channels(self.program, ty, &mut BTreeSet::new()),
+        };
+        self.type_cache.borrow_mut().insert(ty.clone(), properties);
+        properties
+    }
+
     fn queue_type(&self, origin: Origin) -> Option<&MT> {
         match origin {
             Origin::Queue(id) => {
@@ -348,7 +377,7 @@ impl Proof<'_> {
         seen: &mut BTreeSet<Origin>,
     ) -> Result<(), String> {
         queued_capture_type(self.program, ty, &mut BTreeSet::new())?;
-        if has_channels(self.program, ty, &mut BTreeSet::new()) {
+        if self.properties(ty).channels {
             if matches!(ty, MT::Con(name, _) if name == "std::Channel")
                 && !value.iter().any(|origin| origin.queue())
             {
@@ -363,10 +392,10 @@ impl Proof<'_> {
                 "ownership: cannot prove a queued function's captured function source".into(),
             );
         }
-        if has_functions(self.program, ty, &mut BTreeSet::new()) {
+        if self.properties(ty).functions {
             self.queued_targets(value, seen)?;
         }
-        if has_tasks(self.program, ty, &mut BTreeSet::new()) {
+        if self.properties(ty).tasks {
             if matches!(ty, MT::Con(name, _) if name == "std::Task")
                 && !value.iter().any(|origin| origin.task())
             {
@@ -700,9 +729,7 @@ impl Proof<'_> {
     /// Aggregate fields share origins. A checked type rules out unrelated
     /// queue/function fields, but never proves an unknown origin of its own kind.
     fn refine_origins(&self, values: &mut Targets, ty: &MT) {
-        if values.contains(&Origin::UnknownOwnerQueue)
-            && !has_owner_channels(self.program, ty, &mut BTreeSet::new())
-        {
+        if values.contains(&Origin::UnknownOwnerQueue) && !self.properties(ty).owner_channels {
             values.remove(&Origin::UnknownOwnerQueue);
             values.insert(Origin::UnknownQueue);
         }
@@ -719,7 +746,7 @@ impl Proof<'_> {
                     ),
                     _ => true,
                 });
-            } else if !has_tasks(self.program, ty, &mut BTreeSet::new()) {
+            } else if !self.properties(ty).tasks {
                 values.retain(|origin| !origin.task());
             }
         }
@@ -732,18 +759,14 @@ impl Proof<'_> {
             });
             return;
         }
-        if values.iter().any(|origin| origin.queue())
-            && !has_channels(self.program, ty, &mut BTreeSet::new())
-        {
+        if values.iter().any(|origin| origin.queue()) && !self.properties(ty).channels {
             values.retain(|origin| !origin.queue());
         }
         if !matches!(ty, MT::Fun(..)) {
             // Fields of an aggregate initially share origins. A scalar field
             // cannot carry its neighbor's callback into another call. Apply
             // the same exclusion used for function results to expressions too.
-            if values.iter().any(|origin| origin.callable())
-                && !has_functions(self.program, ty, &mut BTreeSet::new())
-            {
+            if values.iter().any(|origin| origin.callable()) && !self.properties(ty).functions {
                 values.retain(|origin| !origin.callable());
             }
             return;
@@ -842,13 +865,18 @@ impl Proof<'_> {
         if result.is_empty() {
             return Ok(result);
         }
-        if let Some(ty) = crate::ir::type_of(
-            &|id| &self.program.funcs[id].ty,
-            &self.program.shapes,
-            local_types,
-            expr,
-        ) {
-            self.refine_origins(&mut result, &ty);
+        // Each IR position has one immutable type across all invocation
+        // scopes and fixed-point rounds. Store its reconstruction once.
+        if let Entry::Vacant(entry) = self.expression_types.entry(site) {
+            entry.insert(crate::ir::type_of(
+                &|id| &self.program.funcs[id].ty,
+                &self.program.shapes,
+                local_types,
+                expr,
+            ));
+        }
+        if let Some(Some(ty)) = self.expression_types.get(&site) {
+            self.refine_origins(&mut result, ty);
         }
         Ok(result)
     }
@@ -893,16 +921,16 @@ impl Proof<'_> {
                         }
                         Origin::UnknownTask => {
                             let ty = function.ty.params(function.arity as usize).1;
-                            if has_functions(self.program, ty, &mut BTreeSet::new()) {
+                            if self.properties(ty).functions {
                                 result.insert(Origin::UnknownFunction);
                             }
-                            if has_channels(self.program, ty, &mut BTreeSet::new()) {
+                            if self.properties(ty).channels {
                                 result.insert(unknown_queue(
                                     self.program,
                                     function.ty.params(function.arity as usize).1,
                                 ));
                             }
-                            if has_tasks(self.program, ty, &mut BTreeSet::new()) {
+                            if self.properties(ty).tasks {
                                 result.insert(Origin::UnknownTask);
                             }
                         }
@@ -928,7 +956,7 @@ impl Proof<'_> {
             Body::Prim(symbol) if symbol == "channel.send" => {
                 let channel = function.ty.params(function.arity as usize).0[0].clone();
                 let payload = function.ty.params(function.arity as usize).0[1];
-                if self.validate && has_functions(self.program, payload, &mut BTreeSet::new()) {
+                if self.validate && self.properties(payload).functions {
                     if matches!(payload, MT::Fun(..)) && args[1].is_empty() {
                         return Err(
                             "ownership: cannot prove the source of a queued function".into()
@@ -936,7 +964,7 @@ impl Proof<'_> {
                     }
                     self.queued_targets(&args[1], &mut BTreeSet::new())?;
                 }
-                if self.validate && has_tasks(self.program, payload, &mut BTreeSet::new()) {
+                if self.validate && self.properties(payload).tasks {
                     self.queued_value(payload, &args[1], &mut BTreeSet::new())?;
                 }
                 self.changed |= join(self.channel_values.entry(channel).or_default(), &args[1]);
@@ -1043,11 +1071,9 @@ impl Proof<'_> {
                 // here would incorrectly run scoped work in its caller's scope.
                 let mut result: Targets = args.iter().flatten().copied().collect();
                 let contract = crate::ownership::primitive(symbol);
-                let returns_functions = has_functions(
-                    self.program,
-                    function.ty.params(function.arity as usize).1,
-                    &mut BTreeSet::new(),
-                );
+                let returns_functions = self
+                    .properties(function.ty.params(function.arity as usize).1)
+                    .functions;
                 if returns_functions {
                     match contract {
                         Some(c)
@@ -1071,11 +1097,9 @@ impl Proof<'_> {
                         }
                     }
                 }
-                let returns_channels = has_channels(
-                    self.program,
-                    function.ty.params(function.arity as usize).1,
-                    &mut BTreeSet::new(),
-                );
+                let returns_channels = self
+                    .properties(function.ty.params(function.arity as usize).1)
+                    .channels;
                 if returns_channels {
                     match contract {
                         Some(c)
@@ -1096,11 +1120,10 @@ impl Proof<'_> {
                         }
                     }
                 }
-                if has_tasks(
-                    self.program,
-                    function.ty.params(function.arity as usize).1,
-                    &mut BTreeSet::new(),
-                ) {
+                if self
+                    .properties(function.ty.params(function.arity as usize).1)
+                    .tasks
+                {
                     match contract {
                         Some(c)
                             if matches!(
@@ -1204,15 +1227,15 @@ impl Proof<'_> {
                     }
                 }
                 let result_type = function.ty.params(function.arity as usize).1;
-                let mut result = if has_functions(self.program, result_type, &mut BTreeSet::new()) {
+                let mut result = if self.properties(result_type).functions {
                     Targets::from([Origin::UnknownFunction])
                 } else {
                     Targets::new()
                 };
-                if has_channels(self.program, result_type, &mut BTreeSet::new()) {
+                if self.properties(result_type).channels {
                     result.insert(unknown_queue(self.program, result_type));
                 }
-                if has_tasks(self.program, result_type, &mut BTreeSet::new()) {
+                if self.properties(result_type).tasks {
                     result.insert(Origin::UnknownTask);
                 }
                 Ok(result)
@@ -1259,6 +1282,10 @@ pub(crate) struct AnalysisStats {
     closures: usize,
     #[cfg(test)]
     facts: usize,
+    #[cfg(test)]
+    cached_types: usize,
+    #[cfg(test)]
+    cached_expressions: usize,
 }
 
 pub(crate) fn check(
@@ -1283,6 +1310,8 @@ pub(crate) fn check(
     let mut proof = Proof {
         program,
         sites,
+        type_cache: RefCell::new(HashMap::new()),
+        expression_types: HashMap::new(),
         captures: BTreeMap::new(),
         inputs: BTreeMap::new(),
         outputs: BTreeMap::new(),
@@ -1382,7 +1411,7 @@ pub(crate) fn check(
             let function = &program.funcs[id];
             let result_type = function.ty.params(function.arity as usize).1;
             if result.iter().any(|origin| origin.callable())
-                && !has_functions(program, result_type, &mut BTreeSet::new())
+                && !proof.properties(result_type).functions
             {
                 result.retain(|origin| !origin.callable());
             }
@@ -1410,6 +1439,8 @@ pub(crate) fn check(
     }
     #[cfg(test)]
     {
+        stats.cached_types = proof.type_cache.borrow().len();
+        stats.cached_expressions = proof.expression_types.len();
         stats.contexts = proof.inputs.len();
         stats.closures = proof.captures.len();
         stats.facts = proof
@@ -1672,6 +1703,14 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                         || stats.closures > closures
                         || stats.facts > facts
                         || program.funcs.len() > n + 33
+                        || stats.cached_expressions > node_count
+                        || stats.cached_types
+                            > node_count
+                                + program
+                                    .funcs
+                                    .iter()
+                                    .map(|f| f.locals.len() + 1)
+                                    .sum::<usize>()
                         || node_count > 19 * n + 126
                     {
                         failures.push(format!(
@@ -1874,6 +1913,7 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
     fn ownership_rest_startup_budget() {
         assert!(std::env::var_os("FWP_NO_OPT").is_some());
         crate::driver::with_big_stack(|| {
+            let mut failures = Vec::new();
             for fixture in ["tests/rest/forms.fwp", "tests/fixtures/server_entries.fwp"] {
                 let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(fixture);
                 let compiling = Instant::now();
@@ -1881,7 +1921,7 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                     .unwrap_or_else(|failure| panic!("{}", failure.rendered));
                 let compile_seconds = compiling.elapsed().as_secs_f64();
                 let checking = Instant::now();
-                crate::arc::check_interpreter(
+                let stats = crate::arc::check_interpreter(
                     &program,
                     &[program.main.expect("REST entry")],
                     EntryChannels::Unknown,
@@ -1889,15 +1929,78 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                 .unwrap();
                 let analysis_seconds = checking.elapsed().as_secs_f64();
                 eprintln!(
-                    "rest-startup fixture={fixture} raw=true functions={} compile_seconds={compile_seconds:.6} analysis_seconds={analysis_seconds:.6} analysis_limit_seconds=10",
+                    "rest-startup fixture={fixture} raw=true functions={} compile_seconds={compile_seconds:.6} analysis_seconds={analysis_seconds:.6} analysis_limit_seconds=10 stats={stats:?}",
                     program.funcs.len(),
                 );
-                assert!(
-                    analysis_seconds <= 10.0,
-                    "{fixture}: lifetime analysis exceeded the startup budget"
-                );
+                if analysis_seconds > 10.0 {
+                    failures.push(format!(
+                        "{fixture}: lifetime analysis exceeded the startup budget"
+                    ));
+                }
             }
+            assert!(failures.is_empty(), "{}", failures.join("\n"));
         });
+    }
+
+    #[test]
+    fn cached_type_queries_do_not_publish_partial_recursive_answers() {
+        for owning in [false, true] {
+            let mut program = Program::default();
+            let a = MT::con("A");
+            let b = MT::con("B");
+            let callback = arrow(MT::unit(), MT::unit());
+            let payload = if owning {
+                MT::Con("std::Channel".into(), vec![callback.clone()])
+            } else {
+                MT::con("std::I64")
+            };
+            program.shapes.insert(
+                a.clone(),
+                TypeShape::Record(vec![("first".into(), b.clone()), ("later".into(), payload)]),
+            );
+            program.shapes.insert(
+                b.clone(),
+                TypeShape::Record(vec![("back".into(), a.clone())]),
+            );
+            let proof = Proof {
+                program: &program,
+                sites: ClosureSites::Separate,
+                type_cache: RefCell::new(HashMap::new()),
+                expression_types: HashMap::new(),
+                captures: BTreeMap::new(),
+                inputs: BTreeMap::new(),
+                outputs: BTreeMap::new(),
+                callback_values: BTreeMap::new(),
+                channel_values: BTreeMap::new(),
+                task_thunks: BTreeMap::new(),
+                task_results: BTreeMap::new(),
+                changed: false,
+                validate: false,
+                state_values: Targets::new(),
+                error_values: Targets::new(),
+            };
+            // Visiting A first crosses B's back edge before reaching A's
+            // payload. That provisional negative result must not be cached for B.
+            let expected = TypeProperties {
+                functions: owning,
+                channels: owning,
+                tasks: false,
+                owner_channels: owning,
+            };
+            for ty in [&a, &b, &a, &b] {
+                assert_eq!(proof.properties(ty), expected);
+            }
+            assert_eq!(proof.type_cache.borrow().len(), 2);
+            assert_eq!(
+                proof.properties(&MT::Con("std::WeakChannel".into(), vec![callback])),
+                TypeProperties {
+                    functions: false,
+                    channels: false,
+                    tasks: false,
+                    owner_channels: false,
+                }
+            );
+        }
     }
 
     #[test]
@@ -1906,6 +2009,8 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
         let mut proof = Proof {
             program: &program,
             sites: ClosureSites::Separate,
+            type_cache: RefCell::new(HashMap::new()),
+            expression_types: HashMap::new(),
             captures: BTreeMap::new(),
             inputs: BTreeMap::new(),
             outputs: BTreeMap::new(),
@@ -2017,6 +2122,8 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
             let mut proof = Proof {
                 program: &program,
                 sites: ClosureSites::Separate,
+                type_cache: RefCell::new(HashMap::new()),
+                expression_types: HashMap::new(),
                 captures: BTreeMap::new(),
                 inputs: BTreeMap::new(),
                 outputs: BTreeMap::new(),
@@ -2547,6 +2654,8 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
         let mut proof = Proof {
             program: &program,
             sites: ClosureSites::Separate,
+            type_cache: RefCell::new(HashMap::new()),
+            expression_types: HashMap::new(),
             captures: BTreeMap::new(),
             inputs: BTreeMap::new(),
             outputs: BTreeMap::new(),
@@ -2764,6 +2873,8 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
         let mut proof = Proof {
             program: &program,
             sites: ClosureSites::Separate,
+            type_cache: RefCell::new(HashMap::new()),
+            expression_types: HashMap::new(),
             captures: BTreeMap::new(),
             inputs: BTreeMap::new(),
             outputs: BTreeMap::new(),

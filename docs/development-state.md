@@ -2,38 +2,62 @@
 
 **Next:** run the batched repairs on focused runners while finishing the audit
 of production run `40262766433` for [PR #216](https://github.com/e6qu/fun-with-pipes/pull/216),
-previous head `0db38df8bd0b3ea6f4dc1165edd985bc82c71ccb`. Keep the PR draft during
+previous head `0db38df8bd0b3ea6f4dc1165edd985bc82c71ccb`.
+Repair head: `793bf7dac78a4b70ae71ece35ec5821be0b90397`. Focused analysis
+`40268967670` failed the REST budget; compiler/lifetime/REST checks
+`40268976256` are still running. Keep the PR draft during
 focused validation so another full matrix does not start prematurely. After the
 remaining old-head results and repair checks are audited, mark ready for complete
 final-head production verification. The original run continues unchanged.
-At the previous head, both Windows queue/callback steps and both ARM64 macOS shards failed; Linux and
-Intel macOS are still running. Both Windows diagnostic bundles confirm exactly
-three stale interpreter-success expectations
-in `queued_functions`: captured channels, task-bearing queues and a cached
-self-owning task result. All other targets in its early diagnostics passed.
-Logs: `/private/tmp/fwp-216-final-win-{amd64,arm64}`. The repair requires
-raw/optimized rejection in both engines, including weak acquisition and AD scope
-controls. ARM64 macOS adds two startup timeouts: REST forms client (60 seconds) and raw
-REST ownership entry (30 seconds). The captured compiler took 26.1 CPU seconds to start the forms interpreter
-under the local guard. A stack sample identifies repeated lifetime-proof type
-walks. The repair skips irrelevant result refinement, preserves child
-visits/scope checks, and shares the initial existential type traversal. It adds
-a runner-only 10-second analysis budget for both REST inputs; startup deadlines
-are unchanged. Focused runner verification is pending. Its second shard also has the same three queue failures.
-All other completed ARM64 shard targets passed. The saved ARM64 crash report
-is the intentional `cleanup_panic_aborts_before_borrowed_tasks_escape` control,
-not a recurrence of the unrelated Intel compiler abort.
-Later Windows, Linux and Intel macOS target results still need full audit.
-Previous-head documentation `40262732309`, paired analysis budgets `40262766768` and the
-production benchmark job passed. Earlier draft skip `40262732305` is not a gate.
-All ten affected queue/task fixtures passed the new rejection expectations
-with the captured final-head compiler: raw/optimized, interpreter/native emit-C
-(40 cases). This verifies expectations, not the unpublished performance repair.
-Guarded command: `python3 scripts/local-guard.py python3 /private/tmp/fwp-check-rejection-expectations.py`.
-Profile: `/private/tmp/fwp-rest-start.sample`; guarded command:
+At the previous head, all four macOS shard logs are audited: ARM64 has 925
+passing tests and five failures; Intel has 908 passing tests and 22 failures.
+The causes are the three outdated queue rejection expectations and slow
+interpreted REST/HTTP/HTTPS startup. Both Windows later TLS/entry batches add
+the same raw REST timeout; their other completed targets passed. Both Windows
+early bundles have only the three queue failures. Remaining Linux and Windows
+results and final macOS packaging/evidence steps still need audit.
+
+Repair analysis `40268967670` finished: library tests and the small scaling
+budgets pass on both hosts, but raw forms admission still takes 11.36 seconds on
+Linux and 48.92 seconds on Intel macOS, failing the unchanged ten-second budget.
+Logs: `/private/tmp/fwp-216-repair-analysis-{linux,mac}`. A second local repair
+caches complete type-property queries and expression types per finite IR position.
+It preserves scope/capture facts and adds a recursive-type cache regression. The
+startup measurement now records both fixtures before failing, with cache sizes
+and analysis counters. This second repair is not published or runner-verified.
+
+The Intel logs also exposed a TLS harness defect: blocking reads could exceed its
+deadline and failed children were killed without being reaped. TLS now uses the
+existing bounded startup helper with explicit protocol prefixes and owns its
+stderr-drain thread. Its three standalone helper tests pass under the guard via
+`python3 scripts/local-guard.py python3 /private/tmp/fwp-check-server-startup.py`.
+Focused validation now includes HTTPS, plain HTTP and HTTP/2 startup callers.
+
+Old-head logs: `/private/tmp/fwp-216-final-win-{amd64,arm64}`,
+`/private/tmp/fwp-216-final-mac-arm64`,
+`/private/tmp/fwp-216-final-macos-{regular,gc}-tests-macos-15-intel`,
+`/private/tmp/fwp-216-final-macos-gc-tests-macos-15`, and
+`/private/tmp/fwp-216-final-windows-tls_tests-windows-{2025,11-arm}`.
+The saved ARM64 crash report is the intentional
+`cleanup_panic_aborts_before_borrowed_tasks_escape` control, not a recurrence of
+the unrelated Intel compiler abort.
+
+Documentation `40268960183` passes the repair head; production `40268959852` is
+skipped because the PR is draft. Neither is complete acceptance. Previous-head
+docs `40262732309`, analysis `40262766768` and production benchmarks passed.
+
+All ten affected queue/task fixtures pass the revised expectations with the
+captured old-head compiler: raw/optimized, interpreter/native emit-C (40 cases).
+Guarded command:
+`python3 scripts/local-guard.py python3 /private/tmp/fwp-check-rejection-expectations.py`.
+The old compiler's forms startup took 26.1 CPU seconds under the local guard;
+`/private/tmp/fwp-rest-start.sample` locates repeated lifetime-proof type walks.
+This was an optimized-source diagnostic, not a same-host comparison with the
+raw runner measurements. Command:
 `python3 scripts/local-guard.py python3 /private/tmp/fwp-probe-rest-start.py`.
-No merge until all nine production jobs, analysis budgets and docs pass the repaired
-final head.
+
+No merge until all nine production jobs, analysis budgets and docs pass the final
+repaired head. Keep the existing startup deadlines; do not raise the budgets.
 
 Worktree: `/private/tmp/fwp-ownership-fault-matrix`.
 Branch: `remove-tracing-runtime`, based on merged #215.
@@ -108,10 +132,11 @@ build, suite or benchmark ran. Draft production skips are not passing gates.
 ## After this batch
 
 The unpublished `/private/tmp/fwp-delete-tracing` checkout, branch
-`delete-tracing-collector`, starts from the current #216 head. It contains an
+`delete-tracing-collector`, contains an
 incomplete collector deletion, allocator/accounting migration and updated focused
 allocator probes. Its own handoff lists the remaining test/report/caller changes;
-do not publish or claim the integrated checkout builds. Rebase it onto verified merged #216 after this repair.
+do not publish or claim the integrated checkout builds. It starts at
+`0db38df8bd0b3ea6f4dc1165edd985bc82c71ccb`; rebase onto verified merged #216.
 
 G5 still removes tracing selection/code, collector-only assertions and reporting
 fields, then checks actual binaries. Use the deletion map in
