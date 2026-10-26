@@ -73,9 +73,6 @@ fn spawned_thunks_release_captures_and_preserve_external_aliases() {
         let probe=r#"
 static jmp_buf rejected;static int recover(void){return 1;}
 static int dead(V v){
-#ifndef FWP_ARC_ONLY
- if(fwp_reuse_verify)return STR(v)->len==0;
-#endif
  uint8_t *slot=fwp_rc_slot(v);return !slot||!*slot;
 }
 int main(void){
@@ -87,9 +84,6 @@ int main(void){
   V fn=fwp_rc_fresh(fwp_pap(mode==2?SLEEPING:PLAIN,1,&capture));
   fwp_task *t=(fwp_task *)(uintptr_t)fSPAWN(fn);
   if(*fwp_rc_slot(fn)!=1||*fwp_rc_slot(capture)!=alias+1)return 1;
-#ifndef FWP_ARC_ONLY
-  fwp_heap_collect();
-#endif
   FWP_KEEP_ALIVE(capture);FWP_KEEP_ALIVE(PTR(t));
   if(mode==2)fwp_p_task_yield();
   if(mode)fwp_p_task_cancel(PTR(t));
@@ -109,33 +103,21 @@ int main(void){
  if(fields.tag!=1||fields.value!=scalar||*fwp_rc_slot(scalar)!=1)return 10;
  fwp_rc_free_obj(fwp_rc_fresh(result));fwp_task_drop(PTR(t));fwp_rc_free_obj(scalar);
  fwp_free_zombie();
-#ifdef FWP_ARC_ONLY
  if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
-#endif
  }
- // Tracing admits uncounted callbacks; ARC must reject loss of ownership.
+ // A callback without an ownership contract cannot consume counted captures.
 
  fwp_fninfo table[sizeof(fwp_fn_table)/sizeof(fwp_fn_table[0])];
  memcpy(table,fwp_fn_table,sizeof(table));table[PLAIN].owned=0;fwp_fns=table;
  V capture=fwp_rc_fresh(fwp_str_new("input",5));V fn=fwp_rc_fresh(fwp_pap(PLAIN,1,&capture));
-#ifdef FWP_ARC_ONLY
  fwp_trap_recover=recover;fwp_trap_jb=&rejected;fwp_trap_cleanup=0;
  if(setjmp(rejected)==0){fSPAWN(fn);return 11;}
  fwp_trap_recover=0;fwp_trap_jb=0;
  if(strcmp(fwp_trap_msg,"internal: counted owner escaped ARC contract"))return 12;
  if(*fwp_rc_slot(fn)!=1||*fwp_rc_slot(capture)!=1||fwp_tasks_active||fwp_cleanups)return 13;
  fwp_fns=fwp_fn_table;fwp_closure_drop(fn);
-#else
- fwp_task *t=(fwp_task *)(uintptr_t)fSPAWN(fn);
- if(*fwp_rc_slot(fn)||*fwp_rc_slot(capture))return 8;
- fwp_closure_drop(fn);V result=fwp_await(t);
- if(result==FWP_NONE||OBJ(result)->f[0]!=5)return 9;
- fwp_rc_free_obj(fwp_rc_fresh(result));fwp_fns=fwp_fn_table;
-#endif
  fwp_tasks_finish();fwp_native_tasks_finish();
-#ifdef FWP_ARC_ONLY
  if(fwp_heap.live!=0||fwp_heap.rc_wide_len)return 90;
-#endif
  return 0;
 }
 "#.replace("SLEEPING",&id("sleeping")).replace("PLAIN",&id("plain")).replace("WORD",&id("word")).replace("SPAWN",&id("task.spawn"));
@@ -272,9 +254,6 @@ static fwp_task *fwp_spawn_task("#,1)
         let probe=r#"
 static jmp_buf failed;static int recover(void){return 1;}
 static int dead(V v){
-#ifndef FWP_ARC_ONLY
- if(fwp_reuse_verify)return STR(v)->len==0;
-#endif
  uint8_t *slot=fwp_rc_slot(v);return !slot||!*slot;
 }
 int main(void){
@@ -295,20 +274,16 @@ int main(void){
   if(mode==2){if(scope.n!=SIZE_MAX||scope.cap!=SIZE_MAX)return 8;scope.n=0;scope.cap=8;}else if(scope.n)return 9;
   if(mode==1){uint8_t *slot=fwp_rc_slot(fn);if(*slot!=255||(*fwp_rc_wide_link(slot))->count!=SIZE_MAX)return 3;fwp_rc_forget_slot(slot);*slot=1;}
   if(*fwp_rc_slot(fn)!=1||*fwp_rc_slot(capture)!=alias+1)return 4;
-  if(!fwp_heap.stress && fwp_heap.live!=live_bytes_before)return 10;
+  if(fwp_heap.live!=live_bytes_before)return 10;
   fwp_closure_drop(fn);
   if(alias){if(*fwp_rc_slot(capture)!=1||STR(capture)->len!=5)return 5;fwp_rc_free_obj(capture);}
   else if(!dead(capture))return 6;
  }
  fwp_cur->scope=0;fwp_mem_free(scope.tasks);
-#ifdef FWP_ARC_ONLY
  if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
-#endif
  }
  fwp_tasks_finish();fwp_native_tasks_finish();
-#ifdef FWP_ARC_ONLY
  if(fwp_heap.live!=0)return 90;
-#endif
  return 0;
 }
 "#.replace("PLAIN",&id("plain")).replace("SPAWN",&id("task.spawn"));

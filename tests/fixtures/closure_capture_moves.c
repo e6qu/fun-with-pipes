@@ -57,11 +57,7 @@ int main(void) {
         if(!fwp_rc_last(scalar)||STR(scalar)->len!=4||memcmp(STR(scalar)->d,"bits",4))return 205;
         fwp_rc_free_obj(scalar);
         double after=(double)fwp_heap.live;
-#ifdef FWP_ARC_ONLY
         if(before!=after||fwp_heap.rc_wide_len)return 206;
-#else
-        if(!fwp_heap.enabled&&!fwp_reuse_verify&&(before!=after))return 206;
-#endif
         if(round==31)printf("%d\t%d\t%d\t%.0f\n", mode, partial_retains, capture_retains, after-before);
     }
     }

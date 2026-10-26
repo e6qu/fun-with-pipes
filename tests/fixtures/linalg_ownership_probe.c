@@ -4,9 +4,6 @@ static jmp_buf la_failure;
 static int la_events, la_fail_at, la_collect;
 static int la_recover(void) { return 1; }
 static void la_event(void) {
-#if !FWP_ARC_ONLY
-    if (la_collect) fwp_heap_collect();
-#endif
     if (++la_events == la_fail_at) fwp_trap("solver allocation probe");
 }
 static V la_input(const double *values, size_t count) {

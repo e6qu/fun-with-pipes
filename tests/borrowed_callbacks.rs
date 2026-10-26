@@ -250,10 +250,8 @@ int main(void) {
     if (*fwp_rc_slot(leaf) != 1 || *fwp_rc_slot(scalar) != 1) return 9;
     probe_drop_leaf(leaf);
     probe_drop_leaf(scalar);
-#ifdef FWP_ARC_ONLY
     if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
     owner_ledger_finish();
-#endif
     }
     puts("borrowed owners and typed slices preserved");
     return 0;

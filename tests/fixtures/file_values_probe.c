@@ -14,9 +14,6 @@ static int file_close_probe(FILE *stream){
 static jmp_buf file_failure;
 static int file_recover(void){return 1;}
 static void file_event(void){
-#if !FWP_ARC_ONLY
- if(file_collect)fwp_heap_collect();
-#endif
  if(++file_events==file_fail_at)fwp_trap("file metadata probe");
 }
 static V file_duration(int64_t ns){file_event();return fwp_duration(ns);}

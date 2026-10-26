@@ -74,7 +74,9 @@ def host_report(artifacts, host, source):
             assert input_path.read_bytes() == original, input_path
             files[input_path.name] = {'sha256': digest(input_path)}
         generated = directory / f'{program}-generated.c'
-        assert '#define FWP_ARC_ONLY 1' not in generated.read_text(), 'wrong memory mode in scalar-text evidence'
+        generated_text = generated.read_text()
+        for collector in ('fwp_heap_collect', 'fwp_heap_sweep', 'fwp_gc_collect', 'fwp_gc_sweep'):
+            assert collector not in generated_text, 'collector code in scalar-text evidence'
         files[generated.name] = {'sha256': digest(generated)}
         programs.append({'program': program, 'medianProcessMs': times,
                          'processSamplesMs': samples[program],
@@ -91,11 +93,9 @@ def host_report(artifacts, host, source):
         binary(directory / 'strings-fwp', machine)['textSectionSha256']
         == binary(directory / 'text-length-fwp', machine)['textSectionSha256'])
     tests = costs / 'text-length'
-    expected = {f'semantics-{memory}{opt}'
-                for memory in ('arc', 'tracing') for opt in ('-O0', '-O2')}
+    expected = {f'semantics-counted{opt}' for opt in ('-O0', '-O2')}
     expected.update(
-        f'allocation-check-{memory}{opt}-exit-{status}'
-        for memory in ('arc', 'tracing')
+        f'allocation-check-counted{opt}-exit-{status}'
         for opt in ('-O0', '-O2')
         for status in (0, 247))
     assert {path.stem for path in tests.glob('*.exe')} == expected

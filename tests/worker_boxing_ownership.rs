@@ -110,9 +110,6 @@ static volatile V first, last, scalar_word;
 static jmp_buf boxing;
 static int recover_boxing(void) { return 1; }
 static int dead_string(V v) {
-#ifndef FWP_ARC_ONLY
-    if (fwp_reuse_verify) return STR(v)->len==0;
-#endif
     return *fwp_rc_slot(v)==0; }
 int main(void) {
 #ifdef _WIN32
@@ -145,9 +142,7 @@ int main(void) {
         if (fwp_vboxBOX((fwp_u3){2,{scalar_word,scalar_word,scalar_word}})!=2 || fwp_cleanups) return 6;
         fwp_rc_free_obj(scalar_word);
     }
-#ifdef FWP_ARC_ONLY
     if (fwp_heap.live!=baseline || fwp_heap.rc_wide_len) return 90;
-#endif
     }
     puts("worker result boxing failure releases typed fields and caller owners without counting scalar bits");
     return 0;

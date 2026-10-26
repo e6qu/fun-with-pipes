@@ -19,14 +19,6 @@ static void typed_drop_string(V value) {
     DROP_STRING(value);
     if(last) {
         count=fwp_rc_slot(value);
-#ifndef FWP_ARC_ONLY
-        if(fwp_reuse_verify) {
-            /* Verification retains the physical leaf and poisons its payload.
-             * Establish that storage still exists before inspecting poison. */
-            if(!count || *count!=1) exit(typed_failure(125,__LINE__));
-            if(STR(value)->len || STR(value)->d[0]) exit(typed_failure(125,__LINE__));
-        } else
-#endif
         {
             /* Small freed slots can still have a metadata address. Require a
              * cleared count and an actual counted-storage free counter change. */
@@ -50,10 +42,6 @@ static V typed_tuple(V first,V second) {
 static void typed_child_body(void *arg,int cancelled);
 static V typed_entry(V *args) {
     (void)args;
-#ifndef FWP_ARC_ONLY
-    fwp_heap_collect();
-    if(!fwp_heap.armed || !fwp_heap.ncollect) exit(typed_failure(129,__LINE__));
-#endif
     if(typed_mode==1) {
         V value=fwp_rc_fresh(fwp_cstr("replacement"));
         fwp_p_put_owned(value,fwp_rc_dup);typed_drop_string(value);
@@ -134,11 +122,7 @@ int main(void) {
             fwp_state_restore(0);
         }
         if(fwp_state_owners || fwp_cleanups || fwp_state_len) return typed_failure(125,__LINE__);
-#ifndef FWP_ARC_ONLY
-        if(fwp_heap.ncollect<=before) return typed_failure(125,__LINE__);
-#else
         if(fwp_heap.ncollect!=before) return typed_failure(129,__LINE__);
-#endif
         if(!fwp_rc_slot(initial) || *fwp_rc_slot(initial)!=1) return typed_failure(125,__LINE__);
         typed_drop_string(initial);
     }
@@ -148,15 +132,11 @@ int main(void) {
     if(!fwp_rc_slot(sentinel) || *fwp_rc_slot(sentinel)!=1) return typed_failure(133,__LINE__);
     fwp_state_restore(0);typed_drop_string(sentinel);
     fwp_tasks_finish();fwp_free_zombie();
-#ifdef FWP_ARC_ONLY
     if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
-#endif
     }
     fwp_trap_recover=NULL;fwp_trap_jb=NULL;fwp_fns=fwp_fn_table;
     fwp_native_tasks_finish();
-#ifdef FWP_ARC_ONLY
     if(fwp_heap.live!=0||fwp_heap.rc_wide_len)return 90;
-#endif
     printf("typed State ownership; collections=%zu owner=%zu cleanup=%zu task=%zu\n",
         fwp_heap.ncollect,sizeof(fwp_state_owner),sizeof(fwp_cleanup),sizeof(fwp_task));
     return 0;

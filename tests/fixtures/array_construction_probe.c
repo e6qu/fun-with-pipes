@@ -107,11 +107,7 @@ static int construct_case(int kind, size_t n, int pattern, int sharing,
     if (construct_alias) construct_list_drops[kind](construct_alias);
     construct_alias = construct_input = 0; array_probe_recording = 0;
     if (construct_live) { fprintf(stderr, "array-construction live allocations: %d\n", construct_live); return 211; }
-#ifdef FWP_ARC_ONLY
     if (fwp_heap.live != before || fwp_heap.rc_wide_len) return 212;
-#else
-    (void)before;
-#endif
     return 0;
 }
 int main(void) {

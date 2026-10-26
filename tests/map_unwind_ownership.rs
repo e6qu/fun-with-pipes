@@ -97,15 +97,9 @@ fn callbacks_and_partial_spines_release_results_and_scratch() {
 static volatile V source_list, input_leaf, input_alias;
 static int recover_map_trap(void) { return 1; }
 static int dead_string(V v) {
-#ifndef FWP_ARC_ONLY
-    if (fwp_reuse_verify) return STR(v)->len == 0;
-#endif
     return *fwp_rc_slot(v) == 0;
 }
 static int dead_data(V v) {
-#ifndef FWP_ARC_ONLY
-    if (fwp_reuse_verify) return OBJ(v)->tag == 0xdead;
-#endif
     return *fwp_rc_slot(v) == 0;
 }
 static int dead_scratch(V v) {
@@ -151,9 +145,7 @@ int main(void) {
         /* The retained input alias remains owned independently of the map. */
         fwp_rc_free_obj(input_alias);
     }
-#ifdef FWP_ARC_ONLY
     if (fwp_heap.live != baseline || fwp_heap.rc_wide_len) return 90;
-#endif
     }
     puts("map results and scratch release across failed callbacks");
     return 0;
@@ -331,9 +323,7 @@ int main(void) {
     LIST_DROP(result);
     if (*fwp_rc_slot(scalar_word) != 1 || STR(scalar_word)->len != 12) return 3;
     fwp_rc_free_obj(scalar_word);
-#ifdef FWP_ARC_ONLY
     if (fwp_heap.live != baseline || fwp_heap.rc_wide_len) return 90;
-#endif
     }
     puts("scalar address bits remain uncounted on map failure");
     return 0;

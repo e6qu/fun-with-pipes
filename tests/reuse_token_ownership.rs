@@ -83,32 +83,15 @@ fn compiler_tokens_transfer_release_and_unwind() {
                 .unwrap()
         };
         let probe = r#"
-#ifndef FWP_ARC_ONLY
-static volatile int force_old;
-#endif
 static volatile V input_cell;
 static V token_entry(V *args) {
-#ifndef FWP_ARC_ONLY
-    if (force_old) {
-        if (OBJ(input_cell)->f[0]) abort(); /* dead fields were cleared */
-        fwp_heap.major_next = 1;
-        fwp_heap_collect();
-        if (!fwp_heap_marked((void *)(uintptr_t)input_cell)) abort();
-    }
-#else
     if (OBJ(input_cell)->f[0] || *fwp_rc_slot(input_cell) != 1) abort();
-#endif
     return GUARD(args[0]);
 }
 static const fwp_fninfo token_fns[] = {{1, token_entry, "token callback", 0}};
 static fwp_clo token_fn = {0, 0};
 static int released(V v) {
-#ifdef FWP_ARC_ONLY
     return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)];
-#else
-    if (fwp_reuse_verify) return OBJ(v)->tag == 0xdead;
-    return *fwp_rc_slot(v) == 0;
-#endif
 }
 int main(void) {
 #ifdef _WIN32
@@ -129,35 +112,16 @@ int main(void) {
     input_cell = fwp_rc_fresh(fwp_data(1, 1, (V[]){2}));
     V result = BUILD(PTR(&token_fn), input_cell);
     if (!result || OBJ(result)->tag != 1 || OBJ(result)->f[0] != 3 || fwp_cleanups) return 3;
-#ifdef FWP_ARC_ONLY
     if (result != input_cell) return 4;
-#else
-    if (!fwp_reuse_verify && result != input_cell) return 4;
-    if (fwp_reuse_verify && !released(input_cell)) return 5;
-#endif
     if (!fwp_rc_release_last(result)) return 6;
     fwp_rc_free_obj(result);
-#ifndef FWP_ARC_ONLY
-    input_cell = fwp_rc_fresh(fwp_data(1, 1, (V[]){2}));
-    force_old = 1;
-    result = BUILD(PTR(&token_fn), input_cell);
-    force_old = 0;
-    if (!result || result == input_cell || OBJ(result)->f[0] != 3 ||
-        !released(input_cell) || fwp_cleanups) return 7;
-    if (!fwp_rc_release_last(result)) return 8;
-    fwp_rc_free_obj(result);
-#endif
     input_cell = fwp_rc_fresh(fwp_data(1, 1, (V[]){(V)(int64_t)-2}));
     double before = fwp_heap.freed;
     result = BUILD(PTR(&token_fn), input_cell); /* Empty: constructor never takes the cell */
     if (result || !released(input_cell) || fwp_cleanups) return 9;
-#ifdef FWP_ARC_ONLY
     if (fwp_heap.freed <= before) return 10;
     if (fwp_heap.live != baseline || fwp_heap.rc_wide_len) return 90;
     owner_ledger_finish();
-#else
-    if (!fwp_reuse_verify && fwp_heap.freed <= before) return 10;
-#endif
     }
     puts("compiler token owners release and transfer exactly once");
     return 0;

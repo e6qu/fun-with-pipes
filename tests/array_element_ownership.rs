@@ -560,9 +560,7 @@ int main(void) {
     if (*fwp_rc_slot(bits) != 1 || STR(bits)->len != 12) return 1;
     DROP_LIST(xs);DROP_LIST(listed);
     fwp_rc_free_obj(selected);fwp_rc_free_obj(changed);fwp_rc_free_obj(bits);
-#ifdef FWP_ARC_ONLY
     if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
-#endif
     }
     puts("scalar array ownership preserved");
     return 0;

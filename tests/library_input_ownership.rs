@@ -215,9 +215,6 @@ int main(void){
  fwp_lib_init(); V bits=fwp_rc_fresh(fwp_str_new("bits",4));
  reset(); double freed=fwp_heap.freed;
  if(length("héllo")!=5||ns!=1||!strings_released_once())_Exit(1);
-#ifndef FWP_ARC_ONLY
- if(!fwp_reuse_verify)
-#endif
  if(fwp_heap.freed<=freed)_Exit(1);
  reset(); if(wrapped("héllo")!=5||ns!=1||!strings_released_once())_Exit(2);
  reset(); const char *held=identity("host");

@@ -11,9 +11,6 @@ static void unzip_drop_input(V value){
         fwp_rc_free_obj(value);value=next;}
 }
 static void unzip_collect_now(void){
-#ifndef FWP_ARC_ONLY
-    if(unzip_collect)fwp_heap_collect();
-#endif
 }
 static void unzip_dup_x(V value){
     if(unzip_case==1&&++unzip_x_calls==2)fwp_trap("unzip left retain failure");

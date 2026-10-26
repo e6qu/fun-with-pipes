@@ -104,9 +104,6 @@ static int converting, fail_field;
 static jmp_buf overflow;
 static int recover_overflow(void) { return 1; }
 static int dead_string(V v) {
-#ifndef FWP_ARC_ONLY
-    if (fwp_reuse_verify) return STR(v)->len==0;
-#endif
     return *fwp_rc_slot(v)==0;
 }
 static heap_rc_wide *wide(V v) { return *fwp_rc_wide_link(fwp_rc_slot(v)); }
@@ -149,9 +146,7 @@ int main(void) {
         fwp_rc_fresh(first);fwp_rc_fresh(last);
         fwp_rc_free_obj(first);fwp_rc_free_obj(last);fwp_rc_free_obj(scalar_word);
     }
-#ifdef FWP_ARC_ONLY
         if (fwp_heap.live!=baseline || fwp_heap.rc_wide_len) return 90;
-#endif
     }
     puts("boxed conversion overflow releases original and remaining caller owners");return 0;
 }

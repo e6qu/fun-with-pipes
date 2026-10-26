@@ -158,8 +158,8 @@ when calling a specialized borrowing worker.
 
 Channel borrowing preserves hidden native contexts as well as payload storage.
 It does not prove the queued graph acyclic: capture/cycle checks remain separate.
-The caller is responsible for its failure cleanup and, in explicit tracing mode,
-keeping borrowed storage visible to tracing. See [the ownership contracts](ownership.md#ownership-boundaries)
+The caller keeps the borrowed owner alive and releases it on failure.
+See [the ownership contracts](ownership.md#ownership-boundaries)
 for examples, restrictions and tests.
 
 ## Numerical specialization

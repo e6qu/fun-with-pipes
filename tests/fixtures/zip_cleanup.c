@@ -15,9 +15,6 @@ static void zip_drop_input(V value){
 static void zip_dup_x(V value){
     if(zip_case==1&&++zip_x_calls==2)fwp_trap("zip first retain failure");
     fwp_rc_dup(value);
-#ifndef FWP_ARC_ONLY
-    if(zip_collect)fwp_heap_collect();
-#endif
 }
 static void zip_dup_y(V value){
     zip_y_calls++;
@@ -29,16 +26,10 @@ static V *zip_probe_items(V xs,size_t *n){
     return fwp_map_items(xs,n);
 }
 static V zip_probe_pair(V x,V y){
-#ifndef FWP_ARC_ONLY
-    if(zip_collect)fwp_heap_collect();
-#endif
     if(zip_case==5&&++zip_pair_calls==2)fwp_trap("zip pair failure");
     return fwp_tuple2(x,y);
 }
 static V zip_probe_node(V *fields){
-#ifndef FWP_ARC_ONLY
-    if(zip_collect)fwp_heap_collect();
-#endif
     if(zip_case==6&&++zip_node_calls==2)fwp_trap("zip list failure");
     return fwp_data(1,2,fields);
 }

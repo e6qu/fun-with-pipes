@@ -85,11 +85,7 @@ static int build_case(int op, int failure, int callback, int cancel, int *steps)
         xs = OBJ(xs)->f[1];
     }
     if (xs) return 219;
-#ifdef FWP_ARC_ONLY
     if (fwp_heap.live != before) return 220;
-#else
-    (void)before;
-#endif
     return 0;
 }
 /* Size arithmetic must fail before allocating or touching caller storage. */

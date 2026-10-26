@@ -50,17 +50,17 @@ main = range 0 128 | each exercise
     assert_eq!(reference.stdout, "True\n".repeat(256).as_bytes());
     let fields = log_fields(&reference.stderr);
     assert_eq!(fields, vec!["level=info msg=\"owned clock\""; 128]);
-    for mode in ["tracing", "arc"] {
+    {
         let cfile = dir.join("clocks.c");
         checked(
             Command::new(compiler)
-                .args(["build", "--gc", mode, "--emit-c"])
+                .args(["build", "--emit-c"])
                 .arg(&source)
                 .arg("-o")
                 .arg(&cfile),
         );
         let mut code = std::fs::read_to_string(cfile).unwrap();
-        if mode == "arc" {
+        {
             let start = code
                 .find("static void *fwp_main_thread(void *arg) {")
                 .unwrap();
@@ -78,18 +78,12 @@ main = range 0 128 | each exercise
         let binary = dir.join("clocks.exe");
         for opt in ["-O1", "-O2"] {
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let stress = if mode == "arc" { "0" } else { "1" };
-            let actual = checked(
-                Command::new(&binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
-            assert_eq!(actual.stdout, reference.stdout, "{mode} {opt}");
-            assert_eq!(log_fields(&actual.stderr), fields, "{mode} {opt}");
+
+            let actual = checked(&mut Command::new(&binary));
+            assert_eq!(actual.stdout, reference.stdout, "counted {opt}");
+            assert_eq!(log_fields(&actual.stderr), fields, "counted {opt}");
         }
-        if mode == "arc" {
+        {
             let counted = "fwp_rc_fresh(fwp_p_time_monotonic())";
             assert!(code.contains(counted));
             let missing_count = code.replace(counted, "fwp_p_time_monotonic()");

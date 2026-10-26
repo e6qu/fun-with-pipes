@@ -9,9 +9,6 @@ static void generation_drop_chunks(V value){
     while(value){if(!fwp_rc_release_last(value))return;V next=OBJ(value)->f[1];generation_drop_list(OBJ(value)->f[0]);fwp_rc_free_obj(value);value=next;}
 }
 static void generation_gc(void){
-#ifndef FWP_ARC_ONLY
-    if(generation_collect)fwp_heap_collect();
-#endif
 }
 static void generation_dup(V value){
     generation_dups++;

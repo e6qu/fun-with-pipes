@@ -72,9 +72,6 @@ main = [task.scope (plain ("input" | string.repeat 2)) | echo,
 static V capture, fn;static jmp_buf recovered;static int bad_handler;
 static int recover(void){return 1;}
 static int dead(V v){
-#ifndef FWP_ARC_ONLY
- if(fwp_reuse_verify)return STR(v)->len==0;
-#endif
  uint8_t *slot=fwp_rc_slot(v);return !slot||!*slot;
 }
 static void worker(void *arg,int failed){
@@ -115,29 +112,19 @@ int main(void){
  V scalar=fwp_rc_fresh(fwp_str_new("scalar",6));fn=fwp_rc_fresh(fwp_pap(WORD,1,&scalar));
  V result=fSCALAR(fn);if(result!=scalar||*fwp_rc_slot(scalar)!=1)return 7;
  fwp_closure_drop(fn);fwp_rc_free_obj(scalar);
-#ifdef FWP_ARC_ONLY
  if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
-#endif
  }
  fwp_fninfo table[sizeof(fwp_fn_table)/sizeof(fwp_fn_table[0])];memcpy(table,fwp_fn_table,sizeof(table));
  table[PLAIN].owned=0;fwp_fns=table;
  capture=fwp_rc_fresh(fwp_str_new("shared",6));fn=fwp_rc_fresh(fwp_pap(PLAIN,1,&capture));
-#ifdef FWP_ARC_ONLY
  fwp_trap_recover=recover;fwp_trap_jb=&recovered;fwp_trap_cleanup=0;
  if(setjmp(recovered)==0){fSCOPE(fn);return 11;}
  fwp_trap_recover=0;fwp_trap_jb=0;
  if(strcmp(fwp_trap_msg,"internal: counted owner escaped ARC contract"))return 12;
  if(*fwp_rc_slot(fn)!=1||*fwp_rc_slot(capture)!=1||fwp_handlers||fwp_cleanups||fwp_cur->scope)return 13;
  fwp_fns=fwp_fn_table;fwp_closure_drop(fn);
-#else
- V result=fSCOPE(fn);
- if(result!=capture||*fwp_rc_slot(fn)||*fwp_rc_slot(capture))return 8;
- fwp_closure_drop(fn);fwp_fns=fwp_fn_table;
-#endif
  fwp_tasks_finish();fwp_native_tasks_finish();
-#ifdef FWP_ARC_ONLY
  if(fwp_heap.live!=0||fwp_heap.rc_wide_len)return 90;
-#endif
  return 0;
 }
 "#.replace("PLAIN", &id("plain")).replace("SCOPE", &id("task.scope : (() -> String) -> String"))

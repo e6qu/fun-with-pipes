@@ -66,9 +66,6 @@ main = [
         );
         let probe = r#"
 static int dead(V v){
-#ifndef FWP_ARC_ONLY
- if(fwp_reuse_verify)return STR(v)->len==0;
-#endif
  uint8_t *slot=fwp_rc_slot(v);return !slot||!*slot;
 }
 int main(void){
@@ -90,14 +87,10 @@ int main(void){
   else if(!dead(capture))return 5;
  }
  fwp_tasks_finish();fwp_free_zombie();
-#ifdef FWP_ARC_ONLY
  if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
-#endif
  }
  fwp_native_tasks_finish();
-#ifdef FWP_ARC_ONLY
  if(fwp_heap.live!=0)return 90;
-#endif
  return 0;
 }
 "#.replace("SLEEPING", &id("sleeping")).replace("PLAIN", &id("plain")).replace("WITHIN", &id("task.within"));

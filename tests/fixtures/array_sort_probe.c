@@ -110,8 +110,6 @@ static int sort_case(int kind, size_t n, int pattern, int sharing,
         int should_reuse = n < 2 || sharing == 0;
 #ifdef FWP_NO_REUSE
         if (n > 1) should_reuse = 0;
-#elif !defined(FWP_ARC_ONLY)
-        if (n > 1 && fwp_reuse_verify) should_reuse = 0;
 #endif
         if (reused != should_reuse) return 205;
         for (size_t i = 0; i < n; i++) {
@@ -132,11 +130,7 @@ static int sort_case(int kind, size_t n, int pattern, int sharing,
     if (sort_alias) sort_drops[kind](sort_alias);
     sort_alias = sort_input = 0; array_probe_recording = 0;
     if (sort_live) { fprintf(stderr, "array-sort live allocations: %d\n", sort_live); return 211; }
-#ifdef FWP_ARC_ONLY
     if (fwp_heap.live != before || fwp_heap.rc_wide_len) return 212;
-#else
-    (void)before;
-#endif
     return 0;
 }
 int main(void) {

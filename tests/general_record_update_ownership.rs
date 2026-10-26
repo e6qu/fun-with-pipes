@@ -104,9 +104,6 @@ static int fail_field;
 static jmp_buf overflow;
 static int recover(void) { return 1; }
 static int dead(V v) {
-#ifndef FWP_ARC_ONLY
-    if (fwp_reuse_verify) return STR(v)->len==0;
-#endif
     return *fwp_rc_slot(v)==0;
 }
 static size_t count(V v) { uint8_t n=*fwp_rc_slot(v); return n==255?(*fwp_rc_wide_link(fwp_rc_slot(v)))->count:n; }
@@ -142,10 +139,6 @@ int main(void) {
         if (!setjmp(overflow)) { fFUNCTION(box);return 6; }
         fwp_trap_recover=0;fwp_trap_jb=0;failing=0;
         if (fwp_cleanups || !observed_copy || !dead(replacement_value)) return 7;
-#ifndef FWP_ARC_ONLY
-        if (fwp_reuse_verify) { if (OBJ(observed_copy)->tag!=0xdead) return 8; }
-        else
-#endif
         if (*fwp_rc_slot(observed_copy)!=0) return 8;
         size_t a=field?255:SIZE_MAX,b=field?SIZE_MAX:255;
         if (!alias) {a--;b--; if (!dead(old)) return 9;}
@@ -156,9 +149,7 @@ int main(void) {
         /* Restore the real fixture owners, discarding artificial overflow counts. */
         fwp_rc_fresh(first);fwp_rc_fresh(last);fwp_rc_free_obj(first);fwp_rc_free_obj(last);fwp_rc_free_obj(word);
     }
-#ifdef FWP_ARC_ONLY
         if (fwp_heap.live!=baseline || fwp_heap.rc_wide_len) return 90;
-#endif
     }
     puts("record updates preserve typed kept fields and release replaced owners");return 0;
 }

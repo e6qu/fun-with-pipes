@@ -104,11 +104,7 @@ static int map_test_case(int op, int failure, int *steps) {
         MAP(map_test_base)->d[1] != map_test_leaf[3] || MAP(map_test_set)->len != 2) return 215;
     for (size_t i = 0; i < 6; i++)
         if (*fwp_rc_slot(map_test_leaf[i]) != counts[i] || !STR(map_test_leaf[i])->len) return 216;
-#ifdef FWP_ARC_ONLY
     if (fwp_heap.live != before) return 217;
-#else
-    (void)before;
-#endif
     return 0;
 }
 int main(void) {

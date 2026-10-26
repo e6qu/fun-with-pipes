@@ -116,9 +116,7 @@ int main(void) {
     if (fwp_cleanups || wide(first)->count!=SIZE_MAX-1 || STR(first)->len!=5) return 7;
     fwp_rc_fresh(first);fwp_rc_free_obj(first);
     if (fwp_heap.rc_wide_len) return 90;
-#ifdef FWP_ARC_ONLY
     if (fwp_heap.live!=baseline || fwp_heap.rc_wide_len) return 90;
-#endif
     }
     puts("wide-count overflow releases exact partial retains and caller owners");return 0;
 }

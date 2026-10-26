@@ -81,9 +81,6 @@ main = [task.yield (),
         let probe=r#"
 static volatile V input, scalar_word;
 static int dead(V v) {
-#ifndef FWP_ARC_ONLY
-    if (fwp_reuse_verify) return STR(v)->len==0;
-#endif
     return *fwp_rc_slot(v)==0; }
 int main(void) {
 #ifdef _WIN32
@@ -105,9 +102,7 @@ int main(void) {
         if (*fwp_rc_slot(scalar_word)!=1 || STR(scalar_word)->len!=11) return 5;
         fwp_rc_free_obj(scalar_word);
     }
-#ifdef FWP_ARC_ONLY
     if (fwp_heap.live!=baseline || fwp_heap.rc_wide_len) return 90;
-#endif
     }
     puts("nested constructor temporaries release children before later field errors");return 0;
 }

@@ -18,56 +18,40 @@ fn canonical_float_text_preserves_values_and_output_order() {
         .unwrap();
     assert!(reference.status.success(), "{reference:?}");
     assert!(reference.stderr.is_empty(), "{reference:?}");
-    for ownership in ["arc", "tracing"] {
+    {
         let cfile = directory.join("text.c");
         let emitted = Command::new(compiler)
             .env_remove("FWP_NO_OPT")
             .env("FWP_LTO", "0")
             .env("FWP_STACK", "1")
-            .env("FWP_FREE", "1")
-            .env("FWP_REUSE", "1")
-            .args([
-                "build", "--gc", ownership, "--memory", "dynamic", "--emit-c", "-O2",
-            ])
+            .args(["build", "--memory", "dynamic", "--emit-c", "-O2"])
             .arg(&input)
             .arg("-o")
             .arg(&cfile)
             .output()
             .unwrap();
-        assert!(emitted.status.success(), "{ownership}: {emitted:?}");
+        assert!(emitted.status.success(), "counted: {emitted:?}");
         let code = std::fs::read_to_string(cfile).unwrap();
         for opt in ["-O1", "-O2"] {
             let executable = directory.join("text.exe");
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-            let stresses: &[&str] = if ownership == "arc" {
-                &["0"]
-            } else {
-                &["0", "1"]
-            };
-            for stress in stresses {
-                let actual = Command::new(&executable)
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress)
-                    .output()
-                    .unwrap();
-                record_probe::save(
-                    "float_formats",
-                    &format!("program-{ownership}{opt}-stress-{stress}"),
-                    &code,
-                    &executable,
-                    &actual,
-                );
-                assert_eq!(
-                    (&actual.stdout, &actual.stderr, actual.status.code()),
-                    (
-                        &reference.stdout,
-                        &reference.stderr,
-                        reference.status.code()
-                    ),
-                    "{ownership} {opt} stress={stress}"
-                );
-            }
+            let actual = Command::new(&executable).output().unwrap();
+            record_probe::save(
+                "float_formats",
+                &format!("program{opt}"),
+                &code,
+                &executable,
+                &actual,
+            );
+            assert_eq!(
+                (&actual.stdout, &actual.stderr, actual.status.code()),
+                (
+                    &reference.stdout,
+                    &reference.stderr,
+                    reference.status.code()
+                ),
+                "{opt}"
+            );
         }
     }
 }
@@ -108,12 +92,7 @@ fn float_text_matches_frozen_precision_and_detects_corruption() {
                 include_str!("fixtures/float_text_baseline.c"), include_str!("fixtures/float_text_probe.c"));
             let executable = directory.join("probe.exe");
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-            let actual = Command::new(&executable)
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
+            let actual = Command::new(&executable).output().unwrap();
             record_probe::save(
                 "float_formats",
                 &format!("precision-{label}{opt}"),
@@ -201,18 +180,13 @@ main = [
             .output()
             .unwrap();
         assert!(built.status.success(), "{built:?}");
-        for stress in ["0", "1"] {
-            let native = Command::new(&binary)
-                .env("FWP_FLOAT_INPUT", "4")
-                .env("FWP_GC_STRESS", stress)
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", stress)
-                .output()
-                .unwrap();
-            assert!(native.status.success(), "{native:?}");
-            assert!(native.stderr.is_empty(), "{native:?}");
-            assert_eq!(native.stdout, expected, "{native:?}");
-        }
+        let native = Command::new(&binary)
+            .env("FWP_FLOAT_INPUT", "4")
+            .output()
+            .unwrap();
+        assert!(native.status.success(), "{native:?}");
+        assert!(native.stderr.is_empty(), "{native:?}");
+        assert_eq!(native.stdout, expected, "{native:?}");
     }
 }
 
@@ -272,12 +246,7 @@ int main(void) {
     ] {
         let binary = directory.join(name);
         fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
-        let output = Command::new(binary)
-            .env("FWP_GC_STRESS", "1")
-            .env("FWP_GC_VERIFY", "1")
-            .env("FWP_REUSE_VERIFY", "1")
-            .output()
-            .unwrap();
+        let output = Command::new(binary).output().unwrap();
         assert_eq!(output.status.code(), Some(expected), "{name}: {output:?}");
     }
 }

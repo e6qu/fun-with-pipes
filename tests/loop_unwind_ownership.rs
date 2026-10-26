@@ -149,9 +149,6 @@ static fwp_task cancelled_loop;
 static volatile V original_text, state_box, capture, scalar_word, observed_text, observed_other;
 static int wanted_tick, current_tick;
 static int dead_string(V v) {
-#ifndef FWP_ARC_ONLY
- if(fwp_reuse_verify)return STR(v)->len==0;
-#endif
  return *fwp_rc_slot(v)==0;
 }
 static void cancel_at_loop_tick(void) {
@@ -213,9 +210,7 @@ int main(void) {
         if (mode==3) { if (!dead_string(capture)) return 7; } else fwp_rc_free_obj(capture);
         fwp_rc_free_obj(original_text);fwp_rc_free_obj(scalar_word);
     }
-#ifdef FWP_ARC_ONLY
     if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
-#endif
     }
     puts("loop states release at cancellation ticks with aliases and scalar bits intact");
     return 0;
@@ -353,9 +348,7 @@ int main(void) {
         if (*fwp_rc_slot(scalar_word)!=1 || STR(scalar_word)->len!=11) return 5;
         fwp_rc_free_obj(original_text);fwp_rc_free_obj(scalar_word);
     }
-#ifdef FWP_ARC_ONLY
     if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
-#endif
     }
     puts("owned Steps release on payload preparation failure without losing aliases");
     return 0;

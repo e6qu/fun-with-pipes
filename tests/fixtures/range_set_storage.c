@@ -16,11 +16,7 @@ int main(void) {
         if (MAP(result)->len != n) return 247;
         for (V i=0; i<n; i++) if (MAP(result)->d[i] != i) return 247;
         fwp_rc_free_obj(result);
-#ifdef FWP_ARC_ONLY
         if (fwp_heap.live != before) return 248;
-#else
-        (void)before;
-#endif
         printf("keys=%llu requests=%zu requested_bytes=%zu\n", (unsigned long long)n, requests, bytes);
     }
     return 0;

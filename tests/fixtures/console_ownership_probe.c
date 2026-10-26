@@ -2,9 +2,6 @@ static jmp_buf console_failure;
 static int console_events, console_fail_at, console_collect, console_heap_live;
 static int console_recover(void) { return 1; }
 static void console_event(void) {
-#if !FWP_ARC_ONLY
-    if (console_collect) fwp_heap_collect();
-#endif
     if (++console_events == console_fail_at) fwp_trap("console construction probe");
 }
 static void *console_heap_resize(void *p, size_t n) {

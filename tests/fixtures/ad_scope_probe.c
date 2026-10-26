@@ -30,12 +30,6 @@ static V scope_inner_entry(V *args) {
 static V scope_outer_entry(V *args) {
     (void)args;
     scope_base=fwp_p_ad_tape(2);scope_record_and_observe(scope_base,0);
-#if FWP_ARC_ONLY
-    if (fwp_heap.ncollect) scope_error=65;
-#else
-    fwp_heap_collect();
-    if (!fwp_heap.armed || !fwp_heap.ncollect) scope_error=65;
-#endif
     if (scope_mode==1) fwp_trap("gradient callback control");
     if (scope_mode==2) fwp_check_cancel();
     if (scope_mode==3) {
@@ -105,18 +99,12 @@ int main(void) {
     if (*fwp_rc_slot(owned)!=1 || ARR(owned)->len!=1 || fwp_f64(ARR(owned)->d[0])!=1) return 76;
     fwp_rc_free_arr(owned);
     uint8_t *remaining=fwp_rc_slot(owned);
-#ifndef FWP_ARC_ONLY
-    if (fwp_reuse_verify) { if (ARR(owned)->len!=0) return 77; }
-    else
-#endif
     if (remaining && *remaining!=0) return 77;
     fwp_cleanup_pop(&owned_cleanup);fwp_tape_scope_release(&owned_scope);
     fwp_rc_free_arr(scope_outputs);fwp_rc_free_arr(scope_seeds);
     scope_outputs=scope_seeds=0;fwp_tape_finish();
     if(fwp_tapes||fwp_ntapes||fwp_tapes_cap||fwp_tape_cached_bytes)return 78;
-#ifdef FWP_ARC_ONLY
     if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
-#endif
     }
     printf("scoped autodiff releases callback tapes; tape=%zu align=%zu scope=%zu cleanup=%zu\n",
            sizeof(fwp_tape),_Alignof(fwp_tape),sizeof(fwp_tape_scope),sizeof(fwp_cleanup));

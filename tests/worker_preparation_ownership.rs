@@ -113,9 +113,6 @@ static void cancel_worker_tick(void) {
     if (cancel_in_worker && fwp_cur) { fwp_cur->cancelled=1;fwp_budget=0; }
 }
 static int dead_string(V v) {
-#ifndef FWP_ARC_ONLY
-    if (fwp_reuse_verify) return STR(v)->len==0;
-#endif
     return *fwp_rc_slot(v)==0; }
 int main(void) {
 #ifdef _WIN32
@@ -167,9 +164,7 @@ int main(void) {
         if (*fwp_rc_slot(scalar_word)!=1 || STR(scalar_word)->len!=11) return 10;
         fwp_rc_free_obj(scalar_word);
     }
-#ifdef FWP_ARC_ONLY
     if (fwp_heap.live!=baseline || fwp_heap.rc_wide_len) return 90;
-#endif
     }
     puts("worker preparation and entry release exact owners while preserving aliases and scalar bits");
     return 0;

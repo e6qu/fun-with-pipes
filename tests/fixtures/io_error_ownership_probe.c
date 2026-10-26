@@ -2,9 +2,6 @@ static int io_collect, io_events, io_fail_at;
 static jmp_buf io_failure;
 static int io_recover(void) { return 1; }
 static void io_event(void) {
-#if !FWP_ARC_ONLY
-    if (io_collect) fwp_heap_collect();
-#endif
     if (++io_events == io_fail_at) fwp_trap("I/O error construction probe");
 }
 static V io_string(const char *text) { io_event(); return fwp_cstr(text); }
@@ -23,11 +20,7 @@ static int io_drop_error(V error) {
 }
 int main(void) {
     fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
-#if FWP_ARC_ONLY
     const int collect_limit=0;
-#else
-    const int collect_limit=1;
-#endif
     for(io_collect=0;io_collect<=collect_limit;io_collect++) {
         size_t live_bytes=fwp_heap.live;
         for(int repeat=0;repeat<128;repeat++) {
@@ -55,8 +48,5 @@ int main(void) {
         }
         io_fail_at=0;fwp_trap_recover=0;fwp_trap_jb=0;fwp_trap_cleanup=0;
     }
-#if !FWP_ARC_ONLY
-    if(!fwp_heap.ncollect)return 238;
-#endif
     return 0;
 }

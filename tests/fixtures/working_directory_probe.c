@@ -2,9 +2,6 @@ static int cwd_mode, cwd_live, cwd_collect;
 static jmp_buf cwd_failure;
 static int cwd_recover(void) { return 1; }
 static void cwd_event(void) {
-#if !FWP_ARC_ONLY
-    if(cwd_collect)fwp_heap_collect();
-#endif
     if(cwd_mode==3)fwp_trap("working directory string failure");
 }
 static V cwd_string(const char *p,size_t n){cwd_event();return fwp_str_lossy(p,n);}
@@ -42,11 +39,7 @@ static int cwd_drop_error(V value){
 }
 int main(void){
     fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
-#if FWP_ARC_ONLY
     const int collect_limit=0;
-#else
-    const int collect_limit=1;
-#endif
     for(cwd_collect=0;cwd_collect<=collect_limit;cwd_collect++){
         size_t live_bytes=fwp_heap.live;
         for(cwd_mode=0;cwd_mode<4;cwd_mode++)for(int repeat=0;repeat<128;repeat++){

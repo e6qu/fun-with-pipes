@@ -106,9 +106,6 @@ static volatile V first, second, last, scalar_word, function_value, argument;
 static jmp_buf preparing;
 static int recover_preparation(void) { return 1; }
 static int dead_cell(V v) {
-#ifndef FWP_ARC_ONLY
-    if (fwp_reuse_verify) return OBJ(v)->tag==0xdead;
-#endif
     size_t ci;
     heap_chunk *chunk=fwp_heap_chunk_of((uintptr_t)v,&ci);
     if (!chunk || chunk->type==HEAP_FREE) return 1;
@@ -157,9 +154,7 @@ int main(void) {
         if (*fwp_rc_slot(last)!=1 || *fwp_rc_slot(scalar_word)!=1) return 8;
         fwp_rc_free_obj(first);fwp_rc_free_obj(second);fwp_rc_free_obj(last);fwp_rc_free_obj(scalar_word);
     }
-#ifdef FWP_ARC_ONLY
     if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
-#endif
     }
     puts("partial argument and capture preparation preserves aliases and releases pending owners");
     return 0;

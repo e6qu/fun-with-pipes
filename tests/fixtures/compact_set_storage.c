@@ -27,9 +27,7 @@ int main(void) {
         }
         intptr_t charged = fwp_heap.live - before;
         fwp_rc_free_obj(result);
-#ifdef FWP_ARC_ONLY
         if (fwp_heap.live != before) return 213;
-#endif
         printf("keys=%llu requested=%zu charged=%lld\n", (unsigned long long)n,
             requested, (long long)charged);
     }

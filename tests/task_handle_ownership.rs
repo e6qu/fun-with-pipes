@@ -80,15 +80,9 @@ main = [ task.spawn (value ("input" | string.repeat 2)) | tap (task.await | echo
         let probe = r#"
 static jmp_buf failed;static int recover(void){return 1;}
 static int dead(V v){
-#ifndef FWP_ARC_ONLY
- if(fwp_reuse_verify)return STR(v)->len==0;
-#endif
  uint8_t *slot=fwp_rc_slot(v);return !slot||!*slot;
 }
 static int dead_option(V v){
-#ifndef FWP_ARC_ONLY
- if(fwp_reuse_verify)return OBJ(v)->tag==0xdead;
-#endif
  uint8_t *slot=fwp_rc_slot(v);return !slot||!*slot;
 }
 static void text_drop(V v){if(fwp_rc_release_last(v))fwp_rc_free_obj(v);}
@@ -137,7 +131,6 @@ int main(void){
  // A counted task cannot lose its ownership contract in ARC.
  capture=fwp_rc_fresh(fwp_str_new("shared",6));fn=fwp_rc_fresh(fwp_pap(VALUE,1,&capture));
  t=(fwp_task *)(uintptr_t)fSPAWN(fn);
-#ifdef FWP_ARC_ONLY
  fwp_trap_recover=recover;fwp_trap_jb=&failed;fwp_trap_cleanup=0;
  if(setjmp(failed)==0){fwp_rc_share(PTR(t));return 30;}
  fwp_trap_recover=0;fwp_trap_jb=0;
@@ -145,23 +138,9 @@ int main(void){
  V shared=fAWAIT(PTR(t));
  if(OBJ(shared)->f[0]!=capture||*fwp_rc_slot(capture)!=2||STR(capture)->len!=6)return 32;
  option_drop(shared);fwp_task_drop(PTR(t));if(!dead(capture))return 33;
-#else
- fwp_rc_share(PTR(t));
- V shared=fAWAIT(PTR(t));
- if(*fwp_rc_slot(PTR(t))||*fwp_rc_slot(capture)||OBJ(shared)->f[0]!=capture)return 24;
- fwp_task_drop(PTR(t));fwp_heap_collect();FWP_KEEP_ALIVE(shared);FWP_KEEP_ALIVE(PTR(t));
- if(STR(OBJ(shared)->f[0])->len!=6)return 25;option_drop(shared);
-#endif
- // A finished old task still roots a young result through minor collection.
+ // A finished task owns its result until the final handle is released.
  fn=fwp_rc_fresh(fwp_pap(FRESH,0,NULL));t=(fwp_task *)(uintptr_t)fSPAWN(fn);
-#ifndef FWP_ARC_ONLY
- fwp_heap_collect();fwp_heap_collect();FWP_KEEP_ALIVE(PTR(t));
-#endif
  fwp_tasks_finish();
-#ifndef FWP_ARC_ONLY
- fwp_heap.major_next=0;size_t minors=fwp_heap.nminor;fwp_heap_collect();FWP_KEEP_ALIVE(PTR(t));
- if(fwp_heap.nminor!=minors+1)return 23;
-#endif
  if(!t->result||STR(t->result)->len!=10||*fwp_rc_slot(t->result)!=1)return 23;
  fwp_task_drop(PTR(t));
  // An overflowing await retain releases the partial Option, not the cache.
@@ -189,14 +168,10 @@ int main(void){
  if(!dead_option(await_option))return 21;
  fwp_closure_drop(fn);if(!dead(capture))return 22;
  fwp_rc_free_obj(duration);fwp_free_zombie();
-#ifdef FWP_ARC_ONLY
  if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
-#endif
  }
  fwp_tasks_finish();fwp_native_tasks_finish();
-#ifdef FWP_ARC_ONLY
  if(fwp_heap.live!=0)return 90;
-#endif
  return 0;
 }
 "#.replace("FRESH", &id("fresh")).replace("SLEEPING", &id("sleeping")).replace("VALUE", &id("value")).replace("SPAWN", &id("task.spawn")).replace("AWAIT", &id("task.await")).replace("WITHIN", &id("task.within"));
@@ -262,7 +237,7 @@ int main(void){
 #endif
  }
  fwp_tasks_finish();fwp_native_tasks_finish();
-#if defined(FWP_ARC_ONLY) && !defined(FWP_RESOURCE_NO_FREE)
+#ifndef FWP_RESOURCE_NO_FREE
  if(fwp_heap.live!=0||fwp_heap.rc_wide_len)return 90;
 #endif
  return 0;

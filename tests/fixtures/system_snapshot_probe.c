@@ -2,9 +2,6 @@ static int snapshot_events,snapshot_fail_at,snapshot_collect,snapshot_handles;
 static jmp_buf snapshot_failure;
 static int snapshot_recover(void){return 1;}
 static void snapshot_event(void){
-#if !FWP_ARC_ONLY
- if(snapshot_collect)fwp_heap_collect();
-#endif
  if(++snapshot_events==snapshot_fail_at)fwp_trap("snapshot construction probe");
 }
 static V snapshot_lossy(const char *s,size_t n){snapshot_event();return fwp_str_lossy(s,n);}

@@ -258,14 +258,10 @@ int main(void) {
     fwp_channel_drop(ch);
     fwp_rc_free_obj(bits);
     fwp_rc_free_obj(duration);
-#ifdef FWP_ARC_ONLY
     if (fwp_heap.live!=baseline || fwp_heap.rc_wide_len) return 90;
-#endif
     }
     fwp_native_tasks_finish();
-#ifdef FWP_ARC_ONLY
     if (fwp_heap.live!=0 || fwp_heap.rc_wide_len) return 90;
-#endif
     puts("typed task aliases preserved");
     return 0;
 }

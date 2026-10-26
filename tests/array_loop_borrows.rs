@@ -17,7 +17,7 @@ fn invariant_and_changing_array_loops_match_interpretation() {
             .args(["run", "--interp"])
             .arg(&source),
     );
-    for gc in ["tracing", "arc"] {
+    {
         for packing in ["0", "1"] {
             let cfile = dir.join("arrays.c");
             checked(
@@ -25,7 +25,7 @@ fn invariant_and_changing_array_loops_match_interpretation() {
                     .env_remove("FWP_NO_OPT")
                     .env("FWP_PACKED_ARRAYS", packing)
                     .env("FWP_ARRAY_FUSION", "1")
-                    .args(["build", "--gc", gc, "--emit-c"])
+                    .args(["build", "--emit-c"])
                     .arg(&source)
                     .arg("-o")
                     .arg(&cfile),
@@ -46,20 +46,14 @@ fn invariant_and_changing_array_loops_match_interpretation() {
             let binary = dir.join("arrays.exe");
             for optimization in ["-O1", "-O2"] {
                 fwp::cgen::compile_c(&code, &binary, optimization).unwrap();
-                let output = checked(
-                    Command::new(&binary)
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", if gc == "arc" { "0" } else { "1" })
-                        .env("FWP_GC_VERIFY", if gc == "arc" { "0" } else { "1" })
-                        .env("FWP_REUSE_VERIFY", if gc == "arc" { "0" } else { "1" }),
-                );
+                let output = checked(&mut Command::new(&binary));
                 assert_eq!(
                     output.stdout, expected.stdout,
-                    "{gc} packing={packing} {optimization}"
+                    "counted packing={packing} {optimization}"
                 );
                 assert_eq!(
                     output.stderr, expected.stderr,
-                    "{gc} packing={packing} {optimization}"
+                    "counted packing={packing} {optimization}"
                 );
             }
         }

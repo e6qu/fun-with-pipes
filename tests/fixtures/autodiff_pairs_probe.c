@@ -99,9 +99,6 @@ int main(void) {
     }
     fwp_cleanup_pop(&cleanup);
     if (fwp_cleanups || fwp_owned_tapes || scope.head!=-1) return 218;
-#if !FWP_ARC_ONLY
-    if (!fwp_heap.armed || !fwp_heap.ncollect) return 219;
-#endif
     puts("paired metadata preserves aligned values across moving growth and traps");
     return 0;
 }

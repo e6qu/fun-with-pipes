@@ -6,10 +6,6 @@ void setup(uintptr_t *descriptor) {
     fwp_lib_init();
     size_t live_bytes=fwp_heap.live;
     for(int i=0;i<32;i++) if(!probe(i)) exit(247);
-    if(fwp_heap.enabled) exit(248);
-#ifndef FWP_ARC_ONLY
-    if(!fwp_reuse_verify)
-#endif
     if(fwp_heap.live > live_bytes) exit(248);
     V address=fwp_rc_fresh(fwp_cstr("127.0.0.1:0"));
     V handle=fwp_p_udp_bind(address,NULL);

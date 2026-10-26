@@ -103,11 +103,7 @@ static int copy_case(int op, int failure, int callback, int cancel, int *steps) 
         xs = OBJ(xs)->f[1];
     }
     if (xs) return 219;
-#ifdef FWP_ARC_ONLY
     if (fwp_heap.live != before) return 220;
-#else
-    (void)before;
-#endif
     return 0;
 }
 int main(void) {
@@ -149,11 +145,7 @@ int main(void) {
         copy_list->drop(copy_tail); copy_tail = 0;
         copy_list->drop(copy_input); copy_input = 0;
         for (int i = 0; i < 3; i++) { copy_list->elem->drop(copy_leaves[i]); copy_leaves[i] = 0; }
-#ifdef FWP_ARC_ONLY
         if (fwp_heap.live != baseline || fwp_heap.rc_wide_len) return 221;
-#else
-        (void)baseline;
-#endif
         if (round == 7) printf("7 copied-list operations: %d allocation/retain failures and %d callback exits cleaned; aliases preserved\n", failures, callbacks);
     }
     return 0;

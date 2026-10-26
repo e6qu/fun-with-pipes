@@ -72,9 +72,6 @@ static volatile V first, second, scalar_word, state_box;
 static jmp_buf failed_preparation;
 static int recover_preparation(void) { return 1; }
 static int dead(V v) {
-#ifndef FWP_ARC_ONLY
-    if (fwp_reuse_verify) return STR(v)->len == 0;
-#endif
     return *fwp_rc_slot(v) == 0;
 }
 int main(void) {
@@ -108,9 +105,7 @@ int main(void) {
         if (leaf_alias) { STRING_DROP(first);STRING_DROP(second); }
         fwp_rc_free_obj(scalar_word);
     }
-#ifdef FWP_ARC_ONLY
     if (fwp_heap.live != baseline || fwp_heap.rc_wide_len) return 90;
-#endif
     }
     puts("flattened preparation releases partial fields and preserves aliases and scalar bits");return 0;
 }

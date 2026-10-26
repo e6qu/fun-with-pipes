@@ -124,9 +124,6 @@ fn inlined_projection_releases_discarded_nested_children() {
  .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
         let probe = r#"
 static int dead(V v) {
-#ifndef FWP_ARC_ONLY
- if(fwp_reuse_verify)return STR(v)->len==0;
-#endif
  return *fwp_rc_slot(v)==0;
 }
 int main(void) {
@@ -140,9 +137,7 @@ int main(void) {
   if(alias){if(*fwp_rc_slot(input)!=1 || STR(input)->len!=5)return 4;fwp_rc_free_obj(input);}
   else if(!dead(input))return 5;
  }
-#ifdef FWP_ARC_ONLY
  if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
-#endif
  }
  return 0;
 }
@@ -313,9 +308,6 @@ main = "input" | choose (read-all () | string.length | eq 0) | echo
  .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
         let probe=r#"
 static int dead(V v) {
-#ifndef FWP_ARC_ONLY
- if(fwp_reuse_verify)return STR(v)->len==0;
-#endif
  return *fwp_rc_slot(v)==0;
 }
 int main(void) {
@@ -325,9 +317,7 @@ int main(void) {
  for(int alias=0;alias<2;alias++){V input=fwp_rc_fresh(fwp_str_new("input",5));if(alias)fwp_rc_dup(input);observed=0;
  if(fFUNCTION(input)!=17)return 1;if(!observed||!dead(observed))return 3;
  if(alias){if(*fwp_rc_slot(input)!=1||STR(input)->len!=5)return 4;fwp_rc_free_obj(input);}else if(!dead(input))return 5;}
-#ifdef FWP_ARC_ONLY
  if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
-#endif
  }
  return 0;
 }

@@ -69,11 +69,7 @@ int main(void) {
     operation_parameters=operation_tuple=operation_outputs=operation_seeds=0;
     fwp_cleanup_pop(&scope_owner);fwp_tape_scope_release(&scope);
     fwp_trap_cleanup=0;fwp_trap_recover=0;fwp_trap_jb=0;
-#ifdef FWP_ARC_ONLY
     if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
-#else
-    (void)baseline;
-#endif
     }
     puts("input nodes need no operation buffers; managed weight transfer is atomic");
     return 0;

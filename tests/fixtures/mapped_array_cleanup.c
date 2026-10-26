@@ -3,9 +3,6 @@ static jmp_buf mapped_test_jump;
 static int mapped_test_recover(void) { return 1; }
 static V mapped_test_apply(V value) {
     mapped_test_calls++;
-#ifndef FWP_ARC_ONLY
-    if (mapped_test_collect) fwp_heap_collect();
-#endif
     if (mapped_test_fail == 1 && mapped_test_calls == 2) fwp_trap("mapped array callback failure");
     return fwp_from_f64(fwp_f64(value) * 2.0);
 }

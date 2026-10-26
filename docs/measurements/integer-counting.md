@@ -127,14 +127,18 @@ the numbers on this page describe the earlier grouped-counting change.
 
 ## Correctness and earlier experiments
 
-`tests/integer_output.rs` compares unoptimized interpretation and native execution
-at O0/O2 in ARC and tracing modes. Inputs include signed/unsigned extremes and
+At the measured revision, `tests/integer_output.rs` compared unoptimized
+interpretation and native execution at O0/O2 in ARC and tracing modes.
+Inputs include signed/unsigned extremes and
 values immediately before, at and after every representable power of ten, with
 both signs for signed cases. Binary I64 payloads are independently checked against
 Rust decimal-format lengths. Other cases preserve Unicode lengths, shared
 strings, effects, trap order and output-protocol separation. Allocation controls
 must detect deliberately inserted storage requests. The artifact audit verifies
 all 24 native executables across both hosts, their C, disassembly and controls.
+The current tests retain those inputs and allocation controls in one counted
+runtime: six binaries per host. That migration still awaits integrated
+collector-deletion validation; [the handoff](../development-state.md) tracks it.
 
 A shared-loop candidate (`995d3ecf`, run `39525618134`) was not selected: CPU
 medians were 1–4% higher on EPYC 9V74 and 2–3% higher on N2 than unchanged fwp.
@@ -146,6 +150,7 @@ focused test runs exposed the new test's binary-versus-text assertion mistake
 and consequent missing artifacts. All failed targets were audited; the repaired
 protocol assertion and complete binary inspection pass in the selected run above.
 
-Reproduce artifact checks with `scripts/summarize-integer-counting.py`, supplying
+Reproduce historical artifact checks with `scripts/summarize-integer-counting.py`
+from the recorded revision, supplying
 the full run/source, artifact directory, output path and explicit comparison mode:
 `legacy` for the first two experiments, `matched` for the selected eight-way run.

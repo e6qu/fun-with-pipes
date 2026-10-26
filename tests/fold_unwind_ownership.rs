@@ -90,9 +90,6 @@ fn right_fold_releases_accumulator_and_scratch_on_failure() {
 static volatile V input_seed, source_list, input_capture;
 static int recover_fold(void) { return 1; }
 static int dead_string(V v) {
-#ifndef FWP_ARC_ONLY
- if(fwp_reuse_verify)return STR(v)->len==0;
-#endif
  return *fwp_rc_slot(v)==0;
 }
 static int dead_scratch(V v) {
@@ -136,9 +133,7 @@ int main(void) {
         if (mode == 1) { if (!dead_string(input_capture)) return 6; }
         else fwp_rc_free_obj(input_capture);
     }
-#ifdef FWP_ARC_ONLY
     if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
-#endif
     }
     puts("fold accumulator and scratch release on failure");
     return 0;
@@ -386,9 +381,7 @@ int main(void) {
     fwp_handlers=h.prev;
     if (fwp_cleanups || *fwp_rc_slot(scalar_word)!=1 || STR(scalar_word)->len!=11 || memcmp(STR(scalar_word)->d,"scalar bits",11)) return 5;
     fwp_rc_free_obj(scalar_word);
-#ifdef FWP_ARC_ONLY
     if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
-#endif
     }
     puts("borrowed duplicates and scalar fold words retain exact ownership");
     return 0;

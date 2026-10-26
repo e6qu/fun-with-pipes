@@ -41,9 +41,7 @@ fn quad_reverse_preserves_low_bits_exponent_range_and_reclaims_owned_values() {
             .replace("    /* Ownership observation point: before runtime teardown. */\n", r#"    /* Ownership observation point: before runtime teardown. */
     if(fwp_owned_tapes)exit(193);
     for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(194);
-#if FWP_ARC_ONLY
     if(fwp_heap.live > precision_live_bytes)exit(195);
-#endif
     if(!precision_calls)exit(196);
     fprintf(stderr,"precision-profile {\"managedRequests\":%llu,\"managedRequestedBytes\":%llu,\"finalChargedDelta\":%lld,\"collections\":%zu}\n",
         (unsigned long long)precision_calls,(unsigned long long)precision_bytes,

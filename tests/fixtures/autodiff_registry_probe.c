@@ -21,11 +21,6 @@ static int registry_recover(void) { return 1; }
 static jmp_buf registry_trap;
 int main(void) {
     fwp_heap_start();
-#ifdef FWP_ARC_ONLY
-    if (fwp_heap.armed) return 200;
-#else
-    if (!fwp_heap.enabled || !fwp_heap.stress || !fwp_heap.verify) return 201;
-#endif
     fwp_tape_scope scope = {-1};
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_tape_scope_release, &scope);

@@ -100,9 +100,6 @@ static volatile V first, last, scalar_word;
 static jmp_buf allocating;
 static int recover_allocation(void) { return 1; }
 static int dead_string(V v) {
-#ifndef FWP_ARC_ONLY
-    if (fwp_reuse_verify) return STR(v)->len==0;
-#endif
     return *fwp_rc_slot(v)==0; }
 int main(void) {
 #ifdef _WIN32
@@ -134,9 +131,7 @@ int main(void) {
         if (*fwp_rc_slot(scalar_word)!=1 || STR(scalar_word)->len!=11) return 6;
         fwp_rc_free_obj(scalar_word);
     }
-#ifdef FWP_ARC_ONLY
     if (fwp_heap.live!=baseline || fwp_heap.rc_wide_len) return 90;
-#endif
     }
     puts("constructor allocation failure releases typed fields without losing aliases or scalar bits");
     return 0;

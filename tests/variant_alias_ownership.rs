@@ -159,12 +159,7 @@ fn returned_variant_aliases_transfer_fields_once() {
         );
         let probe = r#"
 static int dead(V v) {
-#ifdef FWP_ARC_ONLY
  return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)];
-#else
- if(fwp_reuse_verify)return STR(v)->len==0;
- return *fwp_rc_slot(v)==0;
-#endif
 }
 int main(void) {
  fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
@@ -179,10 +174,8 @@ int main(void) {
   else if(!dead(first)||!dead(last)||!dead(other)) return 3;
   fwp_rc_free_obj(result);
  }
-#ifdef FWP_ARC_ONLY
  if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
  owner_ledger_finish();
-#endif
  }
  return 0;
 }
@@ -535,12 +528,7 @@ fn matching_one_variant_payload_moves_its_owner_in_all_result_forms() {
         );
         let probe = r#"
 static int dead(V v) {
-#ifdef FWP_ARC_ONLY
  return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)];
-#else
- if(fwp_reuse_verify)return STR(v)->len==0;
- return *fwp_rc_slot(v)==0;
-#endif
 }
 int main(void) {
  fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
@@ -560,10 +548,8 @@ int main(void) {
   fwp_rc_free_obj(result);
   if(!dead(result)||fwp_cleanups)return 5;
  }
-#ifdef FWP_ARC_ONLY
  if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
  owner_ledger_finish();
-#endif
  }
  return 0;
 }

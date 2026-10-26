@@ -106,15 +106,9 @@ fn cached_values_keep_exact_owners_and_release_typed_children() {
         let probe = r#"
 static jmp_buf overflow; static int recover(void){return 1;}
 static int dead(V v){
-#ifndef FWP_ARC_ONLY
- if(fwp_reuse_verify)return STR(v)->len==0;
-#endif
  return *fwp_rc_slot(v)==0;
 }
 static int dead_record(V v){
-#ifndef FWP_ARC_ONLY
- if(fwp_reuse_verify)return OBJ(v)->tag==0xdead;
-#endif
  return *fwp_rc_slot(v)==0;
 }
 int main(void){
@@ -150,21 +144,14 @@ int main(void){
  if(outer==inner||*fwp_rc_slot(outer)!=2||*fwp_rc_slot(inner)!=1)return 12;
  fwp_rc_free_obj(inner);fwp_rc_drop(outer);fwp_caf_finish();
  if(!dead(inner)||!dead(outer))return 13;
-#ifdef FWP_ARC_ONLY
  if(fwp_heap.live!=round_baseline||fwp_heap.rc_wide_len)return 90;
-#endif
  }
  fwp_rc_free_obj(scalar_bits);
-#ifdef FWP_ARC_ONLY
  if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
-#endif
  return 0;
 }
 "#;
         let executable_probe = r#"static int dead(V v){
-#ifndef FWP_ARC_ONLY
- if(fwp_reuse_verify)return STR(v)->len==0;
-#endif
  return *fwp_rc_slot(v)==0;
 }
 int main(int argc,char **argv){int result=original_main(argc,argv);if(result)return result;
@@ -397,9 +384,6 @@ main = [cached | echo, cached | echo] | ignore
         .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
         assert!(runtime.contains("static volatile V observed"));
         let probe = r#"static int dead(V v){
-#ifndef FWP_ARC_ONLY
- if(fwp_reuse_verify)return STR(v)->len==0;
-#endif
  return *fwp_rc_slot(v)==0;
 }
 int main(int argc,char **argv){
@@ -407,10 +391,8 @@ int main(int argc,char **argv){
  if(result)return result;
  if(evaluations!=1)return 4;
  if(!observed || !dead(observed))return 3;
-#ifdef FWP_ARC_ONLY
- /* budget is remaining allowance; zero live charge restores its initial value. */
+ /* Releasing cached values must return the live byte balance to zero. */
  if(fwp_heap.live!=0||fwp_heap.rc_wide_len)return 90;
-#endif
  return 0;
 }
 "#;
@@ -557,9 +539,6 @@ main = [task.yield (), "input" | choose (read-all () | string.length | eq 0) | e
         );
         let probe = r#"
 static int dead(V v){
-#ifndef FWP_ARC_ONLY
- if(fwp_reuse_verify)return STR(v)->len==0;
-#endif
  return *fwp_rc_slot(v)==0;
 }
 static jmp_buf trapped; static int recover(void){return 1;}
@@ -577,9 +556,7 @@ int main(void){
   else if(!dead(input))return 4;
  }
  fwp_caf_finish();
-#ifdef FWP_ARC_ONLY
  if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
-#endif
  }
  return 0;
 }
