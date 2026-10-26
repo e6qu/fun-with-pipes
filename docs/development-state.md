@@ -30,6 +30,11 @@ Closure, foreign-callback, string-map and runtime-call targets are also migrated
 Closure retention is an actual omitted-free control; callback-input errors keep
 their live-allocation ledger. Runtime-call probes inspect live count metadata,
 not poisoned freed payloads, and retain all unwind/alias/cancellation controls.
+Cached-map, mapped-array and task-handle tests now preserve their owner, alias,
+construction and scheduler controls without duplicate modes. Cached-value tests
+retain initialization, reentrancy, failure order and missing-owner checks. The
+transpose probe keeps every partial-column failure, alias-count and scratch-leak
+control; it also requires final input-owner release. Integrated execution is pending.
 
 ## Implemented here; integration still pending
 
@@ -67,7 +72,7 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 1. **Finish test mode removal.** The list/State/closure fixtures in
    `list_applicative_ownership` are migrated; integrated execution is pending.
    `unwind_cleanup` and typed-State reports are also migrated. Next review the
-   remaining 14 unchanged candidate files and stale candidates listed below.
+   remaining 8 unchanged candidate files and stale candidates listed below.
    Remove variable `--gc` arguments, duplicate
    ARC/tracing loops, obsolete environment settings and CLI-selector tests.
    Keep every distinct semantic input, optimization/layout choice and ownership
@@ -112,7 +117,7 @@ Nine owner-test candidates were reviewed and applied: constructor type/unwind,
 general/ordinary record update, loop preparation, retain unwind, variant conversion,
 worker boxing and worker preparation. Twelve more owner candidates and thirteen program candidates were reviewed,
 refined and applied. The typed-State and unwind candidates were also reviewed,
-refined and applied; 14 candidate files still match their source hashes. The
+refined and applied; 8 candidate files still match their source hashes. The
 `arc_tasks`, `linalg_ownership`, `retained_thunk_ownership`,
 `within_thunk_ownership`, `loop_ownership` and `list_applicative_ownership`
 candidates are now also stale. Remaining candidates are **unreviewed**. They may
@@ -147,6 +152,7 @@ Scripts below live in `/private/tmp` unless a repository path is given.
 | `python3 fwp-check-report-runtime.py` | O1/O2 actual allocator: 100,032 allocated; 32 released/100,000 live, then 100,032 released/zero live; peak 100,032 and extent 196,608. |
 | `python3 fwp-check-memory-startup.py` | Migrated harness compiles at Rust O1 with warnings denied; three helper tests pass. Does not run generated memory servers. |
 | `python3 fwp-check-closure-failure.py` | Actual allocator, cleanup queue and trap code, Clang ARM64 O1/O2: normal release passes; capture trap 101, spill OOM 102 and omitted context reset 94. A recovery callback would fail with 93. Does not establish generated-program or other-target support. |
+| `python3 fwp-check-transpose-owners.py` | Current runtime, Clang ARM64 O1/O2: normal aliases and all fourteen partial-construction failures restore storage; omitted alias retain exits 201 and omitted scratch release exits 202. Six runs pass; generated-program and other-target checks remain pending. |
 | `python3 fwp-check-ad-identity.py` | Current runtime, Clang ARM64 O1/O2: root startup succeeds, cross-task and retired-task use trap 101; repeated IDs or removed checks make controls succeed. No generated Rust-program or other-target claim. |
 | `python3 fwp-check-ad-workspace.py` | Current runtime, Clang ARM64 O1/O2, explicit cache off/on, direct and callback-scoped calls: all eight runs pass, with matching six gradient hashes and cleanup after errors/cancellation. |
 | `python3 fwp-check-server-schema.py` | Actual report reader accepts complete synthetic stdio/HTTP evidence and rejects missing/duplicate rows, an ineffective omitted-free control and excess RSS. This does not execute servers or inspect their binaries. |

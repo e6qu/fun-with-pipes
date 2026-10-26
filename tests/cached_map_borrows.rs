@@ -10,7 +10,7 @@ fn run(command: &mut Command, input: &[u8]) -> Output {
         .spawn()
         .unwrap();
     if let Err(error) = child.stdin.take().unwrap().write_all(input) {
-        // Rejected runtime settings exit before reading stdin. Keep the exit
+        // Injected failures can exit before reading stdin. Keep the exit
         // status and diagnostic so each caller still checks the actual failure.
         assert_eq!(error.kind(), ErrorKind::BrokenPipe, "{error}");
     }
@@ -49,54 +49,57 @@ main = read-all () | string.length | range 0 | map hit | sum | echo
             result.stdout
         })
         .collect();
-    for mode in ["arc", "tracing"] {
-        let generated = directory.join(format!("{mode}.c"));
-        let build = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", mode, "--emit-c"])
-            .arg(&source)
-            .arg("-o")
-            .arg(&generated)
-            .output()
-            .unwrap();
-        assert!(build.status.success(), "{build:?}");
-        let code = std::fs::read_to_string(&generated).unwrap();
-        let start = "static __attribute__((noinline)) V fwp_caf_init";
-        assert!(
-            code.contains(start),
-            "numeric lookup must use a proved cached borrow"
-        );
-        let id = code.split(start).nth(1).unwrap().split('(').next().unwrap();
-        let init = format!("{start}{id}(void) {{ V next = f{id}();");
-        assert_eq!(code.matches(&init).count(), 1);
-        let init_body = code
-            .split(&init)
-            .nth(1)
-            .unwrap()
-            .split('\n')
-            .next()
-            .unwrap();
-        let drop = init_body
-            .split("(previous);")
-            .next()
-            .unwrap()
-            .split_whitespace()
-            .next_back()
-            .unwrap();
-        let mut instrumented = code.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic V borrow_seen, borrow_held; static unsigned borrow_initializations, borrow_retains; static int borrow_reenter, borrow_entered;");
-        instrumented = instrumented.replace(&init, &format!(
+
+    let generated = directory.join("counted.c");
+    let build = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .env_remove("FWP_NO_OPT")
+        .args(["build", "--emit-c"])
+        .arg(&source)
+        .arg("-o")
+        .arg(&generated)
+        .output()
+        .unwrap();
+    assert!(build.status.success(), "{build:?}");
+    let code = std::fs::read_to_string(&generated).unwrap();
+    let start = "static __attribute__((noinline)) V fwp_caf_init";
+    assert!(
+        code.contains(start),
+        "numeric lookup must use a proved cached borrow"
+    );
+    let id = code.split(start).nth(1).unwrap().split('(').next().unwrap();
+    let init = format!("{start}{id}(void) {{ V next = f{id}();");
+    assert_eq!(code.matches(&init).count(), 1);
+    let init_body = code
+        .split(&init)
+        .nth(1)
+        .unwrap()
+        .split('\n')
+        .next()
+        .unwrap();
+    let drop = init_body
+        .split("(previous);")
+        .next()
+        .unwrap()
+        .split_whitespace()
+        .next_back()
+        .unwrap();
+    let mut instrumented = code.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic V borrow_seen, borrow_held; static unsigned borrow_initializations, borrow_retains; static int borrow_reenter, borrow_entered;");
+    instrumented = instrumented.replace(&init, &format!(
             "static V caf{id}(void);\n{start}{id}(void) {{ borrow_initializations++; if (borrow_reenter && !borrow_entered) {{ borrow_entered=1; borrow_held=caf{id}(); }} V next = f{id}();"));
-        instrumented = instrumented.replace(
-            &format!("fwp_caf_value{id} = next;"),
-            &format!("borrow_seen=next; borrow_retains=0; fwp_caf_value{id} = next;"),
-        );
-        instrumented = instrumented.replace("static inline void fwp_rc_dup(V v) {", "static inline void fwp_rc_dup(V v) { if (borrow_seen && v==borrow_seen) borrow_retains++;");
-        instrumented = instrumented.replace(
-            "int main(int argc, char **argv)",
-            "int original_main(int argc, char **argv)",
-        );
-        let probe = format!(
-            r#"
+    instrumented = instrumented.replace(
+        &format!("fwp_caf_value{id} = next;"),
+        &format!("borrow_seen=next; borrow_retains=0; fwp_caf_value{id} = next;"),
+    );
+    instrumented = instrumented.replace(
+        "static inline void fwp_rc_dup(V v) {",
+        "static inline void fwp_rc_dup(V v) { if (borrow_seen && v==borrow_seen) borrow_retains++;",
+    );
+    instrumented = instrumented.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let probe = format!(
+        r#"
 int main(int argc, char **argv) {{
     int inputs=atoi(argv[1]); borrow_reenter=atoi(argv[2]);
     int result=original_main(1,argv); if(result)return result;
@@ -114,63 +117,43 @@ int main(int argc, char **argv) {{
     return 0;
 }}
 "#
-        );
-        for optimization in ["-O1", "-O2"] {
-            let executable = directory
-                .join(format!("{mode}{optimization}"))
-                .with_extension(std::env::consts::EXE_EXTENSION);
-            fwp::cgen::compile_c(
-                &format!("{instrumented}\n{probe}"),
-                &executable,
-                optimization,
-            )
-            .unwrap();
-            for reenter in ["0", "1"] {
-                for poison in ["0", "1"] {
-                    for (input, expected) in inputs.iter().zip(&reference) {
-                        let actual = run(
-                            Command::new(&executable)
-                                .args([&input.len().to_string(), reenter])
-                                .env_remove("FWP_GC")
-                                .env("FWP_GC_STRESS", if mode == "arc" { "0" } else { "1" })
-                                .env("FWP_GC_VERIFY", if mode == "arc" { "0" } else { "1" })
-                                .env("FWP_REUSE_VERIFY", poison),
-                            input,
-                        );
-                        if mode == "arc" && poison == "1" {
-                            assert_eq!(actual.status.code(), Some(101));
-                            assert!(String::from_utf8_lossy(&actual.stderr).contains(
-                                "--gc arc cannot retain released storage for reuse verification"
-                            ));
-                            continue;
-                        }
-                        assert!(
-                            actual.status.success(),
-                            "{mode} {optimization} reenter={reenter} poison={poison}: {actual:?}"
-                        );
-                        assert_eq!(&actual.stdout, expected);
-                        assert!(actual.stderr.is_empty());
-                    }
-                }
-            }
-            for (broken, expected) in [
-                (instrumented.replace("    fwp_caf_finish();", ""), 202),
-                (instrumented.replace(&format!("{drop}(previous);"), ""), 203),
-            ] {
-                fwp::cgen::compile_c(&format!("{broken}\n{probe}"), &executable, optimization)
-                    .unwrap();
+    );
+    for optimization in ["-O1", "-O2"] {
+        let executable = directory
+            .join(format!("counted{optimization}"))
+            .with_extension(std::env::consts::EXE_EXTENSION);
+        fwp::cgen::compile_c(
+            &format!("{instrumented}\n{probe}"),
+            &executable,
+            optimization,
+        )
+        .unwrap();
+        for reenter in ["0", "1"] {
+            for (input, expected) in inputs.iter().zip(&reference) {
                 let actual = run(
-                    Command::new(&executable)
-                        .args(["16", "1"])
-                        .env("FWP_REUSE_VERIFY", "0"),
-                    inputs[1],
+                    Command::new(&executable).args([&input.len().to_string(), reenter]),
+                    input,
                 );
-                assert_eq!(
-                    actual.status.code(),
-                    Some(expected),
-                    "missing cleanup must fail: {actual:?}"
+
+                assert!(
+                    actual.status.success(),
+                    "counted {optimization} reenter={reenter}: {actual:?}"
                 );
+                assert_eq!(&actual.stdout, expected);
+                assert!(actual.stderr.is_empty());
             }
+        }
+        for (broken, expected) in [
+            (instrumented.replace("    fwp_caf_finish();", ""), 202),
+            (instrumented.replace(&format!("{drop}(previous);"), ""), 203),
+        ] {
+            fwp::cgen::compile_c(&format!("{broken}\n{probe}"), &executable, optimization).unwrap();
+            let actual = run(Command::new(&executable).args(["16", "1"]), inputs[1]);
+            assert_eq!(
+                actual.status.code(),
+                Some(expected),
+                "missing cleanup must fail: {actual:?}"
+            );
         }
     }
 }
@@ -202,49 +185,50 @@ main = [task.yield (), "input" | choose (read-all () | string.length | eq 0) | e
         b"",
     );
     assert!(!reference.status.success());
-    for mode in ["arc", "tracing"] {
-        let generated = directory.join(format!("{mode}.c"));
-        let build = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", mode, "--emit-c"])
-            .arg(&source)
-            .arg("-o")
-            .arg(&generated)
-            .output()
-            .unwrap();
-        assert!(build.status.success(), "{build:?}");
-        let code = std::fs::read_to_string(&generated).unwrap();
-        let start = code.find("/* holder :").unwrap();
-        let end = start + code[start..].find("\n}\n").unwrap() + 3;
-        let body = &code[start..end];
-        let id = body
-            .lines()
-            .find(|line| line.starts_with("static ") && line.contains('('))
-            .unwrap()
-            .split('(')
-            .next()
-            .unwrap()
-            .split_whitespace()
-            .next_back()
-            .unwrap();
-        let call = body
-            .find(" = fwp_caf_borrow")
-            .expect("holder must exercise borrowed initialization");
-        let point = body[..call]
-            .rfind("fwp_cleanup_push(")
-            .expect("initializer must protect the caller");
-        let stop = point + body[point..].find(';').unwrap() + 1;
-        let push = &body[point..stop];
-        let node = push.split('&').nth(1).unwrap().split(',').next().unwrap();
-        let control_body =
-            body.replacen(push, "", 1)
-                .replacen(&format!("fwp_cleanup_pop(&{node});"), "", 1);
-        let runtime = code.replace(
-            "int main(int argc, char **argv)",
-            "int original_main(int argc, char **argv)",
-        );
-        let control = runtime.replacen(body, &control_body, 1);
-        let probe = r#"
+
+    let mode = "arc";
+    let generated = directory.join("counted.c");
+    let build = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .env_remove("FWP_NO_OPT")
+        .args(["build", "--emit-c"])
+        .arg(&source)
+        .arg("-o")
+        .arg(&generated)
+        .output()
+        .unwrap();
+    assert!(build.status.success(), "{build:?}");
+    let code = std::fs::read_to_string(&generated).unwrap();
+    let start = code.find("/* holder :").unwrap();
+    let end = start + code[start..].find("\n}\n").unwrap() + 3;
+    let body = &code[start..end];
+    let id = body
+        .lines()
+        .find(|line| line.starts_with("static ") && line.contains('('))
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap()
+        .split_whitespace()
+        .next_back()
+        .unwrap();
+    let call = body
+        .find(" = fwp_caf_borrow")
+        .expect("holder must exercise borrowed initialization");
+    let point = body[..call]
+        .rfind("fwp_cleanup_push(")
+        .expect("initializer must protect the caller");
+    let stop = point + body[point..].find(';').unwrap() + 1;
+    let push = &body[point..stop];
+    let node = push.split('&').nth(1).unwrap().split(',').next().unwrap();
+    let control_body =
+        body.replacen(push, "", 1)
+            .replacen(&format!("fwp_cleanup_pop(&{node});"), "", 1);
+    let runtime = code.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let control = runtime.replacen(body, &control_body, 1);
+    let probe = r#"
 static jmp_buf trapped; static int recover(void){return 1;}
 int main(void){
  fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
@@ -262,43 +246,31 @@ int main(void){
  fwp_caf_finish();return 0;
 }
 "#
-        .replace("FUNCTION", id);
-        let executable = directory
-            .join(mode)
-            .with_extension(std::env::consts::EXE_EXTENSION);
-        for optimization in ["-O1", "-O2"] {
-            fwp::cgen::compile_c(&format!("{control}\n{probe}"), &executable, optimization)
-                .unwrap();
-            let broken = Command::new(&executable)
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
-            assert_eq!(
-                broken.status.code(),
-                Some(4),
-                "missing caller cleanup must fail: {broken:?}"
-            );
-            fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &executable, optimization)
-                .unwrap();
-            for poison in if mode == "arc" {
-                &["0"][..]
-            } else {
-                &["0", "1"][..]
-            } {
-                let result = Command::new(&executable)
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .env("FWP_GC_STRESS", if mode == "arc" { "0" } else { "1" })
-                    .env("FWP_GC_VERIFY", if mode == "arc" { "0" } else { "1" })
-                    .output()
-                    .unwrap();
-                assert!(result.status.success(), "{mode} {optimization}: {result:?}");
-            }
-            fwp::cgen::compile_c(&code, &executable, optimization).unwrap();
-            let native = run(Command::new(&executable).env("FWP_REUSE_VERIFY", "0"), b"");
-            assert_eq!(native.status.code(), reference.status.code());
-            assert_eq!(native.stdout, reference.stdout);
-            assert_eq!(native.stderr, reference.stderr);
-        }
+    .replace("FUNCTION", id);
+    let executable = directory
+        .join(mode)
+        .with_extension(std::env::consts::EXE_EXTENSION);
+    for optimization in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&format!("{control}\n{probe}"), &executable, optimization).unwrap();
+        let broken = Command::new(&executable).output().unwrap();
+        assert_eq!(
+            broken.status.code(),
+            Some(4),
+            "missing caller cleanup must fail: {broken:?}"
+        );
+        fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &executable, optimization).unwrap();
+
+        let result = Command::new(&executable).output().unwrap();
+        assert!(
+            result.status.success(),
+            "counted {optimization}: {result:?}"
+        );
+
+        fwp::cgen::compile_c(&code, &executable, optimization).unwrap();
+        let native = run(Command::new(&executable), b"");
+        assert_eq!(native.status.code(), reference.status.code());
+        assert_eq!(native.stdout, reference.stdout);
+        assert_eq!(native.stderr, reference.stderr);
     }
 }
 
@@ -347,50 +319,45 @@ main = 1 | choose (read-all () | string.length | eq 0) | echo
                 result.stdout
             })
             .collect();
-        for mode in ["arc", "tracing"] {
-            let generated = directory.join("program.c");
-            let build = Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .env_remove("FWP_NO_OPT")
-                .args(["build", "--gc", mode, "--emit-c"])
-                .arg(&source)
-                .arg("-o")
-                .arg(&generated)
-                .output()
-                .unwrap();
-            assert!(build.status.success(), "{build:?}");
-            let code = std::fs::read_to_string(&generated).unwrap();
-            let worker = code
-                .split("/* lookup :")
-                .nth(1)
-                .unwrap()
-                .split("\n}\n")
-                .next()
-                .unwrap();
-            assert!(worker.contains("fwp_caf_borrow"), "{worker}");
-            for allocation in ["fwp_record(", "fwp_some(", "fwp_vbox", "fwp_vunbox"] {
+
+        let generated = directory.join("program.c");
+        let build = Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&generated)
+            .output()
+            .unwrap();
+        assert!(build.status.success(), "{build:?}");
+        let code = std::fs::read_to_string(&generated).unwrap();
+        let worker = code
+            .split("/* lookup :")
+            .nth(1)
+            .unwrap()
+            .split("\n}\n")
+            .next()
+            .unwrap();
+        assert!(worker.contains("fwp_caf_borrow"), "{worker}");
+        for allocation in ["fwp_record(", "fwp_some(", "fwp_vbox", "fwp_vunbox"] {
+            assert!(
+                !worker.contains(allocation),
+                "borrow must preserve direct {ty} results: {worker}"
+            );
+        }
+        for optimization in ["-O1", "-O2"] {
+            let executable = directory
+                .join("program")
+                .with_extension(std::env::consts::EXE_EXTENSION);
+            fwp::cgen::compile_c(&code, &executable, optimization).unwrap();
+            for (input, expected) in inputs.iter().zip(&reference) {
+                let actual = run(Command::new(&executable), input);
                 assert!(
-                    !worker.contains(allocation),
-                    "borrow must preserve direct {ty} results: {worker}"
+                    actual.status.success(),
+                    "counted {optimization}: {actual:?}"
                 );
-            }
-            for optimization in ["-O1", "-O2"] {
-                let executable = directory
-                    .join("program")
-                    .with_extension(std::env::consts::EXE_EXTENSION);
-                fwp::cgen::compile_c(&code, &executable, optimization).unwrap();
-                for (input, expected) in inputs.iter().zip(&reference) {
-                    let actual = run(
-                        Command::new(&executable)
-                            .env_remove("FWP_GC")
-                            .env("FWP_GC_STRESS", if mode == "arc" { "0" } else { "1" })
-                            .env("FWP_GC_VERIFY", if mode == "arc" { "0" } else { "1" })
-                            .env("FWP_REUSE_VERIFY", if mode == "arc" { "0" } else { "1" }),
-                        input,
-                    );
-                    assert!(actual.status.success(), "{mode} {optimization}: {actual:?}");
-                    assert_eq!(&actual.stdout, expected);
-                    assert!(actual.stderr.is_empty());
-                }
+                assert_eq!(&actual.stdout, expected);
+                assert!(actual.stderr.is_empty());
             }
         }
     }
