@@ -710,7 +710,7 @@ fn native_http_matches_interpreter_with_pooled_and_tls_calls() {
             assert_eq!(String::from_utf8_lossy(&reference.stdout), expected);
             for (opt, binary) in &binaries {
                 eprintln!("Comparing HTTP counted {opt} client / {backend} server / TLS {tls}");
-                let out = run(Command::new(binary));
+                let out = run(&mut Command::new(binary));
                 assert!(
                     out.status.success(),
                     "counted/{opt}/{backend:?}/{tls}: {out:?}"
@@ -1535,7 +1535,6 @@ fn fixed_function_server_timing_comparison() {
             .arg(calls.to_string())
             .env("FWP_BASE", base)
             .env("SSL_CERT_FILE", &ca)
-            .envs(env)
             .output()
             .unwrap();
         assert!(output.status.success(), "{output:?}");

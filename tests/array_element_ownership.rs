@@ -790,7 +790,7 @@ fn generated_array_captures_preserve_argument_and_callback_order() {
             let binary = dir.0.join(format!("order-counted-{stack}{opt}.exe"));
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
 
-            input(Command::new(&binary));
+            input(&mut Command::new(&binary));
         }
     }
 }

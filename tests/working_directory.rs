@@ -107,7 +107,7 @@ fn a_removed_directory_is_an_explicit_error() {
             .arg(&binary),
     );
     assert_eq!(
-        removed_directory(Command::new(&binary), &dir.join("gone")),
+        removed_directory(&mut Command::new(&binary), &dir.join("gone")),
         reference
     );
 }

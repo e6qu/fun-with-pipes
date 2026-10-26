@@ -76,23 +76,13 @@ pub fn set_static_memory(m: Option<StaticMemory>) {
 
 /// Options of native executables beyond the C source: linked statically
 /// (`fwp build --static`), and the phase of a profile-guided build.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct NativeOptions {
     pub static_link: bool,
     pub pgo: Option<(Pgo, std::path::PathBuf)>,
     /// Another system to build for (`fwp build --target`), as a GNU
     /// triple such as `aarch64-linux-gnu`.
     pub cross: Option<String>,
-}
-
-impl Default for NativeOptions {
-    fn default() -> Self {
-        Self {
-            static_link: false,
-            pgo: None,
-            cross: None,
-        }
-    }
 }
 
 /// The 64-bit little-endian architectures the runtime is written for.
@@ -5749,9 +5739,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         let value = abi
                             .scalar_result(self.g.prog, id)
                             .map_or_else(|| call.clone(), |n| n.to_word(&call));
-                        let result = self.bind_call(key, value);
-
-                        result
+                        self.bind_call(key, value)
                     }
                 },
             };
@@ -5789,13 +5777,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     )))
                 && params.iter().all(|ty| *ty == result_type);
             let call = format!("f{}({})", id, xs.join(", "));
-            let result = if cannot_unwind {
+            if cannot_unwind {
                 self.bind(call)
             } else {
                 self.bind_call(key, call)
-            };
-
-            result
+            }
         }
     }
 
@@ -5822,12 +5808,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
                             let fs: Vec<String> =
                                 (off..off + m).map(|k| format!("st[{}]", k)).collect();
                             let original = self.begin_call(e as *const Expr);
-                            let mut values = Vec::new();
-                            {
+                            let values = {
                                 let state_fields =
                                     record_fields(&self.g.prog.shapes, &self.locals[0]).unwrap();
                                 let inner = &state_fields[*i as usize].1;
-                                values = record_fields(&self.g.prog.shapes, inner)
+                                let values = record_fields(&self.g.prog.shapes, inner)
                                     .unwrap()
                                     .iter()
                                     .enumerate()
@@ -5837,7 +5822,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
                                 let node = self.fresh();
                                 let retain = self.g.duplicate_values(&values, &ctx, &node);
                                 self.line(&retain);
-                            }
+                                values
+                            };
                             let pending = self.begin_values(&values);
                             let r = format!("fwp_record({}, {})", m, Self::array(&fs));
                             let result = self.bind(self.g.fresh(r));
@@ -5901,7 +5887,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.end_resource_region(frame);
                 result
             }
-            Expr::Dup(l, b) | Expr::Drop(l, b) => {
+            Expr::Dup(l, b) => {
                 self.count(e, *l);
                 self.expr(b)
             }

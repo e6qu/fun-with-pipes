@@ -134,7 +134,7 @@ jobs:
       - name: Compile every target and audit Rust warnings
         run: |
           set -o pipefail
-          cargo clippy --locked --all-targets -- -D warnings 2>&1 | tee compiler-lifetime-evidence/clippy.log
+          cargo clippy --locked --keep-going --all-targets -- -D warnings 2>&1 | tee compiler-lifetime-evidence/clippy.log
       - name: Entry cleanup, macro tasks and panic controls
         if: ${{ !cancelled() }}
         run: |
@@ -348,7 +348,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Record toolchains and audit contracts
         shell: bash
         run: |
@@ -444,7 +444,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Record toolchains and audit contracts
         shell: bash
         run: |
@@ -527,7 +527,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Compare interpreter output, precision and deliberate corruption
         run: cargo test --no-fail-fast --test float_formats --test float_linking --test float_literals --test float_math
       - uses: actions/upload-artifact@v7
@@ -772,14 +772,14 @@ jobs:
         shell: bash
         run: |
           mkdir -p native-commands-evidence
-          cargo clippy --all-targets -- -D warnings 2>&1 | tee native-commands-evidence/compiler.log
+          cargo clippy --keep-going --all-targets -- -D warnings 2>&1 | tee native-commands-evidence/compiler.log
       - name: Windows compiler checks for native command ownership
         id: file_compiler_windows
         if: ${{ !cancelled() && runner.os == 'Windows' }}
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force native-commands-evidence | Out-Null
-          cargo clippy --all-targets -- -D warnings 2>&1 | Tee-Object native-commands-evidence/compiler.log
+          cargo clippy --keep-going --all-targets -- -D warnings 2>&1 | Tee-Object native-commands-evidence/compiler.log
           exit $LASTEXITCODE
       - name: Publish compiler failures while independent tests continue
         if: ${{ !cancelled() && (steps.file_compiler.outcome == 'failure' || steps.file_compiler_windows.outcome == 'failure') }}
@@ -1371,7 +1371,7 @@ jobs:
           brew install openssl@3
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Cancellation storage, matched costs and broken-lifetime controls
         if: ${{ !cancelled() }}
         run: cargo test --test arc_tasks -- --nocapture
@@ -1435,7 +1435,7 @@ jobs:
         with:
           components: rustfmt, clippy
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Context ownership, register roots and matched layout measurements
         if: ${{ !cancelled() }}
         run: cargo test --test task_context_storage -- --nocapture
@@ -1788,7 +1788,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Ownership inventory and Unix native test coverage
         if: ${{ !cancelled() && runner.os != 'Windows' }}
         run: |
@@ -1922,7 +1922,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Target timeout, child termination and continued coverage
         if: ${{ !cancelled() }}
         run: python3 scripts/test-native-test-runner.py
@@ -2011,7 +2011,7 @@ jobs:
           components: rustfmt, clippy
       - run: sudo apt-get update && sudo apt-get install -y llvm gcc-aarch64-linux-gnu
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - if: ${{ !cancelled() }}
         run: cargo test --no-fail-fast --test tail_recursion --test arc_execution --test record_conversion_ownership --test variant_alias_ownership --test wide_workers --test task_ownership --test task_handle_ownership --test reuse_token_ownership --test preempt --test infix --test repl --test debugger --test scalar_math --test float_math --test cached_map_borrows --test caf_ownership --test inline_caf_ownership --test stdlib_doc -- --nocapture
       - if: ${{ !cancelled() }}
@@ -2375,7 +2375,7 @@ jobs:
           printf '%s\n' 'OS=${{ runner.os }}' 'architecture=${{ runner.arch }}' 'runner=${{ matrix.runner }}' 'counted ownership; -O1/-O2; -std=gnu11 -ffp-contract=off' 'explicit alias, interruption and missing-release controls' '8 generated builders; every allocation/retain failure and callback exit; independent aliases; missing-cleanup controls' 'Timing compares fused and ordinary fwp only; no C/Rust parity claim' > collection-build-evidence/settings.txt
       - run: python3 scripts/test-collection-evidence.py
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Collection semantics, failures and cancellation
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test static_constants --test protocol --test repl --test decoder_partial --test cached_map_borrows --test caf_ownership --test inline_caf_ownership --test collection_construction --test map_set_ownership --test mapped_array_construction --test numeric_array_fusion --test range_set -- --nocapture
@@ -2632,7 +2632,7 @@ jobs:
           PY
       - run: cargo fmt --all -- --check
         if: matrix.part == 'checks'
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && matrix.part == 'checks' }}
       - name: HTTP examples, startup failures and connection cleanup
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'server-checks' && matrix.part == 'checks' }}
@@ -2750,7 +2750,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: ./scripts/setup-windows.ps1
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Function lifetime, stack and library regressions
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test closure_ownership --test closure_cleanup --test stack_ownership --test stack_match_ownership --test arc_library
@@ -2953,7 +2953,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
         if: matrix.part == 'all' || matrix.part == 'server' || matrix.part == 'ownership'
       - name: HTTP ownership and shared connection controls
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-clients' && matrix.part == 'ownership' }}
@@ -3532,7 +3532,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - run: cargo test --no-fail-fast --test console_ownership --test arc_execution --test arc_corpus --test text_ownership --test cli_ownership
       - name: Primitive ownership inventory
         run: python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output console-evidence/inventory.json
@@ -3911,7 +3911,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - run: cargo test --no-fail-fast --test autodiff_precision --test autodiff_nested --test autodiff_checkpoint --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace --test autodiff_capacity_bounds --test autodiff_library --test float_formats --test stdlib_doc
       - name: Record profile environment
         run: |
@@ -3955,7 +3955,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - run: cargo test --no-fail-fast --test linalg_ownership --test array_loop_borrows --test numeric_array_fusion --test loop_unwind_ownership --test arc_execution --test blocked_matrix --test transpose_ownership
       - name: Primitive ownership inventory
         run: python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output solver-evidence/inventory.json
@@ -4027,7 +4027,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - run: cargo test --no-fail-fast --test arc_library --test arc_execution --test arc_tasks --test channel_queue_ownership --test channel_cycle_ownership --test transpose_ownership --test native_allocator --test library_input_ownership --test library_result_ownership --test library_resources --test library_unload --test autodiff_library --test ffi --test blocked_matrix --test wide_workers --test loop_unwind_ownership
       - name: Primitive ownership inventory
         run: python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output library-evidence/inventory.json
@@ -4060,7 +4060,7 @@ jobs:
         with:
           components: rustfmt, clippy
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - run: cargo test --lib arc_scope::tests
       - name: Check remote ARC binaries and behavior
         env:
@@ -4422,7 +4422,7 @@ jobs:
         id: compiler
         run: |
           cargo fmt --all
-          cargo clippy --all-targets -- -D warnings
+          cargo clippy --keep-going --all-targets -- -D warnings
           cargo test --lib
       - name: Checked ARC eligibility, reclamation and native binaries
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
@@ -4515,7 +4515,7 @@ jobs:
         id: compiler
         run: |
           cargo fmt --all -- --check
-          cargo clippy --all-targets -- -D warnings
+          cargo clippy --keep-going --all-targets -- -D warnings
       - name: Focused bundle regressions
         if: inputs.suite == 'bundle'
         run: cargo test --no-fail-fast --lib --test protocol --test wide_workers --test decoder_partial --test arc_extensions --test arc_execution --test iteration_consumers --test iterator_fusion --test http2_body_roots --test list_generation_ownership --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace
@@ -4582,7 +4582,7 @@ jobs:
         id: compiler
         run: |
           cargo fmt --all -- --check
-          cargo clippy --all-targets -- -D warnings
+          cargo clippy --keep-going --all-targets -- -D warnings
           cargo test --lib
       - name: Child signal status in both engines
         run: cargo test --test cli child_signal_status_matches_the_shell_in_both_engines -- --exact

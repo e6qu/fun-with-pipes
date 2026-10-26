@@ -1,30 +1,51 @@
 # Current work
 
-**Next:** inspect every result from compiler/lint/cleanup run `40317790424`, fix
-all failures together, then run the complete final-commit production matrix.
-Do not merge until all required checks pass. No full build or suite runs locally.
+**Next:** inspect every final-head production,
+documentation and ownership-analysis result after this repair is pushed. Fix all failures together. Merge
+only after the required jobs pass on the final commit. Full builds stay on CI.
 
 ## Delivery and evidence
 
 - Worktree: `/private/tmp/fwp-delete-tracing`; branch `delete-tracing-collector`.
-- Draft [PR #217](https://github.com/e6qu/fun-with-pipes/pull/217) contains the
-  grouped G5 collector deletion, replacement tests, report migrations and docs.
-- Preliminary validation source: `572fa013cdb66653ab67ffc71eb29ce9751eaf70`.
-  The following documentation-only checkpoint also renames one misleading test
-  and workflow label; it does not change compiler/runtime behavior.
-- [Compiler/lifetime run](https://github.com/e6qu/fun-with-pipes/actions/runs/40317790424):
-  Linux AMD64 and Intel macOS queued at the last observation. It compiles/lints all
-  targets and exercises interpreter, entry, cleanup, service and tooling regressions.
-- [Documentation run](https://github.com/e6qu/fun-with-pipes/actions/runs/40317778375)
-  is queued. Production run `40317778399` was skipped because this is a draft;
-  that skip establishes no support. Mark ready only after preliminary repairs.
+- [PR #217](https://github.com/e6qu/fun-with-pipes/pull/217) is open and ready.
+- Audited failing source: `70e6d1b664a3714847b4ac571d3e43fb6a99abd5`.
+- [Production run 40318846863](https://github.com/e6qu/fun-with-pipes/actions/runs/40318846863)
+  finished: eight native jobs failed; C/Rust benchmarks passed. All eight failed
+  job logs were read. Test compilation stopped each native suite before execution;
+  missing list-copy/array inspection files are consequences, not waived gates.
+  The Python SDK and standalone compiler checks passed where they ran.
+- [Documentation 40318846877](https://github.com/e6qu/fun-with-pipes/actions/runs/40318846877)
+  and Windows dependency cache `40318846850` passed.
+- [Ownership analysis 40319010233](https://github.com/e6qu/fun-with-pipes/actions/runs/40319010233):
+  Linux AMD64 passed. Intel macOS failed the 32-worker relative timing budget
+  (20.69/11.18 ms, 1.85×; maximum 1.5×). Absolute times and fact counts passed.
+  The performance repair below remains unverified; do not raise the limits.
 - Verified base: #216 squash `f5621cb46828273f7ce8edf92be4062ccec0f17c`, identical
   tree to tested `1dd5fcaed7792b5505283b1037a9c22d788a3be5`. Nine production jobs
   `40274667944`, docs `40273010537` and analysis jobs `40273030485` passed.
 
-**GC removal is implemented but unverified.** The deletion source has not yet
-been built as a complete compiler. Local C probes do not establish generated
-program, GCC, Windows or actual WASI support. No new timing gain is claimed.
+### Batched repair
+
+- Fixed eight lost mutable `Command` borrows across CSV, array callbacks, cached
+  map reads, descriptor limits, text tools, HTTP and working-directory tests.
+  Replaced the removed field-move `run` helper with direct execution, retaining
+  the excess-retain failure control. Removed the stale HTTP timing environment.
+- Removed unreachable/redundant compiler code left by unconditional ownership;
+  derived the existing native-options default without changing its values.
+- Removed the obsolete tracing fence from numerical negative controls and the
+  historical map-layout fixture. Updated phase probes to current allocator
+  parameters and the real return boundary; all six phase labels remain intact.
+- Replaced ordered capture lookup with a hash table. Capture identities, facts,
+  ordered origin sets and all timing/size limits remain unchanged. See
+  [the failed measurement and proposed repair](measurements/ownership-analysis.md).
+- Cargo now keeps compiling independent targets after an error in all-target
+  CI checks and the native test runner. This exposes more failures in one run;
+  build failure still fails the job and prevents incomplete suite execution.
+
+**GC removal remains unverified.** CI built the compiler and exercised selected
+programs, but test-compilation failures prevented the native suites. Focused
+Clang controls do not establish generated-program coverage, GCC, Windows or WASI
+support. No timing gain or successful collector-removal acceptance is claimed.
 
 ## What changed
 
@@ -41,11 +62,11 @@ program, GCC, Windows or actual WASI support. No new timing gain is claimed.
 
 ## Remaining acceptance
 
-1. Complete compiler/lint validation and audit **all** failed jobs and test targets
+1. Audit compiler/lint results and **all** failed jobs and test targets
    before pushing repairs. Keep completed head results while other gates run.
-2. Mark the PR ready and run nine production jobs plus documentation on the same
+2. Require nine production jobs plus documentation on the same
    commit. Preserve Linux/macOS/Windows ARM64/AMD64 native coverage and both macOS
-   corpus shards. Run ownership-analysis budgets on that final source too.
+   corpus shards. Require ownership-analysis budgets on that final source too.
 3. Check actual emitted binaries for absent collector symbols and inspect retained
    missing-owner/free/reuse controls. Verify the Python SDK, WASI execution,
    packaging and benchmark readers through their integrated jobs. Do not treat
@@ -128,3 +149,17 @@ Scripts below live in `/private/tmp` unless a repository path is given.
 | `python3 scripts/test-map-replay.py` | Four tests pass: complete counted evidence accepted; wrong source/architecture, changed files, missing variants and external paths rejected without binary execution. |
 | `python3 scripts/test-native-test-runner.py` | Nineteen tests pass after the corpus/shard rename, including explicit coverage, failed target propagation, timeout handling and independent-target progress. Uses synthetic subprocesses, not the language suite. |
 | `python3 scripts/check-roadmap.py` | Pass after this rewrite: 163 link sets, 106 immutable preparation pairs/tags, eight roadmap rows and commit messages. |
+
+## CI repair checks
+
+All commands below used `python3 scripts/local-guard.py`; none built the Rust
+compiler or ran a full suite locally.
+
+| Command | Result |
+|---|---|
+| `python3 scripts/test-native-test-runner.py` | 19 pass, including independent-target progress, failures/timeouts and the new keep-going build argument. |
+| `python3 /private/tmp/fwp-217-check-controls.py` | Six Clang ARM64 O1/O2 runs from CI's saved 3-point/7-update generated C: normal cleanup returns zero live bytes; retained allocation exits 225; removing observation allows completion and final cleanup. GCC and full numerical matrix remain CI gates. |
+| `python3 /private/tmp/fwp-217-check-map-phases.py` | Four Clang ARM64 O1/O2 runs: joined and historical separate storage preserve sorted keys/values, emit all six phase records and restore live bytes. Uses a direct runtime probe appended to CI-generated C, not a whole-application timing comparison. |
+| `cargo fmt --all -- --check` | Entire Rust tree passes formatting; no compiler build. |
+| `python3 scripts/check-roadmap.py` | 163 doc link sets, 106 preparation anchors and eight roadmap rows pass. |
+| `python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /private/tmp/fwp-217-repair-inventory.json` | Frozen primitive contracts pass. |

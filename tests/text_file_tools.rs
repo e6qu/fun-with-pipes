@@ -59,7 +59,7 @@ fn word_frequencies_preserve_separators_normalization_and_tie_order() {
         let binary = dir.join("wordfreq.exe");
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
 
-        check_cases(Command::new(binary));
+        check_cases(&mut Command::new(binary));
     }
 }
 

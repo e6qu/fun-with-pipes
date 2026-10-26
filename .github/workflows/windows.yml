@@ -64,7 +64,7 @@ jobs:
         shell: pwsh
         run: |
           rustc -vV | Tee-Object windows-host.txt
-          cargo check --all-targets 2>&1 | Tee-Object windows-probe.log
+          cargo check --keep-going --all-targets 2>&1 | Tee-Object windows-probe.log
           exit $LASTEXITCODE
       - name: Native socket and library execution
         shell: pwsh

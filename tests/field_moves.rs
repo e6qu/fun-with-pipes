@@ -142,5 +142,8 @@ fn moved_fields_preserve_aliases_siblings_and_failure_cleanup() {
     }
     assert_ne!(control, code);
     fwp::cgen::compile_c(&control, &binary, "-O2").unwrap();
-    assert_eq!(run("0").output().unwrap().status.code(), Some(198));
+    assert_eq!(
+        Command::new(&binary).output().unwrap().status.code(),
+        Some(198)
+    );
 }

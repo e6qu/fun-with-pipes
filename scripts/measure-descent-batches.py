@@ -76,7 +76,7 @@ def observe_solves(code, mode):
         finish = '    /* Ownership observation point: before runtime teardown. */'
         assert changed.count(start) == changed.count(finish) == 1
         changed = changed.replace(start, '    V retained_until_end = fwp_rc_fresh(fwp_str_new("held", 4));\n' + start)
-        changed = changed.replace(finish, '    FWP_KEEP_ALIVE(retained_until_end); fwp_rc_free_obj(retained_until_end);\n' + finish)
+        changed = changed.replace(finish, '    fwp_rc_free_obj(retained_until_end);\n' + finish)
     return changed
 
 

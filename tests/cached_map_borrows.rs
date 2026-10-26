@@ -267,7 +267,7 @@ int main(void){
         );
 
         fwp::cgen::compile_c(&code, &executable, optimization).unwrap();
-        let native = run(Command::new(&executable), b"");
+        let native = run(&mut Command::new(&executable), b"");
         assert_eq!(native.status.code(), reference.status.code());
         assert_eq!(native.stdout, reference.stdout);
         assert_eq!(native.stderr, reference.stderr);
@@ -351,7 +351,7 @@ main = 1 | choose (read-all () | string.length | eq 0) | echo
                 .with_extension(std::env::consts::EXE_EXTENSION);
             fwp::cgen::compile_c(&code, &executable, optimization).unwrap();
             for (input, expected) in inputs.iter().zip(&reference) {
-                let actual = run(Command::new(&executable), input);
+                let actual = run(&mut Command::new(&executable), input);
                 assert!(
                     actual.status.success(),
                     "counted {optimization}: {actual:?}"

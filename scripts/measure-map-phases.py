@@ -33,13 +33,13 @@ static uint64_t map_probe_stamp(const char *stage, uint64_t before, size_t n, co
         ('    V result = fwp_map_typed_new(len, ops->columns);', 'deduplicate', 'keys, vals'),
         ('    MAP(result)->len = 0;', 'result-allocation', '(void *)(uintptr_t)result, NULL'),
         ('    fwp_value_finish(&owner, &cleanup);', 'materialize', '(void *)(uintptr_t)result, NULL'),
-        ('    FWP_KEEP_ALIVE(keys); FWP_KEEP_ALIVE(vals);', 'release-scratch', 'NULL, NULL'),
+        ('    return result;', 'release-scratch', 'NULL, NULL'),
     ]:
         assert builder.count(before) == 1, label
         stamp = f'    probe = map_probe_stamp("{label}", probe, n, {pointers});\n'
         builder = builder.replace(before, stamp + before)
     code = code[:start] + builder + code[end:]
-    signature = 'static __attribute__((noinline)) void *fwp_heap_alloc_big(size_t n, int kind) {'
+    signature = 'static __attribute__((noinline)) void *fwp_heap_alloc_big(size_t n, int leaf) {'
     start = code.index(signature)
     end = code.index('\n}', start) + 2
     original = code[start:end]

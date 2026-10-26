@@ -121,6 +121,22 @@ compilation times. Budget failures retain all size/policy observations and need
 investigation; do not silently raise a limit. New inputs or proof precision need
 a reviewed replacement baseline.
 
+## Current repair awaiting validation
+
+[Run 40319010233](https://github.com/e6qu/fun-with-pipes/actions/runs/40319010233)
+failed the relative budget on Intel macOS at 32 workers: 20.69 ms for separate
+sites versus 11.18 ms for merged sites (1.85×). Absolute time and fact-count
+budgets passed. This is a failed gate, not evidence of acceptable overhead.
+
+Capture lookup used an ordered tree even though the proof never traverses
+captures in key order. Separating sites grows that table from 13 to 168 entries
+at this size, and each fixed-point round repeats the searches. The repair uses
+a hash table for these lookups, preserving the same identities, capture facts,
+ordered origin sets and validation. Both test policies use the same table.
+Runner measurements must establish whether this removes the excess cost; the
+1.5× ratio and all absolute/count budgets remain unchanged. The historical
+samples above are not measurements of this repair.
+
 ## Reproduce and assess
 
 The [`ownership-analysis` suite](../../.github/workflows/numerics.yml)

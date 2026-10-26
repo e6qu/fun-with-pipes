@@ -96,7 +96,7 @@ jobs:
       - name: fmt
         run: cargo fmt --all -- --check
       - name: clippy
-        run: cargo clippy --all-targets -- -D warnings
+        run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Language formatting preflight
         run: cargo run --bin fwp -- fmt --check lib examples docs/tutorials bench
       - name: Regular macOS test shard
@@ -355,7 +355,7 @@ jobs:
       - name: fmt
         run: cargo fmt --all -- --check
       - name: clippy
-        run: cargo clippy --all-targets -- -D warnings
+        run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: clippy (WebAssembly build)
         run: cargo clippy --target wasm32-wasip1 -- -D warnings
       - name: Language formatting preflight

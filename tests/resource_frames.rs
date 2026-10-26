@@ -103,7 +103,9 @@ main = "{}" | file.open | reopen
                 .args([opt, "-o"])
                 .arg(&exe),
         );
-        let native = limit_descriptors(Command::new(&exe), 4).output().unwrap();
+        let native = limit_descriptors(&mut Command::new(&exe), 4)
+            .output()
+            .unwrap();
         assert_eq!(native.status.code(), reference.status.code());
         assert_eq!(native.stdout, reference.stdout);
         assert_eq!(native.stderr, reference.stderr);

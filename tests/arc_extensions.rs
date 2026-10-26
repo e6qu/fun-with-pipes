@@ -330,7 +330,7 @@ int main(void) {{
         let binary = dir.join(opt);
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
         assert_eq!(
-            checked(Command::new(&binary)).stdout,
+            checked(&mut Command::new(&binary)).stdout,
             b"CSV partial cleanup verified\n"
         );
         fwp::cgen::compile_c(&omitted, &binary, opt).unwrap();

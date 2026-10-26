@@ -14,7 +14,7 @@ use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 enum Origin {
     Function(FuncId, usize, u8, Option<Site>),
     UnknownFunction,
@@ -73,7 +73,10 @@ struct Proof<'a> {
     sites: ClosureSites,
     type_cache: RefCell<HashMap<MT, TypeProperties>>,
     expression_types: HashMap<Site, Option<MT>>,
-    captures: BTreeMap<Origin, Vec<Targets>>,
+    // Capture identities are only looked up, never traversed in proof order.
+    // Site separation grows this table with the program; avoid ordered searches
+    // on every fixed-point visit. Origin sets below remain ordered.
+    captures: HashMap<Origin, Vec<Targets>>,
     inputs: BTreeMap<Context, Vec<Targets>>,
     outputs: BTreeMap<Context, Targets>,
     callback_values: BTreeMap<Context, Targets>,
@@ -1312,7 +1315,7 @@ pub(crate) fn check(
         sites,
         type_cache: RefCell::new(HashMap::new()),
         expression_types: HashMap::new(),
-        captures: BTreeMap::new(),
+        captures: HashMap::new(),
         inputs: BTreeMap::new(),
         outputs: BTreeMap::new(),
         callback_values: BTreeMap::new(),
@@ -1967,7 +1970,7 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                 sites: ClosureSites::Separate,
                 type_cache: RefCell::new(HashMap::new()),
                 expression_types: HashMap::new(),
-                captures: BTreeMap::new(),
+                captures: HashMap::new(),
                 inputs: BTreeMap::new(),
                 outputs: BTreeMap::new(),
                 callback_values: BTreeMap::new(),
@@ -2011,7 +2014,7 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
             sites: ClosureSites::Separate,
             type_cache: RefCell::new(HashMap::new()),
             expression_types: HashMap::new(),
-            captures: BTreeMap::new(),
+            captures: HashMap::new(),
             inputs: BTreeMap::new(),
             outputs: BTreeMap::new(),
             callback_values: BTreeMap::new(),
@@ -2124,7 +2127,7 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                 sites: ClosureSites::Separate,
                 type_cache: RefCell::new(HashMap::new()),
                 expression_types: HashMap::new(),
-                captures: BTreeMap::new(),
+                captures: HashMap::new(),
                 inputs: BTreeMap::new(),
                 outputs: BTreeMap::new(),
                 callback_values: BTreeMap::new(),
@@ -2656,7 +2659,7 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
             sites: ClosureSites::Separate,
             type_cache: RefCell::new(HashMap::new()),
             expression_types: HashMap::new(),
-            captures: BTreeMap::new(),
+            captures: HashMap::new(),
             inputs: BTreeMap::new(),
             outputs: BTreeMap::new(),
             callback_values: BTreeMap::new(),
@@ -2875,7 +2878,7 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
             sites: ClosureSites::Separate,
             type_cache: RefCell::new(HashMap::new()),
             expression_types: HashMap::new(),
-            captures: BTreeMap::new(),
+            captures: HashMap::new(),
             inputs: BTreeMap::new(),
             outputs: BTreeMap::new(),
             callback_values: BTreeMap::new(),

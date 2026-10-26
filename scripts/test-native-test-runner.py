@@ -288,7 +288,7 @@ class Coverage(unittest.TestCase):
              patch.object(SHARDS, "run_tests", return_value=1) as run:
             self.assertEqual(SHARDS.main(), 1)
             self.assertEqual(build.call_args.args[0], ["cargo", "test", "--no-fail-fast",
-                "--test", "b", "--test", "a", "--no-run", "--message-format=json"])
+                "--test", "b", "--test", "a", "--keep-going", "--no-run", "--message-format=json"])
             self.assertEqual(run.call_args.args[0], [(("test", "b"), ["/b"]), (("test", "a"), ["/a"])])
             self.assertEqual(run.call_args.args[1], ["--nocapture"])
             with patch.object(SHARDS, "assignment", return_value={"regular": ["a"], "ownership": ["b"]}):
