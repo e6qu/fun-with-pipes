@@ -27,7 +27,7 @@ impl Drop for Scratch {
     }
 }
 #[test]
-fn accumulator_input_and_capture_aliases_under_collection() {
+fn accumulator_input_and_capture_aliases_preserve_values() {
     let dir = Scratch::new("aliases");
     let src = dir.0.join("aliases.fwp");
     std::fs::write(
@@ -78,18 +78,9 @@ main = [
                     .arg(&exe)
                     .env("FWP_STACK", stack),
             );
-            for poison in ["0", "1"] {
-                let out = checked(
-                    Command::new(&exe)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison),
-                );
-                assert_eq!(
-                    out.stdout, reference.stdout,
-                    "{opt}, stack {stack}, poison {poison}"
-                );
-            }
+
+            let out = checked(&mut Command::new(&exe));
+            assert_eq!(out.stdout, reference.stdout, "{opt}, stack {stack}");
         }
     }
 }
@@ -132,16 +123,16 @@ main = (10000, 0) | loop step | echo
     let owned = std::fs::read_to_string(emitted).unwrap();
     let start = owned.find("static V fwp_p_fold_right_own(").unwrap();
     let end = start + owned[start..].find("\n}\n").unwrap();
-    let mut shared = owned.clone();
-    shared.replace_range(
+    let mut retained = owned.clone();
+    retained.replace_range(
         start..end,
         &owned[start..end].replace(
             "z = fwp_apply_borrowed_span(f, 2, args, 1, 1);",
-            "z = fwp_rc_shared(fwp_apply_borrowed_span(f, 2, args, 1, 1));",
+            "z = fwp_apply_borrowed_span(f, 2, args, 1, 1); fwp_rc_dup(z);",
         ),
     );
     // Captured HOFs also transfer accumulators through the owned entry.
-    shared = shared
+    retained = retained
         .lines()
         .map(|line| {
             let trimmed = line.trim();
@@ -151,35 +142,32 @@ main = (10000, 0) | loop step | echo
             {
                 if call.starts_with("fwp_owned_entry") || call.starts_with("fwp_borrowed_fold") {
                     let indent = &line[..line.len() - line.trim_start().len()];
-                    return format!("{indent}z = fwp_rc_shared({call});");
+                    return format!("{indent}z = {call}; fwp_rc_dup(z);");
                 }
             }
             line.to_string()
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert_ne!(
-        shared, owned,
-        "old callback result-sharing boundary was not restored"
-    );
+    assert_ne!(retained, owned, "missing extra accumulator owner control");
     let mut freed = Vec::new();
-    for (name, code) in [("shared", &shared), ("owned", &owned)] {
+    for (name, code) in [("retained", &retained), ("owned", &owned)] {
         let exe = dir.0.join(name);
         fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_ALLOC_STATS", "1")
-                .env("FWP_REUSE_VERIFY", "0"),
-        );
+        let out = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
         assert_eq!(out.stdout, reference.stdout);
         let stats = String::from_utf8_lossy(&out.stderr);
 
-        freed.push(
-            allocation_report::parse(&stats)
-                .expect("allocation report")
-                .released as f64
-                / 1_048_576.0,
-        );
+        let report = allocation_report::parse(&stats).expect("allocation report");
+        if name == "owned" {
+            assert_eq!(report.live, 0, "{name}: {report:?}");
+        } else {
+            assert!(
+                report.live > 0,
+                "ineffective retained-owner control: {name}: {report:?}"
+            );
+        }
+        freed.push(report.released as f64 / 1_048_576.0);
     }
     eprintln!("right fold MiB freed by counts: {freed:?}");
     assert!(freed[1] > freed[0] + 0.3, "{freed:?}");

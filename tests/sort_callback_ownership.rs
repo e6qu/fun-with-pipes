@@ -33,7 +33,7 @@ impl Drop for Scratch {
 }
 
 #[test]
-fn sort_keys_and_aliases_under_collection() {
+fn sort_keys_and_aliases_preserve_values() {
     let dir = Scratch::new("aliases");
     let src = dir.0.join("aliases.fwp");
     std::fs::write(
@@ -77,40 +77,27 @@ main = [
                     .arg(&exe)
                     .env("FWP_STACK", stack),
             );
-            for poison in ["0", "1"] {
-                let out = checked(
-                    Command::new(&exe)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison),
-                );
-                assert_eq!(
-                    out.stdout, reference.stdout,
-                    "{opt}, stack {stack}, poison {poison}"
-                );
-            }
+
+            let out = checked(&mut Command::new(&exe));
+            assert_eq!(out.stdout, reference.stdout, "{opt}, stack {stack}");
         }
     }
-    // The conservative compilation switches must retain the same observable
-    // callback behavior and use their matching runtime function signatures.
-    for flag in ["FWP_REUSE", "FWP_FREE"] {
-        let exe = dir.0.join(flag);
-        checked(
-            Command::new(fwp)
-                .args(["build"])
-                .arg(&src)
-                .args(["-O1", "-o"])
-                .arg(&exe)
-                .env(flag, "0"),
-        );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
-        assert_eq!(out.stdout, reference.stdout, "{flag}=0");
-    }
+    // Forced copies preserve the same callback results and typed ownership.
+    let cfile = dir.0.join("forced-copy.c");
+    checked(
+        Command::new(fwp)
+            .args(["build", "--emit-c"])
+            .arg(&src)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = format!(
+        "#define FWP_NO_REUSE 1\n{}",
+        std::fs::read_to_string(cfile).unwrap()
+    );
+    let exe = dir.0.join("forced-copy.exe");
+    fwp::cgen::compile_c(&code, &exe, "-O1").unwrap();
+    assert_eq!(checked(&mut Command::new(&exe)).stdout, reference.stdout);
 }
 
 #[test]
@@ -148,15 +135,15 @@ main = (10000, 0) | loop step | echo
             .env("FWP_STACK", "0"),
     );
     let owned = std::fs::read_to_string(&emitted).unwrap();
-    // Restore result sharing only in the emitted monomorphic wrappers.
+    // Deliberately retain one extra result owner in the emitted typed wrappers.
     // Scalar bits never become references in either version.
     let mut changed = 0;
-    let shared = owned
+    let retained = owned
         .lines()
         .map(|line| {
             if line.contains("V result = fwp_p_sort_by_copied(l") {
                 changed += 1;
-                line.replace("return result;", "return fwp_rc_shared(result);")
+                line.replace("return result;", "fwp_rc_dup(result); return result;")
             } else {
                 line.to_string()
             }
@@ -164,7 +151,7 @@ main = (10000, 0) | loop step | echo
         .collect::<Vec<_>>()
         .join("\n");
     assert!(changed == 1, "missing sort-by boundary: {changed}");
-    assert_ne!(shared, owned);
+    assert_ne!(retained, owned);
     // Keep owned output but remove only typed key destruction. Raw drops
     // reduce outer counts without destroying the last owned key allocation.
     let kept_keys = owned.replace(
@@ -174,26 +161,26 @@ main = (10000, 0) | loop step | echo
     assert_ne!(kept_keys, owned);
     let mut freed = Vec::new();
     for (name, code) in [
-        ("shared", &shared),
+        ("retained", &retained),
         ("kept-keys", &kept_keys),
         ("owned", &owned),
     ] {
         let exe = dir.0.join(name);
         fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_ALLOC_STATS", "1")
-                .env("FWP_REUSE_VERIFY", "0"),
-        );
+        let out = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
         assert_eq!(out.stdout, reference.stdout);
         let stats = String::from_utf8_lossy(&out.stderr);
 
-        freed.push(
-            allocation_report::parse(&stats)
-                .expect("allocation report")
-                .released as f64
-                / 1_048_576.0,
-        );
+        let report = allocation_report::parse(&stats).expect("allocation report");
+        if name == "owned" {
+            assert_eq!(report.live, 0, "{name}: {report:?}");
+        } else {
+            assert!(
+                report.live > 0,
+                "ineffective retained-owner control: {name}: {report:?}"
+            );
+        }
+        freed.push(report.released as f64 / 1_048_576.0);
     }
     eprintln!("sort callback graph MiB freed by counts: {freed:?}");
     assert!(freed[2] > freed[0] + 0.3, "{freed:?}");
@@ -236,6 +223,11 @@ fn scalar_key_bits_do_not_release_pointed_to_values() {
         "int original_main(int argc, char **argv)",
     );
     let probe = r#"
+static void drop_scalar_nodes(V xs) {
+    while(xs && fwp_rc_release_last(xs)) {
+        V next=OBJ(xs)->f[1];fwp_rc_free_obj(xs);xs=next;
+    }
+}
 static V scalar_key_entry(V *args) { return args[0]; }
 static void scalar_key_args(V *args, uint32_t start, uint32_t n) {
     (void)args; (void)start; (void)n;
@@ -247,15 +239,17 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_heap_start();
+    fwp_heap_start();size_t baseline=fwp_heap.live;
     fwp_fns = scalar_fns;
     V bits = fwp_rc_fresh(fwp_cstr("numeric bits"));
-    V xs = fwp_cons(bits, fwp_cons(bits, 0));
+    V xs = fwp_rc_fresh(fwp_cons(bits, fwp_rc_fresh(fwp_cons(bits, 0))));
     fwp_clo callback = {0, 0};
     V result = WRAPPER(PTR(&callback), xs);
     if (*fwp_rc_slot(bits) != 1 || STR(bits)->len != 12) return 1;
     if (fwp_list_len(result) != 2 || OBJ(result)->f[0] != bits ||
         OBJ(OBJ(result)->f[1])->f[0] != bits) return 2;
+    drop_scalar_nodes(result);drop_scalar_nodes(xs);fwp_rc_free_obj(bits);
+    if(fwp_heap.live!=baseline)return 3;
     puts("scalar key ownership preserved");
     return 0;
 }

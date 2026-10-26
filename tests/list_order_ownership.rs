@@ -29,7 +29,7 @@ impl Drop for Scratch {
 }
 
 #[test]
-fn sorted_and_unique_aliases_under_collection() {
+fn sorted_and_unique_aliases_preserve_values() {
     let dir = Scratch::new("aliases");
     let src = dir.0.join("aliases.fwp");
     std::fs::write(
@@ -71,18 +71,9 @@ main = [
                     .arg(&exe)
                     .env("FWP_STACK", stack),
             );
-            for poison in ["0", "1"] {
-                let out = checked(
-                    Command::new(&exe)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison),
-                );
-                assert_eq!(
-                    out.stdout, reference.stdout,
-                    "{opt}, stack {stack}, poison {poison}"
-                );
-            }
+
+            let out = checked(&mut Command::new(&exe));
+            assert_eq!(out.stdout, reference.stdout, "{opt}, stack {stack}");
         }
     }
 }
@@ -122,10 +113,10 @@ main = (10000, 0) | loop step | echo
             .env("FWP_STACK", "0"),
     );
     let owned = std::fs::read_to_string(&emitted).unwrap();
-    // Restore result sharing only in the emitted monomorphic wrappers.
+    // Deliberately retain one extra result owner in the emitted typed wrappers.
     // Scalar bits never become references in either version.
     let mut changed = 0;
-    let shared = owned
+    let retained = owned
         .lines()
         .map(|line| {
             if ["sort", "unique"]
@@ -133,7 +124,7 @@ main = (10000, 0) | loop step | echo
                 .any(|name| line.contains(&format!("V result = fwp_p_{name}_copied(l")))
             {
                 changed += 1;
-                line.replace("return result;", "return fwp_rc_shared(result);")
+                line.replace("return result;", "fwp_rc_dup(result); return result;")
             } else {
                 line.to_string()
             }
@@ -141,25 +132,25 @@ main = (10000, 0) | loop step | echo
         .collect::<Vec<_>>()
         .join("\n");
     assert!(changed == 2, "missing sort/unique boundaries: {changed}");
-    assert_ne!(shared, owned);
+    assert_ne!(retained, owned);
     let mut freed = Vec::new();
-    for (name, code) in [("shared", &shared), ("owned", &owned)] {
+    for (name, code) in [("retained", &retained), ("owned", &owned)] {
         let exe = dir.0.join(name);
         fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_ALLOC_STATS", "1")
-                .env("FWP_REUSE_VERIFY", "0"),
-        );
+        let out = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
         assert_eq!(out.stdout, reference.stdout);
         let stats = String::from_utf8_lossy(&out.stderr);
 
-        freed.push(
-            allocation_report::parse(&stats)
-                .expect("allocation report")
-                .released as f64
-                / 1_048_576.0,
-        );
+        let report = allocation_report::parse(&stats).expect("allocation report");
+        if name == "owned" {
+            assert_eq!(report.live, 0, "{name}: {report:?}");
+        } else {
+            assert!(
+                report.live > 0,
+                "ineffective retained-owner control: {name}: {report:?}"
+            );
+        }
+        freed.push(report.released as f64 / 1_048_576.0);
     }
     eprintln!("list ordering graph MiB freed by counts: {freed:?}");
     assert!(freed[1] > freed[0] + 0.3, "{freed:?}");

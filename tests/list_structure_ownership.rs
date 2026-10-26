@@ -30,7 +30,7 @@ impl Drop for Scratch {
 }
 
 #[test]
-fn structural_list_aliases_under_collection() {
+fn structural_list_aliases_preserve_values() {
     let dir = Scratch::new("aliases");
     let src = dir.0.join("aliases.fwp");
     std::fs::write(
@@ -76,38 +76,26 @@ main = [
                     .arg(&exe)
                     .env("FWP_STACK", stack),
             );
-            for poison in ["0", "1"] {
-                let out = checked(
-                    Command::new(&exe)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison),
-                );
-                assert_eq!(
-                    out.stdout, reference.stdout,
-                    "{opt}, stack {stack}, poison {poison}"
-                );
-            }
+
+            let out = checked(&mut Command::new(&exe));
+            assert_eq!(out.stdout, reference.stdout, "{opt}, stack {stack}");
         }
     }
-    for flag in ["FWP_REUSE", "FWP_FREE"] {
-        let exe = dir.0.join(flag);
-        checked(
-            Command::new(fwp)
-                .args(["build"])
-                .arg(&src)
-                .args(["-O1", "-o"])
-                .arg(&exe)
-                .env(flag, "0"),
-        );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
-        assert_eq!(out.stdout, reference.stdout, "{flag}=0");
-    }
+    let cfile = dir.0.join("forced-copy.c");
+    checked(
+        Command::new(fwp)
+            .args(["build", "--emit-c"])
+            .arg(&src)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = format!(
+        "#define FWP_NO_REUSE 1\n{}",
+        std::fs::read_to_string(cfile).unwrap()
+    );
+    let exe = dir.0.join("forced-copy.exe");
+    fwp::cgen::compile_c(&code, &exe, "-O1").unwrap();
+    assert_eq!(checked(&mut Command::new(&exe)).stdout, reference.stdout);
 }
 
 #[test]
@@ -146,9 +134,9 @@ main = (10000, 0) | loop step | echo
     );
     let owned = std::fs::read_to_string(&emitted).unwrap();
     // Keep identical typed alias duplication and scratch cleanup; change only
-    // whether the emitted wrappers share their structural result graphs.
+    // whether each result graph has one extra owner that is never released.
     let mut changed = 0;
-    let shared = owned
+    let retained = owned
         .lines()
         .map(|line| {
             if ["zip", "unzip", "chunks"]
@@ -156,8 +144,8 @@ main = (10000, 0) | loop step | echo
                 .any(|name| line.contains(&format!("return fwp_p_{name}_owned(l")))
             {
                 changed += 1;
-                line.replace("return fwp_p_", "return fwp_rc_shared(fwp_p_")
-                    .replace(");", "));")
+                line.replace("return fwp_p_", "V retained = fwp_p_")
+                    .replace(");", "); fwp_rc_dup(retained); return retained;")
             } else {
                 line.to_string()
             }
@@ -165,25 +153,25 @@ main = (10000, 0) | loop step | echo
         .collect::<Vec<_>>()
         .join("\n");
     assert_eq!(changed, 3, "missing structural wrappers: {changed}");
-    assert_ne!(shared, owned);
+    assert_ne!(retained, owned);
     let mut freed = Vec::new();
-    for (name, code) in [("shared", &shared), ("owned", &owned)] {
+    for (name, code) in [("retained", &retained), ("owned", &owned)] {
         let exe = dir.0.join(name);
         fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_ALLOC_STATS", "1")
-                .env("FWP_REUSE_VERIFY", "0"),
-        );
+        let out = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
         assert_eq!(out.stdout, reference.stdout);
         let stats = String::from_utf8_lossy(&out.stderr);
 
-        freed.push(
-            allocation_report::parse(&stats)
-                .expect("allocation report")
-                .released as f64
-                / 1_048_576.0,
-        );
+        let report = allocation_report::parse(&stats).expect("allocation report");
+        if name == "owned" {
+            assert_eq!(report.live, 0, "{name}: {report:?}");
+        } else {
+            assert!(
+                report.live > 0,
+                "ineffective retained-owner control: {name}: {report:?}"
+            );
+        }
+        freed.push(report.released as f64 / 1_048_576.0);
     }
     eprintln!("structural list graph MiB freed by counts: {freed:?}");
     assert!(freed[1] > freed[0] + 0.3, "{freed:?}");
@@ -212,11 +200,7 @@ fn invalid_chunk_sizes_preserve_failure_order() {
                     .args([opt, "-o"])
                     .arg(&exe),
             );
-            let out = Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .output()
-                .unwrap();
+            let out = Command::new(&exe).output().unwrap();
             assert_eq!(out.status.code(), reference.status.code());
             assert_eq!(out.stdout, reference.stdout);
             assert_eq!(out.stderr, reference.stderr);
@@ -243,11 +227,26 @@ fn scalar_structural_fields_do_not_count_address_shaped_bits() {
     );
     let emitted = std::fs::read_to_string(cfile).unwrap();
     let mut probe = r#"
+static void drop_scalar_nodes(V xs) {
+    while(xs && fwp_rc_release_last(xs)) {
+        V next=OBJ(xs)->f[1];fwp_rc_free_obj(xs);xs=next;
+    }
+}
+static void drop_pair_nodes(V xs) {
+    while(xs && fwp_rc_release_last(xs)) {
+        V next=OBJ(xs)->f[1];fwp_rc_free_obj(OBJ(xs)->f[0]);fwp_rc_free_obj(xs);xs=next;
+    }
+}
+static void drop_nested_nodes(V xs) {
+    while(xs && fwp_rc_release_last(xs)) {
+        V next=OBJ(xs)->f[1];drop_scalar_nodes(OBJ(xs)->f[0]);fwp_rc_free_obj(xs);xs=next;
+    }
+}
 int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_heap_start();
+    fwp_heap_start();size_t baseline=fwp_heap.live;
     V bits = fwp_rc_fresh(fwp_cstr("numeric bits"));
     V xs = fwp_rc_fresh(fwp_cons(bits, 0));
     V pairs = ZIP_WRAPPER(xs, xs);
@@ -257,6 +256,10 @@ int main(void) {
     if (OBJ(OBJ(pairs)->f[0])->f[0] != bits ||
         OBJ(OBJ(split)->f[0])->f[0] != bits ||
         OBJ(OBJ(chunks)->f[0])->f[0] != bits) return 2;
+    drop_pair_nodes(pairs);drop_nested_nodes(chunks);
+    drop_scalar_nodes(OBJ(split)->f[0]);drop_scalar_nodes(OBJ(split)->f[1]);fwp_rc_free_obj(split);
+    drop_scalar_nodes(xs);fwp_rc_free_obj(bits);
+    if(fwp_heap.live!=baseline)return 3;
     puts("scalar structural ownership preserved");
     return 0;
 }

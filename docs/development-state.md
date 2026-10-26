@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** migrate list/fold/filter/map/zip ownership controls and their report
-readers, then the remaining test/report/workflow audit below. Finish migration
-before integrated compiler and production validation on runners. The current
-source has not been built as a compiler. GC removal is not verified.
+**Next:** migrate remaining numeric array/storage/device tests, then the
+resource/entry tests and report/workflow audit below. Finish migration before
+integrated compiler and production validation on runners. The current source
+has not been built as a compiler. GC removal is not verified.
 
 Worktree: `/private/tmp/fwp-delete-tracing`; branch `delete-tracing-collector`.
 Base: verified #216 squash `f5621cb46828273f7ce8edf92be4062ccec0f17c`.
@@ -19,6 +19,12 @@ compiler-abort report; its handoff points here. Old publisher scripts stay stopp
 
 ## Latest completed edits; execution pending
 
+- List/fold/filter/map/zip and text checks keep their alias inputs, stack choices,
+  output comparisons and release thresholds. Leak controls retain an extra owner
+  at the named result boundary; no tracing promotion is used. Normal accounting
+  runs must end at zero live bytes. Forced copies use the actual C control.
+  Scalar generation/structure/sort probes now release all fixture storage.
+  Fold artifacts have one result per counted configuration, without GC suffixes.
 - Files: constructor callbacks now declare typed ownership; physical-free hooks
   replace freed-header/text reads. Storage controls target the current destructor.
   Alias, close-once, rollback, overflow, finalizer removal and slot reuse remain.
@@ -102,7 +108,7 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 ## Remaining migration, in order
 
 1. **Finish test mode removal.** A fresh audit still finds old controls in
-   list/fold/filter/sort/map/zip targets; numeric fusion/storage/device bounds;
+   numeric fusion/storage/device bounds;
    process/resource frames; AOT/library extension checks. Review their
    actual assertions and paired C fixtures, not just environment names. The list/State/closure fixtures in
    `list_applicative_ownership` are migrated; integrated execution is pending.
@@ -177,6 +183,7 @@ Scripts below live in `/private/tmp` unless a repository path is given.
 | `python3 fwp-check-memory-startup.py` | Migrated harness compiles at Rust O1 with warnings denied; three helper tests pass. Does not run generated memory servers. |
 | `python3 fwp-check-closure-failure.py` | Actual allocator, cleanup queue and trap code, Clang ARM64 O1/O2: normal release passes; capture trap 101, spill OOM 102 and omitted context reset 94. A recovery callback would fail with 93. Does not establish generated-program or other-target support. |
 | `python3 fwp-check-stream-owners.py` | Current runtime, Clang ARM64 O1/O2: eighteen normal size/read-mode cases end with zero charge and all messages freed; omitted cache drop exits 40 at both levels. This uses a minimal C library harness, not generated Rust/library integration or network calls. |
+| `python3 fwp-check-scalar-list-owners.py` | Current runtime, Clang ARM64 O1/O2: scalar repeat/range, zip/unzip/chunks and sort preserve address-shaped scalar bits and restore live bytes. Six runs; direct runtime calls, not generated-wrapper integration. |
 | `python3 fwp-check-file-owner-migration.py` | Current runtime, Clang ARM64 O1/O2: forty constructor/I/O/storage runs pass, including 8/1,024-round release and all omitted close/finalizer/header/text/alias/scope faults. C harness only; generated and other-platform checks pending. Initially caught a deleted `armed` field and missing typed callback metadata; both fixtures repaired. |
 | `python3 fwp-check-connect-owners.py` | Current runtime/OpenSSL, Clang ARM64 O1/O2: normal cancellation restores live bytes; omitted TCP/TLS owner, resolver and SSL cleanup fail as required. Ten runs; generated-library and other-platform checks pending. |
 | `python3 fwp-check-http2-peer-owners.py` | Current runtime/OpenSSL, Clang ARM64 O1/O2: peer-copy/option failure and explicit transport release restore live bytes; omitted peer release exits 1. Four runs; minimal C descriptors, not generated descriptor/platform verification. |

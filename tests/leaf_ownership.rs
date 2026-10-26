@@ -30,7 +30,7 @@ impl Drop for Scratch {
 }
 
 #[test]
-fn leaf_aliases_and_copy_results_under_stress() {
+fn leaf_aliases_and_copy_results_preserve_values() {
     let dir = Scratch::new("aliases");
     let src = dir.0.join("leaves.fwp");
     std::fs::write(
@@ -64,18 +64,9 @@ main = read-all () | concat "héllo" | trim | checks | echo
                 .args([opt, "-o"])
                 .arg(&exe),
         );
-        for verify in ["0", "1"] {
-            let native = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", verify),
-            );
-            assert_eq!(
-                native.stdout, reference.stdout,
-                "{opt}, reuse verification {verify}"
-            );
-        }
+
+        let native = checked(&mut Command::new(&exe));
+        assert_eq!(native.stdout, reference.stdout, "{opt}");
     }
 }
 
@@ -124,20 +115,20 @@ main = (10000, 0) | loop step | echo
     ] {
         let exe = dir.0.join(name);
         fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_ALLOC_STATS", "1")
-                .env("FWP_REUSE_VERIFY", "0"),
-        );
+        let out = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
         assert_eq!(out.stdout, reference.stdout);
         let stats = String::from_utf8_lossy(&out.stderr);
 
-        freed.push(
-            allocation_report::parse(&stats)
-                .expect("allocation report")
-                .released as f64
-                / 1_048_576.0,
-        );
+        let report = allocation_report::parse(&stats).expect("allocation report");
+        if name == "released" {
+            assert_eq!(report.live, 0, "{name}: {report:?}");
+        } else {
+            assert!(
+                report.live > 0,
+                "ineffective retained-owner control: {name}: {report:?}"
+            );
+        }
+        freed.push(report.released as f64 / 1_048_576.0);
     }
     assert!(
         freed[0] == 0.0 && freed[1] > 0.2,
