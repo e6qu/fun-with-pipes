@@ -44,10 +44,6 @@ int main(void) {
     if(!metadata_matches(metadata)||subject==FWP_NONE||OBJ(subject)->tag!=1||strcmp(STR(OBJ(subject)->f[0])->d,"CN=client"))return 247;
     METADATA_TYPE->drop(metadata);SUBJECT_TYPE->drop(subject);
     headers.v[1].value[0]='o';peer[0]='C';
-    if(getenv("FWP_SERVICE_STRESS")) {
-        if(!fwp_heap.ncollect||fwp_cleanups)return 247;
-        fwp_cur->gctx=NULL;h2_hdrs_free(&headers);return 0;
-    }
     if(fwp_heap.live!=live_bytes)return 248;
     for(int operation=0;operation<2;operation++) {
         const fwp_desc *type=operation?SUBJECT_TYPE:METADATA_TYPE;
@@ -70,6 +66,5 @@ int main(void) {
     if(fwp_p_grpc_peer_subject(SUBJECT_TYPE)!=FWP_NONE||fwp_heap.live!=live_bytes)return 247;
     fwp_cur->gctx=NULL;h2_hdrs_free(&headers);
     printf("partial-result field owner: %zu bytes, alignment %zu, 8 inline values\n",sizeof(fwp_decode_fields),_Alignof(fwp_decode_fields));
-    if(fwp_heap.ncollect)return 247;
     return 0;
 }

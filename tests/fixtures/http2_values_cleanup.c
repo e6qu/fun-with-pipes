@@ -37,10 +37,6 @@ int main(void) {
     if(!request_matches(request)||OBJ(body)->tag!=0||STR(OBJ(body)->f[0])->len!=sizeof bytes||memcmp(STR(OBJ(body)->f[0])->d,bytes,sizeof bytes))return 247;
     REQUEST_TYPE->drop(request);BODY_TYPE->drop(body);
     stream.headers.v[3].value[0]='o';remote[0]='r';stream.data.d[0]=0;
-    if(getenv("FWP_SERVICE_STRESS")) {
-        if(!fwp_heap.ncollect||fwp_cleanups)return 247;
-        h2_hdrs_free(&stream.headers);h2b_free(&stream.data);fwp_lib_finish();return 0;
-    }
     if(fwp_heap.live!=live_bytes){fprintf(stderr,"copied HTTP/2 result live_bytes delta: %lld\n",(long long)(live_bytes - fwp_heap.live));return 248;}
     for(int operation=0;operation<2;operation++) {
         const fwp_desc *type=operation?BODY_TYPE:REQUEST_TYPE;

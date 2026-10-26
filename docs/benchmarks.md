@@ -308,3 +308,7 @@ repeat and are not relabelled as current results. Start with the
 [measurement index](measurements/README.md), not an old run instruction copied
 into a status page. New budgets and required follow-ups are listed in
 [the implementation plan](../PLAN.md).
+
+[Generated REST/MCP server memory](measurements/server-entry-memory.md) defines
+the request counts, allocation boundaries, resident-memory limits and omitted-free
+control. It is a cleanup/space check, not a C/Rust timing comparison.
