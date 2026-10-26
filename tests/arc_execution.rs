@@ -337,8 +337,12 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
         // optimization cannot hide the missing ownership contract.
         for raw in [false, true] {
             if !matches!(name, "custom-native" | "foreign-callback") {
-                let interpreted = Command::new(env!("CARGO_BIN_EXE_fwp"))
-                    .env("FWP_NO_OPT", if raw { "1" } else { "0" })
+                let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
+                command.env_remove("FWP_NO_OPT");
+                if raw {
+                    command.env("FWP_NO_OPT", "1");
+                }
+                let interpreted = command
                     .args(["run", "--interp"])
                     .arg(&input)
                     .output()

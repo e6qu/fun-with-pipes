@@ -697,6 +697,14 @@ impl Proof<'_> {
             values.retain(|origin| !origin.queue());
         }
         if !matches!(ty, MT::Fun(..)) {
+            // Fields of an aggregate initially share origins. A scalar field
+            // cannot carry its neighbor's callback into another call. Apply
+            // the same exclusion used for function results to expressions too.
+            if values.iter().any(|origin| origin.callable())
+                && !has_functions(self.program, ty, &mut BTreeSet::new())
+            {
+                values.retain(|origin| !origin.callable());
+            }
             return;
         }
         values.retain(|closure| match closure {
@@ -2165,8 +2173,16 @@ mod tests {
         fields.insert(Origin::UnknownQueue);
         proof.refine_origins(&mut fields, &leaf);
         assert!(fields.contains(&Origin::UnknownQueue));
+        fields.insert(Origin::Function(3, 0, 0));
+        fields.insert(Origin::UnknownFunction);
         proof.refine_origins(&mut fields, &MT::con("std::String"));
         assert!(fields.is_empty());
+        let mut functions = Targets::from([Origin::UnknownFunction]);
+        let pair = MT::Record(vec![("callback".into(), program.funcs[3].ty.clone())]);
+        proof.refine_origins(&mut functions, &pair);
+        assert!(functions.contains(&Origin::UnknownFunction));
+        proof.refine_origins(&mut functions, &MT::con("?"));
+        assert!(functions.contains(&Origin::UnknownFunction));
 
         let task_queue = MT::Con(
             "std::Channel".into(),

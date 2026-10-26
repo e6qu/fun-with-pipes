@@ -51,14 +51,13 @@ comparisons with C and Rust and the limits of the evidence.
 
 ## Project direction
 
-The remaining [project plan](PLAN.md) targets removal of tracing garbage
-collection and less reference-counting overhead through compile-time ownership,
-borrowing and storage reuse. The [accepted memory direction](docs/gc-removal-design.md)
-adds explicit weak references for selected objects, rejects unproved owning
-cycles, and uses count-free unique storage and scoped workspaces where suitable.
-These additions are planned, not current features. It also covers measured CPU performance,
-differentiation, numerical kernels and larger example applications. These are
-active goals; the capabilities and limitations above describe today's compiler.
+[PLAN.md](PLAN.md) has two separate memory milestones: remove tracing GC, then
+reduce reference-counting and allocation costs in named unshared workloads.
+[Weak channels](docs/weak-channels.md) and [retained C callbacks](docs/retained-callbacks.md)
+are implemented and verified. Count-free unique buffers and general scoped
+workspaces remain planned. Later milestones cover measured CPU performance,
+differentiation, numerical kernels and larger applications.
+
 The [design limits](docs/design-limits.md) explain achievable guarantees and
 tradeoffs. Eligible direct self-tail calls already reuse stack frames in native code and
 the interpreter. Resource-bearing frames and general mutual recursion have

@@ -699,54 +699,44 @@ from a misspelled option.
 
 ### Checked reference counting
 
-Native builds select `--gc arc` by default. This mode checks memory ownership
-and excludes tracing collection; `--gc tracing` explicitly selects the collector.
-Supported entries include native main/CLI/function executables, synchronous WASI
-executables, and C libraries whose inputs are copied and whose results contain
-scalars or explicitly released strings. The [gRPC extension](services.md#building-without-tracing-collection)
-adds checked split clients and services, accepted in
-[PR #161](roadmap-history.md#remote-calls-without-tracing-and-record-field-moves-pr-161).
-HTTP clients and servers are accepted in PRs #162/#163; their ownership contracts
-are described in the [ownership guide](ownership.md#checked-arc-delivery).
+Native builds use checked automatic reference counting (ARC) by default.
+`--gc arc` selects it explicitly; `--gc tracing` selects the collector scheduled
+for removal. ARC checks lifetimes before generating C and excludes tracing code.
+It requires counted cleanup; tracing stress and reuse poisoning are incompatible.
+No rejected program changes mode automatically.
 
-`fwp build --gc arc --staticlib stats.fwp -o libstats.a` can export a
-`String -> I64` function: it copies the input for the call and returns the count
-by value. A `String -> String` export returns an owned string with a matching
-`fwp_release_NAME` function. Records may contain scalars and owned strings;
-release the complete unchanged record once. Raw pointer fields carry manual
-pointee lifetimes; releasing a record frees its owned strings, never those
-pointees. [PR #193](roadmap-history.md#manual-c-pointers-and-foreign-storage-cleanup-pr-193)
-records passing native checks for the manual-pointer contract.
-Serialize host calls, including releases, and release every owned result
-before library unload. [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
-records passing six-platform and production checks for these library results.
-The mode rejects unproved ownership or cycles. Browser-loader and WASI task
-extensions pass actual-module JSPI and Asyncify cleanup checks on both Linux
-hosts; [the measurements](measurements/wasm-host-storage.md#webassembly-task-and-browser-loader-ownership)
-record their scope and remaining costs. Generated REST and MCP entries also use
-checked ownership; [PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164)
-records their passing functional, memory and production checks.
-Channels are eligible when their ownership types cannot form a queue cycle.
-`Channel[String]` and `Channel[List[Channel[String]]]` are eligible: the inner
-channels hold strings, which cannot point back. For `Channel[Task[String]]`, the
-[task-message extension](measurements/task-channels.md) additionally proves the
-task's computation and result owners: a known producer can be accepted, but an
-unknown producer or captured task-bearing queue is rejected. The linked guide
-records validation status. HTTP stream handles remain excluded because their
-handlers can own the queue. The [queued-function capture proof](ownership.md#functions-stored-in-channels)
-admits proved immutable captures and shared socket handles (`UdpSocket`,
-`Listener`, `Conn`), which cannot own a queue. It also admits captured data-only
-queues from `channel.make` when their nested owners have known sources.
-Served gRPC response channels have an explicit native-producer contract; arbitrary
-external channels remain rejected as captures. The linked contract
-records validation status. A function's input/output type alone cannot establish that
-proof. The compiler follows record,
-variant and container fields and rejects a path back to the same channel type;
-see the [proof and limits](ownership.md#ownership-boundaries).
-It requires normal counted
-freeing; tracing stress/verification and reuse poisoning are incompatible.
-The [ownership contract](ownership.md#checked-arc-delivery) and
-[delivery evidence](roadmap-history.md) record coverage and production acceptance.
+An owner keeps storage alive; a borrow uses it while an owner remains. The
+compiler inserts moves, borrows and count operations. Some values use direct
+fields or stack storage, but ARC does not imply zero allocations or zero counts.
+See [ownership](ownership.md) for contracts and [the plan](../PLAN.md) for remaining
+collector deletion and count-reduction work.
+
+Checked entries include executables, commands, HTTP/REST/MCP/gRPC services, C
+libraries and the documented WASI/browser subset. Interpreter entries also check
+queue, State and autodiff lifetimes before language effects; their values remain
+Rust-owned. [The admission table](ownership-admission.md) maps each entry to tests
+and restrictions. [The handoff](development-state.md) tracks the current G5 batch.
+
+Examples of accepted and rejected ownership relationships:
+
+- `Channel[String]` can own strings safely: strings cannot own the channel.
+- `Channel[List[Channel[String]]]` can own other queues whose payloads are strings.
+- A queue owning a callback that owns the same queue forms an owning cycle.
+  The compiler rejects an unproved cycle. An explicit [weak channel](weak-channels.md)
+  can provide a non-owning link; upgrading it must handle `None` after expiration.
+- A queued task or callback needs a proved producer and capture graph. A matching
+  function type alone is insufficient. HTTP stream handles and unknown external
+  function-bearing channels remain rejected.
+- Raw autodiff operations need an `ad.scope`; ordinary `grad`/`vjp` operations
+  arrange their own scope. A derivative value cannot be used after its tape expires.
+
+For C libraries, `String -> I64` copies its input and returns a scalar. A
+`String -> String` result owns its returned storage: release it exactly once with
+`fwp_release_NAME`. Records containing owned strings are released as complete,
+unchanged records. Raw pointer fields retain manual pointee lifetimes. Serialize
+host calls and releases, and release every owned result before unloading.
+[Retained callbacks](retained-callbacks.md) use a separate generated registration
+API; ordinary foreign callbacks expire with their enclosing foreign call.
 
 ### Static memory
 

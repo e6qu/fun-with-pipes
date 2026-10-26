@@ -551,56 +551,6 @@ fn check_pat(shapes: &Shapes, locals: &[MT], p: &Pat, ty: Option<&MT>) -> Result
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn recursive_record_comparison_terminates_and_checks_remaining_fields() {
-        let a = MT::con("A");
-        let b = MT::con("B");
-        let c = MT::con("C");
-        let integer = MT::con("std::I64");
-        let string = MT::con("std::String");
-        let mut shapes = Shapes::new();
-        for (ty, payload) in [(&a, &integer), (&b, &integer), (&c, &string)] {
-            shapes.insert(
-                ty.clone(),
-                TypeShape::Record(vec![
-                    (
-                        "children".into(),
-                        MT::Con("std::List".into(), vec![ty.clone()]),
-                    ),
-                    ("payload".into(), payload.clone()),
-                ]),
-            );
-        }
-        assert!(same_type(&shapes, &a, &b));
-        assert!(same_type(&shapes, &b, &a));
-        assert!(!same_type(&shapes, &a, &c));
-        let callable = |ty| MT::Fun(Box::new(ty), Box::new(integer.clone()));
-        assert!(same_type(&shapes, &callable(a.clone()), &callable(b)));
-        assert!(!same_type(&shapes, &callable(a), &callable(c)));
-    }
-
-    #[test]
-    fn recursive_comparison_keeps_variant_names_distinct() {
-        let a = MT::con("A");
-        let b = MT::con("B");
-        let shapes = Shapes::from([
-            (
-                a.clone(),
-                TypeShape::Adt(vec![("Next".into(), vec![a.clone()])]),
-            ),
-            (
-                b.clone(),
-                TypeShape::Adt(vec![("Next".into(), vec![b.clone()])]),
-            ),
-        ]);
-        assert!(!same_type(&shapes, &a, &b));
-    }
-}
-
 /// Functions reachable from explicit entry points, including closure constants.
 /// Used by execution admission and emission; unrelated definitions are not roots.
 pub(crate) fn reachable_functions(prog: &Program, entries: &[FuncId]) -> Result<Vec<bool>, String> {
@@ -675,4 +625,54 @@ pub(crate) fn reachable_functions(prog: &Program, entries: &[FuncId]) -> Result<
         }
     }
     Ok(live)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn recursive_record_comparison_terminates_and_checks_remaining_fields() {
+        let a = MT::con("A");
+        let b = MT::con("B");
+        let c = MT::con("C");
+        let integer = MT::con("std::I64");
+        let string = MT::con("std::String");
+        let mut shapes = Shapes::new();
+        for (ty, payload) in [(&a, &integer), (&b, &integer), (&c, &string)] {
+            shapes.insert(
+                ty.clone(),
+                TypeShape::Record(vec![
+                    (
+                        "children".into(),
+                        MT::Con("std::List".into(), vec![ty.clone()]),
+                    ),
+                    ("payload".into(), payload.clone()),
+                ]),
+            );
+        }
+        assert!(same_type(&shapes, &a, &b));
+        assert!(same_type(&shapes, &b, &a));
+        assert!(!same_type(&shapes, &a, &c));
+        let callable = |ty| MT::Fun(Box::new(ty), Box::new(integer.clone()));
+        assert!(same_type(&shapes, &callable(a.clone()), &callable(b)));
+        assert!(!same_type(&shapes, &callable(a), &callable(c)));
+    }
+
+    #[test]
+    fn recursive_comparison_keeps_variant_names_distinct() {
+        let a = MT::con("A");
+        let b = MT::con("B");
+        let shapes = Shapes::from([
+            (
+                a.clone(),
+                TypeShape::Adt(vec![("Next".into(), vec![a.clone()])]),
+            ),
+            (
+                b.clone(),
+                TypeShape::Adt(vec![("Next".into(), vec![b.clone()])]),
+            ),
+        ]);
+        assert!(!same_type(&shapes, &a, &b));
+    }
 }

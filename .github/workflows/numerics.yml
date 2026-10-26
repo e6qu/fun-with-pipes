@@ -92,11 +92,6 @@ jobs:
           name: compiler-lifetime-cleanup-${{ matrix.runner }}
           path: compiler-lifetime-evidence/
           if-no-files-found: error
-      - name: Existing compiler and execution regressions
-        if: ${{ !cancelled() }}
-        run: |
-          set -o pipefail
-          cargo test --locked --no-fail-fast --test golden_check --test repl --test debugger --test protocol --test exec --test cli --test preempt --test grpc 2>&1 | tee compiler-lifetime-evidence/tests.log
       - name: Shared lifetime admission and ARC allocation controls
         if: ${{ !cancelled() }}
         run: |
@@ -106,6 +101,18 @@ jobs:
           cargo test --locked --test arc_extensions raw_ad_cannot_escape_scope_proof_through_callbacks_or_arguments -- --nocapture 2>&1 | tee compiler-lifetime-evidence/ad-scopes.log || status=1
           cargo test --locked --no-fail-fast --test channel_cycle_ownership --test autodiff_nested --test reuse 2>&1 | tee compiler-lifetime-evidence/memory.log || status=1
           exit "$status"
+      - name: Publish admission results before tool tests
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: compiler-lifetime-admission-${{ matrix.runner }}
+          path: compiler-lifetime-evidence/
+          if-no-files-found: error
+      - name: Existing compiler and execution regressions
+        if: ${{ !cancelled() }}
+        run: |
+          set -o pipefail
+          cargo test --locked --no-fail-fast --test golden_check --test repl --test debugger --test protocol --test exec --test cli --test preempt --test grpc 2>&1 | tee compiler-lifetime-evidence/tests.log
       - uses: actions/upload-artifact@v7
         if: always()
         with:

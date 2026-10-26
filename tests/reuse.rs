@@ -12,6 +12,9 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
 fn fwp() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_fwp"))
 }
@@ -251,7 +254,14 @@ fn unique_records_are_updated_in_place() {
                 ("FWP_REUSE_VERIFY", "0"),
             ],
         );
-        assert!(o.status.success(), "{o:?}");
+        record_probe::save(
+            "reuse_allocations",
+            &format!("record-reuse-{reuse}"),
+            &measured,
+            &exe,
+            &o,
+        );
+        assert!(o.status.success(), "execution failed: {o:?}");
         assert_eq!(
             String::from_utf8_lossy(&o.stdout),
             "Acc {hi = 2000000, label = \"x\", lo = 0, n = 1000000, total = 3000000}\n"
@@ -326,7 +336,14 @@ fn variant_cells_are_reused() {
                 ("FWP_REUSE_VERIFY", "0"),
             ],
         );
-        assert!(o.status.success(), "{o:?}");
+        record_probe::save(
+            "reuse_allocations",
+            &format!("tree-reuse-{reuse}"),
+            &measured,
+            &exe,
+            &o,
+        );
+        assert!(o.status.success(), "execution failed: {o:?}");
         assert_eq!(String::from_utf8_lossy(&o.stdout), "786404\n");
         let err = String::from_utf8_lossy(&o.stderr);
         let mib = err
@@ -392,7 +409,14 @@ fn unique_arrays_are_written_in_place() {
                     ("FWP_REUSE_VERIFY", "0"),
                 ],
             );
-            assert!(o.status.success(), "{o:?}");
+            record_probe::save(
+                "reuse_allocations",
+                &format!("{name}-reuse-{reuse}"),
+                &measured,
+                &exe,
+                &o,
+            );
+            assert!(o.status.success(), "execution failed: {o:?}");
             assert_eq!(String::from_utf8_lossy(&o.stdout), want);
             let err = String::from_utf8_lossy(&o.stderr);
             let mib = err

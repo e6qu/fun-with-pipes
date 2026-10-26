@@ -61,7 +61,7 @@ the calculation, or establish language-wide overhead.
 | Build a depth-16 tree, increment all nodes ten times, sum | Reuse allocates less than one quarter of copy control |
 | Array push / array set / map update fixtures | Copy control >1,000 / 100 / 1,000 MiB; reuse <10 MiB each |
 
-The observation is cumulative requested managed bytes, including construction
+The observation is cumulative allocator-accounted managed bytes, including construction
 and updates, reported at process exit. It is not peak live memory: a program can
 allocate a gigabyte cumulatively while keeping only a small working set alive.
 Separate [bounded-memory tests](../tests/gc.rs) retain the long-loop 64 MiB peak

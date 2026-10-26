@@ -431,9 +431,12 @@ fn long_loop_runs_in_bounded_memory() {
     assert!(collections > 10, "{} collections", collections);
     assert!(rss < 64 * 1024, "max RSS {} KiB", rss);
 
-    // FWP_GC=off: the same output, no collections
-    let out = Command::new(&shared)
+    // Explicit collection-off is accepted by ARC too; ownership still reclaims.
+    let out = Command::new(&exe)
         .env("FWP_GC", "off")
+        .env("FWP_GC_STRESS", "0")
+        .env("FWP_GC_VERIFY", "0")
+        .env("FWP_REUSE_VERIFY", "0")
         .env("FWP_GC_STATS", "1")
         .output()
         .unwrap();

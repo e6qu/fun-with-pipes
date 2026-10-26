@@ -6,12 +6,20 @@ owner keeps it alive. An **alias** is another reference to the same storage.
 These are mostly compiler concepts: fwp programs still use ordinary immutable
 values and pipes.
 
+**Automatic reference counting (ARC)** tracks how many owners share an object
+and releases it when the last owner goes. A **tracing garbage collector (GC)**
+finds reachable objects by following references, then reclaims unreachable ones.
+A **region** groups allocations under one lifetime so they can be released
+together. fwp aims to prove ownership at compile time, using counts only where
+sharing requires them; deleting tracing does not by itself remove count costs.
+
 This page describes today's contracts. [PLAN.md](../PLAN.md) names the remaining
 implementation tasks. [Primitive ownership](primitive-ownership.md) specifies
 individual operations; [measurements](benchmarks.md) report actual costs.
 The [accepted ownership direction](gc-removal-design.md) specifies explicit weak
 links, rejection of unproved owning cycles, count-free unique storage and scoped
-regions. Current APIs may change; that direction is not implemented support.
+regions. Weak channels and retained C registrations are implemented; count-free
+unique buffers and general regions remain planned. APIs may change.
 
 ## Existing implementation
 
@@ -146,8 +154,8 @@ owners even if later individual nodes have counts of one. `array.sort` takes
 one array owner and can reuse uniquely owned storage. Shared arrays and views
 preserve their original contents. Inline wide values keep all their bits.
 The [comparison](measurements/array-sort-ownership.md) explains alias and cleanup
-controls, count savings, and additional code/stack costs. Its prepared six-host
-checks are complete; integrated delivery still requires final CI.
+controls, count savings, and additional code/stack costs. Its six-host
+checks and final production gates passed in #212.
 
 ## Tasks and channels
 

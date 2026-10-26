@@ -332,7 +332,6 @@ and dependency fetching, and reruns every variant with the
 [compact-record measurements](measurements/task-records.md). PR #189 has full production
 acceptance as recorded above; this earlier merge alone does not.
 
-[PR #188](https://github.com/e6qu/fun-with-pipes/pull/188)
 
 ## Smaller Linux task heap records (PR #187)
 
@@ -520,7 +519,6 @@ passed before the squash merge.
 and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39276733233)
 passed.
 
-[PR #171](https://github.com/e6qu/fun-with-pipes/pull/171)
 
 ## Acyclic nested channel ownership (PR #170)
 
@@ -531,7 +529,6 @@ passed.
 and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39259766267)
 passed before the squash merge.
 
-[PR #170](https://github.com/e6qu/fun-with-pipes/pull/170)
 
 ## Static constants and complete shutdown checks (PR #169)
 
@@ -544,7 +541,6 @@ All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/3
 and [Linux/ARM Mac/Intel Mac shutdown checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39232331253)
 passed before the merge.
 
-[PR #169](https://github.com/e6qu/fun-with-pipes/pull/169)
 
 ## Self-tail recursion and shutdown repairs (PR #168)
 

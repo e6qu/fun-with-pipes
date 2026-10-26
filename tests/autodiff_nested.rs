@@ -40,6 +40,55 @@ main = [
 "#;
 
 #[test]
+fn jacobian_output_count_keeps_its_callback_in_scope_without_optimization() {
+    let dir = fwp::cgen::TempDir::new("jacobian-scope").unwrap();
+    let source = dir.join("jacobian.fwp");
+    std::fs::write(
+        &source,
+        format!("{FUNCTIONS}\nmain = [2.0, 3.0] | rev.jacobian with-unused | echo\n"),
+    )
+    .unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    for raw in [false, true] {
+        let mut command = Command::new(compiler);
+        command.env_remove("FWP_NO_OPT");
+        if raw {
+            command.env("FWP_NO_OPT", "1");
+        }
+        let reference = checked(command.args(["run", "--interp"]).arg(&source));
+        assert_eq!(reference.stdout, b"[[4.0, 0.0], [0.0, 6.0]]\n");
+        assert!(reference.stderr.is_empty(), "{reference:?}");
+        let cfile = dir.join("jacobian.c");
+        let mut command = Command::new(compiler);
+        command.env_remove("FWP_NO_OPT");
+        if raw {
+            command.env("FWP_NO_OPT", "1");
+        }
+        checked(
+            command
+                .args(["build", "--gc", "arc", "--emit-c"])
+                .arg(&source)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(cfile).unwrap();
+        for opt in ["-O1", "-O2"] {
+            let binary = dir.join("jacobian.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            let actual = checked(
+                Command::new(binary)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0"),
+            );
+            assert_eq!(actual.stdout, reference.stdout);
+            assert!(actual.stderr.is_empty(), "{actual:?}");
+        }
+    }
+}
+
+#[test]
 fn nested_reverse_derivatives_match_analytic_values_and_both_engines() {
     let dir = fwp::cgen::TempDir::new("fwp-nested-reverse").unwrap();
     let source = dir.join("nested.fwp");

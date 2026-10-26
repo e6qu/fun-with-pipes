@@ -1,8 +1,9 @@
 # Current work
 
-**Next:** finish shared lifetime admission and ARC memory comparisons, overhaul
-current guides/tutorials, then validate this combined G5 batch. No new compiler
-build or CI run has tested these edits yet. Tracing has **not** been deleted.
+**Next:** publish the audited repair batch for draft [PR #216](https://github.com/e6qu/fun-with-pipes/pull/216),
+then rerun focused compiler/admission checks before the full final-head matrix.
+The old focused head is `0f33476f2baa98a88392cafa7d1152c05cd25c46`, run
+`40254088410`. Tracing has **not** been deleted.
 
 Worktree: `/private/tmp/fwp-ownership-fault-matrix`.
 Branch: `remove-tracing-runtime`, based on merged #215.
@@ -40,10 +41,34 @@ primitive inventory passed: 394 declarations, 384 symbols, 40 aliases, 373
 contracts, 19 templates, no review entries. Commands:
 `python3 scripts/local-guard.py python3 /private/tmp/check-fwp-callback-preparation.py`
 and `python3 scripts/local-guard.py python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /private/tmp/fwp-g5-primitive-inventory.json`.
-New Rust code and tests still need compiler integration checks. Do not call the batch verified from formatting.
-Run focused entry/lifetime tests on runners, then the full nine-job production
-matrix and documentation audit for the final commit. Audit every failure before
-publishing a repair. No full local build, suite or benchmark is authorized.
+The documentation audit passed 161 link sets, 106 preparation pairs/tags and
+eight roadmap rows (`python3 scripts/local-guard.py python3 scripts/check-roadmap.py`).
+Focused run `40254088410` was fully audited on GCC/Linux and Intel macOS.
+Both passed 188 library tests, two task-timer tests, the API doctest, all completed
+tool/entry targets, admission controls and six reuse tests. Six external gRPC
+cases were ignored in this focused configuration; this is not full acceptance.
+Both failed Clippy's helper-after-test-module rule and the same nested-autodiff
+case. Logs are under `/private/tmp/fwp-216-focused/{linux-complete,macos-complete}`.
+
+Repairs awaiting runner verification:
+
+- Move the reachability helper before the IR test module.
+- Filter impossible function origins from scalar expressions, using the existing
+  type rules already applied to function results. The old compiler reproduces
+  the rejection for direct raw `rev.jacobian with-unused`, while an enclosing
+  loop or optimization makes it pass. The new reduced regression checks raw and
+  optimized interpretation/native code; the proof model gains no new contexts.
+- Unset `FWP_NO_OPT` for optimized controls: even the value `0` disables passes.
+- Keep the collection-off loop check on the ordinary ARC executable, so it does
+  not accidentally run the deliberately count-free control without collection.
+- Check macro/compile-time rejection and REPL recovery before output; retain C,
+  binaries and allocation reports for the reuse comparisons.
+
+Guarded fixture syntax/type checks passed with the saved #215 compiler
+(`/private/tmp/fwp-g5-check-fixtures.py`). The saved-compiler reduction driver
+`/private/tmp/fwp-g5-reduce-ad.py` confirms the pre-existing raw native rejection;
+neither verifies the current compiler repair. Current docs and tutorial changes
+passed the full link audit again. No full local build/suite/benchmark ran.
 
 G2's N/2N/4N analysis baseline remains unmeasured. This batch reuses the existing
 proof, without increasing precision. Subsequent G5 work removes tracing code,
