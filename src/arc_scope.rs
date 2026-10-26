@@ -1586,7 +1586,13 @@ mod tests {
                     }
                 }
             }
-            for n in [16, 32, 64] {
+            let time_limits_ms: [u128; 3] = match (std::env::consts::OS, std::env::consts::ARCH) {
+                ("linux", "x86_64") => [20, 35, 65],
+                ("macos", "x86_64") => [55, 90, 170],
+                host => panic!("no ownership-analysis timing baseline for {host:?}"),
+            };
+            let mut failures = Vec::new();
+            for (size_index, n) in [16, 32, 64].into_iter().enumerate() {
                 let mut source = String::from(
                     r#"
 recur : I64 -> I64
@@ -1641,9 +1647,40 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                     let mut sorted = samples[index].clone();
                     sorted.sort_unstable();
                     let stats = &expected[index];
+                    let (closures, facts) = match sites {
+                        ClosureSites::Merged => (13, 57),
+                        ClosureSites::Separate => (5 * n + 8, 10 * n + 47),
+                    };
+                    if stats.rounds > 16
+                        || stats.visits > 15 * n + 300
+                        || stats.summary_updates > 6
+                        || stats.contexts > n + 33
+                        || stats.closures > closures
+                        || stats.facts > facts
+                        || program.funcs.len() > n + 33
+                        || node_count > 19 * n + 126
+                    {
+                        failures.push(format!(
+                            "{sites:?} N={n}: analysis-size budget exceeded: {stats:?}"
+                        ));
+                    }
+                    if sorted[3] > time_limits_ms[size_index] * 1_000_000 {
+                        failures.push(format!(
+                            "{sites:?} N={n}: median {} ns exceeds {} ms",
+                            sorted[3], time_limits_ms[size_index]
+                        ));
+                    }
                     println!("ownership-analysis sites={sites:?} n={n} source_bytes={} functions={} ir_nodes={node_count} median_ns={} samples_ns={:?} origin_bytes={} rounds={} visits={} summary_updates={} contexts={} closures={} facts={}", source.len(), program.funcs.len(), sorted[3], samples[index], std::mem::size_of::<Origin>(), stats.rounds, stats.visits, stats.summary_updates, stats.contexts, stats.closures, stats.facts);
                 }
+                samples[0].sort_unstable();
+                samples[1].sort_unstable();
+                if samples[1][3] * 2 > samples[0][3] * 3 {
+                    failures.push(format!(
+                        "N={n}: separate-site median exceeds 1.5 times the merged control"
+                    ));
+                }
             }
+            assert!(failures.is_empty(), "{}", failures.join("\n"));
         });
     }
 

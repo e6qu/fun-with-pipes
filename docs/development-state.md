@@ -1,12 +1,9 @@
 # Current work
 
-**Next:** publish the measurement-harness repair, dispatch `ownership-analysis`,
-record both hosts' paired results and budgets, then run the full final-head
-matrix for draft [PR #216](https://github.com/e6qu/fun-with-pipes/pull/216).
-The creation-site repair passed Linux focused run `40259739899`; Intel macOS
-passed its lifetime/reuse stages and was finishing tool checks. The paired run
-`40260929945` failed to compile one test caller on both hosts; see below.
-Tracing has **not** been deleted.
+**Next:** publish the recorded G2 baseline and enforced budgets for [PR #216](https://github.com/e6qu/fun-with-pipes/pull/216),
+mark it ready, and run all nine production jobs, documentation and the isolated
+`ownership-analysis` suite on that exact final head. Audit every failure before
+any repair push. Tracing has **not** been deleted.
 
 Worktree: `/private/tmp/fwp-ownership-fault-matrix`.
 Branch: `remove-tracing-runtime`, based on merged #215.
@@ -20,100 +17,82 @@ Its tree equals tested head `bd77d65f58d8c5117ea678cb86cf15fbcf9231f7`:
 `dad73fe097358b3f5842b5d44dcfc13b84fb6bac`.
 All nine production jobs in run `40221722197` and documentation `40221722121`
 passed. G3/G4 are delivered. [History](roadmap-history.md) records the changes.
-Earlier repair logs are retained under `/private/tmp/fwp-215-ci/`; the successful
-final run supersedes their failed heads. Duplicate main run `40252320511` was
-cancelled to free capacity after checking that no completed step had failed;
-its source tree was already fully verified in #215.
+Duplicate main run `40252320511` was cancelled after auditing completed steps;
+its identical source tree was already verified.
 
 ## This batch
 
-- Share function reachability and queue/State/autodiff lifetime checks between
+- Share reachable-function and queue/State/autodiff lifetime checks between
   interpreter entry calls and native generation. Check gRPC handlers before
-  opening a listener. Keep native representation and C ABI checks separate.
-- Reject owning cycles before effects. Move the invalid inter-task derivative
-  out of the supported-program corpus; retain explicit rejection and runtime
-  defense controls. Preserve macros, compile-time calls and returned functions.
+  opening a listener; retain separate native representation/C ABI checks.
+- Reject owning cycles before effects. Keep explicit unscoped-derivative rejection
+  and runtime-defense controls outside the supported-program corpus. Cover macros,
+  compile-time calls, REPL recovery and returned functions.
+- Fix a false rejection: two partial applications of `uncurry3` were merging
+  their captures and inventing an unscoped call. Separate finite IR creation
+  positions; keep actual invocation scopes and rejection of real escapes.
 - Compare identical ARC-generated C with reuse enabled/disabled, retaining counts
-  in both variants. Keep record/tree/array/map allocation budgets. Run ordinary
-  long-loop and HTTP/REST memory checks in ARC with their existing RSS bounds.
-- Replace stale G3/G4 directions and explain ownership, weak links, test controls
-  and measurements with examples. Audit tutorials and links with the code.
+  in both. Preserve allocation budgets and long-loop/HTTP/REST memory limits.
+- Replace stale plans and weak/callback claims. Explain tutorial concepts, numeric
+  results, macro checking order, derivative lifetimes and benchmark boundaries.
 
-## Checks and unresolved work
+## Checks and evidence
 
-Guarded formatting, Cargo metadata/native schedule audit (254 targets), and
-primitive inventory passed: 394 declarations, 384 symbols, 40 aliases, 373
-contracts, 19 templates, no review entries. Commands:
-`python3 scripts/local-guard.py python3 /private/tmp/check-fwp-callback-preparation.py`
-and `python3 scripts/local-guard.py python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /private/tmp/fwp-g5-primitive-inventory.json`.
-The documentation audit passed 162 link sets, 106 preparation pairs/tags and
-eight roadmap rows (`python3 scripts/local-guard.py python3 scripts/check-roadmap.py`).
-Focused run `40254088410` was fully audited on GCC/Linux and Intel macOS.
-Both passed 188 library tests, two task-timer tests, the API doctest, all completed
-tool/entry targets, admission controls and six reuse tests. Six external gRPC
-cases were ignored in this focused configuration; this is not full acceptance.
-Both failed Clippy's helper-after-test-module rule and the same nested-autodiff
-case. Logs are under `/private/tmp/fwp-216-focused/{linux-complete,macos-complete}`.
+Focused run `40259739899`, source `bf2793f196da45fee26258b0f7aaf4ca1ad1cdb3`,
+passed on GCC/Linux and Intel macOS: formatting/Clippy, 189 library tests, task
+cleanup/doctests, all seven nested-autodiff cases, two cycle/macro cases, six reuse
+cases, admission controls and tool targets. Six external gRPC cases are ignored
+in this focused configuration; it does not replace full production acceptance.
+Logs: `/private/tmp/fwp-216-sites-{linux-admission,mac-complete}`.
 
-Repair run `40256218403`, head `e02ef58e51de3b33e27b37fc954a2017bbd6697f`,
-fixed Clippy and passed the existing cleanup/admission/reuse/tool checks on Intel
-macOS. GCC/Linux also completed all tool checks and has the same two remaining
-raw-autodiff failures. Both hosts were fully audited. The new reduced Jacobian case fails
-the same way as the older nested case. Scalar-origin filtering did not fix it.
-Logs: `/private/tmp/fwp-216-repair-{mac-complete,linux-complete}`.
+Paired analysis run `40261359439`, source
+`092009f83a1ba217820f2495d459fdb5c3b10c74`, passed both hosts, including all library
+tests and the explicit scaling test. [The report](measurements/ownership-analysis.md)
+records 16/32/64-worker samples, source hashes, counts, process RSS and limits.
+The old merging rule exists only as a test control. Measurement instrumentation
+is absent from production builds. Documentation run `40261345487` passed.
+The final budget assertions are newer and still require runner verification.
 
-The reduced typed IR identifies the cause: partials of `uncurry3 vjp` and
-`uncurry3 rev._vjp`, both created outside AD, share one capture identity. This
-invents a call to the inner worker outside its real scope. A five-line `uncurry`
-example also reproduces with the saved #215 compiler. Distinct creation sites
-make the diagnostic model converge, but runner tests must verify the Rust fix.
+Earlier failures were fully audited and repaired: helper placement for Clippy;
+incorrect `FWP_NO_OPT=0` controls (presence disables optimization); the closure
+capture merge above; one native-check test caller given the wrong argument; and
+missing evidence when the isolated harness failed to build. Source/log evidence
+is in `/private/tmp/fwp-216-focused/`, `/private/tmp/fwp-216-repair-*/` and
+`/private/tmp/fwp-216-paired-all-failures.log`. Passing later sources supersede
+those failed heads; scalar-origin filtering alone did not fix the scope defect.
 
-The current repair indexes partials by finite expression/constant positions as
-well as function, supplied argument count and creation scope. Invocation scopes
-still control admission. A new State regression distinguishes two partials
-created in the same function before a handler and rejects a real unscoped call.
-The [G2 analysis measurement](measurements/ownership-analysis.md) uses 16/32/64
-workers, raw lowering, seven timed proofs, counts and process peak RSS. Linux
-passed the new State control, all seven autodiff tests and six reuse tests in
-`40259739899`; its first measurement completed at 11.5/20.0/37.3 ms. These samples
-are from the initial fixture, not the local paired comparison. The latter uses
-the same valid IR with the old capture-merging rule as a test-only control;
-production has no alternate mode. Its isolated suite avoids rerunning unrelated
-integration targets just to collect analysis evidence. Record results and budgets before accepting this change. Production
-builds contain no measurement counters. Paired run `40260929945` at `cc86e2f0`
-failed because one `crate::arc::check` call received the analysis-only fourth
-argument. Both hosts reported only this compiler error and a consequent missing
-artifact directory; all failed steps were audited. The repair removes that
-argument and creates evidence before building, retaining the build log. The
-isolated suite runs the inexpensive library tests before the paired measurement.
-Failure logs: `/private/tmp/fwp-216-paired-all-failures.log`.
+Guarded formatting, metadata/native schedule audit (254 targets), primitive
+inventory and documentation checks passed during implementation. Inventory:
+394 declarations, 384 symbols, 40 aliases, 373 contracts, 19 templates, no review
+entries. Links: 162 sets, 106 preparation pairs/tags and eight roadmap rows.
+Commands use `python3 scripts/local-guard.py` with:
 
-Tutorial corrections now include macro checking order, numeric output reasoning,
-`iterate 5` meaning four updates, derivative lifetimes, and delivered weak/graph
-support. Guarded syntax/type checks of the generated scaling source passed after
-fixing its recursion declaration, names and explicit Async signatures. Those
-checks used the saved compiler and do not verify the current proof repair.
+- `python3 /private/tmp/check-fwp-callback-preparation.py`
+- `python3 scripts/check-roadmap.py`
+- `python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /private/tmp/fwp-g5-primitive-inventory.json`
 
-Subsequent G5 work removes tracing code, selection, collector-only assertions and
-report fields, then checks actual binaries. ARC minimization A2–A6 is separate.
+Saved-compiler syntax/type checks and a reduced IR model helped diagnose the
+scope issue; the runner results above verify the actual repair. No full local
+build, suite or benchmark ran. Draft production skips are not passing gates.
 
-The [Intel compiler abort](measurements/compiler-abort.md) remains unexplained;
-passing reruns do not establish its cause. Investigate any recurrence from the
-source/input, without restarting disassembly-led allocator experiments.
+## After this batch
 
-## Delivery
+G5 still removes tracing selection/code, collector-only assertions and reporting
+fields, then checks actual binaries. Use the deletion map in
+[ownership diagnostics](ownership-diagnostics.md). ARC minimization A2–A6 is
+separate. The [Intel compiler abort](measurements/compiler-abort.md) remains
+unexplained; investigate recurrence from source/input, not disassembly guesses.
 
-Keep the old #214/#215 publisher scripts stopped; they contain obsolete docs.
-No new publisher or merge watcher is running. Standing authorization covers
-publication and squash merge after all exact-head gates pass. Supply one subject
-of at most 80 characters and an empty body, then verify the merge result.
-Continue the plan after merging; a PR is not the whole roadmap.
+Keep old #214/#215 publisher scripts stopped; they contain obsolete docs.
+No merge watcher is running. After all exact-head gates pass, squash-merge with
+an explicit subject of at most 80 characters and an empty body, then verify it.
+Continue the plan after merging; one PR does not complete the roadmap.
 
 ## Roadmap status
 
 | Step | Status | Remaining acceptance |
 |---|---|---|
-| 1 | In progress | G2 analysis baseline; G5 shared admission, test migration and tracing deletion |
+| 1 | In progress | G2/G5 final validation, then tracing deletion |
 | 2 | In progress | A2–A6 residual-cost baseline, unique buffer and scoped workspace |
 | 3 | In progress | F1–F3 function-call and recursion costs |
 | 4 | In progress | P1–P3 measured CPU budgets |

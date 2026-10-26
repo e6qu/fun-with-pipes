@@ -113,6 +113,6 @@ are included. Deliberately omitting expiration or the channel's
 metadata release must fail independently. The runtime probe checks expiration
 before dereferencing a deliberately invalid target.
 
-All production gates passed for #215. Before increasing proof precision, record
-G2's analysis-time and memory baseline. Count savings alone are not a timing
+All production gates passed for #215. Further proof precision must respect
+[G2's measured analysis budgets](measurements/ownership-analysis.md). Count savings alone are not a timing
 improvement; [the benchmark guide](benchmarks.md) explains the distinction.

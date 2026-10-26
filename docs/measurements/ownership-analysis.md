@@ -1,8 +1,9 @@
 # Ownership-analysis cost
 
 This measures compiler work, not the execution speed of a compiled fwp program.
-The initial measurements are pending in [PR #216](https://github.com/e6qu/fun-with-pipes/pull/216).
-Do not claim a linear bound or a timing improvement from this protocol alone.
+For the 64-worker fixture below, the repaired proof took 29.8 ms on Linux AMD64
+and 80.8 ms on Intel macOS. It fixes a false rejection; this is not a compiler
+speedup claim or a proved linear bound.
 
 ## Why this measurement is needed
 
@@ -46,7 +47,10 @@ For each size, source checking and lowering finish before timing. Two test
 policies use exactly the same IR: `Merged` reconstructs the earlier capture rule;
 `Separate` uses creation positions. `Merged` does not exist in production builds.
 Both use the current data structures and type filtering, so this isolates the
-merging rule rather than benchmarking a historical compiler binary.
+merging rule rather than benchmarking a historical compiler binary. Both also
+number IR positions; the ratio does not measure the added numbering work or the
+change from the older origin-value layout. Absolute repaired-proof timings
+include those costs.
 
 After one warmup per policy, the test constructs seven fresh proofs per policy.
 Execution order alternates Merged/Separate and Separate/Merged. It prints every
@@ -69,6 +73,54 @@ Facts are summed across input, capture, output, callback, channel, task, State a
 error sets. A fact can occur in several sets and is counted in each. These counts
 describe retained analysis data; they are not measured peak heap bytes.
 
+## Recorded baseline and budgets
+
+[Run 40261359439](https://github.com/e6qu/fun-with-pipes/actions/runs/40261359439)
+passed on source `092009f83a1ba217820f2495d459fdb5c3b10c74`.
+[The dataset](ownership-analysis-2026-10-26.json) retains every sample, source
+hash, count and host description. Both used Rust 1.99.1, O1, debug assertions and
+overflow checks. Linux used an AMD EPYC 9V74 runner; macOS reported an Intel
+Core i7-8700B. The C compiler is outside this experiment.
+
+| Host | Workers | Merged median | Separate median | Separate / Merged | Median limit for either rule |
+|---|---:|---:|---:|---:|---:|
+| Linux AMD64 | 16 | 8.11 ms | 8.62 ms | 1.063× | 20 ms |
+| Linux AMD64 | 32 | 14.39 ms | 15.56 ms | 1.081× | 35 ms |
+| Linux AMD64 | 64 | 27.02 ms | 29.76 ms | 1.102× | 65 ms |
+| Intel macOS | 16 | 22.68 ms | 24.53 ms | 1.082× | 55 ms |
+| Intel macOS | 32 | 39.64 ms | 42.73 ms | 1.078× | 90 ms |
+| Intel macOS | 64 | 82.36 ms | 80.79 ms | 0.981× | 170 ms |
+
+On Linux, separating sites adds 6–10% in this instrumented comparison. The 64-worker
+macOS samples vary substantially (Separate: 78.7–93.4 ms); its ratio does not
+establish an improvement. Separate's N→2N and 2N→4N ratios are 1.80×/1.91× on
+Linux and 1.74×/1.89× on macOS. Three sizes of one fixture do not establish
+asymptotic complexity.
+
+Both hosts produced the same counts:
+
+| Workers | Concrete functions / contexts | IR nodes | Function visits | Separate closures | Separate facts |
+|---|---:|---:|---:|---:|---:|
+| 16 | 49 | 430 | 540 | 88 | 207 |
+| 32 | 65 | 734 | 780 | 168 | 367 |
+| 64 | 97 | 1,342 | 1,260 | 328 | 687 |
+
+Both rules take 16 rounds and make six output-summary updates. Merged keeps
+13 closure identities and 57 facts at every size; Separate retains the distinctions
+needed by the regression. An origin occupies 48 bytes in both test policies.
+The measured command's peak RSS is 46.36 MiB on Linux and 49.82 MiB on macOS;
+these process peaks include the frontend and are not per-policy heap measurements.
+
+The test enforces these count ceilings: functions/contexts `N+33`, IR nodes
+`19N+126`, visits `15N+300`, 16 rounds and six summary updates. Separate permits
+`5N+8` closure identities and `10N+47` facts; Merged permits 13 and 57.
+The time limits above are 2.1× the repaired medians, rounded up in 5 ms
+increments. Separate's median must also remain at most 1.5× Merged's.
+These are regression screens with room for runner variation, not promised
+compilation times. Budget failures retain all size/policy observations and need
+investigation; do not silently raise a limit. New inputs or proof precision need
+a reviewed replacement baseline.
+
 ## Reproduce and assess
 
 The [`ownership-analysis` suite](../../.github/workflows/numerics.yml)
@@ -85,7 +137,6 @@ memory for the command, including Cargo, the test harness and frontend work.
 Linux reports KiB; macOS reports bytes. This process peak does not isolate the
 ownership pass or establish its incremental memory cost.
 
-Before accepting the repair, record both hosts' samples and counts here, calculate
-N→2N and 2N→4N ratios and Separate/Merged cost, then set explicit count/time
-regression budgets from that baseline. Keep the source IDs with the observations. These three sizes exercise
-one mix of queues, captures, recursion and pipes; they do not bound all programs.
+The final source must pass these budgets and the complete production correctness
+matrix. This fixture covers one mix of queues, captures, recursion and pipes;
+it does not bound all programs or establish pass-specific peak heap use.

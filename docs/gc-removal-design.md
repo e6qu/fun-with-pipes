@@ -206,8 +206,10 @@ specialized function count for N, 2N and 4N versions of independent queues,
 nested captures, recursive calls and pipelines. Compare the same source before
 and after a change. Termination of a finite analysis is not proof of linear cost.
 Select numeric compile-time budgets from that baseline before widening analysis.
-No measured compile-time bound or comparative speed result exists for this
-direction yet. The first measurement must establish that baseline.
+The [first analysis baseline](measurements/ownership-analysis.md) measures the
+creation-site repair against the earlier merging rule and sets count/time
+ceilings. It covers one combined fixture; its process-memory peak does not isolate
+the proof heap, and three sizes do not establish an asymptotic bound.
 
 ## Finite route to deleting tracing
 
