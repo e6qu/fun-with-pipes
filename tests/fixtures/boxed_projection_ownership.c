@@ -18,8 +18,6 @@ static int projection_text(V text) {
 int main(void) {
     fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
     if(!fwp_fns[0].owned||!fwp_fns[0].owned->drop_arguments)return 200;
-    const char *stress=getenv("FWP_GC_STRESS");
-    int collecting=stress&&!strcmp(stress,"1");
     double before=projection_charge();
     for(int shared=0;shared<2;shared++)for(int repeat=0;repeat<64;repeat++) {
         V input=projection_input();if(shared)fwp_rc_dup(input);
@@ -36,7 +34,7 @@ int main(void) {
             if(*fwp_rc_slot(text)!=1||!projection_text(text))return 204;
             fwp_fns[0].owned->drop_arguments(&input,0,1);
         }
-        if(!collecting&&projection_charge()!=before)return 205;
+        if(projection_charge()!=before)return 205;
         if(fwp_cleanups)return 206;
     }
     fwp_trap_recover=projection_recover;fwp_trap_jb=&projection_failure;fwp_trap_cleanup=fwp_cleanups;
@@ -44,7 +42,7 @@ int main(void) {
         V input=projection_input();
         if(!setjmp(projection_failure)){(void)f2(input);return 207;}
         if(fwp_cleanups||strcmp(fwp_trap_msg,"kept"))return 208;
-        if(!collecting&&projection_charge()!=before)return 209;
+        if(projection_charge()!=before)return 209;
     }
     return 0;
 }

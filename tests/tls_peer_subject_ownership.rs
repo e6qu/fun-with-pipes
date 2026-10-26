@@ -112,7 +112,7 @@ static int probe(int argc,char **argv){
   if(bio_gets!=(stage==2?0:1)||bio_frees!=bio_gets)return 2;
   if(buffer_frees!=(stage==0||stage>=5?1:0))return 3;
   if(fwp_cleanups||ERR_peek_error())return 4;
-  if(stage==6&&!fwp_reuse_verify&&fwp_heap.live > live_bytes)return 44;
+  if(stage==6&&fwp_heap.live > live_bytes)return 44;
   armed=0;
  }
  stage=0;char *retry=fwp_tls_peer_subject(client);if(!retry||strcmp(retry,"CN=localhost,O=fwp"))return 43;free(retry);

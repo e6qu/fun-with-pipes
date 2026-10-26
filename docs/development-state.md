@@ -1,7 +1,8 @@
 # Current work
 
-**Next:** finish G5's remaining test/report migration, then run integrated
-compiler and production validation on runners. This branch is incomplete and
+**Next:** migrate `linalg_ownership`, `channel_queue_ownership` and their C
+fixtures, then finish the remaining test/report/workflow audit below before
+integrated compiler and production validation on runners. This branch is incomplete and
 has not been built. Do not claim GC removal is verified.
 
 Worktree: `/private/tmp/fwp-delete-tracing`; branch `delete-tracing-collector`.
@@ -33,6 +34,10 @@ compiler-abort report; its handoff points here. Old publisher scripts stay stopp
 - File-constructor rollback, TLS listener/cache/subject/wire ownership and HTTP/2
   client/server checks retain their faults. Client byte-balance assertions now run
   unconditionally, without poison/stress switches that used to suppress them.
+- Inline-file layout comparisons now release both the file/path and display
+  text; Unicode file I/O retains a real forced-copy variant. NUL-path rejection,
+  Windows raw/native comparisons and matrix controls keep all distinct cases.
+  Field-move/projection and TLS subject balance assertions are unconditional.
 - Earlier test migrations cover arrays, hashes, lists, State, cached values,
   derivatives, file/socket/library resources, callbacks and compiler call
   lifetimes. They preserve aliases, partial failures, cancellation, forced-copy
@@ -75,7 +80,11 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 
 ## Remaining migration, in order
 
-1. **Finish test mode removal.** The list/State/closure fixtures in
+1. **Finish test mode removal.** A fresh audit still finds old controls in
+   linear algebra/channel queues; file construction/discard/error/storage targets;
+   list/fold/filter/sort/map/zip targets; numeric fusion/storage/device bounds;
+   process/resource frames; AOT/library/preemption/macOS checks. Review their
+   actual assertions and paired C fixtures, not just environment names. The list/State/closure fixtures in
    `list_applicative_ownership` are migrated; integrated execution is pending.
    `unwind_cleanup` and typed-State reports are also migrated. Continue from a fresh source audit; do not reapply the stale candidates.
    Remove variable `--gc` arguments, duplicate

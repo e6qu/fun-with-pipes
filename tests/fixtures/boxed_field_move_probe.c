@@ -19,8 +19,6 @@ int main(void) {
     factory.entry=conversion_factory; table[2].owned=&factory; table[2].entry=conversion_factory;
     fwp_fns=table;
     fwp_clo callback={2,0};
-    const char *stress=getenv("FWP_GC_STRESS");
-    int collecting=stress&&!strcmp(stress,"1");
     size_t live_bytes=fwp_heap.live;
     for (volatile int shared=0;shared<2;shared++)
     for (volatile int children=0;children<2;children++)
@@ -58,7 +56,7 @@ int main(void) {
         }
         conversion_box=0;
         if(fwp_cleanups)return 217;
-        if(!collecting&&fwp_heap.live!=live_bytes)return 218;
+        if(fwp_heap.live!=live_bytes)return 218;
     }
     return 0;
 }

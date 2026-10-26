@@ -9,8 +9,6 @@ static int move_text(V value, const char *expected) {
 }
 int main(void) {
     fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
-    const char *stress = getenv("FWP_GC_STRESS");
-    int collecting = stress && !strcmp(stress, "1");
     size_t live_bytes = fwp_heap.live;
     for (int shared = 0; shared < 2; shared++) {
         for (int alias = 0; alias < 2; alias++) {
@@ -30,7 +28,7 @@ int main(void) {
                     if (*fwp_rc_slot(input) != 1 || !move_text(input, "abc")) return 199;
                     move_drop(input);
                 }
-                if (!collecting && fwp_heap.live != live_bytes) return 200;
+                if (fwp_heap.live != live_bytes) return 200;
                 if (fwp_cleanups) return 201;
             }
         }
@@ -41,7 +39,7 @@ int main(void) {
         V input = fwp_rc_fresh(fwp_cstr("abc"));
         if (!setjmp(move_failure)) { (void)f6(input); return 202; }
         if (fwp_cleanups != fwp_trap_cleanup) return 203;
-        if (!collecting && fwp_heap.live != live_bytes) return 204;
+        if (fwp_heap.live != live_bytes) return 204;
     }
     return 0;
 }
