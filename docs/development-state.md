@@ -1,42 +1,28 @@
 # Current work
 
-**Next:** rebase onto verified merged
-[PR #216](https://github.com/e6qu/fun-with-pipes/pull/216), finish the G5 test/report
-migration below, then run integrated
-compiler and production validation. This deletion branch is incomplete and has
-not been built. Do not publish it as working code or claim GC removal is verified.
+**Next:** finish G5's remaining test/report migration, then run integrated
+compiler and production validation on runners. This branch is incomplete and
+has not been built. Do not claim GC removal is verified.
 
 Worktree: `/private/tmp/fwp-delete-tracing`; branch `delete-tracing-collector`.
-Base: #216 source `0db38df8bd0b3ea6f4dc1165edd985bc82c71ccb`.
-Local checkpoints: `d83f4745` (runtime deletion), `bd299fe0` (release controls),
-`dd0c2fbe` (counted probes and numeric cases), and `87d68cd1` (Windows contexts,
-client reports and nine owner-test migrations). `6e065730` records native/WASI entries and Linux context checks. Further reviewed
-edits in `2ad9538b` migrate 25 owner/program targets, iterator/recursion measurements
-and HTTP/2/TLS borrowed-byte probes. `c62455fc` removes test root fences, replaces
-loop leak controls and repairs closure destruction failure. Further edits migrate
-list/State/unwind cases and the HTTP/2 unit fixture, remove the unreachable closure
-recovery registration and fix an await-result leak in the typed-State probe.
-Nothing here has been pushed.
-
-`cf8e0e95` saves the list/State/unwind group. `f5a7750e` migrates
-processes, sockets, raw buffers, working directories, text tools/transforms and
-range arrays/sets. Their inputs, optimization/fusion settings and deliberate
-faults remain. Further edits migrate console/system snapshots and collection
-builders/maps/sets, with their five-field cost reports and binary audits.
-The five derivative targets now use one ownership model while retaining direct
-and scoped runtime paths, workspace on/off, O1/O2, every failure control and
-interpreter comparisons. Precision reports have three checked fields; collection
-counts are removed. There are 26 unchanged mode candidates left.
+Base: verified #216 squash `f5621cb46828273f7ce8edf92be4062ccec0f17c`.
+All eleven private checkpoints were rebased through `f441b313`, preserving the
+verified queue rejections, analysis caches and bounded startup. No new PR is open;
+nothing from this deletion branch has been pushed.
 
 #216 passed nine production jobs (`40274667944`), docs (`40273010537`) and both
 analysis-budget jobs (`40273030485`) on `1dd5fcaed7792b5505283b1037a9c22d788a3be5`.
-It was squash-merged as `f5621cb46828273f7ce8edf92be4062ccec0f17c`; tree/message
-verification and rebase are next. No new PR is open. Its worktree is
-`/private/tmp/fwp-ownership-fault-matrix`, branch `remove-tracing-runtime`.
-The primary checkout's handoff tracks its live CI status. Keep the final tested
-head unchanged while its gates run. The primary checkout remains detached at
-#209; preserve its untracked compiler-abort report. Old #214/#215 publishers
-must stay stopped. No merge watcher is running.
+The merge has the same tree and the required one-line message. See
+[delivery history](roadmap-history.md). Keep the primary checkout's untracked
+compiler-abort report; its handoff points here. Old publisher scripts stay stopped.
+
+The current batch preserves five derivative targets' failure controls, precision,
+workspace choices and interpreter comparisons. Direct runtime and callback-scoped
+calls are distinct tests, not memory modes. Precision reports now have three
+checked fields. Nested derivatives and queued functions are also migrated. Rejected derivative
+programs now test admission in both engines; direct C probes separately verify
+root startup, cross-task use and retired task IDs. Queue tests keep all weak-link,
+resource, capture, scope and missing-release checks.
 
 ## Implemented here; integration still pending
 
@@ -74,7 +60,7 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 1. **Finish test mode removal.** The list/State/closure fixtures in
    `list_applicative_ownership` are migrated; integrated execution is pending.
    `unwind_cleanup` and typed-State reports are also migrated. Next review the
-   remaining 26 unchanged candidate files and stale candidates listed below.
+   remaining 24 unchanged candidate files and stale candidates listed below.
    Remove variable `--gc` arguments, duplicate
    ARC/tracing loops, obsolete environment settings and CLI-selector tests.
    Keep every distinct semantic input, optimization/layout choice and ownership
@@ -93,14 +79,14 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
    compact/range sets: five counter fields, 28 inspected binaries per host,
    no tracing mode or dummy collection field. Integrated execution is pending.
    `inspect-task-owners.py` checks collector absence for every binary and reads
-   renamed raw-buffer artifacts; its other task/callback label matrices still
+   renamed raw-buffer artifacts; its task/callback label matrices still
    need migration with the corresponding tests.
 4. **Finish workflow coverage.** Replace collector-stress variants with the
    complete counted corpus and fault controls. Keep all nine production jobs and
    the explicit native target assignment audit. Rename obsolete shard/report
    labels consistently; a filename alone is not grounds to delete tests.
-5. **Rebase and verify.** Incorporate #216's final admission/cache repairs and
-   bounded server helpers. Resolve its handoff/GC-test overlap against this file.
+5. **Verify integration.** #216's final admission/cache repairs and bounded
+   server helpers are incorporated.
    Compile/lint all targets on runners; fix all failures together. Then run one
    complete final-head matrix, docs, primitive inventory and actual-binary
    collector-absence checks. Focused Clang probes do not establish GCC, Windows,
@@ -114,7 +100,7 @@ Nine owner-test candidates were reviewed and applied: constructor type/unwind,
 general/ordinary record update, loop preparation, retain unwind, variant conversion,
 worker boxing and worker preparation. Twelve more owner candidates and thirteen program candidates were reviewed,
 refined and applied. The typed-State and unwind candidates were also reviewed,
-refined and applied; 26 candidate files still match their source hashes. The
+refined and applied; 24 candidate files still match their source hashes. The
 `arc_tasks`, `linalg_ownership`, `retained_thunk_ownership`,
 `within_thunk_ownership`, `loop_ownership` and `list_applicative_ownership`
 candidates are now also stale. Remaining candidates are **unreviewed**. They may
@@ -149,6 +135,8 @@ Scripts below live in `/private/tmp` unless a repository path is given.
 | `python3 fwp-check-report-runtime.py` | O1/O2 actual allocator: 100,032 allocated; 32 released/100,000 live, then 100,032 released/zero live; peak 100,032 and extent 196,608. |
 | `python3 fwp-check-memory-startup.py` | Migrated harness compiles at Rust O1 with warnings denied; three helper tests pass. Does not run generated memory servers. |
 | `python3 fwp-check-closure-failure.py` | Actual allocator, cleanup queue and trap code, Clang ARM64 O1/O2: normal release passes; capture trap 101, spill OOM 102 and omitted context reset 94. A recovery callback would fail with 93. Does not establish generated-program or other-target support. |
+| `python3 fwp-check-ad-identity.py` | Current runtime, Clang ARM64 O1/O2: root startup succeeds, cross-task and retired-task use trap 101; repeated IDs or removed checks make controls succeed. No generated Rust-program or other-target claim. |
+| `python3 fwp-check-ad-workspace.py` | Current runtime, Clang ARM64 O1/O2, explicit cache off/on, direct and callback-scoped calls: all eight runs pass, with matching six gradient hashes and cleanup after errors/cancellation. |
 | `python3 fwp-check-deletion-edits.py` | Rust formatting, changed Python parsing, whitespace, 253-target native schedule and integer artifact gate checks pass. |
 | `python3 fwp-check-migration-python.py` | Ruff reports no unresolved names in all 57 changed Python files. This is a static check, not execution of measurement protocols. |
 | `python3 scripts/check-roadmap.py` | Pass after this rewrite: 162 link sets, 106 immutable preparation pairs/tags, eight roadmap rows and commit messages. |
@@ -180,7 +168,7 @@ characters and an empty body. Verify the message/tree and continue PLAN.md.
 
 | Step | Status | Remaining acceptance |
 |---|---|---|
-| 1 | In progress | G2/G5 final validation, then tracing deletion |
+| 1 | In progress | G5 tracing deletion and final validation |
 | 2 | In progress | A2–A6 residual-cost baseline, unique buffer and scoped workspace |
 | 3 | In progress | F1–F3 function-call and recursion costs |
 | 4 | In progress | P1–P3 measured CPU budgets |
@@ -188,3 +176,12 @@ characters and an empty body. Verify the message/tree and continue PLAN.md.
 | 6 | In progress | N1–N2 numerical accuracy and kernel budgets |
 | 7 | In progress | B1–B2 reproducible comparisons and enforced budgets |
 | 8 | In progress | V1–V2 application correctness, cleanup and scaling matrix |
+
+Rebase note: an overbroad conflict-marker edit was detected immediately. The
+rebase was aborted to its saved checkpoint and repeated with bounded matches.
+The final diff retains every test body and the verified upstream fixes.
+
+The direct workspace probe now registers its own explicit tape scope. Cancellation
+clears it before the harness restores a fresh scope; the first check caught and
+fixed an incorrect expected cleanup-chain pointer. Both workspace paths then
+passed. The production runtime scope requirement was not weakened.

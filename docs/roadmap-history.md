@@ -6,6 +6,22 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Shared lifetime checks and clearer guides (PR #216)
+
+Interpreter and native entries now enforce the same ownership rules before
+executing effects. Separate callback creations no longer get merged into a false
+cycle, and complete analysis caches keep the maintained REST examples within the
+ten-second budget. Memory-server tests bound startup and drain logs while waiting.
+Guides explain pipes, ownership, parser stages and measurement comparisons.
+
+All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40274667944),
+[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40273010537) and both
+[analysis-budget jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40273030485)
+passed on `1dd5fcaed7792b5505283b1037a9c22d788a3be5`.
+[PR #216](https://github.com/e6qu/fun-with-pipes/pull/216) was squash-merged as
+`f5621cb46828273f7ce8edf92be4062ccec0f17c`; the tree and one-line message were
+verified. G2 is complete. Collector deletion and further ARC reduction remain.
+
 ## Weak channels and retained callbacks (PR #215)
 
 Weak channels observe a queue without keeping it alive. Retained C callbacks

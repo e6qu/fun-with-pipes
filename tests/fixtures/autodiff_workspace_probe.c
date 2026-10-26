@@ -3,6 +3,8 @@ static uint64_t workspace_calls,workspace_requested;
 static size_t workspace_live,workspace_peak;
 static V workspace_outputs,workspace_seeds,workspace_node,workspace_base,workspace_inner;
 static int workspace_mode;
+static fwp_tape_scope workspace_direct_scope={-1};
+static fwp_cleanup workspace_direct_cleanup;
 static jmp_buf workspace_recovered;
 static fwp_task workspace_cancelled;
 static fwp_task *workspace_saved_task;
@@ -101,7 +103,8 @@ static const fwp_fninfo workspace_functions[]={
 int main(void){
     fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     size_t initial_live=fwp_heap.live;
-    fwp_trap_recover=workspace_recover;fwp_trap_jb=&workspace_recovered;fwp_trap_cleanup=0;
+    fwp_cleanup_push(&workspace_direct_cleanup,fwp_tape_scope_release,&workspace_direct_scope);
+    fwp_trap_recover=workspace_recover;fwp_trap_jb=&workspace_recovered;fwp_trap_cleanup=&workspace_direct_cleanup;
     puts("{\"profiles\":[");
     workspace_mode=0;workspace_gradient(129);puts(",");
     workspace_mode=4;workspace_gradient(129);puts(",");
@@ -123,12 +126,13 @@ int main(void){
             workspace_saved_task=fwp_cur;memset(&workspace_cancelled,0,sizeof(workspace_cancelled));workspace_cancelled.cancelled=1;fwp_cur=&workspace_cancelled;
             jmp_buf workspace_cancelled_base; workspace_cancelled.base = &workspace_cancelled_base;
             if (!setjmp(workspace_cancelled_base)){fwp_p_ad_backward(workspace_base,workspace_outputs,workspace_seeds);return 197;}
-            workspace_cancelled.base=NULL;fwp_cur=workspace_saved_task;if(!workspace_cancelled.unwinding)return 198;
+            workspace_cancelled.base=NULL;fwp_cur=workspace_saved_task;if(!workspace_cancelled.unwinding || fwp_cleanups || workspace_direct_scope.head!=-1)return 198;
+            fwp_cleanup_push(&workspace_direct_cleanup,fwp_tape_scope_release,&workspace_direct_scope);
         } else if(!setjmp(workspace_recovered)){
             V result=fwp_rc_fresh(fwp_p_ad_backward(workspace_base,workspace_outputs,workspace_seeds));
             if(workspace_mode==1)return 199;fwp_rc_free_arr(result);
         } else if(workspace_mode!=1 || strcmp(fwp_trap_msg,"workspace result allocation control"))return 200;
-        if(fwp_cleanups || !workspace_dead(workspace_base) || fwp_tape_cached_bytes>FWP_AD_WORKSPACE_BUDGET)return 201;
+        if(fwp_cleanups!=&workspace_direct_cleanup || !workspace_dead(workspace_base) || fwp_tape_cached_bytes>FWP_AD_WORKSPACE_BUDGET)return 201;
         if(workspace_inner){
             fwp_tape *inner=fwp_tape_of((int64_t)workspace_inner>>32);if(inner->leaves!=3)return 202;
             workspace_mode=0;fwp_array_store(workspace_outputs,0,workspace_inner,&index);
@@ -140,12 +144,13 @@ int main(void){
     fwp_fns=workspace_functions;
     for(workspace_mode=5;workspace_mode<=7;workspace_mode+=2){
         if(fwp_p_ad_scope(PTR(&workspace_callback),FWP_UNIT)!=FWP_UNIT)return 209;
-        if(fwp_cleanups || !workspace_dead(workspace_base))return 210;
+        if(fwp_cleanups!=&workspace_direct_cleanup || !workspace_dead(workspace_base))return 210;
     }
     workspace_mode=6;
     if(!setjmp(workspace_recovered)){fwp_p_ad_scope(PTR(&workspace_callback),FWP_UNIT);return 204;}
-    if(strcmp(fwp_trap_msg,"workspace scope control") || fwp_cleanups || !workspace_dead(workspace_base))return 205;
+    if(strcmp(fwp_trap_msg,"workspace scope control") || fwp_cleanups!=&workspace_direct_cleanup || !workspace_dead(workspace_base))return 205;
     fwp_rc_free_arr(workspace_outputs);fwp_rc_free_arr(workspace_seeds);
+    fwp_cleanup_pop(&workspace_direct_cleanup);fwp_tape_scope_release(&workspace_direct_scope);
     fwp_tape_finish();
     if(workspace_live || fwp_tape_cached_bytes || fwp_ntapes || fwp_tapes)return 206;
     if(fwp_heap.live!=initial_live)return 211;

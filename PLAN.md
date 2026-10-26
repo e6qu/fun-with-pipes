@@ -13,9 +13,11 @@ checked arithmetic, and observable effect/failure order.
 
 ## Where we are
 
-PR #215 delivered weak channels, retained C callbacks and ownership diagnostics.
-All nine production jobs and documentation passed; its merged tree matches the
-tested tree. [Delivery history](docs/roadmap-history.md) records the source and CI
+PR #216 delivered consistent lifetime checks across execution entries, fixed
+analysis caching, and clarified the language guides. All nine production jobs,
+documentation and analysis budgets passed; its merged tree matches the tested
+tree. Weak channels, retained C callbacks and replacement ownership diagnostics
+were delivered in #215. [Delivery history](docs/roadmap-history.md) records the source and CI
 IDs. Native packages cover Linux, macOS and Windows on ARM64 and AMD64.
 
 **GC removal is incomplete.** Native execution uses checked ARC unless tracing
@@ -36,8 +38,8 @@ collector is not the same as removing these costs. The
    to ARC. Then remove tracing selection, runtime code and collector-only checks.
    Update reporting, examples and workflows together. See the finite deletion
    table in [ownership diagnostics](docs/ownership-diagnostics.md).
-2. Enforce **G2**'s [measured analysis budgets](docs/measurements/ownership-analysis.md)
-   for the creation-site repair. Further precision needs a named failing example
+2. Preserve **G2**'s [verified analysis budgets](docs/measurements/ownership-analysis.md)
+   when changing lifetime analysis. Further precision needs a named failing example
    and an updated cost comparison, not more diagnostic scaffolding.
 3. After GC removal, use **A2** to measure the unique-buffer fixture, then implement
    **A5**. Order **A3/A4/A6** from the remaining measured costs. General region
@@ -72,7 +74,7 @@ The table is an index; the concrete work follows it.
 maps maintained entries to executed checks and precise raw/optimized rejection
 controls. Extend it when adding entries; do not repeat the completed inventory.
 
-**G2 — Contract and analysis baseline recorded; final validation pending.**
+**G2 — Delivered in #216.**
 The [accepted design](docs/gc-removal-design.md) defines weak target identity,
 expiration, acquisition, release ordering and the six boundary examples.
 The compiler rejects unproved owning cycles; returned partial applications remain
@@ -82,7 +84,7 @@ unrelated callback captures. The repair distinguishes finite IR creation positio
 workers, with paired analysis rules, timing, function/IR sizes, summary updates,
 fact counts and whole-command peak memory. It defines enforced count/time ceilings.
 Three sizes do not prove linear complexity; process RSS does not isolate proof
-heap use. Confirm the budgets and full matrix on the final source before acceptance.
+heap use. The final source passed both analysis hosts and all production jobs.
 
 **G3 — Delivered in #213/#215.**
 [Weak channels](docs/weak-channels.md) and [retained C callbacks](docs/retained-callbacks.md)

@@ -348,3 +348,20 @@ Preserve all behavioral assertions and broken-ownership controls. An address
 ledger cannot catch every stale raw read; compiler lifetime checks and alias/output
 comparisons remain necessary. Run all nine production jobs and documentation
 against the final commit before merging.
+
+### Derivative task and scope controls during collector deletion
+
+A derivative tape belongs to the task that created it. Admission rejects programs
+that send an unproved derivative lifetime to another task. The nested-derivative
+tests check that rejection with and without optimization in both engines. A
+separate C probe creates real tape owners and task IDs to test the runtime guard:
+a later task cannot reuse a retired task's tape, and starting the scheduler does
+not change the root task's identity. Deliberately repeated IDs or removed guards
+must change the result. This probe does not make the rejected program legal.
+
+Workspace checks retain both direct runtime calls inside an explicit scope and
+library-style callback scopes, at O1/O2 with caching enabled and disabled. They
+compare six gradient hashes and require storage cleanup on completion, failure
+and cancellation. Collector settings are not needed to exercise these paths.
+The local Clang probes pass; integrated generated programs and all other targets
+remain part of G5's final validation.

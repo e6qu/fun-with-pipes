@@ -8,10 +8,7 @@ mod record_probe;
 
 fn rejects_in_both_engines(source: &std::path::Path, reasons: &[&str]) {
     for raw in [false, true] {
-        for args in [
-            vec!["run", "--interp"],
-            vec!["build", "--gc", "arc", "--emit-c"],
-        ] {
+        for args in [vec!["run", "--interp"], vec!["build", "--emit-c"]] {
             let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
             command.env_remove("FWP_NO_OPT");
             if raw {
@@ -69,13 +66,7 @@ fn weak_channels_preserve_expiration_and_reject_recreated_cycles() {
             for opt in ["-O1", "-O2"] {
                 let binary = dir.join("weak.exe");
                 fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-                let result = checked(
-                    Command::new(&binary)
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "0")
-                        .env("FWP_REUSE_VERIFY", "0"),
-                );
+                let result = checked(&mut Command::new(&binary));
                 assert_eq!(
                     result.stdout,
                     expected.as_bytes(),
@@ -156,13 +147,7 @@ fn weak_channel_metadata_expires_before_child_cleanup_and_survives_address_reuse
         ] {
             let binary = dir.join("lifetime.exe");
             fwp::cgen::compile_c(candidate, &binary, opt).unwrap();
-            let result = Command::new(&binary)
-                .env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
+            let result = Command::new(&binary).output().unwrap();
             record_probe::save(
                 "weak_channels",
                 &format!("{label}{opt}"),
@@ -221,192 +206,180 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                 .arg(&source),
         );
         assert_eq!(reference.stdout, expected.as_bytes(), "{name}");
-        for memory in ["arc", "tracing"] {
-            let cfile = dir.join("main.c");
-            checked(
-                Command::new(compiler)
-                    .env_remove("FWP_NO_OPT")
-                    .args(["build", "-O1", "--gc", memory, "--emit-c"])
-                    .arg(&source)
-                    .arg("-o")
-                    .arg(&cfile),
-            );
-            let mut code = std::fs::read_to_string(cfile).unwrap();
-            if name == "task-handles" && memory == "arc" {
-                let create = "    task->identity = ++fwp_task_identity;";
-                let release = "    if (!t->done || t->stack) abort();";
-                let root_release = "        fwp_mem_free(fwp_root);";
-                let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
-                // WASI, native executable and loaded-library shutdown each release the root.
-                for (needle, count) in [(create, 1), (release, 1), (root_release, 3), (finish, 1)] {
-                    assert_eq!(code.matches(needle).count(), count, "{needle}");
-                }
-                code = code
+
+        let cfile = dir.join("main.c");
+        checked(
+            Command::new(compiler)
+                .env_remove("FWP_NO_OPT")
+                .args(["build", "-O1", "--emit-c"])
+                .arg(&source)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let mut code = std::fs::read_to_string(cfile).unwrap();
+        if name == "task-handles" {
+            let create = "    task->identity = ++fwp_task_identity;";
+            let release = "    if (!t->done || t->stack) abort();";
+            let root_release = "        fwp_mem_free(fwp_root);";
+            let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
+            // WASI, native executable and loaded-library shutdown each release the root.
+            for (needle, count) in [(create, 1), (release, 1), (root_release, 3), (finish, 1)] {
+                assert_eq!(code.matches(needle).count(), count, "{needle}");
+            }
+            code = code
                     .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic unsigned captured_task_live, captured_task_created;")
                     .replace(create, &format!("{create}\n    captured_task_created++; if (++captured_task_live > 64) exit(201);"))
                     .replace(release, &format!("{release}\n    if (!captured_task_live) exit(202); captured_task_live--;"))
                     .replace(root_release, &format!("    if (!captured_task_live) exit(202); captured_task_live--;\n{root_release}"))
                     .replace(finish, &format!("{finish}    if (captured_task_live || !captured_task_created) exit(203);\n"));
+        }
+        if name == "data-queues" {
+            let create = "    fwp_chan *c = (fwp_chan *)fwp_mem_alloc(sizeof(fwp_chan));";
+            let release = "    if (c->sendq.head || c->recvq.head) abort();";
+            let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
+            for needle in [create, release, finish] {
+                assert_eq!(code.matches(needle).count(), 1, "{needle}");
             }
-            if name == "data-queues" {
-                let create = "    fwp_chan *c = (fwp_chan *)fwp_mem_alloc(sizeof(fwp_chan));";
-                let release = "    if (c->sendq.head || c->recvq.head) abort();";
-                let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
-                for needle in [create, release, finish] {
-                    assert_eq!(code.matches(needle).count(), 1, "{needle}");
-                }
-                code = code
-                    .replace(
-                        "typedef uint64_t V;",
-                        "typedef uint64_t V;\nstatic unsigned queue_live, queue_created;",
-                    )
-                    .replace(
-                        create,
-                        &format!("{create}\n    queue_created++; if(++queue_live > 64) exit(198);"),
-                    )
-                    .replace(
-                        release,
-                        &format!("{release}\n    if(!queue_live) exit(199); queue_live--;"),
-                    )
-                    .replace(
-                        finish,
-                        &format!("{finish}    if(queue_live || !queue_created) exit(200);\n"),
-                    );
+            code = code
+                .replace(
+                    "typedef uint64_t V;",
+                    "typedef uint64_t V;\nstatic unsigned queue_live, queue_created;",
+                )
+                .replace(
+                    create,
+                    &format!("{create}\n    queue_created++; if(++queue_live > 64) exit(198);"),
+                )
+                .replace(
+                    release,
+                    &format!("{release}\n    if(!queue_live) exit(199); queue_live--;"),
+                )
+                .replace(
+                    finish,
+                    &format!("{finish}    if(queue_live || !queue_created) exit(200);\n"),
+                );
+        }
+        if name == "sockets" {
+            // Count socket objects with value owners, not just managed bytes:
+            // a freed header is not evidence its OS handle was closed.
+            // Each of 64 rounds opens 6 listeners, 6 connections and 10 UDP
+            // sockets. The 64-live ceiling allows original resource frames
+            // within a round, but detects retention accumulating across them.
+            let create = "    s->refs = 1;";
+            let release = "    fwp_sock_final(s);";
+            let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
+            for needle in [create, release, finish] {
+                assert_eq!(code.matches(needle).count(), 1, "{needle}");
             }
-            if name == "sockets" {
-                // Count socket objects with value owners, not just managed bytes:
-                // a collected header is not evidence its OS handle was closed.
-                // Each of 64 rounds opens 6 listeners, 6 connections and 10 UDP
-                // sockets. The 64-live ceiling allows original resource frames
-                // within a round, but detects retention accumulating across them.
-                let create = "    s->refs = 1;";
-                let release = "    fwp_sock_final(s);";
-                let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
-                for needle in [create, release, finish] {
-                    assert_eq!(code.matches(needle).count(), 1, "{needle}");
-                }
-                code = code
+            code = code
                     .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic unsigned socket_live, socket_created[3];")
                     .replace(create, &format!("{create}\n    socket_created[kind]++; if(++socket_live > 64) exit(194);"))
                     .replace(release, &format!("    fwp_socket_t observed_fd = s->fd;\n{release}\n    if(s->fd != FWP_INVALID_SOCKET) exit(195);\n    if(observed_fd != FWP_INVALID_SOCKET) {{ struct sockaddr_storage addr; socklen_t len = sizeof addr; if(getsockname(observed_fd, (struct sockaddr *)&addr, &len) == 0) exit(195); }}\n    if(!socket_live) exit(196); socket_live--;"))
                     .replace(finish, &format!("{finish}    if(socket_live || socket_created[0] != 64*6 || socket_created[1] != 64*6 || socket_created[2] != 64*10) {{ fprintf(stderr,\"socket accounting: live=%u listeners=%u connections=%u udp=%u\\n\", socket_live, socket_created[0], socket_created[1], socket_created[2]); exit(197); }}\n"));
-            }
-            if name == "values" {
-                assert!(
-                    code.contains("FWP_CHANNEL_RESULT_FIELDS);"),
-                    "immediately matched receives must transfer direct fields"
-                );
-            }
-            if memory == "arc" {
-                let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
-                assert_eq!(code.matches(finish).count(), 1);
-                code = code.replace(
-                    finish,
-                    &format!("{finish}    if(0 != fwp_heap.live) exit(193);\n"),
-                );
-            }
-            let drop = "            c->owner.queue_drop(element);";
-            assert_eq!(code.matches(drop).count(), 1);
-            let missing_drop = code.replace(drop, "            (void)element;");
-            for opt in ["-O0", "-O2"] {
-                let binary = dir.join("main.exe");
-                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-                let stress = if memory == "arc" { "0" } else { "1" };
-                let run = || {
-                    let mut command = Command::new(&binary);
-                    command
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", stress);
-                    command
+        }
+        if name == "values" {
+            assert!(
+                code.contains("FWP_CHANNEL_RESULT_FIELDS);"),
+                "immediately matched receives must transfer direct fields"
+            );
+        }
+
+        let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
+        assert_eq!(code.matches(finish).count(), 1);
+        code = code.replace(
+            finish,
+            &format!("{finish}    if(0 != fwp_heap.live) exit(193);\n"),
+        );
+
+        let drop = "            c->owner.queue_drop(element);";
+        assert_eq!(code.matches(drop).count(), 1);
+        let missing_drop = code.replace(drop, "            (void)element;");
+        for opt in ["-O0", "-O2"] {
+            let binary = dir.join("main.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            let actual = Command::new(&binary).output().unwrap();
+            if let Some(path) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
+                let path = std::path::PathBuf::from(path);
+                std::fs::create_dir_all(&path).unwrap();
+                let label = format!("{name}-counted{opt}");
+                std::fs::write(path.join(format!("{label}.c")), &code).unwrap();
+                std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
+                std::fs::write(path.join(format!("{label}.stdout")), &actual.stdout).unwrap();
+                std::fs::write(path.join(format!("{label}.stderr")), &actual.stderr).unwrap();
+                std::fs::write(
+                    path.join(format!("{label}.status")),
+                    format!("{:?}\n", actual.status.code()),
+                )
+                .unwrap();
+                let (tool, flag) = if cfg!(target_os = "macos") {
+                    ("otool", "-tvV")
+                } else if cfg!(target_os = "windows") {
+                    ("llvm-objdump", "-d")
+                } else {
+                    ("objdump", "-d")
                 };
-                let actual = run().output().unwrap();
+                let assembly = checked(Command::new(tool).arg(flag).arg(&binary));
+                std::fs::write(path.join(format!("{label}.asm")), assembly.stdout).unwrap();
+            }
+            assert!(actual.status.success(), "{name}/{opt}: {actual:?}");
+            assert_eq!(
+                (&actual.stdout, &actual.stderr),
+                (&reference.stdout, &reference.stderr),
+                "{opt}"
+            );
+
+            let symbols = checked(Command::new("nm").arg(&binary));
+            let symbols = String::from_utf8_lossy(&symbols.stdout);
+            for symbol in [
+                "fwp_gc_scan",
+                "fwp_gc_mark_all",
+                "fwp_gc_sweep",
+                "fwp_gc_collect",
+                "fwp_heap_scan",
+                "fwp_heap_mark_all",
+                "fwp_heap_sweep",
+            ] {
+                assert!(
+                    !symbols.contains(symbol),
+                    "{name}/{opt}: binary retains {symbol}"
+                );
+            }
+            fwp::cgen::compile_c(&missing_drop, &binary, opt).unwrap();
+            let omitted = Command::new(&binary).output().unwrap();
+            let expected = match name {
+                "sockets" => 194,
+                "data-queues" => 198,
+                "task-handles" => 201,
+                _ => 193,
+            };
+            assert_eq!(
+                omitted.status.code(),
+                Some(expected),
+                "{name}/{opt}: {omitted:?}"
+            );
+            if name == "task-handles" {
                 if let Some(path) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
                     let path = std::path::PathBuf::from(path);
-                    std::fs::create_dir_all(&path).unwrap();
-                    let label = format!("{name}-{memory}{opt}");
-                    std::fs::write(path.join(format!("{label}.c")), &code).unwrap();
+                    let label = format!("task-handles-counted{opt}-missing-queue-owner");
+                    std::fs::write(path.join(format!("{label}.c")), &missing_drop).unwrap();
                     std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
-                    std::fs::write(path.join(format!("{label}.stdout")), &actual.stdout).unwrap();
-                    std::fs::write(path.join(format!("{label}.stderr")), &actual.stderr).unwrap();
+                    std::fs::write(path.join(format!("{label}.stdout")), &omitted.stdout).unwrap();
+                    std::fs::write(path.join(format!("{label}.stderr")), &omitted.stderr).unwrap();
                     std::fs::write(
                         path.join(format!("{label}.status")),
-                        format!("{:?}\n", actual.status.code()),
+                        format!("{:?}\n", omitted.status.code()),
                     )
                     .unwrap();
-                    let (tool, flag) = if cfg!(target_os = "macos") {
-                        ("otool", "-tvV")
-                    } else if cfg!(target_os = "windows") {
-                        ("llvm-objdump", "-d")
-                    } else {
-                        ("objdump", "-d")
-                    };
-                    let assembly = checked(Command::new(tool).arg(flag).arg(&binary));
-                    std::fs::write(path.join(format!("{label}.asm")), assembly.stdout).unwrap();
                 }
-                assert!(actual.status.success(), "{name}/{memory}/{opt}: {actual:?}");
-                assert_eq!(
-                    (&actual.stdout, &actual.stderr),
-                    (&reference.stdout, &reference.stderr),
-                    "{memory}/{opt}"
+            }
+            if name == "sockets" {
+                let omitted_close = code.replace(
+                    "    fwp_sock_final(s);",
+                    "    /* omitted final socket close */",
                 );
-                if memory == "arc" {
-                    let symbols = checked(Command::new("nm").arg(&binary));
-                    let symbols = String::from_utf8_lossy(&symbols.stdout);
-                    for symbol in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
-                        assert!(
-                            !symbols.contains(symbol),
-                            "{name}/{opt}: ARC binary retains {symbol}"
-                        );
-                    }
-                    fwp::cgen::compile_c(&missing_drop, &binary, opt).unwrap();
-                    let omitted = run().output().unwrap();
-                    let expected = match name {
-                        "sockets" => 194,
-                        "data-queues" => 198,
-                        "task-handles" => 201,
-                        _ => 193,
-                    };
-                    assert_eq!(
-                        omitted.status.code(),
-                        Some(expected),
-                        "{name}/{opt}: {omitted:?}"
-                    );
-                    if name == "task-handles" {
-                        if let Some(path) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
-                            let path = std::path::PathBuf::from(path);
-                            let label = format!("task-handles-arc{opt}-missing-queue-owner");
-                            std::fs::write(path.join(format!("{label}.c")), &missing_drop).unwrap();
-                            std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
-                            std::fs::write(path.join(format!("{label}.stdout")), &omitted.stdout)
-                                .unwrap();
-                            std::fs::write(path.join(format!("{label}.stderr")), &omitted.stderr)
-                                .unwrap();
-                            std::fs::write(
-                                path.join(format!("{label}.status")),
-                                format!("{:?}\n", omitted.status.code()),
-                            )
-                            .unwrap();
-                        }
-                    }
-                    if name == "sockets" {
-                        let omitted_close = code.replace(
-                            "    fwp_sock_final(s);",
-                            "    /* omitted final socket close */",
-                        );
-                        assert_ne!(omitted_close, code);
-                        fwp::cgen::compile_c(&omitted_close, &binary, opt).unwrap();
-                        let omitted = run().output().unwrap();
-                        assert_eq!(omitted.status.code(), Some(195), "{opt}: {omitted:?}");
-                    }
-                } else {
-                    let symbols = checked(Command::new("nm").arg(&binary));
-                    assert!(
-                        String::from_utf8_lossy(&symbols.stdout).contains("fwp_heap_mark_all"),
-                        "tracing control must contain its collector: {name}/{opt}"
-                    );
-                }
+                assert_ne!(omitted_close, code);
+                fwp::cgen::compile_c(&omitted_close, &binary, opt).unwrap();
+                let omitted = Command::new(&binary).output().unwrap();
+                assert_eq!(omitted.status.code(), Some(195), "{opt}: {omitted:?}");
             }
         }
     }
@@ -533,13 +506,7 @@ main = [callbacks 1 | channel.close, apply (A { tail = [] }) ((from-a, from-b) |
     let code = std::fs::read_to_string(cfile).unwrap();
     let binary = dir.join("main.exe");
     fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
-    let actual = checked(
-        Command::new(binary)
-            .env_remove("FWP_GC")
-            .env("FWP_GC_STRESS", "0")
-            .env("FWP_GC_VERIFY", "0")
-            .env("FWP_REUSE_VERIFY", "0"),
-    );
+    let actual = checked(&mut Command::new(binary));
     assert_eq!(
         (&actual.stdout, &actual.stderr),
         (&reference.stdout, &reference.stderr)
@@ -566,33 +533,26 @@ main = callbacks 1 | tap (flip channel.send (choose True)) | channel.recv | opti
             .arg(&source),
     );
     assert_eq!(reference.stdout, b"Some 3\n");
-    for memory in ["arc", "tracing"] {
-        let cfile = dir.join("main.c");
-        checked(
-            Command::new(compiler)
-                .env("FWP_NO_OPT", "1")
-                .args(["build", "-O1", "--gc", memory, "--emit-c"])
-                .arg(&source)
-                .arg("-o")
-                .arg(&cfile),
+
+    let cfile = dir.join("main.c");
+    checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["build", "-O1", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    for opt in ["-O0", "-O2"] {
+        let binary = dir.join("main.exe");
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+
+        let actual = checked(&mut Command::new(binary));
+        assert_eq!(
+            (&actual.stdout, &actual.stderr),
+            (&reference.stdout, &reference.stderr)
         );
-        let code = std::fs::read_to_string(cfile).unwrap();
-        for opt in ["-O0", "-O2"] {
-            let binary = dir.join("main.exe");
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let stress = if memory == "arc" { "0" } else { "1" };
-            let actual = checked(
-                Command::new(binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
-            assert_eq!(
-                (&actual.stdout, &actual.stderr),
-                (&reference.stdout, &reference.stderr)
-            );
-        }
     }
 }
 
@@ -631,13 +591,7 @@ main = [callbacks 1 | channel.close, [] | calls | echo] | ignore
     let code = std::fs::read_to_string(cfile).unwrap();
     let binary = dir.join("main.exe");
     fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
-    let actual = checked(
-        Command::new(binary)
-            .env_remove("FWP_GC")
-            .env("FWP_GC_STRESS", "0")
-            .env("FWP_GC_VERIFY", "0")
-            .env("FWP_REUSE_VERIFY", "0"),
-    );
+    let actual = checked(&mut Command::new(binary));
     assert_eq!(
         (&actual.stdout, &actual.stderr),
         (&reference.stdout, &reference.stderr)
@@ -658,26 +612,22 @@ fn queued_remote_iterators_reject_hidden_stream_owners() {
         "import greeter\nmain = channel.make 1 | tap (flip channel.send (3 | greeter.count)) | channel.recv | ignore\n",
     )
     .unwrap();
-    for (remote, memory, accepted) in [
-        (false, "arc", true),
-        (true, "tracing", true),
-        (true, "arc", false),
-    ] {
+    for (remote, accepted) in [(false, true), (true, false)] {
         let mut build = Command::new(env!("CARGO_BIN_EXE_fwp"));
-        build.args(["build", "-O1", "--gc", memory, "--emit-c"]);
+        build.args(["build", "-O1", "--emit-c"]);
         if remote {
             build.args(["--service", "greeter"]);
         }
         let result = build
             .arg(&source)
             .arg("-o")
-            .arg(dir.join(format!("remote-{remote}-{memory}")))
+            .arg(dir.join(format!("remote-{remote}")))
             .output()
             .unwrap();
         assert_eq!(
             result.status.success(),
             accepted,
-            "remote={remote}/{memory}: {result:?}"
+            "remote={remote}: {result:?}"
         );
         if !accepted {
             let error = String::from_utf8_lossy(&result.stderr);
@@ -714,13 +664,7 @@ fn queued_autodiff_functions_require_the_receivers_scope() {
             let code = std::fs::read_to_string(cfile).unwrap();
             let binary = dir.join("main.exe");
             fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
-            let actual = checked(
-                Command::new(binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0"),
-            );
+            let actual = checked(&mut Command::new(binary));
             assert_eq!(
                 (&actual.stdout, &actual.stderr),
                 (&reference.stdout, &reference.stderr)
@@ -813,13 +757,7 @@ int main(void){
         let binary = dir.join("probe.exe");
         for (candidate, status) in [(&code, 0), (&omitted, 197)] {
             fwp::cgen::compile_c(candidate, &binary, opt).unwrap();
-            let result = Command::new(&binary)
-                .env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
+            let result = Command::new(&binary).output().unwrap();
             assert_eq!(result.status.code(), Some(status), "{opt}: {result:?}");
             if let Some(path) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
                 let path = std::path::PathBuf::from(path);

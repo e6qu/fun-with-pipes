@@ -28,9 +28,8 @@ commands = {
                 'assembly': ['llvm-objdump', '-d'], 'sections': ['llvm-size', '-A'],
                 'symbols': ['llvm-nm']},
 }[system]
-expected = {f'task-handles-{memory}-O{opt}': 0
-            for memory in ['arc', 'tracing'] for opt in [0, 2]}
-expected.update({f'task-handles-arc-O{opt}-missing-queue-owner': 201 for opt in [0, 2]})
+expected = {f'task-handles-counted-O{opt}': 0 for opt in [0, 2]}
+expected.update({f'task-handles-counted-O{opt}-missing-queue-owner': 201 for opt in [0, 2]})
 expected.update({f'callback-transfer/{memory}-O{opt}-{variant}': 0
                  for memory in ['arc', 'tracing'] for opt in [0, 2]
                  for variant in ['transfer', 'redundant-pair']})
