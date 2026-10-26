@@ -161,7 +161,8 @@ Shared cases repeat 32 rounds. Internal tasks with only a scheduler owner repeat
 64 rounds of completion, cancellation before entry and cancellation after
 suspension. Omitting destruction or incorrectly using a counted-object release
 must leave a measured charge and fail. Explicitly disabling physical release is
-a retention control, not supported ARC policy. These four groups save 142 outcomes.
+a deliberate retention control. The task-scope target retains normal/program
+runs and each missing-owner/handler control after removing collector variants.
 
 ## State, deadlines and channel values
 
@@ -323,7 +324,9 @@ partial calls, captured aliases and calls whose arguments continue into a return
 function. The caller keeps its function owner; type information identifies which
 arguments need owners. Missing capture cleanup, counting scalar arguments and
 omitting final fixture owners must fail. Complete programs also compare with the
-interpreter. This group saves 28 outcomes. These are lifetime checks, not a new
+interpreter. Undefined-behavior controls retain both null argument-offset cases
+and the zero-length copy check; the live-allocation ledger also detects a
+duplicate closure drop. These are lifetime checks, not a new
 allocation, speed or C/Rust comparison.
 
 ## Derivative growth and workspace cleanup

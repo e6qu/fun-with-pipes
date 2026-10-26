@@ -49,44 +49,38 @@ main = apply 7 (choose (read-all () | string.length | add 3 | attempt checked | 
             .args(["run", "--interp"])
             .arg(&fixture),
     );
-    for memory in ["arc", "tracing"] {
-        checked(
-            Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .env_remove("FWP_NO_OPT")
-                .env("FWP_STACK", "0")
-                .env("FWP_FREE", "1")
-                .env("FWP_REUSE", "1")
-                .args(["build", "--memory", "dynamic", "--gc", memory, "-O2"])
-                .arg(&fixture)
-                .args(["--emit-c", "-o"])
-                .arg(&emitted),
-        );
-        let program = std::fs::read_to_string(&emitted).unwrap();
-        assert!(program.contains("#define FWP_UNWIND 1"));
-        let copy = "memcpy(r->a, args, n * sizeof(V));";
-        assert_eq!(program.matches(copy).count(), 1);
-        let program = program.replace(copy, "probe_pap_copy(r->a, args, n * sizeof(V));");
-        let program = program.replace(
-            "typedef uint64_t V;",
-            r#"typedef uint64_t V;
+
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env_remove("FWP_NO_OPT")
+            .env("FWP_STACK", "0")
+            .args(["build", "--memory", "dynamic", "-O2"])
+            .arg(&fixture)
+            .args(["--emit-c", "-o"])
+            .arg(&emitted),
+    );
+    let program = std::fs::read_to_string(&emitted).unwrap();
+    assert!(program.contains("#define FWP_UNWIND 1"));
+    let copy = "memcpy(r->a, args, n * sizeof(V));";
+    assert_eq!(program.matches(copy).count(), 1);
+    let program = program.replace(copy, "probe_pap_copy(r->a, args, n * sizeof(V));");
+    let program = program.replace(
+        "typedef uint64_t V;",
+        r#"typedef uint64_t V;
 /* Check the copy contract even when a libc header lacks nonnull annotations. */
 static void probe_pap_copy(void *to, const void *from, size_t size) {
     if (!to || !from) { fputs("null partial-application copy\n", stderr); _Exit(209); }
     memcpy(to, from, size);
 }
 "#,
-        );
+    );
 
-        let program = if memory == "arc" {
-            ownership_ledger::instrument_native(&program, 1 << 16)
-        } else {
-            program
-        };
-        let runtime = program.replace(
-            "int main(int argc, char **argv)",
-            "int original_main(int argc, char **argv)",
-        );
-        let probe = r#"
+    let program = ownership_ledger::instrument_native(&program, 1 << 16);
+    let runtime = program.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let probe = r#"
 static void probe_drop_leaf(V v) {
     uint8_t *c = fwp_rc_slot(v);
     if (!c || !*c) return;
@@ -257,216 +251,178 @@ int main(void) {
     return 0;
 }
 "#;
-        let mut cases = vec![("normal", probe.to_owned(), 0)];
-        for (label, old, new, status) in [
-            (
-                "missing-capture",
-                "else probe_drop_leaf(CLO(f)->a[0]);",
-                "else (void)f;",
-                4,
-            ),
-            (
-                "scalar-counted",
-                "(void)a; (void)start; (void)n;",
-                "if (!start && n) fwp_rc_dup(a[0]);",
-                5,
-            ),
-        ] {
-            assert_eq!(probe.matches(old).count(), 1);
-            cases.push((label, probe.replace(old, new), status));
-        }
-        if memory == "arc" {
-            let release = "    fwp_closure_drop(empty_partial);";
-            assert_eq!(probe.matches(release).count(), 1);
-            cases.push((
-                "duplicate-closure-drop",
-                probe.replace(release, &format!("{release}\n{release}")),
-                203,
-            ));
-            for (label, release) in [
-                ("missing-scalar", "probe_drop_leaf(scalar);"),
-                ("missing-factory", "fwp_closure_drop(factory);"),
+    let mut cases = vec![("normal", probe.to_owned(), 0)];
+    for (label, old, new, status) in [
+        (
+            "missing-capture",
+            "else probe_drop_leaf(CLO(f)->a[0]);",
+            "else (void)f;",
+            4,
+        ),
+        (
+            "scalar-counted",
+            "(void)a; (void)start; (void)n;",
+            "if (!start && n) fwp_rc_dup(a[0]);",
+            5,
+        ),
+    ] {
+        assert_eq!(probe.matches(old).count(), 1);
+        cases.push((label, probe.replace(old, new), status));
+    }
+
+    let release = "    fwp_closure_drop(empty_partial);";
+    assert_eq!(probe.matches(release).count(), 1);
+    cases.push((
+        "duplicate-closure-drop",
+        probe.replace(release, &format!("{release}\n{release}")),
+        203,
+    ));
+    for (label, release) in [
+        ("missing-scalar", "probe_drop_leaf(scalar);"),
+        ("missing-factory", "fwp_closure_drop(factory);"),
+    ] {
+        assert_eq!(probe.matches(release).count(), 1);
+        cases.push((label, probe.replace(release, "/* omitted owner */"), 90));
+    }
+
+    for opt in ["-O1", "-O2"] {
+        let exe = dir.0.join(format!("counted{opt}-program.exe"));
+        fwp::cgen::compile_c(&program, &exe, opt).unwrap();
+
+        let output = Command::new(&exe).output().unwrap();
+        let label = format!("counted{opt}-program");
+        record_probe::save("borrowed_callbacks", &label, &program, &exe, &output);
+        assert_eq!(
+            output.status.code(),
+            reference.status.code(),
+            "{label}: {output:?}"
+        );
+        assert_eq!(output.stdout, reference.stdout, "{label}");
+        assert_eq!(output.stderr, reference.stderr, "{label}");
+
+        let copy = "if (n) probe_pap_copy(r->a, args, n * sizeof(V));";
+        assert_eq!(runtime.matches(copy).count(), 1);
+        let code = format!(
+            "{}\n{}",
+            runtime.replace(copy, "probe_pap_copy(r->a, args, n * sizeof(V));"),
+            cases[0].1
+        );
+        let exe = dir.0.join(format!("counted{opt}-null-copy.exe"));
+        fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+        let out = Command::new(&exe).output().unwrap();
+        record_probe::save(
+            "borrowed_callbacks",
+            &format!("counted{opt}-null-copy"),
+            &code,
+            &exe,
+            &out,
+        );
+        assert_eq!(out.status.code(), Some(209), "counted{opt}: {out:?}");
+        assert!(
+            String::from_utf8_lossy(&out.stderr).contains("null partial-application copy"),
+            "counted{opt}: {out:?}"
+        );
+        #[cfg(unix)]
+        {
+            let probe = &cases[0].1;
+            for (label, code, broken) in [
+                ("valid", format!("{runtime}\n{probe}"), false),
+                (
+                    "null-offset",
+                    format!(
+                        "{}\n{probe}",
+                        runtime.replace(
+                            "owned_len ? args + owned_start : NULL",
+                            "args + owned_start"
+                        )
+                    ),
+                    true,
+                ),
+                (
+                    "null-tail-offset",
+                    format!(
+                        "{}\n{probe}",
+                        runtime.replace(
+                            "after ? args + before + transferred : NULL",
+                            "args + before + transferred"
+                        )
+                    ),
+                    true,
+                ),
             ] {
-                assert_eq!(probe.matches(release).count(), 1);
-                cases.push((label, probe.replace(release, "/* omitted owner */"), 90));
-            }
-        }
-        for opt in ["-O1", "-O2"] {
-            let exe = dir.0.join(format!("{memory}{opt}-program.exe"));
-            fwp::cgen::compile_c(&program, &exe, opt).unwrap();
-            for poison in if memory == "arc" {
-                &["0"][..]
-            } else {
-                &["0", "1"][..]
-            } {
-                let stress = if memory == "arc" { "0" } else { "1" };
-                let output = Command::new(&exe)
-                    .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", poison)
+                let cfile = dir.0.join(format!("counted{opt}-{label}-ubsan.c"));
+                let exe = cfile.with_extension("exe");
+                std::fs::write(&cfile, &code).unwrap();
+                checked(
+                    Command::new("clang")
+                        .args([
+                            opt,
+                            "-std=gnu11",
+                            "-ffp-contract=off",
+                            "-w",
+                            "-fsanitize=pointer-overflow",
+                            "-fno-sanitize-recover=all",
+                        ])
+                        .arg(&cfile)
+                        .arg("-o")
+                        .arg(&exe)
+                        .args(["-lm", "-lpthread"]),
+                );
+                let out = Command::new(&exe)
+                    .env(
+                        "UBSAN_OPTIONS",
+                        "halt_on_error=1:abort_on_error=0:exitcode=1",
+                    )
                     .output()
                     .unwrap();
-                let label = format!("{memory}{opt}-program-poison{poison}");
-                record_probe::save("borrowed_callbacks", &label, &program, &exe, &output);
-                assert_eq!(
-                    output.status.code(),
-                    reference.status.code(),
+                record_probe::save(
+                    "borrowed_callbacks",
+                    &format!("counted{opt}-{label}-ubsan"),
+                    &code,
+                    &exe,
+                    &out,
+                );
+                if broken {
+                    assert_eq!(out.status.code(), Some(1), "{label}: {out:?}");
+                    let message = "applying zero offset to null pointer";
+                    assert!(
+                        String::from_utf8_lossy(&out.stderr).contains(message),
+                        "{label}: {out:?}"
+                    );
+                } else {
+                    assert!(out.status.success(), "{label}: {out:?}");
+                    assert!(out.stderr.is_empty(), "{label}: {out:?}");
+                    assert_eq!(out.stdout, b"borrowed owners and typed slices preserved\n");
+                }
+            }
+        }
+        for (case, probe, status) in &cases {
+            let code = format!("{runtime}\n{probe}");
+            let exe = dir.0.join(format!("counted{opt}-{case}.exe"));
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+
+            let output = Command::new(&exe).output().unwrap();
+            let label = format!("counted{opt}-{case}");
+            record_probe::save("borrowed_callbacks", &label, &code, &exe, &output);
+            assert_eq!(output.status.code(), Some(*status), "{label}: {output:?}");
+            if *status == 203 {
+                assert!(
+                    String::from_utf8_lossy(&output.stderr)
+                        .contains("count operation on a dead or interior allocation"),
                     "{label}: {output:?}"
                 );
-                assert_eq!(output.stdout, reference.stdout, "{label}");
-                assert_eq!(output.stderr, reference.stderr, "{label}");
+            } else {
+                assert!(output.stderr.is_empty(), "{label}: {output:?}");
             }
-            let copy = "if (n) probe_pap_copy(r->a, args, n * sizeof(V));";
-            assert_eq!(runtime.matches(copy).count(), 1);
-            let code = format!(
-                "{}\n{}",
-                runtime.replace(copy, "probe_pap_copy(r->a, args, n * sizeof(V));"),
-                cases[0].1
-            );
-            let exe = dir.0.join(format!("{memory}{opt}-null-copy.exe"));
-            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-            let out = Command::new(&exe)
-                .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                .env("FWP_GC_STATS", "0")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
-            record_probe::save(
-                "borrowed_callbacks",
-                &format!("{memory}{opt}-null-copy"),
-                &code,
-                &exe,
-                &out,
-            );
-            assert_eq!(out.status.code(), Some(209), "{memory}{opt}: {out:?}");
-            assert!(
-                String::from_utf8_lossy(&out.stderr).contains("null partial-application copy"),
-                "{memory}{opt}: {out:?}"
-            );
-            #[cfg(unix)]
-            {
-                let probe = &cases[0].1;
-                for (label, code, broken) in [
-                    ("valid", format!("{runtime}\n{probe}"), false),
-                    (
-                        "null-offset",
-                        format!(
-                            "{}\n{probe}",
-                            runtime.replace(
-                                "owned_len ? args + owned_start : NULL",
-                                "args + owned_start"
-                            )
-                        ),
-                        true,
-                    ),
-                    (
-                        "null-tail-offset",
-                        format!(
-                            "{}\n{probe}",
-                            runtime.replace(
-                                "after ? args + before + transferred : NULL",
-                                "args + before + transferred"
-                            )
-                        ),
-                        true,
-                    ),
-                ] {
-                    let cfile = dir.0.join(format!("{memory}{opt}-{label}-ubsan.c"));
-                    let exe = cfile.with_extension("exe");
-                    std::fs::write(&cfile, &code).unwrap();
-                    checked(
-                        Command::new("clang")
-                            .args([
-                                opt,
-                                "-std=gnu11",
-                                "-ffp-contract=off",
-                                "-w",
-                                "-fsanitize=pointer-overflow",
-                                "-fno-sanitize-recover=all",
-                            ])
-                            .arg(&cfile)
-                            .arg("-o")
-                            .arg(&exe)
-                            .args(["-lm", "-lpthread"]),
-                    );
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "0")
-                        .env("FWP_REUSE_VERIFY", "0")
-                        .env(
-                            "UBSAN_OPTIONS",
-                            "halt_on_error=1:abort_on_error=0:exitcode=1",
-                        )
-                        .output()
-                        .unwrap();
-                    record_probe::save(
-                        "borrowed_callbacks",
-                        &format!("{memory}{opt}-{label}-ubsan"),
-                        &code,
-                        &exe,
-                        &out,
-                    );
-                    if broken {
-                        assert_eq!(out.status.code(), Some(1), "{label}: {out:?}");
-                        let message = "applying zero offset to null pointer";
-                        assert!(
-                            String::from_utf8_lossy(&out.stderr).contains(message),
-                            "{label}: {out:?}"
-                        );
-                    } else {
-                        assert!(out.status.success(), "{label}: {out:?}");
-                        assert!(out.stderr.is_empty(), "{label}: {out:?}");
-                        assert_eq!(out.stdout, b"borrowed owners and typed slices preserved\n");
-                    }
-                }
-            }
-            for (case, probe, status) in &cases {
-                let code = format!("{runtime}\n{probe}");
-                let exe = dir.0.join(format!("{memory}{opt}-{case}.exe"));
-                fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-                for poison in if memory == "arc" {
-                    &["0"][..]
+            assert_eq!(
+                output.stdout,
+                if *status == 0 {
+                    b"borrowed owners and typed slices preserved\n".as_slice()
                 } else {
-                    &["0", "1"][..]
-                } {
-                    let stress = if memory == "arc" { "0" } else { "1" };
-                    let output = Command::new(&exe)
-                        .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
-                    let label = format!("{memory}{opt}-{case}-poison{poison}");
-                    record_probe::save("borrowed_callbacks", &label, &code, &exe, &output);
-                    assert_eq!(output.status.code(), Some(*status), "{label}: {output:?}");
-                    if *status == 203 {
-                        assert!(
-                            String::from_utf8_lossy(&output.stderr)
-                                .contains("count operation on a dead or interior allocation"),
-                            "{label}: {output:?}"
-                        );
-                    } else {
-                        assert!(output.stderr.is_empty(), "{label}: {output:?}");
-                    }
-                    assert_eq!(
-                        output.stdout,
-                        if *status == 0 {
-                            b"borrowed owners and typed slices preserved\n".as_slice()
-                        } else {
-                            b""
-                        },
-                        "{label}"
-                    );
-                }
-            }
+                    b""
+                },
+                "{label}"
+            );
         }
     }
 }

@@ -94,50 +94,44 @@ main = first () | zip (second ()) | map (tap echo | uncurry sub) | echo
                 ),
                 "{name} interpreter {enabled}"
             );
-            for gc in ["tracing", "arc"] {
-                let cfile = dir.join("main.c");
-                checked(
-                    Command::new(compiler)
-                        .env_remove("FWP_NO_OPT")
-                        .env("FWP_ZIP_MAP", enabled)
-                        .args(["build", "--gc", gc, "--emit-c"])
-                        .arg(&input)
-                        .arg("-o")
-                        .arg(&cfile),
+
+            let cfile = dir.join("main.c");
+            checked(
+                Command::new(compiler)
+                    .env_remove("FWP_NO_OPT")
+                    .env("FWP_ZIP_MAP", enabled)
+                    .args(["build", "--emit-c"])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&cfile),
+            );
+            let code = std::fs::read_to_string(cfile).unwrap();
+            assert_eq!(
+                code.contains("/* fused-zip-map :"),
+                eligible && enabled == "1",
+                "{name} counted {enabled}"
+            );
+            if name == "consumers" {
+                assert!(
+                    code.contains("/* numeric mapped array: direct callback */")
+                        || code.contains("return fwp_p_array_map_list(l0, l1,"),
+                    "zip/map optimization hid existing numeric array construction"
                 );
-                let code = std::fs::read_to_string(cfile).unwrap();
+            }
+            for opt in ["-O1", "-O2"] {
+                let binary = dir.join("main.exe");
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+
+                let actual = Command::new(&binary).output().unwrap();
                 assert_eq!(
-                    code.contains("/* fused-zip-map :"),
-                    eligible && enabled == "1",
-                    "{name} {gc} {enabled}"
+                    (&actual.stdout, &actual.stderr, actual.status.code()),
+                    (
+                        &reference.stdout,
+                        &reference.stderr,
+                        reference.status.code()
+                    ),
+                    "{name} counted {enabled} {opt}"
                 );
-                if name == "consumers" {
-                    assert!(
-                        code.contains("/* numeric mapped array: direct callback */")
-                            || code.contains("return fwp_p_array_map_list(l0, l1,"),
-                        "zip/map optimization hid existing numeric array construction"
-                    );
-                }
-                for opt in ["-O1", "-O2"] {
-                    let binary = dir.join("main.exe");
-                    fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-                    let verify = if gc == "tracing" { "1" } else { "0" };
-                    let actual = Command::new(&binary)
-                        .env("FWP_GC_STRESS", verify)
-                        .env("FWP_GC_VERIFY", verify)
-                        .env("FWP_REUSE_VERIFY", verify)
-                        .output()
-                        .unwrap();
-                    assert_eq!(
-                        (&actual.stdout, &actual.stderr, actual.status.code()),
-                        (
-                            &reference.stdout,
-                            &reference.stderr,
-                            reference.status.code()
-                        ),
-                        "{name} {gc} {enabled} {opt}"
-                    );
-                }
             }
         }
     }
@@ -149,97 +143,85 @@ fn numeric_zip_maps_remove_pairs_and_nodes_and_preserve_input_aliases() {
     let input = dir.join("main.fwp");
     std::fs::write(&input,
         "export transform : List[I64] -> List[I64] -> List[I64]\ntransform = curry (uncurry zip | map (uncurry sub))\n").unwrap();
-    for gc in ["tracing", "arc"] {
-        let mut measured = Vec::new();
-        for enabled in ["0", "1"] {
-            let cfile = dir.join("main.c");
-            checked(
-                Command::new(env!("CARGO_BIN_EXE_fwp"))
-                    .env_remove("FWP_NO_OPT")
-                    .env("FWP_ZIP_MAP", enabled)
-                    .args(["build", "--gc", gc, "--fn", "transform", "--emit-c"])
-                    .arg(&input)
-                    .arg("-o")
-                    .arg(&cfile),
-            );
-            let code = std::fs::read_to_string(cfile).unwrap();
-            let start = code.find("/* transform :").unwrap();
-            let entry = code[start..]
-                .split("static V f")
-                .nth(1)
-                .unwrap()
-                .split('(')
-                .next()
-                .unwrap();
-            let start = code.find("/* List[I64] */\nstatic void fwp_drop").unwrap();
-            let drop = code[start..]
-                .split("static void ")
-                .nth(1)
-                .unwrap()
-                .split('(')
-                .next()
-                .unwrap();
-            let probe = include_str!("fixtures/zip_map_counts.c")
-                .replace("fTRANSFORM", &format!("f{entry}"))
-                .replace("fDROP", drop);
-            let prefix = &code[..code.find("int main(").unwrap()];
-            let mut code = prefix.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic uint64_t zip_calls,zip_bytes,zip_retains;")
+
+    let mut measured = Vec::new();
+    for enabled in ["0", "1"] {
+        let cfile = dir.join("main.c");
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_ZIP_MAP", enabled)
+                .args(["build", "--fn", "transform", "--emit-c"])
+                .arg(&input)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(cfile).unwrap();
+        let start = code.find("/* transform :").unwrap();
+        let entry = code[start..]
+            .split("static V f")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let start = code.find("/* List[I64] */\nstatic void fwp_drop").unwrap();
+        let drop = code[start..]
+            .split("static void ")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let probe = include_str!("fixtures/zip_map_counts.c")
+            .replace("fTRANSFORM", &format!("f{entry}"))
+            .replace("fDROP", drop);
+        let prefix = &code[..code.find("int main(").unwrap()];
+        let mut code = prefix.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic uint64_t zip_calls,zip_bytes,zip_retains;")
                 .replace("static inline void *fwp_heap_alloc(size_t n, int kind) {", "static inline void *fwp_heap_alloc(size_t n, int kind) {\nif(kind!=0){zip_calls++;zip_bytes+=n;}")
                 .replace("static inline void *fwp_alloc_init(size_t n) {", "static inline void *fwp_alloc_init(size_t n) {\nzip_calls++;zip_bytes+=n;");
-            assert!(code.contains("if(kind!=0){zip_calls++"));
-            for parameter in ["v", "value"] {
-                let marker = format!("static inline void fwp_rc_dup(V {parameter}) {{");
-                code = code.replace(&marker, &(marker.clone() + "\nzip_retains++;"));
-            }
-            code += &probe;
-            for opt in ["-O1", "-O2"] {
-                let binary = dir.join("counts.exe");
-                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-                let output = checked(
-                    Command::new(&binary)
-                        .env("FWP_GC", "off")
-                        .env("FWP_GC_STRESS", "0"),
-                );
-                let counts: Vec<u64> = String::from_utf8(output.stdout)
-                    .unwrap()
-                    .split_whitespace()
-                    .map(|s| s.parse().unwrap())
-                    .collect();
-                assert_eq!(counts.len(), 56);
-                measured.push(counts);
-                let marker = format!("/* negative control: remove the result's last-owner destruction */\n        {drop}(result);");
-                let broken = code.replace(&marker, "/* result cleanup deliberately omitted */");
-                assert_ne!(broken, code);
-                fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
-                assert_eq!(
-                    Command::new(&binary)
-                        .env("FWP_GC", "off")
-                        .status()
-                        .unwrap()
-                        .code(),
-                    Some(238)
-                );
-            }
+        assert!(code.contains("if(kind!=0){zip_calls++"));
+        for parameter in ["v", "value"] {
+            let marker = format!("static inline void fwp_rc_dup(V {parameter}) {{");
+            code = code.replace(&marker, &(marker.clone() + "\nzip_retains++;"));
         }
-        assert_eq!(measured[0], measured[1]);
-        assert_eq!(measured[2], measured[3]);
-        for (before, after) in measured[0]
-            .as_chunks::<4>()
-            .0
-            .iter()
-            .zip(measured[2].as_chunks::<4>().0)
-        {
-            assert_eq!(before[0], after[0]);
-            assert!(
-                before[1] >= after[1] + 2 * after[0],
-                "{gc}: {before:?} vs {after:?}"
-            );
-            assert!(
-                before[2] >= after[2] + 48 * after[0],
-                "{gc}: {before:?} vs {after:?}"
-            );
-            assert!(before[3] >= after[3], "{gc}: {before:?} vs {after:?}");
+        code += &probe;
+        for opt in ["-O1", "-O2"] {
+            let binary = dir.join("counts.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            let output = checked(&mut Command::new(&binary));
+            let counts: Vec<u64> = String::from_utf8(output.stdout)
+                .unwrap()
+                .split_whitespace()
+                .map(|s| s.parse().unwrap())
+                .collect();
+            assert_eq!(counts.len(), 56);
+            measured.push(counts);
+            let marker = format!("/* negative control: remove the result's last-owner destruction */\n        {drop}(result);");
+            let broken = code.replace(&marker, "/* result cleanup deliberately omitted */");
+            assert_ne!(broken, code);
+            fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
+            assert_eq!(Command::new(&binary).status().unwrap().code(), Some(238));
         }
+    }
+    assert_eq!(measured[0], measured[1]);
+    assert_eq!(measured[2], measured[3]);
+    for (before, after) in measured[0]
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .zip(measured[2].as_chunks::<4>().0)
+    {
+        assert_eq!(before[0], after[0]);
+        assert!(
+            before[1] >= after[1] + 2 * after[0],
+            "counted: {before:?} vs {after:?}"
+        );
+        assert!(
+            before[2] >= after[2] + 48 * after[0],
+            "counted: {before:?} vs {after:?}"
+        );
+        assert!(before[3] >= after[3], "counted: {before:?} vs {after:?}");
     }
 }
 
@@ -248,65 +230,68 @@ fn zip_reclaims_partial_pairs_pending_fields_and_scratch_on_failure() {
     let dir = fwp::cgen::TempDir::new("zip-cleanup").unwrap();
     let input = dir.join("main.fwp");
     std::fs::write(&input, "main = [\"x\"] | zip [\"y\"] | echo\n").unwrap();
-    for gc in ["tracing", "arc"] {
-        let cfile = dir.join("main.c");
-        checked(
-            Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", "--gc", gc, "--emit-c"])
-                .arg(&input)
-                .arg("-o")
-                .arg(&cfile),
+
+    let cfile = dir.join("main.c");
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--emit-c"])
+            .arg(&input)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(&cfile).unwrap();
+    let start = code.find("static V fwp_p_zip_owned(").unwrap();
+    let end = start + code[start..].find("\n}\n").unwrap() + 3;
+    let helper = code[start..end]
+        .replace("fwp_map_items(", "zip_probe_items(")
+        .replace("fwp_tuple2(", "zip_probe_pair(");
+    let code = code[..start].to_string()
+        + "static V *zip_probe_items(V,size_t *);\nstatic V zip_probe_pair(V,V);\n"
+        + &helper
+        + &code[end..];
+    let code = code
+        .replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1")
+        .replace(
+            "static V fwp_map_finish_protected(",
+            "static V zip_probe_node(V *);\nstatic V fwp_map_finish_protected(",
+        )
+        .replace(
+            "V node = fwp_rc_fresh(fwp_data(1, 2, fields));",
+            "V node = fwp_rc_fresh(zip_probe_node(fields));",
         );
-        let code = std::fs::read_to_string(&cfile).unwrap();
-        let start = code.find("static V fwp_p_zip_owned(").unwrap();
-        let end = start + code[start..].find("\n}\n").unwrap() + 3;
-        let helper = code[start..end]
-            .replace("fwp_map_items(", "zip_probe_items(")
-            .replace("fwp_tuple2(", "zip_probe_pair(");
-        let code = code[..start].to_string()
-            + "static V *zip_probe_items(V,size_t *);\nstatic V zip_probe_pair(V,V);\n"
-            + &helper
-            + &code[end..];
-        let code = code
-            .replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1")
-            .replace(
-                "static V fwp_map_finish_protected(",
-                "static V zip_probe_node(V *);\nstatic V fwp_map_finish_protected(",
-            )
-            .replace(
-                "V node = fwp_rc_fresh(fwp_data(1, 2, fields));",
-                "V node = fwp_rc_fresh(zip_probe_node(fields));",
+    assert!(code.contains("V node = fwp_rc_fresh(zip_probe_node(fields));"));
+    let code = code[..code.find("int main(").unwrap()].to_string()
+        + include_str!("fixtures/zip_cleanup.c");
+    let broken_left = code.replace(
+        "fwp_value_owner left = {a[i], drop_x};",
+        "fwp_value_owner left = {a[i], NULL};",
+    );
+    let broken_pairs = code.replace(
+        "fwp_map_owner owner = {a, 0, 0, drop_pair, drop_list};",
+        "fwp_map_owner owner = {a, 0, 0, NULL, drop_list};",
+    );
+    let broken_scratch = code.replace(
+        "fwp_scratch_finish(&b, &scratch_cleanup);",
+        "fwp_cleanup_pop(&scratch_cleanup);",
+    );
+    assert_ne!(broken_left, code);
+    assert_ne!(broken_pairs, code);
+    assert_ne!(broken_scratch, code);
+    for opt in ["-O1", "-O2"] {
+        for (source, status) in [
+            (&code, 0),
+            (&broken_left, 248),
+            (&broken_pairs, 248),
+            (&broken_scratch, 249),
+        ] {
+            let binary = dir.join("probe.exe");
+            fwp::cgen::compile_c(source, &binary, opt).unwrap();
+            let actual = Command::new(&binary).output().unwrap();
+            assert_eq!(
+                actual.status.code(),
+                Some(status),
+                "counted {opt}: {actual:?}"
             );
-        assert!(code.contains("V node = fwp_rc_fresh(zip_probe_node(fields));"));
-        let code = code[..code.find("int main(").unwrap()].to_string()
-            + include_str!("fixtures/zip_cleanup.c");
-        let broken_left = code.replace(
-            "fwp_value_owner left = {a[i], drop_x};",
-            "fwp_value_owner left = {a[i], NULL};",
-        );
-        let broken_pairs = code.replace(
-            "fwp_map_owner owner = {a, 0, 0, drop_pair, drop_list};",
-            "fwp_map_owner owner = {a, 0, 0, NULL, drop_list};",
-        );
-        let broken_scratch = code.replace(
-            "fwp_scratch_finish(&b, &scratch_cleanup);",
-            "fwp_cleanup_pop(&scratch_cleanup);",
-        );
-        assert_ne!(broken_left, code);
-        assert_ne!(broken_pairs, code);
-        assert_ne!(broken_scratch, code);
-        for opt in ["-O1", "-O2"] {
-            for (source, status) in [
-                (&code, 0),
-                (&broken_left, 248),
-                (&broken_pairs, 248),
-                (&broken_scratch, 249),
-            ] {
-                let binary = dir.join("probe.exe");
-                fwp::cgen::compile_c(source, &binary, opt).unwrap();
-                let actual = Command::new(&binary).output().unwrap();
-                assert_eq!(actual.status.code(), Some(status), "{gc} {opt}: {actual:?}");
-            }
         }
     }
 }

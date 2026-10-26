@@ -22,7 +22,10 @@ calls are distinct tests, not memory modes. Precision reports now have three
 checked fields. Nested derivatives and queued functions are also migrated. Rejected derivative
 programs now test admission in both engines; direct C probes separately verify
 root startup, cross-task use and retired task IDs. Queue tests keep all weak-link,
-resource, capture, scope and missing-release checks.
+resource, capture, scope and missing-release checks. Borrowed callbacks, file
+values, task scopes and zip/map fusion are migrated too: null-pointer controls,
+partial-construction failures, raw/native comparisons, stack/fusion settings and
+omitted releases remain. File probes now check final fixture-owner balance.
 
 ## Implemented here; integration still pending
 
@@ -60,7 +63,7 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 1. **Finish test mode removal.** The list/State/closure fixtures in
    `list_applicative_ownership` are migrated; integrated execution is pending.
    `unwind_cleanup` and typed-State reports are also migrated. Next review the
-   remaining 22 unchanged candidate files and stale candidates listed below.
+   remaining 18 unchanged candidate files and stale candidates listed below.
    Remove variable `--gc` arguments, duplicate
    ARC/tracing loops, obsolete environment settings and CLI-selector tests.
    Keep every distinct semantic input, optimization/layout choice and ownership
@@ -105,7 +108,7 @@ Nine owner-test candidates were reviewed and applied: constructor type/unwind,
 general/ordinary record update, loop preparation, retain unwind, variant conversion,
 worker boxing and worker preparation. Twelve more owner candidates and thirteen program candidates were reviewed,
 refined and applied. The typed-State and unwind candidates were also reviewed,
-refined and applied; 22 candidate files still match their source hashes. The
+refined and applied; 18 candidate files still match their source hashes. The
 `arc_tasks`, `linalg_ownership`, `retained_thunk_ownership`,
 `within_thunk_ownership`, `loop_ownership` and `list_applicative_ownership`
 candidates are now also stale. Remaining candidates are **unreviewed**. They may
