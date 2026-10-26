@@ -158,57 +158,48 @@ fn program() -> Program {
 
 #[test]
 fn library_input_copies_transfer_or_release_exactly_once() {
-    for arc in [false, true] {
-        fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-            arc,
-            ..Default::default()
-        });
-        let p = program();
-        let mut interp = fwp::interp::Interp::new(&p, Box::new(Vec::new())).unwrap();
-        assert_eq!(
-            interp
-                .call_root(0, vec![Value::Str("héllo".into())])
-                .unwrap(),
-            Value::I64(5)
-        );
-        assert_eq!(
-            interp
-                .call_root(1, vec![Value::Str("héllo".into())])
-                .unwrap(),
-            Value::I64(5)
-        );
-        assert_eq!(
-            interp
-                .call_root(
-                    5,
-                    vec![Value::Str("first".into()), Value::Str("second".into())]
-                )
-                .unwrap(),
-            Value::Str("second".into())
-        );
-        assert!(interp
-            .call_root(9, vec![Value::Str("prior".into())])
-            .is_err());
-        let (source, _) = fwp::cgen::generate_library(&p, "inputs", &[]).unwrap();
-        let source = if arc {
-            ownership_ledger::instrument_native(&source, 65536)
-        } else {
-            source
-        };
-        let observed = source
+    let p = program();
+    let mut interp = fwp::interp::Interp::new(&p, Box::new(Vec::new())).unwrap();
+    assert_eq!(
+        interp
+            .call_root(0, vec![Value::Str("héllo".into())])
+            .unwrap(),
+        Value::I64(5)
+    );
+    assert_eq!(
+        interp
+            .call_root(1, vec![Value::Str("héllo".into())])
+            .unwrap(),
+        Value::I64(5)
+    );
+    assert_eq!(
+        interp
+            .call_root(
+                5,
+                vec![Value::Str("first".into()), Value::Str("second".into())]
+            )
+            .unwrap(),
+        Value::Str("second".into())
+    );
+    assert!(interp
+        .call_root(9, vec![Value::Str("prior".into())])
+        .is_err());
+    let (source, _) = fwp::cgen::generate_library(&p, "inputs", &[]).unwrap();
+    let source = ownership_ledger::instrument_native(&source, 65536);
+    let observed = source
         .replace("static V fwp_data(uint32_t", "static V strings[32], data[32]; static unsigned drops[32]; static int ns, nd, fail_record;\nstatic V fwp_data(uint32_t")
         .replacen("return PTR(o);", "if(nd<32) data[nd++]=PTR(o); return PTR(o);", 1)
         .replacen("return PTR(r);", "if(ns<32) strings[ns++]=PTR(r); return PTR(r);", 1)
         .replace("static V fwp_record(uint32_t n, const V *f) {", "static void fwp_trap(const char *);\nstatic V fwp_record(uint32_t n, const V *f) { if(fail_record){fail_record=0;fwp_trap(\"injected record allocation failure\");}")
         .replace("/* ---- program ---- */", "static void observe_drop(V v) { for(int i=0;i<ns;i++)if(strings[i]==v)drops[i]++; }\n/* ---- program ---- */")
         .replace("if (!fwp_rc_release_last(v)) return;", "observe_drop(v); if (!fwp_rc_release_last(v)) return;");
-        // A failing assertion exits before atexit: library teardown must not
-        // replace the specific fault with its later final-leak diagnostic.
-        let probe = r#"
+    // A failing assertion exits before atexit: library teardown must not
+    // replace the specific fault with its later final-leak diagnostic.
+    let probe = r#"
 static jmp_buf failure; static int recover(void) { return 1; }
 static void reset(void){ns=nd=0;memset(drops,0,sizeof drops);}
-static int dead_string(V v){return fwp_reuse_verify?STR(v)->len==0:*fwp_rc_slot(v)==0;}
-static int dead_data(V v){return fwp_reuse_verify?OBJ(v)->tag==0xdead:*fwp_rc_slot(v)==0;}
+static int dead_string(V v){return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)];}
+static int dead_data(V v){return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)];}
 static int strings_released_once(void){for(int i=0;i<ns;i++)if(!dead_string(strings[i])||drops[i]!=1)return 0;return 1;}
 static int data_released(void){for(int i=0;i<nd;i++)if(!dead_data(data[i]))return 0;return 1;}
 int main(void){
@@ -265,93 +256,65 @@ int main(void){
 }
 "#;
 
-        let probe = if arc {
-            probe
-                .replace(
-                    "return fwp_reuse_verify?STR(v)->len==0:*fwp_rc_slot(v)==0;",
-                    "return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)];",
-                )
-                .replace(
-                    "return fwp_reuse_verify?OBJ(v)->tag==0xdead:*fwp_rc_slot(v)==0;",
-                    "return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)];",
-                )
-        } else {
-            probe.to_owned()
-        };
-        let dir = std::env::temp_dir().join(format!("fwp-library-input-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
-        let exe = dir.join("probe.exe");
-        for opt in ["-O1", "-O2"] {
-            fwp::cgen::compile_c(&format!("{observed}\n{probe}"), &exe, opt).unwrap();
-            for poison in if arc { &["0"][..] } else { &["1", "0"][..] } {
-                let out = Command::new(&exe)
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
-                    .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
-                    .output()
-                    .unwrap();
-                assert!(
-                    out.status.success(),
-                    "{opt}, poison {poison}: {:?}: {}",
-                    out.status.code(),
-                    String::from_utf8_lossy(&out.stderr)
-                );
-            }
-            let missing_release =
-                observed.replace("inputs_cleanup.release(inputs_cleanup.arg);", "");
-            let wrapped = observed.find("int64_t wrapped(const char * a0)").unwrap();
-            let transfer = wrapped
-                + observed[wrapped..]
-                    .find("    inputs_owner.v0 = 0;")
-                    .unwrap();
-            let mut missing_transfer = observed.clone();
-            missing_transfer
-                .replace_range(transfer..transfer + "    inputs_owner.v0 = 0;".len(), "");
-            let second = observed
-                .find("const char * second(const char * a0, const char * a1)")
+    let dir = std::env::temp_dir().join(format!("fwp-library-input-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let exe = dir.join("probe.exe");
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&format!("{observed}\n{probe}"), &exe, opt).unwrap();
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(
+            out.status.success(),
+            "{opt}: {:?}: {}",
+            out.status.code(),
+            String::from_utf8_lossy(&out.stderr)
+        );
+
+        let missing_release = observed.replace("inputs_cleanup.release(inputs_cleanup.arg);", "");
+        let wrapped = observed.find("int64_t wrapped(const char * a0)").unwrap();
+        let transfer = wrapped
+            + observed[wrapped..]
+                .find("    inputs_owner.v0 = 0;")
                 .unwrap();
-            let argument = second
-                + observed[second..]
-                    .find("    inputs_owner.v0 = input_arg0;")
-                    .unwrap();
-            let mut missing_argument = observed.clone();
-            missing_argument.replace_range(
-                argument..argument + "    inputs_owner.v0 = input_arg0;".len(),
-                "",
+        let mut missing_transfer = observed.clone();
+        missing_transfer.replace_range(transfer..transfer + "    inputs_owner.v0 = 0;".len(), "");
+        let second = observed
+            .find("const char * second(const char * a0, const char * a1)")
+            .unwrap();
+        let argument = second
+            + observed[second..]
+                .find("    inputs_owner.v0 = input_arg0;")
+                .unwrap();
+        let mut missing_argument = observed.clone();
+        missing_argument.replace_range(
+            argument..argument + "    inputs_owner.v0 = input_arg0;".len(),
+            "",
+        );
+        let missing_field =
+            observed.replace("    input_arg1_fields_owner.v1 = input_arg1_fields[1];", "");
+        let redundant_copies = observed.replace(
+            "int move1 = fwp_rc_last(l1);",
+            "int move1 = 0; /* force field copies instead of a unique transfer */",
+        );
+        for (broken, expected) in [
+            (missing_release, 1),
+            (missing_transfer, 203),
+            (missing_argument, 11),
+            (missing_field, 12),
+            (redundant_copies, 9),
+        ] {
+            assert_ne!(broken, observed, "negative control must change code");
+            fwp::cgen::compile_c(&format!("{broken}\n{probe}"), &exe, opt).unwrap();
+            let out = Command::new(&exe).output().unwrap();
+            assert_eq!(
+                out.status.code(),
+                Some(expected),
+                "negative control: {}",
+                String::from_utf8_lossy(&out.stderr)
             );
-            let missing_field =
-                observed.replace("    input_arg1_fields_owner.v1 = input_arg1_fields[1];", "");
-            let redundant_copies = observed.replace(
-                "int move1 = fwp_rc_last(l1);",
-                "int move1 = 0; /* force field copies instead of a unique transfer */",
-            );
-            for (broken, expected) in [
-                (missing_release, 1),
-                (missing_transfer, if arc { 203 } else { 2 }),
-                (missing_argument, 11),
-                (missing_field, 12),
-                (redundant_copies, 9),
-            ] {
-                assert_ne!(broken, observed, "negative control must change code");
-                fwp::cgen::compile_c(&format!("{broken}\n{probe}"), &exe, opt).unwrap();
-                let out = Command::new(&exe)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
-                    .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
-                    .env("FWP_REUSE_VERIFY", if arc { "0" } else { "1" })
-                    .output()
-                    .unwrap();
-                assert_eq!(
-                    out.status.code(),
-                    Some(expected),
-                    "negative control: {}",
-                    String::from_utf8_lossy(&out.stderr)
-                );
-            }
         }
-        std::fs::remove_dir_all(dir).unwrap();
     }
+    std::fs::remove_dir_all(dir).unwrap();
 }
 
 #[test]

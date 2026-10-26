@@ -47,7 +47,11 @@ with C/Rust in six balanced process batches (thirty samples each); paired C
 experiments use four batches (twenty samples). HTTP tests retain all transports
 and memory bounds, with forced-copy client/server coverage replacing collector
 stress. The current HTTP reader requires 18 allocation rows, ten RSS samples
-and 24 ownership-entry rows per host.
+and 24 ownership-entry rows per host. Library inputs/results now use the live
+allocation ledger in every run; static/shared unload controls still check actual
+regions, tasks, finalizers, metrics, signal handlers and thread keys. Removed only
+the deleted collector mark-stack observer. Field/projection tests retain alias,
+transfer, cancellation and missing-release controls.
 
 ## Implemented here; integration still pending
 

@@ -4,40 +4,35 @@ use std::process::Command;
 
 #[test]
 fn unload_closes_owned_files_sessions_and_transferred_http2_handles() {
-    for arc in [true, false] {
-        fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-            arc,
-            ..Default::default()
-        });
-        let unit = MT::Record(vec![]);
-        let p = Program {
-            funcs: vec![
-                Func {
-                    name: "available".into(),
-                    arity: 1,
-                    locals: vec![unit.clone()],
-                    ty: MT::Fun(Box::new(unit.clone()), Box::new(MT::con("std::Bool"))),
-                    body: Body::Prim("tls.available".into()),
-                },
-                // Include HTTP/2 through an actual primitive and its declared
-                // signature, so ARC checks the same contract as source code.
-                Func {
-                    name: "pooled".into(),
-                    arity: 1,
-                    locals: vec![MT::con("std::String")],
-                    ty: MT::Fun(
-                        Box::new(MT::con("std::String")),
-                        Box::new(MT::con("std::Bool")),
-                    ),
-                    body: Body::Prim("http2.pooled".into()),
-                },
-            ],
-            exports: vec![("available".into(), 0)],
-            ..Program::default()
-        };
-        fwp::ir::check_locals(&p).unwrap();
-        let (generated, header) = fwp::cgen::generate_library(&p, "resources", &[]).unwrap();
-        let hooks = r#"
+    let unit = MT::Record(vec![]);
+    let p = Program {
+        funcs: vec![
+            Func {
+                name: "available".into(),
+                arity: 1,
+                locals: vec![unit.clone()],
+                ty: MT::Fun(Box::new(unit.clone()), Box::new(MT::con("std::Bool"))),
+                body: Body::Prim("tls.available".into()),
+            },
+            // Include HTTP/2 through an actual primitive and its declared
+            // signature, so ARC checks the same contract as source code.
+            Func {
+                name: "pooled".into(),
+                arity: 1,
+                locals: vec![MT::con("std::String")],
+                ty: MT::Fun(
+                    Box::new(MT::con("std::String")),
+                    Box::new(MT::con("std::Bool")),
+                ),
+                body: Body::Prim("http2.pooled".into()),
+            },
+        ],
+        exports: vec![("available".into(), 0)],
+        ..Program::default()
+    };
+    fwp::ir::check_locals(&p).unwrap();
+    let (generated, header) = fwp::cgen::generate_library(&p, "resources", &[]).unwrap();
+    let hooks = r#"
 #if defined(_WIN32) && !defined(_WIN32_WINNT)
 #define _WIN32_WINNT 0x0a00
 #endif
@@ -52,7 +47,7 @@ static void observe_free(void *p);
 #define SSL_shutdown(p) observe_shutdown(p)
 #define free(p) observe_free(p)
 "#;
-        let fixture = r#"
+    let fixture = r#"
 #undef SSL_CTX_free
 #undef SSL_free
 #undef SSL_shutdown
@@ -119,76 +114,70 @@ void setup(uintptr_t *fds,int *observations,const char *path,const char *cert,co
  V closed_sock=fwp_sock_new(pair[0],1);fwp_p_sock_close(closed_sock);fwp_p_sock_close(closed_sock);fwp_socket_close(pair[1]);
 }
 "#;
-        let host = include_str!("fixtures/library_resources_host.c");
-        let dir =
-            std::env::temp_dir().join(format!("fwp-library-resources-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
-        // The dependency prefix contains headers/libraries; the runner supplies its
-        // OpenSSL command separately on PATH (including Windows).
-        let openssl = "openssl";
-        let out = Command::new(openssl)
+    let host = include_str!("fixtures/library_resources_host.c");
+    let dir = std::env::temp_dir().join(format!("fwp-library-resources-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    // The dependency prefix contains headers/libraries; the runner supplies its
+    // OpenSSL command separately on PATH (including Windows).
+    let openssl = "openssl";
+    let out = Command::new(openssl)
+        .args([
+            "req",
+            "-x509",
+            "-newkey",
+            "rsa:2048",
+            "-nodes",
+            "-keyout",
+            "key.pem",
+            "-out",
+            "cert.pem",
+            "-days",
+            "2",
+            "-subj",
+            "/CN=localhost",
+        ])
+        .current_dir(&dir)
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let lib = dir.join(format!(
+        "libresources.{}",
+        fwp::cgen::shared_library_extension()
+    ));
+    let exe = dir.join("host.exe");
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_library(
+            &format!("{hooks}\n{generated}\n{fixture}"),
+            &header,
+            &lib,
+            opt,
+            fwp::cgen::LibKind::Shared,
+        )
+        .unwrap();
+        fwp::cgen::compile_c(host, &exe, opt).unwrap();
+
+        let out = Command::new(&exe)
             .args([
-                "req",
-                "-x509",
-                "-newkey",
-                "rsa:2048",
-                "-nodes",
-                "-keyout",
-                "key.pem",
-                "-out",
-                "cert.pem",
-                "-days",
-                "2",
-                "-subj",
-                "/CN=localhost",
+                &lib,
+                &dir.join("data"),
+                &dir.join("cert.pem"),
+                &dir.join("key.pem"),
             ])
-            .current_dir(&dir)
             .output()
             .unwrap();
         assert!(
             out.status.success(),
-            "{}",
+            "{opt}: {:?}: {}",
+            out.status.code(),
             String::from_utf8_lossy(&out.stderr)
         );
-        let lib = dir.join(format!(
-            "libresources.{}",
-            fwp::cgen::shared_library_extension()
-        ));
-        let exe = dir.join("host.exe");
-        for opt in ["-O1", "-O2"] {
-            fwp::cgen::compile_library(
-                &format!("{hooks}\n{generated}\n{fixture}"),
-                &header,
-                &lib,
-                opt,
-                fwp::cgen::LibKind::Shared,
-            )
-            .unwrap();
-            fwp::cgen::compile_c(host, &exe, opt).unwrap();
-            for poison in if arc { &["0"][..] } else { &["0", "1"][..] } {
-                let out = Command::new(&exe)
-                    .args([
-                        &lib,
-                        &dir.join("data"),
-                        &dir.join("cert.pem"),
-                        &dir.join("key.pem"),
-                    ])
-                    .env_remove("FWP_GC")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
-                    .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
-                    .output()
-                    .unwrap();
-                assert!(
-                    out.status.success(),
-                    "{opt}, poison {poison}: {:?}: {}",
-                    out.status.code(),
-                    String::from_utf8_lossy(&out.stderr)
-                );
-            }
-        }
-        // Each omission must be detected by the actual loader host.
-        for (needle, replacement, expected) in [
+    }
+    // Each omission must be detected by the actual loader host.
+    for (needle, replacement, expected) in [
         (
             "    fwp_heap_finalizer(h, fwp_file_final);",
             "    /* omit file ownership */",
@@ -237,9 +226,9 @@ void setup(uintptr_t *fds,int *observations,const char *path,const char *cert,co
                 &dir.join("cert.pem"),
                 &dir.join("key.pem"),
             ])
-            .env_remove("FWP_GC").env("FWP_REUSE_VERIFY", "0")
-            .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
-            .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
+
+
+
             .output()
             .unwrap();
         assert_eq!(
@@ -249,6 +238,5 @@ void setup(uintptr_t *fds,int *observations,const char *path,const char *cert,co
             String::from_utf8_lossy(&out.stderr)
         );
     }
-        std::fs::remove_dir_all(dir).unwrap();
-    }
+    std::fs::remove_dir_all(dir).unwrap();
 }

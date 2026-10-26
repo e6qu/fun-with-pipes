@@ -118,47 +118,29 @@ fn moved_fields_preserve_aliases_siblings_and_failure_cleanup() {
         .is_err());
     let dir = fwp::cgen::TempDir::new("field-moves").unwrap();
     let binary = dir.join("probe.exe");
-    for arc in [false, true] {
-        fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-            arc,
-            ..Default::default()
-        });
-        let emitted = fwp::cgen::generate(&p).unwrap();
-        fwp::cgen::set_native_options(Default::default());
-        let code = emitted.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic size_t move_retains;\n")
+
+    let emitted = fwp::cgen::generate(&p).unwrap();
+    let code = emitted.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic size_t move_retains;\n")
             .replace("static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {",
                 "static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) { move_retains++;")
             .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)")
             + include_str!("fixtures/field_move_probe.c");
-        let run = |stress: &str| {
-            let mut cmd = Command::new(&binary);
-            cmd.env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", stress)
-                .env("FWP_GC_VERIFY", stress)
-                .env("FWP_REUSE_VERIFY", stress);
-            cmd
-        };
-        for opt in ["-O1", "-O2"] {
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            for stress in if arc { &["0"][..] } else { &["0", "1"][..] } {
-                let output = run(stress).output().unwrap();
-                assert!(
-                    output.status.success(),
-                    "arc={arc} {opt} stress={stress}: {output:?}"
-                );
-            }
-        }
-        let mut control = String::new();
-        for line in code.lines() {
-            control.push_str(line);
-            control.push('\n');
-            if let Some(rest) = line.trim().strip_prefix("/* move owned field */ ") {
-                let local = rest.split(" = ").next().unwrap();
-                control.push_str(&format!("fwp_rc_dup({local}); fwp_rc_drop({local});\n"));
-            }
-        }
-        assert_ne!(control, code);
-        fwp::cgen::compile_c(&control, &binary, "-O2").unwrap();
-        assert_eq!(run("0").output().unwrap().status.code(), Some(198));
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+
+        let output = Command::new(&binary).output().unwrap();
+        assert!(output.status.success(), "{opt}: {output:?}");
     }
+    let mut control = String::new();
+    for line in code.lines() {
+        control.push_str(line);
+        control.push('\n');
+        if let Some(rest) = line.trim().strip_prefix("/* move owned field */ ") {
+            let local = rest.split(" = ").next().unwrap();
+            control.push_str(&format!("fwp_rc_dup({local}); fwp_rc_drop({local});\n"));
+        }
+    }
+    assert_ne!(control, code);
+    fwp::cgen::compile_c(&control, &binary, "-O2").unwrap();
+    assert_eq!(run("0").output().unwrap().status.code(), Some(198));
 }

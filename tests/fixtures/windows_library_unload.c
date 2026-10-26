@@ -18,7 +18,6 @@ static void observe_free(void *p) {
  if(observed&&p) {
   if(p==observed->wide)observed->wide_freed++;
   if(p==observed->fins)observed->fins_freed++;
-  if(p==observed->marks)observed->marks_freed++;
   if(p==observed->metrics)observed->metrics_freed++;
   if(p==observed->name)observed->name_freed++;
  }
@@ -27,7 +26,7 @@ static void observe_free(void *p) {
 static void observe_finished(void) {
  if(!observed)return;
  observed->finished++;
- if(observed->wide_freed!=1||observed->fins_freed!=1||observed->marks_freed!=1||
+ if(observed->wide_freed!=1||observed->fins_freed!=1||
     observed->metrics_freed!=1||observed->name_freed!=1||observed->key_deleted!=1||
     observed->fibers_deleted!=3||observed->signal_added!=1||observed->signal_removed!=1||
     fwp_heap.ready||fwp_heap.reservation||fwp_closure_drop_key!=TLS_OUT_OF_INDEXES)
@@ -59,7 +58,6 @@ __declspec(dllexport) void setup(struct snapshot *s) {
  V wide=fwp_rc_fresh(fwp_str_new("wide",4));
  for(int i=0;i<256;i++)fwp_rc_dup(wide);
  s->wide=*fwp_rc_wide_link(fwp_rc_slot(wide));
- fwp_heap.mstack=malloc(8*sizeof(heap_range));fwp_heap.mcap=8;s->marks=fwp_heap.mstack;
  uint64_t *marker=fwp_mem_alloc(sizeof(uint64_t));*marker=0x12345678;
  fwp_heap_finalizer(marker,finalize);s->fins=fwp_heap.fins;
  fwp_metric *metric=fwp_metric_get("probe",5,"",0,"gauge");s->metrics=fwp_metrics;s->name=metric->name;
