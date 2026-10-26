@@ -18,15 +18,20 @@ for marker, hook in [('static inline void *fwp_alloc_init(size_t n) {', ' servic
     assert code.count(marker)==1
     code = code.replace(marker, marker + hook)
 fixture = Path('tests/fixtures/service_values_cleanup.c').read_text()
-# Keep the same assertions and execution; distinguish the shared exit code.
-fixture = '\n'.join(line.replace('return 247;', '{fprintf(stderr,"service assertion line %d\\n",__LINE__);return 247;}') for line in fixture.splitlines())
-fixture = fixture.replace('if(!completed||failed!=(operation?2:12))', 'fprintf(stderr,"operation=%d failed=%d completed=%d\\n",operation,failed,completed); if(!completed||failed!=(operation?2:12))')
-source = code[:code.index('int main(')] + types + '\n#line 1 "service_values_cleanup.c"\n' + fixture
-(out / 'probe.c').write_text(source)
+base = code[:code.index('int main(')] + types + '\n#line 1 "service_values_cleanup.c"\n'
+labeled = fixture
+for index, line in enumerate(fixture.splitlines()):
+    if 'return 247;' in line:
+        labeled = labeled.replace(line, line.replace('return 247;', 'return ' + str(100 + index) + ';'), 1)
+        print('assertion exit', 100 + index, 'line', index + 1, line, flush=True)
+counts = labeled.replace('if(!completed||failed!=(operation?2:12))', 'fprintf(stderr,"operation=%d failed=%d completed=%d\\n",operation,failed,completed); if(!completed||failed!=(operation?2:12))')
 subprocess.run([cc, '--version'],check=True)
-for opt in ['-O1','-O2']:
-    exe = out / ('probe' + opt)
-    command = [cc,opt,'-std=gnu11','-ffp-contract=off',str(out/'probe.c'),'-o',str(exe),'-lssl','-lcrypto','-lm','-lpthread']
-    subprocess.run(command,check=True)
-    result = subprocess.run([str(exe)],capture_output=True,text=True)
-    print(opt,'exit',result.returncode, 'stdout',result.stdout,'stderr',result.stderr,flush=True)
+for name, fixture in [('original', fixture), ('labeled', labeled), ('counts', counts)]:
+    path = out / (name + '.c')
+    path.write_text(base + fixture)
+    for opt in ['-O1','-O2']:
+        exe = out / (name + opt)
+        command = [cc,opt,'-std=gnu11','-ffp-contract=off',str(path),'-o',str(exe),'-lssl','-lcrypto','-lm','-lpthread']
+        subprocess.run(command,check=True)
+        result = subprocess.run([str(exe)],capture_output=True,text=True)
+        print(name,opt,'exit',result.returncode, 'stdout',result.stdout,'stderr',result.stderr,flush=True)
