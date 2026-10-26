@@ -61,54 +61,51 @@ main = [
 "#,
     )
     .unwrap();
-    for memory in ["arc", "tracing"] {
-        checked(
-            Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .env_remove("FWP_NO_OPT")
-                .env("FWP_REUSE", "1")
-                .env("FWP_FREE", "1")
-                .env("FWP_STACK", "0")
-                .args(["build", "--memory", "dynamic", "--gc", memory, "-O2"])
-                .arg(&input)
-                .args(["--emit-c", "-o"])
-                .arg(&cfile),
-        );
-        let original = std::fs::read_to_string(&cfile).unwrap();
-        assert!(original.contains("#define FWP_UNWIND 1"));
-        let marker = "fwp_p_run_state_owned(l0, l1, l2, ";
-        assert_eq!(original.matches(marker).count(), 1);
-        let operations = original
-            .split(marker)
-            .nth(1)
-            .unwrap()
-            .split(')')
-            .next()
-            .unwrap()
-            .split(',')
-            .map(str::trim)
-            .collect::<Vec<_>>();
-        assert_eq!(operations.len(), 3);
-        assert_eq!(operations[0], "fwp_rc_dup");
-        assert_eq!(operations[1], operations[2]);
-        assert!(operations[1].starts_with("fwp_drop"));
-        let probe =
-            include_str!("fixtures/typed_state_probe.c").replace("DROP_STRING", operations[1]);
-        let start = original.find("static V fwp_p_run_state_owned(").unwrap();
-        let end = original[start..].find("static V fwp_p_put(V s)").unwrap() + start;
-        let owned =
-            original[start..end].replace("fwp_tuple2(result, state)", "typed_tuple(result, state)");
-        assert_ne!(owned.as_str(), &original[start..end]);
-        let runtime = format!(
-            "{}static V typed_tuple(V,V);\n{}{}",
-            &original[..start],
-            owned,
-            &original[end..]
-        )
-        .replace(
-            "int main(int argc, char **argv)",
-            "int original_main(int argc, char **argv)",
-        );
-        let controls = [
+
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env_remove("FWP_NO_OPT")
+            .env("FWP_STACK", "0")
+            .args(["build", "--memory", "dynamic", "-O2"])
+            .arg(&input)
+            .args(["--emit-c", "-o"])
+            .arg(&cfile),
+    );
+    let original = std::fs::read_to_string(&cfile).unwrap();
+    assert!(original.contains("#define FWP_UNWIND 1"));
+    let marker = "fwp_p_run_state_owned(l0, l1, l2, ";
+    assert_eq!(original.matches(marker).count(), 1);
+    let operations = original
+        .split(marker)
+        .nth(1)
+        .unwrap()
+        .split(')')
+        .next()
+        .unwrap()
+        .split(',')
+        .map(str::trim)
+        .collect::<Vec<_>>();
+    assert_eq!(operations.len(), 3);
+    assert_eq!(operations[0], "fwp_rc_dup");
+    assert_eq!(operations[1], operations[2]);
+    assert!(operations[1].starts_with("fwp_drop"));
+    let probe = include_str!("fixtures/typed_state_probe.c").replace("DROP_STRING", operations[1]);
+    let start = original.find("static V fwp_p_run_state_owned(").unwrap();
+    let end = original[start..].find("static V fwp_p_put(V s)").unwrap() + start;
+    let owned =
+        original[start..end].replace("fwp_tuple2(result, state)", "typed_tuple(result, state)");
+    assert_ne!(owned.as_str(), &original[start..end]);
+    let runtime = format!(
+        "{}static V typed_tuple(V,V);\n{}{}",
+        &original[..start],
+        owned,
+        &original[end..]
+    )
+    .replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let controls = [
         ("state-retain-omitted", "    if (duplicate) duplicate(initial);", "", 120),
         ("getter-retain-omitted", "static V fwp_p_get_owned(void (*duplicate)(V)) {\n    V value = fwp_p_get();\n    if (duplicate) duplicate(value);", "static V fwp_p_get_owned(void (*duplicate)(V)) {\n    V value = fwp_p_get();", 120),
         ("put-retain-omitted", "        if (owner->duplicate) owner->duplicate(value);", "", 127),
@@ -116,72 +113,62 @@ main = [
         ("pair-owner-omitted", "V pair = fwp_rc_fresh(typed_tuple(result, state));", "V pair = typed_tuple(result, state);", 126),
         ("task-owner-save-omitted", "    from->state_owners = fwp_state_owners;", "", 128),
     ];
-        let runtime = format!("static void typed_no_release(void *p) {{ (void)p; }}\n{runtime}");
-        let mut variants = vec![("typed-state", runtime.clone(), 0)];
-        for (label, old, new, expected) in controls {
-            assert_eq!(runtime.matches(old).count(), 1, "{label}");
-            variants.push((label, runtime.replace(old, new), expected));
-        }
-        for opt in ["-O1", "-O2"] {
-            let mut cases: Vec<_> = variants
-                .iter()
-                .map(|(label, runtime, status)| (*label, format!("{runtime}\n{probe}"), *status))
-                .collect();
-            if memory == "arc" {
-                let missing = probe.replace(
-                    "typed_drop_string(sentinel);",
-                    "/* omit sentinel release */",
-                );
-                assert_ne!(missing, probe);
-                cases.push(("final-owner-omitted", format!("{runtime}\n{missing}"), 90));
+    let runtime = format!("static void typed_no_release(void *p) {{ (void)p; }}\n{runtime}");
+    let mut variants = vec![("typed-state", runtime.clone(), 0)];
+    for (label, old, new, expected) in controls {
+        assert_eq!(runtime.matches(old).count(), 1, "{label}");
+        variants.push((label, runtime.replace(old, new), expected));
+    }
+    for opt in ["-O1", "-O2"] {
+        let mut cases: Vec<_> = variants
+            .iter()
+            .map(|(label, runtime, status)| (*label, format!("{runtime}\n{probe}"), *status))
+            .collect();
+
+        let missing = probe.replace(
+            "typed_drop_string(sentinel);",
+            "/* omit sentinel release */",
+        );
+        assert_ne!(missing, probe);
+        cases.push(("final-owner-omitted", format!("{runtime}\n{missing}"), 90));
+
+        for (label, code, expected) in &cases {
+            let executable = scratch.0.join(format!("counted{opt}-{label}.exe"));
+            if let Some(directory) = std::env::var_os("FWP_TYPED_STATE_ARTIFACTS") {
+                let directory = PathBuf::from(directory);
+                std::fs::create_dir_all(&directory).unwrap();
+                std::fs::write(directory.join(format!("counted{opt}-{label}.c")), code).unwrap();
             }
-            for (label, code, expected) in &cases {
-                let executable = scratch.0.join(format!("{memory}{opt}-{label}.exe"));
-                if let Some(directory) = std::env::var_os("FWP_TYPED_STATE_ARTIFACTS") {
-                    let directory = PathBuf::from(directory);
-                    std::fs::create_dir_all(&directory).unwrap();
-                    std::fs::write(directory.join(format!("{memory}{opt}-{label}.c")), code)
+            if let Some(directory) = std::env::var_os("FWP_ARC_ARTIFACTS") {
+                let directory =
+                    PathBuf::from(directory).join("record-ownership/typed_state_ownership");
+                std::fs::create_dir_all(&directory).unwrap();
+                std::fs::write(directory.join(format!("counted{opt}-{label}.c")), code).unwrap();
+            }
+            fwp::cgen::compile_c(code, &executable, opt).unwrap();
+
+            let output = Command::new(&executable).output().unwrap();
+            let label = format!("counted{opt}-{label}");
+            retain(&label, code, &executable, &output, "c");
+            record_probe::save("typed_state_ownership", &label, code, &executable, &output);
+            assert_eq!(output.status.code(), Some(*expected), "{label}: {output:?}");
+            if *expected == 0 {
+                assert!(output.stderr.is_empty(), "{output:?}");
+                let text = String::from_utf8(output.stdout.clone()).unwrap();
+                let fields = text
+                    .trim_end()
+                    .strip_prefix("typed State ownership; ")
+                    .expect("State report")
+                    .split_whitespace()
+                    .collect::<Vec<_>>();
+                assert_eq!(fields.len(), 3, "{text}");
+                for (field, name) in fields.iter().zip(["owner", "cleanup", "task"]) {
+                    let size = field
+                        .strip_prefix(&format!("{name}="))
+                        .expect("named State layout field")
+                        .parse::<usize>()
                         .unwrap();
-                }
-                if let Some(directory) = std::env::var_os("FWP_ARC_ARTIFACTS") {
-                    let directory =
-                        PathBuf::from(directory).join("record-ownership/typed_state_ownership");
-                    std::fs::create_dir_all(&directory).unwrap();
-                    std::fs::write(directory.join(format!("{memory}{opt}-{label}.c")), code)
-                        .unwrap();
-                }
-                fwp::cgen::compile_c(code, &executable, opt).unwrap();
-                for reuse in if memory == "arc" {
-                    &["0"][..]
-                } else {
-                    &["0", "1"][..]
-                } {
-                    let stress = if memory == "arc" { "0" } else { "1" };
-                    let output = Command::new(&executable)
-                        .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", reuse)
-                        .output()
-                        .unwrap();
-                    let label = format!("{memory}{opt}-{label}-reuse{reuse}");
-                    retain(&label, code, &executable, &output, "c");
-                    record_probe::save("typed_state_ownership", &label, code, &executable, &output);
-                    assert_eq!(output.status.code(), Some(*expected), "{label}: {output:?}");
-                    if *expected == 0 {
-                        assert!(output.stderr.is_empty(), "{output:?}");
-                        let text = String::from_utf8(output.stdout.clone()).unwrap();
-                        let count = text
-                            .strip_prefix("typed State ownership; collections=")
-                            .unwrap()
-                            .split_whitespace()
-                            .next()
-                            .unwrap()
-                            .parse::<usize>()
-                            .unwrap();
-                        assert_eq!(count == 0, memory == "arc", "{text}");
-                    }
+                    assert!(size > 0, "{text}");
                 }
             }
         }
@@ -236,61 +223,39 @@ main = [
             .args(["run", "--interp"])
             .arg(&input),
     );
-    for memory in ["arc", "tracing"] {
-        for opt in ["-O1", "-O2"] {
-            for stack in ["0", "1"] {
-                let executable = scratch.0.join(format!("{memory}{opt}-stack{stack}.exe"));
-                let cfile = scratch.0.join(format!("{memory}{opt}-stack{stack}.c"));
-                for emit in [true, false] {
-                    let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
-                    command
-                        .env_remove("FWP_NO_OPT")
-                        .env("FWP_STACK", stack)
-                        .env("FWP_REUSE", "1")
-                        .env("FWP_FREE", "1")
-                        .args(["build", "--memory", "dynamic", "--gc", memory, opt])
-                        .arg(&input);
-                    if emit {
-                        command.arg("--emit-c");
-                    }
-                    command
-                        .arg("-o")
-                        .arg(if emit { &cfile } else { &executable });
-                    checked(&mut command);
+
+    for opt in ["-O1", "-O2"] {
+        for stack in ["0", "1"] {
+            let executable = scratch.0.join(format!("counted{opt}-stack{stack}.exe"));
+            let cfile = scratch.0.join(format!("counted{opt}-stack{stack}.c"));
+            for emit in [true, false] {
+                let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
+                command
+                    .env_remove("FWP_NO_OPT")
+                    .env("FWP_STACK", stack)
+                    .args(["build", "--memory", "dynamic", opt])
+                    .arg(&input);
+                if emit {
+                    command.arg("--emit-c");
                 }
-                let code = std::fs::read_to_string(cfile).unwrap();
-                for reuse in if memory == "arc" {
-                    &["0"][..]
-                } else {
-                    &["0", "1"][..]
-                } {
-                    let stress = if memory == "arc" { "0" } else { "1" };
-                    let output = Command::new(&executable)
-                        .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", reuse)
-                        .output()
-                        .unwrap();
-                    let label = format!("{memory}{opt}-semantics-stack{stack}-reuse{reuse}");
-                    retain(&label, &code, &executable, &output, "c");
-                    record_probe::save(
-                        "typed_state_ownership",
-                        &label,
-                        &code,
-                        &executable,
-                        &output,
-                    );
-                    assert_eq!(
-                        output.status.code(),
-                        reference.status.code(),
-                        "{label}: {output:?}"
-                    );
-                    assert_eq!(output.stdout, reference.stdout, "{label}");
-                    assert_eq!(output.stderr, reference.stderr, "{label}");
-                }
+                command
+                    .arg("-o")
+                    .arg(if emit { &cfile } else { &executable });
+                checked(&mut command);
             }
+            let code = std::fs::read_to_string(cfile).unwrap();
+
+            let output = Command::new(&executable).output().unwrap();
+            let label = format!("counted{opt}-semantics-stack{stack}");
+            retain(&label, &code, &executable, &output, "c");
+            record_probe::save("typed_state_ownership", &label, &code, &executable, &output);
+            assert_eq!(
+                output.status.code(),
+                reference.status.code(),
+                "{label}: {output:?}"
+            );
+            assert_eq!(output.stdout, reference.stdout, "{label}");
+            assert_eq!(output.stderr, reference.stderr, "{label}");
         }
     }
 }

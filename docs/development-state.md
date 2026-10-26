@@ -11,8 +11,10 @@ Local checkpoints: `d83f4745` (runtime deletion), `bd299fe0` (release controls),
 `dd0c2fbe` (counted probes and numeric cases), and `87d68cd1` (Windows contexts,
 client reports and nine owner-test migrations). `6e065730` records native/WASI entries and Linux context checks. Further reviewed
 edits in `2ad9538b` migrate 25 owner/program targets, iterator/recursion measurements
-and HTTP/2/TLS borrowed-byte probes. Subsequent edits remove remaining test root
-fences, replace loop leak controls and repair closure destruction failure.
+and HTTP/2/TLS borrowed-byte probes. `c62455fc` removes test root fences, replaces
+loop leak controls and repairs closure destruction failure. Further edits migrate
+list/State/unwind cases and the HTTP/2 unit fixture, remove the unreachable closure
+recovery registration and fix an await-result leak in the typed-State probe.
 Nothing here has been pushed.
 
 Only #216 is a public PR. Its worktree is
@@ -46,6 +48,7 @@ must stay stopped. No merge watcher is running.
 | Iterator/recursion reports | Retained matched fwp variants, inputs, optimization levels, timing scopes, allocation/live-byte counters and binary evidence. Removed the second memory mode and collection fields. |
 | Root fences and loops | Removed collector fences from 47 fixtures/targets. Replaced the last fence-dependent loop control with omitted typed releases, checking both released and live bytes. Alias cases use the real copy control. |
 | Closure destruction | Queue exhaustion now exits 102; traps during destruction exit 101 without recovery or shutdown callbacks revisiting partial owners. Normal release restores live bytes and clears the thread context. Missing reset exits 94. Integrated validation is pending. |
+| List, State and unwind | Explicit list input owners and live-byte restoration; scalar State-slot restoration plus separate counted-State checks. Removed two legacy unwind probes covered by the owned suite, retaining their diagnostic assertions. Fixed the typed-State await-result leak and removed collection fields from its report. |
 | Docs | Updated ownership, native commands, tutorials and allocator/report explanations. Historical measurements retain their original source/schema; reproduction instructions distinguish their revision from current tools. |
 
 The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
@@ -54,8 +57,11 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 
 ## Remaining migration, in order
 
-1. **Finish test mode removal.** Start with the remaining list/State fixtures in
-   `list_applicative_ownership`; its closure failure case is migrated. Remove variable `--gc` arguments, duplicate
+1. **Finish test mode removal.** The list/State/closure fixtures in
+   `list_applicative_ownership` are migrated; integrated execution is pending.
+   `unwind_cleanup` and typed-State reports are also migrated. Next review the
+   remaining 43 unchanged candidate files and stale candidates listed below.
+   Remove variable `--gc` arguments, duplicate
    ARC/tracing loops, obsolete environment settings and CLI-selector tests.
    Keep every distinct semantic input, optimization/layout choice and ownership
    fault. Retain errors for unsupported current options; no compatibility aliases.
@@ -63,6 +69,8 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
    anchors and escaped `FWP_ARC_ONLY` blocks. Preserve independent lifetime,
    alias, failure/cancellation and resource assertions. Windows ABI/register/rounding and host-fiber ownership checks have been migrated;
    the Linux context fixture now checks live values and machine state without collector roots.
+   No `FWP_KEEP_ALIVE` remains in runtime, compiler or tests; the HTTP/2 unit
+   fixture now releases its actual call/stream/connection owners.
 3. **Finish report schemas and consumers together.** The shared client-memory report is migrated; other server/numerical
    reports still carry collection fields. Remove them rather than printing dummy
    zeros. Update strict parsers, TSV/JSON producers, artifact audits and docs.
@@ -85,8 +93,8 @@ covering 151 duplicate-mode loops, regenerated after the client-report changes.
 Nine owner-test candidates were reviewed and applied: constructor type/unwind,
 general/ordinary record update, loop preparation, retain unwind, variant conversion,
 worker boxing and worker preparation. Twelve more owner candidates and thirteen program candidates were reviewed,
-refined and applied. With the separate task-context migration, 49 candidates
-matched their original source hashes before the latest fence/loop edits. The
+refined and applied. The typed-State and unwind candidates were also reviewed,
+refined and applied; 43 candidate files still match their source hashes. The
 `arc_tasks`, `linalg_ownership`, `retained_thunk_ownership`,
 `within_thunk_ownership`, `loop_ownership` and `list_applicative_ownership`
 candidates are now also stale. Remaining candidates are **unreviewed**. They may

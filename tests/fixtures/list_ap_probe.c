@@ -34,8 +34,6 @@ static void ap_arguments(V *args,uint32_t offset,uint32_t n) { (void)args;(void)
 static void ap_captures(V callback,int duplicate) { (void)callback;(void)duplicate; }
 static V ap_entry(V *args,char prefix) {
     ap_calls++;
-    fwp_heap_collect();
-    if(!fwp_heap.armed || !fwp_heap.ncollect) fwp_trap("list.ap collection absent");
     if(ap_calls==3 && ap_mode==1) fwp_trap("list.ap callback control");
     if(ap_calls==3 && ap_mode==2) fwp_check_cancel();
     char text[32];int n=snprintf(text,sizeof(text),"%c%lld",prefix,(long long)args[0]);
@@ -60,8 +58,18 @@ static const fwp_fninfo ap_entries[]={
 static fwp_clo ap_callback_a={0,0},ap_callback_b={1,0};
 static void ap_drop_element(V value) { ap_element_drops++;DROP_STRING(value); }
 static void ap_drop_list(V value) { ap_list_drops++;DROP_LIST(value); }
+/* These input spines contain only scalar words or static functions. */
+static void ap_drop_input_spine(V nodes) {
+    while(nodes) {
+        V next=OBJ(nodes)->f[1];
+        if(!fwp_rc_last(nodes)) exit(115);
+        fwp_rc_free_obj(nodes);
+        nodes=next;
+    }
+}
 static int flat_probe(void) {
-    V inputs=fwp_cons(1,fwp_cons(2,fwp_cons(3,0)));
+    size_t baseline=fwp_heap.live;
+    V inputs=fwp_rc_fresh(fwp_cons(1,fwp_rc_fresh(fwp_cons(2,fwp_rc_fresh(fwp_cons(3,0))))));
     for(ap_mode=FLAT_FIRST_MODE;ap_mode<4;ap_mode++) {
         memset(ap_scratch,0,sizeof(ap_scratch));memset(ap_frees,0,sizeof(ap_frees));
         ap_allocations=ap_calls=ap_element_drops=ap_list_drops=ap_nodes=0;
@@ -101,13 +109,16 @@ static int flat_probe(void) {
         if(ap_mode==3 && (ap_element_drops!=1 || ap_list_drops!=4)) return 103;
     }
 
+    ap_drop_input_spine(inputs);
+    if(fwp_heap.live!=baseline) return 115;
     return 0;
 }
 
 int main(void) {
     fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
-    V fs=fwp_cons(PTR(&ap_callback_a),fwp_cons(PTR(&ap_callback_b),0));
-    V xs=fwp_cons(1,fwp_cons(2,0));
+    size_t baseline=fwp_heap.live;
+    V fs=fwp_rc_fresh(fwp_cons(PTR(&ap_callback_a),fwp_rc_fresh(fwp_cons(PTR(&ap_callback_b),0))));
+    V xs=fwp_rc_fresh(fwp_cons(1,fwp_rc_fresh(fwp_cons(2,0))));
     fwp_fns=ap_entries;
     fwp_trap_recover=ap_recover;fwp_trap_jb=&ap_recovered;fwp_trap_cleanup=0;
     for(ap_mode=PROBE_FIRST_MODE;ap_mode<4;ap_mode++) {
@@ -151,6 +162,8 @@ int main(void) {
         if(strcmp(fwp_trap_msg,"list.ap too large") || fwp_cleanups) return 88;
     }
 
-    printf("list.ap and flat-map callback and spine ownership; real collections=%zu V=%zu cleanup=%zu\n",fwp_heap.ncollect,sizeof(V),sizeof(fwp_cleanup));
+    ap_drop_input_spine(fs);ap_drop_input_spine(xs);
+    if(fwp_heap.live!=baseline) return 115;
+    printf("list.ap and flat-map callback and spine ownership; V=%zu cleanup=%zu\n",sizeof(V),sizeof(fwp_cleanup));
     return 0;
 }

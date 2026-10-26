@@ -140,30 +140,23 @@ fn cartesian_results_and_scratch_release_on_trap_and_cancel() {
                 std::fs::write(directory.join(format!("{label}{}.c", &opt[1..])), &code).unwrap();
             }
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-            for reuse in ["0", "1"] {
-                let output = Command::new(&executable)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", reuse)
-                    .output()
-                    .unwrap();
-                retain(
-                    &format!("{label}{}-reuse{reuse}", &opt[1..]),
-                    &code,
-                    &executable,
-                    &output,
-                );
-                assert_eq!(
-                    output.status.code(),
-                    Some(expected),
-                    "{label} {opt} reuse={reuse}: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                );
-                if expected == 0 {
-                    assert!(String::from_utf8_lossy(&output.stdout).starts_with(
-                        "list.ap and flat-map callback and spine ownership; real collections="
-                    ));
-                }
+
+            let output = Command::new(&executable).output().unwrap();
+            retain(
+                &format!("{label}{}", &opt[1..]),
+                &code,
+                &executable,
+                &output,
+            );
+            assert_eq!(
+                output.status.code(),
+                Some(expected),
+                "{label} {opt}: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            if expected == 0 {
+                assert!(String::from_utf8_lossy(&output.stdout)
+                    .starts_with("list.ap and flat-map callback and spine ownership; V="));
             }
         }
     }
@@ -260,32 +253,26 @@ main = [
                 std::fs::write(directory.join(format!("{label}{}.c", &opt[1..])), &code).unwrap();
             }
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-            for reuse in ["0", "1"] {
-                let output = Command::new(&executable)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", reuse)
-                    .output()
-                    .unwrap();
-                retain(
-                    &format!("{label}{}-reuse{reuse}", &opt[1..]),
-                    &code,
-                    &executable,
-                    &output,
-                );
-                assert_eq!(
-                    output.status.success(),
-                    reference.status.success(),
-                    "{label} {opt}: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                );
-                assert_eq!(output.stdout, reference.stdout, "{label} {opt}");
-                if invalid {
-                    assert_eq!(output.status.code(), Some(101));
-                    assert!(String::from_utf8_lossy(&output.stderr)
-                        .lines()
-                        .any(|line| line == "fwp: trap: list.ap order control"));
-                }
+
+            let output = Command::new(&executable).output().unwrap();
+            retain(
+                &format!("{label}{}", &opt[1..]),
+                &code,
+                &executable,
+                &output,
+            );
+            assert_eq!(
+                output.status.success(),
+                reference.status.success(),
+                "{label} {opt}: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            assert_eq!(output.stdout, reference.stdout, "{label} {opt}");
+            if invalid {
+                assert_eq!(output.status.code(), Some(101));
+                assert!(String::from_utf8_lossy(&output.stderr)
+                    .lines()
+                    .any(|line| line == "fwp: trap: list.ap order control"));
             }
         }
     }
@@ -384,7 +371,7 @@ fn closure_cleanup_completes_or_terminates_without_partial_recovery() {
 }
 
 #[test]
-fn inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries() {
+fn inactive_state_slots_are_cleared_at_handler_and_task_boundaries() {
     let scratch = Scratch::new("state-slots");
     let input = scratch.0.join("state.fwp");
     let cfile = scratch.0.join("state.c");
@@ -405,20 +392,10 @@ fn inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries() 
     let original = std::fs::read_to_string(cfile).unwrap();
     assert!(original.contains("#define FWP_UNWIND 1"));
     assert!(original.contains("static int g_apply_user("));
-    let scan = "    uintptr_t a = ((uintptr_t)lo + 7) & ~(uintptr_t)7;";
-    let declaration = "__attribute__((no_sanitize_address)) static void fwp_heap_scan(";
-    assert_eq!(original.matches(scan).count(), 1);
-    assert_eq!(original.matches(declaration).count(), 1);
-    let runtime = original
-        .replace(
-            declaration,
-            &format!("static void state_probe_scan(const char *,const char *,int);\n{declaration}"),
-        )
-        .replace(scan, &format!("    state_probe_scan(lo,hi,root);\n{scan}"))
-        .replace(
-            "int main(int argc, char **argv)",
-            "int original_main(int argc, char **argv)",
-        );
+    let runtime = original.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
     let task_exit="    t->unwinding = 1;\n    fwp_handlers = 0;\n    fwp_state_restore(0);\n    fwp_join_children();";
     assert_eq!(runtime.matches(task_exit).count(), 1);
     let runtime=runtime.replace("static void fwp_task_main(void) {","static int state_empty_from(size_t);\nstatic void state_probe_task_exit(void);\nstatic void fwp_task_main(void) {")
@@ -452,29 +429,23 @@ fn inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries() 
                 std::fs::write(directory.join(format!("{label}{}.c", &opt[1..])), &code).unwrap();
             }
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-            for reuse in ["0", "1"] {
-                let output = Command::new(&executable)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", reuse)
-                    .output()
-                    .unwrap();
-                retain(
-                    &format!("{label}{}-reuse{reuse}", &opt[1..]),
-                    &code,
-                    &executable,
-                    &output,
-                );
-                assert_eq!(
-                    output.status.code(),
-                    Some(expected),
-                    "{label} {opt} reuse={reuse}: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                );
-                if expected == 0 {
-                    assert!(String::from_utf8_lossy(&output.stdout)
-                        .starts_with("State inactive slots cleared; real collections="));
-                }
+
+            let output = Command::new(&executable).output().unwrap();
+            retain(
+                &format!("{label}{}", &opt[1..]),
+                &code,
+                &executable,
+                &output,
+            );
+            assert_eq!(
+                output.status.code(),
+                Some(expected),
+                "{label} {opt}: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            if expected == 0 {
+                assert!(String::from_utf8_lossy(&output.stdout)
+                    .starts_with("State inactive slots cleared after handlers and task exit"));
             }
         }
     }
@@ -552,25 +523,19 @@ main = [
             .unwrap();
         }
         fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-        for reuse in ["0", "1"] {
-            let output = Command::new(&executable)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", reuse)
-                .output()
-                .unwrap();
-            retain(
-                &format!("state-semantics{}-reuse{reuse}", &opt[1..]),
-                &code,
-                &executable,
-                &output,
-            );
-            assert!(
-                output.status.success(),
-                "{opt} reuse={reuse}: {}",
-                String::from_utf8_lossy(&output.stderr)
-            );
-            assert_eq!(output.stdout, reference.stdout, "{opt} reuse={reuse}");
-        }
+
+        let output = Command::new(&executable).output().unwrap();
+        retain(
+            &format!("state-semantics{}", &opt[1..]),
+            &code,
+            &executable,
+            &output,
+        );
+        assert!(
+            output.status.success(),
+            "{opt}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(output.stdout, reference.stdout, "{opt}");
     }
 }

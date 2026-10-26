@@ -3,7 +3,9 @@
 An **owner** keeps a value alive and is responsible for releasing its storage.
 An **alias** is another live reference to that value. Automatic reference counting
 (ARC) tracks owners when sharing is necessary. These checks verify cleanup under
-ARC while preserving the older tracing-collector controls. They do not measure
+ARC. G5 removes their duplicate tracing and poisoned-storage executions while
+preserving each distinct alias, failure, cancellation and missing-release case.
+Integrated validation of these migrations is pending. They do not measure
 execution speed or establish parity with a C/Rust application.
 
 In the examples, `x | f` passes a value to a function; `f | g` combines two
@@ -15,7 +17,7 @@ the data: `string.repeat 2` waits for text and repeats it twice.
 Instrumented C probes exercise generated ownership operations, including failure
 partway through a call and task cancellation. Most repeat 32 rounds. After each
 ARC round, the allocator's managed byte charge must return to its starting value,
-with no entries for unusually large reference counts and no collections. Final
+with no entries for unusually large reference counts. Final
 scheduler shutdown must release its own storage too.
 
 Negative controls deliberately omit a release, retain an extra owner or corrupt
@@ -24,11 +26,10 @@ final release fails with status 90. Passing output alone is insufficient: caller
 aliases must retain their values and exact counts, and integer bits resembling
 addresses must remain integers.
 
-Tracing keeps collection stress and **poisoned storage** checks: released values
-remain physically allocated with recognizable invalid contents, exposing stale
-reads. ARC instead checks released count metadata and storage balance; it must
-not rely on permanently retained poisoned objects. Missing lifetime information
-must be rejected, not silently handled by tracing.
+The former poisoned-storage checks kept released values allocated and filled them
+with invalid contents. The replacement checks use live-allocation identities,
+count metadata and physical storage balance without reading freed payloads.
+Missing lifetime information is rejected; retained dead storage is not a repair.
 
 Probe C uses explicit compiler O2, dynamic storage and C O1/O2. Stack placement
 is disabled where a test needs an actual object; stack-capture tests enable it.
@@ -184,7 +185,11 @@ a task must restore its own state when it resumes.
 replacement, errors, allocation failure, task switches and cancellation. Six
 controls omit individual ownership operations; another omits the final fixture
 owner. Whole programs cover nested handlers, arrays, functions stored in state,
-and stack placement on/off. These produce 56 saved outcomes at C O1/O2.
+and stack placement on/off. The older two-mode run produced 56 saved outcomes.
+The current single-mode suite produces 20 at C O1/O2: 16 probe cases and four
+whole-program cases. It also releases the result box returned when awaiting an
+injected task. The report contains owner-record, cleanup-record and task sizes
+in bytes; it no longer prints a collection count. Final verification is pending.
 
 A deadline sets the current task's time limit and passes its input through.
 `42 | task.deadline 1h` returns `42` and sets a one-hour limit; an earlier existing

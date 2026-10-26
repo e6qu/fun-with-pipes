@@ -894,17 +894,6 @@ static void fwp_closure_drop_push(fwp_closure_drop_work *work, V f) {
     work->items[work->len++] = f;
 }
 
-/* Clear the temporary thread context before releasing its spill buffer.
- * Destructor traps and exhausted storage terminate rather than abandoning
- * pending owners and resuming execution. */
-static void fwp_closure_drop_release(void *arg) {
-    fwp_closure_drop_work *work = arg;
-    fwp_closure_drop_set(NULL);
-    if (work->items != work->local) free(work->items);
-    work->items = work->local;
-    work->len = 0;
-}
-
 static void fwp_closure_drop(V f) {
     if (!fwp_rc_release_last(f)) return;
     fwp_closure_drop_work *active = fwp_closure_drop_get();
@@ -916,8 +905,6 @@ static void fwp_closure_drop(V f) {
     work.items = work.local;
     work.len = 0;
     work.cap = sizeof work.local / sizeof *work.local;
-    fwp_cleanup cleanup;
-    fwp_cleanup_push(&cleanup, fwp_closure_drop_release, &work);
     fwp_closure_drop_set(&work);
     fwp_closure_drop_push(&work, f);
     while (work.len) {
@@ -926,8 +913,9 @@ static void fwp_closure_drop(V f) {
         if (!owned) fwp_trap("internal: owned closure without capture types");
         owned->captures(next, 0);
     }
-    fwp_cleanup_pop(&cleanup);
-    fwp_closure_drop_release(&work);
+    /* No suspension or recoverable failure occurs during destruction. */
+    fwp_closure_drop_set(NULL);
+    if (work.items != work.local) free(work.items);
 }
 
 #ifndef FWP_UNWIND

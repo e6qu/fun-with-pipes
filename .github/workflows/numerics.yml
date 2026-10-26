@@ -3080,7 +3080,7 @@ jobs:
           cargo test --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership --test borrowed_callbacks
           cargo test --test grpc_server_connections --test grpc_server_requests --test grpc_connect_startup --test grpc_server_ownership
           cargo test --test grpc_client_receive --test grpc_response_encoding --test channel_queue_ownership --test arc_tasks
-          cargo test --test list_applicative_ownership inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries -- --exact
+          cargo test --test list_applicative_ownership inactive_state_slots_are_cleared_at_handler_and_task_boundaries -- --exact
       - name: Check client cleanup
         if: matrix.part == 'client'
         shell: bash

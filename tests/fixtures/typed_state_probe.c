@@ -13,7 +13,7 @@ static void typed_drop_string(V value) {
     uint8_t *count=fwp_rc_slot(value);
     int last=count && *count==1;
     double before=fwp_heap.freed;
-    /* A live State slot is an additional owner, including under poisoning.
+    /* A live State slot is an additional owner, independently of the caller.
      * Detect an omitted retain before destroying or reading its payload. */
     if(last && fwp_state_len && fwp_p_get()==value) exit(typed_failure(127,__LINE__));
     DROP_STRING(value);
@@ -65,7 +65,7 @@ static V typed_entry(V *args) {
                 if(!typed_started) exit(typed_failure(130,__LINE__));
                 fwp_cancel_tree(typed_child);
             }
-            fwp_await(typed_child);
+            fwp_task_option_outer_drop(fwp_await_owned(typed_child,NULL));
             if(typed_mode==5 && typed_child_released!=1) exit(typed_failure(125,__LINE__));
             fwp_task_drop(PTR(typed_child));fwp_free_zombie();
         } else fwp_p_task_yield();
@@ -98,7 +98,6 @@ int main(void) {
     typed_started=0;
     for(typed_mode=0;typed_mode<7;typed_mode++) {
         V initial=fwp_rc_fresh(fwp_cstr("initial State"));
-        size_t before=fwp_heap.ncollect;
         if(typed_mode==2) {
             fwp_handler handler;handler.prev=fwp_handlers;handler.state_depth=0;handler.cleanup=fwp_cleanups;
             fwp_handlers=&handler;
@@ -122,7 +121,6 @@ int main(void) {
             fwp_state_restore(0);
         }
         if(fwp_state_owners || fwp_cleanups || fwp_state_len) return typed_failure(125,__LINE__);
-        if(fwp_heap.ncollect!=before) return typed_failure(129,__LINE__);
         if(!fwp_rc_slot(initial) || *fwp_rc_slot(initial)!=1) return typed_failure(125,__LINE__);
         typed_drop_string(initial);
     }
@@ -137,7 +135,7 @@ int main(void) {
     fwp_trap_recover=NULL;fwp_trap_jb=NULL;fwp_fns=fwp_fn_table;
     fwp_native_tasks_finish();
     if(fwp_heap.live!=0||fwp_heap.rc_wide_len)return 90;
-    printf("typed State ownership; collections=%zu owner=%zu cleanup=%zu task=%zu\n",
-        fwp_heap.ncollect,sizeof(fwp_state_owner),sizeof(fwp_cleanup),sizeof(fwp_task));
+    printf("typed State ownership; owner=%zu cleanup=%zu task=%zu\n",
+        sizeof(fwp_state_owner),sizeof(fwp_cleanup),sizeof(fwp_task));
     return 0;
 }

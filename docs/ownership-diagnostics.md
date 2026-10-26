@@ -29,6 +29,16 @@ normal reuse versus the explicit `FWP_NO_REUSE` copy control. These are memory
 correctness checks, not timing comparisons with C or Rust. Integrated validation
 of the migrated loop probe is pending.
 
+The list application probe runs every function over every input; flat-map joins
+the lists returned by its callback. Both check result order, shared elements,
+scratch-buffer release and cleanup after callback failure or task cancellation.
+Their input lists now have explicit owners, and normal completion must restore
+the initial live-byte balance. The separate State-slot probe uses scalar markers
+to test clearing and restoration after growth, errors, served calls and task exit.
+It explicitly releases task handles and result boxes. Owned State values and
+aliases remain covered by `typed_state_ownership` and interpreter/native examples.
+These migrated probes still require integrated validation.
+
 ## Native live-allocation ledger
 
 The [test helper](../tests/support/ownership_ledger.rs) adds an address table to

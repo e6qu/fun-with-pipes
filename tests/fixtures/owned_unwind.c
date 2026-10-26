@@ -148,6 +148,7 @@ static void one_round(void) {
     }
     fwp_trap_recover = 0;
     require(released == 5 && order[4] == 6 && fwp_cleanups == &outer, 232);
+    require(!strcmp(fwp_trap_msg,"owned cleanup trap"),232);
     require(live(parent.value), 232);
     fwp_cleanup_pop(&outer); release_held(&parent);
     fwp_handlers = &top;
@@ -186,9 +187,11 @@ static void one_round(void) {
     fwp_cleanup_push(&early_cleanup, fwp_close_owned_scoped_file, &pending);
     recover_stop = NULL; fwp_trap_recover = recover;
     if (!setjmp(recovered)) fwp_trap("before file handle allocation");
+    require(!strcmp(fwp_trap_msg,"before file handle allocation"),234);
     check_closed();
     file_mode = 3;
     if (!setjmp(recovered)) { fwp_p_file_with_owned(file_path, PTR(&file_function), NULL, drop_pair, NULL); _Exit(234); }
+    require(!strcmp(fwp_trap_msg,"owned file trap"),234);
     fwp_trap_recover = 0; fwp_trap_jb = 0; fwp_trap_cleanup = 0;
     fwp_handlers = top.prev;
     check_closed();

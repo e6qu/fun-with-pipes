@@ -1192,7 +1192,8 @@ int main(void){
  if(_setmode(_fileno(stdout),_O_BINARY)==-1)return 246;
 #endif
  fwp_lib_init();fwp_heap_start();
- g_conn *c=g_conn_new(-1, "", "local",0);g_stream *s=g_stream_new(c,1);
+ g_conn *c=g_conn_new(-1, "", "local",0);fwp_rc_fresh(PTR(c));
+ g_stream *s=g_stream_new(c,1);fwp_rc_fresh(PTR(s));
  V call=g_call_value(c,s);
  struct {uint32_t tag,n;V f[1];} duration={0,1,{0}};
  const unsigned char bytes[]={0,255,192,128,10};
@@ -1219,7 +1220,8 @@ int main(void){
   for(V list=OBJ(r)->f[2];list;list=OBJ(list)->f[1]){V pair=OBJ(list)->f[0];printf("%s:%s\n",STR(OBJ(pair)->f[0])->d,STR(OBJ(pair)->f[1])->d);}
   REQUEST_TYPE->drop(r);
  }
- FWP_KEEP_ALIVE(call);fwp_lib_finish();return 0;
+ g_unlink(c,s);g_conn_drop(c);g_call_drop(call);
+ fwp_lib_finish();return 0;
 }
 "#.replace("CASES", &rows);
         let dir = crate::cgen::TempDir::new("http2-body-bounds").unwrap();
@@ -1234,17 +1236,10 @@ int main(void){
             assert!(out.status.success(), "old body: {out:?}");
             assert_ne!(out.stdout, expected.as_bytes(), "old bound must differ");
             crate::cgen::compile_c(&format!("{generated}\n{fixture}"), &exe, opt).unwrap();
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{poison}: {out:?}");
-                assert_eq!(out.stdout, expected.as_bytes());
-                assert!(out.stderr.is_empty(), "{out:?}");
-            }
+            let out = Command::new(&exe).output().unwrap();
+            assert!(out.status.success(), "{opt}: {out:?}");
+            assert_eq!(out.stdout, expected.as_bytes());
+            assert!(out.stderr.is_empty(), "{out:?}");
         }
     }
 
