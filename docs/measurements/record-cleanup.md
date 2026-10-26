@@ -237,7 +237,7 @@ Borrowed calls preserve the caller's function owner while consuming their argume
 The failed-call test repeats 10,000 calls with collection disabled. Normal calls
 must retain zero bytes; omitting the consumed-function release must retain at least
 160,000 bytes. Four other cases repeat 32 rounds and check ARC balance each round.
-Omitted outside-alias or scalar-fixture releases must fail. These 58 outcomes use
+Omitted outside-alias or scalar-fixture releases must fail. These checks use
 compiler O2 and C O1/O2 with stack placement enabled to exercise stack captures.
 Complete programs also compare with raw interpretation.
 
