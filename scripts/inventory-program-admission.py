@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare tracing and ARC compile admission; this does not execute programs."""
+"""Record current compile admission; this does not execute programs."""
 import argparse
 import hashlib
 import json
@@ -24,41 +24,36 @@ def inventory(compiler, root, sources, optimization, timeout, output):
         programs=[], counts={},
     )
     infrastructure_errors = []
-    with tempfile.TemporaryDirectory(prefix='fwp-arc-inventory-') as directory:
+    with tempfile.TemporaryDirectory(prefix='fwp-admission-inventory-') as directory:
         generated = Path(directory) / 'program.c'
         for program in programs:
+            generated.unlink(missing_ok=True)
+            command = [str(compiler), 'build', '--memory', 'dynamic',
+                       f'-{optimization}', '--emit-c', program.name, '-o', str(generated)]
             record = dict(path=program.relative_to(root).as_posix(),
-                          source_sha256=hashlib.sha256(program.read_bytes()).hexdigest(), modes={})
-            for mode in ['tracing', 'arc']:
-                generated.unlink(missing_ok=True)
-                command = [str(compiler), 'build', '--gc', mode, '--memory', 'dynamic',
-                           f'-{optimization}', '--emit-c', program.name, '-o', str(generated)]
-                try:
-                    result = subprocess.run(command, cwd=program.parent, env=environment,
-                                            capture_output=True, timeout=timeout)
-                    outcome = dict(exit_code=result.returncode,
-                                   stdout=result.stdout.decode('utf-8', errors='replace'),
-                                   stderr=result.stderr.decode('utf-8', errors='replace'))
-                    if result.returncode == 0:
-                        code = generated.read_bytes()
-                        if (b'#define FWP_ARC_ONLY 1' in code) != (mode == 'arc'):
-                            raise ValueError(f'{program} {mode}: incorrect emitted memory mode')
-                        outcome.update(c_sha256=hashlib.sha256(code).hexdigest(), c_bytes=len(code))
-                    elif result.returncode != 1 or b'panicked at' in result.stderr:
-                        infrastructure_errors.append(f'{program.name} {mode}: exit {result.returncode}')
-                except subprocess.TimeoutExpired:
-                    outcome = dict(timeout_seconds=timeout)
-                    infrastructure_errors.append(f'{program.name} {mode}: timeout')
-                record['modes'][mode] = outcome
-            modes = record['modes']
-            if any('timeout_seconds' in value for value in modes.values()):
+                          source_sha256=hashlib.sha256(program.read_bytes()).hexdigest(),
+                          command=command)
+            try:
+                result = subprocess.run(command, cwd=program.parent, env=environment,
+                                        capture_output=True, timeout=timeout)
+                record.update(exit_code=result.returncode,
+                              stdout=result.stdout.decode('utf-8', errors='replace'),
+                              stderr=result.stderr.decode('utf-8', errors='replace'))
+                if result.returncode == 0:
+                    code = generated.read_bytes()
+                    if b'FWP_ARC_ONLY' in code:
+                        raise ValueError(f'{program}: obsolete memory selector in emitted C')
+                    record.update(c_sha256=hashlib.sha256(code).hexdigest(), c_bytes=len(code))
+                    category = 'accepted'
+                elif result.returncode == 1 and b'panicked at' not in result.stderr:
+                    category = 'rejected'
+                else:
+                    category = 'compiler-failure'
+                    infrastructure_errors.append(f'{program.name}: exit {result.returncode}')
+            except subprocess.TimeoutExpired:
+                record['timeout_seconds'] = timeout
                 category = 'timeout'
-            elif modes['tracing']['exit_code'] == 0:
-                category = 'both-accepted' if modes['arc']['exit_code'] == 0 else 'arc-rejected'
-            else:
-                category = 'tracing-rejected'
-                if modes['arc']['exit_code'] == 0:
-                    infrastructure_errors.append(f'{program.name}: ARC accepts a tracing rejection')
+                infrastructure_errors.append(f'{program.name}: timeout')
             record['category'] = category
             report['counts'][category] = report['counts'].get(category, 0) + 1
             report['programs'].append(record)

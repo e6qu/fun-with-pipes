@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Repeat the six accepted word-frequency binaries and inspect C stack estimates."""
+"""Repeat accepted word-frequency binaries and inspect C stack estimates."""
 import argparse
 import hashlib
 import json
@@ -29,7 +29,7 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
-    assert args.warmups > 0 and args.samples > 0 and args.samples % 12 == 0 and args.timeout > 0
+    assert args.warmups > 0 and args.samples > 0 and args.timeout > 0
     source = args.input.resolve()
     report = json.loads((source / 'comparison.json').read_text())
     assert report['source'] == args.source and report['host'] == args.host
@@ -53,7 +53,11 @@ def main():
 
     compiler = run([args.cc, '--version'], empty).stdout.decode()
     assert compiler == report['cCompiler'], 'stack comparison requires the original GCC version'
-    labels = ['c', 'rust', 'fwp-arc', 'fwp-tracing', 'before-arc', 'before-tracing']
+    assert report['comparison'] in {'record', 'compare'}
+    labels = ['c', 'rust', 'fwp-counted']
+    if report['comparison'] == 'compare':
+        labels.append('before-counted')
+    assert args.samples % (2 * len(labels)) == 0
     assert set(report['binaries']) == set(labels)
     stack = {}
     binaries = {}
@@ -68,9 +72,8 @@ def main():
         binaries[label] = binary
         if not label.startswith(('fwp-', 'before-')):
             continue
-        if label.endswith('-arc'):
-            symbols = run([args.nm, binary], empty).stdout
-            assert not any(s in symbols for s in (b'fwp_heap_scan', b'fwp_heap_mark_all', b'fwp_heap_sweep'))
+        symbols = run([args.nm, binary], empty).stdout
+        assert not any(s in symbols for s in (b'fwp_heap_scan', b'fwp_heap_mark_all', b'fwp_heap_sweep'))
         cfile = out / (label + '.c')
         cfile.write_bytes((source / (label + '.c')).read_bytes())
         rebuilt = out / label
@@ -110,8 +113,8 @@ def main():
         samples = {label: [] for label in labels}
         orders = []
         for number in range(args.samples):
-            order = labels[number % 6:] + labels[:number % 6]
-            if number % 12 >= 6:
+            order = labels[number % len(labels):] + labels[:number % len(labels)]
+            if number % (2 * len(labels)) >= len(labels):
                 order.reverse()
             orders.append(order)
             for label in order:
@@ -121,14 +124,15 @@ def main():
                 assert result.stdout == expected and not result.stderr
                 samples[label].append(elapsed)
         medians = {label: statistics.median(values) for label, values in samples.items()}
+        baseline_ratio = ({'counted': medians['fwp-counted'] / medians['before-counted']}
+                          if report['comparison'] == 'compare' else {})
         results[case] = dict(inputSha256=prior['inputSha256'], samplesNs=samples,
                              medianNs=medians, orders=orders,
-                             candidateOverBaseline={mode: medians['fwp-' + mode] / medians['before-' + mode]
-                                                    for mode in ('arc', 'tracing')},
+                             candidateOverBaseline=baseline_ratio,
                              ratios={mode: {peer: medians['fwp-' + mode] / medians[peer]
-                                            for peer in ('c', 'rust')} for mode in ('arc', 'tracing')})
+                                            for peer in ('c', 'rust')} for mode in ('counted',)})
         (out / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
-    result = dict(source=args.source, host=args.host, machine=platform.machine(),
+    result = dict(comparison=report['comparison'], source=args.source, host=args.host, machine=platform.machine(),
                   cpu=run(['lscpu'], empty).stdout.decode(), compiler=compiler,
                   sourceReportSha256=digest(source / 'comparison.json'),
                   binaries=report['binaries'], configuration=dict(warmups=args.warmups, samples=args.samples,

@@ -11,7 +11,7 @@ performance and platform requirements in the last column.
 | Program family | Work and current input | Existing evidence | Still required for this suite |
 |---|---|---|---|
 | [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [C/Rust baseline](measurements/wordfreq.md) and [paired/repeated text comparison](measurements/unchanged-text.md) on two Linux hosts | Set time/memory budgets; validate the current runtime and preserve six-platform cleanup evidence |
-| [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and a small tracing control | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | Preserve these observations as ownership changes; allocation-failure coverage remains |
+| [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and small ownership controls | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | Preserve these observations as ownership changes; allocation-failure coverage remains |
 | [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scaled counting/filtering/CSV/task-file cleanup passes on six hosts; preserve current delivery coverage and separate input/output costs |
 | Numerical pipeline | Map/reduce 65,537 elements and multiply 65×67 by 67×63 matrices, eight rounds | [Existing C/Rust comparison](measurements/numerical-kernels.md#array-and-matrix-kernels-recorded-comparison) | Repeat against current source; add 262,145 elements and 257×259 by 259×255 matrices; set N1 budgets |
 | Derivative application | Rosenbrock descent at 3, 33 and 129 dimensions; 199 updates plus zero/one/1,999-update controls | [AD storage](measurements/ad-application.md), [C/Rust peers](measurements/descent-peers.md), [packed arrays](measurements/packed-descent.md) and [array-owner moves](measurements/array-owner-moves.md) and [borrowed captures](measurements/array-capture-descent.md) on two Linux hosts | Stabilize identical-code timing controls and set per-input budgets; extend nested and platform evidence |
@@ -57,7 +57,19 @@ mark this suite complete because one application improved.
 
 ## Word-frequency comparison
 
-Run the `wordfreq` suite in the **Numerical and ownership evidence** workflow.
+Use the **Numerical and ownership evidence** workflow with an explicit operation:
+
+- `wordfreq-baseline` records current fwp beside C and Rust. It needs no earlier
+  fwp compiler or report (`measure-wordfreq.py --comparison record`).
+- `wordfreq` compares current fwp with a named successful baseline run, rebuilding
+  its saved C with the same toolchain (`--comparison compare`). It requires fewer
+  allocation requests/bytes and no extra retains or higher managed peak. Timing
+  remains visible even if slower.
+- `wordfreq-repeat` repeats either accepted report with the same binaries and
+  verifies that collecting C stack estimates leaves their instructions unchanged.
+
+A new baseline must use the current report schema and profiling implementation.
+Reproduce older measurements with scripts from their recorded source revision.
 It measures Linux AMD64 and ARM64 separately, using production GCC and explicit
 O2 settings. Each host builds once for native ownership checks, the 32-bit
 WebAssembly interpreter and generated-code checks, and the paired measurement.
@@ -87,8 +99,8 @@ this is not a Unicode benchmark or a pure measurement of compiler overhead.
 
 The timer includes process launch, reading the saved input, all computation,
 allocation, printing and teardown. Input generation and compilation are excluded.
-The initial four-variant baseline uses sixteen samples after two warmups; the
-paired six-variant comparison below uses 24. Order rotates and reverses, giving each
+Current recording measures three implementations; comparison measures four. Both
+use 24 samples after two warmups. Order rotates and reverses, giving each
 implementation every position equally. Keep every sample. A ratio of 1.25 means
 fwp's median took 25% more time than that named peer on that host and input.
 
@@ -98,8 +110,9 @@ Instrumented fwp runs count allocation requests, requested bytes, retains and
 peak/final managed charge after constant initialization through cleanup. These
 counts exclude raw buffers, stacks, allocator metadata and process startup; they
 are not resident memory or C/Rust allocation counts. Profiled execution times
-never enter the timing comparison. ARC binaries must omit tracing symbols and
-finish with zero managed charge and collections.
+never enter the timing comparison. Every fwp binary must omit collector symbols and
+finish with zero managed charge. The report has five managed counter fields;
+collection counts no longer exist.
 
 The [Linux C/Rust baseline](measurements/wordfreq.md) and
 [paired text comparison](measurements/unchanged-text.md) retain the observed
@@ -128,7 +141,7 @@ with relative and absolute tolerance 1e-10; different floating-point operation
 orders can round differently. That Python calculation is a correctness oracle,
 not a timed C/Rust baseline.
 
-Linux ARM64/AMD64 measurements use explicit GCC O2, ARC/tracing, disabled LTO and
+Linux ARM64/AMD64 measurements use explicit GCC O2, counted ownership, disabled LTO and
 enabled bounded derivative-workspace reuse. Two warmups precede sixteen timed
 fresh processes per variant, with rotated and reversed order. Timing includes
 startup, calculation, printing and teardown. Separate instrumented runs record
@@ -263,8 +276,8 @@ second read containing invalid UTF-8. Partial results and successful first write
 must survive or be released according to their ordinary semantics.
 
 All five programs must match raw interpretation. Native checks compile fwp at O1
-and generated C at O1 and O2 with LTO disabled. Existing small tracing/stress
-checks remain; the larger observations use checked ARC. Each checkpoint records:
+and generated C at O1 and O2 with LTO disabled. Small boundary controls and
+larger observations use counted ownership. Each checkpoint records:
 
 - Managed allocator charge after the preceding operation. It must stay constant
   within each phase and return to its initial value before runtime teardown.
@@ -285,7 +298,7 @@ twenty memory series and 80 execution outcomes per host. Both ordinary runs and
 deliberately broken controls save stdout, stderr and exit status before any
 result assertion; incomplete runs retain their partial observations. Production
 jobs also upload these sources, binaries and execution records with their
-ownership artifacts. On macOS, directory evidence comes from the GC test job
+ownership artifacts. On macOS, directory evidence comes from the ownership/corpus job
 and text/task evidence from the regular job; both archives are required. A
 coverage check follows the actual test assignments and rejects missing exports.
 Focused measurements explicitly disable link-time optimization; production
@@ -300,23 +313,17 @@ The observer reads Linux `/proc`, macOS `ps`, and Windows
 one query handle per sample; it does not start a shell. These are process-wide
 resident-memory observations, separate from the managed and file-buffer ledgers.
 
-## Which examples pass ARC's ownership checks
+## Which examples pass the ownership checks
 
-`scripts/inventory-arc-programs.py` compares C emission for every `tests/run/*.fwp`
-program in explicit tracing and ARC modes, with dynamic storage and stack
-optimization enabled. The focused file-application workflow runs this inventory
-on Linux AMD64 at fwp O1 and saves `arc-admission.json` with source/compiler hashes,
-commands' diagnostics, and these categories:
-
-- **Both accepted:** both modes emit C. This alone does not verify execution or cleanup.
-- **ARC rejected:** tracing emits C, but ARC rejects the ownership contract. Investigate
-  each diagnostic before admitting a new ownership pattern.
-- **Tracing rejected:** the program fails ordinary compilation too, including
-  intentional diagnostic fixtures. This is not an ARC migration failure.
-
-Timeouts, compiler crashes and mismatched emitted memory modes fail the inventory.
-Recorded ARC rejections are discovery results, not accepted language coverage.
-The ordinary execution snapshots and the runtime ownership tests remain necessary.
+[`inventory-program-admission.py`](../scripts/inventory-program-admission.py)
+records C emission for every `tests/run/*.fwp` program, with dynamic storage and
+stack optimization enabled. The focused file-application workflow runs it on
+Linux AMD64 at fwp O1 and saves `program-admission.json`, including source/compiler
+hashes, commands and diagnostics. `accepted` means C was emitted; `rejected` means
+the compiler reported an error. Neither category establishes execution or cleanup.
+Timeouts, crashes and obsolete memory selectors in emitted C fail the inventory.
+Investigate every rejection before claiming support; execution snapshots and
+runtime ownership tests remain necessary.
 
 The [recorded 85-program inventory](measurements/file-applications.md#which-execution-examples-pass-arcs-checks)
 accepts 81 examples in both modes, including manual pointers with explicit caller

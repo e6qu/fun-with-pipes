@@ -72,9 +72,8 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     compiler = ROOT / 'target/release/fwp'
     cc = os.environ['CC']
-    env = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+    env = dict(os.environ)
     env.pop('FWP_NO_OPT', None)
-    env.pop('FWP_GC', None)
     results = {}
     for name, lanes, repeats in [('four-lanes', 4, 32768), ('sixty-four-lanes', 64, 8192)]:
         directory = out / name
@@ -87,13 +86,13 @@ def main():
         expected = run([compiler, 'run', '--interp', source], dict(env, FWP_NO_OPT='1')).stdout
         assert expected == f'Some {lanes * repeats * (repeats - 1) // 4}\n'
         variants, binaries = {}, {}
-        for label in ['fwp-tracing', 'fwp-arc', 'c', 'rust']:
+        for label in ['fwp-arc', 'c', 'rust']:
             cfile = directory / (label + '.c')
             binary = directory / label
             emit_ns = 0
             if label.startswith('fwp'):
                 start = time.perf_counter_ns()
-                run([compiler, 'build', '--gc', label.removeprefix('fwp-'), '--emit-c', source, '-o', cfile], env)
+                run([compiler, 'build', '--emit-c', source, '-o', cfile], env)
                 emit_ns = time.perf_counter_ns() - start
                 measured = directory / (label + '-profile.c')
                 measured.write_text(iteration.instrument(cfile.read_text()))
@@ -117,24 +116,22 @@ def main():
             rss = re.search(pattern, timed.stderr)
             assert rss, timed.stderr
             (directory / (label + '-rss.txt')).write_text(timed.stderr)
-            profiles = {}
-            for collection in (['normal', 'off'] if label == 'fwp-tracing' else ['off']):
-                observed = run([directory / (label + '-profile')], dict(env, FWP_GC='off') if label.startswith('fwp') and collection == 'off' else env)
-                assert observed.stdout == expected
-                counters = json.loads(observed.stderr)
-                if label.startswith('fwp'):
-                    assert counters['finalChargedBytes'] == 0, counters
-                else:
-                    assert counters['applicationHeapRequests'] == counters['finalApplicationHeapBytes'] == 0, counters
-                profiles[collection] = counters
+            observed = run([directory / (label + '-profile')], env)
+            assert observed.stdout == expected
+            counters = json.loads(observed.stderr)
+            if label.startswith('fwp'):
+                assert counters['finalChargedBytes'] == 0, counters
+                assert set(counters) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
+            else:
+                assert counters['applicationHeapRequests'] == counters['finalApplicationHeapBytes'] == 0, counters
             assembly = run(['otool', '-tvV', binary] if platform.system() == 'Darwin' else ['objdump', '-d', binary]).stdout
             (directory / (label + '.asm')).write_text(assembly)
             variants[label] = dict(sourceSha256=hashlib.sha256(cfile.read_bytes()).hexdigest(), binarySha256=hashlib.sha256(binary.read_bytes()).hexdigest(),
                 assemblySha256=hashlib.sha256(assembly.encode()).hexdigest(), sourceBytes=cfile.stat().st_size, binaryBytes=binary.stat().st_size,
-                emitWallNs=emit_ns, builds=commands, profiles=profiles, unprofiledProcessPeakRssBytes=int(rss[1]) * scale, samples=[])
+                emitWallNs=emit_ns, builds=commands, profile=counters, unprofiledProcessPeakRssBytes=int(rss[1]) * scale, samples=[])
             binaries[label] = binary
         labels = list(binaries)
-        for sample in range(16):
+        for sample in range(18):
             offset = sample % len(labels)
             order = labels[offset:] + labels[:offset]
             if (sample // len(labels)) % 2:
@@ -158,7 +155,7 @@ def main():
     report = dict(head=run(['git', 'rev-parse', 'HEAD']).stdout.strip(), hardware=platform.uname()._asdict(),
         cpu=run(['sysctl', '-n', 'machdep.cpu.brand_string'] if platform.system() == 'Darwin' else ['lscpu']).stdout,
         cCompiler=run([cc, '--version']).stdout, rustCompiler=run(['rustc', '--version', '--verbose']).stdout, results=results,
-        scope='Each program fills N F64 lanes with the iteration index, multiplies each by 0.5, sums lanes left to right starting with lane zero, then sums iteration results. All values are exactly representable for these inputs. C/Rust use fixed stack arrays that their compiler may eliminate; fwp uses ordinary Vec pipes and may allocate intermediates. No fast math or multiply-add contraction; optimization level 2. All validate output against raw interpretation. One warmup/RSS process precedes sixteen balanced rotating wall/child-CPU process samples including startup, construction, calculation, checked result conversion in fwp, and printing. C/Rust conversion is valid for these known inputs but does not implement general optional conversion. Compilation and profiles are separate. fwp counts managed requests/retains/charged storage, excluding initial constants, both with normal collection and disabled collection. C has no explicit heap allocation; Rust verifies no allocator calls during the calculation. Reference counts exclude startup/printing allocator internals; declared stack-array bytes are source storage, not measured frame size. Full generated code/disassembly, commands and hashes are retained; no SIMD instruction, zero-cost or parity claim follows from the API.')
+        scope='Each program fills N F64 lanes with the iteration index, multiplies each by 0.5, sums lanes left to right starting with lane zero, then sums iteration results. All values are exactly representable for these inputs. C/Rust use fixed stack arrays that their compiler may eliminate; fwp uses ordinary Vec pipes and may allocate intermediates. No fast math or multiply-add contraction; optimization level 2. All validate output against raw interpretation. One warmup/RSS process precedes eighteen balanced rotating wall/child-CPU process samples including startup, construction, calculation, checked result conversion in fwp, and printing. C/Rust conversion is valid for these known inputs but does not implement general optional conversion. Compilation and profiles are separate. fwp counts managed requests/retains/charged storage, excluding initial constants; final live storage must return to its baseline. C has no explicit heap allocation; Rust verifies no allocator calls during the calculation. Reference counts exclude startup/printing allocator internals; declared stack-array bytes are source storage, not measured frame size. Full generated code/disassembly, commands and hashes are retained; no SIMD instruction, zero-cost or parity claim follows from the API.')
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({name: work['ratios'] for name, work in results.items()}, indent=2))
 

@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** finish numerical/word-frequency measurement and replay protocols, then
-retire obsolete admission inventories and audit their workflow/doc callers.
-After that, run consolidated compiler and production gates on runners. The current
-source has not been built as a compiler. GC removal is not verified.
+**Next:** publish this branch as one draft PR and dispatch `compiler-lifetimes`
+to compile/lint all targets and exercise entry/cleanup regressions on runners.
+Fix all reported failures together before the complete production matrix.
+The current source has not been built as a compiler. GC removal is not verified.
 
 Worktree: `/private/tmp/fwp-delete-tracing`; branch `delete-tracing-collector`.
 Base: verified #216 squash `f5621cb46828273f7ce8edf92be4062ccec0f17c`.
@@ -19,6 +19,24 @@ compiler-abort report; its handoff points here. Old publisher scripts stay stopp
 
 ## Latest completed edits; execution pending
 
+- Removed the Python disassembler's memory-selector parameter and duplicate
+  builds. Its four optimization levels, explicit targets, C and instruction
+  evidence remain; native SDK execution is pending. Current language docs now
+  describe weak links, exact counts and rejection of unproved cycles consistently.
+- Numerical maps, zip, vectors, descent, record moves and word-frequency tools
+  now use one ownership model, preserving matched inputs, raw interpreter checks,
+  resource faults and C/Rust peers. Rotation counts match the remaining variants.
+  Word-frequency recording can start without an older report; explicit comparison
+  keeps allocation-reduction budgets. Replays require the current schema.
+- Replaced two-mode admission discovery with `inventory-program-admission.py`;
+  updated both workflow callers and docs. The obsolete integer-inspector arguments
+  now match its unconditional collector-absence contract; all three focused reader
+  tests pass. Removed browser fixture collector settings.
+- Found and repaired a library unload consumer still expecting two report fields.
+  It now checks each complete zero-live-byte line. Ten Clang ARM64 O1/O2 loader
+  checks pass, including nonzero, obsolete, malformed and missing records. Generated
+  library and other-platform execution remain pending.
+
 - Migrated 22 scalar/AD profile consumers to the five-field allocation report,
   preserving live-byte, tape, reuse and count budgets. Map producers and replay
   readers now agree on counted artifact names; all four replay validation tests
@@ -26,7 +44,7 @@ compiler-abort report; its handoff points here. Old publisher scripts stay stopp
   two callback runs, eight peak observations and three broken-cleanup/layout
   controls per host. HTTP readers require four client and six server/client
   images per host; WASI and scalar readers match the migrated producers.
-  Ruff name checks pass for 82 changed scripts. This is report validation, not
+  Ruff name checks pass for 90 changed scripts. This is report validation, not
   new generated-program or benchmark evidence.
 
 - Renamed `tests/gc.rs` to `native_memory.rs` and the second macOS shard to
@@ -263,6 +281,11 @@ Scripts below live in `/private/tmp` unless a repository path is given.
 | `python3 fwp-check-server-schema.py` | Actual report reader accepts complete synthetic stdio/HTTP evidence and rejects missing/duplicate rows, an ineffective omitted-free control and excess RSS. This does not execute servers or inspect their binaries. |
 | `python3 fwp-check-deletion-edits.py` | Rust formatting, changed Python parsing, whitespace, 253-target native schedule and integer artifact gate checks pass. |
 | `python3 fwp-check-migration-python.py` | Ruff reports no unresolved names in all changed Python files. This is a static check, not execution of measurement protocols. |
+| `python3 fwp-check-library-report-reader.py` | Actual dynamic loader fixture, Clang ARM64 O1/O2: ten runs accept three consecutive zero-live records and reject nonzero/obsolete/malformed/missing reports. Minimal library stub, not generated-library validation. |
+| `cargo fmt --all -- --check` | Entire Rust tree passes, without building. |
+| `python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /private/tmp/fwp-g5-primitive-inventory.json` | Frozen contracts pass: 394 declarations, 384 symbols, 40 aliases; 373 contracts, 19 templates, two flat scalar signatures. |
+| `python3 scripts/test-collection-evidence.py` | Eight tests pass, including exact target counts and rejection of incomplete/incorrect memory observations. |
+| `python3 scripts/test-integer-output-evidence.py` | Three reader tests pass: collector symbols, incomplete/failed/ignored/duplicate logs are rejected. Synthetic evidence only. |
 | `python3 scripts/test-map-replay.py` | Four tests pass: complete counted evidence accepted; wrong source/architecture, changed files, missing variants and external paths rejected without binary execution. |
 | `python3 scripts/test-native-test-runner.py` | Nineteen tests pass after the corpus/shard rename, including explicit coverage, failed target propagation, timeout handling and independent-target progress. Uses synthetic subprocesses, not the language suite. |
 | `python3 scripts/check-roadmap.py` | Pass after this rewrite: 163 link sets, 106 immutable preparation pairs/tags, eight roadmap rows and commit messages. |

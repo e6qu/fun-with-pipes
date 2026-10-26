@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -1077,7 +1077,7 @@ jobs:
       - name: Inventory execution examples admitted without tracing
         if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
         shell: bash
-        run: python3 scripts/inventory-arc-programs.py --compiler target/debug/fwp --root . --sources tests/run --optimization O1 --timeout 30 --output pointer-evidence/arc-admission.json
+        run: python3 scripts/inventory-program-admission.py --compiler target/debug/fwp --root . --sources tests/run --optimization O1 --timeout 30 --output pointer-evidence/program-admission.json
       - name: Ownership contract and native coverage audits
         if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
         shell: bash
@@ -1292,7 +1292,7 @@ jobs:
       - name: Inventory execution examples admitted without tracing
         if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
         shell: bash
-        run: python3 scripts/inventory-arc-programs.py --compiler target/debug/fwp --root . --sources tests/run --optimization O1 --timeout 30 --output file-application-evidence/arc-admission.json
+        run: python3 scripts/inventory-program-admission.py --compiler target/debug/fwp --root . --sources tests/run --optimization O1 --timeout 30 --output file-application-evidence/program-admission.json
       - name: Inspect native binaries and save memory observations
         if: ${{ !cancelled() }}
         shell: bash
@@ -3549,7 +3549,7 @@ jobs:
           path: ~/Library/Logs/DiagnosticReports/fwp*
           if-no-files-found: ignore
   wordfreq:
-    if: inputs.suite == 'wordfreq'
+    if: inputs.suite == 'wordfreq' || inputs.suite == 'wordfreq-baseline'
     strategy:
       fail-fast: false
       matrix:
@@ -3615,7 +3615,7 @@ jobs:
         run: cargo test --locked --release --test text_file_tools word_frequencies_preserve_separators_normalization_and_tie_order -- --exact
       - name: Download the explicit accepted word-frequency baseline
         id: baseline
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && inputs.suite == 'wordfreq' }}
         env:
           GH_TOKEN: ${{ github.token }}
           BASELINE_RUN: ${{ inputs.baseline_run }}
@@ -3630,10 +3630,17 @@ jobs:
           BASELINE_SOURCE: ${{ inputs.source_revision }}
         if: ${{ !cancelled() && steps.baseline.conclusion == 'success' }}
         run: >-
-          python3 scripts/measure-wordfreq.py --compiler target/release/fwp
+          python3 scripts/measure-wordfreq.py --comparison compare --compiler target/release/fwp
           --cc gcc --rustc rustc --objdump objdump --nm nm --time /usr/bin/time
           --case 4096:64 --case 65536:1024 --warmups 2 --samples 24
           --baseline wordfreq-before --baseline-source "$BASELINE_SOURCE"
+          --timeout 180 --host "${{ matrix.runner }}" --output wordfreq-evidence
+      - name: Record the current word-frequency baseline beside C and Rust
+        if: ${{ !cancelled() && inputs.suite == 'wordfreq-baseline' }}
+        run: >-
+          python3 scripts/measure-wordfreq.py --comparison record --compiler target/release/fwp
+          --cc gcc --rustc rustc --objdump objdump --nm nm --time /usr/bin/time
+          --case 4096:64 --case 65536:1024 --warmups 2 --samples 24
           --timeout 180 --host "${{ matrix.runner }}" --output wordfreq-evidence
       - uses: actions/upload-artifact@v7
         if: always()

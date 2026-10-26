@@ -48,9 +48,9 @@ Native representation and foreign ABI checks remain native-specific. See
 
 [The admission test](../tests/arc_execution.rs) checks these source files with
 both raw and optimized IR, the compiler's internal program representation.
-Tracing must emit C, establishing that the case is not
-a syntax/type error; ARC must return status 1 with the listed diagnostic and emit
-no C. It deliberately does **not** execute invalid scope examples in tracing mode.
+Parsing, inference and lowering precede the ownership check. The compiler must
+return status 1 with the listed ownership diagnostic and emit no C; syntax/type
+errors do not satisfy this test. Invalid lifetime examples are not executed.
 
 | Source | Required diagnostic fragment | Missing contract or invalid behavior | Accepted direction |
 |---|---|---|---|

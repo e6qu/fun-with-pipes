@@ -21,6 +21,19 @@ Each result belongs to its recorded revision and host. A merged change does not
 refresh an old timing sample. [Delivery history](roadmap-history.md) records merges
 and validation; [PLAN.md](../PLAN.md) owns future optimization work.
 
+## Current scripts and historical reports
+
+Current scripts measure one native ownership model. Allocation profiles report
+requests, requested bytes, retains, peak managed charge and final managed charge;
+they do not print a collection counter. Timed runs remain separate from profiles.
+The [application protocol](application-acceptance.md#word-frequency-comparison)
+explains how to record a fresh C/Rust baseline or compare a named prior fwp build.
+
+Saved JSON and tables retain their original revisions, modes and observations.
+Use the scripts at that revision to reproduce them. Current readers deliberately
+reject obsolete schemas; they do not convert old tracing evidence into evidence
+for GC removal. The G5 scripts and compiler still need integrated runner validation.
+
 ## Planned ownership comparisons
 
 These four comparisons belong to plan A/B; no new measurements are claimed here.
@@ -144,7 +157,7 @@ Changing a peer does not demonstrate a compiler speedup.
 | `fib` | Compute `fib(35)`, with `fib(0)=0`, `fib(1)=1`, otherwise `fib(n-1)+fib(n-2)` | Same recurrence. Compilers can transform calls differently. All three check signed subtraction and addition. These inputs fit all three. |
 | `loop` | Start `(i, sum)=(100000000, 0)`; add `(i*3)%7`, decrement `i`, stop at zero | fwp expresses the loop state as a pair; its compiler can turn that into local variables. C and Rust write the loop directly. Checked arithmetic and generated code can still differ. |
 | `map` | Build `(key(i), i)` for `i=0..499999`, where `key(i)=(i*7919)%1000003`; sum 2 million lookups using the same key formula, missing values as zero | All three use contiguous sorted pairs searched by bisection. C uses `qsort`, Rust `sort_unstable_by_key`, fwp its map builder; construction/sorting costs differ. This compares complete implementations, not an isolated lookup operation. |
-| `range-set` | Build the distinct keys `0..999999`, then compute FNV-1a over the canonical set encoding: unsigned LEB128 count followed by eight little-endian bytes per key | All three start with ordered keys and need no sorting. C uses a heap buffer, Rust a vector, fwp a set. Hash multiplication wraps modulo 2^64 in all three. Optimizers may remove storage or combine loops; inspect retained binaries before claiming equal allocations. Runtime startup, allocation, hashing and output are timed together; the report explicitly names its ARC or tracing mode. |
+| `range-set` | Build the distinct keys `0..999999`, then compute FNV-1a over the canonical set encoding: unsigned LEB128 count followed by eight little-endian bytes per key | All three start with ordered keys and need no sorting. C uses a heap buffer, Rust a vector, fwp a set. Hash multiplication wraps modulo 2^64 in all three. Optimizers may remove storage or combine loops; inspect retained binaries before claiming equal allocations. Runtime startup, allocation, hashing and output are timed together; the report explicitly names counted ownership. |
 | `pipeline` | For `0..999999`, multiply by 3, keep even results and sum; sum 20 rounds | fwp can combine the stages into one traversal without intermediate lists. C explicitly fills arrays; Rust constructs vectors and filters them. Eliminating that work can outweigh language overhead. |
 | `strings` | For `i=0..1999999`, concatenate decimal `i`, decimal `3*i` and `#`; sum text lengths | fwp can calculate some formatted lengths without creating the string. C uses `snprintf` and `strlen`; Rust uses `format!` and byte length. All characters here are ASCII, so the lengths agree. The programs need not perform the same formatting or allocation work. |
 | `text-length` | The same input, fwp pipeline and result as `strings`; C and Rust count decimal digits in groups of 16, 8, 4, 2 and 1, without formatting text | This compares fwp's elimination of temporary text against handwritten counting. All three check multiplication and sums for overflow; the inputs fit. The C/Rust failure messages differ and are not exercised. Startup, output, scheduling and remaining ownership work are still included; matching algorithms do not establish equal machine instructions. |
@@ -231,7 +244,7 @@ operations. These claims need separate observations and binary checks.
 
 `measure-tail-recursion.py` compares the same fwp countdown written recursively
 and with `loop`, `Again` and `Stop`. The focused language job uses one million
-iterations, eight samples, O0/O2 and explicit ARC/tracing modes. Both print zero.
+iterations, eight samples, O0/O2 and counted ownership. Both print zero.
 Timing includes fresh-process startup, calculation, output capture and teardown;
 compilation and profiling are excluded. Recursive median divided by explicit-loop
 median measures this abstraction's cost within fwp, not C/Rust overhead.

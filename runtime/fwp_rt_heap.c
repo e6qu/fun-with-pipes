@@ -208,7 +208,7 @@ static void fwp_heap_oom(void) {
     fflush(NULL); _Exit(102);
 }
 
-/* 0 is shared; 1..254 are inline; 255 denotes an exact rare wide count.
+/* 0 has no counted owner; 1..254 are inline; 255 denotes an exact wide count.
  * Side entries live outside the value heap and use stable metadata keys. */
 static heap_rc_wide **fwp_rc_wide_link(uint8_t *slot) {
     uintptr_t hash = (uintptr_t)slot;
@@ -604,7 +604,7 @@ static void fwp_rc_share(V v) {
     if (c && *c) fwp_trap("internal: counted owner escaped ARC contract");
 }
 
-/* `v`, shared (a value the runtime keeps) */
+/* Validate an uncounted boundary and return its value unchanged. */
 static inline V fwp_rc_shared(V v) {
     fwp_rc_share(v);
     return v;

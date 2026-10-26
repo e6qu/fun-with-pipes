@@ -137,7 +137,8 @@ includes more than the language's heap counters. Do not interchange these.
 A **golden test** compares output with a checked-in expected result. A
 **regression test** checks that a repaired behavior stays correct. A **negative
 control** deliberately introduces a defect and checks that the test detects it.
-**GC stress** requests collection unusually often to expose missing live roots.
+**GC stress**, in historical reports, requested frequent tracing collections to
+expose missing live roots. Current checks observe owners and physical releases.
 
 **CI** is the automated build/test service. A **gate** is a required passing
 check before merge. **Final head** means the exact Git commit being merged;

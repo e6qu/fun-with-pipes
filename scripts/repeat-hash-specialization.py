@@ -102,7 +102,7 @@ def main():
               'verified against source and binary hashes before execution. No recompilation. '
               'Balanced rotating/reversed whole-process wall and child-CPU samples include '
               'startup, construction, hashing and output. Original reports retain compiler '
-              'flags, allocation profiles, RSS and code sizes. Buffered/tracing variants are '
+              'flags, allocation profiles, RSS and code sizes. Buffered variants are '
               'excluded from this repeat to concentrate on the specialization and peer gaps. '
               'All samples remain visible; overlapping distributions do not prove improvement.')
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')

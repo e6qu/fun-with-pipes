@@ -39,8 +39,7 @@ def main():
         assert report['hardware']['machine'] == platform.machine()
     assert reports['before']['results'].keys() == reports['after']['results'].keys()
     out = args.output.resolve(); out.mkdir(parents=True, exist_ok=True)
-    environment = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
-    environment.pop('FWP_GC', None)
+    environment = dict(os.environ)
     results = {}
     for name, after in reports['after']['results'].items():
         before = reports['before']['results'][name]
@@ -49,7 +48,7 @@ def main():
         for reference in ['c', 'rust']:
             assert before['variants'][reference]['sourceSha256'] == after['variants'][reference]['sourceSha256']
         variants, binaries = {}, {}
-        labels = [(phase, f'fwp-{mode}') for phase in ['before', 'after'] for mode in ['tracing', 'arc']]
+        labels = [(phase, 'fwp-arc') for phase in ['before', 'after']]
         labels += [('after', 'c'), ('after', 'rust')]
         for phase, variant in labels:
             label = f'{phase}-{variant}'
@@ -69,22 +68,18 @@ def main():
                 cfile.write_text(instrument(source.read_text()))
                 profile_command = [os.environ['CC'], '-O2', '-std=gnu11', '-ffp-contract=off', '-w', str(cfile), '-o', str(measured), '-lm', '-lpthread']
                 run(profile_command, environment)
-                for collector in (['normal', 'off'] if variant == 'fwp-tracing' else ['off']):
-                    result = run([measured], dict(environment, FWP_GC='off') if collector == 'off' else environment)
-                    assert result.stdout == after['expected']
-                    if args.workload == 'hash':
-                        counters = [json.loads(line) for line in result.stderr.splitlines()]
-                        assert len(counters) == 2
-                        expected = original['profile']
-                        memory = counters[1]
-                    else:
-                        counters = json.loads(result.stderr)
-                        expected = original['profiles']['off']
-                        memory = counters
-                    if collector == 'off':
-                        assert counters == expected, (name, label, counters)
-                    assert memory['finalChargedBytes'] == 0
-                    profiles[collector] = counters
+                result = run([measured], environment)
+                assert result.stdout == after['expected']
+                if args.workload == 'hash':
+                    counters = [json.loads(line) for line in result.stderr.splitlines()]
+                    assert len(counters) == 2
+                    memory = counters[1]
+                else:
+                    counters = json.loads(result.stderr)
+                    memory = counters
+                assert counters == original['profile'], (name, label, counters)
+                assert memory['finalChargedBytes'] == 0
+                profiles['counted'] = counters
             warm = run([binary], environment)
             assert warm.stdout == after['expected'] and not warm.stderr
             binaries[label] = binary
@@ -113,13 +108,13 @@ def main():
         ratios = {mode: {reference: {metric: variants[f'after-fwp-{mode}'][key] / variants[reference][key]
                                     for metric, key in [('wall', 'medianWallNs'), ('cpu', 'medianChildCpuNs')]}
                          for reference in [f'before-fwp-{mode}', 'after-c', 'after-rust']}
-                  for mode in ['tracing', 'arc']}
+                  for mode in ['arc']}
         results[name] = dict(source=after['source'], expected=after['expected'], variants=variants, ratios=ratios, **{key: after[key] for key in keys})
     report = dict(workload=args.workload, head=os.environ['GITHUB_SHA'], beforeHead=reports['before']['head'], afterHead=reports['after']['head'],
         baselineRun=os.environ['BASELINE_RUN'], evidenceRun=os.environ['EVIDENCE_RUN'], hardware=platform.uname()._asdict(),
         cpu=run(['sysctl', '-n', 'machdep.cpu.brand_string'] if platform.system() == 'Darwin' else ['lscpu']).stdout,
         profileCompiler=run([os.environ['CC'], '--version']).stdout, results=results,
-        scope='Verified binaries from two named runs execute together: before/after fwp tracing/ARC and the after run\'s matching C/Rust references. Same source, inputs, arithmetic/encoding rules and output; one warmup then twelve balanced rotating whole-process wall/child-CPU samples. Compilation and normal/off collector profiles are separate; off profiles must reproduce original allocation/count measurements exactly. Original reports retain compilation, RSS and reference allocation scope. This compares the two recorded compiler revisions as a whole; it does not isolate individual transformations or establish universal speed or parity.')
+        scope='Verified binaries from two named runs execute together: before/after counted fwp and the after run\'s matching C/Rust references. Same source, inputs, arithmetic/encoding rules and output; one warmup then eight balanced rotating whole-process wall/child-CPU samples. Compilation and allocation profiles are separate; profiles must reproduce original allocation/count measurements exactly. Original reports retain compilation, RSS and reference allocation scope. This compares the two recorded compiler revisions as a whole; it does not isolate individual transformations or establish universal speed or parity.')
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({name: case['ratios'] for name, case in results.items()}, indent=2))
 

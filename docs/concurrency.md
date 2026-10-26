@@ -43,13 +43,12 @@ channel is closed, and `channel.recv` returns `None` once it is closed and
 empty. Closing preserves queued values: receives continue to return them until
 the queue is empty. A sender that finds the channel full waits, which slows the producer to the consumer's pace (backpressure).
 
-A queued value can contain the channel itself. Closing alone does not break
-that reference cycle. The counted ownership implementation verifies explicit
-draining and typed destruction. Checked ARC currently rejects cycle-capable
-payload types; native tracing mode can collect these graphs. The
-[cycle contract](ownership.md#cycle-and-retention-contract) gives supported
-alternatives: task-owned subscribers with data queues, and graphs linked by IDs.
-There is no weak-handle API, and `channel.close` does not discard queued messages.
+A value that owns the queue containing it would form an owning cycle. Closing
+alone would not break it: `channel.close` does not discard queued messages.
+The compiler rejects unproved cycles. Use explicit [weak channel links](weak-channels.md),
+task-owned subscribers with data queues, or graph IDs as described in the
+[cycle contract](ownership.md#cycle-and-retention-contract). The last channel
+owner destroys remaining messages through their typed cleanup operations.
 
 `loop : (s -> Step[s, r] ! e) -> s -> r ! e` runs a step function in
 constant stack space, which suits accept loops and other long-running
@@ -115,9 +114,9 @@ when an effect must occur after another task's effect.
 A native task-enabled program adds a counter decrement and branch at safe
 points, and switches when its slice expires. That is real scheduling overhead;
 the old isolated Fibonacci observation does not establish its cost for other
-workloads. In explicit tracing mode, the collector finds suspended task values
-on their stacks and in saved registers. Default checked ARC releases values
-through their owners instead of scanning stacks.
+workloads. Counted ownership keeps suspended task values alive through their
+owners and releases them during ordinary completion or cancellation. Saved
+registers and stacks preserve execution state; they are not traced for roots.
 
 On glibc Linux, the saved register image occupies an aligned region
 at the top of each child's existing stack allocation; active call frames use

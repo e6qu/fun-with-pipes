@@ -54,7 +54,7 @@ def main():
                     binaries.append(dict(case=case, direct=direct,
                         optimization=optimization, generatedSha256=HASH.digest(source),
                         inspection=HASH.COLLECTIONS.inspect(source.with_suffix('.exe'), host,
-                            'arc', args.llvm_bin, require_tracing=False)))
+                            args.llvm_bin)))
         hosts.append(dict(host=host, job=job['databaseId'], passedTests=passed, binaries=binaries))
         print(host, passed, 'tests and', len(binaries), 'binaries inspected', flush=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)

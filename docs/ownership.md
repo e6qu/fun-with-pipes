@@ -393,10 +393,10 @@ Returning a copied C-library export result uses a separate, already defined API;
 it does not make all foreign callback results safe.
 
 Unknown callback/task producers, recursive channel owners, queued HTTP/2 streams
-and task-result back-references remain rejected by checked ARC. Their maintained
-tracing-only controls are recorded in [the admission checklist](ownership-admission.md).
-Before removing tracing, each must have a proved equivalent or an explicit
-language restriction; these execution paths have not been removed. The scoped
+and task-result back-references remain rejected. The
+[admission checklist](ownership-admission.md) records each boundary's diagnostic
+and explicit supported alternative. Raw and optimized entries enforce these same
+rules; there is no tracing execution path that bypasses them. The scoped
 subscriber establishes one useful accepted form, not arbitrary cycle inference.
 
 A weak reference does not keep its target alive. Use `channel.downgrade` and
@@ -420,8 +420,8 @@ between completed operations as well as at process teardown; a final zero can
 hide growing retention during a service's lifetime. Deliberately missing releases,
 invalid reuse and stale borrows must fail their observers.
 
-Keep tracing stress and verification controls until their ownership replacements
-pass. Report managed bytes, native buffers, OS handles and process memory
+G5 is complete only when the replacement ownership controls and all maintained
+native targets pass on the same source. A focused test alone does not verify removal. Report managed bytes, native buffers, OS handles and process memory
 separately. For a performance claim, name the exact comparison, inputs, toolchains,
 samples, code size and stack cost. [Benchmarks](benchmarks.md) explains how to read
 those results; [delivery history](roadmap-history.md) records tested revisions.

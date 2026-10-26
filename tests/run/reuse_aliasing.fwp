@@ -1,7 +1,7 @@
 # A record updated in place, or a variant's cell rebuilt in place by a
 # constructor of the same size, must have no other reference: each case
 # keeps one (in a tuple, a list, a closure, another record, a loop's
-# state) and then updates the value. Built with FWP_REUSE=1 the native
+# state) and then updates the value. The native
 # program reuses only truly unique records (tests/reuse.rs); the output
 # shows the untouched original next to the copy.
 

@@ -15,12 +15,8 @@ LOG = (Path(__file__).parent / 'fixtures' / 'numeric-tests.log').read_text()
 
 
 class OutputEvidence(unittest.TestCase):
-    def test_binary_tracing_policy_is_explicit(self):
-        for mode, required, present, accepted in [
-            ('arc', False, False, True), ('arc', False, True, False),
-            ('tracing', True, True, True), ('tracing', True, False, False),
-            ('tracing', False, False, True), ('tracing', False, True, True),
-        ]:
+    def test_binary_collector_symbols_are_rejected(self):
+        for present, accepted in [(False, True), (True, False)]:
             def command(tool, *arguments):
                 if tool.name == 'llvm-nm':
                     names = [f'fwp_runtime_{index}' for index in range(12)]
@@ -32,21 +28,19 @@ class OutputEvidence(unittest.TestCase):
                 self.assertEqual(tool.name, 'llvm-size')
                 return '.text 128 4096\n'
 
-            with self.subTest(mode=mode, required=required, present=present):
+            with self.subTest(present=present):
                 with tempfile.TemporaryDirectory() as directory:
                     binary = Path(directory) / 'sample.exe'
                     binary.write_bytes(b'binary identity fixture')
                     with patch.object(REPORT.HASH.COLLECTIONS, 'command', command):
                         if accepted:
                             observed = REPORT.HASH.COLLECTIONS.inspect(
-                                binary, 'ubuntu-latest', mode, Path('/tools'),
-                                require_tracing=required)
+                                binary, 'ubuntu-latest', Path('/tools'))
                             self.assertEqual(bool(observed['tracingSymbols']), present)
                         else:
                             with self.assertRaises(AssertionError):
                                 REPORT.HASH.COLLECTIONS.inspect(
-                                    binary, 'ubuntu-latest', mode, Path('/tools'),
-                                    require_tracing=required)
+                                    binary, 'ubuntu-latest', Path('/tools'))
 
     def test_complete_interleaved_and_windows_logs(self):
         for log in [LOG, LOG.replace('tests/', 'tests\\').replace(

@@ -746,7 +746,7 @@ still be paged out by the OS. The configured parts are:
 
 | Part | Option | Default | What uses it |
 |---|---|---|---|
-| heap | `--heap S` | 64M | fwp values; fixed capacity. ARC reclaims through owners; only explicit tracing mode runs a collector |
+| heap | `--heap S` | 64M | fwp values; fixed capacity. counted owners reclaim storage; no tracing collector |
 | pool | `--pool S` | 32M | Runtime buffers and decimal overflow scratch; Linux interposes allocation functions, Windows uses a private allocator |
 | main stack | `--stack S` | 16M | the main task |
 | task stacks | `--tasks N`, `--task-stack S` | 64 of 1M | tasks: at most N run at once, each with a guard page |

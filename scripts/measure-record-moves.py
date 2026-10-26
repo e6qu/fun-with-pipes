@@ -47,43 +47,41 @@ def main():
         if result.returncode:
             raise RuntimeError(f'{command}: {result.returncode}\n{result.stdout}\n{result.stderr}')
         return result
-    environment = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
-    environment.pop('FWP_GC', None)
+    environment = dict(os.environ)
     results, hashes, changed = {}, {}, {}
     for profile in [False, True]:
         suffix = 'profile' if profile else 'timing'
         binaries = {}
-        for gc, stem in [('arc', 'matrix-arc'), ('tracing', 'matrix')]:
-            filename = f'{stem}-{suffix}.c'
-            source = (args.input / filename).read_text()
-            digest = hashlib.sha256(source.encode()).hexdigest()
-            recorded = [value for key, value in evidence['sourceHashes'].items() if key.endswith('/' + filename)]
-            assert recorded == [digest], (filename, recorded, digest)
-            hashes[filename] = digest
-            assert ('#define FWP_ARC_ONLY 1' in source) == (gc == 'arc')
-            control, count = retained(source)
-            changed[filename] = count
-            for mode, code in [('moved', source), ('retained', control)]:
-                label = f'{gc}-{mode}-{suffix}'
-                cfile, binary = output / f'{label}.c', output / label
-                cfile.write_text(code)
-                command = [cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w',
-                           f'-DPROFILE={int(profile)}', '-DMATRIX_BENCH=1', cfile,
-                           '-o', binary, '-lm', '-lpthread']
-                run(command); commands.append(list(map(str, command)))
-                binaries[label] = binary
-                if not profile:
-                    command = ['otool', '-tvV', binary] if platform.system() == 'Darwin' else ['objdump', '-d', binary]
-                    (output / f'{label}.asm').write_text(run(command).stdout)
-                    if gc == 'arc':
-                        symbols = run(['nm', binary]).stdout
-                        assert not any(symbol in symbols for symbol in ['fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'])
+        stem = 'matrix'
+        filename = f'{stem}-{suffix}.c'
+        source = (args.input / filename).read_text()
+        digest = hashlib.sha256(source.encode()).hexdigest()
+        recorded = [value for key, value in evidence['sourceHashes'].items() if key.endswith('/' + filename)]
+        assert recorded == [digest], (filename, recorded, digest)
+        hashes[filename] = digest
+        assert 'FWP_ARC_ONLY' not in source
+        control, count = retained(source)
+        changed[filename] = count
+        for mode, code in [('moved', source), ('retained', control)]:
+            label = f'counted-{mode}-{suffix}'
+            cfile, binary = output / f'{label}.c', output / label
+            cfile.write_text(code)
+            command = [cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w',
+                       f'-DPROFILE={int(profile)}', '-DMATRIX_BENCH=1', cfile,
+                       '-o', binary, '-lm', '-lpthread']
+            run(command); commands.append(list(map(str, command)))
+            binaries[label] = binary
+            if not profile:
+                command = ['otool', '-tvV', binary] if platform.system() == 'Darwin' else ['objdump', '-d', binary]
+                (output / f'{label}.asm').write_text(run(command).stdout)
+                symbols = run(['nm', binary]).stdout
+                assert not any(symbol in symbols for symbol in ['fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'])
         labels = list(binaries)
         if not profile:
             for binary in binaries.values():
                 run([binary], environment)
         for process in range(1 if profile else 8):
-            order = labels[process % 4:] + labels[:process % 4]
+            order = labels[process % len(labels):] + labels[:process % len(labels)]
             for label in order:
                 command = ['/usr/bin/time', '-l' if platform.system() == 'Darwin' else '-v', binaries[label]]
                 execution = run(command, environment)
@@ -99,12 +97,11 @@ def main():
     result_hashes = {sample['hash'] for record in results.values() for sample in record['samples']}
     assert len(result_hashes) == 1
     clean = lambda record: [{k: v for k, v in sample.items() if k not in ['kernelNs', 'allocationInclusiveNs', 'retains', 'nonlastReleases', 'releaseChecks']} for sample in record['samples']]
-    for gc in ['arc', 'tracing']:
-        assert clean(results[f'{gc}-moved-profile']) == clean(results[f'{gc}-retained-profile'])
-        for mode, counts in [('moved', (0, 0, 16)), ('retained', (24, 24, 56))]:
-            for sample in results[f'{gc}-{mode}-profile']['samples']:
-                assert tuple(sample[key] for key in ['retains', 'nonlastReleases', 'releaseChecks']) == counts, sample
-                assert sample['requests'] == 40 and sample['liveChargedBytes'] == 0 and sample['collections'] == 0, sample
+    assert clean(results[f'counted-moved-profile']) == clean(results[f'counted-retained-profile'])
+    for mode, counts in [('moved', (0, 0, 16)), ('retained', (24, 24, 56))]:
+        for sample in results[f'counted-{mode}-profile']['samples']:
+            assert tuple(sample[key] for key in ['retains', 'nonlastReleases', 'releaseChecks']) == counts, sample
+            assert sample['requests'] == 40 and sample['liveChargedBytes'] == 0, sample
     summary = {label: dict(medianKernelNs=statistics.median(row['kernelNs'] for row in record['samples']),
                           medianAllocationInclusiveNs=statistics.median(row['allocationInclusiveNs'] for row in record['samples']))
                for label, record in results.items() if label.endswith('-timing')}
@@ -113,7 +110,7 @@ def main():
     report = dict(head=os.environ['GITHUB_SHA'], emittedHead=evidence['head'], evidenceRun=os.environ['EVIDENCE_RUN'],
                   sourceHashes=hashes, restoredOperations=changed, hardware=hardware, compiler=run([cc, '--version']).stdout,
                   buildCommands=commands, results=results, summary=summary,
-                  scope='Same-run matrix comparison of field moves and the former retain/drop conversions. Verified emitted C is used for both; only record ownership operations change. Kernel source, ordered arithmetic, input shapes, outputs and allocation profiles agree. The retained control must perform 24 retains and 24 nonlast releases across eight products, versus zero for moves; both use forty allocations and end with zero live storage and collections. Both memory modes use identical C flags. Forty samples per binary from eight rotating four-binary batches after warmup; each binary occupies each position twice. Profiles are separate from timing. The control restores count traffic for these nonfailing inputs; it is not a previous compiler build and does not reproduce obsolete overflow-cleanup scaffolding. This isolates the counted conversions, not a C/Rust comparison, whole-program startup measurement or a general zero-cost claim.')
+                  scope='Same-run matrix comparison of field moves and the former retain/drop conversions. Verified emitted C is used for both; only record ownership operations change. Kernel source, ordered arithmetic, input shapes, outputs and allocation profiles agree. The retained control must perform 24 retains and 24 nonlast releases across eight products, versus zero for moves; both use forty allocations and end with zero live storage. Both variants use counted ownership and identical C flags. Forty samples per binary from eight alternating two-binary batches after warmup; each binary occupies each position four times. Profiles are separate from timing. The control restores count traffic for these nonfailing inputs; it is not a previous compiler build and does not reproduce obsolete overflow-cleanup scaffolding. This isolates the counted conversions, not a C/Rust comparison, whole-program startup measurement or a general zero-cost claim.')
     (output / 'comparison.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(summary, indent=2))
 

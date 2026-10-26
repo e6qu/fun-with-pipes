@@ -73,13 +73,12 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
-    assert args.samples > 0 and args.samples % 8 == 0 and args.warmups > 0 and args.timeout > 0
+    assert args.samples > 0 and args.samples % 4 == 0 and args.warmups > 0 and args.timeout > 0
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     environment = {key: value for key, value in os.environ.items()
                    if not key.startswith('FWP_') and key not in ('GH_TOKEN', 'GITHUB_TOKEN')}
-    environment.update(CC=args.cc, FWP_LTO='0', FWP_AD_WORKSPACE='1',
-                       FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+    environment.update(CC=args.cc, FWP_LTO='0', FWP_AD_WORKSPACE='1')
     commands = []
 
     def run(command, env):
@@ -125,89 +124,87 @@ def main():
             if reference is None:
                 reference = raw.stdout
             assert raw.stdout == reference, (name, variant, raw)
-            for mode in ('arc', 'tracing'):
-                label = variant + '-' + mode
-                code_path = directory / (label + '.c')
-                build([args.compiler.resolve(), 'build', '--gc', mode, '--emit-c', '-O2',
-                       source, '-o', code_path])
-                code = code_path.read_text()
-                profile_code = PROFILE.instrument(code)
-                # Verify tape retirement at the observation point, before runtime shutdown.
-                marker = '    iteration_active=0;'
-                assert profile_code.count(marker) == 1
-                profile_code = profile_code.replace(marker, '''    if(fwp_owned_tapes)exit(230);
+            mode = 'counted'
+            label = variant + '-' + mode
+            code_path = directory / (label + '.c')
+            build([args.compiler.resolve(), 'build', '--emit-c', '-O2',
+                   source, '-o', code_path])
+            code = code_path.read_text()
+            profile_code = PROFILE.instrument(code)
+            # Verify tape retirement at the observation point, before runtime shutdown.
+            marker = '    iteration_active=0;'
+            assert profile_code.count(marker) == 1
+            profile_code = profile_code.replace(marker, '''    if(fwp_owned_tapes)exit(230);
     for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(231);
 ''' + marker)
-                profile_code = RAW.instrument(profile_code)
-                profiled = directory / (label + '-profile.c')
-                profiled.write_text(profile_code)
-                binary = directory / label
-                profile_binary = directory / (label + '-profile')
-                for cfile, executable in ((code_path, binary), (profiled, profile_binary)):
-                    build([args.cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w', cfile,
-                           '-o', executable, '-lm', '-lpthread', '-ldl'])
-                symbols = run([args.nm, binary], environment).stdout
-                if mode == 'arc':
-                    assert not any(symbol in symbols for symbol in
-                                   (b'fwp_heap_scan', b'fwp_heap_mark_all', b'fwp_heap_sweep'))
-                raw_header = binary.read_bytes()[:20]
-                assert raw_header[:6] == b'\x7fELF\x02\x01'
-                assert int.from_bytes(raw_header[18:20], 'little') == {'x86_64': 62, 'aarch64': 183}[platform.machine()]
-                (directory / (label + '.symbols')).write_bytes(symbols)
-                (directory / (label + '.asm')).write_bytes(run([args.objdump, '-d', binary], environment).stdout)
-                actual = run([profile_binary], environment)
-                assert actual.stdout == reference
-                counts, raw_record = [json.loads(line) for line in actual.stderr.splitlines()]
-                raw_counts = raw_record['rawDerivativeStorage']
-                RAW.check_profile(raw_counts, count - 1, True)
-                assert counts['finalChargedBytes'] == 0, (name, label, counts)
-                if mode == 'arc':
-                    assert counts['collections'] == 0
-                profiles[label] = counts
-                raw_profiles[label] = raw_counts
-                (directory / (label + '-profile.stderr')).write_bytes(actual.stderr)
-                uncached = run([profile_binary], dict(environment, FWP_AD_WORKSPACE='0'))
-                assert uncached.stdout == reference
-                uncached_managed, uncached_raw = [json.loads(line) for line in uncached.stderr.splitlines()]
-                RAW.check_profile(uncached_raw['rawDerivativeStorage'], count - 1, False)
-                assert uncached_managed == counts, (name, label, uncached_managed, counts)
-                no_workspace[label] = uncached_raw['rawDerivativeStorage']
-                (directory / (label + '-no-workspace.stderr')).write_bytes(uncached.stderr)
-                metadata[label] = dict(bytes=binary.stat().st_size,
-                                       sha256=hashlib.sha256(binary.read_bytes()).hexdigest(),
-                                       cSha256=hashlib.sha256(code.encode()).hexdigest())
-                binaries[label] = binary
-                # Deliberately preserve a live registry flag after backward. Data buffers
-                # still release normally; the independent observer must reject the flag.
-                if mode == 'arc' and variant == 'loop' and count > 1:
-                    release = 'fwp_tape tp = *t;\n    t->live = 0;'
-                    assert profile_code.count(release) == 1
-                    broken = directory / 'missing-retirement.c'
-                    broken.write_text(profile_code.replace(release, 'fwp_tape tp = *t;'))
-                    control = directory / 'missing-retirement'
+            profile_code = RAW.instrument(profile_code)
+            profiled = directory / (label + '-profile.c')
+            profiled.write_text(profile_code)
+            binary = directory / label
+            profile_binary = directory / (label + '-profile')
+            for cfile, executable in ((code_path, binary), (profiled, profile_binary)):
+                build([args.cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w', cfile,
+                       '-o', executable, '-lm', '-lpthread', '-ldl'])
+            symbols = run([args.nm, binary], environment).stdout
+            assert not any(symbol in symbols for symbol in
+                           (b'fwp_heap_scan', b'fwp_heap_mark_all', b'fwp_heap_sweep'))
+            raw_header = binary.read_bytes()[:20]
+            assert raw_header[:6] == b'\x7fELF\x02\x01'
+            assert int.from_bytes(raw_header[18:20], 'little') == {'x86_64': 62, 'aarch64': 183}[platform.machine()]
+            (directory / (label + '.symbols')).write_bytes(symbols)
+            (directory / (label + '.asm')).write_bytes(run([args.objdump, '-d', binary], environment).stdout)
+            actual = run([profile_binary], environment)
+            assert actual.stdout == reference
+            counts, raw_record = [json.loads(line) for line in actual.stderr.splitlines()]
+            raw_counts = raw_record['rawDerivativeStorage']
+            RAW.check_profile(raw_counts, count - 1, True)
+            assert counts['finalChargedBytes'] == 0, (name, label, counts)
+            assert set(counts) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
+            profiles[label] = counts
+            raw_profiles[label] = raw_counts
+            (directory / (label + '-profile.stderr')).write_bytes(actual.stderr)
+            uncached = run([profile_binary], dict(environment, FWP_AD_WORKSPACE='0'))
+            assert uncached.stdout == reference
+            uncached_managed, uncached_raw = [json.loads(line) for line in uncached.stderr.splitlines()]
+            RAW.check_profile(uncached_raw['rawDerivativeStorage'], count - 1, False)
+            assert uncached_managed == counts, (name, label, uncached_managed, counts)
+            no_workspace[label] = uncached_raw['rawDerivativeStorage']
+            (directory / (label + '-no-workspace.stderr')).write_bytes(uncached.stderr)
+            metadata[label] = dict(bytes=binary.stat().st_size,
+                                   sha256=hashlib.sha256(binary.read_bytes()).hexdigest(),
+                                   cSha256=hashlib.sha256(code.encode()).hexdigest())
+            binaries[label] = binary
+            # Deliberately preserve a live registry flag after backward. Data buffers
+            # still release normally; the independent observer must reject the flag.
+            if variant == 'loop' and count > 1:
+                release = 'fwp_tape tp = *t;\n    t->live = 0;'
+                assert profile_code.count(release) == 1
+                broken = directory / 'missing-retirement.c'
+                broken.write_text(profile_code.replace(release, 'fwp_tape tp = *t;'))
+                control = directory / 'missing-retirement'
+                build([args.cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w', broken,
+                       '-o', control, '-lm', '-lpthread', '-ldl'])
+                failed = subprocess.run([str(control)], env=environment, capture_output=True,
+                                        timeout=args.timeout)
+                assert failed.returncode == 231, failed
+                (directory / 'missing-retirement.stderr').write_bytes(failed.stderr)
+                # An orphaned allocation is absent from the runtime's tape
+                # pointers. The physical ledger must still detect it.
+                for control_name, release in [
+                    ('missing-parent-free', 'ad_raw_free(b->pa);'),
+                    ('missing-registry-free', 'ad_raw_free(fwp_tapes);'),
+                ]:
+                    broken = directory / (control_name + '.c')
+                    broken.write_text(RAW.replace_once(profile_code, release,
+                                                      '/* deliberately omit physical release */'))
+                    control = directory / control_name
                     build([args.cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w', broken,
                            '-o', control, '-lm', '-lpthread', '-ldl'])
                     failed = subprocess.run([str(control)], env=environment, capture_output=True,
                                             timeout=args.timeout)
-                    assert failed.returncode == 231, failed
-                    (directory / 'missing-retirement.stderr').write_bytes(failed.stderr)
-                    # An orphaned allocation is absent from the runtime's tape
-                    # pointers. The physical ledger must still detect it.
-                    for control_name, release in [
-                        ('missing-parent-free', 'ad_raw_free(b->pa);'),
-                        ('missing-registry-free', 'ad_raw_free(fwp_tapes);'),
-                    ]:
-                        broken = directory / (control_name + '.c')
-                        broken.write_text(RAW.replace_once(profile_code, release,
-                                                          '/* deliberately omit physical release */'))
-                        control = directory / control_name
-                        build([args.cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w', broken,
-                               '-o', control, '-lm', '-lpthread', '-ldl'])
-                        failed = subprocess.run([str(control)], env=environment, capture_output=True,
-                                                timeout=args.timeout)
-                        assert failed.returncode == 232, failed
-                        assert b'unreleased raw derivative storage' in failed.stderr, failed
-                        (directory / (control_name + '.stderr')).write_bytes(failed.stderr)
+                    assert failed.returncode == 232, failed
+                    assert b'unreleased raw derivative storage' in failed.stderr, failed
+                    (directory / (control_name + '.stderr')).write_bytes(failed.stderr)
         for _ in range(args.warmups):
             for binary in binaries.values():
                 actual = run([binary], environment)
@@ -216,8 +213,8 @@ def main():
         labels = list(binaries)
         orders = []
         for round_number in range(args.samples):
-            order = labels[round_number % 4:] + labels[:round_number % 4]
-            if round_number % 8 >= 4:
+            order = labels[round_number % len(labels):] + labels[:round_number % len(labels)]
+            if round_number % (2 * len(labels)) >= len(labels):
                 order = list(reversed(order))
             orders.append(order)
             for label in order:
@@ -239,7 +236,7 @@ def main():
         results[name] = dict(dimensions=points, storedValues=count, updates=count - 1,
                              samplesNs=samples, medianNs=medians, orders=orders,
                              loopOverHistory={mode: medians['loop-' + mode] / medians['history-' + mode]
-                                              for mode in ('arc', 'tracing')},
+                                              for mode in ('counted',)},
                              managedProfiles=profiles, rawDerivativeProfiles=raw_profiles,
                              rawDerivativeProfilesWithoutWorkspace=no_workspace,
                              peakProcessRssBytes=resident, binaries=metadata,

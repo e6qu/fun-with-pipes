@@ -20,9 +20,9 @@ tree. Weak channels, retained C callbacks and replacement ownership diagnostics
 were delivered in #215. [Delivery history](docs/roadmap-history.md) records the source and CI
 IDs. Native packages cover Linux, macOS and Windows on ARM64 and AMD64.
 
-**GC removal is incomplete.** Native execution uses checked ARC unless tracing
-is explicitly selected. G5 must remove that selection, collector code and its
-remaining test dependencies. Unproved owning cycles remain rejected; weak links
+**GC removal is not verified.** The merged baseline still permits explicit tracing.
+The G5 branch removes that selection and collector code, migrates the tests and
+updates measurement tools. It still needs integrated compiler and native validation. Unproved owning cycles remain rejected; weak links
 and independently owned workers provide explicit alternatives.
 
 **ARC minimization is incomplete.** Borrowing, moves, direct record/variant
@@ -106,8 +106,8 @@ must survive. All nine production jobs and docs passed on the integrated source.
 **G5 — Delete tracing.** After G1–G4, remove tracing selection and code from
 `src/main.rs`, code generation, runtime allocator/root discovery, host adapters,
 CLI help and tests. Apply the agreed cycle/lifetime policy to interpreter entries
-as well as compiled entries. The current batch adds shared entry admission and
-migrates ordinary allocation/RSS comparisons; its acceptance is tracked in
+as well as compiled entries. Shared entry admission is delivered. The current batch deletes the collector and
+migrates allocation/RSS, cleanup and evidence protocols; its acceptance is tracked in
 [the handoff](docs/development-state.md).
 Keep allocator, stack and resource functions needed without
 collection. Update protocols and examples together; no compatibility switch.

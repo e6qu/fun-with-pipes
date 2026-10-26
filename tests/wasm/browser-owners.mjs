@@ -8,7 +8,7 @@ const loader = process.argv[2];
 const { run } = await import(pathToFileURL(loader).href);
 const bytes = await readFile(loader.replace(/\.js$/, ".wasm"));
 const expected = await readFile(process.argv[3], "utf8");
-const env = { FWP_GC: "off", FWP_GC_STRESS: "0", FWP_GC_VERIFY: "0", FWP_REUSE_VERIFY: "0" };
+const env = {};
 const saved = [];
 async function invoke(onLine) {
   const output = [];
