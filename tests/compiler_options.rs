@@ -21,11 +21,7 @@ fn build_rejects_unknown_options_in_either_position() {
             }
             let output = command.output().unwrap();
             assert_eq!(output.status.code(), Some(2), "{output:?}");
-            let expected = if option == "--gc=banana" {
-                "--gc requires arc or tracing".to_string()
-            } else {
-                format!("unknown option `{option}`")
-            };
+            let expected = format!("unknown option `{option}`");
             assert!(
                 String::from_utf8_lossy(&output.stderr).contains(&expected),
                 "{output:?}"

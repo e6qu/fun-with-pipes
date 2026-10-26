@@ -178,9 +178,15 @@ fn positive_64_bit_counts_saturate_before_wasi_allocation_and_slice_bounds() {
         for opt in ["-O1", "-O2"] {
           for reuse in if label=="chunks" { &["0","1"][..] } else { &["1"][..] } {
             let wasm = tmp.join(format!("{label}{}-{reuse}.wasm", &opt[1..]));
-            let b = Command::new(fwp()).env_remove("FWP_NO_OPT").env("FWP_REUSE", reuse)
-                .args(["build", "--target", "wasm32-wasi", opt]).arg(&source).arg("-o").arg(&wasm).output().unwrap();
+            let cfile = wasm.with_extension("c");
+            let b = Command::new(fwp()).env_remove("FWP_NO_OPT")
+                .args(["build", "--target", "wasm32-wasi", "--emit-c", opt]).arg(&source).arg("-o").arg(&cfile).output().unwrap();
             assert!(b.status.success(), "{label} {opt}: {}", String::from_utf8_lossy(&b.stderr));
+            let mut code = std::fs::read_to_string(cfile).unwrap();
+            if *reuse == "0" {
+                code.insert_str(0, "#define FWP_NO_REUSE 1\n");
+            }
+            fwp::cgen::compile_for(&code, &wasm, opt, fwp::cgen::Target::Wasi).unwrap();
             assert_eq!(run_wasi(&wasm, &[]), expected, "{label} {opt}");
           }
         }

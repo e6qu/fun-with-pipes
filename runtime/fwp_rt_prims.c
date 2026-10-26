@@ -6,8 +6,8 @@ static char **fwp_argv;
 
 /* ------------------------------------------------------------------ lists */
 
-/* Private spines reverse in place. Allocate their cells as mutable so minor
- * collections rescan older cells after reversal introduces younger links. */
+/* Private list cells own their element and tail; reversal transfers those
+ * owners in place without acquiring aliases. */
 static V fwp_private_cons_owned(V field, V tail) {
     fwp_obj *cell = (fwp_obj *)fwp_alloc(sizeof(fwp_obj) + 2 * sizeof(V));
     cell->tag = 1; cell->n = 2;
@@ -218,9 +218,9 @@ static V fwp_value_finish(fwp_value_owner *owner, fwp_cleanup *cleanup) {
     owner->value = 0;
     return value;
 }
-/* Move uniquely owned String-list heads into the callback. Fresh output
- * nodes avoid untracked old-to-young links if a callback collects. String
- * leaves have no resource-close effects; other element types do not use this. */
+/* Move uniquely owned String-list heads into the callback and build an owned
+ * result. String leaves have no resource-close effects; other element types
+ * do not use this path. */
 static V fwp_p_map_strings_owned(V f, V xs, void (*element_drop)(V), void (*list_drop)(V)) {
     fwp_value_owner source = {xs, list_drop}; fwp_cleanup source_cleanup;
     fwp_value_protect(&source, &source_cleanup);
@@ -254,7 +254,7 @@ static V fwp_p_map_strings_owned(V f, V xs, void (*element_drop)(V), void (*list
 }
 
 /* Ternary conversion traverses borrowed input directly. List results own their
- * completed prefix, so allocation failure releases it without tracing scratch. */
+ * completed prefix, so allocation failure releases it without retaining temporary storage. */
 static V fwp_p_tint_trits(V v, int w, void (*drop_list)(V)) {
     int64_t x = (int64_t)v;
     fwp_value_owner owner = {0, drop_list};

@@ -1,4 +1,4 @@
-//! Execute the actual non-GC C path on the host; WASI runner evidence is separate.
+//! Exercise the WASI allocator on the host and separately on an actual WASI runner.
 #![cfg(any(target_os = "linux", target_os = "macos"))]
 use std::process::{Command, Output};
 fn checked(command: &mut Command) -> Output {
@@ -23,7 +23,7 @@ static void observe_file_free(void *p) {
 #undef free
 #define free observe_file_free
 "#;
-fn probe(free: &str) -> (fwp::cgen::TempDir, String, String) {
+fn probe(retain_storage: bool) -> (fwp::cgen::TempDir, String, String) {
     let dir = fwp::cgen::TempDir::new("fwp-wasm-resource-counts").unwrap();
     let src = dir.join("probe.fwp");
     std::fs::write(
@@ -39,13 +39,11 @@ main = "unused" | flip file.with other | ignore
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .args(["build"])
-            .env("FWP_FREE", free)
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&emitted),
     );
     let generated = std::fs::read_to_string(emitted).unwrap();
-    assert!(generated.contains("#define FWP_RESOURCE_OWNERS 1"));
     let pair = fwp::ir::MT::Record(vec![
         ("0".into(), fwp::ir::MT::con("std::File")),
         ("1".into(), fwp::ir::MT::con("std::File")),
@@ -57,6 +55,11 @@ main = "unused" | flip file.with other | ignore
         + marker.len();
     let drop_pair = generated[start..].split('(').next().unwrap();
     let generated = format!("{FILE_FREE_OBSERVER}\n{generated}");
+    let generated = if retain_storage {
+        format!("#define FWP_RESOURCE_NO_FREE 1\n{generated}")
+    } else {
+        generated
+    };
     let generated = generated.replace(
         "int main(int argc, char **argv)",
         "int program_main(int argc, char **argv)",
@@ -68,7 +71,9 @@ static int recover(void){return 1;}
 int main(int argc,char **argv) {
  if(argc!=2)return 30;struct stat descriptor_status;
  for(int cycle=0;cycle<128;cycle++) {
-  V h=fwp_p_file_open(fwp_cstr(argv[1]),0,0);
+  V path=fwp_rc_fresh(fwp_cstr(argv[1]));
+  V h=fwp_p_file_open(path,0,0);
+  fwp_rc_free_obj(path);
   fwp_file *file=(fwp_file *)(uintptr_t)h;int fd=fileno(file->f);
   probe_file = file; unsigned before_free = probe_file_frees;
   fwp_file_dup(h);
@@ -78,16 +83,13 @@ int main(int argc,char **argv) {
   if(file->refs!=2||fstat(fd,&descriptor_status)==-1)return 3;
   DROP_PAIR(pair);
   if(fstat(fd,&descriptor_status)!=-1||errno!=EBADF)return 4;
-#if defined(FWP_RESOURCE_OWNERS) && !defined(FWP_RESOURCE_NO_FREE)
+#ifndef FWP_RESOURCE_NO_FREE
   if(probe_file_frees != before_free + 1)return 29;
 #else
   if(probe_file_frees != before_free || file->refs)return 29;
 #endif
-#ifdef FWP_RESOURCE_OWNERS
   if(fwp_wasm_counts_live||fwp_rc_slot(pair))return 5;
-#endif
  }
-#ifdef FWP_RESOURCE_OWNERS
  /* Pointer-shaped scalars and constants never cause header reads or new counts. */
  V constant=(V)(uintptr_t)"constant";
  V values[]={0,1,4096,UINT64_MAX,constant};
@@ -105,7 +107,6 @@ int main(int argc,char **argv) {
  if(!failed||fwp_wasm_count(entry)!=UINT64_MAX)return 7;
  fwp_wasm_set_count(entry,1);fwp_rc_free_obj(v);
  if(fwp_wasm_counts_live)return 8;
-#endif
  return 0;
 }
 "#
@@ -113,18 +114,19 @@ int main(int argc,char **argv) {
     (dir, generated, fixture)
 }
 #[test]
-fn non_tracing_aggregate_counts_release_file_children() {
-    let (dir, generated, fixture) = probe("1");
+fn host_wasi_aggregate_counts_release_file_children() {
+    let (dir, generated, fixture) = probe(false);
+    let fixture = runtime_owners(fixture);
     let old = generated.replace(
-        "#define FWP_RESOURCE_OWNERS 1",
-        "#undef FWP_RESOURCE_OWNERS",
+        "static void fwp_file_drop(V h) {",
+        "static void fwp_file_drop(V h) { (void)h; return;",
     );
     assert_ne!(old, generated);
     let data = dir.join("data");
     std::fs::write(&data, "contents").unwrap();
     let exe = dir.join("probe");
     for opt in ["-O1", "-O2"] {
-        let leaked_file = generated.replace("    fwp_rc_free_obj(h);", "    fwp_rc_share(h);");
+        let leaked_file = generated.replace("    fwp_rc_resource_free_obj(h);", "    (void)h;");
         assert_ne!(leaked_file, generated);
         for (code, expected) in [(&old, 4), (&leaked_file, 29), (&generated, 0)] {
             fwp::cgen::compile_c(&format!("#define __wasm__ 1\n{code}\n{fixture}"), &exe, opt)
@@ -163,27 +165,23 @@ fn wasi_aggregate_counts_release_file_children() {
         eprintln!("skipping actual WASI evidence: toolchain unavailable");
         return;
     }
-    for free in ["1", "0"] {
-        let (dir, generated, fixture) = probe(free);
-        let fixture = if free == "0" {
-            runtime_owners(fixture)
-        } else {
-            fixture
-        };
+    for retain_storage in [false, true] {
+        let (dir, generated, fixture) = probe(retain_storage);
+        let fixture = runtime_owners(fixture);
         let old = generated.replace(
-            "#define FWP_RESOURCE_OWNERS 1",
-            "#undef FWP_RESOURCE_OWNERS",
+            "static void fwp_file_drop(V h) {",
+            "static void fwp_file_drop(V h) { (void)h; return;",
         );
         std::fs::write(dir.join("data"), "contents").unwrap();
         let wasm = dir.join("probe.wasm");
         let runner =
             std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/wasm/wasi-run.mjs");
-        let omitted = generated.replace("fwp_rc_resource_free_obj(v);", "fwp_rc_drop(v);");
+        let omitted = generated.replace("        fwp_rc_free_obj(v);", "        fwp_rc_drop(v);");
         let omitted_runtime =
             generated.replace("fwp_rc_resource_free_arr(value);", "fwp_rc_drop(value);");
-        let leaked_file = generated.replace("    fwp_rc_free_obj(h);", "    fwp_rc_share(h);");
+        let leaked_file = generated.replace("    fwp_rc_resource_free_obj(h);", "    (void)h;");
         assert_ne!(leaked_file, generated);
-        let cases = if free == "0" {
+        let cases = if retain_storage {
             vec![(&omitted, 5), (&omitted_runtime, 9), (&generated, 0)]
         } else {
             vec![(&old, 4), (&leaked_file, 29), (&generated, 0)]
@@ -208,7 +206,7 @@ fn wasi_aggregate_counts_release_file_children() {
                 assert_eq!(
                     out.status.code(),
                     Some(expected),
-                    "{opt}, WASI, free {free}: {}",
+                    "{opt}, WASI, retained storage {retain_storage}: {}",
                     String::from_utf8_lossy(&out.stderr)
                 );
             }
@@ -218,7 +216,9 @@ fn wasi_aggregate_counts_release_file_children() {
 
 fn runtime_owners(fixture: String) -> String {
     let owners = r#"
- V h=fwp_p_file_open(fwp_cstr(argv[1]),0,0);
+ V path=fwp_rc_fresh(fwp_cstr(argv[1]));
+ V h=fwp_p_file_open(path,0,0);
+ fwp_rc_free_obj(path);
  fwp_file *file=(fwp_file *)(uintptr_t)h;int fd=fileno(file->f);
  fwp_task *task=(fwp_task *)fwp_mem_alloc(sizeof *task);
  task->done=1;task->ownership=FWP_TASK_SHARED;task->has_result=1;task->result=h;task->result_drop=fwp_file_drop;
@@ -226,7 +226,8 @@ fn runtime_owners(fixture: String) -> String {
  if(file->refs!=1||fstat(fd,&descriptor_status)==-1)return 9;
  fwp_task_drop(cached);
  if(fstat(fd,&descriptor_status)!=-1||fwp_wasm_counts_live)return 9;
- h=fwp_p_file_open(fwp_cstr(argv[1]),0,0);file=(fwp_file *)(uintptr_t)h;fd=fileno(file->f);
+ path=fwp_rc_fresh(fwp_cstr(argv[1]));
+ h=fwp_p_file_open(path,0,0);fwp_rc_free_obj(path);file=(fwp_file *)(uintptr_t)h;fd=fileno(file->f);
  V channel=fwp_p_channel_make_owned(1,fwp_file_drop);
  fwp_chan *c=(fwp_chan *)(uintptr_t)channel;
  fwp_chan_grow(c);c->buf[0]=h;c->len=1;
@@ -242,14 +243,14 @@ fn runtime_owners(fixture: String) -> String {
 }
 
 #[test]
-fn disabled_free_disposes_resource_counts_without_freeing_storage() {
-    let (dir, generated, fixture) = probe("0");
+fn retained_storage_disposes_resource_counts_without_freeing_storage() {
+    let (dir, generated, fixture) = probe(true);
     let fixture = runtime_owners(fixture);
     assert!(generated.contains("#define FWP_RESOURCE_NO_FREE 1"));
     let data = dir.join("data");
     std::fs::write(&data, "contents").unwrap();
     let exe = dir.join("probe");
-    let omitted = generated.replace("fwp_rc_resource_free_obj(v);", "fwp_rc_drop(v);");
+    let omitted = generated.replace("        fwp_rc_free_obj(v);", "        fwp_rc_drop(v);");
     assert_ne!(omitted, generated);
     let omitted_runtime =
         generated.replace("fwp_rc_resource_free_arr(value);", "fwp_rc_drop(value);");
@@ -271,7 +272,7 @@ fn disabled_free_disposes_resource_counts_without_freeing_storage() {
 
 #[test]
 fn counted_wasm_storage_is_physically_reclaimed_after_the_last_alias() {
-    let (dir, generated, _) = probe("1");
+    let (dir, generated, _) = probe(false);
     // Observe the actual libc free, independently of the runtime's count table.
     // Omitting physical reclamation must fail even when all metadata is gone.
     let observer = r#"

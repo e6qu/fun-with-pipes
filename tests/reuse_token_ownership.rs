@@ -245,8 +245,8 @@ fn compiler_token_cleanup_preserves_reuse_and_stack_controls() {
 }
 
 #[test]
-fn bump_allocator_still_compiles_token_cleanup() {
-    let dir = Scratch::new("bump");
+fn forced_copies_preserve_token_cleanup() {
+    let dir = Scratch::new("copy");
     let src = dir.0.join("token.fwp");
     let cfile = dir.0.join("token.c");
     let exe = dir.0.join("token.exe");
@@ -268,7 +268,7 @@ fn bump_allocator_still_compiles_token_cleanup() {
             .env("FWP_VRET", "0"),
     );
     let emitted = std::fs::read_to_string(&cfile).unwrap();
-    fwp::cgen::compile_c(&format!("#define FWP_GC 0\n{emitted}"), &exe, "-O1").unwrap();
+    fwp::cgen::compile_c(&format!("#define FWP_NO_REUSE 1\n{emitted}"), &exe, "-O1").unwrap();
     assert_eq!(checked(&mut Command::new(&exe)).stdout, reference.stdout);
 }
 

@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** migrate WASI/resource-count tests, then finish the remaining
-measurement scripts and workflow audit before consolidated runner validation. Finish migration before
+**Next:** finish the native-memory corpus/job rename and remaining measurement
+script audit, then run the consolidated compiler and production gates on runners. Finish migration before
 integrated compiler and production validation on runners. The current source
 has not been built as a compiler. GC removal is not verified.
 
@@ -18,6 +18,16 @@ The merge has the same tree and the required one-line message. See
 compiler-abort report; its handoff points here. Old publisher scripts stay stopped.
 
 ## Latest completed edits; execution pending
+
+- WASI fixtures own their path strings and use actual file/pair/task/channel
+  destructors. They retain physical-free, retained-storage, wide-count and
+  scalar-address controls; actual wasm32 bounds tests use a real forced-copy
+  define. The host allocator-branch check passes; actual WASI integration is pending.
+- Removed the task-result tracing escape branch: owned spawn already supplies
+  the counted task and typed result destructor. An unowned gRPC response reader
+  now traps instead of silently retaining storage. Current-runtime task/transport
+  checks below cover these final runtime edits locally; integrated execution
+  remains pending.
 
 - Array construction/sort and copied-list tests now have matching counted artifact
   readers: eighteen binaries each for construction/sort and ten for list copies.
@@ -135,8 +145,8 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 ## Remaining migration, in order
 
 1. **Finish test mode removal.** A fresh audit still finds old controls in
-   WASI/resource-count checks. REST, benchmarks and array/list support modules
-   are migrated with their paired readers; integration remains pending. Review their
+   obsolete corpus/job names. WASI/resource-count, REST, benchmarks and array/list
+   support modules are migrated with their paired readers; integration remains pending. Review their
    actual assertions and paired C fixtures, not just environment names. The list/State/closure fixtures in
    `list_applicative_ownership` are migrated; integrated execution is pending.
    `unwind_cleanup` and typed-State reports are also migrated. Continue from a fresh source audit; do not reapply the stale candidates.
@@ -210,6 +220,8 @@ Scripts below live in `/private/tmp` unless a repository path is given.
 | `python3 fwp-check-memory-startup.py` | Migrated harness compiles at Rust O1 with warnings denied; three helper tests pass. Does not run generated memory servers. |
 | `python3 fwp-check-closure-failure.py` | Actual allocator, cleanup queue and trap code, Clang ARM64 O1/O2: normal release passes; capture trap 101, spill OOM 102 and omitted context reset 94. A recovery callback would fail with 93. Does not establish generated-program or other-target support. |
 | `python3 fwp-check-stream-owners.py` | Current runtime, Clang ARM64 O1/O2: eighteen normal size/read-mode cases end with zero charge and all messages freed; omitted cache drop exits 40 at both levels. This uses a minimal C library harness, not generated Rust/library integration or network calls. |
+| `python3 fwp-check-task-result-owner.py` | Current runtime, Clang ARM64 O1/O2: four runs verify fresh task results, independent await owners and early handle release. Final bytes return to zero; omitted result destruction fails 217. Minimal typed callback, not generated integration. |
+| `python3 fwp-check-wasi-owner-path.py` | Actual WASI allocator branch compiled on Clang ARM64 O1/O2: twelve file/pair/task/channel cases pass, including retained storage, overflow and omitted file/header/pair/runtime release controls. This uses a minimal typed pair destructor and does not establish generated or actual wasm32 execution. |
 | `python3 fwp-check-counted-descendants.py` | Current runtime, Clang ARM64 O1/O2: six runs verify 256 parent owners, independent child updates, interior count-slot mapping, 70 nested branches and final byte/metadata balance. Saturated counts and omitted child retain fail 1/2. C fixture, not generated integration. |
 | `python3 fwp-check-string-ledger.py` | Actual Rust ledger helper and current runtime, Clang ARM64 O1/O2: four runs preserve live strings and reject omitted ownership with 207 before string access. Minimal C harness, not the generated stack-match test. The harness initially named a nonexistent free helper; corrected to `fwp_rc_free_obj`. |
 | `python3 fwp-check-numeric-decoder.py` | Current runtime, Clang ARM64 O1/O2, packed/word arrays: twelve decoder runs pass. Normal and malformed input restore live bytes; omitted array cleanup fails 169, wire/count controls fail 154/155. Minimal C harness, not generated-program or other-target validation. |

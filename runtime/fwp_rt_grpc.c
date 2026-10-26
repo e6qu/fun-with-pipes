@@ -295,7 +295,7 @@ static void g_stream_drop(g_stream *s) {
  * Discard unread payloads, but keep the active-list owner until completion. */
 static void g_stream_reader_release(g_conn *c, g_stream *s) {
     uint8_t *slot = fwp_rc_slot(PTR(s));
-    if (!slot || !*slot) return; /* no reader count in an uncounted tracing graph */
+    if (!slot || !*slot) fwp_trap("internal: response reader has no owner");
     s->abandoned = 1;
     g_stream_discard_input(s);
     if (s->remote_end || s->reset || c->dead) g_unlink(c, s);

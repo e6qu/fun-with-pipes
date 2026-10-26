@@ -865,7 +865,7 @@ static V fwp_p_ws_parse(V maxv, V atv, V bufv, const fwp_desc *type) {
     fwp_str *r = (fwp_str *)fwp_alloc_leaf(sizeof(fwp_str) + len + 1);
     r->len = len;
     r->d[len] = 0;
-    b = (const unsigned char *)STR(bufv)->d + off; /* the collector does not move objects */
+    b = (const unsigned char *)STR(bufv)->d + off; /* the borrowed input remains live across allocation */
     if (masked)
         for (size_t i = 0; i < len; i++) r->d[i] = (char)(b[at + i] ^ key[i & 3]);
     else if (len)

@@ -3,8 +3,8 @@
  *
  *   - the pool behind malloc, calloc, realloc and free, which this file
  *     defines (Windows uses private names and an explicit decimal allocator);
- *   - the managed heap and its metadata (runtime/fwp_rt_heap.c). Explicit
- *     tracing mode collects within this fixed heap; checked ARC frees released values;
+ *   - the managed heap and its metadata (runtime/fwp_rt_heap.c), where counted
+ *     ownership releases storage for reuse within the fixed region;
  *   - on POSIX, main/task/worker stacks. Windows commits OS-managed stacks
  *     separately at startup and reuses fixed fiber and worker pools.
  * External DLL allocations and OS resources are outside this storage budget.

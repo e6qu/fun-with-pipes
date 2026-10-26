@@ -910,10 +910,9 @@ static void fwp_task_main(void) {
                 t->thunk = 0;
                 t->owns_thunk = 0;
                 V result = fwp_apply_owned(thunk, 1, &unit);
-                /* A counted handle owns the result; unknown shared boundaries
-                 * retain tracing. Scalars never pass through generic sharing. */
-                uint8_t *count = fwp_rc_slot(PTR(t));
-                t->result = t->result_drop && (!count || !*count) ? fwp_rc_shared(result) : result;
+                /* spawn_owned gives the task a counted handle and a typed
+                 * result destructor. Transfer the callback result to it. */
+                t->result = result;
             } else {
                 t->result = fwp_apply1(t->thunk, FWP_UNIT);
             }
