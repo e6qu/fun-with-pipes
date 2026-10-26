@@ -3534,10 +3534,9 @@ static V fwp_p_file_close(V h) {
     return FWP_UNIT;
 }
 
-/* Resource ownership is independent of tracing/count metadata. Explicit close
- * closes the stream; dropping the last value owner also closes it. Unshared
- * storage is released after removing finalizers; unproved shared storage
- * keeps its allocator lifetime. */
+/* File aliases use the resource's own wide count. Explicit close ends I/O;
+ * dropping the last alias also closes the stream, removes its library finalizer
+ * and releases the header and inline path. */
 static void fwp_file_dup(V h) {
     if (!h) return;
     fwp_file *file = (fwp_file *)(uintptr_t)h;

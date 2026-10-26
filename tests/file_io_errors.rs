@@ -48,22 +48,16 @@ fn read_failures_and_invalid_utf8_match_the_original_interpreter() {
                     "{}",
                     String::from_utf8_lossy(&built.stderr)
                 );
-                for poison in ["0", "1"] {
-                    let native = Command::new(&exe)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
-                    assert_eq!(
-                        native.status.code(),
-                        reference.status.code(),
-                        "{case}, handle {handle}, {opt}: {}",
-                        String::from_utf8_lossy(&native.stderr)
-                    );
-                    assert_eq!(native.stdout, reference.stdout);
-                    assert_eq!(native.stderr, reference.stderr);
-                }
+
+                let native = Command::new(&exe).output().unwrap();
+                assert_eq!(
+                    native.status.code(),
+                    reference.status.code(),
+                    "{case}, handle {handle}, {opt}: {}",
+                    String::from_utf8_lossy(&native.stderr)
+                );
+                assert_eq!(native.stdout, reference.stdout);
+                assert_eq!(native.stderr, reference.stderr);
             }
         }
     }
@@ -203,22 +197,15 @@ int main(int argc,char **argv){
             (&runtime, 0),
         ] {
             fwp::cgen::compile_c(&format!("{hooks}\n{code}\n{fixture}"), &exe, opt).unwrap();
-            for poison in ["0", "1"] {
-                std::fs::write(&data, "contents").unwrap();
-                let out = Command::new(&exe)
-                    .arg(&data)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert_eq!(
-                    out.status.code(),
-                    Some(expected),
-                    "{opt}: {}",
-                    String::from_utf8_lossy(&out.stderr)
-                );
-            }
+
+            std::fs::write(&data, "contents").unwrap();
+            let out = Command::new(&exe).arg(&data).output().unwrap();
+            assert_eq!(
+                out.status.code(),
+                Some(expected),
+                "{opt}: {}",
+                String::from_utf8_lossy(&out.stderr)
+            );
         }
     }
     std::fs::remove_dir_all(&dir).unwrap();

@@ -64,16 +64,21 @@ static int observe_handshake(SSL *ssl){if(mode==2)phase=1;return SSL_do_handshak
 static V target;
 static void client(void *arg,int stop){
  if(stop){cancelled++;return;}
- if(mode==1||mode==3){(void)fwp_p_tcp_connect(target,0);return;}
- V empty=fwp_cstr("");
- (void)fwp_p_tls_connect(empty,FWP_TRUE,empty,0,empty,empty,target,0);
+ if(mode==1||mode==3){V result=fwp_p_tcp_connect(target,0);fwp_sock_drop(result);return;}
+ V empty=fwp_rc_fresh(fwp_cstr(""));
+ fwp_value_owner owner={empty,fwp_rc_free_obj};fwp_cleanup cleanup;fwp_value_protect(&owner,&cleanup);
+ V result=fwp_p_tls_connect(empty,FWP_TRUE,empty,0,empty,empty,target,0);
+ fwp_sock_drop(result);fwp_value_finish(&owner,&cleanup);fwp_rc_free_obj(empty);
 }
 static int probe(void){
- fwp_lib_init();V tick=fwp_record(1,(V[]){1000000});
+ fwp_lib_init();fwp_heap_start();size_t baseline=fwp_heap.live;
+ V tick=fwp_rc_fresh(fwp_record(1,(V[]){1000000}));
+ V bind_address=fwp_rc_fresh(fwp_cstr("127.0.0.1:0"));
  for(int test=1;test<=4;test++){
-  mode=0;V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);target=fwp_p_local_addr(listener);
+  mode=0;V listener=fwp_p_tcp_listen(bind_address,0);target=fwp_rc_fresh(fwp_p_local_addr(listener));
   mode=test;phase=res_freed=ssl_freed=cancelled=0;watched_fd=-1;watched_res=0;
   fwp_task *task=fwp_spawn_task(0,client,0,0,0);
+  fwp_rc_fresh(PTR(task));fwp_rc_dup(PTR(task)); /* scheduler and fixture */
   for(int i=0;i<30&&!phase;i++)fwp_p_task_sleep(tick);
   if(!phase||task->done||watched_fd<0)return 31;
   fwp_p_task_cancel(PTR(task));fwp_await(task);
@@ -81,19 +86,24 @@ static int probe(void){
   if(fcntl(watched_fd,F_GETFD)!=-1||errno!=EBADF)return 1;
   if(res_freed!=1)return 2;
   if(ssl_freed!=(mode==2?1:0))return 3;
-  mode=0;fwp_p_tcp_stop(listener);
+  mode=0;fwp_p_tcp_stop(listener);fwp_sock_drop(listener);fwp_rc_free_obj(target);
+  fwp_free_zombie();fwp_task_drop(PTR(task));
  }
- mode=0;V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);target=fwp_p_local_addr(listener);
+ mode=0;V listener=fwp_p_tcp_listen(bind_address,0);target=fwp_rc_fresh(fwp_p_local_addr(listener));
  mode=5;res_freed=ssl_freed=0;watched_res=0;V result=fwp_p_tcp_connect(target,0);
  if(fwp_cleanups||res_freed!=1||fcntl(SOCK(result)->fd,F_GETFD)==-1)return 4;
- fwp_p_sock_close(result);fwp_p_sock_close(result);mode=0;fwp_p_tcp_stop(listener);
+ fwp_p_sock_close(result);fwp_p_sock_close(result);fwp_sock_drop(result);
+ mode=0;fwp_p_tcp_stop(listener);fwp_sock_drop(listener);
  // Refusal also releases the resolver and failed descriptor before the error.
  mode=5;res_freed=0;watched_res=0;watched_fd=-1;
  fwp_handler h={0};h.prev=fwp_handlers;h.cleanup=fwp_cleanups;h.state_depth=fwp_state_len;fwp_handlers=&h;
  if(!setjmp(h.jb)){(void)fwp_p_tcp_connect(target,0);return 5;}
  fwp_handlers=h.prev;if(res_freed!=1||fwp_cleanups!=h.cleanup||watched_fd<0||fcntl(watched_fd,F_GETFD)!=-1||errno!=EBADF)return 6;
  mode=0;
- return 0;
+ fwp_rc_free_obj(OBJ(h.value)->f[0]);fwp_rc_free_obj(OBJ(h.value)->f[1]);fwp_rc_free_obj(h.value);
+ fwp_rc_free_obj(target);fwp_rc_free_obj(bind_address);fwp_rc_free_obj(tick);
+ fwp_library_tasks_finish();if(fwp_heap.live!=baseline)return 7;
+ fwp_lib_finish();return 0;
 }
 int main(void){int status=probe();if(status)_Exit(status);return 0;}
 "#;
@@ -102,18 +112,14 @@ int main(void){int status=probe();if(status)_Exit(status);return 0;}
     let exe = dir.join("probe");
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = Command::new(&exe)
-                .env("FWP_REUSE_VERIFY", poison)
-                .output()
-                .unwrap();
-            assert!(
-                out.status.success(),
-                "{opt}, poison {poison}: {:?}: {}",
-                out.status.code(),
-                String::from_utf8_lossy(&out.stderr)
-            );
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(
+            out.status.success(),
+            "{opt}: {:?}: {}",
+            out.status.code(),
+            String::from_utf8_lossy(&out.stderr)
+        );
     }
     for (needle,replacement,expected) in [
         ("    fwp_cleanup_push(&cleanup, fwp_connect_finish, &owner);", "    /* omit pending connect guard */",1),

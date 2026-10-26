@@ -27,30 +27,27 @@ int main(void){
  fwp_lib_init();fwp_heap_start();
  FILE *keep=tmpfile();if(!keep)return 22;int keep_fd=fileno(keep);
  retained=fwp_file_value(keep,"retained");
- int poison=getenv("FWP_REUSE_VERIFY")&&strcmp(getenv("FWP_REUSE_VERIFY"),"0");
  for(int shared=0;shared<2;shared++)for(int k=0;k<64;k++){
   FILE *stream=tmpfile();if(!stream)return 20;int fd=fileno(stream);
   root=fwp_file_value(stream,"x");fwp_file *h=(fwp_file *)(uintptr_t)root;
   if(fwp_heap.nfins!=2)return 1;
-  if(shared)fwp_rc_share(root);
+  if(shared)fwp_file_dup(root);
   for(int i=0;i<300;i++)fwp_file_dup(root);
   for(int i=0;i<300;i++)fwp_file_drop(root);
-  if(h->refs!=1||fwp_heap.nfins!=2)return 2;
+  if(h->refs!=(uint64_t)(shared?2:1)||fwp_heap.nfins!=2)return 2;
+  if(shared){fwp_file_drop(root);if(h->refs!=1||!h->f)return 2;}
   double before=fwp_heap.freed;V old=root;
   fwp_file_drop(root);root=0;
   struct stat status;if(fstat(fd,&status)!=-1||errno!=EBADF)return 3;
   if(fwp_heap.nfins!=1)_Exit(4); /* Stop before a stale atexit finalizer runs. */
-  if(shared||DISABLED_FREE||poison){
+  if(DISABLED_FREE){
    if(fwp_heap.freed!=before||h->refs||h->f)return 5;
-   if(poison&&!shared&&!DISABLED_FREE&&h->path[0])return 6;
   }else{
    if(fwp_heap.freed<=before)return 7;
-   /* Reuse with tracing disabled: no intervening heap allocation. */
-   if(!strcmp(getenv("FWP_GC"),"off")){
-    void *fresh=fwp_alloc_leaf(sizeof(fwp_file)+2);
-    if(fresh!=(void *)(uintptr_t)old)return 8;
-    memset(fresh,0,sizeof(fwp_file)+2);
-   }
+   /* No intervening heap allocation: the released slot is reusable. */
+   void *fresh=fwp_alloc_leaf(sizeof(fwp_file)+2);
+   if(fresh!=(void *)(uintptr_t)old)return 8;
+   memset(fresh,0,sizeof(fwp_file)+2);fwp_mem_free(fresh);
   }
  }
  /* Finalization must close a genuinely retained stream, not a reclaimed one. */
@@ -72,23 +69,14 @@ int main(void){
                 "#define DISABLED_FREE 0\n"
             };
             fwp::cgen::compile_c(&format!("{prefix}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-            for gc in ["off", "on"] {
-                for poison in ["0", "1"] {
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", gc)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
-                    assert!(
-                        out.status.success(),
-                        "{opt}, disabled={disabled}, gc={gc}, poison={poison}: {:?}: {}",
-                        out.status.code(),
-                        String::from_utf8_lossy(&out.stderr)
-                    );
-                }
-            }
+
+            let out = Command::new(&exe).output().unwrap();
+            assert!(
+                out.status.success(),
+                "{opt}, disabled={disabled}: {:?}: {}",
+                out.status.code(),
+                String::from_utf8_lossy(&out.stderr)
+            );
         }
         for (needle, replacement, expected) in [
             (
@@ -97,7 +85,7 @@ int main(void){
                 4,
             ),
             (
-                "    fwp_mem_free(file);",
+                "    fwp_rc_resource_free_obj(h);",
                 "    /* omit storage disposal */",
                 7,
             ),
@@ -110,11 +98,7 @@ int main(void){
                 opt,
             )
             .unwrap();
-            let out = Command::new(&exe)
-                .env("FWP_GC", "off")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
+            let out = Command::new(&exe).output().unwrap();
             assert_eq!(
                 out.status.code(),
                 Some(expected),
@@ -211,7 +195,7 @@ int main(int argc, char **argv) {
         ),
         (
             "missing-storage-free",
-            "    fwp_mem_free(file);",
+            "    fwp_rc_resource_free_obj(h);",
             "    /* omit physical storage free */",
             212,
         ),
@@ -225,15 +209,7 @@ int main(int argc, char **argv) {
             let exe = dir.join(format!("{name}{opt}.exe"));
             fwp::cgen::compile_c(&code, &exe, opt).unwrap();
             for rounds in [8, 1024] {
-                let out = Command::new(&exe)
-                    .arg(rounds.to_string())
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
+                let out = Command::new(&exe).arg(rounds.to_string()).output().unwrap();
                 record_probe::save(
                     "file_storage_disposal",
                     &format!("arc-{name}{opt}-{rounds}"),

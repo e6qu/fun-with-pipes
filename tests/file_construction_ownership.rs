@@ -50,6 +50,8 @@ static FILE *observe_wide_open(const wchar_t *, const wchar_t *);
 #define _wfopen observe_wide_open
 #endif
 static void *observed_handle;
+static unsigned handle_frees;
+static void observe_handle_free(void *);
 static FILE *observe_open(const char *, const char *);
 static int observe_close(FILE *);
 #define fopen observe_open
@@ -81,30 +83,48 @@ static int observed_stream_closed(void) {
  return fcntl(watched_fd,F_GETFD)==-1 && errno==EBADF;
 #endif
 }
+static void observe_handle_free(void *p) {
+ if(p&&p==observed_handle){if(((fwp_file *)p)->f)_Exit(3);handle_frees++;}
+}
 static int observe_close(FILE *f) {if((uintptr_t)f==watched_stream)closes++;return fclose(f);}
 static jmp_buf construction_failure;
 static int recover_construction(void){return 1;}
-static V file_callback(V *a){callbacks++;if(fault==4)fwp_trap("file callback failure");return fwp_tuple2(7,a[0]);}
-static const fwp_fninfo callbacks_table[]={{1,file_callback,"file callback",0}};
+static V file_callback(V *a){
+ fwp_value_owner input={a[0],fwp_file_drop};fwp_cleanup cleanup;
+ fwp_value_protect(&input,&cleanup);callbacks++;
+ if(fault==4)fwp_trap("file callback failure");
+ V result=fwp_rc_fresh(fwp_tuple2(7,a[0]));
+ fwp_value_finish(&input,&cleanup);return result;
+}
+static void drop_pair(V pair){fwp_file_drop(OBJ(pair)->f[1]);fwp_rc_free_obj(pair);}
+static void file_captures(V fn,int duplicate){(void)fn;(void)duplicate;}
+static void file_arguments(V *args,uint32_t start,uint32_t count){
+ if(start>1||count>1-start)_Exit(32);for(uint32_t i=0;i<count;i++)fwp_file_dup(args[i]);
+}
+static void drop_file_arguments(V *args,uint32_t start,uint32_t count){
+ if(start>1||count>1-start)_Exit(32);for(uint32_t i=0;i<count;i++)fwp_file_drop(args[i]);
+}
+static const fwp_owned_fninfo file_owned={file_callback,file_captures,file_arguments,drop_file_arguments};
+static const fwp_fninfo callbacks_table[]={{1,file_callback,"file callback",&file_owned}};
 static fwp_clo callback={0,0};
 int main(int argc,char **argv){
- if(argc!=2)return 30;fwp_lib_init();fwp_heap_start();if(!fwp_heap.armed)return 31;
+ if(argc!=2)return 30;fwp_lib_init();fwp_heap_start();if(!fwp_heap.base)return 31;
  fwp_fns=callbacks_table;
  for(volatile int create=0;create<2;create++)for(volatile int scoped=0;scoped<2;scoped++)for(volatile int mode=0;mode<(scoped?5:4);mode++){
-  // A traced fixture explicitly roots the path and any failed handle.
-  fault=0;closes=0;watched_fd=-1;watched_stream=0;observed_handle=0;callbacks=0;fwp_fns=callbacks_table;
-  V path=fwp_cstr(argv[1]);fault=mode;
+  fault=0;closes=0;watched_fd=-1;watched_stream=0;observed_handle=0;handle_frees=0;callbacks=0;fwp_fns=callbacks_table;
+  V path=fwp_rc_fresh(fwp_cstr(argv[1]));fault=mode;
   fwp_trap_recover=recover_construction;fwp_trap_jb=&construction_failure;fwp_trap_cleanup=0;
   if(!setjmp(construction_failure)){
-   V result=scoped?fwp_p_file_with(path,PTR(&callback),0):fwp_p_file_open(path,create,0);
+   V result=scoped?fwp_p_file_with_owned(path,PTR(&callback),0,drop_pair,0):fwp_p_file_open(path,create,0);
    if(mode)return 1;
    if(scoped){if(result!=7||callbacks!=1)return 6;}
-   else {if(closes)return 7;fwp_p_file_close(result);fwp_p_file_close(result);}
-  }else if(!mode)return 8;
+   else {if(closes)return 7;fwp_p_file_close(result);fwp_p_file_close(result);fwp_file_drop(result);}
+  }else if(!mode){fprintf(stderr,"unexpected trap: %s\n",fwp_trap_msg);return 8;}
   fault=0;fwp_trap_recover=0;fwp_trap_jb=0;fwp_handlers=0;
   if(fwp_cleanups||closes!=1||watched_fd<0||!observed_stream_closed())return 2;
-  // Inspect the header only while storage was retained by poison mode.
-  if(observed_handle&&getenv("FWP_REUSE_VERIFY")&&strcmp(getenv("FWP_REUSE_VERIFY"),"0")&&((fwp_file *)observed_handle)->f)_Exit(3);
+  // Observe release before storage returns to the allocator; never read it later.
+  if(observed_handle&&handle_frees!=1)_Exit(3);
+  fwp_rc_free_obj(path);
   if(mode&&mode<4&&callbacks)return 4;
   if(mode==4&&callbacks!=1)return 5;
   // A failed but registered handle must not close the stream again.
@@ -126,7 +146,12 @@ int main(int argc,char **argv){
         .replace("    fwp_heap_finalizer(h, fwp_file_final);",
             "    if(fault==3)fwp_trap(\"file finalizer registration\");\n    fwp_heap_finalizer(h, fwp_file_final);");
     assert_ne!(value, injected);
-    let runtime = generated.replacen(value, &injected, 1);
+    let instrument = |code: String| {
+        let free = "static void fwp_mem_free(void *p) {\n";
+        assert_eq!(code.matches(free).count(), 1);
+        code.replace(free, &format!("{free}    observe_handle_free(p);\n"))
+    };
+    let runtime = instrument(generated.replacen(value, &injected, 1));
     let dir =
         Scratch(std::env::temp_dir().join(format!("fwp-file-construction-{}", std::process::id())));
     std::fs::create_dir_all(&dir.0).unwrap();
@@ -145,16 +170,10 @@ int main(int argc,char **argv){
     assert_ne!(raw_only, injected);
     for opt in ["-O1", "-O2"] {
         for (control, expected) in [(&no_scope, 2), (&raw_only, 3)] {
-            let broken = generated.replacen(value, control, 1);
+            let broken = instrument(generated.replacen(value, control, 1));
             fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
             std::fs::write(dir.0.join("data"), "").unwrap();
-            let out = Command::new(&exe)
-                .arg(dir.0.join("data"))
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1")
-                .output()
-                .unwrap();
+            let out = Command::new(&exe).arg(dir.0.join("data")).output().unwrap();
             assert_eq!(
                 out.status.code(),
                 Some(expected),
@@ -164,14 +183,7 @@ int main(int argc,char **argv){
         }
         std::fs::write(dir.0.join("data"), "").unwrap();
         fwp::cgen::compile_c(&format!("{hooks}\n{runtime}\n{fixture}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            checked(
-                Command::new(&exe)
-                    .arg(dir.0.join("data"))
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-        }
+
+        checked(Command::new(&exe).arg(dir.0.join("data")));
     }
 }

@@ -80,35 +80,6 @@ main = (64, "{}") | loop step | const "discarded" | print
         32,
     ));
     assert_eq!(reference.stdout, b"discarded\n");
-    for opt in ["-O1", "-O2"] {
-        for reuse in ["0", "1"] {
-            for free in ["0", "1"] {
-                let exe = dir.0.join(format!("{opt}-{reuse}-{free}"));
-                checked(
-                    Command::new(fwp)
-                        .args(["build"])
-                        .arg(&src)
-                        .args([opt, "-o"])
-                        .arg(&exe)
-                        .env("FWP_REUSE", reuse)
-                        .env("FWP_FREE", free),
-                );
-                for gc in ["off", "on"] {
-                    for poison in ["0", "1"] {
-                        let native = checked(limit_descriptors(
-                            Command::new(&exe)
-                                .env("FWP_GC", gc)
-                                .env("FWP_GC_STRESS", "1")
-                                .env("FWP_GC_VERIFY", "1")
-                                .env("FWP_REUSE_VERIFY", poison),
-                            32,
-                        ));
-                        assert_eq!(native.stdout, reference.stdout);
-                    }
-                }
-            }
-        }
-    }
     let emitted = dir.0.join("discard.c");
     checked(
         Command::new(fwp)
@@ -118,6 +89,23 @@ main = (64, "{}") | loop step | const "discarded" | print
             .arg(&emitted),
     );
     let c = std::fs::read_to_string(emitted).unwrap();
+    for opt in ["-O1", "-O2"] {
+        for copy in [false, true] {
+            for retain_storage in [false, true] {
+                let mut code = c.clone();
+                if copy {
+                    code = format!("#define FWP_NO_REUSE 1\n{code}");
+                }
+                if retain_storage {
+                    code = format!("#define FWP_RESOURCE_NO_FREE 1\n{code}");
+                }
+                let exe = dir.0.join(format!("{opt}-{copy}-{retain_storage}"));
+                fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+                let native = checked(limit_descriptors(&mut Command::new(&exe), 32));
+                assert_eq!(native.stdout, reference.stdout);
+            }
+        }
+    }
     let mut omitted = String::new();
     let mut removed = 0;
     for line in c.lines() {
@@ -135,7 +123,7 @@ main = (64, "{}") | loop step | const "discarded" | print
     for opt in ["-O1", "-O2"] {
         let exe = dir.0.join("no-frame-drop");
         fwp::cgen::compile_c(&omitted, &exe, opt).unwrap();
-        let out = limit_descriptors(Command::new(&exe).env("FWP_GC", "off"), 32)
+        let out = limit_descriptors(&mut Command::new(&exe), 32)
             .output()
             .unwrap();
         assert_eq!(out.status.code(), Some(1));

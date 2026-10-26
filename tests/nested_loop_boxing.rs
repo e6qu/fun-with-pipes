@@ -1,5 +1,7 @@
 //! Rebuilt nested loop records stay flattened and box with exact unwind owners.
 use std::process::Command;
+#[path = "support/ownership_ledger.rs"]
+mod ownership_ledger;
 fn checked(command: &mut Command) -> std::process::Output {
     let out = command.output().unwrap();
     assert!(
@@ -91,7 +93,7 @@ main = [task.yield (), (1, ("left", "right", 17), "tail") | loop step | echo] | 
     let probe=r#"
 static volatile V first,second,word,tail,inner_box,state_box;
 static jmp_buf failure;static int recover(void){return 1;}
-static int dead(V v){return fwp_reuse_verify?STR(v)->len==0:*fwp_rc_slot(v)==0;}
+static int dead(V v){return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)];}
 static void drop_leaf(V v){if(fwp_rc_release_last(v))fwp_rc_free_obj(v);}
 int main(void){
  fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
@@ -135,7 +137,8 @@ int main(void){
             "fwp_rc_dup(st[2]);",
             "if (fault==2) fwp_trap(\"nested retain\"); fwp_rc_dup(st[2]);",
         );
-    let runtime=emitted.replacen(step,&injected,1).replace("typedef uint64_t V;","typedef uint64_t V;\nstatic int fault,current_dup; static void fwp_trap(const char *msg);")
+    let observed = ownership_ledger::instrument_native(&emitted, 4096);
+    let runtime=observed.replacen(step,&injected,1).replace("typedef uint64_t V;","typedef uint64_t V;\nstatic int fault,current_dup; static void fwp_trap(const char *msg);")
         .replace("static V fwp_data(uint32_t tag, uint32_t n, const V *f) {","static V fwp_data(uint32_t tag, uint32_t n, const V *f) { if(fault==3 && n==3)fwp_trap(\"nested allocation\");")
         .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
     // These are the original state, progressive retains, and completed
@@ -176,12 +179,7 @@ int main(void){
     for opt in ["-O1", "-O2"] {
         for control in &controls {
             fwp::cgen::compile_c(&format!("{control}\n{probe}"), &exe, opt).unwrap();
-            let out = Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1")
-                .output()
-                .unwrap();
+            let out = Command::new(&exe).output().unwrap();
             assert_eq!(
                 out.status.code(),
                 Some(2),
@@ -191,21 +189,11 @@ int main(void){
         }
 
         fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-        }
+
+        checked(&mut Command::new(&exe));
+
         fwp::cgen::compile_c(&emitted, &exe, opt).unwrap();
-        let native = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
+        let native = checked(&mut Command::new(&exe));
         assert_eq!(native.stdout, reference.stdout);
     }
     std::fs::remove_dir_all(dir).unwrap();
