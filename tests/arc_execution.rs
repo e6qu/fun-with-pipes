@@ -336,6 +336,22 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
         // examples such as an unscoped derivative tape. Check both IR forms so
         // optimization cannot hide the missing ownership contract.
         for raw in [false, true] {
+            if !matches!(name, "custom-native" | "foreign-callback") {
+                let interpreted = Command::new(env!("CARGO_BIN_EXE_fwp"))
+                    .env("FWP_NO_OPT", if raw { "1" } else { "0" })
+                    .args(["run", "--interp"])
+                    .arg(&input)
+                    .output()
+                    .unwrap();
+                assert!(!interpreted.status.success(), "{name}: {interpreted:?}");
+                assert!(interpreted.stdout.is_empty(), "{name}: {interpreted:?}");
+                let error = String::from_utf8_lossy(&interpreted.stderr);
+                assert!(
+                    error.contains("ownership:") && error.contains(reason),
+                    "{name}: {error}"
+                );
+            }
+
             for mode in ["tracing", "arc"] {
                 let cfile = dir.join(format!("{name}-{raw}-{mode}.c"));
                 let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
@@ -364,7 +380,7 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
                 assert!(!cfile.exists(), "rejected {name} emitted C");
                 let error = String::from_utf8_lossy(&out.stderr);
                 assert!(
-                    error.contains("--gc arc") && error.contains(reason),
+                    error.contains("ownership:") && error.contains(reason),
                     "{name} raw={raw}: {error}"
                 );
                 if name.contains("channel") {

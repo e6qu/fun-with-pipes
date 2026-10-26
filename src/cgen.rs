@@ -10016,8 +10016,7 @@ fn bytes_literal(b: &[u8]) -> String {
 /// exports, functions named by the driver, served methods, and `extra`):
 /// after inlining, most instances of small combinators are reached by
 /// nothing, and no C is generated for them.
-fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
-    let mut live = vec![false; prog.funcs.len()];
+fn live_functions(prog: &Program, extra: &[FuncId]) -> Result<Vec<bool>, String> {
     let mut work: Vec<FuncId> = extra.to_vec();
     work.extend(prog.main);
     work.extend(prog.tests.iter().map(|(_, f)| *f));
@@ -10029,72 +10028,7 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
             work.extend(m.iter_fn);
         }
     }
-    // compile-time constants may hold closures
-    fn value_refs(v: &crate::value::Value, out: &mut Vec<FuncId>) {
-        match v {
-            Value::Closure(c) => {
-                out.push(c.func);
-                c.args.iter().for_each(|x| value_refs(x, out));
-            }
-            Value::Data(_, fs) | Value::Record(fs) => fs.iter().for_each(|x| value_refs(x, out)),
-            Value::Array(xs) => xs.iter().for_each(|x| value_refs(x, out)),
-            Value::Set(values) => values.iter().for_each(|value| value_refs(value, out)),
-            Value::Map(m) => m.iter().for_each(|(k, x)| {
-                value_refs(k, out);
-                value_refs(x, out);
-            }),
-            _ => {}
-        }
-    }
-    fn refs(e: &Expr, out: &mut Vec<FuncId>) {
-        match e {
-            Expr::Trace(_, b)
-            | Expr::Dup(_, b)
-            | Expr::Drop(_, b)
-            | Expr::ResourceRegion { body: b, .. } => refs(b, out),
-            Expr::BorrowGlobal(_, global, body) => {
-                out.push(*global);
-                refs(body, out);
-            }
-            Expr::Local(_) => {}
-            Expr::Const(v) => value_refs(v, out),
-            Expr::Func(f) => out.push(*f),
-            Expr::Call(f, a) => {
-                out.push(*f);
-                a.iter().for_each(|x| refs(x, out));
-            }
-            Expr::Apply(f, a) => {
-                refs(f, out);
-                a.iter().for_each(|x| refs(x, out));
-            }
-            Expr::Construct(_, a) | Expr::Record(a) => a.iter().for_each(|x| refs(x, out)),
-            Expr::Field(r, _) => refs(r, out),
-            Expr::SetFields(r, s) => {
-                refs(r, out);
-                s.iter().for_each(|(_, x)| refs(x, out));
-            }
-            Expr::Let(_, v, b) => {
-                refs(v, out);
-                refs(b, out);
-            }
-            Expr::Match(sc, arms) => {
-                refs(sc, out);
-                arms.iter().for_each(|(_, b)| refs(b, out));
-            }
-        }
-    }
-    while let Some(f) = work.pop() {
-        if f >= live.len() || live[f] {
-            continue;
-        }
-        live[f] = true;
-        match &prog.funcs[f].body {
-            Body::Expr(e) => refs(e, &mut work),
-            Body::Remote(r) => work.extend(r.iter_fn),
-            _ => {}
-        }
-    }
-    live
+    crate::ir::reachable_functions(prog, &work)
 }
 
 fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
@@ -10126,7 +10060,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         Mode::Exec(commands, _) => commands.iter().map(|c| c.fid).collect(),
         _ => Vec::new(),
     };
-    let live = live_functions(prog, &roots);
+    let live = live_functions(prog, &roots)?;
     // the calling conventions follow the bodies as they are; with counted
     // references, the code is generated from the counted bodies
     let mut abis: Vec<Option<Abi>> = prog.funcs.iter().map(|f| abi_of(prog, f)).collect();
@@ -10191,7 +10125,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
                         || !crate::ffi::copied_result(result)
                     {
                         return Err(format!(
-                            "--gc arc: exported function `{name}` requires copied C inputs and scalar, manual-pointer or owned-string results; callbacks have no retained host lifetime"
+                            "ownership: exported function `{name}` requires copied C inputs and scalar, manual-pointer or owned-string results; callbacks have no retained host lifetime"
                         ));
                     }
                 }

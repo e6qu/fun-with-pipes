@@ -251,19 +251,17 @@ fn raw_ad_cannot_escape_scope_proof_through_callbacks_or_arguments() {
     ] {
         let source_path = dir.join(format!("{name}.fwp"));
         std::fs::write(&source_path, source).unwrap();
-        let result = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "arc", "--emit-c"])
-            .arg(&source_path)
-            .arg("-o")
-            .arg(dir.join("rejected.c"))
-            .output()
-            .unwrap();
-        assert!(!result.status.success(), "{name}");
-        let error = String::from_utf8_lossy(&result.stderr);
-        assert!(
-            error.contains("tracing-free lifetime policy"),
-            "{name}: {error}"
-        );
+        for no_opt in ["0", "1"] {
+            for args in [vec!["run", "--interp"], vec!["build", "--gc", "arc", "--emit-c"]] {
+                let result = Command::new(env!("CARGO_BIN_EXE_fwp"))
+                    .env("FWP_NO_OPT", no_opt).args(&args).arg(&source_path)
+                    .output().unwrap();
+                assert!(!result.status.success(), "{name} {no_opt} {args:?}");
+                assert!(result.stdout.is_empty(), "{result:?}");
+                let error = String::from_utf8_lossy(&result.stderr);
+                assert!(error.contains("tracing-free lifetime policy"), "{name}: {error}");
+            }
+        }
     }
     std::fs::remove_dir_all(dir).unwrap();
 }

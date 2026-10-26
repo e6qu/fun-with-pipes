@@ -6,6 +6,34 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Weak channels and retained callbacks (PR #215)
+
+Weak channels observe a queue without keeping it alive. Retained C callbacks
+own an explicit registration, preserve results and finish active calls before
+releasing captures. Cleanup checks cover weak metadata, count overflow, files,
+sockets, real library unload and WASI allocation tables. Independent fault
+controls detect omitted or premature cleanup. [Memory diagnostics](ownership-diagnostics.md)
+records the checks that let G5 delete tracing without losing safety coverage.
+
+All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40221722197)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40221722121)
+passed at `bd77d65f58d8c5117ea678cb86cf15fbcf9231f7`. The user merged
+[PR #215](https://github.com/e6qu/fun-with-pipes/pull/215) as
+`4e7b74be8e11634fac9309e67cb4efccfb34d360`, with an identical tree.
+G3/G4 are complete; tracing still exists.
+
+## Ownership checks without retaining freed objects (PR #214)
+
+A test-only address ledger checks live allocations without keeping freed storage
+around. It catches invalid frees, operations on dead owners and unsafe reuse;
+independent byte accounting catches a free that fails to return storage.
+
+All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40187394961)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40187394939)
+passed at `1591ec72553a1168bc52d5745d1865059c15fede`. Squash merge
+`6ee33396459986a0fa08464b182d23fd2fe6c136` has the same tree.
+[PR #214](https://github.com/e6qu/fun-with-pipes/pull/214).
+
 ## Scoped subscriber lifetimes (PR #213)
 
 [Lesson 24](tutorials/24-subscriptions/README.md) uses an independently owned task

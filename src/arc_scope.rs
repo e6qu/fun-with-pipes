@@ -220,23 +220,23 @@ fn queued_capture_type(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> R
                 "?" | "std::H2Stream" | "std::GrpcCell" | "std::File"
             ) {
                 return Err(format!(
-                    "--gc arc: cannot prove a queued function's captured `{ty}` owner; queue immutable data or keep this owner outside the callback"
+                    "ownership: cannot prove a queued function's captured `{ty}` owner; queue immutable data or keep this owner outside the callback"
                 ));
             }
             if name == "std::Task" && args.len() != 1 {
-                return Err(format!("--gc arc: cannot prove a queued function's captured `{ty}` without its result type"));
+                return Err(format!("ownership: cannot prove a queued function's captured `{ty}` without its result type"));
             }
             if name == "std::Channel" {
                 let [payload] = args.as_slice() else {
                     return Err(format!(
-                        "--gc arc: captured `{ty}` requires a channel payload type"
+                        "ownership: captured `{ty}` requires a channel payload type"
                     ));
                 };
                 if has_functions(program, payload, &mut BTreeSet::new()) {
-                    return Err(format!("--gc arc: cannot prove a queued function's captured function-bearing channel `{ty}`"));
+                    return Err(format!("ownership: cannot prove a queued function's captured function-bearing channel `{ty}`"));
                 }
                 if has_tasks(program, payload, &mut BTreeSet::new()) {
-                    return Err(format!("--gc arc: cannot prove a queued owner's captured task-bearing channel `{ty}`"));
+                    return Err(format!("ownership: cannot prove a queued owner's captured task-bearing channel `{ty}`"));
                 }
             }
             for arg in args {
@@ -284,7 +284,7 @@ impl Proof<'_> {
 
     fn captured_queues(&self, values: &Targets, seen: &mut BTreeSet<Origin>) -> Result<(), String> {
         if values.contains(&Origin::UnknownQueue) || values.contains(&Origin::UnknownOwnerQueue) {
-            return Err("--gc arc: cannot prove the producer of a queued function's captured channel; use a data queue from channel.make or a proved gRPC response channel".into());
+            return Err("ownership: cannot prove the producer of a queued function's captured channel; use a data queue from channel.make or a proved gRPC response channel".into());
         }
         for origin in values {
             let Some(channel) = self.queue_type(*origin) else {
@@ -307,7 +307,7 @@ impl Proof<'_> {
     fn queued_targets(&self, targets: &Targets, seen: &mut BTreeSet<Origin>) -> Result<(), String> {
         for &closure in targets.iter().filter(|origin| origin.callable()) {
             let Origin::Function(id, supplied, _) = closure else {
-                return Err("--gc arc: cannot prove the source of a queued function".into());
+                return Err("ownership: cannot prove the source of a queued function".into());
             };
             if !seen.insert(closure) || supplied == 0 {
                 continue;
@@ -317,7 +317,7 @@ impl Proof<'_> {
                 .get(&closure)
                 .filter(|args| args.len() == supplied)
                 .ok_or_else(|| {
-                    "--gc arc: missing captured values for a queued function".to_string()
+                    "ownership: missing captured values for a queued function".to_string()
                 })?;
             let types = self.program.funcs[id].ty.params(supplied).0;
             for (ty, value) in types.iter().zip(captures) {
@@ -339,14 +339,14 @@ impl Proof<'_> {
                 && !value.iter().any(|origin| origin.queue())
             {
                 return Err(
-                    "--gc arc: cannot prove a queued function's captured channel producer".into(),
+                    "ownership: cannot prove a queued function's captured channel producer".into(),
                 );
             }
             self.captured_queues(value, &mut BTreeSet::new())?;
         }
         if matches!(ty, MT::Fun(..)) && value.is_empty() {
             return Err(
-                "--gc arc: cannot prove a queued function's captured function source".into(),
+                "ownership: cannot prove a queued function's captured function source".into(),
             );
         }
         if has_functions(self.program, ty, &mut BTreeSet::new()) {
@@ -357,7 +357,7 @@ impl Proof<'_> {
                 && !value.iter().any(|origin| origin.task())
             {
                 return Err(
-                    "--gc arc: cannot prove a queued function's captured task producer".into(),
+                    "ownership: cannot prove a queued function's captured task producer".into(),
                 );
             }
             self.captured_tasks(value, seen)?;
@@ -368,7 +368,7 @@ impl Proof<'_> {
     fn captured_tasks(&self, values: &Targets, seen: &mut BTreeSet<Origin>) -> Result<(), String> {
         for &origin in values.iter().filter(|origin| origin.task()) {
             let Origin::Task(id) = origin else {
-                return Err("--gc arc: cannot prove a queued function's captured task producer; keep unknown task owners outside the callback".into());
+                return Err("ownership: cannot prove a queued function's captured task producer; keep unknown task owners outside the callback".into());
             };
             if !seen.insert(origin) {
                 continue;
@@ -376,9 +376,9 @@ impl Proof<'_> {
             let thunks = self
                 .task_thunks
                 .get(&id)
-                .ok_or("--gc arc: missing captured task computation")?;
+                .ok_or("ownership: missing captured task computation")?;
             if thunks.is_empty() {
-                return Err("--gc arc: cannot prove a captured task's computation".into());
+                return Err("ownership: cannot prove a captured task's computation".into());
             }
             // A task retains its computation until it starts, and its result
             // after completion. Both can hide an owner of the receiving queue.
@@ -390,18 +390,18 @@ impl Proof<'_> {
                 .params(self.program.funcs[id].arity as usize)
                 .1
             else {
-                return Err("--gc arc: captured task producer has no task result".into());
+                return Err("ownership: captured task producer has no task result".into());
             };
             let [result_type] = args.as_slice() else {
-                return Err("--gc arc: captured task producer has no result type".into());
+                return Err("ownership: captured task producer has no result type".into());
             };
             if name != "std::Task" {
-                return Err("--gc arc: captured task producer has no task result".into());
+                return Err("ownership: captured task producer has no task result".into());
             }
             let results = self
                 .task_results
                 .get(&id)
-                .ok_or("--gc arc: missing captured task result flow")?;
+                .ok_or("ownership: missing captured task result flow")?;
             self.queued_value(result_type, results, seen)?;
         }
         Ok(())
@@ -421,7 +421,7 @@ impl Proof<'_> {
     ) -> Result<(), String> {
         for &origin in values {
             if origin == Origin::Task(task) {
-                return Err("--gc arc: cannot prove an acyclic task result; its ownership flow can return to the producing task".into());
+                return Err("ownership: cannot prove an acyclic task result; its ownership flow can return to the producing task".into());
             }
             if !seen.insert(origin) {
                 continue;
@@ -431,7 +431,7 @@ impl Proof<'_> {
                     let captures = self
                         .captures
                         .get(&origin)
-                        .ok_or("--gc arc: missing task result function captures")?;
+                        .ok_or("ownership: missing task result function captures")?;
                     for capture in captures {
                         self.task_result_owners(task, capture, seen)?;
                     }
@@ -440,14 +440,14 @@ impl Proof<'_> {
                     for owners in [self.task_thunks.get(&other), self.task_results.get(&other)] {
                         self.task_result_owners(
                             task,
-                            owners.ok_or("--gc arc: missing task owner flow")?,
+                            owners.ok_or("ownership: missing task owner flow")?,
                             seen,
                         )?;
                     }
                 }
                 Origin::UnknownTask | Origin::UnknownFunction | Origin::UnknownOwnerQueue => {
                     return Err(
-                        "--gc arc: cannot prove the owners of an unknown task result".into(),
+                        "ownership: cannot prove the owners of an unknown task result".into(),
                     );
                 }
                 Origin::Queue(_) | Origin::GrpcSender(_) => {
@@ -484,7 +484,7 @@ impl Proof<'_> {
             let Origin::Function(target, supplied, _) = closure else {
                 if self.validate {
                     return Err(
-                        "--gc arc: cannot prove a received iterator's function target".into(),
+                        "ownership: cannot prove a received iterator's function target".into(),
                     );
                 }
                 continue;
@@ -515,7 +515,7 @@ impl Proof<'_> {
             if shape.client_streaming() {
                 let iterator = method.iter_fn.ok_or_else(|| {
                     format!(
-                        "--gc arc: served method `{}` has no received iterator constructor",
+                        "ownership: served method `{}` has no received iterator constructor",
                         method.name
                     )
                 })?;
@@ -584,7 +584,7 @@ impl Proof<'_> {
             let Origin::Function(id, _, _) = closure else {
                 if self.validate {
                     return Err(
-                        "--gc arc: cannot prove the target of a call in an ownership program"
+                        "ownership: cannot prove the target of a call in an ownership program"
                             .into(),
                     );
                 }
@@ -867,7 +867,9 @@ impl Proof<'_> {
                 let payload = function.ty.params(function.arity as usize).0[1];
                 if self.validate && has_functions(self.program, payload, &mut BTreeSet::new()) {
                     if matches!(payload, MT::Fun(..)) && args[1].is_empty() {
-                        return Err("--gc arc: cannot prove the source of a queued function".into());
+                        return Err(
+                            "ownership: cannot prove the source of a queued function".into()
+                        );
                     }
                     self.queued_targets(&args[1], &mut BTreeSet::new())?;
                 }
@@ -916,7 +918,7 @@ impl Proof<'_> {
             }
             Body::Prim(symbol) if matches!(symbol.as_str(), "get" | "put" | "modify") => {
                 if scoped & STATE == 0 {
-                    return Err(format!("--gc arc: primitive `{symbol}` has no tracing-free lifetime policy outside a State scope"));
+                    return Err(format!("ownership: primitive `{symbol}` has no tracing-free lifetime policy outside a State scope"));
                 }
                 match symbol.as_str() {
                     "get" => Ok(self.state_values.clone()),
@@ -944,19 +946,19 @@ impl Proof<'_> {
                 ) =>
             {
                 if scoped & AD == 0 {
-                    return Err(format!("--gc arc: primitive `{symbol}` has no tracing-free lifetime policy outside an autodiff scope"));
+                    return Err(format!("ownership: primitive `{symbol}` has no tracing-free lifetime policy outside an autodiff scope"));
                 }
                 if symbol == "ad.tape-owned" {
                     // Stored scalar operations may execute during a later
                     // backward call. They inherit only the proved AD scope,
                     // never the creator's transient State context.
                     if self.validate && args[0].is_empty() {
-                        return Err("--gc arc: cannot prove managed tape callbacks".into());
+                        return Err("ownership: cannot prove managed tape callbacks".into());
                     }
                     for &closure in args[0].iter().filter(|origin| origin.callable()) {
                         let Origin::Function(target, supplied, _) = closure else {
                             if self.validate {
-                                return Err("--gc arc: cannot prove managed tape callbacks".into());
+                                return Err("ownership: cannot prove managed tape callbacks".into());
                             }
                             continue;
                         };
@@ -1066,7 +1068,7 @@ impl Proof<'_> {
                         let Origin::Function(target, supplied, _) = closure else {
                             if self.validate {
                                 return Err(
-                                    "--gc arc: cannot prove a runtime callback target".into()
+                                    "ownership: cannot prove a runtime callback target".into()
                                 );
                             }
                             continue;
@@ -1097,7 +1099,9 @@ impl Proof<'_> {
                 for &closure in functions.iter().filter(|origin| origin.callable()) {
                     let Origin::Function(target, supplied, _) = closure else {
                         if self.validate {
-                            return Err("--gc arc: cannot prove a primitive callback target".into());
+                            return Err(
+                                "ownership: cannot prove a primitive callback target".into()
+                            );
                         }
                         result.insert(Origin::UnknownFunction);
                         continue;
@@ -1215,7 +1219,7 @@ pub(crate) fn check(
                 .service
                 .as_ref()
                 .and_then(|service| service.methods.iter().find(|method| method.func == entry))
-                .ok_or("--gc arc: gRPC entry has no served method contract")?;
+                .ok_or("ownership: gRPC entry has no served method contract")?;
             matches!(
                 crate::rpc::shape(&function.ty, function.arity as usize, method.error.as_ref())
                     .output,
@@ -1227,7 +1231,7 @@ pub(crate) fn check(
         for ty in function.ty.params(function.arity as usize).0 {
             if has_owner_channels(program, ty, &mut BTreeSet::new()) {
                 return Err(
-                    "--gc arc: external function-bearing channels or task-bearing channels have no proved queue ownership"
+                    "ownership: external function-bearing channels or task-bearing channels have no proved queue ownership"
                         .into(),
                 );
             }

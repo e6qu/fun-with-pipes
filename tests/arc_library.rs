@@ -251,7 +251,7 @@ fn library_checks_every_export_and_rejects_escaping_storage() {
                 .output().unwrap();
             assert!(!output.status.success(), "{name} admitted");
             let error = String::from_utf8_lossy(&output.stderr);
-            assert!(error.contains("--gc arc") && error.contains(diagnostic), "{name}: {error}");
+            assert!(error.contains("ownership:") && error.contains(diagnostic), "{name}: {error}");
         }
     }
 }

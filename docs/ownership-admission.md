@@ -36,11 +36,13 @@ WebAssembly tests require their declared runtime and toolchain.
 | Asynchronous WASI | Scheduler/task stacks own suspended work; queue and task results have typed owners | [wasm_arc](../tests/wasm_arc.rs), `wasi_tasks_release_captures_channels_stacks_and_scheduler`, runs JSPI and Asyncify variants, with repeated tasks, queued functions/data and handles. Missing required tools fail production coverage. |
 | Browser-target loader | Each loader invocation owns a separate module instance; host output receives copied strings | [wasm_arc](../tests/wasm_arc.rs), `browser_entries_isolate_outputs_reentrant_calls_and_host_errors`, runs sequential/concurrent/reentrant calls and throwing sinks under Node. This is loader execution evidence, not coverage of every browser engine. `wasm_entries_keep_cycle_checks_for_browser_and_wasi` checks both targets' queue-capture rejection. |
 
-The interpreter, REPL, notebooks, macros and `comptime` use Rust-owned values,
-not the generated C ARC runtime. Their child-task join/cancellation boundaries
-are documented in [the compiler pipeline](compiler-pipeline.md). Interpretation
-can run a program that native ARC rejects; that difference must remain visible
-when comparing supported execution modes.
+The interpreter uses Rust-owned values rather than generated C counts. This G5
+batch adds the same queue, State and autodiff lifetime admission to its public
+entry calls, including REPL/notebook and compile-time execution. It checks only
+functions reachable from the selected entry; unused definitions cannot reject
+an unrelated calculation. Interpreter gRPC handlers are checked before listening.
+Native representation and foreign ABI checks remain native-specific. See
+[the handoff](development-state.md) for verification of this change.
 
 ## Named rejection fixtures
 
@@ -56,7 +58,7 @@ no C. It deliberately does **not** execute invalid scope examples in tracing mod
 | [foreign-callback](../tests/fixtures/arc-admission/foreign-callback.fwp) | `foreign boundary has no checked ownership contract` | A callback returns managed `String` storage to C; no host owner/release protocol is supplied. | Keep bare managed-result callbacks rejected: their signature supplies no release protocol. Use the separate [retained export API](retained-callbacks.md), whose owned results have generated release functions. |
 | [http-stream-channel](../tests/fixtures/arc-admission/http-stream-channel.fwp) | `channel payloads cannot contain` | An HTTP stream can hide a handler/continuation that owns the queue. | Keep streams out of queues until their independent lifetime is proved. Queue request data or IDs while a task scope owns the stream. |
 | [wrapped-http-stream-channel](../tests/fixtures/arc-admission/wrapped-http-stream-channel.fwp) | `channel payloads cannot contain` | Wrapping the same handle in a list does not remove that possible back-reference. | Keep the same restriction through containers; wrapping a stream cannot remove its hidden owners. |
-| [cyclic-channel](../tests/fixtures/arc-admission/cyclic-channel.fwp) | `a queue can lead back to channel type` | The recursive payload type permits an owning cycle, even though this particular program only creates/closes an empty queue. | Keep this conservative rejection. Use an explicit weak back-edge or graph ID; the candidate recursive `WeakLink` fixture exercises the weak form. |
+| [cyclic-channel](../tests/fixtures/arc-admission/cyclic-channel.fwp) | `a queue can lead back to channel type` | The recursive payload type permits an owning cycle, even though this particular program only creates/closes an empty queue. | Keep this conservative rejection. Use an explicit weak back-edge or graph ID; the recursive `WeakLink` fixture exercises the weak form. |
 | [mutual-channel](../tests/fixtures/arc-admission/mutual-channel.fwp) | `a queue can lead back to channel type` | Two type definitions hide the same possible back-reference. | Keep the transitive owning-edge check; replace a back-edge with a weak reference or graph ID. |
 | [unscoped-tape](../tests/fixtures/arc-admission/unscoped-tape.fwp) | `tracing-free lifetime policy` | A raw derivative tape is created without a bounded autodiff scope. | Keep rejected; it is not a feature to recover by deleting GC. |
 
@@ -80,9 +82,9 @@ shows a graph whose edges are integer IDs: a logical cycle without owning cycles
 | A task's cached result owns the task itself | `task_results_reject_a_cached_self_owner_without_a_channel` in the same file | Rejects failure to prove an `acyclic task result`, even without a channel. Follow both computation and returned captures. |
 | Unknown function, task or external queue producer | Typed IR controls in [arc_scope](../src/arc_scope.rs): `joining_a_known_target_does_not_hide_an_unknown_function`, `queued_task_captures_follow_the_computation_and_unknown_inputs`, `runtime_function_producers_and_external_queues_need_known_sources` | Unknown is not an empty set of captures. These tests construct internal IR; they are not claims that every such internal primitive is available in source. Admission needs a producer/lifetime model. |
 | A received function uses the sender's expired State/AD handler | `queued_autodiff_functions_require_the_receivers_scope` in [queued_functions](../tests/queued_functions.rs); [arc_extensions](../tests/arc_extensions.rs), `raw_ad_cannot_escape_scope_proof_through_callbacks_or_arguments` | Calling must install the required handler in the receiving task. Keep invalid scope use rejected. |
-| An inter-task derivative escapes its scope | [ad_task_reuse](../tests/run/ad_task_reuse.fwp), classified explicitly by [arc_corpus](../tests/arc_corpus.rs) | Expected `outside an autodiff scope` rejection. The corpus fails any new unexpected ARC rejection; it does not just count excluded programs. |
+| An inter-task derivative escapes its scope | [ad_task_reuse](../tests/fixtures/ad_task_reuse.fwp), checked by [autodiff_nested](../tests/autodiff_nested.rs) | Expected `outside an autodiff scope` rejection. The corpus fails any new unexpected ARC rejection; it does not just count excluded programs. |
 | Closing a cyclic channel | [channel_cycle_ownership](../tests/channel_cycle_ownership.rs), `closed_channel_cycles_keep_values_until_drain_and_then_release` | Close preserves queued messages. The tracing-only control drains explicitly and checks reclamation. Removing tracing must not quietly change close to discard messages or pretend this is current ARC admission. |
-| C stores a callback after returning | Foreign declaration permits only a scoped callback; the C body is outside the ownership proof | No compiler diagnostic is promised for a C implementation violating that contract. The candidate [retained API](retained-callbacks.md) supplies a separate context-bearing registration for selected exports, with active-call ownership and explicit release. Integrated validation is pending; scoped callback pointers still cannot be retained. |
+| C stores a callback after returning | Foreign declaration permits only a scoped callback; the C body is outside the ownership proof | No compiler diagnostic is promised for a C implementation violating that contract. The [retained API](retained-callbacks.md) supplies a separate context-bearing registration for selected exports, with active-call ownership and explicit release. Verified in #215; scoped callback pointers still cannot be retained. |
 
 `Ptr[T]` is a manually managed address, not a managed owner. Keeping its storage
 valid and using the matching release operation are `Unsafe` obligations. Passing
@@ -91,37 +93,13 @@ an address through C does not prove that C can retain fwp-owned storage. See
 
 ## Contract work before collector deletion
 
-[The cycle contract](ownership.md#cycle-and-retention-contract) now gives a concrete
-accepted subscriber, graph-ID deletion and the C-retention restriction. The
-subscriber uses existing APIs; it introduces no new weak handle or hidden owner.
-Its [native lifetime test](../tests/arc_tasks.rs),
-`subscriptions_join_active_callbacks_and_release_each_round`, checks normal
-finish, error, active/unstarted cancellation, repeated awaits and callback reentry.
-Eight and 64 rounds must restore the same per-round managed-byte balance.
-Deliberately missing releases and child joins must be detected. Final native
-validation for that new test is recorded in [the handoff](development-state.md).
+G1's entry matrix passed in #212; G3/G4's weak links, retained callbacks and
+cleanup controls passed in #215. [Delivery history](roadmap-history.md) records
+exact tested sources and runs. A passing entry does not prove arbitrary user
+programs safe; each rejection above still applies.
 
-The accepted policy keeps the unproved owning graphs above rejected. Weak links,
-independent task scopes and graph IDs supply the explicit alternatives; the new
-weak and retained-C paths still need integrated validation. The selected contract
-rejects unproved owning cycles and requires explicit weak references before
-collector deletion. Test acquisition followed by a store/capture that could
-recreate the cycle; checking only a weak access's duration is insufficient.
-The [six implementation examples](gc-removal-design.md#six-implementation-examples)
-also cover returned functions, graph-slot reuse and bounded workspaces. They are
-targets, not additional accepted rows in today's execution matrix.
-In particular, a scoped
-subscriber does not prove that an arbitrary queued task result or HTTP/2 stream
-cannot own its queue. A C implementation that retains a scoped callback violates
-the host contract; compiler rejection cannot reliably detect that behavior.
-
-G4 replaces each collector diagnostic with a check that detects the corresponding
-broken ownership behavior. G5 can delete tracing only after those checks and the
-maintained execution matrix pass. There is no promise to reclaim arbitrary cycles
-with ordinary reference counting.
-
-The entry suites and raw/optimized rejection matrix passed at #212's final head
-`dc9cf3bfb846d5a6632fbd6424cc8509b5d560cb` in
-[production](https://github.com/e6qu/fun-with-pipes/actions/runs/40159979066).
-This establishes G1's integrated delivery, not completion of G2–G5 or coverage
-of every browser engine.
+G5 must apply the lifetime rules to all execution entries and delete collector
+code without losing the output, alias, failure, cancellation and memory checks.
+[The diagnostic deletion table](ownership-diagnostics.md#collector-specific-tests-and-retained-assertions)
+identifies what retires with tracing and what must remain. The runtime must not
+silently switch an unproved program to tracing or permanent retention.

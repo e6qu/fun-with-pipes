@@ -369,7 +369,10 @@ fn stats(stderr: &str) -> (f64, u64, u64) {
 )]
 fn long_loop_runs_in_bounded_memory() {
     assert!(linux(), "resident-memory checks require Linux /proc");
-    assert!(have_cc(), "native GC checks require a working C compiler");
+    assert!(
+        have_cc(),
+        "native ownership checks require a working C compiler"
+    );
     let dir = TempDir::new("loop");
     let exe = dir.0.join("churn");
     // Exercise normal counted reclamation first; the separate shared build
@@ -381,17 +384,22 @@ fn long_loop_runs_in_bounded_memory() {
             exe.to_str().unwrap(),
         ],
         &dir.0,
-        "tracing",
+        "arc",
     );
     let out = Command::new(&exe)
+        .env_remove("FWP_GC")
+        .env("FWP_GC_STRESS", "0")
+        .env("FWP_GC_VERIFY", "0")
+        .env("FWP_REUSE_VERIFY", "0")
         .env("FWP_GC_STATS", "1")
         .output()
         .unwrap();
     assert!(out.status.success());
     assert_eq!(String::from_utf8_lossy(&out.stdout), "21768000\n");
-    let (allocated, _, rss) = stats(&String::from_utf8_lossy(&out.stderr));
+    let (allocated, collections, rss) = stats(&String::from_utf8_lossy(&out.stderr));
     // Counted ownership can reclaim this workload without a collection.
     // The shared control below separately requires actual tracing.
+    assert_eq!(collections, 0);
     assert!(allocated > 0.0, "allocated {} MiB", allocated);
     assert!(rss < 64 * 1024, "max RSS {} KiB", rss);
 
@@ -424,7 +432,7 @@ fn long_loop_runs_in_bounded_memory() {
     assert!(rss < 64 * 1024, "max RSS {} KiB", rss);
 
     // FWP_GC=off: the same output, no collections
-    let out = Command::new(&exe)
+    let out = Command::new(&shared)
         .env("FWP_GC", "off")
         .env("FWP_GC_STATS", "1")
         .output()
@@ -545,7 +553,10 @@ fn bounded_server(cmd: Command, marker: &str, paths: &[&str], n: usize, limit_ki
 )]
 fn http_server_runs_in_bounded_memory() {
     assert!(linux(), "resident-memory checks require Linux /proc");
-    assert!(have_cc(), "native GC checks require a working C compiler");
+    assert!(
+        have_cc(),
+        "native ownership checks require a working C compiler"
+    );
     let dir = TempDir::new("http");
     let exe = dir.0.join("api");
     build(
@@ -555,9 +566,13 @@ fn http_server_runs_in_bounded_memory() {
             exe.to_str().unwrap(),
         ],
         &dir.0,
-        "tracing",
+        "arc",
     );
     let mut cmd = Command::new(&exe);
+    cmd.env_remove("FWP_GC")
+        .env("FWP_GC_STRESS", "0")
+        .env("FWP_GC_VERIFY", "0")
+        .env("FWP_REUSE_VERIFY", "0");
     cmd.env("FWP_ADDR", "127.0.0.1:0");
     bounded_server(
         cmd,
@@ -575,7 +590,10 @@ fn http_server_runs_in_bounded_memory() {
 )]
 fn rest_server_runs_in_bounded_memory() {
     assert!(linux(), "resident-memory checks require Linux /proc");
-    assert!(have_cc(), "native GC checks require a working C compiler");
+    assert!(
+        have_cc(),
+        "native ownership checks require a working C compiler"
+    );
     let dir = TempDir::new("rest");
     let exe = dir.0.join("books");
     build(
@@ -586,9 +604,13 @@ fn rest_server_runs_in_bounded_memory() {
             exe.to_str().unwrap(),
         ],
         &dir.0,
-        "tracing",
+        "arc",
     );
     let mut cmd = Command::new(&exe);
+    cmd.env_remove("FWP_GC")
+        .env("FWP_GC_STRESS", "0")
+        .env("FWP_GC_VERIFY", "0")
+        .env("FWP_REUSE_VERIFY", "0");
     cmd.args(["--listen", "127.0.0.1:0"]);
     bounded_server(
         cmd,

@@ -3,7 +3,8 @@
 Read [effects](../04-effects/README.md), [collections](../05-collections/README.md)
 and [tasks/channels](../06-tasks-and-channels/README.md) first. This lesson uses
 existing APIs to give every asynchronous operation an independent owner. It
-introduces no weak-reference or subscription API.
+uses ordinary tasks, scopes and maps. [Weak channels](../../weak-channels.md)
+provide another explicit option for a callback that needs a link back to its queue.
 
 An **owner** keeps storage alive. A channel owns its queued messages, while a
 callback owns its captured values. Queuing a callback that captures the receiving
@@ -104,8 +105,11 @@ contains the other ID. This is a logical cycle, but the integers own no nodes.
 `map.remove 1` creates a graph without node 1, and `map.get 1` returns `None`.
 The other branch still sees node 0's link `[1]`. Thus deletion does not silently
 repair incoming links: callers must check lookup or explicitly remove those links.
-This example never reuses IDs. A reusable-ID API would also need generations or
-another rule to stop an old ID from naming an unrelated replacement node.
+This example never reuses IDs. If a slot is reused, pair its index with a
+**generation**, a number changed each time the slot gets a new occupant. A lookup
+must match both. For example, an old `(2, 4)` handle must not find the replacement
+at `(2, 5)`. The [generation example](../../../tests/fixtures/graph_generations.fwp)
+checks stale lookup, deletion and reuse; its expected output is stored beside it.
 
 `both f g` runs both functions on the same input and returns a pair. Immutable
 sharing preserves the original graph for the second branch; it does not mutate

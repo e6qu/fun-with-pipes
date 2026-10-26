@@ -18,7 +18,7 @@ for a runnable macro example. An **AST** is a tree of source expressions; an
 | Specialize and lower | Reachable concrete uses → typed IR; evaluate `comptime` expressions | `src/mono.rs`, `src/ir.rs` |
 | Preserve resources | Record original resource scopes before transformations | `src/resource.rs` |
 | Optimize | Matrix specialization → simplification/inlining → known callback specialization → fusion → self-tail proof | `src/fuse.rs`, `src/opt.rs`, `src/tailrec.rs` |
-| Interpret | Execute the typed IR directly | `src/interp.rs` |
+| Interpret | Check entry lifetimes, then execute typed IR directly | `src/arc.rs`, `src/arc_scope.rs`, `src/interp.rs` |
 | Or generate native code | Select representations, prove direct-call borrows, insert and verify reference operations, check ownership for default ARC execution, emit C/runtime | `src/cgen.rs`, `src/rc/borrows.rs`, `src/rc.rs`, `src/ownership.rs` |
 | Compile and link | Generated C and required libraries → native executable/library or supported WebAssembly module | C toolchain, selected by `src/cgen.rs` |
 
@@ -40,6 +40,10 @@ parsing, expansion, type checking, lowering or resource preservation. Native
 ownership lowering is separate. Debug builds also validate local types after
 passes and check inserted reference operations. The interpreter uses Rust-owned
 values rather than executing the generated C reference-count machinery.
+Public interpreter entries now check queue/State/autodiff lifetimes before
+language effects, using the same proof as native ARC. Successful checks are
+cached per entry in the immutable program; unreachable definitions are not roots.
+The [handoff](development-state.md) tracks validation of this G5 change.
 Direct-call borrowing changes who keeps an argument alive during a call, without
 changing its source type. Its proof runs before reference operations are inserted;
 [the ownership design](design.md#ownership-implementation) explains the limits.

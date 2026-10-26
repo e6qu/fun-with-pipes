@@ -47,6 +47,28 @@ Record analyzed IR size, summary updates, specialization count, time and memory;
 set numerical regression budgets from the baseline before increasing precision.
 External language benchmarks motivate experiments, not fwp overhead estimates.
 
+## Reuse tests are allocation comparisons
+
+[The reuse tests](../tests/reuse.rs) compare two versions of the same fwp program:
+ARC with in-place updates, and identical generated C with `FWP_NO_REUSE` forcing
+copies. Both retain/release owners and use C O2. This isolates reuse from tracing
+and preserves the same output. It does **not** compare fwp with C or Rust, time
+the calculation, or establish language-wide overhead.
+
+| Input and work | Required allocation difference |
+|---|---|
+| Update a five-field record 1,000,000 times | Copy control >10 MiB; reuse <1 MiB |
+| Build a depth-16 tree, increment all nodes ten times, sum | Reuse allocates less than one quarter of copy control |
+| Array push / array set / map update fixtures | Copy control >1,000 / 100 / 1,000 MiB; reuse <10 MiB each |
+
+The observation is cumulative requested managed bytes, including construction
+and updates, reported at process exit. It is not peak live memory: a program can
+allocate a gigabyte cumulatively while keeping only a small working set alive.
+Separate [bounded-memory tests](../tests/gc.rs) retain the long-loop 64 MiB peak
+RSS limit and HTTP/REST growth limits of 16 MiB across 20,000 requests. RSS is
+whole-process resident memory, including allocator and runtime costs. These are
+regression limits, not claims of optimal space or performance.
+
 ## Reading a result
 
 Divide fwp time by the named baseline time. `1.25×` means 25% more elapsed time;

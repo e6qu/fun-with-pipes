@@ -76,8 +76,8 @@ interpretation with native O1/O2 execution. Eight and 64 rounds must return to t
 same managed-byte balance after each outer scope, then release all runtime charge.
 Broken message, task-owner and callback releases must fail; reporting completion
 before joining children must also fail. Tracing stress/reuse checks remain in the
-comparison. See [current validation](../../development-state.md) for which hosts
-have actually run the new tests.
+comparison. These checks passed on all six native targets in
+[#213](../../roadmap-history.md#scoped-subscriber-lifetimes-pr-213).
 
 ## Run it
 

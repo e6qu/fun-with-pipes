@@ -357,7 +357,7 @@ rejected = const 1 | callbacks | tap send-self | channel.recv | option.map (appl
         assert!(!output.status.success());
         let error = String::from_utf8_lossy(&output.stderr);
         assert!(
-            error.contains("--gc arc") && error.contains("queued function's captured"),
+            error.contains("ownership:") && error.contains("queued function's captured"),
             "{interface}: {error}"
         );
     }

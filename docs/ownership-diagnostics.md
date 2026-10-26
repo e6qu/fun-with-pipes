@@ -3,7 +3,8 @@
 An owner keeps an allocation alive. A retain adds an owner; a release gives one
 up. Removing tracing GC requires checks that catch lost owners, premature release
 and unsafe storage reuse without a collector keeping the affected objects alive.
-This is the diagnostic work in [plan G4](../PLAN.md#1-remove-tracing-gc).
+G4 passed all nine production jobs and documentation in [#215](roadmap-history.md#weak-channels-and-retained-callbacks-pr-215).
+G5 must preserve these checks when removing collector code.
 
 ## Native live-allocation ledger
 
@@ -95,8 +96,7 @@ Existing tracing/poisoning cases remain alongside these ARC checks. The ordinary
 returned-alias program now also runs in ARC. Tests retain C, executable, outputs and
 status under `record-ownership/{borrowed_callbacks,reuse_token_ownership,
 variant_alias_ownership,stack_ownership}` in the ownership evidence artifacts.
-[The handoff](development-state.md) states which preparation checks have run;
-this table does not claim that unrun platform gates passed.
+[The handoff](development-state.md) tracks verification of subsequent changes.
 
 ### Empty callback argument slices
 
@@ -145,8 +145,7 @@ charged bytes each round. Omitting a value free, unwind cleanup, OS close or
 file-object release must produce 231, 232, 235 or 236 respectively. The source
 file-handler example also compares ARC/tracing output with the raw interpreter.
 C, executables, output and status are retained under
-`record-ownership/unwind_cleanup`. These prepared tests await integrated
-compiler/platform validation.
+`record-ownership/unwind_cleanup`. These tests passed in #215.
 
 ## Wide reference counts
 
@@ -168,29 +167,27 @@ placement enabled and disabled, against the raw interpreter. Sweep/mark-specific
 checks remain only for the collector that still exists. Probe artifacts use
 `record-ownership/wide_counts`.
 
-## Candidate weak and external-boundary checks
+## Weak references and external resources
 
-The current preparation adds the live-address ledger to scoped foreign callback
+The live-address ledger checks scoped foreign callback
 entry, nested calls, suspension/cancellation and copied-input tests in
 [foreign_callback_ownership.rs](../tests/foreign_callback_ownership.rs). Existing
 physical-byte checks and deliberately missing-release controls remain independent.
 Scoped callbacks retain their call-limited contract. The separate
 [retained callback API](retained-callbacks.md) adds a unique registration owner
-and active-call cleanup. Its candidate test checks physical bytes and allocation
+and active-call cleanup. Its test checks physical bytes and allocation
 identity through reentry, errors, cancellation and partial construction. Removed
 capture/context cleanup, premature destruction and missing active-call completion
-have distinct fault controls; integrated validation is pending.
+have distinct fault controls.
 
 The direct [library input](../tests/library_input_ownership.rs) and
 [result](../tests/library_result_ownership.rs) tests also add ARC execution.
 Their missing input/field/result release controls and repeated-evaluation control
 remain; freed-value checks use allocation identity in ARC. Premature returned
 string release is checked before reading its bytes. A deliberately duplicated
-release must stop at the ledger with 203. These runs are prepared and await the
-combined compiler/platform gate.
+release must stop at the ledger with 203. These runs passed in #215.
 
-The same preparation extends existing external-owner probes to ARC as well as
-tracing. They retain their original failure controls:
+External-owner probes run in ARC and tracing, with independent fault controls:
 
 | Boundary | Test | Observed fault |
 |---|---|---|
@@ -200,8 +197,8 @@ tracing. They retain their original failure controls:
 | Library unload and suspended tasks | `library_unload::loader_unload_drains_tasks_restores_signals_and_releases_regions` | Omitted heap/stack release, cached-value cleanup, count-table cleanup or host-state restoration fails the corresponding observer |
 
 The last two tests use the real loader and retain their native Windows paths.
-Their new ARC runs are pending; a native allocation balance does not substitute
-for these OS-resource checks.
+Their ARC runs passed in #215. Allocation balance does not substitute for
+these OS-resource checks.
 
 [Weak-channel tests](../tests/queued_functions.rs) check final-release ordering,
 metadata release, reused addresses and failed acquisition. The fault controls
@@ -215,8 +212,8 @@ is included in dynamic/static native and WASI JSPI/Asyncify execution.
 The [WASI physical ledger](../tests/fixtures/wasm_arc_allocations.c) now detects
 duplicate addresses even when an earlier slot is empty. Its regression test
 checks normal reuse, duplicate registration and duplicate removal on native and
-WASI hosts. These additions await integrated compiler/platform validation; they
-do not yet close every G4 row or justify deleting collector checks.
+WASI hosts. These checks passed in #215; collector-specific assertions remain
+until their implementation is deleted.
 
 ## Which collector checks need replacement?
 
@@ -260,26 +257,17 @@ that variant only after its ARC run passes; a `0` setting is merely disabling a
 check. The source inventory retains exact locations, including dynamically
 selected settings, so that deletion can be reviewed without guessing from names.
 
-The allocation-comparison and ordinary bounded-memory tests named above still
-select tracing today. Converting them to ARC is a specific G5 edit, not evidence
-that the conversion has already passed. Never delete their numeric assertions
-or replace them with successful program termination. Reports must retain
-allocation/live-byte/RSS fields and malformed/missing-report controls when
-collector-only statistics are removed.
+This G5 batch moves record/tree/array/map allocation comparisons and ordinary
+loop/HTTP/REST RSS checks to ARC. Both reuse variants keep reference counts;
+`FWP_NO_REUSE` disables only in-place updates in the copy control. The numeric
+budgets remain unchanged. This measures allocation cost, not elapsed time or
+parity with C/Rust. [The handoff](development-state.md) records validation status.
 
 ## Remaining acceptance
 
-The combined candidate must compile and pass all nine production jobs and the
-documentation audit, including actual native Windows and WASI execution. The
-new fault controls, source fixtures and external-library paths are written;
-[the handoff](development-state.md) distinguishes bounded development probes
-from candidate-compiler results. Do not repeat passing local probes as a
-substitute for that gate.
-
-After the gate, G5 follows the deletion map above, updates report consumers and
-workflow settings together, and verifies binaries lack tracing. Preserve all
-non-collector assertions and deliberately broken ownership controls. Neither an
-address table nor zero charged bytes proves arbitrary raw borrowed reads safe;
-compiler lifetime checks and alias/output comparisons remain necessary. The
-[admission contract](ownership-admission.md#contract-work-before-collector-deletion)
-keeps unproved owning cycles rejected.
+G5 must update allocation-report consumers and workflow settings, remove the
+collector-only assertions above and inspect binaries for actual tracing removal.
+Preserve all behavioral assertions and broken-ownership controls. An address
+ledger cannot catch every stale raw read; compiler lifetime checks and alias/output
+comparisons remain necessary. Run all nine production jobs and documentation
+against the final commit before merging.

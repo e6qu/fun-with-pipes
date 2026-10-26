@@ -25,9 +25,17 @@ on to the consumer. `the-channel` supplies an explicit type for that channel.
 
 Automatic reference counting (ARC) releases a value when its last owner lets go.
 Sharing this channel is not a cycle: its queued integers cannot refer back to
-it. A queued callback capturing the channel could form a cycle. Checked ARC
-currently rejects such payloads; there are no public weak-reference helpers yet.
-Closing preserves queued messages, so it is not automatic cycle breaking.
+it. A queued callback capturing the channel could form an owning cycle:
+the queue keeps the callback alive, and the callback keeps the queue alive.
+The compiler rejects this relationship when it cannot prove cleanup.
+
+A **weak reference** observes a channel without keeping it alive.
+`channel.downgrade` makes that reference; `channel.upgrade` returns `Some channel`
+while a strong owner exists and `None` afterward. Closing the channel preserves
+queued messages and does not expire weak references. Releasing the final strong
+owner does. [The weak-channel examples](../../weak-channels.md) show both outcomes.
+For a long-lived worker, [lesson 24](../24-subscriptions/README.md) instead keeps
+the handler in a separate task and queues only data.
 
 ## A loop with explicit state
 
