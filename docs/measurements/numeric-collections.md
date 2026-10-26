@@ -5,6 +5,25 @@ observations of those programs, not current compiler budgets. Commands refer
 to the recorded measurement revision. Read [measurement terms](../benchmarks.md)
 for timing and memory boundaries; [the plan](../../PLAN.md) owns remaining work.
 
+## Current reproduction protocol
+
+G5 updates `measure-collection-build.py` and `summarize-collection-build.py`
+together. They compare two compilations of the same fwp program: collection
+fusion enabled and disabled. They do not compare fwp with C or Rust. Inputs are
+32, 4,096 and 65,536 integers, for maps, mapped sets and range sets. Both versions
+must match the raw interpreter. Eight samples per version use recorded randomized
+order; the timer includes process startup, construction, the query/hash and output.
+The reported ratio is fused time divided by ordinary time; below one is faster.
+
+Separate instrumented executables report allocation requests, requested bytes,
+retains, peak live bytes and final live bytes. These are not whole-process RAM.
+Compilation time, compiler flags, host details, binary size and section sizes are
+recorded separately. The audit requires 28 actual binaries per host: four builder
+failure/control binaries, two compact-set probes, four range-set probes and 18
+timed program variants. It rejects collector symbols in every inspected binary.
+This revised protocol still needs integrated validation. The results below retain
+their original revisions and memory modes; do not treat them as new measurements.
+
 ### Compact set storage: measured allocation size
 
 Sets need one key per entry; the former map-shaped layout also reserved an

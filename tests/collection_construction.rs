@@ -92,36 +92,29 @@ main = [
             "interpreter fused={fused}"
         );
     }
-    for memory in ["arc", "tracing"] {
-        for optimization in ["-O1", "-O2"] {
-            for fused in ["0", "1"] {
-                let executable = directory
-                    .join(format!("{memory}{optimization}-{fused}"))
-                    .with_extension(std::env::consts::EXE_EXTENSION);
-                checked(
-                    Command::new(env!("CARGO_BIN_EXE_fwp"))
-                        .env_remove("FWP_NO_OPT")
-                        .env("FWP_MAP_BUILD", fused)
-                        .args(["build", "--gc", memory, optimization, "-o"])
-                        .arg(&executable)
-                        .arg(&input),
-                );
-                let output = checked(
-                    Command::new(&executable)
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", if memory == "arc" { "0" } else { "1" })
-                        .env("FWP_GC_VERIFY", if memory == "arc" { "0" } else { "1" })
-                        .env("FWP_REUSE_VERIFY", if memory == "arc" { "0" } else { "1" }),
-                );
-                assert_eq!(
-                    output.stdout, reference.stdout,
-                    "{memory} {optimization} fused={fused}"
-                );
-                assert_eq!(
-                    output.stderr, reference.stderr,
-                    "{memory} {optimization} fused={fused}"
-                );
-            }
+
+    for optimization in ["-O1", "-O2"] {
+        for fused in ["0", "1"] {
+            let executable = directory
+                .join(format!("counted{optimization}-{fused}"))
+                .with_extension(std::env::consts::EXE_EXTENSION);
+            checked(
+                Command::new(env!("CARGO_BIN_EXE_fwp"))
+                    .env_remove("FWP_NO_OPT")
+                    .env("FWP_MAP_BUILD", fused)
+                    .args(["build", optimization, "-o"])
+                    .arg(&executable)
+                    .arg(&input),
+            );
+            let output = checked(&mut Command::new(&executable));
+            assert_eq!(
+                output.stdout, reference.stdout,
+                "counted {optimization} fused={fused}"
+            );
+            assert_eq!(
+                output.stderr, reference.stderr,
+                "counted {optimization} fused={fused}"
+            );
         }
     }
 }
@@ -177,43 +170,36 @@ fn failed_numeric_collection_callbacks_release_storage() {
             interpreted.stdout, reference.stdout,
             "interpreter fused={fused}"
         );
-        for memory in ["arc", "tracing"] {
-            let cfile = directory.join("failures.c");
-            checked(
-                Command::new(env!("CARGO_BIN_EXE_fwp"))
-                    .env_remove("FWP_NO_OPT")
-                    .env("FWP_MAP_BUILD", fused)
-                    .args(["build", "--gc", memory, "--emit-c", "-o"])
-                    .arg(&cfile)
-                    .arg(&input),
+
+        let cfile = directory.join("failures.c");
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_MAP_BUILD", fused)
+                .args(["build", "--emit-c", "-o"])
+                .arg(&cfile)
+                .arg(&input),
+        );
+        let mut code = std::fs::read_to_string(&cfile).unwrap();
+
+        let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
+        assert_eq!(code.matches(finish).count(), 1);
+        code = code.replace(finish, &format!("{finish}\n    if (0 != fwp_heap.live) {{ fprintf(stderr, \"collection storage leaked: %lld bytes\\n\", (long long)(fwp_heap.live)); exit(231); }}\n"));
+
+        for optimization in ["-O1", "-O2"] {
+            let executable = directory
+                .join("failures")
+                .with_extension(std::env::consts::EXE_EXTENSION);
+            fwp::cgen::compile_c(&code, &executable, optimization).unwrap();
+            let output = checked(&mut Command::new(&executable));
+            assert_eq!(
+                output.stdout, reference.stdout,
+                "counted {optimization} fused={fused}"
             );
-            let mut code = std::fs::read_to_string(&cfile).unwrap();
-            if memory == "arc" {
-                let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
-                assert_eq!(code.matches(finish).count(), 1);
-                code = code.replace(finish, &format!("{finish}\n    if (0 != fwp_heap.live) {{ fprintf(stderr, \"collection storage leaked: %lld bytes\\n\", (long long)(fwp_heap.live)); exit(231); }}\n"));
-            }
-            for optimization in ["-O1", "-O2"] {
-                let executable = directory
-                    .join("failures")
-                    .with_extension(std::env::consts::EXE_EXTENSION);
-                fwp::cgen::compile_c(&code, &executable, optimization).unwrap();
-                let output = checked(
-                    Command::new(&executable)
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", if memory == "arc" { "0" } else { "1" })
-                        .env("FWP_GC_VERIFY", if memory == "arc" { "0" } else { "1" })
-                        .env("FWP_REUSE_VERIFY", if memory == "arc" { "0" } else { "1" }),
-                );
-                assert_eq!(
-                    output.stdout, reference.stdout,
-                    "{memory} {optimization} fused={fused}"
-                );
-                assert_eq!(
-                    output.stderr, reference.stderr,
-                    "{memory} {optimization} fused={fused}"
-                );
-            }
+            assert_eq!(
+                output.stderr, reference.stderr,
+                "counted {optimization} fused={fused}"
+            );
         }
     }
 }
@@ -365,80 +351,61 @@ fn collection_allocation_failures_and_cancellation_release_every_owner() {
     let directory = fwp::cgen::TempDir::new("collection-allocation-failures").unwrap();
     let input = directory.join("builders.fwp");
     std::fs::write(&input, include_str!("fixtures/collection_build.fwp")).unwrap();
-    for memory in ["arc", "tracing"] {
-        let cfile = directory.join("builders.c");
-        checked(
-            Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .env_remove("FWP_NO_OPT")
-                .env("FWP_MAP_BUILD", "1")
-                .args(["build", "--gc", memory, "--emit-c", "-o"])
-                .arg(&cfile)
-                .arg(&input),
+
+    let cfile = directory.join("builders.c");
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env_remove("FWP_NO_OPT")
+            .env("FWP_MAP_BUILD", "1")
+            .args(["build", "--emit-c", "-o"])
+            .arg(&cfile)
+            .arg(&input),
+    );
+    let code = allocation_probe(std::fs::read_to_string(cfile).unwrap());
+    save_evidence("failures-counted.c", code.as_bytes());
+    for optimization in ["-O1", "-O2"] {
+        let binary = directory
+            .join("probe")
+            .with_extension(std::env::consts::EXE_EXTENSION);
+        fwp::cgen::compile_c(&code, &binary, optimization).unwrap();
+        save_evidence(
+            &format!("failures-counted{optimization}.bin"),
+            &std::fs::read(&binary).unwrap(),
         );
-        let code = allocation_probe(std::fs::read_to_string(cfile).unwrap());
-        save_evidence(&format!("failures-{memory}.c"), code.as_bytes());
-        for optimization in ["-O1", "-O2"] {
-            let binary = directory
-                .join("probe")
-                .with_extension(std::env::consts::EXE_EXTENSION);
-            fwp::cgen::compile_c(&code, &binary, optimization).unwrap();
-            save_evidence(
-                &format!("failures-{memory}{optimization}.bin"),
-                &std::fs::read(&binary).unwrap(),
-            );
-            for reuse in if memory == "arc" {
-                &["0"][..]
-            } else {
-                &["0", "1"][..]
-            } {
-                let output = checked(
-                    Command::new(&binary)
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", if memory == "arc" { "0" } else { "1" })
-                        .env("FWP_GC_VERIFY", if memory == "arc" { "0" } else { "1" })
-                        .env("FWP_REUSE_VERIFY", reuse),
-                );
-                let text = String::from_utf8(output.stdout).unwrap();
-                save_evidence(
-                    &format!("failures-{memory}{optimization}-reuse-{reuse}.txt"),
-                    text.as_bytes(),
-                );
-                assert!(text.starts_with("8 builders: "), "{text}");
-                assert!(
-                    text.ends_with(
-                        " allocation failures and 64 callback exits cleaned; aliases preserved\n"
-                    ),
-                    "{text}"
-                );
-                eprint!("{memory} {optimization} reuse={reuse}: {text}");
-            }
-            // Disabling scratch release must make the allocation ledger fail.
-            let broken = code.replace(
-                "static void fwp_scratch_release(void *arg) {",
-                "static void fwp_scratch_release(void *arg) { (void)arg; return;",
-            );
-            assert_ne!(broken, code);
-            save_evidence(&format!("missing-cleanup-{memory}.c"), broken.as_bytes());
-            fwp::cgen::compile_c(&broken, &binary, optimization).unwrap();
-            save_evidence(
-                &format!("missing-cleanup-{memory}{optimization}.bin"),
-                &std::fs::read(&binary).unwrap(),
-            );
-            let output = Command::new(&binary)
-                .env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
-            assert_eq!(output.status.code(), Some(213), "{output:?}");
-            assert!(
-                String::from_utf8_lossy(&output.stderr).contains("collection live allocations:")
-            );
-            save_evidence(
-                &format!("missing-cleanup-{memory}{optimization}.txt"),
-                &output.stderr,
-            );
-        }
+
+        let output = checked(&mut Command::new(&binary));
+        let text = String::from_utf8(output.stdout).unwrap();
+        save_evidence(
+            &format!("failures-counted{optimization}.txt"),
+            text.as_bytes(),
+        );
+        assert!(text.starts_with("8 builders: "), "{text}");
+        assert!(
+            text.ends_with(
+                " allocation failures and 64 callback exits cleaned; aliases preserved\n"
+            ),
+            "{text}"
+        );
+        eprint!("counted {optimization}: {text}");
+
+        // Disabling scratch release must make the allocation ledger fail.
+        let broken = code.replace(
+            "static void fwp_scratch_release(void *arg) {",
+            "static void fwp_scratch_release(void *arg) { (void)arg; return;",
+        );
+        assert_ne!(broken, code);
+        save_evidence("missing-cleanup-counted.c", broken.as_bytes());
+        fwp::cgen::compile_c(&broken, &binary, optimization).unwrap();
+        save_evidence(
+            &format!("missing-cleanup-counted{optimization}.bin"),
+            &std::fs::read(&binary).unwrap(),
+        );
+        let output = Command::new(&binary).output().unwrap();
+        assert_eq!(output.status.code(), Some(213), "{output:?}");
+        assert!(String::from_utf8_lossy(&output.stderr).contains("collection live allocations:"));
+        save_evidence(
+            &format!("missing-cleanup-counted{optimization}.txt"),
+            &output.stderr,
+        );
     }
 }

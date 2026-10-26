@@ -46,8 +46,7 @@ def main():
     cc = os.environ['CC']
     flags = ['-O2', '-std=gnu11', '-ffp-contract=off', '-w']
     links = ['-lm', '-lws2_32', '-lshell32'] if windows else ['-lm', '-lpthread']
-    env = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
-    env.pop('FWP_GC', None)
+    env = dict(os.environ)
     env.pop('FWP_NO_OPT', None)
     cases = []
     for inputs in [32, 4096, 65536]:
@@ -90,7 +89,8 @@ def main():
                 measured = run([measured_binary], env)
                 assert measured.stdout == reference
                 counters = json.loads(measured.stderr)
-                assert counters['collections'] == 0 and counters['finalChargedBytes'] == 0
+                assert set(counters) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
+                assert counters['finalChargedBytes'] == 0
                 assert counters['retains'] == 0
                 # Retain assembly including compiler stack-size annotations,
                 # plus the actual executable for independent disassembly.
@@ -140,7 +140,7 @@ def main():
         'rustc': run(['rustc', '--version', '--verbose'], env).stdout,
         'fwpCompiler': {'path': str(compiler), 'sha256': compiler_hash.hexdigest()},
         'scope': 'Same fwp program and explicitly selected compiler with numeric collection fusion enabled or disabled, '
-                 'checked ARC, native -O2, no tracing or reuse poisoning. Inputs are compiled constants; '
+                 'counted ownership, native -O2. Inputs are compiled constants; '
                  'range construction, callbacks, sorting, deduplication, one query, startup and output '
                  'are included in whole-process time. Map and mapped-set variants use the same sorting algorithm. '
                  'Range-set cases hash all distinct keys: ordinary construction builds a list and sorts it, '

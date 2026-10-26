@@ -17,10 +17,12 @@ list/State/unwind cases and the HTTP/2 unit fixture, remove the unreachable clos
 recovery registration and fix an await-result leak in the typed-State probe.
 Nothing here has been pushed.
 
-`cf8e0e95` saves the list/State/unwind group. The next reviewed batch migrates
+`cf8e0e95` saves the list/State/unwind group. `f5a7750e` migrates
 processes, sockets, raw buffers, working directories, text tools/transforms and
 range arrays/sets. Their inputs, optimization/fusion settings and deliberate
-faults remain. There are 35 unchanged mode candidates left after this batch.
+faults remain. Further edits migrate console/system snapshots and collection
+builders/maps/sets, with their five-field cost reports and binary audits.
+There are 31 unchanged mode candidates left after this batch.
 
 Only #216 is a public PR. Its worktree is
 `/private/tmp/fwp-ownership-fault-matrix`, branch `remove-tracing-runtime`.
@@ -65,7 +67,7 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 1. **Finish test mode removal.** The list/State/closure fixtures in
    `list_applicative_ownership` are migrated; integrated execution is pending.
    `unwind_cleanup` and typed-State reports are also migrated. Next review the
-   remaining 35 unchanged candidate files and stale candidates listed below.
+   remaining 31 unchanged candidate files and stale candidates listed below.
    Remove variable `--gc` arguments, duplicate
    ARC/tracing loops, obsolete environment settings and CLI-selector tests.
    Keep every distinct semantic input, optimization/layout choice and ownership
@@ -80,8 +82,9 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
    reports still carry collection fields. Remove them rather than printing dummy
    zeros. Update strict parsers, TSV/JSON producers, artifact audits and docs.
    Do not rewrite historical measurement JSON.
-   `summarize-collection-build.py` now reads the four counted range-set artifacts;
-   its compact-set/builder sections still need migration with their generators.
+   Collection measurement and audit scripts now match migrated builders and
+   compact/range sets: five counter fields, 28 inspected binaries per host,
+   no tracing mode or dummy collection field. Integrated execution is pending.
    `inspect-task-owners.py` checks collector absence for every binary and reads
    renamed raw-buffer artifacts; its other task/callback label matrices still
    need migration with the corresponding tests.
@@ -104,7 +107,7 @@ Nine owner-test candidates were reviewed and applied: constructor type/unwind,
 general/ordinary record update, loop preparation, retain unwind, variant conversion,
 worker boxing and worker preparation. Twelve more owner candidates and thirteen program candidates were reviewed,
 refined and applied. The typed-State and unwind candidates were also reviewed,
-refined and applied; 35 candidate files still match their source hashes. The
+refined and applied; 31 candidate files still match their source hashes. The
 `arc_tasks`, `linalg_ownership`, `retained_thunk_ownership`,
 `within_thunk_ownership`, `loop_ownership` and `list_applicative_ownership`
 candidates are now also stale. Remaining candidates are **unreviewed**. They may

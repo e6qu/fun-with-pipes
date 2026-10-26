@@ -1,5 +1,5 @@
 static jmp_buf console_failure;
-static int console_events, console_fail_at, console_collect, console_heap_live;
+static int console_events, console_fail_at, console_heap_live;
 static int console_recover(void) { return 1; }
 static void console_event(void) {
     if (++console_events == console_fail_at) fwp_trap("console construction probe");
@@ -51,11 +51,10 @@ static void console_set_environment(const char *value) {
 int main(int argc,char **argv) {
     if(argc!=2)return 202;
     fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+    size_t initial_bytes=fwp_heap.live;
     char *arguments[]={"program","first","h\xc3\xa9llo","\xff"};
     fwp_argc=4;fwp_argv=arguments;
     V text=fwp_rc_fresh(fwp_str_new("a\r\nb\n\nlast\r",11));
-    const char *setting=getenv("FWP_CONSOLE_COLLECTION");
-    console_collect=setting && !strcmp(setting,"1");
     V key=fwp_rc_fresh(fwp_str_new("FWP_ENV_COPY",12));
     V nul_key=fwp_rc_fresh(fwp_str_new("FWP_ENV_COPY\0suffix",19));
     size_t live_bytes=fwp_heap.live;
@@ -73,7 +72,7 @@ int main(int argc,char **argv) {
             }
             if(kind==6 && value)return 215;
             console_drop(kind,value);
-            if(!console_collect && fwp_heap.live!=live_bytes)return 205;
+            if(fwp_heap.live!=live_bytes)return 205;
             if(console_heap_live)return 211;
         }
         int count=console_events;
@@ -84,12 +83,12 @@ int main(int argc,char **argv) {
             if(!setjmp(console_failure)) {(void)console_call(kind,argv[1],argument);return 206;}
             if(fwp_cleanups!=fwp_trap_cleanup)return 207;
             if(console_heap_live)return 212;
-            if(!console_collect && fwp_heap.live!=live_bytes)return 208;
+            if(fwp_heap.live!=live_bytes)return 208;
             if(*fwp_rc_slot(text)!=1 || STR(text)->len!=11)return 209;
         }
         console_fail_at=0;fwp_trap_recover=0;fwp_trap_jb=0;fwp_trap_cleanup=0;
     }
     fwp_rc_free_obj(text);fwp_rc_free_obj(key);fwp_rc_free_obj(nul_key);
-    if(console_collect && !fwp_heap.ncollect)return 210;
+    if(fwp_heap.live!=initial_bytes)return 208;
     return 0;
 }

@@ -94,54 +94,29 @@ main = [
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for opt in ["-O1", "-O2"] {
-        for stack in ["0", "1"] {
-            let exe = dir
-                .0
-                .join(format!("aliases{opt}-{stack}"))
-                .with_extension(std::env::consts::EXE_EXTENSION);
-            checked(
-                Command::new(fwp)
-                    .args(["build"])
-                    .arg(&src)
-                    .args([opt, "-o"])
-                    .arg(&exe)
-                    .env("FWP_STACK", stack),
-            );
-            for poison in ["0", "1"] {
-                let out = checked(
-                    Command::new(&exe)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison),
-                );
-                assert_eq!(
-                    out.stdout, reference.stdout,
-                    "{opt}, stack {stack}, poison {poison}"
-                );
-            }
-        }
-    }
-    for flag in ["FWP_REUSE", "FWP_FREE"] {
-        let exe = dir
-            .0
-            .join(flag)
-            .with_extension(std::env::consts::EXE_EXTENSION);
+    for stack in ["0", "1"] {
+        let cfile = dir.0.join(format!("aliases-{stack}.c"));
         checked(
             Command::new(fwp)
-                .args(["build"])
+                .arg("build")
                 .arg(&src)
-                .args(["-O1", "-o"])
-                .arg(&exe)
-                .env(flag, "0"),
+                .args(["--emit-c", "-o"])
+                .arg(&cfile)
+                .env("FWP_STACK", stack),
         );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
-        assert_eq!(out.stdout, reference.stdout, "{flag}=0");
+        let code = std::fs::read_to_string(cfile).unwrap();
+        for opt in ["-O1", "-O2"] {
+            for (label, source) in [
+                ("reuse", code.clone()),
+                ("copy", format!("#define FWP_NO_REUSE 1\n{code}")),
+            ] {
+                let exe = dir.0.join(format!("aliases-{stack}-{label}{opt}.exe"));
+                fwp::cgen::compile_c(&source, &exe, opt).unwrap();
+                let out = checked(&mut Command::new(&exe));
+                assert_eq!(out.stdout, reference.stdout, "{stack}/{label}/{opt}");
+                assert_eq!(out.stderr, reference.stderr, "{stack}/{label}/{opt}");
+            }
+        }
     }
 }
 
@@ -190,7 +165,7 @@ main = (10000, 0) | loop step | echo
     );
     let owned = std::fs::read_to_string(&emitted).unwrap();
     // Keep identical typed alias duplication and scratch cleanup; change only
-    // whether the emitted wrappers share their structural result graphs.
+    // whether an extra unreleased owner retains each structural result graph.
     let mut changed = 0;
     let shared = owned
         .lines()
@@ -214,7 +189,7 @@ main = (10000, 0) | loop step | echo
             .any(|name| line.contains(&format!("return fwp_p_{name}_typed(l")))
             {
                 changed += 1;
-                line.replace("return fwp_p_", "return fwp_rc_shared(fwp_p_")
+                line.replace("return fwp_p_", "return fwp_test_leak_owner(fwp_p_")
                     .replace(");", "));")
             } else {
                 line.to_string()
@@ -222,32 +197,33 @@ main = (10000, 0) | loop step | echo
         })
         .collect::<Vec<_>>()
         .join("\n");
+    let marker = "static inline int fwp_rc_unique(V v) {";
+    assert_eq!(shared.matches(marker).count(), 1);
+    let shared = shared.replace(marker,
+        &format!("static V fwp_test_leak_owner(V value) {{ fwp_rc_dup(value); return value; }}\n{marker}"));
     assert_eq!(changed, 13, "missing typed map/set wrappers: {changed}");
     assert_ne!(shared, owned);
-    let mut freed = Vec::new();
-    for (name, code) in [("shared", &shared), ("owned", &owned)] {
-        let exe = dir
-            .0
-            .join(name)
-            .with_extension(std::env::consts::EXE_EXTENSION);
-        fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_ALLOC_STATS", "1")
-                .env("FWP_REUSE_VERIFY", "0"),
+    for opt in ["-O1", "-O2"] {
+        let mut reports = Vec::new();
+        for (name, code) in [("unreleased-owner", &shared), ("owned", &owned)] {
+            let exe = dir.0.join(format!("{name}{opt}.exe"));
+            fwp::cgen::compile_c(code, &exe, opt).unwrap();
+            let out = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
+            assert_eq!(out.stdout, reference.stdout, "{name}{opt}");
+            reports.push(
+                allocation_report::parse(&String::from_utf8_lossy(&out.stderr))
+                    .expect("allocation report"),
+            );
+        }
+        let [leaked, owned] = reports.as_slice() else {
+            unreachable!()
+        };
+        assert!(
+            owned.released > leaked.released + 314_572,
+            "{opt}: {reports:?}"
         );
-        assert_eq!(out.stdout, reference.stdout);
-        let stats = String::from_utf8_lossy(&out.stderr);
-
-        freed.push(
-            allocation_report::parse(&stats)
-                .expect("allocation report")
-                .released as f64
-                / 1_048_576.0,
-        );
+        assert!(leaked.live > owned.live + 314_572, "{opt}: {reports:?}");
     }
-    eprintln!("typed map/set graph MiB freed by counts: {freed:?}");
-    assert!(freed[1] > freed[0] + 0.3, "{freed:?}");
 }
 
 #[test]
@@ -398,15 +374,15 @@ fn save_map_evidence(name: &str, bytes: &[u8]) {
     }
 }
 
-fn map_failure_source(dir: &Scratch, mode: &str) -> String {
+fn map_failure_source(dir: &Scratch) -> String {
     let src = dir.0.join("failures.fwp");
-    let cfile = dir.0.join(format!("failures-{mode}.c"));
+    let cfile = dir.0.join("failures.c");
     std::fs::write(&src, include_str!("fixtures/map_failures.fwp")).unwrap();
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .arg("build")
             .arg(&src)
-            .args(["--gc", mode, "--emit-c", "-o"])
+            .args(["--emit-c", "-o"])
             .arg(&cfile)
             .env("FWP_STACK", "0"),
     );
@@ -530,121 +506,93 @@ fn map_failure_probe(emitted: &str) -> String {
 #[test]
 fn map_set_failures_release_partial_storage_and_preserve_aliases() {
     let dir = Scratch::new("partial-failure");
-    for mode in ["arc", "tracing"] {
-        let emitted = map_failure_source(&dir, mode);
-        let source = map_failure_probe(&emitted);
-        save_map_evidence(&format!("faults-{mode}.c"), source.as_bytes());
-        for opt in ["-O1", "-O2"] {
-            let exe = dir
-                .0
-                .join(format!("failures-{mode}{opt}"))
-                .with_extension(std::env::consts::EXE_EXTENSION);
-            fwp::cgen::compile_c(&source, &exe, opt).unwrap();
-            save_map_evidence(
-                &format!("faults-{mode}{opt}.bin"),
-                &std::fs::read(&exe).unwrap(),
-            );
-            for poison in if mode == "arc" {
-                &["0"][..]
-            } else {
-                &["0", "1"][..]
-            } {
-                let mut command = Command::new(&exe);
-                command
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", poison);
-                if mode != "arc" {
-                    command.env("FWP_GC_STRESS", "1").env("FWP_GC_VERIFY", "1");
-                }
-                let out = checked(&mut command);
-                save_map_evidence(
-                    &format!("faults-{mode}{opt}-reuse-{poison}.txt"),
-                    &out.stdout,
-                );
-                let stdout = String::from_utf8(out.stdout).unwrap();
-                assert!(stdout.starts_with("22 map/set operations: "), "{stdout}");
-                assert!(
-                    stdout.ends_with(" injected failures cleaned; aliases preserved\n"),
-                    "{stdout}"
-                );
-                print!("{mode} {opt} reuse={poison}: {stdout}");
-            }
-        }
-        // A missing result owner must be detected independently of output checks.
-        if mode == "arc" {
-            let start = source.find("static V fwp_map_typed_copy(").unwrap();
-            let end = start + source[start..].find("\n}\n").unwrap() + 3;
-            let mut broken = source.clone();
-            let body = source[start..end].replace(
-                "fwp_value_owner owner = {result, ops->drop_map};",
-                "fwp_value_owner owner = {result, NULL};",
-            );
-            assert_ne!(body, source[start..end]);
-            broken.replace_range(start..end, &body);
-            let exe = dir
-                .0
-                .join("missing-owner")
-                .with_extension(std::env::consts::EXE_EXTENSION);
-            fwp::cgen::compile_c(&broken, &exe, "-O1").unwrap();
-            save_map_evidence("missing-result-owner.c", broken.as_bytes());
-            save_map_evidence("missing-result-owner.bin", &std::fs::read(&exe).unwrap());
-            let out = Command::new(exe)
-                .env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
-            assert_eq!(
-                out.status.code(),
-                Some(213),
-                "{}",
-                String::from_utf8_lossy(&out.stderr)
-            );
-            save_map_evidence("missing-result-owner.txt", &out.stderr);
-            save_map_evidence(
-                "missing-result-owner.status",
-                out.status.code().unwrap().to_string().as_bytes(),
-            );
-            // Protecting the map alone is insufficient when an earlier scratch
-            // allocation survives a comparison failure during sorting.
-            let start = source.find("static V fwp_map_build_typed(").unwrap();
-            let end = start + source[start..].find("\n}\n").unwrap() + 3;
-            let body = source[start..end].replace(
-                "fwp_scratch_protect(&tk, &tk_cleanup);",
-                "fwp_cleanup_push(&tk_cleanup, map_test_no_release, &tk);",
-            );
-            assert_ne!(body, source[start..end]);
-            let mut broken = source.clone();
-            broken.replace_range(start..end, &body);
-            let exe = dir
-                .0
-                .join("missing-scratch-owner")
-                .with_extension(std::env::consts::EXE_EXTENSION);
-            fwp::cgen::compile_c(&broken, &exe, "-O1").unwrap();
-            save_map_evidence("missing-scratch-owner.c", broken.as_bytes());
-            save_map_evidence("missing-scratch-owner.bin", &std::fs::read(&exe).unwrap());
-            let out = Command::new(exe)
-                .env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
-            assert_eq!(
-                out.status.code(),
-                Some(213),
-                "{}",
-                String::from_utf8_lossy(&out.stderr)
-            );
-            save_map_evidence("missing-scratch-owner.txt", &out.stderr);
-            save_map_evidence(
-                "missing-scratch-owner.status",
-                out.status.code().unwrap().to_string().as_bytes(),
-            );
-        }
+
+    let emitted = map_failure_source(&dir);
+    let source = map_failure_probe(&emitted);
+    save_map_evidence("faults-counted.c", source.as_bytes());
+    for opt in ["-O1", "-O2"] {
+        let exe = dir
+            .0
+            .join(format!("failures-counted{opt}"))
+            .with_extension(std::env::consts::EXE_EXTENSION);
+        fwp::cgen::compile_c(&source, &exe, opt).unwrap();
+        save_map_evidence(
+            &format!("faults-counted{opt}.bin"),
+            &std::fs::read(&exe).unwrap(),
+        );
+
+        let mut command = Command::new(&exe);
+
+        let out = checked(&mut command);
+        save_map_evidence(&format!("faults-counted{opt}.txt"), &out.stdout);
+        let stdout = String::from_utf8(out.stdout).unwrap();
+        assert!(stdout.starts_with("22 map/set operations: "), "{stdout}");
+        assert!(
+            stdout.ends_with(" injected failures cleaned; aliases preserved\n"),
+            "{stdout}"
+        );
+        print!("counted {opt}: {stdout}");
+    }
+    // A missing result owner must be detected independently of output checks.
+    {
+        let start = source.find("static V fwp_map_typed_copy(").unwrap();
+        let end = start + source[start..].find("\n}\n").unwrap() + 3;
+        let mut broken = source.clone();
+        let body = source[start..end].replace(
+            "fwp_value_owner owner = {result, ops->drop_map};",
+            "fwp_value_owner owner = {result, NULL};",
+        );
+        assert_ne!(body, source[start..end]);
+        broken.replace_range(start..end, &body);
+        let exe = dir
+            .0
+            .join("missing-owner")
+            .with_extension(std::env::consts::EXE_EXTENSION);
+        fwp::cgen::compile_c(&broken, &exe, "-O1").unwrap();
+        save_map_evidence("missing-result-owner.c", broken.as_bytes());
+        save_map_evidence("missing-result-owner.bin", &std::fs::read(&exe).unwrap());
+        let out = Command::new(exe).output().unwrap();
+        assert_eq!(
+            out.status.code(),
+            Some(213),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        save_map_evidence("missing-result-owner.txt", &out.stderr);
+        save_map_evidence(
+            "missing-result-owner.status",
+            out.status.code().unwrap().to_string().as_bytes(),
+        );
+        // Protecting the map alone is insufficient when an earlier scratch
+        // allocation survives a comparison failure during sorting.
+        let start = source.find("static V fwp_map_build_typed(").unwrap();
+        let end = start + source[start..].find("\n}\n").unwrap() + 3;
+        let body = source[start..end].replace(
+            "fwp_scratch_protect(&tk, &tk_cleanup);",
+            "fwp_cleanup_push(&tk_cleanup, map_test_no_release, &tk);",
+        );
+        assert_ne!(body, source[start..end]);
+        let mut broken = source.clone();
+        broken.replace_range(start..end, &body);
+        let exe = dir
+            .0
+            .join("missing-scratch-owner")
+            .with_extension(std::env::consts::EXE_EXTENSION);
+        fwp::cgen::compile_c(&broken, &exe, "-O1").unwrap();
+        save_map_evidence("missing-scratch-owner.c", broken.as_bytes());
+        save_map_evidence("missing-scratch-owner.bin", &std::fs::read(&exe).unwrap());
+        let out = Command::new(exe).output().unwrap();
+        assert_eq!(
+            out.status.code(),
+            Some(213),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        save_map_evidence("missing-scratch-owner.txt", &out.stderr);
+        save_map_evidence(
+            "missing-scratch-owner.status",
+            out.status.code().unwrap().to_string().as_bytes(),
+        );
     }
 }
 
@@ -659,42 +607,31 @@ fn map_callbacks_can_change_value_types_and_fail_without_leaking() {
             .arg(&source)
             .env("FWP_NO_OPT", "1"),
     );
-    for mode in ["arc", "tracing"] {
-        save_map_evidence("interpreter.txt", &reference.stdout);
-        let mut emitted = map_failure_source(&dir, mode);
-        if mode == "arc" {
-            let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
-            assert_eq!(emitted.matches(finish).count(), 1);
-            emitted = emitted.replace(finish, &format!("{finish}\n    if (0 != fwp_heap.live) {{ fprintf(stderr, \"map callback storage leaked: %lld bytes\\n\", (long long)(fwp_heap.live)); abort(); }}\n"));
-        }
-        save_map_evidence(&format!("callbacks-{mode}.c"), emitted.as_bytes());
-        for opt in ["-O1", "-O2"] {
-            let exe = dir
-                .0
-                .join(format!("callbacks-{mode}{opt}"))
-                .with_extension(std::env::consts::EXE_EXTENSION);
-            fwp::cgen::compile_c(&emitted, &exe, opt).unwrap();
-            save_map_evidence(
-                &format!("callbacks-{mode}{opt}.bin"),
-                &std::fs::read(&exe).unwrap(),
-            );
-            let mut command = Command::new(&exe);
-            command
-                .env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0");
-            if mode != "arc" {
-                command
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", "1");
-            }
-            let output = checked(&mut command);
-            assert_eq!(output.stdout, reference.stdout);
-            save_map_evidence(&format!("callbacks-{mode}{opt}.txt"), &output.stdout);
-            save_map_evidence(&format!("callbacks-{mode}{opt}.stderr"), &output.stderr);
-        }
+
+    save_map_evidence("interpreter.txt", &reference.stdout);
+    let mut emitted = map_failure_source(&dir);
+
+    let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
+    assert_eq!(emitted.matches(finish).count(), 1);
+    emitted = emitted.replace(finish, &format!("{finish}\n    if (0 != fwp_heap.live) {{ fprintf(stderr, \"map callback storage leaked: %lld bytes\\n\", (long long)(fwp_heap.live)); abort(); }}\n"));
+
+    save_map_evidence("callbacks-counted.c", emitted.as_bytes());
+    for opt in ["-O1", "-O2"] {
+        let exe = dir
+            .0
+            .join(format!("callbacks-counted{opt}"))
+            .with_extension(std::env::consts::EXE_EXTENSION);
+        fwp::cgen::compile_c(&emitted, &exe, opt).unwrap();
+        save_map_evidence(
+            &format!("callbacks-counted{opt}.bin"),
+            &std::fs::read(&exe).unwrap(),
+        );
+        let mut command = Command::new(&exe);
+
+        let output = checked(&mut command);
+        assert_eq!(output.stdout, reference.stdout);
+        save_map_evidence(&format!("callbacks-counted{opt}.txt"), &output.stdout);
+        save_map_evidence(&format!("callbacks-counted{opt}.stderr"), &output.stderr);
     }
 }
 
@@ -717,119 +654,100 @@ fn compact_sets_preserve_values_and_request_only_key_storage() {
             "interpreter FWP_NO_OPT={optimize}"
         );
     }
-    for mode in ["arc", "tracing"] {
-        let cfile = dir.0.join("sets.c");
-        checked(
-            Command::new(compiler)
-                .args(["build", "--emit-c", "--gc", mode])
-                .arg(&src)
-                .arg("-o")
-                .arg(&cfile),
+
+    let cfile = dir.0.join("sets.c");
+    checked(
+        Command::new(compiler)
+            .args(["build", "--emit-c"])
+            .arg(&src)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(&cfile).unwrap();
+    let probe_cfile = dir.0.join("builder.c");
+    checked(
+        Command::new(compiler)
+            .args(["build", "--emit-c", "--fn", "build-set"])
+            .arg(&src)
+            .arg("-o")
+            .arg(&probe_cfile),
+    );
+    let builder = std::fs::read_to_string(&probe_cfile).unwrap();
+    let start = builder
+        .find("/* build-set :")
+        .expect("selected set builder missing");
+    let function = builder[start..]
+        .split("static V ")
+        .nth(1)
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    let allocation = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
+    assert_eq!(builder.matches(allocation).count(), 1);
+    let measured = builder
+        .replace(
+            "typedef uint64_t V;",
+            "typedef uint64_t V;\nstatic size_t set_last_request;",
+        )
+        .replace(allocation, &format!("{allocation} set_last_request = n;"))
+        .replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
         );
-        let code = std::fs::read_to_string(&cfile).unwrap();
-        let probe_cfile = dir.0.join("builder.c");
-        checked(
-            Command::new(compiler)
-                .args(["build", "--emit-c", "--gc", mode, "--fn", "build-set"])
-                .arg(&src)
-                .arg("-o")
-                .arg(&probe_cfile),
+    let measured = format!(
+        "{measured}\n{}",
+        include_str!("fixtures/compact_set_storage.c").replace("BUILD_SET", function)
+    );
+    for opt in ["-O0", "-O2"] {
+        let exe = dir
+            .0
+            .join("sets")
+            .with_extension(std::env::consts::EXE_EXTENSION);
+
+        fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+        let output = checked(&mut Command::new(&exe));
+        assert_eq!(output.stdout, reference, "counted/{opt}");
+        fwp::cgen::compile_c(&measured, &exe, opt).unwrap();
+        let output = checked(&mut Command::new(&exe));
+        save_map_evidence(&format!("compact-counted{opt}.txt"), &output.stdout);
+        save_map_evidence(&format!("compact-counted{opt}.c"), measured.as_bytes());
+        save_map_evidence(
+            &format!("compact-counted{opt}.exe"),
+            &std::fs::read(&exe).unwrap(),
         );
-        let builder = std::fs::read_to_string(&probe_cfile).unwrap();
-        let start = builder
-            .find("/* build-set :")
-            .expect("selected set builder missing");
-        let function = builder[start..]
-            .split("static V ")
-            .nth(1)
-            .unwrap()
-            .split('(')
-            .next()
-            .unwrap();
-        let allocation = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
-        assert_eq!(builder.matches(allocation).count(), 1);
-        let measured = builder
-            .replace(
-                "typedef uint64_t V;",
-                "typedef uint64_t V;\nstatic size_t set_last_request;",
-            )
-            .replace(allocation, &format!("{allocation} set_last_request = n;"))
-            .replace(
-                "int main(int argc, char **argv)",
-                "int original_main(int argc, char **argv)",
+        if std::env::var_os("FWP_MAP_FAILURE_ARTIFACTS").is_some() {
+            let disassembly = if cfg!(target_os = "macos") {
+                checked(Command::new("otool").arg("-tvV").arg(&exe))
+            } else if cfg!(target_os = "windows") {
+                checked(Command::new("llvm-objdump").arg("-d").arg(&exe))
+            } else {
+                checked(Command::new("objdump").arg("-d").arg(&exe))
+            };
+            save_map_evidence(&format!("compact-counted{opt}.asm"), &disassembly.stdout);
+        }
+        print!("counted/{opt}: {}", String::from_utf8_lossy(&output.stdout));
+        if opt == "-O0" {
+            // Restoring one wasted word per key must fail the request check.
+            let old = "fwp_alloc(sizeof(fwp_map) + columns * len * sizeof(V))";
+            assert_eq!(measured.matches(old).count(), 1);
+            let wasteful = measured.replace(
+                old,
+                "fwp_alloc(sizeof(fwp_map) + (columns + 1) * len * sizeof(V))",
             );
-        let measured = format!(
-            "{measured}\n{}",
-            include_str!("fixtures/compact_set_storage.c").replace("BUILD_SET", function)
-        );
-        for opt in ["-O0", "-O2"] {
-            let exe = dir
-                .0
-                .join("sets")
-                .with_extension(std::env::consts::EXE_EXTENSION);
-            let verify = if mode == "arc" { "0" } else { "1" };
-            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-            let output = checked(
-                Command::new(&exe)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", verify)
-                    .env("FWP_GC_VERIFY", verify)
-                    .env("FWP_REUSE_VERIFY", verify),
-            );
-            assert_eq!(output.stdout, reference, "{mode}/{opt}");
-            fwp::cgen::compile_c(&measured, &exe, opt).unwrap();
-            let output = checked(
-                Command::new(&exe)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0"),
-            );
-            save_map_evidence(&format!("compact-{mode}{opt}.txt"), &output.stdout);
-            save_map_evidence(&format!("compact-{mode}{opt}.c"), measured.as_bytes());
+            fwp::cgen::compile_c(&wasteful, &exe, opt).unwrap();
+            save_map_evidence("compact-wasted-slot-control.c", wasteful.as_bytes());
             save_map_evidence(
-                &format!("compact-{mode}{opt}.exe"),
+                "compact-wasted-slot-control.bin",
                 &std::fs::read(&exe).unwrap(),
             );
-            if std::env::var_os("FWP_MAP_FAILURE_ARTIFACTS").is_some() {
-                let disassembly = if cfg!(target_os = "macos") {
-                    checked(Command::new("otool").arg("-tvV").arg(&exe))
-                } else if cfg!(target_os = "windows") {
-                    checked(Command::new("llvm-objdump").arg("-d").arg(&exe))
-                } else {
-                    checked(Command::new("objdump").arg("-d").arg(&exe))
-                };
-                save_map_evidence(&format!("compact-{mode}{opt}.asm"), &disassembly.stdout);
-            }
-            print!("{mode}/{opt}: {}", String::from_utf8_lossy(&output.stdout));
-            if mode == "arc" && opt == "-O0" {
-                // Restoring one wasted word per key must fail the request check.
-                let old = "fwp_alloc(sizeof(fwp_map) + columns * len * sizeof(V))";
-                assert_eq!(measured.matches(old).count(), 1);
-                let wasteful = measured.replace(
-                    old,
-                    "fwp_alloc(sizeof(fwp_map) + (columns + 1) * len * sizeof(V))",
-                );
-                fwp::cgen::compile_c(&wasteful, &exe, opt).unwrap();
-                save_map_evidence("compact-wasted-slot-control.c", wasteful.as_bytes());
-                save_map_evidence(
-                    "compact-wasted-slot-control.bin",
-                    &std::fs::read(&exe).unwrap(),
-                );
-                let failed = Command::new(&exe)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
-                assert_eq!(failed.status.code(), Some(211), "{failed:?}");
-                save_map_evidence("compact-wasted-slot-control.txt", &failed.stderr);
-                save_map_evidence(
-                    "compact-wasted-slot-control.status",
-                    failed.status.code().unwrap().to_string().as_bytes(),
-                );
-            }
+            let failed = Command::new(&exe).output().unwrap();
+            assert_eq!(failed.status.code(), Some(211), "{failed:?}");
+            save_map_evidence("compact-wasted-slot-control.txt", &failed.stderr);
+            save_map_evidence(
+                "compact-wasted-slot-control.status",
+                failed.status.code().unwrap().to_string().as_bytes(),
+            );
         }
     }
 }
@@ -837,75 +755,67 @@ fn compact_sets_preserve_values_and_request_only_key_storage() {
 #[test]
 fn map_sort_scratch_does_not_overlap_result_storage() {
     let dir = Scratch::new("sort-storage");
-    for mode in ["arc", "tracing"] {
-        let source = map_failure_source(&dir, mode);
-        let allocation = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
-        assert_eq!(source.matches(allocation).count(), 1);
-        let mut measured = source.replace(
+
+    let source = map_failure_source(&dir);
+    let allocation = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
+    assert_eq!(source.matches(allocation).count(), 1);
+    let mut measured = source.replace(
             "typedef uint64_t V;",
             "typedef uint64_t V;\nstatic int map_storage_active;\nstatic double map_storage_start, map_storage_peak;\nstatic void map_storage_sample(void);",
         ).replace(allocation, "static inline void *map_storage_allocate(size_t n, int kind) {");
-        let start = measured
-            .find("static inline void *map_storage_allocate(")
-            .unwrap();
-        let end = start + measured[start..].find("\n}\n").unwrap() + 3;
-        measured.insert_str(end, "\nstatic inline void *fwp_heap_alloc(size_t n, int kind) { void *p = map_storage_allocate(n, kind); map_storage_sample(); return p; }\n");
-        measured = measured.replace(
-            "int main(int argc, char **argv)",
-            "int original_main(int argc, char **argv)",
-        );
-        measured.push_str(include_str!("fixtures/map_sort_storage.c"));
-        let start = measured.find("static V fwp_map_build_typed(").unwrap();
-        let end = start + measured[start..].find("\n}\n").unwrap() + 3;
-        let body = &measured[start..end];
-        let release = "    fwp_scratch_finish(&tk, &tk_cleanup);\n";
-        assert_eq!(body.matches(release).count(), 1);
-        let late = body.replace(release, "").replace(
-            "    fwp_value_finish(&owner, &cleanup);\n",
-            &format!("    fwp_value_finish(&owner, &cleanup);\n{release}"),
-        );
-        let mut control = measured.clone();
-        control.replace_range(start..end, &late);
-        for (label, code, status) in [("ordinary", &measured, 0), ("late-release", &control, 241)] {
-            save_map_evidence(&format!("sort-storage-{mode}-{label}.c"), code.as_bytes());
-            for opt in ["-O1", "-O2"] {
-                let exe = dir
-                    .0
-                    .join("sort-storage")
-                    .with_extension(std::env::consts::EXE_EXTENSION);
-                fwp::cgen::compile_c(code, &exe, opt).unwrap();
-                save_map_evidence(
-                    &format!("sort-storage-{mode}-{label}{opt}.bin"),
-                    &std::fs::read(&exe).unwrap(),
+    let start = measured
+        .find("static inline void *map_storage_allocate(")
+        .unwrap();
+    let end = start + measured[start..].find("\n}\n").unwrap() + 3;
+    measured.insert_str(end, "\nstatic inline void *fwp_heap_alloc(size_t n, int kind) { void *p = map_storage_allocate(n, kind); map_storage_sample(); return p; }\n");
+    measured = measured.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    measured.push_str(include_str!("fixtures/map_sort_storage.c"));
+    let start = measured.find("static V fwp_map_build_typed(").unwrap();
+    let end = start + measured[start..].find("\n}\n").unwrap() + 3;
+    let body = &measured[start..end];
+    let release = "    fwp_scratch_finish(&tk, &tk_cleanup);\n";
+    assert_eq!(body.matches(release).count(), 1);
+    let late = body.replace(release, "").replace(
+        "    fwp_value_finish(&owner, &cleanup);\n",
+        &format!("    fwp_value_finish(&owner, &cleanup);\n{release}"),
+    );
+    let mut control = measured.clone();
+    control.replace_range(start..end, &late);
+    for (label, code, status) in [("ordinary", &measured, 0), ("late-release", &control, 241)] {
+        save_map_evidence(&format!("sort-storage-counted-{label}.c"), code.as_bytes());
+        for opt in ["-O1", "-O2"] {
+            let exe = dir
+                .0
+                .join("sort-storage")
+                .with_extension(std::env::consts::EXE_EXTENSION);
+            fwp::cgen::compile_c(code, &exe, opt).unwrap();
+            save_map_evidence(
+                &format!("sort-storage-counted-{label}{opt}.bin"),
+                &std::fs::read(&exe).unwrap(),
+            );
+            for kind in ["map", "set"] {
+                let out = Command::new(&exe).arg(kind).output().unwrap();
+                assert_eq!(
+                    out.status.code(),
+                    Some(status),
+                    "counted/{label}/{opt}/{kind}: {out:?}"
                 );
-                for kind in ["map", "set"] {
-                    let out = Command::new(&exe)
-                        .arg(kind)
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "0")
-                        .env("FWP_REUSE_VERIFY", "0")
-                        .output()
-                        .unwrap();
-                    assert_eq!(
-                        out.status.code(),
-                        Some(status),
-                        "{mode}/{label}/{opt}/{kind}: {out:?}"
-                    );
-                    assert!(out.stderr.is_empty(), "{out:?}");
-                    save_map_evidence(
-                        &format!("sort-storage-{mode}-{label}{opt}-{kind}.txt"),
-                        &out.stdout,
-                    );
-                    save_map_evidence(
-                        &format!("sort-storage-{mode}-{label}{opt}-{kind}.status"),
-                        out.status.code().unwrap().to_string().as_bytes(),
-                    );
-                    println!(
-                        "{mode}/{label}/{opt}/{}",
-                        String::from_utf8(out.stdout).unwrap().trim()
-                    );
-                }
+                assert!(out.stderr.is_empty(), "{out:?}");
+                save_map_evidence(
+                    &format!("sort-storage-counted-{label}{opt}-{kind}.txt"),
+                    &out.stdout,
+                );
+                save_map_evidence(
+                    &format!("sort-storage-counted-{label}{opt}-{kind}.status"),
+                    out.status.code().unwrap().to_string().as_bytes(),
+                );
+                println!(
+                    "counted/{label}/{opt}/{}",
+                    String::from_utf8(out.stdout).unwrap().trim()
+                );
             }
         }
     }
