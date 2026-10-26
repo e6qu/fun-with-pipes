@@ -72,7 +72,7 @@ def main():
                    'received_requests_and_statuses_release_on_errors_and_cancelled_waits',
                    'owned_client_streams_release_after_readers_and_senders_finish',
                    'encoded_messages_release_on_cancel_and_preserve_plain_and_gzip_frames',
-                   'task_values_and_channel_aliases_under_stress',
+                   'task_values_and_channel_aliases_preserve_owners',
                    'deadline_aliases_count_only_owned_types',
                    'deadline_passthrough_preserves_count_reclamation']
     if args.comparison in {'method-values', 'server-values', 'server-owners', 'server-borrows', 'server-arc', 'server-arc-moves'}:

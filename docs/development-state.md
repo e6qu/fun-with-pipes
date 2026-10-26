@@ -34,7 +34,11 @@ Cached-map, mapped-array and task-handle tests now preserve their owner, alias,
 construction and scheduler controls without duplicate modes. Cached-value tests
 retain initialization, reentrancy, failure order and missing-owner checks. The
 transpose probe keeps every partial-column failure, alias-count and scratch-leak
-control; it also requires final input-owner release. Integrated execution is pending.
+control; it also requires final input-owner release. Task/deadline, State-sequence
+and UDP tests now keep their failure, alias, socket-close and unload controls
+without collector selectors. State copying uses `FWP_NO_REUSE`; retained-storage
+controls omit physical frees or add explicit extra result owners. Integrated
+execution is pending.
 
 ## Implemented here; integration still pending
 
@@ -72,7 +76,7 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 1. **Finish test mode removal.** The list/State/closure fixtures in
    `list_applicative_ownership` are migrated; integrated execution is pending.
    `unwind_cleanup` and typed-State reports are also migrated. Next review the
-   remaining 8 unchanged candidate files and stale candidates listed below.
+   remaining 5 unchanged candidate files and stale candidates listed below.
    Remove variable `--gc` arguments, duplicate
    ARC/tracing loops, obsolete environment settings and CLI-selector tests.
    Keep every distinct semantic input, optimization/layout choice and ownership
@@ -117,7 +121,7 @@ Nine owner-test candidates were reviewed and applied: constructor type/unwind,
 general/ordinary record update, loop preparation, retain unwind, variant conversion,
 worker boxing and worker preparation. Twelve more owner candidates and thirteen program candidates were reviewed,
 refined and applied. The typed-State and unwind candidates were also reviewed,
-refined and applied; 8 candidate files still match their source hashes. The
+refined and applied; 5 candidate files still match their source hashes. The
 `arc_tasks`, `linalg_ownership`, `retained_thunk_ownership`,
 `within_thunk_ownership`, `loop_ownership` and `list_applicative_ownership`
 candidates are now also stale. Remaining candidates are **unreviewed**. They may
