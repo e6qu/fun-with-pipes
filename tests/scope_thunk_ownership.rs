@@ -89,8 +89,8 @@ static void worker(void *arg,int failed){
  fSCOPE(fn);fwp_trap("expected cancellation");
 }
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
- intptr_t baseline=fwp_gc.budget;
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
+ size_t baseline=fwp_heap.live;
  for(int round=0;round<32;round++){
  for(int alias=0;alias<2;alias++){
   capture=fwp_rc_fresh(fwp_str_new("input",5));if(alias)fwp_rc_dup(capture);
@@ -116,7 +116,7 @@ int main(void){
  V result=fSCALAR(fn);if(result!=scalar||*fwp_rc_slot(scalar)!=1)return 7;
  fwp_closure_drop(fn);fwp_rc_free_obj(scalar);
 #ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
 #endif
  }
  fwp_fninfo table[sizeof(fwp_fn_table)/sizeof(fwp_fn_table[0])];memcpy(table,fwp_fn_table,sizeof(table));
@@ -136,7 +136,7 @@ int main(void){
 #endif
  fwp_tasks_finish();fwp_native_tasks_finish();
 #ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=fwp_gc.budget_given||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=0||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
 #endif
  return 0;
 }

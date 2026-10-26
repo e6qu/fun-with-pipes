@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn inline_paths_preserve_display_and_reduce_constructor_allocations() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::Record(vec![]);
     let program = Program {
         funcs: vec![Func {
@@ -36,7 +32,7 @@ fn inline_paths_preserve_display_and_reduce_constructor_allocations() {
     h->refs = 1;
     file.handle = PTR(h);
 #ifdef FWP_LIBRARY
-    fwp_gc_finalizer(h, fwp_file_final);
+    fwp_heap_finalizer(h, fwp_file_final);
 #endif
     char *p = (char *)observe_alloc(strlen(path) + 1, 1);
     strcpy(p, path);
@@ -59,7 +55,7 @@ static void *observe_alloc(size_t n,int leaf){
  allocations++;requested+=n;return leaf?fwp_alloc_leaf(n):fwp_alloc(n);
 }
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
+ fwp_lib_init();fwp_heap_start();
  const fwp_desc desc={.kind=K_FILE};
  for(size_t n=0;n<=4096;n=n? n*2:1){
   char *path=malloc(n+1);if(!path)return 20;memset(path,'x',n);path[n]=0;
@@ -77,7 +73,7 @@ int main(void){
   fwp_file_drop(root);
   root=0;
  }
- fwp_gc_finish();return 0;
+ fwp_heap_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("file-inline-path").unwrap();
@@ -157,7 +153,7 @@ fn source_file_io_matches_the_unoptimized_interpreter() {
                 build.env("FWP_REUSE", "0").env("FWP_FREE", "0");
             }
             let out = build
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&source)
                 .args([opt, "-o"])
                 .arg(&exe)

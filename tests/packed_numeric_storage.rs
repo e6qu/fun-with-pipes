@@ -38,7 +38,7 @@ fn emitted(scratch: &Scratch, fixture_name: &str, function: &str, packing: &str)
             .env_remove("FWP_TYPED_ABI")
             .env("FWP_REUSE", "1")
             .env("FWP_PACKED_ARRAYS", packing)
-            .args(["build", "--gc", "tracing", "--fn", function, "--emit-c"])
+            .args(["build", "--fn", function, "--emit-c"])
             .arg(fixture(fixture_name))
             .arg("-o")
             .arg(&path),
@@ -67,7 +67,7 @@ fn native_probe(scratch: &Scratch, name: &str, source: &str, opt: &str, stress: 
 }
 fn instrument_allocators(source: &str) -> String {
     source.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic uint64_t measured_calls,measured_bytes;")
-        .replace("static inline void *fwp_gc_alloc(size_t n, int leaf) {", "static inline void *fwp_gc_alloc(size_t n, int leaf) {\n    if (leaf != 0) { measured_calls++; measured_bytes+=n; }")
+        .replace("static inline void *fwp_heap_alloc(size_t n, int kind) {", "static inline void *fwp_heap_alloc(size_t n, int kind) {\n    if (kind != 0) { measured_calls++; measured_bytes+=n; }")
         .replace("static inline void *fwp_alloc_init(size_t n) {", "static inline void *fwp_alloc_init(size_t n) {\n    measured_calls++; measured_bytes+=n;")
 }
 
@@ -92,7 +92,7 @@ fn immutable_numeric_operations_agree_with_raw_interpreter() {
                         .env_remove("FWP_NO_OPT")
                         .env("FWP_PACKED_ARRAYS", packing)
                         .env("FWP_REUSE", reuse)
-                        .args(["build", "--gc", "tracing", opt])
+                        .args(["build", opt])
                         .arg(&source)
                         .arg("-o")
                         .arg(&path),
@@ -212,7 +212,7 @@ fn typed_float_worker_bridges_preserve_zero_and_nan_payloads() {
 _Static_assert(sizeof(fwp_wr{id})==3*{width},"natural aggregate width");
 _Static_assert(_Generic(((fwp_wr{id}*)0)->f0,{ctype}:1,default:0),"native field type");
 int main(void) {{
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     const V bits[]={{{bits}}};
     for(size_t j=0;j<4;j++) {{ V r=f{id}(bits[j]);
         for(size_t k=0;k<3;k++)if(OBJ(r)->f[k]!=bits[j])return 130;

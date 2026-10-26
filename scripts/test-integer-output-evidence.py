@@ -25,7 +25,7 @@ class OutputEvidence(unittest.TestCase):
                 if tool.name == 'llvm-nm':
                     names = [f'fwp_runtime_{index}' for index in range(12)]
                     if present:
-                        names.append('fwp_gc_mark_all')
+                        names.append('fwp_heap_mark_all')
                     return '\n'.join('0000 t ' + name for name in names)
                 if tool.name == 'llvm-objdump':
                     return 'file format elf64-x86-64\n'

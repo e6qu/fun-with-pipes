@@ -66,7 +66,7 @@ static int pair_fill(fwp_tape *t, int64_t count) {
     return pair_check(t);
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     fwp_tape_scope scope={-1};fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup,fwp_tape_scope_release,&scope);
     for (int managed=0;managed<=1;managed++) {
@@ -100,7 +100,7 @@ int main(void) {
     fwp_cleanup_pop(&cleanup);
     if (fwp_cleanups || fwp_owned_tapes || scope.head!=-1) return 218;
 #if !FWP_ARC_ONLY
-    if (!fwp_gc.armed || !fwp_gc.ncollect) return 219;
+    if (!fwp_heap.armed || !fwp_heap.ncollect) return 219;
 #endif
     puts("paired metadata preserves aligned values across moving growth and traps");
     return 0;

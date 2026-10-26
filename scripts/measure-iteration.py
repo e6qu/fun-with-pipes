@@ -53,9 +53,9 @@ static void iteration_sample(void);
 '''
     assert code.count('typedef uint64_t V;') == 1
     code = code.replace('typedef uint64_t V;', declaration)
-    code = wrap(code, 'static inline void *fwp_gc_alloc(size_t n, int leaf) {',
-                'fwp_gc_alloc', 'n, leaf',
-                'if(iteration_active && leaf!=0){iteration_requests++;iteration_bytes+=n;}')
+    code = wrap(code, 'static inline void *fwp_heap_alloc(size_t n, int kind) {',
+                'fwp_heap_alloc', 'n, kind',
+                'if(iteration_active && kind!=0){iteration_requests++;iteration_bytes+=n;}')
     code = wrap(code, 'static inline void *fwp_alloc_init(size_t n) {',
                 'fwp_alloc_init', 'n',
                 'if(iteration_active){iteration_requests++;iteration_bytes+=n;}')
@@ -64,7 +64,7 @@ static void iteration_sample(void);
     code = code.replace(retain, retain + '\nif(iteration_active)iteration_retains++;')
     main = code.index('static void *fwp_main_thread(void *arg) {')
     prefix, body = code[:main], code[main:]
-    sample = '''static double iteration_charge(void){return fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);}
+    sample = '''static double iteration_charge(void){return (double)fwp_heap.live;}
 static void iteration_sample(void){if(iteration_active){double live=iteration_charge()-iteration_start_charge;if(live>iteration_peak)iteration_peak=live;}}
 '''
     assert body.count('    fwp_init_consts();\n') == 1
@@ -72,7 +72,7 @@ static void iteration_sample(void){if(iteration_active){double live=iteration_ch
     body = body.replace('    fwp_init_consts();\n', '    fwp_init_consts();\n    iteration_start_charge=iteration_charge();iteration_active=1;\n')
     body = body.replace('    /* Ownership observation point: before runtime teardown. */\n', '''    /* Ownership observation point: before runtime teardown. */
     iteration_active=0;
-    fprintf(stderr,"{\\"requests\\":%llu,\\"requestedBytes\\":%llu,\\"retains\\":%llu,\\"peakChargedBytes\\":%.0f,\\"finalChargedBytes\\":%.0f,\\"collections\\":%zu}\\n",(unsigned long long)iteration_requests,(unsigned long long)iteration_bytes,(unsigned long long)iteration_retains,iteration_peak,iteration_charge()-iteration_start_charge,fwp_gc.ncollect);
+    fprintf(stderr,"{\\"requests\\":%llu,\\"requestedBytes\\":%llu,\\"retains\\":%llu,\\"peakChargedBytes\\":%.0f,\\"finalChargedBytes\\":%.0f,\\"collections\\":%zu}\\n",(unsigned long long)iteration_requests,(unsigned long long)iteration_bytes,(unsigned long long)iteration_retains,iteration_peak,iteration_charge()-iteration_start_charge,fwp_heap.ncollect);
 ''')
     return prefix + sample + body
 
@@ -113,7 +113,7 @@ def main():
             label = name if producers else name + ('-consumer-only' if fused else '-unfused')
             variant_env = dict(environment, FWP_ITER_CONSUMERS='1' if fused else '0', FWP_ITER_PRODUCERS='1' if producers else '0')
             cfile = out / (label + '.c')
-            run([compiler, 'build', '--gc', 'tracing', '-O2', '--emit-c', source, '-o', cfile], variant_env)
+            run([compiler, 'build', '-O2', '--emit-c', source, '-o', cfile], variant_env)
             workers = loop_evidence(cfile.read_text())
             if name in ('fold', 'each', 'find', 'pipeline', 'iterate', 'array'):
                 assert bool(workers) == fused, (name, fused, workers)

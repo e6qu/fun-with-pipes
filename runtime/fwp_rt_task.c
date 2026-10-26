@@ -17,7 +17,7 @@
  * Without glibc (musl has no makecontext), or with FWP_OWN_CONTEXT,
  * tasks switch with a few instructions of their own on x86-64 and
  * AArch64 (fwp_ctx_swap): the callee-saved registers are pushed on the
- * task's stack, which the collector scans from the saved stack pointer.
+ * task's stack, then restored when the task resumes.
  *
  * On WebAssembly (FWP_FIBERS) there is no ucontext: each task is a fiber
  * whose stack the JavaScript host suspends and resumes with JavaScript
@@ -177,8 +177,8 @@ typedef struct {
 } g_ctx;
 #endif
 
-/* Shared language handles, a sole scheduler owner, or an unproved traced path. */
-enum fwp_task_ownership { FWP_TASK_TRACED, FWP_TASK_SHARED, FWP_TASK_UNIQUE };
+/* Independent handles require counts; scheduler-only tasks have one owner. */
+enum fwp_task_ownership { FWP_TASK_SHARED, FWP_TASK_UNIQUE };
 struct fwp_task {
     uint64_t identity; /* Never reused when allocator slots or fibers are reused. */
 #ifdef _WIN32
@@ -228,11 +228,8 @@ struct fwp_task {
     fwp_task *tprev, *tnext;    /* timer list */
     fwp_wl *wl;                 /* list this task is parked on */
     fwp_task *wprev, *wnext;
-#if FWP_GC && !defined(FWP_ARC_ONLY)
-    char *gc_sp; /* suspended stack bound used only by tracing */
-#endif
     /* Live tasks: also needed by ARC for cancellation and shutdown. */
-    fwp_task *gc_prev, *gc_next;
+    fwp_task *all_prev, *all_next;
 };
 
 typedef struct fwp_scope {
@@ -271,7 +268,7 @@ static int64_t fwp_after(V d) {
     return now > INT64_MAX - n ? INT64_MAX : now + n;
 }
 
-/* a task is collected once it finished and nothing refers to it */
+/* Retained service context travels with its task. */
 #ifdef FWP_GCTX_OWNERS
 static void *(*fwp_gctx_acquire)(void *) = 0;
 static void (*fwp_gctx_release)(void *) = 0;
@@ -286,41 +283,16 @@ static fwp_task *fwp_task_new(void) {
     if (fwp_task_identity == UINT64_MAX) fwp_trap("task identity exhausted");
     fwp_task *task = fwp_mem_alloc(sizeof *task);
     task->identity = ++fwp_task_identity;
-    task->ownership = FWP_TASK_TRACED;
+    task->ownership = FWP_TASK_UNIQUE;
     return task;
 }
 
-static fwp_task *fwp_gc_tasks = 0;
+static fwp_task *fwp_tasks_active = 0;
 #ifdef FWP_LIBC_CONTEXT
-/* The root uses the host's stack. Its saved CPU state is scanned with program
- * data and cleared at teardown. Child contexts live above their usable frames. */
+/* The root uses the host's stack. Child contexts live above their usable frames. */
 static ucontext_t fwp_root_context;
 #endif
 
-#if FWP_GC && !defined(FWP_ARC_ONLY)
-/* the lowest address of a suspended task's stack in use */
-#ifdef FWP_OWN_CONTEXT
-#define FWP_TASK_LOW(t) ((char *)(t)->ctx.sp)
-#else
-#define FWP_TASK_LOW(t) ((t)->gc_sp)
-#endif
-static void fwp_gc_scan_stacks(char *sp) {
-#ifdef _WIN32
-    char *top = fwp_cur ? fwp_cur->ctx.top : fwp_gc.main_top;
-    fwp_gc_scan_root(sp, top);
-    for (fwp_task *t = fwp_gc_tasks; t; t = t->gc_next)
-        if (t != fwp_cur) fwp_win_context_scan(&t->ctx);
-    if (fwp_root && fwp_cur != fwp_root) fwp_win_context_scan(&fwp_root->ctx);
-#else
-    char *top = fwp_cur && fwp_cur->stack ? fwp_cur->stack + fwp_cur->stack_size : fwp_gc.main_top;
-    fwp_gc_scan_root(sp, top);
-    for (fwp_task *t = fwp_gc_tasks; t; t = t->gc_next)
-        if (t != fwp_cur && t->stack && t->gc_sp) fwp_gc_scan_root(FWP_TASK_LOW(t), t->stack + t->stack_size);
-    if (fwp_root && fwp_cur != fwp_root && fwp_root->gc_sp)
-        fwp_gc_scan_root(FWP_TASK_LOW(fwp_root), fwp_gc.main_top);
-#endif
-}
-#endif
 
 #if defined(_WIN32) && defined(FWP_STATIC_MEMORY)
 typedef struct { void *fiber; char *top; int busy; } fwp_static_fiber;
@@ -621,7 +593,7 @@ static void fwp_cancel_tree(fwp_task *t) {
     for (fwp_task *c = t->first_child; c; c = c->next_sibling) fwp_cancel_tree(c);
 }
 
-/* Both owned policies dispose storage after the stack and GC links are removed. */
+/* Dispose storage after retiring the stack and removing scheduler links. */
 static void fwp_task_dispose(V value) {
     fwp_task *t = (fwp_task *)(uintptr_t)value;
     if (!t->done || t->stack) abort();
@@ -632,7 +604,6 @@ static void fwp_task_dispose(V value) {
     fwp_mem_free(t->st);
     t->st = 0;
     enum fwp_task_ownership ownership = t->ownership;
-    t->ownership = FWP_TASK_TRACED;
     /* A sole scheduler owner has no reference count. Counted storage release
      * deliberately ignores zero-count objects, so unique tasks return their
      * raw allocation directly. Neither policy uses a record/variant header. */
@@ -680,10 +651,10 @@ static void fwp_free_zombie(void) {
 #ifdef FWP_LIBC_CONTEXT
         fwp_zombie->ctx = 0; /* a retained result cannot refer to a recycled stack */
 #endif
-        if (fwp_zombie->gc_prev) fwp_zombie->gc_prev->gc_next = fwp_zombie->gc_next;
-        else fwp_gc_tasks = fwp_zombie->gc_next;
-        if (fwp_zombie->gc_next) fwp_zombie->gc_next->gc_prev = fwp_zombie->gc_prev;
-        fwp_zombie->gc_prev = fwp_zombie->gc_next = 0;
+        if (fwp_zombie->all_prev) fwp_zombie->all_prev->all_next = fwp_zombie->all_next;
+        else fwp_tasks_active = fwp_zombie->all_next;
+        if (fwp_zombie->all_next) fwp_zombie->all_next->all_prev = fwp_zombie->all_prev;
+        fwp_zombie->all_prev = fwp_zombie->all_next = 0;
         fwp_task *finished = fwp_zombie;
         fwp_zombie = 0;
         enum fwp_task_ownership ownership = finished->ownership;
@@ -721,9 +692,6 @@ static void fwp_switch(fwp_task *to) {
     if (to == from) return;
     fwp_leave(from);
     fwp_enter(to);
-#if FWP_GC && !defined(FWP_ARC_ONLY)
-    from->gc_sp = fwp_gc_sp();
-#endif
 #ifdef FWP_FIBERS
     ((int (*)(int))(uintptr_t)fwp_hooks.sw)(fwp_fiber_id(to));
 #elif defined(_WIN32)
@@ -1155,9 +1123,9 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
         }
     }
 #endif
-    t->gc_next = fwp_gc_tasks;
-    if (fwp_gc_tasks) fwp_gc_tasks->gc_prev = t;
-    fwp_gc_tasks = t;
+    t->all_next = fwp_tasks_active;
+    if (fwp_tasks_active) fwp_tasks_active->all_prev = t;
+    fwp_tasks_active = t;
 #ifdef FWP_OWN_CONTEXT
     {
         /* what fwp_ctx_swap restores: zeroed registers, the default
@@ -1179,7 +1147,7 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
 #elif defined(FWP_LIBC_CONTEXT)
     /* Keep the large register image out of the frequently accessed task record.
      * makecontext may use only the bytes below this aligned context. The context
-     * remains within the collector's scanned stack and outlives every switch. */
+     * outlives every switch and is released with the task stack. */
     uintptr_t context = ((uintptr_t)t->stack + t->stack_size - sizeof(ucontext_t))
         & ~(uintptr_t)(_Alignof(ucontext_t) - 1);
     t->ctx = (ucontext_t *)context;
@@ -1252,7 +1220,7 @@ static void fwp_tasks_finish(void) {
 static void fwp_fiber_tasks_finish(void) {
     if (fwp_cur != fwp_root) abort();
     fwp_free_zombie();
-    if (fwp_gc_tasks || fwp_ready_head || fwp_timers) abort();
+    if (fwp_tasks_active || fwp_ready_head || fwp_timers) abort();
     while (fwp_stack_pool_n) free(fwp_stack_pool[--fwp_stack_pool_n]);
     if (fwp_root) {
         if (fwp_root->first_child || fwp_root->st || fwp_state_len || fwp_state_owners)
@@ -1288,8 +1256,8 @@ static void fwp_native_tasks_finish(void) {
     if (fwp_cur != fwp_root) abort();
     if (fwp_root) {
         fwp_root->unwinding = 1;
-        for (fwp_task *t = fwp_gc_tasks; t; t = t->gc_next) fwp_cancel_tree(t);
-        while (fwp_gc_tasks) {
+        for (fwp_task *t = fwp_tasks_active; t; t = t->all_next) fwp_cancel_tree(t);
+        while (fwp_tasks_active) {
             fwp_make_ready(fwp_root);
             fwp_block();
             fwp_free_zombie();
@@ -1381,15 +1349,11 @@ static fwp_option_result fwp_task_await_fields(V handle, void (*dup)(V)) {
     return (fwp_option_result){1, value};
 }
 
-static V fwp_p_task_spawn(V thunk) { return PTR(fwp_spawn(thunk, 0)); }
-
 /* Transfer the caller's callback owner to the task. Keep it protected until
  * stack/scope preparation succeeds and the task accepts responsibility. */
 static fwp_task *fwp_spawn_owned(V thunk, int64_t deadline, void (*drop)(V)) {
-    if (!fwp_fns[CLO(thunk)->fn].owned) {
-        fwp_rc_share(thunk);
-        return fwp_spawn(thunk, deadline);
-    }
+    if (!fwp_fns[CLO(thunk)->fn].owned)
+        fwp_trap("internal: task callback has no owned entry");
     fwp_value_owner owner = {thunk, fwp_closure_drop};
     fwp_cleanup cleanup;
     fwp_value_protect(&owner, &cleanup);
@@ -1428,11 +1392,6 @@ static V fwp_await_owned(fwp_task *t, void (*dup)(V)) {
 static V fwp_p_task_await_owned(V t, void (*dup)(V)) {
     fwp_tasks_init();
     return fwp_await_owned((fwp_task *)(uintptr_t)t, dup);
-}
-
-static V fwp_p_task_within(V d, V thunk) {
-    int64_t at = fwp_after(d);
-    return fwp_await(fwp_spawn(thunk, at));
 }
 
 static V fwp_p_task_within_owned(V d, V thunk, void (*drop)(V), void (*dup)(V)) {
@@ -1545,7 +1504,7 @@ static V fwp_task_scope_impl(V body, int borrowed, void (*drop)(V)) {
     r = fwp_value_finish(&result_owner, &result_cleanup);
     fwp_cleanup_pop(&scope_cleanup);
     fwp_scope_release(&scope_owner);
-    FWP_KEEP_ALIVE(body);
+
     return r;
 }
 
@@ -1557,9 +1516,6 @@ static V fwp_p_task_scope_borrowed(V body, void (*drop)(V)) {
 /* ----- channels */
 
 #ifdef FWP_WEAK_CHANNELS
-#ifndef FWP_ARC_ONLY
-#error weak channels require checked ownership
-#endif
 /* The channel owns one metadata reference; every weak value owns another.
  * Metadata never owns the target. Final channel release clears target before
  * destroying any queued value, so reentrant cleanup cannot resurrect it. */
@@ -1913,8 +1869,8 @@ static V fwp_sock_new(fwp_socket_t fd, int kind) {
 #ifdef FWP_TLS
     if (kind != 2) ((fwp_stream *)s)->tls = NULL;
 #endif
-#if defined(FWP_LIBRARY) || !defined(FWP_ARC_ONLY)
-    fwp_gc_finalizer(s, fwp_sock_final);
+#ifdef FWP_LIBRARY
+    fwp_heap_finalizer(s, fwp_sock_final);
 #endif
     return fwp_rc_fresh(PTR(s));
 }
@@ -1935,28 +1891,10 @@ static void fwp_sock_drop(V value) {
     fwp_sock *s = SOCK(value);
     if (!s->refs || --s->refs) return;
     fwp_sock_final(s);
-#if defined(FWP_LIBRARY) || !defined(FWP_ARC_ONLY)
-    fwp_gc_forget_finalizer(s);
+#ifdef FWP_LIBRARY
+    fwp_heap_forget_finalizer(s);
 #endif
-#if !FWP_GC
-    /* Collector-free allocator configurations own their count metadata and
-     * storage through the same typed free used for other resource headers. */
-    fwp_rc_free_obj(value);
-#elif !defined(FWP_RESOURCE_NO_FREE)
-    if (!fwp_rc_last(value)) return;
-#ifndef FWP_ARC_ONLY
-    if (fwp_reuse_verify < 0) {
-        const char *e = getenv("FWP_REUSE_VERIFY");
-        fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
-    }
-    /* This leaf has a socket layout, not a String header. Its zero owners and
-     * invalid descriptor already expose a later accidental use. */
-    if (fwp_reuse_verify) return;
-#endif
-    intptr_t before = fwp_gc.budget;
-    fwp_mem_free(s);
-    fwp_gc.freed += (double)(fwp_gc.budget - before);
-#endif
+    fwp_rc_resource_free_obj(value);
 }
 
 /* split "host:port" (host may be bracketed IPv6); the host must not be
@@ -2334,7 +2272,7 @@ static V fwp_p_udp_bind(V addr, const fwp_desc *err) {
     V result = fwp_sock_new(fd, 2);
     owner.fd = FWP_INVALID_SOCKET;
     fwp_cleanup_pop(&cleanup);
-    FWP_KEEP_ALIVE(addr);
+
     return result;
 }
 
@@ -2471,7 +2409,7 @@ static V fwp_p_metrics_update(int op, V name, V xv) {
         fwp_metric_get(n, len, "_count", 6, "summary")->x += 1;
         fwp_metric_get(n, len, "_sum", 4, "summary")->x += x;
     }
-    FWP_KEEP_ALIVE(name);
+
     return FWP_UNIT;
 }
 
@@ -2496,8 +2434,8 @@ static void fwp_library_tasks_finish(void) {
         fwp_root->unwinding = 1;
         /* Detached runtime tasks are not root children, but still have stacks
          * in this list. Cancel all of them before disposing any mapping. */
-        for (fwp_task *t = fwp_gc_tasks; t; t = t->gc_next) fwp_cancel_tree(t);
-        while (fwp_gc_tasks) {
+        for (fwp_task *t = fwp_tasks_active; t; t = t->all_next) fwp_cancel_tree(t);
+        while (fwp_tasks_active) {
             fwp_make_ready(fwp_root);
             fwp_block();
             fwp_free_zombie();
@@ -2526,7 +2464,7 @@ static void fwp_library_tasks_finish(void) {
         fwp_mem_free(fwp_root);
     }
     fwp_cur = fwp_root = fwp_zombie = 0;
-    fwp_gc_tasks = fwp_ready_head = fwp_ready_tail = fwp_timers = 0;
+    fwp_tasks_active = fwp_ready_head = fwp_ready_tail = fwp_timers = 0;
     fwp_cleanups = 0;
     fwp_foreign_callbacks = 0;
     fwp_handlers = 0;

@@ -20,8 +20,8 @@ static double context_start_charge;
     let mut code = code.replace("typedef uint64_t V;", declarations);
     for (signature, condition) in [
         (
-            "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
-            "leaf != 0",
+            "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+            "kind != 0",
         ),
         ("static inline void *fwp_alloc_init(size_t n) {", "1"),
     ] {
@@ -38,11 +38,11 @@ static double context_start_charge;
             .count(),
         1
     );
-    let body = body.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    context_start_charge=fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);context_measure=1;\n")
+    let body = body.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    context_start_charge=(double)fwp_heap.live;context_measure=1;\n")
         .replace("    /* Ownership observation point: before runtime teardown. */\n", r#"    /* Ownership observation point: before runtime teardown. */
     context_measure=0;
     fprintf(stderr,"context %llu %llu %.0f %zu\n",context_requests,context_bytes,
-        fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget)-context_start_charge,fwp_gc.ncollect);
+        (double)fwp_heap.live-context_start_charge,fwp_heap.ncollect);
 #ifdef FWP_GCTX_OWNERS
     fprintf(stderr,"layout %zu %zu %zu %zu\n",sizeof(g_ctx),_Alignof(g_ctx),sizeof(fwp_task),_Alignof(fwp_task));
 #else
@@ -145,7 +145,7 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
             let cfile = dir.join(format!("{label}.c"));
             checked(
                 Command::new(compiler)
-                    .args(["build", "--gc", "tracing", "--emit-c", "-O2"])
+                    .args(["build", "--emit-c", "-O2"])
                     .arg(&input)
                     .arg("-o")
                     .arg(&cfile),

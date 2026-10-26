@@ -108,8 +108,8 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
 #endif
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
-    intptr_t baseline=fwp_gc.budget;
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+    size_t baseline=fwp_heap.live;
     for (volatile int round=0;round<32;round++) {
     for (volatile int mode=0;mode<4;mode++) for (volatile int alias=0;alias<2;alias++) {
         first=fwp_rc_fresh(fwp_str_new("first",5));last=fwp_rc_fresh(fwp_str_new("last",4));
@@ -135,7 +135,7 @@ int main(void) {
         fwp_rc_free_obj(scalar_word);
     }
 #ifdef FWP_ARC_ONLY
-    if (fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
+    if (fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 90;
 #endif
     }
     puts("constructor allocation failure releases typed fields without losing aliases or scalar bits");

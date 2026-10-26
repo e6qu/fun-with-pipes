@@ -112,7 +112,7 @@ fn autodiff_workspaces_reuse_bounded_storage_and_release_every_private_owner() {
     let cfile = directory.join("runtime.c");
     std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
     let out = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--gc", "tracing", "--emit-c"])
+        .args(["build", "--emit-c"])
         .arg(&input)
         .arg("-o")
         .arg(&cfile)
@@ -144,7 +144,7 @@ fn autodiff_workspaces_reuse_bounded_storage_and_release_every_private_owner() {
     let declarations = "static void *workspace_realloc(void *,size_t);\nstatic void *workspace_calloc(size_t,size_t);\nstatic void workspace_free(void *);\nstatic V workspace_result_array(size_t);\n";
     let runtime=format!("{}{}{}{}",&source[..start],declarations,tape,&source[end..])
       .replace("typedef uint64_t V;","typedef uint64_t V;\nstatic uint64_t measured_calls,measured_bytes;")
-      .replace("static inline void *fwp_gc_alloc(size_t n, int leaf) {","static inline void *fwp_gc_alloc(size_t n, int leaf) {\nif(leaf!=0){measured_calls++;measured_bytes+=n;}")
+      .replace("static inline void *fwp_heap_alloc(size_t n, int kind) {","static inline void *fwp_heap_alloc(size_t n, int kind) {\nif(kind!=0){measured_calls++;measured_bytes+=n;}")
       .replace("static inline void *fwp_alloc_init(size_t n) {","static inline void *fwp_alloc_init(size_t n) {\nmeasured_calls++;measured_bytes+=n;")
       .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
     let probe = include_str!("fixtures/autodiff_workspace_probe.c");

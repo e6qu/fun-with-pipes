@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn tls_options_use_one_allocation_and_release_after_the_last_owner() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -67,7 +63,7 @@ static void *observe_realloc(void *old,size_t n){if(measuring)calls++;void *p=re
 static char *observe_strdup(const char *s){if(measuring)calls++;char *p=strdup(s);if(p)remember(p,strlen(s)+1);return p;}
 static void observe_free(void *p){if(p)for(int i=0;i<allocations;i++)if(watched[i]==p){watched[i]=0;frees++;break;}free(p);}
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  jmp_buf failed;fwp_cur->trap_jb=&failed;fwp_cur->trap_cleanup=fwp_cleanups;
  measuring=fail_allocation=1;
  if(!setjmp(failed)){g_tls_new("ca",1,"name","cert","key");return 2;}

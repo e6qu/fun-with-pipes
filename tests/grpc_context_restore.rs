@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn grpc_context_restores_on_nested_failures_and_cancelled_callbacks() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -79,7 +75,7 @@ static void call(void *arg,int stop){
  if(fwp_cur->gctx!=child_prior_context||fwp_cleanups)_Exit(1);
 }
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  g_ctx before={0},inside={0},nested={0};before.deadline=1;inside.deadline=2;nested.deadline=3;
  prior_context=&before;inner_context=&inside;nested_context=&nested;fwp_cur->gctx=&before;
  for(stage=0;stage<6;stage++){

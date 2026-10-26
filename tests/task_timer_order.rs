@@ -52,7 +52,7 @@ main = [finish!(20), finish!(22)] | sum | echo
         let exe = dir.0.join(format!("macro-tasks{opt}.exe"));
         let compiled = checked(
             Command::new(fwp)
-                .args(["build", "--gc", "arc"])
+                .args(["build"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -98,7 +98,7 @@ fn channel_orders_prints_even_when_shorter_timer_starts_late() {
             let exe = dir.0.join(format!("ordered-{delayed}{opt}"));
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", "tracing"])
+                    .args(["build"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe),

@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn grpc_connection_startup_releases_failed_task_reservations() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![
@@ -100,7 +96,7 @@ static void check_wait_lifetimes(void){
  }
 }
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_trap_recover=g_trap_recover;
+ fwp_lib_init();fwp_heap_start();fwp_trap_recover=g_trap_recover;
  for(stage=0;stage<3;stage++){
   V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);V address=fwp_p_local_addr(listener);snprintf(target,sizeof target,"%s",STR(address)->d);
   pending=started_reader=started_writer=0;trapped=finalized=0;result=0;
@@ -112,7 +108,7 @@ int main(void){
   // A ready root would prevent the scheduler from polling the closed socket.
   // Park briefly so its reader wakes naturally; never await a freed I/O handle.
   int64_t drain_deadline=fwp_now_ns()+10000000000LL;
-  while(fwp_gc_tasks){
+  while(fwp_tasks_active){
    if(fwp_now_ns()>=drain_deadline){fprintf(stderr,"startup drain timed out at stage %d\n",stage);return 9;}
    fwp_park(0,fwp_now_ns()+1000000LL);fwp_free_zombie();
   }fwp_free_zombie();

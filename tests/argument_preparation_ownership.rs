@@ -110,10 +110,10 @@ static int dead_cell(V v) {
     if (fwp_reuse_verify) return OBJ(v)->tag==0xdead;
 #endif
     size_t ci;
-    gc_chunk *chunk=fwp_gc_chunk_of((uintptr_t)v,&ci);
-    if (!chunk || chunk->type==GC_FREE) return 1;
-    if (chunk->type!=GC_SMALL) return 0;
-    for (char *p=fwp_gc.lists[chunk->leaf][chunk->cls].free;p;p=(char *)~*(uintptr_t *)p)
+    heap_chunk *chunk=fwp_heap_chunk_of((uintptr_t)v,&ci);
+    if (!chunk || chunk->type==HEAP_FREE) return 1;
+    if (chunk->type!=HEAP_SMALL) return 0;
+    for (char *p=fwp_heap.lists[chunk->leaf][chunk->cls].free;p;p=(char *)~*(uintptr_t *)p)
         if (PTR(p)==v) return 1;
     return 0;
 }
@@ -121,8 +121,8 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
-    intptr_t baseline=fwp_gc.budget;
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+    size_t baseline=fwp_heap.live;
     for(int round=0;round<32;round++){
     for (volatile int mode=0;mode<6;mode++) {
         first=fwp_rc_fresh(fwp_str_new("first",5));second=fwp_rc_fresh(fwp_str_new("second",6));
@@ -158,7 +158,7 @@ int main(void) {
         fwp_rc_free_obj(first);fwp_rc_free_obj(second);fwp_rc_free_obj(last);fwp_rc_free_obj(scalar_word);
     }
 #ifdef FWP_ARC_ONLY
-    if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
+    if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;
 #endif
     }
     puts("partial argument and capture preparation preserves aliases and releases pending owners");

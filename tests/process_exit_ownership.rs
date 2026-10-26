@@ -74,7 +74,7 @@ fn explicit_exit_preserves_output_and_status_without_a_collector() {
             if mode == "arc" {
                 let symbols = checked(Command::new("nm").arg(&binary));
                 let symbols = String::from_utf8_lossy(&symbols.stdout);
-                for tracing in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                for tracing in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                     assert!(!symbols.contains(tracing), "{symbols}");
                 }
             }
@@ -95,14 +95,7 @@ fn explicit_exit_uses_actual_wasi_process_status() {
     let cfile = dir.join("exit.c");
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args([
-                "build",
-                "--gc",
-                "arc",
-                "--target",
-                "wasm32-wasi",
-                "--emit-c",
-            ])
+            .args(["build", "--target", "wasm32-wasi", "--emit-c"])
             .arg(&input)
             .arg("-o")
             .arg(&cfile),

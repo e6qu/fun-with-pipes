@@ -27,7 +27,7 @@ managed = const [0.0] | rev._seed | .1 | rev._seed | .1
     )
     .unwrap();
     let build = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--gc", "tracing", "--cdylib", "--emit-c"])
+        .args(["build", "--cdylib", "--emit-c"])
         .arg(&input)
         .arg("-o")
         .arg(&output)
@@ -58,7 +58,7 @@ managed = const [0.0] | rev._seed | .1 | rev._seed | .1
     )
     .replace("(double *)calloc(", "(double *)library_calloc(");
     let code=format!("{}\nstatic void *library_realloc(void *,size_t);\nstatic void *library_calloc(size_t,size_t);\nstatic void library_free(void *);\nstatic void *library_mem_alloc(size_t);\nstatic void *library_mem_realloc(void *,size_t,size_t);\nstatic void library_mem_free(void *);\nstatic void library_finished(void);\n{}{}\n{}",&source[..a],tape,&source[b..],include_str!("fixtures/autodiff_library_ledger.c"))
-        .replace("    fwp_tape_finish();\n    fwp_gc_finish();", "    fwp_tape_finish();library_finished();\n    fwp_gc_finish();");
+        .replace("    fwp_tape_finish();\n    fwp_heap_finish();", "    fwp_tape_finish();library_finished();\n    fwp_heap_finish();");
     assert!(code.contains("fwp_tape_finish();library_finished();"));
     let host = dir.join("host.c");
     let exe = dir.join(if cfg!(windows) { "host.exe" } else { "host" });

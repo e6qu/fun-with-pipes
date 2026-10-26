@@ -3,7 +3,7 @@
  * exercise compiler-generated iterator and closure destructors. */
 static int stage,created,dropped,advanced,encoded,parked,moved,borrowed;
 static double input_charge(void) {
-    return fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);
+    return (double)fwp_heap.live;
 }
 static V input_node(const char *text) {
     V string=fwp_rc_fresh(fwp_str_new(text,strlen(text)));
@@ -57,7 +57,7 @@ static void probe_encode(V value,h2_buf *buffer) {
 }
 int main(int argc,char **argv) {
     if(argc!=2)_Exit(200);stage=atoi(argv[1]);if(stage<0||stage>6)_Exit(200);
-    fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+    fwp_lib_init();fwp_heap_start();fwp_tasks_init();
     fwp_trap_recover=g_trap_recover;
     double before=input_charge();
     g_conn *c=g_conn_new(FWP_INVALID_SOCKET, "", "input-owner-test",0);fwp_rc_fresh(PTR(c));
@@ -70,13 +70,13 @@ int main(int argc,char **argv) {
         jmp_buf failed;fwp_cur->trap_jb=&failed;fwp_cur->trap_cleanup=fwp_cleanups;
         if(!setjmp(failed)){g_spawn_sender(c,s,original,&remote);_Exit(237);}
         fwp_cur->trap_jb=0;fwp_cur->trap_cleanup=0;fwp_trap_jb=0;fwp_trap_cleanup=0;
-        if(strcmp(fwp_trap_msg,"reference count overflow")||probe_task||fwp_gc_tasks||fwp_cleanups||dropped)_Exit(238);
+        if(strcmp(fwp_trap_msg,"reference count overflow")||probe_task||fwp_tasks_active||fwp_cleanups||dropped)_Exit(238);
         if(*slot!=255||(*fwp_rc_wide_link(slot))->count!=SIZE_MAX)_Exit(239);
         fwp_rc_forget_slot(slot);*slot=1;input_drop(original);
         if(*fwp_rc_slot(PTR(s))!=2||*fwp_rc_slot(PTR(c))!=1)_Exit(240);
         g_unlink(c,s);g_stream_drop(s);g_conn_drop(c);
         if(dropped!=created)_Exit(221);
-        if(!fwp_gc.enabled&&!fwp_reuse_verify&&input_charge()!=before)_Exit(222);
+        if(!fwp_heap.enabled&&!fwp_reuse_verify&&input_charge()!=before)_Exit(222);
         fwp_lib_finish();return 0;
     }
     if(stage==1)fwp_rc_dup(original); /* separately retained original iterator */
@@ -92,7 +92,7 @@ int main(int argc,char **argv) {
         fwp_cancel_tree(task);
     }
     int64_t deadline=fwp_now_ns()+10000000000LL;
-    while(fwp_gc_tasks){
+    while(fwp_tasks_active){
         if(fwp_now_ns()>=deadline)_Exit(230);
         fwp_park(0,fwp_now_ns()+1000000LL);fwp_free_zombie();
     }
@@ -112,6 +112,6 @@ int main(int argc,char **argv) {
     /* Reset requests have already released their active-list owner. */
     if(*fwp_rc_slot(PTR(s))!=1+s->listed||*fwp_rc_slot(PTR(c))!=1||fwp_cleanups)_Exit(236);
     g_unlink(c,s);g_stream_drop(s);g_conn_drop(c);
-    if(!fwp_gc.enabled&&!fwp_reuse_verify&&input_charge()!=before)_Exit(222);
+    if(!fwp_heap.enabled&&!fwp_reuse_verify&&input_charge()!=before)_Exit(222);
     fwp_lib_finish();return 0;
 }

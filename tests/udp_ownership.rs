@@ -54,7 +54,7 @@ fn udp_results_preserve_values_aliases_and_release_storage() {
     let retained = dir.join("retained.c");
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "tracing", "--emit-c"])
+            .args(["build", "--emit-c"])
             .env("FWP_FREE", "0")
             .arg(&input)
             .arg("-o")
@@ -76,7 +76,7 @@ fn udp_results_preserve_values_aliases_and_release_storage() {
             if arc {
                 let symbols = checked(Command::new("nm").arg(&binary));
                 let symbols = String::from_utf8_lossy(&symbols.stdout);
-                for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                for name in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                     assert!(!symbols.contains(name), "ARC binary contains {name}");
                 }
             }
@@ -94,16 +94,16 @@ fn udp_results_preserve_values_aliases_and_release_storage() {
             let body = code[start..end]
                 .replace(
                     "    fwp_init_consts();\n",
-                    "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t udp_budget=fwp_gc.budget_given;\n",
+                    "    fwp_init_consts();\n    fwp_tasks_init();\n    size_t udp_live_bytes=0;\n",
                 )
                 .replace(
                     "    /* Ownership observation point: before runtime teardown. */\n",
-                    "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.budget<udp_budget) { fprintf(stderr,\"UDP charged storage left: %lld\\n\",(long long)(udp_budget-fwp_gc.budget)); exit(248); }\n",
+                    "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > udp_live_bytes) { fprintf(stderr,\"UDP charged storage left: %lld\\n\",(long long)(fwp_heap.live - udp_live_bytes)); exit(248); }\n",
                 );
             let body = if arc {
                 body.replace(
-                    "if(fwp_gc.budget<udp_budget)",
-                    "if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget<udp_budget)",
+                    "if(fwp_heap.live > udp_live_bytes)",
+                    "if(fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > udp_live_bytes)",
                 )
             } else {
                 body
@@ -274,7 +274,7 @@ fn udp_construction_aliases_and_partial_receives_release_every_owner() {
             let old = code.replace("udp_allocation(); ", "");
             let old = old
                 .replace("static inline void *fwp_alloc_init(size_t n) {", "static inline void *fwp_alloc_init(size_t n) { udp_allocation();")
-                .replace("static inline void *fwp_gc_alloc(size_t n, int leaf) {", "static inline void *fwp_gc_alloc(size_t n, int leaf) { if(leaf!=0)udp_allocation();");
+                .replace("static inline void *fwp_heap_alloc(size_t n, int kind) {", "static inline void *fwp_heap_alloc(size_t n, int kind) { if(kind!=0)udp_allocation();");
             let binary = dir.join("old-global-ordinal.exe");
             fwp::cgen::compile_c(&old, &binary, "-O2").unwrap();
             let output = Command::new(binary)
@@ -330,7 +330,7 @@ fn socket_library_unload_closes_retained_handles_and_preserves_host_socket() {
             let code = std::fs::read_to_string(&cfile).unwrap() + setup;
             let header = std::fs::read_to_string(cfile.with_extension("h")).unwrap();
             let omitted = code.replace(
-                "    fwp_gc_finalizer(s, fwp_sock_final);",
+                "    fwp_heap_finalizer(s, fwp_sock_final);",
                 "    /* omitted library socket finalizer */",
             );
             assert_ne!(code, omitted);
@@ -354,7 +354,7 @@ fn socket_library_unload_closes_retained_handles_and_preserves_host_socket() {
                     if mode == "arc" {
                         let symbols = checked(Command::new("nm").arg(&library));
                         let symbols = String::from_utf8_lossy(&symbols.stdout);
-                        for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                        for name in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                             assert!(!symbols.contains(name), "ARC library contains {name}");
                         }
                     }

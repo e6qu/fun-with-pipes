@@ -213,12 +213,12 @@ static int strings_released_once(void){for(int i=0;i<ns;i++)if(!dead_string(stri
 static int data_released(void){for(int i=0;i<nd;i++)if(!dead_data(data[i]))return 0;return 1;}
 int main(void){
  fwp_lib_init(); V bits=fwp_rc_fresh(fwp_str_new("bits",4));
- reset(); double freed=fwp_gc.freed;
+ reset(); double freed=fwp_heap.freed;
  if(length("héllo")!=5||ns!=1||!strings_released_once())_Exit(1);
 #ifndef FWP_ARC_ONLY
  if(!fwp_reuse_verify)
 #endif
- if(fwp_gc.freed<=freed)_Exit(1);
+ if(fwp_heap.freed<=freed)_Exit(1);
  reset(); if(wrapped("héllo")!=5||ns!=1||!strings_released_once())_Exit(2);
  reset(); const char *held=identity("host");
  if(strcmp(held,"host")||ns!=1||*fwp_rc_slot(strings[0])!=1)_Exit(3);
@@ -260,7 +260,7 @@ int main(void){
  reset(); if(optional(NULL)!=NULL||nd)_Exit(17);
  reset(); discard("discard");if(ns!=1||!strings_released_once())_Exit(18);
  reset(); print_line("unit");if(ns!=1||!strings_released_once())_Exit(19);
- if(strcmp(held,"host")||strcmp(second_host,"second")||strcmp(alias.s,"first")||strcmp(alias.t,"second")||fwp_gc.armed||fwp_gc.ncollect)_Exit(16);
+ if(strcmp(held,"host")||strcmp(second_host,"second")||strcmp(alias.s,"first")||strcmp(alias.t,"second")||fwp_heap.armed||fwp_heap.ncollect)_Exit(16);
  fwp_release_identity(held); fwp_release_second(second_host);
  fwp_release_record_alias(alias); fwp_release_repeat(grown);
  fwp_rc_free_obj(bits);

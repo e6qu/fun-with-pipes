@@ -977,7 +977,7 @@ static V fwp_p_cli_parse(V defs, V args, const fwp_flag *fl, int nf, int nfields
     }
     fwp_decode_fields_end(&parsed, 0);
     V value = fwp_decode_variant(&result, failed ? 1 : 0);
-    FWP_KEEP_ALIVE(defs); FWP_KEEP_ALIVE(args);
+
     return value;
 }
 
@@ -993,7 +993,7 @@ static V fwp_p_cli_help(V defs, const fwp_flag *fl, int nf) {
     }
     V result = fwp_str_new(b.d ? b.d : "", b.len);
     fwp_cleanup_pop(&cleanup); free(b.d);
-    FWP_KEEP_ALIVE(defs);
+
     return result;
 }
 
@@ -1627,8 +1627,8 @@ static V fwp_p_csv_parse_with(V sepv, V text,
     owner.rows = 0;
     fwp_cleanup_pop(&cleanup);
     fwp_csv_release(&owner);
-    FWP_KEEP_ALIVE(sepv);
-    FWP_KEEP_ALIVE(text);
+
+
     return result;
 }
 
@@ -1740,6 +1740,6 @@ finish:
         result.values[0] = fwp_decode_sequence(&records, list);
     }
     V value = fwp_decode_variant(&result, err ? 1 : 0);
-    FWP_KEEP_ALIVE(rows);
+
     return value;
 }

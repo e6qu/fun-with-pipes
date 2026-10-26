@@ -70,7 +70,7 @@ def main():
             continue
         if label.endswith('-arc'):
             symbols = run([args.nm, binary], empty).stdout
-            assert not any(s in symbols for s in (b'fwp_gc_scan', b'fwp_gc_mark_all', b'fwp_gc_sweep'))
+            assert not any(s in symbols for s in (b'fwp_heap_scan', b'fwp_heap_mark_all', b'fwp_heap_sweep'))
         cfile = out / (label + '.c')
         cfile.write_bytes((source / (label + '.c')).read_bytes())
         rebuilt = out / label

@@ -210,10 +210,10 @@ fn numeric_materialization_removes_list_nodes_without_retaining_inputs() {
             let probe = include_str!("fixtures/mapped_array_counts.c")
                 .replace("fTRANSFORM", &format!("f{id}"));
             let source = source[..source.find("int main(").unwrap()].to_string();
-            assert!(source.contains("static inline void *fwp_gc_alloc(size_t n, int leaf) {"));
+            assert!(source.contains("static inline void *fwp_heap_alloc(size_t n, int kind) {"));
             assert!(source.contains("static inline void *fwp_alloc_init(size_t n) {"));
             let code = source.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic uint64_t mapped_calls, mapped_bytes;")
-                .replace("static inline void *fwp_gc_alloc(size_t n, int leaf) {", "static inline void *fwp_gc_alloc(size_t n, int leaf) {\nif(leaf!=0){mapped_calls++;mapped_bytes+=n;}")
+                .replace("static inline void *fwp_heap_alloc(size_t n, int kind) {", "static inline void *fwp_heap_alloc(size_t n, int kind) {\nif(kind!=0){mapped_calls++;mapped_bytes+=n;}")
                 .replace("static inline void *fwp_alloc_init(size_t n) {", "static inline void *fwp_alloc_init(size_t n) {\nmapped_calls++;mapped_bytes+=n;") + &probe;
             for opt in ["-O1", "-O2"] {
                 let binary = dir.join("counts.exe");

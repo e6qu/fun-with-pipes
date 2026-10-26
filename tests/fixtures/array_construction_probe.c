@@ -46,7 +46,7 @@ static V construct_make(int kind, size_t n, int pattern) {
 }
 static int construct_case(int kind, size_t n, int pattern, int sharing,
                           int failure, int cancel, int *steps) {
-    intptr_t before = fwp_gc.budget_given - fwp_gc.budget;
+    size_t before = fwp_heap.live;
     array_probe_recording = 1;
     construct_failure = failure; construct_step = 0; construct_cancel = cancel;
     construct_input = construct_make(kind, n, pattern);
@@ -68,7 +68,7 @@ static int construct_case(int kind, size_t n, int pattern, int sharing,
     if (cancel) {
         fwp_cur = &construct_task;
 #ifdef _WIN32
-        construct_task.ctx.top = fwp_gc.main_top;
+        construct_task.ctx.top = fwp_heap.main_top;
 #endif
     }
     fwp_budget = 1000000; construct_armed = 1; array_probe_retains = 0;
@@ -108,7 +108,7 @@ static int construct_case(int kind, size_t n, int pattern, int sharing,
     construct_alias = construct_input = 0; array_probe_recording = 0;
     if (construct_live) { fprintf(stderr, "array-construction live allocations: %d\n", construct_live); return 211; }
 #ifdef FWP_ARC_ONLY
-    if (fwp_gc.budget_given - fwp_gc.budget != before || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 212;
+    if (fwp_heap.live != before || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 212;
 #else
     (void)before;
 #endif
@@ -118,7 +118,7 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     int cases = 0, failures = 0;
     const size_t lengths[] = {0, 1, 3, 17, 257};
     for (int round = 0; round < 4; round++) {

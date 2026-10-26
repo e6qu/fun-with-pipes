@@ -45,13 +45,13 @@ static int response_matches(V response) {
 }
 static void no_release(void *arg) { (void)arg; }
 int main(void) {
-    fwp_lib_init(); fwp_gc_start(__builtin_frame_address(0)); fwp_tasks_init();
+    fwp_lib_init(); fwp_heap_start(); fwp_tasks_init();
     g_conn *c = g_conn_new(FWP_INVALID_SOCKET, "", "http2 probe", 0);
     fwp_rc_fresh(PTR(c)); g_pool = c; /* pool owns storage, with no transport tasks */
     V key = fwp_cstr("probe");
     V fields[] = {fwp_cstr("GET"), fwp_cstr("http"), fwp_cstr("example.test"), fwp_cstr("/echo"), 0, fwp_cstr("")};
     V request = fwp_record(6, fields);
-    intptr_t budget = fwp_gc.budget;
+    size_t live_bytes = fwp_heap.live;
     int failures = 0, completed = 0;
     for (volatile int allocation = 1; allocation < 64; allocation++) {
         stream_finals = request_resets = 0; response_mode = 0;
@@ -69,8 +69,8 @@ int main(void) {
         allocation_left = response_fail_at = 0; fwp_trap_recover = NULL; fwp_trap_jb = NULL;
         if (fwp_cleanups || c->streams || stream_finals != 1 || *fwp_rc_slot(PTR(c)) != 1) return 3;
         if (!completed && request_resets != 1) return 4;
-        if (!fwp_reuse_verify && !getenv("FWP_CLIENT_STRESS") && fwp_gc.budget != budget) {
-            fprintf(stderr, "allocation %d: charged storage delta %lld\n", allocation, (long long)(fwp_gc.budget-budget)); return 5;
+        if (!fwp_reuse_verify && !getenv("FWP_CLIENT_STRESS") && fwp_heap.live != live_bytes) {
+            fprintf(stderr, "allocation %d: charged storage delta %lld\n", allocation, (long long)(live_bytes - fwp_heap.live)); return 5;
         }
         c->out.len = 0;
         if (completed) break;
@@ -84,7 +84,7 @@ int main(void) {
     if (strcmp(STR(OBJ(error.value)->f[0])->d, "http2") || strcmp(STR(OBJ(error.value)->f[1])->d, "peer reset")) return 8;
     ERROR_TYPE->drop(error.value);
     if (fwp_cleanups || c->streams || stream_finals != 1 || request_resets != 1 || *fwp_rc_slot(PTR(c)) != 1) return 9;
-    if (!fwp_reuse_verify && !getenv("FWP_CLIENT_STRESS") && fwp_gc.budget != budget) return 5;
+    if (!fwp_reuse_verify && !getenv("FWP_CLIENT_STRESS") && fwp_heap.live != live_bytes) return 5;
     response_mode = 2; stream_finals = request_resets = 0; waiting_request = NULL;
     pending_key = key; pending_request = request;
     fwp_task *task = fwp_spawn_task(0, pending_client, NULL, 0, 0);

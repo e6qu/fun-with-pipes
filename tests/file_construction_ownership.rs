@@ -20,10 +20,6 @@ impl Drop for Scratch {
 }
 #[test]
 fn construction_failures_close_streams_once_and_clear_finalized_handles() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![Func {
@@ -92,7 +88,7 @@ static V file_callback(V *a){callbacks++;if(fault==4)fwp_trap("file callback fai
 static const fwp_fninfo callbacks_table[]={{1,file_callback,"file callback",0}};
 static fwp_clo callback={0,0};
 int main(int argc,char **argv){
- if(argc!=2)return 30;fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));if(!fwp_gc.armed)return 31;
+ if(argc!=2)return 30;fwp_lib_init();fwp_heap_start();if(!fwp_heap.armed)return 31;
  fwp_fns=callbacks_table;
  for(volatile int create=0;create<2;create++)for(volatile int scoped=0;scoped<2;scoped++)for(volatile int mode=0;mode<(scoped?5:4);mode++){
   // A traced fixture explicitly roots the path and any failed handle.
@@ -112,10 +108,10 @@ int main(int argc,char **argv){
   if(mode&&mode<4&&callbacks)return 4;
   if(mode==4&&callbacks!=1)return 5;
   // A failed but registered handle must not close the stream again.
-  fwp_gc_finish();if(closes!=1)return 9;
-  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
+  fwp_heap_finish();if(closes!=1)return 9;
+  fwp_lib_init();fwp_heap_start();
  }
- fwp_gc_finish();return 0;
+ fwp_heap_finish();return 0;
 }
 "#;
     let start = generated
@@ -127,8 +123,8 @@ int main(int argc,char **argv){
         "    if(fault==1)fwp_trap(\"file handle allocation\");\n    fwp_file *h = (fwp_file *)fwp_alloc_leaf(sizeof(fwp_file) + len + 1); observed_handle=h;")
         .replace("    memcpy(h->path, path, len + 1);",
             "    if(fault==2)fwp_trap(\"file path initialization\");\n    memcpy(h->path, path, len + 1);")
-        .replace("    fwp_gc_finalizer(h, fwp_file_final);",
-            "    if(fault==3)fwp_trap(\"file finalizer registration\");\n    fwp_gc_finalizer(h, fwp_file_final);");
+        .replace("    fwp_heap_finalizer(h, fwp_file_final);",
+            "    if(fault==3)fwp_trap(\"file finalizer registration\");\n    fwp_heap_finalizer(h, fwp_file_final);");
     assert_ne!(value, injected);
     let runtime = generated.replacen(value, &injected, 1);
     let dir =

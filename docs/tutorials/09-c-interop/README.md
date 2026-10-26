@@ -65,7 +65,7 @@ lesson. From this directory, run both execution modes:
 ```console
 $ fwp run --interp --link visit.c visit.fwp
 5
-$ fwp run --native --gc arc --link visit.c visit.fwp
+$ fwp run --native --link visit.c visit.fwp
 5
 ```
 
@@ -171,8 +171,8 @@ string; the second branch frees the C buffer. `.0` selects the copied result.
 An absent byte produces `None` and still frees the buffer. Passing a borrowed
 fwp `String` directly would not guarantee the returned address stays valid.
 
-The same manual lifetime applies in tracing and ARC modes. ARC counts the
-option and any owned strings, never the raw pointee. Foreign host storage uses
+Reference counting keeps the option and owned strings alive. The raw pointer
+still needs the explicit release above. Foreign host storage uses
 its host's release operation, not necessarily `mem.free`. If adding failure or
 cancellation inside this sequence, provide cleanup for those paths too; a raw
 pointer has no automatic destructor. The

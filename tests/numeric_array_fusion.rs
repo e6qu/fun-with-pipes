@@ -56,7 +56,7 @@ fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
                     Command::new(fwp)
                         .env_remove("FWP_NO_OPT")
                         .env("FWP_ARRAY_FUSION", mode)
-                        .args(["build", "--gc", "tracing", opt])
+                        .args(["build", opt])
                         .arg(&input)
                         .arg("-o")
                         .arg(&binary),
@@ -97,7 +97,7 @@ fn numeric_array_fusion_eliminates_intermediates_and_reclaims_inputs() {
             Command::new(env!("CARGO_BIN_EXE_fwp"))
                 .env_remove("FWP_NO_OPT")
                 .env("FWP_ARRAY_FUSION", mode)
-                .args(["build", "--gc", "tracing", "--fn", "reduce64", "--emit-c"])
+                .args(["build", "--fn", "reduce64", "--emit-c"])
                 .arg(&input)
                 .arg("-o")
                 .arg(&cfile),
@@ -114,11 +114,11 @@ fn numeric_array_fusion_eliminates_intermediates_and_reclaims_inputs() {
         let probe = include_str!("fixtures/array_fusion_allocation_probe.c")
             .replace("fREDUCE64", &format!("f{id}"))
             .replace("FUSED", mode);
-        assert!(source.contains("static inline void *fwp_gc_alloc(size_t n, int leaf) {"));
+        assert!(source.contains("static inline void *fwp_heap_alloc(size_t n, int kind) {"));
         assert!(source.contains("static inline void *fwp_alloc_init(size_t n) {"));
         assert_eq!(source.matches("static void fwp_cleanup_push(fwp_cleanup *c, void (*release)(void *), void *arg) {").count(), 1);
         let code=source.replace("typedef uint64_t V;","typedef uint64_t V;\nstatic uint64_t measured_calls,measured_bytes,measured_retains,measured_scopes;")
-          .replace("static inline void *fwp_gc_alloc(size_t n, int leaf) {","static inline void *fwp_gc_alloc(size_t n, int leaf) {\nif(leaf!=0){measured_calls++;measured_bytes+=n;}")
+          .replace("static inline void *fwp_heap_alloc(size_t n, int kind) {","static inline void *fwp_heap_alloc(size_t n, int kind) {\nif(kind!=0){measured_calls++;measured_bytes+=n;}")
           .replace("static inline void *fwp_alloc_init(size_t n) {","static inline void *fwp_alloc_init(size_t n) {\nmeasured_calls++;measured_bytes+=n;")
           .replace("static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {", "static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {\n        measured_retains++;")
           .replace("static void fwp_cleanup_push(fwp_cleanup *c, void (*release)(void *), void *arg) {", "static void fwp_cleanup_push(fwp_cleanup *c, void (*release)(void *), void *arg) {\nmeasured_scopes++;")

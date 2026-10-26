@@ -1,6 +1,6 @@
 
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     V result=fSTEP(257);
     const char *names[]={"I8","U8","I16","U16","I32","U32","F32","F64"};
     const int kinds[]={K_I8,K_U8,K_I16,K_U16,K_I32,K_U32,K_F32,K_F64};

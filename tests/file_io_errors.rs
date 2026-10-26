@@ -1,5 +1,6 @@
 //! File reads report the same errors as the unoptimized interpreter.
 #![cfg(any(target_os = "linux", target_os = "macos"))]
+use fwp::ir::*;
 use std::process::Command;
 #[test]
 fn read_failures_and_invalid_utf8_match_the_original_interpreter() {
@@ -36,7 +37,7 @@ fn read_failures_and_invalid_utf8_match_the_original_interpreter() {
             for opt in ["-O1", "-O2"] {
                 let exe = dir.join("probe");
                 let built = Command::new(fwp)
-                    .args(["build", "--gc", "tracing"])
+                    .args(["build"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe)
@@ -71,11 +72,6 @@ fn read_failures_and_invalid_utf8_match_the_original_interpreter() {
 
 #[test]
 fn read_temporaries_and_write_errors_have_precise_stream_ownership() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
-    use fwp::ir::*;
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![Func {
@@ -124,7 +120,7 @@ static void observe_free(void *p){if(p&&p==watched_buffer){buffer_frees++;watche
 static jmp_buf recovery;
 static int recover(void){return 1;}
 int main(int argc,char **argv){
- if(argc!=2)return 30;fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
+ if(argc!=2)return 30;fwp_lib_init();fwp_heap_start();
  for(volatile int borrowed=0;borrowed<2;borrowed++)for(volatile int mode=0;mode<(borrowed?4:3);mode++){
   fault=0;watched_buffer=0;buffer_frees=closes=0;watched_fd=-1;V path=fwp_cstr(argv[1]);
   if(borrowed){handle=fwp_p_file_open(path,0,0);closes=0;}
@@ -148,7 +144,7 @@ int main(int argc,char **argv){
    if(strcmp(STR(OBJ(h.value)->f[0])->d,"write")||strcmp(STR(OBJ(h.value)->f[1])->d,expected))return 9;
   }
  }
- fwp_gc_finish();return 0;
+ fwp_heap_finish();return 0;
 }
 "#;
     let mut runtime = generated.clone();

@@ -12,6 +12,9 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 
+#[path = "support/allocation_report.rs"]
+mod allocation_report;
+
 #[path = "support/record_probe.rs"]
 mod record_probe;
 
@@ -75,7 +78,7 @@ fn large_and_small_objects_obey_collection_age() {
     let cfile = dir.0.join("age.c");
     std::fs::write(&source, "main = ()\n").unwrap();
     let emitted = Command::new(fwp())
-        .args(["build", "--gc", "tracing", "--emit-c"])
+        .args(["build", "--emit-c"])
         .arg(&source)
         .arg("-o")
         .arg(&cfile)
@@ -89,8 +92,8 @@ fn large_and_small_objects_obey_collection_age() {
         "int original_main(int argc, char **argv)",
     );
     let code = format!("{code}\n{}", include_str!("fixtures/reuse_age_probe.c"));
-    let unique_mark = "m->type == GC_BIG ? m->mark != 0 :";
-    let young_mark = "m->type == GC_BIG ? !m->mark :";
+    let unique_mark = "m->type == HEAP_BIG ? m->mark != 0 :";
+    let young_mark = "m->type == HEAP_BIG ? !m->mark :";
     assert_eq!(code.matches(unique_mark).count(), 1);
     assert_eq!(code.matches(young_mark).count(), 1);
     let broken_unique = code.replace(unique_mark, "");
@@ -158,7 +161,7 @@ fn golden_programs_with_reuse_verified() {
                 let exe = dir.0.join(format!("{name}.exe"));
                 let want = std::fs::read_to_string(path.with_extension("out")).unwrap();
                 let b = Command::new(fwp())
-                    .args(["build", "--gc", "tracing"])
+                    .args(["build"])
                     .arg(path.file_name().unwrap())
                     .args(["-O1", "-o"])
                     .arg(&exe)
@@ -225,7 +228,7 @@ fn unique_records_are_updated_in_place() {
     .unwrap();
     let cfile = dir.0.join("reuse.c");
     let emitted = Command::new(fwp())
-        .args(["build", "--gc", "arc", "--emit-c", "-O2"])
+        .args(["build", "--emit-c", "-O2"])
         .arg(&src)
         .arg("-o")
         .arg(&cfile)
@@ -248,7 +251,7 @@ fn unique_records_are_updated_in_place() {
             &dir.0,
             b"",
             &[
-                ("FWP_GC_STATS", "1"),
+                ("FWP_ALLOC_STATS", "1"),
                 ("FWP_GC_STRESS", "0"),
                 ("FWP_GC_VERIFY", "0"),
                 ("FWP_REUSE_VERIFY", "0"),
@@ -267,14 +270,10 @@ fn unique_records_are_updated_in_place() {
             "Acc {hi = 2000000, label = \"x\", lo = 0, n = 1000000, total = 3000000}\n"
         );
         let err = String::from_utf8_lossy(&o.stderr);
-        let mib = err
-            .split(" MiB allocated")
-            .next()
-            .unwrap()
-            .rsplit(' ')
-            .next()
-            .unwrap();
-        mib.parse().unwrap()
+        allocation_report::parse(&err)
+            .expect("allocation report")
+            .allocated as f64
+            / 1_048_576.0
     };
     let (copied, reused) = (allocated(false), allocated(true));
     assert!(
@@ -307,7 +306,7 @@ fn variant_cells_are_reused() {
     .unwrap();
     let cfile = dir.0.join("reuse.c");
     let emitted = Command::new(fwp())
-        .args(["build", "--gc", "arc", "--emit-c", "-O2"])
+        .args(["build", "--emit-c", "-O2"])
         .arg(&src)
         .arg("-o")
         .arg(&cfile)
@@ -330,7 +329,7 @@ fn variant_cells_are_reused() {
             &dir.0,
             b"",
             &[
-                ("FWP_GC_STATS", "1"),
+                ("FWP_ALLOC_STATS", "1"),
                 ("FWP_GC_STRESS", "0"),
                 ("FWP_GC_VERIFY", "0"),
                 ("FWP_REUSE_VERIFY", "0"),
@@ -346,14 +345,10 @@ fn variant_cells_are_reused() {
         assert!(o.status.success(), "execution failed: {o:?}");
         assert_eq!(String::from_utf8_lossy(&o.stdout), "786404\n");
         let err = String::from_utf8_lossy(&o.stderr);
-        let mib = err
-            .split(" MiB allocated")
-            .next()
-            .unwrap()
-            .rsplit(' ')
-            .next()
-            .unwrap();
-        mib.parse().unwrap()
+        allocation_report::parse(&err)
+            .expect("allocation report")
+            .allocated as f64
+            / 1_048_576.0
     };
     let (copied, reused) = (allocated(false), allocated(true));
     // the tree itself is built once either way
@@ -380,7 +375,7 @@ fn unique_arrays_are_written_in_place() {
         let src = root().join(format!("tests/reuse/{}.fwp", name));
         let cfile = dir.0.join("reuse.c");
         let emitted = Command::new(fwp())
-            .args(["build", "--gc", "arc", "--emit-c", "-O2"])
+            .args(["build", "--emit-c", "-O2"])
             .arg(&src)
             .arg("-o")
             .arg(&cfile)
@@ -403,7 +398,7 @@ fn unique_arrays_are_written_in_place() {
                 &dir.0,
                 b"",
                 &[
-                    ("FWP_GC_STATS", "1"),
+                    ("FWP_ALLOC_STATS", "1"),
                     ("FWP_GC_STRESS", "0"),
                     ("FWP_GC_VERIFY", "0"),
                     ("FWP_REUSE_VERIFY", "0"),
@@ -419,14 +414,10 @@ fn unique_arrays_are_written_in_place() {
             assert!(o.status.success(), "execution failed: {o:?}");
             assert_eq!(String::from_utf8_lossy(&o.stdout), want);
             let err = String::from_utf8_lossy(&o.stderr);
-            let mib = err
-                .split(" MiB allocated")
-                .next()
-                .unwrap()
-                .rsplit(' ')
-                .next()
-                .unwrap();
-            mib.parse().unwrap()
+            allocation_report::parse(&err)
+                .expect("allocation report")
+                .allocated as f64
+                / 1_048_576.0
         };
         let (copied, in_place) = (allocated(false), allocated(true));
         assert!(
@@ -449,7 +440,7 @@ fn objects_are_freed_by_their_counts() {
     let stats = |free: &str| -> (f64, u64) {
         let exe = dir.0.join(format!("tree{free}.exe"));
         let b = Command::new(fwp())
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .arg("-o")
             .arg(&exe)
@@ -457,7 +448,7 @@ fn objects_are_freed_by_their_counts() {
             .output()
             .unwrap();
         assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
-        let o = run(&exe, &dir.0, b"", &[("FWP_GC_STATS", "1")]);
+        let o = run(&exe, &dir.0, b"", &[("FWP_ALLOC_STATS", "1")]);
         assert_eq!(String::from_utf8_lossy(&o.stdout), "13105400\n");
         let err = String::from_utf8_lossy(&o.stderr).to_string();
         let words: Vec<&str> = err.split_whitespace().collect();

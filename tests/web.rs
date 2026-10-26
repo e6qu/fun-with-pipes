@@ -149,7 +149,7 @@ fn natives() -> Option<&'static (PathBuf, PathBuf)> {
         let build = |name: &str| {
             let exe = d.join(name);
             let st = Command::new(fwp())
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(root().join("tests/web").join(format!("{}.fwp", name)))
                 .arg("-o")
                 .arg(&exe)
@@ -662,7 +662,7 @@ fn checked_arc_http_matches_interpreter_with_pooled_and_tls_calls() {
                     let symbols = Command::new("nm").arg(&binary).output().unwrap();
                     assert!(symbols.status.success(), "{symbols:?}");
                     let symbols = String::from_utf8_lossy(&symbols.stdout);
-                    for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                    for name in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                         assert!(!symbols.contains(name), "ARC {role} contains {name}");
                     }
                     if let Some(path) = &artifact_dir {
@@ -1074,7 +1074,7 @@ fn http_server_function_capture_allocation_profile() {
         let path = artifacts.join(format!("{name}.c"));
         std::fs::copy(root().join("tests/web").join(file), artifacts.join(file)).unwrap();
         let output = Command::new(fwp())
-            .args(["build", "--gc", "arc", "--emit-c", "-o"])
+            .args(["build", "--emit-c", "-o"])
             .arg(&path)
             .arg(root().join("tests/web").join(file))
             .output()

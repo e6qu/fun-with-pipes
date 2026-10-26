@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn alpn_string_allocation_keeps_the_owning_session_live() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![
@@ -50,16 +46,16 @@ static void inspect_owner(void);
 static void observe_ssl_free(SSL *ssl){if(ssl==watched_ssl)released++;SSL_free(ssl);}
 static void inspect_owner(void){
  if(!copy_active)return;copy_active=0;
- if(!fwp_gc.armed)exit(2);size_t before=fwp_gc.ncollect;
- fwp_gc.major_next=1;fwp_gc_collect();
- if(fwp_gc.ncollect<=before)exit(3);if(released)exit(1);
+ if(!fwp_heap.armed)exit(2);size_t before=fwp_heap.ncollect;
+ fwp_heap.major_next=1;fwp_heap_collect();
+ if(fwp_heap.ncollect<=before)exit(3);if(released)exit(1);
 }
 static __attribute__((noinline)) V protocol(void){
  V conn=fwp_sock_new(-1,1);STREAM(conn)->tls=watched_ssl;copy_active=1;
  return fwp_p_tls_alpn(conn);
 }
 static int probe(int argc,char **argv){
- if(argc!=3)return 30;fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));if(!fwp_gc.armed)return 31;
+ if(argc!=3)return 30;fwp_lib_init();fwp_heap_start();if(!fwp_heap.armed)return 31;
  unsigned char *wire=malloc(4);if(!wire)return 32;memcpy(wire,"\x02h2",4);
  SSL_CTX *ctx=fwp_tls_server_ctx(argv[1],argv[2],wire,3,"");if(!ctx)return 33;
  SSL *server=(SSL *)fwp_tls_accepted(ctx,-1);fwp_tls_server_drop(ctx);

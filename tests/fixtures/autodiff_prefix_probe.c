@@ -36,16 +36,16 @@ static int prefix_case(int64_t leaves, int constants) {
     return 0;
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     fwp_tape_scope scope={-1};fwp_cleanup scope_owner;
     fwp_cleanup_push(&scope_owner,fwp_tape_scope_release,&scope);
-    intptr_t baseline=fwp_gc.budget;
+    size_t baseline=fwp_heap.live;
     for(int round=0;round<32;round++) {
     int result=prefix_case(3,0);if(result)return result;
     result=prefix_case(3,1);if(result)return result;
     result=prefix_case(0,1);if(result)return result;
 #ifdef FWP_ARC_ONLY
-    if(fwp_gc.budget!=baseline||fwp_gc.ncollect||fwp_gc.rc_wide_len)return 90;
+    if(fwp_heap.live!=baseline||fwp_heap.ncollect||fwp_heap.rc_wide_len)return 90;
 #endif
     }
     if(fwp_tape_workspace_enabled()) {
@@ -66,7 +66,7 @@ int main(void) {
     if(scope.head!=-1||fwp_cleanups!=&scope_owner)return 245;
     fwp_cleanup_pop(&scope_owner);fwp_tape_scope_release(&scope);
 #ifdef FWP_ARC_ONLY
-    if(fwp_gc.budget!=baseline||fwp_gc.ncollect||fwp_gc.rc_wide_len)return 90;
+    if(fwp_heap.live!=baseline||fwp_heap.ncollect||fwp_heap.rc_wide_len)return 90;
 #else
     (void)baseline;
 #endif

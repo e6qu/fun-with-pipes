@@ -48,7 +48,7 @@ main = read-all () | make { 0 = id, 1 = concat "payload" } | choose | echo
     assert_eq!(references[1].stdout, b"neverpayload\n");
     let cfile = dir.join("probe.c");
     let build = Command::new(fwp)
-        .args(["build", "--gc", "tracing"])
+        .args(["build"])
         .arg(&source)
         .args(["--emit-c", "-o"])
         .arg(&cfile)

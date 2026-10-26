@@ -30,12 +30,12 @@ static int invalid_push(V a, V b) {
     return 0;
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     /* Static storage keeps the changing scope head defined after longjmp. */
     static fwp_tape_scope scope={-1};static fwp_cleanup scope_owner;
     fwp_cleanup_push(&scope_owner,fwp_tape_scope_release,&scope);
     fwp_trap_recover=recover_probe;fwp_trap_jb=&recovered;fwp_trap_cleanup=&scope_owner;
-    intptr_t baseline=fwp_gc.budget;
+    size_t baseline=fwp_heap.live;
     for (unsigned round=0;round<32;round++) {
     for (probe_mode=0;probe_mode<5;probe_mode++) {
         selected_base=fwp_p_ad_tape(2);
@@ -55,10 +55,10 @@ int main(void) {
         ARR(outputs)->d[0]=selected_base;ARR(outputs)->d[1]=selected_base+1;
         ARR(seeds)->d[0]=fwp_from_f64(2);ARR(seeds)->d[1]=fwp_from_f64(3);
 #ifdef FWP_ARC_ONLY
-        if (fwp_gc.armed || fwp_gc.ncollect) return 52;
+        if (fwp_heap.armed || fwp_heap.ncollect) return 52;
 #else
-        fwp_gc_collect();
-        if (!fwp_gc.armed || !fwp_gc.ncollect) return 52;
+        fwp_heap_collect();
+        if (!fwp_heap.armed || !fwp_heap.ncollect) return 52;
 #endif
         if (probe_mode==1) ARR(outputs)->d[0]=other_base;
         if (probe_mode==2) ARR(outputs)->d[0]=selected_base+3;
@@ -73,7 +73,7 @@ int main(void) {
             fwp_cleanups=NULL;
 #ifdef _WIN32
             /* This synthetic task executes on the main thread stack. */
-            cancelled_task.ctx.top=fwp_gc.main_top;
+            cancelled_task.ctx.top=fwp_heap.main_top;
 #endif
             jmp_buf cancelled_task_base; cancelled_task.base = &cancelled_task_base;
             if (!setjmp(cancelled_task_base)) { fwp_p_ad_backward(selected_base,outputs,seeds);return 34; }
@@ -112,7 +112,7 @@ int main(void) {
         fwp_rc_free_arr(result);fwp_rc_free_arr(outputs);fwp_rc_free_arr(seeds);
         outputs=seeds=0;
 #ifdef FWP_ARC_ONLY
-        if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+        if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
 #endif
     }
     }
@@ -138,7 +138,7 @@ int main(void) {
     fwp_trap_cleanup=NULL;fwp_tape_finish();
     if(fwp_tapes||fwp_ntapes||fwp_tapes_cap||fwp_tape_cached_bytes)return 53;
 #ifdef FWP_ARC_ONLY
-    if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+    if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
 #endif
     if (fwp_cleanups) return 51;
     fwp_trap_recover=0;fwp_trap_jb=0;

@@ -44,7 +44,7 @@ def main():
         reference = run([compiler, 'run', '--interp', source], dict(environment, FWP_NO_OPT='1'))
         assert reference.stdout == expected and not reference.stderr, reference
         emitted = out / (name + '.c')
-        run([compiler, 'build', '--gc', 'arc', '--emit-c', '-o', emitted, source], environment)
+        run([compiler, 'build', '--emit-c', '-o', emitted, source], environment)
         original = emitted.read_text()
         creation, growth = '    t->len = n;', '    fwp_tape_reserve(t, op + 1);'
         assert original.count(creation) == 1 and original.count(growth) == 2

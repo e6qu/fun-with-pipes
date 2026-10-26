@@ -18,7 +18,7 @@ static int socket_closed(fwp_socket_t fd) {
 #endif
 }
 int main(void) {
-    fwp_lib_init(); fwp_gc_start(__builtin_frame_address(0)); fwp_tasks_init();
+    fwp_lib_init(); fwp_heap_start(); fwp_tasks_init();
     for (stage = 0; stage < 5; stage++) {
         V listener = fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"), ERROR_TYPE);
         V address = fwp_p_local_addr(listener);

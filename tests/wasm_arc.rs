@@ -48,7 +48,7 @@ fn wasi(binary: &Path, root: &Path) -> Command {
 fn emit(source: &Path, cfile: &Path, entry: &[&str], target: &str) -> String {
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "arc", "--target", target, "--emit-c"])
+            .args(["build", "--target", target, "--emit-c"])
             .args(entry)
             .arg(source)
             .arg("-o")
@@ -259,14 +259,7 @@ fn wasi_arc_rejects_unproved_entries_and_native_library_flags() {
     ] {
         std::fs::write(&source, program).unwrap();
         let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args([
-                "build",
-                "--gc",
-                "arc",
-                "--target",
-                "wasm32-wasi",
-                "--emit-c",
-            ])
+            .args(["build", "--target", "wasm32-wasi", "--emit-c"])
             .args(extra)
             .arg(&source)
             .arg("-o")
@@ -382,7 +375,7 @@ main = [
         let missing_metrics_shutdown =
             instrumented.replace("if (atexit(fwp_metrics_finish))", "if (0)");
         let unclaimed = instrumented.replace(
-            "#if FWP_GC\n        if (!c) return;\n#endif",
+            "#if FWP_NATIVE_HEAP\n        if (!c) return;\n#endif",
             "        if (!c) return;",
         );
         let mut candidates = vec![(&instrumented, 0), (&omitted, 244)];
@@ -609,7 +602,7 @@ fn wasi_function_and_cli_entries_reclaim_inputs_and_results() {
                 symbols.contains("<_start>") && symbols.contains("<fwp_"),
                 "module symbols missing: {symbols}"
             );
-            for collector in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+            for collector in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                 assert!(
                     !symbols.contains(collector),
                     "WASI ARC contains {collector}"
@@ -875,7 +868,7 @@ main = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | igno
         )
         .unwrap();
         let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "arc", "--emit-c", "--target", target])
+            .args(["build", "--emit-c", "--target", target])
             .arg(&source)
             .arg("-o")
             .arg(dir.join("rejected.c"))
@@ -1129,7 +1122,9 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
                             if !symbols.contains("<_start>") || !symbols.contains("<fwp_") {
                                 failures.push(format!("{name}: runtime function names missing"));
                             }
-                            for collector in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                            for collector in
+                                ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"]
+                            {
                                 if symbols.contains(collector) {
                                     failures.push(format!("{name}: {collector} remains"));
                                 }

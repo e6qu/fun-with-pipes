@@ -3,9 +3,6 @@
  * close disables entry, release gives up the host's one registration owner, and
  * the last active call performs any deferred destruction. */
 #ifdef FWP_RETAINED_CALLBACKS
-#ifndef FWP_ARC_ONLY
-#error retained C callbacks require checked ownership
-#endif
 #ifdef __wasm__
 #error retained C callbacks require a native library
 #endif

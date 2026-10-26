@@ -262,34 +262,24 @@ Each one is implemented in both engines:
 
 ### Memory in the C runtime
 
-Native tracing mode combines counted owners with a generational collector
-(`runtime/fwp_rt_gc.c`). A young object has not survived collection; an old one
-has. Minor collection avoids retracing immutable old objects, so its allocator
-rules matter. Checked ARC excludes tracing but still uses allocator metadata.
-Objects come in three kinds, and the generated code must use the right
-allocator:
+Native values have checked owners. The allocator in `runtime/fwp_rt_heap.c`
+provides three initialization policies: `fwp_alloc_init` expects the caller to
+fill a value before publishing it, `fwp_alloc_leaf` zeroes requested bytes, and
+`fwp_alloc` zeroes mutable storage including its slot padding. These policies
+choose storage and initialization; they do not discover roots or collect cycles.
 
-- `fwp_alloc_init`: values that are complete when allocated (records,
-  variants, list cells). Compute every field first, allocate, then fill
-  the object at once. Never write to it after that: an old object must
-  never point to a young one.
-- `fwp_alloc_leaf`: memory that holds no values (string bytes, numbers).
-- `fwp_alloc`: memory filled after it is allocated (arrays, maps,
-  partial applications). Every minor collection scans these.
+Generated cleanup releases values by their types. A runtime call must follow its
+contract in `src/ownership.rs`: some arguments borrow, others transfer owners.
+[Primitive ownership](docs/primitive-ownership.md) explains callback obligations.
+Check aliases, construction failures, cancellation and physical release together;
+[ownership diagnostics](docs/ownership-diagnostics.md) gives the fault controls.
+The copy control `FWP_NO_REUSE` retains counts and cleanup while disabling
+in-place reuse in generated C.
 
-`FWP_GC_VERIFY=1` checks each minor collection against a full trace, and
-`FWP_GC_STRESS=1` collects at every allocation to expose missing roots.
-Run the golden tests with both after you change the runtime or the code
-generator.
-
-Records and variants that compiled code allocates are updated in place
-when they have a single reference (`fwp_rc_*` in runtime/fwp_rt_gc.c).
-A runtime call must follow its contract in `src/ownership.rs`: some arguments
-borrow, others transfer owners, and unproved retention promotes a graph to
-runtime sharing with `fwp_rc_share`. Do not apply the shared policy to every
-primitive indiscriminately. [Primitive ownership](docs/primitive-ownership.md)
-explains the modes and callback obligations. `FWP_REUSE_VERIFY=1` poisons what would be reused, and
-tests/reuse.rs runs every golden program that way.
+`FWP_ALLOC_STATS=1` reports allocation and live-storage bytes separately from
+whole-process RSS. Keep the strict report parser and failure controls in sync.
+Full suites run on GitHub. The collector-deletion changes are not accepted until
+all native targets and the binary-absence checks pass; see the handoff.
 
 ### A benchmark
 
@@ -371,7 +361,7 @@ Contributions are accepted under the project's MIT license.
 Native CI publishes `fwp-{Linux,macOS,Windows}-{ARM64,X64}` artifacts containing one
 compiler archive for that OS/architecture. `scripts/package-native.py` checks
 ELF/Mach-O/PE machine types (the native executable formats) and executes a copied compiler, raw interpreter and
-tracing/ARC generated programs outside the checkout. The archive includes its
+generated programs outside the checkout. The archive includes its
 manifest and requirements: a system C toolchain for native compilation and
 OpenSSL 3 for TLS. `iteration-evidence-*` retains C/disassembly and paired
 measurements; `ownership-evidence-*` retains ARC and workspace controls.

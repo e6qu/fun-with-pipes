@@ -83,7 +83,7 @@ fn entry_check_arrangement_measurement() {
         let cfile = dir.join(format!("{name}-ordinary.c"));
         build(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", "--gc", "arc", "--emit-c", "-o"])
+                .args(["build", "--emit-c", "-o"])
                 .arg(&cfile)
                 .arg(root().join(source)),
         );

@@ -1,17 +1,130 @@
 # Current work
 
-**Next:** finish auditing the cache/TLS repair's Intel macOS focused job in
-`40270503961` and the final artifact upload in `40262766433`. Once all known
-failures are repaired and focused checks pass, publish the evidence/docs update
-and mark [PR #216](https://github.com/e6qu/fun-with-pipes/pull/216) ready for all
-nine production jobs, documentation and analysis budgets on the final head.
-Draft skips do not count as acceptance. Do not raise startup or analysis limits.
+**Next:** finish the unpublished G5 collector deletion after repairing and
+verifying [PR #216](https://github.com/e6qu/fun-with-pipes/pull/216).
+Only #216 is an active public PR. Its worktree is
+`/private/tmp/fwp-ownership-fault-matrix`, branch `remove-tracing-runtime`.
+Use that worktree's handoff for current CI failures and checks. This file owns
+only the unpublished collector-deletion work; do not duplicate changing PR status.
 
-Worktree: `/private/tmp/fwp-ownership-fault-matrix`, branch
-`remove-tracing-runtime`. Published repair:
-`577249f8bc4043d7eda033e3ed433806a0e9806d`; PR temporarily draft.
-The primary checkout remains detached at #209; preserve its operational handoff
-and untracked compiler-abort report. [PLAN.md](../PLAN.md) owns the roadmap.
+This separate worktree is `/private/tmp/fwp-delete-tracing`, branch
+`delete-tracing-collector`, based on #216 head
+`0db38df8bd0b3ea6f4dc1165edd985bc82c71ccb`. Rebase onto verified merged
+#216 before publication. The primary checkout remains detached at #209; preserve
+its handoff and untracked compiler-abort report.
+
+## Incomplete deletion work — not buildable or verified
+
+- Selected counted branches in runtime C with `/usr/bin/unifdef`; preserved native
+  allocator, library cleanup and scheduler tasks. The integrated compiler has not been built or tested.
+- Replaced `runtime/fwp_rt_gc.c` with `fwp_rt_heap.c`: removed root scanning,
+  marking/sweeping, collector options/state/retries and uncounted sharing traversal.
+  `fwp_heap` now tracks physical live/peak slot bytes, cumulative allocation/release
+  bytes and heap extent. Allocation reporting uses `FWP_ALLOC_STATS`.
+- Renamed allocator symbols to `fwp_heap_*`, classes to `HEAP_*`, platform selection
+  to `FWP_NATIVE_HEAP`, task registry to `fwp_tasks_active`/`all_next`/`all_prev`.
+  Registry still owns cancellation/shutdown traversal; finalizers still release
+  external resources before library unmapping. Removed runtime root-fence calls.
+- Added null checks before subtracting initially empty bump/end pointers. Review
+  zero-size allocation, first charge, small/big release and allocation-report
+  precision/overhead before accepting the new accounting.
+- Removed the native mode selector/CLI, FWP_ARC_ONLY emission and generated
+  root-fence bookkeeping. Rust formatting/parsing passed after repairing a help
+  string terminator. Removed the `FWP_FREE`/`FWP_REUSE` compiler switches and selected counted
+  lowering/drop generation unconditionally. Removed the always-true `Gen.reuse` flag, selected 31 counted branches, and
+  deleted unreachable uncounted higher-order helper implementations. Rust parsing
+  and formatting pass; integrated compiler/Clippy checks are still pending. The runtime `FWP_NO_REUSE` copy control
+  remains distinct and keeps reference counts.
+- Reworked native allocator tests to preserve explicit release, first charge,
+  page reuse, wide counts, library-unload cleanup and static-heap exhaustion.
+  The small isolated C probes passed on Apple Clang 17 ARM64 at O1/O2, including
+  a deliberately omitted-free failure (27). Guard command:
+  `python3 scripts/local-guard.py python3 /private/tmp/fwp-check-counted-allocator.py`.
+  Static-heap probes also passed slots/pages/exhaustion at O1/O2 via
+  `/private/tmp/fwp-check-static-allocator.py`. These checks do not verify Rust
+  compilation, generated programs, GCC or other hosts.
+- Updated native ledger hooks to the new allocator signatures. Removed obsolete
+  `NativeOptions.arc` setup from 44 tests and one internal HTTP/2 test. Renamed
+  allocator symbols in 298 active source/test/script files; historical datasets
+  are unchanged. Task-only unowned spawn paths are removed; the scheduler keeps
+  explicit unique/shared ownership, with a trap for a missing owned callback.
+- Migrated the 150 old accounting consumers to direct `fwp_heap.live` values.
+  The old accumulated budget represented net charge, so those expressions must
+  become live bytes, not the new cumulative allocation count. Leak comparisons
+  reverse the old remaining-budget inequality. This migration is not executed.
+- Removed literal `--gc arc/tracing` argument pairs from 120 active test/script
+  files. Variable-mode loops and obsolete-option error tests still need review.
+  Retired `old_reclamation` and its workflow/shard entries using the deletion
+  table; independent task, typed-child and allocation-balance controls remain.
+  Removed unreachable runtime poison-copy branches. Guarded formatting and
+  native schedule audit pass with 253 integration targets. The temporary helper
+  first failed because it tried formatting a deleted file; it now filters those.
+- Added the strict six-field byte/RSS report parser in
+  `tests/support/allocation_report.rs` and its regression in `native_allocator`.
+  The guarded standalone extraction passed valid LF/CRLF records and rejects
+  missing/duplicate fields, wrong units, negative/fractional/out-of-range values.
+  Its first compile caught an unintended moved expected value in the test; the
+  assertion now borrows it. Command:
+  `python3 scripts/local-guard.py python3 /private/tmp/fwp-check-allocation-report.py`.
+  This verifies parsing, not end-to-end generated reporting or consumer migration.
+- Migrated 27 allocation/release report consumers to the strict byte parser.
+  Text and leaf release tests now deliberately omit physical frees in otherwise
+  identical generated C, replacing removed free-disabled compiler switches.
+  Existing MiB thresholds use explicit division by 1,048,576, preserving their
+  budgets. Removed their vacuous zero-collection assertions. The old free-disabled
+  comparisons and poison controls still need replacement, so these tests are not
+  claimed working yet. The actual allocator's report probe passes Clang 17 ARM64 O1/O2: cumulative
+  100,032 bytes, live 100,000 then zero, peak 100,032, extent 196,608.
+  Command: `python3 scripts/local-guard.py python3 /private/tmp/fwp-check-report-runtime.py`.
+  The integrated test additionally parses the records, checks process RSS and
+  runs on native CI. Generated-program reporting is not yet runner-verified.
+- Updated 41 allocator-hook declarations and matching arguments/predicates from
+  the old parameter name to `kind`; values still distinguish initialization,
+  byte storage and mutable storage. Generated hook bodies still need execution.
+  Migrated list, array and construction observers to the single physical-free
+  path, and updated gRPC cache/HTTP omission hooks to the new counted release
+  bodies. Their fault probes still require integrated runner execution.
+- Migrated long-loop and HTTP/REST/gRPC memory tests to the single counted
+  runtime, preserving 64 MiB process RSS, 16 MiB HTTP/REST growth and 8 MiB gRPC
+  growth limits. Removed the intentionally unowned tracing comparison and
+  duplicate gRPC mode. Carried #216's bounded-startup/log-drain repair forward.
+  The first standalone compile found the startup-only helper's unused shutdown
+  function; the narrow allow from #216 is now included. The migrated harness
+  then compiled with warnings denied and passed all three helper tests under
+  `python3 scripts/local-guard.py python3 /private/tmp/fwp-check-memory-startup.py`. Corpus/diagnostic names
+  still need coordinated workflow renaming; runtime checks await integration.
+- Updated ownership/reference/service guides, native tutorial commands and
+  contributor allocator guidance for the removed mode selector. The ownership
+  guide explicitly marks deletion verification pending. Historical measurements
+  remain unchanged; benchmark/control docs and the remaining diagnostics inventory
+  still need their coordinated final migration.
+- Still required: retire collector-only controls/fields, migrate remaining report schemas,
+  remove CLI mode arguments from callers,
+  and update reports/workflow schedules together. Do not invent
+  dummy collection counters or old-API aliases just to make tests compile.
+  Tests still reference old allocator names/accounting, so this intermediate
+  checkout must not be published as working code. Remove obsolete collector-only
+  tests using the deletion table, retaining their independent ownership controls.
+- Do not migrate historical measured datasets to new field names. New evidence
+  needs its own source identity and explicit measurement schema.
+- Edit scripts are `/private/tmp/fwp-delete-collector-core.py` and
+  `/private/tmp/fwp-delete-collector-callers.py`,
+  `/private/tmp/fwp-remove-memory-selector.py`,
+  `/private/tmp/fwp-delete-root-fences.py`, and
+  `/private/tmp/fwp-update-native-allocator-tests.py`,
+  `/private/tmp/fwp-update-test-mode-selection.py`, and
+  `/private/tmp/fwp-rename-active-allocator-symbols.py`, and
+  `/private/tmp/fwp-migrate-live-accounting.py`, and
+  `/private/tmp/fwp-remove-literal-gc-arguments.py`, and
+  `/private/tmp/fwp-remove-counting-switches.py` and
+  `/private/tmp/fwp-remove-counting-branches.py` and
+  `/private/tmp/fwp-migrate-allocation-reports.py` and
+  `/private/tmp/fwp-update-allocator-hook-parameters.py` and
+  `/private/tmp/fwp-migrate-release-observers.py` and
+  `/private/tmp/fwp-migrate-native-memory-tests.py`; they are one-shot edits, not
+  idempotent publishers. Do not rerun blindly. Full builds/suites belong on CI. The branch-selection edit helper initially
+  rescanned strings inefficiently; that process was stopped and an improved
+  version completed under the guard (1.45 CPU seconds, 2.86 elapsed).
 
 ## This delivery
 
@@ -20,63 +133,12 @@ lifetime checks before program effects. Coverage includes returned functions,
 macros, compile-time calls, REPL recovery and gRPC handlers. Native representation
 and C ABI checks remain separate.
 
-The shared check exposed a false rejection in nested differentiation: two partial
-applications were merging their captures. The repair distinguishes finite IR
-creation positions while keeping actual invocation scopes. Large raw REST inputs
-then exposed repeated type walks; the latest repair caches complete type queries
-and expression types within one proof. A recursive-type regression ensures a
-partial negative answer cannot hide a callback field.
+## Prior-batch evidence
 
-Allocation/reuse comparisons now use identical ARC-generated C with copying
-selected explicitly, preserving reference counts and cleanup. Plans, guides and
-tutorials explain the current weak-channel/callback contracts, numeric results,
-macro checking order and benchmark boundaries. **Tracing is not deleted yet.**
-
-## Verification
-
-| Source/run | Result and scope |
-|---|---|
-| `577249f8`, analysis `40270501455` | Both hosts pass: 190 library tests, small worker scaling budgets and both raw REST budgets |
-| `577249f8`, compiler/server `40270503961` | Linux passed completely; Intel macOS server/tool checks running; Clippy passed both |
-| `793bf7da`, analysis `40268967670` | Failed: raw forms admission 11.36 s Linux, 48.92 s Intel macOS; superseded by the cache repair |
-| `793bf7da`, compiler/server `40268976256` | Both hosts passed; superseded by the cache repair |
-| `793bf7da`, docs `40268960183` | Passed; does not verify the later source |
-| `0db38df8`, production `40262766433` | Failed; all native test logs audited, only known queue/startup failures; packaging passed; final artifact upload pending |
-
-The [analysis report](measurements/ownership-analysis.md) and its raw records
-separate compilation, lifetime checking and execution. Latest raw forms analysis:
-6.20 s Linux / 7.10 s Intel macOS; second fixture: 3.90 s / 4.66 s. Limit: 10 s
-each. These single samples from separate runner sessions are not a paired speedup
-measurement. Cache entries are not cache bytes. Full server behavior still needs
-its regression checks.
-
-The previous full-head audit found only two failure categories so far:
-
-- Three outdated queue tests expected interpreter success for rejected owning
-  cycles. Revised expectations cover raw/optimized interpreter/native rejection
-  before output. All 40 captured-compiler probes and focused Linux queue tests pass.
-- Slow interpreted REST/HTTP/HTTPS startup. All four macOS shards, both Windows
-  TLS/entry batches and all 256 logs from each Linux architecture are audited. Each Linux host
-  had 932 passing tests and four failures; macOS ARM64 had 925 passes/five failures,
-  Intel had 908 passes/22 failures. Windows failures match those causes.
-
-TLS and long-running memory tests used a blocking startup read that could miss its deadline and
-killed failed children without reaping them. They now use the existing bounded
-helper, explicit announcement prefixes and an owned stderr-drain thread. The
-three standalone helper tests pass. The memory harness also compiles at Rust O1
-with warnings denied and passes its three helper tests. Its stderr drainer now
-uses a sink instead of an unbounded byte vector. Server integration verification
-is pending.
-
-Logs are under `/private/tmp/fwp-216-final-*`,
-`/private/tmp/fwp-216-repair-*` and `/private/tmp/fwp-216-cache-analysis-{linux,mac}`. Current Linux admission/server
-logs: `/private/tmp/fwp-216-cache-admission-linux`; TLS certificate failures there
-are expected invalid-client controls.
-Earlier creation-site verification: `40259739899`; paired analysis baseline:
-`40261359439`, source `092009f83a1ba217820f2495d459fdb5c3b10c74`.
-Keep the original measurements intact rather than relabeling them as current.
-The saved ARM64 crash was the deliberate task-cleanup abort control, not a
-recurrence of the [unexplained Intel compiler abort](measurements/compiler-abort.md).
+The active #216 handoff owns admission, analysis-budget and CI evidence. Do not
+repeat its changing status here. The report in
+[ownership analysis](measurements/ownership-analysis.md) records the original
+small-fixture comparison; it does not verify this unpublished deletion tree.
 
 ## Local checks
 

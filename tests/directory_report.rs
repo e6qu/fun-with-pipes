@@ -77,8 +77,8 @@ empty-report = const ()
                 .find("static void *fwp_main_thread(void *arg) {")
                 .unwrap();
             let (runtime, main) = code.split_at(start);
-            let measured = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t report_budget = fwp_gc.budget;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < report_budget) exit(229);\n");
+            let measured = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t report_live_bytes = fwp_heap.live;\n")
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > report_live_bytes) exit(229);\n");
             code = format!("{runtime}{measured}");
         }
         let binary = dir.join("report.exe");
@@ -282,7 +282,7 @@ fn scaled_directory_reports_bound_live_storage_and_release_error_paths() {
     checked(
         Command::new(compiler)
             .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", "arc", "--emit-c", "-O1"])
+            .args(["build", "--emit-c", "-O1"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile),

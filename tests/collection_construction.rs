@@ -191,7 +191,7 @@ fn failed_numeric_collection_callbacks_release_storage() {
             if memory == "arc" {
                 let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
                 assert_eq!(code.matches(finish).count(), 1);
-                code = code.replace(finish, &format!("{finish}\n    if (fwp_gc.budget_given != fwp_gc.budget) {{ fprintf(stderr, \"collection storage leaked: %lld bytes\\n\", (long long)(fwp_gc.budget_given - fwp_gc.budget)); exit(231); }}\n"));
+                code = code.replace(finish, &format!("{finish}\n    if (0 != fwp_heap.live) {{ fprintf(stderr, \"collection storage leaked: %lld bytes\\n\", (long long)(fwp_heap.live)); exit(231); }}\n"));
             }
             for optimization in ["-O1", "-O2"] {
                 let executable = directory
@@ -314,11 +314,11 @@ fn allocation_probe(mut code: String) -> String {
     assert_eq!(code.matches("V input = ").count(), 12);
     code = code.replace("V input = ", "build_callback(); V input = ");
     for (name, replacement) in [
-        ("fwp_gc_alloc", "build_allocate"),
+        ("fwp_heap_alloc", "build_allocate"),
         ("fwp_alloc_init", "build_allocate_init"),
     ] {
-        let header = if name == "fwp_gc_alloc" {
-            "size_t n, int leaf"
+        let header = if name == "fwp_heap_alloc" {
+            "size_t n, int kind"
         } else {
             "size_t n"
         };
@@ -332,10 +332,10 @@ fn allocation_probe(mut code: String) -> String {
             .find(&format!("static inline void *{replacement}("))
             .unwrap();
         let end = start + code[start..].find("\n}\n").unwrap() + 3;
-        let body = code[start..end].replace("fwp_gc_alloc(n, 0)", "build_allocate(n, 0)");
+        let body = code[start..end].replace("fwp_heap_alloc(n, 0)", "build_allocate(n, 0)");
         code.replace_range(start..end, &body);
-        let arguments = if name == "fwp_gc_alloc" {
-            "n, leaf"
+        let arguments = if name == "fwp_heap_alloc" {
+            "n, kind"
         } else {
             "n"
         };
@@ -351,12 +351,6 @@ fn allocation_probe(mut code: String) -> String {
             "static void fwp_mem_free(void *p) {\n",
             "static void fwp_mem_free(void *p) { build_release(p);\n",
             1,
-        ),
-        // Object and array release both count logical frees under reuse poison.
-        (
-            "    if (!fwp_rc_last(v)) return;",
-            "    if (!fwp_rc_last(v)) return;\n    build_release((void *)(uintptr_t)v);",
-            2,
         ),
     ] {
         assert_eq!(code.matches(from).count(), count, "{from}");

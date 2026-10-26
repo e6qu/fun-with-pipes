@@ -24,7 +24,7 @@ keep = const
 Save this as `callback.fwp`. On macOS or Linux, generate a static library with:
 
 ```sh
-fwp build callback.fwp --gc arc --staticlib --c-callback keep -O2 -o callback.a
+fwp build callback.fwp --staticlib --c-callback keep -O2 -o callback.a
 ```
 
 `--c-callback` names the C export symbol; repeat it to select more exports. The

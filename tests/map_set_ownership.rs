@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/allocation_report.rs"]
+mod allocation_report;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -99,7 +102,7 @@ main = [
                 .with_extension(std::env::consts::EXE_EXTENSION);
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", "tracing"])
+                    .args(["build"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe)
@@ -126,7 +129,7 @@ main = [
             .with_extension(std::env::consts::EXE_EXTENSION);
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args(["-O1", "-o"])
                 .arg(&exe)
@@ -179,7 +182,7 @@ main = (10000, 0) | loop step | echo
     let emitted = dir.0.join("loop.c");
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&emitted)
@@ -230,23 +233,17 @@ main = (10000, 0) | loop step | echo
         fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
         let out = checked(
             Command::new(&exe)
-                .env("FWP_GC", "off")
-                .env("FWP_GC_STATS", "1")
+                .env("FWP_ALLOC_STATS", "1")
                 .env("FWP_REUSE_VERIFY", "0"),
         );
         assert_eq!(out.stdout, reference.stdout);
         let stats = String::from_utf8_lossy(&out.stderr);
-        assert!(stats.contains("fwp gc: 0 collections"), "{stats}");
+
         freed.push(
-            stats
-                .split(" MiB freed by counts")
-                .next()
-                .unwrap()
-                .rsplit('(')
-                .next()
-                .unwrap()
-                .parse::<f64>()
-                .unwrap(),
+            allocation_report::parse(&stats)
+                .expect("allocation report")
+                .released as f64
+                / 1_048_576.0,
         );
     }
     eprintln!("typed map/set graph MiB freed by counts: {freed:?}");
@@ -273,7 +270,7 @@ main = [
     .unwrap();
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -285,7 +282,7 @@ int main(void) {
     /* Preserve exact test output bytes on native Windows too. */
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     V bits = fwp_rc_fresh(fwp_cstr("numeric bits"));
     V input = fwp_cons(fwp_tuple2(bits, bits), 0);
     V m = NUM_FROM(input);
@@ -483,17 +480,17 @@ fn map_failure_probe(emitted: &str) -> String {
         start..end,
         &format!("static V map_test_scalar(V);\n{definition} return map_test_scalar(l0); }}\n"),
     );
-    let allocate = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+    let allocate = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
     assert_eq!(emitted.matches(allocate).count(), 1);
     let mut runtime = emitted.replace(
         allocate,
-        "static inline void *map_test_allocate(size_t n, int leaf) {",
+        "static inline void *map_test_allocate(size_t n, int kind) {",
     );
     let start = runtime
         .find("static inline void *map_test_allocate(")
         .unwrap();
     let end = start + runtime[start..].find("\n}\n").unwrap() + 3;
-    runtime.insert_str(end, "\nstatic inline void *fwp_gc_alloc(size_t n, int leaf) { map_test_tick(); void *p = map_test_allocate(n, leaf); map_test_record(p); return p; }\n");
+    runtime.insert_str(end, "\nstatic inline void *fwp_heap_alloc(size_t n, int kind) { map_test_tick(); void *p = map_test_allocate(n, kind); map_test_record(p); return p; }\n");
     // The initialized-object allocator has its own fast path. Instrument it
     // once, including that path, without counting its slow path twice.
     let init = "static inline void *fwp_alloc_init(size_t n) {";
@@ -506,7 +503,7 @@ fn map_failure_probe(emitted: &str) -> String {
         .find("static inline void *map_test_allocate_init(")
         .unwrap();
     let end = start + runtime[start..].find("\n}\n").unwrap() + 3;
-    let body = runtime[start..end].replace("fwp_gc_alloc(n, 0)", "map_test_allocate(n, 0)");
+    let body = runtime[start..end].replace("fwp_heap_alloc(n, 0)", "map_test_allocate(n, 0)");
     runtime.replace_range(start..end, &body);
     runtime.insert_str(start + body.len(), "\nstatic inline void *fwp_alloc_init(size_t n) { map_test_tick(); void *p = map_test_allocate_init(n); map_test_record(p); return p; }\n");
     // Comparison can fail while sort scratch is live, and during compaction
@@ -522,10 +519,6 @@ fn map_failure_probe(emitted: &str) -> String {
         .replace(
             "static void fwp_mem_free(void *p) {",
             "static void fwp_mem_free(void *p) { map_test_release(p);",
-        )
-        .replace(
-            "    if (!fwp_rc_last(v)) return;",
-            "    if (!fwp_rc_last(v)) return;\n    map_test_release((void *)(uintptr_t)v);",
         )
         .replace(
             "int main(int argc, char **argv)",
@@ -672,7 +665,7 @@ fn map_callbacks_can_change_value_types_and_fail_without_leaking() {
         if mode == "arc" {
             let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
             assert_eq!(emitted.matches(finish).count(), 1);
-            emitted = emitted.replace(finish, &format!("{finish}\n    if (fwp_gc.budget_given != fwp_gc.budget) {{ fprintf(stderr, \"map callback storage leaked: %lld bytes\\n\", (long long)(fwp_gc.budget_given - fwp_gc.budget)); abort(); }}\n"));
+            emitted = emitted.replace(finish, &format!("{finish}\n    if (0 != fwp_heap.live) {{ fprintf(stderr, \"map callback storage leaked: %lld bytes\\n\", (long long)(fwp_heap.live)); abort(); }}\n"));
         }
         save_map_evidence(&format!("callbacks-{mode}.c"), emitted.as_bytes());
         for opt in ["-O1", "-O2"] {
@@ -753,7 +746,7 @@ fn compact_sets_preserve_values_and_request_only_key_storage() {
             .split('(')
             .next()
             .unwrap();
-        let allocation = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+        let allocation = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
         assert_eq!(builder.matches(allocation).count(), 1);
         let measured = builder
             .replace(
@@ -846,17 +839,17 @@ fn map_sort_scratch_does_not_overlap_result_storage() {
     let dir = Scratch::new("sort-storage");
     for mode in ["arc", "tracing"] {
         let source = map_failure_source(&dir, mode);
-        let allocation = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+        let allocation = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
         assert_eq!(source.matches(allocation).count(), 1);
         let mut measured = source.replace(
             "typedef uint64_t V;",
             "typedef uint64_t V;\nstatic int map_storage_active;\nstatic double map_storage_start, map_storage_peak;\nstatic void map_storage_sample(void);",
-        ).replace(allocation, "static inline void *map_storage_allocate(size_t n, int leaf) {");
+        ).replace(allocation, "static inline void *map_storage_allocate(size_t n, int kind) {");
         let start = measured
             .find("static inline void *map_storage_allocate(")
             .unwrap();
         let end = start + measured[start..].find("\n}\n").unwrap() + 3;
-        measured.insert_str(end, "\nstatic inline void *fwp_gc_alloc(size_t n, int leaf) { void *p = map_storage_allocate(n, leaf); map_storage_sample(); return p; }\n");
+        measured.insert_str(end, "\nstatic inline void *fwp_heap_alloc(size_t n, int kind) { void *p = map_storage_allocate(n, kind); map_storage_sample(); return p; }\n");
         measured = measured.replace(
             "int main(int argc, char **argv)",
             "int original_main(int argc, char **argv)",

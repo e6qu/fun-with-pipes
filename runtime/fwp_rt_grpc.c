@@ -271,8 +271,8 @@ static void g_stream_discard_input(g_stream *s) {
     s->mtail = 0;
 }
 
-/* Counted streams release explicitly. Weak collector finalizers also cover
- * graphs that cross an uncounted boundary in tracing mode. */
+/* Counted streams release explicitly; library shutdown also disposes any
+ * remaining runtime-owned stream buffers before unmapping its heap. */
 static void g_stream_final(void *p) {
     g_stream *s = (g_stream *)p;
     h2_hdrs_free(&s->headers);
@@ -286,7 +286,7 @@ static void g_stream_final(void *p) {
 
 static void g_stream_drop(g_stream *s) {
     if (!fwp_rc_release_last(PTR(s))) return;
-    fwp_gc_forget_finalizer(s);
+    fwp_heap_forget_finalizer(s);
     g_stream_final(s);
     fwp_rc_resource_free_arr(PTR(s));
 }
@@ -341,14 +341,14 @@ static void g_conn_drop(void *value) {
     if (!fwp_rc_release_last(PTR(c))) return;
     if (c->refs || c->fd != FWP_INVALID_SOCKET || c->streams) abort();
     if (c->web) { w_server_storage_drop(c->web); c->web = NULL; }
-    fwp_gc_forget_finalizer(c);
+    fwp_heap_forget_finalizer(c);
     g_conn_final(c);
     fwp_rc_resource_free_arr(PTR(c));
 }
 
 static g_stream *g_stream_new(g_conn *c, uint32_t id) {
     g_stream *s = (g_stream *)fwp_mem_alloc(sizeof *s);
-    fwp_gc_finalizer(s, g_stream_final);
+    fwp_heap_finalizer(s, g_stream_final);
     s->id = id;
     s->window = c->peer.init_window;
     s->next = c->streams;
@@ -369,7 +369,7 @@ static g_conn *g_conn_new(fwp_socket_t fd, const char *prefix, const char *autho
     c->authority = (char *)(c + 1);
     memcpy(c->authority, prefix, pn);
     memcpy(c->authority + pn, authority, n + 1);
-    fwp_gc_finalizer(c, g_conn_final);
+    fwp_heap_finalizer(c, g_conn_final);
     c->fd = fd;
     c->server = server;
     h2_hpack_init(&c->dec);
@@ -529,9 +529,7 @@ static void g_header_block(g_conn *c, uint32_t sid, const unsigned char *b, size
         return;
     }
     s = g_stream_new(c, sid);
-#ifdef FWP_RESOURCE_OWNERS
     fwp_rc_fresh(PTR(s)); /* active connection list */
-#endif
     s->headers = hs;
     s->remote_end = end;
     g_slist_add(fresh, s);
@@ -1117,7 +1115,7 @@ static const g_tls *g_env_tls(const char *var) {
 /* Connection I/O defers cancellation while it owns transport state. Close it
  * before task draining, including connections no longer in the pool. */
 static void g_connections_finish(void) {
-    for (fwp_task *t = fwp_gc_tasks; t; t = t->gc_next)
+    for (fwp_task *t = fwp_tasks_active; t; t = t->all_next)
         if (!t->done && (t->cfn == g_reader || t->cfn == g_writer))
             g_conn_dead(t->carg, "runtime shutting down");
 }
@@ -1465,9 +1463,7 @@ static g_incoming *g_incoming_new(const char *what, size_t length) {
     memcpy(text, what, length);
     text[length] = 0;
     src->what = text;
-#ifdef FWP_RESOURCE_OWNERS
     fwp_rc_fresh(PTR(src));
-#endif
     return src;
 }
 
@@ -1485,9 +1481,7 @@ static g_incoming *g_incoming_client(const char *method, const char *address) {
     char *text = (char *)(src + 1);
     snprintf(text, length + 1, "%s (%s)", method, address);
     src->what = text;
-#ifdef FWP_RESOURCE_OWNERS
     fwp_rc_fresh(PTR(src));
-#endif
     return src;
 }
 
@@ -1512,8 +1506,7 @@ static void g_incoming_drop(void *arg) {
     else g_stream_reader_release(c, s);
     g_conn_drop(c);
 #ifndef FWP_RESOURCE_NO_FREE
-    /* Source and position storage have raw runtime layouts, not record headers.
-     * The array/storage release poisons only the first word under verification. */
+    /* Source and position storage have raw runtime layouts, not record headers. */
     fwp_rc_free_arr(PTR(source));
 #else
     (void)source;
@@ -1523,9 +1516,7 @@ static void g_incoming_drop(void *arg) {
 static g_cell *g_cell_new(g_incoming *source) {
     g_cell *cell = (g_cell *)fwp_mem_alloc(sizeof *cell);
     cell->src = source;
-#ifdef FWP_RESOURCE_OWNERS
     fwp_rc_fresh(PTR(cell));
-#endif
     return cell;
 }
 
@@ -1804,21 +1795,15 @@ static V g_sink_value(g_conn *c, g_stream *s, g_codec enc, int tag) {
     k->enc = enc;
     k->tag = tag;
     V ch = PTR(q);
-#ifdef FWP_RESOURCE_OWNERS
     fwp_rc_fresh(ch);
     fwp_value_owner building = {ch, fwp_channel_drop};
     fwp_cleanup cleanup;
     fwp_value_protect(&building, &cleanup);
     fwp_rc_dup(PTR(s));
-#endif
     k->s = s;
-#ifdef FWP_RESOURCE_OWNERS
     fwp_rc_dup(PTR(c));
-#endif
     k->c = c;
-#ifdef FWP_RESOURCE_OWNERS
     ch = fwp_value_finish(&building, &cleanup); /* transfer the whole channel */
-#endif
     return ch;
 }
 
@@ -1831,12 +1816,8 @@ typedef struct { g_cursor cursor; void (*drop)(V); } g_input;
 static void g_cursor_release(g_cursor *input, void (*drop)(V)) {
     V cur = input->cur, pending = input->pending;
     input->cur = input->pending = 0;
-#ifdef FWP_RESOURCE_OWNERS
     drop(pending);
     drop(cur);
-#else
-    (void)cur; (void)pending;
-#endif
 }
 
 static void g_input_release(void *arg) {
@@ -1845,22 +1826,16 @@ static void g_input_release(void *arg) {
 }
 
 static void g_cursor_acquire(g_cursor *input, void (*drop)(V), V iter) {
-#ifdef FWP_RESOURCE_OWNERS
     if (!drop)
         fwp_trap("missing client input ownership metadata");
     fwp_rc_dup(iter);
-#endif
     input->cur = iter;
 }
 
 static int g_cursor_next(g_cursor *input, void (*drop)(V), V *value) {
     V previous = input->pending;
     input->pending = 0;
-#ifdef FWP_RESOURCE_OWNERS
     drop(previous);
-#else
-    (void)previous;
-#endif
     V node = input->cur;
     if (fwp_tag(node) != 1) return 0;
     input->cur = 0;
@@ -1868,7 +1843,6 @@ static int g_cursor_next(g_cursor *input, void (*drop)(V), V *value) {
     *value = OBJ(node)->f[0];
     /* Preserve lookahead-before-encoding. The pending node keeps the element
      * alive; an exclusive node can transfer its continuation to the call. */
-#ifdef FWP_RESOURCE_OWNERS
     V unit = FWP_UNIT, continuation = OBJ(node)->f[1];
     if (fwp_rc_last(node)) {
         OBJ(node)->f[1] = 0; /* application owns the continuation, including traps */
@@ -1876,9 +1850,6 @@ static int g_cursor_next(g_cursor *input, void (*drop)(V), V *value) {
     } else {
         input->cur = fwp_apply_borrowed(continuation, 1, &unit);
     }
-#else
-    input->cur = fwp_apply1(OBJ(node)->f[1], FWP_UNIT);
-#endif
     return 1;
 }
 
@@ -1961,9 +1932,7 @@ static void g_send_all(void *arg, int cancelled) {
 }
 
 static void g_spawn_sender(g_conn *c, g_stream *s, V iter, const fwp_remote *r) {
-#ifdef FWP_RESOURCE_OWNERS
     if (!r || !r->input_drop) fwp_trap("missing client input ownership metadata");
-#endif
     g_sender *x = (g_sender *)fwp_alloc(sizeof *x);
     x->c = 0;
     x->s = 0;
@@ -2060,9 +2029,7 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
             g_input input = {{0, 0}, r->input_drop};
             fwp_cleanup input_cleanup;
             /* Validate metadata before publishing a cleanup that uses it. */
-#ifdef FWP_RESOURCE_OWNERS
             if (!r->input_drop) fwp_trap("missing client input ownership metadata");
-#endif
             fwp_cleanup_push(&input_cleanup, g_input_release, &input);
             g_cursor_acquire(&input.cursor, input.drop, args[0]);
             V x;
@@ -2179,10 +2146,8 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
     }
     /* an Iterator: the first element now, so that a failure before it is
      * raised in the caller */
-#ifdef FWP_RESOURCE_OWNERS
     const fwp_owned_fninfo *types = fwp_fns[r->m.iter_fn].owned;
     if (!types || !types->drop_arguments) fwp_trap("missing stream ownership metadata");
-#endif
     g_incoming *src = g_incoming_client(r->what, addr);
     fwp_value_owner source_storage = {PTR(src), fwp_rc_resource_free_arr};
     fwp_cleanup source_cleanup;
@@ -2194,11 +2159,9 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
     src->results = r->m.output == 3;
     g_cell *cell = g_cell_new(src);
     (void)fwp_value_finish(&source_storage, &source_cleanup);
-#ifdef FWP_RESOURCE_OWNERS
     g_iterator_owner pending = {PTR(cell), types};
     fwp_cleanup cell_cleanup;
     fwp_cleanup_push(&cell_cleanup, g_iterator_release, &pending);
-#endif
     call.c = 0;
     call.s = 0; /* unread source takes both request and connection owners */
     g_failure f = {0, 0};
@@ -2211,10 +2174,8 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
     }
     V function = fwp_rc_fresh(fwp_pap((uint32_t)r->m.iter_fn, 0, 0));
     V argument = PTR(cell);
-#ifdef FWP_RESOURCE_OWNERS
     pending.cell = 0;
     fwp_cleanup_pop(&cell_cleanup);
-#endif
     fwp_cleanup_pop(&first_received);
     g_got_release(&first);
     fwp_cleanup_pop(&call_cleanup);
@@ -2463,11 +2424,7 @@ static int g_apply_user(uint32_t fn, V *args, V *out, V *err, const fwp_desc **e
     if (setjmp(h.jb) == 0) {
         /* The compiled service signature supplies every argument. No closure
          * or generic partial-application machinery is needed for this call. */
-#ifdef FWP_RESOURCE_OWNERS
         V r = fwp_fns[fn].owned->entry(args);
-#else
-        V r = fwp_fns[fn].entry(args);
-#endif
         fwp_handlers = h.prev;
         t->trap_jb = saved;
         t->trap_cleanup = saved_cleanup;
@@ -2527,7 +2484,6 @@ typedef struct {
 
 static void g_method_values_release(void *arg) {
     g_method_values *values = arg;
-#ifdef FWP_RESOURCE_OWNERS
     uint32_t pending = values->pending;
     values->pending = 0;
     if (pending && values->types->drop_arguments)
@@ -2536,9 +2492,6 @@ static void g_method_values_release(void *arg) {
     values->result = values->error = 0;
     if (result && values->method->result_drop) values->method->result_drop(result);
     if (error && values->error_type && values->error_type->drop) values->error_type->drop(error);
-#else
-    (void)values;
-#endif
 }
 
 static int g_run_method(g_job *j, char **msg) {
@@ -2553,11 +2506,9 @@ static int g_run_method(g_job *j, char **msg) {
     V args[(size_t)m->nreq + 2];
     memset(args, 0, sizeof args);
     const fwp_owned_fninfo *types = fwp_fns[m->fn].owned;
-#ifdef FWP_RESOURCE_OWNERS
     if (!types || !types->entry) fwp_trap("missing served method ownership metadata");
     if ((m->output == 1 || m->output == 3) && !m->result_drop)
         fwp_trap("missing served iterator ownership metadata");
-#endif
     g_method_values values = {m, types, args, 0, 0, 0, 0};
     fwp_cleanup values_cleanup;
     fwp_cleanup_push(&values_cleanup, g_method_values_release, &values);
@@ -2907,9 +2858,7 @@ static void g_accept_loop(fwp_socket_t lfd, const g_server *srv) {
             char peer[128];
             fwp_fmt_addr((struct sockaddr *)&ss, peer, sizeof peer);
             g_conn *c = g_conn_new(fd, "", peer, srv);
-#ifdef FWP_RESOURCE_OWNERS
             fwp_rc_fresh(PTR(c));
-#endif
             c->refs = 1; /* startup storage and transport, moved to the reader */
             fwp_cleanup accepted_owner;
             fwp_cleanup_push(&accepted_owner, g_connect_ref_release, c);
@@ -3134,7 +3083,7 @@ static V fwp_p_grpc_metadata(const fwp_desc *list_type) {
         result.value = fwp_rc_fresh(fwp_cons(pair.value, result.value));
         fwp_value_finish(&pair, &pair_cleanup);
     }
-    FWP_KEEP_ALIVE(PTR(ctx));
+
     return fwp_value_finish(&result, &cleanup);
 }
 
@@ -3235,7 +3184,7 @@ static V fwp_p_grpc_with_metadata(V md, V f) {
     V result = g_with_ctx(ctx, f);
     fwp_cleanup_pop(&metadata_cleanup);
     g_metadata_release(owner);
-    FWP_KEEP_ALIVE(md);
+
     return result;
 }
 
@@ -3304,7 +3253,7 @@ static V fwp_p_grpc_peer_subject(const fwp_desc *option_type) {
     fwp_decode_fields fields;
     fwp_decode_fields_begin(&fields, 1, option_type->vfields[1], 1, NULL);
     fields.values[0] = fwp_rc_fresh(fwp_cstr(sv->peer));
-    FWP_KEEP_ALIVE(PTR(ctx));
+
     return fwp_decode_variant(&fields, 1);
 }
 
@@ -3336,25 +3285,19 @@ static V fwp_p_grpc_with_deadline(V d, V f) {
 }
 
 static V fwp_p_grpc_force(V value, void (*drop_cell)(V)) {
-#ifdef FWP_RESOURCE_OWNERS
     fwp_value_owner owner = {value, drop_cell};
     fwp_cleanup cleanup;
     fwp_value_protect(&owner, &cleanup);
-#else
-    (void)drop_cell;
-#endif
     g_failure f = {0, 0};
     V ev = 0;
     const fwp_desc *ed = 0;
     g_cell *cell = (g_cell *)(uintptr_t)value;
     V result = g_force(cell, 0, &f, &ev, &ed);
-#ifdef FWP_RESOURCE_OWNERS
     /* This call consumes its position. Move its cached owner when exclusive;
      * only a shared position needs an additional reference to the result. */
     if (fwp_rc_last(value)) cell->memo = FWP_NONE;
     else fwp_rc_dup(result);
     drop_cell(fwp_value_finish(&owner, &cleanup));
-#endif
     return result;
 }
 

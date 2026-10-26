@@ -65,11 +65,11 @@ fn ternary_results_preserve_values_aliases_and_release_storage() {
             let body = code[start..end]
                 .replace(
                     "    fwp_init_consts();\n",
-                    "    fwp_init_consts();\n    intptr_t ternary_budget=fwp_gc.budget;\n",
+                    "    fwp_init_consts();\n    size_t ternary_live_bytes=fwp_heap.live;\n",
                 )
                 .replace(
                     "    /* Ownership observation point: before runtime teardown. */\n",
-                    "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.budget!=ternary_budget) exit(248);\n",
+                    "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live!=ternary_live_bytes) exit(248);\n",
                 );
             let mut measured = code.clone();
             measured.replace_range(start..end, &body);
@@ -99,7 +99,7 @@ fn partial_ternary_lists_unwind_without_a_collector() {
         let code = code.replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1");
         let code = code.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int ternary_count_active; static size_t ternary_allocations;");
         let init = "static inline void *fwp_alloc_init(size_t n) {";
-        let slow = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+        let slow = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
         assert!(code.contains(init) && code.contains(slow));
         let code = code
             .replace(
@@ -108,7 +108,7 @@ fn partial_ternary_lists_unwind_without_a_collector() {
             )
             .replace(
                 slow,
-                &format!("{slow} if(ternary_count_active && leaf!=0) ternary_allocations++;"),
+                &format!("{slow} if(ternary_count_active && kind!=0) ternary_allocations++;"),
             );
         let code = code[..code.find("int main(").unwrap()].to_string()
             + include_str!("fixtures/ternary_cleanup.c");

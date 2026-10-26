@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/allocation_report.rs"]
+mod allocation_report;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -66,7 +69,7 @@ main = [
             let exe = dir.0.join(format!("aliases{opt}-{stack}"));
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", "tracing"])
+                    .args(["build"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe)
@@ -120,7 +123,7 @@ main = (10000, 0) | loop step | echo
     let emitted = dir.0.join("loop.c");
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&emitted)
@@ -144,23 +147,17 @@ main = (10000, 0) | loop step | echo
         fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
         let out = checked(
             Command::new(&exe)
-                .env("FWP_GC", "off")
-                .env("FWP_GC_STATS", "1")
+                .env("FWP_ALLOC_STATS", "1")
                 .env("FWP_REUSE_VERIFY", "0"),
         );
         assert_eq!(out.stdout, reference.stdout);
         let stats = String::from_utf8_lossy(&out.stderr);
-        assert!(stats.contains("fwp gc: 0 collections"), "{stats}");
+
         freed.push(
-            stats
-                .split(" MiB freed by counts")
-                .next()
-                .unwrap()
-                .rsplit('(')
-                .next()
-                .unwrap()
-                .parse::<f64>()
-                .unwrap(),
+            allocation_report::parse(&stats)
+                .expect("allocation report")
+                .released as f64
+                / 1_048_576.0,
         );
     }
     eprintln!("mapped graph MiB freed by counts: {freed:?}");

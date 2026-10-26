@@ -7,12 +7,12 @@ static V range_test_new(size_t n, size_t columns) {
     return fwp_map_typed_new(n, columns);
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     for (int trial=0; trial<6; trial++) for (int repeat=0; repeat<64; repeat++) {
         const fwp_desc element = {.kind=trial==3 || trial==5 ? K_U64 : K_I64};
         V lo = trial==2 ? (V)INT64_MIN : trial==3 ? 0 : trial==5 ? UINT64_MAX : (V)-2;
         V hi = trial==2 ? (V)INT64_MAX : trial==3 ? UINT64_MAX : trial==4 ? lo : trial==5 ? 0 : 3;
-        intptr_t before = fwp_gc.budget_given - fwp_gc.budget;
+        size_t before = fwp_heap.live;
         range_allocations = 0;
         // Also intercept oversized allocations if the size guard is removed.
         // The negative control must fail without attempting a huge allocation.
@@ -27,7 +27,7 @@ int main(void) {
             fwp_rc_free_obj(result);
         } else if (trial==0 || trial>=4) return 242;
         fwp_trap_recover = NULL; fwp_trap_jb = NULL;
-        if (fwp_cleanups || fwp_gc.budget_given - fwp_gc.budget != before) return 243;
+        if (fwp_cleanups || fwp_heap.live != before) return 243;
         if (range_allocations != (trial<2 ? 1 : 0)) return 245;
     }
     return 0;

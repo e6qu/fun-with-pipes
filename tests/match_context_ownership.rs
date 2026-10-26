@@ -130,8 +130,8 @@ static int dead(V v) {
  return *fwp_rc_slot(v)==0;
 }
 int main(void) {
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
- intptr_t baseline=fwp_gc.budget;
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+ size_t baseline=fwp_heap.live;
  for(int round=0;round<32;round++){
  for(int alias=0;alias<2;alias++) {
   V input=fwp_rc_fresh(fwp_str_new("input",5));if(alias)fwp_rc_dup(input);observed=0;
@@ -141,7 +141,7 @@ int main(void) {
   else if(!dead(input))return 5;
  }
 #ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;
 #endif
  }
  return 0;
@@ -318,14 +318,14 @@ static int dead(V v) {
  return *fwp_rc_slot(v)==0;
 }
 int main(void) {
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
- intptr_t baseline=fwp_gc.budget;
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+ size_t baseline=fwp_heap.live;
  for(int round=0;round<32;round++){
  for(int alias=0;alias<2;alias++){V input=fwp_rc_fresh(fwp_str_new("input",5));if(alias)fwp_rc_dup(input);observed=0;
  if(fFUNCTION(input)!=17)return 1;if(!observed||!dead(observed))return 3;
  if(alias){if(*fwp_rc_slot(input)!=1||STR(input)->len!=5)return 4;fwp_rc_free_obj(input);}else if(!dead(input))return 5;}
 #ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;
 #endif
  }
  return 0;

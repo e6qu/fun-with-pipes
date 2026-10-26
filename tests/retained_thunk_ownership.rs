@@ -79,8 +79,8 @@ static int dead(V v){
  uint8_t *slot=fwp_rc_slot(v);return !slot||!*slot;
 }
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
- intptr_t baseline=fwp_gc.budget;
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
+ size_t baseline=fwp_heap.live;
  for(int round=0;round<32;round++){
  for(int mode=0;mode<3;mode++)for(int alias=0;alias<2;alias++){
   V capture=fwp_rc_fresh(fwp_str_new("input",5));if(alias)fwp_rc_dup(capture);
@@ -88,7 +88,7 @@ int main(void){
   fwp_task *t=(fwp_task *)(uintptr_t)fSPAWN(fn);
   if(*fwp_rc_slot(fn)!=1||*fwp_rc_slot(capture)!=alias+1)return 1;
 #ifndef FWP_ARC_ONLY
-  fwp_gc_collect();
+  fwp_heap_collect();
 #endif
   FWP_KEEP_ALIVE(capture);FWP_KEEP_ALIVE(PTR(t));
   if(mode==2)fwp_p_task_yield();
@@ -110,7 +110,7 @@ int main(void){
  fwp_rc_free_obj(fwp_rc_fresh(result));fwp_task_drop(PTR(t));fwp_rc_free_obj(scalar);
  fwp_free_zombie();
 #ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
 #endif
  }
  // Tracing admits uncounted callbacks; ARC must reject loss of ownership.
@@ -123,7 +123,7 @@ int main(void){
  if(setjmp(rejected)==0){fSPAWN(fn);return 11;}
  fwp_trap_recover=0;fwp_trap_jb=0;
  if(strcmp(fwp_trap_msg,"internal: counted owner escaped ARC contract"))return 12;
- if(*fwp_rc_slot(fn)!=1||*fwp_rc_slot(capture)!=1||fwp_gc_tasks||fwp_cleanups)return 13;
+ if(*fwp_rc_slot(fn)!=1||*fwp_rc_slot(capture)!=1||fwp_tasks_active||fwp_cleanups)return 13;
  fwp_fns=fwp_fn_table;fwp_closure_drop(fn);
 #else
  fwp_task *t=(fwp_task *)(uintptr_t)fSPAWN(fn);
@@ -134,7 +134,7 @@ int main(void){
 #endif
  fwp_tasks_finish();fwp_native_tasks_finish();
 #ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=fwp_gc.budget_given||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=0||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
 #endif
  return 0;
 }
@@ -278,36 +278,36 @@ static int dead(V v){
  uint8_t *slot=fwp_rc_slot(v);return !slot||!*slot;
 }
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
- intptr_t baseline=fwp_gc.budget;
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
+ size_t baseline=fwp_heap.live;
  for(int round=0;round<32;round++){
  fwp_scope scope={0};scope.cap=8;scope.tasks=fwp_mem_alloc(scope.cap*sizeof(*scope.tasks));fwp_cur->scope=&scope;
  for(int mode=0;mode<3;mode++)for(int alias=0;alias<2;alias++){
   V capture=fwp_rc_fresh(fwp_str_new("input",5));if(alias)fwp_rc_dup(capture);V fn=fwp_rc_fresh(fwp_pap(PLAIN,1,&capture));
-  fwp_task *gc_before=fwp_gc_tasks;
-  intptr_t budget_before=fwp_gc.budget;
+  fwp_task *heap_before=fwp_tasks_active;
+  size_t live_bytes_before=fwp_heap.live;
   if(mode==0)fail_stack=1;else if(mode==2){scope.n=SIZE_MAX;scope.cap=SIZE_MAX;}else{uint8_t *slot=fwp_rc_slot(fn);*slot=254;fwp_rc_dup(fn);(*fwp_rc_wide_link(slot))->count=SIZE_MAX;}
   fwp_trap_recover=recover;fwp_trap_jb=&failed;fwp_trap_cleanup=0;
   if(setjmp(failed)==0){fwp_rc_dup(fn);fSPAWN(fn);return 1;}
   if(mode==0&&fail_stack)return 11;
   fwp_trap_recover=0;fwp_trap_jb=0;
-  if(fwp_cleanups||fwp_cur->first_child||fwp_gc_tasks!=gc_before)return 2;
+  if(fwp_cleanups||fwp_cur->first_child||fwp_tasks_active!=heap_before)return 2;
   if(mode==2){if(scope.n!=SIZE_MAX||scope.cap!=SIZE_MAX)return 8;scope.n=0;scope.cap=8;}else if(scope.n)return 9;
   if(mode==1){uint8_t *slot=fwp_rc_slot(fn);if(*slot!=255||(*fwp_rc_wide_link(slot))->count!=SIZE_MAX)return 3;fwp_rc_forget_slot(slot);*slot=1;}
   if(*fwp_rc_slot(fn)!=1||*fwp_rc_slot(capture)!=alias+1)return 4;
-  if(!fwp_gc.stress && fwp_gc.budget!=budget_before)return 10;
+  if(!fwp_heap.stress && fwp_heap.live!=live_bytes_before)return 10;
   fwp_closure_drop(fn);
   if(alias){if(*fwp_rc_slot(capture)!=1||STR(capture)->len!=5)return 5;fwp_rc_free_obj(capture);}
   else if(!dead(capture))return 6;
  }
  fwp_cur->scope=0;fwp_mem_free(scope.tasks);
 #ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
 #endif
  }
  fwp_tasks_finish();fwp_native_tasks_finish();
 #ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=fwp_gc.budget_given)return 90;
+ if(fwp_heap.live!=0)return 90;
 #endif
  return 0;
 }

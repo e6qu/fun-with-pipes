@@ -66,7 +66,7 @@ fn jacobian_output_count_keeps_its_callback_in_scope_without_optimization() {
         }
         checked(
             command
-                .args(["build", "--gc", "arc", "--emit-c"])
+                .args(["build", "--emit-c"])
                 .arg(&source)
                 .arg("-o")
                 .arg(&cfile),
@@ -131,8 +131,8 @@ fn nested_reverse_derivatives_match_analytic_values_and_both_engines() {
             );
             let runtime = format!("{runtime}\nstatic void nested_tapes_finished(void) {{\n    nested_scope_checks++;\n    if(fwp_owned_tapes)exit(196);\n    for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(197);\n}}\n");
             let checked_code = format!("{runtime}{}", main
-                .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t nested_budget=fwp_gc.budget_given;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(nested_scope_checks != 27)exit(198);\n    if(fwp_owned_tapes)exit(193);\n    for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(194);\n#if FWP_ARC_ONLY\n    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget<nested_budget)exit(195);\n#endif\n"));
+                .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    size_t nested_live_bytes=0;\n")
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(nested_scope_checks != 27)exit(198);\n    if(fwp_owned_tapes)exit(193);\n    for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(194);\n#if FWP_ARC_ONLY\n    if(fwp_heap.enabled || fwp_heap.ncollect || fwp_heap.live > nested_live_bytes)exit(195);\n#endif\n"));
             let binary = dir.join("nested.exe");
             fwp::cgen::compile_c(&checked_code, &binary, opt).unwrap();
             let output = checked(
@@ -178,7 +178,7 @@ fn inactive_zero_control_preserves_nonzero_second_derivatives_at_zero() {
     let cfile = dir.join("zero.c");
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "arc", "--emit-c"])
+            .args(["build", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile),
@@ -211,7 +211,7 @@ fn nested_reverse_rejects_expired_and_unrelated_tapes() {
         assert!(!reference.status.success());
         assert!(String::from_utf8_lossy(&reference.stderr).contains(message), "{reference:?}");
         let binary = dir.join("error.exe");
-        checked(Command::new(compiler).args(["build", "--gc", "arc"]).arg(&source).arg("-o").arg(&binary));
+        checked(Command::new(compiler).args(["build"]).arg(&source).arg("-o").arg(&binary));
         let output = Command::new(binary).output().unwrap();
         assert!(!output.status.success());
         assert!(String::from_utf8_lossy(&output.stderr).contains(message), "{output:?}");
@@ -382,7 +382,7 @@ fn completed_task_identity_cannot_be_reused_by_a_later_task() {
     let cfile = dir.join("reuse.c");
     checked(
         Command::new(compiler)
-            .args(["build", "--gc", "tracing", "--emit-c"])
+            .args(["build", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile),
@@ -447,7 +447,7 @@ main = [1.0] | rev._seed | .1 | rev._seed | .1
     let binary = dir.join("task.exe");
     checked(
         Command::new(compiler)
-            .args(["build", "--gc", "tracing", "-O2"])
+            .args(["build", "-O2"])
             .arg(&source)
             .arg("-o")
             .arg(&binary),
@@ -476,7 +476,7 @@ main = [1.0] | rev._seed | .1 | rev._seed | .1
     .unwrap();
     checked(
         Command::new(compiler)
-            .args(["build", "--gc", "tracing", "-O2"])
+            .args(["build", "-O2"])
             .arg(&source)
             .arg("-o")
             .arg(&binary),

@@ -168,7 +168,7 @@ def main():
                     assert digest(archive.read(name + '/' + old_label)) == recorded[old_label]['sha256']
                 code.write_bytes(raw_code)
             else:
-                build([args.compiler.resolve(), 'build', '--gc', 'arc', '--emit-c', '-O2', fwp_source, '-o', code])
+                build([args.compiler.resolve(), 'build', '--emit-c', '-O2', fwp_source, '-o', code])
             text = code.read_text()
             assert '#define FWP_ARC_ONLY 1' in text
             binary = directory / label
@@ -233,7 +233,7 @@ def main():
             assert int.from_bytes(raw[18:20], 'little') == {'x86_64': 62, 'aarch64': 183}[platform.machine()]
             symbols = run([args.nm, binary], environment).stdout
             if binary.name.startswith('fwp-'):
-                assert not any(name in symbols for name in [b'fwp_gc_scan', b'fwp_gc_mark_all', b'fwp_gc_sweep'])
+                assert not any(name in symbols for name in [b'fwp_heap_scan', b'fwp_heap_mark_all', b'fwp_heap_sweep'])
             assembly = run([args.objdump, '-d', binary], environment).stdout
             assert b'Disassembly of section' in assembly
             (directory / (binary.name + '.symbols')).write_bytes(symbols)

@@ -58,7 +58,7 @@ for label in sorted(expected):
     assert ('#define HTTP_APP_OMIT_CLOSE 1' in code) == ('missing-close' in label)
     symbols = subprocess.check_output([str(args.objdump), '--section-headers', '--syms', str(binary)])
     assembly = subprocess.check_output([str(args.objdump), '-d', str(binary)])
-    assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_gc_(?:scan|mark_all|sweep)\b', symbols)
+    assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_heap_(?:scan|mark_all|sweep)\b', symbols)
     sizes = re.findall(rb'^\s*\d+\s+(?:\.text|__text)\s+([0-9a-fA-F]+)\s', symbols, re.M)
     assert sizes and len(assembly) > 1000
     report['binaries'][label] = dict(machine=machine, fileBytes=len(raw),

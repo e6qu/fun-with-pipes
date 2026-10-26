@@ -85,7 +85,7 @@ From the repository root:
 
 ```sh
 fwp run --interp docs/tutorials/24-subscriptions/main.fwp
-fwp build --gc arc docs/tutorials/24-subscriptions/main.fwp -o subscriptions
+fwp build docs/tutorials/24-subscriptions/main.fwp -o subscriptions
 ./subscriptions
 ```
 

@@ -6,10 +6,6 @@ mod c_instrument;
 
 #[test]
 fn serving_peer_owner_survives_children_and_releases_at_completion() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -120,7 +116,7 @@ static void peer_input_drop(V value){if(value)_Exit(33);}
 static jmp_buf failure;
 static int recover(void){return 1;}
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();
  SSL_CTX *tls=SSL_CTX_new(TLS_client_method());if(!tls)_Exit(31);
  SSL *ssl=SSL_new(tls);SSL_CTX_free(tls);if(!ssl)_Exit(32);
  g_server srv={0};srv.module="probe";
@@ -142,7 +138,7 @@ int main(void){
    if(stage==5){
     if(task_frees!=1||job_frees||s->task||j->sv.task||!j->sv.peer||j->sv.peer_users!=1||children!=1||peer_frees||!observed_sender)_Exit(8);
     int64_t deadline=fwp_now_ns()+10000000000LL;
-    while(fwp_gc_tasks){if(fwp_now_ns()>=deadline)_Exit(34);fwp_park(0,fwp_now_ns()+1000000LL);fwp_free_zombie();}
+    while(fwp_tasks_active){if(fwp_now_ns()>=deadline)_Exit(34);fwp_park(0,fwp_now_ns()+1000000LL);fwp_free_zombie();}
     fwp_free_zombie();
     if(job_frees!=1||task_frees!=1||children!=2||peer_frees!=1)_Exit(9);
    }else if(job_frees!=1||task_frees!=1||s->task||children!=1||peer_frees!=((stage<3||stage==6)?1:0)||fwp_cleanups)_Exit(7);

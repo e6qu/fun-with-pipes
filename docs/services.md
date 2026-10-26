@@ -115,9 +115,9 @@ process can be pointed elsewhere without rebuilding.
 
 ## Building without tracing collection
 
-Native builds use checked automatic reference counting (ARC) by default, with
-no tracing collector in accepted programs. `--gc arc` selects this mode
-explicitly; `--gc tracing` selects the collector scheduled for removal.
+Native builds check memory lifetimes before generating code. Moves and borrows
+avoid ownership work where proved; automatic reference counting (ARC) releases
+shared storage when its last owner goes.
 An owner keeps a value alive; the last owner releases it. A borrow uses a value
 while an existing owner keeps it alive.
 Shared values still need reference counts, and message encoding, network buffers
@@ -127,7 +127,7 @@ For a program `app.fwp` that imports module `m`, this command produces the clien
 `out/app` and server `out/m` with the same checked memory mode:
 
 ```sh
-fwp build app.fwp --service m --gc arc -o out
+fwp build app.fwp --service m -o out
 ```
 
 Use the ordinary listen/address settings above to run them. The compiler rejects

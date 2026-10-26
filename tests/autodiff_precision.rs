@@ -31,23 +31,23 @@ fn quad_reverse_preserves_low_bits_exponent_range_and_reclaims_owned_values() {
         );
         let code = std::fs::read_to_string(cfile).unwrap()
             .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic uint64_t precision_calls, precision_bytes;")
-            .replace("static inline void *fwp_gc_alloc(size_t n, int leaf) {", "static inline void *fwp_gc_alloc(size_t n, int leaf) {\nif(leaf!=0){precision_calls++;precision_bytes+=n;}")
+            .replace("static inline void *fwp_heap_alloc(size_t n, int kind) {", "static inline void *fwp_heap_alloc(size_t n, int kind) {\nif(kind!=0){precision_calls++;precision_bytes+=n;}")
             .replace("static inline void *fwp_alloc_init(size_t n) {", "static inline void *fwp_alloc_init(size_t n) {\nprecision_calls++;precision_bytes+=n;");
         let start = code
             .find("static void *fwp_main_thread(void *arg) {")
             .unwrap();
         let (runtime, entry) = code.split_at(start);
-        let entry = entry.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t precision_budget=fwp_gc.budget_given; precision_calls=precision_bytes=0;\n")
+        let entry = entry.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    size_t precision_live_bytes=0; precision_calls=precision_bytes=0;\n")
             .replace("    /* Ownership observation point: before runtime teardown. */\n", r#"    /* Ownership observation point: before runtime teardown. */
     if(fwp_owned_tapes)exit(193);
     for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(194);
 #if FWP_ARC_ONLY
-    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget<precision_budget)exit(195);
+    if(fwp_heap.enabled || fwp_heap.ncollect || fwp_heap.live > precision_live_bytes)exit(195);
 #endif
     if(!precision_calls)exit(196);
     fprintf(stderr,"precision-profile {\"managedRequests\":%llu,\"managedRequestedBytes\":%llu,\"finalChargedDelta\":%lld,\"collections\":%zu}\n",
         (unsigned long long)precision_calls,(unsigned long long)precision_bytes,
-        (long long)(precision_budget-fwp_gc.budget),fwp_gc.ncollect);
+        (long long)(fwp_heap.live - precision_live_bytes),fwp_heap.ncollect);
 "#);
         let measured = format!("{runtime}{entry}");
         let binary = directory.join("precision.exe");

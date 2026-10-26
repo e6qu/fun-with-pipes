@@ -38,7 +38,7 @@ static V closure_new(unsigned fn) {
 }
 int main(void) {
     volatile V children[200]={0};closure_children=(V *)children;
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     fwp_fns=closure_entries;
     fwp_trap_recover=closure_recover;fwp_trap_jb=&closure_recovered;fwp_trap_cleanup=0;
     for (closure_mode=0;closure_mode<3;closure_mode++) {
@@ -60,10 +60,10 @@ int main(void) {
         unsigned before=closure_captures;
         fwp_closure_drop(closure_new(0));
         if (closure_captures!=before+1 || fwp_closure_drop_get() || fwp_cleanups) return 97;
-        fwp_gc_collect();
-        if (!fwp_gc.armed || !fwp_gc.ncollect) return 98;
+        fwp_heap_collect();
+        if (!fwp_heap.armed || !fwp_heap.ncollect) return 98;
         FWP_KEEP_ALIVE(children);
     }
-    printf("Closure cleanup context resets after capture trap and spill OOM; real collections=%zu\n",fwp_gc.ncollect);
+    printf("Closure cleanup context resets after capture trap and spill OOM; real collections=%zu\n",fwp_heap.ncollect);
     return 0;
 }

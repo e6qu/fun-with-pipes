@@ -204,15 +204,15 @@ static void one_round(void) {
 }
 int main(int argc, char **argv) {
     require(argc == 3, 230);
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_fns = functions; fwp_tasks_init();
     file_path = fwp_rc_fresh(fwp_cstr(argv[1]));
-    intptr_t bytes = fwp_gc.budget;
-    size_t live_before = owner_ledger_live, finalizers = fwp_gc.nfins;
+    size_t bytes = fwp_heap.live;
+    size_t live_before = owner_ledger_live, finalizers = fwp_heap.nfins;
     for (unsigned round = 0; round < (unsigned)strtoul(argv[2], NULL, 10); round++) {
         one_round();
-        require(fwp_gc.budget == bytes && owner_ledger_live == live_before, 237);
-        require(fwp_gc.nfins == finalizers, 238);
+        require(fwp_heap.live == bytes && owner_ledger_live == live_before, 237);
+        require(fwp_heap.nfins == finalizers, 238);
     }
     fwp_rc_free_obj(file_path);
     fwp_tasks_finish(); fwp_native_tasks_finish();

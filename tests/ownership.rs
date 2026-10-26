@@ -3,6 +3,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/allocation_report.rs"]
+mod allocation_report;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -65,7 +68,7 @@ main = [
     let emitted = scratch.0.join("boundaries.c");
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&emitted),
@@ -97,7 +100,7 @@ main = [
     let exe = scratch.0.join("boundaries");
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["-O1", "-o"])
             .arg(&exe),
@@ -143,7 +146,7 @@ main = (10000, key) | loop step | echo
     let emitted = scratch.0.join("key-loop.c");
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&emitted)
@@ -165,19 +168,16 @@ main = (10000, key) | loop step | echo
         fwp::cgen::compile_c(source, &exe, "-O1").unwrap();
         let out = checked(
             Command::new(&exe)
-                .env("FWP_GC_STATS", "1")
+                .env("FWP_ALLOC_STATS", "1")
                 .env("FWP_REUSE_VERIFY", "0"),
         );
         assert_eq!(out.stdout, reference.stdout);
         let stats = String::from_utf8_lossy(&out.stderr);
-        let prefix = stats.split(" MiB allocated").next().unwrap();
         allocated.push(
-            prefix
-                .split_whitespace()
-                .last()
-                .unwrap()
-                .parse::<f64>()
-                .unwrap(),
+            allocation_report::parse(&stats)
+                .expect("allocation report")
+                .allocated as f64
+                / 1_048_576.0,
         );
     }
     eprintln!(
@@ -200,7 +200,7 @@ fn saturated_counts_protect_reachable_values() {
     let hello = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/hello.fwp");
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(hello)
             .args(["--emit-c", "-o"])
             .arg(&emitted),
@@ -213,7 +213,7 @@ fn saturated_counts_protect_reachable_values() {
         "{runtime}\n{}",
         r#"
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     V child = fwp_rc_fresh(fwp_record(1, (V[]){7}));
     V parent = fwp_rc_fresh(fwp_record(1, &child));
     volatile V aliases[255];

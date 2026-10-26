@@ -251,7 +251,7 @@ main = [task.yield (), "input" | choose (read-all () | string.length | eq 0) | e
         let probe = r#"
 static jmp_buf trapped; static int recover(void){return 1;}
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
  for(int alias=0;alias<2;alias++){
   V input=fwp_rc_fresh(fwp_str_new("input",5));if(alias)fwp_rc_dup(input);
   fwp_trap_recover=recover;fwp_trap_jb=&trapped;fwp_trap_cleanup=0;

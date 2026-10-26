@@ -6,7 +6,7 @@ static fwp_handler process_test_handler;
 static int process_test_recover(void) { return 1; }
 static void process_test_collect_now(void) {
 #if !FWP_ARC_ONLY
-    if (process_test_collect) fwp_gc_collect();
+    if (process_test_collect) fwp_heap_collect();
 #endif
 }
 static V process_test_string(const char *text, size_t size) {
@@ -124,7 +124,7 @@ static void process_test_error(V value) {
     process_test_drop(kind); process_test_drop(message); process_test_drop(value);
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
 #if FWP_ARC_ONLY
     const int collect_limit = 0;
 #else
@@ -136,7 +136,7 @@ int main(void) {
     const int mode_limit = 10;
 #endif
     for (process_test_collect = 0; process_test_collect <= collect_limit; process_test_collect++) {
-        intptr_t budget = fwp_gc.budget;
+        size_t live_bytes = fwp_heap.live;
         for (process_test_mode = 0; process_test_mode <= mode_limit; process_test_mode++) for (int repeat = 0; repeat < 8; repeat++) {
             process_test_copies = process_test_appends = process_test_waits = process_test_disposals = 0;
             int error = process_test_mode == 1;
@@ -199,7 +199,7 @@ int main(void) {
                 process_test_result(result);
             }
             if (process_test_disposals != 1 || fwp_cleanups) return 243;
-            if (!process_test_collect && fwp_gc.budget != budget) return 244;
+            if (!process_test_collect && fwp_heap.live != live_bytes) return 244;
         }
     }
     return 0;

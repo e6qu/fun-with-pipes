@@ -51,7 +51,7 @@ def main():
         symbols = run([args.nm, str(binary)]).stdout
         assert len(asm) > 1000
         if binary.name.startswith('fwp'):
-            assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_gc_(?:scan|mark_all|sweep)\b', symbols)
+            assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_heap_(?:scan|mark_all|sweep)\b', symbols)
         (binary.parent / (binary.name + '.asm')).write_bytes(asm)
         (binary.parent / (binary.name + '.symbols')).write_bytes(symbols)
         return dict(sha256=OUTPUT.digest(raw), sourceSha256=OUTPUT.digest(source.read_bytes()),
@@ -84,7 +84,7 @@ def main():
         assert reference.returncode == 0 and not reference.stderr
         OUTPUT.COORDINATE.check_vectors(reference.stdout, expected, 1)
         (directory / 'interpreter.stdout').write_bytes(reference.stdout)
-        run([str(args.compiler), 'build', '--gc', 'arc', '--memory', 'dynamic', '--emit-c', '-O2', str(source), '-o', str(generated)])
+        run([str(args.compiler), 'build', '--memory', 'dynamic', '--emit-c', '-O2', str(source), '-o', str(generated)])
         originals = dict(fwp=generated.read_text(),
             c=f'#define DIMENSIONS {points}\n#define UPDATES {updates}\n' + (ROOT / 'tests/fixtures/descent_coordinate.c').read_text(),
             rust=(ROOT / 'tests/fixtures/descent_coordinate.rs').read_text().replace('// Measurement parameters are inserted here.',

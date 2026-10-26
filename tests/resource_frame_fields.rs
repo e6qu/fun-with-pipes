@@ -13,10 +13,6 @@ fn checked(command: &mut Command) -> Output {
 }
 #[test]
 fn original_record_holders_preserve_files_without_heap_boxes() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let dir = fwp::cgen::TempDir::new("fwp-resource-frame-fields").unwrap();
     let data = dir.join("data");
     std::fs::write(&data, "contents").unwrap();
@@ -48,7 +44,7 @@ main = "{}" | file.open | pack | .file | file.close | const "closed" | echo
     for opt in ["-O1", "-O2"] {
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -307,7 +303,7 @@ static FILE *observed_open(const char *p,const char *m){FILE *f=fopen(p,m);if(f)
 static int observed_close(FILE *f){if(f==stream)closes++;return fclose(f);}
 static int recover(void){return 1;}
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_prog_out=stdout;fwp_init_consts();
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_prog_out=stdout;fwp_init_consts();
  jmp_buf recovery;fwp_trap_jb=&recovery;fwp_trap_recover=recover;fwp_trap_cleanup=0;
  int failed=setjmp(recovery);if(!failed){f0();return 1;}
  fwp_trap_jb=0;fwp_trap_recover=0;

@@ -5,7 +5,7 @@ static fwp_task stack_array_task;
 static int stack_array_recover(void) { return 1; }
 static const fwp_desc stack_array_element = {.kind = K_F64};
 static double stack_array_charge(void) {
-    return fwp_gc.total_alloc + (double)(fwp_gc.budget_given - fwp_gc.budget);
+    return (double)fwp_heap.live;
 }
 static V stack_array_input(void) {
     V value = fwp_array_typed_new(2, &stack_array_element);
@@ -22,7 +22,7 @@ static void stack_array_drop(V value) {
     fwp_fns[0].owned->drop_arguments(&value, 0, 1);
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table;
+    fwp_heap_start(); fwp_fns = fwp_fn_table;
     fwp_init_consts(); fwp_tasks_init();
     if (!fwp_fns[0].owned || !fwp_fns[0].owned->drop_arguments) return 200;
     const char *stress = getenv("FWP_GC_STRESS");

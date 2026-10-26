@@ -17,12 +17,12 @@ fn replace_once(code: &mut String, before: &str, after: &str) {
 fn collector_snapshot(code: &str) -> String {
     let mut code = code.to_owned();
     for (before, after) in [
-        ("    char *top;\n#if FWP_GC && !defined(FWP_ARC_ONLY)\n    char *sp;\n    jmp_buf registers;\n#endif",
+        ("    char *top;\n#if FWP_NATIVE_HEAP && !defined(FWP_ARC_ONLY)\n    char *sp;\n    jmp_buf registers;\n#endif",
          "    char *top, *sp;\n    jmp_buf registers;"),
-        ("#if FWP_GC && !defined(FWP_ARC_ONLY)\n    /* setjmp captures", "    /* setjmp captures"),
-        ("    from->sp = fwp_gc_sp();\n#else\n    (void)from;\n#endif",
-         "    from->sp = fwp_gc_sp();"),
-        ("#if FWP_GC && !defined(FWP_ARC_ONLY)\n    from->sp = NULL;\n    memset(from->registers, 0, sizeof from->registers);\n#endif",
+        ("#if FWP_NATIVE_HEAP && !defined(FWP_ARC_ONLY)\n    /* setjmp captures", "    /* setjmp captures"),
+        ("    from->sp = fwp_heap_sp();\n#else\n    (void)from;\n#endif",
+         "    from->sp = fwp_heap_sp();"),
+        ("#if FWP_NATIVE_HEAP && !defined(FWP_ARC_ONLY)\n    from->sp = NULL;\n    memset(from->registers, 0, sizeof from->registers);\n#endif",
          "    from->sp = NULL;\n    memset(from->registers, 0, sizeof from->registers);"),
     ] {
         replace_once(&mut code, before, after);
@@ -119,7 +119,7 @@ fn arc_task_records_omit_collector_storage_and_switch_copies() {
     assert!(interpreted.stderr.is_empty());
     let generated = Command::new(compiler)
         .env_remove("FWP_NO_OPT")
-        .args(["build", "--gc", "arc", "--emit-c", "-O1"])
+        .args(["build", "--emit-c", "-O1"])
         .arg(&source)
         .arg("-o")
         .arg(&cfile)
@@ -209,16 +209,17 @@ fn arc_task_records_omit_collector_storage_and_switch_copies() {
 
 #[test]
 fn fiber_registers_stacks_and_host_context_are_preserved() {
-    let allocator = include_str!("../runtime/fwp_rt_gc.c");
-    let end = allocator.find("#endif /* FWP_GC */").unwrap() + "#endif /* FWP_GC */".len();
+    let allocator = include_str!("../runtime/fwp_rt_heap.c");
+    let end = allocator.find("#endif /* FWP_NATIVE_HEAP */").unwrap()
+        + "#endif /* FWP_NATIVE_HEAP */".len();
     // Isolate fiber roots from PE data roots, which have their own native probe.
-    let allocator = allocator[..end].replace("    fwp_gc_scan_data();", "");
+    let allocator = allocator[..end].replace("    fwp_heap_scan_data();", "");
     let context = include_str!("../runtime/fwp_rt_context_win.c");
     let missing_registers = context.replace(
-        "    fwp_gc_scan_root((char *)context->registers,\n                     (char *)context->registers + sizeof context->registers);",
+        "    fwp_heap_scan_root((char *)context->registers,\n                     (char *)context->registers + sizeof context->registers);",
         "",
     );
-    let missing_stack = context.replace("    fwp_gc_scan_root(context->sp, context->top);", "");
+    let missing_stack = context.replace("    fwp_heap_scan_root(context->sp, context->top);", "");
     assert_ne!(missing_registers, context);
     assert_ne!(missing_stack, context);
     let dir = fwp::cgen::TempDir::new("windows-context").unwrap();
@@ -246,12 +247,13 @@ fn fiber_registers_stacks_and_host_context_are_preserved() {
 
 #[test]
 fn active_stack_roots_extend_above_the_frame_marker() {
-    let allocator = include_str!("../runtime/fwp_rt_gc.c");
-    let end = allocator.find("#endif /* FWP_GC */").unwrap() + "#endif /* FWP_GC */".len();
-    let allocator = allocator[..end].replace("    fwp_gc_scan_data();", "");
+    let allocator = include_str!("../runtime/fwp_rt_heap.c");
+    let end = allocator.find("#endif /* FWP_NATIVE_HEAP */").unwrap()
+        + "#endif /* FWP_NATIVE_HEAP */".len();
+    let allocator = allocator[..end].replace("    fwp_heap_scan_data();", "");
     let old_bound = allocator.replace(
-        "fwp_gc.main_top = (char *)high;",
-        "fwp_gc.main_top = (char *)top;",
+        "fwp_heap.main_top = (char *)high;",
+        "fwp_heap.main_top = (char *)top;",
     );
     assert_ne!(old_bound, allocator);
     let prefix = include_str!("fixtures/windows_context_probe.c")
@@ -260,21 +262,21 @@ fn active_stack_roots_extend_above_the_frame_marker() {
         .unwrap();
     let probe = r#"
 static char *active_root;
-static void fwp_gc_scan_stacks(char *sp) {
+static void fwp_heap_scan_stacks(char *sp) {
     (void)sp;
     /* Isolate a live slot above the supplied frame marker. Do not let
      * incidental register copies hide an incorrect upper stack bound. */
-    fwp_gc_scan_root(active_root, fwp_gc.main_top);
+    fwp_heap_scan_root(active_root, fwp_heap.main_top);
 }
 int main(void) {
     volatile V slots[8192] = {0};
-    fwp_gc_start((void *)&slots[0]);
+    fwp_heap_start((void *)&slots[0]);
     active_root = (char *)&slots[8191];
     slots[8191] = (V)(uintptr_t)fwp_alloc_leaf(32);
-    fwp_gc.major_next = 1;
-    fwp_gc_collect();
-    if (!fwp_gc_marked((void *)(uintptr_t)slots[8191])) return 23;
-    fwp_gc_finish();
+    fwp_heap.major_next = 1;
+    fwp_heap_collect();
+    if (!fwp_heap_marked((void *)(uintptr_t)slots[8191])) return 23;
+    fwp_heap_finish();
     return 0;
 }
 "#;

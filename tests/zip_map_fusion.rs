@@ -184,9 +184,9 @@ fn numeric_zip_maps_remove_pairs_and_nodes_and_preserve_input_aliases() {
                 .replace("fDROP", drop);
             let prefix = &code[..code.find("int main(").unwrap()];
             let mut code = prefix.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic uint64_t zip_calls,zip_bytes,zip_retains;")
-                .replace("static inline void *fwp_gc_alloc(size_t n, int leaf) {", "static inline void *fwp_gc_alloc(size_t n, int leaf) {\nif(leaf!=0){zip_calls++;zip_bytes+=n;}")
+                .replace("static inline void *fwp_heap_alloc(size_t n, int kind) {", "static inline void *fwp_heap_alloc(size_t n, int kind) {\nif(kind!=0){zip_calls++;zip_bytes+=n;}")
                 .replace("static inline void *fwp_alloc_init(size_t n) {", "static inline void *fwp_alloc_init(size_t n) {\nzip_calls++;zip_bytes+=n;");
-            assert!(code.contains("if(leaf!=0){zip_calls++"));
+            assert!(code.contains("if(kind!=0){zip_calls++"));
             for parameter in ["v", "value"] {
                 let marker = format!("static inline void fwp_rc_dup(V {parameter}) {{");
                 code = code.replace(&marker, &(marker.clone() + "\nzip_retains++;"));

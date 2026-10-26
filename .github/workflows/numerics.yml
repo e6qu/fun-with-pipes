@@ -1473,7 +1473,7 @@ jobs:
           name: task-contexts-${{ matrix.runner }}
           path: task-context-evidence/
           if-no-files-found: error
-  gc_checks:
+  heap_checks:
     if: inputs.suite == 'gc-checks'
     strategy:
       fail-fast: false
@@ -2115,7 +2115,7 @@ jobs:
         run: cargo test --test device_bounds device_output_limits_preserve_kernel_validation_order -- --exact --nocapture
       - name: Retain the actual executable after a snapshot mismatch
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
-        run: cargo test --test gc gc_failure_artifacts_retain_the_native_executable -- --exact --nocapture
+        run: cargo test --test gc heap_failure_artifacts_retain_the_native_executable -- --exact --nocapture
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -2427,7 +2427,7 @@ jobs:
       - run: cargo clippy --lib --bin fwp --test map_set_ownership --test decoder_partial -- -D warnings
       - name: Map and set results, aliases, failure and reuse
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
-        run: cargo test --no-fail-fast --test map_set_ownership --test map_unwind_ownership --test old_reclamation -- --nocapture
+        run: cargo test --no-fail-fast --test map_set_ownership --test map_unwind_ownership -- --nocapture
       - name: Typed decoding and partial results
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test decoder_partial -- --nocapture
@@ -3048,7 +3048,7 @@ jobs:
         if: matrix.part == 'calls' && runner.os == 'Linux'
         run: |
           if [ "${{ inputs.suite }}" = server-arc ]; then
-            cargo test --test gc arc_grpc_server_runs_in_bounded_memory -- --exact --nocapture
+            cargo test --test gc grpc_server_runs_in_bounded_memory -- --exact --nocapture
           else
             cargo test --test gc grpc_server_runs_in_bounded_memory -- --exact --nocapture
           fi
@@ -4435,7 +4435,7 @@ jobs:
         run: cargo test --test arc_execution --test arc_corpus
       - name: Numerical, autodiff and loop ownership regressions
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
-        run: cargo test --no-fail-fast --test ad_tape_ownership --test ad_tape_scopes --test autodiff_capacity_bounds --test autodiff_workspace --test autodiff_library --test blocked_matrix --test numeric_array_fusion --test old_reclamation --test retain_unwind_ownership --test unboxed_worker_locals --test loop_ownership --test loop_unwind_ownership --test loop_preparation_ownership --test field_context_ownership
+        run: cargo test --no-fail-fast --test ad_tape_ownership --test ad_tape_scopes --test autodiff_capacity_bounds --test autodiff_workspace --test autodiff_library --test blocked_matrix --test numeric_array_fusion --test retain_unwind_ownership --test unboxed_worker_locals --test loop_ownership --test loop_unwind_ownership --test loop_preparation_ownership --test field_context_ownership
       - name: Preserve original stack allocation and variant ownership controls
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: cargo test --no-fail-fast --test stack --test stack_ownership --test stack_match_ownership --test variant_alias_ownership --test variant_conversion_ownership
@@ -4461,7 +4461,7 @@ jobs:
         run: |
           mkdir -p array-fusion-evidence/source
           cp src/opt.rs src/arc.rs src/ir.rs src/main.rs src/lib.rs tests/arc_execution.rs tests/arc_corpus.rs tests/loop_ownership.rs src/rc.rs src/fuse.rs src/cgen.rs src/numerics.rs src/mono.rs src/ownership.rs tests/autodiff_capacity_bounds.rs tests/numeric_array_fusion.rs tests/autodiff_workspace.rs tests/autodiff_library.rs tests/blocked_matrix.rs tests/wasm.rs tests/ad_tape_ownership.rs tests/ad_tape_scopes.rs array-fusion-evidence/source/
-          cp runtime/fwp_rt_prims.c runtime/fwp_rt_gc.c runtime/fwp_rt_kernel.c array-fusion-evidence/source/
+          cp runtime/fwp_rt_prims.c runtime/fwp_rt_heap.c runtime/fwp_rt_kernel.c array-fusion-evidence/source/
       - uses: actions/upload-artifact@v7
         if: always()
         with:

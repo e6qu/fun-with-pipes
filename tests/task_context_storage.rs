@@ -17,7 +17,7 @@ fn task_stack_pages_guard_reuse_and_setup_failures() {
     let begin = "    t->stack_size = FWP_NATIVE_TASK_STACK;\n    if (fwp_stack_pool_n > 0)";
     assert_eq!(runtime.matches(begin).count(), 1);
     let block = &runtime[runtime.find(begin).unwrap()..];
-    let block = &block[..block.find("#endif\n    t->gc_next").unwrap()];
+    let block = &block[..block.find("#endif\n    t->all_next").unwrap()];
     let code = include_str!("fixtures/task_stack_pages.c")
         .replace("    /* PRODUCTION_STACK_ALLOCATION */", block);
     let path = directory("pages");
@@ -205,7 +205,7 @@ fn compile(code: &str, path: &Path, label: &str, opt: &str, uses_context: bool) 
                 );
             }
             if code.contains("#define FWP_ARC_ONLY 1") {
-                for collector in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                for collector in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                     assert!(!symbols.contains(collector), "{label} retains {collector}");
                 }
             }
@@ -245,8 +245,8 @@ fn saved_context_roots_and_machine_state() {
                 let mut missing_child = instrumented.clone();
                 replace(
                     &mut missing_child,
-                    "fwp_gc_scan_root(FWP_TASK_LOW(t), t->stack + t->stack_size);",
-                    "fwp_gc_scan_root(FWP_TASK_LOW(t), (char *)t->ctx);",
+                    "fwp_heap_scan_root(FWP_TASK_LOW(t), t->stack + t->stack_size);",
+                    "fwp_heap_scan_root(FWP_TASK_LOW(t), (char *)t->ctx);",
                     1,
                 );
                 variants.push(("missing-child", missing_child, 192));
@@ -297,14 +297,14 @@ fn task_context_storage_preserves_output_and_cleanup() {
             replace(
                 &mut measured,
                 "    client_measure_end();\n",
-                &format!("    client_measure_end();\n{layout_report}    fprintf(stderr, \"process-peak-kib\\t%ld\\n\", fwp_gc_status_kb(\"VmHWM\"));\n"),
+                &format!("    client_measure_end();\n{layout_report}    fprintf(stderr, \"process-peak-kib\\t%ld\\n\", fwp_heap_status_kb(\"VmHWM\"));\n"),
                 1,
             );
             let verified = if layout == "stack" {
                 let mut checked = measured.clone();
                 replace(&mut checked, "    fwp_native_tasks_finish();\n", "    fwp_native_tasks_finish();\n    for(size_t i=0;i<sizeof fwp_root_context;i++)if(((unsigned char *)&fwp_root_context)[i])_Exit(193);\n", 1);
                 replace(&mut checked, "    makecontext(t->ctx, fwp_task_main, 0);", "    makecontext(t->ctx, fwp_task_main, 0);\n    if((uintptr_t)t->ctx % _Alignof(ucontext_t) || (char *)t->ctx < t->stack || (char *)(t->ctx+1) > t->stack+t->stack_size || t->ctx->uc_stack.ss_size != (size_t)((char *)t->ctx-t->stack))_Exit(195);", 1);
-                replace(&mut checked, "        fwp_zombie->gc_prev = fwp_zombie->gc_next = 0;", "        fwp_zombie->gc_prev = fwp_zombie->gc_next = 0;\n        if(fwp_zombie->ctx || fwp_zombie->stack)_Exit(196);", 1);
+                replace(&mut checked, "        fwp_zombie->all_prev = fwp_zombie->all_next = 0;", "        fwp_zombie->all_prev = fwp_zombie->all_next = 0;\n        if(fwp_zombie->ctx || fwp_zombie->stack)_Exit(196);", 1);
                 Some(checked)
             } else {
                 None

@@ -2,11 +2,11 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     const V counts[] = {0, 1, 7, 257, 4096};
     for (size_t c=0; c<sizeof(counts)/sizeof(counts[0]); c++) {
         V n = counts[c];
-        intptr_t before = fwp_gc.budget_given - fwp_gc.budget;
+        size_t before = fwp_heap.live;
         range_requests = range_bytes = 0;
         V result = BUILD_SET(n);
         size_t requests = range_requests, bytes = range_bytes;
@@ -17,7 +17,7 @@ int main(void) {
         for (V i=0; i<n; i++) if (MAP(result)->d[i] != i) return 247;
         fwp_rc_free_obj(result);
 #ifdef FWP_ARC_ONLY
-        if (fwp_gc.budget_given - fwp_gc.budget != before) return 248;
+        if (fwp_heap.live != before) return 248;
 #else
         (void)before;
 #endif

@@ -7,6 +7,9 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 
+#[path = "support/allocation_report.rs"]
+mod allocation_report;
+
 fn fwp() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_fwp"))
 }
@@ -171,7 +174,7 @@ fn allocated(dir: &TempDir, name: &str, var: &str, value: &str, expected: &str) 
     let src = root().join(format!("tests/stack/{}.fwp", name));
     let exe = dir.0.join(format!("{}{}", name, value));
     let b = Command::new(fwp())
-        .args(["build", "--gc", "tracing"])
+        .args(["build"])
         .arg(&src)
         .arg("-o")
         .arg(&exe)
@@ -179,18 +182,14 @@ fn allocated(dir: &TempDir, name: &str, var: &str, value: &str, expected: &str) 
         .output()
         .unwrap();
     assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
-    let o = run(&exe, &dir.0, b"", &[("FWP_GC_STATS", "1")]);
+    let o = run(&exe, &dir.0, b"", &[("FWP_ALLOC_STATS", "1")]);
     assert_eq!(String::from_utf8_lossy(&o.stdout), expected);
     assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
     let err = String::from_utf8_lossy(&o.stderr);
-    let mib = err
-        .split(" MiB allocated")
-        .next()
-        .unwrap()
-        .rsplit(' ')
-        .next()
-        .unwrap();
-    mib.parse().unwrap()
+    allocation_report::parse(&err)
+        .expect("allocation report")
+        .allocated as f64
+        / 1_048_576.0
 }
 
 /// `tests/stack/<name>.fwp` prints `expected`, allocating more than 10 MiB

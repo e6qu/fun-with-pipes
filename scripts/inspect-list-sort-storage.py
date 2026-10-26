@@ -68,7 +68,7 @@ for row in report['programs']:
             sizes = re.findall(rb'^\s*\d+\s+\.text\s+([0-9a-fA-F]+)\s', sections, re.M)
             assert sizes and len(assembly) > 1000
             assert sum(int(size, 16) for size in sizes) == recorded['textSectionBytes']
-            assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_gc_(?:scan|mark_all|sweep)\b', sections)
+            assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_heap_(?:scan|mark_all|sweep)\b', sections)
             images.append(dict(program=kind, variant=variant, scope=scope, machine=machine,
                                **recorded, inspectionDisassemblySha256=hashlib.sha256(assembly).hexdigest()))
     assert [entry['elements'] for entry in row['observations']] == [0, 1, 32, 4096]

@@ -38,7 +38,7 @@ def object_details(path, system, arch, objdump):
     assembly = subprocess.check_output([objdump, '-d', str(path)])
     sizes = re.findall(rb'^\s*\d+\s+(?:\.text|__text)\s+([0-9a-fA-F]+)\s', sections, re.M)
     assert sizes and len(assembly) > 1000
-    assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_gc_(?:scan|mark_all|sweep)\b', sections)
+    assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_heap_(?:scan|mark_all|sweep)\b', sections)
     return dict(machine=machine, fileBytes=len(raw), textBytes=sum(int(size, 16) for size in sizes),
                 binarySha256=hashlib.sha256(raw).hexdigest(),
                 sectionsSha256=hashlib.sha256(sections).hexdigest(),

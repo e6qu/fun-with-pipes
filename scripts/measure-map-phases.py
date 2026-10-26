@@ -39,7 +39,7 @@ static uint64_t map_probe_stamp(const char *stage, uint64_t before, size_t n, co
         stamp = f'    probe = map_probe_stamp("{label}", probe, n, {pointers});\n'
         builder = builder.replace(before, stamp + before)
     code = code[:start] + builder + code[end:]
-    signature = 'static __attribute__((noinline)) void *fwp_gc_alloc_big(size_t n, int leaf) {'
+    signature = 'static __attribute__((noinline)) void *fwp_heap_alloc_big(size_t n, int kind) {'
     start = code.index(signature)
     end = code.index('\n}', start) + 2
     original = code[start:end]

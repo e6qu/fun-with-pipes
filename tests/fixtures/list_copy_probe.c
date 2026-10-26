@@ -55,7 +55,7 @@ static V copy_operation(int op) {
     }
 }
 static int copy_case(int op, int failure, int callback, int cancel, int *steps) {
-    intptr_t before = fwp_gc.budget_given - fwp_gc.budget;
+    size_t before = fwp_heap.live;
     copy_failure = failure; copy_step = copy_calls = 0;
     copy_callback_failure = callback; copy_cancel = cancel; copy_armed = 1;
     copy_saved_task = fwp_cur;
@@ -63,7 +63,7 @@ static int copy_case(int op, int failure, int callback, int cancel, int *steps) 
     if (cancel) {
         fwp_cur = &copy_task;
 #ifdef _WIN32
-        copy_task.ctx.top = fwp_gc.main_top;
+        copy_task.ctx.top = fwp_heap.main_top;
 #endif
     }
     fwp_budget = 1000000;
@@ -104,7 +104,7 @@ static int copy_case(int op, int failure, int callback, int cancel, int *steps) 
     }
     if (xs) return 219;
 #ifdef FWP_ARC_ONLY
-    if (fwp_gc.budget_given - fwp_gc.budget != before) return 220;
+    if (fwp_heap.live != before) return 220;
 #else
     (void)before;
 #endif
@@ -114,8 +114,8 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = copy_functions; fwp_init_consts();
-    intptr_t baseline = fwp_gc.budget_given - fwp_gc.budget;
+    fwp_heap_start(); fwp_fns = copy_functions; fwp_init_consts();
+    size_t baseline = fwp_heap.live;
     for (int round = 0; round < 8; round++) {
         for (int i = 2; i >= 0; i--) {
             copy_leaves[i] = fwp_rc_fresh(fwp_str_new("cab" + i, 1));
@@ -150,7 +150,7 @@ int main(void) {
         copy_list->drop(copy_input); copy_input = 0;
         for (int i = 0; i < 3; i++) { copy_list->elem->drop(copy_leaves[i]); copy_leaves[i] = 0; }
 #ifdef FWP_ARC_ONLY
-        if (fwp_gc.budget_given - fwp_gc.budget != baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 221;
+        if (fwp_heap.live != baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 221;
 #else
         (void)baseline;
 #endif

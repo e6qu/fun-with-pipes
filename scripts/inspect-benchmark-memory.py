@@ -66,7 +66,7 @@ for row, measured in zip(report['programs'], inspection['programs'], strict=True
         symbols = subprocess.check_output([args.objdump, '--section-headers', '--syms', str(binary)])
         assembly = subprocess.check_output([args.objdump, '-d', str(binary)])
         assert len(assembly) > 1000
-        assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_gc_(scan|mark_all|sweep)\b', symbols)
+        assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_heap_(scan|mark_all|sweep)\b', symbols)
         sections = re.findall(rb'^\s*\d+\s+\.text\s+([0-9a-fA-F]+)\s', symbols, re.M)
         assert len(sections) == 1
         stack, = args.input.glob(stem + '*.su')

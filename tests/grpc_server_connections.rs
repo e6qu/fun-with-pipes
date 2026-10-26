@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn accepted_connections_release_after_startup_io_jobs_and_channels() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let no_reuse = std::env::var("FWP_REUSE").as_deref() == Ok("0");
     let unit = MT::unit();
     let program = Program {

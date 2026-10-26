@@ -79,7 +79,7 @@ def main():
                     symbols = run(['nm', binary]).stdout
                     assert 'fwp_matrix_product_f64' not in symbols, 'kernel helper must inline'
                     if gc == 'arc':
-                        assert not any(symbol in symbols for symbol in ['fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'])
+                        assert not any(symbol in symbols for symbol in ['fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'])
         labels = list(binaries)
         if not profile:
             for binary in binaries.values():

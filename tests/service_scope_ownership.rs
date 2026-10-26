@@ -43,8 +43,8 @@ fn scope_results_preserve_aliases_and_release_partial_captures() {
             .find("static void *fwp_main_thread(void *arg) {")
             .unwrap();
         let (runtime, main) = code.split_at(start);
-        let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t scope_budget=fwp_gc.budget_given;\n")
-            .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.budget!=scope_budget || fwp_gc.ncollect) { fprintf(stderr,\"scope charged delta %lld; collections %zu\\n\",(long long)(scope_budget-fwp_gc.budget),fwp_gc.ncollect); exit(248); }\n");
+        let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    size_t scope_live_bytes=0;\n")
+            .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live!=scope_live_bytes || fwp_heap.ncollect) { fprintf(stderr,\"scope charged delta %lld; collections %zu\\n\",(long long)(fwp_heap.live - scope_live_bytes),fwp_heap.ncollect); exit(248); }\n");
         let measured = format!("{runtime}{main}");
         let borrowed = "V r = fwp_apply_borrowed(f, 1, &unit);";
         assert_eq!(measured.matches(borrowed).count(), 1);
@@ -81,7 +81,7 @@ fn scope_results_preserve_aliases_and_release_partial_captures() {
                     if mode == "arc" {
                         let symbols = checked(Command::new("nm").arg(&binary));
                         let symbols = String::from_utf8_lossy(&symbols.stdout);
-                        for tracing in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                        for tracing in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                             assert!(!symbols.contains(tracing), "{symbols}");
                         }
                     }
@@ -108,7 +108,7 @@ fn scope_results_preserve_aliases_and_release_partial_captures() {
             .replace("typedef uint64_t V;","typedef uint64_t V;\nstatic void capture_allocation(void);static V capture_callback(void);static int capture_live;");
         for (marker,replacement) in [
             ("static inline void *fwp_alloc_init(size_t n) {","static inline void *fwp_alloc_init(size_t n) { capture_allocation();"),
-            ("static inline void *fwp_gc_alloc(size_t n, int leaf) {","static inline void *fwp_gc_alloc(size_t n, int leaf) { if(leaf)capture_allocation();"),
+            ("static inline void *fwp_heap_alloc(size_t n, int kind) {","static inline void *fwp_heap_alloc(size_t n, int kind) { if(kind)capture_allocation();"),
             ("    owner->users = 1;\n    fwp_cleanup capture_cleanup;","    owner->users = 1; capture_live++;\n    fwp_cleanup capture_cleanup;"),
             ("if (--cap->users == 0) { h2_hdrs_free", "if (--cap->users == 0) { capture_live--; h2_hdrs_free"),
             (borrowed,"V r = capture_callback();"),

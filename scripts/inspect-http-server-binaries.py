@@ -30,7 +30,7 @@ for root, relative, mode, opt, workload in cases:
     code = source.read_text()
     assert ('#define FWP_ARC_ONLY 1' in code) == (mode == 'arc')
     symbols = subprocess.check_output([str(args.llvm_bin / 'llvm-nm'), str(binary)], text=True)
-    found = [name for name in ['fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep']
+    found = [name for name in ['fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep']
              if name in symbols]
     assert bool(found) == (mode == 'tracing'), (binary, found)
     sections = subprocess.check_output(

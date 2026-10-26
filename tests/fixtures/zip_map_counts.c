@@ -4,11 +4,11 @@ static V zip_input(size_t n, int64_t offset) {
     return result;
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     const size_t sizes[][2]={{0,0},{0,7},{7,0},{1,1},{7,3},{3,7},{129,129}};
     for(size_t test=0;test<7;test++)for(int alias=0;alias<2;alias++) {
         size_t n=sizes[test][0],m=sizes[test][1],length=n<m?n:m;
-        intptr_t budget=fwp_gc.budget;
+        size_t live_bytes=fwp_heap.live;
         V ys=zip_input(n,100),xs=zip_input(m,10);
         if(alias)fwp_rc_dup(xs);
         uint64_t calls=zip_calls,bytes=zip_bytes,retains=zip_retains;
@@ -31,7 +31,7 @@ int main(void) {
             if(count!=m)return 242;
             fDROP(xs);
         }
-        if(fwp_gc.budget!=budget)return 238;
+        if(fwp_heap.live!=live_bytes)return 238;
         printf("%zu %llu %llu %llu\n",length,(unsigned long long)calls,(unsigned long long)bytes,(unsigned long long)retains);
     }
     return 0;

@@ -77,7 +77,7 @@ def main():
         reference = run([compiler, 'run', '--interp', source], dict(environment, FWP_NO_OPT='1'))
         assert reference.stdout == expected and not reference.stderr, reference
         emitted = out / f'slots-{count}.c'
-        run([compiler, 'build', '--gc', 'arc', '--emit-c', '-o', emitted, source], environment)
+        run([compiler, 'build', '--emit-c', '-o', emitted, source], environment)
         original = emitted.read_text()
         growth = 'if (fwp_ntapes == fwp_tapes_cap)'
         capacity = 'int64_t cap = fwp_tapes_cap ? fwp_tapes_cap * 2 : 1;'

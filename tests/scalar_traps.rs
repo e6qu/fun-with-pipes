@@ -293,7 +293,7 @@ fn full_width_unsigned_products_have_defined_overflow() {
     let cfile = dir.join("products.c");
     std::fs::write(&input, "main = ()\n").unwrap();
     let emitted = Command::new(fwp())
-        .args(["build", "--gc", "tracing", "--emit-c"])
+        .args(["build", "--emit-c"])
         .arg(&input)
         .arg("-o")
         .arg(&cfile)

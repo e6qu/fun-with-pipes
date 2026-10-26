@@ -109,7 +109,7 @@ static int dead_string(V v) {
 #endif
     return *fwp_rc_slot(v)==0;
 }
-static gc_rc_wide *wide(V v) { return *fwp_rc_wide_link(fwp_rc_slot(v)); }
+static heap_rc_wide *wide(V v) { return *fwp_rc_wide_link(fwp_rc_slot(v)); }
 static size_t count(V v) { uint8_t c=*fwp_rc_slot(v);return c==255?wide(v)->count:c; }
 static void arm_conversion(V boxed) {
     if (!converting) return;
@@ -124,8 +124,8 @@ static void arm_conversion(V boxed) {
     if (OBJ(boxed)->f[2]!=scalar_word) exit(10);
 }
 int main(void) {
-    fwp_prog_out=stdout;fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
-    intptr_t baseline=fwp_gc.budget;
+    fwp_prog_out=stdout;fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+    size_t baseline=fwp_heap.live;
     for (volatile int round=0;round<32;round++) {
     for (volatile int field=0;field<2;field++)
     for (volatile int other_alias=0;other_alias<2;other_alias++) {
@@ -150,7 +150,7 @@ int main(void) {
         fwp_rc_free_obj(first);fwp_rc_free_obj(last);fwp_rc_free_obj(scalar_word);
     }
 #ifdef FWP_ARC_ONLY
-        if (fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
+        if (fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 90;
 #endif
     }
     puts("boxed conversion overflow releases original and remaining caller owners");return 0;

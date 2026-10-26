@@ -107,7 +107,7 @@ def main():
         reference = run([compiler, 'run', '--interp', source], dict(environment, FWP_NO_OPT='1'))
         assert reference.stdout == expected and not reference.stderr, reference
         emitted = out / (name + '.c')
-        run([compiler, 'build', '--gc', 'arc', '--emit-c', '-o', emitted, source], environment)
+        run([compiler, 'build', '--emit-c', '-o', emitted, source], environment)
         original = emitted.read_text()
         control = (original[:original.index(START)] + baseline_tape + original[original.index(END):]
                    if baseline_tape is not None else interleaved(original))

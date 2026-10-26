@@ -5,7 +5,7 @@ static double file_app_start;
 static double file_app_phase_charge[3];
 static unsigned file_app_samples[3];
 static double file_app_charge(void) {
-    return fwp_gc.total_alloc + (double)(fwp_gc.budget_given - fwp_gc.budget);
+    return (double)fwp_heap.live;
 }
 void file_app_checkpoint(int64_t phase, int64_t remaining) {
     if (phase < 0 || phase >= 3 || remaining != 64 - file_app_samples[phase]) exit(240);
@@ -30,7 +30,7 @@ void file_app_checkpoint(int64_t phase, int64_t remaining) {
     }
 }
 static void file_app_finish(void) {
-    if (fwp_gc.enabled || fwp_gc.ncollect || file_app_charge() != file_app_start ||
+    if (fwp_heap.enabled || fwp_heap.ncollect || file_app_charge() != file_app_start ||
         file_app_opened != file_app_closed || file_app_raw) exit(241);
     for (unsigned phase = 0; phase < 3; phase++) if (file_app_samples[phase] != 64) exit(240);
     fprintf(stderr, "file-final\t0\t0\t0\n");

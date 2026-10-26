@@ -40,7 +40,7 @@ fn blocked_matrix_preserves_raw_products_and_cast_shape_behavior() {
             Command::new(fwp)
                 .env_remove("FWP_NO_OPT")
                 .env("FWP_MATRIX_BLOCKING", mode)
-                .args(["build", "--gc", "tracing", "--emit-c"])
+                .args(["build", "--emit-c"])
                 .arg(&input)
                 .arg("-o")
                 .arg(&generated),
@@ -101,14 +101,7 @@ fn blocked_matrix_uses_only_output_storage_and_preserves_scalar_order() {
             Command::new(env!("CARGO_BIN_EXE_fwp"))
                 .env_remove("FWP_NO_OPT")
                 .env("FWP_MATRIX_BLOCKING", mode)
-                .args([
-                    "build",
-                    "--gc",
-                    "tracing",
-                    "--fn",
-                    "product-data",
-                    "--emit-c",
-                ])
+                .args(["build", "--fn", "product-data", "--emit-c"])
                 .arg(&input)
                 .arg("-o")
                 .arg(&generated),
@@ -126,7 +119,7 @@ fn blocked_matrix_uses_only_output_storage_and_preserves_scalar_order() {
             .replace("fPRODUCT_DATA", &format!("f{id}"))
             .replace("BLOCKED", mode);
         let runtime=source.replace("typedef uint64_t V;","typedef uint64_t V;\nstatic uint64_t matrix_calls,matrix_bytes;")
-            .replace("static inline void *fwp_gc_alloc(size_t n, int leaf) {","static inline void *fwp_gc_alloc(size_t n, int leaf) {\nif(leaf!=0){matrix_calls++;matrix_bytes+=n;}")
+            .replace("static inline void *fwp_heap_alloc(size_t n, int kind) {","static inline void *fwp_heap_alloc(size_t n, int kind) {\nif(kind!=0){matrix_calls++;matrix_bytes+=n;}")
             .replace("static inline void *fwp_alloc_init(size_t n) {","static inline void *fwp_alloc_init(size_t n) {\nmatrix_calls++;matrix_bytes+=n;")
             .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
         let code = format!("{runtime}\n{probe}");
@@ -204,7 +197,7 @@ fn blocked_matrix_releases_output_when_computation_unwinds() {
     let cfile = d.join("matrix.c");
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "tracing", "--emit-c"])
+            .args(["build", "--emit-c"])
             .arg(&input)
             .arg("-o")
             .arg(&cfile),

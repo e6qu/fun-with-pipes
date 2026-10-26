@@ -46,10 +46,10 @@ fn allocation_probe(emitted: &str) -> String {
     assert!(code.contains("#define FWP_UNWIND 1"));
     for (name, replacement, header, arguments) in [
         (
-            "fwp_gc_alloc",
+            "fwp_heap_alloc",
             "copy_allocate",
-            "size_t n, int leaf",
-            "n, leaf",
+            "size_t n, int kind",
+            "n, kind",
         ),
         ("fwp_alloc_init", "copy_allocate_init", "size_t n", "n"),
     ] {
@@ -63,7 +63,7 @@ fn allocation_probe(emitted: &str) -> String {
             .find(&format!("static inline void *{replacement}("))
             .unwrap();
         let end = start + code[start..].find("\n}\n").unwrap() + 3;
-        let body = code[start..end].replace("fwp_gc_alloc(n, 0)", "copy_allocate(n, 0)");
+        let body = code[start..end].replace("fwp_heap_alloc(n, 0)", "copy_allocate(n, 0)");
         code.replace_range(start..end, &body);
         code.insert_str(start + body.len(), &format!("\nstatic inline void *{name}({header}) {{ copy_tick(); void *p = {replacement}({arguments}); copy_record(p); return p; }}\n"));
     }
@@ -77,11 +77,6 @@ fn allocation_probe(emitted: &str) -> String {
             "static void fwp_mem_free(void *p) {\n",
             "static void fwp_mem_free(void *p) { copy_release(p);\n",
             1,
-        ),
-        (
-            "    if (!fwp_rc_last(v)) return;",
-            "    if (!fwp_rc_last(v)) return;\n    copy_release((void *)(uintptr_t)v);",
-            2,
         ),
     ] {
         assert_eq!(code.matches(from).count(), count, "{from}");

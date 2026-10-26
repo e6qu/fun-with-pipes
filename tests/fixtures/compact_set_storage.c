@@ -4,13 +4,13 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_fns = fwp_fn_table; fwp_init_consts();
     const fwp_desc key = {.kind = K_I64};
     const V counts[] = {0, 1, 7, 257, 4096};
     for (size_t c = 0; c < sizeof(counts) / sizeof(counts[0]); c++) {
         V n = counts[c];
-        intptr_t before = fwp_gc.budget_given - fwp_gc.budget;
+        size_t before = fwp_heap.live;
         set_last_request = 0;
         V result = BUILD_SET(n);
         size_t requested = set_last_request;
@@ -25,10 +25,10 @@ int main(void) {
             if (MAP(result)->d[i] != i || fwp_map_find(result, i, &key, &found, 1) != i || !found)
                 return 212;
         }
-        intptr_t charged = fwp_gc.budget_given - fwp_gc.budget - before;
+        intptr_t charged = fwp_heap.live - before;
         fwp_rc_free_obj(result);
 #ifdef FWP_ARC_ONLY
-        if (fwp_gc.budget_given - fwp_gc.budget != before) return 213;
+        if (fwp_heap.live != before) return 213;
 #endif
         printf("keys=%llu requested=%zu charged=%lld\n", (unsigned long long)n,
             requested, (long long)charged);

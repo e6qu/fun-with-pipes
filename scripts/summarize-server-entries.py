@@ -43,7 +43,7 @@ def binary(path, mode, host, llvm):
     assert kind.startswith(prefix) and arch.lower() in kind.lower(), (host, kind)
     names = subprocess.check_output([str(llvm / 'llvm-nm'), str(path)], text=True)
     names = {line.split()[-1].removeprefix('_') for line in names.splitlines() if line.split()}
-    tracing = sorted(names.intersection(['fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep']))
+    tracing = sorted(names.intersection(['fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep']))
     assert bool(tracing) == (mode == 'tracing'), (path, tracing)
     sections = {}
     sizes = subprocess.check_output([str(llvm / 'llvm-size'), '--format=sysv', str(path)], text=True)

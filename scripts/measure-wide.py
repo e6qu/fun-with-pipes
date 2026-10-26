@@ -51,7 +51,7 @@ main = 256{decimal}{suffix} | sum-wide | echo
             label = suffix + ('-native' if enabled == '1' else '-boxed')
             env = dict(environment, FWP_WIDE_WORKERS=enabled)
             cfile = out / (label + '.c')
-            run([compiler, 'build', '--gc', 'arc', '--emit-c', source, '-o', cfile], env)
+            run([compiler, 'build', '--emit-c', source, '-o', cfile], env)
             code = cfile.read_text()
             assert ('/* native wide worker:' in code) == (enabled == '1')
             workers = []

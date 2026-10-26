@@ -312,7 +312,7 @@ queued = both id (const 1 | callbacks)
         let cfile = dir.join("accepted.c");
         checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", interface, "--gc", "arc", "--emit-c", "-o"])
+                .args(["build", interface, "--emit-c", "-o"])
                 .arg(&cfile)
                 .arg(&source),
         );
@@ -349,7 +349,7 @@ rejected = const 1 | callbacks | tap send-self | channel.recv | option.map (appl
         )
         .unwrap();
         let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", interface, "--gc", "arc", "--emit-c", "-o"])
+            .args(["build", interface, "--emit-c", "-o"])
             .arg(dir.join("rejected.c"))
             .arg(&source)
             .output()
@@ -758,7 +758,7 @@ fn generated_http_entries_release_requests_and_bound_process_memory() {
     let client_c = client_file.with_extension("c");
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "arc", "--emit-c", "-o"])
+            .args(["build", "--emit-c", "-o"])
             .arg(&client_c)
             .arg(&client_file),
     );

@@ -22,8 +22,8 @@ static void state_probe_scan(const char *lo, const char *hi, int root) {
 }
 static void state_collect(void) {
     size_t before=state_scans;
-    fwp_gc_collect();
-    if (!fwp_gc.armed || !fwp_gc.ncollect || state_scans==before) exit(108);
+    fwp_heap_collect();
+    if (!fwp_heap.armed || !fwp_heap.ncollect || state_scans==before) exit(108);
 }
 static int state_empty_from(size_t depth) {
     for(size_t i=depth;i<fwp_state_cap;i++) if(fwp_state[i]) return 0;
@@ -50,7 +50,7 @@ static void state_task_body(void *arg,int cancelled) {
     if(arg) { state_task_started++;fwp_p_task_yield();exit(113); }
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     fwp_fns=state_entries;
     state_outer=fwp_cstr("outer alias");state_error=fwp_cstr("retained error alias");
     fwp_state_push(state_outer);fwp_state_push(state_error);
@@ -83,7 +83,7 @@ int main(void) {
     memset(&state_task,0,sizeof state_task);fwp_cur=&state_task;
 #ifdef _WIN32
     /* This synthetic task executes on the main thread stack. */
-    state_task.ctx.top=fwp_gc.main_top;
+    state_task.ctx.top=fwp_heap.main_top;
 #endif
     fwp_trap_recover=g_trap_recover;
     for(state_mode=2;state_mode<4;state_mode++) {
@@ -110,6 +110,6 @@ int main(void) {
     if(state_task_exits!=2 || state_task_cancelled!=1 || fwp_state_len!=1 || fwp_state[0]!=state_outer) return 113;
     fwp_state_restore(0);state_collect();
     if(fwp_state_len || !state_empty_from(0)) return 111;
-    printf("State inactive slots cleared; real collections=%zu; buffer scans=%zu\n",fwp_gc.ncollect,state_scans);
+    printf("State inactive slots cleared; real collections=%zu; buffer scans=%zu\n",fwp_heap.ncollect,state_scans);
     return 0;
 }

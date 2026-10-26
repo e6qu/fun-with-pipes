@@ -81,8 +81,8 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
-    intptr_t baseline = fwp_gc.budget;
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
+    size_t baseline = fwp_heap.live;
     for (volatile int round=0; round<32; round++) {
     for (volatile int fail=0; fail<2; fail++) for (volatile int box_alias=0;box_alias<2;box_alias++)
     for (volatile int leaf_alias=0;leaf_alias<2;leaf_alias++) for (volatile int same=0;same<2;same++) {
@@ -109,7 +109,7 @@ int main(void) {
         fwp_rc_free_obj(scalar_word);
     }
 #ifdef FWP_ARC_ONLY
-    if (fwp_gc.budget != baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
+    if (fwp_heap.live != baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 90;
 #endif
     }
     puts("flattened preparation releases partial fields and preserves aliases and scalar bits");return 0;

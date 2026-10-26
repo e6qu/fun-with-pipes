@@ -10,15 +10,15 @@ static const fwp_fninfo arc_workspace_functions[]={
 };
 static fwp_clo arc_workspace_callback={0,0};
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     fwp_fns=arc_workspace_functions;
-    intptr_t budget=fwp_gc.budget;
+    size_t live_bytes=fwp_heap.live;
     puts("{\"collectorFree\":true,\"profiles\":[");
     const size_t sizes[]={129,129,257,257,0,16385};
     for(size_t i=0;i<6;i++) {
         workspace_mode=(i==1 || i==3)?4:0;
         fwp_p_ad_scope(PTR(&arc_workspace_callback),(V)sizes[i]);
-        if(fwp_cleanups || fwp_gc.armed || fwp_gc.ncollect || fwp_gc.budget!=budget)return 211;
+        if(fwp_cleanups || fwp_heap.armed || fwp_heap.ncollect || fwp_heap.live!=live_bytes)return 211;
         for(int64_t j=0;j<fwp_ntapes;j++)if(fwp_tapes[j].live)return 212;
         puts(i==5?"],":",");
     }

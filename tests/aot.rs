@@ -601,9 +601,9 @@ fn native_ownership_modes_are_explicit_and_part_of_the_cache() {
     let mut cached = Vec::new();
     for (options, count) in [
         (vec!["run"], 1),
-        (vec!["run", "--gc", "arc"], 1),
-        (vec!["run", "--gc", "tracing"], 2),
-        (vec!["run", "--gc", "arc"], 2),
+        (vec!["run"], 1),
+        (vec!["run"], 2),
+        (vec!["run"], 2),
     ] {
         let actual = output(cache.fwp(&options).arg(&source), b"");
         assert!(actual.status.success(), "{}", render(&actual));
@@ -613,7 +613,7 @@ fn native_ownership_modes_are_explicit_and_part_of_the_cache() {
         if cached.is_empty() {
             let symbols = Command::new("nm").arg(&entries[0]).output().unwrap();
             assert!(symbols.status.success(), "{}", render(&symbols));
-            for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+            for name in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                 assert!(!String::from_utf8_lossy(&symbols.stdout).contains(name));
             }
             cached = entries;
@@ -639,7 +639,7 @@ fn native_ownership_modes_are_explicit_and_part_of_the_cache() {
         assert!(ran.stderr.is_empty());
         let symbols = Command::new("nm").arg(&binary).output().unwrap();
         assert!(symbols.status.success(), "{}", render(&symbols));
-        for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+        for name in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
             assert!(!String::from_utf8_lossy(&symbols.stdout).contains(name));
         }
         if let Some(artifacts) = std::env::var_os("FWP_ARC_ARTIFACTS") {
@@ -697,7 +697,7 @@ fn native_ownership_modes_are_explicit_and_part_of_the_cache() {
         vec!["--gc"],
         vec!["--gc=unknown"],
         vec!["--gc=arc", "--gc=tracing"],
-        vec!["--gc", "arc", "--gc", "arc"],
+        vec!["--gc", "arc"],
     ] {
         let rejected = output(
             cache
@@ -728,7 +728,7 @@ fn native_ownership_modes_are_explicit_and_part_of_the_cache() {
     }
     let tools = root().join("tests/exec/tools.fwp");
     let spec = format!("{t}:scale 2 | {t}:total", t = tools.display());
-    for options in [vec!["pipe", &spec], vec!["pipe", "--gc", "arc", &spec]] {
+    for options in [vec!["pipe", &spec], vec!["pipe", &spec]] {
         let pipeline = output(&mut cache.fwp(&options), b"1\n2\n");
         assert!(pipeline.status.success(), "{}", render(&pipeline));
         assert_eq!(pipeline.stdout, b"6\n");
@@ -805,7 +805,7 @@ static void fwp_buf_release(void *arg) { test_buffer_free(((fwp_buf *)arg)->d); 
                     "memcpy(fwp_test_message, message, bytes); test_buffer_register(fwp_test_message);")
                 .replace("free(fwp_test_message);", "test_buffer_free(fwp_test_message);")
                 .replace("    /* Ownership observation point: before runtime teardown. */",
-                    "    /* Ownership observation point: before runtime teardown. */\n    if(test_live_buffers)exit(234);\n    if(fwp_gc.budget < fwp_gc.budget_given)exit(233);");
+                    "    /* Ownership observation point: before runtime teardown. */\n    if(test_live_buffers)exit(234);\n    if(fwp_heap.live > 0)exit(233);");
             for opt in ["-O0", "-O2"] {
                 let mut cases = vec![("protected", measured.clone(), 1)];
                 // Exercise the root cancellation path at the exit primitive.
@@ -891,7 +891,7 @@ static void fwp_buf_release(void *arg) { test_buffer_free(((fwp_buf *)arg)->d); 
                     let symbols = Command::new("nm").arg(&binary).output().unwrap();
                     assert!(symbols.status.success(), "{}", render(&symbols));
                     if arc {
-                        for symbol in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                        for symbol in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                             assert!(
                                 !String::from_utf8_lossy(&symbols.stdout).contains(symbol),
                                 "{label}: {symbol}"

@@ -39,7 +39,7 @@ fn cleanup_scopes_and_suspended_tasks_unwind_exactly_once() {
     std::fs::write(&src, "main = task.yield () | echo\n").unwrap();
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -115,7 +115,7 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_fns = probe_fns;
     fwp_cleanup normal;
     struct held a;
@@ -200,7 +200,7 @@ fn scoped_files_close_on_return_error_trap_and_cancellation() {
     std::fs::write(&src, "main = task.yield () | echo\n").unwrap();
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -265,7 +265,7 @@ int main(int argc, char **argv) {
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
     if (argc != 2) return 1;
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_fns = file_fns;
     file_path = fwp_cstr(argv[1]);
     if (fwp_p_file_with(file_path, fwp_pap(0, 0, 0), 0) != 42 || !closed()) return 2;
@@ -401,7 +401,7 @@ fn owned_unwind_releases_values_files_and_tasks_without_tracing() {
     for memory in ["dynamic", "static"] {
         checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", "--gc", "arc", "--memory", memory, "--emit-c"])
+                .args(["build", "--memory", memory, "--emit-c"])
                 .arg(&src)
                 .arg("-o")
                 .arg(&cfile),

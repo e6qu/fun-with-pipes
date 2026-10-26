@@ -31,7 +31,7 @@ main = [task.yield (), (1, ("left", "right", 17), "tail") | loop step | echo] | 
     );
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -94,7 +94,7 @@ static jmp_buf failure;static int recover(void){return 1;}
 static int dead(V v){return fwp_reuse_verify?STR(v)->len==0:*fwp_rc_slot(v)==0;}
 static void drop_leaf(V v){if(fwp_rc_release_last(v))fwp_rc_free_obj(v);}
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
  for(int test=0;test<4;test++)for(int same=0;same<2;same++)for(int box_alias=0;box_alias<2;box_alias++)
  for(int inner_alias=0;inner_alias<2;inner_alias++)for(int leaf_alias=0;leaf_alias<2;leaf_alias++){
   fault=0;current_dup=0;first=fwp_rc_fresh(fwp_str_new("first",5));

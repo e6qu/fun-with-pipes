@@ -41,7 +41,7 @@ static uintptr_t metadata_copy(const char *p){if(stage==1)fwp_trap("metadata str
 static int recover(void){return 1;}
 static jmp_buf failure;
 static int probe(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
+ fwp_lib_init();fwp_heap_start();
  SSL_CTX *ctx=SSL_CTX_new(TLS_client_method());if(!ctx)return 31;
  SSL *ssl=SSL_new(ctx);SSL_CTX_free(ctx);if(!ssl)return 32;
  g_conn *c=g_conn_new(-1, "", "local",0);c->ssl=ssl;

@@ -46,7 +46,7 @@ fn constants_need_no_startup_heap_and_preserve_layout_and_aliases() {
                 "typedef uint64_t V;\nstatic int constant_watch; static size_t constant_requests;",
             );
             for marker in [
-                "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
+                "static inline void *fwp_heap_alloc(size_t n, int kind) {",
                 "static inline void *fwp_alloc_init(size_t n) {",
             ] {
                 assert_eq!(measured.matches(marker).count(), 1);
@@ -62,7 +62,10 @@ fn constants_need_no_startup_heap_and_preserve_layout_and_aliases() {
             let finish = "    /* Ownership observation point: before runtime teardown. */\n";
             assert_eq!(entry.matches(finish).count(), 1);
             let entry = if memory == "arc" {
-                entry.replace(finish, &format!("{finish}    if(fwp_gc.ncollect || fwp_gc.budget != fwp_gc.budget_given)exit(214);\n"))
+                entry.replace(
+                    finish,
+                    &format!("{finish}    if(fwp_heap.ncollect || fwp_heap.live != 0)exit(214);\n"),
+                )
             } else {
                 entry.to_string()
             };

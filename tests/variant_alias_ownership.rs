@@ -167,8 +167,8 @@ static int dead(V v) {
 #endif
 }
 int main(void) {
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
- intptr_t baseline=fwp_gc.budget;
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+ size_t baseline=fwp_heap.live;
  for(int round=0;round<32;round++){
  for (int alias=0;alias<2;alias++) {
   V first=fwp_rc_fresh(fwp_str_new("first",5)),last=fwp_rc_fresh(fwp_str_new("last",4)),other=fwp_rc_fresh(fwp_str_new("later",5));
@@ -180,7 +180,7 @@ int main(void) {
   fwp_rc_free_obj(result);
  }
 #ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;
  owner_ledger_finish();
 #endif
  }
@@ -543,8 +543,8 @@ static int dead(V v) {
 #endif
 }
 int main(void) {
- fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
- intptr_t baseline=fwp_gc.budget;
+ fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
+ size_t baseline=fwp_heap.live;
  for(int round=0;round<32;round++){
  for(int mode=0;mode<3;mode++) for(int alias=0;alias<2;alias++) {
   V value=fwp_rc_fresh(fwp_str_new("value",5));
@@ -561,7 +561,7 @@ int main(void) {
   if(!dead(result)||fwp_cleanups)return 5;
  }
 #ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;
  owner_ledger_finish();
 #endif
  }

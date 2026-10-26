@@ -239,7 +239,7 @@ def main():
         COORDINATE.check_vectors(reference.stdout, expected, 1)
         (directory / 'interpreter.stdout').write_bytes(reference.stdout)
         generated = directory / 'input.c'
-        build([args.compiler.resolve(), 'build', '--gc', 'arc', '--memory', 'dynamic', '--emit-c', '-O2', source, '-o', generated],
+        build([args.compiler.resolve(), 'build', '--memory', 'dynamic', '--emit-c', '-O2', source, '-o', generated],
               environment, args.build_timeout, commands, out)
         originals = {'fwp': generated.read_text()}
         originals['c'] = f'#define DIMENSIONS {points}\n#define UPDATES {updates}\n' + (ROOT / 'tests/fixtures/descent_coordinate.c').read_text()

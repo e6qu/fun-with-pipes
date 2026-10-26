@@ -65,11 +65,11 @@ fn dns_results_preserve_values_aliases_and_release_storage() {
             let body = code[start..end]
                 .replace(
                     "    fwp_init_consts();\n",
-                    "    fwp_init_consts();\n    intptr_t dns_budget=fwp_gc.budget;\n",
+                    "    fwp_init_consts();\n    size_t dns_live_bytes=fwp_heap.live;\n",
                 )
                 .replace(
                     "    /* Ownership observation point: before runtime teardown. */\n",
-                    "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.budget!=dns_budget) exit(248);\n",
+                    "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live!=dns_live_bytes) exit(248);\n",
                 );
             let mut measured = code.clone();
             measured.replace_range(start..end, &body);
@@ -110,11 +110,11 @@ fn dns_releases_partial_lists_and_resolver_storage() {
             &format!("{declaration}\nstatic void dns_allocation(void);"),
         );
         let init = "static inline void *fwp_alloc_init(size_t n) {";
-        let slow = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+        let slow = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
         assert!(code.contains(init) && code.contains(slow));
         code = code
             .replace(init, &format!("{init} dns_allocation();"))
-            .replace(slow, &format!("{slow} if(leaf!=0) dns_allocation();"));
+            .replace(slow, &format!("{slow} if(kind!=0) dns_allocation();"));
         for (marker, ending) in [
             ("static void fwp_addrinfo_release(", "\n}\n"),
             ("static V fwp_p_dns_resolve(", "\n}\n"),

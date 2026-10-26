@@ -86,7 +86,7 @@ def main():
             reference = raw
         assert raw == reference
         cfile = out / (label + '.c')
-        run([compiler, 'build', '--gc', 'arc', '--emit-c', '-o', cfile, source], environment)
+        run([compiler, 'build', '--emit-c', '-o', cfile, source], environment)
         profile = out / (label + '-profile.c')
         profile.write_text(instrument(cfile.read_text()))
         commands = []

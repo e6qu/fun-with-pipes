@@ -3,6 +3,9 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Command, Output, Stdio};
 
+#[path = "support/allocation_report.rs"]
+mod allocation_report;
+
 #[path = "support/array_construction.rs"]
 mod array_construction;
 
@@ -282,7 +285,7 @@ main = [
                     let stress = if memory == "arc" { "0" } else { "1" };
                     let out = Command::new(&exe)
                         .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_ALLOC_STATS", "0")
                         .env("FWP_GC_STRESS", stress)
                         .env("FWP_GC_VERIFY", stress)
                         .env("FWP_REUSE_VERIFY", poison)
@@ -312,9 +315,7 @@ main = [
                 .env("FWP_FREE", "1")
                 .env("FWP_REUSE", "1")
                 .env(flag, "0")
-                .args([
-                    "build", "--memory", "dynamic", "--gc", "tracing", "-O2", "--emit-c",
-                ])
+                .args(["build", "--memory", "dynamic", "-O2", "--emit-c"])
                 .arg(&src)
                 .arg("-o")
                 .arg(&cfile),
@@ -323,7 +324,7 @@ main = [
         fwp::cgen::compile_c(&code, &exe, "-O1").unwrap();
         let out = Command::new(&exe)
             .env("FWP_GC", "on")
-            .env("FWP_GC_STATS", "0")
+            .env("FWP_ALLOC_STATS", "0")
             .env("FWP_GC_STRESS", "1")
             .env("FWP_GC_VERIFY", "1")
             .env("FWP_REUSE_VERIFY", "1")
@@ -388,7 +389,7 @@ main = (10000, 0) | loop step | echo
         if memory == "arc" {
             let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
             assert_eq!(owned.matches(finish).count(), 1);
-            let balanced=owned.replace(finish,&format!("{finish}    if(fwp_gc.budget!=fwp_gc.budget_given||fwp_gc.rc_wide_len||fwp_gc.ncollect)exit(90);\n"));
+            let balanced=owned.replace(finish,&format!("{finish}    if(fwp_heap.live!=0||fwp_heap.rc_wide_len||fwp_heap.ncollect)exit(90);\n"));
             let mut changed = 0;
             let leaking = balanced
                 .lines()
@@ -415,8 +416,7 @@ main = (10000, 0) | loop step | echo
                     let exe = dir.0.join(format!("arc{opt}-{name}.exe"));
                     fwp::cgen::compile_c(code, &exe, opt).unwrap();
                     let out = Command::new(&exe)
-                        .env("FWP_GC", "off")
-                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_ALLOC_STATS", "0")
                         .env("FWP_GC_STRESS", "0")
                         .env("FWP_GC_VERIFY", "0")
                         .env("FWP_REUSE_VERIFY", "0")
@@ -464,8 +464,7 @@ main = (10000, 0) | loop step | echo
                 let exe = dir.0.join(format!("tracing-O1-{name}.exe"));
                 fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
                 let out = Command::new(&exe)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STATS", "1")
+                    .env("FWP_ALLOC_STATS", "1")
                     .env("FWP_GC_STRESS", "0")
                     .env("FWP_GC_VERIFY", "0")
                     .env("FWP_REUSE_VERIFY", "0")
@@ -476,17 +475,12 @@ main = (10000, 0) | loop step | echo
                 assert!(out.status.success(), "{label}: {out:?}");
                 assert_eq!(out.stdout, reference.stdout, "{label}");
                 let stats = String::from_utf8_lossy(&out.stderr);
-                assert!(stats.contains("fwp gc: 0 collections"), "{stats}");
+
                 freed.push(
-                    stats
-                        .split(" MiB freed by counts")
-                        .next()
-                        .unwrap()
-                        .rsplit('(')
-                        .next()
-                        .unwrap()
-                        .parse::<f64>()
-                        .unwrap(),
+                    allocation_report::parse(&stats)
+                        .expect("allocation report")
+                        .released as f64
+                        / 1_048_576.0,
                 );
             }
             assert!(freed[1] > freed[0] + 0.3, "{freed:?}");
@@ -536,8 +530,8 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 23;
 #endif
-    fwp_gc_start(__builtin_frame_address(0));
-    intptr_t baseline=fwp_gc.budget;
+    fwp_heap_start();
+    size_t baseline=fwp_heap.live;
     for(unsigned round=0;round<32;round++) {
     V bits = fwp_rc_fresh(fwp_cstr("numeric bits"));
     V xs = fwp_rc_fresh(fwp_cons(bits, 0));
@@ -564,7 +558,7 @@ int main(void) {
     DROP_LIST(xs);DROP_LIST(listed);
     fwp_rc_free_obj(selected);fwp_rc_free_obj(changed);fwp_rc_free_obj(bits);
 #ifdef FWP_ARC_ONLY
-    if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+    if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
 #endif
     }
     puts("scalar array ownership preserved");
@@ -667,7 +661,7 @@ int main(void) {
                     let stress = if memory == "arc" { "0" } else { "1" };
                     let out = Command::new(&exe)
                         .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_ALLOC_STATS", "0")
                         .env("FWP_GC_STRESS", stress)
                         .env("FWP_GC_VERIFY", stress)
                         .env("FWP_REUSE_VERIFY", poison)
@@ -791,7 +785,10 @@ fn generated_numeric_arrays_borrow_captures_and_preserve_effect_cleanup() {
                         };
                         code = code.replace(&call, &format!("array_probe_retains=0; array_probe_active=1; {extra} {call} array_probe_active=0; {count_check} array_probe_calls++; {leaked}"));
                     }
-                    code = code.replace(start, &format!("{start}    array_probe_start=fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);\n"));
+                    code = code.replace(
+                        start,
+                        &format!("{start}    array_probe_start=(double)fwp_heap.live;\n"),
+                    );
                     let release = "static void fwp_array_builder_release(void *arg) {\n    fwp_array_builder *owner = arg;";
                     assert_eq!(code.matches(release).count(), 1);
                     let skip = if *control == "skipped-partial-release" {
@@ -805,7 +802,7 @@ fn generated_numeric_arrays_borrow_captures_and_preserve_effect_cleanup() {
                     } else {
                         "if (array_probe_partials != 2) _Exit(224);"
                     };
-                    code = code.replace(finish, &format!("{finish}    {calls}\n    const char *array_probe_stress=getenv(\"FWP_GC_STRESS\");\n    if ((!array_probe_stress || strcmp(array_probe_stress,\"1\")) && fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget)!=array_probe_start) _Exit(222);\n"));
+                    code = code.replace(finish, &format!("{finish}    {calls}\n    const char *array_probe_stress=getenv(\"FWP_GC_STRESS\");\n    if ((!array_probe_stress || strcmp(array_probe_stress,\"1\")) && (double)fwp_heap.live!=array_probe_start) _Exit(222);\n"));
                     code = format!("static unsigned array_probe_active,array_probe_retains,array_probe_calls,array_probe_partials;\nstatic double array_probe_start;\n{code}");
                     for opt in ["-O0", "-O2"] {
                         let binary = dir

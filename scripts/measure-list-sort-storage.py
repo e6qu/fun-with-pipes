@@ -114,7 +114,7 @@ def main():
         source = args.output / f'{kind}.fwp'
         source.write_text(f'main = read-all () | words | {expression} | echo\n')
         generated = args.output / f'{kind}-generated.c'
-        run([args.compiler.resolve(), 'build', '--gc', 'arc', '--memory', 'dynamic',
+        run([args.compiler.resolve(), 'build', '--memory', 'dynamic',
              '-O2', '--emit-c', source, '-o', generated])
         code = generated.read_text()
         assert re.search(r'(?:return|V result =) ' + primitive + r'\(l', code)

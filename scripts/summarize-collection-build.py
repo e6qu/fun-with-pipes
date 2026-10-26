@@ -32,7 +32,7 @@ def inspect(binary, host, mode, llvm, *, require_tracing):
     symbols = {line.split()[-1].removeprefix('_') for line in names.splitlines() if line.split()}
     runtime = {name for name in symbols if name.startswith('fwp_')}
     assert len(runtime) > 10, (binary, 'missing internal symbols')
-    tracing = sorted(symbols.intersection({'fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'}))
+    tracing = sorted(symbols.intersection({'fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'}))
     assert mode in {'arc', 'tracing'}
     assert not require_tracing or mode == 'tracing'
     if mode == 'arc':

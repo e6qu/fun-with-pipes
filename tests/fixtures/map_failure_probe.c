@@ -82,7 +82,7 @@ static void map_test_drop_result(int op, V value) {
 static int map_test_case(int op, int failure, int *steps) {
     unsigned char counts[6];
     for (size_t i = 0; i < 6; i++) counts[i] = *fwp_rc_slot(map_test_leaf[i]);
-    intptr_t before = fwp_gc.budget_given - fwp_gc.budget;
+    size_t before = fwp_heap.live;
     map_test_input = (op == 18 || op == 19) ? map_test_set : map_test_base;
     if (op == 13 || op == 14)
         map_test_input = fwp_map_typed_copy(map_test_base, 2, 1, &map_test_ops);
@@ -105,7 +105,7 @@ static int map_test_case(int op, int failure, int *steps) {
     for (size_t i = 0; i < 6; i++)
         if (*fwp_rc_slot(map_test_leaf[i]) != counts[i] || !STR(map_test_leaf[i])->len) return 216;
 #ifdef FWP_ARC_ONLY
-    if (fwp_gc.budget_given - fwp_gc.budget != before) return 217;
+    if (fwp_heap.live != before) return 217;
 #else
     (void)before;
 #endif
@@ -115,7 +115,7 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     const char *texts[] = {"a", "b", "c", "first", "second", "third"};
     for (size_t i = 0; i < 6; i++) map_test_leaf[i] = fwp_rc_fresh(fwp_cstr(texts[i]));
     map_test_base = fwp_map_typed_new(2, 2); map_test_set = fwp_map_typed_new(2, 1); map_test_other = fwp_map_typed_new(2, 1);

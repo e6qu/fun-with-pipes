@@ -66,8 +66,8 @@ fn failed_calls_reclaim_function_storage_without_collection() {
         let probe = r#"
 static volatile V captured, function_value;
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
-    double before=fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
+    double before=(double)fwp_heap.live;
     for (volatile int i = 0; i < 10000; i++) {
         captured = fwp_rc_fresh(fwp_str_new("capture", 7));
         function_value = fwp_rc_fresh(fwp_pap(FUNCTION, 1, (V[]){captured}));
@@ -78,9 +78,9 @@ int main(void) {
         fwp_handlers = h.prev;
         if (fwp_cleanups) return 2;
     }
-    double remaining=fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget)-before;
+    double remaining=(double)fwp_heap.live-before;
     printf("failed call remaining bytes: %.0f\n", remaining);
-    if(fwp_gc.ncollect)return 172;
+    if(fwp_heap.ncollect)return 172;
     return remaining==0?0:171;
 }
 "#
@@ -176,9 +176,9 @@ static volatile V captured, function_value;
 static int dead_string(V v) { return fwp_reuse_verify ? STR(v)->len == 0 : *fwp_rc_slot(v) == 0; }
 static int dead_function(V v) { return fwp_reuse_verify ? CLO(v)->fn == 0xdead : *fwp_rc_slot(v) == 0; }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     if (!fwp_fns[FUNCTION].owned || !fwp_fns[FUNCTION].owned->drop_arguments) return 1;
-    intptr_t baseline=fwp_gc.budget;
+    size_t baseline=fwp_heap.live;
     for(int round=0;round<32;round++) {
     for (int alias = 0; alias < 2; alias++) {
         captured = fwp_rc_fresh(fwp_str_new("capture", 7));
@@ -203,13 +203,12 @@ int main(void) {
     return 0;
 }
 "#.replace("FUNCTION", id);
-        let probe =
-            if memory == "arc" {
-                probe.replace("fwp_reuse_verify", "0").replace("ARC_BALANCE",
-            "if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;")
-            } else {
-                probe.replace("ARC_BALANCE", "")
-            };
+        let probe = if memory == "arc" {
+            probe.replace("fwp_reuse_verify", "0").replace("ARC_BALANCE",
+            "if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;")
+        } else {
+            probe.replace("ARC_BALANCE", "")
+        };
         let runtime = emitted.replace(
             "int main(int argc, char **argv)",
             "int original_main(int argc, char **argv)",
@@ -343,7 +342,7 @@ static jmp_buf pending_trap;
 static int recover_pending(void) { fwp_trap_jb = &pending_trap; fwp_trap_cleanup = 0; return 1; }
 static int dead_string(V v) { return fwp_reuse_verify ? STR(v)->len == 0 : *fwp_rc_slot(v) == 0; }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     memcpy(prefix_fns, fwp_fn_table, sizeof prefix_fns);
     prefix_owned = *fwp_fn_table[FUNCTION].owned;
     prefix_owned.entry = prefix_entry;
@@ -352,7 +351,7 @@ int main(void) {
     prefix_fns[FUNCTION].owned = &prefix_owned;
     fwp_fns = prefix_fns;
     if (!prefix_owned.drop_arguments) return 1;
-    intptr_t baseline=fwp_gc.budget;
+    size_t baseline=fwp_heap.live;
     for(int round=0;round<32;round++) {
     pending = fwp_rc_fresh(fwp_str_new("pending", 7));
     function_value = fwp_rc_fresh(fwp_pap(FUNCTION, 0, 0));
@@ -377,13 +376,12 @@ int main(void) {
     return 0;
 }
 "#.replace("FUNCTION", id).replace("IDENTITY", identity);
-        let probe =
-            if memory == "arc" {
-                probe.replace("fwp_reuse_verify", "0").replace("ARC_BALANCE",
-            "if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;")
-            } else {
-                probe.replace("ARC_BALANCE", "")
-            };
+        let probe = if memory == "arc" {
+            probe.replace("fwp_reuse_verify", "0").replace("ARC_BALANCE",
+            "if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;")
+        } else {
+            probe.replace("ARC_BALANCE", "")
+        };
         let runtime = emitted.replace(
             "int main(int argc, char **argv)",
             "int original_main(int argc, char **argv)",
@@ -539,8 +537,8 @@ static volatile V original_capture;
 static jmp_buf primitive_trap;
 static int recover_primitive(void) { fwp_trap_jb = &primitive_trap; fwp_trap_cleanup = 0; return 1; }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
-    intptr_t baseline=fwp_gc.budget;
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
+    size_t baseline=fwp_heap.live;
     for(int round=0;round<32;round++) {
     original_capture = fwp_rc_fresh(fwp_str_new("original", 8));
     trap_concat = 1; fwp_trap_recover = recover_primitive;
@@ -555,13 +553,12 @@ int main(void) {
     return 0;
 }
 "#.replace("EXECUTE", &execute);
-        let probe =
-            if memory == "arc" {
-                probe.replace("fwp_reuse_verify", "0").replace("ARC_BALANCE",
-            "if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;")
-            } else {
-                probe.replace("ARC_BALANCE", "")
-            };
+        let probe = if memory == "arc" {
+            probe.replace("fwp_reuse_verify", "0").replace("ARC_BALANCE",
+            "if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;")
+        } else {
+            probe.replace("ARC_BALANCE", "")
+        };
         // Inject a recoverable failure at the real primitive's entry. The actual
         // compiled caller, stack closure, owned wrapper and releases stay intact.
         let mut runtime = emitted.replace(
@@ -666,8 +663,8 @@ fn cancelled_entry_releases_runtime_function_and_callee_parameters() {
 static volatile V captured, function_value;
 static fwp_task cancelled_call;
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
-    intptr_t baseline=fwp_gc.budget;
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
+    size_t baseline=fwp_heap.live;
     for(int round=0;round<32;round++) {
     memset(&cancelled_call,0,sizeof(cancelled_call));
     captured = fwp_rc_fresh(fwp_str_new("cancel capture", 14));
@@ -687,13 +684,12 @@ int main(void) {
 }
 "#
         .replace("FUNCTION", id);
-        let probe =
-            if memory == "arc" {
-                probe.replace("fwp_reuse_verify", "0").replace("ARC_BALANCE",
-            "if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;")
-            } else {
-                probe.replace("ARC_BALANCE", "")
-            };
+        let probe = if memory == "arc" {
+            probe.replace("fwp_reuse_verify", "0").replace("ARC_BALANCE",
+            "if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;")
+        } else {
+            probe.replace("ARC_BALANCE", "")
+        };
         let runtime = emitted.replace(
             "int main(int argc, char **argv)",
             "int original_main(int argc, char **argv)",

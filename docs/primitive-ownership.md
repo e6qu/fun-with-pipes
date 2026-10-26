@@ -6,11 +6,10 @@ implemented directly in Rust and C rather than in fwp. Its contract tells the
 compiler who keeps each argument and result alive.
 
 `src/ownership.rs` is the shared inventory used by reference-count insertion and
-C generation. A coverage test checks library declarations against it. Unknown
-primitives, foreign functions and remote calls keep a conservative contract:
-arguments may become runtime-shared, and results need tracing unless a more
-precise contract proves their lifetime. Such a call is not automatically eligible
-for `--gc arc`.
+C generation. A coverage test checks library declarations against it. Primitives,
+foreign functions and remote calls need contracts that establish argument
+retention and result lifetime.
+The compiler rejects a call when it cannot prove those obligations.
 
 Read the tables using these meanings:
 

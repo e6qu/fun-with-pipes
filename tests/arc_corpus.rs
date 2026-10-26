@@ -51,7 +51,7 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
         };
         let emitted = Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", "arc", "--emit-c", "-O1"])
+            .args(["build", "--emit-c", "-O1"])
             .arg(source_path)
             .current_dir(&root)
             .arg("-o")
@@ -94,9 +94,9 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
                 1
             );
             // Final teardown must release every charge, including scheduler storage.
-            let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t arc_budget = fwp_gc.budget_given;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if (fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < arc_budget) { fprintf(stderr, \"ARC unreclaimed bytes: %ld\\n\", (long)(arc_budget-fwp_gc.budget)); exit(193); }\n");
-            let startup = "    fwp_gc_start(__builtin_frame_address(0));\n";
+            let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    size_t arc_live_bytes = 0;\n")
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if (fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > arc_live_bytes) { fprintf(stderr, \"ARC unreclaimed bytes: %ld\\n\", (long)(fwp_heap.live - arc_live_bytes)); exit(193); }\n");
+            let startup = "    fwp_heap_start();\n";
             assert_eq!(main.matches(startup).count(), 1);
             let main = main.replace(
                 startup,

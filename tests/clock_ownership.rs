@@ -71,8 +71,8 @@ main = range 0 128 | each exercise
                     .count(),
                 1
             );
-            let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t clock_budget = fwp_gc.budget;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < clock_budget) exit(231);\n");
+            let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t clock_live_bytes = fwp_heap.live;\n")
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > clock_live_bytes) exit(231);\n");
             code = format!("{runtime}{main}");
         }
         let binary = dir.join("clocks.exe");

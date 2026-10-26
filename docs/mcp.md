@@ -37,7 +37,7 @@ $ fwp serve --mcp converter.fwp                 # the same, without a build step
 | `fwp build file.fwp --mcp [-o out]` | a native executable serving the tools |
 | `fwp serve --mcp file.fwp [--interp] [--listen host:port]` | serve them (compiled and cached, or interpreted) |
 
-`fwp build file.fwp --mcp --gc arc -o server` checks ownership of the generated
+`fwp build file.fwp --mcp -o server` checks ownership of the generated
 entry and excludes tracing garbage collection. Unsupported lifetimes are compile
 errors. [PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164)
 records passing standard-input and HTTP cleanup checks and native platform evidence.

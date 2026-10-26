@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/allocation_report.rs"]
+mod allocation_report;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -71,7 +74,7 @@ main = [
             let exe = dir.0.join(format!("aliases{opt}-{stack}"));
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", "tracing"])
+                    .args(["build"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe)
@@ -95,7 +98,7 @@ main = [
         let exe = dir.0.join(flag);
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args(["-O1", "-o"])
                 .arg(&exe)
@@ -141,7 +144,7 @@ main = (10000, 0) | loop step | echo
     let emitted = dir.0.join("loop.c");
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&emitted)
@@ -175,23 +178,17 @@ main = (10000, 0) | loop step | echo
         fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
         let out = checked(
             Command::new(&exe)
-                .env("FWP_GC", "off")
-                .env("FWP_GC_STATS", "1")
+                .env("FWP_ALLOC_STATS", "1")
                 .env("FWP_REUSE_VERIFY", "0"),
         );
         assert_eq!(out.stdout, reference.stdout);
         let stats = String::from_utf8_lossy(&out.stderr);
-        assert!(stats.contains("fwp gc: 0 collections"), "{stats}");
+
         freed.push(
-            stats
-                .split(" MiB freed by counts")
-                .next()
-                .unwrap()
-                .rsplit('(')
-                .next()
-                .unwrap()
-                .parse::<f64>()
-                .unwrap(),
+            allocation_report::parse(&stats)
+                .expect("allocation report")
+                .released as f64
+                / 1_048_576.0,
         );
     }
     eprintln!("state sequence graph MiB freed by counts: {freed:?}");
@@ -287,7 +284,7 @@ fn each_preserves_aliases_effect_order_and_early_failures() {
                         .env("FWP_GC", if mode == "tracing" { "on" } else { "off" })
                         .env("FWP_GC_STRESS", stress)
                         .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_ALLOC_STATS", "0")
                         .env("FWP_REUSE_VERIFY", reuse)
                         .output()
                         .unwrap();
@@ -351,7 +348,7 @@ fn each_avoids_allocating_a_discarded_result_list() {
             assert_eq!(raw.stdout, format!("{count}\n").as_bytes());
             checked(
                 Command::new(compiler)
-                    .args(["build", "--gc", "tracing", "--emit-c", "-O2"])
+                    .args(["build", "--emit-c", "-O2"])
                     .arg(&input)
                     .arg("-o")
                     .arg(&cfile),
@@ -366,8 +363,8 @@ fn each_avoids_allocating_a_discarded_result_list() {
             for (marker, condition) in [
                 ("static inline void *fwp_alloc_init(size_t n) {", "1"),
                 (
-                    "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
-                    "leaf != 0",
+                    "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+                    "kind != 0",
                 ),
             ] {
                 assert_eq!(code.matches(marker).count(), 1);
@@ -394,10 +391,9 @@ fn each_avoids_allocating_a_discarded_result_list() {
             fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
             let output = checked(
                 Command::new(&binary)
-                    .env("FWP_GC", "off")
                     .env("FWP_GC_STRESS", "0")
                     .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_ALLOC_STATS", "0")
                     .env("FWP_REUSE_VERIFY", "0"),
             );
             assert_eq!(output.stdout, raw.stdout);

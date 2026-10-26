@@ -3,7 +3,7 @@ static int console_events, console_fail_at, console_collect, console_heap_live;
 static int console_recover(void) { return 1; }
 static void console_event(void) {
 #if !FWP_ARC_ONLY
-    if (console_collect) fwp_gc_collect();
+    if (console_collect) fwp_heap_collect();
 #endif
     if (++console_events == console_fail_at) fwp_trap("console construction probe");
 }
@@ -53,7 +53,7 @@ static void console_set_environment(const char *value) {
 }
 int main(int argc,char **argv) {
     if(argc!=2)return 202;
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     char *arguments[]={"program","first","h\xc3\xa9llo","\xff"};
     fwp_argc=4;fwp_argv=arguments;
     V text=fwp_rc_fresh(fwp_str_new("a\r\nb\n\nlast\r",11));
@@ -61,7 +61,7 @@ int main(int argc,char **argv) {
     console_collect=setting && !strcmp(setting,"1");
     V key=fwp_rc_fresh(fwp_str_new("FWP_ENV_COPY",12));
     V nul_key=fwp_rc_fresh(fwp_str_new("FWP_ENV_COPY\0suffix",19));
-    intptr_t budget=fwp_gc.budget;
+    size_t live_bytes=fwp_heap.live;
     for(int kind=0;kind<7;kind++) {
         V argument=kind==5 ? key : kind==6 ? nul_key : text;
         for(int i=0;i<128;i++) {
@@ -76,7 +76,7 @@ int main(int argc,char **argv) {
             }
             if(kind==6 && value)return 215;
             console_drop(kind,value);
-            if(!console_collect && fwp_gc.budget!=budget)return 205;
+            if(!console_collect && fwp_heap.live!=live_bytes)return 205;
             if(console_heap_live)return 211;
         }
         int count=console_events;
@@ -87,12 +87,12 @@ int main(int argc,char **argv) {
             if(!setjmp(console_failure)) {(void)console_call(kind,argv[1],argument);return 206;}
             if(fwp_cleanups!=fwp_trap_cleanup)return 207;
             if(console_heap_live)return 212;
-            if(!console_collect && fwp_gc.budget!=budget)return 208;
+            if(!console_collect && fwp_heap.live!=live_bytes)return 208;
             if(*fwp_rc_slot(text)!=1 || STR(text)->len!=11)return 209;
         }
         console_fail_at=0;fwp_trap_recover=0;fwp_trap_jb=0;fwp_trap_cleanup=0;
     }
     fwp_rc_free_obj(text);fwp_rc_free_obj(key);fwp_rc_free_obj(nul_key);
-    if(console_collect && !fwp_gc.ncollect)return 210;
+    if(console_collect && !fwp_heap.ncollect)return 210;
     return 0;
 }

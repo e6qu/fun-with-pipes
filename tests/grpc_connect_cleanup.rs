@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn grpc_connect_and_handshake_release_pending_resources_on_cancellation() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![
@@ -115,7 +111,7 @@ static void no_release(void *p){(void)p;}
 static char target[300];static g_conn *result;
 static void client(void *arg,int stop){if(stop){cancelled++;return;}char *error=0;result=g_connect(target,0,&error);if(error)_Exit(33);}
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));V tick=fwp_record(1,(V[]){1000000});
+ fwp_lib_init();fwp_heap_start();V tick=fwp_record(1,(V[]){1000000});
  for(int test=1;test<=3;test++){
   mode=0;V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);V address=fwp_p_local_addr(listener);
   snprintf(target,sizeof target,"%s%s",test==2?"https://":"",STR(address)->d);

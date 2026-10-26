@@ -39,7 +39,7 @@ static size_t server_storage_charge(const void *);
         ("static void g_start_call(g_conn *c, g_stream *s) {", "static void g_start_call(g_conn *c, g_stream *s) {\n    if(server_active)server_calls_started++;"),
         ("    g_job *j = (g_job *)fwp_mem_alloc(sizeof *j);", "    g_job *j = (g_job *)fwp_mem_alloc(sizeof *j);\n    if(server_active){server_job_requested+=sizeof(*j);server_job_charged+=server_storage_charge(j);}"),
         ("    j->sv.task = s->task;", "    j->sv.task = s->task;\n    if(server_active){server_task_requested+=sizeof(*s->task);server_task_charged+=server_storage_charge(s->task);}"),
-        ("    fwp_gc_finalizer(c, g_conn_final);", "    fwp_gc_finalizer(c, g_conn_final);\n    if(server_active)server_connections_created++;"),
+        ("    fwp_heap_finalizer(c, g_conn_final);", "    fwp_heap_finalizer(c, g_conn_final);\n    if(server_active)server_connections_created++;"),
         ("        fwp_socket_close(c->fd);\n        c->fd = FWP_INVALID_SOCKET;", "        fwp_socket_close(c->fd);\n        c->fd = FWP_INVALID_SOCKET;\n        if(server_active)server_connections_closed++;"),
         ("static void g_conn_final(void *p) {", "static void g_conn_final(void *p) {\n    if(server_active)server_connections_finalized++;"),
         ("static void g_stream_final(void *p) {", "static void g_stream_final(void *p) {\n    if(server_active)server_streams_finalized++;"),
@@ -140,7 +140,7 @@ fn measure_server_calls(memory_mode: &str) {
                 let symbols = run(nm, 30);
                 assert!(symbols.status.success(), "{}", render(&symbols));
                 let text = String::from_utf8_lossy(&symbols.stdout);
-                for tracing in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                for tracing in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                     assert!(!text.contains(tracing), "{} contains {tracing}", binary.display());
                 }
                 std::fs::write(binary.with_extension("nm"), symbols.stdout).unwrap();

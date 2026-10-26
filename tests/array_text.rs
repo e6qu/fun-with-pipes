@@ -288,9 +288,7 @@ fn array_text_counts_allocations_and_releases_every_iteration() {
                     .env("FWP_ARRAY_FUSION", fusion)
                     .env("FWP_PACKED_ARRAYS", packed)
                     .env("FWP_LTO", "0")
-                    .args([
-                        "build", "--gc", "arc", "--memory", "dynamic", "--emit-c", "-O2",
-                    ])
+                    .args(["build", "--memory", "dynamic", "--emit-c", "-O2"])
                     .arg(&input)
                     .arg("-o")
                     .arg(&cfile)
@@ -317,8 +315,8 @@ fn array_text_counts_allocations_and_releases_every_iteration() {
                 code = code.replace(declarations, &format!("{declarations}\nstatic size_t text_calls, text_raw_live, text_retains;\nstatic int text_watch, text_bad;"));
                 for (marker, increment) in [
                     (
-                        "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
-                        "if(text_watch && leaf!=0) text_calls++;",
+                        "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+                        "if(text_watch && kind!=0) text_calls++;",
                     ),
                     (
                         "static inline void *fwp_alloc_init(size_t n) {",
@@ -374,13 +372,13 @@ fn array_text_counts_allocations_and_releases_every_iteration() {
                 let loop_body = format!(
                     r#"    V r = FWP_UNIT;
     for(unsigned iteration=0;iteration<64;iteration++) {{
-        intptr_t baseline=fwp_gc.budget;
+        size_t baseline=fwp_heap.live;
         text_retains=0; text_calls=0; text_watch=1;
         r=f{id}();
         text_watch=0;
         if({expectation}) {{ fprintf(stderr,"allocation requests: %zu\n",text_calls); _Exit(211); }}
         if({fusion} && text_retains) _Exit(214);
-        if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) _Exit(212);
+        if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect) _Exit(212);
         if(text_raw_live) _Exit(213);
     }}
     fprintf(stderr,"managed requests per iteration: %zu; retains: %zu; retained managed/raw bytes: 0\n",text_calls,text_retains);"#

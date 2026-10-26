@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn cancelled_connect_and_handshake_release_completed_resource_owners() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![

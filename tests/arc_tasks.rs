@@ -176,7 +176,7 @@ fn cancellation_state_uses_the_entry_stack_and_preserves_cleanup() {
                 let symbols = checked(Command::new("nm").arg(&binary));
                 if memory == "arc" {
                     let symbols = String::from_utf8_lossy(&symbols.stdout);
-                    for collector in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                    for collector in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                         assert!(!symbols.contains(collector), "{label} retains {collector}");
                     }
                 }
@@ -279,8 +279,8 @@ fn tasks_and_acyclic_channels_reclaim_after_join_and_cancellation() {
                 1
             );
             format!("{runtime}{}", main
-                .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t task_budget=fwp_gc.budget_given;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < task_budget) { fprintf(stderr,\"task bytes left: %ld\\n\",(long)(task_budget-fwp_gc.budget)); exit(193); }\n"))
+                .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    size_t task_live_bytes=0;\n")
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > task_live_bytes) { fprintf(stderr,\"task bytes left: %ld\\n\",(long)(fwp_heap.live - task_live_bytes)); exit(193); }\n"))
         } else {
             code
         };
@@ -293,7 +293,7 @@ fn tasks_and_acyclic_channels_reclaim_after_join_and_cancellation() {
             if gc == "arc" {
                 let symbols = checked(Command::new("nm").arg(&binary));
                 let text = String::from_utf8_lossy(&symbols.stdout);
-                for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                for name in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                     assert!(!text.contains(name), "ARC binary contains {name}");
                 }
                 if let Some(path) = std::env::var_os("FWP_ARC_ARTIFACTS") {
@@ -345,10 +345,10 @@ fn preceding_task_record(code: &str) -> String {
         ("    _Bool done, cancelled, unwinding, has_result, ready, timed, timed_out, io_ready;\n    _Bool owns_thunk;\n    enum fwp_task_ownership ownership;",
          "    int done, cancelled, unwinding, has_result, ready, timed, timed_out, io_ready;"),
         ("    V thunk, result;\n", "    V thunk, result;\n    int owns_thunk;\n    enum fwp_task_ownership ownership;\n"),
-        ("#if FWP_GC && !defined(FWP_ARC_ONLY)\n    char *gc_sp; /* suspended stack bound used only by tracing */\n#endif",
-         "    char *gc_sp; /* preceding layout */"),
-        ("#if FWP_GC && !defined(FWP_ARC_ONLY)\n    from->gc_sp = fwp_gc_sp();",
-         "#if FWP_GC\n    from->gc_sp = fwp_gc_sp();"),
+        ("#if FWP_NATIVE_HEAP && !defined(FWP_ARC_ONLY)\n    char *heap_sp; /* suspended stack bound used only by tracing */\n#endif",
+         "    char *heap_sp; /* preceding layout */"),
+        ("#if FWP_NATIVE_HEAP && !defined(FWP_ARC_ONLY)\n    from->heap_sp = fwp_heap_sp();",
+         "#if FWP_NATIVE_HEAP\n    from->heap_sp = fwp_heap_sp();"),
     ] {
         replace_once(&mut code, before, after);
     }
@@ -395,8 +395,8 @@ fn compact_task_records_preserve_scheduling_and_remove_arc_stack_markers() {
         );
         replace_once(
             &mut instrumented,
-            "    from->gc_sp = fwp_gc_sp();",
-            "    from->gc_sp = fwp_gc_sp();\n    task_stack_markers++;",
+            "    from->heap_sp = fwp_heap_sp();",
+            "    from->heap_sp = fwp_heap_sp();\n    task_stack_markers++;",
         );
         replace_once(&mut instrumented, "    client_measure_end();\n",
             "    client_measure_end();\n    fprintf(stderr, \"task-record\\t%zu\\t%zu\\t%zu\\t%zu\\t%zu\\n\", sizeof(fwp_task), _Alignof(fwp_task), sizeof(((fwp_task *)0)->done), sizeof(((fwp_task *)0)->owns_thunk), task_stack_markers);\n");
@@ -536,17 +536,17 @@ fn subscriptions_join_active_callbacks_and_release_each_round() {
                 replace_once(
                     &mut code,
                     "    fwp_scope s = {0, 0, 0, t->scope};",
-                    "    int subscription_outer = t == fwp_root && !t->scope;\n    intptr_t subscription_budget = fwp_gc.budget;\n    fwp_scope s = {0, 0, 0, t->scope};",
+                    "    int subscription_outer = t == fwp_root && !t->scope;\n    size_t subscription_live_bytes = fwp_heap.live;\n    fwp_scope s = {0, 0, 0, t->scope};",
                 );
                 replace_once(
                     &mut code,
                     "    fwp_scope_release(&scope_owner);\n    FWP_KEEP_ALIVE(body);",
-                    "    fwp_scope_release(&scope_owner);\n    if (subscription_outer) {\n        if (t->first_child || fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget != subscription_budget) { fprintf(stderr, \"subscription retained bytes: %ld\\n\", (long)(subscription_budget-fwp_gc.budget)); _Exit(193); }\n        subscription_rounds++;\n    }\n    FWP_KEEP_ALIVE(body);",
+                    "    fwp_scope_release(&scope_owner);\n    if (subscription_outer) {\n        if (t->first_child || fwp_heap.enabled || fwp_heap.ncollect || fwp_heap.live != subscription_live_bytes) { fprintf(stderr, \"subscription retained bytes: %ld\\n\", (long)(fwp_heap.live - subscription_live_bytes)); _Exit(193); }\n        subscription_rounds++;\n    }\n    FWP_KEEP_ALIVE(body);",
                 );
                 replace_once(
                     &mut code,
                     "    /* Ownership observation point: before runtime teardown. */",
-                    &format!("    /* Ownership observation point: before runtime teardown. */\n    if (subscription_rounds != {rounds} || fwp_gc.budget != fwp_gc.budget_given || fwp_gc.ncollect) _Exit(195);"),
+                    &format!("    /* Ownership observation point: before runtime teardown. */\n    if (subscription_rounds != {rounds} || fwp_heap.live != 0 || fwp_heap.ncollect) _Exit(195);"),
                 );
             }
             std::fs::write(&cfile, &code).unwrap();
@@ -574,7 +574,7 @@ fn subscriptions_join_active_callbacks_and_release_each_round() {
                     continue;
                 }
                 let symbols = checked(Command::new("nm").arg(&binary));
-                for collector in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                for collector in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                     assert!(!String::from_utf8_lossy(&symbols.stdout).contains(collector));
                 }
                 std::fs::write(path.join(format!("{label}.symbols")), symbols.stdout).unwrap();

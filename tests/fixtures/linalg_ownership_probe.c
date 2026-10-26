@@ -5,7 +5,7 @@ static int la_events, la_fail_at, la_collect;
 static int la_recover(void) { return 1; }
 static void la_event(void) {
 #if !FWP_ARC_ONLY
-    if (la_collect) fwp_gc_collect();
+    if (la_collect) fwp_heap_collect();
 #endif
     if (++la_events == la_fail_at) fwp_trap("solver allocation probe");
 }
@@ -33,7 +33,7 @@ static void la_drop(int kind, V result) {
     fwp_rc_free_obj(result);
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_fns = fwp_fn_table;
     fwp_init_consts();
     const char *setting = getenv("FWP_LINALG_COLLECTION");
@@ -42,7 +42,7 @@ int main(void) {
     const double singular[] = {1, 2, 2, 4}, indefinite[] = {1, 2, 2, 1};
     V matrix = la_input(diagonal, 4), rhs = la_input(vector, 2);
     V bad = la_input(singular, 4), negative = la_input(indefinite, 4);
-    intptr_t budget = fwp_gc.budget;
+    size_t live_bytes = fwp_heap.live;
     for (int kind = 0; kind < 6; kind++) {
         for (int iteration = 0; iteration < 256; iteration++) {
             la_events = 0;
@@ -51,7 +51,7 @@ int main(void) {
             if (kind == 0 && (fwp_f64(ARR(OBJ(result)->f[0])->d[0]) != 2.0 ||
                              fwp_f64(ARR(OBJ(result)->f[0])->d[1]) != 2.0)) return 221;
             la_drop(kind, result);
-            if (!la_collect && fwp_gc.budget != budget) return 222;
+            if (!la_collect && fwp_heap.live != live_bytes) return 222;
         }
         int allocations = la_events;
         fwp_trap_recover = la_recover;
@@ -61,7 +61,7 @@ int main(void) {
             la_events = 0; la_fail_at = step;
             if (!setjmp(la_failure)) { (void)la_call(kind, matrix, rhs); return 223; }
             if (fwp_cleanups != fwp_trap_cleanup ||
-                (!la_collect && fwp_gc.budget != budget)) return 224;
+                (!la_collect && fwp_heap.live != live_bytes)) return 224;
             if (*fwp_rc_slot(matrix) != 1 || *fwp_rc_slot(rhs) != 1) return 225;
         }
         la_fail_at = 0;
@@ -71,10 +71,10 @@ int main(void) {
         fwp_p_inverse(2, bad) != FWP_NONE ||
         fwp_p_cholesky(2, negative) != FWP_NONE ||
         fwp_f64(fwp_p_det(2, bad)) != 0.0) return 226;
-    if (!la_collect && fwp_gc.budget != budget) return 222;
+    if (!la_collect && fwp_heap.live != live_bytes) return 222;
     for (size_t i = 0; i < 4; i++)
         if (fwp_f64(ARR(matrix)->d[i]) != diagonal[i]) return 227;
-    if (la_collect && !fwp_gc.ncollect) return 228;
+    if (la_collect && !fwp_heap.ncollect) return 228;
     fwp_rc_free_arr(matrix); fwp_rc_free_arr(rhs);
     fwp_rc_free_arr(bad); fwp_rc_free_arr(negative);
     return 0;

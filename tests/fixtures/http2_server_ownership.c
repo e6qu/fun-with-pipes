@@ -29,12 +29,12 @@ static g_stream *request(g_conn *c, uint32_t id) {
     return s; /* borrow active-list owner */
 }
 int main(void) {
-    fwp_lib_init(); fwp_gc_start(__builtin_frame_address(0)); fwp_tasks_init();
+    fwp_lib_init(); fwp_heap_start(); fwp_tasks_init();
     g_conn *c = g_conn_new(FWP_INVALID_SOCKET, "", "server probe", 0);
     fwp_rc_fresh(PTR(c));
     struct g_web *w = fwp_mem_alloc(sizeof *w);
     w->max_header = 4096; w->max_requests = 1000; c->web = w;
-    intptr_t budget = fwp_gc.budget;
+    size_t live_bytes = fwp_heap.live;
     for (int scoped = 0; scoped < 2; scoped++) {
     for (handler_mode = 0; handler_mode < 4; handler_mode++) {
         fwp_scope scope = {0, 0, 0, fwp_cur->scope};
@@ -74,8 +74,8 @@ int main(void) {
             g_call_drop(escaped); escaped = 0;
         }
         if (c->streams || stream_finals != streams_before + 1 || *fwp_rc_slot(PTR(c)) != 1 || fwp_cleanups) return 20;
-        if (!getenv("SERVER_STRESS") && fwp_gc.budget != budget) {
-            fprintf(stderr, "mode %d managed storage delta %lld\n", handler_mode, (long long)(fwp_gc.budget-budget));
+        if (!getenv("SERVER_STRESS") && fwp_heap.live != live_bytes) {
+            fprintf(stderr, "mode %d managed storage delta %lld\n", handler_mode, (long long)(live_bytes - fwp_heap.live));
             return 21;
         }
     }

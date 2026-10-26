@@ -338,7 +338,7 @@ fn measure(opt: &str) {
     std::fs::create_dir_all(&artifacts).unwrap();
     let source = temporary.join("api.c");
     let output = Command::new(fwp())
-        .args(["build", "--gc", "arc", "--emit-c", opt])
+        .args(["build", "--emit-c", opt])
         .arg(example())
         .arg("-o")
         .arg(&source)

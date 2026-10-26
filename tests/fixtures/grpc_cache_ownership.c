@@ -67,12 +67,12 @@ int main(int argc, char **argv) {
     if (argc != 3) return 170;
     int count = atoi(argv[1]), mode = atoi(argv[2]);
     if (count < 1 || count > 16384 || mode < 0 || mode > 10) return 170;
-    fwp_lib_init(); fwp_gc_start(__builtin_frame_address(0));
+    fwp_lib_init(); fwp_heap_start();
     if (mode >= 7) {
         int status = check_terminal_read((mode-7)%2, (mode-7)/2);
         fwp_lib_finish(); return status;
     }
-    double before = fwp_gc.total_alloc + (double)(fwp_gc.budget_given-fwp_gc.budget);
+    double before = (double)fwp_heap.live;
     g_incoming *source = g_incoming_new("owned", 5);
     V root = PTR(g_cell_new(source)), alias = 0;
     for (int i = 0; i < count; i++) {
@@ -111,8 +111,8 @@ int main(int argc, char **argv) {
     }
     cache_observe = 0;
     if (cache_releases != (size_t)(4*count+2) || fwp_cleanups) return 171;
-    double after = fwp_gc.total_alloc + (double)(fwp_gc.budget_given-fwp_gc.budget);
-    if (!fwp_gc.enabled && !fwp_reuse_verify && (after != before || fwp_gc.ncollect)) return 172;
+    double after = (double)fwp_heap.live;
+    if (!fwp_heap.enabled && !fwp_reuse_verify && (after != before || fwp_heap.ncollect)) return 172;
     printf("%d\t%d\t%zu\t%llu\n", count, mode, cache_releases,
         (unsigned long long)(cache_stack_high-cache_stack_low));
     fwp_lib_finish();

@@ -1,7 +1,7 @@
 /* Observe managed charge after each real allocation. Input lanes are stack
  * arrays here; the whole-program benchmark separately includes their heap use. */
 static double map_storage_charge(void) {
-    return fwp_gc.total_alloc + (double)(fwp_gc.budget_given - fwp_gc.budget);
+    return (double)fwp_heap.live;
 }
 static void map_storage_sample(void) {
     if (map_storage_active) {
@@ -15,11 +15,11 @@ int main(int argc, char **argv) {
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 3;
 #endif
     size_t columns = !strcmp(argv[1], "map") ? 2 : 1;
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_fns = fwp_fn_table;
     fwp_init_consts();
     enum { N = 4096 };
-    _Static_assert(N * sizeof(V) > GC_MAX_SMALL, "use exact large-object charges");
+    _Static_assert(N * sizeof(V) > HEAP_MAX_SMALL, "use exact large-object charges");
     V keys[N], values[N];
     for (size_t i = 0; i < N; i++) { keys[i] = (i * 73) % N; values[i] = i * 2; }
     const fwp_desc scalar = {.kind = K_I64};

@@ -149,7 +149,7 @@ def main():
                 symbols = run([args.nm, binary], environment).stdout
                 if mode == 'arc':
                     assert not any(symbol in symbols for symbol in
-                                   (b'fwp_gc_scan', b'fwp_gc_mark_all', b'fwp_gc_sweep'))
+                                   (b'fwp_heap_scan', b'fwp_heap_mark_all', b'fwp_heap_sweep'))
                 raw_header = binary.read_bytes()[:20]
                 assert raw_header[:6] == b'\x7fELF\x02\x01'
                 assert int.from_bytes(raw_header[18:20], 'little') == {'x86_64': 62, 'aarch64': 183}[platform.machine()]

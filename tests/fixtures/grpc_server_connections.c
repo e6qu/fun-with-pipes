@@ -24,7 +24,7 @@ static void connection_overflow(V value){uint8_t *slot=fwp_rc_slot(value);*slot=
 static void connection_restore(V value,unsigned n){uint8_t *slot=fwp_rc_slot(value);fwp_rc_forget_slot(slot);*slot=(uint8_t)n;}
 int main(int argc,char **argv){
  if(argc!=2)_Exit(230);connection_stage=atoi(argv[1]);
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  if(fwp_sockets_init())_Exit(231);
  fwp_socket_t listener=fwp_socket_open(AF_INET,SOCK_STREAM,0),client=fwp_socket_open(AF_INET,SOCK_STREAM,0);
  if(listener==FWP_INVALID_SOCKET||client==FWP_INVALID_SOCKET)_Exit(232);
@@ -42,7 +42,7 @@ int main(int argc,char **argv){
  fwp_fd_closing(listener);fwp_socket_close(listener);
  g_conn *c=seen_connection;g_job *retained=NULL;V channel=0;
  if(connection_stage<2){
-  if(connection_finals!=1||seen_reader||fwp_gc_tasks)_Exit(238);
+  if(connection_finals!=1||seen_reader||fwp_tasks_active)_Exit(238);
  }else{
   if(connection_finals||!seen_reader||c->refs!=1||(connection_stage==9?*fwp_rc_slot(PTR(c))!=0:!fwp_rc_last(PTR(c))))_Exit(239);
   fwp_rc_dup(PTR(c)); /* independently retained host alias */
@@ -70,7 +70,7 @@ int main(int argc,char **argv){
  }
  shutdown(client,SHUT_RDWR);fwp_socket_close(client);
  int64_t until=fwp_now_ns()+10000000000LL;
- while(fwp_gc_tasks){if(fwp_now_ns()>=until)_Exit(241);fwp_park(0,fwp_now_ns()+1000000LL);fwp_free_zombie();}
+ while(fwp_tasks_active){if(fwp_now_ns()>=until)_Exit(241);fwp_park(0,fwp_now_ns()+1000000LL);fwp_free_zombie();}
  fwp_free_zombie();
  if(connection_stage==9){
   /* Explicit no-reuse compilation leaves the callback graph traced. The

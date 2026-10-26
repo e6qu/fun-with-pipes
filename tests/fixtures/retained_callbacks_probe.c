@@ -41,7 +41,7 @@ static jmp_buf callback_failure;
 static int callback_recover(void) { return 1; }
 static void callback_baseline(intptr_t bytes, size_t live) {
     callback_expect(!fwp_callback_registrations, 243);
-    callback_expect(fwp_gc.budget == bytes && owner_ledger_live == live, 241);
+    callback_expect(fwp_heap.live == bytes && owner_ledger_live == live, 241);
     callback_expect(!fwp_cleanups, 244);
 }
 #ifdef _WIN32
@@ -87,7 +87,7 @@ int callback_probe(int mode, unsigned rounds) {
      * bookkeeping still belongs to this scheduler and must be released. */
     (void)fwp_fdw_get(0);
 #endif
-    intptr_t bytes = fwp_gc.budget;
+    size_t bytes = fwp_heap.live;
     size_t live = owner_ledger_live;
     for (unsigned round = 0; round < rounds; round++) {
         char input[] = "captured";

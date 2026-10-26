@@ -578,7 +578,7 @@ static V fwp_p_tls_alpn(V c) {
     if (STREAM(c)->tls && SOCK(c)->kind == 1) SSL_get0_alpn_selected((SSL *)STREAM(c)->tls, &p, &n);
     V result = fwp_str_new(p ? (const char *)p : "", p ? n : 0);
     /* Protocol bytes live in SSL storage, outside the collector's heap. */
-    FWP_KEEP_ALIVE(c);
+
     return result;
 }
 

@@ -5,10 +5,10 @@ This is the execution and rejection checklist for [plan G1](../PLAN.md#1-remove-
 from executing the program, checking its output and proving cleanup. The
 [ownership guide](ownership.md) explains owners, borrows and cycles.
 
-Native builds select checked ARC by default. The entries below also accept
-explicit `--gc arc`. Explicit tracing remains available; deleting it requires
-implementing the [accepted ownership direction](gc-removal-design.md) for the
-remaining lifetime cases, not just deleting a command-line option.
+Every entry below applies the same lifetime policy before program effects.
+The [accepted ownership direction](gc-removal-design.md) defines weak links and
+rejection of unproved owning cycles. [The handoff](development-state.md) tracks
+verification of the collector deletion; a removed option alone is not proof.
 Neither a successful C emission nor an interpreter run proves native cleanup.
 
 ## Entry points and their checks

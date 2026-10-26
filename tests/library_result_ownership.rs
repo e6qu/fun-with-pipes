@@ -189,7 +189,7 @@ int main(void) {
  if(setjmp(failure)==0) { (void)bad_string(0); _Exit(8); }
  if(fwp_cleanups!=boundary || !dead_string(observed_string)) _Exit(4);
  fwp_trap_recover=0; fwp_trap_jb=0;
- if(strcmp(held,"okok") || strcmp(t.text,"hihi") || fwp_gc.armed || fwp_gc.ncollect) _Exit(9);
+ if(strcmp(held,"okok") || strcmp(t.text,"hihi") || fwp_heap.armed || fwp_heap.ncollect) _Exit(9);
  V held_owner = PTR(held) - offsetof(fwp_str, d), text_owner = PTR(t.text) - offsetof(fwp_str, d);
  fwp_release_string(held); fwp_release_text(t);
  if(!dead_string(held_owner) || !dead_string(text_owner)) _Exit(12);
@@ -197,7 +197,7 @@ int main(void) {
 #ifndef FWP_ARC_ONLY
  if(!fwp_reuse_verify)
 #endif
- if(fwp_gc.freed < 32) _Exit(10);
+ if(fwp_heap.freed < 32) _Exit(10);
  return 0;
 }
 "#;

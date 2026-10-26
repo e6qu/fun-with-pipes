@@ -99,7 +99,7 @@ static const fwp_fninfo workspace_functions[]={
     {1,workspace_nested_entry,"workspace nested control",0}
 };
 int main(void){
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     fwp_trap_recover=workspace_recover;fwp_trap_jb=&workspace_recovered;fwp_trap_cleanup=0;
     puts("{\"profiles\":[");
     workspace_mode=0;workspace_gradient(129);puts(",");
@@ -122,7 +122,7 @@ int main(void){
             workspace_saved_task=fwp_cur;memset(&workspace_cancelled,0,sizeof(workspace_cancelled));workspace_cancelled.cancelled=1;fwp_cur=&workspace_cancelled;
 #ifdef _WIN32
             /* This synthetic task executes on the main thread stack. */
-            workspace_cancelled.ctx.top=fwp_gc.main_top;
+            workspace_cancelled.ctx.top=fwp_heap.main_top;
 #endif
             jmp_buf workspace_cancelled_base; workspace_cancelled.base = &workspace_cancelled_base;
             if (!setjmp(workspace_cancelled_base)){fwp_p_ad_backward(workspace_base,workspace_outputs,workspace_seeds);return 197;}

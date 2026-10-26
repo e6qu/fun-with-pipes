@@ -14,7 +14,7 @@ static int metadata_matches(V list) {
     return list==0;
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
     if(fwp_p_grpc_metadata(METADATA_TYPE)||fwp_p_grpc_peer_subject(SUBJECT_TYPE)!=FWP_NONE)return 247;
     h2_hdrs headers={0};
     h2_hdrs_add(&headers,":method",7,"POST",4);
@@ -24,7 +24,7 @@ int main(void) {
     h2_hdrs_add(&headers,"x-a",3,"three",5);
     char peer[]="CN=client";g_serving serving={0};serving.headers=&headers;serving.peer=peer;
     g_ctx ctx={0};ctx.serving=&serving;fwp_cur->gctx=&ctx;
-    intptr_t budget=fwp_gc.budget;
+    size_t live_bytes=fwp_heap.live;
     g_stream outgoing={0};serving.s=&outgoing;
     V key=fwp_rc_fresh(fwp_cstr("X-Name")),value=fwp_rc_fresh(fwp_cstr("one\r\ntwo"));
     fwp_p_grpc_set_meta(0,key,value);fwp_p_grpc_set_meta(0,key,value);fwp_p_grpc_set_meta(1,key,value);
@@ -45,10 +45,10 @@ int main(void) {
     METADATA_TYPE->drop(metadata);SUBJECT_TYPE->drop(subject);
     headers.v[1].value[0]='o';peer[0]='C';
     if(getenv("FWP_SERVICE_STRESS")) {
-        if(!fwp_gc.ncollect||fwp_cleanups)return 247;
+        if(!fwp_heap.ncollect||fwp_cleanups)return 247;
         fwp_cur->gctx=NULL;h2_hdrs_free(&headers);return 0;
     }
-    if(fwp_gc.budget!=budget)return 248;
+    if(fwp_heap.live!=live_bytes)return 248;
     for(int operation=0;operation<2;operation++) {
         const fwp_desc *type=operation?SUBJECT_TYPE:METADATA_TYPE;
         int failed=0,completed=0;
@@ -60,16 +60,16 @@ int main(void) {
                 service_left=0;type->drop(result);completed=1;
             } else failed++;
             service_left=0;fwp_trap_recover=NULL;fwp_trap_jb=NULL;
-            if(fwp_cleanups||fwp_gc.budget!=budget)return 248;
+            if(fwp_cleanups||fwp_heap.live!=live_bytes)return 248;
             if(completed)break;
         }
         if(!completed||failed!=(operation?2:12))return 247;
         printf("service result %d: %d allocation failures; final charged delta 0\n",operation,failed);
     }
     serving.peer=NULL;
-    if(fwp_p_grpc_peer_subject(SUBJECT_TYPE)!=FWP_NONE||fwp_gc.budget!=budget)return 247;
+    if(fwp_p_grpc_peer_subject(SUBJECT_TYPE)!=FWP_NONE||fwp_heap.live!=live_bytes)return 247;
     fwp_cur->gctx=NULL;h2_hdrs_free(&headers);
     printf("partial-result field owner: %zu bytes, alignment %zu, 8 inline values\n",sizeof(fwp_decode_fields),_Alignof(fwp_decode_fields));
-    if(fwp_gc.ncollect)return 247;
+    if(fwp_heap.ncollect)return 247;
     return 0;
 }

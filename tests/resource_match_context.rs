@@ -84,7 +84,7 @@ main = (64, "{}") | loop step | const "discarded" | echo
             for flags in ["0", "1"] {
                 let mut build = Command::new(fwp);
                 build
-                    .args(["build", "--gc", "tracing"])
+                    .args(["build"])
                     .arg(&source)
                     .args([opt, "-o"])
                     .arg(&exe)

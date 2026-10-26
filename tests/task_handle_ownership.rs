@@ -94,8 +94,8 @@ static int dead_option(V v){
 static void text_drop(V v){if(fwp_rc_release_last(v))fwp_rc_free_obj(v);}
 static void option_drop(V v){if(v&&fwp_rc_release_last(v)){text_drop(OBJ(v)->f[0]);fwp_rc_free_obj(v);}}
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
- intptr_t baseline=fwp_gc.budget;
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
+ size_t baseline=fwp_heap.live;
  for(int round=0;round<32;round++){
  V capture=fwp_rc_fresh(fwp_str_new("input",5));V fn=fwp_rc_fresh(fwp_pap(VALUE,1,&capture));
  fwp_task *t=(fwp_task *)(uintptr_t)fSPAWN(fn);
@@ -149,18 +149,18 @@ int main(void){
  fwp_rc_share(PTR(t));
  V shared=fAWAIT(PTR(t));
  if(*fwp_rc_slot(PTR(t))||*fwp_rc_slot(capture)||OBJ(shared)->f[0]!=capture)return 24;
- fwp_task_drop(PTR(t));fwp_gc_collect();FWP_KEEP_ALIVE(shared);FWP_KEEP_ALIVE(PTR(t));
+ fwp_task_drop(PTR(t));fwp_heap_collect();FWP_KEEP_ALIVE(shared);FWP_KEEP_ALIVE(PTR(t));
  if(STR(OBJ(shared)->f[0])->len!=6)return 25;option_drop(shared);
 #endif
  // A finished old task still roots a young result through minor collection.
  fn=fwp_rc_fresh(fwp_pap(FRESH,0,NULL));t=(fwp_task *)(uintptr_t)fSPAWN(fn);
 #ifndef FWP_ARC_ONLY
- fwp_gc_collect();fwp_gc_collect();FWP_KEEP_ALIVE(PTR(t));
+ fwp_heap_collect();fwp_heap_collect();FWP_KEEP_ALIVE(PTR(t));
 #endif
  fwp_tasks_finish();
 #ifndef FWP_ARC_ONLY
- fwp_gc.major_next=0;size_t minors=fwp_gc.nminor;fwp_gc_collect();FWP_KEEP_ALIVE(PTR(t));
- if(fwp_gc.nminor!=minors+1)return 23;
+ fwp_heap.major_next=0;size_t minors=fwp_heap.nminor;fwp_heap_collect();FWP_KEEP_ALIVE(PTR(t));
+ if(fwp_heap.nminor!=minors+1)return 23;
 #endif
  if(!t->result||STR(t->result)->len!=10||*fwp_rc_slot(t->result)!=1)return 23;
  fwp_task_drop(PTR(t));
@@ -190,12 +190,12 @@ int main(void){
  fwp_closure_drop(fn);if(!dead(capture))return 22;
  fwp_rc_free_obj(duration);fwp_free_zombie();
 #ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
 #endif
  }
  fwp_tasks_finish();fwp_native_tasks_finish();
 #ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=fwp_gc.budget_given)return 90;
+ if(fwp_heap.live!=0)return 90;
 #endif
  return 0;
 }
@@ -233,14 +233,14 @@ int main(void){
         // Detached C tasks have a single scheduler owner and no language handle.
         let unique_probe = r#"
 static int entered,finished,mode;
-static double charged(void){return fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);}
+static double charged(void){return (double)fwp_heap.live;}
 static void finish(void *arg){(void)arg;if(fwp_cur->base)_Exit(206);finished++;}
 static void worker(void *arg,int stop){
  (void)arg;if(stop)return;fwp_check_cancel();entered++;
  if(mode==2){fwp_park(0,0);fwp_check_cancel();}
 }
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
  int measured=!strcmp(getenv("FWP_GC"),"off");
  double start=charged();
  for(int i=0;i<64;i++)for(mode=0;mode<3;mode++){
@@ -251,19 +251,19 @@ int main(void){
   if(mode==2){fwp_p_task_yield();if(entered!=1)return 202;}
   if(mode)fwp_cancel_tree(t);
   // Await would read a freed task; only the scheduler's live list is borrowed.
-  while(fwp_gc_tasks){fwp_make_ready(fwp_root);fwp_block();fwp_free_zombie();}
+  while(fwp_tasks_active){fwp_make_ready(fwp_root);fwp_block();fwp_free_zombie();}
   fwp_free_zombie();
   if(finished!=1||entered!=(mode==1?0:1)||fwp_zombie){fprintf(stderr,"unique task iteration=%d mode=%d entered=%d finished=%d zombie=%p\n",i,mode,entered,finished,(void*)fwp_zombie);return 203;}
 #ifndef FWP_RESOURCE_NO_FREE
-  if(measured&&(charged()!=start||fwp_gc.ncollect)){fprintf(stderr,"unique task storage iteration=%d mode=%d before=%.0f after=%.0f collections=%zu\n",i,mode,start,charged(),fwp_gc.ncollect);return 204;}
+  if(measured&&(charged()!=start||fwp_heap.ncollect)){fprintf(stderr,"unique task storage iteration=%d mode=%d before=%.0f after=%.0f collections=%zu\n",i,mode,start,charged(),fwp_heap.ncollect);return 204;}
 #else
-  if(measured&&(charged()<=start||fwp_gc.ncollect))return 205;
+  if(measured&&(charged()<=start||fwp_heap.ncollect))return 205;
   start=charged();
 #endif
  }
  fwp_tasks_finish();fwp_native_tasks_finish();
 #if defined(FWP_ARC_ONLY) && !defined(FWP_RESOURCE_NO_FREE)
- if(fwp_gc.budget!=fwp_gc.budget_given||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=0||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
 #endif
  return 0;
 }

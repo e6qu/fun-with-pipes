@@ -81,7 +81,7 @@ for label, expected_status in sorted(expected.items()):
         binary.with_suffix('.' + kind).write_bytes(output)
         outputs[kind] = dict(command=commands[kind], sha256=hashlib.sha256(output).hexdigest())
         if kind == 'symbols' and arc:
-            assert all(name not in output for name in [b'fwp_gc_scan', b'fwp_gc_mark_all', b'fwp_gc_sweep']), label
+            assert all(name not in output for name in [b'fwp_heap_scan', b'fwp_heap_mark_all', b'fwp_heap_sweep']), label
     stdout = binary.with_suffix('.stdout').read_bytes()
     stderr = binary.with_suffix('.stderr').read_bytes()
     record = dict(machine=machine, bytes=len(data), sha256=hashlib.sha256(data).hexdigest(),

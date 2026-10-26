@@ -229,9 +229,7 @@ fn a_small_heap_is_collected_and_reused() {
     std::fs::write(&source, workload.replace("(6000, 0)", "(60, 0)")).unwrap();
     let shared = dir.0.join("shared");
     let built = Command::new(fwp())
-        .args([
-            "build", "--gc", "tracing", "--memory", "static", "--heap", "1M", "-O1",
-        ])
+        .args(["build", "--memory", "static", "--heap", "1M", "-O1"])
         .arg(&source)
         .arg("-o")
         .arg(&shared)

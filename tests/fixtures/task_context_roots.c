@@ -20,9 +20,9 @@ static volatile uintptr_t probe_hidden;
 static int probe_value_marked(void) {
     void *value = (void *)(probe_hidden ^ PROBE_HIDE);
     size_t index;
-    gc_chunk *chunk = fwp_gc_chunk_of((uintptr_t)value, &index);
-    return chunk && (chunk->type == GC_SMALL || chunk->type == GC_BIG)
-        && fwp_gc_marked(value);
+    heap_chunk *chunk = fwp_heap_chunk_of((uintptr_t)value, &index);
+    return chunk && (chunk->type == HEAP_SMALL || chunk->type == HEAP_BIG)
+        && fwp_heap_marked(value);
 }
 
 static int probe_signal_blocked(void) {
@@ -36,12 +36,12 @@ static void probe_root_reader(void *unused, int cancelled) {
     if (cancelled || fegetround() != FE_UPWARD || probe_signal_blocked()) _Exit(194);
     /* The root's ordinary frames are excluded. Its saved register image must
      * independently keep the value reachable through its actual owner. */
-    fwp_root->gc_sp = fwp_gc.main_top;
+    fwp_root->heap_sp = fwp_heap.main_top;
 #if PROBE_BROKEN_ROOT
     memset(&fwp_root_context, 0, sizeof fwp_root_context);
 #endif
-    fwp_gc.major_next = 1;
-    fwp_gc_collect();
+    fwp_heap.major_next = 1;
+    fwp_heap_collect();
     if (!probe_value_marked()) _Exit(191);
     sigset_t mask;
     sigemptyset(&mask);
@@ -59,9 +59,9 @@ static void probe_child_owner(void *unused, int cancelled) {
     /* Exclude all ordinary child frames. A heap context belongs to the task
      * record; a stack context is the only remaining scanned stack region. */
 #if PROBE_CONTEXT_STACK
-    self->gc_sp = (char *)self->ctx;
+    self->heap_sp = (char *)self->ctx;
 #else
-    self->gc_sp = self->stack + self->stack_size;
+    self->heap_sp = self->stack + self->stack_size;
 #endif
     fwp_enter(fwp_root);
     __asm__ volatile("" : "+r"(held));
@@ -100,8 +100,8 @@ static void probe_context_roots(void) {
     if (fwp_dequeue() != child) _Exit(194);
     fwp_enter(child);
     swapcontext(PROBE_CONTEXT(fwp_root), PROBE_CONTEXT(child));
-    fwp_gc.major_next = 1;
-    fwp_gc_collect();
+    fwp_heap.major_next = 1;
+    fwp_heap_collect();
     if (!probe_value_marked()) _Exit(192);
     fwp_make_ready(fwp_root);
     fwp_enter(child);

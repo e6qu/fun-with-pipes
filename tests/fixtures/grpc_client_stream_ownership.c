@@ -8,10 +8,10 @@ static const fwp_remote empty_input_remote={.input_drop=empty_input_drop};
 static jmp_buf probe_trap;
 static int recover_probe(void) { return 1; }
 static double probe_charge(void) {
-    return fwp_gc.total_alloc + (double)(fwp_gc.budget_given-fwp_gc.budget);
+    return (double)fwp_heap.live;
 }
 static int still_finalized(void *pointer) {
-    for (size_t i=0; i<fwp_gc.nfins; i++) if (fwp_gc.fins[i].obj==pointer) return 1;
+    for (size_t i=0; i<fwp_heap.nfins; i++) if (fwp_heap.fins[i].obj==pointer) return 1;
     return 0;
 }
 static void end_response(g_conn *c, g_stream *s, int mode) {
@@ -35,7 +35,7 @@ static void end_response(g_conn *c, g_stream *s, int mode) {
 int main(int argc,char **argv) {
     if(argc!=2)return 200;
     int mode=atoi(argv[1]);if(mode<0||mode>10)return 200;
-    fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+    fwp_lib_init();fwp_heap_start();fwp_tasks_init();
     double before_connection=probe_charge();
     g_conn *c=g_conn_new(FWP_INVALID_SOCKET, "", "local",0);
     fwp_rc_fresh(PTR(c));fwp_rc_dup(PTR(c)); /* fixture and incoming source */
@@ -86,7 +86,7 @@ int main(int argc,char **argv) {
         fwp_task *task=probe_sender;
         if(mode==7)fwp_cancel_tree(task);
         int64_t deadline=fwp_now_ns()+10000000000LL;
-        while(fwp_gc_tasks){
+        while(fwp_tasks_active){
             if(fwp_now_ns()>=deadline)return 214;
             fwp_park(0,fwp_now_ns()+1000000LL);fwp_free_zombie();
         }
@@ -96,13 +96,13 @@ int main(int argc,char **argv) {
     if(probe_stream_finals!=1)return 212;
     if(still_finalized(s))return 215;
 #ifndef FWP_RESOURCE_NO_FREE
-    if(mode<6&&!fwp_gc.enabled&&!fwp_reuse_verify&&probe_charge()!=before)return 220;
+    if(mode<6&&!fwp_heap.enabled&&!fwp_reuse_verify&&probe_charge()!=before)return 220;
 #endif
     if(*fwp_rc_slot(PTR(c))!=1)return 221;
     g_conn_drop(c);
     if(still_finalized(c))return 222;
 #ifndef FWP_RESOURCE_NO_FREE
-    if(mode<6&&!fwp_gc.enabled&&!fwp_reuse_verify&&probe_charge()!=before_connection)return 223;
+    if(mode<6&&!fwp_heap.enabled&&!fwp_reuse_verify&&probe_charge()!=before_connection)return 223;
 #endif
     fwp_lib_finish();
     if(probe_stream_finals!=1)return 215;

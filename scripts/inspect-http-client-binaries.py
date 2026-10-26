@@ -24,7 +24,7 @@ for folder in folders:
               for mode in ['tracing', 'arc'] for suffix in ['', '-measured']]
     for mode, opt, path, workload in cases:
         symbols = subprocess.check_output([str(llvm / 'llvm-nm'), str(path)], text=True)
-        found = [name for name in ['fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'] if name in symbols]
+        found = [name for name in ['fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'] if name in symbols]
         assert (not found) if mode == 'arc' else found, (path, found)
         sections = subprocess.check_output([str(llvm / 'llvm-size'), '--format=sysv', str(path)], text=True)
         sections = sections.replace(str(path), str(path.relative_to(folder)))

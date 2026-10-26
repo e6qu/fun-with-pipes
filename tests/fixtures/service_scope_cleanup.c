@@ -23,9 +23,9 @@ static int capture_matches(V result){
  return list==0;
 }
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
  capture_input=fwp_rc_fresh(fwp_cstr("callback result"));
- intptr_t budget=fwp_gc.budget;
+ size_t live_bytes=fwp_heap.live;
  for(capture_alias=0;capture_alias<2;capture_alias++){
   int failed=0,completed=0;
   for(int allocation=1;allocation<32;allocation++){
@@ -38,7 +38,7 @@ int main(void){
     CAPTURE_TYPE->drop(result);completed=1;
    }else failed++;
    capture_left=0;fwp_trap_recover=NULL;fwp_trap_jb=NULL;
-   if(fwp_gc.budget!=budget||fwp_cleanups||capture_live||fwp_cur->gctx)return 248;
+   if(fwp_heap.live!=live_bytes||fwp_cleanups||capture_live||fwp_cur->gctx)return 248;
    if(!fwp_rc_last(capture_input))return 248;
    if(completed)break;
   }

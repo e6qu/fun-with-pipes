@@ -28,7 +28,6 @@ fn wrap(code: &mut String, signature: &str, name: &str, body: &str) {
 /// the fixed address table is outside the program's managed allocator.
 pub fn instrument_native(code: &str, capacity: usize) -> String {
     assert!(capacity >= 2 && capacity.is_power_of_two());
-    assert!(code.contains("#define FWP_ARC_ONLY 1"));
     let mut code = code.to_owned();
     let ledger =
         include_str!("../fixtures/ownership_ledger.c").replace("@CAPACITY@", &capacity.to_string());
@@ -39,11 +38,11 @@ pub fn instrument_native(code: &str, capacity: usize) -> String {
     );
     wrap(
         &mut code,
-        "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
-        "fwp_gc_alloc",
-        "    void *result = fwp_gc_alloc_observed_body(n, leaf);\n    if (leaf != 0) owner_ledger_alloc(result);\n    return result;",
+        "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+        "fwp_heap_alloc",
+        "    void *result = fwp_heap_alloc_observed_body(n, kind);\n    if (kind != 0) owner_ledger_alloc(result);\n    return result;",
     );
-    // alloc_init can bypass gc_alloc; its slow path uses leaf == 0, so the
+    // alloc_init can bypass heap_alloc; its slow path uses kind == 0, so the
     // outer observation owns exactly one registration on either path.
     wrap(
         &mut code,
@@ -58,7 +57,7 @@ pub fn instrument_native(code: &str, capacity: usize) -> String {
     );
     // Stack/constant values are not managed allocations. For heap addresses,
     // check identity before count metadata can silently ignore a stale owner.
-    let guard = "    uintptr_t offset = (uintptr_t)v - (uintptr_t)fwp_gc.base;\n    if (offset < (fwp_gc.top << GC_SHIFT) && !owner_ledger_slots[owner_ledger_find((uintptr_t)v)])\n        owner_ledger_error(203, \"count operation on a dead or interior allocation\");\n";
+    let guard = "    uintptr_t offset = (uintptr_t)v - (uintptr_t)fwp_heap.base;\n    if (offset < (fwp_heap.top << HEAP_SHIFT) && !owner_ledger_slots[owner_ledger_find((uintptr_t)v)])\n        owner_ledger_error(203, \"count operation on a dead or interior allocation\");\n";
     for signature in [
         "static inline void fwp_rc_dup(V v) {\n",
         "static inline void fwp_rc_drop(V v) {\n",

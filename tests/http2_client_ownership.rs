@@ -119,8 +119,8 @@ fn http2_client_responses_release_partial_copies_and_request_owners() {
             "static inline void *fwp_alloc_init(size_t n) { client_allocation();",
         ),
         (
-            "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
-            "static inline void *fwp_gc_alloc(size_t n, int leaf) { if(leaf)client_allocation();",
+            "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+            "static inline void *fwp_heap_alloc(size_t n, int kind) { if(kind)client_allocation();",
         ),
         (
             "static void g_stream_final(void *p) {",

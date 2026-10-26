@@ -10,7 +10,7 @@
 #include <fenv.h>
 #include <windows.h>
 static void fwp_trap(const char *message) { fprintf(stderr, "%s\n", message); exit(101); }
-static char *fwp_gc_sp(void) { return __builtin_frame_address(0); }
+static char *fwp_heap_sp(void) { return __builtin_frame_address(0); }
 static int forbidden_snapshot(void) { _Exit(211); }
 #undef setjmp
 #define setjmp(buffer) forbidden_snapshot()

@@ -86,7 +86,7 @@ main = (64, "{}") | loop step | const "discarded" | print
                 let exe = dir.0.join(format!("{opt}-{reuse}-{free}"));
                 checked(
                     Command::new(fwp)
-                        .args(["build", "--gc", "tracing"])
+                        .args(["build"])
                         .arg(&src)
                         .args([opt, "-o"])
                         .arg(&exe)
@@ -112,7 +112,7 @@ main = (64, "{}") | loop step | const "discarded" | print
     let emitted = dir.0.join("discard.c");
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&emitted),

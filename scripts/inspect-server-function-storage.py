@@ -33,7 +33,7 @@ for mode in ['arc', 'tracing']:
         fields = line.split()
         if len(fields) == 3 and re.fullmatch(r'[0-9a-fA-F]+', fields[0]):
             addresses[fields[2].removeprefix('_')] = int(fields[0], 16)
-    tracing = [name for name in ['fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'] if name in addresses]
+    tracing = [name for name in ['fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'] if name in addresses]
     assert bool(tracing) == (mode == 'tracing'), (binary, tracing)
     contents = subprocess.check_output(
         [str(args.llvm_bin / 'llvm-objdump'), '-s', '--section=' + section, str(binary)], text=True)

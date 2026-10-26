@@ -149,7 +149,7 @@ main = [
             checked(
                 Command::new(env!("CARGO_BIN_EXE_fwp"))
                     .env_remove("FWP_NO_OPT")
-                    .args(["build", "--gc", "tracing", opt])
+                    .args(["build", opt])
                     .arg(&input)
                     .arg("-o")
                     .arg(&binary),
@@ -171,7 +171,7 @@ main = [
                 Command::new(env!("CARGO_BIN_EXE_fwp"))
                     .env_remove("FWP_NO_OPT")
                     .env("FWP_STACK", stack)
-                    .args(["build", "--gc", "arc", "--emit-c"])
+                    .args(["build", "--emit-c"])
                     .arg(&input)
                     .arg("-o")
                     .arg(&cfile),
@@ -181,8 +181,8 @@ main = [
                 .find("static void *fwp_main_thread(void *arg) {")
                 .unwrap();
             let (runtime, body) = emitted.split_at(main);
-            let body = body.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t extension_budget = fwp_gc.budget;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.budget < extension_budget) { fprintf(stderr, \"unreclaimed: %ld\\n\", (long)(extension_budget-fwp_gc.budget)); exit(193); }\n");
+            let body = body.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t extension_live_bytes = fwp_heap.live;\n")
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.ncollect || fwp_heap.live > extension_live_bytes) { fprintf(stderr, \"unreclaimed: %ld\\n\", (long)(fwp_heap.live - extension_live_bytes)); exit(193); }\n");
             let body = if name == "scoped-ad" {
                 body.replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    for (int64_t i=0;i<fwp_ntapes;i++) if(fwp_tapes[i].live) exit(194);\n    if(fwp_tape_cached_bytes > FWP_AD_WORKSPACE_BUDGET) exit(195);\n")
             } else {
@@ -252,7 +252,7 @@ fn raw_ad_cannot_escape_scope_proof_through_callbacks_or_arguments() {
         let source_path = dir.join(format!("{name}.fwp"));
         std::fs::write(&source_path, source).unwrap();
         for raw in [false, true] {
-            for args in [vec!["run", "--interp"], vec!["build", "--gc", "arc", "--emit-c"]] {
+            for args in [vec!["run", "--interp"], vec!["build", "--emit-c"]] {
                 let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
                 command.env_remove("FWP_NO_OPT");
                 if raw { command.env("FWP_NO_OPT", "1"); }
@@ -277,7 +277,7 @@ fn csv_partial_construction_releases_fields_rows_and_scratch_on_trap() {
     let cfile = dir.join("csv.c");
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "arc", "--emit-c"])
+            .args(["build", "--emit-c"])
             .arg(&input)
             .arg("-o")
             .arg(&cfile),
@@ -300,20 +300,20 @@ fn csv_partial_construction_releases_fields_rows_and_scratch_on_trap() {
         r#"
 static int csv_recover(void) {{ return 1; }}
 int main(void) {{
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
     V separator=fwp_cstr(","), text=fwp_cstr("a,b\nc,d\ne,f");
-    intptr_t budget=fwp_gc.budget;
+    size_t live_bytes=fwp_heap.live;
     jmp_buf trap; fwp_trap_jb=&trap; fwp_trap_cleanup=0; fwp_trap_recover=csv_recover;
     for(csv_probe_at=1;csv_probe_at<=6;csv_probe_at++) {{
         csv_probe_step=0;
         if(!setjmp(trap)) {{ (void){call}; return 191; }}
         if(strcmp(fwp_trap_msg,"CSV construction control")) return 192;
-        if(fwp_cleanups || fwp_gc.budget!=budget) return 193;
+        if(fwp_cleanups || fwp_heap.live!=live_bytes) return 193;
     }}
     csv_probe_at=0;
     V rows={call};
     {drop_rows}(rows);
-    if(fwp_cleanups || fwp_gc.budget!=budget || fwp_gc.ncollect) return 194;
+    if(fwp_cleanups || fwp_heap.live!=live_bytes || fwp_heap.ncollect) return 194;
     puts("CSV partial cleanup verified"); return 0;
 }}
 "#,

@@ -62,7 +62,7 @@ main = [
             Command::new(env!("CARGO_BIN_EXE_fwp"))
                 .env_remove("FWP_NO_OPT")
                 .env("FWP_ITER_CONSUMERS", enabled)
-                .args(["build", "--gc", "tracing", "--emit-c"])
+                .args(["build", "--emit-c"])
                 .arg(&input)
                 .arg("-o")
                 .arg(&cfile),
@@ -133,7 +133,7 @@ fn producer_lookahead_and_exhausted_stage_order_match_raw_interpreter() {
                 Command::new(env!("CARGO_BIN_EXE_fwp"))
                     .env_remove("FWP_NO_OPT")
                     .env("FWP_ITER_PRODUCERS", producers)
-                    .args(["build", "--gc", "tracing", "-O2"])
+                    .args(["build", "-O2"])
                     .arg(&input)
                     .arg("-o")
                     .arg(&binary),
@@ -188,7 +188,7 @@ main = [
         checked(
             Command::new(compiler)
                 .env("FWP_ITER_PRODUCERS", producers)
-                .args(["build", "--gc", "arc", "--emit-c"])
+                .args(["build", "--emit-c"])
                 .arg(&input)
                 .arg("-o")
                 .arg(&cfile),
@@ -199,8 +199,8 @@ main = [
             .unwrap();
         let (runtime, main) = code.split_at(start);
         let measured = format!("{runtime}{}", main
-            .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t array_budget=fwp_gc.budget;\n")
-            .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget < array_budget) exit(193);\n"));
+            .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t array_live_bytes=fwp_heap.live;\n")
+            .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.enabled || fwp_heap.ncollect || fwp_heap.live > array_live_bytes) exit(193);\n"));
         for opt in ["-O1", "-O2"] {
             let binary = dir.join(if cfg!(windows) {
                 "arrays.exe"

@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn canonical_encoding_scratch_releases_on_partial_and_transcoder_failure() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -77,7 +73,7 @@ static void no_release(void *p){(void)p;}
 static int recover(void){return 1;}
 static jmp_buf failed;
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();
  const fwp_desc descriptor={.kind=K_I64,.name="I64"};const fwp_desc *fields[]={&descriptor};
  g_codec codec={0};codec.ty=&descriptor;fwp_remote remote={0};remote.what="probe";remote.m.nreq=1;remote.m.req=fields;
  for(int kind=0;kind<3;kind++)for(stage=0;stage<3;stage++){
@@ -127,10 +123,6 @@ int main(void){
 
 #[test]
 fn canonical_decoding_scratch_releases_on_malformed_values_and_allocation_traps() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -162,8 +154,8 @@ fn canonical_decoding_scratch_releases_on_malformed_values_and_allocation_traps(
             "observed_decode(k->schema, k->node, msg, n, &canon)",
         ),
         (
-            "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
-            "static inline void *fwp_gc_alloc(size_t n, int leaf) { if(decode_fail && leaf) fwp_trap(\"decode allocation failure\");",
+            "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+            "static inline void *fwp_heap_alloc(size_t n, int kind) { if(decode_fail && kind) fwp_trap(\"decode allocation failure\");",
         ),
     ] {
         assert_eq!(generated.matches(before).count(), 1, "{before}");
@@ -190,7 +182,7 @@ static void no_decode_release(void *p){(void)p;}
 static int decode_recover(void){return 1;}
 static jmp_buf decode_jump;
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();
  const fwp_desc text={.kind=K_STR,.name="String"};
  const int plain[]={PB_MSG,1,1,4,PB_STR},tagged[]={PB_ONEOF,2,4,4,PB_STR};
  const int partial[]={PB_MSG,2,1,6,2,6,PB_STR},bytes[]={PB_MSG,1,1,4,PB_BYTES},empty[]={PB_MSG,0};

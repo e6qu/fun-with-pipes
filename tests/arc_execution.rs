@@ -90,7 +90,7 @@ main = range 0 129 | map (choose | checks) | length | echo
                 Command::new(env!("CARGO_BIN_EXE_fwp"))
                     .env_remove("FWP_NO_OPT")
                     .env("FWP_STACK", stack)
-                    .args(["build", "--gc", "arc", "--memory", memory, "--emit-c"])
+                    .args(["build", "--memory", memory, "--emit-c"])
                     .arg(&input)
                     .arg("-o")
                     .arg(&cfile),
@@ -116,8 +116,8 @@ main = range 0 129 | map (choose | checks) | length | echo
                     .count(),
                 1
             );
-            let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t arc_budget = fwp_gc.budget;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < arc_budget || fwp_gc.freed <= 0) { fprintf(stderr,\"ARC unreclaimed bytes: %ld\\n\",(long)(arc_budget-fwp_gc.budget)); exit(193); }\n");
+            let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t arc_live_bytes = fwp_heap.live;\n")
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > arc_live_bytes || fwp_heap.freed <= 0) { fprintf(stderr,\"ARC unreclaimed bytes: %ld\\n\",(long)(fwp_heap.live - arc_live_bytes)); exit(193); }\n");
             let measured = format!("{runtime}{main}");
             let measured = ownership_ledger::instrument_native(&measured, 1 << 20);
             if let Some(path) = std::env::var_os("FWP_ARC_ARTIFACTS") {
@@ -134,7 +134,7 @@ main = range 0 129 | map (choose | checks) | length | echo
                 fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
                 let symbols = checked(Command::new("nm").arg(&binary));
                 let symbols = String::from_utf8_lossy(&symbols.stdout);
-                for tracing_function in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                for tracing_function in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                     assert!(
                         !symbols.contains(tracing_function),
                         "ARC binary contains {tracing_function}"
@@ -223,8 +223,8 @@ main = range 0 129 | map (choose | checks) | length | echo
                     "physical-free omission must fail the ledger"
                 );
                 let forced = measured.replace(
-                    "    intptr_t arc_budget = fwp_gc.budget;",
-                    "    fwp_gc_collect();\n    intptr_t arc_budget = fwp_gc.budget;",
+                    "    size_t arc_live_bytes = fwp_heap.live;",
+                    "    fwp_heap_collect();\n    size_t arc_live_bytes = fwp_heap.live;",
                 );
                 let binary = dir.join("forced-trace.exe");
                 fwp::cgen::compile_c(&forced, &binary, "-O2").unwrap();
@@ -252,7 +252,7 @@ fn arc_checks_reject_counted_owners_at_uncounted_boundaries() {
     std::fs::write(&input, "main = 7 | echo\n").unwrap();
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "arc", "--emit-c", "-o"])
+            .args(["build", "--emit-c", "-o"])
             .arg(&cfile)
             .arg(input),
     );
@@ -450,7 +450,7 @@ fn wrapped_chain_cleanup_stack_measurement() {
             Command::new(fwp)
                 .env_remove("FWP_NO_OPT")
                 .env("FWP_STACK", "0")
-                .args(["build", "--gc", "arc", "--emit-c"])
+                .args(["build", "--emit-c"])
                 .arg(&input)
                 .arg("-o")
                 .arg(&cfile),
@@ -506,11 +506,11 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     const int sizes[] = {64, 1024, 16384};
     const int nested = NESTED;
     for (int i = 0; i < 3; i++) for (int mode = 0; mode < 4 + nested; mode++) {
-        intptr_t before = fwp_gc.budget;
+        size_t before = fwp_heap.live;
         V root = 0, alias = 0;
         for (int n = 0; n < sizes[i]; n++) {
             V text = fwp_rc_fresh(fwp_str_new("value", 5));
@@ -535,12 +535,12 @@ int main(void) {
             }
             V text = OBJ(kept)->f[0];
             if (STR(text)->len != 5 || memcmp(STR(text)->d, "value", 5)) return 173;
-            if (fwp_gc.budget >= before) return 174;
+            if (fwp_heap.live <= before) return 174;
             if (mode == 4) { TUPLE_RELEASE }
             else if (mode == 3) OPTION_DROP(alias); else DROP(alias);
         }
         if (chain_stack_high-chain_stack_low > 4096) return 175;
-        if (fwp_gc.budget != before || fwp_gc.enabled || fwp_gc.ncollect) return 171;
+        if (fwp_heap.live != before || fwp_heap.enabled || fwp_heap.ncollect) return 171;
         printf("%d\t%d\t%llu\n", sizes[i], mode, (unsigned long long)(chain_stack_high-chain_stack_low));
     }
     return 0;
@@ -631,7 +631,7 @@ int main(void) {
                     .env_remove("FWP_NO_OPT")
                     .env("FWP_STACK", "0")
                     .env("FWP_FREE", free)
-                    .args(["build", "--gc", "tracing", "--emit-c"])
+                    .args(["build", "--emit-c"])
                     .arg(&input)
                     .arg("-o")
                     .arg(&hybrid_c),
@@ -704,9 +704,7 @@ fn native_ownership_ledger_detects_bad_events_without_retaining_storage() {
             Command::new(compiler)
                 .env_remove("FWP_NO_OPT")
                 .env("FWP_REUSE", "1")
-                .args([
-                    "build", "--gc", "arc", "--memory", memory, "--emit-c", "-O1",
-                ])
+                .args(["build", "--memory", memory, "--emit-c", "-O1"])
                 .arg(&source)
                 .arg("-o")
                 .arg(&cfile),
@@ -727,7 +725,7 @@ fn native_ownership_ledger_detects_bad_events_without_retaining_storage() {
         code = code.replace(start, &format!("{start}    run_owner_ledger_probe();\n"));
         let finish = "    owner_ledger_finish();\n";
         assert_eq!(code.matches(finish).count(), 1);
-        code = code.replace(finish, &format!("{finish}    if (fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget != fwp_gc.budget_given) owner_ledger_error(207, \"physical allocation balance differs\");\n"));
+        code = code.replace(finish, &format!("{finish}    if (fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live != 0) owner_ledger_error(207, \"physical allocation balance differs\");\n"));
         for opt in ["-O1", "-O2"] {
             let binary = dir.join(format!("{memory}{opt}.exe"));
             let run = |executable: &std::path::Path, case: &str, rounds: &str| {

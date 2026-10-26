@@ -120,8 +120,8 @@ static void setup(void) {
     box=fwp_rc_fresh(fwp_record(4,(V[]){first,last,old,word}));
 }
 int main(void) {
-    fwp_prog_out=stdout; fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
-    intptr_t baseline=fwp_gc.budget;
+    fwp_prog_out=stdout; fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+    size_t baseline=fwp_heap.live;
     for (volatile int round=0;round<32;round++) {
     for (int alias=0;alias<2;alias++) {
         setup(); failing=0; if (alias) fwp_rc_dup(box);
@@ -157,7 +157,7 @@ int main(void) {
         fwp_rc_fresh(first);fwp_rc_fresh(last);fwp_rc_free_obj(first);fwp_rc_free_obj(last);fwp_rc_free_obj(word);
     }
 #ifdef FWP_ARC_ONLY
-        if (fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
+        if (fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 90;
 #endif
     }
     puts("record updates preserve typed kept fields and release replaced owners");return 0;

@@ -1,7 +1,7 @@
 static jmp_buf projection_failure;
 static int projection_recover(void) { return 1; }
 static double projection_charge(void) {
-    return fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);
+    return (double)fwp_heap.live;
 }
 static V projection_input(void) {
     V text=fwp_rc_fresh(fwp_cstr("kept"));
@@ -16,7 +16,7 @@ static int projection_text(V text) {
     return STR(text)->len==4&&!memcmp(STR(text)->d,"kept",4);
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
     if(!fwp_fns[0].owned||!fwp_fns[0].owned->drop_arguments)return 200;
     const char *stress=getenv("FWP_GC_STRESS");
     int collecting=stress&&!strcmp(stress,"1");

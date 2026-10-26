@@ -72,8 +72,8 @@ static int dead(V v){
  uint8_t *slot=fwp_rc_slot(v);return !slot||!*slot;
 }
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
- intptr_t baseline=fwp_gc.budget;
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
+ size_t baseline=fwp_heap.live;
  for(int round=0;round<32;round++){
  for(int cancelled=0;cancelled<2;cancelled++)for(int alias=0;alias<2;alias++){
   V capture=fwp_rc_fresh(fwp_str_new("input",5));if(alias)fwp_rc_dup(capture);
@@ -91,12 +91,12 @@ int main(void){
  }
  fwp_tasks_finish();fwp_free_zombie();
 #ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
 #endif
  }
  fwp_native_tasks_finish();
 #ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=fwp_gc.budget_given)return 90;
+ if(fwp_heap.live!=0)return 90;
 #endif
  return 0;
 }
@@ -318,7 +318,7 @@ static jmp_buf clock_failed;
 static int recover_clock(void){return 1;}
 static void drop_text(V v){if(fwp_rc_release_last(v))fwp_rc_free_obj(v);}
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
  for(int fault=1;fault<=3;fault++)for(int alias=0;alias<2;alias++){
   V capture=fwp_rc_fresh(fwp_str_new("clock",5));
   fwp_rc_dup(capture); /* inspect the capture through an independent owner */
@@ -328,7 +328,7 @@ int main(void){
   if(setjmp(clock_failed)==0){fwp_p_task_within_owned(duration,fn,drop_text,fwp_rc_dup);return 1;}
   fwp_trap_recover=0;fwp_trap_jb=0;fail_clock=0;
   if(strcmp(fwp_trap_msg,fault==1?"cannot read monotonic clock":"monotonic time exceeds Duration range"))return 8;
-  if(fwp_cleanups||fwp_gc_tasks||fwp_cur->first_child)return 2;
+  if(fwp_cleanups||fwp_tasks_active||fwp_cur->first_child)return 2;
   if(*fwp_rc_slot(capture)!=1+alias)return 3;
   if(alias){if(*fwp_rc_slot(fn)!=1)return 4;fwp_closure_drop(fn);}
   if(*fwp_rc_slot(capture)!=1||STR(capture)->len!=5)return 5;

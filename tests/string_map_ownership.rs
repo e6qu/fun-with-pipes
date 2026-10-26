@@ -65,8 +65,8 @@ fn string_maps_preserve_values_and_release_each_exit() {
             let observation = "    /* Ownership observation point: before runtime teardown. */\n";
             assert_eq!(main.matches(init).count(), 1);
             assert_eq!(main.matches(observation).count(), 1);
-            let main = main.replace(init, &format!("{init}    intptr_t map_budget = fwp_gc.budget;\n"))
-                .replace(observation, &format!("{observation}    if(fwp_gc.budget != map_budget || fwp_gc.enabled || fwp_gc.ncollect) {{ fprintf(stderr, \"string-map owners remain after language execution\\n\"); exit(246); }}\n"));
+            let main = main.replace(init, &format!("{init}    size_t map_live_bytes = fwp_heap.live;\n"))
+                .replace(observation, &format!("{observation}    if(fwp_heap.live != map_live_bytes || fwp_heap.enabled || fwp_heap.ncollect) {{ fprintf(stderr, \"string-map owners remain after language execution\\n\"); exit(246); }}\n"));
             format!("{runtime}{main}")
         } else {
             code

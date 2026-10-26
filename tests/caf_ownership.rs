@@ -118,10 +118,10 @@ static int dead_record(V v){
  return *fwp_rc_slot(v)==0;
 }
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
- intptr_t baseline=fwp_gc.budget;
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+ size_t baseline=fwp_heap.live;
  scalar_bits=fwp_rc_fresh(fwp_str_new("scalar",6));
- intptr_t round_baseline=fwp_gc.budget;
+ size_t round_baseline=fwp_heap.live;
  for(int round=0;round<32;round++){
  calls=0;observed=0;reenter=0;reentrant_held=0;
  fail_once=1;fwp_trap_recover=recover;fwp_trap_jb=&overflow;fwp_trap_cleanup=fwp_cleanups;
@@ -151,12 +151,12 @@ int main(void){
  fwp_rc_free_obj(inner);fwp_rc_drop(outer);fwp_caf_finish();
  if(!dead(inner)||!dead(outer))return 13;
 #ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=round_baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=round_baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
 #endif
  }
  fwp_rc_free_obj(scalar_bits);
 #ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
 #endif
  return 0;
 }
@@ -409,7 +409,7 @@ int main(int argc,char **argv){
  if(!observed || !dead(observed))return 3;
 #ifdef FWP_ARC_ONLY
  /* budget is remaining allowance; zero live charge restores its initial value. */
- if(fwp_gc.budget!=fwp_gc.budget_given||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=0||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
 #endif
  return 0;
 }
@@ -564,8 +564,8 @@ static int dead(V v){
 }
 static jmp_buf trapped; static int recover(void){return 1;}
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
- intptr_t baseline=fwp_gc.budget;
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+ size_t baseline=fwp_heap.live;
  for(int round=0;round<32;round++){
  for(int alias=0;alias<2;alias++){
   V input=fwp_rc_fresh(fwp_str_new("input",5));if(alias)fwp_rc_dup(input);
@@ -578,7 +578,7 @@ int main(void){
  }
  fwp_caf_finish();
 #ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
 #endif
  }
  return 0;

@@ -144,7 +144,7 @@ def main():
         if args.comparison in {'server-arc', 'server-arc-moves'}:
             assert (folder / 'memory-mode.txt').read_text().strip() == 'arc'
             if host.startswith('ubuntu-'):
-                assert 'test arc_grpc_server_runs_in_bounded_memory ... ok' in content
+                assert 'test grpc_server_runs_in_bounded_memory ... ok' in content
         inventory = json.loads((folder / 'primitive-inventory.json').read_text())
         assert inventory['head'] == args.head
         rows = table(folder / 'memory.tsv')
@@ -255,7 +255,7 @@ def main():
                     symbols = folder / f'{mode}-{variant}.nm'
                     text = symbols.read_text()
                     assert all(symbol not in text for symbol in [
-                        'fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'])
+                        'fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'])
                     names.append(symbols.name)
             names += [f'{mode}-{calls}-{rep}.log' for calls in [1, 16, 256] for rep in range(3)]
         observations = folder / 'binary-observations.json'

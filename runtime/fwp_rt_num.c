@@ -673,7 +673,7 @@ static V fwp_p_range_owned(int k, V lo, V hi,
     V result = owner.list;
     owner.list = 0;
     fwp_cleanup_pop(&cleanup);
-    FWP_KEEP_ALIVE(lo); FWP_KEEP_ALIVE(hi);
+
     return result;
 }
 

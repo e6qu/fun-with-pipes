@@ -94,7 +94,7 @@ for memory in ['arc', 'tracing']:
                 sizes = re.findall(rb'^\s*\d+\s+(?:\.text|__text)\s+([0-9a-fA-F]+)\s', sections, re.M)
                 assert sizes
                 if memory == 'arc':
-                    assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_gc_(?:scan|mark_all|sweep)\b', sections)
+                    assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_heap_(?:scan|mark_all|sweep)\b', sections)
                 images.append(dict(label=label, machine=machine, fileBytes=len(raw),
                     instructionBytes=sum(int(size, 16) for size in sizes),
                     sourceSha256=hashlib.sha256(code.encode()).hexdigest(),

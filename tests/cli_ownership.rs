@@ -80,8 +80,8 @@ main = [
         let (runtime, main) = code.split_at(start);
         let measured = if mode == "arc" {
             format!("{runtime}{}", main
-                .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t cli_budget=fwp_gc.budget;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < cli_budget) { fprintf(stderr,\"CLI bytes left: %ld\\n\",(long)(cli_budget-fwp_gc.budget)); exit(193); }\n"))
+                .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t cli_live_bytes=fwp_heap.live;\n")
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > cli_live_bytes) { fprintf(stderr,\"CLI bytes left: %ld\\n\",(long)(fwp_heap.live - cli_live_bytes)); exit(193); }\n"))
         } else {
             code
         };

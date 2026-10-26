@@ -63,9 +63,9 @@ static void clear_dead_stack(void);
     let fixture = r#"
 static void inspect_owner(void){
  if(!copy_active)return;copy_active=0;
- if(!fwp_gc.armed)_Exit(2);size_t before=fwp_gc.ncollect;
- fwp_gc.major_next=1;fwp_gc_collect();
- if(fwp_gc.ncollect<=before)_Exit(3);if(released)_Exit(1);
+ if(!fwp_heap.armed)_Exit(2);size_t before=fwp_heap.ncollect;
+ fwp_heap.major_next=1;fwp_heap_collect();
+ if(fwp_heap.ncollect<=before)_Exit(3);if(released)_Exit(1);
 }
 static __attribute__((noinline)) V body(void){
  g_conn *conn=g_conn_new(-1, "", "local",0);
@@ -78,8 +78,8 @@ static __attribute__((noinline)) V body(void){
  return fwp_p_http2_body(64,PTR(&duration),call,BODY_TYPE);
 }
 static int probe(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
- if(!fwp_gc.armed)return 30;
+ fwp_lib_init();fwp_heap_start();
+ if(!fwp_heap.armed)return 30;
  V result=body();
  static const unsigned char bytes[]={0,255,192,128,10};
  if(copy_active||released||OBJ(result)->tag||OBJ(result)->n!=1)return 4;

@@ -70,7 +70,7 @@ def main():
                 label = f'{kind}-{inputs}-fused-{fused}'
                 build_env = dict(env, FWP_MAP_BUILD=fused)
                 cfile = out / (label + '.c')
-                run([compiler, 'build', '--gc', 'arc', '-O2', '--emit-c', source, '-o', cfile], build_env)
+                run([compiler, 'build', '-O2', '--emit-c', source, '-o', cfile], build_env)
                 code = cfile.read_text()
                 marker = {'map': '/* numeric map: direct callback fields */',
                           'set': '/* numeric set: direct callback */',

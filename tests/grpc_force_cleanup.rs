@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn forced_cells_release_received_storage_and_decoder_failure_text() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -80,7 +76,7 @@ static uintptr_t observed_copy(const char *p){if(stage==2||stage==10)fwp_trap("c
 static jmp_buf failed;
 static int recover(void){return 1;}
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();
  g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1, "", "local",&srv);
  for(stage=0;stage<12;stage++){
   allocations=frees=0;memset(owned,0,sizeof owned);
@@ -177,8 +173,8 @@ fn cached_stream_positions_preserve_values_and_report_storage() {
     for (marker, condition) in [
         ("static inline void *fwp_alloc_init(size_t n) {", "1"),
         (
-            "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
-            "leaf != 0",
+            "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+            "kind != 0",
         ),
     ] {
         assert_eq!(generated.matches(marker).count(), 1);
@@ -306,7 +302,7 @@ fn incoming_stream_descriptions_outlive_their_input_text() {
 static jmp_buf description_failure;
 static int recover_description(void) { return 1; }
 int main(void) {
-    fwp_lib_init(); fwp_gc_start(__builtin_frame_address(0));
+    fwp_lib_init(); fwp_heap_start();
     for (size_t length=0; length<=2048; length+=128) {
         char input[2049]; memset(input,'x',length); input[length]=0;
         description_allocations=description_bytes=0; measure_description=1;
@@ -493,11 +489,11 @@ static __attribute__((noinline)) void observe_cache_stack(void) {
     assert_eq!(generated.matches(declaration).count(), 1);
     generated = generated.replace(declaration, &format!("{declaration}\n{observer}"));
     for function in ["fwp_rc_free_obj", "fwp_rc_free_arr"] {
-        let free = format!("static void {function}(V v) {{\n    if (!fwp_rc_last(v)) return;");
+        let free = format!("static void {function}(V v) {{\n    if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);");
         assert_eq!(generated.matches(&free).count(), 1);
         generated = generated.replace(
             &free,
-            &format!("{free}\n    if(cache_observe)cache_releases++;"),
+            &format!("static void {function}(V v) {{\n    if (fwp_rc_last(v)) {{ if(cache_observe)cache_releases++; fwp_mem_free((void *)(uintptr_t)v); }}"),
         );
     }
     let entry = "static void g_cell_drop(V value, void (*drop_element)(V)) {";

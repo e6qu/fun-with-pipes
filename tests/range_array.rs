@@ -113,11 +113,11 @@ fn direct_range_array_has_no_per_element_heap_allocations() {
             build.args(["--gc", if arc { "arc" } else { "tracing" }]);
             checked(&mut build);
             let mut code = std::fs::read_to_string(cfile).unwrap();
-            let marker = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+            let marker = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
             assert_eq!(code.matches(marker).count(), 1);
             code = code.replace(
                 marker,
-                &format!("static unsigned range_requests;\n{marker} if(leaf!=0) range_requests++;"),
+                &format!("static unsigned range_requests;\n{marker} if(kind!=0) range_requests++;"),
             );
             let initialized = "static inline void *fwp_alloc_init(size_t n) {";
             assert_eq!(code.matches(initialized).count(), 1);
@@ -127,9 +127,9 @@ fn direct_range_array_has_no_per_element_heap_allocations() {
                 .unwrap();
             let finish = start + code[start..].find("\n}\n").unwrap() + 3;
             let body = code[start..finish].replace("    fwp_init_consts();\n",
-                "    fwp_init_consts();\n    range_requests = 0; intptr_t range_budget = fwp_gc.budget;\n")
+                "    fwp_init_consts();\n    range_requests = 0; size_t range_live_bytes = fwp_heap.live;\n")
                 .replace("    /* Ownership observation point: before runtime teardown. */\n",
-                "    /* Ownership observation point: before runtime teardown. */\n    if(range_requests > 6 || fwp_gc.budget != range_budget) exit(246);\n");
+                "    /* Ownership observation point: before runtime teardown. */\n    if(range_requests > 6 || fwp_heap.live != range_live_bytes) exit(246);\n");
             code.replace_range(start..finish, &body);
             for opt in ["-O1", "-O2"] {
                 let binary = dir.join("main.exe");

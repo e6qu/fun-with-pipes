@@ -117,7 +117,7 @@ static V fwp_p_udp_recv_from(V nv, V s, const fwp_desc *err, const fwp_desc *tup
             fields.values[1] = fwp_rc_fresh(fwp_cstr(a));
             V r = fwp_decode_record(&fields);
             fwp_cleanup_pop(&buffer_cleanup); free(buf);
-            FWP_KEEP_ALIVE(s);
+
             return r;
         }
         if (fwp_socket_again(errno)) {
@@ -179,7 +179,7 @@ static V fwp_p_dns_resolve(V host, const fwp_desc *err, const fwp_desc *list_typ
     list.value = fwp_private_reverse_owned(list.value);
     V result = fwp_value_finish(&list, &list_cleanup);
     fwp_cleanup_pop(&address_cleanup); fwp_addrinfo_release(&addresses);
-    FWP_KEEP_ALIVE(host);
+
     return result;
 }
 #endif

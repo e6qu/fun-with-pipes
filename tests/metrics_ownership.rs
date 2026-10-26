@@ -65,11 +65,11 @@ fn metrics_results_preserve_values_aliases_and_release_storage() {
             let body = code[start..end]
                 .replace(
                     "    fwp_init_consts();\n",
-                    "    fwp_init_consts();\n    intptr_t metrics_budget=fwp_gc.budget;\n",
+                    "    fwp_init_consts();\n    size_t metrics_live_bytes=fwp_heap.live;\n",
                 )
                 .replace(
                     "    /* Ownership observation point: before runtime teardown. */\n",
-                    "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.budget!=metrics_budget) exit(248);\n",
+                    "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live!=metrics_live_bytes) exit(248);\n",
                 );
             let mut measured = code.clone();
             measured.replace_range(start..end, &body);
@@ -107,7 +107,7 @@ fn snapshots_and_syntax_release_partial_fields_and_native_scratch() {
             .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic void metrics_allocation(void); static int metrics_buffers;");
         let hooks = [
             ("static inline void *fwp_alloc_init(size_t n) {", "static inline void *fwp_alloc_init(size_t n) { metrics_allocation();"),
-            ("static inline void *fwp_gc_alloc(size_t n, int leaf) {", "static inline void *fwp_gc_alloc(size_t n, int leaf) { if(leaf!=0) metrics_allocation();"),
+            ("static inline void *fwp_heap_alloc(size_t n, int kind) {", "static inline void *fwp_heap_alloc(size_t n, int kind) { if(kind!=0) metrics_allocation();"),
             ("        b->d = data;", "        if(!b->d) metrics_buffers++;\n        b->d = data;"),
             ("    free(b->d);\n    return r;", "    if(b->d) metrics_buffers--;\n    free(b->d);\n    return r;"),
             ("static void fwp_buf_release(void *arg) { free(((fwp_buf *)arg)->d); }", "static void fwp_buf_release(void *arg) { if(((fwp_buf *)arg)->d) metrics_buffers--; free(((fwp_buf *)arg)->d); }"),

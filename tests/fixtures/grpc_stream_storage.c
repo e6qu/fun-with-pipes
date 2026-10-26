@@ -10,7 +10,7 @@ static void observe_free(void *p) {
     free(p);
 }
 static double charged(void) {
-    return fwp_gc.total_alloc + (double)(fwp_gc.budget_given - fwp_gc.budget);
+    return (double)fwp_heap.live;
 }
 static g_cell *next_cell(V value, size_t index) {
     if (value == FWP_NONE) _Exit(20);
@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     size_t count = (size_t)strtoul(argv[1], NULL, 10);
     int mode = atoi(argv[2]); /* 0: consume all; 1: stop early; 2: retain first position */
     if (!count || count > 128 || mode < 0 || mode > 2) return 31;
-    fwp_lib_init(); fwp_gc_start(__builtin_frame_address(0)); fwp_tasks_init();
+    fwp_lib_init(); fwp_heap_start(); fwp_tasks_init();
     double start = charged();
     measured = 1;
     g_server server = {0}; server.module = "stream-storage";
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
     }
     /* A 16-byte position plus decoded text and its two wrappers requests
      * at most 81 bytes per element. Keeping both source and cache exceeds it. */
-    if (!fwp_gc.ncollect && requested_bytes - setup_bytes > 81 * consumed) return 38;
+    if (!fwp_heap.ncollect && requested_bytes - setup_bytes > 81 * consumed) return 38;
     double after_read = charged();
     /* This historical fixture calls the borrowed receive helper directly. Clearing
      * C roots measures retained cache storage; the complete-client and typed
@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
         count, mode, consumed, setup_requests, setup_bytes,
         requests - setup_requests, requested_bytes - setup_bytes,
         setup_charge - start, after_read - start, after_roots - start,
-        count - messages_freed, fwp_gc.ncollect);
+        count - messages_freed, fwp_heap.ncollect);
     fwp_lib_finish();
     if (messages_freed != count) return 37;
     return 0;

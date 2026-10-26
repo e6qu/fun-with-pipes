@@ -5,10 +5,6 @@ use std::process::Command;
 
 #[test]
 fn file_aliases_and_borrowed_io_unwind_preserve_stream_owners() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![Func {
@@ -58,7 +54,7 @@ static int observe_error(FILE *f){if(f==watched_stream&&fault==3){errno=EIO;retu
 static jmp_buf recovery;
 static int recover(void){return 1;}
 int main(int argc,char **argv){
- if(argc!=2)return 30;fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
+ if(argc!=2)return 30;fwp_lib_init();fwp_heap_start();
  /* Deliberately clear the GC count. Resource counts must remain independent. */
  handle=fwp_p_file_open(fwp_cstr(argv[1]),0,0);fwp_file *h=(fwp_file *)(uintptr_t)handle;
  fwp_rc_share(handle);uint8_t *slot=fwp_rc_slot(handle);if(slot&&*slot)return 1;
@@ -94,7 +90,7 @@ int main(int argc,char **argv){
  }
  /* Allocation/conversion traps clean the extra alias and the fresh String. */
  for(volatile int mode=4;mode<6;mode++){
-  rewind(h->f);fault=mode;watched_text=0;double before=fwp_gc.freed;
+  rewind(h->f);fault=mode;watched_text=0;double before=fwp_heap.freed;
   fwp_trap_recover=recover;fwp_trap_jb=&recovery;fwp_trap_cleanup=0;
   int failed=setjmp(recovery);if(!failed)fwp_p_file_read_all_owned(handle,0);
   fwp_trap_recover=0;fwp_trap_jb=0;fault=0;
@@ -102,9 +98,9 @@ int main(int argc,char **argv){
   if(mode==5){
 #ifndef FWP_RESOURCE_NO_FREE
    if(fwp_reuse_verify){if(!watched_text||STR(watched_text)->len||STR(watched_text)->d[0])return 10;}
-   else if(fwp_gc.freed<=before)return 10;
+   else if(fwp_heap.freed<=before)return 10;
 #else
-   if(fwp_gc.freed!=before)return 10;
+   if(fwp_heap.freed!=before)return 10;
 #endif
   }
  }
@@ -115,7 +111,7 @@ int main(int argc,char **argv){
  if(!overflow||h->refs!=UINT64_MAX||closes||fwp_cleanups)return 11;
  h->refs=1;fwp_file_drop(handle);if(closes!=1)return 12;
  /* Library finalizers still see headers, but must not close discarded streams twice. */
- handle=0;fwp_gc_finish();if(closes!=1)return 13;return 0;
+ handle=0;fwp_heap_finish();if(closes!=1)return 13;return 0;
 }
 "#;
     let mut runtime = generated;

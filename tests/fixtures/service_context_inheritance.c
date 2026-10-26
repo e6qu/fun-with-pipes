@@ -110,7 +110,7 @@ static void parent(void *arg, int stop) {
  * failure code. Successful runs still execute complete library shutdown. */
 int main(void) {
     fwp_lib_init();
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_tasks_init();
     fwp_trap_recover = g_trap_recover;
     for (stage = 0; stage < 9; stage++) {

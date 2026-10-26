@@ -97,10 +97,10 @@ static int dead_string(V v) {
 }
 static int dead_scratch(V v) {
     size_t ci;
-    gc_chunk *chunk = fwp_gc_chunk_of((uintptr_t)v, &ci);
-    if (!chunk || chunk->type == GC_FREE) return 1;
-    if (chunk->type != GC_SMALL) return 0;
-    for (char *p = fwp_gc.lists[chunk->leaf][chunk->cls].free; p; p = (char *)~*(uintptr_t *)p)
+    heap_chunk *chunk = fwp_heap_chunk_of((uintptr_t)v, &ci);
+    if (!chunk || chunk->type == HEAP_FREE) return 1;
+    if (chunk->type != HEAP_SMALL) return 0;
+    for (char *p = fwp_heap.lists[chunk->leaf][chunk->cls].free; p; p = (char *)~*(uintptr_t *)p)
         if (PTR(p) == v) return 1;
     return 0;
 }
@@ -108,8 +108,8 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
-    intptr_t baseline=fwp_gc.budget;
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
+    size_t baseline=fwp_heap.live;
     for(int round=0;round<32;round++){
     for (volatile int mode = 0; mode < 3; mode++) {
         input_seed = fwp_rc_fresh(fwp_str_new("seed", 4));
@@ -137,7 +137,7 @@ int main(void) {
         else fwp_rc_free_obj(input_capture);
     }
 #ifdef FWP_ARC_ONLY
-    if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
+    if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;
 #endif
     }
     puts("fold accumulator and scratch release on failure");
@@ -202,7 +202,7 @@ int main(void) {
             assert!(cancelled.contains(update));
             cancelled = cancelled.replace(update, &format!("{update} cancel_after_fold_result();"));
         }
-        let cancelled_probe = probe.replace("static volatile V input_seed, source_list, input_capture;", "static volatile V input_seed, source_list, input_capture;\nstatic fwp_task fold_cancel;\nstatic void cancel_after_fold_result(void) { if (fwp_cur) { fwp_cur->cancelled = 1; fwp_budget = 0; } }").replace("        if (!setjmp(h.jb))", "        memset(&fold_cancel, 0, sizeof fold_cancel); fwp_cur = &fold_cancel; fwp_budget = 1000000;\n#ifdef _WIN32\n        /* This synthetic task executes on main's stack. */\n        fold_cancel.ctx.top = fwp_gc.main_top;\n#endif\n        jmp_buf fold_cancel_base; fold_cancel.base = &fold_cancel_base;\n        if (!setjmp(fold_cancel_base))").replace("        fwp_handlers = h.prev;", "        fold_cancel.base = NULL; fwp_cur = NULL; if (!fold_cancel.unwinding) return 7;\n        fwp_handlers = h.prev;");
+        let cancelled_probe = probe.replace("static volatile V input_seed, source_list, input_capture;", "static volatile V input_seed, source_list, input_capture;\nstatic fwp_task fold_cancel;\nstatic void cancel_after_fold_result(void) { if (fwp_cur) { fwp_cur->cancelled = 1; fwp_budget = 0; } }").replace("        if (!setjmp(h.jb))", "        memset(&fold_cancel, 0, sizeof fold_cancel); fwp_cur = &fold_cancel; fwp_budget = 1000000;\n#ifdef _WIN32\n        /* This synthetic task executes on main's stack. */\n        fold_cancel.ctx.top = fwp_heap.main_top;\n#endif\n        jmp_buf fold_cancel_base; fold_cancel.base = &fold_cancel_base;\n        if (!setjmp(fold_cancel_base))").replace("        fwp_handlers = h.prev;", "        fold_cancel.base = NULL; fwp_cur = NULL; if (!fold_cancel.unwinding) return 7;\n        fwp_handlers = h.prev;");
         let preparing = runtime.replace(
             "fi->owned->arguments(args + i, c->n + i, 1);",
             "fwp_trap(\"injected borrowed argument preparation failure\");",
@@ -368,8 +368,8 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
-    intptr_t baseline=fwp_gc.budget;
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
+    size_t baseline=fwp_heap.live;
     for(int round=0;round<32;round++){
     first = fwp_rc_fresh(fwp_str_new("first",5)); second = fwp_rc_fresh(fwp_str_new("second",6));
     function_value = fwp_rc_fresh(fwp_pap(STEP,0,NULL));
@@ -387,7 +387,7 @@ int main(void) {
     if (fwp_cleanups || *fwp_rc_slot(scalar_word)!=1 || STR(scalar_word)->len!=11 || memcmp(STR(scalar_word)->d,"scalar bits",11)) return 5;
     fwp_rc_free_obj(scalar_word);
 #ifdef FWP_ARC_ONLY
-    if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
+    if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;
 #endif
     }
     puts("borrowed duplicates and scalar fold words retain exact ownership");

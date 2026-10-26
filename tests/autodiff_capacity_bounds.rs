@@ -12,7 +12,7 @@ fn paired_metadata_preserves_values_alignment_and_recoverable_growth() {
     let cfile = directory.join("runtime.c");
     std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
     let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--gc", "tracing", "--emit-c", "-o"])
+        .args(["build", "--emit-c", "-o"])
         .arg(&cfile)
         .arg(&input)
         .output()
@@ -228,7 +228,7 @@ fn registry_growth_preserves_tokens_scopes_and_capacity_bounds() {
     let cfile = directory.join("runtime.c");
     std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
     let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--gc", "tracing", "--emit-c", "-o"])
+        .args(["build", "--emit-c", "-o"])
         .arg(&cfile)
         .arg(&input)
         .output()

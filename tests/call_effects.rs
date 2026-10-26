@@ -165,7 +165,7 @@ fn comptime_file_contents_survive_removing_the_compilation_input() {
             .join(format!("data{opt}{}", std::env::consts::EXE_SUFFIX));
         let built = Command::new(env!("CARGO_BIN_EXE_fwp"))
             .current_dir(dir.path())
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&source)
             .args([opt, "-o"])
             .arg(&executable)
@@ -195,10 +195,6 @@ fn comptime_file_contents_survive_removing_the_compilation_input() {
 
 #[test]
 fn c_generation_rejects_runtime_handles_even_in_hand_built_ir() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let file = Value::File(Rc::new(RefCell::new(FileState {
         path: "closed-test-file".into(),
         file: None,
@@ -314,7 +310,7 @@ fn inferred_pure_callbacks_agree_with_native_execution() {
     for opt in ["-O1", "-O2"] {
         let exe = dir.join(format!("pure{opt}"));
         let built = Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&source)
             .args([opt, "-o"])
             .arg(&exe)

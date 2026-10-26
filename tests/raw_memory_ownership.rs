@@ -82,8 +82,8 @@ static void interop_free(void *p) {
             let end = "    /* Ownership observation point: before runtime teardown. */\n";
             assert_eq!(code.matches(init).count(), 1);
             assert_eq!(code.matches(end).count(), 1);
-            code = code.replace(init, &format!("{init}    intptr_t raw_budget=fwp_gc.budget_given;\n"))
-            .replace(end, &format!("{end}    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget<raw_budget)exit(214);\n"));
+            code = code.replace(init, &format!("{init}    size_t raw_live_bytes=0;\n"))
+            .replace(end, &format!("{end}    if(fwp_heap.enabled || fwp_heap.ncollect || fwp_heap.live > raw_live_bytes)exit(214);\n"));
         }
         for opt in ["-O0", "-O2"] {
             for (label, candidate, status) in [
@@ -155,10 +155,6 @@ fn string_copies_survive_their_source_buffers() {
 
 #[test]
 fn native_string_boundaries_borrow_inputs_and_return_reclaimable_copies() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let string = MT::con("std::String");
     let ptr = MT::Con("std::Ptr".into(), vec![MT::con("std::U8")]);
     let primitive = |symbol: &str, parameter: MT, result: MT| Func {
@@ -203,9 +199,9 @@ int main(void) {
  f2(raw);
  if (STR(copy)->len != 5 || memcmp(STR(copy)->d,"hello",5)) return 5;
  if (STR(input)->len != 5 || memcmp(STR(input)->d,"hello",5)) return 6;
- double before = fwp_gc.freed;
+ double before = fwp_heap.freed;
  f3(copy); f3(input);
- if (!fwp_reuse_verify && fwp_gc.freed <= before) return 7;
+ if (!fwp_reuse_verify && fwp_heap.freed <= before) return 7;
  if (fwp_reuse_verify && (STR(copy)->len || STR(input)->len)) return 8;
  return 0;
 }
@@ -279,7 +275,7 @@ fn pipe_string_copy_matches_raw_interpreter_under_gc_and_reuse_verification() {
     assert_eq!(reference.stdout, "héhéhé\n".as_bytes());
     assert!(reference.stderr.is_empty());
     let generated = Command::new(fwp)
-        .args(["build", "--gc", "tracing"])
+        .args(["build"])
         .arg(&source)
         .args(["--emit-c", "-o"])
         .arg(&cfile)
@@ -339,8 +335,8 @@ fn raw_wide_integer_storage_preserves_all_bits_and_owned_result_boxes() {
             let end = "    /* Ownership observation point: before runtime teardown. */\n";
             assert_eq!(code.matches(init).count(), 1);
             assert_eq!(code.matches(end).count(), 1);
-            code = code.replace(init, &format!("{init}    intptr_t raw_budget=fwp_gc.budget_given;\n"))
-                .replace(end, &format!("{end}    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget<raw_budget)exit(214);\n"));
+            code = code.replace(init, &format!("{init}    size_t raw_live_bytes=0;\n"))
+                .replace(end, &format!("{end}    if(fwp_heap.enabled || fwp_heap.ncollect || fwp_heap.live > raw_live_bytes)exit(214);\n"));
         }
         for opt in ["-O0", "-O2"] {
             let binary = dir.join("wide.exe");

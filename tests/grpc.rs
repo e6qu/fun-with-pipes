@@ -261,8 +261,6 @@ fn arc_remote_calls_exclude_tracing_and_preserve_behavior() {
         let split = d.join(name);
         build(
             &[
-                "--gc",
-                "arc",
                 "--service",
                 "greeter",
                 "--emit-c",
@@ -302,7 +300,7 @@ fn arc_remote_calls_exclude_tracing_and_preserve_behavior() {
                 std::fs::copy(&binary, path.join(binary.file_name().unwrap())).unwrap();
                 std::fs::write(path.join(format!("{name}{opt}.nm")), symbols.as_bytes()).unwrap();
             }
-            for tracing in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+            for tracing in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                 assert!(
                     !symbols.contains(tracing),
                     "{name} {opt} contains {tracing}"
@@ -397,15 +395,7 @@ fn every_kind_of_call() {
         let no_reuse = d.join("no-reuse");
         let mut compile = Command::new(fwp());
         compile
-            .args([
-                "build",
-                "--gc",
-                "tracing",
-                "--service",
-                "greeter",
-                "--emit-c",
-                "-o",
-            ])
+            .args(["build", "--service", "greeter", "--emit-c", "-o"])
             .arg(&no_reuse)
             .arg(&client)
             .current_dir(dir())
@@ -1144,7 +1134,7 @@ fn instrument_repeated_client(generated: &str) -> String {
     for (before,after) in [
         ("static g_stream *g_stream_new(g_conn *c, uint32_t id) {", "static g_stream *g_stream_new(g_conn *c, uint32_t id) {\n    if(client_active){client_call_checkpoint();client_streams_created++;}"),
         ("static void g_stream_final(void *p) {", "static void g_stream_final(void *p) {\n    if(client_active)client_streams_finalized++;"),
-        ("    fwp_gc_finalizer(c, g_conn_final);", "    fwp_gc_finalizer(c, g_conn_final);\n    if(client_active)client_connections_created++;"),
+        ("    fwp_heap_finalizer(c, g_conn_final);", "    fwp_heap_finalizer(c, g_conn_final);\n    if(client_active)client_connections_created++;"),
         ("static void g_conn_final(void *p) {", "static void g_conn_final(void *p) {\n    if(client_active)client_connections_finalized++;"),
         ("        m->n = mn;", "        m->n = mn;\n        if(client_active){client_messages_created++;client_message_requested+=sizeof(*m)+mn+1;uint64_t live=client_message_requested-client_message_freed;if(live>client_message_peak)client_message_peak=live;}"),
     ] {assert_eq!(runtime.matches(before).count(),1,"{before}");runtime=runtime.replacen(before,after,1);}

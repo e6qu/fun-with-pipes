@@ -21,7 +21,7 @@ declarations = re.findall(
 assert declarations
 symbols = subprocess.check_output(
     [str(args.llvm_bin / 'llvm-nm'), '-S', '--defined-only', str(binary)], text=True)
-assert not any(name in symbols for name in ['fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'])
+assert not any(name in symbols for name in ['fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'])
 objects = {}
 addresses = {}
 for line in symbols.splitlines():

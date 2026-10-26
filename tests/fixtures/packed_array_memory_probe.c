@@ -1,14 +1,14 @@
 /* Exercise generated slice functions and generated typed Array[I8] teardown. */
 static size_t probe_capacity(V value) {
-    uintptr_t off=(uintptr_t)value-(uintptr_t)fwp_gc.base;
-    if(off>=fwp_gc.top<<GC_SHIFT)return 0;
-    gc_chunk *m=&fwp_gc.meta[off>>GC_SHIFT];
-    if(m->type==GC_BIG && (off&(GC_CHUNK-1))==0)return m->size;
-    if(m->type==GC_SMALL && (off&(GC_CHUNK-1))%m->slot==0)return m->slot;
+    uintptr_t off=(uintptr_t)value-(uintptr_t)fwp_heap.base;
+    if(off>=fwp_heap.top<<HEAP_SHIFT)return 0;
+    heap_chunk *m=&fwp_heap.meta[off>>HEAP_SHIFT];
+    if(m->type==HEAP_BIG && (off&(HEAP_CHUNK-1))==0)return m->size;
+    if(m->type==HEAP_SMALL && (off&(HEAP_CHUNK-1))%m->slot==0)return m->slot;
     return 0;
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     const fwp_desc element={.kind=K_I8};
     V (*functions[])(V)={fSLICED,fNESTED,fEMPTY,fCOMPACT,fCOMPACT_NESTED};
     const char *names[]={"sliced","nested","empty","compact","compact-nested"};
@@ -16,7 +16,7 @@ int main(void) {
     puts("{\"cases\":[");
     for(size_t which=0;which<5;which++) {
         uint64_t before_calls=measured_calls,before_bytes=measured_bytes;
-        double before_freed=fwp_gc.freed;
+        double before_freed=fwp_heap.freed;
         V result=functions[which](257);
         size_t length=fwp_array_len(result);
         if(length!=lengths[which])return 134;
@@ -39,9 +39,9 @@ int main(void) {
         expected_bytes+=is_view?sizeof(fwp_array_view):sizeof(fwp_arr)+length*stride;
         if(which==1 || which==4)expected_bytes+=FWP_PACKED_ARRAYS?sizeof(fwp_array_view):sizeof(fwp_arr)+200*stride;
         if(bytes!=expected_bytes)return 142;
-        double before_drop=fwp_gc.freed;
+        double before_drop=fwp_heap.freed;
         fARRAY_DROP(result);
-        double released=fwp_gc.freed-before_drop;
+        double released=fwp_heap.freed-before_drop;
         if(released<(double)(own_capacity+backing_capacity))return 143;
         printf("%s{\"name\":\"%s\",\"inputLength\":257,\"resultLength\":%zu,\"isView\":%s,\"managedCalls\":%llu,\"managedRequestedBytes\":%llu,\"resultCapacityBytes\":%zu,\"retainedBackingCapacityBytes\":%zu,\"freedBeforeReturnBytes\":%.0f,\"freedAtDropBytes\":%.0f}",which?",\n":"",names[which],length,is_view?"true":"false",(unsigned long long)calls,(unsigned long long)bytes,own_capacity,backing_capacity,before_drop-before_freed,released);
     }

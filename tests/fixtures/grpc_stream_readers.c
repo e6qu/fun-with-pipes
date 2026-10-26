@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
     if(argc!=2)return 30;
     int mode=atoi(argv[1]); /* 0: both; 1/2: cancel receiver/waiter; 3: recursion; 4/5: decode with queued/later data */
     if(mode<0||mode>5)return 31;
-    fwp_lib_init(); fwp_gc_start(__builtin_frame_address(0)); fwp_tasks_init();
+    fwp_lib_init(); fwp_heap_start(); fwp_tasks_init();
     fwp_cur->deadline=fwp_now_ns()+10000000000LL; /* bound a broken wakeup */
     g_server server={0}; server.module="readers";
     g_conn *connection=g_conn_new(FWP_INVALID_SOCKET, "", "queued",&server);

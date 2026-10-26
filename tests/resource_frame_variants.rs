@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn original_variant_frame_holders_do_not_force_heap_boxes() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let dir = fwp::cgen::TempDir::new("resource-frame-variants").unwrap();
     let data = dir.join("data");
     std::fs::write(&data, "contents").unwrap();
@@ -48,7 +44,7 @@ main = {:?} | file.open | pack | close | const "closed" | echo
         let out = Command::new(fwp)
             .env("FWP_REUSE", "0")
             .env("FWP_FREE", "0")
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&source)
             .args([opt, "-o"])
             .arg(&source_exe)
@@ -469,7 +465,7 @@ static int observed_closed(void){
 #endif
 static int recover(void){return 1;}
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_prog_out=stdout;fwp_init_consts();
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_prog_out=stdout;fwp_init_consts();
  jmp_buf recovery;fwp_trap_jb=&recovery;fwp_trap_recover=recover;fwp_trap_cleanup=0;
  if(!setjmp(recovery)){f0();return 1;}
  fwp_trap_jb=0;fwp_trap_recover=0;

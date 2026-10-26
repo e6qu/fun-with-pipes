@@ -169,7 +169,7 @@ fn direct_range_sets_allocate_only_the_result() {
                 .split('(')
                 .next()
                 .unwrap();
-            let allocate = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+            let allocate = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
             let initialized = "static inline void *fwp_alloc_init(size_t n) {";
             assert_eq!(builder.matches(allocate).count(), 1);
             assert_eq!(builder.matches(initialized).count(), 1);
@@ -180,7 +180,7 @@ fn direct_range_sets_allocate_only_the_result() {
                 )
                 .replace(
                     allocate,
-                    &format!("{allocate} if(leaf!=0) {{range_requests++; range_bytes+=n;}}"),
+                    &format!("{allocate} if(kind!=0) {{range_requests++; range_bytes+=n;}}"),
                 )
                 .replace(
                     initialized,

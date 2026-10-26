@@ -110,11 +110,11 @@ static int dead_data(V v) {
 }
 static int dead_scratch(V v) {
     size_t ci;
-    gc_chunk *chunk = fwp_gc_chunk_of((uintptr_t)v, &ci);
+    heap_chunk *chunk = fwp_heap_chunk_of((uintptr_t)v, &ci);
     if (!chunk) return 1;
-    if (chunk->type == GC_FREE) return 1;
-    if (chunk->type != GC_SMALL) return 0;
-    for (char *p = fwp_gc.lists[chunk->leaf][chunk->cls].free; p;
+    if (chunk->type == HEAP_FREE) return 1;
+    if (chunk->type != HEAP_SMALL) return 0;
+    for (char *p = fwp_heap.lists[chunk->leaf][chunk->cls].free; p;
          p = (char *)~*(uintptr_t *)p)
         if (PTR(p) == v) return 1;
     return 0;
@@ -123,8 +123,8 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
-    intptr_t baseline = fwp_gc.budget;
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
+    size_t baseline = fwp_heap.live;
     for (volatile int round=0; round<32; round++) {
     for (volatile int mode = 0; mode < 3; mode++) {
         input_leaf = fwp_rc_fresh(fwp_str_new("a", 1));
@@ -152,7 +152,7 @@ int main(void) {
         fwp_rc_free_obj(input_alias);
     }
 #ifdef FWP_ARC_ONLY
-    if (fwp_gc.budget != baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
+    if (fwp_heap.live != baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 90;
 #endif
     }
     puts("map results and scratch release across failed callbacks");
@@ -177,7 +177,7 @@ int main(void) {
                 "        owner.count++; if (owner.count == 1) cancel_map_after_result();",
             );
         assert_ne!(cancelled, runtime);
-        let cancelled_probe = probe.replace("static volatile V source_list, input_leaf, input_alias;", "static volatile V source_list, input_leaf, input_alias;\nstatic fwp_task map_cancel;\nstatic void cancel_map_after_result(void) { if (fwp_cur) { fwp_cur->cancelled = 1; fwp_budget = 0; } }").replace("        if (!setjmp(h.jb))", "        memset(&map_cancel, 0, sizeof map_cancel); fwp_cur = &map_cancel; fwp_budget = 1000000;\n#ifdef _WIN32\n        /* This synthetic task executes on main's stack. */\n        map_cancel.ctx.top = fwp_gc.main_top;\n#endif\n        jmp_buf map_cancel_base; map_cancel.base = &map_cancel_base;\n        if (!setjmp(map_cancel_base))").replace("        fwp_handlers = h.prev;", "        map_cancel.base = NULL; fwp_cur = NULL; if (!map_cancel.unwinding) return 8;\n        fwp_handlers = h.prev;");
+        let cancelled_probe = probe.replace("static volatile V source_list, input_leaf, input_alias;", "static volatile V source_list, input_leaf, input_alias;\nstatic fwp_task map_cancel;\nstatic void cancel_map_after_result(void) { if (fwp_cur) { fwp_cur->cancelled = 1; fwp_budget = 0; } }").replace("        if (!setjmp(h.jb))", "        memset(&map_cancel, 0, sizeof map_cancel); fwp_cur = &map_cancel; fwp_budget = 1000000;\n#ifdef _WIN32\n        /* This synthetic task executes on main's stack. */\n        map_cancel.ctx.top = fwp_heap.main_top;\n#endif\n        jmp_buf map_cancel_base; map_cancel.base = &map_cancel_base;\n        if (!setjmp(map_cancel_base))").replace("        fwp_handlers = h.prev;", "        map_cancel.base = NULL; fwp_cur = NULL; if (!map_cancel.unwinding) return 8;\n        fwp_handlers = h.prev;");
         for opt in ["-O1", "-O2"] {
             for (case, code, probe) in [
                 ("callback", &runtime, &probe),
@@ -317,8 +317,8 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
-    intptr_t baseline = fwp_gc.budget;
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
+    size_t baseline = fwp_heap.live;
     for (volatile int round=0; round<32; round++) {
     scalar_word = fwp_rc_fresh(fwp_str_new("scalar alias", 12)); source = PTR(&scalar_head);
     fwp_trap_recover = recover_scalar; fwp_trap_jb = &scalar_trap; fwp_trap_cleanup = 0;
@@ -332,7 +332,7 @@ int main(void) {
     if (*fwp_rc_slot(scalar_word) != 1 || STR(scalar_word)->len != 12) return 3;
     fwp_rc_free_obj(scalar_word);
 #ifdef FWP_ARC_ONLY
-    if (fwp_gc.budget != baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
+    if (fwp_heap.live != baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 90;
 #endif
     }
     puts("scalar address bits remain uncounted on map failure");

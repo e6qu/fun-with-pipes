@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn metadata_capture_releases_after_callbacks_and_escaped_tasks() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let int = MT::con("std::I64");
     let pair = MT::Record(vec![
@@ -177,7 +173,7 @@ static void call(void *arg,int stop){
  if(fwp_cur->gctx||fwp_cleanups)_Exit(1);
 }
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  for(stage=0;stage<11;stage++){
   frees=entered=cancelled=trapped=typed=scope_returned=fail_spawn=nested=0;watched=spawned=0;snapshot=0;
   fwp_task *task=fwp_spawn_task(0,call,0,0,0);

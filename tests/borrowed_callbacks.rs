@@ -146,8 +146,8 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 22;
 #endif
-    fwp_gc_start(__builtin_frame_address(0));
-    intptr_t baseline=fwp_gc.budget;
+    fwp_heap_start();
+    size_t baseline=fwp_heap.live;
     for(unsigned round=0;round<32;round++) {
     /* Exercise the compiler's actual parameter metadata, including a
      * scalar whose bits look exactly like the following pointer argument. */
@@ -251,7 +251,7 @@ int main(void) {
     probe_drop_leaf(leaf);
     probe_drop_leaf(scalar);
 #ifdef FWP_ARC_ONLY
-    if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+    if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
     owner_ledger_finish();
 #endif
     }

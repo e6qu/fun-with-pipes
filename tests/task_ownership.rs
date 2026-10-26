@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/allocation_report.rs"]
+mod allocation_report;
+
 #[path = "support/record_probe.rs"]
 mod record_probe;
 
@@ -78,7 +81,7 @@ main = range 0 4 | each round
             assert_eq!(code.matches(finish).count(), 1);
             code = code.replace(
                 finish,
-                &format!("{finish}    if(fwp_gc.ncollect || fwp_gc.budget_given!=fwp_gc.budget)exit(83);\n"),
+                &format!("{finish}    if(fwp_heap.ncollect || 0!=fwp_heap.live)exit(83);\n"),
             );
         }
         for opt in ["-O0", "-O2", "-O3"] {
@@ -165,7 +168,7 @@ main = [
                 let stress = if memory == "arc" { "0" } else { "1" };
                 let native = Command::new(&exe)
                     .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_ALLOC_STATS", "0")
                     .env("FWP_GC_STRESS", stress)
                     .env("FWP_GC_VERIFY", stress)
                     .env("FWP_REUSE_VERIFY", poison)
@@ -235,9 +238,9 @@ main = [
             .unwrap();
         let probe = r#"
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_tasks_init();
-    intptr_t baseline = fwp_gc.budget;
+    size_t baseline = fwp_heap.live;
     for (int round=0; round<32; round++) {
     V duration = fwp_rc_fresh(fwp_data(0, 1, (V[]){INT64_MAX}));
     V bits = fwp_rc_fresh(fwp_cstr("numeric bits"));
@@ -256,12 +259,12 @@ int main(void) {
     fwp_rc_free_obj(bits);
     fwp_rc_free_obj(duration);
 #ifdef FWP_ARC_ONLY
-    if (fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
+    if (fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 90;
 #endif
     }
     fwp_native_tasks_finish();
 #ifdef FWP_ARC_ONLY
-    if (fwp_gc.budget!=fwp_gc.budget_given || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
+    if (fwp_heap.live!=0 || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 90;
 #endif
     puts("typed task aliases preserved");
     return 0;
@@ -309,8 +312,7 @@ int main(void) {
                 let exe = dir.0.join(format!("{label}.exe"));
                 fwp::cgen::compile_c(code, &exe, opt).unwrap();
                 let output = Command::new(&exe)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_ALLOC_STATS", "0")
                     .env("FWP_GC_STRESS", "0")
                     .env("FWP_GC_VERIFY", "0")
                     .env("FWP_REUSE_VERIFY", "0")
@@ -377,7 +379,7 @@ main = (10000, 0) | loop step | echo
         if memory == "arc" {
             let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
             assert_eq!(current.matches(finish).count(), 1);
-            let balanced = current.replace(finish, &format!("{finish}    if(fwp_gc.budget!=fwp_gc.budget_given || fwp_gc.rc_wide_len || fwp_gc.ncollect)exit(90);\n"));
+            let balanced = current.replace(finish, &format!("{finish}    if(fwp_heap.live!=0 || fwp_heap.rc_wide_len || fwp_heap.ncollect)exit(90);\n"));
             let missing = balanced.replace(
                 boundary,
                 "fwp_rc_dup(l1); fwp_rc_dup(l1); return fwp_p_task_deadline(l0, l1);",
@@ -390,8 +392,7 @@ main = (10000, 0) | loop step | echo
                     let exe = dir.0.join(format!("{label}.exe"));
                     fwp::cgen::compile_c(code, &exe, opt).unwrap();
                     let out = Command::new(&exe)
-                        .env("FWP_GC", "off")
-                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_ALLOC_STATS", "0")
                         .env("FWP_GC_STRESS", "0")
                         .env("FWP_GC_VERIFY", "0")
                         .env("FWP_REUSE_VERIFY", "0")
@@ -415,8 +416,7 @@ main = (10000, 0) | loop step | echo
             fwp::cgen::compile_c(&code, &exe, "-O1").unwrap();
             let out = checked(
                 Command::new(&exe)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STATS", "1")
+                    .env("FWP_ALLOC_STATS", "1")
                     .env("FWP_GC_STRESS", "0")
                     .env("FWP_GC_VERIFY", "0")
                     .env("FWP_REUSE_VERIFY", "0"),
@@ -430,17 +430,12 @@ main = (10000, 0) | loop step | echo
             );
             assert_eq!(out.stdout, reference.stdout);
             let stats = String::from_utf8_lossy(&out.stderr);
-            assert!(stats.contains("fwp gc: 0 collections"), "{stats}");
+
             freed.push(
-                stats
-                    .split(" MiB freed by counts")
-                    .next()
-                    .unwrap()
-                    .rsplit('(')
-                    .next()
-                    .unwrap()
-                    .parse::<f64>()
-                    .unwrap(),
+                allocation_report::parse(&stats)
+                    .expect("allocation report")
+                    .released as f64
+                    / 1_048_576.0,
             );
         }
         assert!(freed[1] > freed[0] + 0.2, "{freed:?}");

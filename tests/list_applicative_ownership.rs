@@ -53,7 +53,7 @@ fn cartesian_results_and_scratch_release_on_trap_and_cancel() {
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&input)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -248,7 +248,7 @@ main = [
             checked(
                 Command::new(env!("CARGO_BIN_EXE_fwp"))
                     .env_remove("FWP_NO_OPT")
-                    .args(["build", "--gc", "tracing"])
+                    .args(["build"])
                     .arg(&input)
                     .args(["--emit-c", "-o"])
                     .arg(&cfile),
@@ -304,7 +304,7 @@ fn closure_drop_context_recovers_after_capture_trap_and_spill_oom() {
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&input)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -393,7 +393,7 @@ fn inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries() 
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&input)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -402,7 +402,7 @@ fn inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries() 
     assert!(original.contains("#define FWP_UNWIND 1"));
     assert!(original.contains("static int g_apply_user("));
     let scan = "    uintptr_t a = ((uintptr_t)lo + 7) & ~(uintptr_t)7;";
-    let declaration = "__attribute__((no_sanitize_address)) static void fwp_gc_scan(";
+    let declaration = "__attribute__((no_sanitize_address)) static void fwp_heap_scan(";
     assert_eq!(original.matches(scan).count(), 1);
     assert_eq!(original.matches(declaration).count(), 1);
     let runtime = original
@@ -532,7 +532,7 @@ main = [
         checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
                 .env_remove("FWP_NO_OPT")
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&input)
                 .args(["--emit-c", "-o"])
                 .arg(&cfile),

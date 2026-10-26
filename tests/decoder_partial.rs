@@ -25,7 +25,7 @@ main = "{\"name\":\"owned\",\"items\":[\"one\",\"two\"],\"packed\":[\"a\",\"b\"]
     let cfile = dir.join("decode.c");
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "arc", "--emit-c"])
+            .args(["build", "--emit-c"])
             .arg(&input)
             .arg("-o")
             .arg(&cfile),
@@ -46,21 +46,21 @@ int main(void) {{
     /* Preserve exact test output bytes on native Windows too. */
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
     V text=fwp_cstr("{{\"name\":\"owned\",\"items\":[\"one\",\"two\"],\"packed\":[\"a\",\"b\"],\"keys\":[\"b\",\"a\",\"b\"],\"sign\":0}}");
     V invalid=fwp_cstr("{{\"name\":\"owned\",\"items\":[\"one\",3],\"packed\":[\"a\",\"b\"],\"keys\":[\"b\",\"a\",\"b\"],\"sign\":0}}");
-    intptr_t budget=fwp_gc.budget;
+    size_t live_bytes=fwp_heap.live;
     jmp_buf trap; fwp_trap_jb=&trap; fwp_trap_cleanup=0; fwp_trap_recover=decode_recover;
     decode_probe_at=0; decode_probe_step=0;
     V result=fwp_p_json_read(text,{descriptor});
     ({descriptor})->drop(result);
     int points=decode_probe_step;
-    if(points<3 || fwp_cleanups || fwp_gc.budget!=budget || decode_scratch_live) return 190;
+    if(points<3 || fwp_cleanups || fwp_heap.live!=live_bytes || decode_scratch_live) return 190;
     for(decode_probe_at=1;decode_probe_at<=points;decode_probe_at++) {{
         decode_probe_step=0;
         if(!setjmp(trap)) {{ (void)fwp_p_json_read(text,{descriptor}); return 191; }}
         if(strcmp(fwp_trap_msg,"decoder construction control")) return 192;
-        if(fwp_cleanups || fwp_gc.budget!=budget || decode_scratch_live) {{ fprintf(stderr,"point=%d charge=%lld scratch=%zu cleanups=%p\n",decode_probe_at,(long long)(budget-fwp_gc.budget),decode_scratch_live,(void*)fwp_cleanups); return 193; }}
+        if(fwp_cleanups || fwp_heap.live!=live_bytes || decode_scratch_live) {{ fprintf(stderr,"point=%d charge=%lld scratch=%zu cleanups=%p\n",decode_probe_at,(long long)(fwp_heap.live - live_bytes),decode_scratch_live,(void*)fwp_cleanups); return 193; }}
     }}
     decode_probe_at=0;
     result=fwp_p_json_read(text,{descriptor});
@@ -73,24 +73,24 @@ int main(void) {{
     fwp_buf roundtrip={{0}}; fwp_encode(&roundtrip,parsed,row); row->drop(parsed);
     if(roundtrip.len!=wire.len || memcmp(roundtrip.d,wire.d,wire.len)) return 201;
     free(roundtrip.d); free(rendered.d);
-    if(fwp_cleanups || fwp_gc.budget!=budget) return 197;
+    if(fwp_cleanups || fwp_heap.live!=live_bytes) return 197;
     for(size_t n=0;n<=wire.len;n++) {{
         fwp_rd reader={{(const unsigned char *)wire.d,n,0}}; V value=0;
         int ok=fwp_decode(&reader,row,&value);
         if(ok!=(n==wire.len)) return 196;
         if(ok) row->drop(value);
-        if(fwp_cleanups || fwp_gc.budget!=budget) return 197;
+        if(fwp_cleanups || fwp_heap.live!=live_bytes) return 197;
     }}
     if(row->fields[row->n-1]->kind!=K_TRIT) return 198;
     wire.d[wire.len-1]=2;
     fwp_rd malformed={{(const unsigned char *)wire.d,wire.len,0}}; V rejected=0;
     if(fwp_decode(&malformed,row,&rejected)) return 199;
-    if(fwp_cleanups || fwp_gc.budget!=budget) return 197;
+    if(fwp_cleanups || fwp_heap.live!=live_bytes) return 197;
     free(wire.d);
     result=fwp_p_json_read(invalid,{descriptor});
     if(fwp_tag(result)!=1) return 194;
     ({descriptor})->drop(result);
-    if(fwp_cleanups || fwp_gc.budget!=budget || fwp_gc.ncollect || decode_scratch_live) return 195;
+    if(fwp_cleanups || fwp_heap.live!=live_bytes || fwp_heap.ncollect || decode_scratch_live) return 195;
     puts("partial decoder cleanup verified"); return 0;
 }}
 "#

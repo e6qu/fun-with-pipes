@@ -21,7 +21,7 @@ for name in ['loop', 'pipeline', 'map', 'http-client', 'http-server']:
         binary = directory / f'{name}-{variant}.exe'
         symbols = subprocess.check_output([str(llvm / 'llvm-nm'), str(binary)], text=True)
         assert not any(symbol in symbols for symbol in
-                       ['fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'])
+                       ['fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'])
         sections = subprocess.check_output(
             [str(llvm / 'llvm-size'), '--format=sysv', str(binary)], text=True)
         text_bytes = int(re.search(r'^\.text\s+(\d+)', sections, re.M).group(1))

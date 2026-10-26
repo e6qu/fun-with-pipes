@@ -88,11 +88,11 @@ main = [task.yield (),
 static volatile V first, last, scalar_word;
 static jmp_buf overflow;
 static int recover_overflow(void) { return 1; }
-static gc_rc_wide *wide(V v) { return *fwp_rc_wide_link(fwp_rc_slot(v)); }
+static heap_rc_wide *wide(V v) { return *fwp_rc_wide_link(fwp_rc_slot(v)); }
 static V counted(const char *s) { V v=fwp_rc_fresh(fwp_str_new(s,5));for(int i=1;i<255;i++)fwp_rc_dup(v);return v; }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
-    intptr_t baseline=fwp_gc.budget;
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+    size_t baseline=fwp_heap.live;
     for (volatile int round=0;round<32;round++) {
     for (volatile int mode=0;mode<2;mode++) {
         first=counted("first");last=counted("other");scalar_word=fwp_rc_fresh(fwp_str_new("scalar bits",11));
@@ -107,7 +107,7 @@ int main(void) {
         /* Discard the artificial counts, including their wide-count entries. */
         fwp_rc_fresh(first);fwp_rc_fresh(last);
         fwp_rc_free_obj(first);fwp_rc_free_obj(last);fwp_rc_free_obj(scalar_word);
-        if (fwp_gc.rc_wide_len) return 90;
+        if (fwp_heap.rc_wide_len) return 90;
     }
     first=counted("input");wide(first)->count=SIZE_MAX;
     fwp_trap_recover=recover_overflow;fwp_trap_jb=&overflow;fwp_trap_cleanup=0;
@@ -115,9 +115,9 @@ int main(void) {
     fwp_trap_recover=0;fwp_trap_jb=0;
     if (fwp_cleanups || wide(first)->count!=SIZE_MAX-1 || STR(first)->len!=5) return 7;
     fwp_rc_fresh(first);fwp_rc_free_obj(first);
-    if (fwp_gc.rc_wide_len) return 90;
+    if (fwp_heap.rc_wide_len) return 90;
 #ifdef FWP_ARC_ONLY
-    if (fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
+    if (fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 90;
 #endif
     }
     puts("wide-count overflow releases exact partial retains and caller owners");return 0;

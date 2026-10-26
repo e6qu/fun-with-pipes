@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn streamed_error_rendering_releases_partial_and_complete_scratch() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -61,7 +57,7 @@ static int observed_decode(uintptr_t *out,char **why){*out=42;*why=0;return G_DE
 static int recover(void){return 1;}
 static jmp_buf failed;
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();
  g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1, "", "local",&srv);
  const fwp_desc descriptor={.kind=K_I64,.name="I64"};
  for(stage=0;stage<2;stage++){

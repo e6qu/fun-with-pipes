@@ -23,48 +23,35 @@ unique buffers and general regions remain planned. APIs may change.
 
 ## Existing implementation
 
-**Supported native programs run without tracing by default. The collector has
-not been deleted, and ordinary ARC is not the desired final ownership model.**
+The collector-deletion work has one native ownership policy: prove lifetimes
+before generation, transfer or borrow existing owners where possible, and count
+remaining shared owners. Unsupported relationships are compile errors. There
+is no command-line memory-policy selector. `--memory static` chooses a bounded
+storage pool; it does not make every allocation a stack value.
 
-| Execution setting | Current behavior | Limit |
-|---|---|---|
-| Native default, or explicit `--gc arc` | Checks ownership before generation; excludes tracing code | Rejects unproved lifetimes; still has heap objects, count metadata and count operations |
-| Explicit `--gc tracing` | Uses proved counted owners and tracing for remaining graphs | Retains collector code and its costs; this mode is scheduled for removal |
-| `FWP_GC=off` in a tracing build | Disables collection as an experimental control | Does not establish complete cleanup or bounded retention |
-| `--memory static` | Uses a bounded memory pool | Does not mean every value has a compile-time lifetime or lives on the stack |
+**Verification is incomplete.** The deletion source removes tracing code and
+selection, but the integrated compiler, replacement tests and actual binaries
+still need verification. [The handoff](development-state.md) records current
+checks. The latest delivered platform evidence is #215, before deletion: Linux,
+macOS and Windows, each on ARM64 and AMD64. Node-hosted browser-loader checks do
+not establish support in every browser engine.
 
-The interpreter uses Rust-owned values and scheduled task lifetimes; the native
-`--gc` choice describes generated execution. Neither disabling the collector nor
-leaving unreachable objects allocated counts as GC removal.
-
-Checked ARC already covers native executables, supported commands, HTTP/gRPC
-services, native library boundaries and the declared WebAssembly subset. It does
-not prove arbitrary foreign code obeys its contract or remove a JavaScript host's
-own collector. Native support has delivery evidence for Linux, macOS and Windows,
-each on ARM64 and AMD64; browser-loader evidence under Node is not evidence for
-every browser engine.
-
-The allocator in an ARC build omits unused tracing marks and age checks. It also
-excludes poisoned-storage diagnostics that would retain released memory. The
-[allocator report](measurements/arc-metadata.md) records layout and reclamation
-checks. Count slots, allocator size classes, destructors and uniqueness tests can
-still cost space or time.
+The interpreter uses Rust-owned values and scheduled task lifetimes. Native ARC
+still has count slots, allocator size classes, cleanup functions and uniqueness
+checks. Neither engine can prove arbitrary foreign code obeys its contract or
+remove a JavaScript host's collector.
 
 ### What remains
 
-The [entry and rejection checklist](ownership-admission.md) names supported
-execution forms, their tests and the remaining lifetime decisions.
+- Finish G5's collector-free tests, reports and six-target verification, including
+  binaries that contain no root discovery, marking or sweeping. Preserve the
+  independent [ownership diagnostics](ownership-diagnostics.md).
+- Enforce the compiler analysis budgets in G2 as proof precision changes.
+- Use A2–A6 to remove measured count traffic and boxes, then give a proved unique
+  buffer and one scoped workspace their own storage paths. A program with zero
+  retains may still allocate or check a count during destruction.
 
-- Apply the agreed lifetime rules to interpreter entries, move the remaining
-  ordinary memory comparisons to ARC, then remove tracing selection, root
-  scanning, marking and sweeping. Preserve the verified [ownership checks](ownership-diagnostics.md).
-- Measure analysis scaling before increasing proof precision (G2).
-- Remove avoidable counts and boxes from named unshared paths (A2–A6). A
-  zero-retain fixture may still allocate or check a count during destruction.
-  Count-free unique heap storage is separate planned work.
-
-[PLAN.md](../PLAN.md) gives concrete tasks and acceptance criteria. Weak channels
-and retained C callbacks were verified in #215; collector deletion is unfinished.
+[PLAN.md](../PLAN.md) defines the fixtures and completion evidence.
 
 ## Stable language behavior
 

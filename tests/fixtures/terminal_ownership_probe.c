@@ -18,7 +18,7 @@ static V terminal_test_read(void) {
     return FWP_NONE;
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
 #ifdef _WIN32
     FreeConsole();
     if (!AllocConsole()) return 248;

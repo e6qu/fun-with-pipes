@@ -177,8 +177,8 @@ main = [
                 1
             );
             code = format!("{runtime}{}", main
-                .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t foreign_budget=fwp_gc.budget_given;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_foreign_callbacks || fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < foreign_budget) { fprintf(stderr,\"foreign bytes left: %ld\\n\",(long)(foreign_budget-fwp_gc.budget)); exit(193); }\n"));
+                .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    size_t foreign_live_bytes=0;\n")
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_foreign_callbacks || fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > foreign_live_bytes) { fprintf(stderr,\"foreign bytes left: %ld\\n\",(long)(fwp_heap.live - foreign_live_bytes)); exit(193); }\n"));
         }
         for opt in ["-O1", "-O2"] {
             let binary = dir.join(format!("{gc}{opt}.exe"));
@@ -304,7 +304,7 @@ test "after" = True
         let marker = "    /* Ownership observation point: before runtime teardown. */";
         assert_eq!(code.matches(marker).count(), 1);
         let check = if arc {
-            "if(fwp_foreign_callbacks || fwp_gc.budget < fwp_gc.budget_given) exit(197);"
+            "if(fwp_foreign_callbacks || fwp_heap.live > 0) exit(197);"
         } else {
             "if(fwp_foreign_callbacks) exit(197);"
         };

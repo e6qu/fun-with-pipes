@@ -153,7 +153,7 @@ def main():
         assert int.from_bytes(raw_header[18:20], 'little') == expected_machine
         if label.endswith('-arc'):
             assert not any(name in symbols for name in
-                           (b'fwp_gc_scan', b'fwp_gc_mark_all', b'fwp_gc_sweep'))
+                           (b'fwp_heap_scan', b'fwp_heap_mark_all', b'fwp_heap_sweep'))
         (out / (label + '.asm')).write_bytes(asm)
         (out / (label + '.symbols')).write_bytes(symbols)
         evidence[label] = dict(sha256=digest(binary), bytes=binary.stat().st_size,

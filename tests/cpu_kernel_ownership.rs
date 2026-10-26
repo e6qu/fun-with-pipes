@@ -65,11 +65,11 @@ fn cpu_kernel_results_preserve_values_aliases_and_release_storage() {
             let body = code[start..end]
                 .replace(
                     "    fwp_init_consts();\n",
-                    "    fwp_init_consts();\n    intptr_t cpu_kernel_budget=fwp_gc.budget;\n",
+                    "    fwp_init_consts();\n    size_t cpu_kernel_live_bytes=fwp_heap.live;\n",
                 )
                 .replace(
                     "    /* Ownership observation point: before runtime teardown. */\n",
-                    "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.budget!=cpu_kernel_budget) exit(248);\n",
+                    "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live!=cpu_kernel_live_bytes) exit(248);\n",
                 );
             let mut measured = code.clone();
             measured.replace_range(start..end, &body);
@@ -99,8 +99,8 @@ fn probe_code(code: String) -> String {
             " kernel_allocation();",
         ),
         (
-            "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
-            " if(leaf!=0) kernel_allocation();",
+            "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+            " if(kind!=0) kernel_allocation();",
         ),
     ] {
         assert_eq!(code.matches(needle).count(), 1);

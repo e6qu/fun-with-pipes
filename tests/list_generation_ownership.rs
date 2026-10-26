@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/allocation_report.rs"]
+mod allocation_report;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -70,7 +73,7 @@ main = [
             let exe = dir.0.join(format!("aliases{opt}-{stack}"));
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", "tracing"])
+                    .args(["build"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe)
@@ -94,7 +97,7 @@ main = [
         let exe = dir.0.join(flag);
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args(["-O1", "-o"])
                 .arg(&exe)
@@ -140,7 +143,7 @@ main = (10000, 0) | loop step | echo
     let emitted = dir.0.join("loop.c");
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&emitted)
@@ -174,23 +177,17 @@ main = (10000, 0) | loop step | echo
         fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
         let out = checked(
             Command::new(&exe)
-                .env("FWP_GC", "off")
-                .env("FWP_GC_STATS", "1")
+                .env("FWP_ALLOC_STATS", "1")
                 .env("FWP_REUSE_VERIFY", "0"),
         );
         assert_eq!(out.stdout, reference.stdout);
         let stats = String::from_utf8_lossy(&out.stderr);
-        assert!(stats.contains("fwp gc: 0 collections"), "{stats}");
+
         freed.push(
-            stats
-                .split(" MiB freed by counts")
-                .next()
-                .unwrap()
-                .rsplit('(')
-                .next()
-                .unwrap()
-                .parse::<f64>()
-                .unwrap(),
+            allocation_report::parse(&stats)
+                .expect("allocation report")
+                .released as f64
+                / 1_048_576.0,
         );
     }
     eprintln!("generated list graph MiB freed by counts: {freed:?}");
@@ -209,7 +206,7 @@ fn scalar_list_generation_does_not_count_address_shaped_bits() {
     .unwrap();
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -220,7 +217,7 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     V bits = fwp_rc_fresh(fwp_cstr("numeric bits"));
     V repeated = REPEAT_WRAPPER(601, bits);
     V numbers = RANGE_WRAPPER(bits, bits + 1);

@@ -21,9 +21,9 @@ static void nested_free(void *pointer) {
 int main(int argc, char **argv) {
     if (argc != 2) return 190;
     nested_mode = atoi(argv[1]);
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_fns = fwp_fn_table; fwp_init_consts(); fwp_tasks_init();
-    intptr_t budget = fwp_gc.budget;
+    size_t live_bytes = fwp_heap.live;
     fwp_task *saved = fwp_cur;
     fwp_trap_recover = nested_recover;
     fwp_trap_jb = &nested_recovered; fwp_trap_cleanup = NULL;
@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     if (!nested_expected_frees || nested_actual_frees != nested_expected_frees) return 195;
     if (nested_mode && !nested_hit) return 196;
 #if FWP_ARC_ONLY
-    if (fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget < budget) return 197;
+    if (fwp_heap.enabled || fwp_heap.ncollect || fwp_heap.live > live_bytes) return 197;
 #endif
     puts("managed tapes release on callback failure and cancellation");
     return 0;

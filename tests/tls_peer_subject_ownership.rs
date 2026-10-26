@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn peer_subject_failures_and_copy_traps_release_temporary_owners() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![
@@ -104,7 +100,7 @@ static int probe(int argc,char **argv){
  V peer=fwp_sock_new(-1,1);STREAM(peer)->tls=server;if(fwp_p_tls_peer_subject(peer)!=FWP_NONE)return 42;STREAM(peer)->tls=0;
  for(stage=0;stage<=6;stage++){
   cert_gets=cert_frees=bio_gets=bio_frees=buffer_frees=0;buffer=0;armed=1;
-  intptr_t budget=fwp_gc.budget;
+  size_t live_bytes=fwp_heap.live;
   if(stage>=5){fwp_trap_recover=recover;fwp_trap_jb=&failure;fwp_trap_cleanup=fwp_cleanups;
    if(!setjmp(failure)){(void)fwp_p_tls_peer_subject(conn);return 38;}fwp_trap_recover=0;fwp_trap_jb=0;
   }else{
@@ -116,7 +112,7 @@ static int probe(int argc,char **argv){
   if(bio_gets!=(stage==2?0:1)||bio_frees!=bio_gets)return 2;
   if(buffer_frees!=(stage==0||stage>=5?1:0))return 3;
   if(fwp_cleanups||ERR_peek_error())return 4;
-  if(stage==6&&!fwp_reuse_verify&&fwp_gc.budget<budget)return 44;
+  if(stage==6&&!fwp_reuse_verify&&fwp_heap.live > live_bytes)return 44;
   armed=0;
  }
  stage=0;char *retry=fwp_tls_peer_subject(client);if(!retry||strcmp(retry,"CN=localhost,O=fwp"))return 43;free(retry);

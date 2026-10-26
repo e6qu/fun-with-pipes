@@ -16,7 +16,7 @@ usage:
   fwp build <file.fwp> [-o out] [--fn name|--cli|--rest] [--emit-c] [-O0|-O1|-O2|-O3]
             [--target native|<arch>-linux|wasm32-wasi|wasm32-browser] [--fat]
             [--static] [--pgo [--pgo-input file] [-- training args...]]
-            [--gc arc|tracing] [--memory static [--heap S] [--pool S] [--stack S]
+            [--memory static [--heap S] [--pool S] [--stack S]
                              [--tasks N] [--task-stack S] [--threads N]]
             [--wasm-async jspi|asyncify]
             [--staticlib|--cdylib] [--link lib-or-source]...
@@ -112,9 +112,6 @@ through C, cached by content in `fwp cache dir` (FWP_CACHE_DIR; at most
 FWP_CACHE_MAX, default 256); -O0..-O3 before the file sets the C
 optimization level (default -O2, -O1 for tests). --interp (or
 FWP_RUN=interp) runs the interpreter instead. A missing C compiler is an error.
---gc arc|tracing before the file selects native ownership for run, exec,
-test and serve; pipe accepts it before its stages. Checked ARC is the default.
-Rejected ownership is an error; execution never switches to tracing automatically.
   fwp cache dir | clean          print or empty the cache of executables
 ";
 
@@ -142,7 +139,7 @@ fn host_unsupported(cmd: &str, prog: &fwp::ir::Program) -> Option<i32> {
     Some(1)
 }
 
-/// Take execution, ownership and optimization options before the program file.
+/// Take execution and optimization options before the program file.
 fn take_run_options(
     cmd: &str,
     args: &mut Vec<String>,
@@ -161,23 +158,6 @@ fn take_run_options(
                 )));
             }
             let native = fwp::aot::wants_native(m);
-            match fwp::aot::take_gc(args) {
-                Ok(Some(arc)) => {
-                    if !native {
-                        eprintln!("fwp {cmd}: --gc selects native ownership; it requires native execution");
-                        return Err(ExitCode::from(2));
-                    }
-                    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-                        arc,
-                        ..Default::default()
-                    });
-                }
-                Ok(None) => {}
-                Err(error) => {
-                    eprintln!("fwp {cmd}: {error}");
-                    return Err(ExitCode::from(2));
-                }
-            }
             Ok((native, fwp::aot::take_opt(args, opt)))
         }
         Err(e) => {
@@ -440,7 +420,7 @@ fn test(args: &[String]) -> ExitCode {
         .any(|a| a.starts_with('-') && a != "--std" && a != "-")
         || args.iter().filter(|a| *a != "--std").count() > 1
     {
-        eprintln!("fwp test: put --gc and optimization options before the single test file");
+        eprintln!("fwp test: put optimization options before the single test file");
         return ExitCode::from(2);
     }
     let path = args.iter().find(|a| !a.starts_with("--")).cloned();
@@ -511,8 +491,6 @@ fn build(args: &[String]) -> ExitCode {
     let mut memory: Option<fwp::cgen::StaticMemory> = None;
     let mut sizes: Vec<(String, String)> = Vec::new();
     let mut static_link = false;
-    let mut arc = true;
-    let mut ownership_selected = false;
     let mut cross: Option<String> = None;
     let mut pgo = false;
     let mut pgo_input: Option<String> = None;
@@ -524,28 +502,6 @@ fn build(args: &[String]) -> ExitCode {
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
-            option if option == "--gc" || option.starts_with("--gc=") => {
-                if ownership_selected {
-                    eprintln!("fwp build: choose --gc once: arc or tracing");
-                    return ExitCode::from(2);
-                }
-                ownership_selected = true;
-                let value = match args[i].split_once('=') {
-                    Some((_, value)) => Some(value.to_string()),
-                    None => {
-                        i += 1;
-                        args.get(i).cloned()
-                    }
-                };
-                arc = match value.as_deref() {
-                    Some("arc") => true,
-                    Some("tracing") => false,
-                    _ => {
-                        eprintln!("fwp build: --gc requires arc or tracing");
-                        return ExitCode::from(2);
-                    }
-                };
-            }
             "--static" => static_link = true,
             "--pgo" => pgo = true,
             "--pgo-input" => {
@@ -759,8 +715,8 @@ fn build(args: &[String]) -> ExitCode {
         eprintln!("fwp build: --static is unavailable on macOS; use ordinary native linking or a Linux cross target");
         return ExitCode::from(2);
     }
-    if !callbacks.is_empty() && (lib.is_none() || !arc) {
-        eprintln!("fwp build: --c-callback requires --staticlib/--cdylib and --gc arc");
+    if !callbacks.is_empty() && lib.is_none() {
+        eprintln!("fwp build: --c-callback requires --staticlib/--cdylib");
         return ExitCode::from(2);
     }
     if lib.is_some() && target.is_wasm() {
@@ -768,7 +724,6 @@ fn build(args: &[String]) -> ExitCode {
         return ExitCode::from(2);
     }
     fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc,
         static_link,
         pgo: None,
         cross,
@@ -948,7 +903,6 @@ fn build(args: &[String]) -> ExitCode {
                 &out,
                 &opt,
                 static_link,
-                arc,
                 &pgo_args,
                 pgo_input.as_deref(),
             )
@@ -980,7 +934,6 @@ fn pgo_build(
     out: &std::path::Path,
     opt: &str,
     static_link: bool,
-    arc: bool,
     args: &[String],
     input: Option<&str>,
 ) -> Result<(), String> {
@@ -990,7 +943,6 @@ fn pgo_build(
         let set = |phase| {
             fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
                 static_link,
-                arc,
                 pgo: Some((phase, dir.clone())),
                 cross: None,
             })
@@ -1491,10 +1443,8 @@ fn pipe(args: &[String]) -> ExitCode {
     // look like them
     let mut lead = 0;
     while let Some(option) = args.get(lead) {
-        if option == "--interp" || option == "--native" || option.starts_with("--gc=") {
+        if option == "--interp" || option == "--native" {
             lead += 1;
-        } else if option == "--gc" {
-            lead = (lead + 2).min(args.len());
         } else {
             break;
         }
@@ -1508,20 +1458,9 @@ fn pipe(args: &[String]) -> ExitCode {
             return ExitCode::from(2);
         }
     };
-    let arc = match fwp::aot::take_gc(&mut mode_args) {
-        Ok(Some(_)) if interp => {
-            eprintln!("fwp pipe: --gc selects native ownership; it requires native execution");
-            return ExitCode::from(2);
-        }
-        Ok(mode) => mode,
-        Err(error) => {
-            eprintln!("fwp pipe: {error}");
-            return ExitCode::from(2);
-        }
-    };
     let spec = args.join(" ");
     let exe = std::env::current_exe().unwrap_or_else(|_| "fwp".into());
-    match fwp::exec::run_pipeline(&exe, &spec, interp, arc) {
+    match fwp::exec::run_pipeline(&exe, &spec, interp) {
         Ok(code) => ExitCode::from((code & 0xff) as u8),
         Err(e) => {
             eprintln!("fwp pipe: {}", e);

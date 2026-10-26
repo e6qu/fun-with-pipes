@@ -46,7 +46,7 @@ for profile in [False,True]:
  for (case,language),source in sources.items():
   if profile:
    changes={
-    'static inline void *fwp_gc_alloc(size_t n, int leaf) {':'static inline void *fwp_gc_alloc(size_t n, int leaf) {\nif(leaf!=0){bench_calls++;bench_bytes+=n;}',
+    'static inline void *fwp_heap_alloc(size_t n, int kind) {':'static inline void *fwp_heap_alloc(size_t n, int kind) {\nif(kind!=0){bench_calls++;bench_bytes+=n;}',
     'static inline void *fwp_alloc_init(size_t n) {':'static inline void *fwp_alloc_init(size_t n) {\nbench_calls++;bench_bytes+=n;',
     'static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {':'static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {\n        bench_retains++;',
     'static inline void fwp_rc_drop_slot(uint8_t *slot) {':'static inline void fwp_rc_drop_slot(uint8_t *slot) {\nbench_nonlast_releases++;',
@@ -61,7 +61,7 @@ for profile in [False,True]:
    disassembly=['otool','-tvV',str(binary)] if platform.system()=='Darwin' else ['objdump','-d',str(binary)]
    assembly=run(disassembly).stdout
    if language=='fwp-arc':
-    symbols=run(['nm',str(binary)]).stdout;assert not any(name in symbols for name in ['fwp_gc_scan','fwp_gc_mark_all','fwp_gc_sweep'])
+    symbols=run(['nm',str(binary)]).stdout;assert not any(name in symbols for name in ['fwp_heap_scan','fwp_heap_mark_all','fwp_heap_sweep'])
    (out/(stem+'-timing.asm')).write_text(assembly);commands.append(disassembly)
  for case in ['array','matrix']:
   languages=['c','rust','fwp','fwp-arc']

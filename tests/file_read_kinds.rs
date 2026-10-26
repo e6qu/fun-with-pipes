@@ -50,7 +50,7 @@ main = [
         let exe = dir.join("probe");
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),

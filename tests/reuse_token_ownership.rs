@@ -91,9 +91,9 @@ static V token_entry(V *args) {
 #ifndef FWP_ARC_ONLY
     if (force_old) {
         if (OBJ(input_cell)->f[0]) abort(); /* dead fields were cleared */
-        fwp_gc.major_next = 1;
-        fwp_gc_collect();
-        if (!fwp_gc_marked((void *)(uintptr_t)input_cell)) abort();
+        fwp_heap.major_next = 1;
+        fwp_heap_collect();
+        if (!fwp_heap_marked((void *)(uintptr_t)input_cell)) abort();
     }
 #else
     if (OBJ(input_cell)->f[0] || *fwp_rc_slot(input_cell) != 1) abort();
@@ -114,10 +114,10 @@ int main(void) {
 #ifdef _WIN32
     _setmode(_fileno(stdout), _O_BINARY);
 #endif
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_init_consts();
     fwp_fns = token_fns;
-    intptr_t baseline = fwp_gc.budget;
+    size_t baseline = fwp_heap.live;
     for (int round = 0; round < 32; round++) {
     input_cell = fwp_rc_fresh(fwp_data(1, 1, (V[]){0}));
     fwp_handler h;
@@ -148,15 +148,15 @@ int main(void) {
     fwp_rc_free_obj(result);
 #endif
     input_cell = fwp_rc_fresh(fwp_data(1, 1, (V[]){(V)(int64_t)-2}));
-    double before = fwp_gc.freed;
+    double before = fwp_heap.freed;
     result = BUILD(PTR(&token_fn), input_cell); /* Empty: constructor never takes the cell */
     if (result || !released(input_cell) || fwp_cleanups) return 9;
 #ifdef FWP_ARC_ONLY
-    if (fwp_gc.freed <= before) return 10;
-    if (fwp_gc.budget != baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
+    if (fwp_heap.freed <= before) return 10;
+    if (fwp_heap.live != baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 90;
     owner_ledger_finish();
 #else
-    if (!fwp_reuse_verify && fwp_gc.freed <= before) return 10;
+    if (!fwp_reuse_verify && fwp_heap.freed <= before) return 10;
 #endif
     }
     puts("compiler token owners release and transfer exactly once");
@@ -327,7 +327,7 @@ fn bump_allocator_still_compiles_token_cleanup() {
     );
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile)

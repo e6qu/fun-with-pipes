@@ -103,8 +103,8 @@ fn vector_results_preserve_lanes_aliases_and_checked_failures() {
                         .find("static void *fwp_main_thread(void *arg) {")
                         .unwrap();
                     let end = start + code[start..].find("\n}\n").unwrap() + 3;
-                    let body=code[start..end].replace("    fwp_init_consts();\n","    fwp_init_consts();\n    intptr_t vector_budget=fwp_gc.budget;\n")
-                        .replace("    /* Ownership observation point: before runtime teardown. */\n","    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.budget!=vector_budget) exit(248);\n");
+                    let body=code[start..end].replace("    fwp_init_consts();\n","    fwp_init_consts();\n    size_t vector_live_bytes=fwp_heap.live;\n")
+                        .replace("    /* Ownership observation point: before runtime teardown. */\n","    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live!=vector_live_bytes) exit(248);\n");
                     let mut measured = code.clone();
                     measured.replace_range(start..end, &body);
                     fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
@@ -219,8 +219,8 @@ fn f64_lane_pipelines_fuse_without_reordering_effects_or_traps() {
                         "if(lane_count_active) lane_requests++;",
                     ),
                     (
-                        "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
-                        "if(lane_count_active && leaf!=0) lane_requests++;",
+                        "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+                        "if(lane_count_active && kind!=0) lane_requests++;",
                     ),
                 ] {
                     assert!(code.contains(marker));

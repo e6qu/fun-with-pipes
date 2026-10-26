@@ -41,7 +41,7 @@ fn copied_library_values_match_interpreter_and_reclaim_storage() {
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env("FWP_STACK", "0")
-            .args(["build", "--gc", "arc", "--staticlib", "--emit-c"])
+            .args(["build", "--staticlib", "--emit-c"])
             .arg(&input)
             .arg("-o")
             .arg(&cfile),
@@ -52,7 +52,7 @@ fn copied_library_values_match_interpreter_and_reclaim_storage() {
         .contains("void fwp_release_twin(struct fwp_c_Words result);"));
     let header = std::fs::read_to_string(cfile.with_extension("h")).unwrap();
     assert!(source.contains("#define FWP_ARC_ONLY 1"));
-    let needle = "    fwp_tape_finish();\n    fwp_gc_finish();";
+    let needle = "    fwp_tape_finish();\n    fwp_heap_finish();";
     assert_eq!(source.matches(needle).count(), 1);
     let box_entry = "static V fwp_data(uint32_t tag, uint32_t n, const V *f) {";
     assert_eq!(source.matches(box_entry).count(), 1);
@@ -61,7 +61,7 @@ fn copied_library_values_match_interpreter_and_reclaim_storage() {
         "static unsigned long long fwp_library_test_retains, fwp_library_fail_value, fwp_library_test_boxes;\nstatic unsigned fwp_library_fail_seen;\nstatic void fwp_test_finished(void);\n{}\n{}",
         source.replace(
             needle,
-            "    fwp_tape_finish();\n    fwp_test_finished();\n    fwp_gc_finish();"
+            "    fwp_tape_finish();\n    fwp_test_finished();\n    fwp_heap_finish();"
         ).replace("static inline void fwp_rc_dup(V v) {", "static inline void fwp_rc_dup(V v) { fwp_library_test_retains++; if (fwp_library_fail_value && v == fwp_library_fail_value && ++fwp_library_fail_seen == 2) fwp_trap(\"second result retain failed\");"),
         include_str!("fixtures/arc_library_probe.c")
     );
@@ -135,7 +135,7 @@ fn copied_library_values_match_interpreter_and_reclaim_storage() {
                     "missing public result release {symbol}"
                 );
             }
-            for symbol in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+            for symbol in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                 assert!(
                     !symbols.contains(symbol),
                     "{symbol} retained in ARC library"

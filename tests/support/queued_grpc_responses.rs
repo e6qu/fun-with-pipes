@@ -137,11 +137,11 @@ fn compile(code: &str, label: &str, opt: &str, artifacts: &Path, arc: bool) -> P
     assert!(symbols.status.success(), "{}", render(&symbols));
     let text = String::from_utf8_lossy(&symbols.stdout);
     if arc {
-        for symbol in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+        for symbol in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
             assert!(!text.contains(symbol), "{label} retains {symbol}");
         }
     } else {
-        assert!(text.contains("fwp_gc_mark_all"), "{label} lacks tracing");
+        assert!(text.contains("fwp_heap_mark_all"), "{label} lacks tracing");
     }
     std::fs::write(artifacts.join(format!("{label}.nm")), symbols.stdout).unwrap();
     binary

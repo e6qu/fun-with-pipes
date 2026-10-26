@@ -190,12 +190,12 @@ void setup(uintptr_t *fds,int *observations,const char *path,const char *cert,co
         // Each omission must be detected by the actual loader host.
         for (needle, replacement, expected) in [
         (
-            "    fwp_gc_finalizer(h, fwp_file_final);",
+            "    fwp_heap_finalizer(h, fwp_file_final);",
             "    /* omit file ownership */",
             1,
         ),
         (
-            "    fwp_gc_finalizer(s, fwp_sock_final);",
+            "    fwp_heap_finalizer(s, fwp_sock_final);",
             "    /* omit socket ownership */",
             1,
         ),

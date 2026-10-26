@@ -73,11 +73,11 @@ fn copied_service_values_release_partial_results_and_preserve_aliases() {
                 "typedef uint64_t V;\nstatic void service_allocation(void);",
             );
         let init = "static inline void *fwp_alloc_init(size_t n) {";
-        let leaf = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+        let leaf = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
         assert!(code.contains(init) && code.contains(leaf));
         let code = code
             .replace(init, &format!("{init} service_allocation();"))
-            .replace(leaf, &format!("{leaf} if(leaf!=0) service_allocation();"));
+            .replace(leaf, &format!("{leaf} if(kind!=0) service_allocation();"));
         let code = code[..code.find("int main(").unwrap()].to_string()
             + &types
             + include_str!("fixtures/service_values_cleanup.c");
@@ -100,7 +100,7 @@ fn copied_service_values_release_partial_results_and_preserve_aliases() {
                     let symbols = if mode == "arc" {
                         let output = checked(Command::new("nm").arg(&binary));
                         let symbols = String::from_utf8(output.stdout).unwrap();
-                        for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                        for name in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                             assert!(!symbols.contains(name), "ARC executable contains {name}");
                         }
                         Some(symbols)
@@ -151,11 +151,11 @@ fn http2_request_and_body_copies_release_every_partial_result() {
         "typedef uint64_t V;\nstatic void service_allocation(void);",
     );
     let init = "static inline void *fwp_alloc_init(size_t n) {";
-    let leaf = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+    let leaf = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
     assert!(code.contains(init) && code.contains(leaf));
     let code = code
         .replace(init, &format!("{init} service_allocation();"))
-        .replace(leaf, &format!("{leaf} if(leaf!=0) service_allocation();"))
+        .replace(leaf, &format!("{leaf} if(kind!=0) service_allocation();"))
         + include_str!("fixtures/http2_values_cleanup.c");
     let broken = code.replace(
         "if (d && d->drop) d->drop(f->values[i]);",

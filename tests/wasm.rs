@@ -52,7 +52,7 @@ fn render(stdout: &[u8], stderr: &[u8], code: i32) -> String {
 
 fn build(path: &Path, target: &str, out: &Path) -> std::process::Output {
     Command::new(fwp())
-        .args(["build", "--gc", "tracing"])
+        .args(["build"])
         .arg(path.file_name().unwrap())
         .args(["--target", target, "-O1", "-o"])
         .arg(out)
@@ -179,7 +179,7 @@ fn positive_64_bit_counts_saturate_before_wasi_allocation_and_slice_bounds() {
           for reuse in if label=="chunks" { &["0","1"][..] } else { &["1"][..] } {
             let wasm = tmp.join(format!("{label}{}-{reuse}.wasm", &opt[1..]));
             let b = Command::new(fwp()).env_remove("FWP_NO_OPT").env("FWP_REUSE", reuse)
-                .args(["build", "--gc", "tracing", "--target", "wasm32-wasi", opt]).arg(&source).arg("-o").arg(&wasm).output().unwrap();
+                .args(["build", "--target", "wasm32-wasi", opt]).arg(&source).arg("-o").arg(&wasm).output().unwrap();
             assert!(b.status.success(), "{label} {opt}: {}", String::from_utf8_lossy(&b.stderr));
             assert_eq!(run_wasi(&wasm, &[]), expected, "{label} {opt}");
           }
@@ -330,7 +330,7 @@ fn command_line_program_under_wasi() {
     std::fs::create_dir_all(&tmp).unwrap();
     let wasm = tmp.join("features.wasm");
     let b = Command::new(fwp())
-        .args(["build", "--gc", "tracing"])
+        .args(["build"])
         .arg(&src)
         .args(["--cli", "--target", "wasm32-wasi", "-o"])
         .arg(&wasm)
@@ -418,7 +418,7 @@ fn tasks_with_asyncify() {
         let path = dir().join(format!("run/{}.fwp", name));
         let wasm = tmp.join(format!("{}.wasm", name));
         let b = Command::new(fwp())
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&path)
             .args([
                 "--target",
@@ -458,7 +458,7 @@ fn tasks_with_asyncify() {
     .unwrap();
     let wasm = tmp.join("many.wasm");
     let b = Command::new(fwp())
-        .args(["build", "--gc", "tracing"])
+        .args(["build"])
         .arg(&many)
         .args([
             "--target",
@@ -481,7 +481,7 @@ fn tasks_with_asyncify() {
     // a program without tasks needs no wasm-opt
     let plain = tmp.join("plain.wasm");
     let b = Command::new(fwp())
-        .args(["build", "--gc", "tracing"])
+        .args(["build"])
         .arg(dir().join("run/basics.fwp"))
         .args(["--target", "wasm32-wasi", "--wasm-async=asyncify", "-o"])
         .arg(&plain)
@@ -520,7 +520,7 @@ fn autodiff_capacity_bounds_precede_actual_wasm32_allocation() {
         for opt in ["-O1", "-O2"] {
             let wasm = tmp.join(format!("{label}{opt}.wasm"));
             let build = Command::new(fwp())
-                .args(["build", "--gc", "tracing", "--target", "wasm32-wasi", opt])
+                .args(["build", "--target", "wasm32-wasi", opt])
                 .arg(&source)
                 .arg("-o")
                 .arg(&wasm)
@@ -545,15 +545,7 @@ fn autodiff_capacity_bounds_precede_actual_wasm32_allocation() {
     let emitted = tmp.join("pairs.c");
     std::fs::write(&source, "main = echo \"pairs\"\n").unwrap();
     let output = Command::new(fwp())
-        .args([
-            "build",
-            "--gc",
-            "tracing",
-            "--target",
-            "wasm32-wasi",
-            "--emit-c",
-            "-o",
-        ])
+        .args(["build", "--target", "wasm32-wasi", "--emit-c", "-o"])
         .arg(&emitted)
         .arg(&source)
         .output()

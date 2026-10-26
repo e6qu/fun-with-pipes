@@ -35,7 +35,7 @@ def main():
     reference = run([compiler, 'run', '--interp', source], dict(environment, FWP_NO_OPT='1')).stdout
     assert reference == '[1.0, 2.0, 3.0]\n', reference
     cfile = out / 'prefix.c'
-    run([compiler, 'build', '--gc', 'arc', '--emit-c', '-o', cfile, source], environment)
+    run([compiler, 'build', '--emit-c', '-o', cfile, source], environment)
     original = cfile.read_text()
     marker = '    int64_t needed = active;'
     assert original.count(marker) == 1

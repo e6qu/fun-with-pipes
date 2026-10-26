@@ -54,7 +54,6 @@
     "ffi",
     "map_set_ownership",
     "system_snapshots",
-    "old_reclamation",
     "fat",
     "wide_counts",
     "retained_thunk_ownership",

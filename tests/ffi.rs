@@ -322,7 +322,7 @@ int main(void) {
         let library = temp.join(format!("libbits.{extension}"));
         let mut build = Command::new(fwp());
         build
-            .args(["build", "--gc", "tracing", kind])
+            .args(["build", kind])
             .arg(&source)
             .arg("-o")
             .arg(&library);

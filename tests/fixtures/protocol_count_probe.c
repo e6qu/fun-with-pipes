@@ -1,5 +1,5 @@
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     const fwp_desc unit={.kind=K_RECORD,.n=0};
     const fwp_desc *fields[]={&unit,&unit};
     const fwp_desc pair={.kind=K_RECORD,.n=2,.fields=fields};

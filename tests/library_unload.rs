@@ -56,8 +56,8 @@ fn loader_unload_drains_tasks_restores_signals_and_releases_regions() {
             continue;
         }
         let observed=generated
-        .replace("static void fwp_gc_init(void) {", "static char *test_reservation; static size_t test_reserved_bytes;\nstatic void fwp_gc_init(void) {")
-        .replace("char *r = (char *)fwp_gc_reserve(&bytes);", "char *r = (char *)fwp_gc_reserve(&bytes); test_reservation=r;test_reserved_bytes=bytes+GC_CHUNK;")
+        .replace("static void fwp_heap_init(void) {", "static char *test_reservation; static size_t test_reserved_bytes;\nstatic void fwp_heap_init(void) {")
+        .replace("char *r = (char *)fwp_heap_reserve(&bytes);", "char *r = (char *)fwp_heap_reserve(&bytes); test_reservation=r;test_reserved_bytes=bytes+HEAP_CHUNK;")
         .replace("    fwp_closure_drop_finish();\n", "    fwp_closure_drop_finish(); observe_finished();\n");
         let hooks = r#"
 static struct snapshot *observed;
@@ -78,7 +78,7 @@ static void observe_finished(void) {
  observed->finished++;
  if(observed->wide_freed!=1||observed->fins_freed!=1||observed->marks_freed!=1||
     observed->metrics_freed!=1||observed->name_freed!=1||observed->key_deleted!=1||
-    fwp_gc.ready||fwp_gc.reservation||fwp_closure_drop_key_ready)observed->order_error=1;
+    fwp_heap.ready||fwp_heap.reservation||fwp_closure_drop_key_ready)observed->order_error=1;
  if(observed->static_exit)puts(observed->order_error?"bad cleanup":"finished");
 }
 static void observe_free(void *p) {
@@ -104,7 +104,7 @@ static void finalize(void *p) {
  if(*(uint64_t *)p!=0x12345678)observed->order_error=1;
  if(observed->entered!=2||observed->completed!=1||observed->cancelled!=2)observed->order_error=1;
 #ifdef FWP_LIBRARY
- if(fwp_root||fwp_gc_tasks||fwp_stack_pool_n||fwp_caf_state0||fwp_lib_ready)observed->order_error=1;
+ if(fwp_root||fwp_tasks_active||fwp_stack_pool_n||fwp_caf_state0||fwp_lib_ready)observed->order_error=1;
 #ifdef FWP_LIBC_CONTEXT
  for(size_t i=0;i<sizeof fwp_root_context;i++)
   if(((unsigned char *)&fwp_root_context)[i])observed->order_error=1;
@@ -117,13 +117,13 @@ static void finalize(void *p) {
 void setup(struct snapshot *s) {
  fwp_lib_init();observed=s;
  s->heap=test_reservation;s->heap_bytes=test_reserved_bytes;
- s->meta=fwp_gc.meta;s->meta_bytes=fwp_gc.meta_bytes;
+ s->meta=fwp_heap.meta;s->meta_bytes=fwp_heap.meta_bytes;
  V wide=fwp_rc_fresh(fwp_str_new("wide",4));
  for(int i=0;i<256;i++)fwp_rc_dup(wide);
  s->wide=*fwp_rc_wide_link(fwp_rc_slot(wide));
- fwp_gc.mstack=malloc(8*sizeof(gc_range));fwp_gc.mcap=8;s->marks=fwp_gc.mstack;
+ fwp_heap.mstack=malloc(8*sizeof(heap_range));fwp_heap.mcap=8;s->marks=fwp_heap.mstack;
  uint64_t *marker=fwp_mem_alloc(sizeof(uint64_t));*marker=0x12345678;
- fwp_gc_finalizer(marker,finalize);s->fins=fwp_gc.fins;
+ fwp_heap_finalizer(marker,finalize);s->fins=fwp_heap.fins;
  fwp_metric *metric=fwp_metric_get("probe",5,"",0,"gauge");s->metrics=fwp_metrics;s->name=metric->name;
  (void)fwp_p_shutdown_requested();
  fwp_task *child=fwp_spawn_task(0,blocked,s,0,0);
@@ -132,7 +132,7 @@ void setup(struct snapshot *s) {
  (void)fwp_p_task_yield();
  fwp_task *done=fwp_spawn_task(0,completed,s,0,0);s->stacks[2]=done->stack;
  (void)fwp_await(done);s->poll_fd=fwp_epfd;
- if(s->entered!=2||s->completed!=1||s->cancelled||!fwp_stack_pool_n||fwp_gc.armed||fwp_gc.ncollect)s->order_error=1;
+ if(s->entered!=2||s->completed!=1||s->cancelled||!fwp_stack_pool_n||fwp_heap.armed||fwp_heap.ncollect)s->order_error=1;
 }
 "#;
         let library_source = format!(
@@ -233,7 +233,7 @@ int main(void) {{
 "#
         );
         let mut controls=vec![
-        ("if (fwp_gc.reservation) munmap(fwp_gc.reservation, fwp_gc.reservation_bytes);", "/* missing heap unmap */",1),
+        ("if (fwp_heap.reservation) munmap(fwp_heap.reservation, fwp_heap.reservation_bytes);", "/* missing heap unmap */",1),
         ("while (fwp_stack_pool_n) munmap(fwp_stack_pool[--fwp_stack_pool_n], FWP_NATIVE_TASK_STACK);", "fwp_stack_pool_n = 0; /* leaked stacks */",2),
         ("    fwp_caf_finish();", "    /* missing cache cleanup */",3),
         ("            free(entry);", "            /* missing wide-count cleanup */",4),
@@ -379,7 +379,7 @@ static void observe_finished(void);
     let library = dir.join("unload.dll");
     let controls = [
         (
-            "if (fwp_gc.reservation) VirtualFree(fwp_gc.reservation, 0, MEM_RELEASE);",
+            "if (fwp_heap.reservation) VirtualFree(fwp_heap.reservation, 0, MEM_RELEASE);",
             "/* missing heap release */",
             1,
         ),

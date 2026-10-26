@@ -65,11 +65,11 @@ fn byte_decoder_results_preserve_values_aliases_and_release_storage() {
             let body = code[start..end]
                 .replace(
                     "    fwp_init_consts();\n",
-                    "    fwp_init_consts();\n    intptr_t byte_decoder_budget=fwp_gc.budget;\n",
+                    "    fwp_init_consts();\n    size_t byte_decoder_live_bytes=fwp_heap.live;\n",
                 )
                 .replace(
                     "    /* Ownership observation point: before runtime teardown. */\n",
-                    "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.budget!=byte_decoder_budget) exit(248);\n",
+                    "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live!=byte_decoder_live_bytes) exit(248);\n",
                 );
             let mut measured = code.clone();
             measured.replace_range(start..end, &body);
@@ -117,8 +117,8 @@ fn byte_decoders_release_native_buffers_and_partial_results() {
                 "static inline void *fwp_alloc_init(size_t n) { byte_allocation();",
             ),
             (
-                "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
-                "static inline void *fwp_gc_alloc(size_t n, int leaf) { if(leaf!=0) byte_allocation();",
+                "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+                "static inline void *fwp_heap_alloc(size_t n, int kind) { if(kind!=0) byte_allocation();",
             ),
             (
                 "    unsigned char *data = (unsigned char *)realloc(b->d, c);",

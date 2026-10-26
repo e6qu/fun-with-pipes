@@ -1,13 +1,10 @@
 //! Served responses and channel sends release buffers on failure and cancellation.
 use fwp::ir::*;
+use fwp::value::Value;
 use std::process::Command;
 
 #[test]
 fn served_buffers_release_on_decode_encode_traps_and_cancelled_send() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -119,7 +116,7 @@ static void no_release(void *p){(void)p;}
 static int observed_next(uintptr_t *cur,uintptr_t *value){if(*cur)return 0;*cur=1;*value=42;return 1;}
 static void serve(void *arg,int stop){if(stop){cancelled++;return;}jmp_buf trapped;jmp_buf *saved=fwp_cur->trap_jb;fwp_cleanup *saved_cleanup=fwp_cur->trap_cleanup;if(!setjmp(trapped)){fwp_cur->trap_jb=&trapped;fwp_cur->trap_cleanup=fwp_cleanups;if(kind==3){g_job *job=arg;g_sink sink={0};sink.c=job->c;sink.s=job->s;result=g_sink_send(&sink,42);}else{char *text=0;result=kind==4?g_reflect(arg,&text):g_run_method(arg,&text);if(text)_Exit(7);}}fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;}
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1, "", "local",&srv);
  const fwp_desc descriptor={.kind=K_I64,.name="I64"};
  /* Kinds: single response, response iterator, typed error, channel sender, reflection.
@@ -218,11 +215,6 @@ int main(void){
 
 #[test]
 fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
-    use fwp::value::Value;
     let unit = MT::unit();
     let string = MT::con("std::String");
     let integer = MT::con("std::I64");
@@ -444,10 +436,6 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
 
 #[test]
 fn native_output_channels_borrow_values_and_release_context() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![

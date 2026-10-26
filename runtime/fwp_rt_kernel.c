@@ -123,9 +123,7 @@ static void fwp_tape_link_scope(fwp_tape *t, int32_t slot) {
             break;
         }
     }
-#if FWP_ARC_ONLY
     if (!t->scope) fwp_trap("internal: ARC autodiff tape has no proved scope");
-#endif
 }
 
 static V fwp_ad_scope_apply(V callback, uint32_t argc, V *args) {
@@ -135,8 +133,8 @@ static V fwp_ad_scope_apply(V callback, uint32_t argc, V *args) {
     V result = fwp_apply_borrowed(callback, argc, args);
     fwp_cleanup_pop(&cleanup);
     fwp_tape_scope_release(&scope);
-    FWP_KEEP_ALIVE(callback);
-    FWP_KEEP_ALIVE(args);
+
+
     return result;
 }
 
@@ -353,8 +351,8 @@ static V fwp_p_ad_tape_owned(V parameters, V inputs, const fwp_desc *elem) {
     owner->leaves = owner->len = n;
     V base = fwp_ad_tape_new((V)n, owner);
     fwp_cleanup_pop(&cleanup);
-    FWP_KEEP_ALIVE(parameters);
-    FWP_KEEP_ALIVE(inputs);
+
+
     return base;
 }
 
@@ -482,7 +480,7 @@ static V fwp_p_ad_push_owned(V tuple, const fwp_desc *elem) {
     t->pa[op] = ra < 0 ? -1 : (int32_t)(ra & 0xffffffff);
     t->pb[op] = rb < 0 ? -1 : (int32_t)(rb & 0xffffffff);
     owner->len = t->len = idx + 1;
-    FWP_KEEP_ALIVE(tuple);
+
     return (V)((id << 32) | idx);
 }
 
@@ -558,7 +556,7 @@ static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_t
     fwp_cleanup_pop(&result_cleanup);
     fwp_cleanup_pop(&value_cleanup); fwp_owned_tape_release(owner);
     fwp_cleanup_pop(&tape_cleanup); fwp_tape_buffers_dispose(&buffers);
-    FWP_KEEP_ALIVE(outs); FWP_KEEP_ALIVE(seeds);
+
     return result.value;
 }
 
@@ -820,7 +818,7 @@ static V fwp_p_device_run(V threads, V nv, V code, V consts, V inputs) {
                         (int64_t)threads, (double *)ARR(owner.output)->d);
     V result = owner.output; owner.output = 0;
     fwp_cleanup_pop(&cleanup); fwp_kernel_release(&owner);
-    FWP_KEEP_ALIVE(code); FWP_KEEP_ALIVE(consts); FWP_KEEP_ALIVE(inputs);
+
     return result;
 }
 
@@ -839,7 +837,7 @@ static V fwp_p_device_sum(V threads, V nv, V code, V consts, V inputs) {
     double total = 0.0;
     for (size_t b = 0; b < blocks; b++) total += owner.sums[b];
     fwp_cleanup_pop(&cleanup); fwp_kernel_release(&owner);
-    FWP_KEEP_ALIVE(code); FWP_KEEP_ALIVE(consts); FWP_KEEP_ALIVE(inputs);
+
     return fwp_from_f64(total);
 }
 
@@ -886,5 +884,5 @@ static V fwp_p_matrix_mul_f64(V mv,V kv,V nv,V left,V right) {
             }
         }
     }
-    fwp_cleanup_pop(&cleanup);FWP_KEEP_ALIVE(left);FWP_KEEP_ALIVE(right);return result;
+    fwp_cleanup_pop(&cleanup);return result;
 }

@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/allocation_report.rs"]
+mod allocation_report;
+
 #[path = "support/record_probe.rs"]
 mod record_probe;
 
@@ -97,7 +100,7 @@ main = [
                     let native = checked(
                         Command::new(&exe)
                             .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                            .env("FWP_GC_STATS", "0")
+                            .env("FWP_ALLOC_STATS", "0")
                             .env("FWP_GC_STRESS", stress)
                             .env("FWP_GC_VERIFY", stress)
                             .env("FWP_REUSE_VERIFY", verify),
@@ -144,7 +147,7 @@ main = (10000, 0) | loop step | echo
         let exe = dir.0.join(format!("loop-{free}.exe"));
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing", "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .arg(&src)
                 .args(["-O1", "-o"])
                 .arg(&exe)
@@ -153,23 +156,17 @@ main = (10000, 0) | loop step | echo
         );
         let out = checked(
             Command::new(&exe)
-                .env("FWP_GC_STATS", "1")
-                .env("FWP_REUSE_VERIFY", "0")
-                .env("FWP_GC", "off"),
+                .env("FWP_ALLOC_STATS", "1")
+                .env("FWP_REUSE_VERIFY", "0"),
         );
         assert_eq!(out.stdout, reference.stdout);
         let stats = String::from_utf8_lossy(&out.stderr);
-        assert!(stats.contains("fwp gc: 0 collections"), "{stats}");
+
         freed.push(
-            stats
-                .split(" MiB freed by counts")
-                .next()
-                .unwrap()
-                .rsplit('(')
-                .next()
-                .unwrap()
-                .parse::<f64>()
-                .unwrap(),
+            allocation_report::parse(&stats)
+                .expect("allocation report")
+                .released as f64
+                / 1_048_576.0,
         );
     }
     assert!(
@@ -180,7 +177,7 @@ main = (10000, 0) | loop step | echo
     let cfile = dir.0.join("arc-counts.c");
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "arc", "--memory", "dynamic"])
+            .args(["build", "--memory", "dynamic"])
             .arg(&src)
             .args(["--emit-c", "-O2", "-o"])
             .arg(&cfile)
@@ -193,7 +190,7 @@ main = (10000, 0) | loop step | echo
     let probe = r#"
 int main(int argc,char **argv){
  int result=original_main(argc,argv);if(result)return result;
- if(fwp_gc.budget!=fwp_gc.budget_given||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=0||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
  return 0;
 }
 "#;
@@ -210,8 +207,7 @@ int main(int argc,char **argv){
             );
             fwp::cgen::compile_c(&code, &exe, opt).unwrap();
             let output = Command::new(&exe)
-                .env("FWP_GC", "off")
-                .env("FWP_GC_STATS", "0")
+                .env("FWP_ALLOC_STATS", "0")
                 .env("FWP_GC_STRESS", "0")
                 .env("FWP_GC_VERIFY", "0")
                 .env("FWP_REUSE_VERIFY", "0")
@@ -275,7 +271,7 @@ fn fixed_function_values_preserve_aliases_and_effect_order() {
                 let result = checked(
                     Command::new(&binary)
                         .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_ALLOC_STATS", "0")
                         .env("FWP_GC_STRESS", stress)
                         .env("FWP_GC_VERIFY", stress)
                         .env("FWP_REUSE_VERIFY", stress),

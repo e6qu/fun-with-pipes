@@ -54,7 +54,7 @@ def instrument(original):
     assert code.count(marker) == 1
     code = code.replace(marker, marker + HELPERS)
     for name, parameters, condition in [
-        ('fwp_gc_alloc', 'size_t n, int leaf', 'iteration_active && leaf!=0'),
+        ('fwp_heap_alloc', 'size_t n, int kind', 'iteration_active && kind!=0'),
         ('fwp_alloc_init', 'size_t n', 'iteration_active'),
     ]:
         signature = f'static inline void *{name}({parameters}) {{'
@@ -138,7 +138,7 @@ def main():
         raw = run([compiler, 'run', '--interp', source], dict(environment, FWP_NO_OPT='1'))
         assert raw.stdout == expected and not raw.stderr
         emitted = out / (name + '.c')
-        run([compiler, 'build', '--gc', 'arc', '--emit-c', source, '-o', emitted], environment)
+        run([compiler, 'build', '--emit-c', source, '-o', emitted], environment)
         original = emitted.read_text()
         variants = {}
         for label, code in [('totals', metadata.checkpoint.instrument(original)), ('sites', instrument(original))]:

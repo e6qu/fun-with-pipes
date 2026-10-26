@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn connection_addresses_preserve_long_pool_keys_in_one_allocation() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -80,7 +76,7 @@ static int distinguish(g_tls *a,g_tls *b){
  drop_options(a);drop_options(b);return ok;
 }
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  if(!distinguish(g_tls_new("a",0,"b|c","d","e"),g_tls_new("a",0,"b","c|d","e")))return 1;
  for(int field=0;field<5;field++){
   const char *v[4]={"a","b","c","d"};const char *w[4]={"a","b","c","d"};
@@ -106,7 +102,7 @@ int main(void){
  g_unlink(connected,stream);g_stream_reader_release(connected,stream);
  g_conn_drop(selected);
  g_conn_dead(connected,"finished");fwp_cancel_tree(reader);fwp_cancel_tree(writer);
- while(fwp_gc_tasks){fwp_make_ready(fwp_root);fwp_block();fwp_free_zombie();}fwp_free_zombie();
+ while(fwp_tasks_active){fwp_make_ready(fwp_root);fwp_block();fwp_free_zombie();}fwp_free_zombie();
  if(connected->refs||connected->fd!=-1||g_pool)return 2;
  g_conn_drop(connected);connected=0;fwp_p_tcp_stop(listener);
  FWP_KEEP_ALIVE(listener);FWP_KEEP_ALIVE(PTR(task));FWP_KEEP_ALIVE(PTR(connected));

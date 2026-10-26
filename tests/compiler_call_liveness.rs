@@ -6,10 +6,6 @@ use std::process::{Command, Output};
 
 #[test]
 fn temporary_channel_fields_preserve_owners_and_nonlocal_cleanup() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let channel = MT::Con("std::Channel".into(), vec![MT::con("std::String")]);
     let integer = MT::con("std::I64");
     let pair = MT::Record(vec![
@@ -110,7 +106,7 @@ static volatile V live_channel;
 static int probe_sink(void *context,V value){(void)context;(void)value;return 0;}
 static void probe_drop(void *context){if(context!=&destroyed)abort();destroyed++;}
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_init_consts();fwp_fns=fwp_fn_table;fwp_tasks_init();
+ fwp_heap_start();fwp_init_consts();fwp_fns=fwp_fn_table;fwp_tasks_init();
  for(volatile int mode=0;mode<3;mode++)for(volatile int alias=0;alias<2;alias++){
   destroyed=0;
   live_channel=fwp_p_channel_make_owned(1,0);
@@ -177,10 +173,6 @@ int main(void){
 
 #[test]
 fn borrowed_function_channels_preserve_native_context_destruction() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let channel = MT::Con(
         "std::Channel".into(),
         vec![MT::Fun(
@@ -267,7 +259,7 @@ static V native_channel(void) {
  return value;
 }
 int main(void) {
- fwp_gc_start(__builtin_frame_address(0));fwp_init_consts();fwp_fns=fwp_fn_table;fwp_tasks_init();
+ fwp_heap_start();fwp_init_consts();fwp_fns=fwp_fn_table;fwp_tasks_init();
  for(int alias=0;alias<2;alias++){
   destroyed=0;V channel=native_channel();
   if(alias)fwp_rc_dup(channel);
@@ -313,10 +305,6 @@ int main(void) {
 
 #[test]
 fn direct_borrowed_fields_preserve_owners_on_success_failure_and_cancellation() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let string = MT::con("std::String");
     let integer = MT::con("std::I64");
     let pair = MT::Record(vec![
@@ -435,7 +423,7 @@ fn direct_borrowed_fields_preserve_owners_on_success_failure_and_cancellation() 
 static volatile V input_value;
 static int dead(V value) { return fwp_reuse_verify ? STR(value)->len==0 : *fwp_rc_slot(value)==0; }
 int main(void) {
- fwp_gc_start(__builtin_frame_address(0)); fwp_init_consts(); fwp_fns=fwp_fn_table;
+ fwp_heap_start(); fwp_init_consts(); fwp_fns=fwp_fn_table;
  for(volatile int mode=0;mode<2;mode++) for(volatile int alias=0;alias<2;alias++) {
   input_value=fwp_rc_fresh(fwp_str_new("input",5)); expected_owners=1+alias;
   if(alias) fwp_rc_dup(input_value);
@@ -558,7 +546,7 @@ fn actual_caller_releases_owned_values_and_preserves_aliases() {
     );
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -586,7 +574,7 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_init_consts(); fwp_fns = caller_fns;
+    fwp_heap_start(); fwp_init_consts(); fwp_fns = caller_fns;
     input_value = fwp_rc_fresh(fwp_str_new("normal", 6));
     if (HOLD(PTR(&caller_fn), input_value) != input_value || fwp_cleanups ||
         *fwp_rc_slot(input_value) != 1) return 1;
@@ -595,7 +583,7 @@ int main(void) {
     for (int alias = 0; alias < 2; alias++) {
         input_value = fwp_rc_fresh(fwp_str_new("retained", 8));
         if (alias) fwp_rc_dup(input_value);
-        double before = fwp_gc.freed;
+        double before = fwp_heap.freed;
         fwp_handler h;
         h.prev = fwp_handlers; h.state_depth = fwp_state_len; h.cleanup = fwp_cleanups;
         fwp_handlers = &h; fail_call = 1;
@@ -609,7 +597,7 @@ int main(void) {
             fwp_mem_free((void *)(uintptr_t)input_value);
         } else {
             if (!released(input_value)) return 7;
-            if (!fwp_reuse_verify && fwp_gc.freed <= before) return 8;
+            if (!fwp_reuse_verify && fwp_heap.freed <= before) return 8;
         }
     }
     puts("live caller owners release exactly once");
@@ -635,7 +623,7 @@ int main(void) {
         }
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -690,7 +678,7 @@ main = 2 | attempt (pair guard) | echo
     );
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -720,7 +708,7 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_init_consts(); fwp_fns = argument_fns;
+    fwp_heap_start(); fwp_init_consts(); fwp_fns = argument_fns;
     fwp_handler h;
     h.prev = fwp_handlers; h.state_depth = fwp_state_len; h.cleanup = fwp_cleanups;
     fwp_handlers = &h;
@@ -749,7 +737,7 @@ int main(void) {
         }
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -790,7 +778,7 @@ fn boxed_wrapper_and_unboxed_worker_release_separate_owners() {
     );
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -817,7 +805,7 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_init_consts(); fwp_fns = worker_fns;
+    fwp_heap_start(); fwp_init_consts(); fwp_fns = worker_fns;
     text_input = fwp_rc_fresh(fwp_str_new("child", 5));
     boxed_input = fwp_rc_fresh(fwp_record(1, (V[]){text_input}));
     fwp_handler h;
@@ -855,7 +843,7 @@ int main(void) {
         }
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -882,7 +870,7 @@ fn incoming_parameters_release_before_cancelled_entry_tick() {
     std::fs::write(&src, source).unwrap();
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -910,7 +898,7 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_init_consts(); fwp_fns = entry_fns;
+    fwp_heap_start(); fwp_init_consts(); fwp_fns = entry_fns;
     incoming = fwp_rc_fresh(fwp_str_new("incoming", 8));
     cancelled_task.cancelled = 1;
     fwp_cur = &cancelled_task;
@@ -974,7 +962,7 @@ main = "owned" | concat " input" | attempt (hold guard) | echo
     );
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -1006,7 +994,7 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_init_consts(); fwp_fns = variant_fns;
+    fwp_heap_start(); fwp_init_consts(); fwp_fns = variant_fns;
     payload = fwp_rc_fresh(fwp_str_new("payload", 7));
     fwp_handler h;
     h.prev = fwp_handlers; h.state_depth = fwp_state_len; h.cleanup = fwp_cleanups;
@@ -1038,7 +1026,7 @@ int main(void) {
         }
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
@@ -1070,7 +1058,7 @@ int main(void) {
         );
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args(["-O2", "-o"])
                 .arg(&exe),

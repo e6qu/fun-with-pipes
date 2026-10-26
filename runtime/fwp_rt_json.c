@@ -326,7 +326,7 @@ static V fwp_p_json_parse(V text, const fwp_desc *result_type) {
     result.values[0] = ok ? fwp_jr_to_json(&r, result_type->vfields[0][0]) : fwp_rc_fresh(fwp_cstr(j.err));
     V value = fwp_decode_variant(&result, !ok);
     fwp_json_finish(&j);
-    FWP_KEEP_ALIVE(text);
+
     return value;
 }
 
@@ -1212,6 +1212,6 @@ static V fwp_p_json_read(V text, const fwp_desc *result_type) {
     V value = fwp_decode_variant(&result, !ok);
     fwp_cleanup_pop(&cleanup); fwp_jt_release(&c);
     fwp_json_finish(&j);
-    FWP_KEEP_ALIVE(text);
+
     return value;
 }

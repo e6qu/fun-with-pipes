@@ -240,8 +240,8 @@ containing `gc` as permission to delete its complete test target.
 
 | Current family | Retire with tracing | Keep without tracing |
 |---|---|---|
-| [native_allocator](../tests/native_allocator.rs) | Image/stack root discovery, collector-scratch exclusion and forced-major reclamation | First allocation/free without initialization; small/large and static-pool allocation; `arc_metadata_and_reclamation_do_not_depend_on_tracing_options`; ledger missing-physical-free control |
-| [old_reclamation](../tests/old_reclamation.rs) | Major/minor marking, old-to-young transitions, intentionally unowned shared graphs and age-gated-free comparison | `tasks.fwp` output remains in the ARC corpus; typed array/map/closure child cleanup remains in the array/map/callback fault suites; small/large physical release remains in the native ledger and wide-count probes |
+| [native_allocator](../tests/native_allocator.rs) | Image/stack root discovery, collector-scratch exclusion and forced-major reclamation | First allocation/free without initialization; small/large and static-pool allocation; `counted_metadata_releases_values_and_resources`; ledger missing-physical-free control |
+| Retired collector-age tests | Major/minor marking, old-to-young transitions, intentionally unowned shared graphs and age-gated-free comparison | `tasks.fwp` output remains in the ARC corpus; typed array/map/closure child cleanup remains in the array/map/callback fault suites; small/large physical release remains in the native ledger and wide-count probes |
 | [wide_counts](../tests/wide_counts.rs) | Sweeping wide entries and automatic promotion to tracing sharing | Exact counts, overflow/allocation failure, actual metadata release and high-fanout outputs described above |
 | [reuse](../tests/reuse.rs) | Collection-age assertions and the `FWP_FREE=0` collector-only comparison | Golden aliases remain in `arc_corpus`; record/variant/array/map allocation comparisons remain, using ARC; invalid uniqueness is caught by ledger fault 204 and alias outputs |
 | [gc](../tests/gc.rs) | Deliberately disabling both ownership freeing and reuse to require collection | Golden outputs/errors, compiler-failure and artifact-retention controls, long-loop RSS and HTTP/REST/gRPC bounded-memory checks; use ARC for their ordinary runs |
@@ -262,6 +262,35 @@ loop/HTTP/REST RSS checks to ARC. Both reuse variants keep reference counts;
 `FWP_NO_REUSE` disables only in-place updates in the copy control. The numeric
 budgets remain unchanged. This measures allocation cost, not elapsed time or
 parity with C/Rust. [The handoff](development-state.md) records validation status.
+
+## Allocation report migration (G5 work in progress)
+
+`FWP_ALLOC_STATS=1` replaces the collector report in the deletion branch. Its
+fields have explicit units:
+
+```text
+fwp allocation: 4096 bytes allocated, 3072 bytes released, 1024 live bytes, 2048 peak live bytes, 65536 heap extent bytes, max RSS 1234 KiB
+```
+
+This example means 1,024 bytes remain allocated at shutdown; the largest live
+balance was 2,048 bytes. Small allocations charge their full size-class slot;
+large allocations charge requested bytes. Heap extent is the high-water address
+range occupied by chunks, including unused space. It is neither live payload nor
+physical resident memory. RSS covers the whole process, including stacks, native
+libraries and allocator metadata. The allocation balance covers only storage
+routed through this allocator; separate OS-resource checks remain necessary.
+
+Allocation/release totals accumulate across the process lifetime using floating
+point and can round beyond 2^53 bytes. Live/peak balances use exact `size_t`
+integers. Use the live balance and independent address ledger for cleanup
+assertions; subtracting very large cumulative totals is not an exact leak check.
+The strict test parser rejects missing fields, duplicate reports, wrong units
+and invalid numbers. Existing historical measurements keep their original schema
+and source identity. New measurements must identify this report format.
+
+The allocator/report code and parser probes exist in the unpublished deletion
+worktree. Consumer migration and integrated validation are unfinished; see
+[the handoff](development-state.md).
 
 ## Remaining acceptance
 

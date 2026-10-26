@@ -95,8 +95,8 @@ main = range 0 32 | each exercise
                     .count(),
                 1
             );
-            let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t process_budget = fwp_gc.budget;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < process_budget) exit(232);\n");
+            let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t process_live_bytes = fwp_heap.live;\n")
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > process_live_bytes) exit(232);\n");
             code = format!("{runtime}{main}");
         }
         retain_code(&format!("repeated-{mode}.c"), &code);
@@ -337,8 +337,8 @@ main = range 0 64 | map normalize
                     .count(),
                 1
             );
-            let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t process_budget = fwp_gc.budget;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < process_budget) exit(232);\n");
+            let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t process_live_bytes = fwp_heap.live;\n")
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > process_live_bytes) exit(232);\n");
             code = format!("{runtime}{main}");
         }
         retain_code(&format!("shell-parent-{mode}.c"), &code);

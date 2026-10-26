@@ -67,7 +67,7 @@ fn interpret(path: &Path, env: &[(&str, &str)]) -> String {
 fn build(path: &Path, dir: &Path, env: &[(&str, &str)]) -> PathBuf {
     let exe = dir.join(path.file_stem().unwrap());
     let b = Command::new(fwp())
-        .args(["build", "--gc", "tracing"])
+        .args(["build"])
         .arg(path)
         .args(["-O2", "-o"])
         .arg(&exe)

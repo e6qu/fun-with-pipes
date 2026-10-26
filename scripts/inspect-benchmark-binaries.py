@@ -77,7 +77,7 @@ for name, c, rs, fwp in medians:
         sections = re.findall(rb'^\s*\d+\s+\.text\s+([0-9a-fA-F]+)\s', symbols, re.M)
         assert sections and len(assembly) > 100
         if kind == 'fwp' and args.memory == 'arc':
-            assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_gc_(scan|mark_all|sweep)\b', symbols)
+            assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_heap_(scan|mark_all|sweep)\b', symbols)
         row['files'][kind] = dict(sourceSha256=hashlib.sha256(original).hexdigest(),
             binarySha256=hashlib.sha256(data).hexdigest(), fileBytes=len(data),
             textSectionBytes=sum(int(size, 16) for size in sections),

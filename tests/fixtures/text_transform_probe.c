@@ -12,10 +12,10 @@ static int text_count(V value) {
     return slot ? *slot : -1;
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_fns=fwp_fn_table;fwp_init_consts();
     fwp_tasks_init();
-    intptr_t initial=fwp_gc.budget;
+    size_t initial=fwp_heap.live;
     V (*unary[])(V)={TEXT_LOWER,TEXT_UPPER,TEXT_TRIM,TEXT_START,TEXT_END};
     const char *input[]={"AbC", "aBc", "  x  ", "  x  ", "  x  "};
     const char *expected[]={"abc", "ABC", "x", "x  ", "  x"};
@@ -87,7 +87,7 @@ int main(void) {
         TEXT_DROP(saved);TEXT_DROP(a);TEXT_DROP(b);
     }
     fwp_tasks_finish();
-    if(fwp_gc.budget!=initial)return 236;
+    if(fwp_heap.live!=initial)return 236;
     puts("text owners transfer, preserve aliases and release on failure");
     return 0;
 }

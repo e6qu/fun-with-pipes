@@ -34,8 +34,8 @@ static void ap_arguments(V *args,uint32_t offset,uint32_t n) { (void)args;(void)
 static void ap_captures(V callback,int duplicate) { (void)callback;(void)duplicate; }
 static V ap_entry(V *args,char prefix) {
     ap_calls++;
-    fwp_gc_collect();
-    if(!fwp_gc.armed || !fwp_gc.ncollect) fwp_trap("list.ap collection absent");
+    fwp_heap_collect();
+    if(!fwp_heap.armed || !fwp_heap.ncollect) fwp_trap("list.ap collection absent");
     if(ap_calls==3 && ap_mode==1) fwp_trap("list.ap callback control");
     if(ap_calls==3 && ap_mode==2) fwp_check_cancel();
     char text[32];int n=snprintf(text,sizeof(text),"%c%lld",prefix,(long long)args[0]);
@@ -70,7 +70,7 @@ static int flat_probe(void) {
             ap_cancelled_task.cancelled=1;fwp_cur=&ap_cancelled_task;
 #ifdef _WIN32
             /* This synthetic task executes on the main thread stack. */
-            ap_cancelled_task.ctx.top=fwp_gc.main_top;
+            ap_cancelled_task.ctx.top=fwp_heap.main_top;
 #endif
             jmp_buf ap_cancelled_task_base; ap_cancelled_task.base = &ap_cancelled_task_base;
             if (!setjmp(ap_cancelled_task_base)) {
@@ -109,7 +109,7 @@ static int flat_probe(void) {
 }
 
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     V fs=fwp_cons(PTR(&ap_callback_a),fwp_cons(PTR(&ap_callback_b),0));
     V xs=fwp_cons(1,fwp_cons(2,0));
     fwp_fns=ap_entries;
@@ -122,7 +122,7 @@ int main(void) {
             ap_cancelled_task.cancelled=1;fwp_cur=&ap_cancelled_task;
 #ifdef _WIN32
             /* This synthetic task executes on the main thread stack. */
-            ap_cancelled_task.ctx.top=fwp_gc.main_top;
+            ap_cancelled_task.ctx.top=fwp_heap.main_top;
 #endif
             jmp_buf ap_cancelled_task_base; ap_cancelled_task.base = &ap_cancelled_task_base;
             if (!setjmp(ap_cancelled_task_base)) { fwp_p_list_ap_owned(fs,xs,ap_drop_element,ap_drop_list);return 82; }
@@ -159,6 +159,6 @@ int main(void) {
         if(strcmp(fwp_trap_msg,"list.ap too large") || fwp_cleanups) return 88;
     }
     FWP_KEEP_ALIVE(fs);FWP_KEEP_ALIVE(xs);
-    printf("list.ap and flat-map callback and spine ownership; real collections=%zu V=%zu cleanup=%zu\n",fwp_gc.ncollect,sizeof(V),sizeof(fwp_cleanup));
+    printf("list.ap and flat-map callback and spine ownership; real collections=%zu V=%zu cleanup=%zu\n",fwp_heap.ncollect,sizeof(V),sizeof(fwp_cleanup));
     return 0;
 }

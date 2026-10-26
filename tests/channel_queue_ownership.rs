@@ -39,7 +39,7 @@ main = [
         String::from_utf8_lossy(&reference.stderr)
     );
     let build = Command::new(fwp)
-        .args(["build", "--gc", "tracing"])
+        .args(["build"])
         .arg(&source)
         .args(["--emit-c", "-o"])
         .arg(&cfile)
@@ -94,7 +94,7 @@ static int dead(V v){return fwp_reuse_verify?STR(v)->len==0:*fwp_rc_slot(v)==0;}
 static void text_drop(V v){if(fwp_rc_release_last(v))fwp_rc_free_obj(v);}
 static void option_drop(V v){if(v&&fwp_rc_release_last(v)){text_drop(OBJ(v)->f[0]);fwp_rc_free_obj(v);}}
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
  V ch=fMAKE(32);if(*fwp_rc_slot(ch)!=1)return 1;
  V values[20];for(int i=0;i<20;i++){
   values[i]=fwp_rc_fresh(fwp_str_new("input",5));
@@ -145,11 +145,11 @@ int main(void){
  if(OBJ(received)->f[0]!=value||*fwp_rc_slot(value)!=1)return 39;option_drop(received);fwp_channel_drop(ch);
  // Direct fields move exactly one owner, allocate no Option and distinguish Some 0.
  ch=fMAKE(1);value=fwp_rc_fresh(fwp_str_new("fields",6));fSEND(ch,value);
- fail_option=1;intptr_t before_fields=fwp_gc.budget;
+ fail_option=1;size_t before_fields=fwp_heap.live;
  fwp_option_result fields=fwp_chan_recv_owned(ch,fwp_after(duration),fwp_rc_dup,FWP_CHANNEL_RESULT_FIELDS);
  V field=fields.value;
  if(!fields.tag||field!=value||*fwp_rc_slot(value)!=1)return 43;
- if(!fail_option||before_fields!=fwp_gc.budget||((fwp_chan *)(uintptr_t)ch)->len)return 44;
+ if(!fail_option||before_fields!=fwp_heap.live||((fwp_chan *)(uintptr_t)ch)->len)return 44;
  fail_option=0;fwp_channel_drop(ch);if(STR(field)->len!=6)return 45;text_drop(field);if(!dead(value))return 46;
  ch=fWORD(1);fSENDWORD(ch,0);
  fields=fwp_chan_recv_owned(ch,0,NULL,FWP_CHANNEL_RESULT_FIELDS);
@@ -170,10 +170,10 @@ int main(void){
  fwp_channel_drop(ch);if(!dead(value))return 33;
  // An old channel and buffer keep new queue elements alive through a minor GC.
  ch=fMAKE(2);value=fwp_rc_fresh(fwp_str_new("old",3));fSEND(ch,value);received=fRECV(ch);option_drop(received);
- fwp_gc_collect();fwp_gc_collect();FWP_KEEP_ALIVE(ch);
+ fwp_heap_collect();fwp_heap_collect();FWP_KEEP_ALIVE(ch);
  value=fwp_rc_fresh(fwp_str_new("young",5));fSEND(ch,value);value=0;
- fwp_gc.major_next=0;size_t minors=fwp_gc.nminor;fwp_gc_collect();FWP_KEEP_ALIVE(ch);
- if(fwp_gc.nminor!=minors+1)return 34;received=fRECV(ch);if(STR(OBJ(received)->f[0])->len!=5)return 34;option_drop(received);fwp_channel_drop(ch);
+ fwp_heap.major_next=0;size_t minors=fwp_heap.nminor;fwp_heap_collect();FWP_KEEP_ALIVE(ch);
+ if(fwp_heap.nminor!=minors+1)return 34;received=fRECV(ch);if(STR(OBJ(received)->f[0])->len!=5)return 34;option_drop(received);fwp_channel_drop(ch);
  // Untyped queue channels and promoted handles keep tracing.
  for(int promoted=0;promoted<2;promoted++){
   ch=promoted?fMAKE(1):fwp_p_channel_make(1);if(promoted)fwp_rc_share(ch);

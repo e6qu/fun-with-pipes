@@ -65,11 +65,11 @@ fn text_decoder_results_preserve_values_aliases_and_release_storage() {
             let body = code[start..end]
                 .replace(
                     "    fwp_init_consts();\n",
-                    "    fwp_init_consts();\n    intptr_t text_decoder_budget=fwp_gc.budget;\n",
+                    "    fwp_init_consts();\n    size_t text_decoder_live_bytes=fwp_heap.live;\n",
                 )
                 .replace(
                     "    /* Ownership observation point: before runtime teardown. */\n",
-                    "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.budget!=text_decoder_budget) exit(248);\n",
+                    "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live!=text_decoder_live_bytes) exit(248);\n",
                 );
             let mut measured = code.clone();
             measured.replace_range(start..end, &body);
@@ -115,11 +115,11 @@ fn partial_text_decoders_release_fields_and_scratch_on_failure() {
             &format!("{declaration}\nstatic void decoder_allocation(void);"),
         );
         let init = "static inline void *fwp_alloc_init(size_t n) {";
-        let slow = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+        let slow = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
         assert!(code.contains(init) && code.contains(slow));
         code = code
             .replace(init, &format!("{init} decoder_allocation();"))
-            .replace(slow, &format!("{slow} if(leaf!=0) decoder_allocation();"));
+            .replace(slow, &format!("{slow} if(kind!=0) decoder_allocation();"));
         let code = code[..code.find("int main(").unwrap()].to_string()
             + &descriptors
             + include_str!("fixtures/text_decoder_cleanup.c");

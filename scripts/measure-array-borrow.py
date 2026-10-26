@@ -74,7 +74,7 @@ def main():
                     (output / f'{label}.asm').write_text(run(command).stdout)
                     if gc == 'arc':
                         symbols = run(['nm', binary]).stdout
-                        assert not any(symbol in symbols for symbol in ['fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'])
+                        assert not any(symbol in symbols for symbol in ['fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'])
         labels = list(binaries)
         if not profile:
             for binary in binaries.values():

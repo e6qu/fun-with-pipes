@@ -56,7 +56,7 @@ raised = string.repeat 2 | fail
     let cfile = dir.join("owners.c");
     checked(
         Command::new(compiler)
-            .args(["build", "--gc", "tracing", "--cli", "--emit-c"])
+            .args(["build", "--cli", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile),
@@ -68,7 +68,7 @@ raised = string.repeat 2 | fail
         .unwrap();
     let probe = r#"
     fwp_tasks_init();
-    intptr_t baseline = fwp_gc.budget;
+    size_t baseline = fwp_heap.live;
     const char *names[] = {"plain", "wrapped", "rejected", "absent", "raised"};
     for (size_t name = 0; name < 5; name++) {
         const fwp_exec_spec *spec = NULL;
@@ -87,8 +87,8 @@ raised = string.repeat 2 | fail
         }
         spec->params[0]->drop(input);
     }
-    if (getenv("FWP_INVOCATION_LEDGER") && (fwp_gc.ncollect || fwp_gc.budget < baseline)) {
-        fprintf(stderr, "invocation bytes left: %ld\n", (long)(baseline - fwp_gc.budget));
+    if (getenv("FWP_INVOCATION_LEDGER") && (fwp_heap.ncollect || fwp_heap.live > baseline)) {
+        fprintf(stderr, "invocation bytes left: %ld\n", (long)(fwp_heap.live - baseline));
         exit(193);
     }
 "#;

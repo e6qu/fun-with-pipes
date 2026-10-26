@@ -36,7 +36,7 @@ static void connect_client(void *arg, int cancelled) {
     FWP_KEEP_ALIVE(transport);
 }
 int main(void) {
-    fwp_lib_init(); fwp_gc_start(__builtin_frame_address(0)); fwp_trap_recover = g_trap_recover;
+    fwp_lib_init(); fwp_heap_start(); fwp_trap_recover = g_trap_recover;
     memset(pool_key, 'x', sizeof pool_key - 1); pool_key[sizeof pool_key - 1] = 0;
     for (startup_stage = -2; startup_stage < 3; startup_stage++) {
         V listener = fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"), ERROR_TYPE);
@@ -62,7 +62,7 @@ int main(void) {
             g_conn_dead(c, "finished");
         }
         int64_t limit = fwp_now_ns() + 10000000000LL;
-        while (fwp_gc_tasks) {
+        while (fwp_tasks_active) {
             if (fwp_now_ns() >= limit) return 7;
             fwp_park(0, fwp_now_ns() + 1000000LL); fwp_free_zombie();
         }

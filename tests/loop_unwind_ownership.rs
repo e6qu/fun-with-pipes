@@ -173,8 +173,8 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 190;
 #endif
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
-    intptr_t baseline=fwp_gc.budget;
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+    size_t baseline=fwp_heap.live;
     for(int round=0;round<32;round++){
     for (volatile int tick=1;tick<=2;tick++) for (volatile int mode=0;mode<5;mode++) {
         original_text=fwp_rc_fresh(fwp_str_new("seed",4));fwp_rc_dup(original_text);
@@ -188,7 +188,7 @@ int main(void) {
 #ifdef _WIN32
         /* This synthetic task runs on main's stack. Windows tasks normally
          * receive their scan boundary when their fiber starts. */
-        cancelled_loop.ctx.top=fwp_gc.main_top;
+        cancelled_loop.ctx.top=fwp_heap.main_top;
 #endif
         jmp_buf cancelled_loop_base; cancelled_loop.base = &cancelled_loop_base;
         if (!setjmp(cancelled_loop_base)) {
@@ -214,7 +214,7 @@ int main(void) {
         fwp_rc_free_obj(original_text);fwp_rc_free_obj(scalar_word);
     }
 #ifdef FWP_ARC_ONLY
-    if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
+    if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;
 #endif
     }
     puts("loop states release at cancellation ticks with aliases and scalar bits intact");
@@ -327,8 +327,8 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 190;
 #endif
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
-    intptr_t baseline=fwp_gc.budget;
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+    size_t baseline=fwp_heap.live;
     for(int round=0;round<32;round++){
     for (volatile int stop=0;stop<2;stop++) for (volatile int alias=0;alias<2;alias++) {
         original_text=fwp_rc_fresh(fwp_str_new("seed",4));fwp_rc_dup(original_text);
@@ -354,7 +354,7 @@ int main(void) {
         fwp_rc_free_obj(original_text);fwp_rc_free_obj(scalar_word);
     }
 #ifdef FWP_ARC_ONLY
-    if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
+    if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;
 #endif
     }
     puts("owned Steps release on payload preparation failure without losing aliases");

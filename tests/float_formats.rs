@@ -81,9 +81,7 @@ fn float_text_matches_frozen_precision_and_detects_corruption() {
     let emitted = Command::new(env!("CARGO_BIN_EXE_fwp"))
         .env_remove("FWP_NO_OPT")
         .env("FWP_LTO", "0")
-        .args([
-            "build", "--gc", "arc", "--memory", "dynamic", "--emit-c", "-O2",
-        ])
+        .args(["build", "--memory", "dynamic", "--emit-c", "-O2"])
         .arg(&input)
         .arg("-o")
         .arg(&cfile)
@@ -196,7 +194,7 @@ main = [
         let built = Command::new(fwp)
             .env_remove("FWP_NO_OPT")
             .env("FWP_CACHE_DIR", directory.join("cache"))
-            .args(["build", "--gc", "tracing", opt])
+            .args(["build", opt])
             .arg(&source)
             .arg("-o")
             .arg(&binary)
@@ -229,7 +227,7 @@ fn quad_array_bytes_and_escaping_owners_are_independent() {
     .unwrap();
     let c = directory.join("quad.c");
     let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--gc", "tracing", "--fn", "quad", "--emit-c"])
+        .args(["build", "--fn", "quad", "--emit-c"])
         .arg(&path)
         .arg("-o")
         .arg(&c)
@@ -243,7 +241,7 @@ fn quad_array_bytes_and_escaping_owners_are_independent() {
     let probe = r#"
 static void quad_drop(V v) { if (fwp_rc_release_last(v)) fwp_rc_free_obj(v); }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
     const fwp_desc quad={.kind=K_F128,.dup=fwp_rc_dup,.drop=quad_drop};
     const float128_t words[]={{{1,0}},{{0,UINT64_C(0x8000000000000000)}},
         {{UINT64_C(0x1234),UINT64_C(0x7fff800000000000)}}};

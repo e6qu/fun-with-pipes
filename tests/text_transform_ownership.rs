@@ -100,11 +100,11 @@ fn text_transformations_preserve_aliases_and_consumed_owners() {
                 &format!("{signature}\n    if(text_force_trap==1)fwp_trap(\"text copy control\");\n    if(text_force_trap==2)fwp_check_cancel();"),
             );
         }
-        let allocation = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+        let allocation = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
         assert_eq!(probe.matches(allocation).count(), 1);
         probe = probe.replace(
             allocation,
-            &format!("{allocation}\n    if(leaf!=0)text_allocations++;"),
+            &format!("{allocation}\n    if(kind!=0)text_allocations++;"),
         );
         probe += &format!(
             "\n{definitions}\n{}",

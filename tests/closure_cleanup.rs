@@ -3,6 +3,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/allocation_report.rs"]
+mod allocation_report;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -91,8 +94,7 @@ main = discard (loop step (8000, add 1)) | echo
             let out = Command::new("sh")
                 .args(["-c", "ulimit -s 256; exec \"$1\"", "closure-stack"])
                 .arg(&exe)
-                .env("FWP_GC", "off")
-                .env("FWP_GC_STATS", "1")
+                .env("FWP_ALLOC_STATS", "1")
                 .output()
                 .unwrap();
             if name == "recursive" {
@@ -112,16 +114,11 @@ main = discard (loop step (8000, add 1)) | echo
                 );
                 assert_eq!(out.stdout, reference.stdout);
                 let stats = String::from_utf8_lossy(&out.stderr);
-                assert!(stats.contains("fwp gc: 0 collections"), "{stats}");
-                let freed: f64 = stats
-                    .split(" MiB freed by counts")
-                    .next()
-                    .unwrap()
-                    .rsplit('(')
-                    .next()
-                    .unwrap()
-                    .parse()
-                    .unwrap();
+
+                let freed: f64 = allocation_report::parse(&stats)
+                    .expect("allocation report")
+                    .released as f64
+                    / 1_048_576.0;
                 assert!(freed > if branching { 0.25 } else { 0.05 }, "{stats}");
             }
         }

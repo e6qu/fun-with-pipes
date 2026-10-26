@@ -26,8 +26,8 @@ def inspect(path, host, llvm, expected_exports):
     names = subprocess.check_output([str(llvm / 'llvm-nm'), str(path)], text=True)
     symbols = {line.split()[-1].removeprefix('_')
                for line in names.splitlines() if line.split()}
-    assert {'fwp_gc_alloc_slow', 'fwp_rc_free_obj'} <= symbols, (path, 'internal runtime names required')
-    tracing = sorted(symbols.intersection({'fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'}))
+    assert {'fwp_heap_alloc_slow', 'fwp_rc_free_obj'} <= symbols, (path, 'internal runtime names required')
+    tracing = sorted(symbols.intersection({'fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'}))
     assert not tracing, (path, tracing)
     public_exports = None
     if path.suffix == '.dll':

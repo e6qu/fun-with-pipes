@@ -104,7 +104,7 @@ main = () | loop (read-all () | string.length | eq 0 | choose) | file.read-all |
             let emitted = dir.0.join("scoped.c");
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", "tracing"])
+                    .args(["build"])
                     .arg(&src)
                     .args(["--emit-c", "-o"])
                     .arg(&emitted),
@@ -124,7 +124,7 @@ main = () | loop (read-all () | string.length | eq 0 | choose) | file.read-all |
         let emitted = dir.0.join(format!("{name}-no-free.c"));
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args(["--emit-c", "-o"])
                 .arg(&emitted)
@@ -133,7 +133,7 @@ main = () | loop (read-all () | string.length | eq 0 | choose) | file.read-all |
         let c = std::fs::read_to_string(emitted).unwrap();
         let observed = c.replace(
             "return fwp_exit_code;",
-            "if(fwp_gc.freed != 0.0) return 29; return fwp_exit_code;",
+            "if(fwp_heap.freed != 0.0) return 29; return fwp_exit_code;",
         );
         assert_ne!(c, observed);
         let exe = dir.0.join(format!("{name}-no-free-accounting"));
@@ -159,7 +159,7 @@ main = () | loop (read-all () | string.length | eq 0 | choose) | file.read-all |
                 let exe = dir.0.join(format!("{name}-{opt}-{flags}"));
                 checked(
                     Command::new(fwp)
-                        .args(["build", "--gc", "tracing"])
+                        .args(["build"])
                         .arg(&src)
                         .args([opt, "-o"])
                         .arg(&exe)

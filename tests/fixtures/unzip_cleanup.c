@@ -12,7 +12,7 @@ static void unzip_drop_input(V value){
 }
 static void unzip_collect_now(void){
 #ifndef FWP_ARC_ONLY
-    if(unzip_collect)fwp_gc_collect();
+    if(unzip_collect)fwp_heap_collect();
 #endif
 }
 static void unzip_dup_x(V value){
@@ -38,7 +38,7 @@ static V unzip_pair(V x,V y){
     unzip_collect_now();if(unzip_case==8)fwp_trap("unzip pair failure");return fwp_tuple2(x,y);
 }
 int main(void){
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     V values[4];for(int i=0;i<4;i++)values[i]=fwp_rc_fresh(fwp_cstr("unzip input"));
     V first=fwp_rc_fresh(fwp_tuple2(values[0],values[1]));
     V second=fwp_rc_fresh(fwp_tuple2(values[2],values[3]));
@@ -46,7 +46,7 @@ int main(void){
     for(unzip_collect=0;unzip_collect<2;unzip_collect++)for(unzip_case=0;unzip_case<10;unzip_case++)for(int repeat=0;repeat<16;repeat++){
         unzip_x_calls=unzip_y_calls=unzip_scratch_calls=unzip_node_calls=0;
         if(unzip_case==9){uint8_t *slot=fwp_rc_slot(values[1]);*slot=254;fwp_rc_dup(values[1]);(*fwp_rc_wide_link(slot))->count=SIZE_MAX;}
-        intptr_t before=fwp_gc.budget;
+        size_t before=fwp_heap.live;
         fwp_trap_recover=unzip_recover;fwp_trap_jb=&unzip_jump;fwp_trap_cleanup=fwp_cleanups;
         if(!setjmp(unzip_jump)){
             V result=fwp_p_unzip_owned(ps,unzip_dup_x,unzip_dup_y,unzip_drop_string,unzip_drop_string,unzip_drop_strings,unzip_drop_strings);
@@ -62,12 +62,12 @@ int main(void){
             if(unzip_case==9&&i==1){if(*slot!=255||(*fwp_rc_wide_link(slot))->count!=SIZE_MAX)return 247;fwp_rc_forget_slot(slot);*slot=1;}
             else if(*slot!=1)return 248;
         }
-        if(!unzip_collect&&fwp_gc.budget!=before)return 249;
+        if(!unzip_collect&&fwp_heap.live!=before)return 249;
     }
     unzip_case=unzip_collect=0;
-    intptr_t before=fwp_gc.budget;
+    size_t before=fwp_heap.live;
     V empty=fwp_p_unzip_owned(0,NULL,NULL,NULL,NULL,unzip_drop_strings,unzip_drop_strings);
     if(OBJ(empty)->f[0]||OBJ(empty)->f[1])return 250;
-    fwp_rc_free_obj(empty);if(fwp_gc.budget!=before)return 251;
+    fwp_rc_free_obj(empty);if(fwp_heap.live!=before)return 251;
     FWP_KEEP_ALIVE(ps);unzip_drop_input(ps);return 0;
 }

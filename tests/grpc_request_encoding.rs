@@ -3,10 +3,6 @@ use fwp::ir::*;
 use std::process::Command;
 
 fn request_runtime() -> String {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -72,7 +68,7 @@ static void observed_free(void *p){if(p&&p==watched_request){request_frees++;wat
 static void no_release(void *p){(void)p;}
 static int observed_next(uintptr_t *cur,uintptr_t *value){if(*cur)return 0;*cur=1;*value=42;return 1;}
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1, "", "local",&srv);fwp_remote remote={0};
  for(stage=0;stage<3;stage++){
   watched_request=wire_buffer=0;request_frees=wire_frees=0;c->out.len=0;c->conn_window=stage==1?0:65535;

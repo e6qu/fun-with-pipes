@@ -58,7 +58,7 @@ fn weak_channels_preserve_expiration_and_reject_recreated_cycles() {
             }
             checked(
                 command
-                    .args(["build", "--gc", "arc", "--memory", memory, "--emit-c"])
+                    .args(["build", "--memory", memory, "--emit-c"])
                     .arg(&source)
                     .arg("-o")
                     .arg(&cfile),
@@ -96,7 +96,7 @@ fn weak_channel_metadata_expires_before_child_cleanup_and_survives_address_reuse
     std::fs::write(&source, include_str!("fixtures/weak_channels.fwp")).unwrap();
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "arc", "--emit-c"])
+            .args(["build", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile),
@@ -300,7 +300,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
             if memory == "arc" {
                 let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
                 assert_eq!(code.matches(finish).count(), 1);
-                code = code.replace(finish, &format!("{finish}    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget_given != fwp_gc.budget) exit(193);\n"));
+                code = code.replace(finish, &format!("{finish}    if(fwp_heap.ncollect || fwp_heap.enabled || 0 != fwp_heap.live) exit(193);\n"));
             }
             let drop = "            c->owner.queue_drop(element);";
             assert_eq!(code.matches(drop).count(), 1);
@@ -351,7 +351,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                 if memory == "arc" {
                     let symbols = checked(Command::new("nm").arg(&binary));
                     let symbols = String::from_utf8_lossy(&symbols.stdout);
-                    for symbol in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                    for symbol in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                         assert!(
                             !symbols.contains(symbol),
                             "{name}/{opt}: ARC binary retains {symbol}"
@@ -400,7 +400,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                 } else {
                     let symbols = checked(Command::new("nm").arg(&binary));
                     assert!(
-                        String::from_utf8_lossy(&symbols.stdout).contains("fwp_gc_mark_all"),
+                        String::from_utf8_lossy(&symbols.stdout).contains("fwp_heap_mark_all"),
                         "tracing control must contain its collector: {name}/{opt}"
                     );
                 }
@@ -522,7 +522,7 @@ main = [callbacks 1 | channel.close, apply (A { tail = [] }) ((from-a, from-b) |
     checked(
         Command::new(compiler)
             .env("FWP_NO_OPT", "1")
-            .args(["build", "--gc", "arc", "--emit-c"])
+            .args(["build", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile),
@@ -620,7 +620,7 @@ main = [callbacks 1 | channel.close, [] | calls | echo] | ignore
     checked(
         Command::new(compiler)
             .env("FWP_NO_OPT", "1")
-            .args(["build", "--gc", "arc", "--emit-c"])
+            .args(["build", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile),
@@ -694,7 +694,7 @@ fn queued_autodiff_functions_require_the_receivers_scope() {
         std::fs::write(&source, format!("callbacks : I64 -> Channel[I64 -> I64] ! {{Async}}\ncallbacks = channel.make\nmain = callbacks 1 | tap (flip channel.send ad.tape) | channel.recv | option.map ({callback}) | ignore\n")).unwrap();
         let cfile = dir.join("main.c");
         let built = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "arc", "--emit-c"])
+            .args(["build", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile)
@@ -743,7 +743,7 @@ main = texts 1 | tap (flip channel.send (give "capture")) | channel.recv | optio
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env("FWP_NO_OPT", "1")
-            .args(["build", "--gc", "arc", "--emit-c"])
+            .args(["build", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile),
@@ -772,8 +772,8 @@ static jmp_buf recovered;
 static int recover(void){return 1;}
 static void text_drop(V v){if(fwp_rc_release_last(v))fwp_rc_free_obj(v);}
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
- intptr_t baseline=fwp_gc.budget;
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
+ size_t baseline=fwp_heap.live;
  for(int iteration=0;iteration<64;iteration++)for(int mode=0;mode<4;mode++){
   V value=fwp_rc_fresh(fwp_str_new("capture",7));
   V fn=fwp_rc_fresh(fwp_pap(GIVE,1,&value));
@@ -795,8 +795,8 @@ int main(void){
    text_drop(text);fwp_closure_drop(fn);fwp_rc_free_obj(received);
   }
   fwp_channel_drop(ch);
-  if(fwp_gc.ncollect||fwp_gc.enabled||fwp_gc.budget!=baseline){
-   fprintf(stderr,"queued closure storage iteration=%d mode=%d bytes=%lld\n",iteration,mode,(long long)(baseline-fwp_gc.budget));return 197;
+  if(fwp_heap.ncollect||fwp_heap.enabled||fwp_heap.live!=baseline){
+   fprintf(stderr,"queued closure storage iteration=%d mode=%d bytes=%lld\n",iteration,mode,(long long)(fwp_heap.live - baseline));return 197;
   }
  }
  return 0;

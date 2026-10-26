@@ -104,7 +104,7 @@ fn numeric_hash_loops_allocate_nothing_and_do_not_adjust_reference_counts() {
             );
         }
         for signature in [
-            "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
+            "static inline void *fwp_heap_alloc(size_t n, int kind) {",
             "static inline void *fwp_alloc_init(size_t n) {",
         ] {
             assert!(code.contains(signature));
@@ -180,11 +180,11 @@ fn hashes_match_typed_interpretation_and_preserve_aliases() {
                 let thread = code[start..finish]
                     .replace(
                         "    fwp_init_consts();\n",
-                        "    fwp_init_consts();\n    intptr_t hash_budget = fwp_gc.budget;\n",
+                        "    fwp_init_consts();\n    size_t hash_live_bytes = fwp_heap.live;\n",
                     )
                     .replace(
                         "    /* Ownership observation point: before runtime teardown. */\n",
-                        "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.budget != hash_budget) exit(248);\n",
+                        "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live != hash_live_bytes) exit(248);\n",
                     );
                 code.replace_range(start..finish, &thread);
             }
@@ -250,7 +250,7 @@ fn hashing_allocates_nothing_and_the_buffered_control_is_detected() {
         checked(&mut command);
         let code = std::fs::read_to_string(&cfile).unwrap();
         let code = &code[..code.find("int main(").unwrap()];
-        let native = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+        let native = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
         assert_eq!(code.matches(native).count(), 1);
         let code = code.replace(
             native,
@@ -414,11 +414,11 @@ fn hash_reduction_removes_lists_and_temporary_heap_tuples() {
             checked(&mut build);
             let mut code = std::fs::read_to_string(cfile).unwrap();
             assert!(code.contains("/* fused :"));
-            let marker = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+            let marker = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
             assert_eq!(code.matches(marker).count(), 1);
             code = code.replace(
                 marker,
-                &format!("static unsigned hash_requests, hash_retains;\n{marker} if(leaf!=0) hash_requests++;"),
+                &format!("static unsigned hash_requests, hash_retains;\n{marker} if(kind!=0) hash_requests++;"),
             );
             let initialized = "static inline void *fwp_alloc_init(size_t n) {";
             assert_eq!(code.matches(initialized).count(), 1);
@@ -431,9 +431,9 @@ fn hash_reduction_removes_lists_and_temporary_heap_tuples() {
                 .unwrap();
             let finish = start + code[start..].find("\n}\n").unwrap() + 3;
             let body = code[start..finish].replace("    fwp_init_consts();\n",
-            "    fwp_init_consts();\n    hash_requests = 0; hash_retains = 0; intptr_t hash_budget = fwp_gc.budget;\n")
+            "    fwp_init_consts();\n    hash_requests = 0; hash_retains = 0; size_t hash_live_bytes = fwp_heap.live;\n")
             .replace("    /* Ownership observation point: before runtime teardown. */\n",
-            "    /* Ownership observation point: before runtime teardown. */\n    if(hash_requests > 35 || hash_retains || fwp_gc.budget != hash_budget) { fprintf(stderr, \"hash requests=%u retains=%u budget=%lld/%lld\\n\", hash_requests, hash_retains, (long long)fwp_gc.budget, (long long)hash_budget); exit(249); }\n");
+            "    /* Ownership observation point: before runtime teardown. */\n    if(hash_requests > 35 || hash_retains || fwp_heap.live != hash_live_bytes) { fprintf(stderr, \"hash requests=%u retains=%u budget=%lld/%lld\\n\", hash_requests, hash_retains, (long long)fwp_heap.live, (long long)hash_live_bytes); exit(249); }\n");
             code.replace_range(start..finish, &body);
             if let Some(path) = std::env::var_os("FWP_HASH_ARTIFACTS") {
                 let path = std::path::PathBuf::from(path);

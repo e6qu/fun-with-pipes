@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn encoded_messages_release_on_cancel_and_preserve_plain_and_gzip_frames() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -75,7 +71,7 @@ static int check_frames(g_conn *c,int gzip){
  h2b_free(&encoded);h2b_free(&plain);return ok?0:16;
 }
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();
  for(size_t i=0;i<sizeof payload;i++)payload[i]=(unsigned char)(17*i);
  g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1, "", "local",&srv);
  for(int gzip=0;gzip<2;gzip++)for(stage=0;stage<6;stage++){

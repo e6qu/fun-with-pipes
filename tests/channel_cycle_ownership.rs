@@ -18,10 +18,7 @@ discard-option = ignore
 main = "must not print" | echo | const 1 | link-channel | tap send-self | tap channel.close | receive | discard-option | const "drained" | echo
 "#).unwrap();
     for raw in [false, true] {
-        for args in [
-            vec!["run", "--interp"],
-            vec!["build", "--gc", "arc", "--emit-c"],
-        ] {
+        for args in [vec!["run", "--interp"], vec!["build", "--emit-c"]] {
             let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
             command.env_remove("FWP_NO_OPT");
             if raw {

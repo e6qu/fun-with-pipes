@@ -30,7 +30,7 @@ def inspect(binary, mode, kind, file_format, llvm):
                for line in names.splitlines() if line.split()}
     runtime = sorted(name for name in symbols if name.startswith('fwp_'))
     assert len(runtime) > 10, (binary, 'missing internal runtime names')
-    tracing = sorted(symbols.intersection({'fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'}))
+    tracing = sorted(symbols.intersection({'fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'}))
     assert bool(tracing) == (mode == 'tracing'), (binary, tracing)
     assembly = subprocess.check_output(
         [str(llvm / 'llvm-objdump'), '-d', '--no-show-raw-insn', str(binary)], text=True)

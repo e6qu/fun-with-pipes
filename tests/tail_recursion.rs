@@ -87,8 +87,8 @@ fn deep_self_recursion_preserves_swaps_aliases_effects_and_failure_order() {
                     .count(),
                     1
                 );
-                let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t tail_budget = fwp_gc.budget;\n")
-                    .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.budget < tail_budget) { fprintf(stderr, \"tail recursion retained %ld bytes\\n\", (long)(tail_budget-fwp_gc.budget)); exit(193); }\n");
+                let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t tail_live_bytes = fwp_heap.live;\n")
+                    .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > tail_live_bytes) { fprintf(stderr, \"tail recursion retained %ld bytes\\n\", (long)(fwp_heap.live - tail_live_bytes)); exit(193); }\n");
                 code = format!("{runtime}{main}");
             }
             for opt in ["-O0", "-O2"] {
@@ -155,7 +155,7 @@ fn tail_loop_remains_cancellable() {
         let binary = dir.join("cancel.exe");
         checked(
             Command::new(compiler)
-                .args(["build", "--gc", "arc", "-O0"])
+                .args(["build", "-O0"])
                 .arg(&src)
                 .arg("-o")
                 .arg(&binary),

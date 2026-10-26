@@ -53,7 +53,7 @@ main = [
     checked(
         Command::new(compiler)
             .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", "arc", "--emit-c"])
+            .args(["build", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile),
@@ -201,8 +201,8 @@ main = [
                         .find("static void *fwp_main_thread(void *arg) {")
                         .unwrap();
                     let (runtime, main) = code.split_at(start);
-                    let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t wide_budget=fwp_gc.budget;\n")
-                        .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(!FWP_USE_GC && fwp_gc.budget<wide_budget) exit(193);\n");
+                    let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t wide_live_bytes=fwp_heap.live;\n")
+                        .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(!FWP_USE_GC && fwp_heap.live > wide_live_bytes) exit(193);\n");
                     code = format!("{runtime}{main}");
                     // ARC has no collector; tracing stress intentionally changes its budget.
                     code = code.replace("!FWP_USE_GC", if gc == "arc" { "1" } else { "0" });

@@ -14,7 +14,7 @@ static void wasm_arc_drop_pair(V value){
     wasm_arc_drop_leaf(OBJ(value)->f[0]);wasm_arc_drop_leaf(OBJ(value)->f[1]);fwp_rc_free_obj(value);
 }
 int main(void){
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     for(int i=0;i<128;i++){
         V leaf=fwp_rc_fresh(fwp_cstr("counted WASI data"));fwp_rc_dup(leaf);
         V pair=fwp_rc_fresh(fwp_tuple2(leaf,leaf));

@@ -146,8 +146,8 @@ fn maintained_text_tools_release_repeated_and_retained_results() {
                     .count(),
                     1
                 );
-                let measured = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t text_budget = fwp_gc.budget;\n")
-                    .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget < text_budget) exit(239);\n");
+                let measured = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t text_live_bytes = fwp_heap.live;\n")
+                    .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.enabled || fwp_heap.ncollect || fwp_heap.live > text_live_bytes) exit(239);\n");
                 code = format!("{runtime}{measured}");
             }
             let binary = root.join("tool.exe");
@@ -303,7 +303,7 @@ fn scaled_text_tools_release_partial_results_and_file_handles() {
         checked(
             Command::new(compiler)
                 .env_remove("FWP_NO_OPT")
-                .args(["build", "--gc", "arc", "--emit-c", "-O1"])
+                .args(["build", "--emit-c", "-O1"])
                 .arg(&source)
                 .arg("-o")
                 .arg(&cfile),

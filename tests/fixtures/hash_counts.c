@@ -18,7 +18,7 @@ static int check_hash(V value, const fwp_desc *desc, int nonempty) {
 }
 #define HASH_CHECK(value, descriptor, nonempty) do { int code = check_hash(value, descriptor, nonempty); if (code) return code; } while(0)
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     const int kinds[] = {K_I8,K_U8,K_I16,K_U16,K_F16,K_BF16,K_I32,K_U32,K_F32,K_I64,K_U64,K_F64,K_TINT,K_TRIT};
     const V bits[] = {0,1,127,128,255,UINT64_MAX,UINT64_C(0x8000000000000000),UINT64_C(0x7ff8000000000042)};
     for (size_t k = 0; k < sizeof kinds/sizeof *kinds; k++) {

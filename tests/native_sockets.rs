@@ -9,7 +9,7 @@ fn socket_scheduler_waits_on_readiness_and_releases_waiters() {
     let cfile = dir.join("main.c");
     std::fs::write(&input, "main = ()\n").unwrap();
     let built = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--gc", "tracing", "--emit-c"])
+        .args(["build", "--emit-c"])
         .arg(&input)
         .arg("-o")
         .arg(&cfile)
@@ -129,11 +129,11 @@ fn socket_scratch_is_released_on_cancel_and_allocation_failure() {
             declaration,
             &format!("{declaration}\nstatic void socket_managed_allocation(void);"),
         );
-        let slow = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+        let slow = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
         assert!(code.contains(slow));
         code = code.replace(
             slow,
-            &format!("{slow} if(leaf!=0) socket_managed_allocation();"),
+            &format!("{slow} if(kind!=0) socket_managed_allocation();"),
         );
         for name in ["fwp_tcp_read", "fwp_p_udp_recv_from", "fwp_p_udp_send_to"] {
             let start = code.find(&format!("static V {name}(")).unwrap();
@@ -218,7 +218,7 @@ fn socket_addresses_reject_nul_before_using_the_prefix() {
     }
     let cfile = dir.join("main.c");
     let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--gc", "tracing", "--emit-c"])
+        .args(["build", "--emit-c"])
         .arg(&input)
         .arg("-o")
         .arg(&cfile)
@@ -403,12 +403,12 @@ fn tcp_values_preserve_scopes_and_release_storage_without_tracing() {
             .unwrap();
         let end = start + code[start..].find("\n}\n").unwrap() + 3;
         let body = code[start..end]
-            .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t tcp_budget=fwp_gc.budget_given;\n")
-            .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.budget<tcp_budget) { fprintf(stderr,\"TCP charged storage left: %lld\\n\",(long long)(tcp_budget-fwp_gc.budget)); exit(248); }\n");
+            .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    size_t tcp_live_bytes=0;\n")
+            .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.ncollect || fwp_heap.live > tcp_live_bytes) { fprintf(stderr,\"TCP charged storage left: %lld\\n\",(long long)(fwp_heap.live - tcp_live_bytes)); exit(248); }\n");
         let mut measured = code.clone();
         measured.replace_range(start..end, &body);
         if mode == "arc" {
-            let needle = "static void fwp_gc_forget_finalizer(void *obj) {\n";
+            let needle = "static void fwp_heap_forget_finalizer(void *obj) {\n";
             assert!(measured.contains(needle));
             measured = measured.replace(
                 needle,
@@ -450,7 +450,7 @@ fn tcp_values_preserve_scopes_and_release_storage_without_tracing() {
                 let output = Command::new("nm").arg(&binary).output().unwrap();
                 assert!(output.status.success());
                 let symbols = String::from_utf8_lossy(&output.stdout);
-                for symbol in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                for symbol in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                     assert!(!symbols.contains(symbol), "ARC binary contains {symbol}");
                 }
             }

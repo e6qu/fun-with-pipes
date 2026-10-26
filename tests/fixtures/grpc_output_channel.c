@@ -6,7 +6,7 @@
 _Static_assert(sizeof(fwp_chan)==88,"native channel header has unexpected size");
 static int channel_stage,channel_encoded,channel_cancelled,channel_trapped;
 static V channel_value,channel_handle;
-static double channel_charge(void){return fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);}
+static double channel_charge(void){return (double)fwp_heap.live;}
 static void channel_text_drop(V value){if(fwp_rc_release_last(value))fwp_rc_free_obj(value);}
 static void channel_encode(V value,h2_buf *buffer){
  unsigned expected=channel_stage==6?2:1;
@@ -40,7 +40,7 @@ static void channel_restore(V value,unsigned count){uint8_t *slot=fwp_rc_slot(va
 int main(int argc,char **argv){
  if(argc!=2)_Exit(230);channel_stage=atoi(argv[1]);
  const char *verify=getenv("FWP_REUSE_VERIFY");int poison=verify&&*verify&&strcmp(verify,"0");
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  double before=channel_charge();
  g_server server={0};server.module="probe";
  g_conn *c=g_conn_new(FWP_INVALID_SOCKET, "", "channel-owner",&server);fwp_rc_fresh(PTR(c));
@@ -57,7 +57,7 @@ int main(int argc,char **argv){
   if(strcmp(fwp_trap_msg,"reference count overflow")||fwp_cleanups)_Exit(237);
   channel_restore(overflow,channel_stage==4?2:1);
   if(*fwp_rc_slot(PTR(c))!=1||*fwp_rc_slot(PTR(s))!=2)_Exit(232);
-  if(!fwp_gc.enabled&&!poison&&channel_charge()!=pending)_Exit(238);
+  if(!fwp_heap.enabled&&!poison&&channel_charge()!=pending)_Exit(238);
  }else{
   channel_handle=g_sink_value(c,s,codec,0);
   if(*fwp_rc_slot(PTR(c))!=2||*fwp_rc_slot(PTR(s))!=3||!fwp_rc_last(channel_handle))_Exit(234);
@@ -77,7 +77,7 @@ int main(int argc,char **argv){
   if(*fwp_rc_slot(PTR(c))!=1||*fwp_rc_slot(PTR(s))!=2||fwp_cleanups)_Exit(232);
  }
  g_unlink(c,s);g_stream_drop(s);g_conn_drop(c);
- if(!fwp_gc.enabled&&!poison&&(channel_charge()!=before||fwp_gc.ncollect)){
+ if(!fwp_heap.enabled&&!poison&&(channel_charge()!=before||fwp_heap.ncollect)){
   fprintf(stderr,"channel stage %d: managed bytes %.0f -> %.0f\n",channel_stage,before,channel_charge());_Exit(243);
  }
  fwp_lib_finish();return 0;

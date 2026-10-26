@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn scoped_tls_options_release_after_callbacks_and_escaped_tasks() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -115,7 +111,7 @@ static void call(void *arg,int stop){
  if(fwp_cur->gctx||fwp_cleanups)_Exit(1);
 }
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  for(stage=0;stage<10;stage++){
   frees=entered=cancelled=trapped=typed=scope_returned=fail_spawn=borrow_depth=0;memset(owned,0,sizeof owned);watched_tls=spawned=0;
   V fields[5];fields[0]=fwp_some(fwp_cstr("ca"));fields[1]=FWP_TRUE;fields[2]=fwp_some(fwp_cstr("name"));fields[3]=fwp_some(fwp_cstr("cert"));fields[4]=fwp_some(fwp_cstr("key"));V options=fwp_record(5,fields);

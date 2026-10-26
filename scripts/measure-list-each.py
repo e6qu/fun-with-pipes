@@ -51,7 +51,7 @@ def main():
             source = out / f"{stem}.fwp"
             source.write_text(OLD + f"main = range 0 {size} | run-state 0 ({function} (const (add 1) | modify)) | .1 | echo\n")
             cfile, binary = out / f"{stem}.c", out / stem
-            generate = [str(compiler), "build", "--gc", "tracing", "-O2", "--emit-c", str(source), "-o", str(cfile)]
+            generate = [str(compiler), "build", "-O2", "--emit-c", str(source), "-o", str(cfile)]
             started = time.perf_counter_ns()
             run(generate, env)
             generate_ns = time.perf_counter_ns() - started
