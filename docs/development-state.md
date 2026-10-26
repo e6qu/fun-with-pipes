@@ -98,6 +98,32 @@ its handoff and untracked compiler-abort report.
   guide explicitly marks deletion verification pending. Historical measurements
   remain unchanged; benchmark/control docs and the remaining diagnostics inventory
   still need their coordinated final migration.
+- Retired reuse collection-age/poison-only tests and their age fixture; ordinary
+  aliases remain in the complete ledger-backed corpus and fault probes. Reuse's
+  tree test keeps its >100 MiB release threshold and now deliberately omits
+  physical frees in the negative control. The missing-compiler check targets the
+  maintained corpus. Removed its obsolete late-poison environment mutation and
+  collector fields; live-byte/ledger checks, all source cases, frontend errors
+  and raw/native result comparisons remain. No integrated run is claimed yet.
+- Replaced the static 1 MiB heap's collection requirement with counted release
+  versus deliberately missing physical frees. Both controls force copies; the
+  positive must keep its output and the negative must exhaust that same pool
+  with status 102. The three-million-step normal ownership case remains too.
+  This new integrated program control has not run yet.
+- Migrated wide-count coverage: retired sweep/promotion cases, retained exact
+  counts, overflow/OOM, real metadata-free fault, aliases and O1/O2 output checks.
+  Added live interior-address count-slot mapping and fresh-count address reuse to
+  the ledger-backed dynamic/static fixture. The ledger rejects count operations
+  on interior pointers, so the mapping check uses the live owning address for
+  updates. Integration is pending. Removed positive collector-status terms from
+  84 files' combined assertions; live bytes, metadata and resource checks remain.
+- Before the next broad selection of counted C test branches, automatic approval
+  review rejected the command because uncommitted work could be lost. Save this
+  local checkpoint first; generate candidate edits separately and review diffs.
+  Nothing from that rejected command ran. A read-only trial established that
+  `unifdef -t -DFWP_ARC_ONLY=1` handles raw C in Rust tests; normal C mode cannot
+  parse Rust lifetimes. Mixed preprocessor conditions and escaped C strings still
+  require explicit review. Do not apply a broad unchecked rewrite.
 - Still required: retire collector-only controls/fields, migrate remaining report schemas,
   remove CLI mode arguments from callers,
   and update reports/workflow schedules together. Do not invent
@@ -121,7 +147,9 @@ its handoff and untracked compiler-abort report.
   `/private/tmp/fwp-migrate-allocation-reports.py` and
   `/private/tmp/fwp-update-allocator-hook-parameters.py` and
   `/private/tmp/fwp-migrate-release-observers.py` and
-  `/private/tmp/fwp-migrate-native-memory-tests.py`; they are one-shot edits, not
+  `/private/tmp/fwp-migrate-native-memory-tests.py` and
+  `/private/tmp/fwp-retire-reuse-collector-tests.py` and
+  `/private/tmp/fwp-migrate-static-heap-test.py`; they are one-shot edits, not
   idempotent publishers. Do not rerun blindly. Full builds/suites belong on CI. The branch-selection edit helper initially
   rescanned strings inefficiently; that process was stopped and an improved
   version completed under the guard (1.45 CPU seconds, 2.86 elapsed).

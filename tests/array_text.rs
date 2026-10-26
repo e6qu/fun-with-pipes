@@ -378,7 +378,7 @@ fn array_text_counts_allocations_and_releases_every_iteration() {
         text_watch=0;
         if({expectation}) {{ fprintf(stderr,"allocation requests: %zu\n",text_calls); _Exit(211); }}
         if({fusion} && text_retains) _Exit(214);
-        if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect) _Exit(212);
+        if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len) _Exit(212);
         if(text_raw_live) _Exit(213);
     }}
     fprintf(stderr,"managed requests per iteration: %zu; retains: %zu; retained managed/raw bytes: 0\n",text_calls,text_retains);"#

@@ -117,7 +117,7 @@ main = range 0 129 | map (choose | checks) | length | echo
                 1
             );
             let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t arc_live_bytes = fwp_heap.live;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > arc_live_bytes || fwp_heap.freed <= 0) { fprintf(stderr,\"ARC unreclaimed bytes: %ld\\n\",(long)(fwp_heap.live - arc_live_bytes)); exit(193); }\n");
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > arc_live_bytes || fwp_heap.freed <= 0) { fprintf(stderr,\"ARC unreclaimed bytes: %ld\\n\",(long)(fwp_heap.live - arc_live_bytes)); exit(193); }\n");
             let measured = format!("{runtime}{main}");
             let measured = ownership_ledger::instrument_native(&measured, 1 << 20);
             if let Some(path) = std::env::var_os("FWP_ARC_ARTIFACTS") {
@@ -540,7 +540,7 @@ int main(void) {
             else if (mode == 3) OPTION_DROP(alias); else DROP(alias);
         }
         if (chain_stack_high-chain_stack_low > 4096) return 175;
-        if (fwp_heap.live != before || fwp_heap.enabled || fwp_heap.ncollect) return 171;
+        if (fwp_heap.live != before) return 171;
         printf("%d\t%d\t%llu\n", sizes[i], mode, (unsigned long long)(chain_stack_high-chain_stack_low));
     }
     return 0;
@@ -725,7 +725,7 @@ fn native_ownership_ledger_detects_bad_events_without_retaining_storage() {
         code = code.replace(start, &format!("{start}    run_owner_ledger_probe();\n"));
         let finish = "    owner_ledger_finish();\n";
         assert_eq!(code.matches(finish).count(), 1);
-        code = code.replace(finish, &format!("{finish}    if (fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live != 0) owner_ledger_error(207, \"physical allocation balance differs\");\n"));
+        code = code.replace(finish, &format!("{finish}    if (fwp_heap.live != 0) owner_ledger_error(207, \"physical allocation balance differs\");\n"));
         for opt in ["-O1", "-O2"] {
             let binary = dir.join(format!("{memory}{opt}.exe"));
             let run = |executable: &std::path::Path, case: &str, rounds: &str| {

@@ -151,12 +151,12 @@ int main(void){
  fwp_rc_free_obj(inner);fwp_rc_drop(outer);fwp_caf_finish();
  if(!dead(inner)||!dead(outer))return 13;
 #ifdef FWP_ARC_ONLY
- if(fwp_heap.live!=round_baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+ if(fwp_heap.live!=round_baseline||fwp_heap.rc_wide_len)return 90;
 #endif
  }
  fwp_rc_free_obj(scalar_bits);
 #ifdef FWP_ARC_ONLY
- if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+ if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
 #endif
  return 0;
 }
@@ -409,7 +409,7 @@ int main(int argc,char **argv){
  if(!observed || !dead(observed))return 3;
 #ifdef FWP_ARC_ONLY
  /* budget is remaining allowance; zero live charge restores its initial value. */
- if(fwp_heap.live!=0||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+ if(fwp_heap.live!=0||fwp_heap.rc_wide_len)return 90;
 #endif
  return 0;
 }
@@ -578,7 +578,7 @@ int main(void){
  }
  fwp_caf_finish();
 #ifdef FWP_ARC_ONLY
- if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+ if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
 #endif
  }
  return 0;

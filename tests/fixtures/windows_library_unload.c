@@ -71,5 +71,5 @@ __declspec(dllexport) void setup(struct snapshot *s) {
  (void)fwp_p_task_yield();
  fwp_task *done=fwp_spawn_task(0,completed,s,0,0);s->fibers[2]=done->ctx.fiber;
  (void)fwp_await(done);
- if(s->entered!=2||s->completed!=1||s->cancelled||fwp_heap.armed||fwp_heap.ncollect)s->order_error=1;
+ if(s->entered!=2||s->completed!=1||s->cancelled)s->order_error=1;
 }

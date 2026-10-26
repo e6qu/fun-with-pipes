@@ -18,7 +18,7 @@ int main(void) {
     for(size_t i=0;i<6;i++) {
         workspace_mode=(i==1 || i==3)?4:0;
         fwp_p_ad_scope(PTR(&arc_workspace_callback),(V)sizes[i]);
-        if(fwp_cleanups || fwp_heap.armed || fwp_heap.ncollect || fwp_heap.live!=live_bytes)return 211;
+        if(fwp_cleanups || fwp_heap.live!=live_bytes)return 211;
         for(int64_t j=0;j<fwp_ntapes;j++)if(fwp_tapes[j].live)return 212;
         puts(i==5?"],":",");
     }

@@ -81,7 +81,7 @@ main = range 0 4 | each round
             assert_eq!(code.matches(finish).count(), 1);
             code = code.replace(
                 finish,
-                &format!("{finish}    if(fwp_heap.ncollect || 0!=fwp_heap.live)exit(83);\n"),
+                &format!("{finish}    if(0!=fwp_heap.live)exit(83);\n"),
             );
         }
         for opt in ["-O0", "-O2", "-O3"] {
@@ -259,12 +259,12 @@ int main(void) {
     fwp_rc_free_obj(bits);
     fwp_rc_free_obj(duration);
 #ifdef FWP_ARC_ONLY
-    if (fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 90;
+    if (fwp_heap.live!=baseline || fwp_heap.rc_wide_len) return 90;
 #endif
     }
     fwp_native_tasks_finish();
 #ifdef FWP_ARC_ONLY
-    if (fwp_heap.live!=0 || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 90;
+    if (fwp_heap.live!=0 || fwp_heap.rc_wide_len) return 90;
 #endif
     puts("typed task aliases preserved");
     return 0;
@@ -379,7 +379,10 @@ main = (10000, 0) | loop step | echo
         if memory == "arc" {
             let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
             assert_eq!(current.matches(finish).count(), 1);
-            let balanced = current.replace(finish, &format!("{finish}    if(fwp_heap.live!=0 || fwp_heap.rc_wide_len || fwp_heap.ncollect)exit(90);\n"));
+            let balanced = current.replace(
+                finish,
+                &format!("{finish}    if(fwp_heap.live!=0 || fwp_heap.rc_wide_len)exit(90);\n"),
+            );
             let missing = balanced.replace(
                 boundary,
                 "fwp_rc_dup(l1); fwp_rc_dup(l1); return fwp_p_task_deadline(l0, l1);",

@@ -215,7 +215,7 @@ fn arc_commands_reclaim_arguments_frames_defaults_and_errors() {
     let (runtime, main) = code.split_at(start);
     let measured = format!("{runtime}{}", main
         .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    size_t protocol_live_bytes=0;\n")
-        .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > protocol_live_bytes) { fprintf(stderr,\"protocol bytes left: %ld\\n\",(long)(fwp_heap.live - protocol_live_bytes)); exit(193); }\n"));
+        .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > protocol_live_bytes) { fprintf(stderr,\"protocol bytes left: %ld\\n\",(long)(fwp_heap.live - protocol_live_bytes)); exit(193); }\n"));
     for opt in ["-O1", "-O2"] {
         let binary = dir.join(if cfg!(windows) {
             "owners.exe"

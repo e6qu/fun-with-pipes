@@ -186,7 +186,7 @@ int main(int argc, char **argv) {
         /* Stop before a broken finalizer list can revisit freed storage. */
         if (fwp_heap.nfins != 1) _Exit(211);
         if (fwp_heap.live != baseline) _Exit(212);
-        if (closed(keep_descriptor) || fwp_heap.ncollect) _Exit(215);
+        if (closed(keep_descriptor)) _Exit(215);
     }
     fwp_file_drop(keep);
     if (!closed(keep_descriptor)) _Exit(210);

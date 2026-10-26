@@ -1,12 +1,7 @@
 //! Allocation comparisons use ARC with and without in-place reuse.
 //! Both variants retain and release owners; FWP_NO_REUSE disables only reuse.
-//! Collector-era safety checks remain until G5 deletes tracing: goldens run under
-//! `FWP_REUSE_VERIFY=1`, which copies a value judged unique and poisons
-//! the original instead of reusing it, so that a wrong judgment changes
-//! the output (with the collector verifying itself as well). Plain reuse
-//! is what tests/golden_run.rs runs.
-//! `tests/run/reuse_aliasing.fwp` keeps a second reference to records it
-//! updates in each of the ways a program can.
+//! Aliases and invalid uniqueness are covered by arc_corpus and ownership-ledger
+//! fault tests. These comparisons keep the original allocation thresholds.
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -43,24 +38,10 @@ impl Drop for TempDir {
     }
 }
 
-fn render(o: &Output) -> String {
-    let mut s = String::from_utf8_lossy(&o.stdout).to_string();
-    if !o.stderr.is_empty() {
-        s.push_str("--- stderr\n");
-        s.push_str(&String::from_utf8_lossy(&o.stderr));
-    }
-    let c = o.status.code().unwrap_or(-1);
-    if c != 0 {
-        s.push_str(&format!("--- exit {}\n", c));
-    }
-    s
-}
-
 fn run(exe: &Path, cwd: &Path, input: &[u8], env: &[(&str, &str)]) -> Output {
     let mut child = Command::new(exe)
         .current_dir(cwd)
         .env("FWP_SEED", "42")
-        .env_remove("FWP_GC")
         .envs(env.iter().copied())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -69,145 +50,6 @@ fn run(exe: &Path, cwd: &Path, input: &[u8], env: &[(&str, &str)]) -> Output {
         .unwrap();
     child.stdin.take().unwrap().write_all(input).unwrap();
     child.wait_with_output().unwrap()
-}
-
-#[test]
-fn large_and_small_objects_obey_collection_age() {
-    let dir = TempDir::new("age");
-    let source = dir.0.join("age.fwp");
-    let cfile = dir.0.join("age.c");
-    std::fs::write(&source, "main = ()\n").unwrap();
-    let emitted = Command::new(fwp())
-        .args(["build", "--emit-c"])
-        .arg(&source)
-        .arg("-o")
-        .arg(&cfile)
-        .output()
-        .unwrap();
-    assert!(emitted.status.success(), "{emitted:?}");
-    let code = std::fs::read_to_string(cfile).unwrap();
-    assert_eq!(code.matches("int main(int argc, char **argv)").count(), 1);
-    let code = code.replace(
-        "int main(int argc, char **argv)",
-        "int original_main(int argc, char **argv)",
-    );
-    let code = format!("{code}\n{}", include_str!("fixtures/reuse_age_probe.c"));
-    let unique_mark = "m->type == HEAP_BIG ? m->mark != 0 :";
-    let young_mark = "m->type == HEAP_BIG ? !m->mark :";
-    assert_eq!(code.matches(unique_mark).count(), 1);
-    assert_eq!(code.matches(young_mark).count(), 1);
-    let broken_unique = code.replace(unique_mark, "");
-    let broken_young = code.replace(young_mark, "");
-    for opt in ["-O0", "-O2"] {
-        for (label, measured, status) in [
-            ("protected", &code, 0),
-            ("missing-large-unique-age", &broken_unique, 239),
-            ("missing-large-young-age", &broken_young, 238),
-        ] {
-            let binary = dir.0.join("age.exe");
-            fwp::cgen::compile_c(measured, &binary, opt).unwrap();
-            for verify in ["0", "1"] {
-                let actual = Command::new(&binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", verify)
-                    .output()
-                    .unwrap();
-                assert_eq!(
-                    actual.status.code(),
-                    Some(status),
-                    "{opt} {label} {verify}: {actual:?}"
-                );
-                assert!(
-                    actual.stdout.is_empty() && actual.stderr.is_empty(),
-                    "{actual:?}"
-                );
-            }
-            if let Some(destination) = std::env::var_os("FWP_STRING_MAP_ARTIFACTS") {
-                let destination = PathBuf::from(destination);
-                std::fs::create_dir_all(&destination).unwrap();
-                let stem = format!("reuse-age-{}-{label}", &opt[1..]);
-                std::fs::write(destination.join(format!("{stem}.c")), measured).unwrap();
-                std::fs::copy(&binary, destination.join(format!("{stem}.exe"))).unwrap();
-                std::fs::write(
-                    destination.join(format!("{stem}.status")),
-                    format!("{status}\n"),
-                )
-                .unwrap();
-            }
-        }
-    }
-}
-
-#[test]
-fn golden_programs_with_reuse_verified() {
-    let dir = TempDir::new("golden");
-    let mut entries: Vec<PathBuf> = std::fs::read_dir(root().join("tests/run"))
-        .unwrap()
-        .map(|e| e.unwrap().path())
-        .filter(|p| p.extension().is_some_and(|e| e == "fwp"))
-        .collect();
-    entries.sort();
-    let queue = std::sync::Mutex::new(entries);
-    let failures = std::sync::Mutex::new(Vec::new());
-    std::thread::scope(|s| {
-        for _ in 0..4 {
-            s.spawn(|| loop {
-                let Some(path) = queue.lock().unwrap().pop() else {
-                    break;
-                };
-                let name = path.file_stem().unwrap().to_string_lossy().to_string();
-                let exe = dir.0.join(format!("{name}.exe"));
-                let want = std::fs::read_to_string(path.with_extension("out")).unwrap();
-                let b = Command::new(fwp())
-                    .args(["build"])
-                    .arg(path.file_name().unwrap())
-                    .args(["-O1", "-o"])
-                    .arg(&exe)
-                    .env("FWP_REUSE", "1")
-                    .current_dir(path.parent().unwrap())
-                    .output()
-                    .unwrap();
-                if name.starts_with("err_") {
-                    if b.status.code() != Some(1) || render(&b) != want {
-                        failures.lock().unwrap().push(format!(
-                            "{} (expected compile error):\n--- expected\n{}--- got\n{}",
-                            path.display(),
-                            want,
-                            render(&b)
-                        ));
-                    }
-                    continue;
-                }
-                if !b.status.success() {
-                    failures.lock().unwrap().push(format!(
-                        "{} (unexpected native compilation failure):\n{}",
-                        path.display(),
-                        render(&b)
-                    ));
-                    continue;
-                }
-                let input = std::fs::read(path.with_extension("in")).unwrap_or_default();
-                let verify: &[(&str, &str)] = &[
-                    ("FWP_REUSE_VERIFY", "1"),
-                    ("FWP_GC_VERIFY", "1"),
-                    ("FWP_GC_STRESS", "50"),
-                ];
-                let got = render(&run(&exe, path.parent().unwrap(), &input, verify));
-                if got != want {
-                    failures.lock().unwrap().push(format!(
-                        "{} (reuse verified):\n--- expected\n{}--- got\n{}",
-                        path.display(),
-                        want,
-                        got
-                    ));
-                }
-            });
-        }
-    });
-    let failures = failures.into_inner().unwrap();
-    assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
 /// A loop that updates a record of five fields (too many to keep in
@@ -232,8 +74,6 @@ fn unique_records_are_updated_in_place() {
         .arg(&src)
         .arg("-o")
         .arg(&cfile)
-        .env("FWP_REUSE", "1")
-        .env("FWP_FREE", "1")
         .output()
         .unwrap();
     assert!(emitted.status.success(), "{emitted:?}");
@@ -246,17 +86,7 @@ fn unique_records_are_updated_in_place() {
             format!("#define FWP_NO_REUSE 1\n{code}")
         };
         fwp::cgen::compile_c(&measured, &exe, "-O2").unwrap();
-        let o = run(
-            &exe,
-            &dir.0,
-            b"",
-            &[
-                ("FWP_ALLOC_STATS", "1"),
-                ("FWP_GC_STRESS", "0"),
-                ("FWP_GC_VERIFY", "0"),
-                ("FWP_REUSE_VERIFY", "0"),
-            ],
-        );
+        let o = run(&exe, &dir.0, b"", &[("FWP_ALLOC_STATS", "1")]);
         record_probe::save(
             "reuse_allocations",
             &format!("record-reuse-{reuse}"),
@@ -310,8 +140,6 @@ fn variant_cells_are_reused() {
         .arg(&src)
         .arg("-o")
         .arg(&cfile)
-        .env("FWP_REUSE", "1")
-        .env("FWP_FREE", "1")
         .output()
         .unwrap();
     assert!(emitted.status.success(), "{emitted:?}");
@@ -324,17 +152,7 @@ fn variant_cells_are_reused() {
             format!("#define FWP_NO_REUSE 1\n{code}")
         };
         fwp::cgen::compile_c(&measured, &exe, "-O2").unwrap();
-        let o = run(
-            &exe,
-            &dir.0,
-            b"",
-            &[
-                ("FWP_ALLOC_STATS", "1"),
-                ("FWP_GC_STRESS", "0"),
-                ("FWP_GC_VERIFY", "0"),
-                ("FWP_REUSE_VERIFY", "0"),
-            ],
-        );
+        let o = run(&exe, &dir.0, b"", &[("FWP_ALLOC_STATS", "1")]);
         record_probe::save(
             "reuse_allocations",
             &format!("tree-reuse-{reuse}"),
@@ -379,8 +197,6 @@ fn unique_arrays_are_written_in_place() {
             .arg(&src)
             .arg("-o")
             .arg(&cfile)
-            .env("FWP_REUSE", "1")
-            .env("FWP_FREE", "1")
             .output()
             .unwrap();
         assert!(emitted.status.success(), "{emitted:?}");
@@ -393,17 +209,7 @@ fn unique_arrays_are_written_in_place() {
                 format!("#define FWP_NO_REUSE 1\n{code}")
             };
             fwp::cgen::compile_c(&measured, &exe, "-O2").unwrap();
-            let o = run(
-                &exe,
-                &dir.0,
-                b"",
-                &[
-                    ("FWP_ALLOC_STATS", "1"),
-                    ("FWP_GC_STRESS", "0"),
-                    ("FWP_GC_VERIFY", "0"),
-                    ("FWP_REUSE_VERIFY", "0"),
-                ],
-            );
+            let o = run(&exe, &dir.0, b"", &[("FWP_ALLOC_STATS", "1")]);
             record_probe::save(
                 "reuse_allocations",
                 &format!("{name}-reuse-{reuse}"),
@@ -437,40 +243,40 @@ fn unique_arrays_are_written_in_place() {
 fn objects_are_freed_by_their_counts() {
     let dir = TempDir::new("free");
     let src = root().join("tests/reuse/tree.fwp");
-    let stats = |free: &str| -> (f64, u64) {
-        let exe = dir.0.join(format!("tree{free}.exe"));
-        let b = Command::new(fwp())
-            .args(["build"])
-            .arg(&src)
-            .arg("-o")
-            .arg(&exe)
-            .env("FWP_FREE", free)
-            .output()
-            .unwrap();
-        assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
-        let o = run(&exe, &dir.0, b"", &[("FWP_ALLOC_STATS", "1")]);
-        assert_eq!(String::from_utf8_lossy(&o.stdout), "13105400\n");
-        let err = String::from_utf8_lossy(&o.stderr).to_string();
-        let words: Vec<&str> = err.split_whitespace().collect();
-        let collections = words[2].parse().unwrap();
-        let freed = err
-            .split(" MiB freed by counts")
-            .next()
-            .unwrap()
-            .rsplit('(')
-            .next()
-            .unwrap()
-            .parse()
-            .unwrap();
-        (freed, collections)
-    };
-    let (kept, kept_collections) = stats("0");
-    let (freed, collections) = stats("1");
-    assert!(
-        kept == 0.0 && kept_collections > 5 && freed > 100.0 && collections == 0,
-        "collector only: {} collections; freed by counts: {} MiB, {} collections",
-        kept_collections,
-        freed,
-        collections
+    let cfile = dir.0.join("tree.c");
+    let emitted = Command::new(fwp())
+        .args(["build", "--emit-c"])
+        .arg(&src)
+        .args(["-o"])
+        .arg(&cfile)
+        .output()
+        .unwrap();
+    assert!(emitted.status.success(), "{emitted:?}");
+    let current = std::fs::read_to_string(&cfile).unwrap();
+    let free_entry = "static void fwp_mem_free(void *p) {";
+    assert_eq!(current.matches(free_entry).count(), 2);
+    // Both programs keep generated counts/drops. Only physical release is
+    // deliberately omitted in the faulty version; no collector rescues it.
+    let missing = current.replace(
+        free_entry,
+        "static void fwp_mem_free(void *p) { (void)p; return;",
     );
+    for (name, code, release) in [
+        ("missing-free", missing.as_str(), false),
+        ("counted", current.as_str(), true),
+    ] {
+        let exe = dir.0.join(format!("{name}.exe"));
+        fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
+        let out = run(&exe, &dir.0, b"", &[("FWP_ALLOC_STATS", "1")]);
+        assert!(out.status.success(), "{out:?}");
+        assert_eq!(out.stdout, b"13105400\n");
+        let report = allocation_report::parse(&String::from_utf8_lossy(&out.stderr)).unwrap();
+        assert!(report.allocated > 100 * 1_048_576, "{report:?}");
+        if release {
+            assert!(report.released > 100 * 1_048_576, "{report:?}");
+        } else {
+            assert_eq!(report.released, 0, "{report:?}");
+            assert!(report.live > 100 * 1_048_576, "{report:?}");
+        }
+    }
 }

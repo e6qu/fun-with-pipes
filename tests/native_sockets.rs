@@ -404,7 +404,7 @@ fn tcp_values_preserve_scopes_and_release_storage_without_tracing() {
         let end = start + code[start..].find("\n}\n").unwrap() + 3;
         let body = code[start..end]
             .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    size_t tcp_live_bytes=0;\n")
-            .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.ncollect || fwp_heap.live > tcp_live_bytes) { fprintf(stderr,\"TCP charged storage left: %lld\\n\",(long long)(fwp_heap.live - tcp_live_bytes)); exit(248); }\n");
+            .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > tcp_live_bytes) { fprintf(stderr,\"TCP charged storage left: %lld\\n\",(long long)(fwp_heap.live - tcp_live_bytes)); exit(248); }\n");
         let mut measured = code.clone();
         measured.replace_range(start..end, &body);
         if mode == "arc" {

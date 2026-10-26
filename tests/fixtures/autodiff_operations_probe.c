@@ -70,7 +70,7 @@ int main(void) {
     fwp_cleanup_pop(&scope_owner);fwp_tape_scope_release(&scope);
     fwp_trap_cleanup=0;fwp_trap_recover=0;fwp_trap_jb=0;
 #ifdef FWP_ARC_ONLY
-    if(fwp_heap.live!=baseline||fwp_heap.ncollect||fwp_heap.rc_wide_len)return 90;
+    if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
 #else
     (void)baseline;
 #endif

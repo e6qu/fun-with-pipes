@@ -182,7 +182,7 @@ main = [
                 .unwrap();
             let (runtime, body) = emitted.split_at(main);
             let body = body.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t extension_live_bytes = fwp_heap.live;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.ncollect || fwp_heap.live > extension_live_bytes) { fprintf(stderr, \"unreclaimed: %ld\\n\", (long)(fwp_heap.live - extension_live_bytes)); exit(193); }\n");
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > extension_live_bytes) { fprintf(stderr, \"unreclaimed: %ld\\n\", (long)(fwp_heap.live - extension_live_bytes)); exit(193); }\n");
             let body = if name == "scoped-ad" {
                 body.replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    for (int64_t i=0;i<fwp_ntapes;i++) if(fwp_tapes[i].live) exit(194);\n    if(fwp_tape_cached_bytes > FWP_AD_WORKSPACE_BUDGET) exit(195);\n")
             } else {
@@ -313,7 +313,7 @@ int main(void) {{
     csv_probe_at=0;
     V rows={call};
     {drop_rows}(rows);
-    if(fwp_cleanups || fwp_heap.live!=live_bytes || fwp_heap.ncollect) return 194;
+    if(fwp_cleanups || fwp_heap.live!=live_bytes) return 194;
     puts("CSV partial cleanup verified"); return 0;
 }}
 "#,

@@ -54,8 +54,7 @@ static void http_app_checkpoint(void) {
         http_app_opened, http_app_closed, charge, tasks, metrics, fwp_heap.ncollect);
     fflush(stderr);
     if (http_app_opened != http_app_sampled + 8 || http_app_closed != http_app_opened ||
-        charge != http_app_baseline || metrics != http_app_metric_baseline ||
-        fwp_heap.enabled || fwp_heap.ncollect) {
+        charge != http_app_baseline || metrics != http_app_metric_baseline) {
         fprintf(stderr, "http-memory changed\n");
         exit(241);
     }
@@ -70,7 +69,7 @@ static void http_app_finish(void) {
     fprintf(stderr, "http-final\t%llu\t%llu\t%.0f\t%zu\n",
         http_app_opened, http_app_closed, charge, http_app_metric_bytes());
     if (!http_app_active || http_app_shutdown_cancelled != 1 || http_app_opened != http_app_closed || charge ||
-        http_app_metric_bytes() != http_app_metric_baseline || fwp_tasks_active || fwp_heap.ncollect) exit(241);
+        http_app_metric_bytes() != http_app_metric_baseline || fwp_tasks_active) exit(241);
     /* Executable metrics storage is released by its existing atexit callback;
        its separate final record must follow this pre-teardown observation. */
 }

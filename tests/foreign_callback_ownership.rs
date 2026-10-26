@@ -178,7 +178,7 @@ main = [
             );
             code = format!("{runtime}{}", main
                 .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    size_t foreign_live_bytes=0;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_foreign_callbacks || fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > foreign_live_bytes) { fprintf(stderr,\"foreign bytes left: %ld\\n\",(long)(fwp_heap.live - foreign_live_bytes)); exit(193); }\n"));
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_foreign_callbacks || fwp_heap.live > foreign_live_bytes) { fprintf(stderr,\"foreign bytes left: %ld\\n\",(long)(fwp_heap.live - foreign_live_bytes)); exit(193); }\n"));
         }
         for opt in ["-O1", "-O2"] {
             let binary = dir.join(format!("{gc}{opt}.exe"));

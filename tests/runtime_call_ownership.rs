@@ -204,8 +204,10 @@ int main(void) {
 }
 "#.replace("FUNCTION", id);
         let probe = if memory == "arc" {
-            probe.replace("fwp_reuse_verify", "0").replace("ARC_BALANCE",
-            "if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;")
+            probe.replace("fwp_reuse_verify", "0").replace(
+                "ARC_BALANCE",
+                "if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;",
+            )
         } else {
             probe.replace("ARC_BALANCE", "")
         };
@@ -377,8 +379,10 @@ int main(void) {
 }
 "#.replace("FUNCTION", id).replace("IDENTITY", identity);
         let probe = if memory == "arc" {
-            probe.replace("fwp_reuse_verify", "0").replace("ARC_BALANCE",
-            "if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;")
+            probe.replace("fwp_reuse_verify", "0").replace(
+                "ARC_BALANCE",
+                "if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;",
+            )
         } else {
             probe.replace("ARC_BALANCE", "")
         };
@@ -554,8 +558,10 @@ int main(void) {
 }
 "#.replace("EXECUTE", &execute);
         let probe = if memory == "arc" {
-            probe.replace("fwp_reuse_verify", "0").replace("ARC_BALANCE",
-            "if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;")
+            probe.replace("fwp_reuse_verify", "0").replace(
+                "ARC_BALANCE",
+                "if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;",
+            )
         } else {
             probe.replace("ARC_BALANCE", "")
         };
@@ -685,8 +691,10 @@ int main(void) {
 "#
         .replace("FUNCTION", id);
         let probe = if memory == "arc" {
-            probe.replace("fwp_reuse_verify", "0").replace("ARC_BALANCE",
-            "if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;")
+            probe.replace("fwp_reuse_verify", "0").replace(
+                "ARC_BALANCE",
+                "if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;",
+            )
         } else {
             probe.replace("ARC_BALANCE", "")
         };

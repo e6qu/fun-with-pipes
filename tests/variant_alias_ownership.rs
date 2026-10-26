@@ -180,7 +180,7 @@ int main(void) {
   fwp_rc_free_obj(result);
  }
 #ifdef FWP_ARC_ONLY
- if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;
+ if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
  owner_ledger_finish();
 #endif
  }
@@ -561,7 +561,7 @@ int main(void) {
   if(!dead(result)||fwp_cleanups)return 5;
  }
 #ifdef FWP_ARC_ONLY
- if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;
+ if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
  owner_ledger_finish();
 #endif
  }

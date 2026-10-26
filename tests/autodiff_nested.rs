@@ -132,7 +132,7 @@ fn nested_reverse_derivatives_match_analytic_values_and_both_engines() {
             let runtime = format!("{runtime}\nstatic void nested_tapes_finished(void) {{\n    nested_scope_checks++;\n    if(fwp_owned_tapes)exit(196);\n    for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(197);\n}}\n");
             let checked_code = format!("{runtime}{}", main
                 .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    size_t nested_live_bytes=0;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(nested_scope_checks != 27)exit(198);\n    if(fwp_owned_tapes)exit(193);\n    for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(194);\n#if FWP_ARC_ONLY\n    if(fwp_heap.enabled || fwp_heap.ncollect || fwp_heap.live > nested_live_bytes)exit(195);\n#endif\n"));
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(nested_scope_checks != 27)exit(198);\n    if(fwp_owned_tapes)exit(193);\n    for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(194);\n#if FWP_ARC_ONLY\n    if(fwp_heap.live > nested_live_bytes)exit(195);\n#endif\n"));
             let binary = dir.join("nested.exe");
             fwp::cgen::compile_c(&checked_code, &binary, opt).unwrap();
             let output = checked(

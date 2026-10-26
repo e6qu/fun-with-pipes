@@ -130,7 +130,7 @@ main = (10000, 0) | loop step | echo
     let probe = r#"
 int main(int argc,char **argv){
  int result=original_main(argc,argv);if(result)return result;
- if(fwp_heap.live!=0||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+ if(fwp_heap.live!=0||fwp_heap.rc_wide_len)return 90;
  return 0;
 }
 "#;

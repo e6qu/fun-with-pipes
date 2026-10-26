@@ -67,6 +67,6 @@ int main(void) {
     }
     fwp_closure_drop(function);
     double after = (double)fwp_heap.live;
-    if (!fwp_heap.enabled && !fwp_reuse_verify && (after != before || fwp_heap.ncollect)) return 194;
+    if (!fwp_heap.enabled && !fwp_reuse_verify && (after != before)) return 194;
     fwp_lib_finish(); return 0;
 }

@@ -300,7 +300,10 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
             if memory == "arc" {
                 let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
                 assert_eq!(code.matches(finish).count(), 1);
-                code = code.replace(finish, &format!("{finish}    if(fwp_heap.ncollect || fwp_heap.enabled || 0 != fwp_heap.live) exit(193);\n"));
+                code = code.replace(
+                    finish,
+                    &format!("{finish}    if(0 != fwp_heap.live) exit(193);\n"),
+                );
             }
             let drop = "            c->owner.queue_drop(element);";
             assert_eq!(code.matches(drop).count(), 1);
@@ -795,7 +798,7 @@ int main(void){
    text_drop(text);fwp_closure_drop(fn);fwp_rc_free_obj(received);
   }
   fwp_channel_drop(ch);
-  if(fwp_heap.ncollect||fwp_heap.enabled||fwp_heap.live!=baseline){
+  if(fwp_heap.live!=baseline){
    fprintf(stderr,"queued closure storage iteration=%d mode=%d bytes=%lld\n",iteration,mode,(long long)(fwp_heap.live - baseline));return 197;
   }
  }

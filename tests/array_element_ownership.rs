@@ -389,7 +389,10 @@ main = (10000, 0) | loop step | echo
         if memory == "arc" {
             let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
             assert_eq!(owned.matches(finish).count(), 1);
-            let balanced=owned.replace(finish,&format!("{finish}    if(fwp_heap.live!=0||fwp_heap.rc_wide_len||fwp_heap.ncollect)exit(90);\n"));
+            let balanced = owned.replace(
+                finish,
+                &format!("{finish}    if(fwp_heap.live!=0||fwp_heap.rc_wide_len)exit(90);\n"),
+            );
             let mut changed = 0;
             let leaking = balanced
                 .lines()
@@ -558,7 +561,7 @@ int main(void) {
     DROP_LIST(xs);DROP_LIST(listed);
     fwp_rc_free_obj(selected);fwp_rc_free_obj(changed);fwp_rc_free_obj(bits);
 #ifdef FWP_ARC_ONLY
-    if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+    if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
 #endif
     }
     puts("scalar array ownership preserved");

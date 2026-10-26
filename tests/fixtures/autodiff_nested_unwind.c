@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     if (!nested_expected_frees || nested_actual_frees != nested_expected_frees) return 195;
     if (nested_mode && !nested_hit) return 196;
 #if FWP_ARC_ONLY
-    if (fwp_heap.enabled || fwp_heap.ncollect || fwp_heap.live > live_bytes) return 197;
+    if (fwp_heap.live > live_bytes) return 197;
 #endif
     puts("managed tapes release on callback failure and cancellation");
     return 0;

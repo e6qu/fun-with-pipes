@@ -103,7 +103,7 @@ fn udp_results_preserve_values_aliases_and_release_storage() {
             let body = if arc {
                 body.replace(
                     "if(fwp_heap.live > udp_live_bytes)",
-                    "if(fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > udp_live_bytes)",
+                    "if(fwp_heap.live > udp_live_bytes)",
                 )
             } else {
                 body

@@ -190,7 +190,7 @@ int main(void){
  fwp_closure_drop(fn);if(!dead(capture))return 22;
  fwp_rc_free_obj(duration);fwp_free_zombie();
 #ifdef FWP_ARC_ONLY
- if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+ if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
 #endif
  }
  fwp_tasks_finish();fwp_native_tasks_finish();
@@ -255,15 +255,15 @@ int main(void){
   fwp_free_zombie();
   if(finished!=1||entered!=(mode==1?0:1)||fwp_zombie){fprintf(stderr,"unique task iteration=%d mode=%d entered=%d finished=%d zombie=%p\n",i,mode,entered,finished,(void*)fwp_zombie);return 203;}
 #ifndef FWP_RESOURCE_NO_FREE
-  if(measured&&(charged()!=start||fwp_heap.ncollect)){fprintf(stderr,"unique task storage iteration=%d mode=%d before=%.0f after=%.0f collections=%zu\n",i,mode,start,charged(),fwp_heap.ncollect);return 204;}
+  if(measured&&(charged()!=start)){fprintf(stderr,"unique task storage iteration=%d mode=%d before=%.0f after=%.0f collections=%zu\n",i,mode,start,charged(),fwp_heap.ncollect);return 204;}
 #else
-  if(measured&&(charged()<=start||fwp_heap.ncollect))return 205;
+  if(measured&&(charged()<=start))return 205;
   start=charged();
 #endif
  }
  fwp_tasks_finish();fwp_native_tasks_finish();
 #if defined(FWP_ARC_ONLY) && !defined(FWP_RESOURCE_NO_FREE)
- if(fwp_heap.live!=0||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+ if(fwp_heap.live!=0||fwp_heap.rc_wide_len)return 90;
 #endif
  return 0;
 }

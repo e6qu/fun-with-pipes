@@ -96,7 +96,7 @@ main = range 0 32 | each exercise
                 1
             );
             let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t process_live_bytes = fwp_heap.live;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > process_live_bytes) exit(232);\n");
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > process_live_bytes) exit(232);\n");
             code = format!("{runtime}{main}");
         }
         retain_code(&format!("repeated-{mode}.c"), &code);
@@ -338,7 +338,7 @@ main = range 0 64 | map normalize
                 1
             );
             let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t process_live_bytes = fwp_heap.live;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > process_live_bytes) exit(232);\n");
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > process_live_bytes) exit(232);\n");
             code = format!("{runtime}{main}");
         }
         retain_code(&format!("shell-parent-{mode}.c"), &code);

@@ -58,9 +58,9 @@ int main(void) {
         fwp_rc_free_obj(scalar);
         double after=(double)fwp_heap.live;
 #ifdef FWP_ARC_ONLY
-        if(before!=after||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 206;
+        if(before!=after||fwp_heap.rc_wide_len)return 206;
 #else
-        if(!fwp_heap.enabled&&!fwp_reuse_verify&&(before!=after||fwp_heap.ncollect))return 206;
+        if(!fwp_heap.enabled&&!fwp_reuse_verify&&(before!=after))return 206;
 #endif
         if(round==31)printf("%d\t%d\t%d\t%.0f\n", mode, partial_retains, capture_retains, after-before);
     }

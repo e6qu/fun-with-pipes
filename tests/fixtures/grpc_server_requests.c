@@ -90,7 +90,7 @@ int main(int argc,char **argv){
  finish:
  if(request_finals!=(stage==7?2:1)||c->streams||pending.v||pending.n||fwp_cleanups)_Exit(239);
  if(stage>=8)g_conn_drop(c);else{fwp_heap_forget_finalizer(c);g_conn_final(c);fwp_mem_free(c);}
- if(!fwp_heap.enabled&&!poison&&(request_charge()!=before||fwp_heap.ncollect)){
+ if(!fwp_heap.enabled&&!poison&&(request_charge()!=before)){
   fprintf(stderr,"request stage %d: managed bytes %.0f -> %.0f\n",stage,before,request_charge());_Exit(243);
  }
  fwp_lib_finish();return 0;

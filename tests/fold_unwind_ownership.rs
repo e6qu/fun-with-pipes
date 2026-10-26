@@ -137,7 +137,7 @@ int main(void) {
         else fwp_rc_free_obj(input_capture);
     }
 #ifdef FWP_ARC_ONLY
-    if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;
+    if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
 #endif
     }
     puts("fold accumulator and scratch release on failure");
@@ -387,7 +387,7 @@ int main(void) {
     if (fwp_cleanups || *fwp_rc_slot(scalar_word)!=1 || STR(scalar_word)->len!=11 || memcmp(STR(scalar_word)->d,"scalar bits",11)) return 5;
     fwp_rc_free_obj(scalar_word);
 #ifdef FWP_ARC_ONLY
-    if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;
+    if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
 #endif
     }
     puts("borrowed duplicates and scalar fold words retain exact ownership");

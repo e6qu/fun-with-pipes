@@ -49,6 +49,28 @@ int main(int argc, char **argv) {
         require_wide(count_wide(function) == 1 && count_wide(leaf) == 1 && !wide_live);
         fwp_closure_drop(function);
         require_wide(!owner_ledger_live && fwp_heap.live == live_bytes && !fwp_heap.rc_wide_len);
+        /* An interior alias belongs to the same live allocation and count. */
+        V record = fwp_rc_fresh(fwp_record(2, (V[]){7, 8}));
+        V interior = PTR(&OBJ(record)->f[1]);
+        require_wide(fwp_rc_slot(interior) == fwp_rc_slot(record));
+        widen(record);
+        require_wide(count_wide(interior) == 601 && wide_live == 1);
+        for (int i = 0; i < 600; i++) fwp_rc_drop(record);
+        require_wide(count_wide(record) == 1 && !wide_live && OBJ(record)->f[1] == 8);
+        fwp_rc_free_obj(record);
+        require_wide(!owner_ledger_live && fwp_heap.live == live_bytes);
+        /* Scratch storage owns its aliases as a group. Its explicit release
+         * removes side metadata; an address reused later starts at one. */
+        record = fwp_rc_fresh(fwp_record(1, (V[]){0}));
+        widen(record);
+        uintptr_t released_address = (uintptr_t)record;
+        fwp_mem_free(OBJ(record));
+        require_wide(!owner_ledger_live && !wide_live && !fwp_heap.rc_wide_len);
+        record = fwp_rc_fresh(fwp_record(1, (V[]){9}));
+        require_wide((uintptr_t)record == released_address && count_wide(record) == 1);
+        require_wide(OBJ(record)->f[0] == 9);
+        fwp_rc_free_obj(record);
+        require_wide(!owner_ledger_live && fwp_heap.live == live_bytes);
         char bytes[20000] = {0};
         V big = fwp_rc_fresh(fwp_str_new(bytes, sizeof bytes));
         widen(big);

@@ -149,13 +149,13 @@ int main(void) {
     fwp_state_restore(0);typed_drop_string(sentinel);
     fwp_tasks_finish();fwp_free_zombie();
 #ifdef FWP_ARC_ONLY
-    if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+    if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
 #endif
     }
     fwp_trap_recover=NULL;fwp_trap_jb=NULL;fwp_fns=fwp_fn_table;
     fwp_native_tasks_finish();
 #ifdef FWP_ARC_ONLY
-    if(fwp_heap.live!=0||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+    if(fwp_heap.live!=0||fwp_heap.rc_wide_len)return 90;
 #endif
     printf("typed State ownership; collections=%zu owner=%zu cleanup=%zu task=%zu\n",
         fwp_heap.ncollect,sizeof(fwp_state_owner),sizeof(fwp_cleanup),sizeof(fwp_task));

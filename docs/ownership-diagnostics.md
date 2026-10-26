@@ -152,8 +152,11 @@ C, executables, output and status are retained under
 Most counts fit in the allocator's byte-sized slot. More than 254 owners require
 a separate exact count; saturation must not silently turn a value into an
 unreclaimed object. [The ARC probe](../tests/wide_counts.rs),
-`arc_wide_counts_release_values_and_metadata_each_round`, creates 601 owners of
-small text, a function capturing text, and large text. It verifies the contents
+`wide_counts_release_values_and_metadata_each_round`, creates 601 owners of
+small text, a function capturing text, and large text. It also checks that an
+interior address maps to its live allocation's count and that reused storage
+starts with one owner. Released objects are observed through the address ledger,
+not read through stale pointers. It verifies the contents
 before release, returns to one owner, and finally releases storage. Dynamic and
 static O1/O2 runs repeat 8 and 1,024 times.
 
@@ -162,9 +165,11 @@ managed allocation ledger. Removing the metadata free while still decrementing
 its logical count must fail with 239. Overflow must trap with 101; failure to
 allocate metadata must terminate with 102. Normal rounds return managed bytes,
 managed allocations and metadata allocations to baseline. The source-level
-high-fanout string/function example now runs in ARC and tracing, with stack
-placement enabled and disabled, against the raw interpreter. Sweep/mark-specific
-checks remain only for the collector that still exists. Probe artifacts use
+high-fanout string/function example compares native O1/O2 output with the raw
+interpreter, with stack placement enabled and disabled. A separate negative
+control omits physical frees while keeping counts and typed destruction. Sweep
+and automatic-promotion-to-tracing cases are retired with the collector. These
+migrated checks still need integrated validation. Probe artifacts use
 `record-ownership/wide_counts`.
 
 ## Weak references and external resources

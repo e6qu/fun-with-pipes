@@ -87,7 +87,7 @@ raised = string.repeat 2 | fail
         }
         spec->params[0]->drop(input);
     }
-    if (getenv("FWP_INVOCATION_LEDGER") && (fwp_heap.ncollect || fwp_heap.live > baseline)) {
+    if (getenv("FWP_INVOCATION_LEDGER") && (fwp_heap.live > baseline)) {
         fprintf(stderr, "invocation bytes left: %ld\n", (long)(fwp_heap.live - baseline));
         exit(193);
     }

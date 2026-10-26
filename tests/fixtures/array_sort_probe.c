@@ -133,7 +133,7 @@ static int sort_case(int kind, size_t n, int pattern, int sharing,
     sort_alias = sort_input = 0; array_probe_recording = 0;
     if (sort_live) { fprintf(stderr, "array-sort live allocations: %d\n", sort_live); return 211; }
 #ifdef FWP_ARC_ONLY
-    if (fwp_heap.live != before || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 212;
+    if (fwp_heap.live != before || fwp_heap.rc_wide_len) return 212;
 #else
     (void)before;
 #endif

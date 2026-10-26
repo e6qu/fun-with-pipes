@@ -77,7 +77,7 @@ int main(int argc,char **argv){
   if(*fwp_rc_slot(PTR(c))!=1||*fwp_rc_slot(PTR(s))!=2||fwp_cleanups)_Exit(232);
  }
  g_unlink(c,s);g_stream_drop(s);g_conn_drop(c);
- if(!fwp_heap.enabled&&!poison&&(channel_charge()!=before||fwp_heap.ncollect)){
+ if(!fwp_heap.enabled&&!poison&&(channel_charge()!=before)){
   fprintf(stderr,"channel stage %d: managed bytes %.0f -> %.0f\n",channel_stage,before,channel_charge());_Exit(243);
  }
  fwp_lib_finish();return 0;

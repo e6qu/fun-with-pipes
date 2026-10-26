@@ -6,7 +6,7 @@ void setup(uintptr_t *descriptor) {
     fwp_lib_init();
     size_t live_bytes=fwp_heap.live;
     for(int i=0;i<32;i++) if(!probe(i)) exit(247);
-    if(fwp_heap.ncollect || fwp_heap.enabled) exit(248);
+    if(fwp_heap.enabled) exit(248);
 #ifndef FWP_ARC_ONLY
     if(!fwp_reuse_verify)
 #endif

@@ -260,7 +260,7 @@ int main(void){
  reset(); if(optional(NULL)!=NULL||nd)_Exit(17);
  reset(); discard("discard");if(ns!=1||!strings_released_once())_Exit(18);
  reset(); print_line("unit");if(ns!=1||!strings_released_once())_Exit(19);
- if(strcmp(held,"host")||strcmp(second_host,"second")||strcmp(alias.s,"first")||strcmp(alias.t,"second")||fwp_heap.armed||fwp_heap.ncollect)_Exit(16);
+ if(strcmp(held,"host")||strcmp(second_host,"second")||strcmp(alias.s,"first")||strcmp(alias.t,"second"))_Exit(16);
  fwp_release_identity(held); fwp_release_second(second_host);
  fwp_release_record_alias(alias); fwp_release_repeat(grown);
  fwp_rc_free_obj(bits);

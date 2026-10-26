@@ -110,7 +110,7 @@ int main(void){
  fwp_rc_free_obj(fwp_rc_fresh(result));fwp_task_drop(PTR(t));fwp_rc_free_obj(scalar);
  fwp_free_zombie();
 #ifdef FWP_ARC_ONLY
- if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+ if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
 #endif
  }
  // Tracing admits uncounted callbacks; ARC must reject loss of ownership.
@@ -134,7 +134,7 @@ int main(void){
 #endif
  fwp_tasks_finish();fwp_native_tasks_finish();
 #ifdef FWP_ARC_ONLY
- if(fwp_heap.live!=0||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+ if(fwp_heap.live!=0||fwp_heap.rc_wide_len)return 90;
 #endif
  return 0;
 }
@@ -302,7 +302,7 @@ int main(void){
  }
  fwp_cur->scope=0;fwp_mem_free(scope.tasks);
 #ifdef FWP_ARC_ONLY
- if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+ if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
 #endif
  }
  fwp_tasks_finish();fwp_native_tasks_finish();

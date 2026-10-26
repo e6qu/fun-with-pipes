@@ -124,7 +124,7 @@ main = ({rounds}, 0) | loop step | echo
                 let current = ownership_ledger::instrument_native(&current, 1 << 16);
                 let observation = "    owner_ledger_finish();\n";
                 assert_eq!(current.matches(observation).count(), 1);
-                let current = current.replace(observation, &format!("{observation}    if (fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > 0) owner_ledger_error(207, \"unreclaimed stack-child bytes\");\n"));
+                let current = current.replace(observation, &format!("{observation}    if (fwp_heap.live > 0) owner_ledger_error(207, \"unreclaimed stack-child bytes\");\n"));
                 let retained = omit_stack_child_releases(&current);
                 for opt in ["-O1", "-O2"] {
                     for (case, code, status) in

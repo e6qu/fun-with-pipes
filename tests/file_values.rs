@@ -58,7 +58,7 @@ fn filesystem_values_match_raw_interpretation() {
                 1
             );
             let measured = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t file_live_bytes = fwp_heap.live;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if (fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > file_live_bytes) exit(195);\n");
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if (fwp_heap.live > file_live_bytes) exit(195);\n");
             format!("{runtime}{measured}")
         } else {
             code

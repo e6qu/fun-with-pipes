@@ -44,7 +44,7 @@ fn scope_results_preserve_aliases_and_release_partial_captures() {
             .unwrap();
         let (runtime, main) = code.split_at(start);
         let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    size_t scope_live_bytes=0;\n")
-            .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live!=scope_live_bytes || fwp_heap.ncollect) { fprintf(stderr,\"scope charged delta %lld; collections %zu\\n\",(long long)(fwp_heap.live - scope_live_bytes),fwp_heap.ncollect); exit(248); }\n");
+            .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live!=scope_live_bytes) { fprintf(stderr,\"scope charged delta %lld; collections %zu\\n\",(long long)(fwp_heap.live - scope_live_bytes),fwp_heap.ncollect); exit(248); }\n");
         let measured = format!("{runtime}{main}");
         let borrowed = "V r = fwp_apply_borrowed(f, 1, &unit);";
         assert_eq!(measured.matches(borrowed).count(), 1);

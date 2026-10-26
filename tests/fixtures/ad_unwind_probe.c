@@ -55,7 +55,7 @@ int main(void) {
         ARR(outputs)->d[0]=selected_base;ARR(outputs)->d[1]=selected_base+1;
         ARR(seeds)->d[0]=fwp_from_f64(2);ARR(seeds)->d[1]=fwp_from_f64(3);
 #ifdef FWP_ARC_ONLY
-        if (fwp_heap.armed || fwp_heap.ncollect) return 52;
+        if (fwp_heap.ncollect) return 52;
 #else
         fwp_heap_collect();
         if (!fwp_heap.armed || !fwp_heap.ncollect) return 52;
@@ -112,7 +112,7 @@ int main(void) {
         fwp_rc_free_arr(result);fwp_rc_free_arr(outputs);fwp_rc_free_arr(seeds);
         outputs=seeds=0;
 #ifdef FWP_ARC_ONLY
-        if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+        if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
 #endif
     }
     }
@@ -138,7 +138,7 @@ int main(void) {
     fwp_trap_cleanup=NULL;fwp_tape_finish();
     if(fwp_tapes||fwp_ntapes||fwp_tapes_cap||fwp_tape_cached_bytes)return 53;
 #ifdef FWP_ARC_ONLY
-    if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+    if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
 #endif
     if (fwp_cleanups) return 51;
     fwp_trap_recover=0;fwp_trap_jb=0;

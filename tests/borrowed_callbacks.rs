@@ -251,7 +251,7 @@ int main(void) {
     probe_drop_leaf(leaf);
     probe_drop_leaf(scalar);
 #ifdef FWP_ARC_ONLY
-    if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+    if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
     owner_ledger_finish();
 #endif
     }

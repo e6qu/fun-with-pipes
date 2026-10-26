@@ -22,7 +22,7 @@ static jmp_buf registry_trap;
 int main(void) {
     fwp_heap_start();
 #ifdef FWP_ARC_ONLY
-    if (fwp_heap.enabled || fwp_heap.armed) return 200;
+    if (fwp_heap.armed) return 200;
 #else
     if (!fwp_heap.enabled || !fwp_heap.stress || !fwp_heap.verify) return 201;
 #endif

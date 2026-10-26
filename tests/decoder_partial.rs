@@ -90,7 +90,7 @@ int main(void) {{
     result=fwp_p_json_read(invalid,{descriptor});
     if(fwp_tag(result)!=1) return 194;
     ({descriptor})->drop(result);
-    if(fwp_cleanups || fwp_heap.live!=live_bytes || fwp_heap.ncollect || decode_scratch_live) return 195;
+    if(fwp_cleanups || fwp_heap.live!=live_bytes || decode_scratch_live) return 195;
     puts("partial decoder cleanup verified"); return 0;
 }}
 "#

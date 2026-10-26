@@ -132,7 +132,7 @@ void setup(struct snapshot *s) {
  (void)fwp_p_task_yield();
  fwp_task *done=fwp_spawn_task(0,completed,s,0,0);s->stacks[2]=done->stack;
  (void)fwp_await(done);s->poll_fd=fwp_epfd;
- if(s->entered!=2||s->completed!=1||s->cancelled||!fwp_stack_pool_n||fwp_heap.armed||fwp_heap.ncollect)s->order_error=1;
+ if(s->entered!=2||s->completed!=1||s->cancelled||!fwp_stack_pool_n)s->order_error=1;
 }
 "#;
         let library_source = format!(

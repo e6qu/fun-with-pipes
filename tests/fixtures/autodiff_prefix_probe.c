@@ -45,7 +45,7 @@ int main(void) {
     result=prefix_case(3,1);if(result)return result;
     result=prefix_case(0,1);if(result)return result;
 #ifdef FWP_ARC_ONLY
-    if(fwp_heap.live!=baseline||fwp_heap.ncollect||fwp_heap.rc_wide_len)return 90;
+    if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
 #endif
     }
     if(fwp_tape_workspace_enabled()) {
@@ -66,7 +66,7 @@ int main(void) {
     if(scope.head!=-1||fwp_cleanups!=&scope_owner)return 245;
     fwp_cleanup_pop(&scope_owner);fwp_tape_scope_release(&scope);
 #ifdef FWP_ARC_ONLY
-    if(fwp_heap.live!=baseline||fwp_heap.ncollect||fwp_heap.rc_wide_len)return 90;
+    if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
 #else
     (void)baseline;
 #endif

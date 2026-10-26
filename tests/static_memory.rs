@@ -194,7 +194,7 @@ fn nothing_is_mapped_after_startup() {
 }
 
 #[test]
-fn a_small_heap_is_collected_and_reused() {
+fn a_small_heap_reuses_released_storage() {
     if !linux_cc() {
         return;
     }
@@ -220,60 +220,57 @@ fn a_small_heap_is_collected_and_reused() {
     let report = String::from_utf8_lossy(&o.stderr);
     assert!(report.contains("heap            1024 KiB"), "{}", report);
 
-    // Actual collection needs a separate control: counted reclamation can keep
-    // the default build bounded without tracing. Disable freeing and reuse for
-    // short-lived lists/strings, then require collection inside the same 1 MiB.
+    // Force copies in both versions. Counted release must reuse the 1 MiB
+    // pool; deliberately omitting physical frees must exhaust that same pool.
     let workload = include_str!("gc/churn.fwp");
     assert_eq!(workload.matches("(6000, 0)").count(), 1);
-    let source = dir.0.join("shared.fwp");
+    let source = dir.0.join("copied.fwp");
+    let cfile = dir.0.join("copied.c");
     std::fs::write(&source, workload.replace("(6000, 0)", "(60, 0)")).unwrap();
-    let shared = dir.0.join("shared");
-    let built = Command::new(fwp())
-        .args(["build", "--memory", "static", "--heap", "1M", "-O1"])
+    let emitted = Command::new(fwp())
+        .args(["build", "--memory", "static", "--heap", "1M", "--emit-c"])
         .arg(&source)
         .arg("-o")
-        .arg(&shared)
-        .env("FWP_FREE", "0")
-        .env("FWP_REUSE", "0")
+        .arg(&cfile)
         .output()
         .unwrap();
-    assert!(built.status.success(), "{}", render(&built));
-    let collected = Command::new(&shared)
-        .env("FWP_GC", "on")
-        .env("FWP_GC_STATS", "1")
-        .env("FWP_MEMORY_REPORT", "1")
-        .output()
-        .unwrap();
-    assert!(collected.status.success(), "{}", render(&collected));
-    assert_eq!(collected.stdout, b"217680\n", "{}", render(&collected));
-    let report = String::from_utf8_lossy(&collected.stderr);
-    assert!(report.contains("heap            1024 KiB"), "{report}");
-    let statistics = report
-        .lines()
-        .find(|line| line.starts_with("fwp gc: "))
-        .expect("collection statistics");
-    let collections: usize = statistics
-        .split_whitespace()
-        .nth(2)
-        .unwrap()
-        .parse()
-        .unwrap();
-    assert!(collections > 0, "{report}");
-
-    // Without either counted reclamation or tracing, the identical executable
-    // must exhaust this heap. This prevents a vacuous collection assertion.
-    let uncollected = Command::new(&shared).env("FWP_GC", "off").output().unwrap();
-    assert_eq!(
-        uncollected.status.code(),
-        Some(102),
-        "{}",
-        render(&uncollected)
+    assert!(emitted.status.success(), "{}", render(&emitted));
+    let code = format!(
+        "#define FWP_NO_REUSE 1\n{}",
+        std::fs::read_to_string(&cfile).unwrap()
     );
-    assert!(
-        String::from_utf8_lossy(&uncollected.stderr).contains("the static heap (1024 KiB) is full"),
-        "{}",
-        render(&uncollected)
+    let free_entry = "static void fwp_mem_free(void *p) {";
+    assert_eq!(code.matches(free_entry).count(), 2);
+    let missing = code.replace(
+        free_entry,
+        "static void fwp_mem_free(void *p) { (void)p; return;",
     );
+    for (name, measured, expected) in [
+        ("released", code.as_str(), 0),
+        ("missing-free", missing.as_str(), 102),
+    ] {
+        let executable = dir.0.join(name);
+        fwp::cgen::compile_c(measured, &executable, "-O1").unwrap();
+        let out = Command::new(&executable)
+            .env("FWP_MEMORY_REPORT", "1")
+            .output()
+            .unwrap();
+        assert_eq!(out.status.code(), Some(expected), "{}", render(&out));
+        if expected == 0 {
+            assert_eq!(out.stdout, b"217680\n", "{}", render(&out));
+            assert!(
+                String::from_utf8_lossy(&out.stderr).contains("heap            1024 KiB"),
+                "{}",
+                render(&out)
+            );
+        } else {
+            assert!(
+                String::from_utf8_lossy(&out.stderr).contains("the static heap (1024 KiB) is full"),
+                "{}",
+                render(&out)
+            );
+        }
+    }
 }
 
 #[test]

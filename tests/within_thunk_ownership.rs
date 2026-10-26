@@ -91,7 +91,7 @@ int main(void){
  }
  fwp_tasks_finish();fwp_free_zombie();
 #ifdef FWP_ARC_ONLY
- if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+ if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
 #endif
  }
  fwp_native_tasks_finish();

@@ -82,8 +82,12 @@ static void interop_free(void *p) {
             let end = "    /* Ownership observation point: before runtime teardown. */\n";
             assert_eq!(code.matches(init).count(), 1);
             assert_eq!(code.matches(end).count(), 1);
-            code = code.replace(init, &format!("{init}    size_t raw_live_bytes=0;\n"))
-            .replace(end, &format!("{end}    if(fwp_heap.enabled || fwp_heap.ncollect || fwp_heap.live > raw_live_bytes)exit(214);\n"));
+            code = code
+                .replace(init, &format!("{init}    size_t raw_live_bytes=0;\n"))
+                .replace(
+                    end,
+                    &format!("{end}    if(fwp_heap.live > raw_live_bytes)exit(214);\n"),
+                );
         }
         for opt in ["-O0", "-O2"] {
             for (label, candidate, status) in [
@@ -335,8 +339,12 @@ fn raw_wide_integer_storage_preserves_all_bits_and_owned_result_boxes() {
             let end = "    /* Ownership observation point: before runtime teardown. */\n";
             assert_eq!(code.matches(init).count(), 1);
             assert_eq!(code.matches(end).count(), 1);
-            code = code.replace(init, &format!("{init}    size_t raw_live_bytes=0;\n"))
-                .replace(end, &format!("{end}    if(fwp_heap.enabled || fwp_heap.ncollect || fwp_heap.live > raw_live_bytes)exit(214);\n"));
+            code = code
+                .replace(init, &format!("{init}    size_t raw_live_bytes=0;\n"))
+                .replace(
+                    end,
+                    &format!("{end}    if(fwp_heap.live > raw_live_bytes)exit(214);\n"),
+                );
         }
         for opt in ["-O0", "-O2"] {
             let binary = dir.join("wide.exe");

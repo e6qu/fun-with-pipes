@@ -949,7 +949,7 @@ jobs:
           from pathlib import Path
           import subprocess
 
-          for target, test in [('reuse', 'golden_programs_with_reuse_verified'),
+          for target, test in [('arc_corpus', 'eligible_golden_programs_preserve_semantics_and_reclaim_values'),
                                ('golden_run', 'native_snapshots')]:
               build = subprocess.check_output(['cargo', 'test', '--test', target,
                   '--no-run', '--message-format=json'], text=True)

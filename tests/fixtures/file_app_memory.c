@@ -30,7 +30,7 @@ void file_app_checkpoint(int64_t phase, int64_t remaining) {
     }
 }
 static void file_app_finish(void) {
-    if (fwp_heap.enabled || fwp_heap.ncollect || file_app_charge() != file_app_start ||
+    if (file_app_charge() != file_app_start ||
         file_app_opened != file_app_closed || file_app_raw) exit(241);
     for (unsigned phase = 0; phase < 3; phase++) if (file_app_samples[phase] != 64) exit(240);
     fprintf(stderr, "file-final\t0\t0\t0\n");

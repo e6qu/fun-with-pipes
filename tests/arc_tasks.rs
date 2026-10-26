@@ -280,7 +280,7 @@ fn tasks_and_acyclic_channels_reclaim_after_join_and_cancellation() {
             );
             format!("{runtime}{}", main
                 .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    size_t task_live_bytes=0;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > task_live_bytes) { fprintf(stderr,\"task bytes left: %ld\\n\",(long)(fwp_heap.live - task_live_bytes)); exit(193); }\n"))
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > task_live_bytes) { fprintf(stderr,\"task bytes left: %ld\\n\",(long)(fwp_heap.live - task_live_bytes)); exit(193); }\n"))
         } else {
             code
         };
@@ -541,12 +541,12 @@ fn subscriptions_join_active_callbacks_and_release_each_round() {
                 replace_once(
                     &mut code,
                     "    fwp_scope_release(&scope_owner);\n    FWP_KEEP_ALIVE(body);",
-                    "    fwp_scope_release(&scope_owner);\n    if (subscription_outer) {\n        if (t->first_child || fwp_heap.enabled || fwp_heap.ncollect || fwp_heap.live != subscription_live_bytes) { fprintf(stderr, \"subscription retained bytes: %ld\\n\", (long)(fwp_heap.live - subscription_live_bytes)); _Exit(193); }\n        subscription_rounds++;\n    }\n    FWP_KEEP_ALIVE(body);",
+                    "    fwp_scope_release(&scope_owner);\n    if (subscription_outer) {\n        if (t->first_child || fwp_heap.live != subscription_live_bytes) { fprintf(stderr, \"subscription retained bytes: %ld\\n\", (long)(fwp_heap.live - subscription_live_bytes)); _Exit(193); }\n        subscription_rounds++;\n    }\n    FWP_KEEP_ALIVE(body);",
                 );
                 replace_once(
                     &mut code,
                     "    /* Ownership observation point: before runtime teardown. */",
-                    &format!("    /* Ownership observation point: before runtime teardown. */\n    if (subscription_rounds != {rounds} || fwp_heap.live != 0 || fwp_heap.ncollect) _Exit(195);"),
+                    &format!("    /* Ownership observation point: before runtime teardown. */\n    if (subscription_rounds != {rounds} || fwp_heap.live != 0) _Exit(195);"),
                 );
             }
             std::fs::write(&cfile, &code).unwrap();

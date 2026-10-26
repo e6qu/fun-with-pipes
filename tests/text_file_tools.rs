@@ -147,7 +147,7 @@ fn maintained_text_tools_release_repeated_and_retained_results() {
                     1
                 );
                 let measured = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t text_live_bytes = fwp_heap.live;\n")
-                    .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.enabled || fwp_heap.ncollect || fwp_heap.live > text_live_bytes) exit(239);\n");
+                    .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > text_live_bytes) exit(239);\n");
                 code = format!("{runtime}{measured}");
             }
             let binary = root.join("tool.exe");

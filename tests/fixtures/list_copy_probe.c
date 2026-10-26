@@ -150,7 +150,7 @@ int main(void) {
         copy_list->drop(copy_input); copy_input = 0;
         for (int i = 0; i < 3; i++) { copy_list->elem->drop(copy_leaves[i]); copy_leaves[i] = 0; }
 #ifdef FWP_ARC_ONLY
-        if (fwp_heap.live != baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 221;
+        if (fwp_heap.live != baseline || fwp_heap.rc_wide_len) return 221;
 #else
         (void)baseline;
 #endif

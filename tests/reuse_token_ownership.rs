@@ -153,7 +153,7 @@ int main(void) {
     if (result || !released(input_cell) || fwp_cleanups) return 9;
 #ifdef FWP_ARC_ONLY
     if (fwp_heap.freed <= before) return 10;
-    if (fwp_heap.live != baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 90;
+    if (fwp_heap.live != baseline || fwp_heap.rc_wide_len) return 90;
     owner_ledger_finish();
 #else
     if (!fwp_reuse_verify && fwp_heap.freed <= before) return 10;

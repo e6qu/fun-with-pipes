@@ -78,7 +78,7 @@ empty-report = const ()
                 .unwrap();
             let (runtime, main) = code.split_at(start);
             let measured = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t report_live_bytes = fwp_heap.live;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.ncollect || fwp_heap.enabled || fwp_heap.live > report_live_bytes) exit(229);\n");
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > report_live_bytes) exit(229);\n");
             code = format!("{runtime}{measured}");
         }
         let binary = dir.join("report.exe");

@@ -152,7 +152,7 @@ int main(void) {
         fwp_rc_free_obj(input_alias);
     }
 #ifdef FWP_ARC_ONLY
-    if (fwp_heap.live != baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 90;
+    if (fwp_heap.live != baseline || fwp_heap.rc_wide_len) return 90;
 #endif
     }
     puts("map results and scratch release across failed callbacks");
@@ -332,7 +332,7 @@ int main(void) {
     if (*fwp_rc_slot(scalar_word) != 1 || STR(scalar_word)->len != 12) return 3;
     fwp_rc_free_obj(scalar_word);
 #ifdef FWP_ARC_ONLY
-    if (fwp_heap.live != baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect) return 90;
+    if (fwp_heap.live != baseline || fwp_heap.rc_wide_len) return 90;
 #endif
     }
     puts("scalar address bits remain uncounted on map failure");

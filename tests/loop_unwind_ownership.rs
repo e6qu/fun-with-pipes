@@ -214,7 +214,7 @@ int main(void) {
         fwp_rc_free_obj(original_text);fwp_rc_free_obj(scalar_word);
     }
 #ifdef FWP_ARC_ONLY
-    if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;
+    if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
 #endif
     }
     puts("loop states release at cancellation ticks with aliases and scalar bits intact");
@@ -354,7 +354,7 @@ int main(void) {
         fwp_rc_free_obj(original_text);fwp_rc_free_obj(scalar_word);
     }
 #ifdef FWP_ARC_ONLY
-    if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;
+    if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
 #endif
     }
     puts("owned Steps release on payload preparation failure without losing aliases");

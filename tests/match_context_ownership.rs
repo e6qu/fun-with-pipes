@@ -141,7 +141,7 @@ int main(void) {
   else if(!dead(input))return 5;
  }
 #ifdef FWP_ARC_ONLY
- if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;
+ if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
 #endif
  }
  return 0;
@@ -325,7 +325,7 @@ int main(void) {
  if(fFUNCTION(input)!=17)return 1;if(!observed||!dead(observed))return 3;
  if(alias){if(*fwp_rc_slot(input)!=1||STR(input)->len!=5)return 4;fwp_rc_free_obj(input);}else if(!dead(input))return 5;}
 #ifdef FWP_ARC_ONLY
- if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;
+ if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
 #endif
  }
  return 0;

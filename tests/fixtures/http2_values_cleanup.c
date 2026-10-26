@@ -85,6 +85,6 @@ int main(void) {
         if(fwp_heap.live!=live_bytes)return 248;
     }
     printf("partial-result field owner: %zu bytes, alignment %zu, 8 inline values\n",sizeof(fwp_decode_fields),_Alignof(fwp_decode_fields));
-    if(fwp_heap.ncollect||fwp_cleanups)return 247;
+    if(fwp_cleanups)return 247;
     fwp_lib_finish();return 0;
 }

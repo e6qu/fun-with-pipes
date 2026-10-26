@@ -158,7 +158,7 @@ int main(void) {
         fwp_rc_free_obj(first);fwp_rc_free_obj(second);fwp_rc_free_obj(last);fwp_rc_free_obj(scalar_word);
     }
 #ifdef FWP_ARC_ONLY
-    if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len || fwp_heap.ncollect)return 90;
+    if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
 #endif
     }
     puts("partial argument and capture preparation preserves aliases and releases pending owners");

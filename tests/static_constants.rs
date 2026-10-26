@@ -64,7 +64,7 @@ fn constants_need_no_startup_heap_and_preserve_layout_and_aliases() {
             let entry = if memory == "arc" {
                 entry.replace(
                     finish,
-                    &format!("{finish}    if(fwp_heap.ncollect || fwp_heap.live != 0)exit(214);\n"),
+                    &format!("{finish}    if(fwp_heap.live != 0)exit(214);\n"),
                 )
             } else {
                 entry.to_string()

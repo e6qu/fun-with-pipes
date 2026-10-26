@@ -116,7 +116,7 @@ int main(void){
  V result=fSCALAR(fn);if(result!=scalar||*fwp_rc_slot(scalar)!=1)return 7;
  fwp_closure_drop(fn);fwp_rc_free_obj(scalar);
 #ifdef FWP_ARC_ONLY
- if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+ if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
 #endif
  }
  fwp_fninfo table[sizeof(fwp_fn_table)/sizeof(fwp_fn_table[0])];memcpy(table,fwp_fn_table,sizeof(table));
@@ -136,7 +136,7 @@ int main(void){
 #endif
  fwp_tasks_finish();fwp_native_tasks_finish();
 #ifdef FWP_ARC_ONLY
- if(fwp_heap.live!=0||fwp_heap.rc_wide_len||fwp_heap.ncollect)return 90;
+ if(fwp_heap.live!=0||fwp_heap.rc_wide_len)return 90;
 #endif
  return 0;
 }
