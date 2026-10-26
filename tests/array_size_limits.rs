@@ -136,25 +136,17 @@ fn array_size_limits_agree_with_raw_interpreter_and_generic_wrappers() {
                 checked(
                     Command::new(fwp)
                         .env_remove("FWP_NO_OPT")
-                        .env("FWP_REUSE", reuse)
                         .args(["build", opt, "--emit-c", "-o"])
                         .arg(&cfile)
                         .arg(&source),
                 );
-                checked(
-                    Command::new(fwp)
-                        .env_remove("FWP_NO_OPT")
-                        .env("FWP_REUSE", reuse)
-                        .args(["build", opt, "-o"])
-                        .arg(&executable)
-                        .arg(&source),
-                );
-                let output = Command::new(&executable)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", "1")
-                    .output()
-                    .unwrap();
+                let mut code = std::fs::read_to_string(&cfile).unwrap();
+                if reuse == "0" {
+                    code.insert_str(0, "#define FWP_NO_REUSE 1\n");
+                }
+                std::fs::write(&cfile, &code).unwrap();
+                fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+                let output = Command::new(&executable).output().unwrap();
                 if let Some(destination) = std::env::var_os("FWP_ARRAY_SIZE_ARTIFACTS") {
                     let destination = PathBuf::from(destination);
                     std::fs::create_dir_all(&destination).unwrap();

@@ -3,6 +3,7 @@ int main(void) {
     const fwp_desc element={.kind=K_F64};
     puts("{\"cases\":[");
     for(size_t run=0;run<5;run++) {
+        const size_t baseline=fwp_heap.live;
         size_t n=run==0?129:run==1?257:run==2?0:run==3?7:1;
         V input=fwp_rc_fresh(fwp_array_new_packed(n,&element));double reference=-0.0;
         for(size_t i=0;i<n;i++) {
@@ -23,6 +24,7 @@ int main(void) {
         if(FUSED && (calls || bytes)){fprintf(stderr,"fused allocated %llu calls and %llu bytes\n",(unsigned long long)calls,(unsigned long long)bytes);return 171;}
         if(!FUSED && calls<2)return 172;
         if(fwp_heap.freed<=freed)return 173;
+        if(fwp_heap.live!=baseline)return 176;
         printf("%s{\"elements\":%zu,\"managedCalls\":%llu,\"managedRequestedBytes\":%llu,\"retains\":%llu,\"cleanupScopes\":%llu,\"freedBytes\":%.0f,\"resultBits\":\"%016llx\"}",run?",\n":"",n,(unsigned long long)calls,(unsigned long long)bytes,(unsigned long long)retains,(unsigned long long)scopes,fwp_heap.freed-freed,(unsigned long long)result);
     }
     puts("]}");return 0;

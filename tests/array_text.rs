@@ -170,21 +170,14 @@ fn array_list_text_preserves_values_views_aliases_and_effect_order() {
                     "{name}/fusion{fusion}/interpreter: {interpreted:?}"
                 ));
             }
-            for (packed, ownership) in [
-                ("0", "arc"),
-                ("0", "tracing"),
-                ("1", "arc"),
-                ("1", "tracing"),
-            ] {
+            for packed in ["0", "1"] {
                 let cfile = directory.join("program.c");
                 let build = Command::new(compiler)
                     .env_remove("FWP_NO_OPT")
                     .env("FWP_ARRAY_FUSION", fusion)
                     .env("FWP_PACKED_ARRAYS", packed)
                     .env("FWP_LTO", "0")
-                    .args([
-                        "build", "--gc", ownership, "--memory", "dynamic", "--emit-c", "-O2",
-                    ])
+                    .args(["build", "--memory", "dynamic", "--emit-c", "-O2"])
                     .arg(&input)
                     .arg("-o")
                     .arg(&cfile)
@@ -192,7 +185,7 @@ fn array_list_text_preserves_values_views_aliases_and_effect_order() {
                     .unwrap();
                 if !build.status.success() {
                     failures.push(format!(
-                        "{name}/{ownership}/fusion{fusion}/packed{packed}: compiler: {build:?}"
+                        "{name}/fusion{fusion}/packed{packed}: compiler: {build:?}"
                     ));
                     continue;
                 }
@@ -201,52 +194,42 @@ fn array_list_text_preserves_values_views_aliases_and_effect_order() {
                     let path = std::path::Path::new(&root).join("array-text-source");
                     std::fs::create_dir_all(&path).unwrap();
                     std::fs::write(
-                        path.join(format!(
-                            "{name}-fusion{fusion}-packed{packed}-{ownership}.c"
-                        )),
+                        path.join(format!("{name}-fusion{fusion}-packed{packed}.c")),
                         &code,
                     )
                     .unwrap();
                 }
                 if code.contains("fwp_show_array_list(l0,") != (eligible && fusion == "1") {
-                    failures.push(format!("{name}/{ownership}/fusion{fusion}/packed{packed}: incorrect display lowering"));
+                    failures.push(format!(
+                        "{name}/fusion{fusion}/packed{packed}: incorrect display lowering"
+                    ));
                 }
                 for opt in ["-O1", "-O2"] {
                     let executable = directory.join("program.exe");
                     if let Err(error) = fwp::cgen::compile_c(&code, &executable, opt) {
                         failures.push(format!(
-                            "{name}/{ownership}/fusion{fusion}/packed{packed}/{opt}: {error}"
+                            "{name}/fusion{fusion}/packed{packed}/{opt}: {error}"
                         ));
                         continue;
                     }
-                    let settings: &[&str] = if ownership == "arc" {
-                        &["0"]
-                    } else {
-                        &["0", "1"]
-                    };
-                    for stress in settings {
-                        let actual = Command::new(&executable)
-                            .env("FWP_GC_STRESS", stress)
-                            .env("FWP_GC_VERIFY", stress)
-                            .env("FWP_REUSE_VERIFY", stress)
-                            .output()
-                            .unwrap();
-                        record_probe::save(
-                            "array_text",
-                            &format!("{name}-fusion{fusion}-packed{packed}-{ownership}{opt}-stress{stress}"),
-                            &code,
-                            &executable,
-                            &actual,
-                        );
-                        if (&actual.stdout, &actual.stderr, actual.status.code())
-                            != (
-                                &reference.stdout,
-                                &reference.stderr,
-                                reference.status.code(),
-                            )
-                        {
-                            failures.push(format!("{name}/fusion{fusion}/{ownership}/{opt}/stress{stress}: {actual:?}"));
-                        }
+                    let actual = Command::new(&executable).output().unwrap();
+                    record_probe::save(
+                        "array_text",
+                        &format!("{name}-fusion{fusion}-packed{packed}{opt}"),
+                        &code,
+                        &executable,
+                        &actual,
+                    );
+                    if (&actual.stdout, &actual.stderr, actual.status.code())
+                        != (
+                            &reference.stdout,
+                            &reference.stderr,
+                            reference.status.code(),
+                        )
+                    {
+                        failures.push(format!(
+                            "{name}/fusion{fusion}/packed{packed}/{opt}: {actual:?}"
+                        ));
                     }
                 }
             }
@@ -410,12 +393,7 @@ fn array_text_counts_allocations_and_releases_every_iteration() {
                         }
                         let executable = directory.join("counts.exe");
                         fwp::cgen::compile_c(&candidate, &executable, opt).unwrap();
-                        let actual = Command::new(&executable)
-                            .env("FWP_GC_STRESS", "0")
-                            .env("FWP_GC_VERIFY", "0")
-                            .env("FWP_REUSE_VERIFY", "0")
-                            .output()
-                            .unwrap();
+                        let actual = Command::new(&executable).output().unwrap();
                         let label = format!("{name}-fusion{fusion}-packed{packed}{opt}-{control}");
                         record_probe::save("array_text", &label, &candidate, &executable, &actual);
                         if actual.status.code() != Some(*status)

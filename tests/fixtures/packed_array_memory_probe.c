@@ -15,6 +15,7 @@ int main(void) {
     const size_t lengths[]={200,128,0,3,2},offsets[]={1,2,0,1,2};
     puts("{\"cases\":[");
     for(size_t which=0;which<5;which++) {
+        const size_t baseline=fwp_heap.live;
         uint64_t before_calls=measured_calls,before_bytes=measured_bytes;
         double before_freed=fwp_heap.freed;
         V result=functions[which](257);
@@ -43,6 +44,7 @@ int main(void) {
         fARRAY_DROP(result);
         double released=fwp_heap.freed-before_drop;
         if(released<(double)(own_capacity+backing_capacity))return 143;
+        if(fwp_heap.live!=baseline)return 144;
         printf("%s{\"name\":\"%s\",\"inputLength\":257,\"resultLength\":%zu,\"isView\":%s,\"managedCalls\":%llu,\"managedRequestedBytes\":%llu,\"resultCapacityBytes\":%zu,\"retainedBackingCapacityBytes\":%zu,\"freedBeforeReturnBytes\":%.0f,\"freedAtDropBytes\":%.0f}",which?",\n":"",names[which],length,is_view?"true":"false",(unsigned long long)calls,(unsigned long long)bytes,own_capacity,backing_capacity,before_drop-before_freed,released);
     }
     puts("],\"scope\":\"Managed allocator requests and rounded object capacities; complete typed last-owner releases without a tracing collection. No timing or total process memory claim.\"}");

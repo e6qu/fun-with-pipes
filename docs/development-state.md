@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** migrate remaining numeric array/storage/device tests, then the
-resource/entry tests and report/workflow audit below. Finish migration before
+**Next:** migrate the remaining resource/entry tests, then audit report
+consumers and workflows below. Finish migration before
 integrated compiler and production validation on runners. The current source
 has not been built as a compiler. GC removal is not verified.
 
@@ -18,6 +18,12 @@ The merge has the same tree and the required one-line message. See
 compiler-abort report; its handoff points here. Old publisher scripts stay stopped.
 
 ## Latest completed edits; execution pending
+
+- Numeric fusion, layout, packed arrays, display and bounds tests retain their
+  O1/O2, packing, effects/traps, bit-pattern and forced-copy cases. Copy controls
+  now change the compiled C. Decoder fixtures release successful results and
+  supply typed failure cleanup; omitted array cleanup fails the live-byte check.
+  Fusion/view/layout fixtures also require restoration of starting live bytes.
 
 - List/fold/filter/map/zip and text checks keep their alias inputs, stack choices,
   output comparisons and release thresholds. Leak controls retain an extra owner
@@ -108,7 +114,6 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 ## Remaining migration, in order
 
 1. **Finish test mode removal.** A fresh audit still finds old controls in
-   numeric fusion/storage/device bounds;
    process/resource frames; AOT/library extension checks. Review their
    actual assertions and paired C fixtures, not just environment names. The list/State/closure fixtures in
    `list_applicative_ownership` are migrated; integrated execution is pending.
@@ -183,6 +188,7 @@ Scripts below live in `/private/tmp` unless a repository path is given.
 | `python3 fwp-check-memory-startup.py` | Migrated harness compiles at Rust O1 with warnings denied; three helper tests pass. Does not run generated memory servers. |
 | `python3 fwp-check-closure-failure.py` | Actual allocator, cleanup queue and trap code, Clang ARM64 O1/O2: normal release passes; capture trap 101, spill OOM 102 and omitted context reset 94. A recovery callback would fail with 93. Does not establish generated-program or other-target support. |
 | `python3 fwp-check-stream-owners.py` | Current runtime, Clang ARM64 O1/O2: eighteen normal size/read-mode cases end with zero charge and all messages freed; omitted cache drop exits 40 at both levels. This uses a minimal C library harness, not generated Rust/library integration or network calls. |
+| `python3 fwp-check-numeric-decoder.py` | Current runtime, Clang ARM64 O1/O2, packed/word arrays: twelve decoder runs pass. Normal and malformed input restore live bytes; omitted array cleanup fails 169, wire/count controls fail 154/155. Minimal C harness, not generated-program or other-target validation. |
 | `python3 fwp-check-scalar-list-owners.py` | Current runtime, Clang ARM64 O1/O2: scalar repeat/range, zip/unzip/chunks and sort preserve address-shaped scalar bits and restore live bytes. Six runs; direct runtime calls, not generated-wrapper integration. |
 | `python3 fwp-check-file-owner-migration.py` | Current runtime, Clang ARM64 O1/O2: forty constructor/I/O/storage runs pass, including 8/1,024-round release and all omitted close/finalizer/header/text/alias/scope faults. C harness only; generated and other-platform checks pending. Initially caught a deleted `armed` field and missing typed callback metadata; both fixtures repaired. |
 | `python3 fwp-check-connect-owners.py` | Current runtime/OpenSSL, Clang ARM64 O1/O2: normal cancellation restores live bytes; omitted TCP/TLS owner, resolver and SSL cleanup fail as required. Ten runs; generated-library and other-platform checks pending. |

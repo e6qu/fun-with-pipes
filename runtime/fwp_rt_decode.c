@@ -1,5 +1,5 @@
 /* Partial decoder values are typed owners. Small field vectors stay on the
- * C stack; larger vectors use scanned scratch so tracing sees pending values.
+ * C stack; larger vectors use temporary heap storage released by this record.
  * The same cleanup record handles ordinary parse failure and nonlocal exit. */
 typedef struct {
     V local[8], *values;

@@ -36,7 +36,6 @@ fn emitted(scratch: &Scratch, fixture_name: &str, function: &str, packing: &str)
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
             .env_remove("FWP_TYPED_ABI")
-            .env("FWP_REUSE", "1")
             .env("FWP_PACKED_ARRAYS", packing)
             .args(["build", "--fn", function, "--emit-c"])
             .arg(fixture(fixture_name))
@@ -55,15 +54,10 @@ fn function_id<'a>(source: &'a str, name: &str) -> &'a str {
         .next()
         .unwrap()
 }
-fn native_probe(scratch: &Scratch, name: &str, source: &str, opt: &str, stress: &str) -> Output {
+fn native_probe(scratch: &Scratch, name: &str, source: &str, opt: &str) -> Output {
     let path = scratch.0.join(format!("{name}{}", &opt[1..]));
     fwp::cgen::compile_c(source, &path, opt).unwrap();
-    Command::new(path)
-        .env("FWP_GC_STRESS", stress)
-        .env("FWP_GC_VERIFY", "1")
-        .env("FWP_REUSE_VERIFY", "0")
-        .output()
-        .unwrap()
+    Command::new(path).output().unwrap()
 }
 fn instrument_allocators(source: &str) -> String {
     source.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic uint64_t measured_calls,measured_bytes;")
@@ -87,22 +81,22 @@ fn immutable_numeric_operations_agree_with_raw_interpreter() {
                 let path = scratch
                     .0
                     .join(format!("packed-{packing}-{reuse}{}", &opt[1..]));
+                let cfile = path.with_extension("c");
                 checked(
                     Command::new(env!("CARGO_BIN_EXE_fwp"))
                         .env_remove("FWP_NO_OPT")
                         .env("FWP_PACKED_ARRAYS", packing)
-                        .env("FWP_REUSE", reuse)
-                        .args(["build", opt])
+                        .args(["build", opt, "--emit-c"])
                         .arg(&source)
                         .arg("-o")
-                        .arg(&path),
+                        .arg(&cfile),
                 );
-                let output = checked(
-                    Command::new(path)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", "1"),
-                );
+                let mut code = std::fs::read_to_string(&cfile).unwrap();
+                if reuse == "0" {
+                    code.insert_str(0, "#define FWP_NO_REUSE 1\n");
+                }
+                fwp::cgen::compile_c(&code, &path, opt).unwrap();
+                let output = checked(&mut Command::new(path));
                 assert_eq!(output.stdout, reference.stdout, "{packing} {reuse} {opt}");
                 assert_eq!(output.stderr, reference.stderr, "{packing} {reuse} {opt}");
             }
@@ -139,7 +133,7 @@ fn views_retain_backing_and_small_copies_release_it_without_collection() {
         );
         source.push_str(&probe);
         for opt in ["-O1", "-O2"] {
-            let output = native_probe(&scratch, &format!("memory-{packing}"), &source, opt, "0");
+            let output = native_probe(&scratch, &format!("memory-{packing}"), &source, opt);
             assert_eq!(
                 output.status.code(),
                 Some(0),
@@ -153,7 +147,7 @@ fn views_retain_backing_and_small_copies_release_it_without_collection() {
                     ("counter", "static inline void *fwp_alloc_init(size_t n) {\n    measured_calls++; measured_bytes+=n;", "static inline void *fwp_alloc_init(size_t n) {\n    (void)n;", 141),
                 ] {
                     assert!(source.contains(old));
-                    let output = native_probe(&scratch, name, &source.replace(old, new), opt, "0");
+                    let output = native_probe(&scratch, name, &source.replace(old, new), opt);
                     assert_eq!(output.status.code(), Some(expected), "{name} {opt}: {}", String::from_utf8_lossy(&output.stderr));
                 }
             }
@@ -172,7 +166,7 @@ fn generated_arrays_have_natural_width_alignment_and_exact_bits() {
         "int original_main(int argc, char **argv)",
     ) + &probe;
     for opt in ["-O1", "-O2"] {
-        let output = native_probe(&scratch, "bytes", &source, opt, "1");
+        let output = native_probe(&scratch, "bytes", &source, opt);
         assert_eq!(
             output.status.code(),
             Some(0),
@@ -226,7 +220,7 @@ int main(void) {{
             "int original_main(int argc, char **argv)",
         ) + &probe;
         for opt in ["-O1", "-O2"] {
-            let output = native_probe(&scratch, function, &source, opt, "1");
+            let output = native_probe(&scratch, function, &source, opt);
             assert_eq!(
                 output.status.code(),
                 Some(0),
@@ -252,7 +246,7 @@ fn binary_decode_accepts_empty_records_and_checks_counts_before_allocation() {
             "int original_main(int argc, char **argv)",
         ) + include_str!("fixtures/protocol_count_probe.c");
         for opt in ["-O1", "-O2"] {
-            let output = native_probe(&scratch, &format!("decode-{packing}"), &source, opt, "1");
+            let output = native_probe(&scratch, &format!("decode-{packing}"), &source, opt);
             assert_eq!(
                 output.status.code(),
                 Some(0),
@@ -261,6 +255,12 @@ fn binary_decode_accepts_empty_records_and_checks_counts_before_allocation() {
             );
             if packing == "1" {
                 for (name, old, new, expected) in [
+                    (
+                        "missing-array-drop",
+                        ".elem=&i8,.drop=drop_scalar_array",
+                        ".elem=&i8,.drop=NULL",
+                        169,
+                    ),
                     (
                         "empty-wire",
                         "if(fwp_wire_empty_inner(elem,0))return !unique || *count<=1;",
@@ -275,7 +275,7 @@ fn binary_decode_accepts_empty_records_and_checks_counts_before_allocation() {
                     ),
                 ] {
                     assert!(source.contains(old));
-                    let output = native_probe(&scratch, name, &source.replace(old, new), opt, "1");
+                    let output = native_probe(&scratch, name, &source.replace(old, new), opt);
                     assert_eq!(
                         output.status.code(),
                         Some(expected),

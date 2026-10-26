@@ -61,12 +61,7 @@ fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
                         .arg("-o")
                         .arg(&binary),
                 );
-                let actual = Command::new(&binary)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", "1")
-                    .output()
-                    .unwrap();
+                let actual = Command::new(&binary).output().unwrap();
                 assert_eq!(
                     (&actual.stdout, &actual.stderr, actual.status.code()),
                     (
@@ -136,12 +131,7 @@ fn numeric_array_fusion_eliminates_intermediates_and_reclaims_inputs() {
         for opt in ["-O1", "-O2"] {
             let executable = directory.join(format!("profile-{mode}{}", &opt[1..]));
             fwp::cgen::compile_c(&format!("{code}\n{probe}"), &executable, opt).unwrap();
-            let out = checked(
-                Command::new(&executable)
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", "0"),
-            );
+            let out = checked(&mut Command::new(&executable));
             if let Some(destination) = std::env::var_os("FWP_ARRAY_FUSION_ARTIFACTS") {
                 let destination = std::path::PathBuf::from(destination);
                 std::fs::create_dir_all(&destination).unwrap();
