@@ -2,6 +2,9 @@
 use std::io::Write;
 use std::process::{Command, Output, Stdio};
 
+#[path = "support/ownership_ledger.rs"]
+mod ownership_ledger;
+
 fn run(command: &mut Command, input: &[u8]) -> Output {
     let mut child = command
         .stdin(Stdio::piped())
@@ -55,7 +58,21 @@ main = read-all () | make { 0 = id, 1 = concat "payload" } | choose | echo
         .output()
         .unwrap();
     assert!(build.status.success(), "{build:?}");
-    let emitted = std::fs::read_to_string(&cfile).unwrap();
+    let emitted =
+        ownership_ledger::instrument_native(&std::fs::read_to_string(&cfile).unwrap(), 1024);
+    // Check string allocation identity before reading its payload in either variant.
+    let emitted = emitted.replace(
+        "#define STR(v) ((fwp_str *)(uintptr_t)(v))",
+        "static fwp_str *observed_string(V);\n#define STR(v) observed_string(v)",
+    ) + r#"
+static fwp_str *observed_string(V value) {
+    uintptr_t offset=(uintptr_t)value-(uintptr_t)fwp_heap.base;
+    if(offset < (fwp_heap.top << HEAP_SHIFT) &&
+       !owner_ledger_slots[owner_ledger_find((uintptr_t)value)])
+        owner_ledger_error(207,"string read after release");
+    return (fwp_str *)(uintptr_t)value;
+}
+"#;
     // Remove only the whole binder's child retains. This restores its previous
     // no-op outer-pointer retain, leaving every child release and allocation.
     let mut erased = String::new();
@@ -74,28 +91,18 @@ main = read-all () | make { 0 = id, 1 = concat "payload" } | choose | echo
     let exe = dir.join("probe");
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&erased, &exe, opt).unwrap();
-        let broken = run(Command::new(&exe).env("FWP_REUSE_VERIFY", "1"), inputs[0]);
+        let broken = run(&mut Command::new(&exe), inputs[0]);
         assert!(
-            !broken.status.success() || broken.stdout != references[0].stdout,
+            matches!(broken.status.code(), Some(203 | 207)),
             "omitting retains must expose the released child: {broken:?}"
         );
         fwp::cgen::compile_c(&emitted, &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                for (input, reference) in inputs.iter().zip(&references) {
-                    let out = run(
-                        Command::new(&exe)
-                            .env("FWP_GC", gc)
-                            .env("FWP_GC_STRESS", "1")
-                            .env("FWP_GC_VERIFY", "1")
-                            .env("FWP_REUSE_VERIFY", poison),
-                        input,
-                    );
-                    assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-                    assert_eq!(out.stdout, reference.stdout);
-                    assert_eq!(out.stderr, reference.stderr);
-                }
-            }
+
+        for (input, reference) in inputs.iter().zip(&references) {
+            let out = run(&mut Command::new(&exe), input);
+            assert!(out.status.success(), "{opt}: {out:?}");
+            assert_eq!(out.stdout, reference.stdout);
+            assert_eq!(out.stderr, reference.stderr);
         }
     }
 }

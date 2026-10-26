@@ -40,14 +40,13 @@ main = {:?} | file.open | pack | close | const "closed" | echo
     );
     assert_eq!(reference.stdout, b"closed\n");
     let source_exe = dir.join("source");
+    let source_c = dir.join("source.c");
     for opt in ["-O1", "-O2"] {
         let out = Command::new(fwp)
-            .env("FWP_REUSE", "0")
-            .env("FWP_FREE", "0")
-            .args(["build"])
+            .args(["build", "--emit-c"])
             .arg(&source)
             .args([opt, "-o"])
-            .arg(&source_exe)
+            .arg(&source_c)
             .output()
             .unwrap();
         assert!(
@@ -56,6 +55,11 @@ main = {:?} | file.open | pack | close | const "closed" | echo
             String::from_utf8_lossy(&out.stderr)
         );
 
+        let code = format!(
+            "#define FWP_NO_REUSE 1\n{}",
+            std::fs::read_to_string(&source_c).unwrap()
+        );
+        fwp::cgen::compile_c(&code, &source_exe, opt).unwrap();
         let out = Command::new(&source_exe).output().unwrap();
         assert!(
             out.status.success(),
@@ -379,7 +383,11 @@ return fwp_exit_code;",
         )
         .replace(
             "typedef uint64_t V;",
-            "typedef uint64_t V;\nstatic volatile V watched_text;",
+            "typedef uint64_t V;\nstatic volatile V watched_text;static unsigned watched_text_frees;",
+        )
+        .replace(
+            "static void fwp_mem_free(void *p) {\n",
+            "static void fwp_mem_free(void *p) {\n    if(p && (uintptr_t)p == watched_text)watched_text_frees++;\n",
         )
         .replace(
             "int main(int argc, char **argv)",
@@ -439,8 +447,7 @@ int main(void){
 #else
  struct stat status;if(fstat(fd,&status)!=-1||errno!=EBADF)return 2;
 #endif
- uint8_t *slot=fwp_rc_slot(watched_text);
- if(!slot||*slot)return 3;
+ if(watched_text_frees!=1)return 3;
  return 0;
 }
 "#;

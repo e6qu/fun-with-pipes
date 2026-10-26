@@ -586,7 +586,6 @@ fn native_ownership_ledger_detects_bad_events_without_retaining_storage() {
         checked(
             Command::new(compiler)
                 .env_remove("FWP_NO_OPT")
-                .env("FWP_REUSE", "1")
                 .args(["build", "--memory", memory, "--emit-c", "-O1"])
                 .arg(&source)
                 .arg("-o")

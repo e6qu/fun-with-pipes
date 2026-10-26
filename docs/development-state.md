@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** migrate the remaining resource/entry tests, then audit report
-consumers and workflows below. Finish migration before
+**Next:** migrate WASI/resource-count, REST and benchmark tests plus the
+array/list report producers and readers; then complete the workflow audit. Finish migration before
 integrated compiler and production validation on runners. The current source
 has not been built as a compiler. GC removal is not verified.
 
@@ -18,6 +18,16 @@ The merge has the same tree and the required one-line message. See
 compiler-abort report; its handoff points here. Old publisher scripts stay stopped.
 
 ## Latest completed edits; execution pending
+
+- Resource frames/matches retain descriptor limits, raw/native comparisons,
+  aliases, handled errors and forced copies. Variant failure checks observe text
+  frees directly. Executable invocation checks always require live-byte balance.
+  Serializer runs compile their saved C once per configuration. Extended owner
+  cases retain both stack settings and every input, with duplicate tracing runs removed.
+- High-fanout tests now acquire child owners explicitly, preserve parent aliases
+  during updates and release the full graph. Saturating away a count fails 1;
+  omitting a child retain fails 2. Stack-match controls use the allocation ledger
+  and check string identity before reading payloads, instead of relying on poisoning.
 
 - Numeric fusion, layout, packed arrays, display and bounds tests retain their
   O1/O2, packing, effects/traps, bit-pattern and forced-copy cases. Copy controls
@@ -114,7 +124,7 @@ The nine mode migrations are `array_loop_borrows`, `cli_ownership`,
 ## Remaining migration, in order
 
 1. **Finish test mode removal.** A fresh audit still finds old controls in
-   process/resource frames; AOT/library extension checks. Review their
+   WASI/resource-count, REST and benchmark checks plus array/list support modules. Review their
    actual assertions and paired C fixtures, not just environment names. The list/State/closure fixtures in
    `list_applicative_ownership` are migrated; integrated execution is pending.
    `unwind_cleanup` and typed-State reports are also migrated. Continue from a fresh source audit; do not reapply the stale candidates.
@@ -188,6 +198,8 @@ Scripts below live in `/private/tmp` unless a repository path is given.
 | `python3 fwp-check-memory-startup.py` | Migrated harness compiles at Rust O1 with warnings denied; three helper tests pass. Does not run generated memory servers. |
 | `python3 fwp-check-closure-failure.py` | Actual allocator, cleanup queue and trap code, Clang ARM64 O1/O2: normal release passes; capture trap 101, spill OOM 102 and omitted context reset 94. A recovery callback would fail with 93. Does not establish generated-program or other-target support. |
 | `python3 fwp-check-stream-owners.py` | Current runtime, Clang ARM64 O1/O2: eighteen normal size/read-mode cases end with zero charge and all messages freed; omitted cache drop exits 40 at both levels. This uses a minimal C library harness, not generated Rust/library integration or network calls. |
+| `python3 fwp-check-counted-descendants.py` | Current runtime, Clang ARM64 O1/O2: six runs verify 256 parent owners, independent child updates, interior count-slot mapping, 70 nested branches and final byte/metadata balance. Saturated counts and omitted child retain fail 1/2. C fixture, not generated integration. |
+| `python3 fwp-check-string-ledger.py` | Actual Rust ledger helper and current runtime, Clang ARM64 O1/O2: four runs preserve live strings and reject omitted ownership with 207 before string access. Minimal C harness, not the generated stack-match test. The harness initially named a nonexistent free helper; corrected to `fwp_rc_free_obj`. |
 | `python3 fwp-check-numeric-decoder.py` | Current runtime, Clang ARM64 O1/O2, packed/word arrays: twelve decoder runs pass. Normal and malformed input restore live bytes; omitted array cleanup fails 169, wire/count controls fail 154/155. Minimal C harness, not generated-program or other-target validation. |
 | `python3 fwp-check-scalar-list-owners.py` | Current runtime, Clang ARM64 O1/O2: scalar repeat/range, zip/unzip/chunks and sort preserve address-shaped scalar bits and restore live bytes. Six runs; direct runtime calls, not generated-wrapper integration. |
 | `python3 fwp-check-file-owner-migration.py` | Current runtime, Clang ARM64 O1/O2: forty constructor/I/O/storage runs pass, including 8/1,024-round release and all omitted close/finalizer/header/text/alias/scope faults. C harness only; generated and other-platform checks pending. Initially caught a deleted `armed` field and missing typed callback metadata; both fixtures repaired. |

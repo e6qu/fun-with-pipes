@@ -1,5 +1,4 @@
-//! Shared contracts must preserve aliases/callbacks and avoid promoting
-//! comparison-only keys to permanent runtime sharing.
+//! Ownership contracts preserve aliases and borrow comparison-only keys.
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
@@ -105,18 +104,9 @@ main = [
             .args(["-O1", "-o"])
             .arg(&exe),
     );
-    for verify in ["0", "1"] {
-        let native = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", verify),
-        );
-        assert_eq!(
-            native.stdout, reference.stdout,
-            "reuse verification {verify}"
-        );
-    }
+
+    let native = checked(&mut Command::new(&exe));
+    assert_eq!(native.stdout, reference.stdout);
 }
 
 #[test]
@@ -150,38 +140,40 @@ main = (10000, key) | loop step | echo
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&emitted)
-            .env("FWP_STACK", "0")
-            .env("FWP_REUSE", "1"),
+            .env("FWP_STACK", "0"),
     );
     let borrowed = std::fs::read_to_string(emitted).unwrap();
-    // Reproduce the previous comparison-key boundary without disabling
-    // any other ownership optimization, so this isolates the contract.
+    // An extra retained key prevents reuse at the comparison boundary.
+    // This deliberate leak isolates the benefit of borrowing that key.
     let boundary = "return fwp_p_map_contains(l0, l1,";
     assert!(borrowed.contains(boundary));
-    let shared = borrowed.replace(
+    let retained = borrowed.replace(
         boundary,
-        "fwp_rc_share(l0); return fwp_p_map_contains(l0, l1,",
+        "fwp_rc_dup(l0); return fwp_p_map_contains(l0, l1,",
     );
     let mut allocated = Vec::new();
-    for (name, source) in [("shared", shared.as_str()), ("borrowed", borrowed.as_str())] {
+    for (name, source) in [
+        ("retained", retained.as_str()),
+        ("borrowed", borrowed.as_str()),
+    ] {
         let exe = scratch.0.join(name);
         fwp::cgen::compile_c(source, &exe, "-O1").unwrap();
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_ALLOC_STATS", "1")
-                .env("FWP_REUSE_VERIFY", "0"),
-        );
+        let out = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
         assert_eq!(out.stdout, reference.stdout);
         let stats = String::from_utf8_lossy(&out.stderr);
-        allocated.push(
-            allocation_report::parse(&stats)
-                .expect("allocation report")
-                .allocated as f64
-                / 1_048_576.0,
-        );
+        let report = allocation_report::parse(&stats).expect("allocation report");
+        if name == "borrowed" {
+            assert_eq!(report.live, 0, "borrowed key cleanup");
+        } else {
+            assert!(
+                report.live > 0,
+                "the extra-owner control must retain storage"
+            );
+        }
+        allocated.push(report.allocated as f64 / 1_048_576.0);
     }
     eprintln!(
-        "comparison keys: shared {} MiB; borrowed {} MiB",
+        "comparison keys: retained {} MiB; borrowed {} MiB",
         allocated[0], allocated[1]
     );
     assert!(
@@ -193,7 +185,7 @@ main = (10000, key) | loop step | echo
 }
 
 #[test]
-fn saturated_counts_protect_reachable_values() {
+fn wide_counts_and_child_owners_protect_reachable_values() {
     let scratch = Scratch::new("saturation");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     let emitted = scratch.0.join("runtime.c");
@@ -211,45 +203,7 @@ fn saturated_counts_protect_reachable_values() {
     );
     let source = format!(
         "{runtime}\n{}",
-        r#"
-int main(void) {
-    fwp_heap_start();
-    V child = fwp_rc_fresh(fwp_record(1, (V[]){7}));
-    V parent = fwp_rc_fresh(fwp_record(1, &child));
-    volatile V aliases[255];
-    for (int i = 0; i < 255; i++) { aliases[i] = parent; fwp_rc_dup(parent); }
-    if (*fwp_rc_slot(parent) != 255 && *fwp_rc_slot(parent) != 0) return 1;
-    /* Counts stay exact at high fanout. A retained runtime callback still
-     * requires explicit graph sharing before receiving borrowed children. */
-    fwp_rc_share(parent);
-    if (*fwp_rc_slot(parent) != 0) return 1;
-    V reachable = OBJ(aliases[0])->f[0];
-    /* A runtime callback receiving a shared value may try a unique
-     * update: it must copy when another alias can observe the original. */
-    V updated = reachable;
-    if (fwp_rc_unique(reachable) != 1)
-        updated = fwp_rc_fresh(fwp_data(0, OBJ(reachable)->n, OBJ(reachable)->f));
-    OBJ(updated)->f[0] = 9;
-    if (OBJ(OBJ(aliases[254])->f[0])->f[0] != 7) return 2;
-    if (OBJ(updated)->f[0] != 9) return 3;
-    V first = fwp_rc_fresh(fwp_record(1, (V[]){11}));
-    V second = fwp_rc_fresh(fwp_record(1, (V[]){12}));
-    V pair = fwp_rc_fresh(fwp_record(2, (V[]){first, second}));
-    fwp_rc_share(PTR(&OBJ(pair)->f[1]));
-    if (fwp_rc_unique(first) == 1 || fwp_rc_unique(second) == 1) return 4;
-    V branches[70];
-    for (int i = 0; i < 70; i++) {
-        V leaf = fwp_rc_fresh(fwp_record(1, (V[]){(V)i}));
-        branches[i] = fwp_rc_fresh(fwp_record(1, &leaf));
-    }
-    V wide = fwp_rc_fresh(fwp_record(70, branches));
-    fwp_rc_share(wide);
-    for (int i = 0; i < 70; i++)
-        if (fwp_rc_unique(OBJ(branches[i])->f[0]) == 1) return 5;
-    puts("shared descendants protected");
-    return 0;
-}
-"#
+        include_str!("fixtures/counted_descendants_probe.c")
     );
     let start = source
         .find("static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);")
@@ -268,22 +222,28 @@ int main(void) {
 "#,
     );
     assert!(previous != source, "saturation baseline was not restored");
-    let old = scratch.0.join("old-saturation");
-    fwp::cgen::compile_c(&previous, &old, "-O2").unwrap();
-    let old_result = Command::new(&old)
-        .env("FWP_REUSE_VERIFY", "0")
-        .env("FWP_GC_STRESS", "0")
-        .output()
-        .unwrap();
-    assert_eq!(
-        old_result.status.code(),
-        Some(2),
-        "old boundary must corrupt the observed child"
+    let missing_child = source.replace(
+        "    fwp_rc_dup(reachable);",
+        "    /* omitted child owner */",
     );
-    let exe = scratch.0.join("saturation");
-    fwp::cgen::compile_c(&source, &exe, "-O2").unwrap();
-    assert_eq!(
-        checked(&mut Command::new(&exe)).stdout,
-        b"shared descendants protected\n"
-    );
+    assert_ne!(missing_child, source);
+    for opt in ["-O1", "-O2"] {
+        for (name, candidate, expected) in [
+            ("saturation", &previous, 1),
+            ("missing-child", &missing_child, 2),
+            ("counted", &source, 0),
+        ] {
+            let exe = scratch.0.join(name);
+            fwp::cgen::compile_c(candidate, &exe, opt).unwrap();
+            let output = Command::new(&exe).output().unwrap();
+            assert_eq!(
+                output.status.code(),
+                Some(expected),
+                "{name}/{opt}: {output:?}"
+            );
+            if expected == 0 {
+                assert_eq!(output.stdout, b"counted descendants protected\n");
+            }
+        }
+    }
 }

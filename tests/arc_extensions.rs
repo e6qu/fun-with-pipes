@@ -142,29 +142,6 @@ main = [
                 include_bytes!("fixtures/graph_generations.out")
             );
         }
-        // The same counted owners coexist with generational tracing. In
-        // particular, CSV's private reversed spines can acquire younger links.
-        for opt in ["-O1", "-O2"] {
-            let binary = dir.join(format!("{name}-tracing{opt}"));
-            checked(
-                Command::new(env!("CARGO_BIN_EXE_fwp"))
-                    .env_remove("FWP_NO_OPT")
-                    .args(["build", opt])
-                    .arg(&input)
-                    .arg("-o")
-                    .arg(&binary),
-            );
-            for reuse in ["0", "1"] {
-                let actual = checked(
-                    Command::new(&binary)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", reuse),
-                );
-                assert_eq!(actual.stdout, reference.stdout, "{name}/{opt}/{reuse}");
-                assert!(actual.stderr.is_empty(), "{actual:?}");
-            }
-        }
         for stack in ["0", "1"] {
             let cfile = dir.join(format!("{name}-{stack}.c"));
             checked(
@@ -353,7 +330,7 @@ int main(void) {{
         let binary = dir.join(opt);
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
         assert_eq!(
-            checked(&mut Command::new(&binary)).stdout,
+            checked(Command::new(&binary)).stdout,
             b"CSV partial cleanup verified\n"
         );
         fwp::cgen::compile_c(&omitted, &binary, opt).unwrap();
