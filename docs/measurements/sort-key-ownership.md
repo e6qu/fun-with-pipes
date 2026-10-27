@@ -4,7 +4,8 @@ This batch removes two temporary owners in the word-frequency example. Both
 native Linux hosts passed the correctness tests; [runner audit 40503213568](https://github.com/e6qu/fun-with-pipes/actions/runs/40503213568)
 verified their [complete measurements](sort-key-ownership-2026-10-27.json).
 Full production verification remains pending. [The handoff](../development-state.md)
-tracks delivery; PR #219 must merge before this becomes the next PR.
+tracks delivery. PR #219 is merged; A4 now joins this batch under
+[its own storage and cleanup protocol](inline-sort-keys.md).
 
 A **record** groups fields into one value; `(word, count)` is a two-field record.
 `.1` selects its second field. In the word-frequency sort key,

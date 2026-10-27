@@ -32,17 +32,17 @@ collector is not the same as removing these costs. The
 1. **A2 and the first A3 change shipped in #218.** All production, documentation
    and analysis gates passed. The [per-owner report](docs/measurements/arc-residual-costs.md)
    attributes residual costs and verifies the capture-free callback reduction.
-2. Finish **A5**: the [local-array path](docs/measurements/unique-array-storage.md)
-   removes count storage and the declared count operations. Native/WASI cleanup,
-   metadata and compiler-cost observations are retained; finish the full final-head
-   matrix before marking it complete.
+2. **A5 shipped in #219.** The [local-array path](docs/measurements/unique-array-storage.md)
+   removes count storage and the declared count operations. All nine production
+   jobs, documentation and both analysis hosts passed; native/WASI cleanup,
+   metadata and compiler-cost observations are retained.
 3. The next **A3/A4** batch removes two temporary owners per distinct word:
    the numeric selector's String owner and the key function's duplicate pair.
    [Its protocol](docs/measurements/sort-key-ownership.md) defines the 2D count
    target, unchanged memory budget, alias and failure controls. Both Linux hosts'
    correctness checks and the independent artifact audit pass. A4 now joins this batch: [contiguous key storage](docs/measurements/inline-sort-keys.md)
    has a declared allocation budget and cleanup probes, with validation pending.
-   Publish after #219 merges and complete the combined final production matrix.
+   Finish focused validation, then publish and complete the combined final matrix.
    **A6** remains the separately scoped parser-workspace task below.
 4. Preserve **G2**'s [verified analysis budgets](docs/measurements/ownership-analysis.md)
    when changing lifetime analysis. Further precision needs a named failing example
@@ -115,21 +115,12 @@ reference counts or escaped scratch addresses. Measure total requested/peak
 bytes, alignment, code size, stack use and sorting time; contiguous storage alone
 does not establish a speedup. This does not require escaping data to live on the stack.
 
-**A5 — Give proved unique heap values an ownership path without counts.**
-Removing retains is insufficient if every buffer still carries a count and checks
-it at destruction. Start with one variable-size array allocated in a function,
-passed only through known non-escaping borrows, then destroyed by that function.
-Prove uniqueness for its complete lifetime in the ownership/escape passes; emit
-one direct destruction path instead of retain/release and uniqueness operations.
-Keep counted representation for values that can actually acquire independent
-owners or cross an unproved boundary; do not invent runtime promotion machinery
-just to cover more cases. No public ownership annotation is assumed.
-**Done:** actual allocated bytes and generated operations show no count slot or
-count checks for the named owned-buffer fixture; failure/cancellation still free
-it exactly once. Alias, captured and unknown-call controls must not select that
-representation. Measure code-size and call-boundary costs before extending it.
-Include attempted weak creation/acquisition as a control: it must not silently
-promote a unique allocation into shared ownership or invalidate the proof.
+**A5 is verified in #219.** The [restricted local-array path](docs/measurements/unique-array-storage.md)
+proves one owner for the whole lifetime, allocates no count slots and frees storage
+directly. Failure/cancellation, alias/capture/unknown-call rejection, weak-channel
+type controls, actual WASI allocation and native binary checks passed. Preserve
+these controls; broader element types, local transfers and loops need their own
+lifetime proof and measured costs before this representation is extended.
 
 **A6 — Give one workspace a region lifetime.** Use a recursive parser that builds
 and walks an expression graph inside one invocation. The invocation owns the

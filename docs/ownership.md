@@ -19,8 +19,7 @@ individual operations; [measurements](benchmarks.md) report actual costs.
 The [accepted ownership direction](gc-removal-design.md) specifies explicit weak
 links, rejection of unproved owning cycles, count-free unique storage and scoped
 regions. Weak channels and retained C registrations are implemented. A restricted
-[count-free local array path](measurements/unique-array-storage.md) is implemented
-and under verification; general regions remain planned. APIs may change.
+[count-free local array path](measurements/unique-array-storage.md) is verified in #219; general regions remain planned. APIs may change.
 
 ## Existing implementation
 

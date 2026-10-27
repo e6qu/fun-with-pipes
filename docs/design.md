@@ -177,7 +177,7 @@ whole-program inference or runtime uniqueness test. Measure compiler cost on
 functions with multiple candidate arrays before expanding this selection; the
 existing lifetime-analysis budgets remain required. The
 [storage report](measurements/unique-array-storage.md) defines the narrow supported
-shape, allocation layout, negative controls and incomplete acceptance evidence.
+shape, allocation layout, negative controls and verified acceptance evidence.
 
 ### Scalar fields and known sort keys
 

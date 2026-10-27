@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -34,7 +34,7 @@ on:
         type: string
 jobs:
   arc_cost_audit:
-    if: inputs.suite == 'arc-cost-audit'
+    if: inputs.suite == 'arc-cost-audit' || inputs.suite == 'inline-key-audit'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -44,6 +44,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       EVIDENCE_RUN: ${{ inputs.evidence_run }}
       MEASUREMENT_SOURCE: ${{ inputs.source_revision }}
+      AUDIT_SUITE: ${{ inputs.suite }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -56,11 +57,16 @@ jobs:
           gh run download "$EVIDENCE_RUN" --name scalar-projections-ubuntu-latest --dir measured-amd64
           gh run download "$EVIDENCE_RUN" --name scalar-projections-ubuntu-24.04-arm --dir measured-arm64
           python3 scripts/test-ownership-profile.py
-          python3 scripts/summarize-arc-costs.py --amd64 measured-amd64/costs --arm64 measured-arm64/costs --source "$MEASUREMENT_SOURCE" --run "$EVIDENCE_RUN" --comparison sort-keys --baseline docs/measurements/unique-array-storage-2026-10-27.json --output sort-key-ownership.json
+          case "$AUDIT_SUITE" in
+            arc-cost-audit) comparison=sort-keys; baseline=docs/measurements/unique-array-storage-2026-10-27.json ;;
+            inline-key-audit) comparison=inline-keys; baseline=docs/measurements/sort-key-ownership-2026-10-27.json ;;
+            *) exit 1 ;;
+          esac
+          python3 scripts/summarize-arc-costs.py --amd64 measured-amd64/costs --arm64 measured-arm64/costs --source "$MEASUREMENT_SOURCE" --run "$EVIDENCE_RUN" --comparison "$comparison" --baseline "$baseline" --output ownership-costs.json
       - uses: actions/upload-artifact@v7
         with:
-          name: sort-key-ownership-audit
-          path: sort-key-ownership.json
+          name: ${{ inputs.suite }}
+          path: ownership-costs.json
           if-no-files-found: error
 
   arc_costs:

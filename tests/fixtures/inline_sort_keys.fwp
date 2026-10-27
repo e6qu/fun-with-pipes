@@ -5,21 +5,30 @@ export sorted : List[(String, I64)] -> List[(String, I64)]
 sorted = sort-by key
 
 # An allocated key must also live until comparison, then be released.
+fresh : (String, I64) -> (I64, String)
 fresh = both .1 (.0 | concat "saved:")
 checked-text : String -> String ! {IO, Error[String]}
 checked-text = tap echo | if (eq "b") (const "key failure" | fail) id
+checked : (String, I64) -> (I64, String) ! {IO, Error[String]}
 checked = both .1 (.0 | checked-text | concat "saved:")
 yielded : (String, I64) -> (I64, String) ! {Async}
 yielded = tap (const () | task.yield) | fresh
 sort-task : List[(String, I64)] -> () -> List[(String, I64)] ! {Async}
 sort-task = curry (.0 | sort-by yielded)
-cancelled = sort-task | task.spawn | tap (const () | task.yield) | tap task.cancel | task.await
+cancelled =
+    sort-task
+    | task.spawn
+    | tap (const () | task.yield)
+    | tap task.cancel
+    | task.await
 
 export probe : () -> () ! {Async}
 probe = task.yield
 main = [
     "b a c a" | words | map (both id string.length) | both sorted id | echo,
-    [("b", 0), ("a", -9223372036854775808), ("c", 9223372036854775807)] | sorted | echo,
+    [("b", 0), ("a", -9223372036854775808), ("c", 9223372036854775807)]
+    | sorted
+    | echo,
     [] | sorted | echo,
     [("only", 1)] | sorted | echo,
     [("b", 2), ("a", 2), ("c", 1)] | sort-by fresh | echo,

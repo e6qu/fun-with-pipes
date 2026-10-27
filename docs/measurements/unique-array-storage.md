@@ -5,12 +5,14 @@ cannot acquire another owner does not need one: its function can free the array
 directly after its last use. This is roadmap A5, following the
 [A3 callback measurements](arc-residual-costs.md).
 
-**Status:** implemented for the restricted case below. Focused native Linux
+**Status:** verified for the restricted case below in PR #219. Focused native Linux
 AMD64/ARM64 and actual WASI checks passed in `40496623447` at
 `0f500ab347bc6025c09235f0e243467d9dc2a8ac`, including 36 native/static/escape
 probes and 18 WASI probes per host. Complete logs, outputs and intended fault
-statuses were audited. The full six-target production matrix remains required
-before A5 is marked complete. [The handoff](../development-state.md) records it.
+statuses were audited. All nine production jobs, documentation and both compiler-analysis hosts
+passed on final `aab8fe71`. Squash `413a10eb` has the identical tested tree.
+[Delivery history](../roadmap-history.md#unique-local-arrays-without-counts-pr-219)
+records the final gates; A5 is complete for this restricted shape.
 
 Paired measurements come from `40492232784` at `b9d637b6`; compiler/runtime
 source is unchanged since that run. Two test-harness repairs followed: the failure
