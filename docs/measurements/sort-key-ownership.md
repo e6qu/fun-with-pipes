@@ -1,8 +1,9 @@
 # Ownership of sort keys and scalar record reads
 
 This batch targets two temporary owners in the word-frequency example. It is
-implemented on the next branch, but its combined checks and measurements are
-pending. PR #219 remains the only active PR while its full matrix runs.
+implemented on the next branch. Both Linux hosts passed the combined correctness
+checks; the retained measurements pass the corrected local audit. Runner audit
+and full production verification remain pending. PR #219 remains the only active PR while its full matrix runs.
 
 A **record** groups fields into one value; `(word, count)` is a two-field record.
 `.1` selects its second field. In the word-frequency sort key,
@@ -46,9 +47,10 @@ with unchanged source/input hashes. Word-frequency inputs contain 4,096 tokens
 and 256 distinct words, or 65,536 tokens and 4,096 distinct words.
 
 For D distinct words, require exactly **2D fewer effective retains and non-final
-releases**, and D fewer effective last-owner queries. No helper's attempted-call
-count may increase; specialization may also remove no-op calls on static function
-values. Preserve every observed total and attributed site. Allocation requests,
+releases**. Require 6D fewer retain attempts, 6D+2 fewer release attempts and
+3D fewer last-owner queries. Successful last-owner queries and final releases
+must be unchanged: the removed queries saw shared pairs or static closures and
+returned false. Allocation requests,
 requested bytes, peak/final managed bytes and count metadata must be unchanged.
 All other fixtures' effective counts, attempted calls and memory totals must match
 the baseline. A missing required String owner must fail, rather than count as an
@@ -69,7 +71,8 @@ unique parents, String results, scalar bits that resemble pointers, physical
 release and interruption at the actual entry tick. Deliberate extra-retain and
 missing-free variants must fail at O1/O2. The scalar-only prototype passed both Linux hosts in `40499978041`; all six
 ordinary/fault probe statuses and outputs per host were audited. The combined
-change and measurements remain pending.
+source passed both hosts' correctness tests in `40501234007`. Its old budget
+expectation failed; the corrected audit and full production gates remain required.
 
 [Sort callbacks](../../tests/sort_callback_ownership.rs) compare raw/native output
 for repeated/equal keys, live aliases, managed keys and callbacks, empty inputs,
@@ -78,3 +81,40 @@ remaining managed bytes and deliberately broken result/key cleanup. Existing
 record conversion-overflow and record update controls remain in the focused batch.
 Full nine-job production, documentation and analysis gates are required before
 claiming verified delivery.
+
+The first combined run (`40501234007`, source `a44ed18e`) passed all AMD64
+correctness tests and all 13 programs' outputs, independent totals and repeated
+samples. Its budget check correctly failed because the original expectation
+mistakenly subtracted D *successful* last-owner queries. The observer counts a
+successful query only when the result is true; the removed checks returned false.
+Source/site attribution established that distinction. The corrected budget above
+preserves successful queries and tightens attempted counts to exact reductions,
+instead of permitting any decrease. Compiler/runtime code is unchanged by that
+reader repair. Both hosts showed the same mismatch. The corrected local reader accepts every
+file hash, site, three-sample set and metadata observation on both architectures.
+A runner audit must independently verify it before final delivery.
+
+## Measured result and remaining costs
+
+For N input tokens and D distinct words, effective retains fall from
+`N + 7D + 10` to `N + 5D + 10`: 512 fewer at N=4,096/D=256, and 8,192 fewer at
+N=65,536/D=4,096. Shared String releases fall from `N + 4D` to `N + 3D`; shared
+pair releases fall from `3D + 10` to `2D + 10`. The input-list/map/saved-key/output
+owners remain. Allocations, requested bytes, peak/final managed bytes and count
+metadata match the baseline on both hosts. All 12 other fixtures match their
+original operation and memory totals.
+
+| Ordinary word-frequency binary | Baseline | Candidate |
+|---|---:|---:|
+| AMD64 complete executable | 78,216 bytes | 77,128 bytes |
+| AMD64 executable `.text` section | 42,018 bytes | 39,154 bytes |
+| AMD64 `main` frame | 128 bytes | 128 bytes |
+| ARM64 complete executable | 79,600 bytes | 78,568 bytes |
+| ARM64 executable `.text` section | 42,156 bytes | 38,908 bytes |
+| ARM64 `main` frame | 160 bytes | 160 bytes |
+
+These GCC frame estimates are per function, not measured peak call-stack use.
+The named specialized key still returns a boxed `(I64, String)` record to the
+sort runtime. That per-key allocation remains an A4 candidate; this batch does
+not claim to eliminate it. Extending the sort's key storage needs a separate
+layout/cleanup proof, allocation budget and failure/cancellation controls.

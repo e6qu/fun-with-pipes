@@ -38,17 +38,27 @@ requires one consumed record, an immediate scalar result and a pure field read;
 resource records and borrowed-worker contracts are excluded. This avoids retaining
 unrelated fields merely to release them in the worker.
 
-The new record-conversion probe covers unique/shared parents, a string-valued
-projection that still needs ownership, pointer-shaped scalar bits, physical
-release and interruption at the real entry tick. Deliberate extra-owner and
-missing-free variants must fail. Compiler and tests are not yet verified; focused run `40499978041` checks
-`00957a15e95cc3b6d584749dcd32ac32b724c3b1` on both Linux hosts and passed.
-All completed test targets and six ordinary/fault probe artifacts per host were
-audited.
-The related sort-key change adds `sort-by` to existing known-callback specialization,
-with capture-order, failure and cancellation controls. It is not in that first run. Format passed through the local guard; no local
-compiler build ran. After focused checks, measure the word-frequency D count
-saving and inspect related pair duplication before assembling the next PR.
+The record-conversion probe covers unique/shared parents, String results,
+pointer-shaped scalar bits, physical release and interruption at the entry tick.
+Prototype `00957a15e95cc3b6d584749dcd32ac32b724c3b1` passed both Linux hosts in
+`40499978041`. All completed targets and six ordinary/fault artifacts per host
+were audited. The related sort-key change adds `sort-by` to existing known-callback
+specialization, with capture-order, failure and cancellation controls.
+
+Combined source `a44ed18ee72301fd9363ef934596064b55eb751f` completed
+`40501234007`. Both hosts passed all correctness targets and produced all 13
+measurements. The budget failed on an incorrect expectation about successful
+last-owner queries: removed queries returned false, so successes stay unchanged.
+The repaired reader now requires exact attempt reductions and the 2D effective
+owner saving. It also updates the per-owner String/pair decomposition. Both local
+artifact audits pass, including every hash, row, sample and metadata observation;
+all complete target logs and six scalar/fault artifacts per host were audited.
+Next run `arc-cost-audit` with evidence `40501234007` and source a44; it verifies
+unchanged compiler/runtime code and audits the existing evidence without rebuilding.
+[The protocol](measurements/sort-key-ownership.md) defines exact checks and limits.
+Local formatting, workflow lint, eleven evidence-reader controls and 166 doc link
+sets passed through the fixed guard; no local compiler build ran. Documentation
+clarifications after a44 do not change the measured compiler/runtime.
 
 ## Passing focused checks
 

@@ -113,8 +113,9 @@ def audit(directory, source, machine):
             profile['releasesByOwner'] = owners
             if name == 'wordfreq':
                 words, distinct = map(int, label.split('-'))
-                assert owners['String']['sharedReleases'] == words + 4 * distinct
-                assert owners['(String, I64)']['sharedReleases'] == 3 * distinct + 10
+                removed = distinct if report.get('comparison', {}).get('policy') == 'sort-keys' else 0
+                assert owners['String']['sharedReleases'] == words + 4 * distinct - removed
+                assert owners['(String, I64)']['sharedReleases'] == 3 * distinct + 10 - removed
                 indirect = [row for row in profile['sites']
                             if by_site[row['site']]['operation'] == 'dup'
                             and by_site[row['site']]['indirect'] and row['effective']]
@@ -151,7 +152,11 @@ def main():
     parser.add_argument('--source', required=True)
     parser.add_argument('--run', required=True)
     parser.add_argument('--output', required=True, type=Path)
+    parser.add_argument('--comparison', required=True, choices=('record', 'compare', 'unique-arrays', 'sort-keys'))
+    parser.add_argument('--baseline', type=Path)
     args = parser.parse_args()
+    if (args.comparison != 'record') != (args.baseline is not None):
+        parser.error('comparison requires --baseline; record does not accept one')
     assert re.fullmatch('[0-9a-f]{40}', args.source) and args.run.isdigit()
     hosts = {machine: audit(directory, args.source, machine)
              for machine, directory in [('x86_64', args.amd64), ('aarch64', args.arm64)]}
@@ -165,6 +170,16 @@ def main():
                          'No timing or C/Rust comparison. Binary .text includes padding; '
                          'frames are per-function GCC estimates, not peak call-stack use. '
                          'Site caller names aid source review but do not classify ownership automatically.')
+    if args.baseline is not None:
+        baseline = json.loads(args.baseline.read_text())
+        for directory in (args.amd64, args.arm64):
+            report = json.loads((directory / 'report.json').read_text())
+            failures = ARC.comparison_failures(report, baseline, args.comparison)
+            assert not failures, '\n'.join(failures)
+        summary['comparison'] = dict(policy=args.comparison, baselineSource=baseline['source'],
+                                     baselineSha256=ARC.digest(args.baseline),
+                                     readerSha256=ARC.digest(Path(__file__)),
+                                     budgetSha256=ARC.digest(Path(ARC.__file__)))
     args.output.write_text(json.dumps(summary, indent=2) + '\n')
     print(f'{len(hosts["x86_64"]["cases"])} cases: native counts agree; files, rows and samples verified')
 

@@ -116,10 +116,11 @@ class Evidence(unittest.TestCase):
                 if name == 'wordfreq':
                     words = int(label.split('-')[1])
                     profile['managed']['retains'] -= 2 * words
-                    for operation in ('dup', 'release_last', 'last'):
-                        count = words if operation == 'last' else 2 * words
-                        profile['operations'][operation]['effective'] -= count
-                        profile['operations'][operation]['calls'] -= count
+                    for operation in ('dup', 'release_last'):
+                        profile['operations'][operation]['effective'] -= 2 * words
+                        profile['operations'][operation]['calls'] -= 6 * words
+                    profile['operations']['release_last']['calls'] -= 2
+                    profile['operations']['last']['calls'] -= 3 * words
                 current['inputs'][label] = [profile]
             report['cases'][name] = current
         self.assertEqual(ARC.comparison_failures(report, baseline, 'sort-keys'), [])
@@ -127,7 +128,8 @@ class Evidence(unittest.TestCase):
         for category, field, delta in (('managed', 'requestedBytes', 8),
                                         ('managed', 'retains', -1),
                                         ('dup', 'effective', -1),
-                                        ('release_last', 'last', -1)):
+                                        ('release_last', 'last', -1),
+                                        ('last', 'effective', -1)):
             changed = copy.deepcopy(original)
             profile = changed['cases']['wordfreq']['inputs']['4096-256'][0]
             target = profile['managed'] if category == 'managed' else profile['operations'][category]

@@ -234,11 +234,13 @@ requirements; it is not a second backlog:
    after the batch is ready. Full builds and suites run on GitHub. Audit every
    failure before publishing a repair.
 
-Removing every possible ARC operation is a separate milestone, not a reason to
-delay collector deletion indefinitely. Its next concrete target is PLAN A5: a variable-size
-buffer with one owner, borrowed by callees, destroyed on all exits, with no count
-field, retain/release operations or uniqueness checks. Report actual storage,
-code size, stack use and cleanup, not just fewer retain instructions.
+ARC minimization remains separate from the completed collector deletion.
+PLAN A5 implements a [restricted local-array path](measurements/unique-array-storage.md)
+with one proved owner, no count slot and direct cleanup on normal and exceptional
+exits. Its final production verification is pending. The following
+[sort-key batch](measurements/sort-key-ownership.md) targets two redundant owners
+per distinct word. Both reports distinguish count savings from actual storage,
+code size, stack use and execution speed.
 
 ## Performance comparisons to run
 
