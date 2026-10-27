@@ -34,8 +34,8 @@ collector is not the same as removing these costs. The
    their [ownership measurements](docs/measurements/README.md), failure controls
    and actual-binary evidence. This does not make all containers count-free.
 2. **A6 is current:** finish the [parser workspace](docs/parser-workspace.md).
-   Its admission-proof and block-owner drafts are not yet connected to code
-   generation. Complete the lifetime transformation, native/WASI cleanup checks
+   Its lifetime transformation is integrated but not yet verified. Complete
+   the native/WASI cleanup checks
    and C/Rust comparisons in one batch. Include the guard-test fixture repair
    discovered after #220; [the handoff](docs/development-state.md) records it.
 3. Preserve **G2**'s [analysis budgets](docs/measurements/ownership-analysis.md)

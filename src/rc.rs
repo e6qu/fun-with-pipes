@@ -95,7 +95,7 @@ pub fn consumes_arg(prog: &Program, id: FuncId, j: usize) -> bool {
             .borrowed_parameters
             .get(&id)
             .is_some_and(|ps| ps.contains(&(j as Local))),
-        Body::Ctor(_) => true,
+        Body::Ctor(_) | Body::RegionEntry { .. } => true,
         Body::Prim(s) => prim_consumes(s, j),
         _ => false,
     }
@@ -218,7 +218,7 @@ fn cached_map_span(
                 Some(TypeShape::Adt(variants)) => variants
                     .iter()
                     .all(|(_, fields)| fields.iter().all(|ty| ordinary_drop(shapes, ty, visiting))),
-                None | Some(TypeShape::Opaque) => false,
+                None | Some(TypeShape::Opaque | TypeShape::RegionLink { .. }) => false,
             },
             _ => false,
         };

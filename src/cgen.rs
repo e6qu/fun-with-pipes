@@ -15,6 +15,7 @@ use crate::ir::*;
 use crate::ownership::ResultOwnership;
 use crate::value::Value;
 
+mod regions;
 mod scalar_text;
 mod sort_keys;
 mod string_map;
@@ -1993,6 +1994,10 @@ impl<'p> Gen<'p> {
     }
 
     fn desc_body(&mut self, mt: &MT, id: usize) -> String {
+        assert!(
+            !matches!(self.prog.shapes.get(mt), Some(TypeShape::RegionLink { .. })),
+            "region link cannot cross a runtime descriptor boundary"
+        );
         let simple = |kind: &str, name: &str| {
             format!(
                 "static const fwp_desc d{} = {{{}, {}}};",
@@ -7838,7 +7843,10 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
         // Unproved external primitives may keep arguments. Remote calls borrow
         // their arguments while encoding/sending; retained input cursors acquire
         // their own typed owners, and output-channel delivery finishes in-call.
-        if !matches!(f.body, Body::Expr(_) | Body::Ctor(_)) {
+        if !matches!(
+            f.body,
+            Body::Expr(_) | Body::Ctor(_) | Body::RegionCtor(_) | Body::RegionEntry { .. }
+        ) {
             let sym = match &f.body {
                 Body::Prim(s) => s.as_str(),
                 _ => "",
@@ -7865,6 +7873,31 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
             }
         }
         match &f.body {
+            Body::RegionEntry { worker } => {
+                // The worker takes the ordinary input owners. No operation
+                // between entry and that transfer can suspend or allocate.
+                let mut arguments = params
+                    .iter()
+                    .enumerate()
+                    .map(|(i, _)| format!("l{i}"))
+                    .collect::<Vec<_>>();
+                arguments.push("PTR(&region)".into());
+                let _ = writeln!(out,
+                    "    fwp_region region = {{0}};\n    fwp_cleanup cleanup;\n    fwp_cleanup_push(&cleanup, fwp_region_release, &region);\n    V result = f{worker}({});\n    fwp_cleanup_pop(&cleanup);\n    fwp_region_release(&region);\n    return result;",
+                    arguments.join(", "));
+            }
+            Body::RegionCtor(tag) => {
+                let fields = (0..f.arity - 1)
+                    .map(|i| format!("l{i}"))
+                    .collect::<Vec<_>>();
+                let _ = writeln!(
+                    out,
+                    "    return fwp_region_data(l{}, {tag}, {}, (V[]){{{}}});",
+                    f.arity - 1,
+                    fields.len(),
+                    fields.join(", ")
+                );
+            }
             Body::Prim(sym) => {
                 let sym = sym.clone();
                 let func = f.clone();
@@ -9810,7 +9843,9 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     let direct_output = !std::env::var("FWP_DIRECT_INTEGER_PRINT").is_ok_and(|v| v == "0");
     let scalar_text = scalar_text::lower(prog, direct_output);
     let string_maps = string_map::lower(&scalar_text);
-    let prog = &string_maps;
+    let region_program = regions::lower(&string_maps);
+    let prog = &region_program;
+    crate::ir::check_locals(prog)?;
     let weak_channels = crate::resource::uses_weak_channels(&prog.funcs, &prog.shapes);
     let tests = matches!(mode, Mode::Tests);
     let main = prog.main.unwrap_or(0);
@@ -9911,6 +9946,10 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         cli_flags: HashMap::new(),
         ticks: uses_async(prog) || uses_services(prog),
         unwind: resources
+            || prog
+                .funcs
+                .iter()
+                .any(|f| matches!(f.body, Body::RegionEntry { .. }))
             || uses_async(prog)
             || uses_services(prog)
             || tests
@@ -10545,6 +10584,14 @@ static const fwp_exec_spec exec_spec{i} = {{
             out.push_str(STATIC_RUNTIME);
             out.push('\n');
         }
+    }
+    if prog
+        .funcs
+        .iter()
+        .any(|f| matches!(f.body, Body::RegionEntry { .. }))
+    {
+        out.push_str(include_str!("../runtime/fwp_rt_region.c"));
+        out.push('\n');
     }
     if tls {
         out.push_str(TLS_RUNTIME);

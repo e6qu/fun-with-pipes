@@ -44,6 +44,20 @@ fn parsing_nested_calls_cancellation_and_escaped_trees_preserve_semantics() {
                 .arg(&cfile),
         );
         let code = std::fs::read_to_string(&cfile).unwrap();
+        for name in ["calculate", "nested", "suspended"] {
+            let marker = format!("/* {name} :");
+            let entry = code
+                .split(&marker)
+                .nth(1)
+                .expect("exported parser entry")
+                .split("\n}\n")
+                .next()
+                .unwrap();
+            assert!(
+                entry.contains("fwp_region region = {0};"),
+                "{name} did not select a region"
+            );
+        }
         for opt in ["-O1", "-O2"] {
             let label = format!("values-stack{stack}{opt}");
             let executable = dir.join(&format!("{label}.exe"));
@@ -54,6 +68,100 @@ fn parsing_nested_calls_cancellation_and_escaped_trees_preserve_semantics() {
             let report = allocation_report::parse(&String::from_utf8_lossy(&output.stderr))
                 .expect("allocation report");
             assert_eq!(report.live, 0, "{label}: {report:?}");
+        }
+    }
+}
+
+#[test]
+fn generated_parser_links_avoid_counts_and_release_each_failed_allocation() {
+    let dir = fwp::cgen::TempDir::new("parser-generated-owners").unwrap();
+    let source = dir.join("parser.fwp");
+    let cfile = dir.join("parser.c");
+    std::fs::write(&source, SOURCE).unwrap();
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args([
+                "build",
+                "--emit-c",
+                "--memory",
+                "dynamic",
+                "--fn",
+                "calculate",
+            ])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    let marker = code.find("/* calculate :").expect("calculate entry");
+    let entry = code[marker..]
+        .split("static V f")
+        .nth(1)
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    let (declarations, main) = include_str!("fixtures/parser_generated_probe.c")
+        .split_once("/* GENERATED-PARSER-MAIN */")
+        .unwrap();
+    let mut measured = code[..code.find("int main(").unwrap()].replace(
+        "typedef uint64_t V;",
+        &format!("typedef uint64_t V;\n{declarations}"),
+    );
+    for signature in [
+        "static inline V fwp_rc_fresh(V v) {",
+        "static inline void fwp_rc_dup(V v) {",
+        "static inline void fwp_rc_drop(V v) {",
+        "static inline int fwp_rc_release_last(V v) {",
+        "static inline int fwp_rc_unique(V v) {",
+        "static inline int fwp_rc_unique_mut(V v) {",
+        "static inline int fwp_rc_last(V v) {",
+        "static void fwp_rc_share(V v) {",
+        "static void fwp_rc_free_obj(V v) {",
+    ] {
+        assert_eq!(measured.matches(signature).count(), 1, "{signature}");
+        measured = measured.replace(
+            signature,
+            &format!("{signature}\n    parser_link_operation(v);"),
+        );
+    }
+    for (old, new) in [
+        ("        fwp_region_block *fresh =", "        if (++parser_allocations == parser_failure) fwp_fail(0, NULL);\n        fwp_region_block *fresh ="),
+        ("        fresh->capacity = capacity;", "        fresh->capacity = capacity;\n        parser_add_block(fresh->data, capacity);"),
+        ("        fwp_mem_free(block);", "        parser_remove_block(block->data);\n        fwp_mem_free(block);"),
+        ("    return PTR(node);", "    if (PTR(node) % 8 || fwp_rc_slot(PTR(node))) exit(250);\n    parser_nodes++;\n    /* extra-link-count */\n    return PTR(node);"),
+    ] {
+        assert_eq!(measured.matches(old).count(), 1, "{old}");
+        measured = measured.replace(old, new);
+    }
+    measured.push_str(&main.replace("@entry@", &format!("f{entry}")));
+    for opt in ["-O1", "-O2"] {
+        for (name, code, status) in [
+            ("ordinary", measured.clone(), 0),
+            (
+                "extra-count",
+                measured.replace("/* extra-link-count */", "fwp_rc_dup(PTR(node));"),
+                251,
+            ),
+            (
+                "missing-free",
+                measured.replace(
+                    "        fwp_mem_free(block);",
+                    "        /* omitted block free */",
+                ),
+                248,
+            ),
+        ] {
+            let label = format!("generated-{name}{opt}");
+            let executable = dir.join(format!("{label}.exe"));
+            fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+            let output = Command::new(&executable).output().unwrap();
+            record_probe::save("parser_workspace", &label, &code, &executable, &output);
+            assert_eq!(output.status.code(), Some(status), "{label}: {output:?}");
+            assert!(
+                output.stdout.is_empty() && output.stderr.is_empty(),
+                "{label}: {output:?}"
+            );
         }
     }
 }

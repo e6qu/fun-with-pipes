@@ -1,6 +1,6 @@
 # One lifetime for a parser's tree
 
-A6 is an implementation task, not supported behavior yet. The first example is
+A6 is under validation, not verified support yet. The first example is
 [the prefix-expression parser](../tests/fixtures/parser_workspace.fwp):
 `+ 2 * 3 4` builds the tree for `2 + (3 * 4)` and evaluates to `14`.
 All nodes contain either an integer or links to other nodes. The input Strings
@@ -38,9 +38,11 @@ cannot return a node. Validate its precise existing contract before admitting it
 
 Use a finite worklist over types and direct helper calls. Cache containment of
 the candidate node type, visit each selected helper once, and count analysis
-work. Recursive helpers do not require arbitrary symbolic execution. Candidate
-selection and specialization must have explicit size/work budgets before being
-applied to larger programs; preserve the existing G2 compiler-analysis checks.
+work. Recursive helpers do not require arbitrary symbolic execution. The current selection budget is eight units per original expression, local and
+type edge; proof visits consume it. Cloned functions and locals may add at most
+twice the original expression/local weight. A candidate that exceeds a budget
+keeps ordinary ownership. Measure these limits on larger programs and preserve
+the existing G2 compiler-analysis checks; bounded work is not a measured compile-time result.
 
 ## Representation and cleanup
 
@@ -52,7 +54,7 @@ program. It would also make mixed records easy to destroy incorrectly.
 Pass the region address explicitly between specialized internal helpers. Do not
 use a process/thread-global current region: nested invocations and task suspension
 must preserve the correct owner. The original public function signature remains
-unchanged. The planned lowering uses an internal region-entry body that creates
+unchanged. The lowering uses an internal region-entry body that creates
 the owner and calls a worker with an explicit extra context parameter. Specialized
 node shapes carry region identity; selection must never depend on a generated
 type-name prefix. Ordinary constructors and workers stay available for escaping

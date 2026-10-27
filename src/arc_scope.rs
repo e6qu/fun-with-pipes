@@ -916,6 +916,12 @@ impl Proof<'_> {
         let function = &self.program.funcs[id];
         let site = (id, 0);
         match &function.body {
+            Body::RegionEntry { worker } => {
+                let mut arguments = args.to_vec();
+                arguments.push(Targets::new());
+                Ok(self.request(*worker, scoped, None, &arguments))
+            }
+            Body::RegionCtor(_) => Ok(Targets::new()),
             Body::Expr(body) => {
                 let mut locals = vec![Targets::new(); function.locals.len()];
                 for (local, value) in locals.iter_mut().zip(args) {

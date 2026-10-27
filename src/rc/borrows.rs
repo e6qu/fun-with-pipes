@@ -341,6 +341,12 @@ pub(crate) fn infer(
         match &f.body {
             Body::Expr(body) => references(body, &mut graph[id], &mut values),
             Body::Remote(remote) => values.extend(remote.iter_fn),
+            Body::RegionEntry { worker } => {
+                graph[id].insert(*worker);
+                // Region entries call the ordinary owning entry, not a
+                // borrowed worker ABI. Their inputs transfer exactly once.
+                values.insert(*worker);
+            }
             _ => {}
         }
     }

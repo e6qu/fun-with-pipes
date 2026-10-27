@@ -1,12 +1,15 @@
 //! Admission proof for one invocation-owned recursive graph.
 //!
-//! This is preparation for A6 lowering. A successful plan is not a storage
-//! transformation: internal link types, helper specialization and cleanup must
-//! consume this proof together before the C backend can select region storage.
+//! Lowering consumes this proof with explicit internal link types, specialized
+//! helpers and invocation cleanup. Failure to prove a candidate leaves its
+//! ordinary ownership unchanged.
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::ir::{Body, Expr, FuncId, Program, TypeShape, MT};
+use crate::ir::{Body, Expr, Func, FuncId, Local, Pat, Program, TypeShape, MT};
+
+mod lowering;
+pub(super) use lowering::lower;
 
 #[derive(Debug, PartialEq, Eq)]
 pub(super) struct Plan {
@@ -52,7 +55,7 @@ impl Types {
                 Some(TypeShape::Record(fields)) => {
                     children.extend(fields.iter().map(|(_, t)| t.clone()));
                 }
-                Some(TypeShape::Opaque) | None => {}
+                Some(TypeShape::Opaque | TypeShape::RegionLink { .. }) | None => {}
             }
             for child in children {
                 parents.entry(child.clone()).or_default().insert(ty.clone());
@@ -94,14 +97,19 @@ fn local_type(
     containing: &BTreeSet<MT>,
     ty: &MT,
     visited: &mut BTreeSet<MT>,
+    budget: &mut usize,
 ) -> bool {
+    let Some(left) = budget.checked_sub(1) else {
+        return false;
+    };
+    *budget = left;
     if !containing.contains(ty) || ty == node || !visited.insert(ty.clone()) {
         return true;
     }
     crate::ir::record_fields(&prog.shapes, ty).is_some_and(|fields| {
         fields
             .iter()
-            .all(|(_, ty)| local_type(prog, node, containing, ty, visited))
+            .all(|(_, ty)| local_type(prog, node, containing, ty, visited, budget))
     })
 }
 
@@ -111,8 +119,14 @@ fn body_calls(
     unknown: &BTreeSet<MT>,
     e: &Expr,
     calls: &mut BTreeSet<FuncId>,
+    budget: &mut usize,
 ) -> bool {
-    let visit = |e, calls: &mut BTreeSet<FuncId>| body_calls(prog, containing, unknown, e, calls);
+    let Some(left) = budget.checked_sub(1) else {
+        return false;
+    };
+    *budget = left;
+    let mut visit =
+        |e, calls: &mut BTreeSet<FuncId>| body_calls(prog, containing, unknown, e, calls, budget);
     match e {
         Expr::Local(_) | Expr::Const(_) => true,
         Expr::Func(id) => {
@@ -158,15 +172,33 @@ fn body_calls(
 /// Check one explicit root/type pair. Selection policy and clone budgets belong
 /// to lowering; this proof never searches arbitrary call contexts or promotes a
 /// link to an independently owned value at runtime.
-pub(super) fn prove(prog: &Program, root: FuncId, node: &MT) -> Option<Plan> {
+#[cfg(test)]
+fn prove(prog: &Program, root: FuncId, node: &MT) -> Option<Plan> {
     if prog.self_tail.contains(&root) || !node_shape(prog, node) {
         return None;
     }
     let types = Types::new(prog);
     let containing = types.containing(node);
     let unknown = types.containing(&MT::con("?"));
+    prove_cached(prog, root, node, &containing, &unknown, &mut usize::MAX)
+}
+
+fn prove_cached(
+    prog: &Program,
+    root: FuncId,
+    node: &MT,
+    containing: &BTreeSet<MT>,
+    unknown: &BTreeSet<MT>,
+    budget: &mut usize,
+) -> Option<Plan> {
+    if prog.self_tail.contains(&root) {
+        return None;
+    }
     let f = prog.funcs.get(root)?;
-    if containing.contains(&f.ty) || !f.locals.iter().any(|ty| containing.contains(ty)) {
+    if f.arity == 0
+        || containing.contains(&f.ty)
+        || !f.locals.iter().any(|ty| containing.contains(ty))
+    {
         return None;
     }
     let mut pending = BTreeSet::from([root]);
@@ -176,6 +208,7 @@ pub(super) fn prove(prog: &Program, root: FuncId, node: &MT) -> Option<Plan> {
             continue;
         }
         let f = &prog.funcs[id];
+        *budget = budget.checked_sub(1 + f.locals.len())?;
         let (parameters, result) = f.ty.params(f.arity as usize);
         if parameters.len() != f.arity as usize || unknown.contains(&f.ty) {
             return None;
@@ -186,14 +219,15 @@ pub(super) fn prove(prog: &Program, root: FuncId, node: &MT) -> Option<Plan> {
             .chain([result])
             .chain(f.locals.iter())
             .any(|ty| {
-                unknown.contains(ty) || !local_type(prog, node, &containing, ty, &mut visited)
+                unknown.contains(ty)
+                    || !local_type(prog, node, containing, ty, &mut visited, budget)
             })
         {
             return None;
         }
         match &f.body {
             Body::Expr(body) => {
-                if !body_calls(prog, &containing, &unknown, body, &mut pending) {
+                if !body_calls(prog, containing, unknown, body, &mut pending, budget) {
                     return None;
                 }
             }
@@ -204,7 +238,12 @@ pub(super) fn prove(prog: &Program, root: FuncId, node: &MT) -> Option<Plan> {
                 if symbol == "fail"
                     && f.arity == 1
                     && f.locals.first() == Some(&MT::con("std::String")) => {}
-            Body::Ctor(_) | Body::Prim(_) | Body::ForeignC { .. } | Body::Remote(_) => {
+            Body::Ctor(_)
+            | Body::Prim(_)
+            | Body::ForeignC { .. }
+            | Body::Remote(_)
+            | Body::RegionCtor(_)
+            | Body::RegionEntry { .. } => {
                 return None;
             }
         }
@@ -382,5 +421,107 @@ mod tests {
         let (mut prog, node) = program();
         prog.self_tail.insert(0);
         assert!(prove(&prog, 0, &node).is_none());
+    }
+
+    #[test]
+    fn lowering_separates_links_and_keeps_ordinary_callers() {
+        let (prog, node) = program();
+        let lowered = lower(&prog);
+        crate::ir::check_locals(&lowered).unwrap();
+        let Body::RegionEntry { worker } = lowered.funcs[0].body else {
+            panic!("local tree must receive a region");
+        };
+        assert_eq!(lowered.funcs[0].ty, prog.funcs[0].ty);
+        assert_eq!(lowered.funcs[worker].arity, 2);
+        let (link, variants) = lowered
+            .shapes
+            .iter()
+            .find_map(|(ty, shape)| match shape {
+                TypeShape::RegionLink { owner: 0, variants } => Some((ty, variants)),
+                _ => None,
+            })
+            .unwrap();
+        assert_ne!(link, &node);
+        assert_eq!(variants[1].1, [link.clone(), link.clone()]);
+        assert!(!crate::rc::needs_rc(&lowered.shapes, link));
+        assert!(crate::rc::needs_rc(&lowered.shapes, &node));
+        assert!(matches!(lowered.funcs[1].body, Body::Ctor(0)));
+        assert_eq!(lowered.funcs[2].ty, prog.funcs[2].ty);
+        let reader = lowered
+            .funcs
+            .iter()
+            .find(|f| f.name == "read [region 0]")
+            .unwrap();
+        assert_eq!(
+            reader.arity, 1,
+            "readers have no needless context parameter"
+        );
+        assert_eq!(&reader.locals[0], link);
+        let live = crate::ir::reachable_functions(&lowered, &[0]).unwrap();
+        assert!(live[worker]);
+    }
+
+    #[test]
+    fn constructors_need_types_and_constant_graphs_keep_their_storage() {
+        let (prog, _) = program();
+        for value in [
+            Expr::Const(Value::Data(0, vec![Value::I64(7)].into())),
+            Expr::Field(
+                Box::new(Expr::Record(vec![Expr::Construct(0, vec![Expr::Local(0)])])),
+                0,
+            ),
+        ] {
+            let mut candidate = prog.clone();
+            candidate.funcs[0].body = Body::Expr(Expr::Let(
+                1,
+                Box::new(value),
+                Box::new(Expr::Call(2, vec![Expr::Local(1)])),
+            ));
+            let lowered = lower(&candidate);
+            assert!(!matches!(lowered.funcs[0].body, Body::RegionEntry { .. }));
+            assert_eq!(lowered.funcs.len(), candidate.funcs.len());
+            assert_eq!(lowered.shapes, candidate.shapes);
+        }
+    }
+
+    #[test]
+    fn typed_inlined_constructors_use_the_explicit_owner() {
+        let (mut prog, _) = program();
+        prog.funcs[0].body = Body::Expr(Expr::Let(
+            1,
+            Box::new(Expr::Construct(0, vec![Expr::Local(0)])),
+            Box::new(Expr::Call(2, vec![Expr::Local(1)])),
+        ));
+        let lowered = lower(&prog);
+        crate::ir::check_locals(&lowered).unwrap();
+        let Body::RegionEntry { worker } = lowered.funcs[0].body else {
+            panic!("no region");
+        };
+        let Body::Expr(Expr::Let(_, value, _)) = &lowered.funcs[worker].body else {
+            panic!("no binding");
+        };
+        let Expr::Call(constructor, args) = &**value else {
+            panic!("ordinary allocation");
+        };
+        assert!(matches!(
+            lowered.funcs[*constructor].body,
+            Body::RegionCtor(0)
+        ));
+        assert!(matches!(args.last(), Some(Expr::Local(1))));
+    }
+
+    #[test]
+    fn cached_scalar_roots_and_exhausted_proofs_do_not_select_regions() {
+        let (mut prog, node) = program();
+        let types = Types::new(&prog);
+        let containing = types.containing(&node);
+        let unknown = types.containing(&MT::con("?"));
+        assert!(prove_cached(&prog, 0, &node, &containing, &unknown, &mut 0).is_none());
+        prog.funcs[0].arity = 0;
+        prog.funcs[0].ty = MT::con("std::I64");
+        assert!(!matches!(
+            lower(&prog).funcs[0].body,
+            Body::RegionEntry { .. }
+        ));
     }
 }

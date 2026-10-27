@@ -202,6 +202,12 @@ pub enum Body {
     Prim(String),
     /// ADT constructor.
     Ctor(u32),
+    /// Native-only entry: owns one region until the worker returns or unwinds.
+    RegionEntry {
+        worker: FuncId,
+    },
+    /// Native-only constructor; the final parameter is its explicit region.
+    RegionCtor(u32),
     /// A C function (`foreign "C"`), called through the C ABI.
     ForeignC {
         symbol: String,
@@ -372,6 +378,12 @@ pub enum TypeShape {
     /// Variant names and field types (with the type's parameters
     /// substituted).
     Adt(Vec<(String, Vec<MT>)>),
+    /// Non-owning node links, confined to this entry's invocation. Fields are
+    /// integers or links with the same owner; never independently owned values.
+    RegionLink {
+        owner: FuncId,
+        variants: Vec<(String, Vec<MT>)>,
+    },
     /// Nominal record: field names and types in canonical order.
     Record(Vec<(String, MT)>),
     Opaque,
@@ -633,6 +645,7 @@ pub(crate) fn reachable_functions(prog: &Program, entries: &[FuncId]) -> Result<
         match &prog.funcs[f].body {
             Body::Expr(e) => refs(e, &mut work),
             Body::Remote(r) => work.extend(r.iter_fn),
+            Body::RegionEntry { worker } => work.push(*worker),
             _ => {}
         }
     }

@@ -422,6 +422,7 @@ impl<'a> Mono<'a> {
                         }
                     }
                     TypeShape::Opaque => {}
+                    TypeShape::RegionLink { .. } => unreachable!("native-only region shape"),
                 }
             }
         }

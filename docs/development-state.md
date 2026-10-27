@@ -1,33 +1,35 @@
 # Current work
 
-**Next:** finish A6's parser region transformation and its evidence in the same
-batch as the local-guard test repair. Keep the PR draft while implementing; run
-one consolidated compiler/ownership check after the transformation is complete,
-then the full final-head production matrix. A3/A4 are merged and verified.
+**Next:** validate A6's integrated compiler transformation in the focused
+Linux ARM64/AMD64 runner suite, fix every failure, then complete WASI and the
+C/Rust measurement evidence in the same draft PR before the full production gate.
 
-Worktree: `/private/tmp/fwp-parser-workspace`, branch `scoped-parser-workspace`,
-based on verified squash `56d5aac63a9963ae6b16574f10d6dc3087a08d8a` (#220).
-[The workspace contract](parser-workspace.md) specifies admission, cleanup, exact
-input sizes and C/Rust comparisons. This is preparation, not region support.
+[Draft PR #221](https://github.com/e6qu/fun-with-pipes/pull/221) uses
+`/private/tmp/fwp-parser-workspace`, branch `scoped-parser-workspace`, based on
+verified squash `56d5aac63a9963ae6b16574f10d6dc3087a08d8a` (#220).
+[The workspace contract](parser-workspace.md) specifies admission, cleanup and
+fixed inputs. The compiler changes are not verified support yet.
 
 ## A6 implementation state
 
-- `src/cgen/regions.rs` contains an unconnected admission-proof draft and seven
-  unit controls. It follows typed containment and known recursive helpers;
-  cached graphs, escaping/unknown/captured uses and self-tail roots stay ordinary.
-- `runtime/fwp_rt_region.c` contains an unconnected block owner. Only integers and
-  internal links may occupy its nodes; ordinary String/token-list owners remain
-  independent. Helpers must receive an explicit context where allocation needs it.
-- `tests/fixtures/parser_workspace.fwp` covers values, parse errors, nested
-  success/failure, cancellation after tree construction, escaping and cached
-  trees. Arithmetic overflow traps with exit 101; it is not caught by `attempt`.
-- `tests/parser_workspace.rs` adds three integration tests and is assigned to
-  native macOS/Windows jobs. The Rust tests have not been built/run yet.
-- Finish explicit internal link types, typed constructor rewriting, helper
-  specialization and invocation cleanup together. Prove mixed records keep their
-  ordinary owners. Reject unrecoverable constructor types rather than guessing.
-  Then verify actual generated links, count operations, failures and binaries;
-  the isolated allocator probe is not that proof.
+- The admission proof caches type containment. It rejects owning fields in nodes,
+  unknown/captured/escaping uses, cached graphs, constants with existing storage
+  and self-tail roots. Ordinary helpers remain available to escaping callers.
+- Lowering distinguishes internal links with `TypeShape::RegionLink`. A
+  `RegionEntry` owns its blocks and calls a specialized worker. Allocation helpers
+  receive the context explicitly; pure readers do not. Typed constructors use
+  the block allocator. Mixed records retain their String/token-list owners.
+- Analysis and cloning have program-size budgets. A reverse call graph propagates
+  context requirements without repeatedly walking recursive helper bodies.
+- Eleven unit controls and four integration tests cover admission, semantic
+  agreement, overflow, nested calls, suspension/cancellation, escaped/cached trees,
+  block alignment, physical cleanup and every block-allocation failure. The
+  generated-parser probe rejects any count operation on a live internal link;
+  deliberate extra-count and missing-free mutations must fail their observers.
+- The Rust changes have not been built/run yet. The focused `parser-workspace`
+  suite builds from Rust at production O1, runs unit/affected integration checks,
+  Clippy and generated-C O1/O2 probes with GCC on both Linux architectures.
+  Full CI remains deferred until this whole batch and its evidence are ready.
 
 ## Checks and the incidental repair
 
@@ -37,6 +39,7 @@ controls disk readings only inside its copied guard subprocess. It adds exact
 64 GiB acceptance, preflight refusal and refusal during sampling. All nine tests
 pass locally under the real guard. `scripts/local-guard.py` and its limits are
 unchanged. The complete failed job log was audited; these were its only failures.
+The repaired draft documentation gate `40553700208` passed at `ab0fccf1`.
 
 Other focused local checks, all through `scripts/local-guard.py`:
 
@@ -67,7 +70,7 @@ Squash `56d5aac6` has tested tree `1c824b804dddd30460bb11b2f5a9a40dd9fe16b4` and
 target summaries per Linux host, 132 per regular macOS host, 126 per ownership
 macOS host and 201 per Windows host. Duplicate postmerge CI `40552108647` was
 cancelled after identical-tree verification. The postmerge docs failure above
-needs the repaired draft's documentation gate, not another unchanged full suite.
+is repaired and passed the draft documentation gate.
 
 A1–A5 are verified for their stated shapes; A6 and roadmap steps 3–8 remain open.
 [History](roadmap-history.md) owns older delivery IDs and evidence. Preserve G2's
