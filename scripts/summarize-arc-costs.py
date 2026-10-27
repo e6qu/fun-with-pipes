@@ -70,7 +70,7 @@ def audit(directory, source, machine):
             frames.append(dict(function=location.rsplit(':', 1)[1], bytes=int(size), kind=kind))
         text, = re.findall(r'^\s*\d+ \.text\s+([0-9a-fA-F]+)\s', (root / 'ordinary.sections').read_text(), re.M)
         metadata_inputs = {}
-        if report.get("comparison", {}).get("policy") == "unique-arrays":
+        if report.get("comparison", {}).get("policy") in ("unique-arrays", "sort-keys"):
             assert set(case["countMetadata"]) == set(case["inputs"])
             for label, samples in case["countMetadata"].items():
                 assert len(samples) == 3 and all(sample == samples[0] for sample in samples)

@@ -41,8 +41,12 @@ unrelated fields merely to release them in the worker.
 The new record-conversion probe covers unique/shared parents, a string-valued
 projection that still needs ownership, pointer-shaped scalar bits, physical
 release and interruption at the real entry tick. Deliberate extra-owner and
-missing-free variants must fail. Compiler and tests are not yet verified; use the
-`scalar-projections` runner suite. Format passed through the local guard; no local
+missing-free variants must fail. Compiler and tests are not yet verified; focused run `40499978041` checks
+`00957a15e95cc3b6d584749dcd32ac32b724c3b1` on both Linux hosts and passed.
+All completed test targets and six ordinary/fault probe artifacts per host were
+audited.
+The related sort-key change adds `sort-by` to existing known-callback specialization,
+with capture-order, failure and cancellation controls. It is not in that first run. Format passed through the local guard; no local
 compiler build ran. After focused checks, measure the word-frequency D count
 saving and inspect related pair duplication before assembling the next PR.
 

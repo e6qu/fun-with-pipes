@@ -878,7 +878,9 @@ pub(crate) fn simplify(
 /// argument to, for those that `specialize_hofs` handles.
 pub fn hof_arity(sym: &str) -> Option<usize> {
     match sym {
-        "map" | "filter" | "find" | "take-while" | "drop-while" | "loop" | "modify" => Some(1),
+        "map" | "filter" | "find" | "take-while" | "drop-while" | "loop" | "modify" | "sort-by" => {
+            Some(1)
+        }
         "fold" | "fold-right" | "zip-with" => Some(2),
         _ => None,
     }

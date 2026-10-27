@@ -33,14 +33,14 @@ on:
         description: Exact focused API run supplying native diagnostic executables
         type: string
 jobs:
-  scalar_projections:
-    if: inputs.suite == 'scalar-projections'
+  arc_costs:
+    if: inputs.suite == 'scalar-projections' || inputs.suite == 'arc-costs'
     strategy:
       fail-fast: false
       matrix:
         runner: [ubuntu-latest, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       CC: gcc
       CARGO_BUILD_JOBS: 2
@@ -73,18 +73,28 @@ jobs:
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: |
           cargo fmt --all -- --check
-          target/debug/fwp fmt --check tests/fixtures/scalar_record_projection.fwp
+          target/debug/fwp fmt --check tests/fixtures/scalar_record_projection.fwp tests/fixtures/sort_key_captures.fwp
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output scalar-projection-evidence/inventory.json
       - name: Verify projected fields, conversion failures and cleanup
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: |
           set -o pipefail
-          cargo test --locked --no-fail-fast --lib --test record_conversion_ownership --test record_update_ownership --test general_record_update_ownership -- --nocapture 2>&1 | tee scalar-projection-evidence/tests.log
+          cargo test --locked --no-fail-fast --lib --test record_conversion_ownership --test record_update_ownership --test general_record_update_ownership --test sort_callback_ownership -- --nocapture 2>&1 | tee scalar-projection-evidence/tests.log
       - name: Check compiler and regression code
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: |
           set -o pipefail
-          cargo clippy --locked --lib --test record_conversion_ownership -- -D warnings 2>&1 | tee scalar-projection-evidence/clippy.log
+          cargo clippy --locked --lib --test record_conversion_ownership --test sort_callback_ownership -- -D warnings 2>&1 | tee scalar-projection-evidence/clippy.log
+      - name: Verify ownership evidence reader controls
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: python3 scripts/test-ownership-profile.py
+      - name: Measure scalar projections and known sort keys
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' && inputs.suite == 'arc-costs' }}
+        run: >-
+          python3 scripts/measure-arc-costs.py --compiler target/debug/fwp
+          --cc gcc --objdump objdump --nm nm --samples 3 --timeout 240
+          --output scalar-projection-evidence/costs --comparison sort-keys
+          --baseline docs/measurements/unique-array-storage-2026-10-27.json
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -178,52 +188,6 @@ jobs:
         with:
           name: unique-arrays-${{ matrix.runner }}
           path: unique-array-evidence/
-          if-no-files-found: error
-
-  arc_costs:
-    if: inputs.suite == 'arc-costs'
-    strategy:
-      fail-fast: false
-      matrix:
-        runner: [ubuntu-latest, ubuntu-24.04-arm]
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 30
-    env:
-      CC: gcc
-      CARGO_BUILD_JOBS: 2
-      FWP_LTO: '0'
-      FWP_ARC_ARTIFACTS: arc-test-evidence
-    steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Check ownership evidence reader controls
-        run: python3 scripts/test-ownership-profile.py
-      - name: Build the current compiler
-        id: compiler
-        run: cargo build --locked --release --bin fwp
-      - name: Check buffer fixture formatting
-        run: target/release/fwp fmt --check tests/fixtures/unique_buffer_costs.fwp tests/fixtures/static_array_callbacks.fwp
-      - name: Verify generated callbacks, aliases, failure and cancellation
-        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
-        run: cargo test --locked --release --no-fail-fast --test array_element_ownership --test array_unwind_ownership --test array_loop_borrows -- --nocapture
-      - name: Count remaining ownership operations and preserve ordinary binaries
-        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
-        run: >-
-          python3 scripts/measure-arc-costs.py --compiler target/release/fwp
-          --cc gcc --objdump objdump --nm nm --samples 3 --timeout 240
-          --output arc-cost-evidence --comparison compare
-          --baseline docs/measurements/arc-residual-baseline-2026-10-27.json
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: arc-costs-${{ matrix.runner }}
-          path: arc-cost-evidence/
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: arc-tests-${{ matrix.runner }}
-          path: arc-test-evidence/
           if-no-files-found: error
 
   ownership_analysis:

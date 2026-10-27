@@ -179,6 +179,24 @@ existing lifetime-analysis budgets remain required. The
 [storage report](measurements/unique-array-storage.md) defines the narrow supported
 shape, allocation layout, negative controls and incomplete acceptance evidence.
 
+### Scalar fields and known sort keys
+
+For a pure scalar projection such as `(word, count) | .1`, the generic function
+entry reads the field from its boxed argument before releasing that argument.
+It does not acquire temporary owners for unrelated fields. Direct calls retain
+the existing separate-field worker. Resource-bearing records and borrowed-worker
+contracts are excluded from this selection; ordinary entry cleanup handles a
+failure before the read. String-valued results still require an independent owner
+when their source record remains shared.
+
+Known partial applications passed to `sort-by` use the same specialization pass
+as `map` and `fold`. For `sort-by (both (.1 | neg) .0)`, the compiler can see the
+whole key calculation and avoid duplicating a pair just to call its selectors.
+Captures are evaluated once in their original order; callbacks still run in the
+sort primitive's original order. Runtime-selected callbacks keep ordinary calls.
+The [measurement protocol](measurements/sort-key-ownership.md) separates these
+implemented changes from their pending verification and count targets.
+
 ## Numerical specialization
 
 The optimizer removes work only when doing so preserves observable behavior:

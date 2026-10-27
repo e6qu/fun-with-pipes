@@ -1,0 +1,25 @@
+# A captured computation runs once, including for an empty input list.
+capture : () -> String ! {IO}
+capture = const "prefix:" | tap echo
+
+# Every visited key is printed before the failure; later keys must not run.
+checked : String -> String ! {IO, Error[String]}
+checked = tap echo | if (eq "b") (const "expected key failure" | fail) id
+
+yielded : String -> String ! {Async}
+yielded = tap (const () | task.yield)
+sort-task : List[String] -> () -> List[String] ! {Async}
+sort-task = curry (.0 | sort-by (yielded | concat "key:"))
+cancelled =
+    sort-task
+    | task.spawn
+    | tap (const () | task.yield)
+    | tap task.cancel
+    | task.await
+
+main = [
+    ["c", "a", "b"] | sort-by (concat (capture ())) | echo,
+    [] | sort-by (concat (capture ())) | echo,
+    ["c", "b", "a"] | attempt (sort-by (checked | concat "key:")) | echo,
+    ["c", "b", "a"] | cancelled | echo,
+] | ignore
