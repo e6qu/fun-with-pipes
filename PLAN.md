@@ -36,11 +36,11 @@ collector is not the same as removing these costs. The
    removes count storage and the declared count operations. Native/WASI cleanup,
    metadata and compiler-cost observations are retained; finish the full final-head
    matrix before marking it complete.
-3. Then group **A3/A4** around word-frequency sort keys. First remove the D String
-   retain/drop pairs performed by the numeric selector for D distinct words; that
-   selector needs only the number. Investigate the associated pair duplication in
-   the same batch. Preserve saved text-key ownership, aliases, failure order and
-   outputs, and compare against the frozen per-owner rows before extending it.
+3. The next **A3/A4** batch removes two temporary owners per distinct word:
+   the numeric selector's String owner and the key function's duplicate pair.
+   [Its protocol](docs/measurements/sort-key-ownership.md) defines the 2D count
+   target, unchanged memory budget, alias and failure controls. The scalar-only
+   prototype passed both Linux hosts; the combined change is awaiting evidence.
    **A6** remains the separately scoped parser-workspace task below.
 4. Preserve **G2**'s [verified analysis budgets](docs/measurements/ownership-analysis.md)
    when changing lifetime analysis. Further precision needs a named failing example
@@ -321,8 +321,7 @@ rules; [feasibility limits](docs/design-limits.md) bound the guarantees.
 
 ## Delivery and acceptance
 
-G3 and G4 shipped together in #215. Keep the remaining GC-removal work together
-where practical. During implementation, run only checks justified by a changed
+Bundle related roadmap work. During implementation, run only checks justified by a changed
 contract, a specific defect or an unresolved concern; do not repeat passing suites
 after every edit or launch full CI for intermediate commits. Write the required
 tests alongside the implementation, even when their broad execution is deferred.

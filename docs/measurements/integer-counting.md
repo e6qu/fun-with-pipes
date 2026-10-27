@@ -137,8 +137,9 @@ strings, effects, trap order and output-protocol separation. Allocation controls
 must detect deliberately inserted storage requests. The artifact audit verifies
 all 24 native executables across both hosts, their C, disassembly and controls.
 The current tests retain those inputs and allocation controls in one counted
-runtime: six binaries per host. That migration still awaits integrated
-collector-deletion validation; [the handoff](../development-state.md) tracks it.
+runtime: six binaries per host. That migration passed integrated validation in
+[#217](../roadmap-history.md#tracing-gc-removal-pr-217). These checks do not remeasure
+the historical timing samples.
 
 A shared-loop candidate (`995d3ecf`, run `39525618134`) was not selected: CPU
 medians were 1–4% higher on EPYC 9V74 and 2–3% higher on N2 than unchanged fwp.

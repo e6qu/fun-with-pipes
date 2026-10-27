@@ -91,15 +91,16 @@ valid and using the matching release operation are `Unsafe` obligations. Passing
 an address through C does not prove that C can retain fwp-owned storage. See
 [C interop](tutorials/09-c-interop/README.md).
 
-## Contract work before collector deletion
+## Delivered contracts and collector removal
 
 G1's entry matrix passed in #212; G3/G4's weak links, retained callbacks and
 cleanup controls passed in #215. [Delivery history](roadmap-history.md) records
 exact tested sources and runs. A passing entry does not prove arbitrary user
 programs safe; each rejection above still applies.
 
-G5 applies the lifetime rules to all execution entries and deletes collector
-code without losing the output, alias, failure, cancellation and memory checks.
+G5 applied the lifetime rules to all execution entries and deleted collector
+code in [#217](roadmap-history.md#tracing-gc-removal-pr-217), preserving output, alias,
+failure, cancellation and memory checks.
 [The diagnostic deletion table](ownership-diagnostics.md#collector-specific-tests-and-retained-assertions)
 identifies what retires with tracing and what must remain. The runtime must not
 silently switch an unproved program to tracing or permanent retention.

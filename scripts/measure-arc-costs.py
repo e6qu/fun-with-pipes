@@ -134,15 +134,13 @@ def comparison_failures(report, baseline, policy):
                 if words:
                     if operation in ('dup', 'release_last'):
                         target['effective'] -= 2 * words
+                        target['calls'] -= 6 * words
+                        if operation == 'release_last':
+                            target['calls'] -= 2
                     if operation == 'last':
-                        target['effective'] -= words
-                    # Known callback specialization can also remove no-op
-                    # attempts on static closures. Preserve every observed row;
-                    # allow fewer attempts, but no growth in any operation.
-                    calls = actual['operations'][operation]['calls']
-                    if calls > counts['calls']:
-                        failures.append(f'{name}/{label}/{operation}: helper attempts increased')
-                    target['calls'] = calls
+                        # The removed checks saw shared pairs or static
+                        # closures, so their result was false, not effective.
+                        target['calls'] -= 3 * words
                 if actual['operations'][operation] != target:
                     failures.append(f'{name}/{label}/{operation}: '
                                     f'{actual["operations"][operation]} != {target}')
