@@ -923,7 +923,7 @@ int main(void) {{
 }
 
 #[test]
-fn unique_arrays_remove_count_storage_and_free_on_partial_failure() {
+fn unique_arrays_remove_counts_and_preserve_failure_cancel_and_escape() {
     let dir = Scratch::new("unique-arrays");
     let source = dir.0.join("unique.fwp");
     std::fs::write(&source, include_str!("fixtures/unique_array_ownership.fwp")).unwrap();
@@ -951,7 +951,7 @@ fn unique_arrays_remove_count_storage_and_free_on_partial_failure() {
         assert_eq!(actual.stdout, reference.stdout, "{optimization}");
         assert_eq!(actual.stderr, reference.stderr, "{optimization}");
     }
-    for name in ["local", "partial"] {
+    for name in ["local", "partial", "completed", "cancelled"] {
         checked(
             Command::new(compiler)
                 .env_remove("FWP_NO_OPT")
@@ -973,7 +973,17 @@ fn unique_arrays_remove_count_storage_and_free_on_partial_failure() {
             .unwrap();
         let probe = include_str!("fixtures/unique_array_probe.c")
             .replace("@ENTRY@", &format!("f{id}"))
-            .replace("@PARTIAL@", if name == "partial" { "1" } else { "0" });
+            .replace(
+                "@PARTIAL@",
+                if matches!(name, "partial" | "completed") {
+                    "1"
+                } else {
+                    "0"
+                },
+            )
+            .replace("@FAIL_LENGTH@", if name == "completed" { "2" } else { "4" })
+            .replace("@CANCEL@", if name == "cancelled" { "1" } else { "0" });
+        assert_eq!(code.matches("static inline void *fwp_alloc_unique(size_t n) { return fwp_heap_alloc(n, HEAP_UNIQUE); }").count(), 1);
         let mut measured = code.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int unique_probe_active;\nstatic V unique_probe_owner;\nstatic size_t unique_probe_allocations, unique_probe_frees, unique_probe_counts;")
             .replace("static inline void *fwp_alloc_unique(size_t n) { return fwp_heap_alloc(n, HEAP_UNIQUE); }", "static inline void *fwp_alloc_unique(size_t n) { void *p = fwp_heap_alloc(n, HEAP_UNIQUE); if (unique_probe_active) { uintptr_t offset = (uintptr_t)p - (uintptr_t)fwp_heap.base; if (offset >= fwp_heap.heap_bytes) exit(223); heap_chunk *chunk = &fwp_heap.meta[offset >> HEAP_SHIFT]; if (chunk->rc || chunk->rc_len) exit(223); unique_probe_owner = PTR(p); unique_probe_allocations++; } return p; }")
             .replace("static void fwp_mem_free(void *p) {\n", "static void fwp_mem_free(void *p) {\n    if (unique_probe_active && (V)(uintptr_t)p == unique_probe_owner) { unique_probe_frees++; }\n    /* missing-free-control */\n")
@@ -1031,6 +1041,92 @@ fn unique_arrays_remove_count_storage_and_free_on_partial_failure() {
                     "{actual:?}"
                 );
             }
+        }
+    }
+
+    let rejected = dir.0.join("weak-array.fwp");
+    for operation in ["channel.downgrade | channel.upgrade", "channel.upgrade"] {
+        std::fs::write(
+            &rejected,
+            format!("main = 4 | flip array.generate id | {operation} | ignore\n"),
+        )
+        .unwrap();
+        for raw in ["0", "1"] {
+            let output = Command::new(compiler)
+                .env("FWP_NO_OPT", raw)
+                .args(["build", "--emit-c", "-O2"])
+                .arg(&rejected)
+                .arg("-o")
+                .arg(&cfile)
+                .output()
+                .unwrap();
+            let error = String::from_utf8_lossy(&output.stderr);
+            assert!(
+                !output.status.success()
+                    && error.contains("type mismatch in pipe input")
+                    && error.contains("Array[I64]"),
+                "{operation}/{raw}: {output:?}"
+            );
+        }
+    }
+    let mut probe = include_str!("fixtures/unique_array_escape_probe.c").to_owned();
+    for name in ["shared", "captured", "reader", "unknown"] {
+        let start = semantics
+            .find(&format!("/* {name} :"))
+            .expect("escape probe export");
+        let id = semantics[start..]
+            .split("static V f")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        probe = probe.replace(&format!("@{name}@"), &format!("f{id}"));
+    }
+    assert_eq!(semantics.matches("static inline void *fwp_alloc_unique(size_t n) { return fwp_heap_alloc(n, HEAP_UNIQUE); }").count(), 1);
+    let measured = semantics
+        .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic size_t escape_probe_unique;")
+        .replace(
+            "static inline void *fwp_alloc_unique(size_t n) { return fwp_heap_alloc(n, HEAP_UNIQUE); }",
+            "static inline void *fwp_alloc_unique(size_t n) { escape_probe_unique++; return fwp_heap_alloc(n, HEAP_UNIQUE); }",
+        )
+        .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)") + &probe;
+    for optimization in ["-O1", "-O2"] {
+        for (label, code, expected) in [
+            ("escaping", measured.clone(), 0),
+            (
+                "escaping-unique-allocation",
+                measured.replace(
+                    "/* unexpected-unique-control */",
+                    "void *unexpected = fwp_alloc_unique(8); fwp_mem_free(unexpected);",
+                ),
+                233,
+            ),
+            (
+                "escaping-missing-owner",
+                measured.replace("/* retain-callback */", "fwp_rc_drop(callback);"),
+                234,
+            ),
+        ] {
+            let binary = dir.0.join(format!("{label}{optimization}.exe"));
+            fwp::cgen::compile_c(&code, &binary, optimization).unwrap();
+            let actual = Command::new(&binary).output().unwrap();
+            record_probe::save(
+                "unique-arrays",
+                &format!("{label}{optimization}"),
+                &code,
+                &binary,
+                &actual,
+            );
+            assert_eq!(
+                actual.status.code(),
+                Some(expected),
+                "{label}/{optimization}: {actual:?}"
+            );
+            assert!(
+                actual.stdout.is_empty() && actual.stderr.is_empty(),
+                "{actual:?}"
+            );
         }
     }
 }

@@ -578,6 +578,7 @@ static inline uint8_t *fwp_rc_slot(V v) {
     /* (a word pointing inside an object counts for that object: only too
      * high, never too low, as words are only dropped through values) */
     size_t i = (size_t)(((uint64_t)(off & (HEAP_CHUNK - 1)) * m->recip) >> 32);
+    if (i >= m->rc_len) return 0; /* unused trailing bytes are not an allocation */
     return &m->rc[i];
 }
 

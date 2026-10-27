@@ -10,6 +10,13 @@ checked-index = if (eq 2) (const "expected index failure" | fail) id
 export partial : I64 -> I64 ! {Error[String]}
 partial = flip array.generate checked-index | read
 
+export completed : I64 -> I64 ! {Error[String]}
+completed =
+    flip array.generate id | tap (array.length | checked-index | ignore) | read
+
+export reader : () -> {callback: Array[I64] -> I64}
+reader = const { callback = read }
+
 export shared : I64 -> (Array[I64], Array[I64])
 shared = flip array.generate id | both id id
 
@@ -18,8 +25,8 @@ unknown = curry (both .0 (.1 | flip array.generate id) | uncurry (flip apply))
 
 close-over : Array[I64] -> () -> I64
 close-over = const | flip compose read
-export captured : I64 -> () -> I64
-captured = flip array.generate id | close-over
+export captured : I64 -> {callback: () -> I64}
+captured = flip array.generate id | close-over | make { callback = id }
 
 yield-index : I64 -> I64 ! {Async}
 yield-index = tap (const () | task.yield)
@@ -27,6 +34,7 @@ export yielded : I64 -> I64 ! {Async}
 yielded = flip array.generate yield-index | read
 copy-task : I64 -> () -> I64 ! {Async}
 copy-task = curry (.0 | yielded)
+export cancelled : I64 -> Option[I64] ! {Async}
 cancelled =
     copy-task
     | task.spawn
@@ -38,9 +46,10 @@ main = [
     0 | local | echo,
     16 | local | echo,
     4 | attempt partial | echo,
+    2 | attempt completed | echo,
     4 | shared | echo,
     4 | unknown read | echo,
-    4 | captured | apply () | echo,
+    4 | captured | .callback | apply () | echo,
     4 | yielded | echo,
     4 | cancelled | echo,
 ] | ignore
