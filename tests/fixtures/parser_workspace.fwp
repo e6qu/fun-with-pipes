@@ -1,0 +1,84 @@
+# Prefix arithmetic makes the workspace lifetime independent of precedence rules.
+# For example, "+ 2 * 3 4" builds a tree for 2 + (3 * 4), then evaluates to 14.
+Expression =
+    | Expression.Number I64
+    | Expression.Add Expression Expression
+    | Expression.Multiply Expression Expression
+
+number : String -> Expression ! {Error[String]}
+number = parse-int | match
+    Some -> Expression.Number
+    None -> fail "expected an integer"
+
+rec parse-expression : List[String] -> (Expression, List[String]) ! {Error[String]}
+parse-expression = match
+    Nil -> fail "missing expression"
+    Cons "+" _ ->
+        parse-expression
+        | second parse-expression
+        | make { 0 = fork Expression.Add .0 (.1 | .0), 1 = .1 | .1 }
+    Cons "*" _ ->
+        parse-expression
+        | second parse-expression
+        | make { 0 = fork Expression.Multiply .0 (.1 | .0), 1 = .1 | .1 }
+    Cons _ _ -> curry (both (.0 | number) .1)
+
+rec evaluate : Expression -> I64
+evaluate = match
+    Expression.Number -> id
+    Expression.Add -> on add evaluate
+    Expression.Multiply -> on mul evaluate
+
+# The graph is internal to this invocation; only the scalar result leaves it.
+export calculate : String -> I64 ! {Error[String]}
+calculate =
+    words
+    | parse-expression
+    | if (.1 | is-empty) (.0 | evaluate) (const "trailing input" | fail)
+
+# This entry returns a graph. It must keep independently owned storage.
+export escaping : String -> Expression ! {Error[String]}
+escaping = words | parse-expression | .0
+
+# Inner success and failure must leave the outer tree alive.
+export nested : String -> I64 ! {Error[String]}
+nested =
+    words
+    | parse-expression
+    | .0
+    | tap (const "* 6 7" | calculate | ignore)
+    | tap (const "+ 2" | attempt calculate | ignore)
+    | evaluate
+
+# Suspend only after constructing the tree, then cancel before traversal.
+export suspended : String -> I64 ! {Async, Error[String]}
+suspended =
+    words | parse-expression | .0 | tap (const () | task.yield) | evaluate
+work : String -> () -> Result[I64, String] ! {Async}
+work = curry (.0 | attempt suspended)
+cancelled =
+    work
+    | task.spawn
+    | tap (const () | task.yield)
+    | tap task.cancel
+    | task.await
+
+# Cached graph storage keeps its ordinary owner across invocations.
+cached : Expression
+cached = "12345" | string.repeat 2 | string.length | Expression.Number
+read-cached : () -> I64
+read-cached = const cached | evaluate
+
+main = [
+    "+ 2 * 3 4" | calculate | echo,
+    "* + 2 3 + 4 5" | calculate | echo,
+    "-7" | calculate | echo,
+    "+ 1" | attempt calculate | echo,
+    "+ 1 no" | attempt calculate | echo,
+    "1 2" | attempt calculate | echo,
+    "+ 2 * 3 4" | nested | echo,
+    "+ 2 * 3 4" | cancelled | echo,
+    "+ 2 3" | escaping | both evaluate evaluate | echo,
+    read-cached () | echo,
+    read-cached () | echo,
+] | ignore

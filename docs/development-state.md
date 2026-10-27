@@ -16,9 +16,11 @@ All completed target logs and 62 probe statuses per host were audited, including
 12 inline-key and six scalar/fault outputs. The fixture's missing signatures and
 formatting are fixed. The initial short timing run `40513939015` rejected AMD64's
 256-key identical-code control (12.7% deviation); ARM64 passed both sizes. Longer
-run `40514452443` uses eight times more work, retaining the 10% noise limit. It is
-queued at protocol source `4bc72c60`. Repeat it on the final protocol head to obtain
-an independent runner allocation and execute the new independent evidence reader.
+run `40514452443` uses eight times more work, retaining the 10% noise limit. It passed both hosts at protocol source `4bc72c60`. Independent repeat
+`40516778004` at final `06e3a923` also passed both hosts. Both artifact sets were
+independently inspected; the repeated report is retained in this next worktree.
+Final docs `40516754393` and G2 `40516769076` pass. Production `40516763516`
+is still running, with no reported failures; its benchmark job passes.
 Do not repeat passing compiler/count measurements without a relevant code change.
 
 ## Combined A3/A4 work
@@ -99,3 +101,32 @@ monitor CI. Squash merge only after all exact-head gates pass, with one line
 | 6 | In progress | N1–N2 numerical accuracy and kernel budgets |
 | 7 | In progress | B1–B2 repeated baselines and enforced budgets |
 | 8 | In progress | V1–V2 application correctness and scaling |
+
+## A6 preparation in the next worktree
+
+`/private/tmp/fwp-parser-workspace`, branch `scoped-parser-workspace`, is based on
+PR #220's frozen head. No next PR is open. [The workspace contract](parser-workspace.md)
+spells out admission, internal links, exceptional cleanup and C/Rust comparisons.
+The fixture covers parsing errors, nested success/failure, cancellation after tree
+construction and an escaping tree. Raw interpretation passes. Arithmetic overflow
+is a trap (exit 101), so the new integration target tests it in separate processes.
+The target is assigned to native macOS/Windows jobs; all 20 runner/coverage controls
+pass under the guard. Rust tests have been written but not built/run yet.
+
+`src/cgen/regions.rs` is an unconnected admission-proof draft with seven unit controls.
+`runtime/fwp_rt_region.c` is an unconnected block-owner draft. A focused probe
+using the unchanged verified #219 runtime passed Clang O1/O2 on macOS ARM64: empty,
+1/257/8,193-node chains, nested ownership, repeated physical-baseline restoration
+and every block-allocation failure. The omitted-free O2 control exits 248 as
+intended. Commands used the local guard, std=gnu11 and ffp-contract=off. This is
+prototype runtime evidence, not GCC/platform or compiler-integration verification.
+The maintained test builds the current compiler and embeds the actual runtime
+fragment; it has no dependency on an older fwp binary. Neither draft participates
+in generated programs yet; neither establishes region support. Finish explicit
+internal link typing, helper specialization and owner cleanup together before the
+consolidated CI build. The selected design must preserve mixed records' ordinary
+String/list owners and reject unknown node boundaries. Do not publish a proof-only
+optimization or claim that zero live bytes proves absence of count operations.
+
+Formatting/raw interpretation, native-runner controls, doc links and the focused
+C block-owner probes ran locally. The three integration tests are not yet built. No fwp compiler build, full suite or benchmark ran. Free disk: 74 GiB.

@@ -141,3 +141,27 @@ running that candidate. One identical-code pair took 109.47 versus 123.40 ms, a
 12.7% difference above the declared 10% limit. The revised workload lengthens
 both batches eightfold; it keeps the same timer scope, inputs, sampling order and
 noise limit. The rejected samples remain evidence, not a performance result.
+
+## Repeated timing observations
+
+The [complete timing report](inline-sort-key-time-2026-10-27.json) retains two
+independent runner allocations per architecture: `40514452443` and `40516778004`.
+Both passed the unchanged noise limit and frozen budgets. Independent inspection
+verified the binaries, every sample pair and each budget saved before measurement.
+
+| Runner allocation | Keys | Candidate/baseline median ratios, two sessions | Maximum control deviation |
+|---|---:|---|---:|
+| 40514452443 / AMD EPYC 7763 64-Core Processor | 256 | 0.5037, 0.5028 | 5.31% |
+| 40514452443 / AMD EPYC 7763 64-Core Processor | 4096 | 0.5130, 0.5123 | 3.06% |
+| 40514452443 / Neoverse-N2 | 256 | 0.4856, 0.4861 | 1.27% |
+| 40514452443 / Neoverse-N2 | 4096 | 0.4863, 0.4846 | 1.40% |
+| 40516778004 / AMD EPYC 9V45 96-Core Processor | 256 | 0.5571, 0.5571 | 4.86% |
+| 40516778004 / AMD EPYC 9V45 96-Core Processor | 4096 | 0.5366, 0.5363 | 5.39% |
+| 40516778004 / Neoverse-N2 | 256 | 0.4856, 0.4862 | 0.57% |
+| 40516778004 / Neoverse-N2 | 4096 | 0.4858, 0.4857 | 0.90% |
+
+The isolated sort and cleanup took about 49–56% of the previous fwp path's time
+in these observations. The AMD64 allocations used different EPYC models; each
+ratio compares programs on the same runner. This does not measure whole-program
+speed or overhead relative to C/Rust. The initial rejected short control remains
+linked above. Full platform delivery is tracked in the handoff.

@@ -121,7 +121,8 @@ type controls, actual WASI allocation and native binary checks passed. Preserve
 these controls; broader element types, local transfers and loops need their own
 lifetime proof and measured costs before this representation is extended.
 
-**A6 — Give one workspace a region lifetime.** Use a recursive parser that builds
+**A6 — Give one workspace a region lifetime.** Follow the concrete
+[parser-workspace contract](docs/parser-workspace.md). Use a recursive parser that builds
 and walks an expression graph inside one invocation. The invocation owns the
 storage; internal links do not own individual nodes. Return a scalar result or
 an explicitly owned copy, never an expired internal link. Add success, parse-error,

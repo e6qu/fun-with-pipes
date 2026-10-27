@@ -439,8 +439,8 @@ explicitly as described in [Contributing](../CONTRIBUTING.md#setting-up).
 
 ## Remaining memory work
 
-The [restricted unique-array path](measurements/unique-array-storage.md) is
-implemented and undergoing final verification. General regions and the scoped
+The [restricted unique-array path](measurements/unique-array-storage.md) was
+verified in PR #219. General regions and the scoped
 workspace remain [plan tasks](../PLAN.md). Tracing removal passed integrated verification in
 [#217](roadmap-history.md#tracing-gc-removal-pr-217). Explicit weak channels and retained
 C callbacks are implemented; see [weak channels](weak-channels.md) and
