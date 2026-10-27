@@ -2,9 +2,9 @@
 
 **Next:** monitor PR #219's production gate `40498383568` at
 `aab8fe71f4f08ff4dcc8a13624dcfdacfd45e031`. Documentation `40498379836`
-and both analysis hosts `40498382182` passed. The benchmark and macOS ARM64
-ownership jobs also passed; their complete logs were audited (126 ownership
-target summaries, zero failures).
+and both analysis hosts `40498382182` passed. Seven production jobs passed: benchmark, all four macOS jobs and both native
+Windows jobs. Complete logs were audited: 126 passing summaries per macOS
+ownership job and 201 per Windows job. Only Linux AMD64/ARM64 remain running.
 Fix any failure, audit all completed targets and squash-merge only after every
 final-head gate passes. Keep the head unchanged while passing gates run. A5 is
 not complete until that integrated verification passes.
@@ -31,6 +31,16 @@ checkout pointer records them once dispatch completes.
   improvement, RSS reduction or universal count-free-array support is claimed.
 
 ## Next batch preparation
+
+A4 is now included in this batch: selected `(I64, String)` keys use a contiguous
+field buffer and the existing direct worker. The implementation and tests are
+not yet verified. [The declared protocol](measurements/inline-sort-keys.md) fixes
+the allocation/count budget before measurement. New probes cover stable order,
+String owners, every scratch/output allocation failure and callback entry failure;
+source checks cover freshly allocated keys and cancellation. Run the focused
+`arc-costs` suite on both Linux hosts before the combined final matrix. Twelve
+evidence-reader controls pass locally under the fixed guard. No compiler build
+or broad test suite runs locally. Preserve the prior A3 report as the baseline.
 
 Worktree `/private/tmp/fwp-sort-key-fields`, branch `borrow-sort-key-fields`, starts
 from #219's final head. No second PR until #219 merges. A scalar record projection

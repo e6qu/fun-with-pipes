@@ -197,6 +197,12 @@ sort primitive's original order. Runtime-selected callbacks keep ordinary calls.
 The [measurement protocol](measurements/sort-key-ownership.md) separates these
 implemented changes from their pending verification and count targets.
 
+The A4 candidate stores known `(I64, String)` keys in an aligned field buffer
+and calls the existing worker directly on `(String, I64)` inputs. Its initialized
+prefix owns the saved Strings; merge scratch borrows them. Other callback shapes
+retain ordinary calls and key records. [The protocol](measurements/inline-sort-keys.md)
+defines selection, cleanup, exact budgets and pending validation.
+
 ## Numerical specialization
 
 The optimizer removes work only when doing so preserves observable behavior:

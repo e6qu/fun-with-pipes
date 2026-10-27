@@ -16,6 +16,7 @@ use crate::ownership::ResultOwnership;
 use crate::value::Value;
 
 mod scalar_text;
+mod sort_keys;
 mod string_map;
 #[path = "cgen_wide.rs"]
 mod wide;
@@ -465,6 +466,8 @@ struct Gen<'p> {
     /// locals and the elements (`opt::specialize_hofs`): the primitive and
     /// the function, and how many locals it captures.
     hofs: Vec<(String, FuncId, usize)>,
+    /// Known scalar/string key workers whose results stay in a typed buffer.
+    inline_sort_keys: Vec<FuncId>,
     /// The unboxed calling convention of each function that has one.
     abis: Vec<Option<Abi>>,
     wide_workers: Vec<bool>,
@@ -5312,6 +5315,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
     }
 
     fn owned_hof(&mut self, id: FuncId, args: &[Expr]) -> Option<String> {
+        if let Some(call) = self.inline_sort_keys(id, args) {
+            return Some(call);
+        }
         if matches!(&self.g.prog.funcs[id].body, Body::Prim(s) if s == "array.generate") {
             let [count, callback] = args else { return None };
             let (g, captures) = self.callback_origin(callback)?;
@@ -9916,6 +9922,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             }),
         loops: Vec::new(),
         hofs: Vec::new(),
+        inline_sort_keys: Vec::new(),
         abis,
         wide_workers,
         noesc: crate::escape::params(prog),
@@ -10013,6 +10020,9 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         bodies.push_str(&g.loop_def(step, record));
         bodies.push('\n');
         li += 1;
+    }
+    for callback in g.inline_sort_keys.clone() {
+        bodies.push_str(&g.inline_sort_keys_def(callback));
     }
     let mut lib_defs = String::new();
     if let Mode::Library(callbacks) = mode {
@@ -10718,6 +10728,9 @@ static const fwp_exec_spec exec_spec{i} = {{
     }
     for (i, (sym, _, k)) in g.hofs.iter().enumerate() {
         let _ = writeln!(out, "{};", hof_sig(i, sym, *k));
+    }
+    for callback in &g.inline_sort_keys {
+        let _ = writeln!(out, "static V fwp_sort_keys{callback}(V xs);");
     }
     // Constant applicative forms retain their typed cached owners.
     out.push_str(&caf_defs);

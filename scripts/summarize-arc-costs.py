@@ -70,7 +70,7 @@ def audit(directory, source, machine):
             frames.append(dict(function=location.rsplit(':', 1)[1], bytes=int(size), kind=kind))
         text, = re.findall(r'^\s*\d+ \.text\s+([0-9a-fA-F]+)\s', (root / 'ordinary.sections').read_text(), re.M)
         metadata_inputs = {}
-        if report.get("comparison", {}).get("policy") in ("unique-arrays", "sort-keys"):
+        if report.get("comparison", {}).get("policy") in ("unique-arrays", "sort-keys", "inline-keys"):
             assert set(case["countMetadata"]) == set(case["inputs"])
             for label, samples in case["countMetadata"].items():
                 assert len(samples) == 3 and all(sample == samples[0] for sample in samples)
@@ -113,9 +113,10 @@ def audit(directory, source, machine):
             profile['releasesByOwner'] = owners
             if name == 'wordfreq':
                 words, distinct = map(int, label.split('-'))
-                removed = distinct if report.get('comparison', {}).get('policy') == 'sort-keys' else 0
+                policy = report.get('comparison', {}).get('policy')
+                removed = distinct if policy in ('sort-keys', 'inline-keys') else 0
                 assert owners['String']['sharedReleases'] == words + 4 * distinct - removed
-                assert owners['(String, I64)']['sharedReleases'] == 3 * distinct + 10 - removed
+                assert owners['(String, I64)']['sharedReleases'] == 3 * distinct + 10 - removed - (distinct if policy == 'inline-keys' else 0)
                 indirect = [row for row in profile['sites']
                             if by_site[row['site']]['operation'] == 'dup'
                             and by_site[row['site']]['indirect'] and row['effective']]
@@ -152,7 +153,7 @@ def main():
     parser.add_argument('--source', required=True)
     parser.add_argument('--run', required=True)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('record', 'compare', 'unique-arrays', 'sort-keys'))
+    parser.add_argument('--comparison', required=True, choices=('record', 'compare', 'unique-arrays', 'sort-keys', 'inline-keys'))
     parser.add_argument('--baseline', type=Path)
     args = parser.parse_args()
     if (args.comparison != 'record') != (args.baseline is not None):

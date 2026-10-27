@@ -33,8 +33,8 @@ static V fwp_p_map(V f, V xs) {
     return fwp_list_from(a, n);
 }
 
-/* Scratch storage remains scanned until results transfer into fresh nodes.
- * Elements already carry callback result ownership; never reset their counts. */
+/* Scratch items borrow the source list. Callback results acquire their own
+ * owners before transfer into fresh nodes; never reset their counts. */
 static V *fwp_map_items(V xs, size_t *n) {
     V source = xs;
     *n = fwp_list_len(xs);
@@ -447,6 +447,42 @@ static V fwp_copy_finish(V *a, size_t n, V owned_tail, const fwp_desc *list) {
 
     return fwp_value_finish(&result, &cleanup);
 }
+/* Inline keys own their String field, without an object header or count per key.
+ * Merge scratch holds borrowed copies; comparisons cannot call user code or
+ * suspend, so cleanup sees the fully restored main buffer after each merge. */
+typedef struct { int64_t number; V text; } fwp_i64_string_key;
+typedef struct {
+    fwp_i64_string_key *keys;
+    size_t count;
+    void (*drop_text)(V);
+} fwp_i64_string_keys;
+static void fwp_i64_string_keys_release(void *arg) {
+    fwp_i64_string_keys *owner = arg;
+    fwp_i64_string_key *keys = owner->keys;
+    size_t count = owner->count;
+    owner->keys = NULL; owner->count = 0;
+    for (size_t i = 0; i < count; i++) owner->drop_text(keys[i].text);
+    if (keys) fwp_mem_free(keys);
+}
+static void fwp_i64_string_msort(fwp_i64_string_key *keys, V *vals, size_t n,
+                                const fwp_desc *text, fwp_i64_string_key *tk, V *tv) {
+    if (n < 2) return;
+    size_t m = n / 2;
+    fwp_i64_string_msort(keys, vals, m, text, tk, tv);
+    fwp_i64_string_msort(keys + m, vals + m, n - m, text, tk, tv);
+    size_t i = 0, j = m, k = 0;
+    while (i < m && j < n) {
+        int less = keys[j].number < keys[i].number ||
+            (keys[j].number == keys[i].number && fwp_cmp(keys[j].text, keys[i].text, text) < 0);
+        if (less) { tk[k] = keys[j]; tv[k++] = vals[j++]; }
+        else { tk[k] = keys[i]; tv[k++] = vals[i++]; }
+    }
+    while (i < m) { tk[k] = keys[i]; tv[k++] = vals[i++]; }
+    while (j < n) { tk[k] = keys[j]; tv[k++] = vals[j++]; }
+    memcpy(keys, tk, n * sizeof(fwp_i64_string_key));
+    memcpy(vals, tv, n * sizeof(V));
+}
+
 /* Plain sorting uses the same words as keys and values; one merge buffer is
  * sufficient. The source list keeps every borrowed element alive. */
 static V fwp_p_sort_copied(V xs, const fwp_desc *elem, const fwp_desc *list) {
