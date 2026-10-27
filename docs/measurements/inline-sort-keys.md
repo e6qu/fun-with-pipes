@@ -111,7 +111,7 @@ the same native GCC O2 flags. It calls their actual word-frequency sort entries;
 it does not reconstruct an allegedly equivalent implementation. The harness
 builds 256 or 4,096 `(word, count)` records once, then checks exact sorted object
 order against C `qsort`. Counts have repeated values, so text breaks ties.
-The timed loop performs 4,096 or 256 complete sorts respectively, including key
+The timed loop performs 32,768 or 2,048 complete sorts respectively, including key
 calculation, merge scratch, result-list construction and result release. Input
 construction, the independent order check, process startup and printing are outside
 the monotonic timer. Physical live storage must return to its input baseline after
@@ -133,3 +133,11 @@ Retain every pair, sources, binary hashes, compiler/CPU identity and failures.
 These sessions share a runner. A separate repeat on another runner allocation is
 required before treating the result as a repeatable B1 budget; a single run is
 only the named same-runner observation. General CPU budgets remain separate.
+
+The [first timing session](inline-sort-key-time-initial-2026-10-27.json), run
+`40513939015` at `7da1a783`, used eight times fewer sorts per sample. ARM64 passed
+both sizes; AMD64 passed 4,096 keys but rejected the 256-key noise control before
+running that candidate. One identical-code pair took 109.47 versus 123.40 ms, a
+12.7% difference above the declared 10% limit. The revised workload lengthens
+both batches eightfold; it keeps the same timer scope, inputs, sampling order and
+noise limit. The rejected samples remain evidence, not a performance result.

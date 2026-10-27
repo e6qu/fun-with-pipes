@@ -103,7 +103,7 @@ jobs:
           python3 scripts/measure-inline-sort-time.py --baseline baseline/costs
           --candidate candidate/costs --baseline-source a44ed18ee72301fd9363ef934596064b55eb751f
           --candidate-source "$MEASUREMENT_SOURCE" --cc gcc --cpu 1 --samples 6 --warmups 2
-          --small-rounds 4096 --large-rounds 256 --max-control-ratio 1.10 --timeout 120
+          --small-rounds 32768 --large-rounds 2048 --max-control-ratio 1.10 --timeout 120
           --output sort-timing
       - uses: actions/upload-artifact@v7
         if: always()

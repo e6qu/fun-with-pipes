@@ -1,15 +1,18 @@
 # Current work
 
-**Next:** run `inline-key-time` against the retained A3/A4 artifacts, audit both
-native hosts, then publish the final batch head for all production/analysis gates.
+**Next:** rerun isolated sort timing with eightfold longer batches after auditing
+both hosts of `40513939015`. ARM64 passed both sizes; AMD64's 256-key identical-code
+control deviated by 12.7%, so that candidate was not measured. The 10% noise limit
+is unchanged. The short samples are retained; longer batches should reduce brief
+interruptions' relative weight. Draft PR #220 contains the whole A3/A4 batch.
 Focused correctness `40512388783` and saved-artifact audit `40512399031` passed.
 All completed target logs and 62 probe statuses per host were audited, including
-12 inline-key and six scalar/fault outputs. The initial fixture's missing signatures
-and formatting were the only failures; they are fixed.
+12 inline-key and six scalar/fault outputs. The fixture's missing signatures and
+formatting are fixed. Full production/analysis validation follows timing.
 
 Work in `/private/tmp/fwp-sort-key-fields`, branch `borrow-sort-key-fields`.
 PR #219 is merged. The branch rebased onto its verified squash with an identical
-tree; current published source is `e19eed00`. Source `dfd844c1` remains the measured
+tree; the timing protocol source is `7da1a783`. Source `dfd844c1` remains the measured
 compiler/runtime, retained by `evidence/inline-sort-key-probe-dfd844c1`. The next
 commit adds timing and retained reports, not compiler/runtime changes. Keep one
 active PR and defer its full matrix until the batch is ready.
