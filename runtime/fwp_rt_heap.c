@@ -23,6 +23,7 @@ static void *fwp_alloc(size_t n) {
 }
 
 static void *fwp_alloc_leaf(size_t n) { return fwp_alloc(n); }
+static void *fwp_alloc_unique(size_t n) { return fwp_alloc(n); }
 static void *fwp_alloc_init(size_t n) { return fwp_alloc(n); }
 static void *fwp_mem_alloc(size_t n) {
     void *p = calloc(1, n ? n : 1);
@@ -164,15 +165,16 @@ static inline size_t fwp_rc_capacity(V value) { (void)value; return 0; }
 #define HEAP_COMMIT_STEP 64 /* chunks committed at a time */
 
 enum { HEAP_FREE = 0, HEAP_SMALL, HEAP_BIG, HEAP_BIG_TAIL };
+enum { HEAP_UNIQUE = 3, HEAP_KINDS = 4 };
 
 typedef struct {
-    uint8_t type, leaf, cls;       /* leaf: the kind (0, 1, 2) */
+    uint8_t type, leaf, cls;       /* allocation kind; HEAP_UNIQUE has no counts */
     uint32_t slot, nslots;
     uint32_t head;                 /* big: number of chunks; tail: its head */
     size_t size;                   /* big: bytes */
     uint32_t recip;                /* small: 2^32 / slot, rounded up */
-    uint8_t rc[HEAP_CHUNK / 16];     /* all small kinds: inline count or wide marker;
-                                    * big: rc[0] (fwp_rc_*) */
+    uint32_t rc_len;
+    uint8_t *rc;                   /* counted slots only; null for unique storage */
 } heap_chunk;
 
 typedef struct { char *free, *bump, *end; } heap_list;
@@ -184,7 +186,7 @@ typedef struct heap_rc_wide {
 } heap_rc_wide;
 
 static struct {
-    heap_list lists[3][HEAP_NCLS]; /* [allocation kind][size class] */
+    heap_list lists[HEAP_KINDS][HEAP_NCLS]; /* [allocation kind][size class] */
     uint32_t slot[HEAP_NCLS];
     uint8_t cls_of[HEAP_MAX_SMALL / 16 + 1];
     int ready, stats;
@@ -200,7 +202,7 @@ static struct {
     size_t live, peak, nfree_chunks;
     double total_alloc, freed;
     heap_rc_wide *rc_wide[256];
-    size_t rc_wide_len;
+    size_t rc_wide_len, rc_bytes;
 } fwp_heap;
 
 static void fwp_heap_oom(void) {
@@ -231,11 +233,23 @@ static inline void fwp_rc_clear_slot(uint8_t *slot) {
     if (__builtin_expect(*slot == 255, 0)) fwp_rc_forget_slot(slot);
     *slot = 0;
 }
-static void fwp_rc_clear_chunk(heap_chunk *chunk) {
+/* Count arrays have stable addresses while any slot can hold a live owner.
+ * Unique chunks reserve no count slots, including when a free counted chunk
+ * is reused. These bytes are allocator metadata, not language-value storage. */
+static void fwp_rc_prepare_chunk(heap_chunk *chunk, size_t slots) {
     if (fwp_heap.rc_wide_len)
-        for (size_t i = 0; i < sizeof chunk->rc; i++)
+        for (size_t i = 0; i < chunk->rc_len; i++)
             if (chunk->rc[i] == 255) fwp_rc_forget_slot(&chunk->rc[i]);
-    memset(chunk->rc, 0, sizeof chunk->rc);
+    if (chunk->rc_len != slots) {
+        fwp_heap.rc_bytes -= chunk->rc_len;
+        free(chunk->rc);
+        chunk->rc = slots ? (uint8_t *)calloc(slots, 1) : NULL;
+        if (slots && !chunk->rc) fwp_heap_oom();
+        chunk->rc_len = (uint32_t)slots;
+        fwp_heap.rc_bytes += slots;
+    } else if (slots) {
+        memset(chunk->rc, 0, slots);
+    }
 }
 static void fwp_rc_wide_dup(uint8_t *slot) {
     heap_rc_wide **link = fwp_rc_wide_link(slot);
@@ -408,9 +422,10 @@ static __attribute__((noinline)) void *fwp_heap_alloc_big(size_t n, int leaf) {
     m->leaf = (uint8_t)leaf;
     m->head = (uint32_t)k;
     m->size = n;
-    fwp_rc_clear_slot(&m->rc[0]);
+    fwp_rc_prepare_chunk(m, leaf == HEAP_UNIQUE ? 0 : 1);
     for (size_t i = 1; i < k; i++) {
         heap_chunk *t = &fwp_heap.meta[ci + i];
+        fwp_rc_prepare_chunk(t, 0);
         t->type = HEAP_BIG_TAIL;
         t->head = (uint32_t)ci;
     }
@@ -433,7 +448,7 @@ static __attribute__((noinline)) char *fwp_heap_refill(heap_list *l, unsigned c,
     m->slot = fwp_heap.slot[c];
     m->nslots = (uint32_t)(HEAP_CHUNK / m->slot);
     m->recip = (uint32_t)((((uint64_t)1 << 32) + m->slot - 1) / m->slot);
-    fwp_rc_clear_chunk(m);
+    fwp_rc_prepare_chunk(m, leaf == HEAP_UNIQUE ? 0 : m->nslots);
     char *p = fwp_heap_chunk_addr(ci);
     l->bump = p + m->slot;
     l->end = p + (size_t)m->nslots * m->slot;
@@ -450,7 +465,7 @@ static __attribute__((noinline)) void *fwp_heap_alloc_slow(size_t n, int kind) {
     if (p) l->free = (char *)~*(uintptr_t *)p;
     else if (l->bump && (size_t)(l->end - l->bump) >= sz) { p = l->bump; l->bump += sz; }
     else p = fwp_heap_refill(l, c, kind);
-    memset(p, 0, kind == 1 ? n : sz);
+    memset(p, 0, (kind == 1 || kind == HEAP_UNIQUE) ? n : sz);
     fwp_heap_charge(sz);
     return p;
 }
@@ -463,14 +478,14 @@ static inline void *fwp_heap_alloc(size_t n, int kind) {
         char *p = l->free;
         if (p) {
             l->free = (char *)~*(uintptr_t *)p;
-            memset(p, 0, kind == 1 ? n : sz);
+            memset(p, 0, (kind == 1 || kind == HEAP_UNIQUE) ? n : sz);
             fwp_heap_charge(sz);
             return p;
         }
         if (l->bump && (size_t)(l->end - l->bump) >= sz) {
             p = l->bump;
             l->bump += sz;
-            memset(p, 0, kind == 1 ? n : sz);
+            memset(p, 0, (kind == 1 || kind == HEAP_UNIQUE) ? n : sz);
             fwp_heap_charge(sz);
             return p;
         }
@@ -499,6 +514,8 @@ static inline void *fwp_alloc_init(size_t n) {
 }
 /* Zeroed bytes/numbers; unused slot padding need not be initialized. */
 static inline void *fwp_alloc_leaf(size_t n) { return fwp_heap_alloc(n, 1); }
+/* Compiler-proved unique storage; destruction uses fwp_mem_free directly. */
+static inline void *fwp_alloc_unique(size_t n) { return fwp_heap_alloc(n, HEAP_UNIQUE); }
 
 /* the chunk of a heap address, or 0 */
 static inline heap_chunk *fwp_heap_chunk_of(uintptr_t a, size_t *ci) {
@@ -516,7 +533,7 @@ static void fwp_mem_free(void *p) {
     if (m->type == HEAP_SMALL) {
         heap_list *l = &fwp_heap.lists[m->leaf][m->cls];
         size_t i = (size_t)((uintptr_t)p & (HEAP_CHUNK - 1)) / m->slot;
-        fwp_rc_clear_slot(&m->rc[i]);
+        if (m->rc) fwp_rc_clear_slot(&m->rc[i]);
         *(uintptr_t *)p = ~(uintptr_t)l->free;
         l->free = (char *)p;
         fwp_heap.live -= m->slot;
@@ -524,7 +541,7 @@ static void fwp_mem_free(void *p) {
     } else if (m->type == HEAP_BIG && (char *)p == fwp_heap_chunk_addr(ci)) {
         fwp_heap.live -= m->size;
         fwp_heap.freed += (double)m->size;
-        fwp_rc_clear_slot(&m->rc[0]);
+        if (m->rc) fwp_rc_clear_slot(&m->rc[0]);
         size_t k = m->head;
         for (size_t i = 0; i < k; i++) fwp_heap.meta[ci + i].type = HEAP_FREE;
         fwp_heap.nfree_chunks += k;
@@ -555,6 +572,7 @@ static inline uint8_t *fwp_rc_slot(V v) {
     uintptr_t off = (uintptr_t)v - (uintptr_t)fwp_heap.base;
     if (off >= fwp_heap.top << HEAP_SHIFT) return 0;
     heap_chunk *m = &fwp_heap.meta[off >> HEAP_SHIFT];
+    if (!m->rc) return 0;
     if (m->type == HEAP_BIG && (off & (HEAP_CHUNK - 1)) == 0) return &m->rc[0];
     if (m->type != HEAP_SMALL) return 0;
     /* (a word pointing inside an object counts for that object: only too
@@ -698,6 +716,7 @@ static void fwp_heap_finish(void) {
         f.fn(f.obj);
     }
     free(fwp_heap.fins);
+    for (size_t i = 0; i < fwp_heap.top; i++) free(fwp_heap.meta[i].rc);
     for (size_t i = 0; i < 256; i++) {
         heap_rc_wide *entry = fwp_heap.rc_wide[i];
         while (entry) {

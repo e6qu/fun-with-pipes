@@ -2,7 +2,7 @@
 //! translation unit containing the runtime and the program; it is compiled
 //! with the system C compiler into a self-contained native executable.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 use std::io::Read;
 #[cfg(unix)]
@@ -2456,6 +2456,8 @@ struct FnGen<'g, 'p> {
     stack_args: Vec<(String, MT)>,
     /// Off-heap local owners count their children directly.
     stack_children: HashMap<Local, Vec<(String, MT)>>,
+    /// Local arrays whose complete lifetime needs direct destruction, not counts.
+    unique_arrays: HashSet<Local>,
     known_callbacks: HashMap<Local, (FuncId, usize)>,
     /// Known callbacks used only by specialized generators/folds need captures,
     /// not a closure object. Their owners use the existing stack-child ledger.
@@ -4082,6 +4084,57 @@ impl<'g, 'p> FnGen<'g, 'p> {
         self.end_call(original);
     }
 
+    fn bind_unique_array(&mut self, local: Local, value: &Expr, body: &Expr) -> bool {
+        if self.in_loop.is_some()
+            || self.locals[local as usize]
+                != MT::Con("std::Array".into(), vec![MT::con("std::I64")])
+        {
+            return false;
+        }
+        let Expr::Call(id, arguments) = value else {
+            return false;
+        };
+        if !matches!(&self.g.prog.funcs[*id].body, Body::Prim(symbol) if symbol == "array.generate")
+        {
+            return false;
+        }
+        let [count, Expr::Func(callback)] = arguments.as_slice() else {
+            return false;
+        };
+        if !self.array_callback(*callback, 0)
+            || !crate::rc::unique::local_lifetime(self.g.prog, &self.g.noesc, body, local)
+        {
+            return false;
+        }
+        let count = self.expr(count);
+        let count = self.bind(count);
+        let pending = self.begin_call(value as *const Expr);
+        let array = self.bind(format!("fwp_unique_i64_array_new({count})"));
+        let cleanup = self.fresh();
+        if self.g.unwind {
+            self.line(&format!("fwp_cleanup {cleanup}; fwp_cleanup_push(&{cleanup}, fwp_unique_array_cleanup, &{array});"));
+        }
+        let index = self.fresh();
+        self.g.used_closures[*callback] = true;
+        self.line("/* proved unique I64 array: no reference-count metadata */");
+        self.line(&format!(
+            "for (size_t {index} = 0; {index} < ARR({array})->len; {index}++) {{"
+        ));
+        self.indent += 1;
+        self.line(&format!(
+            "ARR({array})->d[{index}] = fwp_owned_entry{callback}((V[]){{(V){index}}});"
+        ));
+        self.indent -= 1;
+        self.line("}");
+        if self.g.unwind {
+            self.line(&format!("fwp_cleanup_pop(&{cleanup});"));
+        }
+        self.line(&format!("l{local} = {array};"));
+        self.end_call(pending);
+        self.unique_arrays.insert(local);
+        true
+    }
+
     fn bind_local<'e>(&mut self, l: Local, v: &Expr, body: &'e Expr) -> &'e Expr {
         if self.resource_slots.contains_key(&l) {
             if let Some(ResourceSlot::Variant(_, m)) = self.resource_slots.get(&l).cloned() {
@@ -4109,6 +4162,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
             let value = self.expr(v);
             self.line(&format!("l{l} = {value};"));
             self.anchor_resource_binding(l, !matches!(v, Expr::Field(..)));
+            return body;
+        }
+        if self.bind_unique_array(l, v, body) {
             return body;
         }
         if let Some((g, n)) = self.callback_origin(v) {
@@ -4595,6 +4651,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         if self.fields.contains_key(&x)
             || self.vlocals.contains_key(&x)
             || self.stack_children.contains_key(&x)
+            || self.unique_arrays.contains(&x)
             || virtual_state
         {
             return None;
@@ -4841,6 +4898,14 @@ impl<'g, 'p> FnGen<'g, 'p> {
     }
 
     fn count_change(&mut self, e: &Expr, l: Local) {
+        if self.unique_arrays.contains(&l) {
+            assert!(
+                matches!(e, Expr::Drop(..)),
+                "unique array gained another owner"
+            );
+            self.line(&format!("fwp_mem_free((void *)(uintptr_t)l{l});"));
+            return;
+        }
         if let Some(children) = self.stack_children.get(&l).cloned() {
             self.stack_children_count(children, matches!(e, Expr::Dup(..)));
             return;
@@ -4965,6 +5030,14 @@ impl<'g, 'p> FnGen<'g, 'p> {
         let mut values = Vec::new();
         let mut releases = Vec::new();
         for &(l, count) in owners {
+            if self.unique_arrays.contains(&l) {
+                assert_eq!(count, 1, "unique array gained another cleanup owner");
+                let field = format!("v{}", members.len());
+                members.push(format!("V {field};"));
+                values.push(format!("l{l}"));
+                releases.push(format!("fwp_mem_free((void *)(uintptr_t)c->{field});"));
+                continue;
+            }
             if let Some((u, m, ty)) = self.vlocals.get(&l).cloned() {
                 let k = self.g.vhelper(&ty, m);
                 let field = format!("v{}", members.len());
@@ -7383,6 +7456,7 @@ impl<'p> Gen<'p> {
             tokens: Vec::new(),
             stack_args: Vec::new(),
             stack_children: HashMap::new(),
+            unique_arrays: HashSet::new(),
             known_callbacks: HashMap::new(),
             callback_captures: HashMap::new(),
             resource_slots: HashMap::new(),
@@ -7515,6 +7589,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
             tokens: Vec::new(),
             stack_args: Vec::new(),
             stack_children: HashMap::new(),
+            unique_arrays: HashSet::new(),
             known_callbacks: HashMap::new(),
             callback_captures: HashMap::new(),
             resource_slots: HashMap::new(),
@@ -8554,6 +8629,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                     tokens: Vec::new(),
                     stack_args: Vec::new(),
                     stack_children: HashMap::new(),
+                    unique_arrays: HashSet::new(),
                     known_callbacks: HashMap::new(),
                     callback_captures: HashMap::new(),
                     resource_slots: HashMap::new(),
@@ -8638,6 +8714,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
             tokens: Vec::new(),
             stack_args: Vec::new(),
             stack_children: HashMap::new(),
+            unique_arrays: HashSet::new(),
             known_callbacks: HashMap::new(),
             callback_captures: HashMap::new(),
             resource_slots: HashMap::new(),

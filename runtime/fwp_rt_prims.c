@@ -2015,6 +2015,20 @@ static V fwp_array_typed_new(size_t n, const fwp_desc *elem) {
     if (n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap("array too large");
     return fwp_rc_fresh(fwp_array_new_packed(n, elem));
 }
+/* A proved local I64 array has neither counted elements nor a count slot. */
+static V fwp_unique_i64_array_new(V count) {
+    size_t n = fwp_count_arg(count);
+    if (n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap("array too large");
+    fwp_arr *array = (fwp_arr *)fwp_alloc_unique(sizeof(fwp_arr) + n * sizeof(V));
+    array->len = n;
+    return PTR(array);
+}
+static void fwp_unique_array_cleanup(void *arg) {
+    V *owner = arg;
+    V value = *owner;
+    *owner = 0;
+    fwp_mem_free((void *)(uintptr_t)value);
+}
 /* Vector storage owns its array and each boxed lane. These are ordinary C
  * loops: a target compiler may vectorize eligible arithmetic, but ownership
  * does not depend on that decision. */

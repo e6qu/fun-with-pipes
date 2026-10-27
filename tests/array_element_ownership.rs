@@ -921,3 +921,116 @@ int main(void) {{
         }
     }
 }
+
+#[test]
+fn unique_arrays_remove_count_storage_and_free_on_partial_failure() {
+    let dir = Scratch::new("unique-arrays");
+    let source = dir.0.join("unique.fwp");
+    std::fs::write(&source, include_str!("fixtures/unique_array_ownership.fwp")).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    let cfile = dir.0.join("main.c");
+    checked(
+        Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--emit-c", "-O2"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let semantics = std::fs::read_to_string(&cfile).unwrap();
+    for optimization in ["-O1", "-O2"] {
+        let binary = dir.0.join(format!("semantics{optimization}.exe"));
+        fwp::cgen::compile_c(&semantics, &binary, optimization).unwrap();
+        let actual = checked(&mut Command::new(&binary));
+        assert_eq!(actual.stdout, reference.stdout, "{optimization}");
+        assert_eq!(actual.stderr, reference.stderr, "{optimization}");
+    }
+    for name in ["local", "partial"] {
+        checked(
+            Command::new(compiler)
+                .env_remove("FWP_NO_OPT")
+                .args(["build", "--fn", name, "--emit-c", "-O2"])
+                .arg(&source)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(&cfile).unwrap();
+        let start = code
+            .find(&format!("/* {name} :"))
+            .expect("explicit unique probe entry");
+        let id = code[start..]
+            .split("static V f")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let probe = include_str!("fixtures/unique_array_probe.c")
+            .replace("@ENTRY@", &format!("f{id}"))
+            .replace("@PARTIAL@", if name == "partial" { "1" } else { "0" });
+        let mut measured = code.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int unique_probe_active;\nstatic V unique_probe_owner;\nstatic size_t unique_probe_allocations, unique_probe_frees, unique_probe_counts;")
+            .replace("static inline void *fwp_alloc_unique(size_t n) { return fwp_heap_alloc(n, HEAP_UNIQUE); }", "static inline void *fwp_alloc_unique(size_t n) { void *p = fwp_heap_alloc(n, HEAP_UNIQUE); if (unique_probe_active) { uintptr_t offset = (uintptr_t)p - (uintptr_t)fwp_heap.base; if (offset >= fwp_heap.heap_bytes) exit(223); heap_chunk *chunk = &fwp_heap.meta[offset >> HEAP_SHIFT]; if (chunk->rc || chunk->rc_len) exit(223); unique_probe_owner = PTR(p); unique_probe_allocations++; } return p; }")
+            .replace("static void fwp_mem_free(void *p) {\n", "static void fwp_mem_free(void *p) {\n    if (unique_probe_active && (V)(uintptr_t)p == unique_probe_owner) { unique_probe_frees++; }\n    /* missing-free-control */\n")
+            .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)");
+        for signature in [
+            "static inline V fwp_rc_fresh(V v) {",
+            "static inline void fwp_rc_dup(V v) {",
+            "static inline void fwp_rc_drop(V v) {",
+            "static inline int fwp_rc_release_last(V v) {",
+            "static inline int fwp_rc_unique(V v) {",
+            "static inline int fwp_rc_unique_mut(V v) {",
+            "static inline int fwp_rc_last(V v) {",
+        ] {
+            assert_eq!(measured.matches(signature).count(), 1);
+            measured = measured.replace(signature, &format!("{signature}\n    if (unique_probe_active && v == unique_probe_owner) unique_probe_counts++;"));
+        }
+        let measured = measured + &probe;
+        for optimization in ["-O1", "-O2"] {
+            for (label, code, expected) in [
+                ("owned", measured.clone(), 0),
+                (
+                    "extra-count",
+                    measured.replace(
+                        "/* extra-count-control */",
+                        "fwp_rc_fresh(unique_probe_owner);",
+                    ),
+                    224,
+                ),
+                (
+                    "missing-free",
+                    measured.replace(
+                        "/* missing-free-control */",
+                        "if (unique_probe_active && (V)(uintptr_t)p == unique_probe_owner) return;",
+                    ),
+                    225,
+                ),
+            ] {
+                let binary = dir.0.join(format!("{name}-{label}{optimization}.exe"));
+                fwp::cgen::compile_c(&code, &binary, optimization).unwrap();
+                let actual = Command::new(&binary).output().unwrap();
+                record_probe::save(
+                    "unique-arrays",
+                    &format!("{name}-{label}{optimization}"),
+                    &code,
+                    &binary,
+                    &actual,
+                );
+                assert_eq!(
+                    actual.status.code(),
+                    Some(expected),
+                    "{name}/{label}/{optimization}: {actual:?}"
+                );
+                assert!(
+                    actual.stdout.is_empty() && actual.stderr.is_empty(),
+                    "{actual:?}"
+                );
+            }
+        }
+    }
+}
