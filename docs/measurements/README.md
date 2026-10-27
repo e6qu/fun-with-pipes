@@ -9,7 +9,7 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Ownership costs
 
-- [Remaining ARC operations after GC removal](arc-residual-costs.md): current A2 protocol; results pending.
+- [Remaining ARC operations after GC removal](arc-residual-costs.md): A2 per-owner attribution and measured static-callback reduction, including code/stack costs.
 
 ## Numerical applications
 

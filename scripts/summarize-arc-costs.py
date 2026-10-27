@@ -106,6 +106,22 @@ def audit(directory, source, machine):
                 words, distinct = map(int, label.split('-'))
                 assert owners['String']['sharedReleases'] == words + 4 * distinct
                 assert owners['(String, I64)']['sharedReleases'] == 3 * distinct + 10
+                indirect = [row for row in profile['sites']
+                            if by_site[row['site']]['operation'] == 'dup'
+                            and by_site[row['site']]['indirect'] and row['effective']]
+                # The original baseline grouped all indirect calls. New reports
+                # identify two distinct String owners: insertion into the map
+                # and copying keys into its result list, not an extra sort key.
+                if len(indirect) == 3:
+                    for operation in ('fwp_p_map_update_typed', 'fwp_p_map_to_list_typed'):
+                        matching = [row for row in indirect
+                                    if operation in by_site[row['site']]['source']]
+                        assert len(matching) == 1 and matching[0]['effective'] == distinct
+                    records = [row for row in indirect
+                               if 'static const fwp_desc' in by_site[row['site']]['source']]
+                    assert len(records) == 1 and records[0]['effective'] == distinct + 5
+                else:
+                    assert len(indirect) == 1 and indirect[0]['effective'] == 3 * distinct + 5
         if name == 'observer-control':
             assert case['missingRetainObservationRejected'] is True
         results[name] = dict(binaryBytes=case['binaryBytes'], textBytes=int(text, 16),

@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** verify the A3 static-array-callback change on both native Linux
-architectures and finish A2's per-owner attribution using the saved reports.
-Keep this measurement, the related implementation and documentation in one PR;
-run the full production matrix after the batch is ready.
+**Next:** publish the combined A2 attribution/A3 static-array-callback PR and run
+its complete production/documentation gates. Both focused Linux hosts pass;
+monitor final-head CI, repair every failure and squash-merge only after green.
+A5's count-free unique array follows this delivery.
 
 ## Current batch
 
@@ -18,7 +18,9 @@ run the full production matrix after the batch is ready.
 - Selected A3 change: known scalar array callbacks with no captures use the
   existing direct-call generator. Target: remove N redundant retain attempts and
   closure-release checks for N elements; preserve every effective count and
-  allocation/live-byte metric. Candidate verification and full CI are pending.
+  allocation/live-byte metric. Candidate verification passes on both hosts at `863a5215b39c9c04bceb14aacc96972e3b41752a`,
+  run `40479298165`. All 12 tests and 13 measured cases pass per host; logs and
+  all artifact hashes were audited. Full delivery CI remains pending.
 - Focused candidate `3c66e1f1`, run `40477814241`: both hosts passed the other
   eleven array/capture/unwind checks; the new test tried to find helpers already
   inlined out of `main`. The repair builds an explicit exported `probe` entry.
@@ -33,6 +35,10 @@ run the full production matrix after the batch is ready.
   needs a lifetime proof and failure, cancellation, capture, unknown-call and
   weak-link controls. Counts live in allocator chunk metadata, not inline in
   the array payload; the future representation must address that storage too.
+- A2 now classifies each remaining owner and balances retains/non-final releases.
+  Candidate indirect sites distinguish map insertion from map-to-list key copies.
+  Ordinary buffer binaries shrink; entry frame estimates grow. No speed or peak
+  stack improvement is claimed. See the report for exact before/after figures.
 - Current docs now mark G5 complete and keep ARC minimization separate.
   Historical reports keep their original sources and numerical claims.
 
@@ -80,7 +86,7 @@ could not read `ps`; rerunning with process-sampling permission kept all limits.
 | Step | Status | Remaining acceptance |
 |---|---|---|
 | 1 | Verified | Preserve G1–G5 lifetime and collector-free checks |
-| 2 | In progress | A2 attribution and A3–A6 reductions, unique buffer and scoped workspace |
+| 2 | In progress | Deliver A2/first A3; A5 unique buffer, later A3/A4/A6 and scoped workspace |
 | 3 | In progress | F1–F3 function-call and recursion costs |
 | 4 | In progress | P1–P3 measured CPU budgets |
 | 5 | In progress | D1–D3 derivative correctness and time/storage budgets |

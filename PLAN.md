@@ -29,14 +29,13 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. Complete **A2**: refresh the fixed-fixture counts with the current compiler,
-   attribute remaining operations to their generated-C sites and owning values,
-   and measure the runtime-sized array that will be A5's first target. The
-   [measurement protocol](docs/measurements/arc-residual-costs.md) defines inputs,
-   checks and what each counter means.
-2. Implement **A5**'s count-free unique buffer after that baseline. Order
-   **A3/A4/A6** from the other measured costs. Removing every count and general
-   region inference remain separate goals with explicit acceptance requirements.
+1. Deliver **A2 and the first A3 change** together: both native Linux hosts pass
+   the [per-owner report and callback reduction](docs/measurements/arc-residual-costs.md).
+   Finish the complete production/documentation gates before merging this batch.
+2. Implement **A5** next: prove the local runtime-sized array's lifetime and remove
+   its count slot, count initialization and last-owner checks. The report defines
+   the measured target and negative controls. Select later **A3/A4/A6** work from
+   its owner breakdown; general region inference remains separate.
 3. Preserve **G2**'s [verified analysis budgets](docs/measurements/ownership-analysis.md)
    when changing lifetime analysis. Further precision needs a named failing example
    and an updated cost comparison, not more diagnostic scaffolding.
@@ -125,7 +124,10 @@ allocations or peak charge; sort reuse removes its measured copy request. Preser
 failure/cancellation and bit-pattern controls. Report the measured instruction
 and stack growth; do not claim a timing gain from count savings.
 
-**A2 — Account for remaining counts in fixed fixtures.** Use the text/function
+**A2 — Account for remaining counts in fixed fixtures (measured; delivery pending).**
+The [current report](docs/measurements/arc-residual-costs.md) attributes all effective
+retains and releases by owner, with unchanged totals on both native Linux hosts.
+Use the text/function
 channel fixtures, cached-map reads, word frequency and packed descent reports.
 For each remaining retain/release identify the owner and source operation in
 `src/rc/borrows.rs`, `src/rc/` or `src/cgen.rs`. Classify it as necessary sharing,
@@ -134,7 +136,11 @@ retain, release, uniqueness-check and live-byte counts separately.
 **Done:** a checked table explains every residual count for these fixtures and
 names the next removable operation; a blanket “reduce ARC” item is not sufficient.
 
-**A3 — Remove only the identified redundant ownership work.** Implement one
+**A3 — Remove only the identified redundant ownership work.** The first class
+passes focused native checks: a known scalar array callback with no captures
+avoids one retain attempt and closure-release check per element. Allocation and
+effective counts are unchanged; the report records smaller code and larger entry
+frames. Full delivery gates remain. Implement one
 coherent class from A2, covering nested matches, last use, aliases and exceptional
 exits. Extend existing direct-call, callback and runtime-call ownership tests.
 **Done:** the predeclared per-fixture count reaches its target, live aliases keep

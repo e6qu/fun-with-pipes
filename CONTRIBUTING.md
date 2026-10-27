@@ -278,8 +278,8 @@ in-place reuse in generated C.
 
 `FWP_ALLOC_STATS=1` reports allocation and live-storage bytes separately from
 whole-process RSS. Keep the strict report parser and failure controls in sync.
-Full suites run on GitHub. The collector-deletion changes are not accepted until
-all native targets and the binary-absence checks pass; see the handoff.
+Full suites run on GitHub. Preserve the verified collector-free native targets
+and binary-absence checks; see the handoff.
 
 ### A benchmark
 

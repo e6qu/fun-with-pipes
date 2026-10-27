@@ -59,8 +59,8 @@ runtime teardown. Final managed live-byte growth must be zero.
 
 `sites.json` maps site IDs to lines in the retained `profile-base.c`. Direct
 calls have their own sites. The baseline groups function-pointer calls by
-operation; the candidate observer separates their construction sites so map keys
-and sort keys can be attributed independently. Every site records calls, effective events and (for releases)
+operation; the candidate observer separates their construction sites so map insertion keys
+and result-list keys can be attributed independently. Every site records calls, effective events and (for releases)
 last-owner events. A last-owner release and its later physical free are separate
 observations, not two count decrements. Free calls in this report are typed
 ownership frees; raw buffers and other allocator clients need their own observers.
@@ -81,14 +81,84 @@ These are operation counts, **not timing measurements**. Profiling changes code
 and storage. No C/Rust peer is timed, so this report establishes neither a speedup
 nor parity with C/Rust. Separate ordinary binaries provide size/frame evidence.
 
+## What the remaining owners cost
+
+These totals include entry/argument preparation and final cleanup. They are not
+per-loop counts. “Last releases” reach the last owner and allow destruction;
+other effective releases remove an additional shared owner. All cases finish
+with zero additional managed live bytes. The saved report records every active
+site, its C line and caller, and releases grouped by the value's type.
+
+| Case | Allocation requests | Effective retains / non-final releases | Last releases | Peak charged bytes |
+|---|---:|---:|---:|---:|
+| Fresh text, 1,024 messages | 1,033 | 0 | 1,026 | 608 |
+| Fresh function, 1,024 messages | 2,057 | 0 | 2,050 | 624 |
+| Shared text, 1,024 messages | 10 | 2,048 | 3 | 544 |
+| Shared function, 1,024 messages | 1,035 | 4,096 | 1,028 | 576 |
+| Closed channel, 1,024 rejected functions | 2,056 | 0 | 2,050 | 608 |
+| Cached numeric map, full workload | 4 | 1 | 2 | 16,000,008 |
+| Word frequency, 4,096 words / 256 spellings | 14,987 | 5,898 | 10,875 | 341,617 |
+| Word frequency, 65,536 words / 4,096 spellings | 239,251 | 94,218 | 173,695 | 5,465,713 |
+| Packed descent, 3 coordinates / 7 updates | 8 | 0 | 8 | 112 |
+| Packed descent, 129 coordinates / 199 updates | 200 | 0 | 200 | 4,352 |
+| Local buffer / callback reader, 4,096 elements | 7 | 0 | 2 | 32,872 |
+| Shared buffer, 4,096 elements | 8 | 1 | 3 | 32,904 |
+
+“Necessary sharing” below means that the current program keeps independent
+owners alive, not that no different representation or algorithm could avoid it.
+A “missed borrow” is an owning call or temporary whose original owner remains
+alive throughout its use. Removing one still requires a compiler proof.
+
+| Owner and operation | Classification and source path |
+|---|---|
+| Fresh channel text/functions; rejected sends | No effective retains. One text owner per message, plus one closure for function messages; the queue transfers or rejects those owners. Last-owner checks and count initialization are bookkeeping for allocated values. The channel and CLI argument add fixed cleanup. See `src/cgen.rs` channel emission and `runtime/fwp_rt_task.c`. |
+| Shared channel text | Per message, one retain gives the queue an owner while the source remains live: necessary sharing. Another temporary keeps text for comparison: a missed borrow. Both releases are String releases. See `src/rc/borrows.rs` and generated loop/send calls. |
+| Shared channel function | Per message, two function retains cover the exchange temporary and queue ownership; one is a missed borrow, one is necessary sharing. The channel call adds one missed borrow. Calling the shared function returns its captured String with one new owner: necessary sharing. Releases balance as two Function, one Channel and one String. See ordinary-call borrowing and `src/cgen.rs` callback argument preparation. |
+| Cached numeric map | One additional map owner is returned from the cache for the size read: a missed borrow across the cached entry. The two million lookups already borrow. The final map and temporary `List[()]` have last-owner releases. See `src/cgen.rs` cached entry emission and `src/rc/borrows.rs`. |
+| Word-frequency strings and pairs | The exact decomposition below separates independent collection owners from temporary call/field owners. List nodes, map storage, sort keys and record boxes retain count initialization and destruction checks. See `src/cgen.rs` argument/field emission and typed list/map/sort operations in `runtime/fwp_rt_prims.c`. |
+| Packed descent | Each update creates an array and releases the preceding owned array; the initial constant is unmanaged. There are no effective retains. Each allocated array and the final formatted String still have last-owner bookkeeping. See the packed numeric emitter in `src/cgen.rs` and array cleanup in `runtime/fwp_rt_prims.c`. |
+| Local buffer and callback reader | No effective retains. The array and CLI String each have one last release. Array count initialization and destruction checks are the A5 target; the known reader does not create an independent owner. |
+| Shared buffer | One array retain is necessary for two live result fields. The array, result pair and CLI String have final releases. This is a negative control for count-free storage, not a target for deleting a required owner. |
+
+For word frequency, let **N** be the input word count and **D** the number of
+distinct normalized spellings; both inputs have more than five spellings. The
+measured total is **N + 7D + 10 retains**, balanced by the same number of non-final
+releases: **N + 4D String releases** and **3D + 10 pair releases**.
+
+| Retains | Owner and source operation | Classification |
+|---:|---|---|
+| N | Word String passed to the frequency fold (`fwp_args36`); the callback borrows it for `map.update`, then drops it | Missed borrow from the input list |
+| D | Map keys copied into the result list (`map.to-list`) | Necessary sharing between map and list |
+| D | Record passed to the sort-key callback (`fwp_args8`) | Missed borrow from the sort input |
+| D | Record duplicated by the key function's `both` (`w8`) | Temporary boxed-value bookkeeping |
+| D | String field retained and immediately dropped by the numeric selector (`f9`) | Temporary boxed-value bookkeeping |
+| D | String field returned by the text selector (`f12`) into the saved sort key | Necessary sharing between key and source record |
+| D | First occurrence of each String inserted into the map (`map.update`) | Necessary sharing between map and input list |
+| D | Records copied into sorted output | Necessary sharing with the source list |
+| 5 | Records copied by `take 5` | Necessary sharing with the sorted list |
+| 5 | Records passed to output (`fwp_args37`) | Missed borrow from the output list |
+
+Names in parentheses identify the retained generated C, not stable compiler APIs.
+The candidate observer separates function-pointer construction sites that the
+baseline grouped together. This identifies the map-insertion, map-to-list and list-element
+copies without guessing from aggregate totals. Its reader independently requires
+that effective retains equal non-final releases.
+
+Uniqueness queries do not add owners. Word frequency asks whether list nodes,
+lowercased text and map storage can be reused; typed destruction then checks the
+last owner. For 65,536 words the report records 87,382 `unique`, 65,536
+`unique_mut` and 321,151 `last` calls. These are still-boxed-value bookkeeping,
+not proof of count-free storage. Static values also reach no-op count helpers;
+the `calls` and `effective` columns retain that difference. The next section
+removes one such class rather than treating zero effective retains as zero cost.
+
 ## First selected change
 
-Generating a 4,096-element numeric array currently makes 4,096 extra retain
-attempts and closure-release checks on the static `id` callback. None changes a
-count, but each inspects ownership metadata. The compiler specializes array
-generation for captured callbacks; it does not yet select that path when there
-are no captures. Extend that existing path to known scalar callbacks with zero
-captures, preserving the array builder's failure/cancellation cleanup.
+Before this change, generating a 4,096-element numeric array made 4,096 extra retain
+attempts and closure-release checks on the static `id` callback. None changed a
+count, but each inspected ownership metadata. The compiler now also selects its
+existing specialized generator for known scalar callbacks with zero captures,
+preserving the array builder's failure/cancellation cleanup.
 
 The predeclared target removes exactly one retain attempt and one closure-release
 check per element in all three buffer fixtures. Effective retains, other ownership
@@ -98,20 +168,55 @@ the frozen baseline and reports all mismatches. The ordinary binaries provide
 the code-size and frame-cost comparison. This is A3's first selected class;
 it does **not** remove the array's count metadata or complete A5.
 
-Candidate verification is pending. A semantic fixture covers empty arrays,
+Both native hosts pass [candidate run 40479298165](https://github.com/e6qu/fun-with-pipes/actions/runs/40479298165)
+at `863a5215b39c9c04bceb14aacc96972e3b41752a`. The
+[audited candidate report](arc-residual-candidate-2026-10-27.json) confirms every
+predeclared count target, unchanged effective counts and allocation/live-byte
+metrics, and identical cross-host totals. All 12 focused tests pass per host.
+The full production matrix remains a separate delivery gate.
+
+A semantic fixture covers empty arrays,
 aliases, ordered effects, handled callback errors, yielding, cancellation and
 dynamic callbacks. Native O1/O2 probes require zero callback owner checks for
 known generation and zero retained storage after partial failure. Deliberately
 adding an owner check or omitting partial cleanup must fail those probes.
 
-## Completion requirement
+## Code and stack costs
 
-After both hosts pass, retain a checked report and explain each active site in
-terms of its owner and source operation. Classify the cost as required sharing,+a missed move/borrow, or bookkeeping for a still-boxed value. State the next
-removable operation and a count/storage target before implementation. A list of
-totals without that attribution does not complete A2. A5 additionally requires
-failure/cancellation cleanup and alias, capture, unknown-call and weak-link
-controls before claiming a count-free unique representation.
+Ordinary GCC 13.3 O2 binaries give the following before → after byte counts.
+The frame is GCC's estimate for `fwp_exec_call.constprop`, into which the
+specialized loop is inlined; it is not whole-program peak stack use. The new
+frame is marked `dynamic` by GCC, so its reported bytes are not an upper bound.
+
+| Buffer | AMD64 executable code | ARM64 executable code | AMD64 entry frame | ARM64 entry frame |
+|---|---:|---:|---:|---:|
+| Local | 60,882 → 60,786 | 57,916 → 57,836 | 416 → 1,008 | 528 → 912 |
+| Shared | 62,370 → 62,258 | 59,388 → 59,212 | 416 → 1,024 | 528 → 928 |
+| Callback reader | 61,314 → 61,202 | 58,364 → 58,300 | 416 → 1,008 | 528 → 912 |
+
+The complete files shrink by 160 bytes on AMD64 and 96 bytes on ARM64 for each
+buffer. Other cases have unchanged code/file sizes. The larger entry frames are
+a real cost of this specialization; these measurements do not establish a lower
+peak stack requirement or a speedup. Keep the saved frames and ordinary C when
+comparing later representation changes.
+
+## Next: remove the unique array's count storage
+
+A2's attribution and the first A3 count target are measured. A5 now starts from
+`buffer-unique`: an array of runtime length, read through known borrows and freed
+once. At length 4,096 it still has one effective array count initialization,
+one last-owner release and one free-time last-owner check. The target removes
+those three count operations **and the allocator count slot**, while preserving
+one allocation and exactly one physical free for that array. The unrelated CLI
+String and runtime setup are outside that target.
+
+Prove the array's entire lifetime before selecting a separate allocation/free
+path; report actual payload, alignment and allocator metadata bytes. Do not add
+runtime promotion to shared ownership. Test empty/large arrays, nested matches,
+errors and cancellation, and reject the unique representation for aliases,
+captured/unknown-call escape and weak-link attempts. The shared fixture must
+keep its independent owner. These requirements are still unimplemented; the
+current zero-retain array is not yet count-free.
 
 Return to [PLAN.md](../../PLAN.md), [ownership](../ownership.md) or
 [measurement reports](README.md).
