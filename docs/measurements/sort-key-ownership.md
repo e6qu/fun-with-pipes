@@ -1,9 +1,10 @@
 # Ownership of sort keys and scalar record reads
 
-This batch targets two temporary owners in the word-frequency example. It is
-implemented on the next branch. Both Linux hosts passed the combined correctness
-checks; the retained measurements pass the corrected local audit. Runner audit
-and full production verification remain pending. PR #219 remains the only active PR while its full matrix runs.
+This batch removes two temporary owners in the word-frequency example. Both
+native Linux hosts passed the correctness tests; [runner audit 40503213568](https://github.com/e6qu/fun-with-pipes/actions/runs/40503213568)
+verified their [complete measurements](sort-key-ownership-2026-10-27.json).
+Full production verification remains pending. [The handoff](../development-state.md)
+tracks delivery; PR #219 must merge before this becomes the next PR.
 
 A **record** groups fields into one value; `(word, count)` is a two-field record.
 `.1` selects its second field. In the word-frequency sort key,
@@ -72,7 +73,8 @@ release and interruption at the actual entry tick. Deliberate extra-retain and
 missing-free variants must fail at O1/O2. The scalar-only prototype passed both Linux hosts in `40499978041`; all six
 ordinary/fault probe statuses and outputs per host were audited. The combined
 source passed both hosts' correctness tests in `40501234007`. Its old budget
-expectation failed; the corrected audit and full production gates remain required.
+expectation failed; the corrected runner audit passed. Full production gates
+remain required.
 
 [Sort callbacks](../../tests/sort_callback_ownership.rs) compare raw/native output
 for repeated/equal keys, live aliases, managed keys and callbacks, empty inputs,
@@ -82,17 +84,14 @@ record conversion-overflow and record update controls remain in the focused batc
 Full nine-job production, documentation and analysis gates are required before
 claiming verified delivery.
 
-The first combined run (`40501234007`, source `a44ed18e`) passed all AMD64
-correctness tests and all 13 programs' outputs, independent totals and repeated
-samples. Its budget check correctly failed because the original expectation
-mistakenly subtracted D *successful* last-owner queries. The observer counts a
-successful query only when the result is true; the removed checks returned false.
-Source/site attribution established that distinction. The corrected budget above
-preserves successful queries and tightens attempted counts to exact reductions,
-instead of permitting any decrease. Compiler/runtime code is unchanged by that
-reader repair. Both hosts showed the same mismatch. The corrected local reader accepts every
-file hash, site, three-sample set and metadata observation on both architectures.
-A runner audit must independently verify it before final delivery.
+The measurement run `40501234007` used source
+`a44ed18ee72301fd9363ef934596064b55eb751f`, retained by
+`evidence/sort-key-ownership-2026-10-27`. Its budget wrongly expected fewer
+successful last-owner queries. Removed checks returned false, so successes must
+stay unchanged. Reader repair `2baf3ec0` corrected that expectation, tightened
+attempted counts to exact reductions and updated the String/pair attribution.
+The passing audit verified unchanged compiler/runtime sources and reused the
+original samples. It did not rerun or discard them.
 
 ## Measured result and remaining costs
 

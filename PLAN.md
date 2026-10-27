@@ -39,8 +39,9 @@ collector is not the same as removing these costs. The
 3. The next **A3/A4** batch removes two temporary owners per distinct word:
    the numeric selector's String owner and the key function's duplicate pair.
    [Its protocol](docs/measurements/sort-key-ownership.md) defines the 2D count
-   target, unchanged memory budget, alias and failure controls. The scalar-only
-   prototype passed both Linux hosts; the combined change is awaiting evidence.
+   target, unchanged memory budget, alias and failure controls. Both Linux hosts'
+   correctness checks and the independent artifact audit pass. Publish this batch
+   after #219 merges, then complete its final production matrix.
    **A6** remains the separately scoped parser-workspace task below.
 4. Preserve **G2**'s [verified analysis budgets](docs/measurements/ownership-analysis.md)
    when changing lifetime analysis. Further precision needs a named failing example
