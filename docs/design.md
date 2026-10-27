@@ -413,10 +413,11 @@ x86-64 instruction levels at startup; it is not a macOS universal binary.
 Compiler-build and generated-program toolchains can differ; configure them
 explicitly as described in [Contributing](../CONTRIBUTING.md#setting-up).
 
-## Not implemented
+## Remaining memory work
 
-Count-free unique heap storage and the scoped-workspace target are unfinished
-[plan tasks](../PLAN.md). Tracing removal passed integrated verification in
+The [restricted unique-array path](measurements/unique-array-storage.md) is
+implemented and undergoing final verification. General regions and the scoped
+workspace remain [plan tasks](../PLAN.md). Tracing removal passed integrated verification in
 [#217](roadmap-history.md#tracing-gc-removal-pr-217). Explicit weak channels and retained
 C callbacks are implemented; see [weak channels](weak-channels.md) and
 [retained callbacks](retained-callbacks.md) for their lifetime rules.

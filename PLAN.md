@@ -34,13 +34,18 @@ collector is not the same as removing these costs. The
    attributes residual costs and verifies the capture-free callback reduction.
 2. Finish **A5**: the [local-array path](docs/measurements/unique-array-storage.md)
    removes count storage and the declared count operations. Native/WASI cleanup,
-   metadata and compiler-cost observations are retained; finish escaping/static
-   controls and the full final-head matrix before marking it complete. Select later
-   **A3/A4/A6** work from the owner breakdown; general regions remain separate.
-3. Preserve **G2**'s [verified analysis budgets](docs/measurements/ownership-analysis.md)
+   metadata and compiler-cost observations are retained; finish the full final-head
+   matrix before marking it complete.
+3. Then group **A3/A4** around word-frequency sort keys. First remove the D String
+   retain/drop pairs performed by the numeric selector for D distinct words; that
+   selector needs only the number. Investigate the associated pair duplication in
+   the same batch. Preserve saved text-key ownership, aliases, failure order and
+   outputs, and compare against the frozen per-owner rows before extending it.
+   **A6** remains the separately scoped parser-workspace task below.
+4. Preserve **G2**'s [verified analysis budgets](docs/measurements/ownership-analysis.md)
    when changing lifetime analysis. Further precision needs a named failing example
    and an updated cost comparison, not more diagnostic scaffolding.
-4. Use **B1** to set per-workload timing budgets before further CPU or derivative
+5. Use **B1** to set per-workload timing budgets before further CPU or derivative
    optimizations. Keep slower and inconclusive results visible.
 
 The original intermittent Intel macOS compiler abort remains an open defect.

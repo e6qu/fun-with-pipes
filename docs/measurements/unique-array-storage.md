@@ -5,17 +5,19 @@ cannot acquire another owner does not need one: its function can free the array
 directly after its last use. This is roadmap A5, following the
 [A3 callback measurements](arc-residual-costs.md).
 
-**Status:** implemented for the restricted case below; acceptance is incomplete.
-The prototype passed native Linux AMD64/ARM64 run `40487837146` at
-`04bb2033f6b30f8a34049ae973e2c5b24c6dbd7b`. Run `40492232784` at `b9d637b6` passed all 13 paired measurements, all other focused
-targets and Clippy on both hosts. Its new completed-array test failed because the
-fixture's temporary transfer kept counted storage; the corrected borrowed-read
-fixture, cancellation and actual WASI probes passed in `40494835629`. That run
-exposed a separate escaping-probe setup error: the ordinary main build removed
-needed exports. The repair uses an explicit function entry; its verification and
-the added static-memory probe remain pending. Neither run establishes final
-six-target support. [The handoff](../development-state.md) records remaining
-checks; this report must retain actual results before A5 can be marked complete.
+**Status:** implemented for the restricted case below. Focused native Linux
+AMD64/ARM64 and actual WASI checks passed in `40496623447` at
+`0f500ab347bc6025c09235f0e243467d9dc2a8ac`, including 36 native/static/escape
+probes and 18 WASI probes per host. Complete logs, outputs and intended fault
+statuses were audited. The full six-target production matrix remains required
+before A5 is marked complete. [The handoff](../development-state.md) records it.
+
+Paired measurements come from `40492232784` at `b9d637b6`; compiler/runtime
+source is unchanged since that run. Two test-harness repairs followed: the failure
+fixture now exercises a proved borrow instead of a temporary transfer, and the
+escaping probe uses an explicit function entry so its exports survive optimization.
+Both repairs are covered by the passing focused run. Immutable evidence tags
+preserve the measurement sources across the rebase onto #218.
 
 ## Selected programs
 

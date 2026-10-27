@@ -1,13 +1,18 @@
 # Current work
 
-**Next:** verify the escaping/static array controls, then finish A5's docs and
-full final-head matrix in one PR. Keep monitoring focused CI; fix all failures
-before another publication. A5 is not complete and no final matrix has run yet.
+**Next:** monitor PR #219's final production, documentation and analysis gates.
+Fix any failure, audit all completed targets and squash-merge only after every
+final-head gate passes. Keep the head unchanged while passing gates run. A5 is
+not complete until that integrated verification passes.
 
 ## Active worktree
 
-`/private/tmp/fwp-unique-array`, branch `unique-array-storage`. Rebased onto verified #218; the rebased tree matched the measured source exactly. The current working
-tree corrects the escaping probe's entry selection and adds static-memory probes.
+`/private/tmp/fwp-unique-array`, branch `unique-array-storage`, PR
+[#219](https://github.com/e6qu/fun-with-pipes/pull/219). Rebased onto verified #218;
+the rebased tree matched the measured source exactly. Focused source
+`0f500ab347bc6025c09235f0e243467d9dc2a8ac` passed. The final update changes only
+documentation. Read PR checks for the exact final head and gate IDs; the primary
+checkout pointer records them once dispatch completes.
 
 - Lifetime proof: selected local `Array[I64]` generation by a known callback with
   no captures, outside specialized loops. No independent aliases, captures or
@@ -21,48 +26,43 @@ tree corrects the escaping probe's entry selection and adds static-memory probes
   exact counts, metadata, code/stack costs and outstanding acceptance. No timing
   improvement, RSS reduction or universal count-free-array support is claimed.
 
-## Verification and known repairs
+## Passing focused checks
 
-Prototype `04bb2033f6b30f8a34049ae973e2c5b24c6dbd7b`, run `40487837146`, passed
-native Linux AMD64/ARM64: 196 unit tests, 11 array-element tests, array borrowing/
-unwind, library unload, six allocator tests and Clippy. Complete logs/artifacts audited.
+Run `40496623447` at `0f500ab347bc6025c09235f0e243467d9dc2a8ac` passed both
+native Linux hosts: 196 unit tests, all 11 array-element tests, array borrowing/
+unwind, library unload, six allocator tests, Clippy, actual WASI and compiler-cost
+observations. All complete logs were audited. Each host's 36 native/static/escape
+and 18 WASI probe statuses and empty outputs were independently checked.
+Artifacts: `/private/tmp/fwp-unique-0f5-{amd64,arm64}`; full log:
+`/private/tmp/fwp-unique-0f5-complete.log`.
 
-At `b9d637b6336f8a66b05c0b721f7b010aaa5aa998`, run `40492232784`, all 13 paired
-count/metadata measurements passed on both hosts. Hashes, rows, three samples per
-input and cross-host totals were audited. The report/JSON retain every result;
-immutable tag `evidence/unique-array-storage-2026-10-27` preserves the source.
-The completed-array test failed because its `tap` expression transferred the array
-through a temporary local, outside this proof. The corrected fixture uses a known
-borrowed read that fails while the same array owner remains live.
+## Retained measurements and repairs
 
-At `7cf8baf8`, run `40494835629`, native success/partial/completed/cancellation
-probes all passed (24 variants per host), as did actual WASI cleanup (18 variants),
-all other focused targets, Clippy and compiler-cost measurements. Both logs were
-audited. One test-harness failure remained: an ordinary main build removed exports
-needed by the escaping probe. The working tree builds an explicit function entry
-before selecting those exports. The native harness collects all executable-probe
-failures instead of stopping at the first variant. All 42 native/WASI probe statuses per host were independently checked, with
-empty stdout/stderr and their intended fault exits. The complete compiler-cost
-reports were reviewed on both hosts.
+All 13 paired count/metadata cases passed on both hosts in `40492232784`, source
+`b9d637b6336f8a66b05c0b721f7b010aaa5aa998`. Hashes, rows and three samples per
+input were audited. Tag `evidence/unique-array-storage-2026-10-27` preserves that
+source. The compiler/runtime is unchanged since b9; later changes are tests/docs.
+Compiler-cost samples from `40494835629` use 16/32/64 source calls and five samples
+after warmup. Actual emitted sites are recorded because inlining partitions larger
+inputs. Tag `evidence/unique-array-probe-7cf8baf8` preserves that source. Reports
+retain both costs and limits; whole-command time is not isolated proof time.
 
-Compiler measurements use 16/32/64 source calls, five samples after a warmup;
-actual selected sites are recorded because inlining partitions larger inputs.
-These measure the complete compiler command through C emission, not isolated
-proof time. The proof's worst-case O(MN) walk is documented; preserve G2 budgets.
-`unique-array-checks` reruns affected native/WASI/compiler controls without repeating
-the unchanged count measurements. The compiler/runtime source is unchanged since b9.
+The completed-array probe initially used a temporary transfer outside this proof;
+it now fails during a known borrowed read while the array remains live. The escape
+probe initially lost exports during main optimization; it now builds an explicit
+function entry. Both repairs, static allocation and all fault controls pass 0f5.
+Native/WASI harnesses collect all executable-probe failures before asserting.
 
 ## Remaining acceptance
 
-1. Publish the entry-selection repair with static generated-array probes and verify
-   both Linux hosts; retain all fault statuses and actual C/binaries.
-2. Audit the remaining artifacts and compiler-cost samples. Finish the report,
-   ownership/diagnostic docs and plan with precise tested limits.
-3. Open one coherent PR and run the complete nine-job production
-   matrix plus documentation and existing compiler-analysis budgets. Squash-merge
-   only after final-head success; explicit subject <=80 characters, empty body.
-4. Continue A3/A4/A6 from the measured owner breakdown. General regions and other
-   element types are not part of the initial A5 selection.
+1. Run the complete nine-job production matrix, documentation and existing G2
+   compiler-analysis budgets on the final head. Do not repeat the unchanged
+   operation-count measurements: their compiler/runtime sources are identical.
+2. Audit every completed log and artifact. Squash-merge only on final-head success,
+   with an explicit subject <=80 characters and empty body; verify message and tree.
+3. Continue the measured A3/A4 word-frequency sort-key work in PLAN.md. Start with
+   the numeric selector's D unnecessary String retain/drop pairs and investigate
+   related pair duplication together. A6's parser workspace remains separate.
 
 ## Local checks and recovery
 
@@ -89,6 +89,7 @@ Duplicate postmerge CI/docs `40495744117`/`40495743977` were cancelled.
 Tracing GC removal shipped in #217 (`9dfa014596e1954e3e67c653123dad77a14f5241`),
 identical tree to tested `2721bf14a389f685e3dd64f5bf3d6921f61a6212`. Production
 `40433794313`, docs `40433794300` and analysis `40433851517` passed.
+
 ## Roadmap status
 
 | Step | Status | Remaining acceptance |

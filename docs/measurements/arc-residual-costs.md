@@ -202,23 +202,14 @@ a real cost of this specialization; these measurements do not establish a lower
 peak stack requirement or a speedup. Keep the saved frames and ordinary C when
 comparing later representation changes.
 
-## Next: remove the unique array's count storage
+## A5 follow-up: remove the unique array's count storage
 
-A2's attribution and the first A3 count target are measured. A5 now starts from
-`buffer-unique`: an array of runtime length, read through known borrows and freed
-once. At length 4,096 it still has one effective array count initialization,
-one last-owner release and one free-time last-owner check. The target removes
-those three count operations **and the allocator count slot**, while preserving
-one allocation and exactly one physical free for that array. The unrelated CLI
-String and runtime setup are outside that target.
+These A3 measurements define the next target. At length 4,096, `buffer-unique`
+still has one array count initialization, one last-owner release, one last-owner
+query and one counted-array free call. Its unrelated CLI String also has an owner;
+removing the array's count cannot remove that String's storage.
 
-Prove the array's entire lifetime before selecting a separate allocation/free
-path; report actual payload, alignment and allocator metadata bytes. Do not add
-runtime promotion to shared ownership. Test empty/large arrays, nested matches,
-errors and cancellation, and reject the unique representation for aliases,
-captured/unknown-call escape and weak-link attempts. The shared fixture must
-keep its independent owner. These requirements are still unimplemented; the
-current zero-retain array is not yet count-free.
-
-Return to [PLAN.md](../../PLAN.md), [ownership](../ownership.md) or
-[measurement reports](README.md).
+The [A5 report](unique-array-storage.md) now records the implemented local-array
+path, paired measurements, metadata layout and cleanup/escape controls. It keeps
+payload allocations separate from count storage and distinguishes implemented
+code from completed platform acceptance. General region inference remains separate.

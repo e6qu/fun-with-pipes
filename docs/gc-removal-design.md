@@ -3,7 +3,8 @@
 The accepted design combines inferred moves and borrows, reference counting for
 sharing, and explicit weak links where an owning cycle would otherwise form.
 Weak channels and retained C callbacks passed all production gates in #215.
-Count-free unique heap storage and general region support remain planned.
+A [restricted count-free array path](measurements/unique-array-storage.md) is
+implemented and undergoing verification. General regions remain planned.
 
 [PLAN.md](../PLAN.md) gives the work order and completion checks;
 [ownership.md](ownership.md) describes current implementation. APIs and layouts
