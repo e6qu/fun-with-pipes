@@ -2,7 +2,9 @@
 
 **Next:** monitor PR #219's production gate `40498383568` at
 `aab8fe71f4f08ff4dcc8a13624dcfdacfd45e031`. Documentation `40498379836`
-and both analysis hosts `40498382182` passed.
+and both analysis hosts `40498382182` passed. The benchmark and macOS ARM64
+ownership jobs also passed; their complete logs were audited (126 ownership
+target summaries, zero failures).
 Fix any failure, audit all completed targets and squash-merge only after every
 final-head gate passes. Keep the head unchanged while passing gates run. A5 is
 not complete until that integrated verification passes.
@@ -53,8 +55,10 @@ The repaired reader now requires exact attempt reductions and the 2D effective
 owner saving. It also updates the per-owner String/pair decomposition. Both local
 artifact audits pass, including every hash, row, sample and metadata observation;
 all complete target logs and six scalar/fault artifacts per host were audited.
-Next run `arc-cost-audit` with evidence `40501234007` and source a44; it verifies
-unchanged compiler/runtime code and audits the existing evidence without rebuilding.
+Artifact-only runner audit `40503213568` passed at reader source `2baf3ec0`,
+verifying unchanged compiler/runtime code and all evidence without rebuilding.
+The complete report is retained in `measurements/sort-key-ownership-2026-10-27.json`.
+Tag `evidence/sort-key-ownership-2026-10-27` retains a44 across the coming rebase.
 [The protocol](measurements/sort-key-ownership.md) defines exact checks and limits.
 Local formatting, workflow lint, eleven evidence-reader controls and 166 doc link
 sets passed through the fixed guard; no local compiler build ran. Documentation

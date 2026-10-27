@@ -1,6 +1,6 @@
 # Remaining ownership costs after GC removal
 
-This is the current A2 measurement protocol and measured baseline. Tracing
+This is the original A2 measurement protocol and baseline. Tracing
 removal passed [#217](../roadmap-history.md#tracing-gc-removal-pr-217); it did not
 remove all reference counts or heap storage. This experiment measures the
 remaining work before selecting the next compiler change. Both native Linux
@@ -14,7 +14,10 @@ An allocation request obtains storage. A retain adds an owner. A release gives
 up an owner; only the last owner permits destruction. A uniqueness check asks
 whether one owner remains so storage can be reused. An attempted operation can
 do nothing, for example when its value is static or has no counted storage.
-Report attempted and effective operations separately.
+Report attempted and effective operations separately. For last-owner queries,
+“effective” counts true results, not every query of counted storage. Later
+[array storage](unique-array-storage.md) and [sort-key](sort-key-ownership.md)
+reports preserve these baselines and describe their own measured changes.
 
 ## Programs and inputs
 
