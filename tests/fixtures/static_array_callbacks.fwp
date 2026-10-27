@@ -26,6 +26,11 @@ cancelled =
 export dynamic : (I64 -> I64) -> I64 -> Array[I64]
 dynamic = flip array.generate
 
+# A named entry keeps both paths callable by the native cleanup probe even
+# when the ordinary main program inlines generated and failed.
+export probe : Bool -> I64 -> Array[I64] ! {Error[String]}
+probe = curry (if .0 (.1 | failed) (.1 | generated))
+
 main = [
     0 | generated | echo,
     4 | generated | both id id | echo,

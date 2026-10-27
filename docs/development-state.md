@@ -19,6 +19,12 @@ run the full production matrix after the batch is ready.
   existing direct-call generator. Target: remove N redundant retain attempts and
   closure-release checks for N elements; preserve every effective count and
   allocation/live-byte metric. Candidate verification and full CI are pending.
+- Focused candidate `3c66e1f1`, run `40477814241`: both hosts passed the other
+  eleven array/capture/unwind checks; the new test tried to find helpers already
+  inlined out of `main`. The repair builds an explicit exported `probe` entry.
+  The failed test also prevented measurement/artifact creation. The workflow
+  now runs measurements after a successful compiler build even if tests fail,
+  and preserves generated probe C separately. Both failed logs were audited.
 - Profiles distinguish attempted/effective retains, releases, last-owner checks,
   uniqueness checks, count initialization and typed frees. Generated-C sites
   explain where operations happen; ordinary binaries retain size/frame evidence.
@@ -47,7 +53,7 @@ All local workloads use `python3 scripts/local-guard.py`; full compiler builds,
 full suites and measurements run on GitHub. The first sandboxed guard invocation
 could not read `ps`; rerunning with process-sampling permission kept all limits.
 
-- `python3 scripts/test-ownership-profile.py`: six reader/comparison controls pass.
+- `python3 scripts/test-ownership-profile.py`: eight reader/comparison controls pass.
 - `python3 /private/tmp/fwp-check-ownership-profile.py`: actual emitted runtime
   control passes on Apple Clang 17 ARM64 at O1/O2. Exact totals cover 301 retains,
   wide counts, indirect calls, two frees, unique/shared and unmanaged cases.
@@ -62,6 +68,12 @@ could not read `ps`; rerunning with process-sampling permission kept all limits.
   All focused-job logs are clean. Static-callback raw-interpreter outputs pass;
   its formatting was corrected with the language formatter. Rust formatting,
   workflow lint, staged whitespace and the 164-link documentation audit pass.
+- Per-owner audit checks that effective retains balance non-final releases and
+  verifies word-frequency string/record formulas on both hosts. A report-reader
+  bug counted alternative C-preprocessor braces together; function-range checks
+  now follow the emitter's layout and exclude global descriptors, with a regression
+  control. No observed counts changed. The explicit native probe entry survives
+  optimization in the verified compiler; formatting passes.
 
 ## Roadmap status
 

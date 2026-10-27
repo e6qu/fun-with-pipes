@@ -20,9 +20,24 @@ def caller_lines(code):
     # mistaken for a function name. These emitted functions have single-line
     # signatures; retain the actual source line when no signature is found.
     masked = re.sub(r'__attribute__\(\([^\n]*?\)\)', lambda m: ' ' * len(m[0]), masked)
+    line_starts = [0] + [match.end() for match in re.finditer('\n', code)]
+    # Native/WASI/Windows conditional arms can contain alternative opening
+    # braces with one shared closing brace. Raw brace depth is therefore not a
+    # C-preprocessor-aware function boundary. Emitted multi-line functions end
+    # at column zero; one-line functions end on their declaration line.
+    closing_lines = [match.start() for match in re.finditer(r'^}', masked, re.M)]
     functions = []
     for match in re.finditer(r'^static [^=;\n]*?\b(\w+)\([^;{\n]*\)\s*\{', masked, re.M):
-        functions.append((code.count('\n', 0, match.start()) + 1, match[1]))
+        opening = match.end() - 1
+        line_end = masked.find('\n', opening)
+        assert line_end >= 0
+        same_line = masked[opening + 1:line_end]
+        if same_line.rstrip().endswith('}'):
+            end = line_end - 1
+        else:
+            end = closing_lines[bisect_right(closing_lines, opening)]
+        functions.append((bisect_right(line_starts, match.start()),
+                          bisect_right(line_starts, end), match[1]))
     return functions
 
 
@@ -45,6 +60,10 @@ def audit(directory, source, machine):
         lines = code.splitlines()
         functions = caller_lines(code)
         starts = [row[0] for row in functions]
+        owner_types = {function: owner for owner, function in re.findall(
+            r'/\* ([^\n]*?) \*/\nstatic void (fwp_drop\d+)\(V v\) \{', code)}
+        owner_types.update(fwp_closure_drop='Function', fwp_channel_drop='Channel',
+                           fwp_cli_text_drop='String')
         frames = []
         for line in (root / 'ordinary.su').read_text().splitlines():
             location, size, kind = line.split('\t')
@@ -64,8 +83,29 @@ def audit(directory, source, machine):
             site = sites[index]
             assert site['id'] == index and site['source'] == lines[site['line'] - 1].strip()
             position = bisect_right(starts, site['line']) - 1
-            caller = functions[position][1] if position >= 0 else None
-            selected_sites.append(dict(site, caller=caller))
+            caller = (functions[position][2]
+                      if position >= 0 and site['line'] <= functions[position][1] else None)
+            selected_sites.append(dict(site, caller=caller, ownerType=owner_types.get(caller)))
+        by_site = {site['id']: site for site in selected_sites}
+        for label, profile in inputs.items():
+            owners = {}
+            for row in profile['sites']:
+                site = by_site[row['site']]
+                if site['operation'] != 'release_last' or row['effective'] == 0:
+                    continue
+                owner = site['ownerType']
+                # The synthetic observer calls the primitive itself; its
+                # explicit known totals are checked during measurement.
+                assert owner is not None or name == 'observer-control', (name, label, site)
+                key = owner or 'observer control'
+                counts = owners.setdefault(key, dict(sharedReleases=0, lastOwnerReleases=0))
+                counts['sharedReleases'] += row['effective'] - row['last']
+                counts['lastOwnerReleases'] += row['last']
+            profile['releasesByOwner'] = owners
+            if name == 'wordfreq':
+                words, distinct = map(int, label.split('-'))
+                assert owners['String']['sharedReleases'] == words + 4 * distinct
+                assert owners['(String, I64)']['sharedReleases'] == 3 * distinct + 10
         if name == 'observer-control':
             assert case['missingRetainObservationRejected'] is True
         results[name] = dict(binaryBytes=case['binaryBytes'], textBytes=int(text, 16),

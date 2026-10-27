@@ -45,18 +45,22 @@ jobs:
       CC: gcc
       CARGO_BUILD_JOBS: 2
       FWP_LTO: '0'
+      FWP_ARC_ARTIFACTS: arc-test-evidence
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - name: Check ownership evidence reader controls
         run: python3 scripts/test-ownership-profile.py
       - name: Build the current compiler
+        id: compiler
         run: cargo build --locked --release --bin fwp
       - name: Check buffer fixture formatting
         run: target/release/fwp fmt --check tests/fixtures/unique_buffer_costs.fwp tests/fixtures/static_array_callbacks.fwp
       - name: Verify generated callbacks, aliases, failure and cancellation
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: cargo test --locked --release --no-fail-fast --test array_element_ownership --test array_unwind_ownership --test array_loop_borrows -- --nocapture
       - name: Count remaining ownership operations and preserve ordinary binaries
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: >-
           python3 scripts/measure-arc-costs.py --compiler target/release/fwp
           --cc gcc --objdump objdump --nm nm --samples 3 --timeout 240
@@ -67,6 +71,12 @@ jobs:
         with:
           name: arc-costs-${{ matrix.runner }}
           path: arc-cost-evidence/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: arc-tests-${{ matrix.runner }}
+          path: arc-test-evidence/
           if-no-files-found: error
 
   ownership_analysis:

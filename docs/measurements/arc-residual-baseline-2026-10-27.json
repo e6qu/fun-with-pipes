@@ -298,7 +298,13 @@
                   "effective": 0,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "observer control": {
+                  "sharedReleases": 1,
+                  "lastOwnerReleases": 1
+                }
+              }
             }
           },
           "activeSites": [
@@ -308,7 +314,8 @@
               "line": 1359,
               "indirect": true,
               "source": "static inline void fwp_rc_dup(V v) {",
-              "caller": "fwp_rc_dup"
+              "caller": "fwp_rc_dup",
+              "ownerType": null
             },
             {
               "id": 8,
@@ -316,7 +323,8 @@
               "line": 1427,
               "indirect": true,
               "source": "static void fwp_rc_free_arr(V v) {",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 11,
@@ -324,7 +332,8 @@
               "line": 1425,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -332,7 +341,8 @@
               "line": 1428,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 226,
@@ -340,7 +350,8 @@
               "line": 16577,
               "indirect": false,
               "source": "V observed = fwp_rc_fresh((V)(uintptr_t)fwp_alloc_leaf(24));",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 227,
@@ -348,7 +359,8 @@
               "line": 16578,
               "indirect": false,
               "source": "for (int i=0; i<300; i++) fwp_rc_dup(observed);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 228,
@@ -356,7 +368,8 @@
               "line": 16581,
               "indirect": false,
               "source": "if (fwp_rc_unique(observed) || fwp_rc_unique_mut(observed) || fwp_rc_last(observed)) exit(91);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 229,
@@ -364,7 +377,8 @@
               "line": 16581,
               "indirect": false,
               "source": "if (fwp_rc_unique(observed) || fwp_rc_unique_mut(observed) || fwp_rc_last(observed)) exit(91);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 230,
@@ -372,7 +386,8 @@
               "line": 16581,
               "indirect": false,
               "source": "if (fwp_rc_unique(observed) || fwp_rc_unique_mut(observed) || fwp_rc_last(observed)) exit(91);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 231,
@@ -380,7 +395,8 @@
               "line": 16582,
               "indirect": false,
               "source": "for (int i=0; i<300; i++) fwp_rc_drop(observed);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 232,
@@ -388,7 +404,8 @@
               "line": 16583,
               "indirect": false,
               "source": "if (fwp_rc_release_last(observed)) exit(92);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 233,
@@ -396,7 +413,8 @@
               "line": 16584,
               "indirect": false,
               "source": "if (!fwp_rc_unique(observed) || !fwp_rc_unique_mut(observed) || !fwp_rc_last(observed)) exit(93);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 234,
@@ -404,7 +422,8 @@
               "line": 16584,
               "indirect": false,
               "source": "if (!fwp_rc_unique(observed) || !fwp_rc_unique_mut(observed) || !fwp_rc_last(observed)) exit(93);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 235,
@@ -412,7 +431,8 @@
               "line": 16584,
               "indirect": false,
               "source": "if (!fwp_rc_unique(observed) || !fwp_rc_unique_mut(observed) || !fwp_rc_last(observed)) exit(93);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 236,
@@ -420,7 +440,8 @@
               "line": 16585,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(observed)) exit(94);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 237,
@@ -428,7 +449,8 @@
               "line": 16586,
               "indirect": false,
               "source": "fwp_rc_free_obj(observed);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 238,
@@ -436,7 +458,8 @@
               "line": 16587,
               "indirect": false,
               "source": "V array = fwp_rc_fresh((V)(uintptr_t)fwp_alloc_leaf(16));",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 239,
@@ -444,7 +467,8 @@
               "line": 16590,
               "indirect": false,
               "source": "fwp_rc_dup(0); fwp_rc_drop(0); fwp_rc_fresh(0);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 240,
@@ -452,7 +476,8 @@
               "line": 16590,
               "indirect": false,
               "source": "fwp_rc_dup(0); fwp_rc_drop(0); fwp_rc_fresh(0);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 241,
@@ -460,7 +485,8 @@
               "line": 16590,
               "indirect": false,
               "source": "fwp_rc_dup(0); fwp_rc_drop(0); fwp_rc_fresh(0);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 242,
@@ -468,7 +494,8 @@
               "line": 16591,
               "indirect": false,
               "source": "if (fwp_rc_release_last(0) || fwp_rc_unique(0) || fwp_rc_unique_mut(0) || fwp_rc_last(0)) exit(95);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 243,
@@ -476,7 +503,8 @@
               "line": 16591,
               "indirect": false,
               "source": "if (fwp_rc_release_last(0) || fwp_rc_unique(0) || fwp_rc_unique_mut(0) || fwp_rc_last(0)) exit(95);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 244,
@@ -484,7 +512,8 @@
               "line": 16591,
               "indirect": false,
               "source": "if (fwp_rc_release_last(0) || fwp_rc_unique(0) || fwp_rc_unique_mut(0) || fwp_rc_last(0)) exit(95);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 245,
@@ -492,7 +521,8 @@
               "line": 16591,
               "indirect": false,
               "source": "if (fwp_rc_release_last(0) || fwp_rc_unique(0) || fwp_rc_unique_mut(0) || fwp_rc_last(0)) exit(95);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -1305,7 +1335,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             },
             "16": {
               "managed": {
@@ -1441,7 +1481,17 @@
                   "effective": 16,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 17
+                }
+              }
             },
             "1024": {
               "managed": {
@@ -1577,7 +1627,17 @@
                   "effective": 1024,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1025
+                }
+              }
             }
           },
           "activeSites": [
@@ -1587,7 +1647,8 @@
               "line": 1426,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -1595,7 +1656,8 @@
               "line": 1429,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 16,
@@ -1603,7 +1665,8 @@
               "line": 1581,
               "indirect": false,
               "source": "fwp_rc_free_arr(value);",
-              "caller": "fwp_rc_resource_free_arr"
+              "caller": "fwp_rc_resource_free_arr",
+              "ownerType": null
             },
             {
               "id": 19,
@@ -1611,7 +1674,8 @@
               "line": 1679,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(f)) return;",
-              "caller": "fwp_closure_drop"
+              "caller": "fwp_closure_drop",
+              "ownerType": "Function"
             },
             {
               "id": 24,
@@ -1619,7 +1683,8 @@
               "line": 1850,
               "indirect": false,
               "source": "fwp_rc_dup(f);",
-              "caller": "fwp_apply_borrowed_span"
+              "caller": "fwp_apply_borrowed_span",
+              "ownerType": null
             },
             {
               "id": 129,
@@ -1627,7 +1692,8 @@
               "line": 9431,
               "indirect": false,
               "source": "V value = fwp_rc_fresh(fwp_p_channel_make(cap));",
-              "caller": "fwp_p_channel_make_owned"
+              "caller": "fwp_p_channel_make_owned",
+              "ownerType": null
             },
             {
               "id": 130,
@@ -1635,7 +1701,8 @@
               "line": 9438,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_channel_drop"
+              "caller": "fwp_channel_drop",
+              "ownerType": "Channel"
             },
             {
               "id": 190,
@@ -1643,7 +1710,8 @@
               "line": 13881,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 192,
@@ -1651,7 +1719,8 @@
               "line": 13885,
               "indirect": false,
               "source": "fwp_rc_free_obj(value);",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 209,
@@ -1659,7 +1728,8 @@
               "line": 15221,
               "indirect": false,
               "source": "for (int i = 0; i < na; i++) av[i] = fwp_rc_fresh(fwp_str_lossy(argv[i + 1], strlen(argv[i + 1])));",
-              "caller": "fwp_exec_run"
+              "caller": "fwp_exec_run",
+              "ownerType": null
             },
             {
               "id": 231,
@@ -1667,7 +1737,8 @@
               "line": 16585,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop3"
+              "caller": "fwp_drop3",
+              "ownerType": "String"
             },
             {
               "id": 232,
@@ -1675,7 +1746,8 @@
               "line": 16586,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop3"
+              "caller": "fwp_drop3",
+              "ownerType": "String"
             },
             {
               "id": 249,
@@ -1683,7 +1755,8 @@
               "line": 17188,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_p_str_repeat(l0, l1));",
-              "caller": "f67"
+              "caller": "f67",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -2537,7 +2610,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             },
             "16": {
               "managed": {
@@ -2703,7 +2786,21 @@
                   "effective": 16,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Function": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 16
+                },
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 17
+                }
+              }
             },
             "1024": {
               "managed": {
@@ -2869,7 +2966,21 @@
                   "effective": 1024,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Function": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1024
+                },
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1025
+                }
+              }
             }
           },
           "activeSites": [
@@ -2879,7 +2990,8 @@
               "line": 1426,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -2887,7 +2999,8 @@
               "line": 1429,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 16,
@@ -2895,7 +3008,8 @@
               "line": 1581,
               "indirect": false,
               "source": "fwp_rc_free_arr(value);",
-              "caller": "fwp_rc_resource_free_arr"
+              "caller": "fwp_rc_resource_free_arr",
+              "ownerType": null
             },
             {
               "id": 19,
@@ -2903,7 +3017,8 @@
               "line": 1679,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(f)) return;",
-              "caller": "fwp_closure_drop"
+              "caller": "fwp_closure_drop",
+              "ownerType": "Function"
             },
             {
               "id": 20,
@@ -2911,7 +3026,8 @@
               "line": 1764,
               "indirect": false,
               "source": "V building = fwp_rc_fresh(PTR(r));",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 21,
@@ -2919,7 +3035,8 @@
               "line": 1773,
               "indirect": false,
               "source": "if (fwp_rc_last(f)) c->n = 0;",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 22,
@@ -2927,7 +3044,8 @@
               "line": 1775,
               "indirect": false,
               "source": "V result = fwp_rc_fresh(PTR(r));",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 23,
@@ -2935,7 +3053,8 @@
               "line": 1801,
               "indirect": false,
               "source": "if (fwp_rc_last(f)) c->n = 0;",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 24,
@@ -2943,7 +3062,8 @@
               "line": 1850,
               "indirect": false,
               "source": "fwp_rc_dup(f);",
-              "caller": "fwp_apply_borrowed_span"
+              "caller": "fwp_apply_borrowed_span",
+              "ownerType": null
             },
             {
               "id": 129,
@@ -2951,7 +3071,8 @@
               "line": 9431,
               "indirect": false,
               "source": "V value = fwp_rc_fresh(fwp_p_channel_make(cap));",
-              "caller": "fwp_p_channel_make_owned"
+              "caller": "fwp_p_channel_make_owned",
+              "ownerType": null
             },
             {
               "id": 130,
@@ -2959,7 +3080,8 @@
               "line": 9438,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_channel_drop"
+              "caller": "fwp_channel_drop",
+              "ownerType": "Channel"
             },
             {
               "id": 190,
@@ -2967,7 +3089,8 @@
               "line": 13881,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 192,
@@ -2975,7 +3098,8 @@
               "line": 13885,
               "indirect": false,
               "source": "fwp_rc_free_obj(value);",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 209,
@@ -2983,7 +3107,8 @@
               "line": 15221,
               "indirect": false,
               "source": "for (int i = 0; i < na; i++) av[i] = fwp_rc_fresh(fwp_str_lossy(argv[i + 1], strlen(argv[i + 1])));",
-              "caller": "fwp_exec_run"
+              "caller": "fwp_exec_run",
+              "ownerType": null
             },
             {
               "id": 231,
@@ -2991,7 +3116,8 @@
               "line": 16587,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop3"
+              "caller": "fwp_drop3",
+              "ownerType": "String"
             },
             {
               "id": 232,
@@ -2999,7 +3125,8 @@
               "line": 16588,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop3"
+              "caller": "fwp_drop3",
+              "ownerType": "String"
             },
             {
               "id": 244,
@@ -3007,7 +3134,8 @@
               "line": 16809,
               "indirect": false,
               "source": "if (!duplicate) { fwp_rc_free_obj(v); }",
-              "caller": "fwp_caps36"
+              "caller": "fwp_caps36",
+              "ownerType": null
             },
             {
               "id": 250,
@@ -3015,7 +3143,8 @@
               "line": 17233,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_p_str_repeat(l0, l1));",
-              "caller": "f69"
+              "caller": "f69",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -3917,7 +4046,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 2
+                }
+              }
             },
             "16": {
               "managed": {
@@ -4065,7 +4204,17 @@
                   "effective": 16,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 32,
+                  "lastOwnerReleases": 2
+                }
+              }
             },
             "1024": {
               "managed": {
@@ -4213,7 +4362,17 @@
                   "effective": 1024,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 2048,
+                  "lastOwnerReleases": 2
+                }
+              }
             }
           },
           "activeSites": [
@@ -4223,7 +4382,8 @@
               "line": 1426,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -4231,7 +4391,8 @@
               "line": 1429,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 16,
@@ -4239,7 +4400,8 @@
               "line": 1581,
               "indirect": false,
               "source": "fwp_rc_free_arr(value);",
-              "caller": "fwp_rc_resource_free_arr"
+              "caller": "fwp_rc_resource_free_arr",
+              "ownerType": null
             },
             {
               "id": 19,
@@ -4247,7 +4409,8 @@
               "line": 1679,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(f)) return;",
-              "caller": "fwp_closure_drop"
+              "caller": "fwp_closure_drop",
+              "ownerType": "Function"
             },
             {
               "id": 24,
@@ -4255,7 +4418,8 @@
               "line": 1850,
               "indirect": false,
               "source": "fwp_rc_dup(f);",
-              "caller": "fwp_apply_borrowed_span"
+              "caller": "fwp_apply_borrowed_span",
+              "ownerType": null
             },
             {
               "id": 129,
@@ -4263,7 +4427,8 @@
               "line": 9431,
               "indirect": false,
               "source": "V value = fwp_rc_fresh(fwp_p_channel_make(cap));",
-              "caller": "fwp_p_channel_make_owned"
+              "caller": "fwp_p_channel_make_owned",
+              "ownerType": null
             },
             {
               "id": 130,
@@ -4271,7 +4436,8 @@
               "line": 9438,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_channel_drop"
+              "caller": "fwp_channel_drop",
+              "ownerType": "Channel"
             },
             {
               "id": 190,
@@ -4279,7 +4445,8 @@
               "line": 13881,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 192,
@@ -4287,7 +4454,8 @@
               "line": 13885,
               "indirect": false,
               "source": "fwp_rc_free_obj(value);",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 209,
@@ -4295,7 +4463,8 @@
               "line": 15221,
               "indirect": false,
               "source": "for (int i = 0; i < na; i++) av[i] = fwp_rc_fresh(fwp_str_lossy(argv[i + 1], strlen(argv[i + 1])));",
-              "caller": "fwp_exec_run"
+              "caller": "fwp_exec_run",
+              "ownerType": null
             },
             {
               "id": 231,
@@ -4303,7 +4472,8 @@
               "line": 16584,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop3"
+              "caller": "fwp_drop3",
+              "ownerType": "String"
             },
             {
               "id": 232,
@@ -4311,7 +4481,8 @@
               "line": 16585,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop3"
+              "caller": "fwp_drop3",
+              "ownerType": "String"
             },
             {
               "id": 241,
@@ -4319,7 +4490,8 @@
               "line": 16874,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_show_i64(l0));",
-              "caller": "f5"
+              "caller": "f5",
+              "ownerType": null
             },
             {
               "id": 250,
@@ -4327,7 +4499,8 @@
               "line": 17179,
               "indirect": false,
               "source": "fwp_rc_dup(l3);",
-              "caller": "fs8"
+              "caller": "fs8",
+              "ownerType": null
             },
             {
               "id": 251,
@@ -4335,7 +4508,8 @@
               "line": 17185,
               "indirect": false,
               "source": "fwp_rc_dup(l16);",
-              "caller": "fs8"
+              "caller": "fs8",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -5301,7 +5475,21 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Function": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 2
+                }
+              }
             },
             "16": {
               "managed": {
@@ -5491,7 +5679,21 @@
                   "effective": 16,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Function": {
+                  "sharedReleases": 32,
+                  "lastOwnerReleases": 1
+                },
+                "Channel": {
+                  "sharedReleases": 16,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 16,
+                  "lastOwnerReleases": 18
+                }
+              }
             },
             "1024": {
               "managed": {
@@ -5681,7 +5883,21 @@
                   "effective": 1024,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Function": {
+                  "sharedReleases": 2048,
+                  "lastOwnerReleases": 1
+                },
+                "Channel": {
+                  "sharedReleases": 1024,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 1024,
+                  "lastOwnerReleases": 1026
+                }
+              }
             }
           },
           "activeSites": [
@@ -5691,7 +5907,8 @@
               "line": 1426,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -5699,7 +5916,8 @@
               "line": 1429,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 16,
@@ -5707,7 +5925,8 @@
               "line": 1581,
               "indirect": false,
               "source": "fwp_rc_free_arr(value);",
-              "caller": "fwp_rc_resource_free_arr"
+              "caller": "fwp_rc_resource_free_arr",
+              "ownerType": null
             },
             {
               "id": 19,
@@ -5715,7 +5934,8 @@
               "line": 1679,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(f)) return;",
-              "caller": "fwp_closure_drop"
+              "caller": "fwp_closure_drop",
+              "ownerType": "Function"
             },
             {
               "id": 20,
@@ -5723,7 +5943,8 @@
               "line": 1764,
               "indirect": false,
               "source": "V building = fwp_rc_fresh(PTR(r));",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 21,
@@ -5731,7 +5952,8 @@
               "line": 1773,
               "indirect": false,
               "source": "if (fwp_rc_last(f)) c->n = 0;",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 22,
@@ -5739,7 +5961,8 @@
               "line": 1775,
               "indirect": false,
               "source": "V result = fwp_rc_fresh(PTR(r));",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 23,
@@ -5747,7 +5970,8 @@
               "line": 1801,
               "indirect": false,
               "source": "if (fwp_rc_last(f)) c->n = 0;",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 24,
@@ -5755,7 +5979,8 @@
               "line": 1850,
               "indirect": false,
               "source": "fwp_rc_dup(f);",
-              "caller": "fwp_apply_borrowed_span"
+              "caller": "fwp_apply_borrowed_span",
+              "ownerType": null
             },
             {
               "id": 129,
@@ -5763,7 +5988,8 @@
               "line": 9431,
               "indirect": false,
               "source": "V value = fwp_rc_fresh(fwp_p_channel_make(cap));",
-              "caller": "fwp_p_channel_make_owned"
+              "caller": "fwp_p_channel_make_owned",
+              "ownerType": null
             },
             {
               "id": 130,
@@ -5771,7 +5997,8 @@
               "line": 9438,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_channel_drop"
+              "caller": "fwp_channel_drop",
+              "ownerType": "Channel"
             },
             {
               "id": 190,
@@ -5779,7 +6006,8 @@
               "line": 13881,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 192,
@@ -5787,7 +6015,8 @@
               "line": 13885,
               "indirect": false,
               "source": "fwp_rc_free_obj(value);",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 209,
@@ -5795,7 +6024,8 @@
               "line": 15221,
               "indirect": false,
               "source": "for (int i = 0; i < na; i++) av[i] = fwp_rc_fresh(fwp_str_lossy(argv[i + 1], strlen(argv[i + 1])));",
-              "caller": "fwp_exec_run"
+              "caller": "fwp_exec_run",
+              "ownerType": null
             },
             {
               "id": 226,
@@ -5803,7 +6033,8 @@
               "line": 16558,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "String"
             },
             {
               "id": 227,
@@ -5811,7 +6042,8 @@
               "line": 16559,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "String"
             },
             {
               "id": 243,
@@ -5819,7 +6051,8 @@
               "line": 16841,
               "indirect": false,
               "source": "if (!duplicate) { fwp_rc_free_obj(v); }",
-              "caller": "fwp_caps6"
+              "caller": "fwp_caps6",
+              "ownerType": null
             },
             {
               "id": 244,
@@ -5827,7 +6060,8 @@
               "line": 16849,
               "indirect": false,
               "source": "if (start <= 0 && 0 - start < n) { fwp_rc_dup(a[0 - start]); }",
-              "caller": "fwp_args6"
+              "caller": "fwp_args6",
+              "ownerType": null
             },
             {
               "id": 247,
@@ -5835,7 +6069,8 @@
               "line": 16976,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_show_i64(l0));",
-              "caller": "f5"
+              "caller": "f5",
+              "ownerType": null
             },
             {
               "id": 255,
@@ -5843,7 +6078,8 @@
               "line": 17168,
               "indirect": false,
               "source": "fwp_rc_dup(l18);",
-              "caller": "w21"
+              "caller": "w21",
+              "ownerType": null
             },
             {
               "id": 260,
@@ -5851,7 +6087,8 @@
               "line": 17353,
               "indirect": false,
               "source": "fwp_rc_dup(l0);",
-              "caller": "fs10"
+              "caller": "fs10",
+              "ownerType": null
             },
             {
               "id": 261,
@@ -5859,7 +6096,8 @@
               "line": 17359,
               "indirect": false,
               "source": "fwp_rc_dup(l3);",
-              "caller": "fs10"
+              "caller": "fs10",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -6773,7 +7011,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             },
             "16": {
               "managed": {
@@ -6933,7 +7181,21 @@
                   "effective": 16,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Function": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 16
+                },
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 17
+                }
+              }
             },
             "1024": {
               "managed": {
@@ -7093,7 +7355,21 @@
                   "effective": 1024,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Function": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1024
+                },
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1025
+                }
+              }
             }
           },
           "activeSites": [
@@ -7103,7 +7379,8 @@
               "line": 1426,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -7111,7 +7388,8 @@
               "line": 1429,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 16,
@@ -7119,7 +7397,8 @@
               "line": 1581,
               "indirect": false,
               "source": "fwp_rc_free_arr(value);",
-              "caller": "fwp_rc_resource_free_arr"
+              "caller": "fwp_rc_resource_free_arr",
+              "ownerType": null
             },
             {
               "id": 19,
@@ -7127,7 +7406,8 @@
               "line": 1679,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(f)) return;",
-              "caller": "fwp_closure_drop"
+              "caller": "fwp_closure_drop",
+              "ownerType": "Function"
             },
             {
               "id": 20,
@@ -7135,7 +7415,8 @@
               "line": 1764,
               "indirect": false,
               "source": "V building = fwp_rc_fresh(PTR(r));",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 21,
@@ -7143,7 +7424,8 @@
               "line": 1773,
               "indirect": false,
               "source": "if (fwp_rc_last(f)) c->n = 0;",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 22,
@@ -7151,7 +7433,8 @@
               "line": 1775,
               "indirect": false,
               "source": "V result = fwp_rc_fresh(PTR(r));",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 24,
@@ -7159,7 +7442,8 @@
               "line": 1850,
               "indirect": false,
               "source": "fwp_rc_dup(f);",
-              "caller": "fwp_apply_borrowed_span"
+              "caller": "fwp_apply_borrowed_span",
+              "ownerType": null
             },
             {
               "id": 129,
@@ -7167,7 +7451,8 @@
               "line": 9431,
               "indirect": false,
               "source": "V value = fwp_rc_fresh(fwp_p_channel_make(cap));",
-              "caller": "fwp_p_channel_make_owned"
+              "caller": "fwp_p_channel_make_owned",
+              "ownerType": null
             },
             {
               "id": 130,
@@ -7175,7 +7460,8 @@
               "line": 9438,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_channel_drop"
+              "caller": "fwp_channel_drop",
+              "ownerType": "Channel"
             },
             {
               "id": 190,
@@ -7183,7 +7469,8 @@
               "line": 13881,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 192,
@@ -7191,7 +7478,8 @@
               "line": 13885,
               "indirect": false,
               "source": "fwp_rc_free_obj(value);",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 209,
@@ -7199,7 +7487,8 @@
               "line": 15221,
               "indirect": false,
               "source": "for (int i = 0; i < na; i++) av[i] = fwp_rc_fresh(fwp_str_lossy(argv[i + 1], strlen(argv[i + 1])));",
-              "caller": "fwp_exec_run"
+              "caller": "fwp_exec_run",
+              "ownerType": null
             },
             {
               "id": 231,
@@ -7207,7 +7496,8 @@
               "line": 16587,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop4"
+              "caller": "fwp_drop4",
+              "ownerType": "String"
             },
             {
               "id": 232,
@@ -7215,7 +7505,8 @@
               "line": 16588,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop4"
+              "caller": "fwp_drop4",
+              "ownerType": "String"
             },
             {
               "id": 239,
@@ -7223,7 +7514,8 @@
               "line": 16774,
               "indirect": false,
               "source": "if (!duplicate) { fwp_rc_free_obj(v); }",
-              "caller": "fwp_caps40"
+              "caller": "fwp_caps40",
+              "ownerType": null
             },
             {
               "id": 245,
@@ -7231,7 +7523,8 @@
               "line": 17048,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_p_str_repeat(l0, l1));",
-              "caller": "f38"
+              "caller": "f38",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -7599,7 +7892,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Map[I64, I64]": {
+                  "sharedReleases": 1,
+                  "lastOwnerReleases": 1
+                },
+                "List[()]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             }
           },
           "activeSites": [
@@ -7609,7 +7912,8 @@
               "line": 1425,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -7617,7 +7921,8 @@
               "line": 1428,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 86,
@@ -7625,7 +7930,8 @@
               "line": 6076,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_map_alloc(capacity, columns));",
-              "caller": "fwp_map_typed_new"
+              "caller": "fwp_map_typed_new",
+              "ownerType": null
             },
             {
               "id": 226,
@@ -7633,7 +7939,8 @@
               "line": 16551,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Map[I64, I64]"
             },
             {
               "id": 227,
@@ -7641,7 +7948,8 @@
               "line": 16552,
               "indirect": false,
               "source": "fwp_rc_free_arr(v);",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Map[I64, I64]"
             },
             {
               "id": 228,
@@ -7649,7 +7957,8 @@
               "line": 16560,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "List[()]"
             },
             {
               "id": 229,
@@ -7657,7 +7966,8 @@
               "line": 16562,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "List[()]"
             },
             {
               "id": 241,
@@ -7665,7 +7975,8 @@
               "line": 16683,
               "indirect": false,
               "source": "static V caf6(void) { V value = fwp_caf_state6 ? fwp_caf_value6 : fwp_caf_init6(); fwp_rc_dup(value); return value; }",
-              "caller": "caf6"
+              "caller": "caf6",
+              "ownerType": null
             },
             {
               "id": 246,
@@ -7673,7 +7984,8 @@
               "line": 16793,
               "indirect": false,
               "source": "V t9 = fwp_rc_fresh(fwp_data(1, 2, (V[]){t6, (V)0}));",
-              "caller": "f0"
+              "caller": "f0",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -8543,7 +8855,33 @@
                   "effective": 1640,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 5120,
+                  "lastOwnerReleases": 5742
+                },
+                "List[String]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 4096
+                },
+                "Map[String, I64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 8
+                },
+                "List[(String, I64)]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 517
+                },
+                "(String, I64)": {
+                  "sharedReleases": 778,
+                  "lastOwnerReleases": 256
+                },
+                "(I64, String)": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 256
+                }
+              }
             },
             "65536-4096": {
               "managed": {
@@ -8877,7 +9215,33 @@
                   "effective": 26216,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 81920,
+                  "lastOwnerReleases": 91758
+                },
+                "List[String]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 65536
+                },
+                "Map[String, I64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 12
+                },
+                "List[(String, I64)]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 8197
+                },
+                "(String, I64)": {
+                  "sharedReleases": 12298,
+                  "lastOwnerReleases": 4096
+                },
+                "(I64, String)": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 4096
+                }
+              }
             }
           },
           "activeSites": [
@@ -8887,7 +9251,8 @@
               "line": 1359,
               "indirect": true,
               "source": "static inline void fwp_rc_dup(V v) {",
-              "caller": "fwp_rc_dup"
+              "caller": "fwp_rc_dup",
+              "ownerType": null
             },
             {
               "id": 11,
@@ -8895,7 +9260,8 @@
               "line": 1425,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -8903,7 +9269,8 @@
               "line": 1428,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 19,
@@ -8911,7 +9278,8 @@
               "line": 1678,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(f)) return;",
-              "caller": "fwp_closure_drop"
+              "caller": "fwp_closure_drop",
+              "ownerType": "Function"
             },
             {
               "id": 23,
@@ -8919,7 +9287,8 @@
               "line": 1800,
               "indirect": false,
               "source": "if (fwp_rc_last(f)) c->n = 0;",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 24,
@@ -8927,7 +9296,8 @@
               "line": 1849,
               "indirect": false,
               "source": "fwp_rc_dup(f);",
-              "caller": "fwp_apply_borrowed_span"
+              "caller": "fwp_apply_borrowed_span",
+              "ownerType": null
             },
             {
               "id": 30,
@@ -8935,7 +9305,8 @@
               "line": 3414,
               "indirect": false,
               "source": "V node = fwp_rc_fresh(fwp_data(1, 2, fields));",
-              "caller": "fwp_map_finish_protected"
+              "caller": "fwp_map_finish_protected",
+              "ownerType": null
             },
             {
               "id": 37,
@@ -8943,7 +9314,8 @@
               "line": 3757,
               "indirect": false,
               "source": "result.value = fwp_rc_fresh(fwp_cons(value, result.value));",
-              "caller": "fwp_copy_finish"
+              "caller": "fwp_copy_finish",
+              "ownerType": null
             },
             {
               "id": 41,
@@ -8951,7 +9323,8 @@
               "line": 4002,
               "indirect": false,
               "source": "if (!borrowed_tail && fwp_rc_unique(node) == 1) {",
-              "caller": "fwp_p_loop"
+              "caller": null,
+              "ownerType": null
             },
             {
               "id": 42,
@@ -8959,7 +9332,8 @@
               "line": 4004,
               "indirect": false,
               "source": "fwp_rc_free_obj(node);",
-              "caller": "fwp_p_loop"
+              "caller": null,
+              "ownerType": null
             },
             {
               "id": 51,
@@ -8967,7 +9341,8 @@
               "line": 4624,
               "indirect": false,
               "source": "V r = fwp_rc_unique(s) == 1 ? s : fwp_str_new(STR(s)->d, STR(s)->len);",
-              "caller": "fwp_p_case"
+              "caller": "fwp_p_case",
+              "ownerType": null
             },
             {
               "id": 86,
@@ -8975,7 +9350,8 @@
               "line": 6076,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_map_alloc(capacity, columns));",
-              "caller": "fwp_map_typed_new"
+              "caller": "fwp_map_typed_new",
+              "ownerType": null
             },
             {
               "id": 87,
@@ -8983,7 +9359,8 @@
               "line": 6117,
               "indirect": false,
               "source": "int unique = fwp_rc_unique_mut(m);",
-              "caller": "fwp_p_map_insert_typed"
+              "caller": "fwp_p_map_insert_typed",
+              "ownerType": null
             },
             {
               "id": 91,
@@ -8991,7 +9368,8 @@
               "line": 6251,
               "indirect": false,
               "source": "V pair = fwp_rc_fresh(fwp_tuple2(key, value));",
-              "caller": "fwp_p_map_to_list_typed"
+              "caller": "fwp_p_map_to_list_typed",
+              "ownerType": null
             },
             {
               "id": 92,
@@ -8999,7 +9377,8 @@
               "line": 6256,
               "indirect": false,
               "source": "output.value = fwp_rc_fresh(fwp_cons(pair, output.value));",
-              "caller": "fwp_p_map_to_list_typed"
+              "caller": "fwp_p_map_to_list_typed",
+              "ownerType": null
             },
             {
               "id": 93,
@@ -9007,7 +9386,8 @@
               "line": 6480,
               "indirect": false,
               "source": "V r = fwp_rc_fresh(fwp_str_lossy(b.d ? b.d : \"\", b.len));",
-              "caller": "fwp_read_stdin_all"
+              "caller": "fwp_read_stdin_all",
+              "ownerType": null
             },
             {
               "id": 226,
@@ -9015,7 +9395,8 @@
               "line": 16573,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "String"
             },
             {
               "id": 227,
@@ -9023,7 +9404,8 @@
               "line": 16574,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "String"
             },
             {
               "id": 228,
@@ -9031,7 +9413,8 @@
               "line": 16582,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "List[String]"
             },
             {
               "id": 229,
@@ -9039,7 +9422,8 @@
               "line": 16585,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "List[String]"
             },
             {
               "id": 230,
@@ -9047,7 +9431,8 @@
               "line": 16594,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop2"
+              "caller": "fwp_drop2",
+              "ownerType": "Map[String, I64]"
             },
             {
               "id": 231,
@@ -9055,7 +9440,8 @@
               "line": 16596,
               "indirect": false,
               "source": "fwp_rc_free_arr(v);",
-              "caller": "fwp_drop2"
+              "caller": "fwp_drop2",
+              "ownerType": "Map[String, I64]"
             },
             {
               "id": 232,
@@ -9063,7 +9449,8 @@
               "line": 16608,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop5"
+              "caller": "fwp_drop5",
+              "ownerType": "List[(String, I64)]"
             },
             {
               "id": 233,
@@ -9071,7 +9458,8 @@
               "line": 16611,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop5"
+              "caller": "fwp_drop5",
+              "ownerType": "List[(String, I64)]"
             },
             {
               "id": 234,
@@ -9079,7 +9467,8 @@
               "line": 16620,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop6"
+              "caller": "fwp_drop6",
+              "ownerType": "(String, I64)"
             },
             {
               "id": 235,
@@ -9087,7 +9476,8 @@
               "line": 16622,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop6"
+              "caller": "fwp_drop6",
+              "ownerType": "(String, I64)"
             },
             {
               "id": 236,
@@ -9095,7 +9485,8 @@
               "line": 16630,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop7"
+              "caller": "fwp_drop7",
+              "ownerType": "(I64, String)"
             },
             {
               "id": 237,
@@ -9103,7 +9494,8 @@
               "line": 16632,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop7"
+              "caller": "fwp_drop7",
+              "ownerType": "(I64, String)"
             },
             {
               "id": 238,
@@ -9111,7 +9503,8 @@
               "line": 16649,
               "indirect": false,
               "source": "fwp_rc_fresh(v);",
-              "caller": "fwp_own_tree0"
+              "caller": "fwp_own_tree0",
+              "ownerType": null
             },
             {
               "id": 239,
@@ -9119,7 +9512,8 @@
               "line": 16669,
               "indirect": false,
               "source": "fwp_rc_fresh(v);",
-              "caller": "fwp_own_tree1"
+              "caller": "fwp_own_tree1",
+              "ownerType": null
             },
             {
               "id": 240,
@@ -9127,7 +9521,8 @@
               "line": 16741,
               "indirect": false,
               "source": "static V caf31(void) { if (!fwp_caf_state31) { V next = f31(); V previous = fwp_caf_state31 ? fwp_caf_value31 : 0; fwp_caf_value31 = next; fwp_caf_state31 = 1; fwp_drop2(previous); } fwp_rc_dup(fwp_caf_value31); return fwp_caf_value31; }",
-              "caller": "caf31"
+              "caller": "caf31",
+              "ownerType": null
             },
             {
               "id": 244,
@@ -9135,7 +9530,8 @@
               "line": 16778,
               "indirect": false,
               "source": "if (CLO(v)->n > 0) { if (duplicate) fwp_rc_dup(CLO(v)->a[0]); else fwp_drop3(CLO(v)->a[0]); }",
-              "caller": "fwp_caps8"
+              "caller": "fwp_caps8",
+              "ownerType": null
             },
             {
               "id": 245,
@@ -9143,7 +9539,8 @@
               "line": 16779,
               "indirect": false,
               "source": "if (CLO(v)->n > 1) { if (duplicate) fwp_rc_dup(CLO(v)->a[1]); else fwp_drop4(CLO(v)->a[1]); }",
-              "caller": "fwp_caps8"
+              "caller": "fwp_caps8",
+              "ownerType": null
             },
             {
               "id": 250,
@@ -9151,7 +9548,8 @@
               "line": 16791,
               "indirect": false,
               "source": "if (start <= 2 && 2 - start < n) { fwp_rc_dup(a[2 - start]); }",
-              "caller": "fwp_args8"
+              "caller": "fwp_args8",
+              "ownerType": null
             },
             {
               "id": 255,
@@ -9159,7 +9557,8 @@
               "line": 16830,
               "indirect": false,
               "source": "if (CLO(v)->n > 0) { if (duplicate) fwp_rc_dup(CLO(v)->a[0]); else fwp_drop3(CLO(v)->a[0]); }",
-              "caller": "fwp_caps11"
+              "caller": "fwp_caps11",
+              "ownerType": null
             },
             {
               "id": 256,
@@ -9167,7 +9566,8 @@
               "line": 16831,
               "indirect": false,
               "source": "if (CLO(v)->n > 1) { if (duplicate) fwp_rc_dup(CLO(v)->a[1]); else fwp_drop8(CLO(v)->a[1]); }",
-              "caller": "fwp_caps11"
+              "caller": "fwp_caps11",
+              "ownerType": null
             },
             {
               "id": 270,
@@ -9175,7 +9575,8 @@
               "line": 16892,
               "indirect": false,
               "source": "if (start <= 1 && 1 - start < n) { fwp_rc_dup(a[1 - start]); }",
-              "caller": "fwp_args36"
+              "caller": "fwp_args36",
+              "ownerType": null
             },
             {
               "id": 273,
@@ -9183,7 +9584,8 @@
               "line": 16909,
               "indirect": false,
               "source": "if (start <= 1 && 1 - start < n) { fwp_rc_dup(a[1 - start]); }",
-              "caller": "fwp_args37"
+              "caller": "fwp_args37",
+              "ownerType": null
             },
             {
               "id": 274,
@@ -9191,7 +9593,8 @@
               "line": 17053,
               "indirect": false,
               "source": "fwp_rc_dup(l2);",
-              "caller": "w8"
+              "caller": "w8",
+              "ownerType": null
             },
             {
               "id": 275,
@@ -9199,7 +9602,8 @@
               "line": 17058,
               "indirect": false,
               "source": "static V f8(V l0, V l1, V l2) { fwp_wr8 r = w8(l0, l1, l2);  V result = fwp_rc_fresh(fwp_record(2, (V[]){(V)(int64_t)(r.f0), r.f1})); return result; }",
-              "caller": "f8"
+              "caller": "f8",
+              "ownerType": null
             },
             {
               "id": 276,
@@ -9207,7 +9611,8 @@
               "line": 17068,
               "indirect": false,
               "source": "static V f9(V l0) { V field0_0 = OBJ(l0)->f[0]; V field0_1 = OBJ(l0)->f[1]; int move0 = fwp_rc_last(l0); if (move0) { OBJ(l0)->f[0] = 0; } else { fwp_rc_dup(field0_0); } V r = (V)(int64_t)(w9(field0_0, (int64_t)(field0_1))); fwp_drop6(l0); return r; }",
-              "caller": "f9"
+              "caller": "f9",
+              "ownerType": null
             },
             {
               "id": 277,
@@ -9215,7 +9620,8 @@
               "line": 17068,
               "indirect": false,
               "source": "static V f9(V l0) { V field0_0 = OBJ(l0)->f[0]; V field0_1 = OBJ(l0)->f[1]; int move0 = fwp_rc_last(l0); if (move0) { OBJ(l0)->f[0] = 0; } else { fwp_rc_dup(field0_0); } V r = (V)(int64_t)(w9(field0_0, (int64_t)(field0_1))); fwp_drop6(l0); return r; }",
-              "caller": "f9"
+              "caller": "f9",
+              "ownerType": null
             },
             {
               "id": 278,
@@ -9223,7 +9629,8 @@
               "line": 17095,
               "indirect": false,
               "source": "static V f12(V l0) { V field0_0 = OBJ(l0)->f[0]; V field0_1 = OBJ(l0)->f[1]; int move0 = fwp_rc_last(l0); if (move0) { OBJ(l0)->f[0] = 0; } else { fwp_rc_dup(field0_0); } V r = w12(field0_0, (int64_t)(field0_1)); fwp_drop6(l0); return r; }",
-              "caller": "f12"
+              "caller": "f12",
+              "ownerType": null
             },
             {
               "id": 279,
@@ -9231,7 +9638,8 @@
               "line": 17095,
               "indirect": false,
               "source": "static V f12(V l0) { V field0_0 = OBJ(l0)->f[0]; V field0_1 = OBJ(l0)->f[1]; int move0 = fwp_rc_last(l0); if (move0) { OBJ(l0)->f[0] = 0; } else { fwp_rc_dup(field0_0); } V r = w12(field0_0, (int64_t)(field0_1)); fwp_drop6(l0); return r; }",
-              "caller": "f12"
+              "caller": "f12",
+              "ownerType": null
             },
             {
               "id": 280,
@@ -9239,7 +9647,8 @@
               "line": 17104,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_p_format(l0, l1, &d4));",
-              "caller": "f15"
+              "caller": "f15",
+              "ownerType": null
             },
             {
               "id": 282,
@@ -9247,7 +9656,8 @@
               "line": 17161,
               "indirect": false,
               "source": "fwp_value_owner owner = {l2, fwp_drop0}; fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup); V result = fwp_p_replace(l0, l1, l2); if (result == l2) return fwp_value_finish(&owner, &cleanup); fwp_rc_fresh(result); fwp_value_release(&owner); fwp_value_finish(&owner, &cleanup); return result;",
-              "caller": "f34"
+              "caller": "f34",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -9594,7 +10004,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Array[F64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 7
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             }
           },
           "activeSites": [
@@ -9604,7 +10024,8 @@
               "line": 1425,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -9612,7 +10033,8 @@
               "line": 1428,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 63,
@@ -9620,7 +10042,8 @@
               "line": 5329,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_array_new_packed(n, elem));",
-              "caller": "fwp_array_typed_new"
+              "caller": "fwp_array_typed_new",
+              "ownerType": null
             },
             {
               "id": 226,
@@ -9628,7 +10051,8 @@
               "line": 16551,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[F64]"
             },
             {
               "id": 228,
@@ -9636,7 +10060,8 @@
               "line": 16553,
               "indirect": false,
               "source": "fwp_rc_free_arr(v);",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[F64]"
             },
             {
               "id": 229,
@@ -9644,7 +10069,8 @@
               "line": 16561,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "String"
             },
             {
               "id": 230,
@@ -9652,7 +10078,8 @@
               "line": 16562,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "String"
             },
             {
               "id": 249,
@@ -9660,7 +10087,8 @@
               "line": 17249,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_show_array_list(l0, &d0));",
-              "caller": "f68"
+              "caller": "f68",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -10012,7 +10440,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Array[F64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 199
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             }
           },
           "activeSites": [
@@ -10022,7 +10460,8 @@
               "line": 1425,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -10030,7 +10469,8 @@
               "line": 1428,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 63,
@@ -10038,7 +10478,8 @@
               "line": 5329,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_array_new_packed(n, elem));",
-              "caller": "fwp_array_typed_new"
+              "caller": "fwp_array_typed_new",
+              "ownerType": null
             },
             {
               "id": 226,
@@ -10046,7 +10487,8 @@
               "line": 16551,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[F64]"
             },
             {
               "id": 228,
@@ -10054,7 +10496,8 @@
               "line": 16553,
               "indirect": false,
               "source": "fwp_rc_free_arr(v);",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[F64]"
             },
             {
               "id": 229,
@@ -10062,7 +10505,8 @@
               "line": 16561,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "String"
             },
             {
               "id": 230,
@@ -10070,7 +10514,8 @@
               "line": 16562,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "String"
             },
             {
               "id": 249,
@@ -10078,7 +10523,8 @@
               "line": 17249,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_show_array_list(l0, &d0));",
-              "caller": "f68"
+              "caller": "f68",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -10752,7 +11198,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Array[I64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             },
             "16": {
               "managed": {
@@ -10870,7 +11326,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Array[I64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             },
             "4096": {
               "managed": {
@@ -10988,7 +11454,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Array[I64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             }
           },
           "activeSites": [
@@ -10998,7 +11474,8 @@
               "line": 1425,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -11006,7 +11483,8 @@
               "line": 1428,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 19,
@@ -11014,7 +11492,8 @@
               "line": 1678,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(f)) return;",
-              "caller": "fwp_closure_drop"
+              "caller": "fwp_closure_drop",
+              "ownerType": "Function"
             },
             {
               "id": 24,
@@ -11022,7 +11501,8 @@
               "line": 1849,
               "indirect": false,
               "source": "fwp_rc_dup(f);",
-              "caller": "fwp_apply_borrowed_span"
+              "caller": "fwp_apply_borrowed_span",
+              "ownerType": null
             },
             {
               "id": 63,
@@ -11030,7 +11510,8 @@
               "line": 5329,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_array_new_packed(n, elem));",
-              "caller": "fwp_array_typed_new"
+              "caller": "fwp_array_typed_new",
+              "ownerType": null
             },
             {
               "id": 190,
@@ -11038,7 +11519,8 @@
               "line": 13880,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 192,
@@ -11046,7 +11528,8 @@
               "line": 13884,
               "indirect": false,
               "source": "fwp_rc_free_obj(value);",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 209,
@@ -11054,7 +11537,8 @@
               "line": 15220,
               "indirect": false,
               "source": "for (int i = 0; i < na; i++) av[i] = fwp_rc_fresh(fwp_str_lossy(argv[i + 1], strlen(argv[i + 1])));",
-              "caller": "fwp_exec_run"
+              "caller": "fwp_exec_run",
+              "ownerType": null
             },
             {
               "id": 226,
@@ -11062,7 +11546,8 @@
               "line": 16543,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[I64]"
             },
             {
               "id": 228,
@@ -11070,7 +11555,8 @@
               "line": 16545,
               "indirect": false,
               "source": "fwp_rc_free_arr(v);",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[I64]"
             }
           ],
           "fileHashes": {
@@ -11783,7 +12269,21 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Array[I64]": {
+                  "sharedReleases": 1,
+                  "lastOwnerReleases": 1
+                },
+                "(Array[I64], Array[I64])": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             },
             "16": {
               "managed": {
@@ -11925,7 +12425,21 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Array[I64]": {
+                  "sharedReleases": 1,
+                  "lastOwnerReleases": 1
+                },
+                "(Array[I64], Array[I64])": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             },
             "4096": {
               "managed": {
@@ -12067,7 +12581,21 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Array[I64]": {
+                  "sharedReleases": 1,
+                  "lastOwnerReleases": 1
+                },
+                "(Array[I64], Array[I64])": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             }
           },
           "activeSites": [
@@ -12077,7 +12605,8 @@
               "line": 1425,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -12085,7 +12614,8 @@
               "line": 1428,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 19,
@@ -12093,7 +12623,8 @@
               "line": 1678,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(f)) return;",
-              "caller": "fwp_closure_drop"
+              "caller": "fwp_closure_drop",
+              "ownerType": "Function"
             },
             {
               "id": 24,
@@ -12101,7 +12632,8 @@
               "line": 1849,
               "indirect": false,
               "source": "fwp_rc_dup(f);",
-              "caller": "fwp_apply_borrowed_span"
+              "caller": "fwp_apply_borrowed_span",
+              "ownerType": null
             },
             {
               "id": 63,
@@ -12109,7 +12641,8 @@
               "line": 5329,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_array_new_packed(n, elem));",
-              "caller": "fwp_array_typed_new"
+              "caller": "fwp_array_typed_new",
+              "ownerType": null
             },
             {
               "id": 190,
@@ -12117,7 +12650,8 @@
               "line": 13880,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 192,
@@ -12125,7 +12659,8 @@
               "line": 13884,
               "indirect": false,
               "source": "fwp_rc_free_obj(value);",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 209,
@@ -12133,7 +12668,8 @@
               "line": 15220,
               "indirect": false,
               "source": "for (int i = 0; i < na; i++) av[i] = fwp_rc_fresh(fwp_str_lossy(argv[i + 1], strlen(argv[i + 1])));",
-              "caller": "fwp_exec_run"
+              "caller": "fwp_exec_run",
+              "ownerType": null
             },
             {
               "id": 226,
@@ -12141,7 +12677,8 @@
               "line": 16552,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[I64]"
             },
             {
               "id": 228,
@@ -12149,7 +12686,8 @@
               "line": 16554,
               "indirect": false,
               "source": "fwp_rc_free_arr(v);",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[I64]"
             },
             {
               "id": 229,
@@ -12157,7 +12695,8 @@
               "line": 16562,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "(Array[I64], Array[I64])"
             },
             {
               "id": 230,
@@ -12165,7 +12704,8 @@
               "line": 16565,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "(Array[I64], Array[I64])"
             },
             {
               "id": 234,
@@ -12173,7 +12713,8 @@
               "line": 16830,
               "indirect": false,
               "source": "fwp_rc_dup(l1);",
-              "caller": "w2"
+              "caller": "w2",
+              "ownerType": null
             },
             {
               "id": 235,
@@ -12181,7 +12722,8 @@
               "line": 16835,
               "indirect": false,
               "source": "static V f2(V l0) { fwp_wr2 r = w2((int64_t)(l0)); fwp_owner_ctx5 pending_result = {r.f0, r.f1}; fwp_cleanup boxing_cleanup; fwp_cleanup_push(&boxing_cleanup, fwp_owner_release5, &pending_result); V result = fwp_rc_fresh(fwp_record(2, (V[]){r.f0, r.f1})); fwp_cleanup_pop(&boxing_cleanup);return result; }",
-              "caller": "f2"
+              "caller": "f2",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -12850,7 +13392,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Array[I64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             },
             "16": {
               "managed": {
@@ -12968,7 +13520,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Array[I64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             },
             "4096": {
               "managed": {
@@ -13086,7 +13648,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Array[I64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             }
           },
           "activeSites": [
@@ -13096,7 +13668,8 @@
               "line": 1425,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -13104,7 +13677,8 @@
               "line": 1428,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 19,
@@ -13112,7 +13686,8 @@
               "line": 1678,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(f)) return;",
-              "caller": "fwp_closure_drop"
+              "caller": "fwp_closure_drop",
+              "ownerType": "Function"
             },
             {
               "id": 24,
@@ -13120,7 +13695,8 @@
               "line": 1849,
               "indirect": false,
               "source": "fwp_rc_dup(f);",
-              "caller": "fwp_apply_borrowed_span"
+              "caller": "fwp_apply_borrowed_span",
+              "ownerType": null
             },
             {
               "id": 63,
@@ -13128,7 +13704,8 @@
               "line": 5329,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_array_new_packed(n, elem));",
-              "caller": "fwp_array_typed_new"
+              "caller": "fwp_array_typed_new",
+              "ownerType": null
             },
             {
               "id": 190,
@@ -13136,7 +13713,8 @@
               "line": 13880,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 192,
@@ -13144,7 +13722,8 @@
               "line": 13884,
               "indirect": false,
               "source": "fwp_rc_free_obj(value);",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 209,
@@ -13152,7 +13731,8 @@
               "line": 15220,
               "indirect": false,
               "source": "for (int i = 0; i < na; i++) av[i] = fwp_rc_fresh(fwp_str_lossy(argv[i + 1], strlen(argv[i + 1])));",
-              "caller": "fwp_exec_run"
+              "caller": "fwp_exec_run",
+              "ownerType": null
             },
             {
               "id": 226,
@@ -13160,7 +13740,8 @@
               "line": 16543,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[I64]"
             },
             {
               "id": 228,
@@ -13168,7 +13749,8 @@
               "line": 16545,
               "indirect": false,
               "source": "fwp_rc_free_arr(v);",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[I64]"
             }
           ],
           "fileHashes": {
@@ -13501,7 +14083,13 @@
                   "effective": 0,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "observer control": {
+                  "sharedReleases": 1,
+                  "lastOwnerReleases": 1
+                }
+              }
             }
           },
           "activeSites": [
@@ -13511,7 +14099,8 @@
               "line": 1359,
               "indirect": true,
               "source": "static inline void fwp_rc_dup(V v) {",
-              "caller": "fwp_rc_dup"
+              "caller": "fwp_rc_dup",
+              "ownerType": null
             },
             {
               "id": 8,
@@ -13519,7 +14108,8 @@
               "line": 1427,
               "indirect": true,
               "source": "static void fwp_rc_free_arr(V v) {",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 11,
@@ -13527,7 +14117,8 @@
               "line": 1425,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -13535,7 +14126,8 @@
               "line": 1428,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 226,
@@ -13543,7 +14135,8 @@
               "line": 16577,
               "indirect": false,
               "source": "V observed = fwp_rc_fresh((V)(uintptr_t)fwp_alloc_leaf(24));",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 227,
@@ -13551,7 +14144,8 @@
               "line": 16578,
               "indirect": false,
               "source": "for (int i=0; i<300; i++) fwp_rc_dup(observed);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 228,
@@ -13559,7 +14153,8 @@
               "line": 16581,
               "indirect": false,
               "source": "if (fwp_rc_unique(observed) || fwp_rc_unique_mut(observed) || fwp_rc_last(observed)) exit(91);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 229,
@@ -13567,7 +14162,8 @@
               "line": 16581,
               "indirect": false,
               "source": "if (fwp_rc_unique(observed) || fwp_rc_unique_mut(observed) || fwp_rc_last(observed)) exit(91);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 230,
@@ -13575,7 +14171,8 @@
               "line": 16581,
               "indirect": false,
               "source": "if (fwp_rc_unique(observed) || fwp_rc_unique_mut(observed) || fwp_rc_last(observed)) exit(91);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 231,
@@ -13583,7 +14180,8 @@
               "line": 16582,
               "indirect": false,
               "source": "for (int i=0; i<300; i++) fwp_rc_drop(observed);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 232,
@@ -13591,7 +14189,8 @@
               "line": 16583,
               "indirect": false,
               "source": "if (fwp_rc_release_last(observed)) exit(92);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 233,
@@ -13599,7 +14198,8 @@
               "line": 16584,
               "indirect": false,
               "source": "if (!fwp_rc_unique(observed) || !fwp_rc_unique_mut(observed) || !fwp_rc_last(observed)) exit(93);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 234,
@@ -13607,7 +14207,8 @@
               "line": 16584,
               "indirect": false,
               "source": "if (!fwp_rc_unique(observed) || !fwp_rc_unique_mut(observed) || !fwp_rc_last(observed)) exit(93);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 235,
@@ -13615,7 +14216,8 @@
               "line": 16584,
               "indirect": false,
               "source": "if (!fwp_rc_unique(observed) || !fwp_rc_unique_mut(observed) || !fwp_rc_last(observed)) exit(93);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 236,
@@ -13623,7 +14225,8 @@
               "line": 16585,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(observed)) exit(94);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 237,
@@ -13631,7 +14234,8 @@
               "line": 16586,
               "indirect": false,
               "source": "fwp_rc_free_obj(observed);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 238,
@@ -13639,7 +14243,8 @@
               "line": 16587,
               "indirect": false,
               "source": "V array = fwp_rc_fresh((V)(uintptr_t)fwp_alloc_leaf(16));",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 239,
@@ -13647,7 +14252,8 @@
               "line": 16590,
               "indirect": false,
               "source": "fwp_rc_dup(0); fwp_rc_drop(0); fwp_rc_fresh(0);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 240,
@@ -13655,7 +14261,8 @@
               "line": 16590,
               "indirect": false,
               "source": "fwp_rc_dup(0); fwp_rc_drop(0); fwp_rc_fresh(0);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 241,
@@ -13663,7 +14270,8 @@
               "line": 16590,
               "indirect": false,
               "source": "fwp_rc_dup(0); fwp_rc_drop(0); fwp_rc_fresh(0);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 242,
@@ -13671,7 +14279,8 @@
               "line": 16591,
               "indirect": false,
               "source": "if (fwp_rc_release_last(0) || fwp_rc_unique(0) || fwp_rc_unique_mut(0) || fwp_rc_last(0)) exit(95);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 243,
@@ -13679,7 +14288,8 @@
               "line": 16591,
               "indirect": false,
               "source": "if (fwp_rc_release_last(0) || fwp_rc_unique(0) || fwp_rc_unique_mut(0) || fwp_rc_last(0)) exit(95);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 244,
@@ -13687,7 +14297,8 @@
               "line": 16591,
               "indirect": false,
               "source": "if (fwp_rc_release_last(0) || fwp_rc_unique(0) || fwp_rc_unique_mut(0) || fwp_rc_last(0)) exit(95);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             },
             {
               "id": 245,
@@ -13695,7 +14306,8 @@
               "line": 16591,
               "indirect": false,
               "source": "if (fwp_rc_release_last(0) || fwp_rc_unique(0) || fwp_rc_unique_mut(0) || fwp_rc_last(0)) exit(95);",
-              "caller": "fwp_main_thread"
+              "caller": "fwp_main_thread",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -14508,7 +15120,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             },
             "16": {
               "managed": {
@@ -14644,7 +15266,17 @@
                   "effective": 16,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 17
+                }
+              }
             },
             "1024": {
               "managed": {
@@ -14780,7 +15412,17 @@
                   "effective": 1024,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1025
+                }
+              }
             }
           },
           "activeSites": [
@@ -14790,7 +15432,8 @@
               "line": 1426,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -14798,7 +15441,8 @@
               "line": 1429,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 16,
@@ -14806,7 +15450,8 @@
               "line": 1581,
               "indirect": false,
               "source": "fwp_rc_free_arr(value);",
-              "caller": "fwp_rc_resource_free_arr"
+              "caller": "fwp_rc_resource_free_arr",
+              "ownerType": null
             },
             {
               "id": 19,
@@ -14814,7 +15459,8 @@
               "line": 1679,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(f)) return;",
-              "caller": "fwp_closure_drop"
+              "caller": "fwp_closure_drop",
+              "ownerType": "Function"
             },
             {
               "id": 24,
@@ -14822,7 +15468,8 @@
               "line": 1850,
               "indirect": false,
               "source": "fwp_rc_dup(f);",
-              "caller": "fwp_apply_borrowed_span"
+              "caller": "fwp_apply_borrowed_span",
+              "ownerType": null
             },
             {
               "id": 129,
@@ -14830,7 +15477,8 @@
               "line": 9431,
               "indirect": false,
               "source": "V value = fwp_rc_fresh(fwp_p_channel_make(cap));",
-              "caller": "fwp_p_channel_make_owned"
+              "caller": "fwp_p_channel_make_owned",
+              "ownerType": null
             },
             {
               "id": 130,
@@ -14838,7 +15486,8 @@
               "line": 9438,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_channel_drop"
+              "caller": "fwp_channel_drop",
+              "ownerType": "Channel"
             },
             {
               "id": 190,
@@ -14846,7 +15495,8 @@
               "line": 13881,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 192,
@@ -14854,7 +15504,8 @@
               "line": 13885,
               "indirect": false,
               "source": "fwp_rc_free_obj(value);",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 209,
@@ -14862,7 +15513,8 @@
               "line": 15221,
               "indirect": false,
               "source": "for (int i = 0; i < na; i++) av[i] = fwp_rc_fresh(fwp_str_lossy(argv[i + 1], strlen(argv[i + 1])));",
-              "caller": "fwp_exec_run"
+              "caller": "fwp_exec_run",
+              "ownerType": null
             },
             {
               "id": 231,
@@ -14870,7 +15522,8 @@
               "line": 16585,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop3"
+              "caller": "fwp_drop3",
+              "ownerType": "String"
             },
             {
               "id": 232,
@@ -14878,7 +15531,8 @@
               "line": 16586,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop3"
+              "caller": "fwp_drop3",
+              "ownerType": "String"
             },
             {
               "id": 249,
@@ -14886,7 +15540,8 @@
               "line": 17188,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_p_str_repeat(l0, l1));",
-              "caller": "f67"
+              "caller": "f67",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -15740,7 +16395,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             },
             "16": {
               "managed": {
@@ -15906,7 +16571,21 @@
                   "effective": 16,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Function": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 16
+                },
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 17
+                }
+              }
             },
             "1024": {
               "managed": {
@@ -16072,7 +16751,21 @@
                   "effective": 1024,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Function": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1024
+                },
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1025
+                }
+              }
             }
           },
           "activeSites": [
@@ -16082,7 +16775,8 @@
               "line": 1426,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -16090,7 +16784,8 @@
               "line": 1429,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 16,
@@ -16098,7 +16793,8 @@
               "line": 1581,
               "indirect": false,
               "source": "fwp_rc_free_arr(value);",
-              "caller": "fwp_rc_resource_free_arr"
+              "caller": "fwp_rc_resource_free_arr",
+              "ownerType": null
             },
             {
               "id": 19,
@@ -16106,7 +16802,8 @@
               "line": 1679,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(f)) return;",
-              "caller": "fwp_closure_drop"
+              "caller": "fwp_closure_drop",
+              "ownerType": "Function"
             },
             {
               "id": 20,
@@ -16114,7 +16811,8 @@
               "line": 1764,
               "indirect": false,
               "source": "V building = fwp_rc_fresh(PTR(r));",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 21,
@@ -16122,7 +16820,8 @@
               "line": 1773,
               "indirect": false,
               "source": "if (fwp_rc_last(f)) c->n = 0;",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 22,
@@ -16130,7 +16829,8 @@
               "line": 1775,
               "indirect": false,
               "source": "V result = fwp_rc_fresh(PTR(r));",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 23,
@@ -16138,7 +16838,8 @@
               "line": 1801,
               "indirect": false,
               "source": "if (fwp_rc_last(f)) c->n = 0;",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 24,
@@ -16146,7 +16847,8 @@
               "line": 1850,
               "indirect": false,
               "source": "fwp_rc_dup(f);",
-              "caller": "fwp_apply_borrowed_span"
+              "caller": "fwp_apply_borrowed_span",
+              "ownerType": null
             },
             {
               "id": 129,
@@ -16154,7 +16856,8 @@
               "line": 9431,
               "indirect": false,
               "source": "V value = fwp_rc_fresh(fwp_p_channel_make(cap));",
-              "caller": "fwp_p_channel_make_owned"
+              "caller": "fwp_p_channel_make_owned",
+              "ownerType": null
             },
             {
               "id": 130,
@@ -16162,7 +16865,8 @@
               "line": 9438,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_channel_drop"
+              "caller": "fwp_channel_drop",
+              "ownerType": "Channel"
             },
             {
               "id": 190,
@@ -16170,7 +16874,8 @@
               "line": 13881,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 192,
@@ -16178,7 +16883,8 @@
               "line": 13885,
               "indirect": false,
               "source": "fwp_rc_free_obj(value);",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 209,
@@ -16186,7 +16892,8 @@
               "line": 15221,
               "indirect": false,
               "source": "for (int i = 0; i < na; i++) av[i] = fwp_rc_fresh(fwp_str_lossy(argv[i + 1], strlen(argv[i + 1])));",
-              "caller": "fwp_exec_run"
+              "caller": "fwp_exec_run",
+              "ownerType": null
             },
             {
               "id": 231,
@@ -16194,7 +16901,8 @@
               "line": 16587,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop3"
+              "caller": "fwp_drop3",
+              "ownerType": "String"
             },
             {
               "id": 232,
@@ -16202,7 +16910,8 @@
               "line": 16588,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop3"
+              "caller": "fwp_drop3",
+              "ownerType": "String"
             },
             {
               "id": 244,
@@ -16210,7 +16919,8 @@
               "line": 16809,
               "indirect": false,
               "source": "if (!duplicate) { fwp_rc_free_obj(v); }",
-              "caller": "fwp_caps36"
+              "caller": "fwp_caps36",
+              "ownerType": null
             },
             {
               "id": 250,
@@ -16218,7 +16928,8 @@
               "line": 17233,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_p_str_repeat(l0, l1));",
-              "caller": "f69"
+              "caller": "f69",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -17120,7 +17831,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 2
+                }
+              }
             },
             "16": {
               "managed": {
@@ -17268,7 +17989,17 @@
                   "effective": 16,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 32,
+                  "lastOwnerReleases": 2
+                }
+              }
             },
             "1024": {
               "managed": {
@@ -17416,7 +18147,17 @@
                   "effective": 1024,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 2048,
+                  "lastOwnerReleases": 2
+                }
+              }
             }
           },
           "activeSites": [
@@ -17426,7 +18167,8 @@
               "line": 1426,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -17434,7 +18176,8 @@
               "line": 1429,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 16,
@@ -17442,7 +18185,8 @@
               "line": 1581,
               "indirect": false,
               "source": "fwp_rc_free_arr(value);",
-              "caller": "fwp_rc_resource_free_arr"
+              "caller": "fwp_rc_resource_free_arr",
+              "ownerType": null
             },
             {
               "id": 19,
@@ -17450,7 +18194,8 @@
               "line": 1679,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(f)) return;",
-              "caller": "fwp_closure_drop"
+              "caller": "fwp_closure_drop",
+              "ownerType": "Function"
             },
             {
               "id": 24,
@@ -17458,7 +18203,8 @@
               "line": 1850,
               "indirect": false,
               "source": "fwp_rc_dup(f);",
-              "caller": "fwp_apply_borrowed_span"
+              "caller": "fwp_apply_borrowed_span",
+              "ownerType": null
             },
             {
               "id": 129,
@@ -17466,7 +18212,8 @@
               "line": 9431,
               "indirect": false,
               "source": "V value = fwp_rc_fresh(fwp_p_channel_make(cap));",
-              "caller": "fwp_p_channel_make_owned"
+              "caller": "fwp_p_channel_make_owned",
+              "ownerType": null
             },
             {
               "id": 130,
@@ -17474,7 +18221,8 @@
               "line": 9438,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_channel_drop"
+              "caller": "fwp_channel_drop",
+              "ownerType": "Channel"
             },
             {
               "id": 190,
@@ -17482,7 +18230,8 @@
               "line": 13881,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 192,
@@ -17490,7 +18239,8 @@
               "line": 13885,
               "indirect": false,
               "source": "fwp_rc_free_obj(value);",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 209,
@@ -17498,7 +18248,8 @@
               "line": 15221,
               "indirect": false,
               "source": "for (int i = 0; i < na; i++) av[i] = fwp_rc_fresh(fwp_str_lossy(argv[i + 1], strlen(argv[i + 1])));",
-              "caller": "fwp_exec_run"
+              "caller": "fwp_exec_run",
+              "ownerType": null
             },
             {
               "id": 231,
@@ -17506,7 +18257,8 @@
               "line": 16584,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop3"
+              "caller": "fwp_drop3",
+              "ownerType": "String"
             },
             {
               "id": 232,
@@ -17514,7 +18266,8 @@
               "line": 16585,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop3"
+              "caller": "fwp_drop3",
+              "ownerType": "String"
             },
             {
               "id": 241,
@@ -17522,7 +18275,8 @@
               "line": 16874,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_show_i64(l0));",
-              "caller": "f5"
+              "caller": "f5",
+              "ownerType": null
             },
             {
               "id": 250,
@@ -17530,7 +18284,8 @@
               "line": 17179,
               "indirect": false,
               "source": "fwp_rc_dup(l3);",
-              "caller": "fs8"
+              "caller": "fs8",
+              "ownerType": null
             },
             {
               "id": 251,
@@ -17538,7 +18293,8 @@
               "line": 17185,
               "indirect": false,
               "source": "fwp_rc_dup(l16);",
-              "caller": "fs8"
+              "caller": "fs8",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -18504,7 +19260,21 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Function": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 2
+                }
+              }
             },
             "16": {
               "managed": {
@@ -18694,7 +19464,21 @@
                   "effective": 16,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Function": {
+                  "sharedReleases": 32,
+                  "lastOwnerReleases": 1
+                },
+                "Channel": {
+                  "sharedReleases": 16,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 16,
+                  "lastOwnerReleases": 18
+                }
+              }
             },
             "1024": {
               "managed": {
@@ -18884,7 +19668,21 @@
                   "effective": 1024,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Function": {
+                  "sharedReleases": 2048,
+                  "lastOwnerReleases": 1
+                },
+                "Channel": {
+                  "sharedReleases": 1024,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 1024,
+                  "lastOwnerReleases": 1026
+                }
+              }
             }
           },
           "activeSites": [
@@ -18894,7 +19692,8 @@
               "line": 1426,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -18902,7 +19701,8 @@
               "line": 1429,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 16,
@@ -18910,7 +19710,8 @@
               "line": 1581,
               "indirect": false,
               "source": "fwp_rc_free_arr(value);",
-              "caller": "fwp_rc_resource_free_arr"
+              "caller": "fwp_rc_resource_free_arr",
+              "ownerType": null
             },
             {
               "id": 19,
@@ -18918,7 +19719,8 @@
               "line": 1679,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(f)) return;",
-              "caller": "fwp_closure_drop"
+              "caller": "fwp_closure_drop",
+              "ownerType": "Function"
             },
             {
               "id": 20,
@@ -18926,7 +19728,8 @@
               "line": 1764,
               "indirect": false,
               "source": "V building = fwp_rc_fresh(PTR(r));",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 21,
@@ -18934,7 +19737,8 @@
               "line": 1773,
               "indirect": false,
               "source": "if (fwp_rc_last(f)) c->n = 0;",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 22,
@@ -18942,7 +19746,8 @@
               "line": 1775,
               "indirect": false,
               "source": "V result = fwp_rc_fresh(PTR(r));",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 23,
@@ -18950,7 +19755,8 @@
               "line": 1801,
               "indirect": false,
               "source": "if (fwp_rc_last(f)) c->n = 0;",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 24,
@@ -18958,7 +19764,8 @@
               "line": 1850,
               "indirect": false,
               "source": "fwp_rc_dup(f);",
-              "caller": "fwp_apply_borrowed_span"
+              "caller": "fwp_apply_borrowed_span",
+              "ownerType": null
             },
             {
               "id": 129,
@@ -18966,7 +19773,8 @@
               "line": 9431,
               "indirect": false,
               "source": "V value = fwp_rc_fresh(fwp_p_channel_make(cap));",
-              "caller": "fwp_p_channel_make_owned"
+              "caller": "fwp_p_channel_make_owned",
+              "ownerType": null
             },
             {
               "id": 130,
@@ -18974,7 +19782,8 @@
               "line": 9438,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_channel_drop"
+              "caller": "fwp_channel_drop",
+              "ownerType": "Channel"
             },
             {
               "id": 190,
@@ -18982,7 +19791,8 @@
               "line": 13881,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 192,
@@ -18990,7 +19800,8 @@
               "line": 13885,
               "indirect": false,
               "source": "fwp_rc_free_obj(value);",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 209,
@@ -18998,7 +19809,8 @@
               "line": 15221,
               "indirect": false,
               "source": "for (int i = 0; i < na; i++) av[i] = fwp_rc_fresh(fwp_str_lossy(argv[i + 1], strlen(argv[i + 1])));",
-              "caller": "fwp_exec_run"
+              "caller": "fwp_exec_run",
+              "ownerType": null
             },
             {
               "id": 226,
@@ -19006,7 +19818,8 @@
               "line": 16558,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "String"
             },
             {
               "id": 227,
@@ -19014,7 +19827,8 @@
               "line": 16559,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "String"
             },
             {
               "id": 243,
@@ -19022,7 +19836,8 @@
               "line": 16841,
               "indirect": false,
               "source": "if (!duplicate) { fwp_rc_free_obj(v); }",
-              "caller": "fwp_caps6"
+              "caller": "fwp_caps6",
+              "ownerType": null
             },
             {
               "id": 244,
@@ -19030,7 +19845,8 @@
               "line": 16849,
               "indirect": false,
               "source": "if (start <= 0 && 0 - start < n) { fwp_rc_dup(a[0 - start]); }",
-              "caller": "fwp_args6"
+              "caller": "fwp_args6",
+              "ownerType": null
             },
             {
               "id": 247,
@@ -19038,7 +19854,8 @@
               "line": 16976,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_show_i64(l0));",
-              "caller": "f5"
+              "caller": "f5",
+              "ownerType": null
             },
             {
               "id": 255,
@@ -19046,7 +19863,8 @@
               "line": 17168,
               "indirect": false,
               "source": "fwp_rc_dup(l18);",
-              "caller": "w21"
+              "caller": "w21",
+              "ownerType": null
             },
             {
               "id": 260,
@@ -19054,7 +19872,8 @@
               "line": 17353,
               "indirect": false,
               "source": "fwp_rc_dup(l0);",
-              "caller": "fs10"
+              "caller": "fs10",
+              "ownerType": null
             },
             {
               "id": 261,
@@ -19062,7 +19881,8 @@
               "line": 17359,
               "indirect": false,
               "source": "fwp_rc_dup(l3);",
-              "caller": "fs10"
+              "caller": "fs10",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -19976,7 +20796,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             },
             "16": {
               "managed": {
@@ -20136,7 +20966,21 @@
                   "effective": 16,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Function": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 16
+                },
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 17
+                }
+              }
             },
             "1024": {
               "managed": {
@@ -20296,7 +21140,21 @@
                   "effective": 1024,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Function": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1024
+                },
+                "Channel": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1025
+                }
+              }
             }
           },
           "activeSites": [
@@ -20306,7 +21164,8 @@
               "line": 1426,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -20314,7 +21173,8 @@
               "line": 1429,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 16,
@@ -20322,7 +21182,8 @@
               "line": 1581,
               "indirect": false,
               "source": "fwp_rc_free_arr(value);",
-              "caller": "fwp_rc_resource_free_arr"
+              "caller": "fwp_rc_resource_free_arr",
+              "ownerType": null
             },
             {
               "id": 19,
@@ -20330,7 +21191,8 @@
               "line": 1679,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(f)) return;",
-              "caller": "fwp_closure_drop"
+              "caller": "fwp_closure_drop",
+              "ownerType": "Function"
             },
             {
               "id": 20,
@@ -20338,7 +21200,8 @@
               "line": 1764,
               "indirect": false,
               "source": "V building = fwp_rc_fresh(PTR(r));",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 21,
@@ -20346,7 +21209,8 @@
               "line": 1773,
               "indirect": false,
               "source": "if (fwp_rc_last(f)) c->n = 0;",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 22,
@@ -20354,7 +21218,8 @@
               "line": 1775,
               "indirect": false,
               "source": "V result = fwp_rc_fresh(PTR(r));",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 24,
@@ -20362,7 +21227,8 @@
               "line": 1850,
               "indirect": false,
               "source": "fwp_rc_dup(f);",
-              "caller": "fwp_apply_borrowed_span"
+              "caller": "fwp_apply_borrowed_span",
+              "ownerType": null
             },
             {
               "id": 129,
@@ -20370,7 +21236,8 @@
               "line": 9431,
               "indirect": false,
               "source": "V value = fwp_rc_fresh(fwp_p_channel_make(cap));",
-              "caller": "fwp_p_channel_make_owned"
+              "caller": "fwp_p_channel_make_owned",
+              "ownerType": null
             },
             {
               "id": 130,
@@ -20378,7 +21245,8 @@
               "line": 9438,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_channel_drop"
+              "caller": "fwp_channel_drop",
+              "ownerType": "Channel"
             },
             {
               "id": 190,
@@ -20386,7 +21254,8 @@
               "line": 13881,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 192,
@@ -20394,7 +21263,8 @@
               "line": 13885,
               "indirect": false,
               "source": "fwp_rc_free_obj(value);",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 209,
@@ -20402,7 +21272,8 @@
               "line": 15221,
               "indirect": false,
               "source": "for (int i = 0; i < na; i++) av[i] = fwp_rc_fresh(fwp_str_lossy(argv[i + 1], strlen(argv[i + 1])));",
-              "caller": "fwp_exec_run"
+              "caller": "fwp_exec_run",
+              "ownerType": null
             },
             {
               "id": 231,
@@ -20410,7 +21281,8 @@
               "line": 16587,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop4"
+              "caller": "fwp_drop4",
+              "ownerType": "String"
             },
             {
               "id": 232,
@@ -20418,7 +21290,8 @@
               "line": 16588,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop4"
+              "caller": "fwp_drop4",
+              "ownerType": "String"
             },
             {
               "id": 239,
@@ -20426,7 +21299,8 @@
               "line": 16774,
               "indirect": false,
               "source": "if (!duplicate) { fwp_rc_free_obj(v); }",
-              "caller": "fwp_caps40"
+              "caller": "fwp_caps40",
+              "ownerType": null
             },
             {
               "id": 245,
@@ -20434,7 +21308,8 @@
               "line": 17048,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_p_str_repeat(l0, l1));",
-              "caller": "f38"
+              "caller": "f38",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -20802,7 +21677,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Map[I64, I64]": {
+                  "sharedReleases": 1,
+                  "lastOwnerReleases": 1
+                },
+                "List[()]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             }
           },
           "activeSites": [
@@ -20812,7 +21697,8 @@
               "line": 1425,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -20820,7 +21706,8 @@
               "line": 1428,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 86,
@@ -20828,7 +21715,8 @@
               "line": 6076,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_map_alloc(capacity, columns));",
-              "caller": "fwp_map_typed_new"
+              "caller": "fwp_map_typed_new",
+              "ownerType": null
             },
             {
               "id": 226,
@@ -20836,7 +21724,8 @@
               "line": 16551,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Map[I64, I64]"
             },
             {
               "id": 227,
@@ -20844,7 +21733,8 @@
               "line": 16552,
               "indirect": false,
               "source": "fwp_rc_free_arr(v);",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Map[I64, I64]"
             },
             {
               "id": 228,
@@ -20852,7 +21742,8 @@
               "line": 16560,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "List[()]"
             },
             {
               "id": 229,
@@ -20860,7 +21751,8 @@
               "line": 16562,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "List[()]"
             },
             {
               "id": 241,
@@ -20868,7 +21760,8 @@
               "line": 16683,
               "indirect": false,
               "source": "static V caf6(void) { V value = fwp_caf_state6 ? fwp_caf_value6 : fwp_caf_init6(); fwp_rc_dup(value); return value; }",
-              "caller": "caf6"
+              "caller": "caf6",
+              "ownerType": null
             },
             {
               "id": 246,
@@ -20876,7 +21769,8 @@
               "line": 16793,
               "indirect": false,
               "source": "V t9 = fwp_rc_fresh(fwp_data(1, 2, (V[]){t6, (V)0}));",
-              "caller": "f0"
+              "caller": "f0",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -21746,7 +22640,33 @@
                   "effective": 1640,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 5120,
+                  "lastOwnerReleases": 5742
+                },
+                "List[String]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 4096
+                },
+                "Map[String, I64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 8
+                },
+                "List[(String, I64)]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 517
+                },
+                "(String, I64)": {
+                  "sharedReleases": 778,
+                  "lastOwnerReleases": 256
+                },
+                "(I64, String)": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 256
+                }
+              }
             },
             "65536-4096": {
               "managed": {
@@ -22080,7 +23000,33 @@
                   "effective": 26216,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 81920,
+                  "lastOwnerReleases": 91758
+                },
+                "List[String]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 65536
+                },
+                "Map[String, I64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 12
+                },
+                "List[(String, I64)]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 8197
+                },
+                "(String, I64)": {
+                  "sharedReleases": 12298,
+                  "lastOwnerReleases": 4096
+                },
+                "(I64, String)": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 4096
+                }
+              }
             }
           },
           "activeSites": [
@@ -22090,7 +23036,8 @@
               "line": 1359,
               "indirect": true,
               "source": "static inline void fwp_rc_dup(V v) {",
-              "caller": "fwp_rc_dup"
+              "caller": "fwp_rc_dup",
+              "ownerType": null
             },
             {
               "id": 11,
@@ -22098,7 +23045,8 @@
               "line": 1425,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -22106,7 +23054,8 @@
               "line": 1428,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 19,
@@ -22114,7 +23063,8 @@
               "line": 1678,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(f)) return;",
-              "caller": "fwp_closure_drop"
+              "caller": "fwp_closure_drop",
+              "ownerType": "Function"
             },
             {
               "id": 23,
@@ -22122,7 +23072,8 @@
               "line": 1800,
               "indirect": false,
               "source": "if (fwp_rc_last(f)) c->n = 0;",
-              "caller": "fwp_apply_owned"
+              "caller": "fwp_apply_owned",
+              "ownerType": null
             },
             {
               "id": 24,
@@ -22130,7 +23081,8 @@
               "line": 1849,
               "indirect": false,
               "source": "fwp_rc_dup(f);",
-              "caller": "fwp_apply_borrowed_span"
+              "caller": "fwp_apply_borrowed_span",
+              "ownerType": null
             },
             {
               "id": 30,
@@ -22138,7 +23090,8 @@
               "line": 3414,
               "indirect": false,
               "source": "V node = fwp_rc_fresh(fwp_data(1, 2, fields));",
-              "caller": "fwp_map_finish_protected"
+              "caller": "fwp_map_finish_protected",
+              "ownerType": null
             },
             {
               "id": 37,
@@ -22146,7 +23099,8 @@
               "line": 3757,
               "indirect": false,
               "source": "result.value = fwp_rc_fresh(fwp_cons(value, result.value));",
-              "caller": "fwp_copy_finish"
+              "caller": "fwp_copy_finish",
+              "ownerType": null
             },
             {
               "id": 41,
@@ -22154,7 +23108,8 @@
               "line": 4002,
               "indirect": false,
               "source": "if (!borrowed_tail && fwp_rc_unique(node) == 1) {",
-              "caller": "fwp_p_loop"
+              "caller": null,
+              "ownerType": null
             },
             {
               "id": 42,
@@ -22162,7 +23117,8 @@
               "line": 4004,
               "indirect": false,
               "source": "fwp_rc_free_obj(node);",
-              "caller": "fwp_p_loop"
+              "caller": null,
+              "ownerType": null
             },
             {
               "id": 51,
@@ -22170,7 +23126,8 @@
               "line": 4624,
               "indirect": false,
               "source": "V r = fwp_rc_unique(s) == 1 ? s : fwp_str_new(STR(s)->d, STR(s)->len);",
-              "caller": "fwp_p_case"
+              "caller": "fwp_p_case",
+              "ownerType": null
             },
             {
               "id": 86,
@@ -22178,7 +23135,8 @@
               "line": 6076,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_map_alloc(capacity, columns));",
-              "caller": "fwp_map_typed_new"
+              "caller": "fwp_map_typed_new",
+              "ownerType": null
             },
             {
               "id": 87,
@@ -22186,7 +23144,8 @@
               "line": 6117,
               "indirect": false,
               "source": "int unique = fwp_rc_unique_mut(m);",
-              "caller": "fwp_p_map_insert_typed"
+              "caller": "fwp_p_map_insert_typed",
+              "ownerType": null
             },
             {
               "id": 91,
@@ -22194,7 +23153,8 @@
               "line": 6251,
               "indirect": false,
               "source": "V pair = fwp_rc_fresh(fwp_tuple2(key, value));",
-              "caller": "fwp_p_map_to_list_typed"
+              "caller": "fwp_p_map_to_list_typed",
+              "ownerType": null
             },
             {
               "id": 92,
@@ -22202,7 +23162,8 @@
               "line": 6256,
               "indirect": false,
               "source": "output.value = fwp_rc_fresh(fwp_cons(pair, output.value));",
-              "caller": "fwp_p_map_to_list_typed"
+              "caller": "fwp_p_map_to_list_typed",
+              "ownerType": null
             },
             {
               "id": 93,
@@ -22210,7 +23171,8 @@
               "line": 6480,
               "indirect": false,
               "source": "V r = fwp_rc_fresh(fwp_str_lossy(b.d ? b.d : \"\", b.len));",
-              "caller": "fwp_read_stdin_all"
+              "caller": "fwp_read_stdin_all",
+              "ownerType": null
             },
             {
               "id": 226,
@@ -22218,7 +23180,8 @@
               "line": 16573,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "String"
             },
             {
               "id": 227,
@@ -22226,7 +23189,8 @@
               "line": 16574,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "String"
             },
             {
               "id": 228,
@@ -22234,7 +23198,8 @@
               "line": 16582,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "List[String]"
             },
             {
               "id": 229,
@@ -22242,7 +23207,8 @@
               "line": 16585,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "List[String]"
             },
             {
               "id": 230,
@@ -22250,7 +23216,8 @@
               "line": 16594,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop2"
+              "caller": "fwp_drop2",
+              "ownerType": "Map[String, I64]"
             },
             {
               "id": 231,
@@ -22258,7 +23225,8 @@
               "line": 16596,
               "indirect": false,
               "source": "fwp_rc_free_arr(v);",
-              "caller": "fwp_drop2"
+              "caller": "fwp_drop2",
+              "ownerType": "Map[String, I64]"
             },
             {
               "id": 232,
@@ -22266,7 +23234,8 @@
               "line": 16608,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop5"
+              "caller": "fwp_drop5",
+              "ownerType": "List[(String, I64)]"
             },
             {
               "id": 233,
@@ -22274,7 +23243,8 @@
               "line": 16611,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop5"
+              "caller": "fwp_drop5",
+              "ownerType": "List[(String, I64)]"
             },
             {
               "id": 234,
@@ -22282,7 +23252,8 @@
               "line": 16620,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop6"
+              "caller": "fwp_drop6",
+              "ownerType": "(String, I64)"
             },
             {
               "id": 235,
@@ -22290,7 +23261,8 @@
               "line": 16622,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop6"
+              "caller": "fwp_drop6",
+              "ownerType": "(String, I64)"
             },
             {
               "id": 236,
@@ -22298,7 +23270,8 @@
               "line": 16630,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop7"
+              "caller": "fwp_drop7",
+              "ownerType": "(I64, String)"
             },
             {
               "id": 237,
@@ -22306,7 +23279,8 @@
               "line": 16632,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop7"
+              "caller": "fwp_drop7",
+              "ownerType": "(I64, String)"
             },
             {
               "id": 238,
@@ -22314,7 +23288,8 @@
               "line": 16649,
               "indirect": false,
               "source": "fwp_rc_fresh(v);",
-              "caller": "fwp_own_tree0"
+              "caller": "fwp_own_tree0",
+              "ownerType": null
             },
             {
               "id": 239,
@@ -22322,7 +23297,8 @@
               "line": 16669,
               "indirect": false,
               "source": "fwp_rc_fresh(v);",
-              "caller": "fwp_own_tree1"
+              "caller": "fwp_own_tree1",
+              "ownerType": null
             },
             {
               "id": 240,
@@ -22330,7 +23306,8 @@
               "line": 16741,
               "indirect": false,
               "source": "static V caf31(void) { if (!fwp_caf_state31) { V next = f31(); V previous = fwp_caf_state31 ? fwp_caf_value31 : 0; fwp_caf_value31 = next; fwp_caf_state31 = 1; fwp_drop2(previous); } fwp_rc_dup(fwp_caf_value31); return fwp_caf_value31; }",
-              "caller": "caf31"
+              "caller": "caf31",
+              "ownerType": null
             },
             {
               "id": 244,
@@ -22338,7 +23315,8 @@
               "line": 16778,
               "indirect": false,
               "source": "if (CLO(v)->n > 0) { if (duplicate) fwp_rc_dup(CLO(v)->a[0]); else fwp_drop3(CLO(v)->a[0]); }",
-              "caller": "fwp_caps8"
+              "caller": "fwp_caps8",
+              "ownerType": null
             },
             {
               "id": 245,
@@ -22346,7 +23324,8 @@
               "line": 16779,
               "indirect": false,
               "source": "if (CLO(v)->n > 1) { if (duplicate) fwp_rc_dup(CLO(v)->a[1]); else fwp_drop4(CLO(v)->a[1]); }",
-              "caller": "fwp_caps8"
+              "caller": "fwp_caps8",
+              "ownerType": null
             },
             {
               "id": 250,
@@ -22354,7 +23333,8 @@
               "line": 16791,
               "indirect": false,
               "source": "if (start <= 2 && 2 - start < n) { fwp_rc_dup(a[2 - start]); }",
-              "caller": "fwp_args8"
+              "caller": "fwp_args8",
+              "ownerType": null
             },
             {
               "id": 255,
@@ -22362,7 +23342,8 @@
               "line": 16830,
               "indirect": false,
               "source": "if (CLO(v)->n > 0) { if (duplicate) fwp_rc_dup(CLO(v)->a[0]); else fwp_drop3(CLO(v)->a[0]); }",
-              "caller": "fwp_caps11"
+              "caller": "fwp_caps11",
+              "ownerType": null
             },
             {
               "id": 256,
@@ -22370,7 +23351,8 @@
               "line": 16831,
               "indirect": false,
               "source": "if (CLO(v)->n > 1) { if (duplicate) fwp_rc_dup(CLO(v)->a[1]); else fwp_drop8(CLO(v)->a[1]); }",
-              "caller": "fwp_caps11"
+              "caller": "fwp_caps11",
+              "ownerType": null
             },
             {
               "id": 270,
@@ -22378,7 +23360,8 @@
               "line": 16892,
               "indirect": false,
               "source": "if (start <= 1 && 1 - start < n) { fwp_rc_dup(a[1 - start]); }",
-              "caller": "fwp_args36"
+              "caller": "fwp_args36",
+              "ownerType": null
             },
             {
               "id": 273,
@@ -22386,7 +23369,8 @@
               "line": 16909,
               "indirect": false,
               "source": "if (start <= 1 && 1 - start < n) { fwp_rc_dup(a[1 - start]); }",
-              "caller": "fwp_args37"
+              "caller": "fwp_args37",
+              "ownerType": null
             },
             {
               "id": 274,
@@ -22394,7 +23378,8 @@
               "line": 17053,
               "indirect": false,
               "source": "fwp_rc_dup(l2);",
-              "caller": "w8"
+              "caller": "w8",
+              "ownerType": null
             },
             {
               "id": 275,
@@ -22402,7 +23387,8 @@
               "line": 17058,
               "indirect": false,
               "source": "static V f8(V l0, V l1, V l2) { fwp_wr8 r = w8(l0, l1, l2);  V result = fwp_rc_fresh(fwp_record(2, (V[]){(V)(int64_t)(r.f0), r.f1})); return result; }",
-              "caller": "f8"
+              "caller": "f8",
+              "ownerType": null
             },
             {
               "id": 276,
@@ -22410,7 +23396,8 @@
               "line": 17068,
               "indirect": false,
               "source": "static V f9(V l0) { V field0_0 = OBJ(l0)->f[0]; V field0_1 = OBJ(l0)->f[1]; int move0 = fwp_rc_last(l0); if (move0) { OBJ(l0)->f[0] = 0; } else { fwp_rc_dup(field0_0); } V r = (V)(int64_t)(w9(field0_0, (int64_t)(field0_1))); fwp_drop6(l0); return r; }",
-              "caller": "f9"
+              "caller": "f9",
+              "ownerType": null
             },
             {
               "id": 277,
@@ -22418,7 +23405,8 @@
               "line": 17068,
               "indirect": false,
               "source": "static V f9(V l0) { V field0_0 = OBJ(l0)->f[0]; V field0_1 = OBJ(l0)->f[1]; int move0 = fwp_rc_last(l0); if (move0) { OBJ(l0)->f[0] = 0; } else { fwp_rc_dup(field0_0); } V r = (V)(int64_t)(w9(field0_0, (int64_t)(field0_1))); fwp_drop6(l0); return r; }",
-              "caller": "f9"
+              "caller": "f9",
+              "ownerType": null
             },
             {
               "id": 278,
@@ -22426,7 +23414,8 @@
               "line": 17095,
               "indirect": false,
               "source": "static V f12(V l0) { V field0_0 = OBJ(l0)->f[0]; V field0_1 = OBJ(l0)->f[1]; int move0 = fwp_rc_last(l0); if (move0) { OBJ(l0)->f[0] = 0; } else { fwp_rc_dup(field0_0); } V r = w12(field0_0, (int64_t)(field0_1)); fwp_drop6(l0); return r; }",
-              "caller": "f12"
+              "caller": "f12",
+              "ownerType": null
             },
             {
               "id": 279,
@@ -22434,7 +23423,8 @@
               "line": 17095,
               "indirect": false,
               "source": "static V f12(V l0) { V field0_0 = OBJ(l0)->f[0]; V field0_1 = OBJ(l0)->f[1]; int move0 = fwp_rc_last(l0); if (move0) { OBJ(l0)->f[0] = 0; } else { fwp_rc_dup(field0_0); } V r = w12(field0_0, (int64_t)(field0_1)); fwp_drop6(l0); return r; }",
-              "caller": "f12"
+              "caller": "f12",
+              "ownerType": null
             },
             {
               "id": 280,
@@ -22442,7 +23432,8 @@
               "line": 17104,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_p_format(l0, l1, &d4));",
-              "caller": "f15"
+              "caller": "f15",
+              "ownerType": null
             },
             {
               "id": 282,
@@ -22450,7 +23441,8 @@
               "line": 17161,
               "indirect": false,
               "source": "fwp_value_owner owner = {l2, fwp_drop0}; fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup); V result = fwp_p_replace(l0, l1, l2); if (result == l2) return fwp_value_finish(&owner, &cleanup); fwp_rc_fresh(result); fwp_value_release(&owner); fwp_value_finish(&owner, &cleanup); return result;",
-              "caller": "f34"
+              "caller": "f34",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -22797,7 +23789,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Array[F64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 7
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             }
           },
           "activeSites": [
@@ -22807,7 +23809,8 @@
               "line": 1425,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -22815,7 +23818,8 @@
               "line": 1428,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 63,
@@ -22823,7 +23827,8 @@
               "line": 5329,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_array_new_packed(n, elem));",
-              "caller": "fwp_array_typed_new"
+              "caller": "fwp_array_typed_new",
+              "ownerType": null
             },
             {
               "id": 226,
@@ -22831,7 +23836,8 @@
               "line": 16551,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[F64]"
             },
             {
               "id": 228,
@@ -22839,7 +23845,8 @@
               "line": 16553,
               "indirect": false,
               "source": "fwp_rc_free_arr(v);",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[F64]"
             },
             {
               "id": 229,
@@ -22847,7 +23854,8 @@
               "line": 16561,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "String"
             },
             {
               "id": 230,
@@ -22855,7 +23863,8 @@
               "line": 16562,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "String"
             },
             {
               "id": 249,
@@ -22863,7 +23872,8 @@
               "line": 17249,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_show_array_list(l0, &d0));",
-              "caller": "f68"
+              "caller": "f68",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -23215,7 +24225,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "Array[F64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 199
+                },
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             }
           },
           "activeSites": [
@@ -23225,7 +24245,8 @@
               "line": 1425,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -23233,7 +24254,8 @@
               "line": 1428,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 63,
@@ -23241,7 +24263,8 @@
               "line": 5329,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_array_new_packed(n, elem));",
-              "caller": "fwp_array_typed_new"
+              "caller": "fwp_array_typed_new",
+              "ownerType": null
             },
             {
               "id": 226,
@@ -23249,7 +24272,8 @@
               "line": 16551,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[F64]"
             },
             {
               "id": 228,
@@ -23257,7 +24281,8 @@
               "line": 16553,
               "indirect": false,
               "source": "fwp_rc_free_arr(v);",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[F64]"
             },
             {
               "id": 229,
@@ -23265,7 +24290,8 @@
               "line": 16561,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "String"
             },
             {
               "id": 230,
@@ -23273,7 +24299,8 @@
               "line": 16562,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "String"
             },
             {
               "id": 249,
@@ -23281,7 +24308,8 @@
               "line": 17249,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_show_array_list(l0, &d0));",
-              "caller": "f68"
+              "caller": "f68",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -23955,7 +24983,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Array[I64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             },
             "16": {
               "managed": {
@@ -24073,7 +25111,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Array[I64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             },
             "4096": {
               "managed": {
@@ -24191,7 +25239,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Array[I64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             }
           },
           "activeSites": [
@@ -24201,7 +25259,8 @@
               "line": 1425,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -24209,7 +25268,8 @@
               "line": 1428,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 19,
@@ -24217,7 +25277,8 @@
               "line": 1678,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(f)) return;",
-              "caller": "fwp_closure_drop"
+              "caller": "fwp_closure_drop",
+              "ownerType": "Function"
             },
             {
               "id": 24,
@@ -24225,7 +25286,8 @@
               "line": 1849,
               "indirect": false,
               "source": "fwp_rc_dup(f);",
-              "caller": "fwp_apply_borrowed_span"
+              "caller": "fwp_apply_borrowed_span",
+              "ownerType": null
             },
             {
               "id": 63,
@@ -24233,7 +25295,8 @@
               "line": 5329,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_array_new_packed(n, elem));",
-              "caller": "fwp_array_typed_new"
+              "caller": "fwp_array_typed_new",
+              "ownerType": null
             },
             {
               "id": 190,
@@ -24241,7 +25304,8 @@
               "line": 13880,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 192,
@@ -24249,7 +25313,8 @@
               "line": 13884,
               "indirect": false,
               "source": "fwp_rc_free_obj(value);",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 209,
@@ -24257,7 +25322,8 @@
               "line": 15220,
               "indirect": false,
               "source": "for (int i = 0; i < na; i++) av[i] = fwp_rc_fresh(fwp_str_lossy(argv[i + 1], strlen(argv[i + 1])));",
-              "caller": "fwp_exec_run"
+              "caller": "fwp_exec_run",
+              "ownerType": null
             },
             {
               "id": 226,
@@ -24265,7 +25331,8 @@
               "line": 16543,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[I64]"
             },
             {
               "id": 228,
@@ -24273,7 +25340,8 @@
               "line": 16545,
               "indirect": false,
               "source": "fwp_rc_free_arr(v);",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[I64]"
             }
           ],
           "fileHashes": {
@@ -24986,7 +26054,21 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Array[I64]": {
+                  "sharedReleases": 1,
+                  "lastOwnerReleases": 1
+                },
+                "(Array[I64], Array[I64])": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             },
             "16": {
               "managed": {
@@ -25128,7 +26210,21 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Array[I64]": {
+                  "sharedReleases": 1,
+                  "lastOwnerReleases": 1
+                },
+                "(Array[I64], Array[I64])": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             },
             "4096": {
               "managed": {
@@ -25270,7 +26366,21 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Array[I64]": {
+                  "sharedReleases": 1,
+                  "lastOwnerReleases": 1
+                },
+                "(Array[I64], Array[I64])": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             }
           },
           "activeSites": [
@@ -25280,7 +26390,8 @@
               "line": 1425,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -25288,7 +26399,8 @@
               "line": 1428,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 19,
@@ -25296,7 +26408,8 @@
               "line": 1678,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(f)) return;",
-              "caller": "fwp_closure_drop"
+              "caller": "fwp_closure_drop",
+              "ownerType": "Function"
             },
             {
               "id": 24,
@@ -25304,7 +26417,8 @@
               "line": 1849,
               "indirect": false,
               "source": "fwp_rc_dup(f);",
-              "caller": "fwp_apply_borrowed_span"
+              "caller": "fwp_apply_borrowed_span",
+              "ownerType": null
             },
             {
               "id": 63,
@@ -25312,7 +26426,8 @@
               "line": 5329,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_array_new_packed(n, elem));",
-              "caller": "fwp_array_typed_new"
+              "caller": "fwp_array_typed_new",
+              "ownerType": null
             },
             {
               "id": 190,
@@ -25320,7 +26435,8 @@
               "line": 13880,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 192,
@@ -25328,7 +26444,8 @@
               "line": 13884,
               "indirect": false,
               "source": "fwp_rc_free_obj(value);",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 209,
@@ -25336,7 +26453,8 @@
               "line": 15220,
               "indirect": false,
               "source": "for (int i = 0; i < na; i++) av[i] = fwp_rc_fresh(fwp_str_lossy(argv[i + 1], strlen(argv[i + 1])));",
-              "caller": "fwp_exec_run"
+              "caller": "fwp_exec_run",
+              "ownerType": null
             },
             {
               "id": 226,
@@ -25344,7 +26462,8 @@
               "line": 16552,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[I64]"
             },
             {
               "id": 228,
@@ -25352,7 +26471,8 @@
               "line": 16554,
               "indirect": false,
               "source": "fwp_rc_free_arr(v);",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[I64]"
             },
             {
               "id": 229,
@@ -25360,7 +26480,8 @@
               "line": 16562,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "(Array[I64], Array[I64])"
             },
             {
               "id": 230,
@@ -25368,7 +26489,8 @@
               "line": 16565,
               "indirect": false,
               "source": "fwp_rc_free_obj(v);",
-              "caller": "fwp_drop1"
+              "caller": "fwp_drop1",
+              "ownerType": "(Array[I64], Array[I64])"
             },
             {
               "id": 234,
@@ -25376,7 +26498,8 @@
               "line": 16830,
               "indirect": false,
               "source": "fwp_rc_dup(l1);",
-              "caller": "w2"
+              "caller": "w2",
+              "ownerType": null
             },
             {
               "id": 235,
@@ -25384,7 +26507,8 @@
               "line": 16835,
               "indirect": false,
               "source": "static V f2(V l0) { fwp_wr2 r = w2((int64_t)(l0)); fwp_owner_ctx5 pending_result = {r.f0, r.f1}; fwp_cleanup boxing_cleanup; fwp_cleanup_push(&boxing_cleanup, fwp_owner_release5, &pending_result); V result = fwp_rc_fresh(fwp_record(2, (V[]){r.f0, r.f1})); fwp_cleanup_pop(&boxing_cleanup);return result; }",
-              "caller": "f2"
+              "caller": "f2",
+              "ownerType": null
             }
           ],
           "fileHashes": {
@@ -26053,7 +27177,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Array[I64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             },
             "16": {
               "managed": {
@@ -26171,7 +27305,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Array[I64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             },
             "4096": {
               "managed": {
@@ -26289,7 +27433,17 @@
                   "effective": 1,
                   "last": 0
                 }
-              ]
+              ],
+              "releasesByOwner": {
+                "String": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                },
+                "Array[I64]": {
+                  "sharedReleases": 0,
+                  "lastOwnerReleases": 1
+                }
+              }
             }
           },
           "activeSites": [
@@ -26299,7 +27453,8 @@
               "line": 1425,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_obj"
+              "caller": "fwp_rc_free_obj",
+              "ownerType": null
             },
             {
               "id": 12,
@@ -26307,7 +27462,8 @@
               "line": 1428,
               "indirect": false,
               "source": "if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);",
-              "caller": "fwp_rc_free_arr"
+              "caller": "fwp_rc_free_arr",
+              "ownerType": null
             },
             {
               "id": 19,
@@ -26315,7 +27471,8 @@
               "line": 1678,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(f)) return;",
-              "caller": "fwp_closure_drop"
+              "caller": "fwp_closure_drop",
+              "ownerType": "Function"
             },
             {
               "id": 24,
@@ -26323,7 +27480,8 @@
               "line": 1849,
               "indirect": false,
               "source": "fwp_rc_dup(f);",
-              "caller": "fwp_apply_borrowed_span"
+              "caller": "fwp_apply_borrowed_span",
+              "ownerType": null
             },
             {
               "id": 63,
@@ -26331,7 +27489,8 @@
               "line": 5329,
               "indirect": false,
               "source": "return fwp_rc_fresh(fwp_array_new_packed(n, elem));",
-              "caller": "fwp_array_typed_new"
+              "caller": "fwp_array_typed_new",
+              "ownerType": null
             },
             {
               "id": 190,
@@ -26339,7 +27498,8 @@
               "line": 13880,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(value)) return;",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 192,
@@ -26347,7 +27507,8 @@
               "line": 13884,
               "indirect": false,
               "source": "fwp_rc_free_obj(value);",
-              "caller": "fwp_cli_text_drop"
+              "caller": "fwp_cli_text_drop",
+              "ownerType": "String"
             },
             {
               "id": 209,
@@ -26355,7 +27516,8 @@
               "line": 15220,
               "indirect": false,
               "source": "for (int i = 0; i < na; i++) av[i] = fwp_rc_fresh(fwp_str_lossy(argv[i + 1], strlen(argv[i + 1])));",
-              "caller": "fwp_exec_run"
+              "caller": "fwp_exec_run",
+              "ownerType": null
             },
             {
               "id": 226,
@@ -26363,7 +27525,8 @@
               "line": 16543,
               "indirect": false,
               "source": "if (!fwp_rc_release_last(v)) return;",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[I64]"
             },
             {
               "id": 228,
@@ -26371,7 +27534,8 @@
               "line": 16545,
               "indirect": false,
               "source": "fwp_rc_free_arr(v);",
-              "caller": "fwp_drop0"
+              "caller": "fwp_drop0",
+              "ownerType": "Array[I64]"
             }
           ],
           "fileHashes": {

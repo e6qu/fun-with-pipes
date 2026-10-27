@@ -72,6 +72,9 @@ def parse_profile(stderr, sites):
         for field, count in counts.items():
             totals[sites[number]['operation']][field] += count
     assert totals['dup']['effective'] == managed['retains'], (totals, managed)
+    decrements = (totals['drop']['effective'] + totals['release_last']['effective']
+                  - totals['release_last']['last'])
+    assert decrements == managed['retains'], (decrements, managed)
     return dict(managed=managed, operations=totals,
                 sites=[dict(site=number, **counts) for number, counts in sorted(rows.items())])
 

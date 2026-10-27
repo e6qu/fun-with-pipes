@@ -12,6 +12,7 @@ SPEC = importlib.util.spec_from_file_location(
     'arc_costs', Path(__file__).with_name('measure-arc-costs.py'))
 ARC = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(ARC)
+SUMMARY = ARC.module('summarize-arc-costs')
 
 
 class Evidence(unittest.TestCase):
@@ -32,6 +33,10 @@ class Evidence(unittest.TestCase):
     def test_missing_retain_site(self):
         with self.assertRaises(AssertionError):
             ARC.parse_profile(self.evidence(self.rows[1:], self.managed), self.sites)
+
+    def test_missing_release_site(self):
+        with self.assertRaises(AssertionError):
+            ARC.parse_profile(self.evidence(self.rows[:1], self.managed), self.sites)
 
     def test_duplicate_unknown_and_impossible_rows(self):
         for rows in (self.rows + self.rows[:1], ['ownership-site\t2\t1\t1\t0'],
@@ -54,6 +59,14 @@ class Evidence(unittest.TestCase):
         self.assertEqual(len(masked), len(code))
         self.assertNotIn('fwp_rc_dup', masked)
         self.assertEqual(ARC.OWNERSHIP.function_end(code, code.index('{')), len(code))
+
+    def test_function_boundaries_exclude_global_descriptors_and_handle_cpp(self):
+        code = ('static void first(void) { return; }\n'
+                'static int descriptor = 0;\n'
+                'static void second(int n) {\n'
+                '#ifdef _WIN32\n    if (n) {\n#else\n    if (n != 0) {\n#endif\n'
+                '        descriptor++;\n    }\n}\n')
+        self.assertEqual(SUMMARY.caller_lines(code), [(1, 1, 'first'), (3, 11, 'second')])
 
     def test_comparison_checks_attempts_and_preserves_effective_owners(self):
         old = ARC.parse_profile(self.evidence(self.rows, self.managed), self.sites)

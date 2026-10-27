@@ -818,20 +818,31 @@ fn static_array_callbacks_avoid_owner_checks_and_preserve_partial_cleanup() {
             .arg(&cfile),
     );
     let code = std::fs::read_to_string(cfile).unwrap();
-    let function = |name: &str| {
-        let start = code.find(&format!("/* {name} :")).unwrap();
-        let id = code[start..]
-            .split("static V f")
-            .nth(1)
-            .unwrap()
-            .split('(')
-            .next()
-            .unwrap();
-        format!("f{id}")
-    };
-    let generated = function("generated");
-    let failed = function("failed");
-    let measured = code
+    let probe_cfile = dir.0.join("probe.c");
+    checked(
+        Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--fn", "probe", "--emit-c", "-O2"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&probe_cfile),
+    );
+    let probe_code = std::fs::read_to_string(probe_cfile).unwrap();
+    if let Some(root) = std::env::var_os("FWP_ARC_ARTIFACTS") {
+        let path = PathBuf::from(root).join("static-array-callbacks");
+        std::fs::create_dir_all(&path).unwrap();
+        std::fs::write(path.join("probe.c"), &probe_code).unwrap();
+    }
+    let start = probe_code.find("/* probe :").expect("explicit probe entry");
+    let id = probe_code[start..]
+        .split("static V f")
+        .nth(1)
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    let entry = format!("f{id}");
+    let measured = probe_code
         .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int callback_probe_active;\nstatic size_t callback_probe_retains, callback_probe_drops;")
         .replace("static inline void fwp_rc_dup(V v) {\n", "static inline void fwp_rc_dup(V v) {\n    if (callback_probe_active) callback_probe_retains++;\n")
         .replace("static void fwp_closure_drop(V f) {\n", "static void fwp_closure_drop(V f) {\n    if (callback_probe_active) callback_probe_drops++;\n")
@@ -845,7 +856,7 @@ int main(void) {{
     for(size_t test=0;test<3;test++) {{
         size_t n=lengths[test];
         callback_probe_active=1;
-        V result={generated}((V)n);
+        V result={entry}(FWP_FALSE,(V)n);
         callback_probe_active=0;
         if(callback_probe_retains || callback_probe_drops) return 224;
         if(fwp_array_len(result)!=n) return 226;
@@ -855,7 +866,7 @@ int main(void) {{
     }}
     fwp_handler h; h.prev=fwp_handlers; h.state_depth=fwp_state_len; h.cleanup=fwp_cleanups;
     fwp_handlers=&h;
-    if(!setjmp(h.jb)) {{ {failed}(4); return 228; }}
+    if(!setjmp(h.jb)) {{ {entry}(FWP_TRUE,4); return 228; }}
     fwp_handlers=h.prev;
     if(fwp_cleanups!=h.cleanup || fwp_heap.live!=initial) return 225;
     return 0;
