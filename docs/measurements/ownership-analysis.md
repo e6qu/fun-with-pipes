@@ -265,3 +265,34 @@ caches 443 and 15,031. Both hosts produce identical analysis counts. This is a
 compiler-cost check, not an fwp-versus-C/Rust execution benchmark. Serving requests,
 listener startup and generated-program speed are outside the timer. Full server
 regressions and final-head production checks remain required.
+
+## Current budget repair
+
+At `2499e7b7`, [run 40423924014](https://github.com/e6qu/fun-with-pipes/actions/runs/40423924014)
+passed Linux and failed Intel macOS. At N=64 the separate-site median was
+35.57 ms versus 21.80 ms for merged sites (1.63 times, limit 1.5). Forms analysis
+took 12.02 seconds against the ten-second limit, with the same 591,732 visits,
+2,585 summary updates, 25,817 facts and 591/18,379 type/expression cache entries.
+These elapsed-time failures remain evidence even though previous runs passed.
+
+The repair removes temporary captured-argument copies when a call has
+all its arguments: input summaries can join the original sets directly. Partial
+applications still own their stored captures; over-application still evaluates
+the returned function with the remaining arguments. The analysis rules and timing
+limits are unchanged. Both-host measurements and the production matrix are
+required before claiming an improvement.
+
+[Focused run 40433091299](https://github.com/e6qu/fun-with-pipes/actions/runs/40433091299)
+at `5609b5c7fe4fbd3837781e3ba08a9e46750c09aa` passes both budget tests and all
+192 ordinary library tests on both hosts. Proof rounds, visits, summary updates,
+closure/fact counts and cache entries are unchanged.
+
+| Host | Separate/merged ratio at 16 / 32 / 64 workers | Forms analysis | Entry analysis |
+|---|---|---:|---:|
+| Linux AMD64 | 1.249 / 1.309 / 1.366 | 5.977 s | 3.692 s |
+| Intel macOS | 1.193 / 1.242 / 1.263 | 6.804 s | 4.181 s |
+
+These are passing sessions under the existing budgets. Host load differs from
+the failed session; the elapsed-time difference is not a paired speedup estimate.
+The concrete change removes temporary argument-set copies from fully supplied
+calls. The full native matrix must still verify the final published source.

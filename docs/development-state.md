@@ -1,38 +1,43 @@
 # Current work
 
-**Next:** audit the combined repair's final production, documentation and analysis
-runs on PR #217. Fix every failed target before another push. Squash merge only
-when all required jobs pass on the same head; then continue PLAN.md A2–A6.
+**Next:** publish the verified setup/analysis repair and monitor final-head CI
+with timed wake-ups until every gate passes. Squash merge with one subject
+of at most 80 characters and an empty body, then continue PLAN.md A2–A6.
 
 ## Delivery and evidence
 
 - Worktree: `/private/tmp/fwp-delete-tracing`; branch `delete-tracing-collector`.
-- [PR #217](https://github.com/e6qu/fun-with-pipes/pull/217) is open. Last full run:
-  `6c84631a425ca05c1ce7556cbe1988a0848c5c59`.
-- [Production 40395391896](https://github.com/e6qu/fun-with-pipes/actions/runs/40395391896):
-  benchmarks and both regular macOS jobs pass. Both Linux, both Windows and both
-  macOS ownership jobs fail only the unrelated-error control in
-  `copied_service_values_release_partial_results_and_preserve_aliases`.
-  Completed target audit: Linux 255 per host, regular macOS 131 per host,
-  ownership macOS 124 per host, Windows 149 per host; no other target failed.
-- [Documentation 40395391710](https://github.com/e6qu/fun-with-pipes/actions/runs/40395391710)
-  and both [analysis hosts 40395432328](https://github.com/e6qu/fun-with-pipes/actions/runs/40395432328)
-  pass. The Windows header-order and package-setup repairs are verified by this run.
-- The remaining failure is in the newly added test control: a global string
-  replacement changed both the emitted error and its expected message. Therefore
-  the control returned 0 instead of 247 on all six hosts. The earlier focused
-  probe changed only the producing call, so its success missed the Rust test bug.
-- Repair: replace the complete, uniquely matched `fwp_trap(...)` call; assert the
-  fixture's comparison still expects the original message. Name every variant in
-  assertion failures. Keep all allocation, alias and cleanup checks unchanged.
-- Focused [actual-test verification 40423724806](https://github.com/e6qu/fun-with-pipes/actions/runs/40423724806)
-  uses native GCC and CI compiler `6c84631a`. Diagnostic source `c1e63d04` on
-  `ci-service-value-diagnosis`; passes (6.57 s test execution). It compiles
-  the actual first Rust test body with temporary-directory/C-compiler adapters,
-  rather than reimplementing the control replacements in Python. Full compiler
-  integration still requires the final production matrix.
-- Verified base remains #216 squash `f5621cb46828273f7ce8edf92be4062ccec0f17c`,
-  identical tree to tested `1dd5fcaed7792b5505283b1037a9c22d788a3be5`.
+- [PR #217](https://github.com/e6qu/fun-with-pipes/pull/217) is open; published
+  source `2499e7b737b0684e46d101cb2ceecac062c3a445`.
+- [Production 40423913146](https://github.com/e6qu/fun-with-pipes/actions/runs/40423913146):
+  both regular macOS, both ownership macOS, both Windows and benchmarks pass.
+  ARM64 Linux passes too. AMD64 Linux has two failures with one setup cause:
+  cross-toolchain downloads from Azure's Ubuntu mirror exceeded ten minutes;
+  the skipped `wasm-opt` installation then made the required WASI task check fail.
+  The service error-control repair passes; no other completed AMD64 target fails.
+- [Documentation 40423913144](https://github.com/e6qu/fun-with-pipes/actions/runs/40423913144)
+  passes. [Analysis 40423924014](https://github.com/e6qu/fun-with-pipes/actions/runs/40423924014)
+  passes Linux but fails Intel macOS: N=64 separate/merged medians
+  35.57/21.80 ms exceed the 1.5 ratio; forms analysis takes 12.02 s against 10 s.
+  These limits remain unchanged. Earlier passing runs do not erase these failures.
+- Setup repair selects `https://archive.ubuntu.com/ubuntu/` directly in the
+  runner's AMD64 mirror list, retaining package identities and all timeout limits.
+  The failing mirror kept transferring slowly, so an idle connection timeout
+  could not prevent the overall step deadline. No package or test is skipped.
+- Analysis repair joins captured and newly supplied facts directly for calls
+  with all their arguments. It removes a temporary vector and copied origin sets
+  on each visit; partial and over-applied calls retain their required storage.
+  Summary ordering, scope rules and acceptance budgets are unchanged.
+- [Focused verification 40433091299](https://github.com/e6qu/fun-with-pipes/actions/runs/40433091299),
+  temporary source `5609b5c7fe4fbd3837781e3ba08a9e46750c09aa` on
+  `ci-ownership-setup-repair`, runs both analysis hosts and the actual Linux
+  dependency steps. All three jobs pass: 192 ordinary library tests per analysis
+  host, both existing budget tests and every required setup tool. Proof counts
+  remain unchanged; [measurements](measurements/ownership-analysis.md) record the
+  results. Full production acceptance still requires the published final head.
+- Standing user instruction: remain active, use timed wake-ups to monitor CI,
+  repair failures and squash merge only a passing final head. One-minute
+  `clock.sleep` waits keep this turn active; no detached merge watcher is used.
 
 **GC removal remains unverified.** Require all nine production jobs, documentation
 and both analysis hosts on the repaired final head before merging.
@@ -237,3 +242,16 @@ sampled container memory. This is diagnosis, not native platform acceptance.
   interpreter comparisons and the O2 symbol check; see run `40423724806` above.
 - Guarded Rust formatting, documentation audit and whitespace checks pass:
   163 link sets, 106 immutable preparation anchors and eight roadmap steps.
+
+### Setup and analysis repair verification
+
+- Runner `40433091299`: both analysis hosts pass all 192 ordinary unit tests and
+  the separately executed scaling/startup tests. Linux forms/entries take
+  5.977/3.692 s; Intel 6.804/4.181 s, each under 10 s. Largest-fixture ratios are
+  1.366 and 1.263 respectively, under 1.5. No count or timing budget was raised.
+- The focused dependency job runs the production setup steps. The explicit
+  Ubuntu archive supplies 55.8 MB of cross packages in six seconds; cross GCC,
+  qemu, musl, Clang and wasm-opt 132 are installed and report their versions.
+- Local formatting and workflow checks use `scripts/local-guard.py`; no full
+  build or suite is run locally. The earlier formatting check found line wrapping;
+  `cargo fmt` corrected it before focused runner publication.
