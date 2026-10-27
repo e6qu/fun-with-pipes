@@ -31,6 +31,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use crate::ir::*;
 
 pub(crate) mod borrows;
+pub(crate) mod unique;
 
 type Set = BTreeSet<Local>;
 

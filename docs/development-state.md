@@ -1,9 +1,40 @@
 # Current work
 
-**Next:** publish the combined A2 attribution/A3 static-array-callback PR and run
-its complete production/documentation gates. Both focused Linux hosts pass;
-monitor final-head CI, repair every failure and squash-merge only after green.
-A5's count-free unique array follows this delivery.
+**Next:** add A5's generated-program, failure/cancellation and representation
+controls, then compile and run the complete focused batch on GitHub. Work is isolated in `/private/tmp/fwp-unique-array`,
+branch `unique-array-storage`. PR #218 remains the only open PR; monitor its
+production run `40480893046` at `4e504ee381d1d85f2172b508459d026300013ba5` and
+squash-merge only after all gates pass. Documentation `40480892776`, analysis
+`40480891997` and the benchmark job have passed. No platform failures reported.
+
+A5 preparation is **unverified**: `src/rc/unique.rs` is a proof draft with controls,
+connected to local I64 array generation but not yet compiled. It checks one release per
+normal path, rejects independent owners and requires nonescaping borrowed calls.
+The allocator draft separates chunk headers from count arrays and adds a unique
+allocation kind with no count slots. The backend draft selects it for known capture-free I64 generators whose
+verified ownership body has one release and only nonescaping borrowed uses.
+Metadata probes now cover absent unique counts and counted/unique chunk reuse,
+but the Rust compiler/tests have not been built. Extend teardown/physical
+observers and accounting before any claim of support. A guarded local diagnostic
+replaced the saved GCC-generated C's complete allocator section with the current
+allocator source (no compiler build). Clang O1/O2 passed zeroed unique storage,
+reuse, 301-owner wide counts and zero final live growth. It observed a 40-byte
+chunk header and 8-byte count pointer. This is not GCC or whole-compiler proof. Counted chunks now use a
+separate count allocation; measure its added pointer lookup and allocation cost. `/private/tmp/fwp-a5-review.md` records allocator
+options, exact source paths and the required physical-release/metadata controls.
+A stale ownership-module comment about tracing and the Windows failure-artifact
+step label were corrected. The working-tree primitive inventory passes (394 declarations, 384 symbols,
+40 aliases); its recorded HEAD is the base commit, not a published A5 source.
+Formatting passes. The 40-byte chunk-header probe covers all count slots; unique
+chunks have null count pointers, including counted/unique big-chunk reuse.
+Native metadata probes and generated-array probes are drafted but have not run
+with the current compiler. They require absent count metadata, exactly one free,
+partial-failure cleanup and rejection of omitted-free/extra-count controls.
+The fixture's raw-interpreter outputs and formatting pass with the verified #217
+compiler artifact; this is not new-backend verification. The `unique-arrays`
+focused suite builds current source and runs unit, allocator, array/unwind and
+library-unload checks plus Clippy on native Linux AMD64/ARM64 in one batch.
+All following A2/A3 evidence belongs to PR #218, not to verified A5 support.
 
 ## Current batch
 

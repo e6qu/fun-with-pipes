@@ -175,7 +175,15 @@ fn counted_metadata_releases_values_and_resources() {
                 std::fs::write(path.join(format!("{label}.c")), &measured).unwrap();
                 std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
             }
-            for kind in ["plain", "object", "array", "file", "socket"] {
+            for kind in [
+                "plain",
+                "unique",
+                "unique-reuse",
+                "object",
+                "array",
+                "file",
+                "socket",
+            ] {
                 let output = Command::new(&binary)
                     .env("FWP_METADATA_CASE", kind)
                     .env("FWP_METADATA_FILE", dir.join("resource.dat"))
@@ -191,17 +199,17 @@ fn counted_metadata_releases_values_and_resources() {
                     .split_whitespace()
                     .map(|value| value.parse().unwrap())
                     .collect();
-                assert_eq!(
-                    fields,
-                    [
-                        65536,
-                        4128,
-                        4096,
-                        0,
-                        i64::from(kind == "object" || kind == "array")
-                    ],
-                    "{label}/{kind}"
-                );
+                assert_eq!(fields.len(), 6, "{label}/{kind}");
+                assert_eq!(&fields[..3], &[65536, 40, 8], "{label}/{kind}");
+                assert_eq!(fields[4], 0, "live allocation: {label}/{kind}");
+                assert_eq!(fields[5], i64::from(kind == "object" || kind == "array"));
+                if kind == "unique" {
+                    assert_eq!(fields[3], 0, "unique storage reserved count metadata");
+                } else if kind == "unique-reuse" {
+                    assert_eq!(fields[3], 1, "one counted big allocation after reuse");
+                } else {
+                    assert!(fields[3] > 0, "counted storage lost count metadata");
+                }
                 if let Some(path) = &artifacts {
                     std::fs::write(path.join(format!("{label}-{kind}.stdout")), &output.stdout)
                         .unwrap();

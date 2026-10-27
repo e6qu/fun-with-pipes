@@ -1,5 +1,5 @@
-//! Ownership at native primitive boundaries. Unproved heap-sharing boundaries
-//! still require tracing; checked ARC rejects them rather than retaining forever.
+//! Ownership at native primitive boundaries. Unproved owning cycles and lifetime
+//! boundaries are rejected; neither tracing nor permanent retention is available.
 //! Contracts cover containers, text/byte results and synchronous list callbacks.
 //! Array/map/set elements are typed owners. Spawned tasks take a counted
 //! callback owner. Synchronous service scopes borrow callbacks; detached children
@@ -150,8 +150,11 @@ impl Contract {
 /// Hash only reads typed bytes and returns an immediate fingerprint. Array list
 /// display copies numeric text into a fresh string without retaining its input. Synchronous
 /// callbacks may return captured children, but never the callback object itself.
+/// Array reads return a scalar or separately owned element, never the outer array.
 pub fn borrows_without_escape(symbol: &str, index: usize) -> bool {
-    if matches!(symbol, "hash" | "array._show-list") && index == 0 {
+    if (matches!(symbol, "hash" | "array._show-list" | "array.length") && index == 0)
+        || (symbol == "array.get" && index == 1)
+    {
         return true;
     }
     primitive(symbol).is_some_and(|c| c.borrows_callback() && c.callback_argument() == Some(index))
@@ -752,6 +755,8 @@ mod tests {
 
     #[test]
     fn borrowed_arguments_need_an_independent_nonescape_proof() {
+        assert!(borrows_without_escape("array.length", 0));
+        assert!(borrows_without_escape("array.get", 1));
         assert!(borrows_without_escape("hash", 0));
         assert!(!borrows_without_escape("hash", 1));
         assert!(borrows_without_escape("array._show-list", 0));
