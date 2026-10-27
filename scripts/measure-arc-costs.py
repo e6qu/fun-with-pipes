@@ -92,6 +92,30 @@ def cases():
         yield 'buffer-' + entry, source, entry, [(str(n), b'') for n in (0, 16, 4096)]
 
 
+def comparison_failures(report, baseline):
+    """Check the declared no-capture callback saving without hiding other costs."""
+    old = baseline['hosts'][report['machine']]['cases']
+    assert set(report['cases']) == set(old)
+    failures = []
+    for name, case in report['cases'].items():
+        previous = old[name]
+        if case['sourceSha256'] != previous['sourceSha256']:
+            failures.append(f'{name}: program differs from the measured baseline')
+        assert set(case['inputs']) == set(previous['inputs'])
+        for label, samples in case['inputs'].items():
+            actual, expected = samples[0], previous['inputs'][label]
+            if actual['managed'] != expected['managed']:
+                failures.append(f'{name}/{label}: allocation/retain/live-byte totals changed')
+            for operation, counts in expected['operations'].items():
+                target = dict(counts)
+                if name.startswith('buffer-') and operation in ('dup', 'release_last'):
+                    target['calls'] -= int(label)
+                if actual['operations'][operation] != target:
+                    failures.append(f'{name}/{label}/{operation}: '
+                                    f'{actual["operations"][operation]} != {target}')
+    return failures
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
@@ -101,7 +125,11 @@ def main():
     parser.add_argument('--samples', required=True, type=int)
     parser.add_argument('--timeout', required=True, type=int)
     parser.add_argument('--output', required=True, type=Path)
+    parser.add_argument('--comparison', required=True, choices=('record', 'compare'))
+    parser.add_argument('--baseline', type=Path)
     args = parser.parse_args()
+    if (args.comparison == 'compare') != (args.baseline is not None):
+        parser.error('compare requires --baseline; record does not accept one')
     assert os.environ.get('GITHUB_ACTIONS') == 'true', 'full measurements run on GitHub'
     assert platform.system() == 'Linux' and args.samples >= 2 and args.timeout > 0
     output = args.output.resolve()
@@ -231,6 +259,13 @@ def main():
         result['files'] = {path.name: digest(path) for path in sorted(directory.iterdir()) if path.is_file()}
         (output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
         print(name + ': outputs, baseline counts, site totals and repetitions agree', flush=True)
+    if args.comparison == 'compare':
+        baseline = json.loads(args.baseline.read_text())
+        failures = comparison_failures(report, baseline)
+        report['comparison'] = dict(baselineSource=baseline['source'],
+                                    baselineSha256=digest(args.baseline), failures=failures)
+        (output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
+        assert not failures, '\n'.join(failures)
 
 
 if __name__ == '__main__':

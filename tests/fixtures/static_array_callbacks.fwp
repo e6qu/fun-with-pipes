@@ -1,0 +1,37 @@
+# Known callbacks without captures must preserve effects and partial cleanup.
+export generated : I64 -> Array[I64]
+generated = flip array.generate id
+
+checked-index : I64 -> I64 ! {Error[String]}
+checked-index = if (eq 2) (const "expected index failure" | fail) id
+export failed : I64 -> Array[I64] ! {Error[String]}
+failed = flip array.generate checked-index
+
+logged-index : I64 -> I64 ! {IO}
+logged-index = tap echo
+logged = flip array.generate logged-index
+
+yield-index : I64 -> I64 ! {Async}
+yield-index = tap (const () | task.yield)
+yielded = flip array.generate yield-index
+copy-task : I64 -> () -> Array[I64] ! {Async}
+copy-task = curry (.0 | yielded)
+cancelled =
+    copy-task
+    | task.spawn
+    | tap (const () | task.yield)
+    | tap task.cancel
+    | task.await
+
+export dynamic : (I64 -> I64) -> I64 -> Array[I64]
+dynamic = flip array.generate
+
+main = [
+    0 | generated | echo,
+    4 | generated | both id id | echo,
+    4 | attempt failed | echo,
+    3 | logged | echo,
+    4 | yielded | echo,
+    4 | cancelled | echo,
+    3 | dynamic (add 2) | echo,
+] | ignore

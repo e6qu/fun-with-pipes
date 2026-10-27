@@ -2517,7 +2517,7 @@ struct LoopGen {
 /// The signature of a higher-order primitive specialized for a function
 /// that captures `k` values (`Gen::hofs`).
 fn hof_sig(i: usize, sym: &str, k: usize) -> String {
-    let caps: Vec<String> = (0..k).map(|j| format!("V c{}", j)).collect();
+    let mut parameters: Vec<String> = (0..k).map(|j| format!("V c{}", j)).collect();
     let rest = match sym {
         "fold" | "fold-right" => "V z, V xs",
         "zip-with" => "V ys, V xs",
@@ -2525,7 +2525,8 @@ fn hof_sig(i: usize, sym: &str, k: usize) -> String {
         "array.generate" => "V count",
         _ => "V xs",
     };
-    format!("static V fwp_hof{}({}, {})", i, caps.join(", "), rest)
+    parameters.push(rest.into());
+    format!("static V fwp_hof{}({})", i, parameters.join(", "))
 }
 
 /// Its definition: the runtime's generic loop (runtime/fwp_rt_prims.c),
@@ -5181,12 +5182,12 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// Match the exact callback convention implemented by owned_hof below.
     fn array_callback(&self, id: FuncId, captures: usize) -> bool {
         let function = &self.g.prog.funcs[id];
-        captures > 0
-            && function.arity as usize == captures + 1
+        function.arity as usize == captures + 1
             && scalar(function.ty.params(captures + 1).1).is_some()
-            && function.locals[..captures]
-                .iter()
-                .any(|ty| crate::rc::needs_rc(&self.g.prog.shapes, ty))
+            && (captures == 0
+                || function.locals[..captures]
+                    .iter()
+                    .any(|ty| crate::rc::needs_rc(&self.g.prog.shapes, ty)))
     }
 
     /// Every value read must be a generator/fold's known callback argument.
@@ -5244,7 +5245,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
             if !self.array_callback(g, captures) {
                 return None;
             }
-            if !matches!(callback, Expr::Local(_) | Expr::Apply(_, _)) {
+            if !matches!(callback, Expr::Func(_) | Expr::Local(_) | Expr::Apply(_, _)) {
                 return None;
             }
             // array.generate evaluates its count before the callback. Bind it
@@ -5252,6 +5253,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
             let count_value = self.expr(count);
             let count_value = self.bind(count_value);
             let mut values = match callback {
+                Expr::Func(_) => Vec::new(),
                 Expr::Local(l) => match self.callback_captures.get(l) {
                     Some(values) => values.clone(),
                     None => (0..captures)

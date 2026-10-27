@@ -35,7 +35,7 @@ def instrument(code):
     masked = mask_c(code)
     lines = code.splitlines()
     starts = [0] + [match.end() for match in re.finditer('\n', code)]
-    sites, edits = [], []
+    sites, edits, definitions = [], [], {}
 
     def site(operation, offset, indirect):
         number = len(sites)
@@ -55,7 +55,6 @@ def instrument(code):
         definition_match, = matches
         opening = definition_match.end() - 1
         end = function_end(code, opening)
-        indirect = site(operation, definition_match.start(), True)
         signature = code[definition_match.start():opening]
         renamed = signature.replace(name + '(V v)', name + '_profile(size_t profile_site, V v)')
         body = code[opening:end]
@@ -83,12 +82,23 @@ def instrument(code):
             old = 'if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);'
             assert body.count(old) == 1
             body = body.replace(old, 'if (fwp_rc_last(v)) { ownership_hit(profile_site, 1); fwp_mem_free((void *)(uintptr_t)v); }')
-        # Retain ordinary signatures for actual function-pointer uses. Direct
-        # calls below go to the site-taking function. These diagnostic adapters
-        # are excluded from ordinary binary size and stack measurements.
-        result = 'return ' if definition_match[1] != 'void' else ''
-        wrapper = signature + '{ ' + result + name + f'_profile({indirect}, v); }}'
-        edits.append((definition_match.start(), end, renamed + body + '\n' + wrapper))
+        definitions[operation] = (len(edits), definition_match[1])
+        edits.append((definition_match.start(), end, renamed + body))
+
+    # Preserve each function-pointer construction's identity as well as its ABI.
+    # A single per-operation indirect bucket would merge map keys, sort keys and
+    # copied list elements, losing the ownership attribution this report needs.
+    for match in re.finditer(r'\bfwp_rc_(' + '|'.join(OPERATIONS) + r')\b(?!\s*\()', masked):
+        operation = match[1]
+        number = site(operation, match.start(), True)
+        index, result_type = definitions[operation]
+        helper = f'ownership_indirect_{number}'
+        returns = 'return ' if result_type != 'void' else ''
+        wrapper = (f'\nstatic {result_type} {helper}(V value) {{ '
+                   f'{returns}fwp_rc_{operation}_profile({number}, value); }}')
+        start, end, text = edits[index]
+        edits[index] = (start, end, text + wrapper)
+        edits.append((match.start(), match.end(), helper))
 
     # Rewrite direct calls, including calls between the profiled helpers. Apply
     # them inside replacement bodies as well, using sites in the original input.

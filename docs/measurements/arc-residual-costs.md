@@ -1,9 +1,14 @@
 # Remaining ownership costs after GC removal
 
-This is the current A2 measurement protocol. **Results are pending.** Tracing
+This is the current A2 measurement protocol and measured baseline. Tracing
 removal passed [#217](../roadmap-history.md#tracing-gc-removal-pr-217); it did not
 remove all reference counts or heap storage. This experiment measures the
-remaining work before selecting the next compiler change.
+remaining work before selecting the next compiler change. Both native Linux
+hosts pass [baseline run 40474903463](https://github.com/e6qu/fun-with-pipes/actions/runs/40474903463)
+at source `405bcfde48afdc07267c76251ac3c70a0d346e97`. The
+[audited report](arc-residual-baseline-2026-10-27.json) retains all 13 cases,
+three identical samples per input, active sites, file hashes and ordinary binary
+size/frame evidence. Every operation total agrees between architectures.
 
 An allocation request obtains storage. A retain adds an owner. A release gives
 up an owner; only the last owner permits destruction. A uniqueness check asks
@@ -53,8 +58,9 @@ constant initialization and end after entry and cached-value cleanup, before
 runtime teardown. Final managed live-byte growth must be zero.
 
 `sites.json` maps site IDs to lines in the retained `profile-base.c`. Direct
-calls have their own sites; function-pointer calls have explicit per-operation
-indirect sites. Every site records calls, effective events and (for releases)
+calls have their own sites. The baseline groups function-pointer calls by
+operation; the candidate observer separates their construction sites so map keys
+and sort keys can be attributed independently. Every site records calls, effective events and (for releases)
 last-owner events. A last-owner release and its later physical free are separate
 observations, not two count decrements. Free calls in this report are typed
 ownership frees; raw buffers and other allocator clients need their own observers.
@@ -74,6 +80,29 @@ metadata; the buffer does not carry an inline count field in its payload.
 These are operation counts, **not timing measurements**. Profiling changes code
 and storage. No C/Rust peer is timed, so this report establishes neither a speedup
 nor parity with C/Rust. Separate ordinary binaries provide size/frame evidence.
+
+## First selected change
+
+Generating a 4,096-element numeric array currently makes 4,096 extra retain
+attempts and closure-release checks on the static `id` callback. None changes a
+count, but each inspects ownership metadata. The compiler specializes array
+generation for captured callbacks; it does not yet select that path when there
+are no captures. Extend that existing path to known scalar callbacks with zero
+captures, preserving the array builder's failure/cancellation cleanup.
+
+The predeclared target removes exactly one retain attempt and one closure-release
+check per element in all three buffer fixtures. Effective retains, other ownership
+operations, allocation requests/bytes and peak/final managed charge must remain
+identical. Other fixtures must keep all counts. `compare` checks every row against
+the frozen baseline and reports all mismatches. The ordinary binaries provide
+the code-size and frame-cost comparison. This is A3's first selected class;
+it does **not** remove the array's count metadata or complete A5.
+
+Candidate verification is pending. A semantic fixture covers empty arrays,
+aliases, ordered effects, handled callback errors, yielding, cancellation and
+dynamic callbacks. Native O1/O2 probes require zero callback owner checks for
+known generation and zero retained storage after partial failure. Deliberately
+adding an owner check or omitting partial cleanup must fail those probes.
 
 ## Completion requirement
 

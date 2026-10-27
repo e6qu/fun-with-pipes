@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** run the A2 ownership-cost suite on both native Linux architectures,
-audit every operation against its owner, then select the first removable cost.
+**Next:** verify the A3 static-array-callback change on both native Linux
+architectures and finish A2's per-owner attribution using the saved reports.
 Keep this measurement, the related implementation and documentation in one PR;
 run the full production matrix after the batch is ready.
 
@@ -11,7 +11,14 @@ run the full production matrix after the batch is ready.
 - Base: `9dfa014596e1954e3e67c653123dad77a14f5241`, the verified #217 squash merge.
 - Added a current-compiler [A2 protocol](measurements/arc-residual-costs.md) for
   channel payloads, cached-map reads, word frequency, packed descent and a
-  runtime-sized numeric buffer. Results and per-owner attribution are pending.
+  runtime-sized numeric buffer. Both native hosts pass run `40474903463` at
+  `405bcfde48afdc07267c76251ac3c70a0d346e97`: all 13 cases agree between hosts,
+  all repetitions agree and the omitted-observation control is rejected. The
+  checked report is `measurements/arc-residual-baseline-2026-10-27.json`.
+- Selected A3 change: known scalar array callbacks with no captures use the
+  existing direct-call generator. Target: remove N redundant retain attempts and
+  closure-release checks for N elements; preserve every effective count and
+  allocation/live-byte metric. Candidate verification and full CI are pending.
 - Profiles distinguish attempted/effective retains, releases, last-owner checks,
   uniqueness checks, count initialization and typed frees. Generated-C sites
   explain where operations happen; ordinary binaries retain size/frame evidence.
@@ -40,7 +47,7 @@ All local workloads use `python3 scripts/local-guard.py`; full compiler builds,
 full suites and measurements run on GitHub. The first sandboxed guard invocation
 could not read `ps`; rerunning with process-sampling permission kept all limits.
 
-- `python3 scripts/test-ownership-profile.py`: five reader/lexical controls pass.
+- `python3 scripts/test-ownership-profile.py`: six reader/comparison controls pass.
 - `python3 /private/tmp/fwp-check-ownership-profile.py`: actual emitted runtime
   control passes on Apple Clang 17 ARM64 at O1/O2. Exact totals cover 301 retains,
   wide counts, indirect calls, two frees, unique/shared and unmanaged cases.
@@ -50,6 +57,11 @@ could not read `ps`; rerunning with process-sampling permission kept all limits.
   local/shared/callback arrays. It initially caught reversed `apply` arguments
   in the new callback fixture; `flip apply` fixes the declared function type.
 - No full compiler build, suite or benchmark has run locally.
+- Guarded report audit: both complete artifact sets, hashes, profiles, three
+  samples per input and ordinary binary/stack records agree; 13 cases pass.
+  All focused-job logs are clean. Static-callback raw-interpreter outputs pass;
+  its formatting was corrected with the language formatter. Rust formatting,
+  workflow lint, staged whitespace and the 164-link documentation audit pass.
 
 ## Roadmap status
 

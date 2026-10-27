@@ -55,6 +55,21 @@ class Evidence(unittest.TestCase):
         self.assertNotIn('fwp_rc_dup', masked)
         self.assertEqual(ARC.OWNERSHIP.function_end(code, code.index('{')), len(code))
 
+    def test_comparison_checks_attempts_and_preserves_effective_owners(self):
+        old = ARC.parse_profile(self.evidence(self.rows, self.managed), self.sites)
+        old['operations']['dup']['calls'] = 19
+        old['operations']['release_last']['calls'] = 19
+        case = dict(sourceSha256='same', inputs={'16': old})
+        baseline = dict(hosts={'x86_64': dict(cases={'buffer-unique': case})})
+        current = copy.deepcopy(old)
+        current['operations']['dup']['calls'] -= 16
+        current['operations']['release_last']['calls'] -= 16
+        report = dict(machine='x86_64', cases={'buffer-unique': dict(sourceSha256='same', inputs={'16': [current]})})
+        self.assertEqual(ARC.comparison_failures(report, baseline), [])
+        current['operations']['dup']['effective'] -= 1
+        current['managed']['requests'] += 1
+        self.assertEqual(len(ARC.comparison_failures(report, baseline)), 2)
+
 
 if __name__ == '__main__':
     unittest.main()

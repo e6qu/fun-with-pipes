@@ -794,3 +794,119 @@ fn generated_array_captures_preserve_argument_and_callback_order() {
         }
     }
 }
+
+#[test]
+fn static_array_callbacks_avoid_owner_checks_and_preserve_partial_cleanup() {
+    let dir = Scratch::new("static-callbacks");
+    let source = dir.0.join("callbacks.fwp");
+    std::fs::write(&source, include_str!("fixtures/static_array_callbacks.fwp")).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    assert!(reference.stderr.is_empty());
+    let cfile = dir.0.join("callbacks.c");
+    checked(
+        Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--emit-c", "-O2"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    let function = |name: &str| {
+        let start = code.find(&format!("/* {name} :")).unwrap();
+        let id = code[start..]
+            .split("static V f")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        format!("f{id}")
+    };
+    let generated = function("generated");
+    let failed = function("failed");
+    let measured = code
+        .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int callback_probe_active;\nstatic size_t callback_probe_retains, callback_probe_drops;")
+        .replace("static inline void fwp_rc_dup(V v) {\n", "static inline void fwp_rc_dup(V v) {\n    if (callback_probe_active) callback_probe_retains++;\n")
+        .replace("static void fwp_closure_drop(V f) {\n", "static void fwp_closure_drop(V f) {\n    if (callback_probe_active) callback_probe_drops++;\n")
+        .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)");
+    let probe = format!(
+        r#"
+int main(void) {{
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
+    size_t initial=fwp_heap.live;
+    const size_t lengths[]={{0,16,4096}};
+    for(size_t test=0;test<3;test++) {{
+        size_t n=lengths[test];
+        callback_probe_active=1;
+        V result={generated}((V)n);
+        callback_probe_active=0;
+        if(callback_probe_retains || callback_probe_drops) return 224;
+        if(fwp_array_len(result)!=n) return 226;
+        for(size_t i=0;i<n;i++) if((int64_t)fwp_array_load(result,i,NULL)!=(int64_t)i) return 227;
+        fwp_rc_free_arr(result);
+        if(fwp_heap.live!=initial) return 225;
+    }}
+    fwp_handler h; h.prev=fwp_handlers; h.state_depth=fwp_state_len; h.cleanup=fwp_cleanups;
+    fwp_handlers=&h;
+    if(!setjmp(h.jb)) {{ {failed}(4); return 228; }}
+    fwp_handlers=h.prev;
+    if(fwp_cleanups!=h.cleanup || fwp_heap.live!=initial) return 225;
+    return 0;
+}}
+"#
+    );
+    let measured = measured + &probe;
+    for optimization in ["-O1", "-O2"] {
+        let binary = dir.0.join(format!("semantics{optimization}.exe"));
+        fwp::cgen::compile_c(&code, &binary, optimization).unwrap();
+        let actual = checked(&mut Command::new(&binary));
+        assert_eq!(actual.stdout, reference.stdout, "{optimization}");
+        assert_eq!(actual.stderr, reference.stderr, "{optimization}");
+        for (label, variant, expected) in [
+            ("owned", measured.clone(), 0),
+            (
+                "extra-callback-check",
+                measured.replace(
+                    "callback_probe_active=1;",
+                    "callback_probe_active=1; fwp_rc_dup(0);",
+                ),
+                224,
+            ),
+            (
+                "missing-partial-cleanup",
+                measured.replace(
+                    "fwp_array_builder *owner = arg;",
+                    "fwp_array_builder *owner = arg; (void)owner; return;",
+                ),
+                225,
+            ),
+        ] {
+            let binary = dir.0.join(format!("{label}{optimization}.exe"));
+            fwp::cgen::compile_c(&variant, &binary, optimization).unwrap();
+            let actual = Command::new(&binary).output().unwrap();
+            record_probe::save(
+                "static-array-callbacks",
+                &format!("{label}{optimization}"),
+                &variant,
+                &binary,
+                &actual,
+            );
+            assert_eq!(
+                actual.status.code(),
+                Some(expected),
+                "{label}/{optimization}: {actual:?}"
+            );
+            assert!(
+                actual.stdout.is_empty() && actual.stderr.is_empty(),
+                "{actual:?}"
+            );
+        }
+    }
+}

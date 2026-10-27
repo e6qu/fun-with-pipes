@@ -53,12 +53,15 @@ jobs:
       - name: Build the current compiler
         run: cargo build --locked --release --bin fwp
       - name: Check buffer fixture formatting
-        run: target/release/fwp fmt --check tests/fixtures/unique_buffer_costs.fwp
+        run: target/release/fwp fmt --check tests/fixtures/unique_buffer_costs.fwp tests/fixtures/static_array_callbacks.fwp
+      - name: Verify generated callbacks, aliases, failure and cancellation
+        run: cargo test --locked --release --no-fail-fast --test array_element_ownership --test array_unwind_ownership --test array_loop_borrows -- --nocapture
       - name: Count remaining ownership operations and preserve ordinary binaries
         run: >-
           python3 scripts/measure-arc-costs.py --compiler target/release/fwp
           --cc gcc --objdump objdump --nm nm --samples 3 --timeout 240
-          --output arc-cost-evidence
+          --output arc-cost-evidence --comparison compare
+          --baseline docs/measurements/arc-residual-baseline-2026-10-27.json
       - uses: actions/upload-artifact@v7
         if: always()
         with:
