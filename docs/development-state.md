@@ -1,19 +1,18 @@
 # Current work
 
-**Next:** publish the batched fixture repairs, then run focused correctness checks
-and the independent saved-artifact audit. Run `40510702844` finished on both hosts:
-all 13 cost comparisons passed. The only failures were formatting and missing
-concrete signatures in two new fixture definitions. Both are repaired; the verified
-unchanged formatter/raw interpreter accepted the corrected source under the guard.
-All completed targets and 50 probe statuses per host were audited. Twelve reader
-controls and the local artifact audit pass. Current native probes still need to run.
+**Next:** run `inline-key-time` against the retained A3/A4 artifacts, audit both
+native hosts, then publish the final batch head for all production/analysis gates.
+Focused correctness `40512388783` and saved-artifact audit `40512399031` passed.
+All completed target logs and 62 probe statuses per host were audited, including
+12 inline-key and six scalar/fault outputs. The initial fixture's missing signatures
+and formatting were the only failures; they are fixed.
 
 Work in `/private/tmp/fwp-sort-key-fields`, branch `borrow-sort-key-fields`.
-PR #219 is merged. No active PR yet; publish this combined batch after focused
-repairs and measurements are ready. The branch rebased onto #219 as `b2e90d90`,
-with unchanged tree `592ad8c6fd1b0a3b9eebe1bd14e01827e0adb339`. Remote still points
-to measured `dfd844c1`; preserve the explicit force-with-lease when publishing.
-Tag `evidence/inline-sort-key-probe-dfd844c1` retains the running source.
+PR #219 is merged. The branch rebased onto its verified squash with an identical
+tree; current published source is `e19eed00`. Source `dfd844c1` remains the measured
+compiler/runtime, retained by `evidence/inline-sort-key-probe-dfd844c1`. The next
+commit adds timing and retained reports, not compiler/runtime changes. Keep one
+active PR and defer its full matrix until the batch is ready.
 
 ## Combined A3/A4 work
 
@@ -30,11 +29,10 @@ Tag `evidence/inline-sort-key-probe-dfd844c1` retains the running source.
 - New probes exercise empty/singleton inputs, equal-key stability, integer limits,
   every scratch/output allocation failure, callback-entry interruption and
   deliberately omitted String release or buffer freeing. Source programs cover
-  newly allocated key text, partial key failure and cancellation. These new probes
-  are not verified yet. Concrete fixture signatures and formatting are repaired after auditing both
+  newly allocated key text, partial key failure and cancellation. All new probes passed at e19eed00. Concrete fixture signatures and formatting are repaired after auditing both
   hosts. The failing source never reached these new C probes.
 - Docs remove stale GC-removal status, shorten completed roadmap work and now
-  record verified A5. Current uncommitted docs/signature edits are intentional.
+  record verified A5. A5 delivery records now match its verified merge.
 
 ## Existing evidence
 
@@ -47,8 +45,8 @@ Artifact-only audit `40503213568` passed without rerunning unchanged programs.
 The full report and immutable source tag are linked from the A3 report.
 
 All completed target logs and six scalar/fault artifacts per host were audited.
-The new A4 run is the first measurement of its declared storage/count budget;
-it does not replace or discard A3 observations. Sorting timing and the final
+The A4 report in `measurements/inline-sort-keys-2026-10-27.json` passes its
+declared budget; it does not replace or discard A3 observations. Sorting timing and the final
 production/analysis gates remain required before A4 acceptance.
 
 Local checks used `scripts/local-guard.py`: Rust formatting, workflow lint,

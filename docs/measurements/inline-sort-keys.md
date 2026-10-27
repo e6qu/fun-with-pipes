@@ -1,7 +1,9 @@
 # Keeping sort keys together
 
-This is the A4 implementation and its declared acceptance protocol. Validation
-is pending; [the handoff](../development-state.md) tracks the active source.
+This is the A4 implementation and its declared acceptance protocol. All 13
+allocation/count comparisons passed on both Linux architectures; the independent
+artifact audit `40512399031` passed. [The handoff](../development-state.md) tracks
+correctness checks, timing and the remaining production gates.
 It extends [the scalar-read and sort-callback batch](sort-key-ownership.md) before
 that batch's full production validation.
 
@@ -59,6 +61,34 @@ operation/memory budgets. Record binary size, executable section size and each
 function's stack-frame estimate separately; fewer counts do not imply smaller
 code, less stack or faster execution.
 
+## Observed allocation and binary costs
+
+The [complete report](inline-sort-keys-2026-10-27.json) retains source
+`dfd844c1209bb75dc7829bd4fa44f2f50d93a7bb`, measured in `40510702844` and audited
+in `40512399031`. The declared reductions pass exactly on both hosts: 256/4,096
+fewer allocations and effective retains, and 2,032/32,752 fewer requested bytes.
+Peak managed bytes and all count-metadata observations remain unchanged. Both
+sizes finish with zero live managed bytes; the other 12 fixtures retain their
+exact budgets. Removing short-lived keys does not reduce the program's peak,
+which occurs elsewhere.
+
+| Word-frequency binary | A3 baseline | A4 candidate |
+|---|---:|---:|
+| AMD64 executable | 77,128 bytes | 72,560 bytes |
+| AMD64 `.text` | 39,154 bytes | 36,194 bytes |
+| AMD64 `main` frame | 128 bytes | 128 bytes |
+| ARM64 executable | 78,568 bytes | 78,128 bytes |
+| ARM64 `.text` | 38,908 bytes | 35,596 bytes |
+| ARM64 `main` frame | 160 bytes | 160 bytes |
+
+These are actual ordinary executables and GCC frame estimates, not peak runtime
+stack measurements. The initial new fixture failed before native execution
+because two definitions lacked concrete signatures. Formatting and those
+signatures were repaired; all six sort tests passed on both hosts in `40512388783`.
+The 12 inline-key and six scalar-projection probe statuses/outputs per host were
+audited, including deliberate missing-owner/free failures. Compiler/runtime code
+did not change, so the passing measurements were audited rather than rerun.
+
 ## Required verification
 
 The existing sort-callback target adds actual generated-kernel probes at GCC
@@ -73,3 +103,33 @@ Before A4 is complete, retain the observed allocation/count/binary results, meas
 sorting time against the same-host A3 implementation with an identical-code noise
 control, and pass the full production, documentation and analysis gates. Timing
 needs the B1 protocol; operation-count success alone is not a timing result.
+
+## Sorting-time protocol
+
+`inline-key-time` recompiles the retained baseline and candidate generated C with
+the same native GCC O2 flags. It calls their actual word-frequency sort entries;
+it does not reconstruct an allegedly equivalent implementation. The harness
+builds 256 or 4,096 `(word, count)` records once, then checks exact sorted object
+order against C `qsort`. Counts have repeated values, so text breaks ties.
+The timed loop performs 4,096 or 256 complete sorts respectively, including key
+calculation, merge scratch, result-list construction and result release. Input
+construction, the independent order check, process startup and printing are outside
+the monotonic timer. Physical live storage must return to its input baseline after
+the loop and to its empty baseline after releasing input. This is fwp before versus
+fwp after; C `qsort` is a correctness oracle and is not timed as a competing language.
+
+Each sample is a fresh process pinned to CPU 1. Before running the candidate,
+two sampling sessions each take two warmups and six alternating pairs of executions
+of two byte-identical baseline binaries. The budget is `1 + 2E`, where E is the
+largest absolute deviation of a baseline-copy/baseline ratio from 1. The factor 2
+allows observed noise on both sides of a comparison. A control ratio deviation
+over the explicit 10% noise limit rejects the experiment; it does not widen the
+budget. The budget is saved before any candidate timing is observed.
+
+Two subsequent sessions use the same warmups and six alternating baseline/candidate
+pairs. Each session's median candidate/baseline ratio must stay within the frozen
+budget. A ratio below 1 means less time for the candidate; above 1 means extra time.
+Retain every pair, sources, binary hashes, compiler/CPU identity and failures.
+These sessions share a runner. A separate repeat on another runner allocation is
+required before treating the result as a repeatable B1 budget; a single run is
+only the named same-runner observation. General CPU budgets remain separate.
