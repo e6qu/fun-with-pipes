@@ -97,8 +97,8 @@ def cases():
 
 
 def comparison_failures(report, baseline, policy):
-    """Check the declared no-capture callback saving without hiding other costs."""
-    assert policy in ('compare', 'unique-arrays')
+    """Check each declared ownership saving without hiding other costs."""
+    assert policy in ('compare', 'unique-arrays', 'sort-keys')
     old = baseline['hosts'][report['machine']]['cases']
     assert set(report['cases']) == set(old)
     failures = []
@@ -107,9 +107,19 @@ def comparison_failures(report, baseline, policy):
         if case['sourceSha256'] != previous['sourceSha256']:
             failures.append(f'{name}: program differs from the measured baseline')
         assert set(case['inputs']) == set(previous['inputs'])
+        if policy == 'sort-keys':
+            metadata = case.get('countMetadata', {})
+            if set(metadata) != set(previous['countMetadata']):
+                failures.append(f'{name}: missing count metadata observations')
+            for label, samples in metadata.items():
+                if not samples or any(sample != previous['countMetadata'].get(label) for sample in samples):
+                    failures.append(f'{name}/{label}: count metadata changed')
         for label, samples in case['inputs'].items():
             actual, expected = samples[0], previous['inputs'][label]
-            if actual['managed'] != expected['managed']:
+            managed = dict(expected['managed'])
+            words = int(label.split('-')[1]) if policy == 'sort-keys' and name == 'wordfreq' else 0
+            managed['retains'] -= 2 * words
+            if actual['managed'] != managed:
                 failures.append(f'{name}/{label}: allocation/retain/live-byte totals changed')
             for operation, counts in expected['operations'].items():
                 target = dict(counts)
@@ -121,6 +131,18 @@ def comparison_failures(report, baseline, policy):
                         target['effective'] -= 1
                         if operation == 'release_last':
                             target['last'] -= 1
+                if words:
+                    if operation in ('dup', 'release_last'):
+                        target['effective'] -= 2 * words
+                    if operation == 'last':
+                        target['effective'] -= words
+                    # Known callback specialization can also remove no-op
+                    # attempts on static closures. Preserve every observed row;
+                    # allow fewer attempts, but no growth in any operation.
+                    calls = actual['operations'][operation]['calls']
+                    if calls > counts['calls']:
+                        failures.append(f'{name}/{label}/{operation}: helper attempts increased')
+                    target['calls'] = calls
                 if actual['operations'][operation] != target:
                     failures.append(f'{name}/{label}/{operation}: '
                                     f'{actual["operations"][operation]} != {target}')
@@ -188,7 +210,7 @@ def main():
     parser.add_argument('--samples', required=True, type=int)
     parser.add_argument('--timeout', required=True, type=int)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('record', 'compare', 'unique-arrays'))
+    parser.add_argument('--comparison', required=True, choices=('record', 'compare', 'unique-arrays', 'sort-keys'))
     parser.add_argument('--baseline', type=Path)
     args = parser.parse_args()
     if (args.comparison != 'record') != (args.baseline is not None):
@@ -244,7 +266,7 @@ def main():
         (directory / 'profile-sites.c').write_text(measured)
         (directory / 'sites.json').write_text(json.dumps(sites, indent=2) + '\n')
         profiles_to_build = ['ordinary', 'profile-base', 'profile-sites']
-        if args.comparison == 'unique-arrays':
+        if args.comparison in ('unique-arrays', 'sort-keys'):
             (directory / 'profile-metadata.c').write_text(instrument_metadata(base))
             profiles_to_build.append('profile-metadata')
         binaries = {}
@@ -297,7 +319,7 @@ def main():
                                                peakChargedBytes=32, finalChargedBytes=0), base_counts
                 if previous is not None:
                     assert parsed == previous, (name, label, 'unstable counts')
-                if args.comparison == 'unique-arrays':
+                if args.comparison in ('unique-arrays', 'sort-keys'):
                     metadata_result = run([binaries['profile-metadata'], *arguments], data, False)
                     assert metadata_result.stdout == reference.stdout
                     metadata, metadata_managed = parse_metadata(metadata_result.stderr)

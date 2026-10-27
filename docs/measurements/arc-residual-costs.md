@@ -41,7 +41,11 @@ All programs also compare ordinary native output with unoptimized interpretation
 
 ## Execution and evidence
 
-Dispatch the `arc-costs` suite in `.github/workflows/numerics.yml`. It builds the
+The original A2/A3 evidence used the `arc-costs` suite at its recorded source.
+The current suite uses the [sort-key budget](sort-key-ownership.md) against the
+subsequent unique-array baseline. To reproduce historical counts, select their
+recorded source rather than applying an obsolete budget to current code.
+The suite builds the
 current Rust compiler on native Linux AMD64 and ARM64; no previous fwp compiler,
 saved generated program or self-hosting is required. Generated C uses GCC O2,
 GNU C11, disabled floating-point contraction, no fast math and no link-time

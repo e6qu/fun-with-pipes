@@ -53,6 +53,8 @@ main = [
     ["c", "a", "b"] | map concat | sort-by (apply "!") | map (apply "?") | echo,
     "ccc a bb" | words | sort-by (make { 0 = string.length, 1 = id }) | echo,
     [3, 1, 3, 2, 1] | sort-by id | echo,
+    [("b", 2), ("a", 2), ("c", 1)] | sort-by (both (.1 | neg) .0) | echo,
+    [("b", 2), ("a", 2), ("c", 1)] | both (sort-by (both (.1 | neg) .0)) id | echo,
     ["one"] | sort-by trace | echo,
     [] | sort-by trace | echo,
 ] | ignore
@@ -263,5 +265,51 @@ int main(void) {
             checked(&mut Command::new(&exe)).stdout,
             b"scalar key ownership preserved\n"
         );
+    }
+}
+
+#[test]
+fn specialized_sort_keys_preserve_capture_order_failure_and_cancellation() {
+    let dir = Scratch::new("captures");
+    let source = dir.0.join("captures.fwp");
+    let cfile = dir.0.join("captures.c");
+    std::fs::write(&source, include_str!("fixtures/sort_key_captures.fwp")).unwrap();
+    let fwp = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(fwp)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    assert!(reference.stderr.is_empty());
+    let expected = String::from_utf8_lossy(&reference.stdout);
+    assert_eq!(
+        expected.lines().filter(|line| *line == "prefix:").count(),
+        2
+    );
+    for stack in ["0", "1"] {
+        checked(
+            Command::new(fwp)
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_STACK", stack)
+                .args(["build", "--memory", "dynamic", "--emit-c", "-O2"])
+                .arg(&source)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        assert!(
+            emitted.contains("/* sort-by-fn :"),
+            "known sort keys were not specialized"
+        );
+        for opt in ["-O1", "-O2"] {
+            let executable = dir.0.join(format!("captures-{stack}{opt}.exe"));
+            fwp::cgen::compile_c(&emitted, &executable, opt).unwrap();
+            let actual = checked(Command::new(&executable).env("FWP_ALLOC_STATS", "1"));
+            assert_eq!(actual.stdout, reference.stdout, "{stack}/{opt}");
+            let stats = String::from_utf8_lossy(&actual.stderr);
+            let report = allocation_report::parse(&stats).expect("allocation report");
+            assert_eq!(report.live, 0, "{stack}/{opt}: {report:?}");
+        }
     }
 }

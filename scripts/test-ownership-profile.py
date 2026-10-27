@@ -103,6 +103,43 @@ class Evidence(unittest.TestCase):
         report['cases']['buffer-unique']['inputs']['16'][0]['operations']['fresh']['calls'] += 1
         self.assertEqual(len(ARC.comparison_failures(report, baseline, 'unique-arrays')), 1)
 
+    def test_sort_key_budget_preserves_allocations_and_required_owners(self):
+        baseline = json.loads((ARC.ROOT / 'docs/measurements/unique-array-storage-2026-10-27.json').read_text())
+        cases = baseline['hosts']['x86_64']['cases']
+        report = dict(machine='x86_64', cases={})
+        for name, case in cases.items():
+            current = dict(sourceSha256=case['sourceSha256'], inputs={},
+                           countMetadata={label: [copy.deepcopy(value)]
+                                          for label, value in case['countMetadata'].items()})
+            for label, profile in case['inputs'].items():
+                profile = copy.deepcopy(profile)
+                if name == 'wordfreq':
+                    words = int(label.split('-')[1])
+                    profile['managed']['retains'] -= 2 * words
+                    for operation in ('dup', 'release_last', 'last'):
+                        count = words if operation == 'last' else 2 * words
+                        profile['operations'][operation]['effective'] -= count
+                        profile['operations'][operation]['calls'] -= count
+                current['inputs'][label] = [profile]
+            report['cases'][name] = current
+        self.assertEqual(ARC.comparison_failures(report, baseline, 'sort-keys'), [])
+        original = copy.deepcopy(report)
+        for category, field, delta in (('managed', 'requestedBytes', 8),
+                                        ('managed', 'retains', -1),
+                                        ('dup', 'effective', -1),
+                                        ('release_last', 'last', -1)):
+            changed = copy.deepcopy(original)
+            profile = changed['cases']['wordfreq']['inputs']['4096-256'][0]
+            target = profile['managed'] if category == 'managed' else profile['operations'][category]
+            target[field] += delta
+            self.assertTrue(ARC.comparison_failures(changed, baseline, 'sort-keys'))
+        changed = copy.deepcopy(original)
+        changed['cases']['wordfreq']['countMetadata']['4096-256'][0]['requestedCountBytes'] += 1
+        self.assertTrue(ARC.comparison_failures(changed, baseline, 'sort-keys'))
+        changed = copy.deepcopy(original)
+        changed['cases']['wordfreq']['inputs']['4096-256'][0]['operations']['fresh']['calls'] += 1
+        self.assertTrue(ARC.comparison_failures(changed, baseline, 'sort-keys'))
+
     def test_metadata_accounting_and_missing_observations(self):
         metadata = dict(allocationRequests=1, requestedCountBytes=16, releasedCountBytes=0,
                         initialCountBytes=4, finalCountBytes=20, peakCountBytes=20,
