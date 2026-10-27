@@ -106,6 +106,18 @@ def audit(directory, source):
         frozen = dict(row, samples=[])
         frozen.pop('ratios', None)
         assert json.loads((directory / f'budget-{name}.json').read_text()) == frozen
+    controls = {'multiply': (7, 45), 'negative': (1, -7), 'minimum': (1, -9223372036854775808),
+                'missing': None, 'trailing': None, 'invalid': None, 'add-overflow': None, 'mul-overflow': None}
+    assert set(report['peerControls']) == set(controls)
+    for name, expected in controls.items():
+        assert set(report['peerControls'][name]) == {'c', 'rust'}
+        for result in report['peerControls'][name].values():
+            if expected is None:
+                assert result['status'] != 0
+            else:
+                assert result['status'] == 0 and result['stderr'] == ''
+                value = json.loads(result['stdout'])
+                assert (value['nodes'], value['result']) == expected
     assert report['analysis'] == json.loads((directory / 'analysis.json').read_text())
     assert [row['roots'] for row in report['analysis']] == [16, 32, 64]
     for row in report['analysis']:

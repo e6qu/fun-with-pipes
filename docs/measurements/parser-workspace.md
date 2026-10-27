@@ -1,6 +1,9 @@
 # Measuring one parser's tree lifetime
 
-**Protocol under validation in #221; results are pending.** This measures the
+**Protocol under validation in #221; results are pending.** The first measurement
+run, `40593725874`, stopped before timing because its adapter did not recognize
+the earlier compiler’s unboxed scalar entry. The adapter is repaired and checked
+against both emitted representations; those failed jobs establish no speed result. This measures the
 [A6 parser](../parser-workspace.md), which builds a tree and then evaluates it.
 For example, `+ 2 * 3 4` builds five nodes and computes `2 + (3 * 4) = 14`.
 Removing tree-node reference counts does not remove tokenization or every heap

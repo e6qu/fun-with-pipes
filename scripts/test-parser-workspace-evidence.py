@@ -105,11 +105,12 @@ class ParserEvidence(unittest.TestCase):
     def test_missing_or_ambiguous_phase_boundary_is_rejected(self):
         code = '''typedef uint64_t V;
 /* calculate : String -> I64 */
-static V f0(V l0) {
+static int64_t w0(V l0) {
     V t1 = f1(l0);
     fwp_wr2 t2 = w2(l1);
     return t2.f0;
 }
+static V f0(V l0) { V r = (V)(int64_t)(w0(l0)); return r; }
 /* words : String -> List[String] */
 static V f1(V l0) {
     return l0;
@@ -120,7 +121,7 @@ int main(void) {}
         self.assertIn('uint64_t token_start', emitted)
         self.assertIn('uint64_t construct_start', emitted)
         self.assertNotIn('@', emitted)
-        for broken in [code.replace('f1(l0)', 'f3(l0)'),
+        for broken in [code.replace('static V f0(', 'static V f4('), code.replace('f1(l0)', 'f3(l0)'),
                        code.replace('    V t1 = f1(l0);', '    V t1 = f1(l0);\n    V t3 = f1(l0);')]:
             with self.assertRaises(AssertionError):
                 MEASURE.instrument(broken, False, False)

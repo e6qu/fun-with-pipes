@@ -1,8 +1,9 @@
 # Current work
 
-**Next:** run the combined parser correctness/measurement batch on native Linux
-ARM64 and AMD64, audit every job and retained artifact, and fix all failures.
-Only then publish the measurements and run the full final-head production/G2 gate.
+**Next:** rerun the four parser measurement jobs with the repaired entry adapter,
+audit every sample/artifact and fix any remaining failures. Compiler/runtime code
+is unchanged from the passing focused batch. Then publish the measurements and
+run the full final-head production/G2 gate.
 
 [Draft PR #221](https://github.com/e6qu/fun-with-pipes/pull/221) uses
 `/private/tmp/fwp-parser-workspace`, branch `scoped-parser-workspace`, based on
@@ -20,25 +21,32 @@ fwp/C/Rust comparison. A6 is not verified support yet.
 - A public recursive call starts a fresh owner. Helpers within one parse share
   that parse's blocks. Mixed records preserve String/token owners. Cleanup runs
   on normal return, failure and task cancellation.
-- Focused run `40578305643` at `de6e0be935d77cad51e08cd3eeaa8241d61d75bd`
-  passed on both native Linux hosts: 209 unit tests, six allocator tests, five
+- Focused run `40593718067` at `c9df8b8d7cf60eee55d0455973c3b2a7b3d6d1ae`
+  passed on both native Linux hosts: 211 unit tests, six allocator tests, six
   parser tests, two record tests, Clippy and actual WASI O1/O2 controls.
-  All logs and 22 retained probes per host were independently audited for
-  complete outputs, statuses, zero final live storage and binary architecture.
-  Documentation run `40578309634` passed. Draft production jobs were skipped;
+  All logs and 26 retained probes per host were independently audited for
+  complete outputs, statuses, live-storage baselines and binary architecture.
+  Documentation `40593704633` passed. Draft production jobs were skipped;
   they do not establish final platform support.
-- That batch fixed the Ubuntu AMD64 WASI mismatch: unversioned Clang had advanced
-  to 21 while libraries remained LLVM 18. All affected workflows now use one
-  checked setup script pinning Clang, linker and WASI libraries to LLVM 18.
-  It also verified five distinct live owners in the recursive parser example.
-- The next batch avoids copying the whole program when there is no eligible
-  region candidate. It checks completed clone weight, including new context
-  arguments, against the growth budget before publication; the earlier estimate
-  did not precisely bound rewritten size. Added growth controls cover 1/16/32/64
-  roots, with separate pass measurements on runners.
-- A sixth parser test observes cancellation only after five nodes and one block
-  exist, then requires that cancelled cleanup releases them. Omitting that cleanup
-  must fail both the live-block and allocation-report observations.
+- The cancellation observer requires five nodes and one block before cancellation,
+  then verifies the cancelled cleanup. Its missing-free mutation exits 243 and
+  retains storage; ordinary cleanup exits zero with zero final live bytes.
+- Completed clone weight now includes new context arguments and must fit the
+  growth budget before publication. Controls cover 1/16/32/64 roots. Programs
+  without an eligible node/entry avoid a whole-program copy. Direct pass
+  measurements passed on all four native measurement hosts.
+- Measurement run `40593725874` failed identically in all four jobs before timing:
+  the harness expected a generic-value entry, but the previous compiler emits an
+  unboxed scalar worker and public entry bridge. All logs/artifacts were audited.
+  The repaired adapter explicitly checks that bridge and still times the public
+  entry. Local small-input checks passed against both actual retained C forms
+  (#220 baseline and `c9df8b8d` candidate). No compiler change is needed.
+  The repaired batch also runs C/Rust malformed-input, multiplication, signed
+  minimum and overflow controls on the production toolchains.
+- Earlier source/toolchain repairs passed `40578305643`: recursive public calls
+  preserve five separate owners, and Linux WASI compiler/linker/libraries now
+  share an explicitly checked LLVM 18 setup. Unversioned Clang 21 had caused the
+  previous AMD64 link failure; all affected workflows use the shared repair.
 - New measurement tools compare the previous fwp program, the candidate and
   explicit C/Rust indexed arenas. Four fixed tree shapes, 1/16/256 repetitions,
   independently frozen timing budgets, compiler scale, actual binary hashes,
@@ -46,8 +54,8 @@ fwp/C/Rust comparison. A6 is not verified support yet.
   on each Linux architecture. Results are pending, not a claimed speedup.
 - Eight evidence controls pass locally under the guard. Small Clang O2/Rust O2
   harness checks passed values, balanced/left-nested shapes, cleanup, malformed
-  input and overflow. The generated-C harness used retained `de6e0be9` C; this
-  checks instrumentation only, not the pending compiler changes or GCC.
+  input and overflow. The generated-C harness checks instrumentation; it does not replace GCC
+  verification or the complete final-head platform matrix.
 
 ## Checks and the incidental repair
 

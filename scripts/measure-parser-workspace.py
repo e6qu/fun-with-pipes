@@ -44,7 +44,15 @@ def definition(code, name):
 def instrument(code, region, profile):
     """Clock only top-level phase boundaries, including inlined evaluation."""
     entry = definition(code, 'calculate')
-    entry_id, = re.findall(r'static V (f\d+)\(', entry[0])
+    if region:
+        entry_id, = re.findall(r'static V (f\d+)\(', entry[0])
+    else:
+        # The counted scalar entry has an unboxed worker and an exported V
+        # bridge. Time the same public bridge, not a guessed function shape.
+        worker_id, = re.findall(r'static int64_t w(\d+)\(', entry[0])
+        entry_id = 'f' + worker_id
+        bridge = f'static V {entry_id}(V l0) {{ V r = (V)(int64_t)(w{worker_id}(l0)); return r; }}'
+        assert code.count(bridge) == 1, bridge
     root_name = 'calculate'
     if region:
         root_name, = re.findall(r'/\* (calculate \[region \d+\]) :', code)
@@ -175,6 +183,30 @@ def main():
     for path in sorted(args.output.iterdir()):
         if path.suffix in ('.exe', '.c', '.rs', '.su', '.fwp'):
             report['files'][path.name] = dict(sha256=digest(path), bytes=path.stat().st_size)
+    report['peerControls'] = {}
+    for name, text, nodes, expected in [
+        ('multiply', '* + 2 3 + 4 5', 7, 45), ('negative', '-7', 1, -7),
+        ('minimum', '-9223372036854775808', 1, -9223372036854775808),
+        ('missing', '+ 1', 3, None), ('trailing', '1 2', 1, None),
+        ('invalid', 'invalid', 1, None),
+        ('add-overflow', '+ 9223372036854775807 1', 3, None),
+        ('mul-overflow', '* 9223372036854775807 2', 3, None),
+    ]:
+        control = args.output / f'control-{name}.txt'
+        control.write_text(text)
+        results = {}
+        for label in ['c', 'rust']:
+            command = [str(args.output / f'{label}.exe'), str(control), '1', str(expected or 0), str(nodes)]
+            commands.append(command)
+            result = subprocess.run(command, capture_output=True, env=environment, timeout=args.timeout)
+            results[label] = dict(status=result.returncode, stdout=result.stdout.decode(), stderr=result.stderr.decode())
+            if expected is None:
+                assert result.returncode != 0, (name, label)
+            else:
+                value = json.loads(result.stdout)
+                assert result.returncode == 0 and not result.stderr
+                assert value['result'] == expected and value['nodes'] == nodes
+        report['peerControls'][name] = results
     report['analysis'] = json.loads((args.output / 'analysis.json').read_text())
     report['protocol'] = {str(path.relative_to(ROOT)): digest(path) for path in
                           [Path(__file__), ROOT / 'tests/fixtures/parser_workspace_timing.c',
