@@ -2,8 +2,9 @@
 
 These checks measure fwp against itself: an ordinary server, the same server
 with allocation counters, and an intentionally broken release path. They do not
-compare elapsed time with C/Rust or estimate language-wide overhead. Integrated
-results for the collector-removal implementation are still pending.
+compare elapsed time with C/Rust or estimate language-wide overhead. The
+collector-free implementation passed integrated validation in
+[#217](../roadmap-history.md#tracing-gc-removal-pr-217).
 
 [The test](../../tests/server_entry_ownership.rs) uses
 [one service](../../tests/fixtures/server_entries.fwp). REST exposes its functions

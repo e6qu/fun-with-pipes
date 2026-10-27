@@ -65,11 +65,12 @@ CI saves generated C, executables, output and exit status under `record-ownershi
 The related record, constructor and collection probes now save unexpected
 outcomes before asserting success, so a failed check leaves its evidence intact.
 The earlier accepted results are recorded below. They verify their named source
-revision, not the pending collector-removal changes.
+revision. The collector-free changes passed integrated validation in
+[#217](../roadmap-history.md#tracing-gc-removal-pr-217).
 
 See [record cleanup](record-cleanup.md) for constructors and field conversions,
 [ownership](../ownership.md) for the memory contract and [PLAN.md](../../PLAN.md)
-for the remaining removal of tracing and unnecessary reference counting.
+for the remaining work on unnecessary reference counts and allocations.
 
 ## Native acceptance
 
