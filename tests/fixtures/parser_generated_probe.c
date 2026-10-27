@@ -22,9 +22,8 @@ static void parser_remove_block(void *data) {
     exit(250);
 }
 /* GENERATED-PARSER-MAIN */
-static int parser_case(const char *text, int64_t expected, int parse_error,
+static int parser_case_inner(const char *text, int64_t expected, int parse_error,
                        size_t failure, size_t *allocations) {
-    size_t baseline = fwp_heap.live;
     V input = fwp_rc_fresh(fwp_cstr(text));
     fwp_rc_dup(input); /* The caller deliberately keeps an independent alias. */
     fwp_handler handler = {0};
@@ -45,8 +44,19 @@ static int parser_case(const char *text, int64_t expected, int parse_error,
     if (!fwp_rc_slot(input) || *fwp_rc_slot(input) != 1 || strcmp(STR(input)->d, text)) return 249;
     if (!fwp_rc_release_last(input)) return 249;
     fwp_rc_free_obj(input);
-    if (fwp_heap.live != baseline) return 248;
     *allocations = parser_allocations;
+    return 0;
+}
+/* Check after the handler frame returns: WASI return-state storage belongs
+ * to that frame and is released on function exit, independently of the tree. */
+static int parser_case(const char *text, int64_t expected, int parse_error,
+                       size_t failure, size_t *allocations) {
+    size_t baseline = @storage@;
+    @save_counts@
+    int status = parser_case_inner(text, expected, parse_error, failure, allocations);
+    if (status) return status;
+    if (@storage@ != baseline) return 248;
+    @check_counts@
     return 0;
 }
 static size_t parser_leaves, parser_length;
@@ -66,7 +76,7 @@ static void parser_input(unsigned depth) {
 int main(void) {
     fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     fwp_budget = INT32_MAX;
-    const unsigned depths[] = {5, 9, 13};
+    const unsigned depths[] = {@depths@};
     for (size_t shape = 0; shape < sizeof depths / sizeof depths[0]; shape++) {
         parser_leaves = parser_length = 0; parser_expected = 0;
         parser_input(depths[shape]);

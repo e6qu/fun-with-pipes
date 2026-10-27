@@ -60,6 +60,9 @@ fn channel_payload(
                 )?;
             }
             match prog.shapes.get(ty) {
+                Some(TypeShape::RegionLink { .. }) => {
+                    return Err(format!("{path}: invocation-owned links cannot be queued"));
+                }
                 Some(TypeShape::Record(fields)) => {
                     for (name, ty) in fields {
                         channel_payload(prog, ty, channel, seen, &format!("{path}.{name}"))?;
@@ -129,6 +132,21 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
                 _ => {}
             }
             match prog.shapes.get(ty) {
+                Some(TypeShape::RegionLink { owner, variants }) => {
+                    if !prog
+                        .funcs
+                        .get(*owner)
+                        .is_some_and(|f| matches!(f.body, Body::RegionEntry { .. }))
+                        || variants
+                            .iter()
+                            .flat_map(|(_, fields)| fields)
+                            .any(|field| field != ty && field != &MT::con("std::I64"))
+                    {
+                        return Err(format!(
+                            "type `{ty}` has an invalid invocation-owned link contract"
+                        ));
+                    }
+                }
                 Some(TypeShape::Record(fields)) => {
                     for (_, field) in fields {
                         value_type(prog, field, seen)?;

@@ -58,6 +58,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: WASI toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
       - name: Record source and fetch locked dependencies
         run: |
           mkdir parser-workspace-evidence
@@ -86,7 +92,16 @@ jobs:
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: |
           set -o pipefail
-          cargo clippy --locked --lib --test parser_workspace -- -D warnings 2>&1 | tee parser-workspace-evidence/clippy.log
+          cargo clippy --locked --lib --test parser_workspace --test wasm_arc -- -D warnings 2>&1 | tee parser-workspace-evidence/clippy.log
+      - name: Verify actual WASI parser allocation and cleanup
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        env:
+          FWP_REQUIRE_WASI_ARC: 1
+          FWP_WASM_CC: clang
+          FWP_WASI_ARC_ARTIFACTS: parser-workspace-evidence/wasi
+        run: |
+          set -o pipefail
+          cargo test --locked --test wasm_arc wasi_parser_regions_release_blocks_and_keep_links_out_of_count_tables -- --exact --nocapture 2>&1 | tee parser-workspace-evidence/wasi.log
       - uses: actions/upload-artifact@v7
         if: always()
         with:

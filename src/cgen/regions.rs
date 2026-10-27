@@ -428,6 +428,7 @@ mod tests {
         let (prog, node) = program();
         let lowered = lower(&prog);
         crate::ir::check_locals(&lowered).unwrap();
+        crate::arc::check(&lowered, &[0], crate::arc::EntryChannels::Unknown).unwrap();
         let Body::RegionEntry { worker } = lowered.funcs[0].body else {
             panic!("local tree must receive a region");
         };
@@ -523,5 +524,32 @@ mod tests {
             lower(&prog).funcs[0].body,
             Body::RegionEntry { .. }
         ));
+    }
+
+    #[test]
+    fn native_admission_checks_link_owner_and_field_contract() {
+        let (prog, _) = program();
+        for broken_owner in [false, true] {
+            let mut lowered = lower(&prog);
+            let shape = lowered
+                .shapes
+                .values_mut()
+                .find(|shape| matches!(shape, TypeShape::RegionLink { .. }))
+                .unwrap();
+            let TypeShape::RegionLink { owner, variants } = shape else {
+                unreachable!()
+            };
+            if broken_owner {
+                *owner = 1; // An ordinary constructor cannot own a region.
+            } else {
+                variants[0].1.push(MT::con("std::String"));
+            }
+            let error =
+                crate::arc::check(&lowered, &[0], crate::arc::EntryChannels::Unknown).unwrap_err();
+            assert!(
+                error.contains("invalid invocation-owned link contract"),
+                "{error}"
+            );
+        }
     }
 }

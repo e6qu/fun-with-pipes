@@ -3,6 +3,8 @@ use std::process::{Command, Output};
 
 #[path = "support/allocation_report.rs"]
 mod allocation_report;
+#[path = "support/parser_region_probe.rs"]
+mod parser_region_probe;
 #[path = "support/record_probe.rs"]
 mod record_probe;
 
@@ -60,7 +62,7 @@ fn parsing_nested_calls_cancellation_and_escaped_trees_preserve_semantics() {
         }
         for opt in ["-O1", "-O2"] {
             let label = format!("values-stack{stack}{opt}");
-            let executable = dir.join(&format!("{label}.exe"));
+            let executable = dir.join(format!("{label}.exe"));
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
             let output = checked(Command::new(&executable).env("FWP_ALLOC_STATS", "1"));
             record_probe::save("parser_workspace", &label, &code, &executable, &output);
@@ -93,48 +95,7 @@ fn generated_parser_links_avoid_counts_and_release_each_failed_allocation() {
             .arg(&cfile),
     );
     let code = std::fs::read_to_string(cfile).unwrap();
-    let marker = code.find("/* calculate :").expect("calculate entry");
-    let entry = code[marker..]
-        .split("static V f")
-        .nth(1)
-        .unwrap()
-        .split('(')
-        .next()
-        .unwrap();
-    let (declarations, main) = include_str!("fixtures/parser_generated_probe.c")
-        .split_once("/* GENERATED-PARSER-MAIN */")
-        .unwrap();
-    let mut measured = code[..code.find("int main(").unwrap()].replace(
-        "typedef uint64_t V;",
-        &format!("typedef uint64_t V;\n{declarations}"),
-    );
-    for signature in [
-        "static inline V fwp_rc_fresh(V v) {",
-        "static inline void fwp_rc_dup(V v) {",
-        "static inline void fwp_rc_drop(V v) {",
-        "static inline int fwp_rc_release_last(V v) {",
-        "static inline int fwp_rc_unique(V v) {",
-        "static inline int fwp_rc_unique_mut(V v) {",
-        "static inline int fwp_rc_last(V v) {",
-        "static void fwp_rc_share(V v) {",
-        "static void fwp_rc_free_obj(V v) {",
-    ] {
-        assert_eq!(measured.matches(signature).count(), 1, "{signature}");
-        measured = measured.replace(
-            signature,
-            &format!("{signature}\n    parser_link_operation(v);"),
-        );
-    }
-    for (old, new) in [
-        ("        fwp_region_block *fresh =", "        if (++parser_allocations == parser_failure) fwp_fail(0, NULL);\n        fwp_region_block *fresh ="),
-        ("        fresh->capacity = capacity;", "        fresh->capacity = capacity;\n        parser_add_block(fresh->data, capacity);"),
-        ("        fwp_mem_free(block);", "        parser_remove_block(block->data);\n        fwp_mem_free(block);"),
-        ("    return PTR(node);", "    if (PTR(node) % 8 || fwp_rc_slot(PTR(node))) exit(250);\n    parser_nodes++;\n    /* extra-link-count */\n    return PTR(node);"),
-    ] {
-        assert_eq!(measured.matches(old).count(), 1, "{old}");
-        measured = measured.replace(old, new);
-    }
-    measured.push_str(&main.replace("@entry@", &format!("f{entry}")));
+    let measured = parser_region_probe::instrument(&code, "calculate", fwp::cgen::Target::Native);
     for opt in ["-O1", "-O2"] {
         for (name, code, status) in [
             ("ordinary", measured.clone(), 0),
@@ -175,7 +136,7 @@ fn checked_arithmetic_traps_are_not_catchable_parse_errors() {
         ("add", "+ 9223372036854775807 1"),
         ("multiply", "* 9223372036854775807 2"),
     ] {
-        let source = dir.join(&format!("{name}.fwp"));
+        let source = dir.join(format!("{name}.fwp"));
         std::fs::write(
             &source,
             format!("{definitions}\nmain = \"{input}\" | attempt calculate | echo\n"),
@@ -191,7 +152,7 @@ fn checked_arithmetic_traps_are_not_catchable_parse_errors() {
         assert!(reference.stdout.is_empty());
         assert_eq!(reference.stderr, b"fwp: trap: arithmetic overflow in I64\n");
         for opt in ["-O1", "-O2"] {
-            let executable = dir.join(&format!("{name}{opt}.exe"));
+            let executable = dir.join(format!("{name}{opt}.exe"));
             checked(
                 Command::new(compiler)
                     .env_remove("FWP_NO_OPT")

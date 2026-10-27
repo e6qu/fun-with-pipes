@@ -3,6 +3,9 @@
 use std::path::Path;
 use std::process::{Command, Output};
 
+#[path = "support/parser_region_probe.rs"]
+mod parser_region_probe;
+
 fn checked(command: &mut Command) -> Output {
     let output = command.output().unwrap();
     assert!(output.status.success(), "{command:?}: {output:?}");
@@ -1412,6 +1415,72 @@ fn wasi_unique_arrays_have_no_count_entries_and_free_on_failure() {
                         "{name}/{label}/{opt}: expected {expected}, got {output:?}"
                     ));
                 }
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+#[test]
+fn wasi_parser_regions_release_blocks_and_keep_links_out_of_count_tables() {
+    if !available() {
+        return;
+    }
+    let dir = fwp::cgen::TempDir::new("wasi-parser-regions").unwrap();
+    let source = dir.join("parser.fwp");
+    let synchronous = include_str!("fixtures/parser_workspace.fwp")
+        .split_once("# Suspend only")
+        .unwrap()
+        .0;
+    std::fs::write(&source, synchronous).unwrap();
+    let code = emit(
+        &source,
+        &dir.join("parser.c"),
+        &["--fn", "calculate", "-O2"],
+        "wasm32-wasi",
+    );
+    assert!(code.contains("fwp_region region = {0};"));
+    let measured = parser_region_probe::instrument(&code, "calculate", fwp::cgen::Target::Wasi);
+    let mut failures = Vec::new();
+    for opt in ["-O1", "-O2"] {
+        for (name, candidate, expected) in [
+            ("ordinary", measured.clone(), 0),
+            (
+                "extra-count",
+                measured.replace("/* extra-link-count */", "fwp_rc_dup(PTR(node));"),
+                251,
+            ),
+            (
+                "missing-free",
+                measured.replace(
+                    "        fwp_mem_free(block);",
+                    "        /* omitted block free */",
+                ),
+                248,
+            ),
+        ] {
+            let label = format!("parser-{name}{opt}");
+            let binary = dir.join(format!("{label}.wasm"));
+            fwp::cgen::compile_for(&candidate, &binary, opt, fwp::cgen::Target::Wasi).unwrap();
+            let output = wasi(&binary, dir.path()).output().unwrap();
+            if let Some(path) = std::env::var_os("FWP_WASI_ARC_ARTIFACTS") {
+                let path = std::path::PathBuf::from(path);
+                std::fs::create_dir_all(&path).unwrap();
+                std::fs::write(path.join(format!("{label}.c")), &candidate).unwrap();
+                std::fs::copy(&binary, path.join(format!("{label}.wasm"))).unwrap();
+                std::fs::write(path.join(format!("{label}.stdout")), &output.stdout).unwrap();
+                std::fs::write(path.join(format!("{label}.stderr")), &output.stderr).unwrap();
+                std::fs::write(
+                    path.join(format!("{label}.status")),
+                    format!("{:?}\n", output.status.code()),
+                )
+                .unwrap();
+            }
+            if output.status.code() != Some(expected)
+                || !output.stdout.is_empty()
+                || !output.stderr.is_empty()
+            {
+                failures.push(format!("{label}: expected {expected}, got {output:?}"));
             }
         }
     }

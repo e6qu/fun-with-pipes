@@ -21,14 +21,20 @@ fixed inputs. The compiler changes are not verified support yet.
   the block allocator. Mixed records retain their String/token-list owners.
 - Analysis and cloning have program-size budgets. A reverse call graph propagates
   context requirements without repeatedly walking recursive helper bodies.
-- Eleven unit controls and four integration tests cover admission, semantic
+- Twelve unit controls, four native integration tests and one WASI test cover admission, semantic
   agreement, overflow, nested calls, suspension/cancellation, escaped/cached trees,
   block alignment, physical cleanup and every block-allocation failure. The
   generated-parser probe rejects any count operation on a live internal link;
   deliberate extra-count and missing-free mutations must fail their observers.
-- The Rust changes have not been built/run yet. The focused `parser-workspace`
-  suite builds from Rust at production O1, runs unit/affected integration checks,
-  Clippy and generated-C O1/O2 probes with GCC on both Linux architectures.
+- First focused run `40556027459` at `f16da74d` built on both Linux hosts.
+  All 207 units, six allocator tests and two record tests passed. Three parser
+  tests stopped because the ownership checker lacked the new link-shape contract;
+  the block probe passed. Both Clippy jobs reported the same three needless
+  borrows in test paths. Complete logs were audited. The repair checks region
+  owner/field contracts explicitly, adds invalid-contract unit controls and fixes
+  all three lint errors. It also shares the actual-parser observer with WASI,
+  checking physical storage after the handler frame returns. These repairs and
+  WASI execution still need a runner check.
   Full CI remains deferred until this whole batch and its evidence are ready.
 
 ## Checks and the incidental repair
@@ -39,7 +45,8 @@ controls disk readings only inside its copied guard subprocess. It adds exact
 64 GiB acceptance, preflight refusal and refusal during sampling. All nine tests
 pass locally under the real guard. `scripts/local-guard.py` and its limits are
 unchanged. The complete failed job log was audited; these were its only failures.
-The repaired draft documentation gate `40553700208` passed at `ab0fccf1`.
+The repaired draft documentation gates `40553700208` at `ab0fccf1` and
+`40556027112` at `f16da74d` passed.
 
 Other focused local checks, all through `scripts/local-guard.py`:
 
