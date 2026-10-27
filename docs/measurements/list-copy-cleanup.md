@@ -8,8 +8,9 @@ counting (ARC) releases a value when its last owner lets it go.
 
 The current G5 protocol requires ten binaries per host: two program runs, two
 balanced cleanup probes and six omitted-cleanup controls at O1/O2. It has one
-counted ownership model. Its updated artifact reader awaits integrated validation;
-older results below retain their original source and tracing configurations.
+counted ownership model. Its updated artifact reader passed integrated validation in
+[#217](../roadmap-history.md#tracing-gc-removal-pr-217). Older results below retain
+their original source and tracing configurations.
 
 This program sorts words by a newly allocated key string. `attempt` catches the
 error raised for `"b"`, so the result is `Err "expected"`:

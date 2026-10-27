@@ -16,6 +16,7 @@ use crate::ownership::ResultOwnership;
 use crate::value::Value;
 
 mod scalar_text;
+mod sort_keys;
 mod string_map;
 #[path = "cgen_wide.rs"]
 mod wide;
@@ -465,6 +466,8 @@ struct Gen<'p> {
     /// locals and the elements (`opt::specialize_hofs`): the primitive and
     /// the function, and how many locals it captures.
     hofs: Vec<(String, FuncId, usize)>,
+    /// Known scalar/string key workers whose results stay in a typed buffer.
+    inline_sort_keys: Vec<FuncId>,
     /// The unboxed calling convention of each function that has one.
     abis: Vec<Option<Abi>>,
     wide_workers: Vec<bool>,
@@ -5312,6 +5315,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
     }
 
     fn owned_hof(&mut self, id: FuncId, args: &[Expr]) -> Option<String> {
+        if let Some(call) = self.inline_sort_keys(id, args) {
+            return Some(call);
+        }
         if matches!(&self.g.prog.funcs[id].body, Body::Prim(s) if s == "array.generate") {
             let [count, callback] = args else { return None };
             let (g, captures) = self.callback_origin(callback)?;
@@ -8613,47 +8619,53 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                 if let Some(abi) = self.abis[id].clone() {
                     return Ok(self.worker(id, &abi, &e));
                 }
-                let locals = self.prog.funcs[id].locals.clone();
-                let mut fg = FnGen {
-                    live_calls: self.live_calls(id, &e),
-                    g: self,
-                    out: String::new(),
-                    tmp: 0,
-                    label: 0,
-                    indent: 1,
-                    in_loop: None,
-                    fields: HashMap::new(),
-                    locals,
-                    known_tag: HashMap::new(),
-                    vlocals: HashMap::new(),
-                    tokens: Vec::new(),
-                    stack_args: Vec::new(),
-                    stack_children: HashMap::new(),
-                    unique_arrays: HashSet::new(),
-                    known_callbacks: HashMap::new(),
-                    callback_captures: HashMap::new(),
-                    resource_slots: HashMap::new(),
-                    me: id,
-                    tail_calls: tail_calls(&e),
-                };
-                if fg.g.uncounted.self_tail.contains(&id) {
-                    fg.line("fwp_self_again:;");
-                }
-                let borrowed =
-                    fg.g.prog
-                        .borrowed_parameters
-                        .get(&id)
-                        .cloned()
-                        .unwrap_or_default();
-                fg.entry_tick(fg.g.prog.funcs[fg.me].arity, &borrowed);
-                let r = fg.expr(&e);
-                let body = fg.out;
-                out.push_str(&body);
-                let _ = writeln!(out, "    return {};", r);
+                out.push_str(&self.boxed_body(id, &e));
             }
         }
         out.push_str("}\n");
         Ok(out)
+    }
+
+    /// Emit the ownership-lowered body with ordinary boxed parameters.
+    /// Scalar projections use this at their function-value entry so unused
+    /// fields never acquire temporary owners just to enter the direct worker.
+    fn boxed_body(&mut self, id: FuncId, e: &Expr) -> String {
+        let locals = self.prog.funcs[id].locals.clone();
+        let mut fg = FnGen {
+            live_calls: self.live_calls(id, e),
+            g: self,
+            out: String::new(),
+            tmp: 0,
+            label: 0,
+            indent: 1,
+            in_loop: None,
+            fields: HashMap::new(),
+            locals,
+            known_tag: HashMap::new(),
+            vlocals: HashMap::new(),
+            tokens: Vec::new(),
+            stack_args: Vec::new(),
+            stack_children: HashMap::new(),
+            unique_arrays: HashSet::new(),
+            known_callbacks: HashMap::new(),
+            callback_captures: HashMap::new(),
+            resource_slots: HashMap::new(),
+            me: id,
+            tail_calls: tail_calls(e),
+        };
+        if fg.g.uncounted.self_tail.contains(&id) {
+            fg.line("fwp_self_again:;");
+        }
+        let borrowed =
+            fg.g.prog
+                .borrowed_parameters
+                .get(&id)
+                .cloned()
+                .unwrap_or_default();
+        fg.entry_tick(fg.g.prog.funcs[fg.me].arity, &borrowed);
+        let r = fg.expr(e);
+        let _ = writeln!(fg.out, "    return {};", r);
+        fg.out
     }
 
     /// A function with an unboxed calling convention: its worker, and the
@@ -8756,6 +8768,32 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
         let _ = writeln!(out, "    return {};\n}}", ret);
         // the function as a value: unpack, call, box
         let params: Vec<String> = (0..f.arity).map(|i| format!("V l{}", i)).collect();
+        // A pure scalar projection needs no owners for the other fields.
+        // Keep its direct worker for already-separated arguments, but read a
+        // boxed argument in place. The ordinary body preserves entry ticks and
+        // consumes the box after reading, without moving any destruction across
+        // user code. Resource frames and borrowed worker contracts stay separate.
+        let scalar_projection = f.arity == 1
+            && abi.params[0].is_some()
+            && crate::rc::consumes_arg(self.prog, id, 0)
+            && !crate::rc::needs_rc(&self.prog.shapes, f.ty.params(1).1)
+            && !self.resource_type(&f.locals[0])
+            && record_fields(&self.prog.shapes, &f.locals[0]).is_some_and(|fields| {
+                fields
+                    .iter()
+                    .any(|(_, ty)| crate::rc::needs_rc(&self.prog.shapes, ty))
+            })
+            && matches!(&self.uncounted.funcs[id].body,
+                Body::Expr(Expr::Field(base, _)) if matches!(&**base, Expr::Local(0)));
+        if scalar_projection {
+            let _ = writeln!(out, "static V f{id}({}) {{", params.join(", "));
+            for i in f.arity..f.nlocals() {
+                let _ = writeln!(out, "    V l{i} = 0;");
+            }
+            out.push_str(&self.boxed_body(id, e));
+            out.push_str("}\n");
+            return out;
+        }
         let moving_records: Vec<_> = abi
             .params
             .iter()
@@ -9884,6 +9922,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             }),
         loops: Vec::new(),
         hofs: Vec::new(),
+        inline_sort_keys: Vec::new(),
         abis,
         wide_workers,
         noesc: crate::escape::params(prog),
@@ -9981,6 +10020,9 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         bodies.push_str(&g.loop_def(step, record));
         bodies.push('\n');
         li += 1;
+    }
+    for callback in g.inline_sort_keys.clone() {
+        bodies.push_str(&g.inline_sort_keys_def(callback));
     }
     let mut lib_defs = String::new();
     if let Mode::Library(callbacks) = mode {
@@ -10686,6 +10728,9 @@ static const fwp_exec_spec exec_spec{i} = {{
     }
     for (i, (sym, _, k)) in g.hofs.iter().enumerate() {
         let _ = writeln!(out, "{};", hof_sig(i, sym, *k));
+    }
+    for callback in &g.inline_sort_keys {
+        let _ = writeln!(out, "static V fwp_sort_keys{callback}(V xs);");
     }
     // Constant applicative forms retain their typed cached owners.
     out.push_str(&caf_defs);

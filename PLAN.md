@@ -32,15 +32,16 @@ collector is not the same as removing these costs. The
 1. **A2 and the first A3 change shipped in #218.** All production, documentation
    and analysis gates passed. The [per-owner report](docs/measurements/arc-residual-costs.md)
    attributes residual costs and verifies the capture-free callback reduction.
-2. Finish **A5**: the [local-array path](docs/measurements/unique-array-storage.md)
-   removes count storage and the declared count operations. Native/WASI cleanup,
-   metadata and compiler-cost observations are retained; finish the full final-head
-   matrix before marking it complete.
-3. Then group **A3/A4** around word-frequency sort keys. First remove the D String
-   retain/drop pairs performed by the numeric selector for D distinct words; that
-   selector needs only the number. Investigate the associated pair duplication in
-   the same batch. Preserve saved text-key ownership, aliases, failure order and
-   outputs, and compare against the frozen per-owner rows before extending it.
+2. **A5 shipped in #219.** The [local-array path](docs/measurements/unique-array-storage.md)
+   removes count storage and the declared count operations. All nine production
+   jobs, documentation and both analysis hosts passed; native/WASI cleanup,
+   metadata and compiler-cost observations are retained.
+3. **A3/A4 are bundled in PR #220.** [Scalar reads and callback specialization](docs/measurements/sort-key-ownership.md)
+   remove two temporary owners per distinct word. [Contiguous key storage](docs/measurements/inline-sort-keys.md)
+   removes another owner and one key allocation. Both Linux hosts' correctness
+   checks, exact budgets and independent artifact audits pass. Finish isolated
+   timing and the final production/analysis matrix; keep its head unchanged while
+   passing gates run. The initial noisy timing control is retained, not accepted.
    **A6** remains the separately scoped parser-workspace task below.
 4. Preserve **G2**'s [verified analysis budgets](docs/measurements/ownership-analysis.md)
    when changing lifetime analysis. Further precision needs a named failing example
@@ -71,76 +72,23 @@ The table is an index; the concrete work follows it.
 
 ## 1. Remove tracing GC
 
-**G1 — Delivered in #212.** The [entry/rejection matrix](docs/ownership-admission.md)
-maps maintained entries to executed checks and precise raw/optimized rejection
-controls. Extend it when adding entries; do not repeat the completed inventory.
-
-**G2 — Delivered in #216.**
-The [accepted design](docs/gc-removal-design.md) defines weak target identity,
-expiration, acquisition, release ordering and the six boundary examples.
-The compiler rejects unproved owning cycles; returned partial applications remain
-supported. Shared entry admission exposed a false rejection caused by merging
-unrelated callback captures. The repair distinguishes finite IR creation positions.
-[The measured baseline](docs/measurements/ownership-analysis.md) covers 16/32/64
-workers, with paired analysis rules, timing, function/IR sizes, summary updates,
-fact counts and whole-command peak memory. It defines enforced count/time ceilings.
-Three sizes do not prove linear complexity; process RSS does not isolate proof
-heap use. The final source passed both analysis hosts and all production jobs.
-
-**G3 — Delivered in #213/#215.**
-[Weak channels](docs/weak-channels.md) and [retained C callbacks](docs/retained-callbacks.md)
-cover live/expired acquisition, address reuse, active/reentrant calls and cleanup.
-[Lesson 24](docs/tutorials/24-subscriptions/README.md) gives a task-owned subscriber.
-All six [boundary examples](docs/gc-removal-design.md#six-implementation-examples)
-have explicit contracts and regression checks. An acquired strong owner cannot
-be stored where it recreates an unproved cycle. Invalid derivative scopes remain
-rejected. These APIs do not promise arbitrary foreign lifetime inference.
-
-**G4 — Delivered in #214/#215.**
-[Ownership diagnostics](docs/ownership-diagnostics.md) check live allocation
-identities, physical bytes, exact wide counts, child ownership, reuse, unwind,
-weak metadata, actual OS resources, library unload and WASI allocation tables.
-Deliberately broken cleanup must fail each independent observer. The deletion
-table identifies collector-only assertions and the behavior/memory budgets that
-must survive. All nine production jobs and docs passed on the integrated source.
-
-**G5 — Delivered in #217.** Tracing selection and runtime code are deleted, with
-no compatibility switch. Maintained native and WASI programs pass replacement
-ownership, failure/cancellation, physical-release and reuse controls. Actual
-binaries are checked for absent collector symbols. The interpreter and native
-entries retain the same agreed lifetime rules, outputs and error order.
-Allocator, task stacks, resource cleanup and necessary shared counts remain.
-[Ownership diagnostics](docs/ownership-diagnostics.md) records the preserved
-coverage. Historical measurements remain tied to their original sources;
-passing production checks does not remeasure every historical benchmark.
+**G1–G5 are verified.** Entry/cycle rules, weak channels, retained C callbacks,
+replacement ownership diagnostics and collector deletion shipped through #217.
+Preserve the [admission matrix](docs/ownership-admission.md),
+[six boundary contracts](docs/gc-removal-design.md#six-implementation-examples),
+[cleanup/binary checks](docs/ownership-diagnostics.md) and
+[G2 analysis budgets](docs/measurements/ownership-analysis.md).
+[Delivery history](docs/roadmap-history.md#tracing-gc-removal-pr-217) owns the source
+IDs, repairs and passing gates. These are maintained guarantees, not open tasks.
 
 ## 2. Minimize ARC in named unshared paths
 
-**A1 — List-to-array moves and array-sort reuse (delivered in #212).** All nine
-production jobs and documentation passed on the integrated source. The
-[measurement report](docs/measurements/array-sort-ownership.md) records source IDs,
-controls, count savings and code/stack costs.
-An unshared list prefix transfers elements into the array; the first shared node
-and its descendants retain independent owners. Sorting reuses only an eligible
-unique array; aliases/views preserve their original contents. Inline 128-bit
-sorting must not overwrite a later key. Existing focused six-host checks and
-Linux measurements are retained alongside the passing integrated delivery.
-**Done:** the 4,096-word conversion control removes 4,096 retains without extra
-allocations or peak charge; sort reuse removes its measured copy request. Preserve
-failure/cancellation and bit-pattern controls. Report the measured instruction
-and stack growth; do not claim a timing gain from count savings.
-
-**A2 — Account for remaining counts in fixed fixtures (measured; delivery pending).**
-The [current report](docs/measurements/arc-residual-costs.md) attributes all effective
-retains and releases by owner, with unchanged totals on both native Linux hosts.
-Use the text/function
-channel fixtures, cached-map reads, word frequency and packed descent reports.
-For each remaining retain/release identify the owner and source operation in
-`src/rc/borrows.rs`, `src/rc/` or `src/cgen.rs`. Classify it as necessary sharing,
-a missed move/borrow, or bookkeeping for a still-boxed value. Record allocation,
-retain, release, uniqueness-check and live-byte counts separately.
-**Done:** a checked table explains every residual count for these fixtures and
-names the next removable operation; a blanket “reduce ARC” item is not sufficient.
+**A1 is verified in #212.** [List-to-array moves and array-sort reuse](docs/measurements/array-sort-ownership.md)
+remove the measured copying/count costs while preserving aliases and cleanup.
+**A2 is verified in #218.** [The residual-cost report](docs/measurements/arc-residual-costs.md)
+accounts for effective retains/releases in channels, cached maps, word frequency,
+packed descent and local/shared arrays. Use its named owners to select changes;
+preserve source IDs and distinguish code/stack costs from execution speed.
 
 **A3 — Remove only the identified redundant ownership work.** The first class
 shipped in #218: a known scalar array callback with no captures
@@ -152,28 +100,26 @@ exits. Extend existing direct-call, callback and runtime-call ownership tests.
 **Done:** the predeclared per-fixture count reaches its target, live aliases keep
 their values, and destruction timing is unchanged. Necessary shared owners remain.
 
-**A4 — Remove remaining avoidable boxes in those paths.** Measure closure,
-record/variant and loop-state boxes at known call sites. Extend direct-field or
-stack representation only where size and escape lifetime are proved.
-**Done:** the selected allocation disappears in real generated programs, with
-no added count traffic or escaped stack address; report code size and stack cost.
-This is not a requirement that all unbounded or escaping data live on the stack.
+**A4 — Remove the word-frequency sort-key boxes.** The A3 batch still allocates
+one `(I64, String)` key record per distinct word. Prototype contiguous typed key
+storage for this known callback and fixed key layout. Keep the saved String's
+independent owner; comparisons borrow fields, and success/failure/cancellation
+release every initialized field and scratch buffer. Unknown callbacks and other
+layouts retain their existing supported representation.
+Use the existing 256/4,096-distinct-word cases, shared input, equal keys and
+partial-key failures. Compare against the retained A3 report before extending
+record/variant or loop-state storage elsewhere.
+**Done:** D key-box allocations disappear for D distinct words, with no added
+reference counts or escaped scratch addresses. Measure total requested/peak
+bytes, alignment, code size, stack use and sorting time; contiguous storage alone
+does not establish a speedup. This does not require escaping data to live on the stack.
 
-**A5 — Give proved unique heap values an ownership path without counts.**
-Removing retains is insufficient if every buffer still carries a count and checks
-it at destruction. Start with one variable-size array allocated in a function,
-passed only through known non-escaping borrows, then destroyed by that function.
-Prove uniqueness for its complete lifetime in the ownership/escape passes; emit
-one direct destruction path instead of retain/release and uniqueness operations.
-Keep counted representation for values that can actually acquire independent
-owners or cross an unproved boundary; do not invent runtime promotion machinery
-just to cover more cases. No public ownership annotation is assumed.
-**Done:** actual allocated bytes and generated operations show no count slot or
-count checks for the named owned-buffer fixture; failure/cancellation still free
-it exactly once. Alias, captured and unknown-call controls must not select that
-representation. Measure code-size and call-boundary costs before extending it.
-Include attempted weak creation/acquisition as a control: it must not silently
-promote a unique allocation into shared ownership or invalidate the proof.
+**A5 is verified in #219.** The [restricted local-array path](docs/measurements/unique-array-storage.md)
+proves one owner for the whole lifetime, allocates no count slots and frees storage
+directly. Failure/cancellation, alias/capture/unknown-call rejection, weak-channel
+type controls, actual WASI allocation and native binary checks passed. Preserve
+these controls; broader element types, local transfers and loops need their own
+lifetime proof and measured costs before this representation is extended.
 
 **A6 — Give one workspace a region lifetime.** Use a recursive parser that builds
 and walks an expression graph inside one invocation. The invocation owns the
@@ -321,8 +267,7 @@ rules; [feasibility limits](docs/design-limits.md) bound the guarantees.
 
 ## Delivery and acceptance
 
-G3 and G4 shipped together in #215. Keep the remaining GC-removal work together
-where practical. During implementation, run only checks justified by a changed
+Bundle related roadmap work. During implementation, run only checks justified by a changed
 contract, a specific defect or an unresolved concern; do not repeat passing suites
 after every edit or launch full CI for intermediate commits. Write the required
 tests alongside the implementation, even when their broad execution is deferred.

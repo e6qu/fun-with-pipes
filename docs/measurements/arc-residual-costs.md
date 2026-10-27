@@ -1,6 +1,6 @@
 # Remaining ownership costs after GC removal
 
-This is the current A2 measurement protocol and measured baseline. Tracing
+This is the original A2 measurement protocol and baseline. Tracing
 removal passed [#217](../roadmap-history.md#tracing-gc-removal-pr-217); it did not
 remove all reference counts or heap storage. This experiment measures the
 remaining work before selecting the next compiler change. Both native Linux
@@ -14,7 +14,10 @@ An allocation request obtains storage. A retain adds an owner. A release gives
 up an owner; only the last owner permits destruction. A uniqueness check asks
 whether one owner remains so storage can be reused. An attempted operation can
 do nothing, for example when its value is static or has no counted storage.
-Report attempted and effective operations separately.
+Report attempted and effective operations separately. For last-owner queries,
+“effective” counts true results, not every query of counted storage. Later
+[array storage](unique-array-storage.md) and [sort-key](sort-key-ownership.md)
+reports preserve these baselines and describe their own measured changes.
 
 ## Programs and inputs
 
@@ -41,7 +44,11 @@ All programs also compare ordinary native output with unoptimized interpretation
 
 ## Execution and evidence
 
-Dispatch the `arc-costs` suite in `.github/workflows/numerics.yml`. It builds the
+The original A2/A3 evidence used the `arc-costs` suite at its recorded source.
+The current suite uses the [sort-key budget](sort-key-ownership.md) against the
+subsequent unique-array baseline. To reproduce historical counts, select their
+recorded source rather than applying an obsolete budget to current code.
+The suite builds the
 current Rust compiler on native Linux AMD64 and ARM64; no previous fwp compiler,
 saved generated program or self-hosting is required. Generated C uses GCC O2,
 GNU C11, disabled floating-point contraction, no fast math and no link-time
@@ -204,12 +211,12 @@ comparing later representation changes.
 
 ## A5 follow-up: remove the unique array's count storage
 
-These A3 measurements define the next target. At length 4,096, `buffer-unique`
+These historical A3 measurements defined A5’s target. At length 4,096, `buffer-unique`
 still has one array count initialization, one last-owner release, one last-owner
 query and one counted-array free call. Its unrelated CLI String also has an owner;
 removing the array's count cannot remove that String's storage.
 
-The [A5 report](unique-array-storage.md) now records the implemented local-array
-path, paired measurements, metadata layout and cleanup/escape controls. It keeps
-payload allocations separate from count storage and distinguishes implemented
-code from completed platform acceptance. General region inference remains separate.
+The [A5 report](unique-array-storage.md) records the local-array path verified
+in #219, with paired measurements, metadata layout and cleanup/escape controls.
+Payload allocations remain separate from count storage. General region inference
+remains separate.

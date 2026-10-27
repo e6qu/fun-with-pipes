@@ -6,6 +6,23 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Unique local arrays without counts (PR #219)
+
+Selected local `Array[I64]` values now have a compiler-proved single owner,
+no count storage and direct cleanup. Other array shapes keep counted storage.
+The [report](measurements/unique-array-storage.md) covers proof boundaries,
+metadata allocation, code/stack costs, native/WASI probes and compiler cost.
+It makes no execution-speed or general count-free-array claim.
+
+All nine production jobs `40498383568`, documentation `40498379836` and both
+analysis hosts `40498382182` passed at `aab8fe71f4f08ff4dcc8a13624dcfdacfd45e031`.
+Completed logs were audited, including 256 passing target summaries per Linux
+host, 126 per macOS ownership host and 201 per Windows host. Squash merge
+`413a10ebe1b2b08375383bebae8272129043d94a` has the identical tested tree
+`5653457a60d29370c82bad2367f17816860ddba0`. Its message is one 56-character line
+with no body or trailers. Duplicate postmerge CI `40511055857` was cancelled
+after that verification. A5 is complete for the declared local-array shape.
+
 ## Static array callbacks and remaining ARC costs (PR #218)
 
 Creating N array elements through a known capture-free callback no longer makes
@@ -20,7 +37,7 @@ Merged as `cd0b53e27ff71bb266658415886c7bfc117ce9cb`, with tree
 docs `40480892776` and both analysis hosts `40480891997` passed; completed logs
 were audited. The squash subject is one line, 69 characters, with no body or trailers.
 Duplicate postmerge CI/docs runs were cancelled after verifying the identical tree.
-A2 and the first A3 class are delivered; A5 and the rest of ARC minimization remain open.
+This delivered A2 and the first A3 class; later entries record further ARC work.
 
 ## Tracing GC removal (PR #217)
 

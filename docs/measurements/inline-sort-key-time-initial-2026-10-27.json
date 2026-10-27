@@ -1,0 +1,2429 @@
+{
+  "run": "40513939015",
+  "scope": "Initial short batches; AMD64 256-key control was too noisy and its candidate was not measured.",
+  "hosts": {
+    "x86_64": {
+      "baselineSource": "a44ed18ee72301fd9363ef934596064b55eb751f",
+      "candidateSource": "dfd844c1209bb75dc7829bd4fa44f2f50d93a7bb",
+      "protocolSource": "7da1a783402ba02efd77494032da612fa133d66c",
+      "scriptSha256": "09750261650c27e78288767f5d333e039225a0dc03cdca697ec294be023c5d87",
+      "harnessSha256": "517142562e5f23c774c67b75eacd8066fd56cba70568c9ae3c94fff6c46c96ce",
+      "machine": "x86_64",
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.26\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "commands": [
+        [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        [
+          "lscpu"
+        ],
+        [
+          "gcc",
+          "--version"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-fno-fast-math",
+          "-fno-lto",
+          "-fstack-usage",
+          "-w",
+          "sort-timing/baseline.c",
+          "-o",
+          "sort-timing/baseline.exe",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-fno-fast-math",
+          "-fno-lto",
+          "-fstack-usage",
+          "-w",
+          "sort-timing/candidate.c",
+          "-o",
+          "sort-timing/candidate.exe",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ]
+      ],
+      "scope": "fwp A3 versus fwp A4 generated sorting kernels, not C/Rust. Timer includes key calculation, stable sort, result-list construction and release. Input construction, independent order validation, process startup and printing are excluded. Each sample is a fresh process; two sampling sessions share one native runner. These sessions do not establish performance across independent runner allocations.",
+      "settings": {
+        "baseline": "baseline/costs",
+        "candidate": "candidate/costs",
+        "baseline_source": "a44ed18ee72301fd9363ef934596064b55eb751f",
+        "candidate_source": "dfd844c1209bb75dc7829bd4fa44f2f50d93a7bb",
+        "cc": "gcc",
+        "cpu": 1,
+        "samples": 6,
+        "warmups": 2,
+        "small_rounds": 4096,
+        "large_rounds": 256,
+        "max_control_ratio": 1.1,
+        "timeout": 120,
+        "output": "sort-timing"
+      },
+      "files": {
+        "baseline": {
+          "originalC": "0b0e81648571d92b4dd4da1bcc5cbe50dc1b5d9b43290424bdbea754cad00b40",
+          "harness": "a4c5999d92298fe712dac32fe677de8867e523bb31f08235fa50c5e7b474b9fb",
+          "binary": "76f8f63228a5bde2a0900d9b01563af42691a1778c0b3a0b73689314412ec823",
+          "binaryBytes": 77384
+        },
+        "candidate": {
+          "originalC": "5c7e2a04ed183e975c91d115d495af3ad5737348a19b210dea3f4e2d1c43efad",
+          "harness": "d0dea408eddf82b882f53eff90e51620f97ad6f44c2499f8464b9a036e0b0874",
+          "binary": "ecc584d74c521eb5b0cfb69a24ef20175cb711e3027799014286f3c16cd2a1a6",
+          "binaryBytes": 72848
+        }
+      },
+      "cases": {
+        "256": {
+          "elements": 256,
+          "rounds": 4096,
+          "control": [
+            {
+              "session": 0,
+              "pairs": [
+                {
+                  "baseline": 108169473,
+                  "baseline-copy": 112461158
+                },
+                {
+                  "baseline-copy": 107645094,
+                  "baseline": 109079251
+                },
+                {
+                  "baseline": 111988616,
+                  "baseline-copy": 112297391
+                },
+                {
+                  "baseline-copy": 113746078,
+                  "baseline": 112705749
+                },
+                {
+                  "baseline": 112598948,
+                  "baseline-copy": 112624676
+                },
+                {
+                  "baseline-copy": 109116261,
+                  "baseline": 108034031
+                }
+              ]
+            },
+            {
+              "session": 1,
+              "pairs": [
+                {
+                  "baseline": 109468362,
+                  "baseline-copy": 123400160
+                },
+                {
+                  "baseline-copy": 109992882,
+                  "baseline": 109216933
+                },
+                {
+                  "baseline": 107711545,
+                  "baseline-copy": 111289926
+                },
+                {
+                  "baseline-copy": 110674068,
+                  "baseline": 110012542
+                },
+                {
+                  "baseline": 108141293,
+                  "baseline-copy": 111715437
+                },
+                {
+                  "baseline-copy": 110012661,
+                  "baseline": 108362015
+                }
+              ]
+            }
+          ],
+          "candidate": [],
+          "controlEnvelope": 0.12726780364174983,
+          "allowedCandidateRatio": 1.2545356072834997
+        },
+        "4096": {
+          "elements": 4096,
+          "rounds": 256,
+          "control": [
+            {
+              "session": 0,
+              "pairs": [
+                {
+                  "baseline": 163433278,
+                  "baseline-copy": 163417656
+                },
+                {
+                  "baseline-copy": 165899343,
+                  "baseline": 161282920
+                },
+                {
+                  "baseline": 163112305,
+                  "baseline-copy": 161651138
+                },
+                {
+                  "baseline-copy": 162465892,
+                  "baseline": 161125243
+                },
+                {
+                  "baseline": 166912772,
+                  "baseline-copy": 164486978
+                },
+                {
+                  "baseline-copy": 166439660,
+                  "baseline": 168261734
+                }
+              ]
+            },
+            {
+              "session": 1,
+              "pairs": [
+                {
+                  "baseline": 169922407,
+                  "baseline-copy": 162497540
+                },
+                {
+                  "baseline-copy": 161060735,
+                  "baseline": 162460415
+                },
+                {
+                  "baseline": 163917490,
+                  "baseline-copy": 164122689
+                },
+                {
+                  "baseline-copy": 167947582,
+                  "baseline": 166221631
+                },
+                {
+                  "baseline": 164186555,
+                  "baseline-copy": 164621069
+                },
+                {
+                  "baseline-copy": 167209920,
+                  "baseline": 165548387
+                }
+              ]
+            }
+          ],
+          "candidate": [
+            {
+              "session": 0,
+              "pairs": [
+                {
+                  "baseline": 163849498,
+                  "candidate": 81530299
+                },
+                {
+                  "candidate": 80886980,
+                  "baseline": 162611983
+                },
+                {
+                  "baseline": 160818841,
+                  "candidate": 81910402
+                },
+                {
+                  "candidate": 81843051,
+                  "baseline": 163795936
+                },
+                {
+                  "baseline": 177393081,
+                  "candidate": 81167082
+                },
+                {
+                  "candidate": 80995283,
+                  "baseline": 164863044
+                }
+              ],
+              "medianRatio": 0.4975079256118913
+            },
+            {
+              "session": 1,
+              "pairs": [
+                {
+                  "baseline": 161182840,
+                  "candidate": 81202405
+                },
+                {
+                  "candidate": 85505698,
+                  "baseline": 164762833
+                },
+                {
+                  "baseline": 167780389,
+                  "candidate": 82953103
+                },
+                {
+                  "candidate": 81722950,
+                  "baseline": 162022394
+                },
+                {
+                  "baseline": 166204004,
+                  "candidate": 88654873
+                },
+                {
+                  "candidate": 90007681,
+                  "baseline": 164460818
+                }
+              ],
+              "medianRatio": 0.5116776125599262
+            }
+          ],
+          "controlEnvelope": 0.04369563220699901,
+          "allowedCandidateRatio": 1.087391264413998
+        }
+      },
+      "failures": [
+        "256: identical-code control exceeds explicit noise limit"
+      ]
+    },
+    "aarch64": {
+      "baselineSource": "a44ed18ee72301fd9363ef934596064b55eb751f",
+      "candidateSource": "dfd844c1209bb75dc7829bd4fa44f2f50d93a7bb",
+      "protocolSource": "7da1a783402ba02efd77494032da612fa133d66c",
+      "scriptSha256": "09750261650c27e78288767f5d333e039225a0dc03cdca697ec294be023c5d87",
+      "harnessSha256": "517142562e5f23c774c67b75eacd8066fd56cba70568c9ae3c94fff6c46c96ce",
+      "machine": "aarch64",
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "commands": [
+        [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        [
+          "lscpu"
+        ],
+        [
+          "gcc",
+          "--version"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-fno-fast-math",
+          "-fno-lto",
+          "-fstack-usage",
+          "-w",
+          "sort-timing/baseline.c",
+          "-o",
+          "sort-timing/baseline.exe",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-fno-fast-math",
+          "-fno-lto",
+          "-fstack-usage",
+          "-w",
+          "sort-timing/candidate.c",
+          "-o",
+          "sort-timing/candidate.exe",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "256",
+          "4096"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline-copy.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/candidate.exe",
+          "4096",
+          "256"
+        ],
+        [
+          "taskset",
+          "--cpu-list",
+          "1",
+          "sort-timing/baseline.exe",
+          "4096",
+          "256"
+        ]
+      ],
+      "scope": "fwp A3 versus fwp A4 generated sorting kernels, not C/Rust. Timer includes key calculation, stable sort, result-list construction and release. Input construction, independent order validation, process startup and printing are excluded. Each sample is a fresh process; two sampling sessions share one native runner. These sessions do not establish performance across independent runner allocations.",
+      "settings": {
+        "baseline": "baseline/costs",
+        "candidate": "candidate/costs",
+        "baseline_source": "a44ed18ee72301fd9363ef934596064b55eb751f",
+        "candidate_source": "dfd844c1209bb75dc7829bd4fa44f2f50d93a7bb",
+        "cc": "gcc",
+        "cpu": 1,
+        "samples": 6,
+        "warmups": 2,
+        "small_rounds": 4096,
+        "large_rounds": 256,
+        "max_control_ratio": 1.1,
+        "timeout": 120,
+        "output": "sort-timing"
+      },
+      "files": {
+        "baseline": {
+          "originalC": "0b0e81648571d92b4dd4da1bcc5cbe50dc1b5d9b43290424bdbea754cad00b40",
+          "harness": "a4c5999d92298fe712dac32fe677de8867e523bb31f08235fa50c5e7b474b9fb",
+          "binary": "06d10cc2c587de2321b39ad1e5f44b799b8f0602ab661f8dfc0decf36c3ede21",
+          "binaryBytes": 78816
+        },
+        "candidate": {
+          "originalC": "5c7e2a04ed183e975c91d115d495af3ad5737348a19b210dea3f4e2d1c43efad",
+          "harness": "d0dea408eddf82b882f53eff90e51620f97ad6f44c2499f8464b9a036e0b0874",
+          "binary": "26949f9d39e41155a21a1432708990007dc10d109bc65bf089a957f0519f9cb7",
+          "binaryBytes": 78360
+        }
+      },
+      "cases": {
+        "256": {
+          "elements": 256,
+          "rounds": 4096,
+          "control": [
+            {
+              "session": 0,
+              "pairs": [
+                {
+                  "baseline": 97783821,
+                  "baseline-copy": 97843621
+                },
+                {
+                  "baseline-copy": 97766349,
+                  "baseline": 97925310
+                },
+                {
+                  "baseline": 97430013,
+                  "baseline-copy": 97632813
+                },
+                {
+                  "baseline-copy": 98881863,
+                  "baseline": 97727021
+                },
+                {
+                  "baseline": 97384189,
+                  "baseline-copy": 97623173
+                },
+                {
+                  "baseline-copy": 98123638,
+                  "baseline": 97679917
+                }
+              ]
+            },
+            {
+              "session": 1,
+              "pairs": [
+                {
+                  "baseline": 97808942,
+                  "baseline-copy": 97664854
+                },
+                {
+                  "baseline-copy": 97771645,
+                  "baseline": 97687893
+                },
+                {
+                  "baseline": 97889478,
+                  "baseline-copy": 97416213
+                },
+                {
+                  "baseline-copy": 97446557,
+                  "baseline": 97856958
+                },
+                {
+                  "baseline": 97421589,
+                  "baseline-copy": 97620822
+                },
+                {
+                  "baseline-copy": 97766838,
+                  "baseline": 97530773
+                }
+              ]
+            }
+          ],
+          "candidate": [
+            {
+              "session": 0,
+              "pairs": [
+                {
+                  "baseline": 97825950,
+                  "candidate": 47747738
+                },
+                {
+                  "candidate": 48445410,
+                  "baseline": 97999886
+                },
+                {
+                  "baseline": 97353885,
+                  "candidate": 47564266
+                },
+                {
+                  "candidate": 47452593,
+                  "baseline": 97795990
+                },
+                {
+                  "baseline": 97673653,
+                  "candidate": 47784529
+                },
+                {
+                  "candidate": 47604801,
+                  "baseline": 97924461
+                }
+              ],
+              "medianRatio": 0.4883297385675033
+            },
+            {
+              "session": 1,
+              "pairs": [
+                {
+                  "baseline": 97559184,
+                  "candidate": 47501649
+                },
+                {
+                  "candidate": 47608524,
+                  "baseline": 98484745
+                },
+                {
+                  "baseline": 98975473,
+                  "candidate": 48562955
+                },
+                {
+                  "candidate": 47670354,
+                  "baseline": 97665682
+                },
+                {
+                  "baseline": 97609564,
+                  "candidate": 47672375
+                },
+                {
+                  "candidate": 47503409,
+                  "baseline": 97852213
+                }
+              ],
+              "medianRatio": 0.4874990632126649
+            }
+          ],
+          "controlEnvelope": 0.011817018345417596,
+          "allowedCandidateRatio": 1.0236340366908352
+        },
+        "4096": {
+          "elements": 4096,
+          "rounds": 256,
+          "control": [
+            {
+              "session": 0,
+              "pairs": [
+                {
+                  "baseline": 142962499,
+                  "baseline-copy": 144164725
+                },
+                {
+                  "baseline-copy": 143119324,
+                  "baseline": 142103275
+                },
+                {
+                  "baseline": 143233324,
+                  "baseline-copy": 142736908
+                },
+                {
+                  "baseline-copy": 142911819,
+                  "baseline": 143056108
+                },
+                {
+                  "baseline": 142514964,
+                  "baseline-copy": 142082219
+                },
+                {
+                  "baseline-copy": 142616643,
+                  "baseline": 142804324
+                }
+              ]
+            },
+            {
+              "session": 1,
+              "pairs": [
+                {
+                  "baseline": 141951403,
+                  "baseline-copy": 142712356
+                },
+                {
+                  "baseline-copy": 142845380,
+                  "baseline": 142621139
+                },
+                {
+                  "baseline": 142044090,
+                  "baseline-copy": 143329084
+                },
+                {
+                  "baseline-copy": 142699108,
+                  "baseline": 142964212
+                },
+                {
+                  "baseline": 142280643,
+                  "baseline-copy": 141976491
+                },
+                {
+                  "baseline-copy": 143141860,
+                  "baseline": 142126835
+                }
+              ]
+            }
+          ],
+          "candidate": [
+            {
+              "session": 0,
+              "pairs": [
+                {
+                  "baseline": 143321452,
+                  "candidate": 69179115
+                },
+                {
+                  "candidate": 69557211,
+                  "baseline": 143167405
+                },
+                {
+                  "baseline": 142165299,
+                  "candidate": 69572387
+                },
+                {
+                  "candidate": 69742620,
+                  "baseline": 142709787
+                },
+                {
+                  "baseline": 141758955,
+                  "candidate": 69108859
+                },
+                {
+                  "candidate": 70762749,
+                  "baseline": 144049453
+                }
+              ],
+              "medianRatio": 0.4881060427153403
+            },
+            {
+              "session": 1,
+              "pairs": [
+                {
+                  "baseline": 142718008,
+                  "candidate": 69547535
+                },
+                {
+                  "candidate": 70076948,
+                  "baseline": 142771566
+                },
+                {
+                  "baseline": 142474707,
+                  "candidate": 69472764
+                },
+                {
+                  "candidate": 69445828,
+                  "baseline": 142404617
+                },
+                {
+                  "baseline": 142325230,
+                  "candidate": 69282972
+                },
+                {
+                  "candidate": 69447388,
+                  "baseline": 144308511
+                }
+              ],
+              "medianRatio": 0.48746103627082027
+            }
+          ],
+          "controlEnvelope": 0.009046444663765918,
+          "allowedCandidateRatio": 1.0180928893275318
+        }
+      },
+      "failures": []
+    }
+  }
+}

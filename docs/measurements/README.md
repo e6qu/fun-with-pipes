@@ -9,7 +9,10 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Ownership costs
 
-- [Remaining ARC operations after GC removal](arc-residual-costs.md): A2 per-owner attribution and measured static-callback reduction, including code/stack costs.
+- [Remaining ARC operations after GC removal](arc-residual-costs.md): per-owner attribution and static-callback reduction.
+- [Unique local arrays without counts](unique-array-storage.md): verified storage, lifetime proof and native/WASI cleanup.
+- [Scalar reads and sort callbacks](sort-key-ownership.md): remove temporary String and pair owners.
+- [Contiguous sort keys](inline-sort-keys.md): remove key boxes, with exact allocation budgets and separate sorting-time controls.
 
 ## Numerical applications
 

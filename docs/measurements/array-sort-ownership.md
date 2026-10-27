@@ -6,11 +6,11 @@ each on ARM64 and AMD64. Integrated delivery passed in [PR #212](../roadmap-hist
 storage/count savings, not a measured timing speedup or proof of C/Rust parity.
 
 The current G5 checks use one counted configuration: eighteen executable
-variants each for construction and sorting, including four normal/copy
+variants each for construction and sorting, including two output runs, four balanced/copy
 observations and twelve deliberate faults per host. The readers require those
-exact sets and check every image for collector symbols. This updated protocol
-awaits integrated validation; the measurements below retain their original
-source revisions and configuration sets.
+exact sets and check every image for collector symbols. This protocol passed integrated
+validation in [#217](../roadmap-history.md#tracing-gc-removal-pr-217). The measurements
+below retain their original source revisions and configuration sets.
 
 ## Behavior
 

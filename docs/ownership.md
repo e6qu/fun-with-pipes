@@ -19,8 +19,7 @@ individual operations; [measurements](benchmarks.md) report actual costs.
 The [accepted ownership direction](gc-removal-design.md) specifies explicit weak
 links, rejection of unproved owning cycles, count-free unique storage and scoped
 regions. Weak channels and retained C registrations are implemented. A restricted
-[count-free local array path](measurements/unique-array-storage.md) is implemented
-and under verification; general regions remain planned. APIs may change.
+[count-free local array path](measurements/unique-array-storage.md) is verified in #219; general regions remain planned. APIs may change.
 
 ## Existing implementation
 
@@ -420,8 +419,10 @@ between completed operations as well as at process teardown; a final zero can
 hide growing retention during a service's lifetime. Deliberately missing releases,
 invalid reuse and stale borrows must fail their observers.
 
-G5 is complete only when the replacement ownership controls and all maintained
-native targets pass on the same source. A focused test alone does not verify removal. Report managed bytes, native buffers, OS handles and process memory
+G5 passed the replacement ownership controls and every maintained native target
+on one source in [#217](roadmap-history.md#tracing-gc-removal-pr-217). Preserve those
+checks when changing storage; a focused test alone does not verify all platforms.
+Report managed bytes, native buffers, OS handles and process memory
 separately. For a performance claim, name the exact comparison, inputs, toolchains,
 samples, code size and stack cost. [Benchmarks](benchmarks.md) explains how to read
 those results; [delivery history](roadmap-history.md) records tested revisions.

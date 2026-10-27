@@ -1131,4 +1131,5 @@ For example, `test "stop" = 7 | exit` reports `FAILED (exit 7)` and the runner
 continues. This recovery belongs to the test runner: ordinary programs still
 exit. A trap or exit inside a child task remains process-fatal in both engines.
 The [delivery history](roadmap-history.md) records platform validation. The
-[plan](../PLAN.md#1-remove-tracing-gc) specifies the remaining collector removal.
+[plan](../PLAN.md) records completed collector removal and the remaining ARC,
+allocation and performance work.

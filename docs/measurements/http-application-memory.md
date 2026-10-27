@@ -5,8 +5,9 @@ five values after `http-memory`: opened sockets, closed sockets, charged bytes,
 live tasks and metric bytes. The collector field is removed. Ordinary HTTP/2
 server reports require 18 allocation rows, ten RSS samples and 24 ownership-entry
 rows per host across cleartext/TLS. The former stress case now runs both client
-and server with unique-storage reuse disabled. Integrated G5 execution is pending;
-the delivery evidence below describes its recorded source revision.
+and server with unique-storage reuse disabled. This protocol passed integrated G5 execution in
+[#217](../roadmap-history.md#tracing-gc-removal-pr-217). The detailed delivery
+evidence below retains its original source revision.
 
 Status: [PR #208](https://github.com/e6qu/fun-with-pipes/pull/208) passes all nine
 production jobs, documentation and independent six-host binary review at

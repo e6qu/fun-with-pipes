@@ -252,3 +252,129 @@ int main(void) {
     }
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn scalar_projection_skips_unrelated_field_owners_and_preserves_cleanup() {
+    let dir = std::env::temp_dir().join(format!("fwp-scalar-projection-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let source = dir.join("projection.fwp");
+    let cfile = dir.join("projection.c");
+    std::fs::write(
+        &source,
+        include_str!("fixtures/scalar_record_projection.fwp"),
+    )
+    .unwrap();
+    let fwp = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(fwp)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    checked(
+        Command::new(fwp)
+            .env_remove("FWP_NO_OPT")
+            .args([
+                "build", "--fn", "probe", "--memory", "dynamic", "--emit-c", "-O2",
+            ])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let mut emitted = std::fs::read_to_string(&cfile).unwrap();
+    let mut probe = include_str!("fixtures/scalar_record_projection_probe.c").to_owned();
+    for name in ["numeric", "text"] {
+        let start = emitted
+            .find(&format!("/* {name} :"))
+            .expect("exported projection");
+        let id = emitted[start..]
+            .split("static V f")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        probe = probe.replace(&format!("@{name}@"), &format!("f{id}"));
+        if name == "numeric" {
+            let entry = emitted.find(&format!("static V f{id}(V l0) {{")).unwrap();
+            let end = entry + emitted[entry..].find("\n}\n").unwrap() + 3;
+            let body = &emitted[entry..end];
+            assert!(
+                body.contains("FWP_TICK();"),
+                "projection must preserve its entry tick"
+            );
+            let interrupted = body.replace(
+                "FWP_TICK();",
+                "if (projection_fail) fwp_fail(0, NULL); FWP_TICK();",
+            );
+            emitted.replace_range(entry..end, &interrupted);
+        }
+    }
+    let measured = emitted
+        .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int projection_active, projection_fail;\nstatic size_t projection_dups;")
+        .replace("static inline void fwp_rc_dup(V v) {", "static inline void fwp_rc_dup(V v) {\n    if (projection_active) projection_dups++;")
+        .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)") + &probe;
+    // Build ordinary main separately so source output is checked against the raw
+    // interpreter as well as the direct exported-entry ownership observations.
+    checked(
+        Command::new(fwp)
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--memory", "dynamic", "--emit-c", "-O2"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let main_code = std::fs::read_to_string(&cfile).unwrap();
+    let mut failures = Vec::new();
+    for opt in ["-O1", "-O2"] {
+        let executable = dir.join(format!("main{opt}.exe"));
+        fwp::cgen::compile_c(&main_code, &executable, opt).unwrap();
+        let actual = Command::new(&executable).output().unwrap();
+        if !actual.status.success()
+            || actual.stdout != reference.stdout
+            || actual.stderr != reference.stderr
+        {
+            failures.push(format!("main/{opt}: {actual:?}"));
+        }
+        for (label, code, expected) in [
+            ("owners", measured.clone(), 0),
+            (
+                "extra-owner",
+                measured.replace(
+                    "/* extra-owner-control */",
+                    "if (!text) { fwp_rc_dup(scalar); fwp_rc_drop(scalar); }",
+                ),
+                243,
+            ),
+            (
+                "missing-free",
+                measured.replace(
+                    "fwp_mem_free((void *)(uintptr_t)value);",
+                    "/* omitted physical release */",
+                ),
+                247,
+            ),
+        ] {
+            let executable = dir.join(format!("{label}{opt}.exe"));
+            fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+            let actual = Command::new(&executable).output().unwrap();
+            record_probe::save(
+                "scalar-projection",
+                &format!("{label}{opt}"),
+                &code,
+                &executable,
+                &actual,
+            );
+            if actual.status.code() != Some(expected)
+                || !actual.stdout.is_empty()
+                || !actual.stderr.is_empty()
+            {
+                failures.push(format!(
+                    "{label}/{opt}: expected {expected}, got {actual:?}"
+                ));
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+    std::fs::remove_dir_all(dir).unwrap();
+}
