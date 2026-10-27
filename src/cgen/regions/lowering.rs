@@ -1,4 +1,6 @@
 //! Typed specialization. A rejected candidate leaves the original program intact.
+use std::borrow::Cow;
+
 use super::*;
 
 fn substitute(ty: &MT, names: &BTreeMap<MT, MT>) -> MT {
@@ -184,7 +186,8 @@ fn specialize(
     plan: &Plan,
     containing: &BTreeSet<MT>,
     output: &mut Program,
-) -> Option<()> {
+    growth: usize,
+) -> Option<usize> {
     let mut selected = plan.helpers.clone();
     selected.insert(plan.root);
     let mut pending = vec![plan.node.clone()];
@@ -358,6 +361,12 @@ fn specialize(
             f.arity -= 1;
         }
     }
+    // Context arguments and rewritten constructors can add expressions beyond
+    // the admission estimate. Charge actual completed clones before publishing.
+    let added = functions.iter().map(weight).sum::<usize>();
+    if added > growth {
+        return None;
+    }
     output.shapes.extend(shapes);
     output.funcs.extend(functions);
     for (old, new) in ids {
@@ -368,7 +377,7 @@ fn specialize(
     let entry = &mut output.funcs[plan.root];
     entry.body = Body::RegionEntry { worker };
     entry.locals.truncate(entry.arity as usize);
-    Some(())
+    Some(added)
 }
 
 /// Visit each expression once, including rejected forms when sizing a program.
@@ -410,7 +419,7 @@ fn inspect(expr: &Expr, mut visit: impl FnMut(&Expr)) -> usize {
     count
 }
 
-fn weight(function: &Func) -> usize {
+pub(super) fn weight(function: &Func) -> usize {
     1 + function.locals.len()
         + match &function.body {
             Body::Expr(e) => inspect(e, |_| {}),
@@ -488,8 +497,8 @@ fn prune_context(
 /// bodies consume that budget as they are visited. Added code gets at most twice
 /// the original program's expression/local weight. These are optimization limits,
 /// not language limits: an unselected invocation keeps its ordinary owners.
-pub(in crate::cgen) fn lower(program: &Program) -> Program {
-    let mut output = program.clone();
+pub(in crate::cgen) fn lower(program: &Program) -> Cow<'_, Program> {
+    let mut output = Cow::Borrowed(program);
     let nodes: Vec<_> = program
         .shapes
         .keys()
@@ -546,8 +555,10 @@ pub(in crate::cgen) fn lower(program: &Program) -> Program {
                     return output;
                 };
                 budget = left;
-                if specialize(program, &plan, &containing, &mut output).is_some() {
-                    growth -= cost;
+                if let Some(added) =
+                    specialize(program, &plan, &containing, output.to_mut(), growth)
+                {
+                    growth -= added;
                 }
             }
         }

@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -33,6 +33,55 @@ on:
         description: Exact focused API run supplying native diagnostic executables
         type: string
 jobs:
+  parser_measurements:
+    if: inputs.suite == 'parser-measurements'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+        session: [1, 2]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    env:
+      CC: gcc
+      FWP_LTO: '0'
+      CARGO_BUILD_JOBS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build both compilers independently from Rust
+        run: |
+          cargo build --locked --bin fwp
+          git worktree add --detach "$RUNNER_TEMP/parser-baseline" 56d5aac63a9963ae6b16574f10d6dc3087a08d8a
+          cargo build --locked --manifest-path "$RUNNER_TEMP/parser-baseline/Cargo.toml" --bin fwp
+      - name: Measure the region pass separately from frontend and C emission
+        env:
+          FWP_PARSER_ANALYSIS_OUTPUT: parser-analysis.json
+        run: cargo test --locked --lib cgen::regions::tests::measure_region_lowering_scale -- --ignored --exact --nocapture
+      - name: Check measurement controls
+        run: python3 scripts/test-parser-workspace-evidence.py
+      - name: Compare parser storage and execution after freezing timing budgets
+        run: >-
+          python3 scripts/measure-parser-workspace.py
+          --baseline "$RUNNER_TEMP/parser-baseline/target/debug/fwp"
+          --candidate "$PWD/target/debug/fwp" --candidate-source "${{ github.sha }}"
+          --analysis-report parser-analysis.json
+          --cc gcc --rustc rustc --cpu 1 --samples 6 --warmups 2 --rounds 32768
+          --max-control-ratio 1.10 --timeout 180 --output parser-measurements
+      - name: Audit all retained samples and binaries
+        run: python3 scripts/inspect-parser-workspace.py --input parser-measurements --source "${{ github.sha }}"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: parser-measurements-${{ matrix.runner }}-${{ matrix.session }}
+          path: parser-measurements/
+          if-no-files-found: error
+
   parser_workspace:
     if: inputs.suite == 'parser-workspace'
     strategy:

@@ -9,6 +9,8 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Ownership costs
 
+- [Parser workspace comparison](parser-workspace.md): pending A6 measurements, with exact C/Rust work and storage/timing boundaries.
+
 - [Remaining ARC operations after GC removal](arc-residual-costs.md): per-owner attribution and static-callback reduction.
 - [Unique local arrays without counts](unique-array-storage.md): verified storage, lifetime proof and native/WASI cleanup.
 - [Scalar reads and sort callbacks](sort-key-ownership.md): remove temporary String and pair owners.

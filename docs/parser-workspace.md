@@ -6,7 +6,7 @@ A6 is under validation, not verified support yet. The first example is
 All nodes contain either an integer or links to other nodes. The input Strings
 and token list keep their ordinary owners.
 
-Today, each heap node has an individual lifetime. The proposed implementation
+Before A6, each heap node has an individual lifetime. The candidate implementation
 lets one invocation own a collection of storage blocks, called a region. Links
 within those blocks need neither ownership counts nor individual destruction.
 The invocation releases all its blocks after evaluation, including on failure.
@@ -39,8 +39,9 @@ cannot return a node. Validate its precise existing contract before admitting it
 Use a finite worklist over types and direct helper calls. Cache containment of
 the candidate node type, visit each selected helper once, and count analysis
 work. Recursive helpers do not require arbitrary symbolic execution. The current selection budget is eight units per original expression, local and
-type edge; proof visits consume it. Cloned functions and locals may add at most
-twice the original expression/local weight. A candidate that exceeds a budget
+type edge; proof visits consume it. Completed cloned functions and locals may add at most
+twice the original expression/local weight; check their actual rewritten weight
+before publishing a candidate. A candidate that exceeds a budget
 keeps ordinary ownership. Measure these limits on larger programs and preserve
 the existing G2 compiler-analysis checks; bounded work is not a measured compile-time result.
 
@@ -102,6 +103,8 @@ The draft allocator uses 4,096-byte payload blocks plus an owner header. Report
 unused payload bytes explicitly, especially for small trees: removing individual
 counts can increase retained storage. Do not infer a memory win from block count.
 
+The [measurement protocol](measurements/parser-workspace.md) defines the peers,
+phase boundaries, storage accounting, repeated sessions and rejection controls.
 For timing, compare the previous counted fwp program, the candidate and explicit
 C/Rust arena implementations of the same prefix grammar. Predeclare token inputs,
 node counts, checked arithmetic and output oracle. Separate tokenization from tree

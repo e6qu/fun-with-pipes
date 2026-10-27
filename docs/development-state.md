@@ -1,49 +1,53 @@
 # Current work
 
-**Next:** validate the pinned WASI toolchain and recursive-owner repair together
-in the focused Linux ARM64/AMD64 suite. Then complete C/Rust comparisons,
-compiler-cost evidence and cancellation observations before the full production gate.
+**Next:** run the combined parser correctness/measurement batch on native Linux
+ARM64 and AMD64, audit every job and retained artifact, and fix all failures.
+Only then publish the measurements and run the full final-head production/G2 gate.
 
 [Draft PR #221](https://github.com/e6qu/fun-with-pipes/pull/221) uses
 `/private/tmp/fwp-parser-workspace`, branch `scoped-parser-workspace`, based on
 verified squash `56d5aac63a9963ae6b16574f10d6dc3087a08d8a` (#220).
-[The workspace contract](parser-workspace.md) specifies admission, cleanup and
-fixed inputs. The compiler changes are not verified support yet.
+[The workspace contract](parser-workspace.md) specifies admission and cleanup;
+[the measurement protocol](measurements/parser-workspace.md) defines the exact
+fwp/C/Rust comparison. A6 is not verified support yet.
 
-## A6 implementation state
+## A6 implementation and checks
 
-- The admission proof caches type containment. It rejects owning fields in nodes,
-  unknown/captured/escaping uses, cached graphs, constants with existing storage
-  and self-tail roots. Ordinary helpers remain available to escaping callers.
-- Lowering distinguishes internal links with `TypeShape::RegionLink`. A
-  `RegionEntry` owns its blocks and calls a specialized worker. Allocation helpers
-  receive the context explicitly; pure readers do not. Typed constructors use
-  the block allocator. Mixed records retain their String/token-list owners.
-- Analysis and cloning have program-size budgets. A reverse call graph propagates
-  context requirements without repeatedly walking recursive helper bodies.
-- Thirteen unit controls, five native integration tests and one WASI test cover
-  admission, values/traps, nested/reentrant calls, cancellation, escaped/cached
-  trees, alignment and physical cleanup. Deliberate extra-count and missing-free
-  mutations must fail their observers.
-- Run `40557195444` at `4ec06337` passed all 208 units, six allocator tests, four
-  parser tests, two record tests and Clippy on both Linux hosts. ARM64 also passed
-  actual WASI; its 20 native/WASI probes were independently audited for complete
-  outputs, statuses, zero final live bytes and binary architecture headers.
-- AMD64's WASI preflight failed because Ubuntu's unversioned Clang advanced to 21
-  while jobs installed LLVM 18 WASI libraries. Logs from both jobs were audited.
-  `scripts/setup-wasi-linux.sh` now pins compiler, linker and libraries together,
-  runs a link preflight, and is shared by all affected CI/focused workflows.
-  Missing-tool errors now include the actual compiler and Node diagnostics.
-- Source review also found recursive public calls sharing the outer context.
-  They now reenter the owning entry. A source example evaluates five trees to 70;
-  the new native observer requires five distinct live owners. Raw interpretation
-  and formatting pass with the unchanged verified frontend. The native fix,
-  regression controls and toolchain repair need the next focused runner batch.
-- First run `40556027459` at `f16da74d` failed three parser tests because the
-  ownership checker lacked a link-shape contract, and Clippy found three needless
-  test-path borrows. Those repairs passed in `40557195444`; invalid owner/field
-  metadata now has explicit rejection controls. This is not final full validation.
-
+- Explicit internal link types distinguish invocation-owned nodes from ordinary
+  owners. Only recursive integer/link variants qualify. Escaping/cached graphs,
+  unknown/captured calls, runtime boundaries and self-tail roots keep ordinary
+  ownership. Helpers receive explicit storage context; pure readers do not.
+- A public recursive call starts a fresh owner. Helpers within one parse share
+  that parse's blocks. Mixed records preserve String/token owners. Cleanup runs
+  on normal return, failure and task cancellation.
+- Focused run `40578305643` at `de6e0be935d77cad51e08cd3eeaa8241d61d75bd`
+  passed on both native Linux hosts: 209 unit tests, six allocator tests, five
+  parser tests, two record tests, Clippy and actual WASI O1/O2 controls.
+  All logs and 22 retained probes per host were independently audited for
+  complete outputs, statuses, zero final live storage and binary architecture.
+  Documentation run `40578309634` passed. Draft production jobs were skipped;
+  they do not establish final platform support.
+- That batch fixed the Ubuntu AMD64 WASI mismatch: unversioned Clang had advanced
+  to 21 while libraries remained LLVM 18. All affected workflows now use one
+  checked setup script pinning Clang, linker and WASI libraries to LLVM 18.
+  It also verified five distinct live owners in the recursive parser example.
+- The next batch avoids copying the whole program when there is no eligible
+  region candidate. It checks completed clone weight, including new context
+  arguments, against the growth budget before publication; the earlier estimate
+  did not precisely bound rewritten size. Added growth controls cover 1/16/32/64
+  roots, with separate pass measurements on runners.
+- A sixth parser test observes cancellation only after five nodes and one block
+  exist, then requires that cancelled cleanup releases them. Omitting that cleanup
+  must fail both the live-block and allocation-report observations.
+- New measurement tools compare the previous fwp program, the candidate and
+  explicit C/Rust indexed arenas. Four fixed tree shapes, 1/16/256 repetitions,
+  independently frozen timing budgets, compiler scale, actual binary hashes,
+  stack files and precise allocation ledgers run in two independent sessions
+  on each Linux architecture. Results are pending, not a claimed speedup.
+- Eight evidence controls pass locally under the guard. Small Clang O2/Rust O2
+  harness checks passed values, balanced/left-nested shapes, cleanup, malformed
+  input and overflow. The generated-C harness used retained `de6e0be9` C; this
+  checks instrumentation only, not the pending compiler changes or GCC.
 
 ## Checks and the incidental repair
 

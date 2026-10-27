@@ -9844,7 +9844,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     let scalar_text = scalar_text::lower(prog, direct_output);
     let string_maps = string_map::lower(&scalar_text);
     let region_program = regions::lower(&string_maps);
-    let prog = &region_program;
+    let prog = region_program.as_ref();
     crate::ir::check_locals(prog)?;
     let weak_channels = crate::resource::uses_weak_channels(&prog.funcs, &prog.shapes);
     let tests = matches!(mode, Mode::Tests);

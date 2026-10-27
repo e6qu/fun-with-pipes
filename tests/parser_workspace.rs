@@ -270,3 +270,72 @@ int main(void) {{
         assert!(output.stdout.is_empty() && output.stderr.is_empty());
     }
 }
+
+#[test]
+fn cancellation_occurs_after_tree_construction_and_releases_its_blocks() {
+    let dir = fwp::cgen::TempDir::new("parser-cancelled-owner").unwrap();
+    let source = dir.join("cancelled.fwp");
+    let cfile = dir.join("cancelled.c");
+    let definitions = SOURCE.split_once("main = [").unwrap().0;
+    std::fs::write(
+        &source,
+        format!("{definitions}\nmain = \"+ 2 * 3 4\" | cancelled | echo\n"),
+    )
+    .unwrap();
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--emit-c", "--memory", "dynamic"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    let mut probe = code.replace("typedef uint64_t V;",
+        "typedef uint64_t V;\nstatic size_t parser_nodes, parser_live_blocks, parser_cancel_seen, parser_cancel_release;");
+    for (old, new) in [
+        ("    return PTR(node);", "    parser_nodes++;\n    return PTR(node);"),
+        ("        fresh->capacity = capacity;", "        fresh->capacity = capacity;\n        parser_live_blocks++;"),
+        ("        fwp_mem_free(block);", "        fwp_mem_free(block);\n        parser_live_blocks--;"),
+        ("static V fwp_p_task_cancel(V t) {", "static V fwp_p_task_cancel(V t) {\n    if (parser_nodes != 5 || parser_live_blocks != 1) exit(241);\n    parser_cancel_seen++;"),
+        ("static void fwp_region_release(void *context) {", "static void fwp_region_release(void *context) {\n    if (fwp_cur && fwp_cur->cancelled) { parser_cancel_release++; /* omit cancelled cleanup */ }"),
+        ("int main(int argc, char **argv)", "int parser_original_main(int argc, char **argv)"),
+    ] {
+        assert_eq!(probe.matches(old).count(), 1, "{old}");
+        probe = probe.replace(old, new);
+    }
+    probe.push_str(
+        r#"
+int main(int argc, char **argv) {
+    int status = parser_original_main(argc, argv);
+    if (status) return status;
+    if (parser_nodes != 5 || parser_cancel_seen != 1 || parser_cancel_release != 1) return 242;
+    if (parser_live_blocks) return 243;
+    return 0;
+}
+"#,
+    );
+    for opt in ["-O1", "-O2"] {
+        for (name, candidate, status) in [
+            ("ordinary", probe.clone(), 0),
+            (
+                "missing-free",
+                probe.replace("/* omit cancelled cleanup */", "return;"),
+                243,
+            ),
+        ] {
+            let label = format!("cancellation-{name}{opt}");
+            let binary = dir.join(format!("{label}.exe"));
+            fwp::cgen::compile_c(&candidate, &binary, opt).unwrap();
+            let output = Command::new(&binary)
+                .env("FWP_ALLOC_STATS", "1")
+                .output()
+                .unwrap();
+            record_probe::save("parser_workspace", &label, &candidate, &binary, &output);
+            assert_eq!(output.status.code(), Some(status), "{label}: {output:?}");
+            assert_eq!(output.stdout, b"None\n");
+            let report =
+                allocation_report::parse(&String::from_utf8_lossy(&output.stderr)).unwrap();
+            assert_eq!(report.live == 0, status == 0, "{label}: {report:?}");
+        }
+    }
+}

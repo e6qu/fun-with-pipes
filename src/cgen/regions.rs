@@ -261,6 +261,8 @@ mod tests {
     use super::*;
     use crate::ir::Func;
     use crate::value::Value;
+    use std::hint::black_box;
+    use std::time::Instant;
 
     fn arrow(input: MT, output: MT) -> MT {
         MT::Fun(Box::new(input), Box::new(output))
@@ -530,7 +532,7 @@ mod tests {
     fn native_admission_checks_link_owner_and_field_contract() {
         let (prog, _) = program();
         for broken_owner in [false, true] {
-            let mut lowered = lower(&prog);
+            let mut lowered = lower(&prog).into_owned();
             let shape = lowered
                 .shapes
                 .values_mut()
@@ -577,5 +579,76 @@ mod tests {
             panic!("no recursive call");
         };
         assert!(matches!(&**call, Expr::Call(0, args) if args.len() == 1));
+    }
+    #[test]
+    fn programs_without_a_region_candidate_do_not_copy_the_program() {
+        let (mut prog, node) = program();
+        prog.shapes.remove(&node);
+        assert!(matches!(lower(&prog), std::borrow::Cow::Borrowed(_)));
+        let (mut prog, _) = program();
+        prog.funcs[0].locals.truncate(1);
+        prog.funcs[0].body = Body::Expr(Expr::Local(0));
+        assert!(matches!(lower(&prog), std::borrow::Cow::Borrowed(_)));
+    }
+    fn scaled_program(roots: usize) -> Program {
+        let (mut prog, _) = program();
+        for index in 1..roots {
+            let mut root = prog.funcs[0].clone();
+            root.name = format!("root{index}");
+            prog.funcs.push(root);
+        }
+        prog
+    }
+
+    #[test]
+    fn completed_clones_stay_inside_the_program_growth_budget() {
+        for roots in [1, 16, 32, 64] {
+            let prog = scaled_program(roots);
+            let original = prog.funcs.iter().map(lowering::weight).sum::<usize>();
+            let lowered = lower(&prog);
+            crate::ir::check_locals(&lowered).unwrap();
+            assert!(lowered
+                .funcs
+                .iter()
+                .any(|f| matches!(f.body, Body::RegionEntry { .. })));
+            let added = lowered.funcs[prog.funcs.len()..]
+                .iter()
+                .map(lowering::weight)
+                .sum::<usize>();
+            assert!(added <= original * 2, "{roots}: {added} > 2 * {original}");
+        }
+    }
+
+    #[test]
+    #[ignore = "compiler pass measurements run explicitly on GitHub runners"]
+    fn measure_region_lowering_scale() {
+        assert_eq!(std::env::var("GITHUB_ACTIONS").as_deref(), Ok("true"));
+        let output = std::env::var("FWP_PARSER_ANALYSIS_OUTPUT").expect("explicit report path");
+        let mut rows = Vec::new();
+        for roots in [16, 32, 64] {
+            let prog = scaled_program(roots);
+            let original = prog.funcs.iter().map(lowering::weight).sum::<usize>();
+            let mut samples = Vec::new();
+            for _ in 0..6 {
+                let start = Instant::now();
+                for _ in 0..128 {
+                    black_box(lower(black_box(&prog)));
+                }
+                samples.push(start.elapsed().as_nanos().to_string());
+            }
+            let lowered = lower(&prog);
+            let selected = lowered
+                .funcs
+                .iter()
+                .filter(|f| matches!(f.body, Body::RegionEntry { .. }))
+                .count();
+            let added = lowered.funcs[prog.funcs.len()..]
+                .iter()
+                .map(lowering::weight)
+                .sum::<usize>();
+            assert!(selected > 0 && selected <= roots && added <= original * 2);
+            rows.push(format!("{{\"roots\":{roots},\"selected\":{selected},\"originalWeight\":{original},\"addedWeight\":{added},\"iterations\":128,\"nanoseconds\":[{}]}}", samples.join(",")));
+        }
+        std::fs::write(output, format!("[{}]\n", rows.join(","))).unwrap();
     }
 }
