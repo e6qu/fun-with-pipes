@@ -592,9 +592,6 @@ fwp build file.fwp [options]                  compile
                      with the arguments after `--` (stdin from
                      --pgo-input F, or empty), then build with the profile
                      (needs GCC)
-    --gc arc         checked ownership (default) for native/WebAssembly and C libraries;
-                     unsupported value/runtime boundaries diagnose
-    --gc tracing     explicitly select tracing collection
     --memory static  bounded runtime storage and stacks at startup, with
                      --heap S, --pool S, --stack S, --tasks N,
                      --task-stack S and --threads N
@@ -653,7 +650,6 @@ start, so startup is separate from the compiled program's execution time.
 | | |
 |---|---|
 | `--interp`, `FWP_RUN=interp` | run the interpreter instead (`--native` and `FWP_RUN=native` ask for the default) |
-| `--gc arc` or `--gc tracing` before the file/stages | native ownership mode for `run`, `exec`, `test`, `serve` and `pipe`; ARC validates every entry and omits tracing; incompatible with interpretation |
 | `-O0` .. `-O3`, `-Os` before the file | the C optimization level: `-O2`, and `-O1` for tests |
 | `FWP_CACHE_DIR` | the cache: `$XDG_CACHE_HOME/fwp`, else `~/.cache/fwp`, else `fwp-cache` in the temporary directory |
 | `FWP_CACHE_MAX` | how many executables it keeps (256; minimum 1, including when set to 0); pruning preserves the current executable |
@@ -699,10 +695,11 @@ from a misspelled option.
 
 ### Checked reference counting
 
-Native builds use checked automatic reference counting (ARC) by default.
-`--gc arc` selects it explicitly; `--gc tracing` selects the collector scheduled
-for removal. ARC checks lifetimes before generating C and excludes tracing code.
-It requires counted cleanup; tracing stress and reuse poisoning are incompatible.
+Native builds check lifetimes before generating C. Proved moves and borrows
+avoid extra owners; automatic reference counting (ARC) releases shared storage.
+An unproved owning cycle is a compile error. The interpreter applies the same
+lifetime policy before program effects. [Memory ownership](ownership.md) explains
+the contracts and the remaining work on count-free storage.
 No rejected program changes mode automatically.
 
 An owner keeps storage alive; a borrow uses it while an owner remains. The
@@ -749,7 +746,7 @@ still be paged out by the OS. The configured parts are:
 
 | Part | Option | Default | What uses it |
 |---|---|---|---|
-| heap | `--heap S` | 64M | fwp values; fixed capacity. ARC reclaims through owners; only explicit tracing mode runs a collector |
+| heap | `--heap S` | 64M | fwp values; fixed capacity. counted owners reclaim storage; no tracing collector |
 | pool | `--pool S` | 32M | Runtime buffers and decimal overflow scratch; Linux interposes allocation functions, Windows uses a private allocator |
 | main stack | `--stack S` | 16M | the main task |
 | task stacks | `--tasks N`, `--task-stack S` | 64 of 1M | tasks: at most N run at once, each with a guard page |
@@ -763,12 +760,11 @@ fwp: out of memory: the static heap (1024 KiB) is full; build with a larger --he
 ```
 
 `FWP_MEMORY_REPORT=1` prints, at exit, the size of each part and how much
-of it was used at most. This example is from an explicit tracing build; ARC
-reports zero collections:
+of it was used at most. For example (illustrative sizes, not a benchmark):
 
 ```
 fwp: static memory: 124448 KiB mapped at startup
-  heap           65536 KiB, 8320 KiB used at most (4231 KiB live at most, 1 collections)
+  heap           65536 KiB, 8320 KiB used at most (4231 KiB live at most)
   pool           32768 KiB, 136 KiB used at most
   ...
 ```
@@ -970,14 +966,7 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 | `FWP_MATRIX_BLOCKING=0` | when compiling: retain the library F64 matrix implementation for comparison; specialization checks runtime shape and preserves ascending inner-index arithmetic |
 | `FWP_AD_WORKSPACE=0` | interpreter and native programs: release detached tape capacity instead of retaining the single bounded 512 KiB workspace; tape identity and scope lifetimes are unchanged |
 | `FWP_DUMP_IR=1` | prints the program's own functions in optimized IR to stderr when it is compiled (`all`: the standard library's too; `rc`: with their references counted) |
-| `FWP_REUSE=0` | when compiling: disable optional reference-counted reuse, so updates copy rather than reuse unique storage. Resource ownership can still require counting. Checked ARC rejects this setting because it requires counted cleanup; the ordinary tracing mode remains available. |
-| `FWP_REUSE_VERIFY=1` | native programs: a value judged unique is copied and the original poisoned instead of reused, so that a wrong judgment shows (for testing) |
-| `FWP_FREE=0` | when compiling: disables eligible value storage reclamation by counted drops, leaving that storage to the collector; this does not disable tracing |
-| `FWP_GC=off` | native programs: disables tracing collection. Eligible counted drops can still reclaim values; shared/unmodeled storage may remain allocated. This is not a general tracing-free execution guarantee ([ownership](ownership.md)) |
-| `FWP_GC=full` | native programs: every collection is a major one (no generations) |
-| `FWP_GC_VERIFY=1` | native programs: check each minor collection against a full trace, and abort at the first object it missed (for testing the runtime) |
-| `FWP_GC_STATS=1` | native programs: print the collector's statistics to stderr at exit (collections, bytes allocated, heap and live sizes, pauses, peak RSS) |
-| `FWP_GC_STRESS=n` | native programs: collect at every n-th allocation (`1`: at every one), to find bugs in the runtime |
+| `FWP_ALLOC_STATS=1` | native programs: report allocated/released bytes, live/peak live bytes, heap extent and peak process RSS in KiB at exit; [field definitions](ownership-diagnostics.md#allocation-report-migration-g5-work-in-progress) |
 | `CC` | the C compiler for native builds |
 | `FWP_CC_<triple>` | the C compiler (and its first arguments) for `--target <triple>`, such as `FWP_CC_aarch64_linux_gnu` (see [Cross-compiling](#cross-compiling)) |
 | `AR` | the archiver for `--staticlib` (cross builds: `<triple>-ar`, else `llvm-ar`) |
@@ -1126,12 +1115,9 @@ exports.deactivate = () => client && client.stop();
 
 ## Native tests with checked ownership
 
-`fwp test --gc arc tests.fwp` checks every test against the ARC ownership rules
-before any test runs. `fwp test --std --gc arc` checks the standard library tests in the same mode.
-A rejected entry produces a compile diagnostic; it does not rerun under tracing.
-Checked ARC is now the default. `--gc tracing` explicitly selects the collector
-for diagnostics and programs whose ownership is not yet proved. A rejected
-program never changes memory modes automatically.
+`fwp test tests.fwp` checks every test's ownership before any test runs.
+`fwp test --std` checks the standard library tests. A rejected entry produces a
+compile diagnostic explaining the unsupported lifetime.
 
 For example, `test "length" = "abc" | string.length | eq 3` succeeds. A test that
 raises a language `Error` reports its value and fails; the runner releases that

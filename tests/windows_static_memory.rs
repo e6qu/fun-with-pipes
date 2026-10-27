@@ -74,8 +74,6 @@ main = [
         Command::new(compiler)
             .args([
                 "build",
-                "--gc",
-                "tracing",
                 "--emit-c",
                 "--memory",
                 "static",
@@ -109,14 +107,8 @@ main = [
     for opt in ["-O1", "-O2"] {
         let binary = dir.join("static.exe");
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-        for stress in ["0", "1"] {
-            let out = checked(
-                Command::new(&binary)
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress)
-                    .env("FWP_MEMORY_REPORT", "1"),
-            );
+        {
+            let out = checked(Command::new(&binary).env("FWP_MEMORY_REPORT", "1"));
             assert_eq!(out.stdout, reference.stdout);
             let report = String::from_utf8_lossy(&out.stderr);
             assert!(report.contains("stacks committed separately"), "{report}");
@@ -152,7 +144,7 @@ fn fixed_storage_exhaustion_names_the_configured_part() {
         std::fs::write(&source, program).unwrap();
         checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", "--gc", "tracing", "--memory", "static", "-O1"])
+                .args(["build", "--memory", "static", "-O1"])
                 .args(options)
                 .arg(&source)
                 .arg("-o")
@@ -172,17 +164,17 @@ fn fatal_task_traps_keep_their_exit_status_with_static_fibers() {
     let dir = fwp::cgen::TempDir::new("windows-static-trap").unwrap();
     let source = dir.join("trap.fwp");
     std::fs::write(&source, "bad : () -> I64\nbad = const \"static task trap\" | prim.trap\nmain = task.spawn bad | task.await | ignore\n").unwrap();
-    for gc in ["tracing", "arc"] {
+    {
         let binary = dir.join("trap.exe");
         checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", "--memory", "static", "--gc", gc, "-O2"])
+                .args(["build", "--memory", "static", "-O2"])
                 .arg(&source)
                 .arg("-o")
                 .arg(&binary),
         );
         let out = Command::new(binary).output().unwrap();
-        assert_eq!(out.status.code(), Some(101), "{gc}: {out:?}");
+        assert_eq!(out.status.code(), Some(101), "counted: {out:?}");
         assert_eq!(out.stderr, b"fwp: trap: static task trap\n");
     }
 }

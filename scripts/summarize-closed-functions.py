@@ -34,9 +34,9 @@ for directory in args.artifact:
         memory_lines = [line for line in stderr.splitlines() if line.startswith('client-memory\t')]
         assert len(memory_lines) == 1
         memory = [int(value) for value in memory_lines[0].split('\t')[1:]]
-        assert len(memory) == 6 and memory[5] == 0 and memory[3] >= memory[4] >= 0
+        assert len(memory) == 5 and memory[3] >= memory[4] >= 0
         assert memory[:3] == [int(row[field]) for field in ['all_requests', 'all_requested_bytes', 'retains']]
-        row.update(peak_managed_bytes=memory[3], final_managed_bytes=memory[4], collections=memory[5])
+        row.update(peak_managed_bytes=memory[3], final_managed_bytes=memory[4])
         profile = table(directory / ('sites-' + '-'.join(key) + '.tsv'))
         assert len(profile) == len(sites)
         assert [int(p['site']) for p in profile] == list(range(len(sites)))

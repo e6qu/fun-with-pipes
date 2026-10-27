@@ -7,8 +7,8 @@ valid.
 
 Automatic reference counting (ARC) releases storage when its last counted owner
 finishes using it. An alias is another reference to the same value. These checks
-exercise that cleanup directly, alongside the tracing mode that also searches
-the heap for reachable values.
+exercise that cleanup directly. G5 removes duplicate tracing executions; the
+migrated tests still need full target validation.
 
 `String -> String` means a function from text to text. The following
 `! {Error[String]}` allows it to fail with a string message. `const "expected"`
@@ -40,20 +40,18 @@ The collection probes also use integers whose bits happen to equal valid object
 addresses. Typed cleanup must treat those integers as numbers, not as additional
 owners of the pointed-to objects.
 
-Each probe runs 32 rounds in checked ARC and tracing mode. ARC rounds must return
+Each probe runs 32 rounds with counted ownership. Every round must return
 the allocator's accounted bytes for live values (the managed byte charge) to the
-starting value, with no wide-count entries or
-collections. A wide count is an extra counter used when the usual single-byte
+starting value, with no wide-count entries. A wide count is an extra counter used when the usual single-byte
 counter is too small. Deliberately omitting a final fixture release must fail with
 status 90. Removing a temporary-buffer release must fail with status 3; the loop's
 missing partial cleanup must fail with status 5.
 
 Settings are explicit: dynamic memory, enabled stack placement, C emission at O2,
-and native C builds at optimization levels O1/O2. ARC runs disable collector
-diagnostics. Tracing runs collect at every allocation and verify their tracing,
-with both ordinary and poisoned storage checks. Poisoning deliberately keeps
-released objects and marks their contents to expose stale uses. ARC uses direct
-cleanup checks because retaining released objects would violate its memory contract.
+and native C builds at optimization levels O1/O2. The checks observe physical
+release and live allocation identities; they do not keep dead storage allocated
+or read its old contents. Removing a collector-specific run does not remove its
+distinct failure or cancellation case.
 Complete programs compare with the raw interpreter, which disables optimization.
 
 ## Evidence and limits
@@ -66,8 +64,8 @@ arbitrary programs.
 CI saves generated C, executables, output and exit status under `record-ownership/`.
 The related record, constructor and collection probes now save unexpected
 outcomes before asserting success, so a failed check leaves its evidence intact.
-This test extension did not change the compiler or runtime. Its accepted
-results are recorded below.
+The earlier accepted results are recorded below. They verify their named source
+revision, not the pending collector-removal changes.
 
 See [record cleanup](record-cleanup.md) for constructors and field conversions,
 [ownership](../ownership.md) for the memory contract and [PLAN.md](../../PLAN.md)

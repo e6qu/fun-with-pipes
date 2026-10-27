@@ -25,12 +25,12 @@ class EvidenceValidation(unittest.TestCase):
                    'generatedSha256': hashlib.sha256(b'source').hexdigest()}
         self.report = {'source': 'commit', 'cases': [
             {'work': work, 'variants': {mode + '-' + layout: copy.deepcopy(variant)
-                                      for mode in ['tracing', 'arc']
+                                      for mode in ['counted']
                                       for layout in ['separate', 'joined']}}
             for work in ['full', 'construction']]}
 
     def test_complete_inputs(self):
-        self.assertEqual(len(replay.validate(self.folder, self.report, 'commit', 62)), 8)
+        self.assertEqual(len(replay.validate(self.folder, self.report, 'commit', 62)), 4)
 
     def test_reject_wrong_source_or_architecture(self):
         for source, machine in [('wrong', 62), ('commit', 183)]:
@@ -48,10 +48,10 @@ class EvidenceValidation(unittest.TestCase):
                 path.write_bytes(original)
 
     def test_reject_incomplete_variants_or_external_path(self):
-        variant = self.report['cases'][0]['variants'].pop('arc-joined')
+        variant = self.report['cases'][0]['variants'].pop('counted-joined')
         with self.assertRaises(AssertionError):
             replay.validate(self.folder, self.report, 'commit', 62)
-        self.report['cases'][0]['variants']['arc-joined'] = variant
+        self.report['cases'][0]['variants']['counted-joined'] = variant
         variant['binary'] = '../program'
         with self.assertRaises(AssertionError):
             replay.validate(self.folder, self.report, 'commit', 62)

@@ -88,7 +88,7 @@ static V fwp_p_file_info(V path, const fwp_desc *err) {
     V fields[3] = {S_ISDIR(st.st_mode) ? FWP_TRUE : FWP_FALSE, modified.value, (V)(int64_t)st.st_size};
     V result = fwp_rc_fresh(fwp_record(3, fields));
     (void)fwp_value_finish(&modified, &cleanup);
-    FWP_KEEP_ALIVE(path);
+
     return result;
 }
 
@@ -144,7 +144,7 @@ static V fwp_p_dir_list(V path, const fwp_desc *err, void (*drop_list)(V)) {
     qsort(owner.items,owner.count,sizeof(V),fwp_cmp_cstr);
     V result=fwp_map_finish_protected(&owner,&cleanup);
     fwp_cleanup_pop(&directory_cleanup);fwp_directory_release(&directory);
-    FWP_KEEP_ALIVE(path);return result;
+    return result;
 }
 
 static V fwp_p_dir_create(V path, const fwp_desc *err) {
@@ -187,7 +187,7 @@ static V fwp_p_dir_create_all(V path, const fwp_desc *err) {
         }
     }
     fwp_scratch_finish(&scratch,&cleanup);
-    FWP_KEEP_ALIVE(path);return FWP_UNIT;
+    return FWP_UNIT;
 }
 
 static V fwp_p_env_vars(void (*drop_pair)(V), void (*drop_list)(V)) {
@@ -494,7 +494,7 @@ static V fwp_run_process(V argv, V input, int capture, const fwp_desc *err) {
         (void)fwp_value_finish(&stderr_value, &stderr_cleanup);
     }
     fwp_cleanup_pop(&cleanup); fwp_process_finish(&process);
-    FWP_KEEP_ALIVE(argv); FWP_KEEP_ALIVE(input);
+
     return result;
 finish:
     fwp_cleanup_pop(&cleanup); fwp_process_finish(&process);

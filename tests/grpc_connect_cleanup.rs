@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn grpc_connect_and_handshake_release_pending_resources_on_cancellation() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![
@@ -115,19 +111,20 @@ static void no_release(void *p){(void)p;}
 static char target[300];static g_conn *result;
 static void client(void *arg,int stop){if(stop){cancelled++;return;}char *error=0;result=g_connect(target,0,&error);if(error)_Exit(33);}
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));V tick=fwp_record(1,(V[]){1000000});
+ fwp_lib_init();fwp_heap_start();V tick=fwp_record(1,(V[]){1000000});
  for(int test=1;test<=3;test++){
   mode=0;V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);V address=fwp_p_local_addr(listener);
   snprintf(target,sizeof target,"%s%s",test==2?"https://":"",STR(address)->d);
   mode=test;phase=res_freed=ssl_freed=cancelled=backgrounds=0;watched_fd=FWP_INVALID_SOCKET;watched_res=0;result=0;
-  fwp_task *task=fwp_spawn_task(0,client,0,0,0);
+  fwp_task *task=fwp_spawn_task(0,client,0,0,0);fwp_task_own_internal(task,1);
   for(int i=0;i<30&&!phase;i++)fwp_p_task_sleep(tick);
   if(!phase||task->done||watched_fd==FWP_INVALID_SOCKET)return 31;
   fwp_p_task_cancel(PTR(task));fwp_await(task);
   if(!task->done||cancelled!=1||result||backgrounds||fwp_cleanups)return 32;
+  fwp_task_drop(PTR(task));
   if(!socket_closed(watched_fd))return 1;
   if(res_freed!=1)return 2;if(ssl_freed!=(mode==2?1:0))return 3;
-  mode=0;fwp_p_tcp_stop(listener);FWP_KEEP_ALIVE(listener);FWP_KEEP_ALIVE(tick);
+  mode=0;fwp_p_tcp_stop(listener);
  }
  mode=0;V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);V address=fwp_p_local_addr(listener);snprintf(target,sizeof target,"%s",STR(address)->d);
  mode=4;res_freed=ssl_freed=backgrounds=0;watched_res=0;char *error=0;g_conn *c=g_connect(target,0,&error);
@@ -137,7 +134,7 @@ int main(void){
  g_conn_dead(c,"finished");g_conn_drop(c);mode=0;fwp_p_tcp_stop(listener);
  mode=4;res_freed=ssl_freed=backgrounds=0;watched_res=0;watched_fd=FWP_INVALID_SOCKET;
  c=g_connect(target,0,&error);if(c||!error||strncmp(error,"cannot connect to ",18)||res_freed!=1||ssl_freed||backgrounds||fwp_cleanups||watched_fd==FWP_INVALID_SOCKET||!socket_closed(watched_fd))return 7;free(error);
- mode=0;FWP_KEEP_ALIVE(listener);FWP_KEEP_ALIVE(tick);fwp_lib_finish();return 0;
+ mode=0;fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-connect-cleanup").unwrap();
@@ -165,17 +162,8 @@ int main(void){
             );
         }
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-            }
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
 }

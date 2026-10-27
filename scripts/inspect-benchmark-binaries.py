@@ -13,7 +13,6 @@ ROOT = Path(__file__).resolve().parent.parent
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--input', type=Path, required=True)
 parser.add_argument('--source', required=True)
-parser.add_argument('--memory', choices=['arc', 'tracing'], required=True)
 parser.add_argument('--arch', choices=['x86_64', 'aarch64'], required=True)
 parser.add_argument('--objdump', required=True)
 parser.add_argument('--output', type=Path, required=True)
@@ -23,11 +22,11 @@ assert not args.output.exists(), 'Preserve completed reviews'
 directory, = (args.input / args.source).iterdir()
 report = (directory / 'report.md').read_text()
 assert f'Source commit: `{args.source}`. Host: `linux/{args.arch}`.' in report
-assert f'Native fwp memory mode: `{args.memory}`.' in report, 'declared benchmark memory mode differs'
+assert 'Native fwp ownership: counted.' in report, 'declared benchmark ownership differs'
 assert 'Arithmetic contract: checked signed I64 calculations in all three peers.' in report, 'declared arithmetic contract differs'
 assert '-std=c11 -O2 -ffp-contract=off' in report, 'C build settings differ'
 assert 'Rust compiler (`rustc --edition=2021 -O`)' in report, 'Rust build settings differ'
-assert f'fwp build flags: `--gc {args.memory} -O2`, `FWP_LTO=0`' in report
+assert 'fwp build flags: `-O2`, `FWP_LTO=0`' in report
 programs = sorted(path.name for path in (ROOT / 'bench').iterdir()
                   if (path / 'main.fwp').is_file())
 medians = re.findall(
@@ -45,7 +44,7 @@ for line in raw.splitlines():
             for kind, column in zip(['c', 'rs', 'fwp'], parts[2:5], strict=True)}
 assert sorted(samples) == programs
 machine = {'x86_64': 62, 'aarch64': 183}[args.arch]
-result = dict(source=args.source, memory=args.memory, architecture=args.arch,
+result = dict(source=args.source, ownership='counted', architecture=args.arch,
               reportSha256=hashlib.sha256(report.encode()).hexdigest(),
               tool=subprocess.check_output([args.objdump, '--version'], text=True),
               scope='Static inspection of actual measured binaries; no re-execution. '
@@ -76,17 +75,18 @@ for name, c, rs, fwp in medians:
         assembly = subprocess.check_output([args.objdump, '-d', str(binary)])
         sections = re.findall(rb'^\s*\d+\s+\.text\s+([0-9a-fA-F]+)\s', symbols, re.M)
         assert sections and len(assembly) > 100
-        if kind == 'fwp' and args.memory == 'arc':
-            assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_gc_(scan|mark_all|sweep)\b', symbols)
+        if kind == 'fwp':
+            assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_heap_(scan|mark_all|sweep)\b', symbols)
         row['files'][kind] = dict(sourceSha256=hashlib.sha256(original).hexdigest(),
             binarySha256=hashlib.sha256(data).hexdigest(), fileBytes=len(data),
             textSectionBytes=sum(int(size, 16) for size in sections),
             disassemblySha256=hashlib.sha256(assembly).hexdigest(),
             symbolsSha256=hashlib.sha256(symbols).hexdigest())
     generated = (directory / f'{name}-generated.c').read_bytes()
-    assert (b'#define FWP_ARC_ONLY 1' in generated) == (args.memory == 'arc')
+    assert b'FWP_ARC_ONLY' not in generated
+    assert b'fwp_heap_collect(' not in generated
     row['generatedCSha256'] = hashlib.sha256(generated).hexdigest()
     result['programs'].append(row)
 args.output.parent.mkdir(parents=True, exist_ok=True)
 args.output.write_text(json.dumps(result, indent=2) + '\n')
-print(f'Inspected {len(programs) * 3} native binaries and explicit {args.memory} benchmark records')
+print(f'Inspected {len(programs) * 3} native binaries and counted-ownership benchmark records')

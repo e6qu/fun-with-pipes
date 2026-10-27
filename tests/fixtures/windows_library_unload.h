@@ -6,9 +6,9 @@
 #include <stdio.h>
 #include <string.h>
 struct snapshot {
- void *heap, *meta, *stacks[3], *fibers[3], *wide, *fins, *marks, *metrics, *name;
+ void *heap, *meta, *stacks[3], *fibers[3], *wide, *fins, *metrics, *name;
  uintptr_t socket;
  int entered, completed, cancelled, finalized, order_error, static_exit;
- int wide_freed, fins_freed, marks_freed, metrics_freed, name_freed;
+ int wide_freed, fins_freed, metrics_freed, name_freed;
  int fibers_deleted, key_deleted, signal_added, signal_removed, finished;
 };

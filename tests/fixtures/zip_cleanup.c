@@ -15,9 +15,6 @@ static void zip_drop_input(V value){
 static void zip_dup_x(V value){
     if(zip_case==1&&++zip_x_calls==2)fwp_trap("zip first retain failure");
     fwp_rc_dup(value);
-#ifndef FWP_ARC_ONLY
-    if(zip_collect)fwp_gc_collect();
-#endif
 }
 static void zip_dup_y(V value){
     zip_y_calls++;
@@ -29,28 +26,22 @@ static V *zip_probe_items(V xs,size_t *n){
     return fwp_map_items(xs,n);
 }
 static V zip_probe_pair(V x,V y){
-#ifndef FWP_ARC_ONLY
-    if(zip_collect)fwp_gc_collect();
-#endif
     if(zip_case==5&&++zip_pair_calls==2)fwp_trap("zip pair failure");
     return fwp_tuple2(x,y);
 }
 static V zip_probe_node(V *fields){
-#ifndef FWP_ARC_ONLY
-    if(zip_collect)fwp_gc_collect();
-#endif
     if(zip_case==6&&++zip_node_calls==2)fwp_trap("zip list failure");
     return fwp_data(1,2,fields);
 }
 int main(void){
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     V values[4];for(int i=0;i<4;i++)values[i]=fwp_rc_fresh(fwp_cstr("zip input"));
     V xs=fwp_rc_fresh(fwp_cons(values[0],fwp_rc_fresh(fwp_cons(values[1],0))));
     V ys=fwp_rc_fresh(fwp_cons(values[2],fwp_rc_fresh(fwp_cons(values[3],0))));
     for(zip_collect=0;zip_collect<2;zip_collect++)for(zip_case=0;zip_case<8;zip_case++)for(int repeat=0;repeat<16;repeat++){
         zip_x_calls=zip_y_calls=zip_items_calls=zip_pair_calls=zip_node_calls=0;
         if(zip_case==7){uint8_t *slot=fwp_rc_slot(values[2]);*slot=254;fwp_rc_dup(values[2]);(*fwp_rc_wide_link(slot))->count=SIZE_MAX;}
-        intptr_t before=fwp_gc.budget;
+        size_t before=fwp_heap.live;
         fwp_trap_recover=zip_recover;fwp_trap_jb=&zip_jump;fwp_trap_cleanup=fwp_cleanups;
         if(!setjmp(zip_jump)){
             V result=fwp_p_zip_owned(ys,xs,zip_dup_x,zip_dup_y,zip_drop_string,zip_drop_string,zip_drop_pair,zip_drop_list);
@@ -66,7 +57,7 @@ int main(void){
             if(zip_case==7&&i==2){if(*slot!=255||(*fwp_rc_wide_link(slot))->count!=SIZE_MAX)return 247;fwp_rc_forget_slot(slot);*slot=1;}
             else if(*slot!=1)return 248;
         }
-        if(!zip_collect&&fwp_gc.budget!=before)return 249;
+        if(!zip_collect&&fwp_heap.live!=before)return 249;
     }
-    FWP_KEEP_ALIVE(xs);FWP_KEEP_ALIVE(ys);zip_drop_input(xs);zip_drop_input(ys);return 0;
+    zip_drop_input(xs);zip_drop_input(ys);return 0;
 }

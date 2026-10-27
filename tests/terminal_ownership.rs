@@ -10,10 +10,10 @@ fn terminal_echo_restores_after_success_and_traps() {
         "main = [task.yield (), term.read-secret () | echo] | ignore\n",
     )
     .unwrap();
-    for mode in ["tracing", "arc"] {
+    {
         let cfile = dir.join("terminal.c");
         let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", mode, "--emit-c"])
+            .args(["build", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile)
@@ -42,7 +42,10 @@ fn terminal_echo_restores_after_success_and_traps() {
         for optimization in ["-O1", "-O2"] {
             fwp::cgen::compile_c(&code, &binary, optimization).unwrap();
             let result = Command::new(&binary).output().unwrap();
-            assert!(result.status.success(), "{mode} {optimization}: {result:?}");
+            assert!(
+                result.status.success(),
+                "counted {optimization}: {result:?}"
+            );
         }
         // Drop the restore action only while unwinding. Normal return still restores.
         let broken = code
@@ -59,6 +62,6 @@ fn terminal_echo_restores_after_success_and_traps() {
             format!("static void terminal_test_no_restore(void *p) {{ (void)p; }}\n{broken}");
         fwp::cgen::compile_c(&broken, &binary, "-O2").unwrap();
         let result = Command::new(&binary).output().unwrap();
-        assert_eq!(result.status.code(), Some(245), "{mode}: {result:?}");
+        assert_eq!(result.status.code(), Some(245), "counted: {result:?}");
     }
 }

@@ -13,10 +13,6 @@ fn checked(command: &mut Command) -> Output {
 }
 #[test]
 fn original_record_holders_preserve_files_without_heap_boxes() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let dir = fwp::cgen::TempDir::new("fwp-resource-frame-fields").unwrap();
     let data = dir.join("data");
     std::fs::write(&data, "contents").unwrap();
@@ -48,17 +44,12 @@ main = "{}" | file.open | pack | .file | file.close | const "closed" | echo
     for opt in ["-O1", "-O2"] {
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
         );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
+        let out = checked(&mut Command::new(&exe));
         assert_eq!(out.stdout, reference.stdout);
         assert_eq!(out.stderr, reference.stderr);
     }
@@ -143,22 +134,13 @@ main = "{}" | file.open | pack | .file | file.close | const "closed" | echo
             );
         for opt in ["-O1", "-O2"] {
             fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-            for gc in ["on", "off"] {
-                for poison in ["0", "1"] {
-                    let out = checked(
-                        Command::new(&exe)
-                            .env("FWP_GC", gc)
-                            .env("FWP_GC_STRESS", "1")
-                            .env("FWP_GC_VERIFY", "1")
-                            .env("FWP_REUSE_VERIFY", poison),
-                    );
-                    assert!(out.stdout.is_empty());
-                    eprintln!(
-                        "mode {mode}, {opt}, GC {gc}, poison {poison}: {}",
-                        String::from_utf8_lossy(&out.stderr)
-                    );
-                }
-            }
+
+            let out = checked(&mut Command::new(&exe));
+            assert!(out.stdout.is_empty());
+            eprintln!(
+                "mode {mode}, {opt}: {}",
+                String::from_utf8_lossy(&out.stderr)
+            );
         }
     }
     // Original record binders can be lets and whole-pattern bindings on
@@ -202,23 +184,14 @@ static int record_close(FILE *f){if(f==record_stream)record_closes++;return fclo
         let code = format!("{hooks}\n{code}\n{audit}");
         for opt in ["-O1", "-O2"] {
             fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-            for gc in ["off", "on"] {
-                for poison in ["0", "1"] {
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", gc)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
-                    assert!(
-                        out.status.success(),
-                        "record selector={selector}, {opt}, gc={gc}, poison={poison}: {:?}: {}",
-                        out.status.code(),
-                        String::from_utf8_lossy(&out.stderr)
-                    );
-                }
-            }
+
+            let out = Command::new(&exe).output().unwrap();
+            assert!(
+                out.status.success(),
+                "record selector={selector}, {opt}: {:?}: {}",
+                out.status.code(),
+                String::from_utf8_lossy(&out.stderr)
+            );
         }
     }
     let mut fault_program = program.clone();
@@ -307,34 +280,27 @@ static FILE *observed_open(const char *p,const char *m){FILE *f=fopen(p,m);if(f)
 static int observed_close(FILE *f){if(f==stream)closes++;return fclose(f);}
 static int recover(void){return 1;}
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_prog_out=stdout;fwp_init_consts();
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_prog_out=stdout;fwp_init_consts();
  jmp_buf recovery;fwp_trap_jb=&recovery;fwp_trap_recover=recover;fwp_trap_cleanup=0;
  int failed=setjmp(recovery);if(!failed){f0();return 1;}
  fwp_trap_jb=0;fwp_trap_recover=0;
  struct stat status;if(fwp_cleanups||closes!=1||fstat(fd,&status)!=-1||errno!=EBADF)return 2;
  uint8_t *slot=fwp_rc_slot(watched_text);
- if(fwp_reuse_verify){if(STR(watched_text)->len||STR(watched_text)->d[0])return 3;}
- else if(!slot||*slot)return 3;
+ if(!slot||*slot)return 3;
  return 0;
 }
 "#;
     for opt in ["-O1", "-O2"] {
         for (code, expected) in [(&omitted, 2), (&code, 0)] {
             fwp::cgen::compile_c(&format!("{hooks}\n{code}\n{fixture}"), &exe, opt).unwrap();
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert_eq!(
-                    out.status.code(),
-                    Some(expected),
-                    "{opt}, poison {poison}: {}",
-                    String::from_utf8_lossy(&out.stderr)
-                );
-            }
+
+            let out = Command::new(&exe).output().unwrap();
+            assert_eq!(
+                out.status.code(),
+                Some(expected),
+                "{opt}: {}",
+                String::from_utf8_lossy(&out.stderr)
+            );
         }
     }
 }

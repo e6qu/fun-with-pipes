@@ -2,9 +2,6 @@ static int cwd_mode, cwd_live, cwd_collect;
 static jmp_buf cwd_failure;
 static int cwd_recover(void) { return 1; }
 static void cwd_event(void) {
-#if !FWP_ARC_ONLY
-    if(cwd_collect)fwp_gc_collect();
-#endif
     if(cwd_mode==3)fwp_trap("working directory string failure");
 }
 static V cwd_string(const char *p,size_t n){cwd_event();return fwp_str_lossy(p,n);}
@@ -41,14 +38,10 @@ static int cwd_drop_error(V value){
     cwd_drop(kind);cwd_drop(OBJ(value)->f[1]);cwd_drop(value);return 0;
 }
 int main(void){
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
-#if FWP_ARC_ONLY
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     const int collect_limit=0;
-#else
-    const int collect_limit=1;
-#endif
     for(cwd_collect=0;cwd_collect<=collect_limit;cwd_collect++){
-        intptr_t budget=fwp_gc.budget;
+        size_t live_bytes=fwp_heap.live;
         for(cwd_mode=0;cwd_mode<4;cwd_mode++)for(int repeat=0;repeat<128;repeat++){
             if(cwd_mode==1){
                 fwp_handler handler={0};handler.prev=fwp_handlers;handler.cleanup=fwp_cleanups;fwp_handlers=&handler;
@@ -67,7 +60,7 @@ int main(void){
             }
             if(cwd_live)return 221;
             if(fwp_cleanups)return 226;
-            if(!cwd_collect&&fwp_gc.budget!=budget)return 228;
+            if(!cwd_collect&&fwp_heap.live!=live_bytes)return 228;
         }
 #ifdef _WIN32
         cwd_mode=4;

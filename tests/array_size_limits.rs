@@ -136,25 +136,17 @@ fn array_size_limits_agree_with_raw_interpreter_and_generic_wrappers() {
                 checked(
                     Command::new(fwp)
                         .env_remove("FWP_NO_OPT")
-                        .env("FWP_REUSE", reuse)
-                        .args(["build", "--gc", "tracing", opt, "--emit-c", "-o"])
+                        .args(["build", opt, "--emit-c", "-o"])
                         .arg(&cfile)
                         .arg(&source),
                 );
-                checked(
-                    Command::new(fwp)
-                        .env_remove("FWP_NO_OPT")
-                        .env("FWP_REUSE", reuse)
-                        .args(["build", "--gc", "tracing", opt, "-o"])
-                        .arg(&executable)
-                        .arg(&source),
-                );
-                let output = Command::new(&executable)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", "1")
-                    .output()
-                    .unwrap();
+                let mut code = std::fs::read_to_string(&cfile).unwrap();
+                if reuse == "0" {
+                    code.insert_str(0, "#define FWP_NO_REUSE 1\n");
+                }
+                std::fs::write(&cfile, &code).unwrap();
+                fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+                let output = Command::new(&executable).output().unwrap();
                 if let Some(destination) = std::env::var_os("FWP_ARRAY_SIZE_ARTIFACTS") {
                     let destination = PathBuf::from(destination);
                     std::fs::create_dir_all(&destination).unwrap();
@@ -244,7 +236,7 @@ fn generic_array_constructor_checks_before_multiplication() {
 fn non_tracing_allocation_preserves_size_zeroing_alignment_and_failure() {
     let directory = std::env::temp_dir().join(format!("fwp-wasm-size-{}", std::process::id()));
     std::fs::create_dir(&directory).unwrap();
-    let source = include_str!("../runtime/fwp_rt_gc.c");
+    let source = include_str!("../runtime/fwp_rt_heap.c");
     let start = source.find("static void *fwp_alloc(size_t n) {").unwrap();
     let end = source[start..]
         .find("static void *fwp_alloc_leaf(")

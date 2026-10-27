@@ -1,8 +1,28 @@
+/* These descriptors own decoded storage, including partially filled arrays. */
+static void drop_pair(V value) {
+    if(fwp_rc_release_last(value))fwp_rc_free_obj(value);
+}
+static void drop_scalar_array(V value) {
+    if(fwp_rc_release_last(value))fwp_rc_free_arr(value);
+}
+static void release_sequence(V value,const fwp_desc *type) {
+    if(type->kind==K_ARRAY) {
+        if(!fwp_rc_release_last(value))return;
+        if(type->elem->drop)for(size_t i=0;i<fwp_array_len(value);i++)
+            type->elem->drop(fwp_array_load(value,i,type->elem));
+        fwp_rc_free_arr(value);
+    }else while(value && fwp_rc_release_last(value)) {
+        V next=OBJ(value)->f[1];
+        if(type->elem->drop)type->elem->drop(OBJ(value)->f[0]);
+        fwp_rc_free_obj(value);value=next;
+    }
+}
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+    const size_t baseline=fwp_heap.live;
     const fwp_desc unit={.kind=K_RECORD,.n=0};
     const fwp_desc *fields[]={&unit,&unit};
-    const fwp_desc pair={.kind=K_RECORD,.n=2,.fields=fields};
+    const fwp_desc pair={.kind=K_RECORD,.n=2,.fields=fields,.drop=drop_pair};
     const fwp_desc i8={.kind=K_I8};
     const unsigned char zero_bytes[]={0x81,0x02};
     for(int kind=0;kind<2;kind++)for(int nested=0;nested<2;nested++) {
@@ -17,18 +37,23 @@ int main(void) {
                 if(nested?(OBJ(item)->n!=2 || OBJ(item)->f[0] || OBJ(item)->f[1]):item!=0)return 157;
             }
         }else if(fwp_list_len(value)!=257)return 158;
-        FWP_KEEP_ALIVE(value);
+        release_sequence(value,&container);
+        if(fwp_heap.live!=baseline)return 169;
+
     }
     const unsigned char numeric[]={3,0x80,0xff,0x7f};
-    const fwp_desc numbers={.kind=K_ARRAY,.elem=&i8};V value;
+    const fwp_desc numbers={.kind=K_ARRAY,.elem=&i8,.drop=drop_scalar_array};V value;
     uint64_t calls=measured_calls,bytes=measured_bytes;
     fwp_rd reader={numeric,sizeof numeric,0};
     if(!fwp_decode(&reader,&numbers,&value) || fwp_array_len(value)!=3)return 159;
     if(measured_calls-calls!=1 || measured_bytes-bytes!=sizeof(fwp_arr)+3*fwp_array_stride(&i8))return 163;
     const V expected[]={(V)(int64_t)-128,(V)(int64_t)-1,127};
     for(size_t i=0;i<3;i++)if(fwp_array_load(value,i,&i8)!=expected[i])return 160;
+    drop_scalar_array(value);
+    if(fwp_heap.live!=baseline)return 169;
     reader=(fwp_rd){numeric,3,0};
     if(fwp_decode(&reader,&numbers,&value))return 161;
+    if(fwp_heap.live!=baseline)return 169;
     /* Wide counts still decode directly into the packed payload: no V vector. */
     unsigned char large[259]={0x81,0x02};
     for(size_t i=0;i<257;i++)large[i+2]=(unsigned char)(i%128);
@@ -37,6 +62,8 @@ int main(void) {
     if(!fwp_decode(&reader,&numbers,&value) || fwp_array_len(value)!=257)return 164;
     if(measured_calls-calls!=1 || measured_bytes-bytes!=sizeof(fwp_arr)+257*fwp_array_stride(&i8))return 165;
     for(size_t i=0;i<257;i++)if(fwp_array_load(value,i,&i8)!=(V)(i%128))return 166;
+    drop_scalar_array(value);
+    if(fwp_heap.live!=baseline)return 169;
     const unsigned char huge[]={255,255,255,255,255,255,255,255,255,1};
     reader=(fwp_rd){huge,sizeof huge,0};uint64_t count;
     if(fwp_decode_count(&reader,&unit,0,&count))return 155;

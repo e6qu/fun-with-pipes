@@ -108,8 +108,7 @@ def main():
         assert digest((ROOT / name).read_bytes()) == host['report']['sourceHashes'][name], name
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
-    environment = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
-    environment.pop('FWP_GC', None)
+    environment = dict(os.environ)
     cflags = ['-O2', '-std=gnu11', '-ffp-contract=off', '-fno-fast-math', '-fstack-usage', '-march=' + args.c_arch]
     commands = []
 
@@ -163,7 +162,7 @@ def main():
                                             for i in range(args.repetitions)]
                     managed, raw = [row for row in records if 'solve' not in row]
                     previous = old['fwpProfiles']['fwp-packed']
-                    assert managed['retains'] == managed['finalChargedBytes'] == managed['collections'] == 0
+                    assert managed['retains'] == managed['finalChargedBytes'] == 0
                     assert managed['peakChargedBytes'] <= previous['managed']['peakChargedBytes']
                     for metric in ['requests', 'requestedBytes']:
                         assert managed[metric] <= previous['managed'][metric] * args.repetitions

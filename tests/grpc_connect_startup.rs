@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn grpc_connection_startup_releases_failed_task_reservations() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![
@@ -80,8 +76,8 @@ static void check_wait_lifetimes(void){
   wait_entered=wait_finished=wait_cancelled=0;
   wait_until=mode==0?fwp_now_ns()+100000000LL:0;
   int64_t deadline=mode==3?fwp_now_ns()+100000000LL:0;
-  fwp_task *first=fwp_spawn_task(0,wait_socket,&fd,deadline,0);
-  fwp_task *second=fwp_spawn_task(0,wait_socket,&fd,deadline,0);
+  fwp_task *first=fwp_spawn_task(0,wait_socket,&fd,deadline,0);fwp_task_own_internal(first,1);
+  fwp_task *second=fwp_spawn_task(0,wait_socket,&fd,deadline,0);fwp_task_own_internal(second,1);
   while(wait_entered!=2)fwp_p_task_yield();
   if(mode==1){fwp_cancel_tree(first);fwp_cancel_tree(second);}
   if(mode==2)fwp_fd_closing(fd); /* both parked readers must wake */
@@ -90,35 +86,36 @@ static void check_wait_lifetimes(void){
    if(fwp_now_ns()>=drain)_Exit(44);
    fwp_park(0,fwp_now_ns()+1000000LL);fwp_free_zombie();
   }
-  fwp_await(first);fwp_await(second);fwp_free_zombie();
+  fwp_await(first);fwp_await(second);fwp_free_zombie();fwp_task_drop(PTR(first));fwp_task_drop(PTR(second));
   int cancelled=mode==1||mode==3;
   if(wait_finished!=(cancelled?0:2)||wait_cancelled!=(cancelled?2:0)||fwp_cleanups)_Exit(42);
 #ifndef __linux__
   if(fwp_poll_waits)_Exit(43);
 #endif
-  fwp_p_tcp_stop(listener);FWP_KEEP_ALIVE(listener);
+  fwp_p_tcp_stop(listener);
  }
 }
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_trap_recover=g_trap_recover;
+ fwp_lib_init();fwp_heap_start();fwp_trap_recover=g_trap_recover;
  for(stage=0;stage<3;stage++){
   V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);V address=fwp_p_local_addr(listener);snprintf(target,sizeof target,"%s",STR(address)->d);
   pending=started_reader=started_writer=0;trapped=finalized=0;result=0;
-  fwp_task *task=fwp_spawn_task(0,client,0,0,0);fwp_await(task);g_conn *c=pending;
+  fwp_task *task=fwp_spawn_task(0,client,0,0,0);fwp_task_own_internal(task,1);fwp_await(task);g_conn *c=pending;
   if(!task->done||!c||fwp_cleanups||trapped!=(stage<2))return 2;
+  fwp_task_drop(PTR(task));
   if(stage==0){if(result||g_pool||started_reader||started_writer)return 1;if(strcmp(fwp_trap_msg,"reader spawn trap"))return 3;}
   if(stage==1){if(result||g_pool||!started_reader||started_writer)return 1;if(strcmp(fwp_trap_msg,"writer spawn trap"))return 4;}
   if(stage==2){int kind=0;socklen_t n=sizeof kind;if(result!=c||g_pool!=c||!started_reader||!started_writer||c->refs!=2||c->dead||getsockopt(c->fd,SOL_SOCKET,SO_TYPE,(char *)&kind,&n))return 1;g_conn_dead(c,"finished");}
   // A ready root would prevent the scheduler from polling the closed socket.
   // Park briefly so its reader wakes naturally; never await a freed I/O handle.
   int64_t drain_deadline=fwp_now_ns()+10000000000LL;
-  while(fwp_gc_tasks){
+  while(fwp_tasks_active){
    if(fwp_now_ns()>=drain_deadline){fprintf(stderr,"startup drain timed out at stage %d\n",stage);return 9;}
    fwp_park(0,fwp_now_ns()+1000000LL);fwp_free_zombie();
   }fwp_free_zombie();
   if(stage==2){if(c->refs||c->fd!=FWP_INVALID_SOCKET||finalized)return 1;g_conn_drop(c);result=0;}
   if(finalized!=1||g_pool||fwp_cleanups)return 1;
-  fwp_p_tcp_stop(listener);FWP_KEEP_ALIVE(listener);FWP_KEEP_ALIVE(PTR(task));
+  fwp_p_tcp_stop(listener);
  }
  check_wait_lifetimes();fwp_lib_finish();return 0;
 }
@@ -169,7 +166,7 @@ int main(void){
     for opt in ["-O1", "-O2"] {
         for (broken, expected) in &controls {
             fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
-            let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+            let out = Command::new(&exe).output().unwrap();
             assert_eq!(
                 out.status.code(),
                 Some(*expected),
@@ -177,17 +174,8 @@ int main(void){
             );
         }
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-            }
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
 }

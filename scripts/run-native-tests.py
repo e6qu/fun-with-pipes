@@ -13,22 +13,22 @@ import sys
 import time
 
 ROOT = Path(__file__).resolve().parent.parent
-SHARDS = {"regular": 0, "gc": 1}
+SHARDS = {"regular": 0, "ownership": 1}
 UNIT_TARGETS = {"lib", "bin", "example", "bench"}
 # Every integration target has an explicit assignment. Adding a target must not
-# reshuffle unrelated work or consume the GC job's separate stress allowance.
+# reshuffle unrelated work or consume the ownership job's separate corpus allowance.
 SCHEDULE = ROOT / "scripts/macos-test-shards.json"
 
 
 def assignment(path):
     schedule = json.loads(path.read_text())
     if set(schedule) != set(SHARDS):
-        raise ValueError("schedule must contain exactly regular and gc")
+        raise ValueError("schedule must contain exactly regular and ownership")
     for shard, names in schedule.items():
         if not isinstance(names, list) or not names or any(
                 not isinstance(name, str) or not name for name in names):
             raise ValueError(f"invalid target list for {shard}")
-    names = schedule["regular"] + schedule["gc"]
+    names = schedule["regular"] + schedule["ownership"]
     if len(names) != len(set(names)):
         raise ValueError("duplicate target in macOS schedule")
     return schedule
@@ -52,7 +52,7 @@ def command(metadata, shard, schedule):
             raise ValueError(f"unassigned Cargo target: {target['name']} {kinds}")
     if not names or len(names) != len(set(names)):
         raise ValueError("expected nonempty, unique integration test targets")
-    assigned = schedule["regular"] + schedule["gc"]
+    assigned = schedule["regular"] + schedule["ownership"]
     if len(assigned) != len(set(assigned)):
         raise ValueError("duplicate target in macOS schedule")
     missing, obsolete = set(names) - set(assigned), set(assigned) - set(names)
@@ -64,7 +64,7 @@ def command(metadata, shard, schedule):
         raise ValueError(f"empty integration test shard: {shard}")
     args = ["cargo", "test", "--no-fail-fast"]
     if shard == "all":
-        # Linux retains Cargo's complete target selection and every stress test.
+        # Linux retains Cargo's complete target selection and the complete golden corpus.
         args += ["--all-targets", "--"]
     else:
         # Mac unit, example and benchmark targets run once in the regular job.
@@ -72,8 +72,8 @@ def command(metadata, shard, schedule):
             args += ["--lib", "--bins", "--examples", "--benches"]
         for name in selected:
             args += ["--test", name]
-        # The Mac GC job runs this test separately before its shard.
-        args += ["--", "--skip", "golden_programs_under_gc_stress"]
+        # The Mac ownership job runs this test separately before its shard.
+        args += ["--", "--skip", "golden_programs_with_counted_ownership"]
     return args, sorted(names), selected
 
 

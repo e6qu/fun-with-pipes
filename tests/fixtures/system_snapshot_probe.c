@@ -1,10 +1,7 @@
-static int snapshot_events,snapshot_fail_at,snapshot_collect,snapshot_handles;
+static int snapshot_events,snapshot_fail_at,snapshot_handles;
 static jmp_buf snapshot_failure;
 static int snapshot_recover(void){return 1;}
 static void snapshot_event(void){
-#if !FWP_ARC_ONLY
- if(snapshot_collect)fwp_gc_collect();
-#endif
  if(++snapshot_events==snapshot_fail_at)fwp_trap("snapshot construction probe");
 }
 static V snapshot_lossy(const char *s,size_t n){snapshot_event();return fwp_str_lossy(s,n);}
@@ -59,10 +56,10 @@ static int snapshot_counts(V xs,int pairs){
 static volatile V snapshot_directory,snapshot_created;
 int main(int argc,char **argv){
  if(argc!=3)return 246;
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+ size_t initial_bytes=fwp_heap.live;
  snapshot_directory=fwp_rc_fresh(fwp_cstr(argv[1]));snapshot_created=fwp_rc_fresh(fwp_cstr(argv[2]));
- const char *collect=getenv("FWP_SNAPSHOT_COLLECTION");snapshot_collect=collect&&!strcmp(collect,"1");
- intptr_t budget=fwp_gc.budget;
+ size_t live_bytes=fwp_heap.live;
  for(int kind=0;kind<3;kind++){
   V path=kind==2?snapshot_created:snapshot_directory;
   for(int repeat=0;repeat<64;repeat++){
@@ -71,7 +68,7 @@ int main(int argc,char **argv){
    if(kind==0 && fwp_list_len(value)!=35)return 247;
    if(kind==0)snapshot_drop_strings(value);else if(kind==1)snapshot_drop_pairs(value);
    if(snapshot_handles)return 242;
-   if(!snapshot_collect && fwp_gc.budget!=budget)return 241;
+   if(fwp_heap.live!=live_bytes)return 241;
   }
   int count=snapshot_events;
   fwp_trap_recover=snapshot_recover;fwp_trap_jb=&snapshot_failure;fwp_trap_cleanup=fwp_cleanups;
@@ -79,12 +76,12 @@ int main(int argc,char **argv){
    snapshot_events=0;
    if(!setjmp(snapshot_failure)){(void)snapshot_call(kind,path);return 248;}
    if(snapshot_handles || fwp_cleanups!=fwp_trap_cleanup)return 242;
-   if(!snapshot_collect && fwp_gc.budget!=budget)return 241;
+   if(fwp_heap.live!=live_bytes)return 241;
    if(*fwp_rc_slot(path)!=1)return 243;
   }
   snapshot_fail_at=0;fwp_trap_recover=0;fwp_trap_jb=0;fwp_trap_cleanup=0;
  }
  snapshot_drop_text(snapshot_directory);snapshot_drop_text(snapshot_created);
- if(snapshot_collect && !fwp_gc.ncollect)return 250;
+ if(fwp_heap.live!=initial_bytes)return 241;
  return 0;
 }

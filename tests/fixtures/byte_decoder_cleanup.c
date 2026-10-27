@@ -8,8 +8,8 @@ static void byte_leaf_drop(V value) {
     if(fwp_rc_release_last(value)) fwp_rc_resource_free_obj(value);
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
-    intptr_t initial_budget=fwp_gc.budget;
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
+    size_t initial_live_bytes=fwp_heap.live;
     for(int which=0;which<16;which++) {
         V raw=fwp_rc_fresh(fwp_cstr("hello hello hello")), input=raw;
         if(which<2) input=fwp_rc_fresh(fwp_p_zlib_gzip(raw));
@@ -22,7 +22,7 @@ int main(void) {
         if(byte_buffers_live) return 249;
         int failures=0, completed=0;
         for(int allocation=1;allocation<64;allocation++) {
-            intptr_t budget=fwp_gc.budget;
+            size_t live_bytes=fwp_heap.live;
             fwp_trap_recover=byte_recover; fwp_trap_jb=&byte_jump;
             fwp_trap_cleanup=fwp_cleanups; byte_left=allocation;
             if(!setjmp(byte_jump)) {
@@ -46,8 +46,8 @@ int main(void) {
                 completed=1;
             } else failures++;
             byte_left=0; fwp_trap_recover=NULL; fwp_trap_jb=NULL;
-            if(fwp_cleanups || fwp_gc.budget!=budget || byte_buffers_live) {
-                fprintf(stderr,"byte case %d allocation %d: charged delta %lld, native buffers %d, cleanup pending %d\n",which,allocation,(long long)(budget-fwp_gc.budget),byte_buffers_live,fwp_cleanups!=NULL);
+            if(fwp_cleanups || fwp_heap.live!=live_bytes || byte_buffers_live) {
+                fprintf(stderr,"byte case %d allocation %d: charged delta %lld, native buffers %d, cleanup pending %d\n",which,allocation,(long long)(fwp_heap.live - live_bytes),byte_buffers_live,fwp_cleanups!=NULL);
                 return 248;
             }
             if(!fwp_rc_last(input)) return 249;
@@ -57,7 +57,7 @@ int main(void) {
         printf("byte case %d: %d managed allocation failures checked; final charged delta 0; native buffers 0\n",which,failures);
         if(input!=raw) byte_leaf_drop(input);
         byte_leaf_drop(raw);
-        if(fwp_gc.budget!=initial_budget) return 248;
+        if(fwp_heap.live!=initial_live_bytes) return 248;
     }
     return 0;
 }

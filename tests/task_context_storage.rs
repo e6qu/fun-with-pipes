@@ -17,7 +17,7 @@ fn task_stack_pages_guard_reuse_and_setup_failures() {
     let begin = "    t->stack_size = FWP_NATIVE_TASK_STACK;\n    if (fwp_stack_pool_n > 0)";
     assert_eq!(runtime.matches(begin).count(), 1);
     let block = &runtime[runtime.find(begin).unwrap()..];
-    let block = &block[..block.find("#endif\n    t->gc_next").unwrap()];
+    let block = &block[..block.find("#endif\n    t->all_next").unwrap()];
     let code = include_str!("fixtures/task_stack_pages.c")
         .replace("    /* PRODUCTION_STACK_ALLOCATION */", block);
     let path = directory("pages");
@@ -83,7 +83,7 @@ fn run(command: &mut Command, path: &Path, label: &str, seconds: u64) -> Output 
     }
 }
 
-fn generated(path: &Path, memory: &str, program: &str) -> String {
+fn generated(path: &Path, program: &str) -> String {
     let source = path.join("tasks.fwp");
     std::fs::write(&source, program).unwrap();
     let compiler = env!("CARGO_BIN_EXE_fwp");
@@ -107,7 +107,7 @@ fn generated(path: &Path, memory: &str, program: &str) -> String {
     let result = run(
         Command::new(compiler)
             .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", memory, "--emit-c", "-O1"])
+            .args(["build", "--emit-c", "-O1"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile),
@@ -204,10 +204,9 @@ fn compile(code: &str, path: &Path, label: &str, opt: &str, uses_context: bool) 
                     "{label} changed the context implementation"
                 );
             }
-            if code.contains("#define FWP_ARC_ONLY 1") {
-                for collector in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
-                    assert!(!symbols.contains(collector), "{label} retains {collector}");
-                }
+
+            for collector in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
+                assert!(!symbols.contains(collector), "{label} retains {collector}");
             }
         }
     }
@@ -215,231 +214,160 @@ fn compile(code: &str, path: &Path, label: &str, opt: &str, uses_context: bool) 
 }
 
 #[test]
-fn saved_context_roots_and_machine_state() {
-    let path = directory("roots");
-    let code = generated(&path, "tracing", PROGRAM);
+fn saved_context_preserves_registers_rounding_and_signals() {
+    let path = directory("machine-state");
+    let code = generated(&path, PROGRAM);
     for opt in ["-O0", "-O2"] {
-        for (layout, original) in [("heap", heap_context(&code)), ("stack", code.clone())] {
-            let mut instrumented = original;
+        for (layout, mut instrumented) in [("heap", heap_context(&code)), ("stack", code.clone())] {
             let declarations = instrumented
                 .find("static void *fwp_main_thread(void *arg) {")
                 .unwrap();
-            instrumented.insert_str(declarations, include_str!("fixtures/task_context_roots.c"));
+            instrumented.insert_str(declarations, include_str!("fixtures/task_context_state.c"));
             replace(
                 &mut instrumented,
                 "    fwp_init_consts();\n",
-                "    fwp_init_consts();\n    probe_context_roots();\n",
+                "    fwp_init_consts();\n    probe_context_state();\n",
                 1,
             );
             let instrumented = format!(
                 "#define PROBE_CONTEXT_STACK {}\n{instrumented}",
                 usize::from(layout == "stack")
             );
-            let mut variants = vec![("ordinary", instrumented.clone(), 0)];
-            if layout == "stack" {
-                variants.push((
-                    "missing-root",
-                    format!("#define PROBE_BROKEN_ROOT 1\n{instrumented}"),
-                    191,
-                ));
-                let mut missing_child = instrumented.clone();
-                replace(
-                    &mut missing_child,
-                    "fwp_gc_scan_root(FWP_TASK_LOW(t), t->stack + t->stack_size);",
-                    "fwp_gc_scan_root(FWP_TASK_LOW(t), (char *)t->ctx);",
-                    1,
-                );
-                variants.push(("missing-child", missing_child, 192));
-            }
-            for (variant, text, expected) in variants {
-                let label = format!("{layout}{opt}-{variant}");
-                let binary = compile(&text, &path, &label, opt, true);
-                let actual = run(
-                    Command::new(binary)
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", "0")
-                        .env_remove("FWP_GC"),
-                    &path,
-                    &label,
-                    30,
-                );
-                assert_eq!(
-                    actual.status.code(),
-                    Some(expected),
-                    "{label}: {}",
-                    String::from_utf8_lossy(&actual.stderr)
-                );
-                if expected == 0 {
-                    assert_eq!(
-                        actual.stdout,
-                        b"saved context roots and machine state pass\n528\n"
-                    );
-                    assert!(
-                        actual.stderr.is_empty(),
-                        "{label}: {}",
-                        String::from_utf8_lossy(&actual.stderr)
-                    );
-                }
-            }
+            let label = format!("{layout}{opt}");
+            let binary = compile(&instrumented, &path, &label, opt, true);
+            let actual = run(&mut Command::new(binary), &path, &label, 30);
+            assert!(actual.status.success(), "{label}: {actual:?}");
+            assert_eq!(
+                actual.stdout,
+                b"saved registers, rounding and signals pass\n528\n"
+            );
+            assert!(actual.stderr.is_empty(), "{label}: {actual:?}");
         }
     }
 }
 
 #[test]
 fn task_context_storage_preserves_output_and_cleanup() {
-    for memory in ["arc", "tracing"] {
-        let path = directory(memory);
-        let code = generated(&path, memory, PROGRAM);
-        for (layout, original) in [("heap", heap_context(&code)), ("stack", code.clone())] {
-            let mut measured = allocations::instrument_client_allocations(&original);
-            let layout_report = format!("    fprintf(stderr, \"task-layout\\t%zu\\t%zu\\t%zu\\t%zu\\n\", sizeof(fwp_task), _Alignof(fwp_task), sizeof(ucontext_t), (size_t){});\n", if layout == "stack" { "sizeof(ucontext_t)" } else { "0" });
-            replace(
+    let path = directory("counted");
+    let code = generated(&path, PROGRAM);
+    for (layout, original) in [("heap", heap_context(&code)), ("stack", code.clone())] {
+        let mut measured = allocations::instrument_client_allocations(&original);
+        let layout_report = format!("    fprintf(stderr, \"task-layout\\t%zu\\t%zu\\t%zu\\t%zu\\n\", sizeof(fwp_task), _Alignof(fwp_task), sizeof(ucontext_t), (size_t){});\n", if layout == "stack" { "sizeof(ucontext_t)" } else { "0" });
+        replace(
                 &mut measured,
                 "    client_measure_end();\n",
-                &format!("    client_measure_end();\n{layout_report}    fprintf(stderr, \"process-peak-kib\\t%ld\\n\", fwp_gc_status_kb(\"VmHWM\"));\n"),
+                &format!("    client_measure_end();\n{layout_report}    fprintf(stderr, \"process-peak-kib\\t%ld\\n\", fwp_heap_status_kb(\"VmHWM\"));\n"),
                 1,
             );
-            let verified = if layout == "stack" {
-                let mut checked = measured.clone();
-                replace(&mut checked, "    fwp_native_tasks_finish();\n", "    fwp_native_tasks_finish();\n    for(size_t i=0;i<sizeof fwp_root_context;i++)if(((unsigned char *)&fwp_root_context)[i])_Exit(193);\n", 1);
-                replace(&mut checked, "    makecontext(t->ctx, fwp_task_main, 0);", "    makecontext(t->ctx, fwp_task_main, 0);\n    if((uintptr_t)t->ctx % _Alignof(ucontext_t) || (char *)t->ctx < t->stack || (char *)(t->ctx+1) > t->stack+t->stack_size || t->ctx->uc_stack.ss_size != (size_t)((char *)t->ctx-t->stack))_Exit(195);", 1);
-                replace(&mut checked, "        fwp_zombie->gc_prev = fwp_zombie->gc_next = 0;", "        fwp_zombie->gc_prev = fwp_zombie->gc_next = 0;\n        if(fwp_zombie->ctx || fwp_zombie->stack)_Exit(196);", 1);
-                Some(checked)
-            } else {
-                None
-            };
-            for opt in ["-O0", "-O2"] {
-                let mut variants = vec![(format!("{layout}{opt}"), &measured)];
-                if let Some(checked) = &verified {
-                    variants.push((format!("{layout}{opt}-verified"), checked));
-                }
-                for (label, source) in variants {
-                    let binary = compile(source, &path, &label, opt, true);
-                    let actual = run(
-                        Command::new(binary)
-                            .env("FWP_GC", "off")
-                            .env("FWP_FREE", "1")
-                            .env("FWP_GC_STRESS", "0")
-                            .env("FWP_GC_VERIFY", "0")
-                            .env("FWP_REUSE_VERIFY", "0"),
-                        &path,
-                        &label,
-                        30,
-                    );
-                    assert!(
-                        actual.status.success(),
-                        "{memory}/{label}: {}",
-                        String::from_utf8_lossy(&actual.stderr)
-                    );
-                    assert_eq!(actual.stdout, b"528\n");
-                    let stderr = String::from_utf8_lossy(&actual.stderr);
-                    let counts = stderr
-                        .lines()
-                        .find(|line| line.starts_with("client-memory\t"))
-                        .unwrap();
-                    let values: Vec<u64> = counts
-                        .split('\t')
-                        .skip(1)
-                        .map(|v| v.parse().unwrap())
-                        .collect();
-                    assert_eq!(values.len(), 6);
-                    assert_eq!(values[4..], [0, 0], "{memory}/{label}: {stderr}");
-                    let peak: u64 = stderr
-                        .lines()
-                        .find_map(|line| line.strip_prefix("process-peak-kib\t"))
-                        .unwrap()
-                        .parse()
-                        .unwrap();
-                    assert!(peak > 0, "whole-process peak memory unavailable: {stderr}");
-                    assert_eq!(stderr.lines().count(), 3, "{stderr}");
-                }
+        let verified = if layout == "stack" {
+            let mut checked = measured.clone();
+            replace(&mut checked, "    fwp_native_tasks_finish();\n", "    fwp_native_tasks_finish();\n    for(size_t i=0;i<sizeof fwp_root_context;i++)if(((unsigned char *)&fwp_root_context)[i])_Exit(193);\n", 1);
+            replace(&mut checked, "    makecontext(t->ctx, fwp_task_main, 0);", "    makecontext(t->ctx, fwp_task_main, 0);\n    if((uintptr_t)t->ctx % _Alignof(ucontext_t) || (char *)t->ctx < t->stack || (char *)(t->ctx+1) > t->stack+t->stack_size || t->ctx->uc_stack.ss_size != (size_t)((char *)t->ctx-t->stack))_Exit(195);", 1);
+            replace(&mut checked, "        fwp_zombie->all_prev = fwp_zombie->all_next = 0;", "        fwp_zombie->all_prev = fwp_zombie->all_next = 0;\n        if(fwp_zombie->ctx || fwp_zombie->stack)_Exit(196);", 1);
+            Some(checked)
+        } else {
+            None
+        };
+        for opt in ["-O0", "-O2"] {
+            let mut variants = vec![(format!("{layout}{opt}"), &measured)];
+            if let Some(checked) = &verified {
+                variants.push((format!("{layout}{opt}-verified"), checked));
             }
-            if memory == "arc" && layout == "stack" {
-                let mut broken = verified.unwrap();
-                replace(
-                    &mut broken,
-                    "        memset(&fwp_root_context, 0, sizeof fwp_root_context);\n",
-                    "",
-                    1,
-                );
-                let label = "missing-root-clear-O2";
-                let binary = compile(&broken, &path, label, "-O2", true);
-                let actual = run(
-                    Command::new(binary)
-                        .env("FWP_GC", "off")
-                        .env("FWP_FREE", "1")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "0")
-                        .env("FWP_REUSE_VERIFY", "0"),
-                    &path,
-                    label,
-                    30,
-                );
-                assert_eq!(
-                    actual.status.code(),
-                    Some(193),
-                    "{}",
+            for (label, source) in variants {
+                let binary = compile(source, &path, &label, opt, true);
+                let actual = run(&mut Command::new(binary), &path, &label, 30);
+                assert!(
+                    actual.status.success(),
+                    "{label}: {}",
                     String::from_utf8_lossy(&actual.stderr)
                 );
+                assert_eq!(actual.stdout, b"528\n");
+                let stderr = String::from_utf8_lossy(&actual.stderr);
+                let counts = stderr
+                    .lines()
+                    .find(|line| line.starts_with("client-memory\t"))
+                    .unwrap();
+                let values: Vec<u64> = counts
+                    .split('\t')
+                    .skip(1)
+                    .map(|v| v.parse().unwrap())
+                    .collect();
+                assert_eq!(values.len(), 5);
+                assert_eq!(values[4], 0, "{label}: {stderr}");
+                let peak: u64 = stderr
+                    .lines()
+                    .find_map(|line| line.strip_prefix("process-peak-kib\t"))
+                    .unwrap()
+                    .parse()
+                    .unwrap();
+                assert!(peak > 0, "whole-process peak memory unavailable: {stderr}");
+                assert_eq!(stderr.lines().count(), 3, "{stderr}");
             }
+        }
+        if layout == "stack" {
+            let mut broken = verified.unwrap();
+            replace(
+                &mut broken,
+                "        memset(&fwp_root_context, 0, sizeof fwp_root_context);\n",
+                "",
+                1,
+            );
+            let label = "missing-root-clear-O2";
+            let binary = compile(&broken, &path, label, "-O2", true);
+            let actual = run(&mut Command::new(binary), &path, label, 30);
+            assert_eq!(
+                actual.status.code(),
+                Some(193),
+                "{}",
+                String::from_utf8_lossy(&actual.stderr)
+            );
         }
     }
 }
 
 #[test]
 fn taskless_entry_does_not_clear_unused_context_storage() {
-    for memory in ["arc", "tracing"] {
-        let path = directory(&format!("taskless-{memory}"));
-        let mut code = generated(&path, memory, "main = 528 | echo\n");
-        let clear = "memset(&fwp_root_context, 0, sizeof fwp_root_context);";
-        replace(
-            &mut code,
-            clear,
-            "(probe_context_clears++, memset(&fwp_root_context, 0, sizeof fwp_root_context));",
-            3,
-        );
-        replace(
+    let path = directory("taskless");
+    let mut code = generated(&path, "main = 528 | echo\n");
+    let clear = "memset(&fwp_root_context, 0, sizeof fwp_root_context);";
+    replace(
+        &mut code,
+        clear,
+        "(probe_context_clears++, memset(&fwp_root_context, 0, sizeof fwp_root_context));",
+        3,
+    );
+    replace(
             &mut code,
             "    fwp_native_tasks_finish();\n",
             "    fwp_native_tasks_finish();\n    if (probe_context_clears || fwp_root || fwp_cur) _Exit(197);\n",
             1,
         );
-        code = format!("static int probe_context_clears;\n{code}");
-        for opt in ["-O0", "-O2"] {
-            let mut variants = vec![("ordinary", code.clone(), 0)];
-            if memory == "arc" && opt == "-O2" {
-                let mut broken = code.clone();
-                replace(
+    code = format!("static int probe_context_clears;\n{code}");
+    for opt in ["-O0", "-O2"] {
+        let mut variants = vec![("ordinary", code.clone(), 0)];
+        if opt == "-O2" {
+            let mut broken = code.clone();
+            replace(
                     &mut broken,
                     "    fwp_native_tasks_finish();\n",
                     "    fwp_native_tasks_finish();\n    (probe_context_clears++, memset(&fwp_root_context, 0, sizeof fwp_root_context));\n",
                     1,
                 );
-                variants.push(("unconditional-clear", broken, 197));
-            }
-            for (variant, source, status) in variants {
-                let label = format!("{variant}{opt}");
-                let binary = compile(&source, &path, &label, opt, false);
-                let actual = run(
-                    Command::new(binary)
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "0")
-                        .env("FWP_REUSE_VERIFY", "0"),
-                    &path,
-                    &label,
-                    30,
-                );
-                assert_eq!(
-                    actual.status.code(),
-                    Some(status),
-                    "{memory}/{label}: {}",
-                    String::from_utf8_lossy(&actual.stderr)
-                );
-                assert!(actual.stderr.is_empty());
-                if status == 0 {
-                    assert_eq!(actual.stdout, b"528\n");
-                }
+            variants.push(("unconditional-clear", broken, 197));
+        }
+        for (variant, source, status) in variants {
+            let label = format!("{variant}{opt}");
+            let binary = compile(&source, &path, &label, opt, false);
+            let actual = run(&mut Command::new(binary), &path, &label, 30);
+            assert_eq!(
+                actual.status.code(),
+                Some(status),
+                "{label}: {}",
+                String::from_utf8_lossy(&actual.stderr)
+            );
+            assert!(actual.stderr.is_empty());
+            if status == 0 {
+                assert_eq!(actual.stdout, b"528\n");
             }
         }
     }

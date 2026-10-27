@@ -78,11 +78,10 @@ fn callbacks_and_partial_spines_release_results_and_scratch() {
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .env("FWP_STACK", "1")
                 .arg(&src)
                 .args(["--emit-c", "-O2", "-o"])
@@ -97,24 +96,18 @@ fn callbacks_and_partial_spines_release_results_and_scratch() {
 static volatile V source_list, input_leaf, input_alias;
 static int recover_map_trap(void) { return 1; }
 static int dead_string(V v) {
-#ifndef FWP_ARC_ONLY
-    if (fwp_reuse_verify) return STR(v)->len == 0;
-#endif
     return *fwp_rc_slot(v) == 0;
 }
 static int dead_data(V v) {
-#ifndef FWP_ARC_ONLY
-    if (fwp_reuse_verify) return OBJ(v)->tag == 0xdead;
-#endif
     return *fwp_rc_slot(v) == 0;
 }
 static int dead_scratch(V v) {
     size_t ci;
-    gc_chunk *chunk = fwp_gc_chunk_of((uintptr_t)v, &ci);
+    heap_chunk *chunk = fwp_heap_chunk_of((uintptr_t)v, &ci);
     if (!chunk) return 1;
-    if (chunk->type == GC_FREE) return 1;
-    if (chunk->type != GC_SMALL) return 0;
-    for (char *p = fwp_gc.lists[chunk->leaf][chunk->cls].free; p;
+    if (chunk->type == HEAP_FREE) return 1;
+    if (chunk->type != HEAP_SMALL) return 0;
+    for (char *p = fwp_heap.lists[chunk->leaf][chunk->cls].free; p;
          p = (char *)~*(uintptr_t *)p)
         if (PTR(p) == v) return 1;
     return 0;
@@ -123,8 +116,8 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
-    intptr_t baseline = fwp_gc.budget;
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
+    size_t baseline = fwp_heap.live;
     for (volatile int round=0; round<32; round++) {
     for (volatile int mode = 0; mode < 3; mode++) {
         input_leaf = fwp_rc_fresh(fwp_str_new("a", 1));
@@ -151,9 +144,7 @@ int main(void) {
         /* The retained input alias remains owned independently of the map. */
         fwp_rc_free_obj(input_alias);
     }
-#ifdef FWP_ARC_ONLY
-    if (fwp_gc.budget != baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
-#endif
+    if (fwp_heap.live != baseline || fwp_heap.rc_wide_len) return 90;
     }
     puts("map results and scratch release across failed callbacks");
     return 0;
@@ -177,102 +168,67 @@ int main(void) {
                 "        owner.count++; if (owner.count == 1) cancel_map_after_result();",
             );
         assert_ne!(cancelled, runtime);
-        let cancelled_probe = probe.replace("static volatile V source_list, input_leaf, input_alias;", "static volatile V source_list, input_leaf, input_alias;\nstatic fwp_task map_cancel;\nstatic void cancel_map_after_result(void) { if (fwp_cur) { fwp_cur->cancelled = 1; fwp_budget = 0; } }").replace("        if (!setjmp(h.jb))", "        memset(&map_cancel, 0, sizeof map_cancel); fwp_cur = &map_cancel; fwp_budget = 1000000;\n#ifdef _WIN32\n        /* This synthetic task executes on main's stack. */\n        map_cancel.ctx.top = fwp_gc.main_top;\n#endif\n        jmp_buf map_cancel_base; map_cancel.base = &map_cancel_base;\n        if (!setjmp(map_cancel_base))").replace("        fwp_handlers = h.prev;", "        map_cancel.base = NULL; fwp_cur = NULL; if (!map_cancel.unwinding) return 8;\n        fwp_handlers = h.prev;");
+        let cancelled_probe = probe.replace("static volatile V source_list, input_leaf, input_alias;", "static volatile V source_list, input_leaf, input_alias;\nstatic fwp_task map_cancel;\nstatic void cancel_map_after_result(void) { if (fwp_cur) { fwp_cur->cancelled = 1; fwp_budget = 0; } }").replace("        if (!setjmp(h.jb))", "        memset(&map_cancel, 0, sizeof map_cancel); fwp_cur = &map_cancel; fwp_budget = 1000000;\n        jmp_buf map_cancel_base; map_cancel.base = &map_cancel_base;\n        if (!setjmp(map_cancel_base))").replace("        fwp_handlers = h.prev;", "        map_cancel.base = NULL; fwp_cur = NULL; if (!map_cancel.unwinding) return 8;\n        fwp_handlers = h.prev;");
         for opt in ["-O1", "-O2"] {
             for (case, code, probe) in [
                 ("callback", &runtime, &probe),
                 ("builder", &builder, &builder_probe),
                 ("cancelled", &cancelled, &cancelled_probe),
             ] {
-                if mode == "arc" {
+                {
                     let missing = probe.replace("fwp_rc_free_obj(input_alias);", "");
                     assert_ne!(&missing, probe);
                     fwp::cgen::compile_c(&format!("{code}\n{missing}"), &exe, opt).unwrap();
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", "off")
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "0")
-                        .env("FWP_REUSE_VERIFY", "0")
-                        .output()
-                        .unwrap();
+                    let out = Command::new(&exe).output().unwrap();
                     record_probe::save(
                         "map_unwind_ownership",
-                        &format!("{mode}{opt}-{case}-missing-release"),
+                        &format!("counted{opt}-{case}-missing-release"),
                         &format!("{code}\n{missing}"),
                         &exe,
                         &out,
                     );
-                    assert_eq!(out.status.code(), Some(90), "{mode} {opt} {case}: {out:?}");
+                    assert_eq!(out.status.code(), Some(90), "counted {opt} {case}: {out:?}");
                 }
                 let missing_scratch =
                     code.replacen("    if (items) fwp_mem_free(items);", "    (void)items;", 1);
                 assert_ne!(&missing_scratch, code);
                 fwp::cgen::compile_c(&format!("{missing_scratch}\n{probe}"), &exe, opt).unwrap();
-                let out = Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress)
-                    .output()
-                    .unwrap();
+                let out = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "map_unwind_ownership",
-                    &format!("{mode}{opt}-{case}-missing-scratch"),
+                    &format!("counted{opt}-{case}-missing-scratch"),
                     &format!("{missing_scratch}\n{probe}"),
                     &exe,
                     &out,
                 );
-                assert_eq!(out.status.code(), Some(3), "{mode} {opt} {case}: {out:?}");
+                assert_eq!(out.status.code(), Some(3), "counted {opt} {case}: {out:?}");
                 fwp::cgen::compile_c(&format!("{code}\n{probe}"), &exe, opt).unwrap();
-                for poison in if mode == "arc" {
-                    &["0"][..]
-                } else {
-                    &["0", "1"][..]
-                } {
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
+                {
+                    let out = Command::new(&exe).output().unwrap();
                     record_probe::save(
                         "map_unwind_ownership",
-                        &format!("{mode}{opt}-{case}-normal-poison{poison}"),
+                        &format!("counted{opt}-{case}-normal"),
                         &format!("{code}\n{probe}"),
                         &exe,
                         &out,
                     );
-                    assert!(
-                        out.status.success(),
-                        "{mode} {opt} poison={poison}: {out:?}"
-                    );
+                    assert!(out.status.success(), "counted {opt}: {out:?}");
                     assert_eq!(
                         out.stdout,
                         b"map results and scratch release across failed callbacks\n"
                     );
-                    assert!(out.stderr.is_empty(), "{mode} {opt} {case}: {out:?}");
+                    assert!(out.stderr.is_empty(), "counted {opt} {case}: {out:?}");
                 }
             }
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .args(["build", "--memory", "dynamic"])
                     .env("FWP_STACK", "1")
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe),
             );
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
+            let out = checked(&mut Command::new(&exe));
             assert_eq!(out.stdout, reference.stdout);
         }
     }
@@ -286,11 +242,10 @@ fn scalar_address_bits_survive_map_cleanup() {
     let exe = dir.0.join("scalar.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .env("FWP_STACK", "1")
                 .arg(&src)
                 .args(["--emit-c", "-O2", "-o"])
@@ -317,8 +272,8 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
-    intptr_t baseline = fwp_gc.budget;
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
+    size_t baseline = fwp_heap.live;
     for (volatile int round=0; round<32; round++) {
     scalar_word = fwp_rc_fresh(fwp_str_new("scalar alias", 12)); source = PTR(&scalar_head);
     fwp_trap_recover = recover_scalar; fwp_trap_jb = &scalar_trap; fwp_trap_cleanup = 0;
@@ -331,9 +286,7 @@ int main(void) {
     LIST_DROP(result);
     if (*fwp_rc_slot(scalar_word) != 1 || STR(scalar_word)->len != 12) return 3;
     fwp_rc_free_obj(scalar_word);
-#ifdef FWP_ARC_ONLY
-    if (fwp_gc.budget != baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
-#endif
+    if (fwp_heap.live != baseline || fwp_heap.rc_wide_len) return 90;
     }
     puts("scalar address bits remain uncounted on map failure");
     return 0;
@@ -345,59 +298,39 @@ int main(void) {
             "int original_main(int argc, char **argv)",
         );
         for opt in ["-O1", "-O2"] {
-            for (case, code, probe) in [("scalar", &runtime, &probe)] {
-                if mode == "arc" {
+            {
+                let (case, code, probe) = ("scalar", &runtime, &probe);
+                {
                     let missing = probe.replace("fwp_rc_free_obj(scalar_word);", "");
                     assert_ne!(&missing, probe);
                     fwp::cgen::compile_c(&format!("{code}\n{missing}"), &exe, opt).unwrap();
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", "off")
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "0")
-                        .env("FWP_REUSE_VERIFY", "0")
-                        .output()
-                        .unwrap();
+                    let out = Command::new(&exe).output().unwrap();
                     record_probe::save(
                         "map_unwind_ownership",
-                        &format!("{mode}{opt}-{case}-missing-release"),
+                        &format!("counted{opt}-{case}-missing-release"),
                         &format!("{code}\n{missing}"),
                         &exe,
                         &out,
                     );
-                    assert_eq!(out.status.code(), Some(90), "{mode} {opt} {case}: {out:?}");
+                    assert_eq!(out.status.code(), Some(90), "counted {opt} {case}: {out:?}");
                 }
 
                 fwp::cgen::compile_c(&format!("{code}\n{probe}"), &exe, opt).unwrap();
-                for poison in if mode == "arc" {
-                    &["0"][..]
-                } else {
-                    &["0", "1"][..]
-                } {
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
+                {
+                    let out = Command::new(&exe).output().unwrap();
                     record_probe::save(
                         "map_unwind_ownership",
-                        &format!("{mode}{opt}-{case}-normal-poison{poison}"),
+                        &format!("counted{opt}-{case}-normal"),
                         &format!("{code}\n{probe}"),
                         &exe,
                         &out,
                     );
-                    assert!(
-                        out.status.success(),
-                        "{mode} {opt} poison={poison}: {out:?}"
-                    );
+                    assert!(out.status.success(), "counted {opt}: {out:?}");
                     assert_eq!(
                         out.stdout,
                         b"scalar address bits remain uncounted on map failure\n"
                     );
-                    assert!(out.stderr.is_empty(), "{mode} {opt} {case}: {out:?}");
+                    assert!(out.stderr.is_empty(), "counted {opt} {case}: {out:?}");
                 }
             }
         }

@@ -71,7 +71,7 @@ static V fwp_p_file_info(V path, const fwp_desc *error) {
                    time.value, (V)standard.EndOfFile.QuadPart};
     V result = fwp_rc_fresh(fwp_record(3, fields));
     (void)fwp_value_finish(&time, &cleanup);
-    FWP_KEEP_ALIVE(path);
+
     return result;
 }
 static V fwp_win_remove(V path, int directory, const fwp_desc *error) {
@@ -144,7 +144,7 @@ static V fwp_p_dir_list(V path, const fwp_desc *error, void (*drop_list)(V)) {
     qsort(owner.items,owner.count,sizeof(V),fwp_cmp_cstr);
     V result=fwp_map_finish_protected(&owner,&owner_cleanup);
     fwp_cleanup_pop(&cleanup);fwp_win_find_finish(&handle);
-    FWP_KEEP_ALIVE(path);return result;
+    return result;
 }
 static V fwp_p_dir_create(V path, const fwp_desc *error) {
     if (fwp_path_has_nul(path)) return fwp_io_error("create", "path contains a NUL character", error);
@@ -484,7 +484,7 @@ static V fwp_run_process(V argv, V input, int capture, const fwp_desc *error) {
     }
     fwp_cleanup_pop(&cleanup);
     fwp_win_process_finish(&process);
-    FWP_KEEP_ALIVE(input); FWP_KEEP_ALIVE(argv);
+
     return result;
 finish:
     fwp_cleanup_pop(&cleanup);

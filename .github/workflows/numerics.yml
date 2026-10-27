@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -134,7 +134,7 @@ jobs:
       - name: Compile every target and audit Rust warnings
         run: |
           set -o pipefail
-          cargo clippy --locked --all-targets -- -D warnings 2>&1 | tee compiler-lifetime-evidence/clippy.log
+          cargo clippy --locked --keep-going --all-targets -- -D warnings 2>&1 | tee compiler-lifetime-evidence/clippy.log
       - name: Entry cleanup, macro tasks and panic controls
         if: ${{ !cancelled() }}
         run: |
@@ -157,7 +157,7 @@ jobs:
         run: |
           set -o pipefail
           status=0
-          cargo test --locked --test arc_execution arc_rejects_unproved_runtime_boundaries_and_disabled_counting -- --nocapture 2>&1 | tee compiler-lifetime-evidence/admission.log || status=1
+          cargo test --locked --test arc_execution ownership_rejects_unproved_runtime_boundaries -- --nocapture 2>&1 | tee compiler-lifetime-evidence/admission.log || status=1
           cargo test --locked --test arc_extensions raw_ad_cannot_escape_scope_proof_through_callbacks_or_arguments -- --nocapture 2>&1 | tee compiler-lifetime-evidence/ad-scopes.log || status=1
           cargo test --locked --no-fail-fast --test channel_cycle_ownership --test queued_functions --test autodiff_nested --test reuse 2>&1 | tee compiler-lifetime-evidence/memory.log || status=1
           exit "$status"
@@ -348,7 +348,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Record toolchains and audit contracts
         shell: bash
         run: |
@@ -444,7 +444,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Record toolchains and audit contracts
         shell: bash
         run: |
@@ -527,7 +527,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Compare interpreter output, precision and deliberate corruption
         run: cargo test --no-fail-fast --test float_formats --test float_linking --test float_literals --test float_math
       - uses: actions/upload-artifact@v7
@@ -772,14 +772,14 @@ jobs:
         shell: bash
         run: |
           mkdir -p native-commands-evidence
-          cargo clippy --all-targets -- -D warnings 2>&1 | tee native-commands-evidence/compiler.log
+          cargo clippy --keep-going --all-targets -- -D warnings 2>&1 | tee native-commands-evidence/compiler.log
       - name: Windows compiler checks for native command ownership
         id: file_compiler_windows
         if: ${{ !cancelled() && runner.os == 'Windows' }}
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force native-commands-evidence | Out-Null
-          cargo clippy --all-targets -- -D warnings 2>&1 | Tee-Object native-commands-evidence/compiler.log
+          cargo clippy --keep-going --all-targets -- -D warnings 2>&1 | Tee-Object native-commands-evidence/compiler.log
           exit $LASTEXITCODE
       - name: Publish compiler failures while independent tests continue
         if: ${{ !cancelled() && (steps.file_compiler.outcome == 'failure' || steps.file_compiler_windows.outcome == 'failure') }}
@@ -949,7 +949,7 @@ jobs:
           from pathlib import Path
           import subprocess
 
-          for target, test in [('reuse', 'golden_programs_with_reuse_verified'),
+          for target, test in [('arc_corpus', 'eligible_golden_programs_preserve_semantics_and_reclaim_values'),
                                ('golden_run', 'native_snapshots')]:
               build = subprocess.check_output(['cargo', 'test', '--test', target,
                   '--no-run', '--message-format=json'], text=True)
@@ -1077,7 +1077,7 @@ jobs:
       - name: Inventory execution examples admitted without tracing
         if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
         shell: bash
-        run: python3 scripts/inventory-arc-programs.py --compiler target/debug/fwp --root . --sources tests/run --optimization O1 --timeout 30 --output pointer-evidence/arc-admission.json
+        run: python3 scripts/inventory-program-admission.py --compiler target/debug/fwp --root . --sources tests/run --optimization O1 --timeout 30 --output pointer-evidence/program-admission.json
       - name: Ownership contract and native coverage audits
         if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
         shell: bash
@@ -1292,7 +1292,7 @@ jobs:
       - name: Inventory execution examples admitted without tracing
         if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
         shell: bash
-        run: python3 scripts/inventory-arc-programs.py --compiler target/debug/fwp --root . --sources tests/run --optimization O1 --timeout 30 --output file-application-evidence/arc-admission.json
+        run: python3 scripts/inventory-program-admission.py --compiler target/debug/fwp --root . --sources tests/run --optimization O1 --timeout 30 --output file-application-evidence/program-admission.json
       - name: Inspect native binaries and save memory observations
         if: ${{ !cancelled() }}
         shell: bash
@@ -1371,7 +1371,7 @@ jobs:
           brew install openssl@3
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Cancellation storage, matched costs and broken-lifetime controls
         if: ${{ !cancelled() }}
         run: cargo test --test arc_tasks -- --nocapture
@@ -1435,7 +1435,7 @@ jobs:
         with:
           components: rustfmt, clippy
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Context ownership, register roots and matched layout measurements
         if: ${{ !cancelled() }}
         run: cargo test --test task_context_storage -- --nocapture
@@ -1473,8 +1473,8 @@ jobs:
           name: task-contexts-${{ matrix.runner }}
           path: task-context-evidence/
           if-no-files-found: error
-  gc_checks:
-    if: inputs.suite == 'gc-checks'
+  heap_checks:
+    if: inputs.suite == 'memory-checks'
     strategy:
       fail-fast: false
       matrix:
@@ -1497,13 +1497,13 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --test gc -- -D warnings
+      - run: cargo clippy --test native_memory -- -D warnings
       - name: Stress, compiler failure controls and explicit memory-test support
         shell: bash
         run: |
           set -o pipefail
-          cargo test --test gc -- --nocapture 2>&1 | tee gc-checks.log
-      - name: Missing or failing compilers must fail the stress check
+          cargo test --test native_memory -- --nocapture 2>&1 | tee memory-checks.log
+      - name: Missing or failing compilers must fail the native corpus
         shell: bash
         run: |
           python3 - <<'PYCONTROL'
@@ -1511,25 +1511,25 @@ jobs:
           import os
           import subprocess
 
-          build = subprocess.check_output(['cargo', 'test', '--test', 'gc',
+          build = subprocess.check_output(['cargo', 'test', '--test', 'native_memory',
               '--no-run', '--message-format=json'], text=True)
           binaries = [row['executable'] for row in map(json.loads, build.splitlines())
               if row.get('reason') == 'compiler-artifact' and row.get('executable')
-              and row['target']['name'] == 'gc']
+              and row['target']['name'] == 'native_memory']
           binary, = binaries
           for compiler in ['/fwp-test-no-such-c-compiler', 'false']:
-              result = subprocess.run([binary, '--exact', 'golden_programs_under_gc_stress'],
+              result = subprocess.run([binary, '--exact', 'golden_programs_with_counted_ownership'],
                   env=dict(os.environ, CC=compiler), capture_output=True, text=True)
               output = result.stdout + result.stderr
               assert result.returncode != 0, output
-              assert 'native GC checks require a working C compiler' in output, output
+              assert 'native ownership checks require a working C compiler' in output, output
               print(compiler + ': explicit compiler precondition failed as required')
           PYCONTROL
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: gc-checks-${{ matrix.runner }}
-          path: gc-checks.log
+          name: memory-checks-${{ matrix.runner }}
+          path: memory-checks.log
           if-no-files-found: error
   channel_transfer_costs:
     if: inputs.suite == 'channel-costs' || inputs.suite == 'scalar-text'
@@ -1559,7 +1559,7 @@ jobs:
           uname -a > channel-cost-evidence/kernel.txt
           rustc -Vv > channel-cost-evidence/rust.txt
           "$CC" --version > channel-cost-evidence/cc.txt
-          printf '%s\n' 'CC=gcc; FWP_LTO=0; compile_c with -O2 -std=gnu11 -ffp-contract=off -w; native runtime links; ARC and tracing; stress/verification disabled for counts' > channel-cost-evidence/settings.txt
+          printf '%s\n' 'CC=gcc; FWP_LTO=0; compile_c with -O2 -std=gnu11 -ffp-contract=off -w; native runtime links; counted ownership; allocation and retain counters' > channel-cost-evidence/settings.txt
       - name: Check primitive ownership contracts
         env:
           FWP_INVENTORY_EXPECTED_HEAD: ${{ github.sha }}
@@ -1580,14 +1580,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(find channel-cost-evidence/text-length -name '*.exe' | wc -l)" -eq 12
+          test "$(find channel-cost-evidence/text-length -name '*.exe' | wc -l)" -eq 6
           for binary in channel-cost-evidence/text-length/*.exe; do
             objdump -d "$binary" > "${binary%.exe}.asm"
           done
       - name: Compare complete programs with C and Rust
         if: ${{ !cancelled() && inputs.suite == 'scalar-text' }}
         env:
-          FWP_BENCH_OWNERSHIP: tracing
+          FWP_LTO: '0'
         run: cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
       - uses: actions/upload-artifact@v7
         if: ${{ always() && inputs.suite == 'scalar-text' }}
@@ -1668,7 +1668,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(find integer-counting-semantics -name '*.exe' | wc -l)" -eq 12
+          test "$(find integer-counting-semantics -name '*.exe' | wc -l)" -eq 6
           for binary in integer-counting-semantics/*.exe; do
             objdump -d "$binary" > "${binary%.exe}.asm"
           done
@@ -1677,7 +1677,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(find integer-product-semantics -name '*.exe' | wc -l)" -eq 14
+          test "$(find integer-product-semantics -name '*.exe' | wc -l)" -eq 10
           for binary in integer-product-semantics/*.exe; do
             objdump -d "$binary" > "${binary%.exe}.asm"
           done
@@ -1694,9 +1694,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          target/debug/fwp build bench/text-length/main.fwp --gc tracing -O2 --emit-c -o integer-counting-evidence/compiler-produced.c
+          target/debug/fwp build bench/text-length/main.fwp -O2 --emit-c -o integer-counting-evidence/compiler-produced.c
           cmp integer-counting-evidence/recomputed-product.c integer-counting-evidence/compiler-produced.c
-          target/debug/fwp build bench/text-length/main.fwp --gc tracing -O2 -o integer-counting-evidence/compiler-produced
+          target/debug/fwp build bench/text-length/main.fwp -O2 -o integer-counting-evidence/compiler-produced
           integer-counting-evidence/compiler-produced > integer-counting-evidence/compiler-produced.stdout 2> integer-counting-evidence/compiler-produced.stderr
           printf '28518516\n' | cmp - integer-counting-evidence/compiler-produced.stdout
           test ! -s integer-counting-evidence/compiler-produced.stderr
@@ -1788,7 +1788,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Ownership inventory and Unix native test coverage
         if: ${{ !cancelled() && runner.os != 'Windows' }}
         run: |
@@ -1922,7 +1922,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Target timeout, child termination and continued coverage
         if: ${{ !cancelled() }}
         run: python3 scripts/test-native-test-runner.py
@@ -1955,7 +1955,7 @@ jobs:
           if built.returncode:
               print(built.stdout)
               built.check_returncode()
-          executables = runner.test_executables(built.stdout, metadata, 'gc', targets)
+          executables = runner.test_executables(built.stdout, metadata, 'ownership', targets)
           raise SystemExit(runner.run_tests(executables, [],
                            Path(os.environ['RUNNER_TEMP']) / 'shutdown-tests', 900))
           PYTHON
@@ -2011,7 +2011,7 @@ jobs:
           components: rustfmt, clippy
       - run: sudo apt-get update && sudo apt-get install -y llvm gcc-aarch64-linux-gnu
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - if: ${{ !cancelled() }}
         run: cargo test --no-fail-fast --test tail_recursion --test arc_execution --test record_conversion_ownership --test variant_alias_ownership --test wide_workers --test task_ownership --test task_handle_ownership --test reuse_token_ownership --test preempt --test infix --test repl --test debugger --test scalar_math --test float_math --test cached_map_borrows --test caf_ownership --test inline_caf_ownership --test stdlib_doc -- --nocapture
       - if: ${{ !cancelled() }}
@@ -2070,7 +2070,7 @@ jobs:
       FWP_CODEC_ARTIFACTS: artifact-path-evidence/codecs
       FWP_ARRAY_SIZE_ARTIFACTS: artifact-path-evidence/arrays
       FWP_DEVICE_BOUNDS_ARTIFACTS: artifact-path-evidence/device
-      FWP_GC_DIAGNOSTICS_ARTIFACTS: artifact-path-evidence/gc
+      FWP_NATIVE_MEMORY_ARTIFACTS: artifact-path-evidence/native-memory
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -2103,7 +2103,7 @@ jobs:
           rustc --version > artifact-path-evidence/rustc.txt
           clang --version > artifact-path-evidence/clang.txt
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --lib --bin fwp --test list_applicative_ownership --test typed_state_ownership --test ad_tape_scopes --test serializer_leaf_ownership --test ad_tape_ownership --test autodiff_workspace --test blocked_matrix --test worker_preparation_ownership --test array_size_limits --test device_bounds --test gc -- -D warnings
+      - run: cargo clippy --lib --bin fwp --test list_applicative_ownership --test typed_state_ownership --test ad_tape_scopes --test serializer_leaf_ownership --test ad_tape_ownership --test autodiff_workspace --test blocked_matrix --test worker_preparation_ownership --test array_size_limits --test device_bounds --test native_memory -- -D warnings
       - name: Native ownership checks with artifact writing enabled
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test list_applicative_ownership --test typed_state_ownership --test ad_tape_scopes --test serializer_leaf_ownership --test ad_tape_ownership --test autodiff_workspace --test blocked_matrix --test worker_preparation_ownership -- --nocapture
@@ -2115,7 +2115,7 @@ jobs:
         run: cargo test --test device_bounds device_output_limits_preserve_kernel_validation_order -- --exact --nocapture
       - name: Retain the actual executable after a snapshot mismatch
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
-        run: cargo test --test gc gc_failure_artifacts_retain_the_native_executable -- --exact --nocapture
+        run: cargo test --test native_memory native_failure_artifacts_retain_the_executable -- --exact --nocapture
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -2372,10 +2372,10 @@ jobs:
           git rev-parse HEAD > collection-build-evidence/source.txt
           rustc --version > collection-build-evidence/rustc.txt
           clang --version > collection-build-evidence/clang.txt
-          printf '%s\n' 'OS=${{ runner.os }}' 'architecture=${{ runner.arch }}' 'runner=${{ matrix.runner }}' 'ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off' 'tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1' '8 generated builders; every allocation/retain failure and callback exit; independent aliases; missing-cleanup controls' 'Timing compares fused and ordinary fwp only; no C/Rust parity claim' > collection-build-evidence/settings.txt
+          printf '%s\n' 'OS=${{ runner.os }}' 'architecture=${{ runner.arch }}' 'runner=${{ matrix.runner }}' 'counted ownership; -O1/-O2; -std=gnu11 -ffp-contract=off' 'explicit alias, interruption and missing-release controls' '8 generated builders; every allocation/retain failure and callback exit; independent aliases; missing-cleanup controls' 'Timing compares fused and ordinary fwp only; no C/Rust parity claim' > collection-build-evidence/settings.txt
       - run: python3 scripts/test-collection-evidence.py
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Collection semantics, failures and cancellation
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test static_constants --test protocol --test repl --test decoder_partial --test cached_map_borrows --test caf_ownership --test inline_caf_ownership --test collection_construction --test map_set_ownership --test mapped_array_construction --test numeric_array_fusion --test range_set -- --nocapture
@@ -2422,12 +2422,12 @@ jobs:
           git rev-parse HEAD > map-storage-evidence/source.txt
           rustc --version > map-storage-evidence/rustc.txt
           "$CC" --version > map-storage-evidence/c.txt
-          printf '%s\n' 'OS=${{ runner.os }}' 'architecture=${{ runner.arch }}' 'runner=${{ matrix.runner }}' 'ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off' 'tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1' '22 operations; every allocation, retain and comparison fails once; independent aliases; two missing-cleanup controls' 'No timing comparison or C/Rust speed claim' > map-storage-evidence/settings.txt
+          printf '%s\n' 'OS=${{ runner.os }}' 'architecture=${{ runner.arch }}' 'runner=${{ matrix.runner }}' 'counted ownership; -O1/-O2; -std=gnu11 -ffp-contract=off' 'explicit alias, interruption and missing-release controls' '22 operations; every allocation, retain and comparison fails once; independent aliases; two missing-cleanup controls' 'No timing comparison or C/Rust speed claim' > map-storage-evidence/settings.txt
       - run: cargo fmt --all -- --check
       - run: cargo clippy --lib --bin fwp --test map_set_ownership --test decoder_partial -- -D warnings
       - name: Map and set results, aliases, failure and reuse
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
-        run: cargo test --no-fail-fast --test map_set_ownership --test map_unwind_ownership --test old_reclamation -- --nocapture
+        run: cargo test --no-fail-fast --test map_set_ownership --test map_unwind_ownership -- --nocapture
       - name: Typed decoding and partial results
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test decoder_partial -- --nocapture
@@ -2469,7 +2469,7 @@ jobs:
           git rev-parse HEAD > library-result-evidence/source.txt
           rustc --version > library-result-evidence/rustc.txt
           clang --version > library-result-evidence/clang.txt
-          printf '%s\n' 'OS=${{ runner.os }}' 'architecture=${{ runner.arch }}' 'runner=${{ matrix.runner }}' 'generated source: build --gc arc --staticlib --emit-c; FWP_STACK=0' 'native libraries: -O1/-O2 -std=gnu11 -ffp-contract=off -fPIC; shared flag depends on host' 'FWP_AD_WORKSPACE=0/1; one static execution or three dynamic unload rounds' '256 repeated calls after warmup; zero counted bytes at shutdown; no timing comparison' > library-result-evidence/settings.txt
+          printf '%s\n' 'OS=${{ runner.os }}' 'architecture=${{ runner.arch }}' 'runner=${{ matrix.runner }}' 'generated source: build --staticlib --emit-c; FWP_STACK=0' 'native libraries: -O1/-O2 -std=gnu11 -ffp-contract=off -fPIC; shared flag depends on host' 'FWP_AD_WORKSPACE=0/1; one static execution or three dynamic unload rounds' '256 repeated calls after warmup; zero counted bytes at shutdown; no timing comparison' > library-result-evidence/settings.txt
       - run: cargo fmt --all -- --check
       - run: cargo clippy --lib --bin fwp --test arc_library --test library_input_ownership --test library_result_ownership --test library_unload --test ffi -- -D warnings
       - name: Static and shared results, aliases, release controls and unload
@@ -2627,12 +2627,12 @@ jobs:
               cpu = subprocess.check_output(['powershell', '-NoProfile', '-Command', 'Get-CimInstance Win32_Processor | Select-Object Name,Manufacturer,NumberOfCores,NumberOfLogicalProcessors | ConvertTo-Json'], text=True)
           (evidence / 'cpu.txt').write_text(platform.platform() + '\n' + platform.machine() + '\n' + cpu)
           files = sorted(p for directory in ['src', 'lib', 'runtime'] for p in Path(directory).rglob('*') if p.is_file())
-          files += [Path(name) for name in ['tests/http_server.rs', 'tests/web.rs', 'tests/gc.rs', 'tests/support/http_server_process.rs', 'tests/support/http_application.rs', 'tests/support/http_application_memory.rs', 'tests/fixtures/http_app_memory.c', 'tests/task_context_storage.rs', 'tests/fixtures/task_stack_pages.c', 'tests/static_memory.rs', 'tests/fixtures/static_stack_guard.c', 'examples/server/api.fwp', 'tests/web/server.fwp', 'tests/server_entry_ownership.rs', 'tests/fixtures/server_entries.fwp', 'tests/fixtures/server_entry_client.fwp', 'tests/support/client_allocations.rs', 'tests/support/process_memory.rs', 'scripts/summarize-server-entries.py', '.github/workflows/numerics.yml']]
+          files += [Path(name) for name in ['tests/http_server.rs', 'tests/web.rs', 'tests/native_memory.rs', 'tests/support/http_server_process.rs', 'tests/support/http_application.rs', 'tests/support/http_application_memory.rs', 'tests/fixtures/http_app_memory.c', 'tests/task_context_storage.rs', 'tests/fixtures/task_stack_pages.c', 'tests/static_memory.rs', 'tests/fixtures/static_stack_guard.c', 'examples/server/api.fwp', 'tests/web/server.fwp', 'tests/server_entry_ownership.rs', 'tests/fixtures/server_entries.fwp', 'tests/fixtures/server_entry_client.fwp', 'tests/support/client_allocations.rs', 'tests/support/process_memory.rs', 'scripts/summarize-server-entries.py', '.github/workflows/numerics.yml']]
           Path('server-check-evidence/source-sha256.json').write_text(json.dumps({p.as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in files}, indent=2) + '\n')
           PY
       - run: cargo fmt --all -- --check
         if: matrix.part == 'checks'
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && matrix.part == 'checks' }}
       - name: HTTP examples, startup failures and connection cleanup
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'server-checks' && matrix.part == 'checks' }}
@@ -2671,8 +2671,8 @@ jobs:
         shell: bash
         run: |
           result=0
-          cargo test --test gc http_server_runs_in_bounded_memory -- --exact --nocapture || result=1
-          cargo test --test gc rest_server_runs_in_bounded_memory -- --exact --nocapture || result=1
+          cargo test --test native_memory http_server_runs_in_bounded_memory -- --exact --nocapture || result=1
+          cargo test --test native_memory rest_server_runs_in_bounded_memory -- --exact --nocapture || result=1
           exit "$result"
       - name: Generated entry results and ownership restrictions
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && (inputs.suite == 'server-entries' || inputs.suite == 'server-recheck') && matrix.part == 'checks' }}
@@ -2750,7 +2750,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: ./scripts/setup-windows.ps1
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - name: Function lifetime, stack and library regressions
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test closure_ownership --test closure_cleanup --test stack_ownership --test stack_match_ownership --test arc_library
@@ -2888,9 +2888,6 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 1
       FWP_ENTRY_CHECK_ARTIFACTS: entry-check-evidence
-      FWP_GC_STRESS: 0
-      FWP_GC_VERIFY: 0
-      FWP_REUSE_VERIFY: 0
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -2956,7 +2953,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
         if: matrix.part == 'all' || matrix.part == 'server' || matrix.part == 'ownership'
       - name: HTTP ownership and shared connection controls
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-clients' && matrix.part == 'ownership' }}
@@ -2965,7 +2962,7 @@ jobs:
           cargo test --no-fail-fast --lib --test native_sockets --test http2_client_ownership --test http2_server_ownership --test http2_peer_cleanup --test http2_body_roots --test grpc_connect_startup --test grpc_connect_cleanup --test grpc_connection_addresses --test grpc_tls_pool_identity --test grpc_client_receive --test grpc_client_requests --test library_resources
       - name: Reject cyclic ownership at unsupported boundaries
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-clients' && matrix.part == 'ownership' }}
-        run: cargo test --test arc_execution arc_rejects_unproved_runtime_boundaries_and_disabled_counting -- --exact --nocapture
+        run: cargo test --test arc_execution ownership_rejects_unproved_runtime_boundaries -- --exact --nocapture
       - name: Preserve the counted-owner escape check
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-clients' && matrix.part == 'ownership' }}
         run: cargo test --test arc_execution arc_checks_reject_counted_owners_at_uncounted_boundaries -- --exact --nocapture
@@ -2994,7 +2991,7 @@ jobs:
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-clients' && matrix.part == 'comparisons' }}
         env:
           FWP_HTTP_CLIENT_ARTIFACTS: http-client-evidence
-        run: cargo test --test web checked_arc_http_matches_interpreter_with_pooled_and_tls_calls -- --exact --nocapture
+        run: cargo test --test web native_http_matches_interpreter_with_pooled_and_tls_calls -- --exact --nocapture
       - name: Repeated HTTP client memory costs
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-clients' && matrix.part == 'comparisons' }}
         env:
@@ -3047,11 +3044,7 @@ jobs:
       - name: Check long-running server resident memory
         if: matrix.part == 'calls' && runner.os == 'Linux'
         run: |
-          if [ "${{ inputs.suite }}" = server-arc ]; then
-            cargo test --test gc arc_grpc_server_runs_in_bounded_memory -- --exact --nocapture
-          else
-            cargo test --test gc grpc_server_runs_in_bounded_memory -- --exact --nocapture
-          fi
+          cargo test --test native_memory grpc_server_runs_in_bounded_memory -- --exact --nocapture
       - name: Prepare server measurements and check compiler ownership
         if: matrix.part == 'calls'
         shell: bash
@@ -3080,7 +3073,7 @@ jobs:
           cargo test --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership --test borrowed_callbacks
           cargo test --test grpc_server_connections --test grpc_server_requests --test grpc_connect_startup --test grpc_server_ownership
           cargo test --test grpc_client_receive --test grpc_response_encoding --test channel_queue_ownership --test arc_tasks
-          cargo test --test list_applicative_ownership inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries -- --exact
+          cargo test --test list_applicative_ownership inactive_state_slots_are_cleared_at_handler_and_task_boundaries -- --exact
       - name: Check client cleanup
         if: matrix.part == 'client'
         shell: bash
@@ -3095,11 +3088,7 @@ jobs:
         env:
           FWP_SERVER_MEMORY_ARTIFACTS: server-memory-evidence
         run: |
-          if [ "${{ inputs.suite }}" = server-arc ]; then
-            cargo test --test grpc server_measurement::repeated_arc_server_call_memory -- --exact --ignored --nocapture
-          else
-            cargo test --test grpc server_measurement::repeated_server_call_memory -- --exact --ignored --nocapture
-          fi
+          cargo test --test grpc server_measurement::repeated_server_call_memory -- --exact --ignored --nocapture
       - uses: actions/upload-artifact@v7
         if: always() && matrix.part == 'calls'
         with:
@@ -3543,7 +3532,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - run: cargo test --no-fail-fast --test console_ownership --test arc_execution --test arc_corpus --test text_ownership --test cli_ownership
       - name: Primitive ownership inventory
         run: python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output console-evidence/inventory.json
@@ -3560,7 +3549,7 @@ jobs:
           path: ~/Library/Logs/DiagnosticReports/fwp*
           if-no-files-found: ignore
   wordfreq:
-    if: inputs.suite == 'wordfreq'
+    if: inputs.suite == 'wordfreq' || inputs.suite == 'wordfreq-baseline'
     strategy:
       fail-fast: false
       matrix:
@@ -3626,7 +3615,7 @@ jobs:
         run: cargo test --locked --release --test text_file_tools word_frequencies_preserve_separators_normalization_and_tie_order -- --exact
       - name: Download the explicit accepted word-frequency baseline
         id: baseline
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && inputs.suite == 'wordfreq' }}
         env:
           GH_TOKEN: ${{ github.token }}
           BASELINE_RUN: ${{ inputs.baseline_run }}
@@ -3641,10 +3630,17 @@ jobs:
           BASELINE_SOURCE: ${{ inputs.source_revision }}
         if: ${{ !cancelled() && steps.baseline.conclusion == 'success' }}
         run: >-
-          python3 scripts/measure-wordfreq.py --compiler target/release/fwp
+          python3 scripts/measure-wordfreq.py --comparison compare --compiler target/release/fwp
           --cc gcc --rustc rustc --objdump objdump --nm nm --time /usr/bin/time
           --case 4096:64 --case 65536:1024 --warmups 2 --samples 24
           --baseline wordfreq-before --baseline-source "$BASELINE_SOURCE"
+          --timeout 180 --host "${{ matrix.runner }}" --output wordfreq-evidence
+      - name: Record the current word-frequency baseline beside C and Rust
+        if: ${{ !cancelled() && inputs.suite == 'wordfreq-baseline' }}
+        run: >-
+          python3 scripts/measure-wordfreq.py --comparison record --compiler target/release/fwp
+          --cc gcc --rustc rustc --objdump objdump --nm nm --time /usr/bin/time
+          --case 4096:64 --case 65536:1024 --warmups 2 --samples 24
           --timeout 180 --host "${{ matrix.runner }}" --output wordfreq-evidence
       - uses: actions/upload-artifact@v7
         if: always()
@@ -3915,7 +3911,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - run: cargo test --no-fail-fast --test autodiff_precision --test autodiff_nested --test autodiff_checkpoint --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace --test autodiff_capacity_bounds --test autodiff_library --test float_formats --test stdlib_doc
       - name: Record profile environment
         run: |
@@ -3959,7 +3955,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - run: cargo test --no-fail-fast --test linalg_ownership --test array_loop_borrows --test numeric_array_fusion --test loop_unwind_ownership --test arc_execution --test blocked_matrix --test transpose_ownership
       - name: Primitive ownership inventory
         run: python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output solver-evidence/inventory.json
@@ -4031,12 +4027,12 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - run: cargo test --no-fail-fast --test arc_library --test arc_execution --test arc_tasks --test channel_queue_ownership --test channel_cycle_ownership --test transpose_ownership --test native_allocator --test library_input_ownership --test library_result_ownership --test library_resources --test library_unload --test autodiff_library --test ffi --test blocked_matrix --test wide_workers --test loop_unwind_ownership
       - name: Primitive ownership inventory
         run: python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output library-evidence/inventory.json
       - run: cargo build --release --bin fwp
-      - name: Compare tracing and checked ARC against C and Rust
+      - name: Compare counted fwp against C and Rust
         run: python3 scripts/measure-numerical-kernels.py
       - uses: actions/upload-artifact@v7
         if: always()
@@ -4064,7 +4060,7 @@ jobs:
         with:
           components: rustfmt, clippy
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --keep-going --all-targets -- -D warnings
       - run: cargo test --lib arc_scope::tests
       - name: Check remote ARC binaries and behavior
         env:
@@ -4096,7 +4092,6 @@ jobs:
     env:
       CC: gcc
       CARGO_BUILD_JOBS: 2
-      FWP_BENCH_OWNERSHIP: arc
       FWP_LTO: '0'
     steps:
       - name: Require a supported native Linux runner
@@ -4140,8 +4135,8 @@ jobs:
             ARM64) architecture=aarch64 ;;
             *) echo "Unsupported benchmark architecture: $RUNNER_ARCH" >&2; exit 1 ;;
           esac
-          python3 scripts/inspect-benchmark-binaries.py --input target/bench-evidence --source "$GITHUB_SHA" --memory arc --arch "$architecture" --objdump objdump --output target/bench-inspection.json
-          python3 scripts/test-benchmark-evidence.py --input target/bench-evidence --source "$GITHUB_SHA" --memory arc --arch "$architecture" --objdump objdump --output target/bench-controls.json
+          python3 scripts/inspect-benchmark-binaries.py --input target/bench-evidence --source "$GITHUB_SHA" --arch "$architecture" --objdump objdump --output target/bench-inspection.json
+          python3 scripts/test-benchmark-evidence.py --input target/bench-evidence --source "$GITHUB_SHA" --arch "$architecture" --objdump objdump --output target/bench-controls.json
       - name: Measure memory separately and detect intentional leaks
         if: ${{ !cancelled() && steps.evidence.outcome == 'success' && inputs.suite == 'benchmark-comparison' }}
         shell: bash
@@ -4181,7 +4176,7 @@ jobs:
         run: |
           python3 scripts/measure-list-sort-storage.py --compiler target/release/fwp --cc gcc --source "$GITHUB_SHA" --output target/list-sort-storage
           python3 scripts/inspect-list-sort-storage.py --input target/list-sort-storage --source "$GITHUB_SHA" --arch "$RUNNER_ARCH" --objdump objdump --output target/list-sort-inspection.json
-          FWP_FREE=1 FWP_STACK=0 FWP_REUSE=1 FWP_ARRAY_FUSION=0 FWP_PACKED_ARRAYS=1 target/release/fwp build --gc arc --memory dynamic -O2 --emit-c tests/fixtures/array_sort_reuse.fwp -o target/array-sort-wide.c
+          FWP_STACK=0 FWP_ARRAY_FUSION=0 FWP_PACKED_ARRAYS=1 target/release/fwp build --memory dynamic -O2 --emit-c tests/fixtures/array_sort_reuse.fwp -o target/array-sort-wide.c
           python3 scripts/measure-array-sort-layout.py measure --program target/array-sort-wide.c --cc gcc --directory target/array-sort-layout --source "$GITHUB_SHA" --system Linux --arch "$RUNNER_ARCH" --objdump objdump --output target/array-sort-layout-inspection.json
       - uses: actions/upload-artifact@v7
         if: always()
@@ -4247,7 +4242,6 @@ jobs:
       - name: Complete-program C and Rust comparison
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         env:
-          FWP_BENCH_OWNERSHIP: arc
           FWP_LTO: '0'
         run: cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
       - uses: actions/upload-artifact@v7
@@ -4428,14 +4422,14 @@ jobs:
         id: compiler
         run: |
           cargo fmt --all
-          cargo clippy --all-targets -- -D warnings
+          cargo clippy --keep-going --all-targets -- -D warnings
           cargo test --lib
       - name: Checked ARC eligibility, reclamation and native binaries
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: cargo test --test arc_execution --test arc_corpus
       - name: Numerical, autodiff and loop ownership regressions
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
-        run: cargo test --no-fail-fast --test ad_tape_ownership --test ad_tape_scopes --test autodiff_capacity_bounds --test autodiff_workspace --test autodiff_library --test blocked_matrix --test numeric_array_fusion --test old_reclamation --test retain_unwind_ownership --test unboxed_worker_locals --test loop_ownership --test loop_unwind_ownership --test loop_preparation_ownership --test field_context_ownership
+        run: cargo test --no-fail-fast --test ad_tape_ownership --test ad_tape_scopes --test autodiff_capacity_bounds --test autodiff_workspace --test autodiff_library --test blocked_matrix --test numeric_array_fusion --test retain_unwind_ownership --test unboxed_worker_locals --test loop_ownership --test loop_unwind_ownership --test loop_preparation_ownership --test field_context_ownership
       - name: Preserve original stack allocation and variant ownership controls
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: cargo test --no-fail-fast --test stack --test stack_ownership --test stack_match_ownership --test variant_alias_ownership --test variant_conversion_ownership
@@ -4461,7 +4455,7 @@ jobs:
         run: |
           mkdir -p array-fusion-evidence/source
           cp src/opt.rs src/arc.rs src/ir.rs src/main.rs src/lib.rs tests/arc_execution.rs tests/arc_corpus.rs tests/loop_ownership.rs src/rc.rs src/fuse.rs src/cgen.rs src/numerics.rs src/mono.rs src/ownership.rs tests/autodiff_capacity_bounds.rs tests/numeric_array_fusion.rs tests/autodiff_workspace.rs tests/autodiff_library.rs tests/blocked_matrix.rs tests/wasm.rs tests/ad_tape_ownership.rs tests/ad_tape_scopes.rs array-fusion-evidence/source/
-          cp runtime/fwp_rt_prims.c runtime/fwp_rt_gc.c runtime/fwp_rt_kernel.c array-fusion-evidence/source/
+          cp runtime/fwp_rt_prims.c runtime/fwp_rt_heap.c runtime/fwp_rt_kernel.c array-fusion-evidence/source/
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -4521,7 +4515,7 @@ jobs:
         id: compiler
         run: |
           cargo fmt --all -- --check
-          cargo clippy --all-targets -- -D warnings
+          cargo clippy --keep-going --all-targets -- -D warnings
       - name: Focused bundle regressions
         if: inputs.suite == 'bundle'
         run: cargo test --no-fail-fast --lib --test protocol --test wide_workers --test decoder_partial --test arc_extensions --test arc_execution --test iteration_consumers --test iterator_fusion --test http2_body_roots --test list_generation_ownership --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace
@@ -4533,7 +4527,7 @@ jobs:
         env:
           FWP_REQUIRE_WASI_GOLDENS: 1
         run: cargo test --test wasm golden_programs_under_wasi
-      - name: GCC conservative-root omission control
+      - name: GCC explicit-owner omission control
         if: inputs.suite == 'bundle' && runner.os == 'Linux'
         run: CC=gcc cargo test --test http2_body_roots
       - name: Build evidence compiler
@@ -4588,7 +4582,7 @@ jobs:
         id: compiler
         run: |
           cargo fmt --all -- --check
-          cargo clippy --all-targets -- -D warnings
+          cargo clippy --keep-going --all-targets -- -D warnings
           cargo test --lib
       - name: Child signal status in both engines
         run: cargo test --test cli child_signal_status_matches_the_shell_in_both_engines -- --exact
@@ -4790,7 +4784,7 @@ jobs:
               print(built.stdout)
               built.check_returncode()
           executables = shards.test_executables(built.stdout, metadata, 'regular', selected)
-          raise SystemExit(shards.run_tests(executables, ['--skip', 'golden_programs_under_gc_stress'],
+          raise SystemExit(shards.run_tests(executables, ['--skip', 'golden_programs_with_counted_ownership'],
                                            Path(os.environ['RUNNER_TEMP']) / 'macos-shard-probe', 1800))
           PYTHON
       - uses: actions/upload-artifact@v7

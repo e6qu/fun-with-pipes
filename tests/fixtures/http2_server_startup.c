@@ -18,7 +18,7 @@ static int socket_closed(fwp_socket_t fd) {
 #endif
 }
 int main(void) {
-    fwp_lib_init(); fwp_gc_start(__builtin_frame_address(0)); fwp_tasks_init();
+    fwp_lib_init(); fwp_heap_start(); fwp_tasks_init();
     for (stage = 0; stage < 5; stage++) {
         V listener = fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"), ERROR_TYPE);
         V address = fwp_p_local_addr(listener);
@@ -61,7 +61,7 @@ int main(void) {
         if (stream_finals != before_streams + (stage > 0)) return 8;
         if (tls_finals != (stage < 3)) return 11;
         fwp_closure_drop(handler); fwp_sock_drop(conn); fwp_sock_drop(peer); fwp_sock_drop(listener);
-        FWP_KEEP_ALIVE(address); FWP_KEEP_ALIVE(upgrade); FWP_KEEP_ALIVE(initial);
+
     }
     fwp_lib_finish(); return 0;
 }

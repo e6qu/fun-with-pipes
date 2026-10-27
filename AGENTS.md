@@ -64,11 +64,11 @@ implementation of currently supported external protocols.
   through PLAN.md in substantial groups after each verified merge, keeping one
   active PR and the handoff current until the roadmap acceptance criteria hold.
 - Require nine production jobs for the exact commit: Linux ARM64/AMD64, regular
-  and GC-stress macOS ARM64/AMD64, native Windows ARM64/AMD64, and C/Rust benchmarks;
+  and ownership/corpus macOS ARM64/AMD64, native Windows ARM64/AMD64, and C/Rust benchmarks;
   also require the documentation audit. Preserve coverage as ownership evolves.
   Skipped or emulated checks do not establish native support.
-- Memory changes need failure/cancellation, GC stress/verification and reuse
-  checks. Replace collector-specific checks only with tested ownership guarantees.
+- Memory changes need failure/cancellation, exact owner and physical-free checks,
+  reuse controls and the full golden corpus. Verify replacements before claiming GC removal.
   Inspect actual binaries for representation and tracing-removal claims.
 - Every commit message is exactly one line, at most 80 characters, with no body,
   trailers, AI attribution, `Co-authored-by` or `Authored-by`. Use ordinary author

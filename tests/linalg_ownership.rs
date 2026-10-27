@@ -61,23 +61,17 @@ fn qr_checks_square_output_before_allocation_and_preserves_input_errors() {
             format!("fwp: trap: {error}\n")
         };
         assert_eq!(reference.stderr, stderr.as_bytes(), "{label}");
-        for (gc, optimization) in [("tracing", "-O1"), ("tracing", "-O2"), ("arc", "-O2")] {
+        for optimization in ["-O1", "-O2"] {
             let binary = directory.join(format!("{label}-{optimization}.exe"));
             checked(
                 Command::new(compiler)
                     .env_remove("FWP_NO_OPT")
-                    .args(["build", "--fn", "qr-size", "--gc", gc, optimization])
+                    .args(["build", "--fn", "qr-size", optimization])
                     .arg(&input)
                     .arg("-o")
                     .arg(&binary),
             );
-            let actual = Command::new(binary)
-                .arg("0")
-                .env("FWP_GC_STRESS", if gc == "arc" { "0" } else { "1" })
-                .env("FWP_GC_VERIFY", if gc == "arc" { "0" } else { "1" })
-                .env("FWP_REUSE_VERIFY", if gc == "arc" { "0" } else { "1" })
-                .output()
-                .unwrap();
+            let actual = Command::new(binary).arg("0").output().unwrap();
             assert_eq!(
                 (actual.status.code(), actual.stdout, actual.stderr),
                 (
@@ -102,104 +96,74 @@ fn solvers_preserve_values_and_reclaim_scratch_and_partial_results() {
             .args(["run", "--interp"])
             .arg(&input),
     );
-    for gc in ["tracing", "arc"] {
-        let cfile = dir.join(format!("{gc}.c"));
-        checked(
-            Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .env_remove("FWP_NO_OPT")
-                .args(["build", "--gc", gc, "--emit-c"])
-                .arg(&input)
-                .arg("-o")
-                .arg(&cfile),
+
+    let cfile = dir.join("counted.c");
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--emit-c"])
+            .arg(&input)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let source = std::fs::read_to_string(&cfile).unwrap();
+    let binary = dir.join("program.exe");
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&source, &binary, opt).unwrap();
+        let output = checked(&mut Command::new(&binary));
+        assert_eq!(output.stdout, reference.stdout, "{opt}");
+        assert_eq!(output.stderr, reference.stderr, "{opt}");
+    }
+    let start = source
+        .find("/* ------------------------------------------------------- linear algebra */")
+        .unwrap();
+    let end = start + source[start..].find("/* Borrow each input row").unwrap();
+    let body = source[start..end]
+        .replace(
+            "owner->scratch[slot] = buffer;",
+            "owner->scratch[slot] = buffer; la_event();",
+        )
+        .replace(
+            "owner->results[slot] = r;",
+            "owner->results[slot] = r; la_event();",
+        )
+        .replace(
+            "V result = fwp_rc_fresh(fwp_some(",
+            "la_event();\n    V result = fwp_rc_fresh(fwp_some(",
+        )
+        .replace(
+            "V result = fwp_rc_fresh(fwp_tuple2(",
+            "la_event();\n    V result = fwp_rc_fresh(fwp_tuple2(",
         );
-        let source = std::fs::read_to_string(&cfile).unwrap();
-        let binary = dir.join("program.exe");
-        for opt in ["-O1", "-O2"] {
-            fwp::cgen::compile_c(&source, &binary, opt).unwrap();
-            let output = checked(
-                Command::new(&binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", if gc == "arc" { "0" } else { "1" })
-                    .env("FWP_GC_VERIFY", if gc == "arc" { "0" } else { "1" })
-                    .env("FWP_REUSE_VERIFY", if gc == "arc" { "0" } else { "1" }),
-            );
-            assert_eq!(output.stdout, reference.stdout, "{gc} {opt}");
-            assert_eq!(output.stderr, reference.stderr, "{gc} {opt}");
-        }
-        let start = source
-            .find("/* ------------------------------------------------------- linear algebra */")
-            .unwrap();
-        let end = start + source[start..].find("/* Borrow each input row").unwrap();
-        let body = source[start..end]
-            .replace(
-                "owner->scratch[slot] = buffer;",
-                "owner->scratch[slot] = buffer; la_event();",
-            )
-            .replace(
-                "owner->results[slot] = r;",
-                "owner->results[slot] = r; la_event();",
-            )
-            .replace(
-                "V result = fwp_rc_fresh(fwp_some(",
-                "la_event();\n    V result = fwp_rc_fresh(fwp_some(",
-            )
-            .replace(
-                "V result = fwp_rc_fresh(fwp_tuple2(",
-                "la_event();\n    V result = fwp_rc_fresh(fwp_tuple2(",
-            );
-        let measured = format!(
-            "{}static void la_event(void);\n{body}{}\n{}",
-            &source[..start],
-            source[end..].replace(
-                "int main(int argc, char **argv)",
-                "int original_main(int argc, char **argv)"
-            ),
-            include_str!("fixtures/linalg_ownership_probe.c")
-        );
-        for opt in ["-O1", "-O2"] {
-            fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
-            for collect in if gc == "arc" {
-                &["0"][..]
-            } else {
-                &["0", "1"][..]
-            } {
-                checked(
-                    Command::new(&binary)
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", if gc == "arc" { "0" } else { "1" })
-                        .env("FWP_REUSE_VERIFY", "0")
-                        .env("FWP_LINALG_COLLECTION", collect),
-                );
-            }
-        }
-        for (before, after, expected) in [
-            (
-                "if (buffer) { FWP_KEEP_ALIVE(buffer); fwp_mem_free(buffer); }",
-                "if (buffer) { FWP_KEEP_ALIVE(buffer); }",
-                222,
-            ),
-            (
-                "if (value) { FWP_KEEP_ALIVE(value); fwp_rc_free_arr(value); }",
-                "if (value) { FWP_KEEP_ALIVE(value); }",
-                224,
-            ),
-        ] {
-            assert_eq!(measured.matches(before).count(), 1);
-            fwp::cgen::compile_c(&measured.replacen(before, after, 1), &binary, "-O2").unwrap();
-            let result = Command::new(&binary)
-                .env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
-                .env("FWP_LINALG_COLLECTION", "0")
-                .output()
-                .unwrap();
-            assert_eq!(
-                result.status.code(),
-                Some(expected),
-                "{gc} {before}: {result:?}"
-            );
-        }
+    let measured = format!(
+        "{}static void la_event(void);\n{body}{}\n{}",
+        &source[..start],
+        source[end..].replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)"
+        ),
+        include_str!("fixtures/linalg_ownership_probe.c")
+    );
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
+
+        checked(&mut Command::new(&binary));
+    }
+    for (before, after, expected) in [
+        (
+            "if (buffer) { fwp_mem_free(buffer); }",
+            "if (buffer) { }",
+            222,
+        ),
+        (
+            "if (value) { fwp_rc_free_arr(value); }",
+            "if (value) { }",
+            224,
+        ),
+    ] {
+        assert_eq!(measured.matches(before).count(), 1);
+        fwp::cgen::compile_c(&measured.replacen(before, after, 1), &binary, "-O2").unwrap();
+        let result = Command::new(&binary).output().unwrap();
+        assert_eq!(result.status.code(), Some(expected), "{before}: {result:?}");
     }
 }

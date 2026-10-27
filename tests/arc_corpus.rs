@@ -1,4 +1,4 @@
-//! Run every eligible golden program in checked ARC mode; report rejections explicitly.
+//! Check every maintained golden program, ownership ledger and interpreter result.
 use std::io::Write;
 use std::process::{Command, Output, Stdio};
 
@@ -51,7 +51,7 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
         };
         let emitted = Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", "arc", "--emit-c", "-O1"])
+            .args(["build", "--emit-c", "-O1"])
             .arg(source_path)
             .current_dir(&root)
             .arg("-o")
@@ -94,16 +94,9 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
                 1
             );
             // Final teardown must release every charge, including scheduler storage.
-            let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t arc_budget = fwp_gc.budget_given;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if (fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < arc_budget) { fprintf(stderr, \"ARC unreclaimed bytes: %ld\\n\", (long)(arc_budget-fwp_gc.budget)); exit(193); }\n");
-            let startup = "    fwp_gc_start(__builtin_frame_address(0));\n";
-            assert_eq!(main.matches(startup).count(), 1);
-            let main = main.replace(
-                startup,
-                &format!("{startup}    arc_corpus_late_option();\n"),
-            );
-            let late_option = include_str!("fixtures/arc_late_option.c");
-            let measured = format!("{runtime}{late_option}\n{main}");
+            let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    size_t arc_live_bytes = 0;\n")
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if (fwp_heap.live > arc_live_bytes) { fprintf(stderr, \"ARC unreclaimed bytes: %ld\\n\", (long)(fwp_heap.live - arc_live_bytes)); exit(193); }\n");
+            let measured = format!("{runtime}\n{main}");
             let measured = ownership_ledger::instrument_native(&measured, 1 << 20);
             let binary = scratch.join(format!("{name}.exe"));
             if let Err(error) = fwp::cgen::compile_c(&measured, &binary, "-O1") {
@@ -126,10 +119,6 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
                 let mut child = command
                     .current_dir(&root)
                     .env("FWP_SEED", "42")
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
                     .stdin(Stdio::piped())
                     .stdout(Stdio::piped())
                     .stderr(Stdio::piped())
@@ -156,34 +145,7 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
                     std::fs::read(path.with_extension("out")).unwrap()
                 );
             }
-            let actual = execute(Command::new(&binary).env("FWP_CORPUS_LATE_POISON", "0"));
-            // A host can change its environment after initialization. An ARC
-            // program must still reclaim owners, without enabling poisoning.
-            // Reuse the compiled binary and the existing interpreter oracle.
-            let late = execute(Command::new(&binary).env("FWP_CORPUS_LATE_POISON", "1"));
-            let late_matches = late.status.code().is_some()
-                && late.status.code() == reference.status.code()
-                && late.stdout == reference.stdout
-                && late.stderr == reference.stderr;
-            if !late_matches {
-                failures.push(format!(
-                    "late reuse option changed ARC corpus {name}: {late:?}"
-                ));
-                if let Some(path) = &artifacts {
-                    std::fs::write(path.join(format!("corpus-late-failed-{name}.c")), &measured)
-                        .unwrap();
-                    std::fs::write(
-                        path.join(format!("corpus-late-failed-{name}.stdout")),
-                        &late.stdout,
-                    )
-                    .unwrap();
-                    std::fs::write(
-                        path.join(format!("corpus-late-failed-{name}.stderr")),
-                        &late.stderr,
-                    )
-                    .unwrap();
-                }
-            }
+            let actual = execute(&mut Command::new(&binary));
             if name == "ffi" {
                 if let Some(path) = &artifacts {
                     std::fs::write(path.join("corpus-ffi.c"), &measured).unwrap();
@@ -210,7 +172,7 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
                 actual.status.code(), String::from_utf8_lossy(&actual.stdout), String::from_utf8_lossy(&actual.stderr)));
             }
             report.push_str(&format!(
-                "executed\t{name}\tstatus={:?}\treturn-ledger={}\tlate-reuse-option={late_matches}\toracle={}\n",
+                "executed\t{name}\tstatus={:?}\treturn-ledger={}\toracle={}\n",
                 actual.status.code(),
                 actual.status.success(),
                 if optimized_reference {

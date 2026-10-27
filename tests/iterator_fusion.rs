@@ -62,7 +62,7 @@ main = [
             Command::new(env!("CARGO_BIN_EXE_fwp"))
                 .env_remove("FWP_NO_OPT")
                 .env("FWP_ITER_CONSUMERS", enabled)
-                .args(["build", "--gc", "tracing", "--emit-c"])
+                .args(["build", "--emit-c"])
                 .arg(&input)
                 .arg("-o")
                 .arg(&cfile),
@@ -72,19 +72,13 @@ main = [
         for opt in ["-O1", "-O2"] {
             let binary = dir.join(format!("fusion-{enabled}{opt}"));
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            for stress in ["0", "1"] {
-                let actual = checked(
-                    Command::new(&binary)
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", stress),
-                );
-                assert_eq!(
-                    actual.stdout, reference.stdout,
-                    "fusion={enabled} opt={opt} stress={stress}"
-                );
-                assert!(actual.stderr.is_empty(), "{actual:?}");
-            }
+
+            let actual = checked(&mut Command::new(&binary));
+            assert_eq!(
+                actual.stdout, reference.stdout,
+                "fusion={enabled} opt={opt}"
+            );
+            assert!(actual.stderr.is_empty(), "{actual:?}");
         }
     }
     std::fs::remove_dir_all(dir).unwrap();
@@ -133,17 +127,12 @@ fn producer_lookahead_and_exhausted_stage_order_match_raw_interpreter() {
                 Command::new(env!("CARGO_BIN_EXE_fwp"))
                     .env_remove("FWP_NO_OPT")
                     .env("FWP_ITER_PRODUCERS", producers)
-                    .args(["build", "--gc", "tracing", "-O2"])
+                    .args(["build", "-O2"])
                     .arg(&input)
                     .arg("-o")
                     .arg(&binary),
             );
-            let native = Command::new(&binary)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1")
-                .output()
-                .unwrap();
+            let native = Command::new(&binary).output().unwrap();
             assert_eq!(
                 native.status.code(),
                 reference.status.code(),
@@ -188,7 +177,7 @@ main = [
         checked(
             Command::new(compiler)
                 .env("FWP_ITER_PRODUCERS", producers)
-                .args(["build", "--gc", "arc", "--emit-c"])
+                .args(["build", "--emit-c"])
                 .arg(&input)
                 .arg("-o")
                 .arg(&cfile),
@@ -199,8 +188,8 @@ main = [
             .unwrap();
         let (runtime, main) = code.split_at(start);
         let measured = format!("{runtime}{}", main
-            .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t array_budget=fwp_gc.budget;\n")
-            .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget < array_budget) exit(193);\n"));
+            .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t array_live_bytes=fwp_heap.live;\n")
+            .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > array_live_bytes) exit(193);\n"));
         for opt in ["-O1", "-O2"] {
             let binary = dir.join(if cfg!(windows) {
                 "arrays.exe"
@@ -208,27 +197,15 @@ main = [
                 "arrays"
             });
             fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
-            let output = checked(
-                Command::new(&binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0"),
-            );
+            let output = checked(&mut Command::new(&binary));
             assert_eq!(output.stdout, reference.stdout, "{producers} {opt}");
             assert_eq!(output.stderr, reference.stderr, "{producers} {opt}");
             if producers == "1" {
-                let needle = "    fwp_mem_free((void *)(uintptr_t)v);";
+                let needle = "    if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);";
                 assert!(measured.contains(needle));
                 let omitted = measured.replace(needle, "/* omit physical release */");
                 fwp::cgen::compile_c(&omitted, &binary, opt).unwrap();
-                let output = Command::new(binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
+                let output = Command::new(binary).output().unwrap();
                 assert_eq!(output.status.code(), Some(193), "omitted free: {output:?}");
             }
         }

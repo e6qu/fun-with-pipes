@@ -4,11 +4,6 @@ use std::process::Command;
 
 #[test]
 fn accepted_connections_release_after_startup_io_jobs_and_channels() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
-    let no_reuse = std::env::var("FWP_REUSE").as_deref() == Ok("0");
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -92,119 +87,46 @@ fn accepted_connections_release_after_startup_io_jobs_and_channels() {
     ];
     let dir = fwp::cgen::TempDir::new("grpc-accepted-owners").unwrap();
     let binary = dir.join("connections.exe");
-    // The no-reuse mode cannot be combined with ARC. Replay counted transport
-    // ownership controls with tracing excluded as well as with ordinary stress.
-    for (arc, opt) in [(false, "-O1"), (false, "-O2"), (true, "-O2")] {
-        if no_reuse && arc {
-            continue;
-        }
-        let code = if arc {
-            format!("#define FWP_ARC_ONLY 1\n{code}")
+    for no_reuse in [false, true] {
+        let code = if no_reuse {
+            format!("#define FWP_NO_REUSE 1\n{code}")
         } else {
             code.clone()
         };
-        if no_reuse {
-            assert!(!code.contains("#define FWP_RESOURCE_OWNERS 1"));
-            let counted = "#ifdef FWP_RESOURCE_OWNERS\n            fwp_rc_fresh(PTR(c));\n#endif";
-            assert_eq!(code.matches(counted).count(), 1);
-            // Enabling counts without counted channel owners must fail even
-            // though the callback remains reachable by the tracing collector.
-            let broken = code.replace(counted, "            fwp_rc_fresh(PTR(c));");
-            for (runtime, expected) in [(&code, 0), (&broken, 239)] {
-                fwp::cgen::compile_c(&format!("{prefix}{runtime}\n{fixture}"), &binary, opt)
+        for opt in ["-O1", "-O2"] {
+            // Counting an unsuccessful accept as a connection stops the fixture
+            // before it can exercise any ownership. A forced readiness retry must
+            // expose that old test-driver assumption on every host.
+            let early_stop = fixture
+                .replace("if(accept_calls)fwp_trap", "if(accept_calls++)fwp_trap")
+                .replace("if(accepted!=FWP_INVALID_SOCKET)accept_calls++;", "");
+            fwp::cgen::compile_c(&format!("{prefix}{code}\n{early_stop}"), &binary, opt).unwrap();
+            let output = Command::new(&binary).arg("7").output().unwrap();
+            assert_eq!(output.status.code(), Some(237), "{opt}: {output:?}");
+            for (needle, replacement, stage, expected) in controls {
+                assert_eq!(code.matches(needle).count(), 1, "{needle}");
+                let broken = code.replace(needle, replacement);
+                fwp::cgen::compile_c(&format!("{prefix}{broken}\n{fixture}"), &binary, opt)
                     .unwrap();
-                for gc in ["off", "on"] {
-                    let output = Command::new(&binary)
-                        .arg("9")
-                        .env("FWP_GC", gc)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", "0")
-                        .output()
-                        .unwrap();
-                    assert_eq!(
-                        output.status.code(),
-                        Some(expected),
-                        "{opt}/{gc}/no-reuse: {output:?}"
-                    );
-                }
+                let output = Command::new(&binary)
+                    .arg(stage.to_string())
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    output.status.code(),
+                    Some(expected),
+                    "{opt}/{stage} omitted {needle}: {output:?}"
+                );
             }
-            continue;
-        }
-        // Counting an unsuccessful accept as a connection stops the fixture
-        // before it can exercise any ownership. A forced readiness retry must
-        // expose that old test-driver assumption on every host.
-        let early_stop = fixture
-            .replace("if(accept_calls)fwp_trap", "if(accept_calls++)fwp_trap")
-            .replace("if(accepted!=FWP_INVALID_SOCKET)accept_calls++;", "");
-        fwp::cgen::compile_c(&format!("{prefix}{code}\n{early_stop}"), &binary, opt).unwrap();
-        let output = Command::new(&binary)
-            .arg("7")
-            .env("FWP_GC", "off")
-            .env("FWP_GC_STRESS", "0")
-            .env("FWP_GC_VERIFY", "0")
-            .env("FWP_REUSE_VERIFY", "0")
-            .output()
-            .unwrap();
-        assert_eq!(output.status.code(), Some(237), "{opt}: {output:?}");
-        for (needle, replacement, stage, expected) in controls {
-            assert_eq!(code.matches(needle).count(), 1, "{needle}");
-            let broken = code.replace(needle, replacement);
-            fwp::cgen::compile_c(&format!("{prefix}{broken}\n{fixture}"), &binary, opt).unwrap();
-            let output = Command::new(&binary)
-                .arg(stage.to_string())
-                .env("FWP_GC", "off")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
-            assert_eq!(
-                output.status.code(),
-                Some(expected),
-                "{opt}/{stage} omitted {needle}: {output:?}"
-            );
-        }
-        fwp::cgen::compile_c(&format!("{prefix}{code}\n{fixture}"), &binary, opt).unwrap();
-        let settings: &[(&str, &str, &str)] = if arc {
-            &[("off", "0", "0")]
-        } else {
-            &[
-                ("off", "1", "0"),
-                ("off", "1", "1"),
-                ("on", "1", "0"),
-                ("on", "1", "1"),
-            ]
-        };
-        for &(gc, verify, poison) in settings {
+            fwp::cgen::compile_c(&format!("{prefix}{code}\n{fixture}"), &binary, opt).unwrap();
+
             for stage in 0..9 {
                 let output = Command::new(&binary)
                     .arg(stage.to_string())
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", verify)
-                    .env("FWP_GC_VERIFY", verify)
-                    .env("FWP_REUSE_VERIFY", poison)
                     .output()
                     .unwrap();
-                assert!(
-                    output.status.success(),
-                    "{opt}/arc={arc}/{gc}/{poison}/{stage}: {output:?}"
-                );
+                assert!(output.status.success(), "{opt}/{stage}: {output:?}");
             }
         }
-    }
-    if !no_reuse {
-        // Generate this mode in a separate process; do not mutate process-wide
-        // compiler options while Rust's test harness is running.
-        let output = Command::new(std::env::current_exe().unwrap())
-            .args([
-                "--exact",
-                "accepted_connections_release_after_startup_io_jobs_and_channels",
-                "--nocapture",
-            ])
-            .env("FWP_REUSE", "0")
-            .output()
-            .unwrap();
-        assert!(output.status.success(), "no-reuse compiler: {output:?}");
     }
 }

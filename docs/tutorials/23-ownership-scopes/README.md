@@ -121,7 +121,7 @@ From the repository root:
 
 ```sh
 fwp run --interp docs/tutorials/23-ownership-scopes/main.fwp
-fwp build --gc arc docs/tutorials/23-ownership-scopes/main.fwp -o ownership-scopes
+fwp build docs/tutorials/23-ownership-scopes/main.fwp -o ownership-scopes
 ./ownership-scopes
 ```
 

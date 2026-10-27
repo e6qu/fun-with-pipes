@@ -24,7 +24,7 @@ keep = const
 Save this as `callback.fwp`. On macOS or Linux, generate a static library with:
 
 ```sh
-fwp build callback.fwp --gc arc --staticlib --c-callback keep -O2 -o callback.a
+fwp build callback.fwp --staticlib --c-callback keep -O2 -o callback.a
 ```
 
 `--c-callback` names the C export symbol; repeat it to select more exports. The
@@ -108,8 +108,7 @@ those obligations from an arbitrary external library.
 This API selects a known export and captures its leading C arguments. It does
 not export an arbitrary runtime-created fwp closure, admit function fields in
 `repr(C)` records, or extend the lifetime of ordinary scoped callbacks. Native
-checked-ARC libraries support this path; tracing and WebAssembly library builds
-are rejected. Existing restrictions on owning cycles still apply.
+libraries support this path; WebAssembly library builds are rejected. Existing restrictions on owning cycles still apply.
 
 ## Checks
 

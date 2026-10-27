@@ -83,8 +83,7 @@ def main():
     args.output.mkdir(parents=True)
     environment = {key: value for key, value in os.environ.items()
                    if not key.startswith('FWP_') and key not in {'GH_TOKEN', 'GITHUB_TOKEN'}}
-    environment.update(FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0',
-                       FWP_GC='off', FWP_LTO='0', LC_ALL='C')
+    environment.update(FWP_LTO='0', LC_ALL='C')
 
     def run(command, data=None, **settings):
         result = subprocess.run(list(map(str, command)), env=dict(environment, **settings),
@@ -114,7 +113,7 @@ def main():
         source = args.output / f'{kind}.fwp'
         source.write_text(f'main = read-all () | words | {expression} | echo\n')
         generated = args.output / f'{kind}-generated.c'
-        run([args.compiler.resolve(), 'build', '--gc', 'arc', '--memory', 'dynamic',
+        run([args.compiler.resolve(), 'build', '--memory', 'dynamic',
              '-O2', '--emit-c', source, '-o', generated])
         code = generated.read_text()
         assert re.search(r'(?:return|V result =) ' + primitive + r'\(l', code)
@@ -159,7 +158,8 @@ def main():
                     assert actual.stdout == reference.stdout
                     samples.append(json.loads(actual.stderr))
                 assert all(sample == samples[0] for sample in samples)
-                assert samples[0]['finalChargedBytes'] == samples[0]['collections'] == 0
+                assert samples[0]['finalChargedBytes'] == 0
+                assert set(samples[0]) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
                 observed['variants'][variant] = samples
             for optimization in ['-O1', '-O2']:
                 normal, control = [name for name, _ in variants(code, kind)]

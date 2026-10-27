@@ -63,42 +63,41 @@ def main():
     iteration = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(iteration)
     baseline = json.loads((original / 'report.json').read_text())
-    env = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+    env = dict(os.environ)
     cc = os.environ['CC']
     results = []
     for work in ['full', 'construction']:
         expected = next(case['expected'] for case in baseline['cases'] if case['work'] == work)
         variants = {}
-        for mode in ['tracing', 'arc']:
-            source = original / f'{work}-{mode}-fusion-1.c'
-            code = source.read_text()
-            for layout in ['separate', 'joined']:
-                label = f'{mode}-{layout}'
-                cfile = out / f'{work}-{label}.c'
-                cfile.write_text(separate_storage(code) if layout == 'separate' else code)
-                binary = out / f'{work}-{label}'
-                profile = out / f'{work}-{label}-profile.c'
-                profile.write_text(iteration.instrument(cfile.read_text()))
-                measured = out / f'{work}-{label}-profile'
-                commands = []
-                for generated, executable in [(cfile, binary), (profile, measured)]:
-                    command = [cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w',
-                               generated, '-o', executable, '-lm', '-lpthread']
-                    helper.run(command, env)
-                    commands.append(list(map(str, command)))
-                measured_result = helper.run([measured], env)
-                assert measured_result.stdout == expected
-                counters = json.loads(measured_result.stderr)
-                assert counters['finalChargedBytes'] == 0, counters
-                if mode == 'arc':
-                    assert counters['collections'] == 0, counters
-                actual = helper.run([binary], env)
-                assert actual.stdout == expected and not actual.stderr
-                variants[label] = {**helper.inspect(binary, env), 'commands': commands,
-                                   'sourceSha256': helper.digest(source),
-                                   'generatedSha256': helper.digest(cfile),
-                                   'profileSha256': helper.digest(measured),
-                                   'counters': counters, 'processWallNs': []}
+        mode = 'counted'
+        source = original / f'{work}-{mode}-fusion-1.c'
+        code = source.read_text()
+        for layout in ['separate', 'joined']:
+            label = f'{mode}-{layout}'
+            cfile = out / f'{work}-{label}.c'
+            cfile.write_text(separate_storage(code) if layout == 'separate' else code)
+            binary = out / f'{work}-{label}'
+            profile = out / f'{work}-{label}-profile.c'
+            profile.write_text(iteration.instrument(cfile.read_text()))
+            measured = out / f'{work}-{label}-profile'
+            commands = []
+            for generated, executable in [(cfile, binary), (profile, measured)]:
+                command = [cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w',
+                           generated, '-o', executable, '-lm', '-lpthread']
+                helper.run(command, env)
+                commands.append(list(map(str, command)))
+            measured_result = helper.run([measured], env)
+            assert measured_result.stdout == expected
+            counters = json.loads(measured_result.stderr)
+            assert counters['finalChargedBytes'] == 0, counters
+            assert set(counters) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
+            actual = helper.run([binary], env)
+            assert actual.stdout == expected and not actual.stderr
+            variants[label] = {**helper.inspect(binary, env), 'commands': commands,
+                               'sourceSha256': helper.digest(source),
+                               'generatedSha256': helper.digest(cfile),
+                               'profileSha256': helper.digest(measured),
+                               'counters': counters, 'processWallNs': []}
         orders = []
         labels = list(variants)
         for round_number in range(24):
@@ -114,10 +113,10 @@ def main():
         for variant in variants.values():
             variant['medianProcessWallNs'] = statistics.median(variant['processWallNs'])
         ratios = {mode: variants[f'{mode}-joined']['medianProcessWallNs'] /
-                  variants[f'{mode}-separate']['medianProcessWallNs'] for mode in ['tracing', 'arc']}
-        for mode in ['tracing', 'arc']:
-            assert variants[f'{mode}-separate']['counters']['requests'] - variants[f'{mode}-joined']['counters']['requests'] == 2
-            assert variants[f'{mode}-separate']['counters']['retains'] == variants[f'{mode}-joined']['counters']['retains']
+                  variants[f'{mode}-separate']['medianProcessWallNs'] for mode in ['counted']}
+        mode = 'counted'
+        assert variants[f'{mode}-separate']['counters']['requests'] - variants[f'{mode}-joined']['counters']['requests'] == 2
+        assert variants[f'{mode}-separate']['counters']['retains'] == variants[f'{mode}-joined']['counters']['retains']
         results.append({'work': work, 'expected': expected, 'executionOrder': orders,
                         'variants': variants, 'joinedToSeparateTimeRatio': ratios})
         (out / 'cases.json').write_text(json.dumps(results, indent=2) + '\n')
@@ -133,7 +132,7 @@ def main():
                        'the current builder releases it earlier. This now compares both layout and '
                        'scratch lifetime, not an isolated buffer-layout effect. '
                        'All variants retain checked arithmetic, ownership and cleanup. Twenty-four '
-                       'fresh processes per variant rotate order; each position occurs six times. '
+                       'fresh processes per variant rotate order; each position occurs twelve times. '
                        'Full work constructs 500,000 entries and makes 2,000,000 lookups; separate '
                        'construction programs only print size. Neither is an isolated sort/lookup '
                        'measurement. Separate instrumented programs count managed requests, retains '

@@ -62,47 +62,40 @@ main = range 0 4 | each round
         b"Err \"scope errorscope error\"\n".repeat(4)
     );
     assert!(reference.stderr.is_empty());
-    for memory in ["arc", "tracing"] {
-        let cfile = dir.0.join("scope.c");
-        checked(
-            Command::new(compiler)
-                .env_remove("FWP_NO_OPT")
-                .args(["build", "--gc", memory, "--emit-c"])
-                .arg(&source)
-                .arg("-o")
-                .arg(&cfile),
+
+    let cfile = dir.0.join("scope.c");
+    checked(
+        Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let mut code = std::fs::read_to_string(&cfile).unwrap();
+
+    let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
+    assert_eq!(code.matches(finish).count(), 1);
+    code = code.replace(
+        finish,
+        &format!("{finish}    if(0!=fwp_heap.live)exit(83);\n"),
+    );
+
+    for opt in ["-O0", "-O2", "-O3"] {
+        let binary = dir.0.join("scope.exe");
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+
+        let actual = checked(&mut Command::new(&binary));
+        assert_eq!(
+            (&actual.stdout, &actual.stderr),
+            (&reference.stdout, &reference.stderr),
+            "counted/{opt}"
         );
-        let mut code = std::fs::read_to_string(&cfile).unwrap();
-        if memory == "arc" {
-            let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
-            assert_eq!(code.matches(finish).count(), 1);
-            code = code.replace(
-                finish,
-                &format!("{finish}    if(fwp_gc.ncollect || fwp_gc.budget_given!=fwp_gc.budget)exit(83);\n"),
-            );
-        }
-        for opt in ["-O0", "-O2", "-O3"] {
-            let binary = dir.0.join("scope.exe");
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let stress = if memory == "arc" { "0" } else { "1" };
-            let actual = checked(
-                Command::new(&binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
-            assert_eq!(
-                (&actual.stdout, &actual.stderr),
-                (&reference.stdout, &reference.stderr),
-                "{memory}/{opt}"
-            );
-        }
     }
 }
 
 #[test]
-fn task_values_and_channel_aliases_under_stress() {
+fn task_values_and_channel_aliases_preserve_owners() {
     let dir = Scratch::new("aliases");
     let src = dir.0.join("tasks.fwp");
     std::fs::write(
@@ -138,50 +131,35 @@ main = [
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for memory in ["arc", "tracing"] {
-        let cfile = dir.0.join(format!("{memory}.c"));
-        checked(
-            Command::new(fwp)
-                .env_remove("FWP_NO_OPT")
-                .env("FWP_STACK", "0")
-                .env("FWP_FREE", "1")
-                .env("FWP_REUSE", "1")
-                .args([
-                    "build", "--memory", "dynamic", "--gc", memory, "-O2", "--emit-c",
-                ])
-                .arg(&src)
-                .arg("-o")
-                .arg(&cfile),
+
+    let cfile = dir.0.join("counted.c");
+    checked(
+        Command::new(fwp)
+            .env_remove("FWP_NO_OPT")
+            .env("FWP_STACK", "0")
+            .args(["build", "--memory", "dynamic", "-O2", "--emit-c"])
+            .arg(&src)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    for opt in ["-O1", "-O2"] {
+        let exe = dir.0.join(format!("counted{opt}.exe"));
+        fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+
+        let native = Command::new(&exe)
+            .env("FWP_ALLOC_STATS", "0")
+            .output()
+            .unwrap();
+        let label = format!("counted{opt}-aliases");
+        record_probe::save("task_ownership", &label, &code, &exe, &native);
+        assert_eq!(
+            native.status.code(),
+            reference.status.code(),
+            "{label}: {native:?}"
         );
-        let code = std::fs::read_to_string(cfile).unwrap();
-        for opt in ["-O1", "-O2"] {
-            let exe = dir.0.join(format!("{memory}{opt}.exe"));
-            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-            for poison in if memory == "arc" {
-                &["0"][..]
-            } else {
-                &["0", "1"][..]
-            } {
-                let stress = if memory == "arc" { "0" } else { "1" };
-                let native = Command::new(&exe)
-                    .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                let label = format!("{memory}{opt}-aliases-poison{poison}");
-                record_probe::save("task_ownership", &label, &code, &exe, &native);
-                assert_eq!(
-                    native.status.code(),
-                    reference.status.code(),
-                    "{label}: {native:?}"
-                );
-                assert_eq!(native.stdout, reference.stdout, "{label}");
-                assert_eq!(native.stderr, reference.stderr, "{label}");
-            }
-        }
+        assert_eq!(native.stdout, reference.stdout, "{label}");
+        assert_eq!(native.stderr, reference.stderr, "{label}");
     }
 }
 
@@ -201,43 +179,41 @@ main = [
 "#,
     )
     .unwrap();
-    for memory in ["arc", "tracing"] {
-        checked(
-            Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .env_remove("FWP_NO_OPT")
-                .env("FWP_STACK", "0")
-                .env("FWP_FREE", "1")
-                .env("FWP_REUSE", "1")
-                .args(["build", "--memory", "dynamic", "--gc", memory, "-O2"])
-                .arg(&src)
-                .args(["--emit-c", "-o"])
-                .arg(&cfile),
-        );
-        let emitted = std::fs::read_to_string(&cfile).unwrap();
-        let mut scalar = None;
-        let mut owned = None;
-        for (boundary, _) in emitted.match_indices("return fwp_p_task_deadline(l0, l1);") {
-            let function = emitted[..boundary].rsplit("static V ").next().unwrap();
-            let name = function.split('(').next().unwrap();
-            if function.contains("fwp_rc_dup(l1)") {
-                owned = Some(name);
-            } else {
-                scalar = Some(name);
-            }
+
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env_remove("FWP_NO_OPT")
+            .env("FWP_STACK", "0")
+            .args(["build", "--memory", "dynamic", "-O2"])
+            .arg(&src)
+            .args(["--emit-c", "-o"])
+            .arg(&cfile),
+    );
+    let emitted = std::fs::read_to_string(&cfile).unwrap();
+    let mut scalar = None;
+    let mut owned = None;
+    for (boundary, _) in emitted.match_indices("return fwp_p_task_deadline(l0, l1);") {
+        let function = emitted[..boundary].rsplit("static V ").next().unwrap();
+        let name = function.split('(').next().unwrap();
+        if function.contains("fwp_rc_dup(l1)") {
+            owned = Some(name);
+        } else {
+            scalar = Some(name);
         }
-        let recv_boundary = emitted.find("fwp_p_channel_recv_owned(l0, NULL)").unwrap();
-        let recv = emitted[..recv_boundary]
-            .rsplit("static V ")
-            .next()
-            .unwrap()
-            .split('(')
-            .next()
-            .unwrap();
-        let probe = r#"
+    }
+    let recv_boundary = emitted.find("fwp_p_channel_recv_owned(l0, NULL)").unwrap();
+    let recv = emitted[..recv_boundary]
+        .rsplit("static V ")
+        .next()
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    let probe = r#"
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_tasks_init();
-    intptr_t baseline = fwp_gc.budget;
+    size_t baseline = fwp_heap.live;
     for (int round=0; round<32; round++) {
     V duration = fwp_rc_fresh(fwp_data(0, 1, (V[]){INT64_MAX}));
     V bits = fwp_rc_fresh(fwp_cstr("numeric bits"));
@@ -255,82 +231,73 @@ int main(void) {
     fwp_channel_drop(ch);
     fwp_rc_free_obj(bits);
     fwp_rc_free_obj(duration);
-#ifdef FWP_ARC_ONLY
-    if (fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
-#endif
+    if (fwp_heap.live!=baseline || fwp_heap.rc_wide_len) return 90;
     }
     fwp_native_tasks_finish();
-#ifdef FWP_ARC_ONLY
-    if (fwp_gc.budget!=fwp_gc.budget_given || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 90;
-#endif
+    if (fwp_heap.live!=0 || fwp_heap.rc_wide_len) return 90;
     puts("typed task aliases preserved");
     return 0;
 }
 "#
-        .replace("SCALAR", scalar.expect("missing scalar deadline wrapper"))
-        .replace("OWNED", owned.expect("missing owned deadline wrapper"))
-        .replace("RECV", recv);
-        let runtime = emitted.replace(
-            "int main(int argc, char **argv)",
-            "int original_main(int argc, char **argv)",
-        );
-        let mut cases = vec![("typed", format!("{runtime}\n{probe}"), 0)];
-        let boundary = "fwp_rc_dup(l1); return fwp_p_task_deadline(l0, l1);";
-        assert_eq!(runtime.matches(boundary).count(), 1);
+    .replace("SCALAR", scalar.expect("missing scalar deadline wrapper"))
+    .replace("OWNED", owned.expect("missing owned deadline wrapper"))
+    .replace("RECV", recv);
+    let runtime = emitted.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let mut cases = vec![("typed", format!("{runtime}\n{probe}"), 0)];
+    let boundary = "fwp_rc_dup(l1); return fwp_p_task_deadline(l0, l1);";
+    assert_eq!(runtime.matches(boundary).count(), 1);
+    cases.push((
+        "missing-retain",
+        format!(
+            "{}\n{probe}",
+            runtime.replace(boundary, "return fwp_p_task_deadline(l0, l1);")
+        ),
+        2,
+    ));
+
+    for (label, release) in [
+        ("missing-option", "fwp_rc_free_obj(opt);"),
+        ("missing-channel", "fwp_channel_drop(ch);"),
+        ("missing-scalar", "fwp_rc_free_obj(bits);"),
+        ("missing-duration", "fwp_rc_free_obj(duration);"),
+    ] {
+        assert_eq!(probe.matches(release).count(), 1);
         cases.push((
-            "missing-retain",
+            label,
             format!(
-                "{}\n{probe}",
-                runtime.replace(boundary, "return fwp_p_task_deadline(l0, l1);")
+                "{runtime}\n{}",
+                probe.replace(release, "/* omitted owner */")
             ),
-            2,
+            90,
         ));
-        if memory == "arc" {
-            for (label, release) in [
-                ("missing-option", "fwp_rc_free_obj(opt);"),
-                ("missing-channel", "fwp_channel_drop(ch);"),
-                ("missing-scalar", "fwp_rc_free_obj(bits);"),
-                ("missing-duration", "fwp_rc_free_obj(duration);"),
-            ] {
-                assert_eq!(probe.matches(release).count(), 1);
-                cases.push((
-                    label,
-                    format!(
-                        "{runtime}\n{}",
-                        probe.replace(release, "/* omitted owner */")
-                    ),
-                    90,
-                ));
-            }
-        }
-        for opt in ["-O1", "-O2"] {
-            for (label, code, expected) in &cases {
-                let label = format!("{memory}{opt}-{label}");
-                let exe = dir.0.join(format!("{label}.exe"));
-                fwp::cgen::compile_c(code, &exe, opt).unwrap();
-                let output = Command::new(&exe)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
-                record_probe::save("task_ownership", &label, code, &exe, &output);
-                assert_eq!(output.status.code(), Some(*expected), "{label}: {output:?}");
-                assert!(output.stderr.is_empty(), "{output:?}");
-                let stdout = String::from_utf8(output.stdout)
-                    .unwrap()
-                    .replace("\r\n", "\n");
-                assert_eq!(
-                    stdout,
-                    if *expected == 0 {
-                        "typed task aliases preserved\n"
-                    } else {
-                        ""
-                    }
-                );
-            }
+    }
+
+    for opt in ["-O1", "-O2"] {
+        for (label, code, expected) in &cases {
+            let label = format!("counted{opt}-{label}");
+            let exe = dir.0.join(format!("{label}.exe"));
+            fwp::cgen::compile_c(code, &exe, opt).unwrap();
+            let output = Command::new(&exe)
+                .env("FWP_ALLOC_STATS", "0")
+                .output()
+                .unwrap();
+            record_probe::save("task_ownership", &label, code, &exe, &output);
+            assert_eq!(output.status.code(), Some(*expected), "{label}: {output:?}");
+            assert!(output.stderr.is_empty(), "{output:?}");
+            let stdout = String::from_utf8(output.stdout)
+                .unwrap()
+                .replace("\r\n", "\n");
+            assert_eq!(
+                stdout,
+                if *expected == 0 {
+                    "typed task aliases preserved\n"
+                } else {
+                    ""
+                }
+            );
         }
     }
 }
@@ -359,91 +326,45 @@ main = (10000, 0) | loop step | echo
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for memory in ["arc", "tracing"] {
-        checked(
-            Command::new(fwp)
-                .env_remove("FWP_NO_OPT")
-                .env("FWP_FREE", "1")
-                .env("FWP_REUSE", "1")
-                .args(["build", "--memory", "dynamic", "--gc", memory, "-O2"])
-                .arg(&src)
-                .args(["--emit-c", "-o"])
-                .arg(&cfile)
-                .env("FWP_STACK", "0"),
-        );
-        let current = std::fs::read_to_string(&cfile).unwrap();
-        let boundary = "fwp_rc_dup(l1); return fwp_p_task_deadline(l0, l1);";
-        assert_eq!(current.matches(boundary).count(), 1);
-        if memory == "arc" {
-            let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
-            assert_eq!(current.matches(finish).count(), 1);
-            let balanced = current.replace(finish, &format!("{finish}    if(fwp_gc.budget!=fwp_gc.budget_given || fwp_gc.rc_wide_len || fwp_gc.ncollect)exit(90);\n"));
-            let missing = balanced.replace(
-                boundary,
-                "fwp_rc_dup(l1); fwp_rc_dup(l1); return fwp_p_task_deadline(l0, l1);",
-            );
-            for opt in ["-O1", "-O2"] {
-                for (label, code, expected) in
-                    [("reclamation", &balanced, 0), ("extra-owner", &missing, 90)]
-                {
-                    let label = format!("{memory}{opt}-{label}");
-                    let exe = dir.0.join(format!("{label}.exe"));
-                    fwp::cgen::compile_c(code, &exe, opt).unwrap();
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", "off")
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "0")
-                        .env("FWP_REUSE_VERIFY", "0")
-                        .output()
-                        .unwrap();
-                    record_probe::save("task_ownership", &label, code, &exe, &out);
-                    assert_eq!(out.status.code(), Some(expected), "{label}: {out:?}");
-                    assert_eq!(out.stdout, reference.stdout, "{label}");
-                    assert!(out.stderr.is_empty(), "{out:?}");
-                }
-            }
-            continue;
+
+    checked(
+        Command::new(fwp)
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--memory", "dynamic", "-O2"])
+            .arg(&src)
+            .args(["--emit-c", "-o"])
+            .arg(&cfile)
+            .env("FWP_STACK", "0"),
+    );
+    let current = std::fs::read_to_string(&cfile).unwrap();
+    let boundary = "fwp_rc_dup(l1); return fwp_p_task_deadline(l0, l1);";
+    assert_eq!(current.matches(boundary).count(), 1);
+
+    let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
+    assert_eq!(current.matches(finish).count(), 1);
+    let balanced = current.replace(
+        finish,
+        &format!("{finish}    if(fwp_heap.live!=0 || fwp_heap.rc_wide_len)exit(90);\n"),
+    );
+    let missing = balanced.replace(
+        boundary,
+        "fwp_rc_dup(l1); fwp_rc_dup(l1); return fwp_p_task_deadline(l0, l1);",
+    );
+    for opt in ["-O1", "-O2"] {
+        for (label, code, expected) in
+            [("reclamation", &balanced, 0), ("extra-owner", &missing, 90)]
+        {
+            let label = format!("counted{opt}-{label}");
+            let exe = dir.0.join(format!("{label}.exe"));
+            fwp::cgen::compile_c(code, &exe, opt).unwrap();
+            let out = Command::new(&exe)
+                .env("FWP_ALLOC_STATS", "0")
+                .output()
+                .unwrap();
+            record_probe::save("task_ownership", &label, code, &exe, &out);
+            assert_eq!(out.status.code(), Some(expected), "{label}: {out:?}");
+            assert_eq!(out.stdout, reference.stdout, "{label}");
+            assert!(out.stderr.is_empty(), "{out:?}");
         }
-        let shared = current.replace(
-            boundary,
-            "fwp_rc_share(l1); fwp_rc_dup(l1); return fwp_p_task_deadline(l0, l1);",
-        );
-        let mut freed = Vec::new();
-        for (name, code) in [("shared", shared), ("owned", current)] {
-            let exe = dir.0.join(format!("{name}.exe"));
-            fwp::cgen::compile_c(&code, &exe, "-O1").unwrap();
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STATS", "1")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0"),
-            );
-            record_probe::save(
-                "task_ownership",
-                &format!("tracing-O1-reclamation-{name}"),
-                &code,
-                &exe,
-                &out,
-            );
-            assert_eq!(out.stdout, reference.stdout);
-            let stats = String::from_utf8_lossy(&out.stderr);
-            assert!(stats.contains("fwp gc: 0 collections"), "{stats}");
-            freed.push(
-                stats
-                    .split(" MiB freed by counts")
-                    .next()
-                    .unwrap()
-                    .rsplit('(')
-                    .next()
-                    .unwrap()
-                    .parse::<f64>()
-                    .unwrap(),
-            );
-        }
-        assert!(freed[1] > freed[0] + 0.2, "{freed:?}");
-        eprintln!("deadline MiB freed by counts: {freed:?}");
     }
 }

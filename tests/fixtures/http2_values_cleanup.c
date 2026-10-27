@@ -17,7 +17,7 @@ static int request_matches(V request) {
     return list==0;
 }
 int main(void) {
-    fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+    fwp_lib_init();fwp_heap_start();fwp_tasks_init();
     char remote[]="remote";g_conn conn={0};conn.authority=remote;
     g_stream stream={0};g_call call={.c=&conn,.s=&stream};
     struct {uint32_t tag,n;V f[1];} duration={0,1,{0}};
@@ -29,7 +29,7 @@ int main(void) {
     h2_hdrs_add(&stream.headers,"x-a",3,"three",5);
     static const unsigned char bytes[]={0,255,192,128,10};
     h2b_put(&stream.data,bytes,sizeof bytes);stream.remote_end=1;
-    intptr_t budget=fwp_gc.budget;
+    size_t live_bytes=fwp_heap.live;
     V request=fwp_p_http2_request(PTR(&call),REQUEST_TYPE);
     V body=fwp_p_http2_body(64,PTR(&duration),PTR(&call),BODY_TYPE);
     REQUEST_TYPE->dup(request);BODY_TYPE->dup(body);REQUEST_TYPE->drop(request);BODY_TYPE->drop(body);
@@ -37,27 +37,27 @@ int main(void) {
     if(!request_matches(request)||OBJ(body)->tag!=0||STR(OBJ(body)->f[0])->len!=sizeof bytes||memcmp(STR(OBJ(body)->f[0])->d,bytes,sizeof bytes))return 247;
     REQUEST_TYPE->drop(request);BODY_TYPE->drop(body);
     stream.headers.v[3].value[0]='o';remote[0]='r';stream.data.d[0]=0;
-    if(getenv("FWP_SERVICE_STRESS")) {
-        if(!fwp_gc.ncollect||fwp_cleanups)return 247;
-        h2_hdrs_free(&stream.headers);h2b_free(&stream.data);fwp_lib_finish();return 0;
-    }
-    if(fwp_gc.budget!=budget){fprintf(stderr,"copied HTTP/2 result budget delta: %lld\n",(long long)(fwp_gc.budget-budget));return 248;}
+    if(fwp_heap.live!=live_bytes){fprintf(stderr,"copied HTTP/2 result live_bytes delta: %lld\n",(long long)(live_bytes - fwp_heap.live));return 248;}
     for(int operation=0;operation<2;operation++) {
         const fwp_desc *type=operation?BODY_TYPE:REQUEST_TYPE;
-        int failed=0,completed=0;
-        for(int allocation=1;allocation<64;allocation++) {
+        /* Check each request directly; do not carry a second loop tally across longjmp. */
+        const int failures=operation?2:20;
+        for(int allocation=1;allocation<=failures+1;allocation++) {
             fwp_trap_recover=service_recover;fwp_trap_jb=&service_jump;fwp_trap_cleanup=fwp_cleanups;
             service_left=allocation;
             if(!setjmp(service_jump)) {
                 V result=operation?fwp_p_http2_body(64,PTR(&duration),PTR(&call),type):fwp_p_http2_request(PTR(&call),type);
-                service_left=0;type->drop(result);completed=1;
-            } else failed++;
+                service_left=0;type->drop(result);
+                if(allocation<=failures) {
+                    fprintf(stderr,"HTTP/2 result %d: allocation %d did not fail\n",operation,allocation);return 247;
+                }
+            } else if(allocation>failures||service_left||strcmp(fwp_trap_msg,"injected HTTP/2-result allocation failure")) {
+                fprintf(stderr,"HTTP/2 result %d: unexpected trap at allocation %d: %s\n",operation,allocation,fwp_trap_msg);return 247;
+            }
             service_left=0;fwp_trap_recover=NULL;fwp_trap_jb=NULL;
-            if(fwp_cleanups||fwp_gc.budget!=budget)return 248;
-            if(completed)break;
+            if(fwp_cleanups||fwp_heap.live!=live_bytes)return 248;
         }
-        if(!completed||failed!=(operation?2:20))return 247;
-        printf("HTTP/2 result %d: %d allocation failures; final charged delta 0\n",operation,failed);
+        printf("HTTP/2 result %d: %d allocation failures; final charged delta 0\n",operation,failures);
     }
     // Existing host wins over :authority, and duplicate header order is retained.
     h2_hdrs_add(&stream.headers,"host",4,"explicit.test",13);
@@ -68,7 +68,7 @@ int main(void) {
         if(!strcmp(STR(OBJ(pair)->f[0])->d,"host")&&(count!=3||strcmp(STR(OBJ(pair)->f[1])->d,"explicit.test")))return 247;
         count++;
     }
-    REQUEST_TYPE->drop(request);if(count!=4||fwp_gc.budget!=budget)return 248;
+    REQUEST_TYPE->drop(request);if(count!=4||fwp_heap.live!=live_bytes)return 248;
     h2_hdrs_free(&stream.headers);h2b_free(&stream.data);
     request=fwp_p_http2_request(PTR(&call),REQUEST_TYPE);
     if(STR(OBJ(request)->f[0])->len||STR(OBJ(request)->f[1])->len||OBJ(request)->f[2])return 247;
@@ -82,9 +82,9 @@ int main(void) {
         body=fwp_p_http2_body(error?-1:1,PTR(&duration),PTR(&call),BODY_TYPE);
         if(OBJ(body)->tag!=1||(int64_t)OBJ(body)->f[0]!=(error==0?413:error==3?408:0))return 247;
         BODY_TYPE->drop(body);h2b_free(&stream.data);
-        if(fwp_gc.budget!=budget)return 248;
+        if(fwp_heap.live!=live_bytes)return 248;
     }
     printf("partial-result field owner: %zu bytes, alignment %zu, 8 inline values\n",sizeof(fwp_decode_fields),_Alignof(fwp_decode_fields));
-    if(fwp_gc.ncollect||fwp_cleanups)return 247;
+    if(fwp_cleanups)return 247;
     fwp_lib_finish();return 0;
 }

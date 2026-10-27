@@ -69,20 +69,13 @@ fn http2_client_startup_releases_reserved_io_and_connection_owners() {
         ] {
             fwp::cgen::compile_c(&format!("{declarations}\n{source}\n{fixture}"), &exe, opt)
                 .unwrap();
-            let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+            let out = Command::new(&exe).output().unwrap();
             assert_eq!(
                 out.status.code(),
                 Some(expected),
                 "{opt}, expected {expected}: {out:?}"
             );
         }
-        let out = Command::new(&exe)
-            .env("FWP_GC_STRESS", "1")
-            .env("FWP_GC_VERIFY", "1")
-            .env("FWP_REUSE_VERIFY", "1")
-            .output()
-            .unwrap();
-        assert!(out.status.success(), "{opt}, stress: {out:?}");
     }
 }
 
@@ -119,8 +112,8 @@ fn http2_client_responses_release_partial_copies_and_request_owners() {
             "static inline void *fwp_alloc_init(size_t n) { client_allocation();",
         ),
         (
-            "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
-            "static inline void *fwp_gc_alloc(size_t n, int leaf) { if(leaf)client_allocation();",
+            "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+            "static inline void *fwp_heap_alloc(size_t n, int kind) { if(kind)client_allocation();",
         ),
         (
             "static void g_stream_final(void *p) {",
@@ -153,27 +146,12 @@ fn http2_client_responses_release_partial_copies_and_request_owners() {
                 opt,
             )
             .unwrap();
-            let out = Command::new(&exe)
-                .env("FWP_GC", "off")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
+            let out = Command::new(&exe).output().unwrap();
             assert_eq!(
                 out.status.code(),
                 Some(status),
                 "{opt}, expected {status}: {out:?}"
             );
-        }
-        for stress in [false, true] {
-            let mut cmd = Command::new(&exe);
-            cmd.env("FWP_REUSE_VERIFY", "1");
-            if stress {
-                cmd.env("FWP_CLIENT_STRESS", "1")
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1");
-            }
-            let out = cmd.output().unwrap();
-            assert!(out.status.success(), "{opt}, stress {stress}: {out:?}");
         }
     }
 }

@@ -112,12 +112,11 @@ fn current_loop_states_release_at_first_and_later_cancellation_ticks() {
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         checked(
             Command::new(fwp)
                 .env("FWP_STACK", "1")
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .arg(&src)
                 .args(["--emit-c", "-O2", "-o"])
                 .arg(&cfile),
@@ -149,9 +148,6 @@ static fwp_task cancelled_loop;
 static volatile V original_text, state_box, capture, scalar_word, observed_text, observed_other;
 static int wanted_tick, current_tick;
 static int dead_string(V v) {
-#ifndef FWP_ARC_ONLY
- if(fwp_reuse_verify)return STR(v)->len==0;
-#endif
  return *fwp_rc_slot(v)==0;
 }
 static void cancel_at_loop_tick(void) {
@@ -173,8 +169,8 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 190;
 #endif
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
-    intptr_t baseline=fwp_gc.budget;
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+    size_t baseline=fwp_heap.live;
     for(int round=0;round<32;round++){
     for (volatile int tick=1;tick<=2;tick++) for (volatile int mode=0;mode<5;mode++) {
         original_text=fwp_rc_fresh(fwp_str_new("seed",4));fwp_rc_dup(original_text);
@@ -185,11 +181,6 @@ int main(void) {
         state_box=fwp_rc_fresh(fwp_data(0,2,(V[]){scalar_word,payload}));
         wanted_tick=tick;current_tick=0;observed_text=0;observed_other=0;
         memset(&cancelled_loop,0,sizeof cancelled_loop);fwp_cur=&cancelled_loop;fwp_budget=1000000;
-#ifdef _WIN32
-        /* This synthetic task runs on main's stack. Windows tasks normally
-         * receive their scan boundary when their fiber starts. */
-        cancelled_loop.ctx.top=fwp_gc.main_top;
-#endif
         jmp_buf cancelled_loop_base; cancelled_loop.base = &cancelled_loop_base;
         if (!setjmp(cancelled_loop_base)) {
             if (mode==0) fwp_loopSTEP(state_box);
@@ -213,9 +204,7 @@ int main(void) {
         if (mode==3) { if (!dead_string(capture)) return 7; } else fwp_rc_free_obj(capture);
         fwp_rc_free_obj(original_text);fwp_rc_free_obj(scalar_word);
     }
-#ifdef FWP_ARC_ONLY
-    if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
-#endif
+    if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
     }
     puts("loop states release at cancellation ticks with aliases and scalar bits intact");
     return 0;
@@ -230,7 +219,7 @@ int main(void) {
                 );
         for opt in ["-O1", "-O2"] {
             let mut cases = vec![("normal", probe.clone(), 0)];
-            if mode == "arc" {
+            {
                 let missing = probe.replace("fwp_rc_free_obj(original_text);", "");
                 assert_ne!(missing, probe);
                 cases.push(("missing-release", missing, 90));
@@ -238,22 +227,11 @@ int main(void) {
             for (label, probe, status) in cases {
                 let code = format!("{runtime}\n{probe}");
                 fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-                for poison in if mode == "tracing" && label == "normal" {
-                    &["0", "1"][..]
-                } else {
-                    &["0"][..]
-                } {
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
+                {
+                    let out = Command::new(&exe).output().unwrap();
                     record_probe::save(
                         "loop_unwind_ownership",
-                        &format!("{mode}{opt}-ticks-{label}-poison{poison}"),
+                        &format!("counted{opt}-ticks-{label}"),
                         &code,
                         &exe,
                         &out,
@@ -261,9 +239,9 @@ int main(void) {
                     assert_eq!(
                         out.status.code(),
                         Some(status),
-                        "{mode} {opt} {label}: {out:?}"
+                        "counted {opt} {label}: {out:?}"
                     );
-                    assert!(out.stderr.is_empty(), "{mode} {opt} {label}: {out:?}");
+                    assert!(out.stderr.is_empty(), "counted {opt} {label}: {out:?}");
                     let expected = if status == 0 {
                         &b"loop states release at cancellation ticks with aliases and scalar bits intact\n"[..]
                     } else {
@@ -275,19 +253,12 @@ int main(void) {
             checked(
                 Command::new(fwp)
                     .env("FWP_STACK", "1")
-                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .args(["build", "--memory", "dynamic"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe),
             );
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
+            let out = checked(&mut Command::new(&exe));
             assert_eq!(out.stdout, reference.stdout);
         }
     }
@@ -300,12 +271,11 @@ fn owned_steps_release_if_payload_preparation_fails() {
     let cfile = dir.0.join("payload.c");
     let exe = dir.0.join("payload.exe");
     std::fs::write(&src, SOURCE).unwrap();
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
                 .env("FWP_STACK", "1")
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .arg(&src)
                 .args(["--emit-c", "-O2", "-o"])
                 .arg(&cfile),
@@ -327,8 +297,8 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 190;
 #endif
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
-    intptr_t baseline=fwp_gc.budget;
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+    size_t baseline=fwp_heap.live;
     for(int round=0;round<32;round++){
     for (volatile int stop=0;stop<2;stop++) for (volatile int alias=0;alias<2;alias++) {
         original_text=fwp_rc_fresh(fwp_str_new("seed",4));fwp_rc_dup(original_text);
@@ -353,9 +323,7 @@ int main(void) {
         if (*fwp_rc_slot(scalar_word)!=1 || STR(scalar_word)->len!=11) return 5;
         fwp_rc_free_obj(original_text);fwp_rc_free_obj(scalar_word);
     }
-#ifdef FWP_ARC_ONLY
-    if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
-#endif
+    if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
     }
     puts("owned Steps release on payload preparation failure without losing aliases");
     return 0;
@@ -367,7 +335,7 @@ int main(void) {
         );
         for opt in ["-O1", "-O2"] {
             let mut cases = vec![("normal", probe.clone(), 0)];
-            if mode == "arc" {
+            {
                 let missing = probe.replace("fwp_rc_free_obj(original_text);", "");
                 assert_ne!(missing, probe);
                 cases.push(("missing-release", missing, 90));
@@ -375,22 +343,11 @@ int main(void) {
             for (label, probe, status) in cases {
                 let code = format!("{runtime}\n{probe}");
                 fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-                for poison in if mode == "tracing" && label == "normal" {
-                    &["0", "1"][..]
-                } else {
-                    &["0"][..]
-                } {
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
+                {
+                    let out = Command::new(&exe).output().unwrap();
                     record_probe::save(
                         "loop_unwind_ownership",
-                        &format!("{mode}{opt}-payload-{label}-poison{poison}"),
+                        &format!("counted{opt}-payload-{label}"),
                         &code,
                         &exe,
                         &out,
@@ -398,9 +355,9 @@ int main(void) {
                     assert_eq!(
                         out.status.code(),
                         Some(status),
-                        "{mode} {opt} {label}: {out:?}"
+                        "counted {opt} {label}: {out:?}"
                     );
-                    assert!(out.stderr.is_empty(), "{mode} {opt} {label}: {out:?}");
+                    assert!(out.stderr.is_empty(), "counted {opt} {label}: {out:?}");
                     let expected = if status == 0 {
                         &b"owned Steps release on payload preparation failure without losing aliases\n"[..]
                     } else {

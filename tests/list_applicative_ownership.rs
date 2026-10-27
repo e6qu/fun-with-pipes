@@ -53,7 +53,7 @@ fn cartesian_results_and_scratch_release_on_trap_and_cancel() {
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&input)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -140,30 +140,23 @@ fn cartesian_results_and_scratch_release_on_trap_and_cancel() {
                 std::fs::write(directory.join(format!("{label}{}.c", &opt[1..])), &code).unwrap();
             }
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-            for reuse in ["0", "1"] {
-                let output = Command::new(&executable)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", reuse)
-                    .output()
-                    .unwrap();
-                retain(
-                    &format!("{label}{}-reuse{reuse}", &opt[1..]),
-                    &code,
-                    &executable,
-                    &output,
-                );
-                assert_eq!(
-                    output.status.code(),
-                    Some(expected),
-                    "{label} {opt} reuse={reuse}: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                );
-                if expected == 0 {
-                    assert!(String::from_utf8_lossy(&output.stdout).starts_with(
-                        "list.ap and flat-map callback and spine ownership; real collections="
-                    ));
-                }
+
+            let output = Command::new(&executable).output().unwrap();
+            retain(
+                &format!("{label}{}", &opt[1..]),
+                &code,
+                &executable,
+                &output,
+            );
+            assert_eq!(
+                output.status.code(),
+                Some(expected),
+                "{label} {opt}: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            if expected == 0 {
+                assert!(String::from_utf8_lossy(&output.stdout)
+                    .starts_with("list.ap and flat-map callback and spine ownership; V="));
             }
         }
     }
@@ -248,7 +241,7 @@ main = [
             checked(
                 Command::new(env!("CARGO_BIN_EXE_fwp"))
                     .env_remove("FWP_NO_OPT")
-                    .args(["build", "--gc", "tracing"])
+                    .args(["build"])
                     .arg(&input)
                     .args(["--emit-c", "-o"])
                     .arg(&cfile),
@@ -260,39 +253,33 @@ main = [
                 std::fs::write(directory.join(format!("{label}{}.c", &opt[1..])), &code).unwrap();
             }
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-            for reuse in ["0", "1"] {
-                let output = Command::new(&executable)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", reuse)
-                    .output()
-                    .unwrap();
-                retain(
-                    &format!("{label}{}-reuse{reuse}", &opt[1..]),
-                    &code,
-                    &executable,
-                    &output,
-                );
-                assert_eq!(
-                    output.status.success(),
-                    reference.status.success(),
-                    "{label} {opt}: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                );
-                assert_eq!(output.stdout, reference.stdout, "{label} {opt}");
-                if invalid {
-                    assert_eq!(output.status.code(), Some(101));
-                    assert!(String::from_utf8_lossy(&output.stderr)
-                        .lines()
-                        .any(|line| line == "fwp: trap: list.ap order control"));
-                }
+
+            let output = Command::new(&executable).output().unwrap();
+            retain(
+                &format!("{label}{}", &opt[1..]),
+                &code,
+                &executable,
+                &output,
+            );
+            assert_eq!(
+                output.status.success(),
+                reference.status.success(),
+                "{label} {opt}: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            assert_eq!(output.stdout, reference.stdout, "{label} {opt}");
+            if invalid {
+                assert_eq!(output.status.code(), Some(101));
+                assert!(String::from_utf8_lossy(&output.stderr)
+                    .lines()
+                    .any(|line| line == "fwp: trap: list.ap order control"));
             }
         }
     }
 }
 
 #[test]
-fn closure_drop_context_recovers_after_capture_trap_and_spill_oom() {
+fn closure_cleanup_completes_or_terminates_without_partial_recovery() {
     let scratch = Scratch::new("closure-drop");
     let input = scratch.0.join("closure.fwp");
     let cfile = scratch.0.join("closure.c");
@@ -304,7 +291,7 @@ fn closure_drop_context_recovers_after_capture_trap_and_spill_oom() {
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&input)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -315,7 +302,8 @@ fn closure_drop_context_recovers_after_capture_trap_and_spill_oom() {
     let region = original[start..end]
         .replace("malloc(", "closure_probe_alloc(")
         .replace("free(", "closure_probe_free(");
-    let declarations="static void *closure_probe_alloc(size_t);\nstatic void closure_probe_free(void *);\nstatic void closure_probe_noop(void *);\n";
+    let declarations =
+        "static void *closure_probe_alloc(size_t);\nstatic void closure_probe_free(void *);\n";
     let runtime = format!(
         "{}{}{}{}",
         &original[..start],
@@ -327,60 +315,63 @@ fn closure_drop_context_recovers_after_capture_trap_and_spill_oom() {
         "int main(int argc, char **argv)",
         "int original_main(int argc, char **argv)",
     );
-    let registration = "fwp_cleanup_push(&cleanup, fwp_closure_drop_release, &work);";
-    assert_eq!(runtime.matches(registration).count(), 1);
-    let uncontrolled = runtime.replace(
-        registration,
-        "fwp_cleanup_push(&cleanup, closure_probe_noop, &work);",
-    );
+    let reset = "    fwp_closure_drop_set(NULL);";
+    assert_eq!(runtime.matches(reset).count(), 1);
+    let uncontrolled = runtime.replace(reset, "");
     for opt in ["-O1", "-O2"] {
-        for (label, source, expected) in [
-            ("closure-protected", &runtime, 0),
-            ("closure-unprotected", &uncontrolled, 94),
+        for (label, source, mode, expected, error) in [
+            ("closure-release", &runtime, 0, 0, ""),
+            ("closure-stale-context", &uncontrolled, 0, 94, ""),
+            (
+                "closure-capture-trap",
+                &runtime,
+                1,
+                101,
+                "fwp: trap: closure capture cleanup control\n",
+            ),
+            (
+                "closure-spill-oom",
+                &runtime,
+                2,
+                102,
+                "fwp: out of memory\n",
+            ),
         ] {
             let code = format!(
-                "{source}\n{}",
+                "{source}\n#define PROBE_MODE {mode}\n{}",
                 include_str!("fixtures/closure_drop_probe.c")
             );
             let executable = scratch
                 .0
                 .join(format!("{label}{}", &opt[1..]))
                 .with_extension(std::env::consts::EXE_EXTENSION);
-            if let Some(directory) = std::env::var_os("FWP_LIST_AP_ARTIFACTS") {
-                let directory = PathBuf::from(directory);
-                std::fs::create_dir_all(&directory).unwrap();
-                std::fs::write(directory.join(format!("{label}{}.c", &opt[1..])), &code).unwrap();
-            }
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-            for reuse in ["0", "1"] {
-                let output = Command::new(&executable)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", reuse)
-                    .output()
-                    .unwrap();
-                retain(
-                    &format!("{label}{}-reuse{reuse}", &opt[1..]),
-                    &code,
-                    &executable,
-                    &output,
-                );
-                assert_eq!(
-                    output.status.code(),
-                    Some(expected),
-                    "{label} {opt} reuse={reuse}: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                );
-                if expected == 0 {
-                    assert!(String::from_utf8_lossy(&output.stdout).starts_with("Closure cleanup context resets after capture trap and spill OOM; real collections="));
-                }
+            let output = Command::new(&executable).output().unwrap();
+            retain(
+                &format!("{label}{}", &opt[1..]),
+                &code,
+                &executable,
+                &output,
+            );
+            assert_eq!(
+                output.status.code(),
+                Some(expected),
+                "{label}{opt}: {output:?}"
+            );
+            assert_eq!(
+                String::from_utf8_lossy(&output.stderr).replace("\r\n", "\n"),
+                error
+            );
+            if expected == 0 {
+                assert!(String::from_utf8_lossy(&output.stdout)
+                    .starts_with("Closure cleanup releases captures and resets its context"));
             }
         }
     }
 }
 
 #[test]
-fn inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries() {
+fn inactive_state_slots_are_cleared_at_handler_and_task_boundaries() {
     let scratch = Scratch::new("state-slots");
     let input = scratch.0.join("state.fwp");
     let cfile = scratch.0.join("state.c");
@@ -393,7 +384,7 @@ fn inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries() 
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&input)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -401,20 +392,10 @@ fn inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries() 
     let original = std::fs::read_to_string(cfile).unwrap();
     assert!(original.contains("#define FWP_UNWIND 1"));
     assert!(original.contains("static int g_apply_user("));
-    let scan = "    uintptr_t a = ((uintptr_t)lo + 7) & ~(uintptr_t)7;";
-    let declaration = "__attribute__((no_sanitize_address)) static void fwp_gc_scan(";
-    assert_eq!(original.matches(scan).count(), 1);
-    assert_eq!(original.matches(declaration).count(), 1);
-    let runtime = original
-        .replace(
-            declaration,
-            &format!("static void state_probe_scan(const char *,const char *,int);\n{declaration}"),
-        )
-        .replace(scan, &format!("    state_probe_scan(lo,hi,root);\n{scan}"))
-        .replace(
-            "int main(int argc, char **argv)",
-            "int original_main(int argc, char **argv)",
-        );
+    let runtime = original.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
     let task_exit="    t->unwinding = 1;\n    fwp_handlers = 0;\n    fwp_state_restore(0);\n    fwp_join_children();";
     assert_eq!(runtime.matches(task_exit).count(), 1);
     let runtime=runtime.replace("static void fwp_task_main(void) {","static int state_empty_from(size_t);\nstatic void state_probe_task_exit(void);\nstatic void fwp_task_main(void) {")
@@ -448,29 +429,23 @@ fn inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries() 
                 std::fs::write(directory.join(format!("{label}{}.c", &opt[1..])), &code).unwrap();
             }
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-            for reuse in ["0", "1"] {
-                let output = Command::new(&executable)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", reuse)
-                    .output()
-                    .unwrap();
-                retain(
-                    &format!("{label}{}-reuse{reuse}", &opt[1..]),
-                    &code,
-                    &executable,
-                    &output,
-                );
-                assert_eq!(
-                    output.status.code(),
-                    Some(expected),
-                    "{label} {opt} reuse={reuse}: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                );
-                if expected == 0 {
-                    assert!(String::from_utf8_lossy(&output.stdout)
-                        .starts_with("State inactive slots cleared; real collections="));
-                }
+
+            let output = Command::new(&executable).output().unwrap();
+            retain(
+                &format!("{label}{}", &opt[1..]),
+                &code,
+                &executable,
+                &output,
+            );
+            assert_eq!(
+                output.status.code(),
+                Some(expected),
+                "{label} {opt}: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            if expected == 0 {
+                assert!(String::from_utf8_lossy(&output.stdout)
+                    .starts_with("State inactive slots cleared after handlers and task exit"));
             }
         }
     }
@@ -532,7 +507,7 @@ main = [
         checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
                 .env_remove("FWP_NO_OPT")
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&input)
                 .args(["--emit-c", "-o"])
                 .arg(&cfile),
@@ -548,25 +523,19 @@ main = [
             .unwrap();
         }
         fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-        for reuse in ["0", "1"] {
-            let output = Command::new(&executable)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", reuse)
-                .output()
-                .unwrap();
-            retain(
-                &format!("state-semantics{}-reuse{reuse}", &opt[1..]),
-                &code,
-                &executable,
-                &output,
-            );
-            assert!(
-                output.status.success(),
-                "{opt} reuse={reuse}: {}",
-                String::from_utf8_lossy(&output.stderr)
-            );
-            assert_eq!(output.stdout, reference.stdout, "{opt} reuse={reuse}");
-        }
+
+        let output = Command::new(&executable).output().unwrap();
+        retain(
+            &format!("state-semantics{}", &opt[1..]),
+            &code,
+            &executable,
+            &output,
+        );
+        assert!(
+            output.status.success(),
+            "{opt}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(output.stdout, reference.stdout, "{opt}");
     }
 }

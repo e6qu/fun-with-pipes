@@ -21,17 +21,13 @@ static void nested_free(void *pointer) {
 int main(int argc, char **argv) {
     if (argc != 2) return 190;
     nested_mode = atoi(argv[1]);
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_fns = fwp_fn_table; fwp_init_consts(); fwp_tasks_init();
-    intptr_t budget = fwp_gc.budget;
+    size_t live_bytes = fwp_heap.live;
     fwp_task *saved = fwp_cur;
     fwp_trap_recover = nested_recover;
     fwp_trap_jb = &nested_recovered; fwp_trap_cleanup = NULL;
     if (nested_mode == 6) {
-#ifdef _WIN32
-        /* This injected task runs on the current stack, not a new fiber. */
-        nested_cancelled.ctx.top = saved->ctx.top;
-#endif
         fwp_cur = &nested_cancelled;
         jmp_buf nested_cancelled_base; nested_cancelled.base = &nested_cancelled_base;
         if (!setjmp(nested_cancelled_base)) { NESTED_MAIN(); return 191; }
@@ -47,9 +43,7 @@ int main(int argc, char **argv) {
     for (int64_t i=0;i<fwp_ntapes;i++) if (fwp_tapes[i].live) return 194;
     if (!nested_expected_frees || nested_actual_frees != nested_expected_frees) return 195;
     if (nested_mode && !nested_hit) return 196;
-#if FWP_ARC_ONLY
-    if (fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget < budget) return 197;
-#endif
+    if (fwp_heap.live > live_bytes) return 197;
     puts("managed tapes release on callback failure and cancellation");
     return 0;
 }

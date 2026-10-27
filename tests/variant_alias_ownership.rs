@@ -25,12 +25,8 @@ fn returned_variant_aliases_transfer_fields_once() {
         .unwrap_or_else(std::sync::PoisonError::into_inner);
     std::env::set_var("FWP_STACK", "0");
     fwp::cgen::set_static_memory(None);
-    for arc in [true, false] {
-        let mode = if arc { "arc" } else { "tracing" };
-        let stress = if arc { "0" } else { "1" };
-
+    {
         fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-            arc,
             static_link: false,
             pgo: None,
             cross: None,
@@ -141,11 +137,7 @@ fn returned_variant_aliases_transfer_fields_once() {
             .unwrap();
         assert_eq!(result, Value::Str("laterfirst".into()));
         let emitted = fwp::cgen::generate(&p).unwrap();
-        let emitted = if arc {
-            ownership_ledger::instrument_native(&emitted, 1 << 16)
-        } else {
-            emitted
-        };
+        let emitted = ownership_ledger::instrument_native(&emitted, 1 << 16);
         let start = emitted.find("/* holder :").unwrap();
         let end = start + emitted[start..].find("/* concat :").unwrap();
         let holder = &emitted[start..end];
@@ -159,16 +151,11 @@ fn returned_variant_aliases_transfer_fields_once() {
         );
         let probe = r#"
 static int dead(V v) {
-#ifdef FWP_ARC_ONLY
  return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)];
-#else
- if(fwp_reuse_verify)return STR(v)->len==0;
- return *fwp_rc_slot(v)==0;
-#endif
 }
 int main(void) {
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
- intptr_t baseline=fwp_gc.budget;
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+ size_t baseline=fwp_heap.live;
  for(int round=0;round<32;round++){
  for (int alias=0;alias<2;alias++) {
   V first=fwp_rc_fresh(fwp_str_new("first",5)),last=fwp_rc_fresh(fwp_str_new("last",4)),other=fwp_rc_fresh(fwp_str_new("later",5));
@@ -179,10 +166,8 @@ int main(void) {
   else if(!dead(first)||!dead(last)||!dead(other)) return 3;
   fwp_rc_free_obj(result);
  }
-#ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
  owner_ledger_finish();
-#endif
  }
  return 0;
 }
@@ -209,15 +194,10 @@ int main(void) {
         let control = runtime.replacen(transfer, &format!("{dup}(&{from});\n{transfer}"), 1);
         for opt in ["-O1", "-O2"] {
             fwp::cgen::compile_c(&format!("{control}\n{probe}"), &exe, opt).unwrap();
-            let old = Command::new(&exe)
-                .env("FWP_GC", if arc { "off" } else { "on" })
-                .env("FWP_GC_STATS", "0")
-                .env("FWP_REUSE_VERIFY", stress)
-                .output()
-                .unwrap();
+            let old = Command::new(&exe).output().unwrap();
             record_probe::save(
                 "variant_alias_ownership",
-                &format!("{mode}{opt}-alias-extra-owner"),
+                &format!("counted{opt}-alias-extra-owner"),
                 &format!("{control}\n{probe}"),
                 &exe,
                 &old,
@@ -227,22 +207,15 @@ int main(void) {
                 Some(3),
                 "an extra alias retain must be detected"
             );
-            if arc {
+            {
                 let missing = probe.replace("fwp_rc_free_obj(result);", "");
                 assert_ne!(missing, probe);
                 let code = format!("{runtime}\n{missing}");
                 fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-                let missing_output = Command::new(&exe)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
+                let missing_output = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "variant_alias_ownership",
-                    &format!("{mode}{opt}-alias-missing-release"),
+                    &format!("counted{opt}-alias-missing-release"),
                     &code,
                     &exe,
                     &missing_output,
@@ -250,29 +223,22 @@ int main(void) {
                 assert_eq!(
                     missing_output.status.code(),
                     Some(90),
-                    "{mode} {opt}: {missing_output:?}"
+                    "counted {opt}: {missing_output:?}"
                 );
             }
             fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-            for poison in if arc { &["0"][..] } else { &["0", "1"][..] } {
-                let o = Command::new(&exe)
-                    .env("FWP_GC", if arc { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
+            {
+                let o = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "variant_alias_ownership",
-                    &format!("{mode}{opt}-alias-normal-poison{poison}"),
+                    &format!("counted{opt}-alias-normal"),
                     &format!("{runtime}\n{probe}"),
                     &exe,
                     &o,
                 );
                 assert!(
                     o.stdout.is_empty() && o.stderr.is_empty(),
-                    "{mode} {opt}: {o:?}"
+                    "counted {opt}: {o:?}"
                 );
                 assert!(
                     o.status.success(),
@@ -324,10 +290,9 @@ main = "later" | choose (read-all () | string.length | eq 0) "first" "last" | ec
         .output()
         .unwrap();
     assert!(reference.status.success());
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         let output = Command::new(fwp)
-            .args(["build", "--gc", mode, "--memory", "dynamic"])
+            .args(["build", "--memory", "dynamic"])
             .arg(&src)
             .args(["--emit-c", "-O2", "-o"])
             .arg(&cfile)
@@ -351,45 +316,34 @@ main = "later" | choose (read-all () | string.length | eq 0) "first" "last" | ec
         );
         for opt in ["-O1", "-O2"] {
             let built = Command::new(fwp)
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe)
                 .env("FWP_STACK", "0")
                 .output()
                 .unwrap();
-            assert!(built.status.success(), "{mode} {opt}: {built:?}");
+            assert!(built.status.success(), "counted {opt}: {built:?}");
             let generated = Command::new(fwp)
-                .args(["build", "--gc", mode, "--memory", "dynamic", "--emit-c"])
+                .args(["build", "--memory", "dynamic", "--emit-c"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&cfile)
                 .env("FWP_STACK", "0")
                 .output()
                 .unwrap();
-            assert!(generated.status.success(), "{mode} {opt}: {generated:?}");
+            assert!(generated.status.success(), "counted {opt}: {generated:?}");
             let program_code = std::fs::read_to_string(&cfile).unwrap();
-            for poison in if mode == "arc" {
-                &["0"][..]
-            } else {
-                &["0", "1"][..]
-            } {
-                let output = Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
+            {
+                let output = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "variant_alias_ownership",
-                    &format!("{mode}{opt}-source-normal-poison{poison}"),
+                    &format!("counted{opt}-source-normal"),
                     &program_code,
                     &exe,
                     &output,
                 );
-                assert!(output.stderr.is_empty(), "{mode} {opt}: {output:?}");
+                assert!(output.stderr.is_empty(), "counted {opt}: {output:?}");
                 assert!(
                     output.status.success(),
                     "{}",
@@ -409,12 +363,8 @@ fn matching_one_variant_payload_moves_its_owner_in_all_result_forms() {
         .unwrap_or_else(std::sync::PoisonError::into_inner);
     std::env::set_var("FWP_STACK", "0");
     fwp::cgen::set_static_memory(None);
-    for arc in [true, false] {
-        let mode = if arc { "arc" } else { "tracing" };
-        let stress = if arc { "0" } else { "1" };
-
+    {
         fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-            arc,
             static_link: false,
             pgo: None,
             cross: None,
@@ -514,11 +464,7 @@ fn matching_one_variant_payload_moves_its_owner_in_all_result_forms() {
             Value::Data(0, vec![Value::str("value")].into())
         );
         let emitted = fwp::cgen::generate(&program).unwrap();
-        let emitted = if arc {
-            ownership_ledger::instrument_native(&emitted, 1 << 16)
-        } else {
-            emitted
-        };
+        let emitted = ownership_ledger::instrument_native(&emitted, 1 << 16);
         let marker = "/* move matched variant payload */";
         assert_eq!(
             emitted.matches(marker).count(),
@@ -535,16 +481,11 @@ fn matching_one_variant_payload_moves_its_owner_in_all_result_forms() {
         );
         let probe = r#"
 static int dead(V v) {
-#ifdef FWP_ARC_ONLY
  return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)];
-#else
- if(fwp_reuse_verify)return STR(v)->len==0;
- return *fwp_rc_slot(v)==0;
-#endif
 }
 int main(void) {
- fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
- intptr_t baseline=fwp_gc.budget;
+ fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
+ size_t baseline=fwp_heap.live;
  for(int round=0;round<32;round++){
  for(int mode=0;mode<3;mode++) for(int alias=0;alias<2;alias++) {
   V value=fwp_rc_fresh(fwp_str_new("value",5));
@@ -560,10 +501,8 @@ int main(void) {
   fwp_rc_free_obj(result);
   if(!dead(result)||fwp_cleanups)return 5;
  }
-#ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
+ if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
  owner_ledger_finish();
-#endif
  }
  return 0;
 }
@@ -572,17 +511,10 @@ int main(void) {
         let exe = dir.join("probe.exe");
         for optimization in ["-O0", "-O2"] {
             fwp::cgen::compile_c(&format!("{control}\n{probe}"), &exe, optimization).unwrap();
-            let negative = Command::new(&exe)
-                .env("FWP_GC", if arc { "off" } else { "on" })
-                .env("FWP_GC_STATS", "0")
-                .env("FWP_GC_STRESS", stress)
-                .env("FWP_GC_VERIFY", stress)
-                .env("FWP_REUSE_VERIFY", stress)
-                .output()
-                .unwrap();
+            let negative = Command::new(&exe).output().unwrap();
             record_probe::save(
                 "variant_alias_ownership",
-                &format!("{mode}{optimization}-payload-extra-owner"),
+                &format!("counted{optimization}-payload-extra-owner"),
                 &format!("{control}\n{probe}"),
                 &exe,
                 &negative,
@@ -592,22 +524,15 @@ int main(void) {
                 Some(2),
                 "an extra payload owner must be detected: {negative:?}"
             );
-            if arc {
+            {
                 let missing = probe.replace("fwp_rc_free_obj(result);", "");
                 assert_ne!(missing, probe);
                 let code = format!("{runtime}\n{missing}");
                 fwp::cgen::compile_c(&code, &exe, optimization).unwrap();
-                let missing_output = Command::new(&exe)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
+                let missing_output = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "variant_alias_ownership",
-                    &format!("{mode}{optimization}-payload-missing-release"),
+                    &format!("counted{optimization}-payload-missing-release"),
                     &code,
                     &exe,
                     &missing_output,
@@ -615,34 +540,24 @@ int main(void) {
                 assert_eq!(
                     missing_output.status.code(),
                     Some(5),
-                    "{mode} {optimization}: {missing_output:?}"
+                    "counted {optimization}: {missing_output:?}"
                 );
             }
             fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, optimization).unwrap();
-            for poison in if arc { &["0"][..] } else { &["0", "1"][..] } {
-                let actual = Command::new(&exe)
-                    .env("FWP_GC", if arc { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
+            {
+                let actual = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "variant_alias_ownership",
-                    &format!("{mode}{optimization}-payload-normal-poison{poison}"),
+                    &format!("counted{optimization}-payload-normal"),
                     &format!("{runtime}\n{probe}"),
                     &exe,
                     &actual,
                 );
                 assert!(
                     actual.stdout.is_empty() && actual.stderr.is_empty(),
-                    "{mode} {optimization}: {actual:?}"
+                    "counted {optimization}: {actual:?}"
                 );
-                assert!(
-                    actual.status.success(),
-                    "{optimization}, poison {poison}: {actual:?}"
-                );
+                assert!(actual.status.success(), "{optimization}: {actual:?}");
             }
         }
     }

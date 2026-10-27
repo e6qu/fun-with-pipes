@@ -33,7 +33,7 @@ static void capacity_dispose(void) {
     capacity_calls=capacity_fail=0;capacity_exit_code=capacity_oversized=0;
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_cleanup_push(&capacity_scope_owner,fwp_tape_scope_release,&capacity_scope);
     fwp_trap_recover=capacity_recover;fwp_trap_jb=&capacity_trap;fwp_trap_cleanup=&capacity_scope_owner;
     static int round;

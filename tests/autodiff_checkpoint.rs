@@ -43,21 +43,16 @@ fn checkpointed_vjp_matches_explicit_segment_precision_and_raw_execution() {
         "[2.0, 3.0]\n[4.0, 5.0]\n[8.0]\nTrue\nTrue\nTrue\nTrue\n[8.0, 8.0]\n"
     );
     assert!(reference.stderr.is_empty());
-    for mode in ["tracing", "arc"] {
+    {
         for opt in ["-O1", "-O2"] {
             let binary = dir.join("checkpoint.exe");
             let mut build = Command::new(compiler);
             build.arg("build").arg(&source).arg(opt);
-            build.args(["--gc", mode]);
+
             checked(build.arg("-o").arg(&binary));
-            let output = checked(
-                Command::new(&binary)
-                    .env("FWP_GC_STRESS", if mode == "arc" { "0" } else { "1" })
-                    .env("FWP_GC_VERIFY", if mode == "arc" { "0" } else { "1" })
-                    .env("FWP_REUSE_VERIFY", if mode == "arc" { "0" } else { "1" }),
-            );
-            assert_eq!(output.stdout, reference.stdout, "{mode} {opt}");
-            assert_eq!(output.stderr, reference.stderr, "{mode} {opt}");
+            let output = checked(&mut Command::new(&binary));
+            assert_eq!(output.stdout, reference.stdout, "counted {opt}");
+            assert_eq!(output.stderr, reference.stderr, "counted {opt}");
         }
     }
 }
@@ -105,11 +100,11 @@ fn checkpoint_arguments_fail_before_replay_and_reject_wrong_seed_counts() {
             String::from_utf8_lossy(&reference.stderr).contains(error),
             "{reference:?}"
         );
-        for mode in ["tracing", "arc"] {
+        {
             let binary = dir.join("error.exe");
             let mut build = Command::new(compiler);
             build.arg("build").arg(&source);
-            build.args(["--gc", mode]);
+
             checked(build.arg("-o").arg(&binary));
             let output = Command::new(binary).output().unwrap();
             assert!(!output.status.success());
@@ -137,7 +132,7 @@ fn checkpoint_tapes_are_bounded_and_released_without_collection() {
         let cfile = dir.join("memory.c");
         checked(
             Command::new(compiler)
-                .args(["build", "--gc", "arc", "--emit-c"])
+                .args(["build", "--emit-c"])
                 .arg(&source)
                 .arg("-o")
                 .arg(&cfile),
@@ -157,8 +152,8 @@ fn checkpoint_tapes_are_bounded_and_released_without_collection() {
             .unwrap();
         let (runtime, main) = code.split_at(start);
         let code = format!("{runtime}{}", main
-            .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t checkpoint_budget=fwp_gc.budget_given;\n")
-            .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    for(int64_t i=0;i<fwp_ntapes;i++) if(fwp_tapes[i].live)exit(193);\n    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget < checkpoint_budget)exit(194);\n    fprintf(stderr,\"%lld\\n\",(long long)checkpoint_peak);\n"));
+            .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    size_t checkpoint_live_bytes=0;\n")
+            .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    for(int64_t i=0;i<fwp_ntapes;i++) if(fwp_tapes[i].live)exit(193);\n    if(fwp_heap.live > checkpoint_live_bytes)exit(194);\n    fprintf(stderr,\"%lld\\n\",(long long)checkpoint_peak);\n"));
         for opt in ["-O1", "-O2"] {
             let binary = dir.join("memory.exe");
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();

@@ -71,7 +71,7 @@ static V fwp_p_url_decode(V s, int plus, const fwp_desc *result_type) {
     if (!fwp_valid_utf8((const unsigned char *)out, k)) { fwp_decode_fields_end(&result, 0); return FWP_NONE; }
     result.values[0] = fwp_rc_fresh(fwp_str_new(out, k));
     V value = fwp_decode_variant(&result, 1);
-    FWP_KEEP_ALIVE(s); return value;
+    return value;
 }
 
 static long fwp_rfind_char(const char *d, size_t n, char c) {
@@ -150,7 +150,7 @@ static V fwp_p_url_split(V sv, const fwp_desc *result_type) {
     fields.values[4] = fwp_rc_fresh(fwp_str_new(query, qn));
     result.values[0] = fwp_decode_record(&fields);
     V value = fwp_decode_variant(&result, 1);
-    FWP_KEEP_ALIVE(sv); return value;
+    return value;
 invalid:
     fwp_decode_fields_end(&fields, 0);
     fwp_decode_fields_end(&result, 0);
@@ -288,7 +288,7 @@ static V fwp_p_parse_request_head(V head, const fwp_desc *result_type) {
     fields.values[2] = fwp_rc_fresh(fwp_str_new(version, vn));
     result.values[0] = fwp_decode_record(&fields);
     V value = fwp_decode_variant(&result, 0);
-    FWP_KEEP_ALIVE(head); return value;
+    return value;
 }
 
 static V fwp_p_parse_response_head(V head, const fwp_desc *result_type) {
@@ -324,7 +324,7 @@ static V fwp_p_parse_response_head(V head, const fwp_desc *result_type) {
     fields.values[2] = fwp_rc_fresh(fwp_str_new(reason, reasonn));
     result.values[0] = fwp_decode_record(&fields);
     V value = fwp_decode_variant(&result, 0);
-    FWP_KEEP_ALIVE(head); return value;
+    return value;
 }
 
 static V fwp_p_to_hex(V nv) {

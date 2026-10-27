@@ -42,7 +42,7 @@ fn recursive_record_workers_keep_results_unboxed() {
     let cfile = dir.0.join("wide.c");
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -57,24 +57,14 @@ fn recursive_record_workers_keep_results_unboxed() {
     let exe = dir.0.join("wide");
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&generated, &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let native = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-            assert_eq!(native.stdout, reference.stdout);
-        }
+
+        let native = checked(&mut Command::new(&exe));
+        assert_eq!(native.stdout, reference.stdout);
     }
 }
 
 #[test]
 fn transferred_record_fields_preserve_aliases_and_trap_cleanup() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     use fwp::ir::*;
     use fwp::value::Value;
     fn fun(args: &[MT], ret: MT) -> MT {
@@ -266,9 +256,9 @@ fn transferred_record_fields_preserve_aliases_and_trap_cleanup() {
 static volatile V input,word;static jmp_buf failure;
 static int recover(void){return 1;}
 static void drop_leaf(V v){if(fwp_rc_release_last(v))fwp_rc_free_obj(v);}
-static int dead(V v){return fwp_reuse_verify?STR(v)->len==0:*fwp_rc_slot(v)==0;}
+static int dead(V v){return *fwp_rc_slot(v)==0;}
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
  for(int mode=0;mode<4;mode++)for(int alias=0;alias<2;alias++){
   input=fwp_rc_fresh(fwp_str_new("hello",5));word=fwp_rc_fresh(fwp_str_new("scalar",6));if(alias)fwp_rc_dup(input);
   if(mode==0){V result=f2(input,word);if(result!=input||*fwp_rc_slot(input)!=1+alias)return 1;drop_leaf(result);}
@@ -291,23 +281,13 @@ int main(void){
     let exe = dir.0.join("probe");
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{runtime}\n{fixture}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-        }
+
+        checked(&mut Command::new(&exe));
     }
 }
 
 #[test]
 fn forwarded_callback_records_keep_their_box_and_release_aliases_on_failure() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     use fwp::ir::*;
     use fwp::value::{Closure, Value};
     use std::rc::Rc;
@@ -426,7 +406,7 @@ static V forward_extra_box(V value){
  V result=fwp_rc_fresh(fwp_record(2,fields));fwp_rc_free_obj(value);return result;
 }
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
  forward_input=fwp_rc_fresh(fwp_str_new("hello",5));
  fwp_rc_dup(forward_input);forward_requests=0;forward_measuring=1;
  V result=f1(PTR(&fc0),forward_input);
@@ -459,20 +439,14 @@ int main(void){
     let binary = dir.join("forward.exe");
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
-        let output = Command::new(&binary).env("FWP_GC", "off").output().unwrap();
+        let output = Command::new(&binary).output().unwrap();
         assert_eq!(
             output.status.code(),
             Some(249),
             "extra result box: {output:?}"
         );
         fwp::cgen::compile_c(&good, &binary, opt).unwrap();
-        for poison in ["0", "1"] {
-            checked(
-                Command::new(&binary)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-        }
+
+        checked(&mut Command::new(&binary));
     }
 }

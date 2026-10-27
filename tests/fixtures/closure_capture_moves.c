@@ -13,11 +13,11 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
     for(int round=0;round<32;round++){
     for (volatile int mode=0; mode<12; mode++) {
         int shared=mode%2, partial=(mode%4)/2, failure=mode/4;
-        double before=fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);
+        double before=(double)fwp_heap.live;
         V scalar=capture_text("bits");
         capture_first=capture_text("first"); capture_second=capture_text("second");
         V function=fwp_rc_fresh(fwp_pap(ID,partial?1:2,(V[]){capture_first,capture_second}));
@@ -56,12 +56,8 @@ int main(void) {
         }
         if(!fwp_rc_last(scalar)||STR(scalar)->len!=4||memcmp(STR(scalar)->d,"bits",4))return 205;
         fwp_rc_free_obj(scalar);
-        double after=fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);
-#ifdef FWP_ARC_ONLY
-        if(before!=after||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 206;
-#else
-        if(!fwp_gc.enabled&&!fwp_reuse_verify&&(before!=after||fwp_gc.ncollect))return 206;
-#endif
+        double after=(double)fwp_heap.live;
+        if(before!=after||fwp_heap.rc_wide_len)return 206;
         if(round==31)printf("%d\t%d\t%d\t%.0f\n", mode, partial_retains, capture_retains, after-before);
     }
     }

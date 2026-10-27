@@ -45,11 +45,11 @@ fn explicit_exit_preserves_output_and_status_without_a_collector() {
             assert_exit(&output, code);
         }
     }
-    for mode in ["tracing", "arc"] {
+    {
         let cfile = dir.join("exit.c");
         checked(
             Command::new(compiler)
-                .args(["build", "--gc", mode, "--emit-c"])
+                .args(["build", "--emit-c"])
                 .arg(&input)
                 .arg("-o")
                 .arg(&cfile),
@@ -61,20 +61,14 @@ fn explicit_exit_preserves_output_and_status_without_a_collector() {
             for code in CASES {
                 let output = Command::new(&binary)
                     .arg(code.to_string())
-                    .env("FWP_GC_STRESS", if mode == "tracing" { "1" } else { "0" })
-                    .env("FWP_GC_VERIFY", if mode == "tracing" { "1" } else { "0" })
-                    .env(
-                        "FWP_REUSE_VERIFY",
-                        if mode == "tracing" { "1" } else { "0" },
-                    )
                     .output()
                     .unwrap();
                 assert_exit(&output, code);
             }
-            if mode == "arc" {
+            {
                 let symbols = checked(Command::new("nm").arg(&binary));
                 let symbols = String::from_utf8_lossy(&symbols.stdout);
-                for tracing in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                for tracing in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                     assert!(!symbols.contains(tracing), "{symbols}");
                 }
             }
@@ -95,14 +89,7 @@ fn explicit_exit_uses_actual_wasi_process_status() {
     let cfile = dir.join("exit.c");
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args([
-                "build",
-                "--gc",
-                "arc",
-                "--target",
-                "wasm32-wasi",
-                "--emit-c",
-            ])
+            .args(["build", "--target", "wasm32-wasi", "--emit-c"])
             .arg(&input)
             .arg("-o")
             .arg(&cfile),
@@ -117,10 +104,6 @@ fn explicit_exit_uses_actual_wasi_process_status() {
                 .arg(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/wasm/wasi-run.mjs"))
                 .arg(&binary)
                 .arg(code.to_string())
-                .env("FWP_GC", "off")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
                 .output()
                 .unwrap();
             assert_exit(&output, code);

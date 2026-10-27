@@ -5,8 +5,7 @@
  *
  * F16/BF16/F32/F64 tapes hold numeric parents and F64 partial derivatives in
  * malloc'ed buffers. F128 and nested tapes own typed weights and callbacks in
- * scanned runtime
- * storage, and execute adjoint operations on enclosing tapes. A reverse-mode
+ * owned runtime storage, and execute adjoint operations on enclosing tapes. A reverse-mode
  * value refers to its node as
  * (tape id << 32) | index, constants as -1; a tape id is
  * (generation << 16) | (slot + 1), so a value that outlives its tape is
@@ -22,8 +21,8 @@
 
 /* ------------------------------------------------------------------ tapes */
 
-/* F128 and nested reverse weights are language values. Keep them in scanned mutable
- * storage with explicit typed owners, rooted independently of the reallocable
+/* F128 and nested reverse weights are language values. Keep them in mutable
+ * storage with explicit typed owners, independent of the reallocable
  * numeric registry. Detached backward passes stay on this list across reentry. */
 typedef struct fwp_owned_tape {
     struct fwp_owned_tape *prev, *next;
@@ -123,9 +122,7 @@ static void fwp_tape_link_scope(fwp_tape *t, int32_t slot) {
             break;
         }
     }
-#if FWP_ARC_ONLY
     if (!t->scope) fwp_trap("internal: ARC autodiff tape has no proved scope");
-#endif
 }
 
 static V fwp_ad_scope_apply(V callback, uint32_t argc, V *args) {
@@ -135,8 +132,8 @@ static V fwp_ad_scope_apply(V callback, uint32_t argc, V *args) {
     V result = fwp_apply_borrowed(callback, argc, args);
     fwp_cleanup_pop(&cleanup);
     fwp_tape_scope_release(&scope);
-    FWP_KEEP_ALIVE(callback);
-    FWP_KEEP_ALIVE(args);
+
+
     return result;
 }
 
@@ -207,10 +204,11 @@ static void fwp_tape_retire(fwp_tape *t) {
     } else fwp_tape_buffers_release(&buffers);
 }
 static void fwp_tape_finish(void) {
-    /* Shutdown releases both the bounded cache and unscoped live tapes. */
+    /* Shutdown releases the bounded cache and any unfinished scoped tapes. */
     fwp_tape_buffers_dispose(&fwp_tape_workspace);fwp_tape_cached_bytes = 0;
     for (int64_t i = 0; i < fwp_ntapes; i++) {
         fwp_tape *t = &fwp_tapes[i];
+        fwp_tape_unlink_scope(t);
         fwp_tape_buffers buffers = {t->pa, t->pb, t->da, t->db, t->adj, t->cap, t->adjcap};
         fwp_tape_buffers_dispose(&buffers);
         fwp_owned_tape_release(t->owned); t->owned = NULL;
@@ -353,8 +351,8 @@ static V fwp_p_ad_tape_owned(V parameters, V inputs, const fwp_desc *elem) {
     owner->leaves = owner->len = n;
     V base = fwp_ad_tape_new((V)n, owner);
     fwp_cleanup_pop(&cleanup);
-    FWP_KEEP_ALIVE(parameters);
-    FWP_KEEP_ALIVE(inputs);
+
+
     return base;
 }
 
@@ -482,7 +480,7 @@ static V fwp_p_ad_push_owned(V tuple, const fwp_desc *elem) {
     t->pa[op] = ra < 0 ? -1 : (int32_t)(ra & 0xffffffff);
     t->pb[op] = rb < 0 ? -1 : (int32_t)(rb & 0xffffffff);
     owner->len = t->len = idx + 1;
-    FWP_KEEP_ALIVE(tuple);
+
     return (V)((id << 32) | idx);
 }
 
@@ -558,7 +556,7 @@ static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_t
     fwp_cleanup_pop(&result_cleanup);
     fwp_cleanup_pop(&value_cleanup); fwp_owned_tape_release(owner);
     fwp_cleanup_pop(&tape_cleanup); fwp_tape_buffers_dispose(&buffers);
-    FWP_KEEP_ALIVE(outs); FWP_KEEP_ALIVE(seeds);
+
     return result.value;
 }
 
@@ -820,7 +818,7 @@ static V fwp_p_device_run(V threads, V nv, V code, V consts, V inputs) {
                         (int64_t)threads, (double *)ARR(owner.output)->d);
     V result = owner.output; owner.output = 0;
     fwp_cleanup_pop(&cleanup); fwp_kernel_release(&owner);
-    FWP_KEEP_ALIVE(code); FWP_KEEP_ALIVE(consts); FWP_KEEP_ALIVE(inputs);
+
     return result;
 }
 
@@ -839,7 +837,7 @@ static V fwp_p_device_sum(V threads, V nv, V code, V consts, V inputs) {
     double total = 0.0;
     for (size_t b = 0; b < blocks; b++) total += owner.sums[b];
     fwp_cleanup_pop(&cleanup); fwp_kernel_release(&owner);
-    FWP_KEEP_ALIVE(code); FWP_KEEP_ALIVE(consts); FWP_KEEP_ALIVE(inputs);
+
     return fwp_from_f64(total);
 }
 
@@ -886,5 +884,5 @@ static V fwp_p_matrix_mul_f64(V mv,V kv,V nv,V left,V right) {
             }
         }
     }
-    fwp_cleanup_pop(&cleanup);FWP_KEEP_ALIVE(left);FWP_KEEP_ALIVE(right);return result;
+    fwp_cleanup_pop(&cleanup);return result;
 }

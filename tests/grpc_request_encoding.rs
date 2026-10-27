@@ -3,10 +3,6 @@ use fwp::ir::*;
 use std::process::Command;
 
 fn request_runtime() -> String {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -72,21 +68,22 @@ static void observed_free(void *p){if(p&&p==watched_request){request_frees++;wat
 static void no_release(void *p){(void)p;}
 static int observed_next(uintptr_t *cur,uintptr_t *value){if(*cur)return 0;*cur=1;*value=42;return 1;}
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1, "", "local",&srv);fwp_remote remote={0};
  for(stage=0;stage<3;stage++){
   watched_request=wire_buffer=0;request_frees=wire_frees=0;c->out.len=0;c->conn_window=stage==1?0:65535;
   g_stream *s=g_stream_new(c,(uint32_t)(1+2*stage));s->sent_headers=1;
   g_sender *x=fwp_alloc(sizeof *x);x->c=c;x->s=s;x->remote=&remote;
-  fwp_task *t=fwp_spawn_task(0,g_send_all,x,0,1);
+  fwp_task *t=fwp_spawn_task(0,g_send_all,x,0,1);fwp_task_own_internal(t,1);
   if(stage==1){fwp_p_task_yield();if(t->done||!watched_request||!wire_buffer||request_frees||wire_frees)return 2;fwp_p_task_cancel(PTR(t));}
   fwp_await(t);
   if(!t->done||request_frees!=1||watched_request||wire_buffer||wire_frees!=(stage==2?0:1)||fwp_cleanups)return 1;
+  fwp_task_drop(PTR(t));
   if(stage==0){if(!s->local_end||s->reset)return 3;int found=0;for(size_t i=0;i+7<=c->out.len;i++)if(!memcmp(c->out.d+i,"request",7))found=1;if(!found)return 4;}
   if(stage==2&&(!s->reset||strcmp(s->reset,"trap: encode trap")))return 5;
-  FWP_KEEP_ALIVE(PTR(t));FWP_KEEP_ALIVE(PTR(x));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
+
  }
- FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
+ fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-request-encoding").unwrap();
@@ -100,21 +97,12 @@ int main(void){
     );
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{hooks}\n{omitted}\n{fixture}"), &exe, opt).unwrap();
-        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(out.status.code(), Some(1), "omitted cleanup: {out:?}");
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-            }
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
 }
 
@@ -159,7 +147,7 @@ fn input_owners_release_after_lookahead_failure_and_sender_cancellation() {
             ("    fwp_mem_free(x);", "    (void)x;", "0", 222),
             (
                 "    t->cfinish = g_sender_peer_finish; probe_task=t;\n    t->ownership = FWP_TASK_UNIQUE;",
-                "    t->cfinish = g_sender_peer_finish; probe_task=t;\n    t->ownership = FWP_TASK_TRACED;",
+                "    t->cfinish = g_sender_peer_finish; probe_task=t;\n    t->ownership = FWP_TASK_SHARED; /* omit its required counted owner */",
                 "0",
                 222,
             ),
@@ -183,8 +171,8 @@ fn input_owners_release_after_lookahead_failure_and_sender_cancellation() {
             fwp::cgen::compile_c(&broken, &exe, opt).unwrap();
             let out = Command::new(&exe)
                 .arg(stage)
-                .env("FWP_GC", "off")
-                .env("FWP_REUSE_VERIFY", "0")
+
+
                 .output()
                 .unwrap();
             assert_eq!(
@@ -194,21 +182,11 @@ fn input_owners_release_after_lookahead_failure_and_sender_cancellation() {
             );
         }
         fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                for stage in 0..7 {
-                    let out = Command::new(&exe)
-                        .arg(stage.to_string())
-                        .env("FWP_GC", gc)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
-                    assert!(out.status.success(), "{opt}/{gc}/{poison}/{stage}: {out:?}");
-                    assert!(out.stdout.is_empty() && out.stderr.is_empty(), "{out:?}");
-                }
-            }
+
+        for stage in 0..7 {
+            let out = Command::new(&exe).arg(stage.to_string()).output().unwrap();
+            assert!(out.status.success(), "{opt}/{stage}: {out:?}");
+            assert!(out.stdout.is_empty() && out.stderr.is_empty(), "{out:?}");
         }
     }
 }

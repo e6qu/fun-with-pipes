@@ -1,5 +1,5 @@
 static jmp_buf transpose_failure;
-static int fail_duplicate, fail_node, duplicates, nodes, collect;
+static int fail_duplicate, fail_node, duplicates, nodes;
 static int transpose_recover(void) { return 1; }
 static void transpose_drop_text(V v) {
     if (fwp_rc_release_last(v)) fwp_rc_free_obj(v);
@@ -25,17 +25,15 @@ static void transpose_duplicate(V v) {
     fwp_rc_dup(v);
 }
 static V transpose_cons(V head, V tail) {
-    if (collect) fwp_gc_collect();
     if (++nodes == fail_node) fwp_trap("transpose construction probe");
     return fwp_cons(head, tail);
 }
 
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_fns = fwp_fn_table;
     fwp_init_consts();
-    const char *mode = getenv("FWP_TRANSPOSE_COLLECTION");
-    collect = mode && !strcmp(mode, "1");
+    size_t baseline = fwp_heap.live;
     V values[6], input = 0;
     for (int i = 0; i < 6; ++i) values[i] = fwp_rc_fresh(fwp_str_new("alias", 5));
     for (int i = 2; i >= 0; --i) {
@@ -43,7 +41,7 @@ int main(void) {
         row = fwp_rc_fresh(fwp_cons(values[2*i], row));
         input = fwp_rc_fresh(fwp_cons(row, input));
     }
-    intptr_t budget = fwp_gc.budget;
+    size_t live_bytes = fwp_heap.live;
     V result = fwp_p_list_transpose_owned(input, transpose_duplicate,
         transpose_drop_text, transpose_drop_row, transpose_drop_matrix);
     V column = result;
@@ -60,7 +58,7 @@ int main(void) {
     }
     if (column) return 200;
     transpose_drop_matrix(result);
-    if (!collect && fwp_gc.budget != budget) return 202;
+    if (fwp_heap.live != live_bytes) return 202;
 
     /* Trap at each retain and node construction, including after a completed
      * column. All input counts and scratch/output storage must be restored. */
@@ -77,12 +75,12 @@ int main(void) {
                     transpose_drop_text, transpose_drop_row, transpose_drop_matrix);
                 return 203;
             }
-            if (fwp_cleanups != fwp_trap_cleanup || (!collect && fwp_gc.budget != budget)) return 204;
+            if (fwp_cleanups != fwp_trap_cleanup || (fwp_heap.live != live_bytes)) return 204;
             for (int i = 0; i < 6; ++i) if (*fwp_rc_slot(values[i]) != 1) return 205;
         }
     }
     fwp_trap_recover = 0; fwp_trap_jb = 0; fwp_trap_cleanup = 0;
     transpose_drop_matrix(input);
-    if (collect && !fwp_gc.ncollect) return 206;
+    if (fwp_heap.live != baseline) return 206;
     return 0;
 }

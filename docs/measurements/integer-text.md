@@ -77,7 +77,7 @@ differ. Their small timing differences are separate samples of the same code.
 ## Storage and machine code
 
 A separate 4,096-element probe uses the same integer pattern plus literal
-`"é🙂"` and prints `40240`. It tests unoptimized O0 and optimized O2 builds in
+`"é🙂"` and prints `40240`. At the measured revision, it tested O0 and O2 builds in
 both memory modes: tracing GC follows references to find live objects;
 automatic reference counting (ARC) releases storage when its last owner goes.
 The probe makes **zero
@@ -126,11 +126,18 @@ were audited. New tests cover integer widths/extremes, Unicode, shared strings,
 effects, trap order, binary output and allocation controls; 24 test binaries
 and their generated C/disassembly are archived across the two hosts.
 
-Run the `scalar-text` suite in `.github/workflows/numerics.yml`, download its
+The current `scalar-text` suite runs one counted runtime at O0/O2, retaining
+all inputs and allocation-failure controls. Its six binaries per host replace
+the historical twelve that included tracing variants. Collector-deletion
+validation is still pending; see [the handoff](../development-state.md).
+
+Run that suite in `.github/workflows/numerics.yml`, download its
 artifacts, then use `scripts/summarize-scalar-text.py` with explicit `--run`,
 `--source`, `--artifacts` and `--output` arguments. It checks source inputs,
 architectures from executable files, timing samples, binary hashes and the
 primitive inventory.
+To re-audit the historical artifacts above, use the audit script from their
+recorded revision; their schema and measurements have not been rewritten.
 The separate `scalar-text-memory` suite reuses those artifacts with explicit
 `evidence_run` and `source_revision` inputs. Measurement source
 `fd1c1ec0292fa3c49a8f4f3cf37e76cb420058d6`, tagged

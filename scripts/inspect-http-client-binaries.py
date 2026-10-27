@@ -19,13 +19,13 @@ assert len(folders) == 6, 'expected all six native host artifacts'
 for folder in folders:
     revision = (folder / 'revision.txt').read_text().strip()
     cases = [(mode, opt, folder / f'{mode}{opt}.exe', 'functional')
-             for mode in ['tracing', 'arc'] for opt in ['-O1', '-O2']]
+             for mode in ['counted'] for opt in ['-O1', '-O2']]
     cases += [(mode, '-O2', folder / 'memory' / f'{mode}{suffix}.exe', 'repeated' + suffix)
-              for mode in ['tracing', 'arc'] for suffix in ['', '-measured']]
+              for mode in ['counted'] for suffix in ['', '-measured']]
     for mode, opt, path, workload in cases:
         symbols = subprocess.check_output([str(llvm / 'llvm-nm'), str(path)], text=True)
-        found = [name for name in ['fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'] if name in symbols]
-        assert (not found) if mode == 'arc' else found, (path, found)
+        found = [name for name in ['fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'] if name in symbols]
+        assert not found, (path, found)
         sections = subprocess.check_output([str(llvm / 'llvm-size'), '--format=sysv', str(path)], text=True)
         sections = sections.replace(str(path), str(path.relative_to(folder)))
         header = subprocess.check_output(['file', '-b', str(path)], text=True)
@@ -41,6 +41,6 @@ for folder in folders:
                          tracing_symbols=found, sections=sections, format=header, http_entry=entry.group(1),
                          relevant_functions=[name for name in named if any(part in name for part in
                              ['http2_send', 'g_call_release', 'g_conn_drop', 'g_reader', 'g_writer'])]))
-    print(folder.name, ': eight binaries inspected; ARC tracing-symbol controls pass', flush=True)
-assert len(rows) == 48, len(rows)
+    print(folder.name, ': four binaries inspected; collector symbols absent', flush=True)
+assert len(rows) == 24, len(rows)
 (root / 'binary-review.json').write_text(json.dumps(rows, indent=2) + '\n')

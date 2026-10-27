@@ -33,8 +33,7 @@ def main():
         ['measure-large-map', 'replay-map-storage', 'measure-iteration', 'measure-map-storage']]
     out = options.output.resolve()
     out.mkdir(parents=True, exist_ok=True)
-    env = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
-    env.pop('FWP_GC', None)
+    env = dict(os.environ)
     env.pop('FWP_NO_OPT', None)
     env['FWP_MAP_BUILD'] = '1'
     replay.save(out / 'request.json', {'run': options.run, 'source': options.source, 'host': options.host})
@@ -54,13 +53,13 @@ def main():
     (out / 'program.fwp').write_bytes(program.read_bytes())
     compiler = options.compiler.resolve()
     current = {}
-    for mode in ['tracing', 'arc']:
-        generated = out / (mode + '-compiler.c')
-        helper.run([compiler, 'build', '--gc', mode, '--emit-c', program, '-o', generated], env)
-        code = generated.read_text()
-        assert 'fwp_caf_borrow' in code, 'measured compiler must prove cached borrowing'
-        current[mode + '-joined'] = code
-        current[mode + '-separate'] = storage.separate_storage(code)
+    mode = 'counted'
+    generated = out / (mode + '-compiler.c')
+    helper.run([compiler, 'build', '--emit-c', program, '-o', generated], env)
+    code = generated.read_text()
+    assert 'fwp_caf_borrow' in code, 'measured compiler must prove cached borrowing'
+    current[mode + '-joined'] = code
+    current[mode + '-separate'] = storage.separate_storage(code)
     full, = [case for case in report['cases'] if case['work'] == 'full']
     variants = {}
     for name, baseline in full['variants'].items():
@@ -83,7 +82,7 @@ def main():
             assert result.stdout == full['expected']
             counters = json.loads(result.stderr)
             assert counters['retains'] == (1 if ownership == 'borrowed' else 2000001), counters
-            for key in ['requests', 'peakChargedBytes', 'finalChargedBytes', 'collections']:
+            for key in ['requests', 'peakChargedBytes', 'finalChargedBytes']:
                 assert counters[key] == baseline['counters'][key], (key, counters, baseline['counters'])
             result = helper.run([binary], env)
             assert result.stdout == full['expected'] and not result.stderr

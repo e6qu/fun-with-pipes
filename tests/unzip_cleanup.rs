@@ -6,10 +6,10 @@ fn unzip_releases_scratch_fields_and_both_partial_lists() {
     let dir = fwp::cgen::TempDir::new("unzip-cleanup").unwrap();
     let source = dir.join("main.fwp");
     std::fs::write(&source, "main = [(\"left\", \"right\")] | unzip | echo\n").unwrap();
-    for gc in ["tracing", "arc"] {
+    {
         let cfile = dir.join("main.c");
         let emitted = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", gc, "--emit-c"])
+            .args(["build", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile)
@@ -53,17 +53,11 @@ fn unzip_releases_scratch_fields_and_both_partial_lists() {
                 }
                 let binary = dir.join("probe.exe");
                 fwp::cgen::compile_c(candidate, &binary, opt).unwrap();
-                let result = Command::new(&binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", if gc == "arc" { "0" } else { "1" })
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
+                let result = Command::new(&binary).output().unwrap();
                 assert_eq!(
                     result.status.code(),
                     Some(expected),
-                    "{gc} {opt}: {result:?}"
+                    "counted {opt}: {result:?}"
                 );
             }
         }

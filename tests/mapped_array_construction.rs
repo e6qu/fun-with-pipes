@@ -9,14 +9,13 @@ fn emitted(
     compiler: &str,
     source: &std::path::Path,
     cfile: &std::path::Path,
-    gc: &str,
     fused: &str,
 ) -> String {
     checked(
         Command::new(compiler)
             .env_remove("FWP_NO_OPT")
             .env("FWP_ARRAY_FUSION", fused)
-            .args(["build", "--gc", gc, "--emit-c"])
+            .args(["build", "--emit-c"])
             .arg(source)
             .arg("-o")
             .arg(cfile),
@@ -82,49 +81,41 @@ main = [
                 ),
                 "{name} interpreter {fused}"
             );
-            for gc in ["tracing", "arc"] {
-                let code = emitted(compiler, &input, &dir.join("main.c"), gc, fused);
-                assert_eq!(
-                    code.contains("return fwp_p_array_map_list(l0, l1,")
-                        || code.contains("/* numeric mapped array: direct callback */"),
-                    eligible && fused == "1",
-                    "{name} {gc} {fused}"
+
+            let code = emitted(compiler, &input, &dir.join("main.c"), fused);
+            assert_eq!(
+                code.contains("return fwp_p_array_map_list(l0, l1,")
+                    || code.contains("/* numeric mapped array: direct callback */"),
+                eligible && fused == "1",
+                "{name} counted {fused}"
+            );
+            if eligible && fused == "1" && name != "dynamic" {
+                assert!(
+                    code.contains("/* numeric mapped array: direct callback */"),
+                    "known callback lost direct call: {name}"
                 );
-                if eligible && fused == "1" && name != "dynamic" {
-                    assert!(
-                        code.contains("/* numeric mapped array: direct callback */"),
-                        "known callback lost direct call: {name}"
-                    );
-                }
-                for body in code
-                    .split("/* numeric mapped array: direct callback */")
-                    .skip(1)
-                {
-                    let loop_body = body.split("fwp_scratch_finish").next().unwrap();
-                    assert!(
-                        loop_body.contains("fwp_owned_entry") && !loop_body.contains("fwp_apply_")
-                    );
-                }
-                for opt in ["-O1", "-O2"] {
-                    let binary = dir.join("main.exe");
-                    fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-                    let verify = if gc == "arc" { "0" } else { "1" };
-                    let actual = Command::new(&binary)
-                        .env("FWP_GC_STRESS", verify)
-                        .env("FWP_GC_VERIFY", verify)
-                        .env("FWP_REUSE_VERIFY", verify)
-                        .output()
-                        .unwrap();
-                    assert_eq!(
-                        (&actual.stdout, &actual.stderr, actual.status.code()),
-                        (
-                            &reference.stdout,
-                            &reference.stderr,
-                            reference.status.code()
-                        ),
-                        "{name} {gc} {fused} {opt}"
-                    );
-                }
+            }
+            for body in code
+                .split("/* numeric mapped array: direct callback */")
+                .skip(1)
+            {
+                let loop_body = body.split("fwp_scratch_finish").next().unwrap();
+                assert!(loop_body.contains("fwp_owned_entry") && !loop_body.contains("fwp_apply_"));
+            }
+            for opt in ["-O1", "-O2"] {
+                let binary = dir.join("main.exe");
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+
+                let actual = Command::new(&binary).output().unwrap();
+                assert_eq!(
+                    (&actual.stdout, &actual.stderr, actual.status.code()),
+                    (
+                        &reference.stdout,
+                        &reference.stderr,
+                        reference.status.code()
+                    ),
+                    "{name} counted {fused} {opt}"
+                );
             }
         }
     }
@@ -139,40 +130,34 @@ fn mapped_array_scratch_releases_on_success_and_callback_failure() {
         "main = [1.0, 2.0] | map (mul 2.0) | array.from-list | array.to-list | echo\n",
     )
     .unwrap();
-    for gc in ["tracing", "arc"] {
-        let code = emitted(
-            env!("CARGO_BIN_EXE_fwp"),
-            &input,
-            &dir.join("main.c"),
-            gc,
-            "1",
+
+    let code = emitted(env!("CARGO_BIN_EXE_fwp"), &input, &dir.join("main.c"), "1");
+    let start = code.find("static V fwp_p_array_map_list(").unwrap();
+    let end = start + code[start..].find("\n}\n").unwrap() + 3;
+    let helper = code[start..end]
+        .replace(
+            "fwp_apply_borrowed(f, 1, &items[i])",
+            "mapped_test_apply(items[i])",
+        )
+        .replace("fwp_array_typed_new(n, elem)", "mapped_test_array(n, elem)");
+    let code = code[..start].to_string()
+        + "static V mapped_test_apply(V);\nstatic V mapped_test_array(size_t, const fwp_desc *);\n"
+        + &helper
+        + &code[end..];
+    let code = code.replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1");
+    let main = code.find("int main(").unwrap();
+    let code = code[..main].to_string() + include_str!("fixtures/mapped_array_cleanup.c");
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join("probe.exe");
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        checked(&mut Command::new(&binary));
+        let broken = code.replace(
+            "    fwp_scratch_finish(&items, &cleanup);",
+            "    fwp_cleanup_pop(&cleanup);",
         );
-        let start = code.find("static V fwp_p_array_map_list(").unwrap();
-        let end = start + code[start..].find("\n}\n").unwrap() + 3;
-        let helper = code[start..end]
-            .replace(
-                "fwp_apply_borrowed(f, 1, &items[i])",
-                "mapped_test_apply(items[i])",
-            )
-            .replace("fwp_array_typed_new(n, elem)", "mapped_test_array(n, elem)");
-        let code = code[..start].to_string()
-            + "static V mapped_test_apply(V);\nstatic V mapped_test_array(size_t, const fwp_desc *);\n"
-            + &helper + &code[end..];
-        let code = code.replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1");
-        let main = code.find("int main(").unwrap();
-        let code = code[..main].to_string() + include_str!("fixtures/mapped_array_cleanup.c");
-        for opt in ["-O1", "-O2"] {
-            let binary = dir.join("probe.exe");
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            checked(&mut Command::new(&binary));
-            let broken = code.replace(
-                "    fwp_scratch_finish(&items, &cleanup);",
-                "    fwp_cleanup_pop(&cleanup);",
-            );
-            assert_ne!(broken, code);
-            fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
-            assert_eq!(Command::new(&binary).status().unwrap().code(), Some(231));
-        }
+        assert_ne!(broken, code);
+        fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
+        assert_eq!(Command::new(&binary).status().unwrap().code(), Some(231));
     }
 }
 
@@ -185,63 +170,62 @@ fn numeric_materialization_removes_list_nodes_without_retaining_inputs() {
         "export transform : List[F64] -> Array[F64]\ntransform = map (mul 2.0) | array.from-list\n",
     )
     .unwrap();
-    for gc in ["tracing", "arc"] {
-        let mut measurements = Vec::new();
-        for fused in ["0", "1"] {
-            let cfile = dir.join("main.c");
-            checked(
-                Command::new(env!("CARGO_BIN_EXE_fwp"))
-                    .env_remove("FWP_NO_OPT")
-                    .env("FWP_ARRAY_FUSION", fused)
-                    .args(["build", "--gc", gc, "--fn", "transform", "--emit-c"])
-                    .arg(&input)
-                    .arg("-o")
-                    .arg(&cfile),
-            );
-            let source = std::fs::read_to_string(cfile).unwrap();
-            let start = source.find("/* transform :").unwrap();
-            let id = source[start..]
-                .split("static V f")
-                .nth(1)
-                .unwrap()
-                .split('(')
-                .next()
-                .unwrap();
-            let probe = include_str!("fixtures/mapped_array_counts.c")
-                .replace("fTRANSFORM", &format!("f{id}"));
-            let source = source[..source.find("int main(").unwrap()].to_string();
-            assert!(source.contains("static inline void *fwp_gc_alloc(size_t n, int leaf) {"));
-            assert!(source.contains("static inline void *fwp_alloc_init(size_t n) {"));
-            let code = source.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic uint64_t mapped_calls, mapped_bytes;")
-                .replace("static inline void *fwp_gc_alloc(size_t n, int leaf) {", "static inline void *fwp_gc_alloc(size_t n, int leaf) {\nif(leaf!=0){mapped_calls++;mapped_bytes+=n;}")
+
+    let mut measurements = Vec::new();
+    for fused in ["0", "1"] {
+        let cfile = dir.join("main.c");
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_ARRAY_FUSION", fused)
+                .args(["build", "--fn", "transform", "--emit-c"])
+                .arg(&input)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let source = std::fs::read_to_string(cfile).unwrap();
+        let start = source.find("/* transform :").unwrap();
+        let id = source[start..]
+            .split("static V f")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let probe =
+            include_str!("fixtures/mapped_array_counts.c").replace("fTRANSFORM", &format!("f{id}"));
+        let source = source[..source.find("int main(").unwrap()].to_string();
+        assert!(source.contains("static inline void *fwp_heap_alloc(size_t n, int kind) {"));
+        assert!(source.contains("static inline void *fwp_alloc_init(size_t n) {"));
+        let code = source.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic uint64_t mapped_calls, mapped_bytes;")
+                .replace("static inline void *fwp_heap_alloc(size_t n, int kind) {", "static inline void *fwp_heap_alloc(size_t n, int kind) {\nif(kind!=0){mapped_calls++;mapped_bytes+=n;}")
                 .replace("static inline void *fwp_alloc_init(size_t n) {", "static inline void *fwp_alloc_init(size_t n) {\nmapped_calls++;mapped_bytes+=n;") + &probe;
-            for opt in ["-O1", "-O2"] {
-                let binary = dir.join("counts.exe");
-                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-                let output = checked(Command::new(&binary).env("FWP_GC_STRESS", "0"));
-                let counts: Vec<u64> = String::from_utf8(output.stdout)
-                    .unwrap()
-                    .split_whitespace()
-                    .map(|s| s.parse().unwrap())
-                    .collect();
-                assert_eq!(counts.len(), 12);
-                measurements.push(counts);
-            }
+        for opt in ["-O1", "-O2"] {
+            let binary = dir.join("counts.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            let output = checked(&mut Command::new(&binary));
+            let counts: Vec<u64> = String::from_utf8(output.stdout)
+                .unwrap()
+                .split_whitespace()
+                .map(|s| s.parse().unwrap())
+                .collect();
+            assert_eq!(counts.len(), 12);
+            measurements.push(counts);
         }
-        assert_eq!(measurements[0], measurements[1]);
-        assert_eq!(measurements[2], measurements[3]);
-        for (unfused, fused) in measurements[0]
-            .as_chunks::<3>()
-            .0
-            .iter()
-            .zip(measurements[2].as_chunks::<3>().0)
-        {
-            assert_eq!(unfused[0], fused[0]);
-            assert!(
-                unfused[1] >= fused[1] + fused[0],
-                "{gc}: {unfused:?} vs {fused:?}"
-            );
-            assert!(unfused[2] >= fused[2] + 24 * fused[0]);
-        }
+    }
+    assert_eq!(measurements[0], measurements[1]);
+    assert_eq!(measurements[2], measurements[3]);
+    for (unfused, fused) in measurements[0]
+        .as_chunks::<3>()
+        .0
+        .iter()
+        .zip(measurements[2].as_chunks::<3>().0)
+    {
+        assert_eq!(unfused[0], fused[0]);
+        assert!(
+            unfused[1] >= fused[1] + fused[0],
+            "counted: {unfused:?} vs {fused:?}"
+        );
+        assert!(unfused[2] >= fused[2] + 24 * fused[0]);
     }
 }

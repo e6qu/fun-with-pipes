@@ -18,56 +18,40 @@ fn canonical_float_text_preserves_values_and_output_order() {
         .unwrap();
     assert!(reference.status.success(), "{reference:?}");
     assert!(reference.stderr.is_empty(), "{reference:?}");
-    for ownership in ["arc", "tracing"] {
+    {
         let cfile = directory.join("text.c");
         let emitted = Command::new(compiler)
             .env_remove("FWP_NO_OPT")
             .env("FWP_LTO", "0")
             .env("FWP_STACK", "1")
-            .env("FWP_FREE", "1")
-            .env("FWP_REUSE", "1")
-            .args([
-                "build", "--gc", ownership, "--memory", "dynamic", "--emit-c", "-O2",
-            ])
+            .args(["build", "--memory", "dynamic", "--emit-c", "-O2"])
             .arg(&input)
             .arg("-o")
             .arg(&cfile)
             .output()
             .unwrap();
-        assert!(emitted.status.success(), "{ownership}: {emitted:?}");
+        assert!(emitted.status.success(), "counted: {emitted:?}");
         let code = std::fs::read_to_string(cfile).unwrap();
         for opt in ["-O1", "-O2"] {
             let executable = directory.join("text.exe");
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-            let stresses: &[&str] = if ownership == "arc" {
-                &["0"]
-            } else {
-                &["0", "1"]
-            };
-            for stress in stresses {
-                let actual = Command::new(&executable)
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress)
-                    .output()
-                    .unwrap();
-                record_probe::save(
-                    "float_formats",
-                    &format!("program-{ownership}{opt}-stress-{stress}"),
-                    &code,
-                    &executable,
-                    &actual,
-                );
-                assert_eq!(
-                    (&actual.stdout, &actual.stderr, actual.status.code()),
-                    (
-                        &reference.stdout,
-                        &reference.stderr,
-                        reference.status.code()
-                    ),
-                    "{ownership} {opt} stress={stress}"
-                );
-            }
+            let actual = Command::new(&executable).output().unwrap();
+            record_probe::save(
+                "float_formats",
+                &format!("program{opt}"),
+                &code,
+                &executable,
+                &actual,
+            );
+            assert_eq!(
+                (&actual.stdout, &actual.stderr, actual.status.code()),
+                (
+                    &reference.stdout,
+                    &reference.stderr,
+                    reference.status.code()
+                ),
+                "{opt}"
+            );
         }
     }
 }
@@ -81,9 +65,7 @@ fn float_text_matches_frozen_precision_and_detects_corruption() {
     let emitted = Command::new(env!("CARGO_BIN_EXE_fwp"))
         .env_remove("FWP_NO_OPT")
         .env("FWP_LTO", "0")
-        .args([
-            "build", "--gc", "arc", "--memory", "dynamic", "--emit-c", "-O2",
-        ])
+        .args(["build", "--memory", "dynamic", "--emit-c", "-O2"])
         .arg(&input)
         .arg("-o")
         .arg(&cfile)
@@ -110,12 +92,7 @@ fn float_text_matches_frozen_precision_and_detects_corruption() {
                 include_str!("fixtures/float_text_baseline.c"), include_str!("fixtures/float_text_probe.c"));
             let executable = directory.join("probe.exe");
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-            let actual = Command::new(&executable)
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
+            let actual = Command::new(&executable).output().unwrap();
             record_probe::save(
                 "float_formats",
                 &format!("precision-{label}{opt}"),
@@ -196,25 +173,20 @@ main = [
         let built = Command::new(fwp)
             .env_remove("FWP_NO_OPT")
             .env("FWP_CACHE_DIR", directory.join("cache"))
-            .args(["build", "--gc", "tracing", opt])
+            .args(["build", opt])
             .arg(&source)
             .arg("-o")
             .arg(&binary)
             .output()
             .unwrap();
         assert!(built.status.success(), "{built:?}");
-        for stress in ["0", "1"] {
-            let native = Command::new(&binary)
-                .env("FWP_FLOAT_INPUT", "4")
-                .env("FWP_GC_STRESS", stress)
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", stress)
-                .output()
-                .unwrap();
-            assert!(native.status.success(), "{native:?}");
-            assert!(native.stderr.is_empty(), "{native:?}");
-            assert_eq!(native.stdout, expected, "{native:?}");
-        }
+        let native = Command::new(&binary)
+            .env("FWP_FLOAT_INPUT", "4")
+            .output()
+            .unwrap();
+        assert!(native.status.success(), "{native:?}");
+        assert!(native.stderr.is_empty(), "{native:?}");
+        assert_eq!(native.stdout, expected, "{native:?}");
     }
 }
 
@@ -229,7 +201,7 @@ fn quad_array_bytes_and_escaping_owners_are_independent() {
     .unwrap();
     let c = directory.join("quad.c");
     let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--gc", "tracing", "--fn", "quad", "--emit-c"])
+        .args(["build", "--fn", "quad", "--emit-c"])
         .arg(&path)
         .arg("-o")
         .arg(&c)
@@ -243,7 +215,7 @@ fn quad_array_bytes_and_escaping_owners_are_independent() {
     let probe = r#"
 static void quad_drop(V v) { if (fwp_rc_release_last(v)) fwp_rc_free_obj(v); }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
     const fwp_desc quad={.kind=K_F128,.dup=fwp_rc_dup,.drop=quad_drop};
     const float128_t words[]={{{1,0}},{{0,UINT64_C(0x8000000000000000)}},
         {{UINT64_C(0x1234),UINT64_C(0x7fff800000000000)}}};
@@ -259,7 +231,7 @@ int main(void) {
     if(memcmp(&value,&words[2],16)) return 183;
     if(!fwp_rc_slot(saved) || *fwp_rc_slot(saved)!=1) return 184;
     quad_drop(saved);
-    FWP_KEEP_ALIVE(original);
+
     return 0;
 }
 "#;
@@ -274,12 +246,7 @@ int main(void) {
     ] {
         let binary = directory.join(name);
         fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
-        let output = Command::new(binary)
-            .env("FWP_GC_STRESS", "1")
-            .env("FWP_GC_VERIFY", "1")
-            .env("FWP_REUSE_VERIFY", "1")
-            .output()
-            .unwrap();
+        let output = Command::new(binary).output().unwrap();
         assert_eq!(output.status.code(), Some(expected), "{name}: {output:?}");
     }
 }

@@ -1,8 +1,8 @@
 static unsigned closure_mode, closure_allocs, closure_frees, closure_captures;
 static V *closure_children;
 static jmp_buf closure_recovered;
-static int closure_recover(void) { return 1; }
-static void closure_probe_noop(void *arg) { (void)arg; }
+/* Recovery itself is the fault: it would abandon pending owners. */
+static int closure_recover(void) { exit(93); }
 static void *closure_probe_alloc(size_t n) {
     closure_allocs++;
     if (closure_mode == 2 && closure_allocs == 2) return NULL;
@@ -38,32 +38,23 @@ static V closure_new(unsigned fn) {
 }
 int main(void) {
     volatile V children[200]={0};closure_children=(V *)children;
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     fwp_fns=closure_entries;
     fwp_trap_recover=closure_recover;fwp_trap_jb=&closure_recovered;fwp_trap_cleanup=0;
-    for (closure_mode=0;closure_mode<3;closure_mode++) {
-        closure_allocs=closure_frees=closure_captures=0;
-        unsigned count=closure_mode==2?200:80;
-        for(unsigned i=0;i<count;i++) children[i]=closure_new(0);
-        V root=closure_new(1);
-        if (!setjmp(closure_recovered)) {
-            fwp_closure_drop(root);
-            if (closure_mode) return 93;
-        } else {
-            const char *expected=closure_mode==1?"closure capture cleanup control":"out of memory";
-            if (strcmp(fwp_trap_msg,expected)) return 93;
-        }
-        /* Detect the stale pointer without dereferencing dead stack storage. */
-        if (fwp_closure_drop_get() || fwp_cleanups) return 94;
-        if (closure_allocs!=(closure_mode==2?2:1) || closure_frees!=1) return 95;
-        if (closure_captures!=(closure_mode?0:81)) return 96;
-        unsigned before=closure_captures;
-        fwp_closure_drop(closure_new(0));
-        if (closure_captures!=before+1 || fwp_closure_drop_get() || fwp_cleanups) return 97;
-        fwp_gc_collect();
-        if (!fwp_gc.armed || !fwp_gc.ncollect) return 98;
-        FWP_KEEP_ALIVE(children);
-    }
-    printf("Closure cleanup context resets after capture trap and spill OOM; real collections=%zu\n",fwp_gc.ncollect);
+    closure_mode=PROBE_MODE;
+    size_t baseline=fwp_heap.live;
+    unsigned count=closure_mode==2?200:80;
+    for(unsigned i=0;i<count;i++) children[i]=closure_new(0);
+    V root=closure_new(1);
+    fwp_closure_drop(root);
+    if (closure_mode) return 93;
+    /* Observe the context without dereferencing a possibly dead stack frame. */
+    if (fwp_closure_drop_get() || fwp_cleanups) return 94;
+    if (closure_allocs!=1 || closure_frees!=1) return 95;
+    if (closure_captures!=81 || fwp_heap.live!=baseline) return 96;
+    fwp_closure_drop(closure_new(0));
+    if (closure_captures!=82 || fwp_closure_drop_get() || fwp_cleanups ||
+        fwp_heap.live!=baseline) return 97;
+    puts("Closure cleanup releases captures and resets its context");
     return 0;
 }

@@ -14,14 +14,14 @@ args = parser.parse_args()
 directory = args.artifact
 binary = directory / 'server.exe'
 code = (directory / 'server.c').read_text()
-assert '#define FWP_ARC_ONLY 1' in code
+assert 'FWP_ARC_ONLY' not in code
 declarations = re.findall(
     r'^static fwp_clo (fwp_static_function\d+) = \{(\d+), (\d+), \{([0, ]+)\}\};$',
     code, re.M)
 assert declarations
 symbols = subprocess.check_output(
     [str(args.llvm_bin / 'llvm-nm'), '-S', '--defined-only', str(binary)], text=True)
-assert not any(name in symbols for name in ['fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'])
+assert not any(name in symbols for name in ['fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'])
 objects = {}
 addresses = {}
 for line in symbols.splitlines():

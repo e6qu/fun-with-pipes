@@ -107,55 +107,33 @@ fn boxed_transfers_preserve_shared_parents_wide_values_and_cleanup() {
         .is_err());
     let dir = fwp::cgen::TempDir::new("boxed-field-moves").unwrap();
     let binary = dir.join("probe.exe");
-    for arc in [false, true] {
-        fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-            arc,
-            ..Default::default()
-        });
-        let emitted = fwp::cgen::generate(&p).unwrap();
-        fwp::cgen::set_native_options(Default::default());
-        let code = emitted.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic size_t conversion_retains;")
+
+    let emitted = fwp::cgen::generate(&p).unwrap();
+    let code = emitted.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic size_t conversion_retains;")
             .replace("static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {", "static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) { conversion_retains++;")
             .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)")
             + include_str!("fixtures/boxed_field_move_probe.c");
-        assert!(code.contains("conversion_retains++;"));
-        for opt in ["-O1", "-O2"] {
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            for stress in if arc { &["0"][..] } else { &["0", "1"][..] } {
-                let output = Command::new(&binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress)
-                    .output()
-                    .unwrap();
-                assert!(
-                    output.status.success(),
-                    "arc={arc} {opt} stress={stress}: {output:?}"
-                );
-            }
-        }
-        // Force the old retain/drop conversion; the count assertion must fail.
-        let control = code
-            .lines()
-            .map(|line| {
-                if line.contains("/* move boxed fields */") {
-                    format!("{} = 0;", line.split(" = ").next().unwrap())
-                } else {
-                    line.to_owned()
-                }
-            })
-            .collect::<Vec<_>>()
-            .join("\n");
-        assert!(code.contains("/* move boxed fields */"));
-        fwp::cgen::compile_c(&control, &binary, "-O2").unwrap();
-        let output = Command::new(&binary)
-            .env_remove("FWP_GC")
-            .env("FWP_GC_STRESS", "0")
-            .env("FWP_GC_VERIFY", "0")
-            .env("FWP_REUSE_VERIFY", "0")
-            .output()
-            .unwrap();
-        assert_eq!(output.status.code(), Some(214), "{output:?}");
+    assert!(code.contains("conversion_retains++;"));
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+
+        let output = Command::new(&binary).output().unwrap();
+        assert!(output.status.success(), "{opt}: {output:?}");
     }
+    // Force the old retain/drop conversion; the count assertion must fail.
+    let control = code
+        .lines()
+        .map(|line| {
+            if line.contains("/* move boxed fields */") {
+                format!("{} = 0;", line.split(" = ").next().unwrap())
+            } else {
+                line.to_owned()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(code.contains("/* move boxed fields */"));
+    fwp::cgen::compile_c(&control, &binary, "-O2").unwrap();
+    let output = Command::new(&binary).output().unwrap();
+    assert_eq!(output.status.code(), Some(214), "{output:?}");
 }

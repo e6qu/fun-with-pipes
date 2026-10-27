@@ -103,7 +103,7 @@ fn native_boundary_offsets_match_raw_interpreter_and_reject_signed_overflow() {
     assert!(reference.stderr.is_empty());
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&source)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -123,16 +123,11 @@ fn native_boundary_offsets_match_raw_interpreter_and_reject_signed_overflow() {
     for opt in ["-O1", "-O2"] {
         let exe = dir.join(format!("probe{opt}"));
         fwp::cgen::compile_c(&emitted, &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let output = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-            assert_eq!(output.stdout, reference.stdout);
-            assert_eq!(output.stderr, reference.stderr);
-        }
+
+        let output = checked(&mut Command::new(&exe));
+        assert_eq!(output.stdout, reference.stdout);
+        assert_eq!(output.stderr, reference.stderr);
+
         let cc = std::env::var("CC").unwrap_or_else(|_| "cc".into());
         for (file, negative) in [(&cfile, false), (&control_file, true)] {
             let kind = if negative {

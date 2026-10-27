@@ -148,6 +148,7 @@ static void one_round(void) {
     }
     fwp_trap_recover = 0;
     require(released == 5 && order[4] == 6 && fwp_cleanups == &outer, 232);
+    require(!strcmp(fwp_trap_msg,"owned cleanup trap"),232);
     require(live(parent.value), 232);
     fwp_cleanup_pop(&outer); release_held(&parent);
     fwp_handlers = &top;
@@ -186,9 +187,11 @@ static void one_round(void) {
     fwp_cleanup_push(&early_cleanup, fwp_close_owned_scoped_file, &pending);
     recover_stop = NULL; fwp_trap_recover = recover;
     if (!setjmp(recovered)) fwp_trap("before file handle allocation");
+    require(!strcmp(fwp_trap_msg,"before file handle allocation"),234);
     check_closed();
     file_mode = 3;
     if (!setjmp(recovered)) { fwp_p_file_with_owned(file_path, PTR(&file_function), NULL, drop_pair, NULL); _Exit(234); }
+    require(!strcmp(fwp_trap_msg,"owned file trap"),234);
     fwp_trap_recover = 0; fwp_trap_jb = 0; fwp_trap_cleanup = 0;
     fwp_handlers = top.prev;
     check_closed();
@@ -204,15 +207,15 @@ static void one_round(void) {
 }
 int main(int argc, char **argv) {
     require(argc == 3, 230);
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_fns = functions; fwp_tasks_init();
     file_path = fwp_rc_fresh(fwp_cstr(argv[1]));
-    intptr_t bytes = fwp_gc.budget;
-    size_t live_before = owner_ledger_live, finalizers = fwp_gc.nfins;
+    size_t bytes = fwp_heap.live;
+    size_t live_before = owner_ledger_live, finalizers = fwp_heap.nfins;
     for (unsigned round = 0; round < (unsigned)strtoul(argv[2], NULL, 10); round++) {
         one_round();
-        require(fwp_gc.budget == bytes && owner_ledger_live == live_before, 237);
-        require(fwp_gc.nfins == finalizers, 238);
+        require(fwp_heap.live == bytes && owner_ledger_live == live_before, 237);
+        require(fwp_heap.nfins == finalizers, 238);
     }
     fwp_rc_free_obj(file_path);
     fwp_tasks_finish(); fwp_native_tasks_finish();

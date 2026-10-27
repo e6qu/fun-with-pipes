@@ -1,7 +1,5 @@
-/* The OS must preserve live values even when ARC has no collector snapshot. */
+/* The OS preserves live register, stack and rounding state across fiber switches. */
 #define _WIN32_WINNT 0x0a00
-#define FWP_GC 1
-#define FWP_ARC_ONLY 1
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,7 +8,6 @@
 #include <fenv.h>
 #include <windows.h>
 static void fwp_trap(const char *message) { fprintf(stderr, "%s\n", message); exit(101); }
-static char *fwp_gc_sp(void) { return __builtin_frame_address(0); }
 static int forbidden_snapshot(void) { _Exit(211); }
 #undef setjmp
 #define setjmp(buffer) forbidden_snapshot()
@@ -31,7 +28,7 @@ static volatile double child_number = 1.25, root_number = 2.5;
 
 static void CALLBACK child_entry(void *argument) {
     (void)argument;
-    fwp_win_context_started(&child);
+    fwp_win_stack_started();
     register char *held __asm__(INTEGER_REGISTER) = child_text;
     register double number __asm__(FLOAT_REGISTER) = child_number;
     volatile uint64_t stack_value = UINT64_C(0x123456789abcdef0);
@@ -78,6 +75,6 @@ int main(void) {
     if (!IsThreadAFiber()) return 218;
     fwp_win_context_root_finish(&root);
     if (IsThreadAFiber()) return 219;
-    puts("ARC fibers preserve registers, stack, rounding and host ownership");
+    puts("fibers preserve registers, stack, rounding and host ownership");
     return 0;
 }

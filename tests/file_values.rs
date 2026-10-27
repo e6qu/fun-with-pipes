@@ -35,82 +35,64 @@ fn filesystem_values_match_raw_interpretation() {
             .args(["run", "--interp"])
             .arg(&source),
     );
-    for gc in ["tracing", "arc"] {
-        let cfile = dir.join("values.c");
-        checked(
-            Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .env_remove("FWP_NO_OPT")
-                .args(["build", "--gc", gc, "--emit-c"])
-                .arg(&source)
-                .arg("-o")
-                .arg(&cfile),
+
+    let cfile = dir.join("values.c");
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    let code = {
+        let start = code
+            .find("static void *fwp_main_thread(void *arg) {")
+            .unwrap();
+        let (runtime, main) = code.split_at(start);
+        assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
+        assert_eq!(
+            main.matches("    /* Ownership observation point: before runtime teardown. */\n")
+                .count(),
+            1
         );
-        let code = std::fs::read_to_string(cfile).unwrap();
-        let code = if gc == "arc" {
-            let start = code
-                .find("static void *fwp_main_thread(void *arg) {")
-                .unwrap();
-            let (runtime, main) = code.split_at(start);
-            assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
-            assert_eq!(
-                main.matches("    /* Ownership observation point: before runtime teardown. */\n")
-                    .count(),
-                1
-            );
-            let measured = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t file_budget = fwp_gc.budget;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if (fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < file_budget) exit(195);\n");
-            format!("{runtime}{measured}")
-        } else {
-            code
-        };
-        let binary = dir.join("values.exe");
-        for opt in ["-O1", "-O2"] {
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let verify = if gc == "arc" { "0" } else { "1" };
-            let actual = checked(
-                Command::new(&binary)
-                    .current_dir(&root)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", verify)
-                    .env("FWP_GC_VERIFY", verify)
-                    .env("FWP_REUSE_VERIFY", verify),
-            );
-            assert_eq!(
-                (&actual.stdout, &actual.stderr),
-                (&expected.stdout, &expected.stderr),
-                "{gc} {opt}: native stdout={} stderr={}; interpreter stdout={} stderr={}",
-                String::from_utf8_lossy(&actual.stdout),
-                String::from_utf8_lossy(&actual.stderr),
-                String::from_utf8_lossy(&expected.stdout),
-                String::from_utf8_lossy(&expected.stderr)
-            );
-            assert!(!root.join("made").exists());
-            assert_eq!(std::fs::read(root.join("input")).unwrap(), vec![255; 70000]);
-        }
-        if gc == "arc" {
-            let owned = code
-                .lines()
-                .find(|line| line.contains("return fwp_rc_fresh(fwp_p_file_read("))
-                .expect("text reads have an owning result");
-            let unowned = owned.replace("return fwp_rc_fresh(", "return ");
-            let unowned = unowned.strip_suffix(");").unwrap().to_string() + ";";
-            let broken = code.replace(owned, &unowned);
-            fwp::cgen::compile_c(&broken, &binary, "-O2").unwrap();
-            let result = Command::new(&binary)
-                .current_dir(&root)
-                .env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
-            assert_eq!(
-                result.status.code(),
-                Some(195),
-                "missing text owner: {result:?}"
-            );
-        }
+        let measured = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t file_live_bytes = fwp_heap.live;\n")
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if (fwp_heap.live > file_live_bytes) exit(195);\n");
+        format!("{runtime}{measured}")
+    };
+    let binary = dir.join("values.exe");
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+
+        let actual = checked(Command::new(&binary).current_dir(&root));
+        assert_eq!(
+            (&actual.stdout, &actual.stderr),
+            (&expected.stdout, &expected.stderr),
+            "counted {opt}: native stdout={} stderr={}; interpreter stdout={} stderr={}",
+            String::from_utf8_lossy(&actual.stdout),
+            String::from_utf8_lossy(&actual.stderr),
+            String::from_utf8_lossy(&expected.stdout),
+            String::from_utf8_lossy(&expected.stderr)
+        );
+        assert!(!root.join("made").exists());
+        assert_eq!(std::fs::read(root.join("input")).unwrap(), vec![255; 70000]);
     }
+
+    let owned = code
+        .lines()
+        .find(|line| line.contains("return fwp_rc_fresh(fwp_p_file_read("))
+        .expect("text reads have an owning result");
+    let unowned = owned.replace("return fwp_rc_fresh(", "return ");
+    let unowned = unowned.strip_suffix(");").unwrap().to_string() + ";";
+    let broken = code.replace(owned, &unowned);
+    fwp::cgen::compile_c(&broken, &binary, "-O2").unwrap();
+    let result = Command::new(&binary).current_dir(&root).output().unwrap();
+    assert_eq!(
+        result.status.code(),
+        Some(195),
+        "missing text owner: {result:?}"
+    );
 }
 fn instrument(mut code: String) -> String {
     let start = "static void fwp_file_buffer_cleanup(";
@@ -168,63 +150,51 @@ fn metadata_and_file_values_release_complete_and_partial_storage() {
     std::fs::write(&input, vec![255; 70000]).unwrap();
     let source = dir.join("probe.fwp");
     std::fs::write(&source, "main = [task.yield (), echo \"probe\"] | ignore\n").unwrap();
-    for gc in ["tracing", "arc"] {
-        let cfile = dir.join("probe.c");
-        checked(
-            Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", "--gc", gc, "--emit-c"])
-                .arg(&source)
-                .arg("-o")
-                .arg(&cfile),
-        );
-        let code = instrument(std::fs::read_to_string(cfile).unwrap());
-        let binary = dir.join("probe.exe");
-        let run = |collect: &str| {
-            let mut cmd = Command::new(&binary);
-            cmd.arg(&input)
-                .arg(dir.join("output"))
-                .env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", if gc == "arc" { "0" } else { "1" })
-                .env("FWP_REUSE_VERIFY", "0")
-                .env("FWP_FILE_COLLECTION", collect);
-            cmd
-        };
-        for opt in ["-O1", "-O2"] {
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            for collect in if gc == "arc" {
-                &["0"][..]
-            } else {
-                &["0", "1"][..]
-            } {
-                checked(&mut run(collect));
-            }
-        }
-        let missing_count = code.replace(
-            "V result = fwp_rc_fresh(file_record(3, fields));",
-            "V result = file_record(3, fields);",
-        );
-        let mut unprotected = code.clone();
-        for name in ["modified", "time"] {
-            unprotected = unprotected
-                .replace(
-                    &format!("fwp_value_protect(&{name}, &cleanup);"),
-                    "(void)cleanup;",
-                )
-                .replace(
-                    &format!("(void)fwp_value_finish(&{name}, &cleanup);"),
-                    &format!("(void){name};"),
-                );
-        }
-        for (broken, status) in [
-            (missing_count, 182),
-            (unprotected, 189),
-            (code.replace("errno = error;", "(void)error;"), 192),
-            (code.replace("file_buffer_free(b->d);", "(void)b->d;"), 199),
-        ] {
-            assert_ne!(broken, code);
-            fwp::cgen::compile_c(&broken, &binary, "-O2").unwrap();
-            assert_eq!(run("0").output().unwrap().status.code(), Some(status));
-        }
+
+    let cfile = dir.join("probe.c");
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = instrument(std::fs::read_to_string(cfile).unwrap());
+    let binary = dir.join("probe.exe");
+    let run = || {
+        let mut cmd = Command::new(&binary);
+        cmd.arg(&input).arg(dir.join("output"));
+        cmd
+    };
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+
+        checked(&mut run());
+    }
+    let missing_count = code.replace(
+        "V result = fwp_rc_fresh(file_record(3, fields));",
+        "V result = file_record(3, fields);",
+    );
+    let mut unprotected = code.clone();
+    for name in ["modified", "time"] {
+        unprotected = unprotected
+            .replace(
+                &format!("fwp_value_protect(&{name}, &cleanup);"),
+                "(void)cleanup;",
+            )
+            .replace(
+                &format!("(void)fwp_value_finish(&{name}, &cleanup);"),
+                &format!("(void){name};"),
+            );
+    }
+    for (broken, status) in [
+        (missing_count, 182),
+        (unprotected, 189),
+        (code.replace("errno = error;", "(void)error;"), 192),
+        (code.replace("file_buffer_free(b->d);", "(void)b->d;"), 199),
+    ] {
+        assert_ne!(broken, code);
+        fwp::cgen::compile_c(&broken, &binary, "-O2").unwrap();
+        assert_eq!(run().output().unwrap().status.code(), Some(status));
     }
 }

@@ -1,5 +1,6 @@
 /* Measurement control from 9f0632f9c1abf4f067fa659f1d95c5768cb8a965.
- * Never linked into the compiler/runtime; reconstructs the old buffer layout. */
+ * Reconstructs the old layout under current counted ownership.
+ * Never linked into the compiler/runtime; obsolete tracing fences are omitted. */
 static V fwp_map_build_typed(V *keys, V *vals, size_t n, const fwp_map_ops *ops, const fwp_desc *kd) {
     if (!n) return FWP_EMPTY_MAP;
     V *tk = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
@@ -35,11 +36,9 @@ static V fwp_map_build_typed(V *keys, V *vals, size_t n, const fwp_map_ops *ops,
     fwp_value_finish(&owner, &cleanup);
     if (tv) fwp_scratch_finish(&tv, &tv_cleanup);
     fwp_scratch_finish(&tk, &tk_cleanup);
-    FWP_KEEP_ALIVE(keys); FWP_KEEP_ALIVE(vals);
     return result;
 }
 static V fwp_p_map_from_list_typed(V xs, const fwp_map_ops *ops, const fwp_desc *kd) {
-    V source = xs;
     size_t n = fwp_list_len(xs);
     if (n >= SIZE_MAX / sizeof(V)) fwp_trap("map too large");
     V *keys = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
@@ -53,6 +52,5 @@ static V fwp_p_map_from_list_typed(V xs, const fwp_map_ops *ops, const fwp_desc 
     V result = fwp_map_build_typed(keys, vals, n, ops, kd);
     fwp_scratch_finish(&vals, &vals_cleanup);
     fwp_scratch_finish(&keys, &keys_cleanup);
-    FWP_KEEP_ALIVE(source);
     return result;
 }

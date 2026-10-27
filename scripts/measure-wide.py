@@ -26,7 +26,7 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     compiler = ROOT / 'target/release/fwp'
     cc = os.environ.get('CC', 'cc')
-    environment = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+    environment = dict(os.environ)
     environment.pop('FWP_NO_OPT', None)
     cpp = os.environ.get('CXX', cc)
     results = {}
@@ -51,7 +51,7 @@ main = 256{decimal}{suffix} | sum-wide | echo
             label = suffix + ('-native' if enabled == '1' else '-boxed')
             env = dict(environment, FWP_WIDE_WORKERS=enabled)
             cfile = out / (label + '.c')
-            run([compiler, 'build', '--gc', 'arc', '--emit-c', source, '-o', cfile], env)
+            run([compiler, 'build', '--emit-c', source, '-o', cfile], env)
             code = cfile.read_text()
             assert ('/* native wide worker:' in code) == (enabled == '1')
             workers = []
@@ -100,7 +100,8 @@ main = 256{decimal}{suffix} | sum-wide | echo
             measured = run([out / (label + '-profile')], env)
             assert measured.stdout == reference
             counters = json.loads(measured.stderr)
-            assert counters['collections'] == 0 and counters['finalChargedBytes'] <= 0, counters
+            assert set(counters) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}, counters
+            assert counters['finalChargedBytes'] <= 0, counters
             binary = out / label
             asm = ['otool', '-tvV', binary] if platform.system() == 'Darwin' else ['objdump', '-d', binary]
             (out / (label + '.asm')).write_text(run(asm).stdout)

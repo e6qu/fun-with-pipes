@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn tls_pool_keys_distinguish_complete_options_and_survive_scope_release() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -68,7 +64,7 @@ static int distinguish(g_tls *a,g_tls *b){
  drop_options(a);drop_options(b);return ok;
 }
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  if(!distinguish(g_tls_new("a",0,"b|c","d","e"),g_tls_new("a",0,"b","c|d","e")))return 1;
  for(int field=0;field<5;field++){
   const char *v[4]={"a","b","c","d"};const char *w[4]={"a","b","c","d"};
@@ -81,7 +77,7 @@ int main(void){
  g_tls *original=g_tls_new("ca|file",1,long_name,"cert","key");
  g_tls *same=g_tls_new("ca|file",1,long_name,"cert","key");
  V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);V address=fwp_p_local_addr(listener);snprintf(target,sizeof target,"%s",STR(address)->d);
- options=original;fwp_task *task=fwp_spawn_task(0,client,0,0,0);fwp_await(task);
+ options=original;fwp_task *task=fwp_spawn_task(0,client,0,0,0);fwp_task_own_internal(task,1);fwp_await(task);fwp_task_drop(PTR(task));
  if(!connected||connected->refs!=2||g_pool!=connected||!g_same_tls(connected,same)||connected->tlskey==original->key)return 1;
  drop_options(original);options=0;
  g_ctx context={0};context.tls=same;fwp_cur->gctx=&context;
@@ -92,10 +88,10 @@ int main(void){
  g_unlink(connected,stream);g_stream_reader_release(connected,stream);
  g_conn_drop(selected);
  g_conn_dead(connected,"finished");fwp_cancel_tree(reader);fwp_cancel_tree(writer);
- while(fwp_gc_tasks){fwp_make_ready(fwp_root);fwp_block();fwp_free_zombie();}fwp_free_zombie();
+ while(fwp_tasks_active){fwp_make_ready(fwp_root);fwp_block();fwp_free_zombie();}fwp_free_zombie();
  if(connected->refs||connected->fd!=-1||g_pool)return 2;
  g_conn_drop(connected);connected=0;fwp_p_tcp_stop(listener);
- FWP_KEEP_ALIVE(listener);FWP_KEEP_ALIVE(PTR(task));FWP_KEEP_ALIVE(PTR(connected));
+
  fwp_lib_finish();return 0;
 }
 "#;
@@ -114,7 +110,7 @@ int main(void){
             opt,
         )
         .unwrap();
-        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(out.status.code(), Some(102), "pool-key allocation: {out:?}");
         assert!(out.stdout.is_empty());
         assert_eq!(
@@ -122,20 +118,11 @@ int main(void){
             "fwp: out of memory\n"
         );
         fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
-        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(out.status.code(), Some(1), "old identity: {out:?}");
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-            }
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
 }

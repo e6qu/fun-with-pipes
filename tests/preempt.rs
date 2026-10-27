@@ -1,8 +1,8 @@
 //! Preemptive scheduling: tasks are preempted after a slice of function
 //! entries (`FWP_PREEMPT`), counted alike by the interpreter and native
 //! programs, so the same program interleaves alike on both, whatever the
-//! slice; the collector finds the roots of tasks preempted at any safe
-//! point; and the outputs do not change from run to run.
+//! slice; suspended tasks retain their live values; and outputs do not
+//! change from run to run.
 //! Timer wake order depends on wall time. The scoped timer fixture
 //! collects both results before reporting them in a fixed order.
 
@@ -67,7 +67,7 @@ fn interpret(path: &Path, env: &[(&str, &str)]) -> String {
 fn build(path: &Path, dir: &Path, env: &[(&str, &str)]) -> PathBuf {
     let exe = dir.join(path.file_stem().unwrap());
     let b = Command::new(fwp())
-        .args(["build", "--gc", "tracing"])
+        .args(["build"])
         .arg(path)
         .args(["-O2", "-o"])
         .arg(&exe)
@@ -118,16 +118,6 @@ fn backends_interleave_alike_for_any_slice() {
             );
             if let Some(exe) = &exe {
                 assert_eq!(native(exe, &env), want, "{} with FWP_PREEMPT={}", p, slice);
-                // the collector finds the roots of tasks switched out at
-                // safe points
-                let stressed = [("FWP_PREEMPT", slice), ("FWP_GC_STRESS", "1")];
-                assert_eq!(
-                    native(exe, &stressed),
-                    want,
-                    "{} with FWP_PREEMPT={} FWP_GC_STRESS=1",
-                    p,
-                    slice
-                );
             }
         }
     }
@@ -169,14 +159,7 @@ fn raw_function_entries_preserve_interleaving() {
         assert!(!expected.contains("--- exit"), "{expected}");
         if let Some(exe) = &exe {
             assert_eq!(
-                native(
-                    exe,
-                    &[
-                        ("FWP_PREEMPT", slice),
-                        ("FWP_GC_STRESS", "1"),
-                        ("FWP_GC_VERIFY", "1")
-                    ]
-                ),
+                native(exe, &[("FWP_PREEMPT", slice),]),
                 expected,
                 "raw IR with FWP_PREEMPT={slice}"
             );

@@ -44,7 +44,8 @@ def host_report(artifacts, host, source):
     report = (root / 'bench.md').read_text()
     assert (directory / 'report.md').read_text() == report
     assert f'Source commit: `{source}`. Host: `linux/{architecture}`.' in report
-    assert 'fwp build flags: `--gc tracing -O2`' in report, 'scalar-text requires its explicit tracing baseline'
+    assert 'fwp build flags: `-O2`' in report
+    assert 'Native fwp ownership: counted.' in report
     medians = re.findall(
         r'^\| (\S+) \| ([\d.]+) ms \| ([\d.]+) ms \| ([\d.]+) ms \|',
         report.split('## Raw elapsed samples')[0], re.M)
@@ -74,7 +75,9 @@ def host_report(artifacts, host, source):
             assert input_path.read_bytes() == original, input_path
             files[input_path.name] = {'sha256': digest(input_path)}
         generated = directory / f'{program}-generated.c'
-        assert '#define FWP_ARC_ONLY 1' not in generated.read_text(), 'wrong memory mode in scalar-text evidence'
+        generated_text = generated.read_text()
+        for collector in ('fwp_heap_collect', 'fwp_heap_sweep', 'fwp_gc_collect', 'fwp_gc_sweep'):
+            assert collector not in generated_text, 'collector code in scalar-text evidence'
         files[generated.name] = {'sha256': digest(generated)}
         programs.append({'program': program, 'medianProcessMs': times,
                          'processSamplesMs': samples[program],
@@ -91,11 +94,9 @@ def host_report(artifacts, host, source):
         binary(directory / 'strings-fwp', machine)['textSectionSha256']
         == binary(directory / 'text-length-fwp', machine)['textSectionSha256'])
     tests = costs / 'text-length'
-    expected = {f'semantics-{memory}{opt}'
-                for memory in ('arc', 'tracing') for opt in ('-O0', '-O2')}
+    expected = {f'semantics-counted{opt}' for opt in ('-O0', '-O2')}
     expected.update(
-        f'allocation-check-{memory}{opt}-exit-{status}'
-        for memory in ('arc', 'tracing')
+        f'allocation-check-counted{opt}-exit-{status}'
         for opt in ('-O0', '-O2')
         for status in (0, 247))
     assert {path.stem for path in tests.glob('*.exe')} == expected
@@ -144,11 +145,11 @@ def main():
         'source': args.source, 'run': args.run, 'url': run['url'], 'hosts': hosts,
         'scope': 'Seven complete programs, one warmup and six rotating-order fresh-process '
                  'samples per implementation. Medians and samples have 0.001 ms resolution. '
-                 'Native fwp uses tracing, GCC O2 and LTO off; C uses GCC O2, Rust uses -O. '
+                 'Native fwp uses counted ownership, GCC O2 and LTO off; C uses GCC O2, Rust uses -O. '
                  'Compilation is excluded. text-length compares identical decimal-length '
                  'calculations for i=0..1999999: fwp eliminates text; C/Rust count digits '
                  'directly with checked multiplication and sums. strings peers still format. '
-                 'Separate O0/O2 ARC/tracing probes check results and zero managed leaf '
+                 'Separate O0/O2 counted-ownership probes check results and zero managed leaf '
                  'allocations after constant initialization, with allocating controls. '
                  'They do not measure total allocations, RSS, peak memory or elapsed-time '
                  'improvement over an earlier fwp revision. ELF .text includes layout costs; '

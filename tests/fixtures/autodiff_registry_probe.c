@@ -20,12 +20,7 @@ static void *registry_calloc(size_t n, size_t bytes) {
 static int registry_recover(void) { return 1; }
 static jmp_buf registry_trap;
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));
-#ifdef FWP_ARC_ONLY
-    if (fwp_gc.enabled || fwp_gc.armed) return 200;
-#else
-    if (!fwp_gc.enabled || !fwp_gc.stress || !fwp_gc.verify) return 201;
-#endif
+    fwp_heap_start();
     fwp_tape_scope scope = {-1};
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_tape_scope_release, &scope);

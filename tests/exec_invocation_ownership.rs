@@ -56,7 +56,7 @@ raised = string.repeat 2 | fail
     let cfile = dir.join("owners.c");
     checked(
         Command::new(compiler)
-            .args(["build", "--gc", "tracing", "--cli", "--emit-c"])
+            .args(["build", "--cli", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile),
@@ -68,7 +68,7 @@ raised = string.repeat 2 | fail
         .unwrap();
     let probe = r#"
     fwp_tasks_init();
-    intptr_t baseline = fwp_gc.budget;
+    size_t baseline = fwp_heap.live;
     const char *names[] = {"plain", "wrapped", "rejected", "absent", "raised"};
     for (size_t name = 0; name < 5; name++) {
         const fwp_exec_spec *spec = NULL;
@@ -87,8 +87,8 @@ raised = string.repeat 2 | fail
         }
         spec->params[0]->drop(input);
     }
-    if (getenv("FWP_INVOCATION_LEDGER") && (fwp_gc.ncollect || fwp_gc.budget < baseline)) {
-        fprintf(stderr, "invocation bytes left: %ld\n", (long)(baseline - fwp_gc.budget));
+    if (fwp_heap.live != baseline) {
+        fprintf(stderr, "invocation bytes left: %ld\n", (long)(fwp_heap.live - baseline));
         exit(193);
     }
 "#;
@@ -100,23 +100,9 @@ raised = string.repeat 2 | fail
             "owners"
         });
         fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
-        for stress in ["0", "1"] {
-            let mut command = Command::new(&binary);
-            command
-                .env_remove("FWP_GC")
-                .env_remove("FWP_OUT")
-                .env("FWP_GC_STRESS", stress)
-                .env("FWP_GC_VERIFY", stress)
-                .env("FWP_REUSE_VERIFY", stress);
-            if stress == "0" {
-                command
-                    .env("FWP_GC", "off")
-                    .env("FWP_INVOCATION_LEDGER", "1");
-            }
-            let output = checked(&mut command);
-            assert_eq!(output.stdout, stdout, "{opt} stress={stress}");
-            assert_eq!(output.stderr, stderr, "{opt} stress={stress}");
-        }
+        let output = checked(Command::new(&binary).env_remove("FWP_OUT"));
+        assert_eq!(output.stdout, stdout, "{opt}");
+        assert_eq!(output.stderr, stderr, "{opt}");
         // The complete wrapper must remain owned while projecting the payload.
         let begin = measured.find("static int fwp_emit_result(").unwrap();
         let end = begin + measured[begin..].find("\n}\n").unwrap() + 3;
@@ -129,14 +115,7 @@ raised = string.repeat 2 | fail
             &measured[end..]
         );
         fwp::cgen::compile_c(&omitted, &binary, opt).unwrap();
-        let output = Command::new(&binary)
-            .env("FWP_GC", "off")
-            .env("FWP_INVOCATION_LEDGER", "1")
-            .env("FWP_GC_STRESS", "0")
-            .env("FWP_GC_VERIFY", "0")
-            .env("FWP_REUSE_VERIFY", "0")
-            .output()
-            .unwrap();
+        let output = Command::new(&binary).output().unwrap();
         assert_eq!(
             output.status.code(),
             Some(193),

@@ -31,37 +31,32 @@ fn snapshots_match_raw_interpretation() {
             .args(["run", "--interp"])
             .arg(&source),
     );
-    for gc in ["tracing", "arc"] {
-        let cfile = dir.join("snapshots.c");
-        checked(
-            Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .env_remove("FWP_NO_OPT")
-                .args(["build", "--gc", gc, "--emit-c"])
-                .arg(&source)
-                .arg("-o")
-                .arg(&cfile),
+
+    let cfile = dir.join("snapshots.c");
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    let binary = dir.join("snapshots.exe");
+    for optimization in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&code, &binary, optimization).unwrap();
+
+        let actual = checked(
+            Command::new(&binary)
+                .current_dir(&root)
+                .env("FWP_SNAPSHOT_COPY", "copied"),
         );
-        let code = std::fs::read_to_string(cfile).unwrap();
-        let binary = dir.join("snapshots.exe");
-        for optimization in ["-O1", "-O2"] {
-            fwp::cgen::compile_c(&code, &binary, optimization).unwrap();
-            let verify = if gc == "arc" { "0" } else { "1" };
-            let actual = checked(
-                Command::new(&binary)
-                    .current_dir(&root)
-                    .env("FWP_SNAPSHOT_COPY", "copied")
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", verify)
-                    .env("FWP_GC_VERIFY", verify)
-                    .env("FWP_REUSE_VERIFY", verify),
-            );
-            assert_eq!(
-                (&actual.stdout, &actual.stderr),
-                (&expected.stdout, &expected.stderr),
-                "{gc} {optimization}"
-            );
-            assert!(root.join("made/a").is_dir());
-        }
+        assert_eq!(
+            (&actual.stdout, &actual.stderr),
+            (&expected.stdout, &expected.stderr),
+            "counted {optimization}"
+        );
+        assert!(root.join("made/a").is_dir());
     }
 }
 fn instrument(mut code: String) -> String {
@@ -114,7 +109,7 @@ fn instrument(mut code: String) -> String {
     code.push_str(include_str!("fixtures/system_snapshot_probe.c"));
     code
 }
-fn probe(binary: &Path, root: &Path, gc: &str, collect: &str) -> Command {
+fn probe(binary: &Path, root: &Path) -> Command {
     let mut command = Command::new(binary);
     command.env_clear();
     for key in ["PATH", "SystemRoot", "TEMP", "TMP"] {
@@ -128,11 +123,7 @@ fn probe(binary: &Path, root: &Path, gc: &str, collect: &str) -> Command {
     command
         .arg(root.join("names"))
         .arg(root.join("made/a"))
-        .env("FWP_SNAPSHOT_COPY", "copied")
-        .env("FWP_GC_STRESS", "0")
-        .env("FWP_GC_VERIFY", if gc == "arc" { "0" } else { "1" })
-        .env("FWP_REUSE_VERIFY", "0")
-        .env("FWP_SNAPSHOT_COLLECTION", collect);
+        .env("FWP_SNAPSHOT_COPY", "copied");
     command
 }
 #[test]
@@ -142,43 +133,37 @@ fn snapshots_release_copies_partial_results_and_system_handles() {
     names(&root);
     let source = dir.join("probe.fwp");
     std::fs::write(&source, "main = [task.yield (), echo \"probe\"] | ignore\n").unwrap();
-    for gc in ["tracing", "arc"] {
-        let cfile = dir.join("probe.c");
-        checked(
-            Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", "--gc", gc, "--emit-c"])
-                .arg(&source)
-                .arg("-o")
-                .arg(&cfile),
-        );
-        let code = instrument(std::fs::read_to_string(cfile).unwrap());
-        let binary = dir.join("probe.exe");
-        for optimization in ["-O1", "-O2"] {
-            fwp::cgen::compile_c(&code, &binary, optimization).unwrap();
-            for collect in if gc == "arc" {
-                &["0"][..]
+
+    let cfile = dir.join("probe.c");
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = instrument(std::fs::read_to_string(cfile).unwrap());
+    let binary = dir.join("probe.exe");
+    for optimization in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&code, &binary, optimization).unwrap();
+
+        checked(&mut probe(&binary, &root));
+    }
+    for (release, replacement, status) in [
+        ("fwp_mem_free(owner->items);", "(void)owner->items;", 241),
+        (
+            if cfg!(windows) {
+                "snapshot_find_close(*handle)"
             } else {
-                &["0", "1"][..]
-            } {
-                checked(&mut probe(&binary, &root, gc, collect));
-            }
-        }
-        for (release, replacement, status) in [
-            ("fwp_mem_free(owner->items);", "(void)owner->items;", 241),
-            (
-                if cfg!(windows) {
-                    "snapshot_find_close(*handle)"
-                } else {
-                    "snapshot_close(*directory)"
-                },
-                "0",
-                242,
-            ),
-        ] {
-            assert!(code.contains(release));
-            fwp::cgen::compile_c(&code.replace(release, replacement), &binary, "-O2").unwrap();
-            let omitted = probe(&binary, &root, gc, "0").output().unwrap();
-            assert_eq!(omitted.status.code(), Some(status), "{omitted:?}");
-        }
+                "snapshot_close(*directory)"
+            },
+            "0",
+            242,
+        ),
+    ] {
+        assert!(code.contains(release));
+        fwp::cgen::compile_c(&code.replace(release, replacement), &binary, "-O2").unwrap();
+        let omitted = probe(&binary, &root).output().unwrap();
+        assert_eq!(omitted.status.code(), Some(status), "{omitted:?}");
     }
 }

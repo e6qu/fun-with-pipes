@@ -44,16 +44,13 @@ static V build_operation(int op) {
     }
 }
 static int build_case(int op, int failure, int callback, int cancel, int *steps) {
-    intptr_t before = fwp_gc.budget_given - fwp_gc.budget;
+    size_t before = fwp_heap.live;
     build_failure = failure; build_step = build_calls = 0;
     build_callback_failure = callback; build_cancel = cancel; build_armed = 1;
     build_saved_task = fwp_cur;
     memset(&build_task, 0, sizeof(build_task));
     if (cancel) {
         build_task.cancelled = 1; fwp_cur = &build_task;
-#ifdef _WIN32
-        build_task.ctx.top = fwp_gc.main_top;
-#endif
     }
     fwp_trap_recover = build_recover; fwp_trap_jb = &build_jump;
     fwp_trap_cleanup = fwp_cleanups;
@@ -85,11 +82,7 @@ static int build_case(int op, int failure, int callback, int cancel, int *steps)
         xs = OBJ(xs)->f[1];
     }
     if (xs) return 219;
-#ifdef FWP_ARC_ONLY
-    if (fwp_gc.budget_given - fwp_gc.budget != before) return 220;
-#else
-    (void)before;
-#endif
+    if (fwp_heap.live != before) return 220;
     return 0;
 }
 /* Size arithmetic must fail before allocating or touching caller storage. */
@@ -117,7 +110,7 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     for (V i = 4; i; i--) build_input = fwp_rc_fresh(fwp_cons(i - 1, build_input));
     int bounds = build_bounds(); if (bounds) return bounds;
     int failures = 0, callbacks = 0;

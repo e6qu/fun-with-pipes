@@ -104,7 +104,7 @@ main = () | loop (read-all () | string.length | eq 0 | choose) | file.read-all |
             let emitted = dir.0.join("scoped.c");
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", "tracing"])
+                    .args(["build"])
                     .arg(&src)
                     .args(["--emit-c", "-o"])
                     .arg(&emitted),
@@ -114,74 +114,54 @@ main = () | loop (read-all () | string.length | eq 0 | choose) | file.read-all |
             assert_ne!(c, omitted);
             let exe = dir.0.join("no-result-owner");
             for opt in ["-O1", "-O2"] {
-                fwp::cgen::compile_c(&omitted, &exe, opt).unwrap();
-                let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+                fwp::cgen::compile_c(
+                    &format!("#define FWP_RESOURCE_NO_FREE 1\n{omitted}"),
+                    &exe,
+                    opt,
+                )
+                .unwrap();
+                let out = Command::new(&exe).output().unwrap();
                 assert_eq!(out.status.code(), Some(101));
                 assert!(String::from_utf8_lossy(&out.stderr).contains("duplicate discarded file"));
             }
         }
 
-        let emitted = dir.0.join(format!("{name}-no-free.c"));
+        let emitted = dir.0.join(format!("{name}.c"));
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args(["--emit-c", "-o"])
-                .arg(&emitted)
-                .env("FWP_FREE", "0"),
+                .arg(&emitted),
         );
         let c = std::fs::read_to_string(emitted).unwrap();
+        let observation = "    /* Ownership observation point: before runtime teardown. */\n";
+        assert_eq!(c.matches(observation).count(), 1);
         let observed = c.replace(
-            "return fwp_exit_code;",
-            "if(fwp_gc.freed != 0.0) return 29; return fwp_exit_code;",
+            observation,
+            &format!("{observation}    if(fwp_heap.live)exit(29);\n"),
         );
-        assert_ne!(c, observed);
-        let exe = dir.0.join(format!("{name}-no-free-accounting"));
+        let release = "    fwp_rc_resource_free_obj(h);";
+        assert_eq!(observed.matches(release).count(), 1);
+        let omitted = observed.replace(release, "    /* omit file header release */");
         for opt in ["-O1", "-O2"] {
-            fwp::cgen::compile_c(&observed, &exe, opt).unwrap();
-            let out = checked(Command::new(&exe).env("FWP_GC", "off"));
-            assert_eq!(out.stdout, reference.stdout);
-            if name == "scoped" {
-                let wrong_free =
-                    observed.replace(" { fwp_rc_drop(v); }", " { fwp_rc_free_obj(v); }");
-                assert_ne!(observed, wrong_free);
-                fwp::cgen::compile_c(&wrong_free, &exe, opt).unwrap();
-                let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+            for (label, code, expected) in [
+                ("reuse", observed.clone(), 0),
+                ("copy", format!("#define FWP_NO_REUSE 1\n{observed}"), 0),
+                ("missing-release", omitted.clone(), 29),
+            ] {
+                let exe = dir.0.join(format!("{name}{opt}-{label}"));
+                fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+                let native = limit_descriptors(&mut Command::new(&exe), 32)
+                    .output()
+                    .unwrap();
                 assert_eq!(
-                    out.status.code(),
-                    Some(29),
-                    "ordinary child storage unexpectedly left unfreed"
+                    native.status.code(),
+                    Some(expected),
+                    "{name}{opt}-{label}: {native:?}"
                 );
-            }
-        }
-        for opt in ["-O1", "-O2"] {
-            for flags in ["0", "1"] {
-                let exe = dir.0.join(format!("{name}-{opt}-{flags}"));
-                checked(
-                    Command::new(fwp)
-                        .args(["build", "--gc", "tracing"])
-                        .arg(&src)
-                        .args([opt, "-o"])
-                        .arg(&exe)
-                        .env("FWP_REUSE", flags)
-                        .env("FWP_FREE", flags),
-                );
-                for gc in ["off", "on"] {
-                    for poison in ["0", "1"] {
-                        let native = checked(limit_descriptors(
-                            Command::new(&exe)
-                                .env("FWP_GC", gc)
-                                .env("FWP_GC_STRESS", "1")
-                                .env("FWP_GC_VERIFY", "1")
-                                .env("FWP_REUSE_VERIFY", poison),
-                            32,
-                        ));
-                        assert_eq!(
-                            native.stdout, reference.stdout,
-                            "{name}, {opt}, flags {flags}, GC {gc}, poison {poison}"
-                        );
-                    }
-                }
+                assert_eq!(native.stdout, reference.stdout, "{name}{opt}-{label}");
+                assert!(native.stderr.is_empty(), "{name}{opt}-{label}: {native:?}");
             }
         }
     }

@@ -30,12 +30,12 @@ static int invalid_push(V a, V b) {
     return 0;
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     /* Static storage keeps the changing scope head defined after longjmp. */
     static fwp_tape_scope scope={-1};static fwp_cleanup scope_owner;
     fwp_cleanup_push(&scope_owner,fwp_tape_scope_release,&scope);
     fwp_trap_recover=recover_probe;fwp_trap_jb=&recovered;fwp_trap_cleanup=&scope_owner;
-    intptr_t baseline=fwp_gc.budget;
+    size_t baseline=fwp_heap.live;
     for (unsigned round=0;round<32;round++) {
     for (probe_mode=0;probe_mode<5;probe_mode++) {
         selected_base=fwp_p_ad_tape(2);
@@ -54,12 +54,6 @@ int main(void) {
         outputs=fwp_rc_fresh(fwp_arr_new(2));seeds=fwp_rc_fresh(fwp_arr_new(2));
         ARR(outputs)->d[0]=selected_base;ARR(outputs)->d[1]=selected_base+1;
         ARR(seeds)->d[0]=fwp_from_f64(2);ARR(seeds)->d[1]=fwp_from_f64(3);
-#ifdef FWP_ARC_ONLY
-        if (fwp_gc.armed || fwp_gc.ncollect) return 52;
-#else
-        fwp_gc_collect();
-        if (!fwp_gc.armed || !fwp_gc.ncollect) return 52;
-#endif
         if (probe_mode==1) ARR(outputs)->d[0]=other_base;
         if (probe_mode==2) ARR(outputs)->d[0]=selected_base+3;
         tracked[0]=t->pa;tracked[1]=t->pb;tracked[2]=t->da;tracked[3]=t->db;tracked[4]=0;
@@ -71,10 +65,6 @@ int main(void) {
             /* The injected task has its own cleanup chain. The caller keeps
              * the scope containing the independent other computation. */
             fwp_cleanups=NULL;
-#ifdef _WIN32
-            /* This synthetic task executes on the main thread stack. */
-            cancelled_task.ctx.top=fwp_gc.main_top;
-#endif
             jmp_buf cancelled_task_base; cancelled_task.base = &cancelled_task_base;
             if (!setjmp(cancelled_task_base)) { fwp_p_ad_backward(selected_base,outputs,seeds);return 34; }
             cancelled_task.base=NULL;fwp_cur=saved_current;fwp_cleanups=&scope_owner;
@@ -111,9 +101,7 @@ int main(void) {
         if (ARR(result)->len!=1 || fwp_f64(ARR(result)->d[0])!=2) return 44;
         fwp_rc_free_arr(result);fwp_rc_free_arr(outputs);fwp_rc_free_arr(seeds);
         outputs=seeds=0;
-#ifdef FWP_ARC_ONLY
-        if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
-#endif
+        if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
     }
     }
     outputs=fwp_rc_fresh(fwp_arr_new(0));seeds=fwp_rc_fresh(fwp_arr_new(0));
@@ -137,9 +125,7 @@ int main(void) {
     fwp_cleanup_pop(&scope_owner);fwp_tape_scope_release(&scope);
     fwp_trap_cleanup=NULL;fwp_tape_finish();
     if(fwp_tapes||fwp_ntapes||fwp_tapes_cap||fwp_tape_cached_bytes)return 53;
-#ifdef FWP_ARC_ONLY
-    if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
-#endif
+    if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
     if (fwp_cleanups) return 51;
     fwp_trap_recover=0;fwp_trap_jb=0;
     puts("autodiff releases allocated detached buffers on return, trap and task cancellation");

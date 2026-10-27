@@ -53,12 +53,12 @@ for label in sorted(expected):
         machine = struct.unpack_from('<H', raw, offset + 4)[0]
         assert machine == {'ARM64': 0xaa64, 'X64': 0x8664}[args.arch]
     code = files['c'].decode()
-    assert '#define FWP_ARC_ONLY 1' in code
+    assert 'FWP_ARC_ONLY' not in code
     assert ('#define HTTP_APP_OMIT_FREE 1' in code) == ('missing-free' in label)
     assert ('#define HTTP_APP_OMIT_CLOSE 1' in code) == ('missing-close' in label)
     symbols = subprocess.check_output([str(args.objdump), '--section-headers', '--syms', str(binary)])
     assembly = subprocess.check_output([str(args.objdump), '-d', str(binary)])
-    assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_gc_(?:scan|mark_all|sweep)\b', symbols)
+    assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_heap_(?:scan|mark_all|sweep)\b', symbols)
     sizes = re.findall(rb'^\s*\d+\s+(?:\.text|__text)\s+([0-9a-fA-F]+)\s', symbols, re.M)
     assert sizes and len(assembly) > 1000
     report['binaries'][label] = dict(machine=machine, fileBytes=len(raw),
@@ -71,11 +71,11 @@ for label in sorted(expected):
     observations = [line.split('\t') for line in lines if line.startswith('http-memory\t')]
     assert len(observations) == (8 if healthy else 2), (label, lines)
     baseline = observations[0]
-    assert len(baseline) == 7 and baseline[1:3] == ['8', '8']
-    assert baseline[4] == '1' and baseline[6] == '0'
+    assert len(baseline) == 6 and baseline[1:3] == ['8', '8']
+    assert baseline[4] == '1'
     for index, row in enumerate(observations):
-        assert len(row) == 7 and int(row[1]) == 8 * (index + 1)
-        assert row[4] == '1' and row[6] == '0'
+        assert len(row) == 6 and int(row[1]) == 8 * (index + 1)
+        assert row[4] == '1'
         if healthy:
             assert row[1] == row[2] and row[3] == baseline[3] and row[5] == baseline[5]
     if healthy:

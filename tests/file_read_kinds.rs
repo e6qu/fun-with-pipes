@@ -50,23 +50,14 @@ main = [
         let exe = dir.join("probe");
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
         );
-        for gc in ["on", "off"] {
-            for poison in ["0", "1"] {
-                let out = checked(
-                    Command::new(&exe)
-                        .env("FWP_GC", gc)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison),
-                );
-                assert_eq!(out.stdout, reference.stdout);
-                assert_eq!(out.stderr, reference.stderr);
-            }
-        }
+
+        let out = checked(&mut Command::new(&exe));
+        assert_eq!(out.stdout, reference.stdout);
+        assert_eq!(out.stderr, reference.stderr);
     }
 }

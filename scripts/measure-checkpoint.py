@@ -69,8 +69,7 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     compiler = ROOT / 'target/release/fwp'
     cc = os.environ.get('CC', 'cc')
-    environment = dict(os.environ, FWP_AD_WORKSPACE='0', FWP_GC_STRESS='0',
-                       FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+    environment = dict(os.environ, FWP_AD_WORKSPACE='0')
     environment.pop('FWP_NO_OPT', None)
     results = {}
     reference = None
@@ -86,7 +85,7 @@ def main():
             reference = raw
         assert raw == reference
         cfile = out / (label + '.c')
-        run([compiler, 'build', '--gc', 'arc', '--emit-c', '-o', cfile, source], environment)
+        run([compiler, 'build', '--emit-c', '-o', cfile, source], environment)
         profile = out / (label + '-profile.c')
         profile.write_text(instrument(cfile.read_text()))
         commands = []
@@ -106,7 +105,8 @@ def main():
         measured = run([measured_binary], environment)
         assert measured.stdout == reference
         tape, managed = map(json.loads, measured.stderr.splitlines())
-        assert tape['finalTapeBytes'] == 0 and managed['collections'] == 0
+        assert tape['finalTapeBytes'] == 0
+        assert set(managed) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
         assert managed['finalChargedBytes'] == 0, managed
         asm = ['otool', '-tvV', binary] if platform.system() == 'Darwin' else ['objdump', '-d', binary]
         (out / (label + '.asm')).write_text(run(asm).stdout)

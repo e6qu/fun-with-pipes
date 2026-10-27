@@ -2,6 +2,9 @@
 //! Linux-only guards in the older allocation and process-memory tests.
 #![cfg(target_os = "macos")]
 
+#[path = "support/allocation_report.rs"]
+mod allocation_report;
+
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
@@ -41,14 +44,14 @@ impl Drop for Scratch {
 }
 
 #[test]
-fn native_tasks_and_autodiff_under_collection() {
+fn native_tasks_and_autodiff_release_allocations() {
     let scratch = Scratch::new("runtime");
     for name in ["tasks", "autodiff_reverse", "wide_records"] {
         let src = root().join(format!("tests/run/{name}.fwp"));
         let exe = scratch.0.join(name);
         checked(
             Command::new(fwp())
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args(["-O1", "-o"])
                 .arg(&exe),
@@ -62,25 +65,26 @@ fn native_tasks_and_autodiff_under_collection() {
         let native = checked(
             Command::new(&exe)
                 .env("FWP_SEED", "42")
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_GC_STATS", "1"),
+                .env("FWP_ALLOC_STATS", "1"),
         );
         assert_eq!(native.stdout, interpreted.stdout, "{name}");
         let stderr = String::from_utf8_lossy(&native.stderr);
-        let stats = stderr.lines().find(|l| l.starts_with("fwp gc: ")).unwrap();
-        assert!(!stats.contains("collection off"), "{stats}");
-        let collections: usize = stats.split_whitespace().nth(2).unwrap().parse().unwrap();
-        assert!(collections > 0, "{name}: {stats}");
+        let stats = allocation_report::parse(&stderr).unwrap();
+        assert!(
+            stats.allocated > 0 && stats.peak_live > 0,
+            "{name}: {stats:?}"
+        );
+        assert_eq!(stats.live, 0, "{name}: {stats:?}");
+        assert_eq!(stats.released, stats.allocated, "{name}: {stats:?}");
     }
 }
 
 #[test]
-fn optimized_lists_under_collection() {
+fn optimized_lists_match_interpreter() {
     let scratch = Scratch::new("optimized-lists");
     // These failed in the full Darwin sweep: flat-map, a right-fold
     // callback and filesystem lists. Keep this local reproducer short;
-    // the golden GC suite still executes the original long iterator.
+    // the full native corpus still executes the original long iterator.
     for name in ["traits", "stdlib_fixes", "cli_fs"] {
         let fixture = root().join(format!("tests/run/{name}.fwp"));
         let source = std::fs::read_to_string(&fixture).unwrap();
@@ -107,26 +111,18 @@ fn optimized_lists_under_collection() {
             let exe = scratch.0.join(format!("{name}{opt}"));
             checked(
                 Command::new(fwp())
-                    .args(["build", "--gc", "tracing"])
+                    .args(["build"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe),
             );
-            for poison in ["0", "1"] {
-                let output = checked(
-                    Command::new(&exe)
-                        .current_dir(&scratch.0)
-                        .env("FWP_SEED", "42")
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison),
-                );
-                assert_eq!(
-                    output.stdout,
-                    expected.as_bytes(),
-                    "{name}, {opt}, poison={poison}"
-                );
-            }
+
+            let output = checked(
+                Command::new(&exe)
+                    .current_dir(&scratch.0)
+                    .env("FWP_SEED", "42"),
+            );
+            assert_eq!(output.stdout, expected.as_bytes(), "{name}, {opt}");
         }
     }
 }
@@ -146,7 +142,7 @@ fn openssl_prefix_is_usable_in_both_backends() {
     let exe = scratch.0.join("available");
     checked(
         Command::new(fwp())
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .arg("-o")
             .arg(&exe),
@@ -155,49 +151,60 @@ fn openssl_prefix_is_usable_in_both_backends() {
 }
 
 #[test]
-fn writable_global_roots_survive_collection() {
-    let scratch = Scratch::new("roots");
-    let generated = scratch.0.join("roots.c");
+fn global_owner_survives_allocations_and_releases_storage() {
+    let scratch = Scratch::new("global-owner");
+    let generated = scratch.0.join("global.c");
     checked(
         Command::new(fwp())
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(root().join("examples/hello.fwp"))
             .args(["--emit-c", "-o"])
             .arg(&generated),
     );
-    let source = std::fs::read_to_string(generated).unwrap();
-    // Use the production runtime and a deliberately isolated C helper:
-    // no copy of the pointer may remain in a caller's stack or registers.
-    let source = source.replace(
+    let source = std::fs::read_to_string(generated).unwrap().replace(
         "int main(int argc, char **argv)",
         "int original_main(int argc, char **argv)",
     );
     let source = format!(
         "{source}\n{}",
         r#"
-static volatile V root_value;
-static __attribute__((noinline)) void make_root(void) {
-    root_value = fwp_cstr("a global root survives collection");
+static V global_value;
+static __attribute__((noinline)) void make_owner(void) {
+    global_value = fwp_rc_fresh(fwp_cstr("global owner"));
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));
-    if (!fwp_gc.armed) return 1;
-    make_root();
+    fwp_heap_start();
+    size_t baseline = fwp_heap.live;
+    make_owner();
+    size_t owned_bytes = fwp_heap.live;
     for (int i = 0; i < 100; i++) {
-        fwp_gc_collect();
-        if (strcmp(STR(root_value)->d, "a global root survives collection")) return 2;
+        V scratch = fwp_rc_fresh(fwp_cstr("temporary"));
+        if (strcmp(STR(global_value)->d, "global owner") || !fwp_rc_last(global_value)) return 2;
+        fwp_rc_free_obj(scratch);
+        if (fwp_heap.live != owned_bytes) return 3;
     }
-    puts("global root kept");
+    fwp_rc_free_obj(global_value);global_value = 0;
+    if (fwp_heap.live != baseline) return 3;
+    puts("global owner released");
     return 0;
 }
 "#
     );
-    let exe = scratch.0.join("roots");
-    fwp::cgen::compile_c(&source, &exe, "-O2").unwrap();
-    assert_eq!(
-        checked(Command::new(&exe).env("FWP_GC_VERIFY", "1")).stdout,
-        b"global root kept\n"
+    let omitted = source.replace(
+        "fwp_rc_free_obj(global_value);",
+        "/* omit global owner release */",
     );
+    assert_ne!(omitted, source);
+    for opt in ["-O1", "-O2"] {
+        let exe = scratch.0.join(format!("global{opt}"));
+        fwp::cgen::compile_c(&source, &exe, opt).unwrap();
+        assert_eq!(
+            checked(&mut Command::new(&exe)).stdout,
+            b"global owner released\n"
+        );
+        fwp::cgen::compile_c(&omitted, &exe, opt).unwrap();
+        assert_eq!(Command::new(&exe).output().unwrap().status.code(), Some(3));
+    }
 }
 
 #[test]
@@ -205,7 +212,7 @@ fn darwin_library_names_and_unsupported_static_linking() {
     let scratch = Scratch::new("libraries");
     checked(
         Command::new(fwp())
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(root().join("tests/c-interop/geom.fwp"))
             .arg("--cdylib")
             .arg("-o")
@@ -215,7 +222,7 @@ fn darwin_library_names_and_unsupported_static_linking() {
     assert!(scratch.0.join("libgeom.dylib").is_file());
     assert!(scratch.0.join("libgeom.h").is_file());
     let output = Command::new(fwp())
-        .args(["build", "--gc", "tracing"])
+        .args(["build"])
         .arg(root().join("examples/hello.fwp"))
         .arg("--static")
         .arg("-o")

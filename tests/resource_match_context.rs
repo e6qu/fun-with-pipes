@@ -81,35 +81,29 @@ main = (64, "{}") | loop step | const "discarded" | echo
     let exe = dir.join("probe");
     for unoptimized in [false, true] {
         for opt in ["-O1", "-O2"] {
-            for flags in ["0", "1"] {
+            for copy in [false, true] {
+                let cfile = exe.with_extension("c");
                 let mut build = Command::new(fwp);
                 build
-                    .args(["build", "--gc", "tracing"])
+                    .args(["build", "--emit-c"])
                     .arg(&source)
                     .args([opt, "-o"])
-                    .arg(&exe)
-                    .env("FWP_REUSE", flags)
-                    .env("FWP_FREE", flags);
+                    .arg(&cfile);
                 if unoptimized {
                     build.env("FWP_NO_OPT", "1");
                 } else {
                     build.env_remove("FWP_NO_OPT");
                 }
                 checked(&mut build);
-                for gc in ["off", "on"] {
-                    for poison in ["0", "1"] {
-                        let got = checked(limit_descriptors(
-                            Command::new(&exe)
-                                .env("FWP_GC", gc)
-                                .env("FWP_GC_STRESS", "1")
-                                .env("FWP_GC_VERIFY", "1")
-                                .env("FWP_REUSE_VERIFY", poison),
-                            32,
-                        ));
-                        assert_eq!(got.stdout, reference.stdout);
-                        assert_eq!(got.stderr, reference.stderr);
-                    }
+                let mut code = std::fs::read_to_string(cfile).unwrap();
+                if copy {
+                    code.insert_str(0, "#define FWP_NO_REUSE 1\n");
                 }
+                fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+
+                let got = checked(limit_descriptors(&mut Command::new(&exe), 32));
+                assert_eq!(got.stdout, reference.stdout);
+                assert_eq!(got.stderr, reference.stderr);
             }
         }
     }

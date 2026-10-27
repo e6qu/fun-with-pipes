@@ -158,8 +158,8 @@ when calling a specialized borrowing worker.
 
 Channel borrowing preserves hidden native contexts as well as payload storage.
 It does not prove the queued graph acyclic: capture/cycle checks remain separate.
-The caller is responsible for its failure cleanup and, in explicit tracing mode,
-keeping borrowed storage visible to tracing. See [the ownership contracts](ownership.md#ownership-boundaries)
+The caller keeps the borrowed owner alive and releases it on failure.
+See [the ownership contracts](ownership.md#ownership-boundaries)
 for examples, restrictions and tests.
 
 ## Numerical specialization
@@ -380,7 +380,8 @@ stream cannot keep reading across cells; completed ordinary values remain usable
 `run`, `exec`, `test`, `serve` and `pipe` compile/cache native code unless
 `--interp` is explicit. A missing C compiler is an error, not an implicit switch
 to interpretation. The front end still produces current diagnostics on cache hits.
-Native ARC/tracing settings are rejected by interpreted commands.
+Native-only build settings are rejected by interpreted commands. Memory ownership
+is part of the language contract, not a selectable execution mode.
 
 The executable cache fingerprints source, target, C compiler version and header
 search environment. Linked C/preprocessed assembly contributes expanded source,
@@ -397,8 +398,10 @@ explicitly as described in [Contributing](../CONTRIBUTING.md#setting-up).
 
 ## Not implemented
 
-Complete tracing removal, explicit weak handles, count-free unique heap storage
-and the scoped-workspace target are unfinished [plan tasks](../PLAN.md).
+Verified tracing removal, count-free unique heap storage and the scoped-workspace
+target are unfinished [plan tasks](../PLAN.md). Explicit weak channels and retained
+C callbacks are implemented; see [weak channels](weak-channels.md) and
+[retained callbacks](retained-callbacks.md) for their lifetime rules.
 General strong-cycle reclamation by ordinary ARC is not a goal. The selected
 model rejects unproved owning cycles and preserves escaping functions.
 JIT compilation is excluded, not deferred. The interpreter prepares foreign-call

@@ -194,7 +194,7 @@ fn ignored_caf_arguments_still_trap_in_evaluation_order() {
     std::fs::create_dir_all(&dir).unwrap();
     let fwp = env!("CARGO_BIN_EXE_fwp");
     let src = dir.join("probe.fwp");
-    let exe = dir.join("probe");
+    let exe = dir.join("probe.exe");
     let cases=[
         "bad : I64\nbad = 1 | div 0\ndiscard : I64 -> I64\ndiscard = const 17\nmain = bad | discard | echo\n",
         "bad : I64\nbad = 1 | div 0\nlater : I64\nlater = 9223372036854775807 | add 1\ndiscard : I64 -> I64\ndiscard = const later\nmain = bad | discard | echo\n",
@@ -230,7 +230,7 @@ fn ignored_caf_arguments_still_trap_in_evaluation_order() {
         assert_eq!(optimized.stderr, reference.stderr);
         for opt in ["-O1", "-O2"] {
             let build = Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe)
@@ -241,22 +241,16 @@ fn ignored_caf_arguments_still_trap_in_evaluation_order() {
                 "{}",
                 String::from_utf8_lossy(&build.stderr)
             );
-            for poison in ["0", "1"] {
-                let native = Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert_eq!(
-                    native.status.code(),
-                    reference.status.code(),
-                    "case {case}, {opt}, poison {poison}: {}",
-                    String::from_utf8_lossy(&native.stdout)
-                );
-                assert_eq!(native.stdout, reference.stdout, "case {case}");
-                assert_eq!(native.stderr, reference.stderr, "case {case}");
-            }
+
+            let native = Command::new(&exe).output().unwrap();
+            assert_eq!(
+                native.status.code(),
+                reference.status.code(),
+                "case {case}, {opt}: {}",
+                String::from_utf8_lossy(&native.stdout)
+            );
+            assert_eq!(native.stdout, reference.stdout, "case {case}");
+            assert_eq!(native.stderr, reference.stderr, "case {case}");
         }
     }
     std::fs::remove_dir_all(dir).unwrap();
@@ -269,7 +263,7 @@ fn unused_counted_caf_argument_evaluates_and_releases_its_temporary() {
     let fwp = env!("CARGO_BIN_EXE_fwp");
     let src = dir.join("probe.fwp");
     let cfile = dir.join("probe.c");
-    let exe = dir.join("probe");
+    let exe = dir.join("probe.exe");
     std::fs::write(&src,"cached = \"input\" | string.repeat 2\ndiscard : String -> I64\ndiscard = const 17\nmain = cached | discard | echo\n").unwrap();
     let reference = Command::new(fwp)
         .args(["run", "--interp"])
@@ -280,7 +274,7 @@ fn unused_counted_caf_argument_evaluates_and_releases_its_temporary() {
     assert!(reference.status.success());
     assert_eq!(reference.stdout, b"17\n");
     let build = Command::new(fwp)
-        .args(["build", "--gc", "tracing"])
+        .args(["build"])
         .arg(&src)
         .args(["--emit-c", "-o"])
         .arg(&cfile)
@@ -303,7 +297,7 @@ fn unused_counted_caf_argument_evaluates_and_releases_its_temporary() {
     let probe = r#"
 int main(int argc,char **argv){int result=original_main(argc,argv);if(result)return result;
  if(calls!=1)return 2;if(before_count!=1)return 4;
- if(!observed||!(fwp_reuse_verify?STR(observed)->len==0:*fwp_rc_slot(observed)==0))return 3;
+ if(!observed||*fwp_rc_slot(observed)!=0)return 3;
  return 0;}
 "#;
     let start = runtime.find("/* main :").unwrap();
@@ -317,32 +311,23 @@ int main(int argc,char **argv){int result=original_main(argc,argv);if(result)ret
     let control = runtime.replacen(body, &control_body, 1);
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{control}\n{probe}"), &exe, opt).unwrap();
-        let old = Command::new(&exe)
-            .env("FWP_REUSE_VERIFY", "1")
-            .output()
-            .unwrap();
+        let old = Command::new(&exe).output().unwrap();
         assert_eq!(
             old.status.code(),
             Some(4),
             "missing argument release must leave an extra owner"
         );
         fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let o = Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", poison)
-                .output()
-                .unwrap();
-            assert!(
-                o.status.success(),
-                "code {:?}: {}\n{body}",
-                o.status.code(),
-                String::from_utf8_lossy(&o.stderr)
-            );
-            assert_eq!(o.stdout, reference.stdout);
-            assert_eq!(o.stderr, reference.stderr);
-        }
+
+        let o = Command::new(&exe).output().unwrap();
+        assert!(
+            o.status.success(),
+            "code {:?}: {}\n{body}",
+            o.status.code(),
+            String::from_utf8_lossy(&o.stderr)
+        );
+        assert_eq!(o.stdout, reference.stdout);
+        assert_eq!(o.stderr, reference.stderr);
     }
     std::fs::remove_dir_all(dir).unwrap();
 }
@@ -395,36 +380,30 @@ main = [
     assert_eq!(optimized.stdout, reference.stdout);
     assert_eq!(optimized.stderr, reference.stderr);
     let mut failures = Vec::new();
-    for memory in ["arc", "tracing"] {
-        for optimization in ["-O0", "-O2"] {
-            let exe = dir.join(format!("probe-{memory}{optimization}.exe"));
-            let build = Command::new(fwp)
-                .arg("build")
-                .arg(&src)
-                .args(["--gc", memory, optimization, "-o"])
-                .arg(&exe)
-                .output()
-                .unwrap();
-            if !build.status.success() {
-                failures.push(format!("build {memory}, {optimization}: {build:?}"));
-                continue;
-            }
-            let stress = if memory == "tracing" { "1" } else { "0" };
-            let native = Command::new(&exe)
-                .env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", stress)
-                .env("FWP_GC_VERIFY", stress)
-                .env("FWP_REUSE_VERIFY", stress)
-                .output()
-                .unwrap();
-            if !native.status.success()
-                || native.stdout != reference.stdout
-                || native.stderr != reference.stderr
-            {
-                failures.push(format!("run {memory}, {optimization}: {native:?}"));
-            }
+
+    for optimization in ["-O0", "-O2"] {
+        let exe = dir.join(format!("probe-counted{optimization}.exe"));
+        let build = Command::new(fwp)
+            .arg("build")
+            .arg(&src)
+            .args([optimization, "-o"])
+            .arg(&exe)
+            .output()
+            .unwrap();
+        if !build.status.success() {
+            failures.push(format!("build counted, {optimization}: {build:?}"));
+            continue;
+        }
+
+        let native = Command::new(&exe).output().unwrap();
+        if !native.status.success()
+            || native.stdout != reference.stdout
+            || native.stderr != reference.stderr
+        {
+            failures.push(format!("run counted, {optimization}: {native:?}"));
         }
     }
+
     assert!(failures.is_empty(), "{}", failures.join("\n"));
     std::fs::remove_dir_all(dir).unwrap();
 }

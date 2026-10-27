@@ -49,9 +49,9 @@ static V map_step(V *args) {
     return result;
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_fns = fwp_fn_table; fwp_init_consts(); fwp_tasks_init();
-    intptr_t initial = fwp_gc.budget;
+    size_t initial = fwp_heap.live;
     for (int repeat = 0; repeat < 64; repeat++) for (int alias_kind = 0; alias_kind < 4; alias_kind++) {
         V source = map_source(), alias = 0;
         if (alias_kind == 1) alias = source;
@@ -77,7 +77,7 @@ int main(void) {
             map_leaf_drop(alias);
         }
         map_list_drop(result);
-        if (fwp_cleanups || fwp_gc.budget != initial) return 245;
+        if (fwp_cleanups || fwp_heap.live != initial) return 245;
     }
     if (fwp_k_map_strings_owned(map_step, 0, map_leaf_drop, map_list_drop)) return 241;
     for (int kind = 1; kind <= 5; kind++) for (int position = 1; position <= 3; position++) for (int alias_kind = 0; alias_kind < 4; alias_kind++) {
@@ -93,9 +93,6 @@ int main(void) {
         memset(&map_cancelled, 0, sizeof map_cancelled);
         if (kind == 2) {
             map_cancelled.identity = UINT64_MAX; map_cancelled.cancelled = 1;
-#ifdef _WIN32
-            map_cancelled.ctx.top = previous->ctx.top;
-#endif
             map_cancelled.base = &map_jump; fwp_cur = &map_cancelled;
         }
         if (!setjmp(map_jump)) {
@@ -115,10 +112,10 @@ int main(void) {
             if (STR(alias)->len != 3 || memcmp(STR(alias)->d, "AbC", 3)) return 243;
             map_leaf_drop(alias);
         }
-        if (fwp_cleanups || fwp_gc.budget != initial) return 245;
+        if (fwp_cleanups || fwp_heap.live != initial) return 245;
     }
     fwp_tasks_finish();
-    if (fwp_gc.budget != initial) return 245;
+    if (fwp_heap.live != initial) return 245;
     puts("string maps preserve aliases and release source, results and scratch");
     return 0;
 }

@@ -39,24 +39,20 @@ report = dict(source=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=
                   runtime_libraries=['-lm', '-lws2_32', '-lshell32'] if system == 'Windows'
                                     else ['-lm', '-lpthread']), binaries={})
 expected = {
-    f'{memory}-{layout}{opt}'
-    for memory in ['arc', 'tracing']
+    f'counted-{layout}{opt}'
     for layout in ['heap', 'stack']
     for opt in ['-O0', '-O2']
 } | {
-    f'{memory}-{control}-O2'
-    for memory in ['arc', 'tracing']
+    f'counted-{control}-O2'
     for control in ['verified', 'missing-clear', 'missing-entry']
 }
-expected |= {f'records/{memory}-{layout}-O{opt}'
-             for memory in ['arc', 'tracing']
-             for layout in ['preceding', 'compact'] for opt in [0, 2]}
-expected |= {f'records/{memory}-verified-O2' for memory in ['arc', 'tracing']}
+expected |= {f'records/counted-{layout}-O{opt}'
+                      for layout in ['wide-flags', 'compact'] for opt in [0, 2]}
+expected.add('records/counted-verified-O2')
 if system == 'Windows':
     expected |= {f'windows-context/abi-{variant}-O{opt}'
-                 for variant in ['arc', 'restored-snapshot'] for opt in range(3)}
-    expected |= {f'windows-context/cost-{variant}-O{opt}'
-                 for variant in ['snapshot', 'arc'] for opt in [0, 2]}
+                 for variant in ['counted', 'injected-snapshot'] for opt in range(3)}
+    expected |= {f'windows-context/cost-counted-O{opt}' for opt in [0, 2]}
     report['compilation']['windows_abi_native_optimizations'] = ['-O0', '-O1', '-O2']
 for binary in sorted(root.rglob('*.exe')):
     label = binary.relative_to(root).with_suffix('').as_posix()
@@ -82,7 +78,7 @@ for binary in sorted(root.rglob('*.exe')):
         root.joinpath(f'{label}.{kind}').write_bytes(output)
         outputs[kind] = dict(command=command, sha256=hashlib.sha256(output).hexdigest())
     status = root.joinpath(f'{label}.status').read_text().strip()
-    desired = (211 if 'restored-snapshot' in label else
+    desired = (211 if 'injected-snapshot' in label else
                195 if 'missing-clear' in label else 194 if 'missing-entry' in label else 0)
     assert status == f'Some({desired})', (label, status)
     stderr = root.joinpath(f'{label}.stderr').read_text()

@@ -60,8 +60,7 @@ def main():
     out.mkdir(parents=True, exist_ok=False)
     environment = {k: v for k, v in os.environ.items() if not k.startswith('FWP_') and k not in {'GH_TOKEN', 'GITHUB_TOKEN'}}
     environment.update(CC=args.cc, FWP_LTO='0', FWP_AD_WORKSPACE='1', FWP_PACKED_ARRAYS='1',
-                       FWP_STACK='1', FWP_FREE='1', FWP_REUSE='1', FWP_ARRAY_FUSION='1',
-                       FWP_GC='off', FWP_GC_STATS='0', FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+                       FWP_STACK='1', FWP_ARRAY_FUSION='1')
     flags = ['-O2', '-std=gnu11', '-ffp-contract=off', '-fno-fast-math', '-fno-lto', '-fstack-usage', '-march=' + args.c_arch]
     labels = ['fwp-current', 'fwp-original', 'fwp-current-identical', 'fwp-original-identical', 'c', 'rust']
     commands, results = [], {}
@@ -87,7 +86,7 @@ def main():
         OUTPUT.COORDINATE.check_vectors(reference.stdout, expected, 1)
         (directory / 'interpreter.stdout').write_bytes(reference.stdout)
         generated = directory / 'input.c'
-        build([args.compiler.resolve(), 'build', '--gc', 'arc', '--memory', 'dynamic', '--emit-c', '-O2', source, '-o', generated])
+        build([args.compiler.resolve(), 'build', '--memory', 'dynamic', '--emit-c', '-O2', source, '-o', generated])
         originals = {'fwp-current': generated.read_text()}
         originals['fwp-original'] = original_formatter(originals['fwp-current'])
         originals['c'] = f'#define DIMENSIONS {points}\n#define UPDATES {updates}\n' + (ROOT / 'tests/fixtures/descent_coordinate.c').read_text()
@@ -131,7 +130,8 @@ def main():
                 checkpoints = [row for row in rows if 'solve' in row]
                 assert checkpoints == [dict(solve=i+1, managedLiveBytes=0, rawLiveBytes=0) for i in range(repetitions)]
                 managed, raw = [row for row in rows if 'solve' not in row]
-                assert managed['retains'] == managed['finalChargedBytes'] == managed['collections'] == 0
+                assert managed['retains'] == managed['finalChargedBytes'] == 0
+                assert set(managed) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
                 BATCHES.PEERS.AD.RAW.check_profile(raw['rawDerivativeStorage'], 0, True)
                 profiles[label] = dict(managed=managed, raw=raw, completedSolves=len(checkpoints), observationsSha256=digest(observed.stderr))
             else:

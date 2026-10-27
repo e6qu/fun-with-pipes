@@ -242,7 +242,7 @@ fn native_server() {
     let directory = fwp::cgen::TempDir::new("example-api").unwrap();
     let exe = directory.join("api.exe");
     let st = Command::new(fwp())
-        .args(["build", "--gc", "arc", "-O2"])
+        .args(["build", "-O2"])
         .arg(example())
         .arg("-o")
         .arg(&exe)

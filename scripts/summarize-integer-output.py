@@ -46,38 +46,28 @@ def main():
         binaries = []
         for case in ['widths', 'shared', 'trap']:
             for direct in ['0', '1']:
-                for mode in ['arc', 'tracing']:
-                    for optimization in ['-O0', '-O2']:
-                        name = f'{case}-{mode}-{direct}{optimization}'
-                        source = directory / f'{name}.c'
-                        code = source.read_text()
-                        assert (code.count('fwp_print_integer(') > 1) == (direct == '1'), name
-                        # This immediate print then trap has no remaining owner;
-                        # O2 can remove the unused collector along with show.
-                        require_tracing = (mode == 'tracing' and
-                            not (case == 'trap' and direct == '1' and optimization == '-O2'))
-                        binaries.append(dict(case=case, direct=direct, mode=mode,
-                            optimization=optimization, generatedSha256=HASH.digest(source),
-                            tracingRequired=require_tracing,
-                            inspection=HASH.COLLECTIONS.inspect(source.with_suffix('.exe'), host, mode, args.llvm_bin,
-                                                               require_tracing=require_tracing)))
+                for optimization in ['-O0', '-O2']:
+                    name = f'{case}-counted-{direct}{optimization}'
+                    source = directory / f'{name}.c'
+                    code = source.read_text()
+                    assert (code.count('fwp_print_integer(') > 1) == (direct == '1'), name
+                    binaries.append(dict(case=case, direct=direct,
+                        optimization=optimization, generatedSha256=HASH.digest(source),
+                        inspection=HASH.COLLECTIONS.inspect(source.with_suffix('.exe'), host,
+                            args.llvm_bin)))
         hosts.append(dict(host=host, job=job['databaseId'], passedTests=passed, binaries=binaries))
         print(host, passed, 'tests and', len(binaries), 'binaries inspected', flush=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(dict(source=args.head, testsRun=args.run,
-        collectorSource=HASH.command('git', 'rev-parse', 'HEAD').strip(),
-        scope='Six native hosts compare raw interpretation with direct/ordinary integer output, '
-              'ARC/stressed tracing and O0/O2. Tests cover integer widths, shared strings, '
-              'trap order and binary-output routing. A separate test requires zero output '
-              'String allocations versus one in the ordinary control and must reject an '
-              'inserted allocation at both optimization levels and memory modes. Those '
-              'counts are test assertions, not whole-process allocation or timing data. '
-              'The 144 saved semantic-test binaries are inspected as data, never executed '
-              'by this collector. ARC binaries must exclude tracing symbols. Tracing controls '
-              'must contain them, except the direct O2 print-then-trap case, whose unused '
-              'collector can be eliminated. Observed symbols are recorded in every case. Assembly needs '
-              'human review for stack/register claims. WASI and full production acceptance '
-              'are separate gates.', hosts=hosts), indent=2) + '\n')
+        auditSource=HASH.command('git', 'rev-parse', 'HEAD').strip(),
+        scope='Six native hosts compare raw interpretation with direct and ordinary integer '
+              'output at O0/O2. Tests cover integer widths, shared strings, trap order and '
+              'binary-output routing. A separate test requires zero output String '
+              'allocations versus one in the ordinary control and rejects an inserted '
+              'allocation. These counts do not measure whole-process allocation or time. '
+              'The 72 saved semantic-test binaries are inspected without execution and '
+              'must exclude tracing symbols. Assembly needs human review for stack/register '
+              'claims. WASI and full production acceptance are separate gates.', hosts=hosts), indent=2) + '\n')
 
 
 if __name__ == '__main__':

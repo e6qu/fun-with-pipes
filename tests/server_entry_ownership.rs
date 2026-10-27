@@ -24,18 +24,17 @@ fn checked(command: &mut Command) -> Output {
     output
 }
 
-fn generated(dir: &Path, interface: &str, mode: &str, free: bool) -> String {
+fn generated(dir: &Path, interface: &str) -> String {
     let name = interface.trim_start_matches("--");
-    let path = dir.join(format!("{name}-{mode}-{free}.c"));
+    let path = dir.join(format!("{name}.c"));
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", interface, "--gc", mode, "--emit-c", "-o"])
+            .args(["build", interface, "--emit-c", "-o"])
             .arg(&path)
-            .arg(fixture())
-            .env("FWP_FREE", if free { "1" } else { "0" }),
+            .arg(fixture()),
     );
     let source = std::fs::read_to_string(path).unwrap();
-    assert_eq!(source.contains("#define FWP_ARC_ONLY 1"), mode == "arc");
+    assert!(!source.contains("FWP_ARC_ONLY"));
     source
 }
 
@@ -181,7 +180,7 @@ fn assert_precision_replies(output: &Output) {
 }
 
 #[test]
-fn exact_json_and_csv_values_and_traps_match_in_all_memory_modes() {
+fn exact_json_and_csv_values_and_traps_match_both_engines() {
     let dir = fwp::cgen::TempDir::new("entry-numeric-codecs").unwrap();
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/run");
     for name in [
@@ -214,24 +213,16 @@ fn exact_json_and_csv_values_and_traps_match_in_all_memory_modes() {
                 .output()
                 .unwrap(),
         );
-        for (mode, opt) in [("arc", "-O2"), ("tracing", "-O1"), ("tracing", "-O2")] {
-            let exe = dir.join(format!("{name}-{mode}-{opt}.exe"));
+        for opt in ["-O1", "-O2"] {
+            let exe = dir.join(format!("{name}-counted-{opt}.exe"));
             checked(
                 Command::new(env!("CARGO_BIN_EXE_fwp"))
-                    .args(["build", "--gc", mode, opt, "-o"])
+                    .args(["build", opt, "-o"])
                     .arg(&exe)
                     .arg(&source),
             );
-            let stress = if mode == "tracing" { "1" } else { "0" };
-            compare(
-                &format!("{mode} {opt}"),
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress)
-                    .output()
-                    .unwrap(),
-            );
+
+            compare(opt, Command::new(&exe).output().unwrap());
         }
     }
 }
@@ -256,37 +247,18 @@ fn mcp_stdio_aliases_errors_and_notifications_match_raw_interpreter() {
         precision_input(),
     );
     assert_precision_replies(&precise);
-    for mode in ["tracing", "arc"] {
-        eprintln!("MCP entries: {mode} native result and alias checks");
-        let source = generated(dir.path(), "--mcp", mode, true);
-        let binary = dir.join(format!("mcp-{mode}.exe"));
-        fwp::cgen::compile_c(&source, &binary, "-O1").unwrap();
-        let stress = if mode == "tracing" { "16" } else { "0" };
-        let result = run_input(
-            Command::new(&binary)
-                .env("FWP_GC_STRESS", stress)
-                .env("FWP_GC_VERIFY", if mode == "tracing" { "1" } else { "0" })
-                .env(
-                    "FWP_REUSE_VERIFY",
-                    if mode == "tracing" { "1" } else { "0" },
-                ),
-            input(2),
-        );
-        assert_eq!(result.stdout, reference.stdout, "{mode}");
-        assert!(result.stderr.is_empty(), "{mode}: {result:?}");
-        let result = run_input(
-            Command::new(&binary)
-                .env("FWP_GC_STRESS", stress)
-                .env("FWP_GC_VERIFY", if mode == "tracing" { "1" } else { "0" })
-                .env(
-                    "FWP_REUSE_VERIFY",
-                    if mode == "tracing" { "1" } else { "0" },
-                ),
-            precision_input(),
-        );
-        assert_eq!(result.stdout, precise.stdout, "{mode} precision");
-        assert_precision_replies(&result);
-    }
+
+    eprintln!("MCP entries: counted native result and alias checks");
+    let source = generated(dir.path(), "--mcp");
+    let binary = dir.join("mcp-counted.exe");
+    fwp::cgen::compile_c(&source, &binary, "-O1").unwrap();
+
+    let result = run_input(&mut Command::new(&binary), input(2));
+    assert_eq!(result.stdout, reference.stdout, "counted");
+    assert!(result.stderr.is_empty(), "counted: {result:?}");
+    let result = run_input(&mut Command::new(&binary), precision_input());
+    assert_eq!(result.stdout, precise.stdout, "counted precision");
+    assert_precision_replies(&result);
 }
 
 #[test]
@@ -312,7 +284,7 @@ queued = both id (const 1 | callbacks)
         let cfile = dir.join("accepted.c");
         checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", interface, "--gc", "arc", "--emit-c", "-o"])
+                .args(["build", interface, "--emit-c", "-o"])
                 .arg(&cfile)
                 .arg(&source),
         );
@@ -321,11 +293,7 @@ queued = both id (const 1 | callbacks)
             let binary = dir.join("queued.exe");
             fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
             let result = run_input(
-                Command::new(binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0"),
+                &mut Command::new(binary),
                 tool(7, "queued", r#"{"input":3}"#),
             );
             let reply = Json::parse(String::from_utf8_lossy(&result.stdout).trim()).unwrap();
@@ -349,7 +317,7 @@ rejected = const 1 | callbacks | tap send-self | channel.recv | option.map (appl
         )
         .unwrap();
         let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", interface, "--gc", "arc", "--emit-c", "-o"])
+            .args(["build", interface, "--emit-c", "-o"])
             .arg(dir.join("rejected.c"))
             .arg(&source)
             .output()
@@ -700,35 +668,24 @@ fn generated_http_entries_preserve_results_and_disconnected_handler_owners() {
             server.stop(dir.path());
             references.push((tls, replies));
         }
-        for mode in ["tracing", "arc"] {
-            eprintln!("{interface} HTTP: building {mode}");
-            let code = generated(dir.path(), &flag, mode, true);
-            let binary = dir.join(format!("{interface}-{mode}.exe"));
-            fwp::cgen::compile_c(&code, &binary, "-O1").unwrap();
-            for (tls, replies) in &references {
-                let mut server = HttpServer::start(
-                    Command::new(&binary)
-                        .env("FWP_GC_STRESS", if mode == "tracing" { "16" } else { "0" })
-                        .env("FWP_GC_VERIFY", if mode == "tracing" { "1" } else { "0" })
-                        .env(
-                            "FWP_REUSE_VERIFY",
-                            if mode == "tracing" { "1" } else { "0" },
-                        ),
-                    interface,
-                    *tls,
-                    dir.path(),
-                );
-                assert_eq!(
-                    &exercise_http(&server, dir.path()),
-                    replies,
-                    "{interface}/{mode}/{tls}"
-                );
-                if !tls {
-                    server.cancel_handler();
-                }
-                assert_eq!(&exercise_http(&server, dir.path()), replies);
-                server.stop(dir.path());
+
+        eprintln!("{interface} HTTP: building counted");
+        let code = generated(dir.path(), &flag);
+        let binary = dir.join(format!("{interface}-counted.exe"));
+        fwp::cgen::compile_c(&code, &binary, "-O1").unwrap();
+        for (tls, replies) in &references {
+            let mut server =
+                HttpServer::start(&mut Command::new(&binary), interface, *tls, dir.path());
+            assert_eq!(
+                &exercise_http(&server, dir.path()),
+                replies,
+                "{interface}/counted/{tls}"
+            );
+            if !tls {
+                server.cancel_handler();
             }
+            assert_eq!(&exercise_http(&server, dir.path()), replies);
+            server.stop(dir.path());
         }
     }
 }
@@ -749,16 +706,16 @@ fn generated_http_entries_release_requests_and_bound_process_memory() {
     std::fs::create_dir_all(&artifacts).unwrap();
     certificate(&artifacts);
     std::fs::copy(fixture(), artifacts.join("server_entries.fwp")).unwrap();
-    std::fs::write(artifacts.join("scope.txt"), "Generated REST (HTTP/TLS) and MCP (HTTP) servers at one revision, tracing versus checked ARC, with collection disabled and counted freeing enabled. An ordinary native ARC client makes three sequential pooled HTTP/2 requests per cycle: a copied record, duplicate aliases of a record, and a caught error. It prints every response status and body. A raw-interpreter server establishes output for each transport, then ordinary and instrumented native servers must match it. Managed counters cover startup after constant initialization through normal entry and cached-value cleanup; include 1/16/128 request cycles and one HTTP/1.1 shutdown request, with three fresh measured processes per case. Raw transport/TLS/OS storage, allocator metadata and client memory are excluded. Separately, ordinary persistent servers process five batches of 1024 cycles (3072 requests per batch), with a fresh client per batch; the 1000-request connection limit exercises replacement. After each client exits and 100 ms settling, Linux VmRSS/macOS ps RSS/Windows WorkingSet64 is sampled. The first batch warms caches; later samples must stay less than 8 MiB above it. These samples are not peak process memory. Native -O2, ordinary fwp optimization and separate floating multiplication/addition rounding. No timing or C/Rust parity claim.\n").unwrap();
-    let mut rows = String::from("interface\tmode\ttls\tcycles\trepetition\trequests\trequested_bytes\tretains\tpeak_bytes\tfinal_bytes\tcollections\n");
-    let mut rss = String::from("interface\tmode\ttls\tbatch\tcumulative_requests\trss_kib\n");
+    std::fs::write(artifacts.join("scope.txt"), "Generated REST (HTTP/TLS) and MCP (HTTP) servers at one revision, with counted ownership. An ordinary native ARC client makes three sequential pooled HTTP/2 requests per cycle: a copied record, duplicate aliases of a record, and a caught error. It prints every response status and body. A raw-interpreter server establishes output for each transport, then ordinary and instrumented native servers must match it. Managed counters cover startup after constant initialization through normal entry and cached-value cleanup; include 1/16/128 request cycles and one HTTP/1.1 shutdown request, with three fresh measured processes per case. Raw transport/TLS/OS storage, allocator metadata and client memory are excluded. Separately, ordinary persistent servers process five batches of 1024 cycles (3072 requests per batch), with a fresh client per batch; the 1000-request connection limit exercises replacement. After each client exits and 100 ms settling, Linux VmRSS/macOS ps RSS/Windows WorkingSet64 is sampled. The first batch warms caches; later samples must stay less than 8 MiB above it. These samples are not peak process memory. Native -O2, ordinary fwp optimization and separate floating multiplication/addition rounding. No timing or C/Rust parity claim.\n").unwrap();
+    let mut rows = String::from("interface\ttls\tcycles\trepetition\trequests\trequested_bytes\tretains\tpeak_bytes\tfinal_bytes\n");
+    let mut rss = String::from("interface\ttls\tbatch\tcumulative_requests\trss_kib\n");
     let flag = format!("--{interface}");
     let client_file = artifacts.join(format!("client-{interface}.fwp"));
     std::fs::write(&client_file, client_source(interface)).unwrap();
     let client_c = client_file.with_extension("c");
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "arc", "--emit-c", "-o"])
+            .args(["build", "--emit-c", "-o"])
             .arg(&client_c)
             .arg(&client_file),
     );
@@ -769,10 +726,7 @@ fn generated_http_entries_release_requests_and_bound_process_memory() {
             Command::new(&client)
                 .arg(cycles.to_string())
                 .env("FWP_BASE", server.base())
-                .env("SSL_CERT_FILE", artifacts.join("server.pem"))
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0"),
+                .env("SSL_CERT_FILE", artifacts.join("server.pem")),
         )
         .stdout
     };
@@ -795,87 +749,76 @@ fn generated_http_entries_release_requests_and_bound_process_memory() {
         server.stop(&artifacts);
         references.push((tls, expected));
     }
-    for mode in ["tracing", "arc"] {
-        eprintln!("entry HTTP memory: build {interface}/{mode}");
-        let code = generated(&artifacts, &flag, mode, true);
-        let ordinary = artifacts.join(format!("{interface}-{mode}-true.exe"));
-        fwp::cgen::compile_c(&code, &ordinary, "-O2").unwrap();
-        let counted_code = client_allocations::instrument_client_allocations(&code);
-        let counted = artifacts.join(format!("{interface}-{mode}-measured.exe"));
-        std::fs::write(counted.with_extension("c"), &counted_code).unwrap();
-        fwp::cgen::compile_c(&counted_code, &counted, "-O2").unwrap();
-        for (tls, reference) in &references {
-            let launch = |binary: &Path| {
-                HttpServer::start(
-                    Command::new(binary)
-                        .env("FWP_GC", "off")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "0")
-                        .env("FWP_REUSE_VERIFY", "0"),
-                    interface,
-                    *tls,
-                    &artifacts,
-                )
-            };
-            let mut final_bytes = None;
-            for cycles in [1, 16, 128] {
-                let expected = reference.repeat(cycles);
-                let server = launch(&ordinary);
-                assert_eq!(run_client(&server, cycles), expected);
-                server.stop(&artifacts);
-                for repetition in 0..3 {
-                    eprintln!("entry HTTP memory: {interface}/{mode}/TLS={tls}, cycles={cycles}, sample={repetition}");
-                    let server = launch(&counted);
-                    assert_eq!(run_client(&server, cycles), expected);
-                    let stderr = server.stop(&artifacts);
-                    std::fs::write(
-                        artifacts.join(format!(
-                            "{interface}-{mode}-{tls}-{cycles}-{repetition}.stderr"
-                        )),
-                        &stderr,
-                    )
-                    .unwrap();
-                    let reports: Vec<_> = stderr
-                        .lines()
-                        .filter_map(|line| line.strip_prefix("client-memory\t"))
-                        .collect();
-                    assert_eq!(reports.len(), 1);
-                    let counters: Vec<u64> =
-                        reports[0].split('\t').map(|n| n.parse().unwrap()).collect();
-                    assert_eq!(counters.len(), 6);
-                    assert!(counters[0] > 0 && counters[3] >= counters[4]);
-                    assert_eq!(counters[5], 0);
-                    assert_eq!(
-                        *final_bytes.get_or_insert(counters[4]),
-                        counters[4],
-                        "{interface}/{mode}/{tls}/{cycles}"
-                    );
-                    rows.push_str(&format!(
-                        "{interface}\t{mode}\t{tls}\t{cycles}\t{repetition}\t{}\n",
-                        reports[0]
-                    ));
-                    std::fs::write(artifacts.join("memory.tsv"), &rows).unwrap();
-                }
-            }
+
+    eprintln!("entry HTTP memory: build {interface}/counted");
+    let code = generated(&artifacts, &flag);
+    let ordinary = artifacts.join(format!("{interface}.exe"));
+    fwp::cgen::compile_c(&code, &ordinary, "-O2").unwrap();
+    let counted_code = client_allocations::instrument_client_allocations(&code);
+    let counted = artifacts.join(format!("{interface}-measured.exe"));
+    std::fs::write(counted.with_extension("c"), &counted_code).unwrap();
+    fwp::cgen::compile_c(&counted_code, &counted, "-O2").unwrap();
+    for (tls, reference) in &references {
+        let launch = |binary: &Path| {
+            HttpServer::start(&mut Command::new(binary), interface, *tls, &artifacts)
+        };
+        let mut final_bytes = None;
+        for cycles in [1, 16, 128] {
+            let expected = reference.repeat(cycles);
             let server = launch(&ordinary);
-            let mut warm = None;
-            for batch in 0..5 {
-                assert_eq!(run_client(&server, 1024), reference.repeat(1024));
-                std::thread::sleep(Duration::from_millis(100));
-                let resident = process_memory::process_rss_kib(server.child.id());
-                assert!(resident > 0);
-                assert!(
-                    resident < *warm.get_or_insert(resident) + 8192,
-                    "{interface}/{mode}/{tls}: RSS {resident}, warm {warm:?}"
-                );
-                rss.push_str(&format!(
-                    "{interface}\t{mode}\t{tls}\t{batch}\t{}\t{resident}\n",
-                    (batch + 1) * 3072
-                ));
-                std::fs::write(artifacts.join("rss.tsv"), &rss).unwrap();
-            }
+            assert_eq!(run_client(&server, cycles), expected);
             server.stop(&artifacts);
+            for repetition in 0..3 {
+                eprintln!("entry HTTP memory: {interface}/counted/TLS={tls}, cycles={cycles}, sample={repetition}");
+                let server = launch(&counted);
+                assert_eq!(run_client(&server, cycles), expected);
+                let stderr = server.stop(&artifacts);
+                std::fs::write(
+                    artifacts.join(format!(
+                        "{interface}-counted-{tls}-{cycles}-{repetition}.stderr"
+                    )),
+                    &stderr,
+                )
+                .unwrap();
+                let reports: Vec<_> = stderr
+                    .lines()
+                    .filter_map(|line| line.strip_prefix("client-memory\t"))
+                    .collect();
+                assert_eq!(reports.len(), 1);
+                let counters: Vec<u64> =
+                    reports[0].split('\t').map(|n| n.parse().unwrap()).collect();
+                assert_eq!(counters.len(), 5);
+                assert!(counters[0] > 0 && counters[3] >= counters[4]);
+                assert_eq!(
+                    *final_bytes.get_or_insert(counters[4]),
+                    counters[4],
+                    "{interface}/counted/{tls}/{cycles}"
+                );
+                rows.push_str(&format!(
+                    "{interface}\t{tls}\t{cycles}\t{repetition}\t{}\n",
+                    reports[0]
+                ));
+                std::fs::write(artifacts.join("memory.tsv"), &rows).unwrap();
+            }
         }
+        let server = launch(&ordinary);
+        let mut warm = None;
+        for batch in 0..5 {
+            assert_eq!(run_client(&server, 1024), reference.repeat(1024));
+            std::thread::sleep(Duration::from_millis(100));
+            let resident = process_memory::process_rss_kib(server.child.id());
+            assert!(resident > 0);
+            assert!(
+                resident < *warm.get_or_insert(resident) + 8192,
+                "{interface}/counted/{tls}: RSS {resident}, warm {warm:?}"
+            );
+            rss.push_str(&format!(
+                "{interface}\t{tls}\t{batch}\t{}\t{resident}\n",
+                (batch + 1) * 3072
+            ));
+            std::fs::write(artifacts.join("rss.tsv"), &rss).unwrap();
+        }
+        server.stop(&artifacts);
     }
 }
 
@@ -887,38 +830,42 @@ fn mcp_stdio_releases_repeated_requests_without_collection() {
         PathBuf::from(std::env::var_os("FWP_SERVER_ENTRY_ARTIFACTS").expect("entry artifacts"));
     std::fs::create_dir_all(&artifacts).unwrap();
     std::fs::copy(fixture(), artifacts.join("server_entries.fwp")).unwrap();
-    std::fs::write(artifacts.join("scope.txt"), "Repeated generated MCP standard-input server, same fixture and messages in tracing and checked ARC. One, 16 or 128 repetitions of eight replies: returned record, duplicated record aliases, successful value, caught error, explicit error result, invalid typed input, malformed JSON, and unknown method; blank lines and notifications produce no reply. Ordinary -O2 servers validate every response before the allocation-instrumented server is compared byte for byte. Collection is disabled and counted freeing enabled except in the explicit tracing build with FWP_FREE=0, which must demonstrate increasing retained storage. Managed allocation requests, payload bytes, actual count increments and peak/final charged storage cover constant initialization completion through main and cached-value cleanup, before whole-runtime disposal. Raw buffers, OS storage, allocator metadata and process RSS are excluded. No elapsed-time or C/Rust comparison.\n").unwrap();
-    let mut rows = String::from("mode\tfree\trepeats\trequests\trequested_bytes\tretains\tpeak_bytes\tfinal_bytes\tcollections\n");
+    std::fs::write(artifacts.join("scope.txt"), "Repeated generated MCP standard-input server, same fixture and messages with counted ownership. One, 16 or 128 repetitions of eight replies: returned record, duplicated record aliases, successful value, caught error, explicit error result, invalid typed input, malformed JSON, and unknown method; blank lines and notifications produce no reply. Ordinary -O2 servers validate every response before the allocation-instrumented server is compared byte for byte. The negative control omits physical frees in the same runtime and must demonstrate increasing retained storage. Managed allocation requests, payload bytes, actual count increments and peak/final charged storage cover constant initialization completion through main and cached-value cleanup, before whole-runtime disposal. Raw buffers, OS storage, allocator metadata and process RSS are excluded. No elapsed-time or C/Rust comparison.\n").unwrap();
+    let mut rows = String::from(
+        "free\trepeats\trequests\trequested_bytes\tretains\tpeak_bytes\tfinal_bytes\n",
+    );
     let mut finals = Vec::new();
-    for (mode, free) in [("tracing", true), ("arc", true), ("tracing", false)] {
-        eprintln!("MCP memory: build {mode}, counted freeing={free}");
-        let source = generated(&artifacts, "--mcp", mode, free);
-        let ordinary = artifacts.join(format!("mcp-{mode}-{free}.exe"));
+    for free in [true, false] {
+        eprintln!("MCP memory: build counted, counted freeing={free}");
+        let source = generated(&artifacts, "--mcp");
+        let source = if free {
+            source
+        } else {
+            let release = "static void fwp_mem_free(void *p) {\n";
+            assert_eq!(source.matches(release).count(), 1);
+            source.replace(
+                release,
+                &format!("{release}    return; /* omitted physical release */\n"),
+            )
+        };
+        std::fs::write(artifacts.join(format!("mcp-{free}.c")), &source).unwrap();
+        let ordinary = artifacts.join(format!("mcp-{free}.exe"));
         fwp::cgen::compile_c(&source, &ordinary, "-O2").unwrap();
         let measured = client_allocations::instrument_client_allocations(&source);
-        let binary = artifacts.join(format!("mcp-measured-{mode}-{free}.exe"));
+        let binary = artifacts.join(format!("mcp-measured-{free}.exe"));
         std::fs::write(binary.with_extension("c"), &measured).unwrap();
         fwp::cgen::compile_c(&measured, &binary, "-O2").unwrap();
         let mut case_finals = Vec::new();
         for repeats in [1, 16, 128] {
-            eprintln!("MCP memory: {mode}, counted freeing={free}, repetitions={repeats}");
-            let run = |path: &Path| {
-                run_input(
-                    Command::new(path)
-                        .env("FWP_GC", "off")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "0")
-                        .env("FWP_REUSE_VERIFY", "0"),
-                    input(repeats),
-                )
-            };
+            eprintln!("MCP memory: counted, counted freeing={free}, repetitions={repeats}");
+            let run = |path: &Path| run_input(&mut Command::new(path), input(repeats));
             let expected = run(&ordinary);
             assert_replies(&expected, repeats);
             let output = run(&binary);
             assert_eq!(output.stdout, expected.stdout);
             let stderr = String::from_utf8(output.stderr).unwrap();
             std::fs::write(
-                artifacts.join(format!("mcp-{mode}-{free}-{repeats}.stderr")),
+                artifacts.join(format!("mcp-{free}-{repeats}.stderr")),
                 &stderr,
             )
             .unwrap();
@@ -929,12 +876,11 @@ fn mcp_stdio_releases_repeated_requests_without_collection() {
                 .split('\t')
                 .map(|n| n.parse().unwrap())
                 .collect();
-            assert_eq!(counters.len(), 6);
-            assert_eq!(counters[5], 0);
+            assert_eq!(counters.len(), 5);
             assert!(counters[3] >= counters[4]);
             case_finals.push(counters[4]);
             rows.push_str(&format!(
-                "{mode}\t{free}\t{repeats}\t{}\n",
+                "{free}\t{repeats}\t{}\n",
                 counters
                     .iter()
                     .map(u64::to_string)
@@ -946,7 +892,7 @@ fn mcp_stdio_releases_repeated_requests_without_collection() {
         if free {
             assert!(
                 case_finals.windows(2).all(|pair| pair[0] == pair[1]),
-                "{mode}: {case_finals:?}"
+                "counted: {case_finals:?}"
             );
         } else {
             assert!(
@@ -954,7 +900,7 @@ fn mcp_stdio_releases_repeated_requests_without_collection() {
                 "missing-free control: {case_finals:?}"
             );
         }
-        finals.push((mode, free, case_finals));
+        finals.push((free, case_finals));
     }
     eprintln!("MCP final managed bytes: {finals:?}");
 }

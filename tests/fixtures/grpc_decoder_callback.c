@@ -40,9 +40,9 @@ static const fwp_fninfo decoder_functions[] = {
     {1, legacy_decoder_entry, "decoder", &decoder_owned}
 };
 int main(void) {
-    fwp_lib_init(); fwp_gc_start(__builtin_frame_address(0)); fwp_tasks_init();
+    fwp_lib_init(); fwp_heap_start(); fwp_tasks_init();
     fwp_fns = decoder_functions;
-    double before = fwp_gc.total_alloc + (double)(fwp_gc.budget_given-fwp_gc.budget);
+    double before = (double)fwp_heap.live;
     V function = fwp_rc_fresh(fwp_pap(0, 0, 0));
     g_codec codec = {0}; codec.fn = function;
     for (decoder_mode = 0; decoder_mode < 3; decoder_mode++) {
@@ -63,10 +63,10 @@ int main(void) {
         fwp_trap_recover = 0; fwp_trap_jb = 0; fwp_trap_cleanup = 0;
         if (trapped != (decoder_mode == 2) || fwp_handlers || fwp_cleanups) return 192;
         if (!fwp_rc_last(function)) return 193;
-        FWP_KEEP_ALIVE(function);
+
     }
     fwp_closure_drop(function);
-    double after = fwp_gc.total_alloc + (double)(fwp_gc.budget_given-fwp_gc.budget);
-    if (!fwp_gc.enabled && !fwp_reuse_verify && (after != before || fwp_gc.ncollect)) return 194;
+    double after = (double)fwp_heap.live;
+    if ((after != before)) return 194;
     fwp_lib_finish(); return 0;
 }

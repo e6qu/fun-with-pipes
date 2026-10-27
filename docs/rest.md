@@ -52,7 +52,7 @@ calls it with `curl` and a generated client.
 | `fwp openapi app.fwp` | the OpenAPI document of the endpoints, as JSON (`--yaml`: as YAML) |
 | `fwp openapi --import spec.json [-o client.fwp]` | an fwp client module of an API (JSON or YAML; OpenAPI 3.0, 3.1 or Swagger 2.0) |
 
-`fwp build app.fwp --rest --gc arc -o server` applies the compiler's ownership
+`fwp build app.fwp --rest -o server` applies the compiler's ownership
 checks to the generated server and excludes tracing garbage collection. The
 checks reject unsupported lifetimes; they do not silently enable tracing.
 [PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164)

@@ -41,11 +41,11 @@ static uintptr_t metadata_copy(const char *p){if(stage==1)fwp_trap("metadata str
 static int recover(void){return 1;}
 static jmp_buf failure;
 static int probe(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
+ fwp_lib_init();fwp_heap_start();size_t baseline=fwp_heap.live;
  SSL_CTX *ctx=SSL_CTX_new(TLS_client_method());if(!ctx)return 31;
  SSL *ssl=SSL_new(ctx);SSL_CTX_free(ctx);if(!ssl)return 32;
- g_conn *c=g_conn_new(-1, "", "local",0);c->ssl=ssl;
- g_stream *s=g_stream_new(c,1);V call=g_call_value(c,s);
+ g_conn *c=g_conn_new(FWP_INVALID_SOCKET, "", "local",0);fwp_rc_fresh(PTR(c));c->ssl=ssl;
+ g_stream *s=g_stream_new(c,1);fwp_rc_fresh(PTR(s));V call=g_call_value(c,s);
  for(stage=0;stage<5;stage++){
   buffer=0;buffer_frees=subject_calls=0;
   c->ssl=stage==4?0:ssl;
@@ -63,7 +63,8 @@ static int probe(void){
   if(buffer_frees!=(stage<3?1:0)){fprintf(stderr,"stage %d frees %d expected %d\n",stage,buffer_frees,stage<3?1:0);return 1;}
   if(subject_calls!=(stage==4?0:1)||fwp_cleanups){fprintf(stderr,"stage %d calls %d cleanup %p\n",stage,subject_calls,(void *)fwp_cleanups);return 2;}
  }
- c->ssl=ssl;FWP_KEEP_ALIVE(call);fwp_lib_finish();return 0;
+ c->ssl=ssl;g_call_drop(call);g_unlink(c,s);g_conn_drop(c);
+ if(fwp_heap.live!=baseline)return 3;fwp_lib_finish();return 0;
 }
 int main(void){int status=probe();if(status)_Exit(status);return 0;}
 "#;
@@ -81,14 +82,8 @@ int main(void){int status=probe();if(status)_Exit(status);return 0;}
         let out = Command::new(&exe).output().unwrap();
         assert_eq!(out.status.code(), Some(1), "omitted cleanup: {out:?}");
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", poison)
-                .output()
-                .unwrap();
-            assert!(out.status.success(), "{opt}/{poison}: {out:?}");
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
 }

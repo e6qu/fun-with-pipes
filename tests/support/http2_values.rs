@@ -2,12 +2,7 @@ use fwp::ir::*;
 
 // Generate the real result descriptors and primitive calls without starting a server.
 pub fn generated() -> String {
-    // These runtime probes exercise collector roots and deliberate missing
-    // owners. ARC execution has separate complete-ownership checks.
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
+    // Runtime probes use the same typed ownership entries as generated programs.
     let unit = MT::unit();
     let string = MT::con("std::String");
     let bytes = MT::con("std::Bytes");
@@ -97,6 +92,10 @@ pub fn generated() -> String {
             },
         ],
         shapes: [
+            (
+                MT::con("std::Duration"),
+                TypeShape::Record(vec![("nanos".into(), int.clone())]),
+            ),
             (
                 connection,
                 TypeShape::Adt(vec![

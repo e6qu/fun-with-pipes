@@ -65,39 +65,6 @@ pub fn take_opt(args: &mut Vec<String>, default: &str) -> String {
     default.to_string()
 }
 
-/// Take an explicit native ownership mode before the program file.
-pub fn take_gc(args: &mut Vec<String>) -> Result<Option<bool>, String> {
-    let mut selected = None;
-    let mut i = 0;
-    while i < args.len() {
-        let argument = &args[i];
-        if argument.ends_with(".fwp") || argument == "-" || argument == "--" {
-            break;
-        }
-        if argument == "--gc" || argument.starts_with("--gc=") {
-            if selected.is_some() {
-                return Err("choose --gc once: arc or tracing".into());
-            }
-            let option = args.remove(i);
-            let value = if let Some((_, value)) = option.split_once('=') {
-                value.to_string()
-            } else if i < args.len() {
-                args.remove(i)
-            } else {
-                return Err("--gc requires arc or tracing".into());
-            };
-            selected = Some(match value.as_str() {
-                "arc" => true,
-                "tracing" => false,
-                _ => return Err("--gc requires arc or tracing".into()),
-            });
-        } else {
-            i += 1;
-        }
-    }
-    Ok(selected)
-}
-
 /// The C compiler native programs are built with.
 pub fn cc() -> String {
     std::env::var("CC").unwrap_or_else(|_| "cc".into())

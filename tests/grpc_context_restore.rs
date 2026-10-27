@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn grpc_context_restores_on_nested_failures_and_cancelled_callbacks() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -73,21 +69,22 @@ static void call(void *arg,int stop){
   if(!setjmp(handler.jb)){
    fwp_cur->trap_jb=&failed;fwp_cur->trap_cleanup=fwp_cleanups;
    if(g_with_ctx(inner_context,0)!=42||stage)_Exit(12);
-  }else{typed++;if(handler.desc!=&string_descriptor||strcmp(STR(handler.value)->d,"typed failure"))_Exit(13);FWP_KEEP_ALIVE(handler.value);}
+  }else{typed++;if(handler.desc!=&string_descriptor||strcmp(STR(handler.value)->d,"typed failure"))_Exit(13);}
  }else{trapped++;if(strcmp(fwp_trap_msg,"context trap"))_Exit(14);}
  fwp_handlers=handler.prev;fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;
  if(fwp_cur->gctx!=child_prior_context||fwp_cleanups)_Exit(1);
 }
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  g_ctx before={0},inside={0},nested={0};before.deadline=1;inside.deadline=2;nested.deadline=3;
  prior_context=&before;inner_context=&inside;nested_context=&nested;fwp_cur->gctx=&before;
  for(stage=0;stage<6;stage++){
-  depth=entered=cancelled=typed=trapped=0;fwp_task *task=fwp_spawn_task(0,call,0,0,0);
+  depth=entered=cancelled=typed=trapped=0;fwp_task *task=fwp_spawn_task(0,call,0,0,0);fwp_task_own_internal(task,1);
   if(stage==3){fwp_p_task_yield();if(!entered||task->done||task->gctx!=inner_context)return 2;fwp_p_task_cancel(PTR(task));}
   fwp_await(task);
   if(!task->done||task->gctx||task->gctx_storage.deadline||fwp_cur->gctx!=prior_context||cancelled!=(stage==3)||typed!=(stage==1||stage==5)||trapped!=(stage==2||stage==4)||fwp_cleanups)return 1;
-  FWP_KEEP_ALIVE(PTR(task));
+  fwp_task_drop(PTR(task));
+
  }
  fwp_cur->gctx=0;fwp_lib_finish();return 0;
 }
@@ -103,24 +100,15 @@ int main(void){
     );
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{hooks}\n{omitted}\n{fixture}"), &exe, opt).unwrap();
-        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(
             out.status.code(),
             Some(1),
             "omitted context restore: {out:?}"
         );
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-            }
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
 }

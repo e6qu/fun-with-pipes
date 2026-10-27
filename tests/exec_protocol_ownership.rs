@@ -203,7 +203,7 @@ fn arc_commands_reclaim_arguments_frames_defaults_and_errors() {
     let cfile = dir.join("owners.c");
     checked(
         Command::new(compiler)
-            .args(["build", "--cli", "--gc", "arc", "--emit-c"])
+            .args(["build", "--cli", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile),
@@ -214,8 +214,8 @@ fn arc_commands_reclaim_arguments_frames_defaults_and_errors() {
         .unwrap();
     let (runtime, main) = code.split_at(start);
     let measured = format!("{runtime}{}", main
-        .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t protocol_budget=fwp_gc.budget_given;\n")
-        .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < protocol_budget) { fprintf(stderr,\"protocol bytes left: %ld\\n\",(long)(protocol_budget-fwp_gc.budget)); exit(193); }\n"));
+        .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    size_t protocol_live_bytes=0;\n")
+        .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > protocol_live_bytes) { fprintf(stderr,\"protocol bytes left: %ld\\n\",(long)(fwp_heap.live - protocol_live_bytes)); exit(193); }\n"));
     for opt in ["-O1", "-O2"] {
         let binary = dir.join(if cfg!(windows) {
             "owners.exe"
@@ -226,10 +226,6 @@ fn arc_commands_reclaim_arguments_frames_defaults_and_errors() {
         for ((args, input, binary_out, user, level), reference) in cases.iter().zip(&references) {
             let output = run(
                 Command::new(&binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
                     .env("FWP_TRANSPORT", "stdio")
                     .env("FWP_OUT", if *binary_out { "bin" } else { "text" })
                     .env("FWP_TEST_USER", user)
@@ -251,10 +247,6 @@ fn arc_commands_reclaim_arguments_frames_defaults_and_errors() {
         fwp::cgen::compile_c(&omitted, &binary, opt).unwrap();
         let output = run(
             Command::new(binary)
-                .env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
                 .env("FWP_OUT", "text")
                 .args(["relay", "prefix-"]),
             b"input\n",
@@ -283,7 +275,7 @@ fn arc_checks_each_exported_entry_for_unscoped_effects() {
         let input = dir.join(format!("{name}.fwp"));
         std::fs::write(&input, format!("# expose: cli\n{source}")).unwrap();
         let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--cli", "--gc", "arc", "--emit-c"])
+            .args(["build", "--cli", "--emit-c"])
             .arg(&input)
             .arg("-o")
             .arg(dir.join("rejected.c"))

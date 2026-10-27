@@ -61,8 +61,7 @@ def main():
                   / 'bench-evidence' / args.source).iterdir()
     environment = {key: value for key, value in os.environ.items()
                    if not key.startswith('FWP_') and key not in ('GH_TOKEN', 'GITHUB_TOKEN')}
-    environment.update(FWP_GC_STRESS='0', FWP_GC_VERIFY='0',
-                       FWP_REUSE_VERIFY='0', FWP_LTO='0', LC_ALL='C')
+    environment.update(FWP_LTO='0', LC_ALL='C')
     compiler = run([args.cc, '--version'], environment).stdout.decode().splitlines()[0]
     assert compiler == source_report['cCompiler'], (compiler, source_report['cCompiler'])
     executables = {label: directory / ('text-length-' + kind)
@@ -125,7 +124,7 @@ def main():
         assert actual.stdout == b'28518516\n'
         counts = json.loads(actual.stderr)
         for key in ('requests', 'requestedBytes', 'retains', 'peakChargedBytes',
-                    'finalChargedBytes', 'collections'):
+                    'finalChargedBytes'):
             assert counts[key] == 0, (label, key, counts)
         managed[label] = counts
     control_source = out / 'injected-allocation.c'

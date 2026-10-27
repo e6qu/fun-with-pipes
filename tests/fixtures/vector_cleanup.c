@@ -28,12 +28,12 @@ static void vector_drop(V value) {
     vector_array_drop(OBJ(value)->f[0]); fwp_rc_resource_free_obj(value);
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
     V x=fwp_rc_fresh(fwp_from_i128(K_I128,3,"I128",128));
     V vector=fwp_p_simd_splat(x,4,&vector_element);
     V array=OBJ(vector)->f[0];
     for (int trial=0;trial<5;trial++) for(int repeat=0;repeat<32;repeat++) {
-        intptr_t budget=fwp_gc.budget;
+        size_t live_bytes=fwp_heap.live;
         vector_fail_allocation=trial<3 ? (trial==2 ? 2 : 1) : 0;
         vector_fail_arithmetic=trial>=3 ? 3 : 0;
         fwp_trap_recover=vector_recover; fwp_trap_jb=&vector_jump;
@@ -46,7 +46,7 @@ int main(void) {
             return 247;
         }
         fwp_trap_recover=NULL; fwp_trap_jb=NULL;
-        if(fwp_cleanups || fwp_gc.budget!=budget) return 248;
+        if(fwp_cleanups || fwp_heap.live!=live_bytes) return 248;
         if(!fwp_rc_last(vector) || !fwp_rc_last(array)) return 249;
     }
     vector_drop(vector); vector_box_drop(x);

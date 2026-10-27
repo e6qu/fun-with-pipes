@@ -4,7 +4,7 @@ static const fwp_desc socket_tuple_type={.kind=K_RECORD,.n=2,.fields=socket_tupl
 static jmp_buf socket_jump;
 static int socket_recover(void) { return 1; }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
     if(fwp_sockets_init()) return 246;
     fwp_sock handle={.fd=0,.kind=2,.refs=1};
     V address=fwp_cstr("127.0.0.1:9"), data=fwp_cstr("x");

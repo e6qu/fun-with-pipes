@@ -48,44 +48,41 @@ def main():
         if result.returncode:
             raise RuntimeError(f'{command}: {result.returncode}\n{result.stdout}\n{result.stderr}')
         return result
-    environment = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
-    environment.pop('FWP_GC', None)
+    environment = dict(os.environ)
     results, hashes, changed = {}, {}, {}
     for profile in [False, True]:
         suffix = 'profile' if profile else 'timing'
         binaries = {}
-        for gc, stem in [('arc', 'matrix-arc'), ('tracing', 'matrix')]:
-            filename = f'{stem}-{suffix}.c'
-            source = (args.input / filename).read_text()
-            digest = hashlib.sha256(source.encode()).hexdigest()
-            recorded = [value for key, value in evidence['sourceHashes'].items() if key.endswith('/' + filename)]
-            assert recorded == [digest], (filename, recorded, digest)
-            hashes[filename] = digest
-            assert ('#define FWP_ARC_ONLY 1' in source) == (gc == 'arc')
-            candidate, count = separate_output(source)
-            changed[filename] = count
-            for mode, code in [('parameter', candidate), ('local', source)]:
-                label = f'{gc}-{mode}-{suffix}'
-                cfile, binary = output / f'{label}.c', output / label
-                cfile.write_text(code)
-                command = [cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w',
-                           f'-DPROFILE={int(profile)}', '-DMATRIX_BENCH=1', cfile,
-                           '-o', binary, '-lm', '-lpthread']
-                run(command); commands.append(list(map(str, command)))
-                binaries[label] = binary
-                if not profile:
-                    command = ['otool', '-tvV', binary] if platform.system() == 'Darwin' else ['objdump', '-d', binary]
-                    (output / f'{label}.asm').write_text(run(command).stdout)
-                    symbols = run(['nm', binary]).stdout
-                    assert 'fwp_matrix_product_f64' not in symbols, 'kernel helper must inline'
-                    if gc == 'arc':
-                        assert not any(symbol in symbols for symbol in ['fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'])
+        filename = f'matrix-{suffix}.c'
+        source = (args.input / filename).read_text()
+        digest = hashlib.sha256(source.encode()).hexdigest()
+        recorded = [value for key, value in evidence['sourceHashes'].items() if key.endswith('/' + filename)]
+        assert recorded == [digest], (filename, recorded, digest)
+        hashes[filename] = digest
+        assert 'FWP_ARC_ONLY' not in source
+        candidate, count = separate_output(source)
+        changed[filename] = count
+        for mode, code in [('parameter', candidate), ('local', source)]:
+            label = f'{mode}-{suffix}'
+            cfile, binary = output / f'{label}.c', output / label
+            cfile.write_text(code)
+            command = [cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w',
+                       f'-DPROFILE={int(profile)}', '-DMATRIX_BENCH=1', cfile,
+                       '-o', binary, '-lm', '-lpthread']
+            run(command); commands.append(list(map(str, command)))
+            binaries[label] = binary
+            if not profile:
+                command = ['otool', '-tvV', binary] if platform.system() == 'Darwin' else ['objdump', '-d', binary]
+                (output / f'{label}.asm').write_text(run(command).stdout)
+                symbols = run(['nm', binary]).stdout
+                assert 'fwp_matrix_product_f64' not in symbols, 'kernel helper must inline'
+                assert not any(symbol in symbols for symbol in ['fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'])
         labels = list(binaries)
         if not profile:
             for binary in binaries.values():
                 run([binary], environment)
-        for process in range(1 if profile else 8):
-            order = labels[process % 4:] + labels[:process % 4]
+        for process in range(1 if profile else 4):
+            order = labels[process % 2:] + labels[:process % 2]
             for label in order:
                 command = ['/usr/bin/time', '-l' if platform.system() == 'Darwin' else '-v', binaries[label]]
                 execution = run(command, environment)
@@ -101,12 +98,11 @@ def main():
     result_hashes = {sample['hash'] for record in results.values() for sample in record['samples']}
     assert len(result_hashes) == 1
     clean = lambda record: [{k: v for k, v in sample.items() if k not in ['kernelNs', 'allocationInclusiveNs']} for sample in record['samples']]
-    for gc in ['arc', 'tracing']:
-        assert clean(results[f'{gc}-parameter-profile']) == clean(results[f'{gc}-local-profile'])
-        for mode, counts in [('parameter', (0, 0, 16)), ('local', (0, 0, 16))]:
-            for sample in results[f'{gc}-{mode}-profile']['samples']:
-                assert tuple(sample[key] for key in ['retains', 'nonlastReleases', 'releaseChecks']) == counts, sample
-                assert sample['requests'] == 40 and sample['liveChargedBytes'] == 0 and sample['collections'] == 0, sample
+    assert clean(results['parameter-profile']) == clean(results['local-profile'])
+    for mode, counts in [('parameter', (0, 0, 16)), ('local', (0, 0, 16))]:
+        for sample in results[f'{mode}-profile']['samples']:
+            assert tuple(sample[key] for key in ['retains', 'nonlastReleases', 'releaseChecks']) == counts, sample
+            assert sample['requests'] == 40 and sample['liveChargedBytes'] == 0, sample
     summary = {label: dict(medianKernelNs=statistics.median(row['kernelNs'] for row in record['samples']),
                           medianAllocationInclusiveNs=statistics.median(row['allocationInclusiveNs'] for row in record['samples']))
                for label, record in results.items() if label.endswith('-timing')}
@@ -115,7 +111,7 @@ def main():
     report = dict(head=os.environ['GITHUB_SHA'], emittedHead=evidence['head'], evidenceRun=os.environ['EVIDENCE_RUN'],
                   sourceHashes=hashes, changedOutputDeclarations=changed, hardware=hardware, compiler=run([cc, '--version']).stdout,
                   buildCommands=commands, results=results, summary=summary,
-                  scope='Same-run matrix experiment: the existing local restrict output pointer versus the identical loop in an always-inlined helper with a restrict output parameter. Only fresh output is disjoint; inputs may alias. The emitted baseline C is hash-verified. Kernel arithmetic, checks, scheduler ticks, allocation and ownership profiles must agree. Eight rotating four-binary batches give forty samples per binary after warmup; profiles are separate. Native symbols must exclude an out-of-line helper and ARC tracing. This is an emitted-C experiment, not changed-compiler acceptance, C/Rust parity or a portable speed claim.')
+                  scope='Same-run matrix experiment: the existing local restrict output pointer versus the identical loop in an always-inlined helper with a restrict output parameter. Only fresh output is disjoint; inputs may alias. The emitted baseline C is hash-verified. Kernel arithmetic, checks, scheduler ticks, allocation and ownership profiles must agree. Four alternating two-binary batches give twenty samples per binary after warmup; profiles are separate. Native symbols must exclude an out-of-line helper and collector symbols. This is an emitted-C experiment, not changed-compiler acceptance, C/Rust parity or a portable speed claim.')
     (output / 'comparison.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(summary, indent=2))
 

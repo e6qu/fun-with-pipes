@@ -123,45 +123,36 @@ fn program() -> Program {
 
 #[test]
 fn exported_boxes_are_reclaimed_and_host_strings_survive() {
-    for arc in [false, true] {
-        fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-            arc,
-            ..Default::default()
-        });
-        let program = program();
-        let mut interp = fwp::interp::Interp::new(&program, Box::new(Vec::new())).unwrap();
-        assert_eq!(
-            interp.call_root(0, vec![Value::I64(17)]).unwrap(),
-            Value::Record(vec![Value::I64(17), Value::I64(17)].into())
-        );
-        assert_eq!(
-            interp.call_root(2, vec![Value::I64(17)]).unwrap(),
-            Value::Record(vec![Value::I64(17), Value::Str("hihi".into())].into())
-        );
-        assert_eq!(
-            interp.call_root(5, vec![]).unwrap(),
-            Value::Record(vec![Value::I64(17), Value::I64(42)].into())
-        );
-        assert_eq!(
-            interp.call_root(6, vec![Value::I64(0)]).unwrap(),
-            Value::Str("okok".into())
-        );
-        let (source, _) = fwp::cgen::generate_library(&program, "ownership", &[]).unwrap();
-        let source = if arc {
-            ownership_ledger::instrument_native(&source, 65536)
-        } else {
-            source
-        };
-        let observed = source
+    let program = program();
+    let mut interp = fwp::interp::Interp::new(&program, Box::new(Vec::new())).unwrap();
+    assert_eq!(
+        interp.call_root(0, vec![Value::I64(17)]).unwrap(),
+        Value::Record(vec![Value::I64(17), Value::I64(17)].into())
+    );
+    assert_eq!(
+        interp.call_root(2, vec![Value::I64(17)]).unwrap(),
+        Value::Record(vec![Value::I64(17), Value::Str("hihi".into())].into())
+    );
+    assert_eq!(
+        interp.call_root(5, vec![]).unwrap(),
+        Value::Record(vec![Value::I64(17), Value::I64(42)].into())
+    );
+    assert_eq!(
+        interp.call_root(6, vec![Value::I64(0)]).unwrap(),
+        Value::Str("okok".into())
+    );
+    let (source, _) = fwp::cgen::generate_library(&program, "ownership", &[]).unwrap();
+    let source = ownership_ledger::instrument_native(&source, 65536);
+    let observed = source
         .replace("static V fwp_data(uint32_t", "static V observed_data, observed_string; static size_t data_calls;\nstatic V fwp_data(uint32_t")
         .replacen("return PTR(o);", "data_calls++; observed_data = PTR(o); return PTR(o);", 1)
         .replacen("return PTR(r);", "observed_string = PTR(r); return PTR(r);", 1);
-        // A failing assertion exits before atexit: library teardown must not
-        // replace the specific fault with its later final-leak diagnostic.
-        let probe = r#"
+    // A failing assertion exits before atexit: library teardown must not
+    // replace the specific fault with its later final-leak diagnostic.
+    let probe = r#"
 static jmp_buf failure; static int recover(void) { return 1; }
-static int dead(V v) { return fwp_reuse_verify ? OBJ(v)->tag == 0xdead : *fwp_rc_slot(v) == 0; }
-static int dead_string(V v) { return fwp_reuse_verify ? STR(v)->len == 0 : *fwp_rc_slot(v) == 0; }
+static int dead(V v) { return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)]; }
+static int dead_string(V v) { return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)]; }
 int main(void) {
  fwp_lib_init();
  V bits = fwp_rc_fresh(fwp_str_new("bits",4));
@@ -189,98 +180,68 @@ int main(void) {
  if(setjmp(failure)==0) { (void)bad_string(0); _Exit(8); }
  if(fwp_cleanups!=boundary || !dead_string(observed_string)) _Exit(4);
  fwp_trap_recover=0; fwp_trap_jb=0;
- if(strcmp(held,"okok") || strcmp(t.text,"hihi") || fwp_gc.armed || fwp_gc.ncollect) _Exit(9);
+ if(strcmp(held,"okok") || strcmp(t.text,"hihi")) _Exit(9);
  V held_owner = PTR(held) - offsetof(fwp_str, d), text_owner = PTR(t.text) - offsetof(fwp_str, d);
  fwp_release_string(held); fwp_release_text(t);
  if(!dead_string(held_owner) || !dead_string(text_owner)) _Exit(12);
  fwp_rc_free_obj(bits);
-#ifndef FWP_ARC_ONLY
- if(!fwp_reuse_verify)
-#endif
- if(fwp_gc.freed < 32) _Exit(10);
+ if(fwp_heap.freed < 32) _Exit(10);
  return 0;
 }
 "#;
 
-        let probe = if arc {
-            probe
-                .replace(
-                    "return fwp_reuse_verify ? OBJ(v)->tag == 0xdead : *fwp_rc_slot(v) == 0;",
-                    "return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)];",
-                )
-                .replace(
-                    "return fwp_reuse_verify ? STR(v)->len == 0 : *fwp_rc_slot(v) == 0;",
-                    "return !owner_ledger_slots[owner_ledger_find((uintptr_t)v)];",
-                )
-        } else {
-            probe.to_owned()
-        };
-        let dir = std::env::temp_dir().join(format!("fwp-library-results-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
-        let exe = dir.join("probe.exe");
-        for opt in ["-O1", "-O2"] {
-            fwp::cgen::compile_c(&format!("{observed}\n{probe}"), &exe, opt).unwrap();
-            for poison in if arc { &["0"][..] } else { &["0", "1"][..] } {
-                let out = Command::new(&exe)
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
-                    .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
-                    .output()
-                    .unwrap();
-                assert!(
-                    out.status.success(),
-                    "{opt}, poison {poison}: {:?}: {}",
-                    out.status.code(),
-                    String::from_utf8_lossy(&out.stderr)
-                );
-            }
-            let missing_drop =
-                observed.replace("owner.value = result; fwp_value_release(&owner);", "");
-            let premature_release = observed.replace(
-                "const char * converted = fwp_c_str_arg(result);",
-                "const char * converted = fwp_c_str_arg(result); fwp_rc_free_obj(result);",
+    let dir = std::env::temp_dir().join(format!("fwp-library-results-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let exe = dir.join("probe.exe");
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&format!("{observed}\n{probe}"), &exe, opt).unwrap();
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(
+            out.status.success(),
+            "{opt}: {:?}: {}",
+            out.status.code(),
+            String::from_utf8_lossy(&out.stderr)
+        );
+
+        let missing_drop = observed.replace("owner.value = result; fwp_value_release(&owner);", "");
+        let premature_release = observed.replace(
+            "const char * converted = fwp_c_str_arg(result);",
+            "const char * converted = fwp_c_str_arg(result); fwp_rc_free_obj(result);",
+        );
+        let extra_evaluation = observed.replace(
+            "    V result = f1(input_arg0);",
+            "    V result = f1(input_arg0); (void)f1(input_arg0);",
+        );
+        let bad_start = observed.find("struct fwp_c_Text bad(int64_t a0)").unwrap();
+        let mut missing_guard = observed.clone();
+        let guard = bad_start
+            + observed[bad_start..]
+                .find("fwp_cleanup_push(&result_cleanup,")
+                .unwrap();
+        let end = guard + observed[guard..].find(';').unwrap() + 1;
+        missing_guard.replace_range(guard..end, "");
+        for (broken, expected) in [
+            (missing_drop, 3),
+            (premature_release, 6),
+            (missing_guard, 4),
+            (extra_evaluation, 11),
+        ] {
+            assert_ne!(
+                broken, observed,
+                "negative control must change generated code"
             );
-            let extra_evaluation = observed.replace(
-                "    V result = f1(input_arg0);",
-                "    V result = f1(input_arg0); (void)f1(input_arg0);",
+            fwp::cgen::compile_c(&format!("{broken}\n{probe}"), &exe, opt).unwrap();
+            let out = Command::new(&exe).output().unwrap();
+            assert_eq!(
+                out.status.code(),
+                Some(expected),
+                "negative control: {}",
+                String::from_utf8_lossy(&out.stderr)
             );
-            let bad_start = observed.find("struct fwp_c_Text bad(int64_t a0)").unwrap();
-            let mut missing_guard = observed.clone();
-            let guard = bad_start
-                + observed[bad_start..]
-                    .find("fwp_cleanup_push(&result_cleanup,")
-                    .unwrap();
-            let end = guard + observed[guard..].find(';').unwrap() + 1;
-            missing_guard.replace_range(guard..end, "");
-            for (broken, expected) in [
-                (missing_drop, 3),
-                (premature_release, 6),
-                (missing_guard, 4),
-                (extra_evaluation, 11),
-            ] {
-                assert_ne!(
-                    broken, observed,
-                    "negative control must change generated code"
-                );
-                fwp::cgen::compile_c(&format!("{broken}\n{probe}"), &exe, opt).unwrap();
-                let out = Command::new(&exe)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
-                    .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
-                    .env("FWP_REUSE_VERIFY", if arc { "0" } else { "1" })
-                    .output()
-                    .unwrap();
-                assert_eq!(
-                    out.status.code(),
-                    Some(expected),
-                    "negative control: {}",
-                    String::from_utf8_lossy(&out.stderr)
-                );
-            }
         }
-        std::fs::remove_dir_all(dir).unwrap();
     }
+    std::fs::remove_dir_all(dir).unwrap();
 }
 
 #[test]

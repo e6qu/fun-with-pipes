@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/allocation_report.rs"]
+mod allocation_report;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -27,7 +30,7 @@ impl Drop for Scratch {
 }
 
 #[test]
-fn state_sequences_preserve_aliases_under_collection() {
+fn state_sequences_preserve_aliases_with_and_without_reuse() {
     let dir = Scratch::new("aliases");
     let src = dir.0.join("aliases.fwp");
     std::fs::write(
@@ -68,46 +71,40 @@ main = [
     );
     for opt in ["-O1", "-O2"] {
         for stack in ["0", "1"] {
-            let exe = dir.0.join(format!("aliases{opt}-{stack}"));
+            let exe = dir.0.join(format!("aliases{opt}-{stack}.exe"));
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", "tracing"])
+                    .args(["build"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe)
                     .env("FWP_STACK", stack),
             );
-            for poison in ["0", "1"] {
-                let out = checked(
-                    Command::new(&exe)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison),
-                );
-                assert_eq!(
-                    out.stdout, reference.stdout,
-                    "{opt}, stack {stack}, poison {poison}"
-                );
-            }
+
+            let out = checked(&mut Command::new(&exe));
+            assert_eq!(out.stdout, reference.stdout, "{opt}, stack {stack}");
         }
     }
-    for flag in ["FWP_REUSE", "FWP_FREE"] {
-        let exe = dir.0.join(flag);
-        checked(
-            Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
-                .arg(&src)
-                .args(["-O1", "-o"])
-                .arg(&exe)
-                .env(flag, "0"),
-        );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
-        assert_eq!(out.stdout, reference.stdout, "{flag}=0");
+    let cfile = dir.0.join("aliases.c");
+    checked(
+        Command::new(fwp)
+            .args(["build", "--emit-c"])
+            .arg(&src)
+            .arg("-o")
+            .arg(&cfile)
+            .env("FWP_STACK", "0"),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    let no_reuse = format!("#define FWP_NO_REUSE 1\n{code}");
+    let boundary = "static void fwp_mem_free(void *p) {\n";
+    assert_eq!(code.matches(boundary).count(), 1);
+    let no_free = code.replacen(boundary, &format!("{boundary}    return;\n"), 1);
+    for (name, code) in [("no-reuse", &no_reuse), ("no-free", &no_free)] {
+        let exe = dir.0.join(format!("{name}.exe"));
+        fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
+        let out = checked(&mut Command::new(&exe));
+        assert_eq!(out.stdout, reference.stdout, "{name}");
+        assert_eq!(out.stderr, reference.stderr, "{name}");
     }
 }
 
@@ -141,14 +138,15 @@ main = (10000, 0) | loop step | echo
     let emitted = dir.0.join("loop.c");
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&emitted)
             .env("FWP_STACK", "0"),
     );
     let owned = std::fs::read_to_string(&emitted).unwrap();
-    // Restore result sharing only in the emitted monomorphic wrappers.
+    // Add one unreleased owner to each sequence result. This must reduce
+    // physical reclamation while preserving the program result.
     // Scalar bits never become references in either version.
     let mut changed = 0;
     let shared = owned
@@ -159,7 +157,7 @@ main = (10000, 0) | loop step | echo
                 .any(|name| line.contains(&format!("return fwp_p_{name}_owned(l")))
             {
                 changed += 1;
-                line.replacen("return ", "return fwp_rc_shared(", 1)
+                line.replacen("return ", "return state_extra_owner(", 1)
                     .replace(");", "));")
             } else {
                 line.to_string()
@@ -169,29 +167,26 @@ main = (10000, 0) | loop step | echo
         .join("\n");
     assert!(changed == 2, "missing scan/iterate boundaries: {changed}");
     assert_ne!(shared, owned);
+    let marker = "/* ---- program ---- */";
+    assert_eq!(shared.matches(marker).count(), 1);
+    let shared = shared.replacen(
+        marker,
+        &format!("static V state_extra_owner(V v) {{ fwp_rc_dup(v); return v; }}\n{marker}"),
+        1,
+    );
     let mut freed = Vec::new();
     for (name, code) in [("shared", &shared), ("owned", &owned)] {
-        let exe = dir.0.join(name);
+        let exe = dir.0.join(format!("{name}.exe"));
         fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC", "off")
-                .env("FWP_GC_STATS", "1")
-                .env("FWP_REUSE_VERIFY", "0"),
-        );
+        let out = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
         assert_eq!(out.stdout, reference.stdout);
         let stats = String::from_utf8_lossy(&out.stderr);
-        assert!(stats.contains("fwp gc: 0 collections"), "{stats}");
+
         freed.push(
-            stats
-                .split(" MiB freed by counts")
-                .next()
-                .unwrap()
-                .rsplit('(')
-                .next()
-                .unwrap()
-                .parse::<f64>()
-                .unwrap(),
+            allocation_report::parse(&stats)
+                .expect("allocation report")
+                .released as f64
+                / 1_048_576.0,
         );
     }
     eprintln!("state sequence graph MiB freed by counts: {freed:?}");
@@ -264,67 +259,57 @@ fn each_preserves_aliases_effect_order_and_early_failures() {
             ),
             (&raw.stdout, &raw.stderr, raw.status.code())
         );
-        for mode in ["tracing", "arc"] {
-            for opt in ["-O1", "-O2"] {
-                let binary = dir.0.join(format!("{name}-{mode}{opt}.exe"));
-                checked(
-                    Command::new(compiler)
-                        .args(["build", "--gc", mode, opt])
-                        .arg(&input)
-                        .arg("-o")
-                        .arg(&binary),
-                );
-                // Reuse verification retains freed storage for comparison;
-                // checked ARC deliberately prohibits that diagnostic mode.
-                let reuse_modes: &[&str] = if mode == "tracing" {
-                    &["0", "1"]
-                } else {
-                    &["0"]
-                };
-                for reuse in reuse_modes {
-                    let stress = if mode == "tracing" { "1" } else { "0" };
-                    let output = Command::new(&binary)
-                        .env("FWP_GC", if mode == "tracing" { "on" } else { "off" })
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_REUSE_VERIFY", reuse)
-                        .output()
+
+        for opt in ["-O1", "-O2"] {
+            let binary = dir.0.join(format!("{name}-counted{opt}.exe"));
+            checked(
+                Command::new(compiler)
+                    .args(["build", opt])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&binary),
+            );
+            // Reuse verification retains freed storage for comparison;
+            // checked ARC deliberately prohibits that diagnostic mode.
+            let reuse_modes: &[&str] = { &["0"] };
+            for reuse in reuse_modes {
+                let output = Command::new(&binary)
+                    .env("FWP_ALLOC_STATS", "0")
+                    .output()
+                    .unwrap();
+                // Retain trap programs for instruction and startup inspection,
+                // plus any unexpected result from the other cases.
+                if (name == "trap" && *reuse == "0")
+                    || output.stdout != raw.stdout
+                    || output.stderr != raw.stderr
+                    || output.status.code() != raw.status.code()
+                {
+                    if let Some(path) = std::env::var_os("FWP_CONTEXT_ARTIFACTS") {
+                        let path = PathBuf::from(path);
+                        std::fs::create_dir_all(&path).unwrap();
+                        let stem = format!("each-{name}-counted{opt}");
+                        std::fs::copy(&binary, path.join(format!("{stem}.exe"))).unwrap();
+                        std::fs::copy(&input, path.join(format!("{stem}.fwp"))).unwrap();
+                        checked(
+                            Command::new(compiler)
+                                .args(["build", opt, "--emit-c"])
+                                .arg(&input)
+                                .arg("-o")
+                                .arg(path.join(format!("{stem}.c"))),
+                        );
+                        std::fs::write(
+                            path.join(format!("{stem}.txt")),
+                            format!("reuse={reuse}\n{output:?}\n"),
+                        )
                         .unwrap();
-                    // Retain trap programs for instruction and startup inspection,
-                    // plus any unexpected result from the other cases.
-                    if (name == "trap" && *reuse == "0")
-                        || output.stdout != raw.stdout
-                        || output.stderr != raw.stderr
-                        || output.status.code() != raw.status.code()
-                    {
-                        if let Some(path) = std::env::var_os("FWP_CONTEXT_ARTIFACTS") {
-                            let path = PathBuf::from(path);
-                            std::fs::create_dir_all(&path).unwrap();
-                            let stem = format!("each-{name}-{mode}{opt}");
-                            std::fs::copy(&binary, path.join(format!("{stem}.exe"))).unwrap();
-                            std::fs::copy(&input, path.join(format!("{stem}.fwp"))).unwrap();
-                            checked(
-                                Command::new(compiler)
-                                    .args(["build", "--gc", mode, opt, "--emit-c"])
-                                    .arg(&input)
-                                    .arg("-o")
-                                    .arg(path.join(format!("{stem}.c"))),
-                            );
-                            std::fs::write(
-                                path.join(format!("{stem}.txt")),
-                                format!("reuse={reuse}\n{output:?}\n"),
-                            )
-                            .unwrap();
-                        }
                     }
-                    assert_eq!(
-                        (&output.stdout, &output.stderr, output.status.code()),
-                        (&raw.stdout, &raw.stderr, raw.status.code()),
-                        "{name}/{mode}/{opt}/{reuse}: {:?}",
-                        output.status
-                    );
                 }
+                assert_eq!(
+                    (&output.stdout, &output.stderr, output.status.code()),
+                    (&raw.stdout, &raw.stderr, raw.status.code()),
+                    "{name}/counted/{opt}/{reuse}: {:?}",
+                    output.status
+                );
             }
         }
     }
@@ -351,7 +336,7 @@ fn each_avoids_allocating_a_discarded_result_list() {
             assert_eq!(raw.stdout, format!("{count}\n").as_bytes());
             checked(
                 Command::new(compiler)
-                    .args(["build", "--gc", "tracing", "--emit-c", "-O2"])
+                    .args(["build", "--emit-c", "-O2"])
                     .arg(&input)
                     .arg("-o")
                     .arg(&cfile),
@@ -366,8 +351,8 @@ fn each_avoids_allocating_a_discarded_result_list() {
             for (marker, condition) in [
                 ("static inline void *fwp_alloc_init(size_t n) {", "1"),
                 (
-                    "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
-                    "leaf != 0",
+                    "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+                    "kind != 0",
                 ),
             ] {
                 assert_eq!(code.matches(marker).count(), 1);
@@ -392,14 +377,7 @@ fn each_avoids_allocating_a_discarded_result_list() {
             assert_eq!(body.matches(finish).count(), 1);
             code = prefix.to_string() + &body.replace(finish, &format!("{finish}fprintf(stderr,\"each-cost %llu %llu %llu\\n\",each_requests,each_bytes,each_calls);\n"));
             fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
-            let output = checked(
-                Command::new(&binary)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_REUSE_VERIFY", "0"),
-            );
+            let output = checked(Command::new(&binary).env("FWP_ALLOC_STATS", "0"));
             assert_eq!(output.stdout, raw.stdout);
             let stderr = String::from_utf8(output.stderr).unwrap();
             let values: Vec<i64> = stderr

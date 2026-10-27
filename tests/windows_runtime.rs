@@ -24,41 +24,27 @@ fn compare(source: &Path, dir: &Path, expected_exit: i32) {
         let binary = dir.join("generated.exe");
         checked(
             Command::new(compiler)
-                .args(["build", "--gc", "tracing", opt])
+                .args(["build", opt])
                 .arg(source)
                 .arg("-o")
                 .arg(&binary)
                 .current_dir(dir),
         );
-        for stress in ["0", "1"] {
-            eprintln!("running {} {opt} stress={stress}", source.display());
-            let actual = Command::new(&binary)
-                .env("FWP_SEED", "42")
-                .env("FWP_GC_STRESS", stress)
-                .env("FWP_GC_VERIFY", stress)
-                .env("FWP_REUSE_VERIFY", stress)
-                .current_dir(dir)
-                .output()
-                .unwrap();
-            assert_eq!(
-                actual.status.code(),
-                expected.status.code(),
-                "{} {opt} stress={stress}: {actual:?}",
-                source.display()
-            );
-            assert_eq!(
-                actual.stdout,
-                expected.stdout,
-                "{} {opt} stress={stress}",
-                source.display()
-            );
-            assert_eq!(
-                actual.stderr,
-                expected.stderr,
-                "{} {opt} stress={stress}",
-                source.display()
-            );
-        }
+
+        eprintln!("running {} {opt}", source.display());
+        let actual = Command::new(&binary)
+            .env("FWP_SEED", "42")
+            .current_dir(dir)
+            .output()
+            .unwrap();
+        assert_eq!(
+            actual.status.code(),
+            expected.status.code(),
+            "{} {opt}: {actual:?}",
+            source.display()
+        );
+        assert_eq!(actual.stdout, expected.stdout, "{} {opt}", source.display());
+        assert_eq!(actual.stderr, expected.stderr, "{} {opt}", source.display());
     }
 }
 

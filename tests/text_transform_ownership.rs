@@ -51,125 +51,115 @@ fn text_transformations_preserve_aliases_and_consumed_owners() {
             raw
         })
         .collect();
-    for mode in ["arc", "tracing"] {
-        let cfile = dir.join("text.c");
-        checked(
-            Command::new(compiler)
-                .env_remove("FWP_NO_OPT")
-                .args(["build", "--gc", mode, "--emit-c", "-O2"])
-                .arg(&source)
-                .arg("-o")
-                .arg(&cfile),
-        );
-        let code = std::fs::read_to_string(&cfile).unwrap();
-        let calls = [
-            ("TEXT_LOWER", "fwp_p_case(l0, 0)"),
-            ("TEXT_UPPER", "fwp_p_case(l0, 1)"),
-            ("TEXT_TRIM", "fwp_p_trim_impl(l0, 1, 1)"),
-            ("TEXT_START", "fwp_p_trim_impl(l0, 1, 0)"),
-            ("TEXT_END", "fwp_p_trim_impl(l0, 0, 1)"),
-            ("TEXT_REPLACE", "fwp_p_replace(l0, l1, l2)"),
-        ];
-        let mut definitions = String::new();
-        for (name, call) in calls {
-            definitions.push_str(&format!("#define {name} {}\n", wrapper(&code, call)));
-        }
-        let lower = code
-            .lines()
-            .find(|line| line.contains("V result = fwp_p_case(l0, 0);"))
-            .unwrap();
-        let drop = lower
-            .split("fwp_value_owner owner = {l0, ")
-            .nth(1)
-            .unwrap()
-            .split('}')
-            .next()
-            .unwrap();
-        definitions.push_str(&format!("#define TEXT_DROP {drop}\n"));
-        let mut probe = code.replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1")
+
+    let cfile = dir.join("text.c");
+    checked(
+        Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--emit-c", "-O2"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(&cfile).unwrap();
+    let calls = [
+        ("TEXT_LOWER", "fwp_p_case(l0, 0)"),
+        ("TEXT_UPPER", "fwp_p_case(l0, 1)"),
+        ("TEXT_TRIM", "fwp_p_trim_impl(l0, 1, 1)"),
+        ("TEXT_START", "fwp_p_trim_impl(l0, 1, 0)"),
+        ("TEXT_END", "fwp_p_trim_impl(l0, 0, 1)"),
+        ("TEXT_REPLACE", "fwp_p_replace(l0, l1, l2)"),
+    ];
+    let mut definitions = String::new();
+    for (name, call) in calls {
+        definitions.push_str(&format!("#define {name} {}\n", wrapper(&code, call)));
+    }
+    let lower = code
+        .lines()
+        .find(|line| line.contains("V result = fwp_p_case(l0, 0);"))
+        .unwrap();
+    let drop = lower
+        .split("fwp_value_owner owner = {l0, ")
+        .nth(1)
+        .unwrap()
+        .split('}')
+        .next()
+        .unwrap();
+    definitions.push_str(&format!("#define TEXT_DROP {drop}\n"));
+    let mut probe = code.replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1")
             .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)")
             .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int text_force_trap;\nstatic uint64_t text_allocations;\nstatic void fwp_check_cancel(void);");
-        for signature in [
-            "static V fwp_p_case(V s, int upper) {",
-            "static V fwp_p_trim_impl(V s, int start, int end) {",
-            "static V fwp_p_replace(V from, V to, V s) {",
-        ] {
-            assert_eq!(probe.matches(signature).count(), 1);
-            probe = probe.replace(
+    for signature in [
+        "static V fwp_p_case(V s, int upper) {",
+        "static V fwp_p_trim_impl(V s, int start, int end) {",
+        "static V fwp_p_replace(V from, V to, V s) {",
+    ] {
+        assert_eq!(probe.matches(signature).count(), 1);
+        probe = probe.replace(
                 signature,
                 &format!("{signature}\n    if(text_force_trap==1)fwp_trap(\"text copy control\");\n    if(text_force_trap==2)fwp_check_cancel();"),
             );
+    }
+    let allocation = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
+    assert_eq!(probe.matches(allocation).count(), 1);
+    probe = probe.replace(
+        allocation,
+        &format!("{allocation}\n    if(kind!=0)text_allocations++;"),
+    );
+    probe += &format!(
+        "\n{definitions}\n{}",
+        include_str!("fixtures/text_transform_probe.c")
+    );
+    let guard = "fwp_value_protect(&owner, &cleanup); V result = fwp_p_case(l0, 0);";
+    assert_eq!(probe.matches(guard).count(), 1);
+    let unprotected = probe.replace(
+        guard,
+        "if(!text_force_trap)fwp_value_protect(&owner, &cleanup); V result = fwp_p_case(l0, 0);",
+    );
+    let unprotected_cancel = probe.replace(
+        guard,
+        "if(text_force_trap!=2)fwp_value_protect(&owner, &cleanup); V result = fwp_p_case(l0, 0);",
+    );
+    for opt in ["-O0", "-O2"] {
+        let binary = dir.join("text.exe");
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        for (input, reference) in inputs.iter().zip(&references) {
+            let actual = checked(Command::new(&binary).env("FWP_TEXT_INPUT", input));
+            assert_eq!(
+                (&actual.stdout, &actual.stderr),
+                (&reference.stdout, &reference.stderr),
+                "counted {opt} {input}"
+            );
         }
-        let allocation = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
-        assert_eq!(probe.matches(allocation).count(), 1);
-        probe = probe.replace(
-            allocation,
-            &format!("{allocation}\n    if(leaf!=0)text_allocations++;"),
-        );
-        probe += &format!(
-            "\n{definitions}\n{}",
-            include_str!("fixtures/text_transform_probe.c")
-        );
-        let guard = "fwp_value_protect(&owner, &cleanup); V result = fwp_p_case(l0, 0);";
-        assert_eq!(probe.matches(guard).count(), 1);
-        let unprotected = probe.replace(guard, "if(!text_force_trap)fwp_value_protect(&owner, &cleanup); V result = fwp_p_case(l0, 0);");
-        let unprotected_cancel = probe.replace(guard, "if(text_force_trap!=2)fwp_value_protect(&owner, &cleanup); V result = fwp_p_case(l0, 0);");
-        for opt in ["-O0", "-O2"] {
-            let binary = dir.join("text.exe");
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            for (input, reference) in inputs.iter().zip(&references) {
-                let stress = if mode == "arc" { "0" } else { "1" };
-                let actual = checked(
-                    Command::new(&binary)
-                        .env("FWP_TEXT_INPUT", input)
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", stress),
-                );
+        for (label, measured, status) in [
+            ("protected", &probe, 0),
+            ("missing-owner", &unprotected, 235),
+            ("missing-cancel-owner", &unprotected_cancel, 235),
+        ] {
+            fwp::cgen::compile_c(measured, &binary, opt).unwrap();
+            let actual = Command::new(&binary).output().unwrap();
+            assert_eq!(
+                actual.status.code(),
+                Some(status),
+                "counted {opt} {label}: {actual:?}"
+            );
+            assert!(actual.stderr.is_empty(), "{actual:?}");
+            if status == 0 {
                 assert_eq!(
-                    (&actual.stdout, &actual.stderr),
-                    (&reference.stdout, &reference.stderr),
-                    "{mode} {opt} {input}"
+                    std::str::from_utf8(&actual.stdout)
+                        .unwrap()
+                        .lines()
+                        .collect::<Vec<_>>(),
+                    ["text owners transfer, preserve aliases and release on failure"]
                 );
             }
-            for (label, measured, status) in [
-                ("protected", &probe, 0),
-                ("missing-owner", &unprotected, 235),
-                ("missing-cancel-owner", &unprotected_cancel, 235),
-            ] {
-                fwp::cgen::compile_c(measured, &binary, opt).unwrap();
-                let actual = Command::new(&binary)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
-                assert_eq!(
-                    actual.status.code(),
-                    Some(status),
-                    "{mode} {opt} {label}: {actual:?}"
-                );
-                assert!(actual.stderr.is_empty(), "{actual:?}");
-                if status == 0 {
-                    assert_eq!(
-                        std::str::from_utf8(&actual.stdout)
-                            .unwrap()
-                            .lines()
-                            .collect::<Vec<_>>(),
-                        ["text owners transfer, preserve aliases and release on failure"]
-                    );
-                }
-                if let Some(destination) = std::env::var_os("FWP_TEXT_TRANSFORM_ARTIFACTS") {
-                    let destination = std::path::PathBuf::from(destination);
-                    std::fs::create_dir_all(&destination).unwrap();
-                    let stem = format!("{mode}-{}-{label}", &opt[1..]);
-                    std::fs::write(destination.join(format!("{stem}.c")), measured).unwrap();
-                    std::fs::copy(&binary, destination.join(format!("{stem}.bin"))).unwrap();
-                    std::fs::write(destination.join(format!("{stem}.stdout")), actual.stdout)
-                        .unwrap();
-                }
+            if let Some(destination) = std::env::var_os("FWP_TEXT_TRANSFORM_ARTIFACTS") {
+                let destination = std::path::PathBuf::from(destination);
+                std::fs::create_dir_all(&destination).unwrap();
+                let stem = format!("counted-{}-{label}", &opt[1..]);
+                std::fs::write(destination.join(format!("{stem}.c")), measured).unwrap();
+                std::fs::copy(&binary, destination.join(format!("{stem}.bin"))).unwrap();
+                std::fs::write(destination.join(format!("{stem}.stdout")), actual.stdout).unwrap();
             }
         }
     }
@@ -198,34 +188,27 @@ fn large_counts_keep_small_results_without_wrapping_or_empty_repeat_work() {
         (&optimized.stdout, &optimized.stderr),
         (&reference.stdout, &reference.stderr)
     );
-    for mode in ["arc", "tracing"] {
-        let cfile = dir.join("counts.c");
-        checked(
-            Command::new(compiler)
-                .env_remove("FWP_NO_OPT")
-                .args(["build", "--gc", mode, "--emit-c"])
-                .arg(&source)
-                .arg("-o")
-                .arg(&cfile),
+
+    let cfile = dir.join("counts.c");
+    checked(
+        Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    for opt in ["-O0", "-O2"] {
+        let binary = dir.join("counts.exe");
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+
+        let actual = checked(&mut Command::new(&binary));
+        assert_eq!(
+            (&actual.stdout, &actual.stderr),
+            (&reference.stdout, &reference.stderr),
+            "counted {opt}"
         );
-        let code = std::fs::read_to_string(cfile).unwrap();
-        for opt in ["-O0", "-O2"] {
-            let binary = dir.join("counts.exe");
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let stress = if mode == "arc" { "0" } else { "1" };
-            let actual = checked(
-                Command::new(&binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
-            assert_eq!(
-                (&actual.stdout, &actual.stderr),
-                (&reference.stdout, &reference.stderr),
-                "{mode} {opt}"
-            );
-        }
     }
 }
 

@@ -27,15 +27,16 @@ physical task-record freeing is measured separately by the resulting managed
 storage. The final sample waits for client disconnection and removal of all
 connection and serving tasks. The server remains alive with its listener open.
 
-Generated clients and servers use native `-O2`. Collection is disabled and
-physical freeing enabled. Counters begin after
+Generated clients and servers use native `-O2` and counted ownership.
+Counters begin after
 listener, routing and root-task setup. They cover managed allocation requests,
 requested/charged bytes, reference-count increments and selected allocation
 categories. Categories count allocations, not identities of remaining objects.
 Raw request/wire buffers, stack pools, TLS/OS/allocator metadata, whole-process
 memory and timing are excluded. Both an interpreted server and ordinary native
 server provide functional output references. No timing or C/Rust comparison is
-claimed; the baseline does not establish server ownership or checked ARC.
+claimed. Finalized connection/stream counts and zero live tasks check this
+specific cleanup boundary; they do not prove every server lifetime.
 
 An idle scheduler can remain on the last finished task's stack until another
 task becomes ready. The measurement wakes the existing listener once, after

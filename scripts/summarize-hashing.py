@@ -73,15 +73,13 @@ def main():
         binaries = []
         for typed in ['0', '1']:
             for packed in ['0', '1']:
-                for mode in ['arc', 'tracing']:
-                    for opt in ['-O0', '-O2']:
-                        label = f'typed-{typed}-packed-{packed}-{mode}{opt}'
-                        source = directory / 'numeric' / f'{label}.c'
-                        assert ('/* numeric hash without type dispatch */' in source.read_text()) == (typed == '1')
-                        binaries.append(dict(typed=typed, packed=packed, mode=mode, optimization=opt,
-                            sourceSha256=digest(source),
-                            inspection=COLLECTIONS.inspect(source.with_suffix('.exe'), host, mode, args.llvm_bin,
-                                                           require_tracing=mode == 'tracing')))
+                for opt in ['-O0', '-O2']:
+                    label = f'typed-{typed}-packed-{packed}-counted{opt}'
+                    source = directory / 'numeric' / f'{label}.c'
+                    assert ('/* numeric hash without type dispatch */' in source.read_text()) == (typed == '1')
+                    binaries.append(dict(typed=typed, packed=packed, optimization=opt,
+                        sourceSha256=digest(source),
+                        inspection=COLLECTIONS.inspect(source.with_suffix('.exe'), host, args.llvm_bin)))
         row = dict(host=host, job=job['databaseId'], passedTests=count, binaries=binaries)
         if host in cost_hosts:
             cost_job = next(job for job in costs if job['name'] == f'ad_metadata ({host})')
@@ -100,7 +98,7 @@ def main():
                 n = case['elements']
                 assert case['canonicalBytesPerHash'] == 8 + max(1, (n.bit_length() + 6) // 7) + 8*n
                 assert (directory / name / 'hash.fwp').read_text() == case['source']
-                assert set(case['variants']) == {'fwp-tracing', 'fwp-arc', 'fwp-arc-generic', 'fwp-arc-buffered', 'c', 'rust'}
+                assert set(case['variants']) == {'fwp-arc', 'fwp-arc-generic', 'fwp-arc-buffered', 'c', 'rust'}
                 assert case['variants']['fwp-arc']['profile'] == case['variants']['fwp-arc-generic']['profile'], (host, name, 'specialization changed allocation or owner counts')
                 for label, variant in case['variants'].items():
                     folder = directory / name
@@ -110,20 +108,20 @@ def main():
                     assert digest(folder / (label + '.asm')) == variant['assemblySha256']
                     assert (folder / label).stat().st_size == variant['binaryBytes']
                     samples = variant['samples']
-                    assert len(samples) == 12
+                    assert len(samples) == 10
                     for index, sample in enumerate(samples):
                         assert sorted(sample['order']) == sorted(case['variants'])
                         assert sample['order'] == case['variants']['c']['samples'][index]['order']
                     for metric, median in [('wallNs', 'medianWallNs'), ('childCpuNs', 'medianChildCpuNs')]:
                         assert min(sample[metric] for sample in samples) > 0
                         assert statistics.median(sample[metric] for sample in samples) == variant[median]
-                    assert sorted(sample['order'].index(label) for sample in samples) == sorted(list(range(6))*2)
+                    assert sorted(sample['order'].index(label) for sample in samples) == sorted(list(range(5))*2)
                     if label.startswith('fwp'):
-                        mode = 'tracing' if label == 'fwp-tracing' else 'arc'
-                        variant['inspection'] = COLLECTIONS.inspect(folder / label, host, mode, args.llvm_bin,
-                                                                    require_tracing=mode == 'tracing')
+                        variant['inspection'] = COLLECTIONS.inspect(folder / label, host, args.llvm_bin)
                         buffers, managed = variant['profile']
-                        assert managed['finalChargedBytes'] == managed['collections'] == 0
+                        assert set(managed) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}, managed
+                        assert all(isinstance(value, int) and value >= 0 for value in managed.values()), managed
+                        assert managed['finalChargedBytes'] == 0
                         assert bool(buffers['hashBufferRequests']) == label.endswith('buffered')
                         for reference, ratios in case['ratios'][label].items():
                             for metric, median in [('wall', 'medianWallNs'), ('cpu', 'medianChildCpuNs')]:
@@ -133,14 +131,14 @@ def main():
                         assert variant['profile'][0]['finalArrayBytes'] == 0
             row.update(costJob=cost_job['databaseId'], measurements=report)
         rows.append(row)
-        print(host, count, 'tests and 16 correctness binaries inspected', flush=True)
+        print(host, count, 'tests and 8 correctness binaries inspected', flush=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(dict(source=args.head, testsRun=args.tests_run,
         costsRun=args.costs_run, collectorSource=command('git', 'rev-parse', 'HEAD').strip(),
         scope='Six native hosts run all hash and neighboring ownership/protocol tests. '
-              'Four hosts measure specialized tracing/ARC, generic ARC, buffered ARC and C/Rust '
+              'Four hosts measure specialized, generic and buffered fwp with C/Rust '
               'on three equivalent-encoding workloads. Actual binaries are inspected as data, '
-              'never executed by this collector. ARC binaries must exclude tracing symbols. '
+              'never executed by this collector. All fwp binaries must exclude tracing symbols. '
               'Section sizes are recorded; assembly still needs human review for register and '
               'inner-loop claims. Focused evidence does not replace production acceptance.',
         hosts=rows), indent=2) + '\n')

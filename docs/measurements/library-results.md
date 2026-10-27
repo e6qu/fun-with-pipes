@@ -29,3 +29,11 @@ Windows export/toolchain repairs prevent accidentally calling the system's diffe
 `norm` function (25 instead of 5). No C/Rust speed was measured; counted bytes
 exclude allocator capacity and host RAM. [PR #165](../roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
 records acceptance. Use `suite=library-results`.
+
+The collector-removal branch keeps the same eight ownership configurations,
+three shared-library unloads and four fault controls. Its shutdown report is one
+exact live-byte count per line, measured after typed globals and derivative
+buffers are released and before allocator teardown. The reader requires zero;
+it rejects the historical two-column byte/collection format. Native libraries
+must still omit collector symbols. This updated protocol awaits integrated
+execution; it does not replace the recorded six-host results above.

@@ -83,10 +83,9 @@ def main():
             assert report['rustCompiler'].startswith('rustc ')
             if args.comparison in ('matched', 'compiled-range'):
                 probes = args.artifacts / ('integer-counting-semantics-' + host)
-                expected = {f'semantics-{mode}{opt}' for mode in ('arc', 'tracing')
-                            for opt in ('-O0', '-O2')}
-                expected.update(f'allocation-check-{mode}{opt}-exit-{status}'
-                                for mode in ('arc', 'tracing') for opt in ('-O0', '-O2')
+                expected = {f'semantics-counted{opt}' for opt in ('-O0', '-O2')}
+                expected.update(f'allocation-check-counted{opt}-exit-{status}'
+                                for opt in ('-O0', '-O2')
                                 for status in (0, 247))
                 assert {path.stem for path in probes.glob('*.exe')} == expected
                 checked = []
@@ -139,8 +138,8 @@ def main():
                 **actual, 'sourceSha256': audit.digest(actual_c),
                 'assemblySha256': audit.digest(assembly)}
             products = args.artifacts / ('integer-product-semantics-' + host)
-            native = {f'products-{mode}{opt}': f'products-{mode}.c'
-                      for mode in ('arc', 'tracing') for opt in ('-O0', '-O1', '-O2', '-O3')}
+            native = {f'products-counted{opt}': 'products-counted.c'
+                      for opt in ('-O0', '-O1', '-O2', '-O3')}
             sanitized = {f'{kind}{opt}': f'{kind}.c'
                          for kind in ('checked', 'unchecked-control') for opt in ('-O1', '-O2', '-O3')}
             expected_products = {**native, **sanitized}
@@ -149,7 +148,7 @@ def main():
             check = 'if (__builtin_mul_overflow(x, y, &r)) fwp_trap_overflow("I64");'
             assert checked_c.count(check) == 1
             assert (products / 'unchecked-control.c').read_text() == checked_c.replace(check, '')
-            generated = (products / 'products-arc.c').read_text()
+            generated = (products / 'products-counted.c').read_text()
             _, tail = generated.split('/* prim.mul : I64 -> I64 -> I64 */\n', 1)
             primitive, _ = tail.split('\n}\n', 1)
             assert primitive + '\n}\n' in checked_c
@@ -194,7 +193,7 @@ def main():
         for label in ('rebuilt-fwp', 'candidate-fwp') + (('grouped-unhinted',) if args.comparison != 'legacy' else ()) + (('recomputed-product',) if args.comparison in ('range', 'compiled-range') else ()):
             counts = report['managedMemory'][label]
             assert all(counts[key] == 0 for key in ('requests', 'requestedBytes', 'retains',
-                       'peakChargedBytes', 'finalChargedBytes', 'collections'))
+                       'peakChargedBytes', 'finalChargedBytes'))
         control = report['managedMemory']['injected-allocation']
         assert control['requests'] == 1 and control['requestedBytes'] == 16
         assert control['peakChargedBytes'] > 0

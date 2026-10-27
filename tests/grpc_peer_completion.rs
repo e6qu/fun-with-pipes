@@ -6,10 +6,6 @@ mod c_instrument;
 
 #[test]
 fn serving_peer_owner_survives_children_and_releases_at_completion() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -120,7 +116,7 @@ static void peer_input_drop(V value){if(value)_Exit(33);}
 static jmp_buf failure;
 static int recover(void){return 1;}
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();
  SSL_CTX *tls=SSL_CTX_new(TLS_client_method());if(!tls)_Exit(31);
  SSL *ssl=SSL_new(tls);SSL_CTX_free(tls);if(!ssl)_Exit(32);
  g_server srv={0};srv.module="probe";
@@ -142,12 +138,12 @@ int main(void){
    if(stage==5){
     if(task_frees!=1||job_frees||s->task||j->sv.task||!j->sv.peer||j->sv.peer_users!=1||children!=1||peer_frees||!observed_sender)_Exit(8);
     int64_t deadline=fwp_now_ns()+10000000000LL;
-    while(fwp_gc_tasks){if(fwp_now_ns()>=deadline)_Exit(34);fwp_park(0,fwp_now_ns()+1000000LL);fwp_free_zombie();}
+    while(fwp_tasks_active){if(fwp_now_ns()>=deadline)_Exit(34);fwp_park(0,fwp_now_ns()+1000000LL);fwp_free_zombie();}
     fwp_free_zombie();
     if(job_frees!=1||task_frees!=1||children!=2||peer_frees!=1)_Exit(9);
    }else if(job_frees!=1||task_frees!=1||s->task||children!=1||peer_frees!=((stage<3||stage==6)?1:0)||fwp_cleanups)_Exit(7);
   }
-  FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
+
  }
  // Overflow fails before acquiring a sender owner or publishing a task.
  stage=7;peer_frees=job_frees=task_frees=task_disposals=0;observed_sender=observed_task=0;
@@ -169,10 +165,9 @@ int main(void){
  if(scope.n!=1||scope.tasks[0]!=scoped_task||!scoped_task->done||scoped_task->gctx)_Exit(41);
  fwp_scope_owner scope_owner={fwp_cur,&scope,fwp_handlers};
  fwp_scope_release(&scope_owner);
- // Reuse verification deliberately poisons counted storage without freeing it.
- if(task_disposals!=1||task_frees!=(fwp_reuse_verify?0:1)||fwp_cur->scope)_Exit(42);
- if(fwp_reuse_verify&&*(uint64_t *)scoped_task)_Exit(43);
- c->ssl=ssl;FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
+ // Scope release must dispose and physically free the completed task once.
+ if(task_disposals!=1||task_frees!=1||fwp_cur->scope)_Exit(42);
+ c->ssl=ssl;fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-peer-completion").unwrap();
@@ -200,28 +195,21 @@ int main(void){
             (&early, &[1, 6][..]),
             (&sender_omitted, &[9][..]),
             (&job_omitted, &[7][..]),
-            (&task_omitted, &[7][..]),
+            // Spawn defaults to unique ownership; omitting the promotion now
+            // fails when a scope needs a second owner after completion.
+            (&task_omitted, &[40][..]),
             (&scope_omitted, &[40][..]),
         ] {
             fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
-            let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+            let out = Command::new(&exe).output().unwrap();
             assert!(
                 out.status.code().is_some_and(|code| codes.contains(&code)),
-                "omitted/early release: {out:?}"
+                "omitted/early release, expected {codes:?}: {out:?}"
             );
         }
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-            }
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
 }

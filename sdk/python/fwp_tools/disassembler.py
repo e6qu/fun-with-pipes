@@ -41,21 +41,18 @@ class Disassembler:
         return json.loads(self._run([self.fwp, "disassemble", "--json", "--tool", self.llvm_objdump, str(binary)]).stdout)
 
     def compare(self, source: str | Path, directory: str | Path, *, targets: list[Target],
-                levels: tuple[str, ...], ownership: str):
+                levels: tuple[str, ...]):
         """Compile debug objects, retain emitted C and inspect every requested pair.
 
         Generated objects contain the emitted C translation unit. External float,
         TLS and other linked libraries are not folded into this object's listing;
         inspect a fully linked executable separately to inspect those components.
-        ownership selects checked "arc" or explicit "tracing" generation and is
-        recorded with the compiler command; no compiler default is inferred.
+        Native ownership is fixed by the language; it is not a comparison option.
         Target.fwp_target selects fwp's C generation target (native or a supported
         Linux triple). Target.triple selects Clang's --target; a cross-GCC executable instead
         selects its target itself and should use triple=None. sysroot=None uses
         the selected compiler's header search configuration.
         """
-        if ownership not in {"arc", "tracing"}:
-            raise ValueError("ownership must be arc or tracing")
         if not targets or not levels or len(set(levels)) != len(levels):
             raise ValueError("choose at least one target and distinct optimization levels")
         if any(level not in {"O0", "O1", "O2", "O3", "Os", "Oz", "Og"} for level in levels):
@@ -68,10 +65,10 @@ class Disassembler:
         directory = Path(directory).resolve()
         directory.mkdir(parents=True, exist_ok=False)
         report = {"source": str(source), "source_text": source.read_text(encoding="utf-8"),
-                  "executed": False, "ownership": ownership, "kind": "relocatable objects", "targets": [], "variants": []}
+                  "executed": False, "ownership": "counted", "kind": "relocatable objects", "targets": [], "variants": []}
         for target in targets:
             generated = directory / f"{target.name}.c"
-            emit_command = [self.fwp, "build", "--gc", ownership, "--emit-c", "--target", target.fwp_target,
+            emit_command = [self.fwp, "build", "--emit-c", "--target", target.fwp_target,
                             str(source), "-o", str(generated)]
             emitted = self._run(emit_command)
             report["targets"].append({"name": target.name, "fwp_target": target.fwp_target,

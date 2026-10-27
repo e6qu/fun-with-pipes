@@ -14,7 +14,7 @@ use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 enum Origin {
     Function(FuncId, usize, u8, Option<Site>),
     UnknownFunction,
@@ -73,7 +73,10 @@ struct Proof<'a> {
     sites: ClosureSites,
     type_cache: RefCell<HashMap<MT, TypeProperties>>,
     expression_types: HashMap<Site, Option<MT>>,
-    captures: BTreeMap<Origin, Vec<Targets>>,
+    // Capture identities are only looked up, never traversed in proof order.
+    // Site separation grows this table with the program; avoid ordered searches
+    // on every fixed-point visit. Origin sets below remain ordered.
+    captures: HashMap<Origin, Vec<Targets>>,
     inputs: BTreeMap<Context, Vec<Targets>>,
     outputs: BTreeMap<Context, Targets>,
     callback_values: BTreeMap<Context, Targets>,
@@ -87,6 +90,11 @@ struct Proof<'a> {
 }
 
 fn join(destination: &mut Targets, source: &Targets) -> bool {
+    // Converged summaries repeatedly present identical facts. Comparing them
+    // once avoids reinserting every origin into an already equal ordered set.
+    if source.is_empty() || destination == source {
+        return false;
+    }
     let before = destination.len();
     destination.extend(source.iter().copied());
     before != destination.len()
@@ -310,7 +318,7 @@ impl Proof<'_> {
         match origin {
             Origin::Queue(id) => {
                 let function = &self.program.funcs[id];
-                Some(function.ty.params(function.arity as usize).1)
+                Some(function.ty.after_args(function.arity as usize))
             }
             Origin::GrpcSender(id) => {
                 let function = &self.program.funcs[id];
@@ -430,8 +438,7 @@ impl Proof<'_> {
             self.queued_targets(thunks, seen)?;
             let MT::Con(name, args) = self.program.funcs[id]
                 .ty
-                .params(self.program.funcs[id].arity as usize)
-                .1
+                .after_args(self.program.funcs[id].arity as usize)
             else {
                 return Err("ownership: captured task producer has no task result".into());
             };
@@ -571,7 +578,7 @@ impl Proof<'_> {
                 )?;
                 let mut args = vec![Targets::new(); function.arity as usize];
                 args[0] = input;
-                self.request(method.func, 0, &args);
+                self.request(method.func, 0, None, &args);
             }
             if matches!(shape.output, crate::rpc::Output::Iter(_)) {
                 let returned = self
@@ -587,13 +594,24 @@ impl Proof<'_> {
         Ok(())
     }
 
-    fn request(&mut self, id: FuncId, scoped: u8, args: &[Targets]) -> Targets {
+    fn request(
+        &mut self,
+        id: FuncId,
+        scoped: u8,
+        capture: Option<Origin>,
+        args: &[Targets],
+    ) -> Targets {
         let key = (id, scoped);
-        if let std::collections::btree_map::Entry::Vacant(entry) = self.inputs.entry(key) {
-            entry.insert(vec![Targets::new(); self.program.funcs[id].arity as usize]);
+        let inputs = self.inputs.entry(key).or_insert_with(|| {
             self.changed = true;
-        }
-        for (slot, value) in self.inputs.get_mut(&key).unwrap().iter_mut().zip(args) {
+            vec![Targets::new(); self.program.funcs[id].arity as usize]
+        });
+        // A saturated call only joins facts into its input summary. Borrow the
+        // capture sets directly instead of cloning a temporary argument vector
+        // on every fixed-point visit.
+        let captured = capture.and_then(|origin| self.captures.get(&origin));
+        let values = captured.into_iter().flatten().chain(args);
+        for (slot, value) in inputs.iter_mut().zip(values) {
             self.changed |= join(slot, value);
         }
         self.outputs.get(&key).cloned().unwrap_or_default()
@@ -619,12 +637,18 @@ impl Proof<'_> {
                 }
             },
         );
-        let captured = self
-            .captures
-            .entry(key)
-            .or_insert_with(|| vec![Targets::new(); args.len()]);
-        for (slot, value) in captured.iter_mut().zip(&args) {
-            self.changed |= join(slot, value);
+        match self.captures.entry(key) {
+            std::collections::hash_map::Entry::Vacant(entry) => {
+                // The caller already owns these sets. Transfer them instead
+                // of allocating a second vector and copying every origin.
+                self.changed |= args.iter().any(|value| !value.is_empty());
+                entry.insert(args);
+            }
+            std::collections::hash_map::Entry::Occupied(mut entry) => {
+                for (slot, value) in entry.get_mut().iter_mut().zip(&args) {
+                    self.changed |= join(slot, value);
+                }
+            }
         }
         BTreeSet::from([key])
     }
@@ -652,18 +676,24 @@ impl Proof<'_> {
                 result.insert(Origin::UnknownFunction);
                 continue;
             };
-            let mut all = self.captures.get(&closure).cloned().unwrap_or_default();
-            all.extend_from_slice(args);
             let arity = self.program.funcs[id].arity as usize;
+            let captured = self
+                .captures
+                .get(&closure)
+                .map(Vec::as_slice)
+                .unwrap_or(&[]);
+            if captured.len() + args.len() == arity {
+                let returned = self.request(id, scoped, Some(closure), args);
+                join(&mut result, &returned);
+                continue;
+            }
+            let mut all = captured.to_vec();
+            all.extend_from_slice(args);
             let value = if all.len() < arity {
                 self.partial(id, all, scoped, site)
             } else {
-                let returned = self.request(id, scoped, &all[..arity]);
-                if all.len() == arity {
-                    returned
-                } else {
-                    self.apply(&returned, &all[arity..], scoped, site)?
-                }
+                let returned = self.request(id, scoped, None, &all[..arity]);
+                self.apply(&returned, &all[arity..], scoped, site)?
             };
             join(&mut result, &value);
         }
@@ -740,8 +770,7 @@ impl Proof<'_> {
                         &self.program.shapes,
                         self.program.funcs[*id]
                             .ty
-                            .params(self.program.funcs[*id].arity as usize)
-                            .1,
+                            .after_args(self.program.funcs[*id].arity as usize),
                         ty,
                     ),
                     _ => true,
@@ -781,7 +810,7 @@ impl Proof<'_> {
             Origin::UnknownFunction => true,
             Origin::Function(id, supplied, _, _) => crate::ir::same_type(
                 &self.program.shapes,
-                self.program.funcs[*id].ty.params(*supplied).1,
+                self.program.funcs[*id].ty.after_args(*supplied),
                 ty,
             ),
         });
@@ -800,14 +829,16 @@ impl Proof<'_> {
         let mut result = match expr {
             Expr::Local(local) => locals[*local as usize].clone(),
             Expr::Const(value) => self.constant(value, next_site),
-            Expr::Func(id) if self.program.funcs[*id].arity == 0 => self.request(*id, scoped, &[]),
+            Expr::Func(id) if self.program.funcs[*id].arity == 0 => {
+                self.request(*id, scoped, None, &[])
+            }
             Expr::Func(id) => BTreeSet::from([Origin::Function(*id, 0, 0, None)]),
             Expr::Call(id, args) => {
                 let values = args
                     .iter()
                     .map(|arg| self.expr(arg, locals, local_types, scoped, next_site))
                     .collect::<Result<Vec<_>, _>>()?;
-                self.request(*id, scoped, &values)
+                self.request(*id, scoped, None, &values)
             }
             Expr::Apply(callee, args) => {
                 let targets = self.expr(callee, locals, local_types, scoped, next_site)?;
@@ -833,7 +864,7 @@ impl Proof<'_> {
                 result
             }
             Expr::BorrowGlobal(local, global, body) => {
-                locals[*local as usize] = self.request(*global, scoped, &[]);
+                locals[*local as usize] = self.request(*global, scoped, None, &[]);
                 self.expr(body, locals, local_types, scoped, next_site)?
             }
             Expr::Let(local, value, body) => {
@@ -920,14 +951,14 @@ impl Proof<'_> {
                             );
                         }
                         Origin::UnknownTask => {
-                            let ty = function.ty.params(function.arity as usize).1;
+                            let ty = function.ty.after_args(function.arity as usize);
                             if self.properties(ty).functions {
                                 result.insert(Origin::UnknownFunction);
                             }
                             if self.properties(ty).channels {
                                 result.insert(unknown_queue(
                                     self.program,
-                                    function.ty.params(function.arity as usize).1,
+                                    function.ty.after_args(function.arity as usize),
                                 ));
                             }
                             if self.properties(ty).tasks {
@@ -994,7 +1025,7 @@ impl Proof<'_> {
             Body::Prim(symbol) if symbol == "channel.upgrade" => {
                 Ok(Targets::from([unknown_queue(
                     self.program,
-                    function.ty.params(function.arity as usize).1,
+                    function.ty.after_args(function.arity as usize),
                 )]))
             }
             Body::Prim(symbol) if symbol == "channel.close" => Ok(Targets::new()),
@@ -1071,10 +1102,9 @@ impl Proof<'_> {
                 // here would incorrectly run scoped work in its caller's scope.
                 let mut result: Targets = args.iter().flatten().copied().collect();
                 let contract = crate::ownership::primitive(symbol);
-                let returns_functions = self
-                    .properties(function.ty.params(function.arity as usize).1)
-                    .functions;
-                if returns_functions {
+                let result_type = function.ty.after_args(function.arity as usize);
+                let properties = self.properties(result_type);
+                if properties.functions {
                     match contract {
                         Some(c)
                             if matches!(
@@ -1097,10 +1127,7 @@ impl Proof<'_> {
                         }
                     }
                 }
-                let returns_channels = self
-                    .properties(function.ty.params(function.arity as usize).1)
-                    .channels;
-                if returns_channels {
+                if properties.channels {
                     match contract {
                         Some(c)
                             if matches!(
@@ -1115,15 +1142,12 @@ impl Proof<'_> {
                         _ => {
                             result.insert(unknown_queue(
                                 self.program,
-                                function.ty.params(function.arity as usize).1,
+                                function.ty.after_args(function.arity as usize),
                             ));
                         }
                     }
                 }
-                if self
-                    .properties(function.ty.params(function.arity as usize).1)
-                    .tasks
-                {
+                if properties.tasks {
                     match contract {
                         Some(c)
                             if matches!(
@@ -1226,7 +1250,7 @@ impl Proof<'_> {
                         self.apply(&args[index], &vec![Targets::new(); count], scoped, site)?;
                     }
                 }
-                let result_type = function.ty.params(function.arity as usize).1;
+                let result_type = function.ty.after_args(function.arity as usize);
                 let mut result = if self.properties(result_type).functions {
                     Targets::from([Origin::UnknownFunction])
                 } else {
@@ -1312,7 +1336,7 @@ pub(crate) fn check(
         sites,
         type_cache: RefCell::new(HashMap::new()),
         expression_types: HashMap::new(),
-        captures: BTreeMap::new(),
+        captures: HashMap::new(),
         inputs: BTreeMap::new(),
         outputs: BTreeMap::new(),
         callback_values: BTreeMap::new(),
@@ -1389,7 +1413,7 @@ pub(crate) fn check(
                 origins
             })
             .collect();
-        proof.request(entry, 0, &args);
+        proof.request(entry, 0, None, &args);
     }
     #[cfg(test)]
     let mut stats = AnalysisStats::default();
@@ -1400,7 +1424,14 @@ pub(crate) fn check(
         }
         proof.changed = false;
         proof.service_boundaries(entries)?;
-        for ((id, scoped), args) in proof.inputs.clone() {
+        // Freeze this round's inputs in the same order without rebuilding a
+        // search tree that the traversal only consumes sequentially.
+        let inputs: Vec<_> = proof
+            .inputs
+            .iter()
+            .map(|(&key, args)| (key, args.clone()))
+            .collect();
+        for ((id, scoped), args) in inputs {
             #[cfg(test)]
             {
                 stats.visits += 1;
@@ -1409,7 +1440,7 @@ pub(crate) fn check(
                 format!("{error}\n  while checking `{}`", program.funcs[id].name)
             })?;
             let function = &program.funcs[id];
-            let result_type = function.ty.params(function.arity as usize).1;
+            let result_type = function.ty.after_args(function.arity as usize);
             if result.iter().any(|origin| origin.callable())
                 && !proof.properties(result_type).functions
             {
@@ -1429,7 +1460,12 @@ pub(crate) fn check(
     }
     proof.validate = true;
     proof.service_boundaries(entries)?;
-    for ((id, scoped), args) in proof.inputs.clone() {
+    let inputs: Vec<_> = proof
+        .inputs
+        .iter()
+        .map(|(&key, args)| (key, args.clone()))
+        .collect();
+    for ((id, scoped), args) in inputs {
         proof
             .function(id, scoped, &args)
             .map_err(|error| format!("{error}\n  while checking `{}`", program.funcs[id].name))?;
@@ -1967,7 +2003,7 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                 sites: ClosureSites::Separate,
                 type_cache: RefCell::new(HashMap::new()),
                 expression_types: HashMap::new(),
-                captures: BTreeMap::new(),
+                captures: HashMap::new(),
                 inputs: BTreeMap::new(),
                 outputs: BTreeMap::new(),
                 callback_values: BTreeMap::new(),
@@ -2011,7 +2047,7 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
             sites: ClosureSites::Separate,
             type_cache: RefCell::new(HashMap::new()),
             expression_types: HashMap::new(),
-            captures: BTreeMap::new(),
+            captures: HashMap::new(),
             inputs: BTreeMap::new(),
             outputs: BTreeMap::new(),
             callback_values: BTreeMap::new(),
@@ -2124,7 +2160,7 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                 sites: ClosureSites::Separate,
                 type_cache: RefCell::new(HashMap::new()),
                 expression_types: HashMap::new(),
-                captures: BTreeMap::new(),
+                captures: HashMap::new(),
                 inputs: BTreeMap::new(),
                 outputs: BTreeMap::new(),
                 callback_values: BTreeMap::new(),
@@ -2656,7 +2692,7 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
             sites: ClosureSites::Separate,
             type_cache: RefCell::new(HashMap::new()),
             expression_types: HashMap::new(),
-            captures: BTreeMap::new(),
+            captures: HashMap::new(),
             inputs: BTreeMap::new(),
             outputs: BTreeMap::new(),
             callback_values: BTreeMap::new(),
@@ -2875,7 +2911,7 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
             sites: ClosureSites::Separate,
             type_cache: RefCell::new(HashMap::new()),
             expression_types: HashMap::new(),
-            captures: BTreeMap::new(),
+            captures: HashMap::new(),
             inputs: BTreeMap::new(),
             outputs: BTreeMap::new(),
             callback_values: BTreeMap::new(),

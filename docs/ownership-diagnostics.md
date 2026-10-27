@@ -4,7 +4,41 @@ An owner keeps an allocation alive. A retain adds an owner; a release gives one
 up. Removing tracing GC requires checks that catch lost owners, premature release
 and unsafe storage reuse without a collector keeping the affected objects alive.
 G4 passed all nine production jobs and documentation in [#215](roadmap-history.md#weak-channels-and-retained-callbacks-pr-215).
-G5 must preserve these checks when removing collector code.
+The G5 branch replaces collector-specific controls while retaining these ownership
+checks. Its integrated acceptance is pending in [PR #217](https://github.com/e6qu/fun-with-pipes/pull/217).
+
+## Closure destruction and loop releases
+
+A closure is a function together with the values it captures. Releasing its last
+owner also releases those captured values. A temporary queue avoids recursively
+using the C stack for a long chain of captured functions.
+
+The G5 closure probe checks that normal destruction releases all captures,
+restores live bytes and clears the temporary thread context. A deliberately
+missing context reset must fail with status 94 before reading the stale pointer.
+Failure to grow the queue terminates with status 102, matching allocator
+exhaustion. A trap during destruction terminates with status 101. Neither may
+resume a server call or language test after abandoning partially released owners.
+Ordinary traps outside destruction keep their existing recovery rules.
+The focused Clang ARM64 O1/O2 probe passes; integrated target checks are pending.
+
+The loop probe compares the same 10,000-step program with and without its typed
+loop releases. Both must match the raw interpreter's output. The missing-release
+control must release at least 314,573 fewer bytes and leave at least that many
+extra live bytes. Separate alias tests cover O1/O2, stack placement on/off and
+normal reuse versus the explicit `FWP_NO_REUSE` copy control. These are memory
+correctness checks, not timing comparisons with C or Rust. Integrated validation
+of the migrated loop probe is pending.
+
+The list application probe runs every function over every input; flat-map joins
+the lists returned by its callback. Both check result order, shared elements,
+scratch-buffer release and cleanup after callback failure or task cancellation.
+Their input lists now have explicit owners, and normal completion must restore
+the initial live-byte balance. The separate State-slot probe uses scalar markers
+to test clearing and restoration after growth, errors, served calls and task exit.
+It explicitly releases task handles and result boxes. Owned State values and
+aliases remain covered by `typed_state_ownership` and interpreter/native examples.
+These migrated probes still require integrated validation.
 
 ## Native live-allocation ledger
 
@@ -92,8 +126,8 @@ physical-byte balances, and match the raw interpreter. Removing the child releas
 must fail at both sizes. These four test targets use explicitly bounded 65,536-slot
 tables (512 KiB on a 64-bit host), outside the managed heap.
 
-Existing tracing/poisoning cases remain alongside these ARC checks. The ordinary
-returned-alias program now also runs in ARC. Tests retain C, executable, outputs and
+The returned-alias program runs with counted owners. Explicit forced-copy and
+missing-owner controls replace the old tracing/poisoning variants. Tests retain C, executable, outputs and
 status under `record-ownership/{borrowed_callbacks,reuse_token_ownership,
 variant_alias_ownership,stack_ownership}` in the ownership evidence artifacts.
 [The handoff](development-state.md) tracks verification of subsequent changes.
@@ -143,7 +177,7 @@ order. File closure and file-object release have separate observers. Dynamic
 and static O1/O2 runs use 8 and 1,024 rounds, restoring both live allocations and
 charged bytes each round. Omitting a value free, unwind cleanup, OS close or
 file-object release must produce 231, 232, 235 or 236 respectively. The source
-file-handler example also compares ARC/tracing output with the raw interpreter.
+file-handler example also compares counted native output with the raw interpreter.
 C, executables, output and status are retained under
 `record-ownership/unwind_cleanup`. These tests passed in #215.
 
@@ -152,8 +186,11 @@ C, executables, output and status are retained under
 Most counts fit in the allocator's byte-sized slot. More than 254 owners require
 a separate exact count; saturation must not silently turn a value into an
 unreclaimed object. [The ARC probe](../tests/wide_counts.rs),
-`arc_wide_counts_release_values_and_metadata_each_round`, creates 601 owners of
-small text, a function capturing text, and large text. It verifies the contents
+`wide_counts_release_values_and_metadata_each_round`, creates 601 owners of
+small text, a function capturing text, and large text. It also checks that an
+interior address maps to its live allocation's count and that reused storage
+starts with one owner. Released objects are observed through the address ledger,
+not read through stale pointers. It verifies the contents
 before release, returns to one owner, and finally releases storage. Dynamic and
 static O1/O2 runs repeat 8 and 1,024 times.
 
@@ -162,9 +199,11 @@ managed allocation ledger. Removing the metadata free while still decrementing
 its logical count must fail with 239. Overflow must trap with 101; failure to
 allocate metadata must terminate with 102. Normal rounds return managed bytes,
 managed allocations and metadata allocations to baseline. The source-level
-high-fanout string/function example now runs in ARC and tracing, with stack
-placement enabled and disabled, against the raw interpreter. Sweep/mark-specific
-checks remain only for the collector that still exists. Probe artifacts use
+high-fanout string/function example compares native O1/O2 output with the raw
+interpreter, with stack placement enabled and disabled. A separate negative
+control omits physical frees while keeping counts and typed destruction. Sweep
+and automatic-promotion-to-tracing cases are retired with the collector. These
+migrated checks still need integrated validation. Probe artifacts use
 `record-ownership/wide_counts`.
 
 ## Weak references and external resources
@@ -187,7 +226,7 @@ remain; freed-value checks use allocation identity in ARC. Premature returned
 string release is checked before reading its bytes. A deliberately duplicated
 release must stop at the ledger with 203. These runs passed in #215.
 
-External-owner probes run in ARC and tracing, with independent fault controls:
+External-owner probes use counted ownership, with independent fault controls:
 
 | Boundary | Test | Observed fault |
 |---|---|---|
@@ -212,8 +251,8 @@ is included in dynamic/static native and WASI JSPI/Asyncify execution.
 The [WASI physical ledger](../tests/fixtures/wasm_arc_allocations.c) now detects
 duplicate addresses even when an earlier slot is empty. Its regression test
 checks normal reuse, duplicate registration and duplicate removal on native and
-WASI hosts. These checks passed in #215; collector-specific assertions remain
-until their implementation is deleted.
+WASI hosts. Their #215 results establish the starting point; the migrated G5
+controls still need integrated native and WASI validation.
 
 ## Which collector checks need replacement?
 
@@ -224,30 +263,32 @@ tests, scripts and workflows. CI saves `memory-diagnostics.json` in the existing
 It checks the requested revision against the checkout. Comments, disabled settings
 and runtime-selected values remain visible; a mention is not proof of coverage.
 
-| Setting/control | Purpose today | Work before deletion |
+| Retired setting/control | Former purpose | Replacement |
 |---|---|---|
 | `FWP_GC_STRESS` | Collect frequently to expose lost roots during allocation/suspension | Keep the semantic inputs and error/cancellation cases; map each to compiler ownership checks, native allocation/byte checks, or its external/WASI owner test. Values of `0` merely disable stress. |
 | `FWP_GC_VERIFY` | Compare a minor trace against a complete trace | Retire mark/age consistency checks with the collector. Preserve any independent lifetime, alias and cleanup assertions in the same tests. |
 | `FWP_REUSE_VERIFY` | Copy and poison storage instead of reusing/freeing it | Retain current controls until their alias/lifetime cases have ownership-based fault tests. The new live-allocation/reuse checks cover the faults above but not arbitrary stale reads. |
-| `FWP_GC` | Select/disable collector behavior in a generated tracing runtime | Remove the selector with tracing; preserve tests proving physical reclamation and zero collections. Disabling collection alone is not GC removal. |
+| `FWP_GC` | Select/disable collector behavior in a generated tracing runtime | Remove the selector with tracing; preserve physical-reclamation tests and verify collector code is absent. Disabling collection alone is not GC removal. |
 | `FWP_GC_STATS` | Print allocation, reclamation, collection and process-memory observations | Preserve allocation/live-byte observations in the collector-free reporting path. Update consumers and their malformed/missing-evidence tests together. |
 
 ### Collector-specific tests and retained assertions
 
 This is the deletion map for the mixed collector/ownership test families. Keep
-the old assertions until G5 removes their implementation; do not treat a filename
+independent lifetime assertions while replacing collector-specific checks; do not treat a filename
 containing `gc` as permission to delete its complete test target.
 
 | Current family | Retire with tracing | Keep without tracing |
 |---|---|---|
-| [native_allocator](../tests/native_allocator.rs) | Image/stack root discovery, collector-scratch exclusion and forced-major reclamation | First allocation/free without initialization; small/large and static-pool allocation; `arc_metadata_and_reclamation_do_not_depend_on_tracing_options`; ledger missing-physical-free control |
-| [old_reclamation](../tests/old_reclamation.rs) | Major/minor marking, old-to-young transitions, intentionally unowned shared graphs and age-gated-free comparison | `tasks.fwp` output remains in the ARC corpus; typed array/map/closure child cleanup remains in the array/map/callback fault suites; small/large physical release remains in the native ledger and wide-count probes |
+| [native_allocator](../tests/native_allocator.rs) | Image/stack root discovery, collector-scratch exclusion and forced-major reclamation | First allocation/free without initialization; small/large and static-pool allocation; `counted_metadata_releases_values_and_resources`; ledger missing-physical-free control |
+| Retired collector-age tests | Major/minor marking, old-to-young transitions, intentionally unowned shared graphs and age-gated-free comparison | `tasks.fwp` output remains in the ARC corpus; typed array/map/closure child cleanup remains in the array/map/callback fault suites; small/large physical release remains in the native ledger and wide-count probes |
 | [wide_counts](../tests/wide_counts.rs) | Sweeping wide entries and automatic promotion to tracing sharing | Exact counts, overflow/allocation failure, actual metadata release and high-fanout outputs described above |
 | [reuse](../tests/reuse.rs) | Collection-age assertions and the `FWP_FREE=0` collector-only comparison | Golden aliases remain in `arc_corpus`; record/variant/array/map allocation comparisons remain, using ARC; invalid uniqueness is caught by ledger fault 204 and alias outputs |
-| [gc](../tests/gc.rs) | Deliberately disabling both ownership freeing and reuse to require collection | Golden outputs/errors, compiler-failure and artifact-retention controls, long-loop RSS and HTTP/REST/gRPC bounded-memory checks; use ARC for their ordinary runs |
+| [native memory](../tests/native_memory.rs) | Deliberately disabling both ownership freeing and reuse to require collection | Golden outputs/errors, compiler-failure and artifact-retention controls, long-loop RSS and HTTP/REST/gRPC bounded-memory checks; use ARC for their ordinary runs |
 | [channel_cycle_ownership](../tests/channel_cycle_ownership.rs) | Executing an unproved strong recursive queue graph | The same graph remains an explicit admission rejection; `weak_channels.fwp` tests a recursive weak back-edge, close preserving a queued message, live upgrade while its outside owner survives, and expiration after that owner returns |
 | Callback, stack-child, variant and reuse-token probes | Poisoned-storage inspection | The fault matrix above: captured owners, child destruction, duplicate destruction, interrupted reconstruction and original semantic outputs |
+| List/fold/filter/map/zip and text results | Restoring a tracing-sharing boundary to keep results alive | Deliberately retain one extra result owner, or omit the physical release for leaf/text controls. Preserve alias outputs and released-byte thresholds; normal accounting runs must end at zero live bytes. Scalar-address probes release their own graphs and verify that numeric bits never own the pointed-to allocation. |
 | Unwind, files, sockets and loaded libraries | Collector rooting/poisoning around resource owners | Actual descriptors/handles, construction errors, nested unwind, cancellation, close-before-free, active callbacks and real library unload, with the independent faults above |
+| HTTP/2 body and TLS protocol copies | Forced major collections, stale-register clearing and root fences | Inspect the real stream/session at the copy boundary; release after copying, require unchanged copied bytes and zero live-byte growth. The premature-release control stops before reading freed bytes. |
 | [WASI ARC](../tests/wasm_arc.rs) | No native root/mark substitute applies | Physical allocations, count-table entries, task stacks/scheduler, host errors and both JSPI/Asyncify paths; omitted free/table cleanup/scheduler release must still fail |
 
 Other semantic/numeric/protocol suites keep their inputs, expected outputs,
@@ -263,11 +304,66 @@ loop/HTTP/REST RSS checks to ARC. Both reuse variants keep reference counts;
 budgets remain unchanged. This measures allocation cost, not elapsed time or
 parity with C/Rust. [The handoff](development-state.md) records validation status.
 
+## Allocation report migration (G5 work in progress)
+
+`FWP_ALLOC_STATS=1` replaces the collector report in the deletion branch. Its
+fields have explicit units:
+
+```text
+fwp allocation: 4096 bytes allocated, 3072 bytes released, 1024 live bytes, 2048 peak live bytes, 65536 heap extent bytes, max RSS 1234 KiB
+```
+
+This example means 1,024 bytes remain allocated at shutdown; the largest live
+balance was 2,048 bytes. Small allocations charge their full size-class slot;
+large allocations charge requested bytes. Heap extent is the high-water address
+range occupied by chunks, including unused space. It is neither live payload nor
+physical resident memory. RSS covers the whole process, including stacks, native
+libraries and allocator metadata. The allocation balance covers only storage
+routed through this allocator; separate OS-resource checks remain necessary.
+
+Allocation/release totals accumulate across the process lifetime using floating
+point and can round beyond 2^53 bytes. Live/peak balances use exact `size_t`
+integers. Use the live balance and independent address ledger for cleanup
+assertions; subtracting very large cumulative totals is not an exact leak check.
+The strict test parser rejects missing fields, duplicate reports, wrong units
+and invalid numbers. Existing historical measurements keep their original schema
+and source identity. New measurements must identify this report format.
+
+The allocator/report code, parser probes and migrated consumers are published
+in draft PR #217. Integrated validation is unfinished; see
+[the handoff](development-state.md).
+
 ## Remaining acceptance
 
-G5 must update allocation-report consumers and workflow settings, remove the
-collector-only assertions above and inspect binaries for actual tracing removal.
+The shared `client-memory` report has five columns after its label: allocation
+requests, requested bytes, effective retains, peak live-byte growth and final
+live-byte growth. Measurement starts after constant initialization and ends at
+the generated ownership observation point, before full runtime shutdown. HTTP
+server probes that reuse this observer call the same row `server-memory`.
+Neither row includes collection counts. They exclude raw network buffers,
+allocator metadata, OS resources and process RSS; separate observers cover those.
+Their migrated consumers still require integrated validation.
+
+The report/workflow migration and collector deletion are implemented. G5 must
+verify their integrated behavior and inspect binaries for actual tracing removal.
 Preserve all behavioral assertions and broken-ownership controls. An address
 ledger cannot catch every stale raw read; compiler lifetime checks and alias/output
 comparisons remain necessary. Run all nine production jobs and documentation
 against the final commit before merging.
+
+### Derivative task and scope controls during collector deletion
+
+A derivative tape belongs to the task that created it. Admission rejects programs
+that send an unproved derivative lifetime to another task. The nested-derivative
+tests check that rejection with and without optimization in both engines. A
+separate C probe creates real tape owners and task IDs to test the runtime guard:
+a later task cannot reuse a retired task's tape, and starting the scheduler does
+not change the root task's identity. Deliberately repeated IDs or removed guards
+must change the result. This probe does not make the rejected program legal.
+
+Workspace checks retain both direct runtime calls inside an explicit scope and
+library-style callback scopes, at O1/O2 with caching enabled and disabled. They
+compare six gradient hashes and require storage cleanup on completion, failure
+and cancellation. Collector settings are not needed to exercise these paths.
+The local Clang probes pass; integrated generated programs and all other targets
+remain part of G5's final validation.

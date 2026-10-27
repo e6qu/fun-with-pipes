@@ -81,7 +81,7 @@ def main():
         assert {(r["mode"], r["elements"], r["repetition"]) for r in rows} == {
             (mode, size, repetition) for mode in modes for size in sizes for repetition in range(3)}
         for row in rows:
-            assert row["collections"] == 0 and row["requests"] > 0 and row["requested_bytes"] > 0
+            assert row["requests"] > 0 and row["requested_bytes"] > 0
             assert 0 <= row["final_charged_bytes"] <= row["peak_charged_bytes"]
         ranges = []
         for mode in modes:

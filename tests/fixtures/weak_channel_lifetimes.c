@@ -5,7 +5,7 @@ static jmp_buf weak_recovered;
 static int weak_recover(void) { return 1; }
 
 static int failed_allocations(void) {
-    intptr_t baseline = fwp_gc.budget;
+    size_t baseline = fwp_heap.live;
     size_t live = owner_ledger_live;
     V channel = fwp_p_channel_make_owned(1, NULL);
     fail_weak_allocation = 1;
@@ -15,20 +15,20 @@ static int failed_allocations(void) {
     if (setjmp(weak_recovered) == 0) { fwp_p_channel_downgrade(channel); return 232; }
     if (((fwp_chan *)(uintptr_t)channel)->weak || *fwp_rc_slot(channel) != 1) return 233;
     V weak = fwp_p_channel_downgrade(channel);
-    intptr_t before = fwp_gc.budget;
+    size_t before = fwp_heap.live;
     size_t owners = owner_ledger_live;
     fail_weak_allocation = 2;
     if (setjmp(weak_recovered) == 0) { fwp_p_channel_upgrade(weak); return 234; }
     if (*fwp_rc_slot(channel) != 1) return 231;
-    if (fwp_gc.budget != before || owner_ledger_live != owners || fwp_cleanups) return 235;
+    if (fwp_heap.live != before || owner_ledger_live != owners || fwp_cleanups) return 235;
     /* Exercise the actual retain trap after the option was allocated. The
      * borrowed target must survive; only the unfinished result is destroyed. */
     for (unsigned i = 1; i < 255; i++) fwp_rc_dup(channel);
-    gc_rc_wide *wide = *fwp_rc_wide_link(fwp_rc_slot(channel));
+    heap_rc_wide *wide = *fwp_rc_wide_link(fwp_rc_slot(channel));
     if (!wide || wide->count != 255) return 236;
     wide->count = SIZE_MAX;
     if (setjmp(weak_recovered) == 0) { fwp_p_channel_upgrade(weak); return 237; }
-    if (wide->count != SIZE_MAX || fwp_gc.budget != before ||
+    if (wide->count != SIZE_MAX || fwp_heap.live != before ||
         owner_ledger_live != owners || fwp_cleanups) return 235;
     wide->count = 255;
     for (unsigned i = 1; i < 255; i++) fwp_channel_drop(channel);
@@ -37,7 +37,7 @@ static int failed_allocations(void) {
     fwp_trap_jb = 0;
     fwp_channel_drop(channel);
     fwp_weak_channel_drop(weak);
-    if (fwp_gc.budget != baseline || owner_ledger_live != live) return 222;
+    if (fwp_heap.live != baseline || owner_ledger_live != live) return 222;
     return 0;
 }
 
@@ -55,13 +55,13 @@ static void channel_option_drop(V option) {
 }
 
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_fns = fwp_fn_table;
     fwp_init_consts();
     fwp_tasks_init();
     int failure = failed_allocations();
     if (failure) return failure;
-    intptr_t baseline = fwp_gc.budget;
+    size_t baseline = fwp_heap.live;
     size_t live = owner_ledger_live;
     unsigned reused = 0;
     for (unsigned round = 0; round < 1024; round++) {
@@ -86,7 +86,7 @@ int main(void) {
         if (fwp_p_channel_upgrade(weak) != FWP_NONE) return 229;
         fwp_channel_drop(replacement);
         fwp_weak_channel_drop(weak);
-        if (fwp_gc.budget != baseline || owner_ledger_live != live) return 222;
+        if (fwp_heap.live != baseline || owner_ledger_live != live) return 222;
     }
     if (!reused) return 230; /* actually exercise allocator address reuse */
     return 0;

@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn alpn_preparation_bounds_storage_and_closes_connection_on_failure() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![
@@ -94,18 +90,14 @@ int main(void){int status=probe();if(status)_Exit(status);return 0;}
     let exe = dir.join("probe");
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = Command::new(&exe)
-                .env("FWP_REUSE_VERIFY", poison)
-                .output()
-                .unwrap();
-            assert!(
-                out.status.success(),
-                "{opt}, poison {poison}: {:?}: {}",
-                out.status.code(),
-                String::from_utf8_lossy(&out.stderr)
-            );
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(
+            out.status.success(),
+            "{opt}: {:?}: {}",
+            out.status.code(),
+            String::from_utf8_lossy(&out.stderr)
+        );
     }
     for (needle, replacement, expected) in [
         (

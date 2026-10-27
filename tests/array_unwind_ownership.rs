@@ -41,7 +41,7 @@ main = [4 | attempt mapped | echo, 4 | attempt generated | echo, 4 | attempt fol
     checked(
         Command::new(fwp)
             .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", "arc", "--emit-c"])
+            .args(["build", "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile),
@@ -65,26 +65,26 @@ static int retained;
 static void fail_retain(V value) {{ if(retained++ == 3) fwp_fail(0,NULL); fwp_rc_dup(value); }}
 static void drop_leaf(V value) {{ if(fwp_rc_release_last(value)) fwp_rc_free_obj(value); }}
 int main(void) {{
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
     V (*const functions[])(V)={{{}}};
     for(volatile int i=0;i<3;i++) {{
-        intptr_t budget=fwp_gc.budget;
+        size_t live_bytes=fwp_heap.live;
         fwp_handler h; h.prev=fwp_handlers; h.state_depth=fwp_state_len; h.cleanup=fwp_cleanups;
         fwp_handlers=&h;
         if(!setjmp(h.jb)) {{ functions[i](4); return 190; }}
         fwp_handlers=h.prev;
         if(fwp_cleanups != h.cleanup) return 191;
-        if(fwp_gc.budget < budget) return 193;
+        if(fwp_heap.live > live_bytes) return 193;
     }}
     V leaf=fwp_rc_fresh(fwp_cstr("retained input"));
-    intptr_t budget=fwp_gc.budget;
+    size_t live_bytes=fwp_heap.live;
     const fwp_desc element={{.kind=K_STR,.dup=fail_retain,.drop=drop_leaf}};
     fwp_handler h; h.prev=fwp_handlers; h.state_depth=fwp_state_len; h.cleanup=fwp_cleanups;
     fwp_handlers=&h;
     if(!setjmp(h.jb)) {{ fwp_p_array_make_typed(10,leaf,fail_retain,&element); return 194; }}
     fwp_handlers=h.prev;
     if(fwp_cleanups != h.cleanup || *fwp_rc_slot(leaf)!=1) return 195;
-    if(fwp_gc.budget < budget) return 196;
+    if(fwp_heap.live > live_bytes) return 196;
     drop_leaf(leaf);
     return 0;
 }}
@@ -94,7 +94,7 @@ int main(void) {{
     for opt in ["-O1", "-O2"] {
         let binary = dir.join(format!("semantic{opt}"));
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-        let output = checked(Command::new(binary).env("FWP_REUSE_VERIFY", "0"));
+        let output = checked(&mut Command::new(binary));
         assert_eq!(output.stdout, reference.stdout);
         assert_eq!(output.stderr, reference.stderr);
         let measured = code.replace(
@@ -114,10 +114,7 @@ int main(void) {{
         ] {
             let binary = dir.join(format!("{label}{opt}"));
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let output = Command::new(binary)
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
+            let output = Command::new(binary).output().unwrap();
             assert_eq!(
                 output.status.code(),
                 Some(expected),

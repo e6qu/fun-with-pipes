@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -28,12 +29,13 @@ int main(int argc, char **argv) {
 #endif
         FILE *file = fopen(argv[2], "r");
         if (!file) return 194;
-        long live; size_t collections; int lines = 0;
-        while (fscanf(file, "%ld %zu", &live, &collections) == 2) {
-            if (live || collections) return 195;
+        char line[64];
+        int lines = 0;
+        while (fgets(line, sizeof(line), file)) {
+            if (strcmp(line, "0\n")) return 195;
             ++lines;
         }
-        fclose(file);
+        if (ferror(file) || fclose(file)) return 194;
         if (lines != round + 1) return 194;
     }
     return 0;

@@ -30,14 +30,14 @@ def inspect(binary, mode, kind, file_format, llvm):
                for line in names.splitlines() if line.split()}
     runtime = sorted(name for name in symbols if name.startswith('fwp_'))
     assert len(runtime) > 10, (binary, 'missing internal runtime names')
-    tracing = sorted(symbols.intersection({'fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'}))
-    assert bool(tracing) == (mode == 'tracing'), (binary, tracing)
+    tracing = sorted(symbols.intersection({'fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'}))
+    assert not tracing, (binary, tracing)
     assembly = subprocess.check_output(
         [str(llvm / 'llvm-objdump'), '-d', '--no-show-raw-insn', str(binary)], text=True)
     assert 'file format ' + file_format in assembly, binary
     binary.with_suffix('.disassembly.txt').write_text(assembly)
     raw = binary.read_bytes()
-    if kind == 'callbacks' and mode == 'arc':
+    if kind == 'callbacks':
         assert b'map callback storage leaked:' in raw, binary
     return {'file': binary.name, 'sha256': hashlib.sha256(raw).hexdigest(),
             'bytes': len(raw), 'format': file_format,
@@ -57,29 +57,29 @@ def sort_observation(directory, label, kind, late):
 
 def sort_storage(directory, file_format, llvm, runtime):
     runs = []
-    for mode in ['arc', 'tracing']:
-        ordinary = (directory / f'sort-storage-{mode}-ordinary.c').read_text()
-        start = ordinary.index('static V fwp_map_build_typed(')
-        end = start + ordinary[start:].index('\n}\n') + 3
-        body = ordinary[start:end]
-        runtime_start = runtime.index('static V fwp_map_build_typed(')
-        runtime_end = runtime_start + runtime[runtime_start:].index('\n}\n') + 3
-        assert body == runtime[runtime_start:runtime_end], 'Saved builder differs from recorded source'
-        release = '    fwp_scratch_finish(&tk, &tk_cleanup);\n'
-        finish = '    fwp_value_finish(&owner, &cleanup);\n'
-        assert body.count(release) == body.count(finish) == 1
-        late_body = body.replace(release, '').replace(finish, finish + release)
-        late_source = (directory / f'sort-storage-{mode}-late-release.c').read_text()
-        assert late_source == ordinary[:start] + late_body + ordinary[end:]
-        for label in ['ordinary', 'late-release']:
-            source = directory / f'sort-storage-{mode}-{label}.c'
-            for opt in ['-O1', '-O2']:
-                name = f'sort-storage-{mode}-{label}{opt}'
-                runs.append({'mode': mode, 'optimization': opt, 'control': label,
-                    'sourceSha256': hashlib.sha256(source.read_bytes()).hexdigest(),
-                    'binary': inspect(directory / f'{name}.bin', mode, 'sort-storage', file_format, llvm),
-                    'observations': [sort_observation(directory, name, kind, label == 'late-release')
-                                     for kind in ['map', 'set']]})
+    mode = 'counted'
+    ordinary = (directory / f'sort-storage-{mode}-ordinary.c').read_text()
+    start = ordinary.index('static V fwp_map_build_typed(')
+    end = start + ordinary[start:].index('\n}\n') + 3
+    body = ordinary[start:end]
+    runtime_start = runtime.index('static V fwp_map_build_typed(')
+    runtime_end = runtime_start + runtime[runtime_start:].index('\n}\n') + 3
+    assert body == runtime[runtime_start:runtime_end], 'Saved builder differs from recorded source'
+    release = '    fwp_scratch_finish(&tk, &tk_cleanup);\n'
+    finish = '    fwp_value_finish(&owner, &cleanup);\n'
+    assert body.count(release) == body.count(finish) == 1
+    late_body = body.replace(release, '').replace(finish, finish + release)
+    late_source = (directory / f'sort-storage-{mode}-late-release.c').read_text()
+    assert late_source == ordinary[:start] + late_body + ordinary[end:]
+    for label in ['ordinary', 'late-release']:
+        source = directory / f'sort-storage-{mode}-{label}.c'
+        for opt in ['-O1', '-O2']:
+            name = f'sort-storage-{mode}-{label}{opt}'
+            runs.append({'mode': mode, 'optimization': opt, 'control': label,
+                'sourceSha256': hashlib.sha256(source.read_bytes()).hexdigest(),
+                'binary': inspect(directory / f'{name}.bin', mode, 'sort-storage', file_format, llvm),
+                'observations': [sort_observation(directory, name, kind, label == 'late-release')
+                                 for kind in ['map', 'set']]})
     return runs
 
 
@@ -88,22 +88,19 @@ def inspect_host(directory, host, llvm, runtime):
     reference = (directory / 'interpreter.txt').read_bytes()
     assert reference.count(b'Err "expected"\n') == 4
     runs, binaries = [], []
-    for mode in ['arc', 'tracing']:
-        for opt in ['-O1', '-O2']:
-            for poison in (['0'] if mode == 'arc' else ['0', '1']):
-                line = (directory / f'faults-{mode}{opt}-reuse-{poison}.txt').read_text().strip()
-                count = 138 if poison == '1' else 136
-                assert line == (f'22 map/set operations: {count} injected failures cleaned; '
-                                'aliases preserved'), line
-                runs.append({'mode': mode, 'optimization': opt,
-                             'reuse_verification': poison == '1',
-                             'injected_failures': count})
-            assert (directory / f'callbacks-{mode}{opt}.txt').read_bytes() == reference
-            assert not (directory / f'callbacks-{mode}{opt}.stderr').read_bytes()
-            for kind in ['faults', 'callbacks']:
-                binaries.append(inspect(directory / f'{kind}-{mode}{opt}.bin',
-                                        mode, kind, file_format, llvm))
-    fault_source = (directory / 'faults-arc.c').read_text()
+    mode = 'counted'
+    for opt in ['-O1', '-O2']:
+        line = (directory / f'faults-{mode}{opt}.txt').read_text().strip()
+        assert line == ('22 map/set operations: 136 injected failures cleaned; '
+                        'aliases preserved'), line
+        runs.append({'mode': mode, 'optimization': opt,
+                     'injected_failures': 136})
+        assert (directory / f'callbacks-{mode}{opt}.txt').read_bytes() == reference
+        assert not (directory / f'callbacks-{mode}{opt}.stderr').read_bytes()
+        for kind in ['faults', 'callbacks']:
+            binaries.append(inspect(directory / f'{kind}-{mode}{opt}.bin',
+                                    mode, kind, file_format, llvm))
+    fault_source = (directory / 'faults-counted.c').read_text()
     for name, function, before, after in [
         ('missing-result-owner', 'fwp_map_typed_copy',
          'fwp_value_owner owner = {result, ops->drop_map};',
@@ -117,7 +114,7 @@ def inspect_host(directory, host, llvm, runtime):
         assert body.count(before) == 1
         assert (directory / f'{name}.c').read_text() == (
             fault_source[:start] + body.replace(before, after) + fault_source[end:])
-    compact_source = (directory / 'compact-arc-O0.c').read_text()
+    compact_source = (directory / 'compact-counted-O0.c').read_text()
     allocation = 'fwp_alloc(sizeof(fwp_map) + columns * len * sizeof(V))'
     assert compact_source.count(allocation) == 1
     assert (directory / 'compact-wasted-slot-control.c').read_text() == compact_source.replace(
@@ -130,13 +127,13 @@ def inspect_host(directory, host, llvm, runtime):
                          ('compact-wasted-slot-control', 211)]:
         assert int((directory / f'{name}.status').read_text()) == status
         assert (directory / f'{name}.c').stat().st_size
-        binaries.append(inspect(directory / f'{name}.bin', 'arc', name, file_format, llvm))
+        binaries.append(inspect(directory / f'{name}.bin', 'counted', name, file_format, llvm))
     compact = COLLECTION.compact_sets(directory, host, llvm)
     storage = sort_storage(directory, file_format, llvm, runtime)
     return {'runs': runs, 'controls': controls, 'binaries': binaries,
             'compactSets': compact, 'sortStorage': storage,
             'callback_outputs_match_interpreter': True,
-            'arc_shutdown_counted_bytes': 0}
+            'shutdown_counted_bytes': 0}
 
 
 def main():
@@ -168,14 +165,13 @@ def main():
                    compiler=(directory / 'c.txt').read_text().strip(),
                    rustc=(directory / 'rustc.txt').read_text().strip())
         rows.append(row)
-        print(host, '23 binaries, 6 fault configurations, 4 callbacks, 16 peaks, 3 cleanup/layout controls verified')
+        print(host, '13 binaries, 2 fault configurations, 2 callbacks, 8 peaks, 3 cleanup/layout controls verified')
     args.output.write_text(json.dumps({
         'source': audit['head'], 'run': audit['run'], 'complete_native_matrix': True,
         'scope': 'Failure cleanup and typed ownership, not a timing or code-size comparison. '
                  'Instrumented programs execute on native CI hosts; this collector only reads '
-                 'their files. ARC counted bytes exclude allocator capacity and process RSS. '
-                 'Tracing retains collector code and deliberately poisons released objects '
-                 'under reuse verification.',
+                 'their files. Counted bytes exclude allocator capacity and process RSS. '
+                 'Omitted owners and delayed scratch release must fail their independent checks.',
         'hosts': rows,
     }, indent=2) + '\n')
 

@@ -9,9 +9,6 @@ static void generation_drop_chunks(V value){
     while(value){if(!fwp_rc_release_last(value))return;V next=OBJ(value)->f[1];generation_drop_list(OBJ(value)->f[0]);fwp_rc_free_obj(value);value=next;}
 }
 static void generation_gc(void){
-#ifndef FWP_ARC_ONLY
-    if(generation_collect)fwp_gc_collect();
-#endif
 }
 static void generation_dup(V value){
     generation_dups++;
@@ -41,7 +38,7 @@ static V generation_node(V *fields){
 }
 int main(int argc,char **argv){
     if(argc!=2)return 242;generation_operation=atoi(argv[1]);
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     V values[5];for(int i=0;i<5;i++)values[i]=fwp_rc_fresh(fwp_cstr("input"));
     V xs=0;for(int i=3;i>=0;i--)xs=fwp_rc_fresh(fwp_cons(values[i],xs));
     for(generation_collect=0;generation_collect<2;generation_collect++)for(generation_case=0;generation_case<8;generation_case++)for(int repeat=0;repeat<8;repeat++){
@@ -49,7 +46,7 @@ int main(int argc,char **argv){
            (generation_case==6&&generation_operation!=1&&generation_operation!=2)||
            (generation_case==7&&generation_operation!=1))continue;
         generation_dups=generation_nodes=generation_scratch_calls=generation_callbacks=0;
-        intptr_t before=fwp_gc.budget;
+        size_t before=fwp_heap.live;
         fwp_trap_recover=generation_recover;fwp_trap_jb=&generation_jump;fwp_trap_cleanup=fwp_cleanups;
         if(!setjmp(generation_jump)){
             V result=0;
@@ -66,7 +63,7 @@ int main(int argc,char **argv){
         fwp_trap_recover=NULL;fwp_trap_jb=NULL;
         if(fwp_cleanups)return 246;
         for(int i=0;i<5;i++)if(*fwp_rc_slot(values[i])!=1)return 248;
-        if(!generation_collect&&fwp_gc.budget!=before)return 249;
+        if(!generation_collect&&fwp_heap.live!=before)return 249;
     }
-    FWP_KEEP_ALIVE(xs);generation_drop_list(xs);generation_drop_text(values[4]);return 0;
+    generation_drop_list(xs);generation_drop_text(values[4]);return 0;
 }

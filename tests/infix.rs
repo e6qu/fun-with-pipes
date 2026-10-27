@@ -116,7 +116,7 @@ fn raw_interpreter_and_native_agree() {
         for opt in ["-O0", "-O1", "-O2"] {
             let exe = dir.join(format!("{name}{opt}{}", std::env::consts::EXE_SUFFIX));
             let build = Command::new(compiler)
-                .args(["build", opt, "--gc", "arc"])
+                .args(["build", opt])
                 .arg(&path)
                 .arg("-o")
                 .arg(&exe)

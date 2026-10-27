@@ -13,12 +13,7 @@ fn checked(command: &mut Command) -> Output {
 
 fn run(binary: &Path, mode: &str, rounds: &str) -> Command {
     let mut command = Command::new(binary);
-    command
-        .args([mode, rounds])
-        .env_remove("FWP_GC")
-        .env("FWP_REUSE_VERIFY", "0")
-        .env("FWP_GC_VERIFY", "0")
-        .env("FWP_GC_STRESS", "0");
+    command.args([mode, rounds]);
     command
 }
 
@@ -29,7 +24,7 @@ fn retained_callbacks_release_captures_after_the_last_active_call() {
     std::fs::write(&input, include_str!("fixtures/retained_callbacks.fwp")).unwrap();
     let cfile = dir.join("callbacks.c");
     let mut emit = Command::new(env!("CARGO_BIN_EXE_fwp"));
-    emit.args(["build", "--gc", "arc", "--staticlib", "--emit-c"]);
+    emit.args(["build", "--staticlib", "--emit-c"]);
     for export in [
         "keep", "count", "second", "unary", "discard", "words", "inside", "failing", "blocked",
     ] {
@@ -39,7 +34,7 @@ fn retained_callbacks_release_captures_after_the_last_active_call() {
     let source = std::fs::read_to_string(&cfile).unwrap();
     let header = std::fs::read_to_string(cfile.with_extension("h")).unwrap();
     assert!(source.contains("#define FWP_RETAINED_CALLBACKS 1"));
-    let allocation = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+    let allocation = "static inline void *fwp_heap_alloc(size_t n, int kind) {";
     let observed = ownership_ledger::instrument_native(&source, 65536);
     assert_eq!(observed.matches(allocation).count(), 1);
     let observed = observed.replace(allocation, &format!("{allocation}\n    if (callback_fail_after && !--callback_fail_after) fwp_trap(\"callback allocation failure\");"));
@@ -121,23 +116,11 @@ int main(int argc, char **argv) {
         fwp::cgen::compile_library(&source, &header, &shared, opt, fwp::cgen::LibKind::Shared)
             .unwrap();
         for rounds in ["8", "1024"] {
-            checked(
-                Command::new(&loader)
-                    .arg(&shared)
-                    .args(["0", rounds])
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0"),
-            );
+            checked(Command::new(&loader).arg(&shared).args(["0", rounds]));
         }
         let result = Command::new(&loader)
             .arg(&shared)
             .args(["3", "1"])
-            .env_remove("FWP_GC")
-            .env("FWP_GC_STRESS", "0")
-            .env("FWP_GC_VERIFY", "0")
-            .env("FWP_REUSE_VERIFY", "0")
             .output()
             .unwrap();
         assert!(!result.status.success());
@@ -219,21 +202,15 @@ int main(int argc, char **argv) {
     for (flags, diagnostic) in [
         (
             vec!["--c-callback", "keep"],
-            "requires --staticlib/--cdylib and --gc arc",
+            "requires --staticlib/--cdylib",
         ),
         (
-            vec!["--staticlib", "--gc", "tracing", "--c-callback", "keep"],
-            "requires --staticlib/--cdylib and --gc arc",
-        ),
-        (
-            vec!["--staticlib", "--gc", "arc", "--c-callback", "absent"],
+            vec!["--staticlib", "--c-callback", "absent"],
             "unknown C callback export",
         ),
         (
             vec![
                 "--staticlib",
-                "--gc",
-                "arc",
                 "--c-callback",
                 "keep",
                 "--c-callback",

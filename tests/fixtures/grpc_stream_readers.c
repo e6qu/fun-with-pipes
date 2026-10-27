@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
     if(argc!=2)return 30;
     int mode=atoi(argv[1]); /* 0: both; 1/2: cancel receiver/waiter; 3: recursion; 4/5: decode with queued/later data */
     if(mode<0||mode>5)return 31;
-    fwp_lib_init(); fwp_gc_start(__builtin_frame_address(0)); fwp_tasks_init();
+    fwp_lib_init(); fwp_heap_start(); fwp_tasks_init();
     fwp_cur->deadline=fwp_now_ns()+10000000000LL; /* bound a broken wakeup */
     g_server server={0}; server.module="readers";
     g_conn *connection=g_conn_new(FWP_INVALID_SOCKET, "", "queued",&server);
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
         if(strcmp(fwp_trap_msg,"recursive stream read")||cell->forced||cell->src!=source||
            source->reader!=fwp_cur||source->read_waiters.head)return 50;
         source->reader=0;
-        FWP_KEEP_ALIVE(PTR(cell)); FWP_KEEP_ALIVE(PTR(source));
+
         fwp_lib_finish(); return 0;
     }
     stream_reader first={cell,0,0,0,0}, second={cell,0,0,0,0};
@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
     if(!stream->mhead||stream->mhead!=stream->mtail||stream->mhead->d[2]!='b')return 46;
     V text=OBJ(OBJ(cell->memo)->f[0])->f[0];
     if(STR(text)->len!=1||STR(text)->d[0]!='a')return 47;
-    FWP_KEEP_ALIVE(PTR(a)); FWP_KEEP_ALIVE(PTR(b));
-    FWP_KEEP_ALIVE(PTR(cell)); FWP_KEEP_ALIVE(PTR(source)); FWP_KEEP_ALIVE(PTR(connection));
+
+
     fwp_lib_finish(); return 0;
 }

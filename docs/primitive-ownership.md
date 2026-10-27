@@ -6,11 +6,10 @@ implemented directly in Rust and C rather than in fwp. Its contract tells the
 compiler who keeps each argument and result alive.
 
 `src/ownership.rs` is the shared inventory used by reference-count insertion and
-C generation. A coverage test checks library declarations against it. Unknown
-primitives, foreign functions and remote calls keep a conservative contract:
-arguments may become runtime-shared, and results need tracing unless a more
-precise contract proves their lifetime. Such a call is not automatically eligible
-for `--gc arc`.
+C generation. A coverage test checks library declarations against it. Primitives,
+foreign functions and remote calls need contracts that establish argument
+retention and result lifetime.
+The compiler rejects a call when it cannot prove those obligations.
 
 Read the tables using these meanings:
 
@@ -134,7 +133,7 @@ stops at the catching handler boundary; task switches preserve separate chains.
 Normal transfer unlinks registrations without releasing a transferred value.
 Compiler caller/reuse-token, runtime application/capture preparation and
 synchronous callback registrations preserve partially acquired owners. Unproved
-boundaries remain available only under explicit tracing; checked ARC rejects them. Cleanup registrations alone do not establish their ownership.
+boundaries are rejected. Cleanup registrations alone do not establish their ownership.
 
 ## Conservative reconstruction and external boundaries
 
@@ -147,7 +146,7 @@ counted reconstruction; the runtime and failure checks establish those contracts
 Unknown primitive, foreign and remote boundaries keep explicit sharing in
 [src/ownership.rs](../src/ownership.rs). The finite review records argument,
 result, callback, retention, teardown and cycle policy for every remaining
-boundary; it does not establish tracing-free eligibility.
+boundary; declarations alone do not prove that a particular program meets those rules.
 
 | Boundary | Current lifetime policy |
 |---|---|
@@ -168,8 +167,8 @@ boundary; it does not establish tracing-free eligibility.
 | process.run-input / process.call | Borrow input/argument strings until the child finishes; captured status/output record owns both copied strings, while call returns an immediate status. Registered cleanup owns temporary buffers, pipe endpoints and child-process resources |
 | External resource contexts | Original scoped/task owners preserve teardown order; counted C context storage does not by itself prove ownership of every fwp graph |
 
-Channel close preserves queued values. Explicit drain breaks the tested counted
-cycle, while unreachable shared cycles still need tracing. Checked ARC admits
+Channel close preserves queued values; it does not break an owning cycle.
+Unproved cycles are rejected even when a later drain is planned. The compiler admits
 nested channels when following their payload types cannot lead back to the same
 channel type. HTTP stream handles remain excluded because their hidden owners
 can lead back to the queue. The [task-message extension](measurements/task-channels.md)
@@ -182,28 +181,19 @@ retained message and the last channel owner releases remaining messages. See the
 contracts. These contracts describe the current runtime. Checked ARC additionally
 enforces its lifetime and cycle rules, rejecting unproved shared boundaries.
 
-## Complete runtime sharing
+## Counted runtime sharing
 
-In explicit tracing mode, runtime sharing can promote a reachable graph to
-tracing-managed storage. This differs from adding an ordinary counted owner.
-Checked ARC rejects calls requiring that promotion; normal ARC sharing keeps
-exact counts and typed cleanup.
+A second strong owner increments the allocation's count; it does not promote a
+graph into traced storage. Counts 1–254 fit one byte. At 255, an exact `size_t`
+side entry keyed by the canonical metadata slot stores the additional count.
+Interior references resolve to the allocation start. Releases and free/reuse
+remove obsolete side entries. Count overflow traps; side-entry allocation failure
+exits with status 102. Large fanout never saturates into permanent retention.
 
-Native counts 1–254 fit the existing byte. At 255, rare exact size_t side
-entries keyed by canonical metadata slots track additional owners without new
-value roots. Release, sharing, free/reuse and collection remove those entries;
-count overflow traps and side-entry allocation failure exits with status 102. Interior
-references canonicalize to allocation starts. Explicit runtime sharing still
-promotes the complete reachable graph; traversal overflow preserves child
-counts while recursing. Large fanout no longer forces automatic sharing.
-
-Eligible counted storage reclaims at last release at any age. Returning a cell
-clears old marks; verification clears stale child words before linking the free
-slot. The young-cell restriction on record reuse applies to tracing builds. ARC
-objects do not age through collections; unique counted objects remain eligible
-for reuse. Unproved shared graphs require explicit tracing. The tracing churn
-fixture explicitly disables both counted freeing and reuse so real collection
-remains tested.
+The last owner invokes typed child cleanup and frees the allocation. A unique
+allocation can be reused when size, layout and child-ownership rules permit it.
+Objects do not age. Unknown boundaries may accept only values whose ownership
+contract permits them; counted values cannot silently escape into untracked storage.
 
 ## Selected String/Bytes boundaries
 
@@ -339,18 +329,18 @@ select reference destructors.
 ## Accepted ownership review
 
 The immutable baseline and exact contract promotions distinguish counted
-boundaries from reviewed tracing requirements. Preparation and historical
+boundaries from operations that still require a specific lifetime proof. Preparation and historical
 binary/GC/reuse/omission controls remain in [history](roadmap-history.md).
-Checked ARC has a separate [eligibility contract](ownership.md); no
-blanket no-GC claim is established.
+The [eligibility contract](ownership.md) defines allowed lifetimes. Collector
+removal remains unverified until the final integrated checks pass.
 
 ## Validation and limits
 
 [Delivery evidence](roadmap-history.md) records the exact source and accepted
 checks for past changes; the handoff tracks current work.
 Focused interpreter oracles explicitly use FWP_NO_OPT=1. Tests cover retained aliases,
-scalar words resembling pointers, callback/capture ownership, conservative flags,
-GC stress/verification and reuse poisoning. The interpreter/native comparison
+scalar words resembling pointers, callback/capture ownership, forced copies,
+physical-free observations and deliberately omitted owners. The interpreter/native comparison
 includes observable callback and trap order.
 
 Detailed tests, failed controls, allocation/count measurements and compiler/

@@ -37,7 +37,7 @@ fn std_tests_pass_natively() {
 #[test]
 fn std_tests_pass_with_checked_ownership() {
     let out = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["test", "--std", "--native", "--gc", "arc"])
+        .args(["test", "--std", "--native"])
         .output()
         .unwrap();
     let stdout = String::from_utf8_lossy(&out.stdout);

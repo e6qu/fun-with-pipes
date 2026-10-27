@@ -93,11 +93,10 @@ yield between checking the target and retaining it. This is not an arbitrary
 OS-thread sharing API. External retention needs a separate registration and
 active-call protocol; weak channels do not supply one implicitly.
 
-During the transition, native weak channels require checked ARC. A tracing build
-is rejected rather than letting a conservative scan treat the metadata's target
-address as a strong edge. G5 deletes that obsolete execution mode. Existing
-allocator/static-pool and WASI checks passed with #215; they remain required
-when G5 removes tracing.
+Weak channels use the ordinary counted ownership model. Their metadata stores
+an identity and expiration state without owning the target; no scan can turn
+that address into a strong edge. Allocator/static-pool and WASI checks passed
+with #215. G5 must pass them again on the collector-free implementation.
 
 ## Required evidence and remaining work
 

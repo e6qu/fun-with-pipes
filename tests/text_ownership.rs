@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/allocation_report.rs"]
+mod allocation_report;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -26,7 +29,7 @@ impl Drop for Scratch {
 }
 
 #[test]
-fn nested_text_results_under_collection() {
+fn nested_text_results_preserve_values() {
     let dir = Scratch::new("aliases");
     let src = dir.0.join("leaves.fwp");
     std::fs::write(
@@ -63,23 +66,14 @@ main = read-all () | concat " a,b hé\nc " | checks | echo
         let exe = dir.0.join(format!("leaves{opt}"));
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
         );
-        for verify in ["0", "1"] {
-            let native = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", verify),
-            );
-            assert_eq!(
-                native.stdout, reference.stdout,
-                "{opt}, reuse verification {verify}"
-            );
-        }
+
+        let native = checked(&mut Command::new(&exe));
+        assert_eq!(native.stdout, reference.stdout, "{opt}");
     }
 }
 
@@ -100,37 +94,48 @@ main = (10000, 0) | loop step | echo
     .unwrap();
     let fwp = env!("CARGO_BIN_EXE_fwp");
     let reference = checked(Command::new(fwp).args(["run", "--interp"]).arg(&src));
+    let emitted = dir.0.join("loop.c");
+    checked(
+        Command::new(fwp)
+            .args(["build", "--emit-c"])
+            .arg(&src)
+            .args(["-o"])
+            .arg(&emitted),
+    );
+    let current = std::fs::read_to_string(&emitted).unwrap();
+    let free_entry = "static void fwp_mem_free(void *p) {";
+    assert_eq!(
+        current.matches(free_entry).count(),
+        2,
+        "native and WASM free implementations"
+    );
+    // Deliberately omit physical frees while retaining all generated owners and
+    // drops. The allocation report must distinguish this defect from cleanup.
+    let retained = current.replace(
+        free_entry,
+        "static void fwp_mem_free(void *p) { (void)p; return;",
+    );
     let mut freed = Vec::new();
-    for free in ["0", "1"] {
-        let exe = dir.0.join(format!("loop-{free}"));
-        checked(
-            Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
-                .arg(&src)
-                .args(["-O1", "-o"])
-                .arg(&exe)
-                .env("FWP_FREE", free),
-        );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STATS", "1")
-                .env("FWP_REUSE_VERIFY", "0")
-                .env("FWP_GC", "off"),
-        );
+    for (name, code) in [
+        ("missing-free", retained.as_str()),
+        ("released", current.as_str()),
+    ] {
+        let exe = dir.0.join(name);
+        fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
+        let out = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
         assert_eq!(out.stdout, reference.stdout);
         let stats = String::from_utf8_lossy(&out.stderr);
-        assert!(stats.contains("fwp gc: 0 collections"), "{stats}");
-        freed.push(
-            stats
-                .split(" MiB freed by counts")
-                .next()
-                .unwrap()
-                .rsplit('(')
-                .next()
-                .unwrap()
-                .parse::<f64>()
-                .unwrap(),
-        );
+
+        let report = allocation_report::parse(&stats).expect("allocation report");
+        if name == "released" {
+            assert_eq!(report.live, 0, "{name}: {report:?}");
+        } else {
+            assert!(
+                report.live > 0,
+                "ineffective retained-owner control: {name}: {report:?}"
+            );
+        }
+        freed.push(report.released as f64 / 1_048_576.0);
     }
     assert!(
         freed[0] == 0.0 && freed[1] > 0.5,
@@ -164,7 +169,7 @@ main = (10000, 0) | loop step | echo
     let cfile = dir.0.join("scratch-loop.c");
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -185,23 +190,14 @@ main = (10000, 0) | loop step | echo
     for (name, source) in [("retained", retained), ("released", current)] {
         let exe = dir.0.join(name);
         fwp::cgen::compile_c(&source, &exe, "-O1").unwrap();
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC", "off")
-                .env("FWP_GC_STATS", "1"),
-        );
+        let out = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
         assert_eq!(out.stdout, expected.stdout, "{name}");
         let stats = String::from_utf8_lossy(&out.stderr);
-        assert!(stats.contains("fwp gc: 0 collections"), "{stats}");
-        let heap: f64 = stats
-            .split("heap ")
-            .nth(1)
-            .unwrap()
-            .split_whitespace()
-            .next()
-            .unwrap()
-            .parse()
-            .unwrap();
+
+        let heap: f64 = allocation_report::parse(&stats)
+            .expect("allocation report")
+            .heap_extent as f64
+            / 1_048_576.0;
         heaps.push(heap);
     }
     assert!(

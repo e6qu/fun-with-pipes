@@ -9,7 +9,6 @@ typedef struct { uint64_t len; char d[]; } fwp_str;
 typedef struct { char *d; size_t len, cap; } fwp_buf;
 #define STR(v) ((fwp_str *)(uintptr_t)(v))
 #define PTR(v) ((V)(uintptr_t)(v))
-#define FWP_KEEP_ALIVE(v) ((void)(v))
 static _Noreturn void fwp_trap(const char *message) {
     if (strcmp(message, "string too large")) exit(128);
     exit(125);

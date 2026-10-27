@@ -117,7 +117,7 @@ def main():
         summaries = []
         selected_count = 0
         for row in rows:
-            assert row["collections"] == 0 and row["requests"] > 0
+            assert row["requests"] > 0
             assert 0 <= row["final_charged_bytes"] <= row["peak_charged_bytes"]
             calls = row["batches"] * MODES[row["mode"]]
             assert row["streams_created"] == calls
@@ -228,8 +228,7 @@ def main():
                     names += [layout_name, f"stream-owners/streams{opt}-no-free-{no_free}.exe"]
             names += [f"stream-owners/streams-no-free-{no_free}.c" for no_free in ["false", "true"]]
         if args.closed_connections and baseline:
-            names += [f"task-owners/{memory}-unique{opt}{extension}"
-                      for memory in ["arc", "tracing"]
+            names += [f"task-owners/counted-unique{opt}{extension}"
                       for opt in ["-O1", "-O2"] for extension in [".c", ".exe"]]
         observations = folder / "binary-observations.json"
         if observations.exists():
@@ -249,20 +248,20 @@ def main():
                   "partial": "One call per batch, sum first 32 of 64 (528)",
                   "retained": "Two calls per batch; sum both 1..64 streams and reread the first value of the initial retained iterator (4161)"},
         "sampling": "1, 16 or 256 batches in one process; three separate measured processes per case, after raw interpreter and uninstrumented native output agreement. Checkpoints precede each new request-stream allocation. Counters start after constant initialization. Final counters follow root execution, joining its child tasks and cached-value cleanup, before whole-runtime shutdown. Reusable connections and detached I/O tasks are still live at this point.",
-        "limits": "Collection disabled, physical freeing enabled. Managed allocations and counted retains plus connection/stream object and queued-message counts. Message requested bytes include the header and trailing byte. Other raw buffers, allocator/TLS/OS storage, server/process memory and timing excluded. Partial-read queue occupancy can vary with network/task scheduling. This is an ownership baseline, not a bounded-memory, zero-cost or C/Rust parity claim.",
+        "limits": "Counted ownership with physical freeing. Managed allocations and counted retains plus connection/stream object and queued-message counts. Message requested bytes include the header and trailing byte. Other raw buffers, allocator/TLS/OS storage, server/process memory and timing excluded. Partial-read queue occupancy can vary with network/task scheduling. This is an ownership baseline, not a bounded-memory, zero-cost or C/Rust parity claim.",
         "hosts": results}
     if baseline:
         report["baseline"] = {"file": args.baseline_report.name,
                               "source_revision": baseline["source_revision"],
                               "run_url": baseline["run_url"], **fingerprint(args.baseline_report)}
-        report["limits"] = ("Collection disabled, physical freeing enabled. Compared with the retained repeated-call baseline using the same source programs, input sizes and output checks. Managed allocation/count totals and explicit request/message releases are measured before whole-runtime shutdown. Constant final managed charge is required in every measured mode and size, as is release of all created streams and queued messages. Reusable connections and detached I/O tasks remain live at the final sampling point; their remaining storage is not a demonstrated leak. Partial readers can avoid constructing later messages once abandoned, so message-construction work can differ. Other raw buffers, allocator/TLS/OS storage, server/process memory and timing are excluded. Connections and retained callback graphs still require tracing; these cases do not establish unlimited-call bounds, checked ARC, zero-cost abstractions or C/Rust parity.")
+        report["limits"] = ("Counted ownership with physical freeing. Compared with the retained repeated-call baseline using the same source programs, input sizes and output checks. Managed allocation/count totals and explicit request/message releases are measured before whole-runtime shutdown. Constant final managed charge is required in every measured mode and size, as is release of all created streams and queued messages. Reusable connections and detached I/O tasks remain live at the final sampling point; their remaining storage is not a demonstrated leak. Partial readers can avoid constructing later messages once abandoned, so message-construction work can differ. Other raw buffers, allocator/TLS/OS storage, server/process memory and timing are excluded. These counters alone do not prove unlimited-call bounds, cycle freedom, zero-cost abstractions or C/Rust parity.")
     if args.projection_moves:
         report["comparison_kind"] = "compiler transfer of the only counted field from a consumed boxed record"
         report["limits"] += " This compiler comparison requires fewer retains in every measured case without extra allocation requests or higher final managed storage; shared records keep their existing owners. Dynamic dispatch, record allocations and ownership tests remain."
     if args.closed_connections:
         report["connection_lifetime"] = "closed_and_drained"
         report["sampling"] = "1, 16 or 256 batches, three measured processes per case. Native-only hooks close each connection and drain its reader/writer tasks before the next call and before final sampling. Every drain requires one closed socket per created connection, no pooled connection, no live I/O task and no remaining request/message. Managed charge and unfinalized connection counts are sampled at each drain. Counters start after constant initialization and end after root execution, child joins, cached-value cleanup and the final drain, before runtime shutdown."
-        report["limits"] = "Collection disabled, physical freeing enabled. Raw interpretation and ordinary native output are functional references using their usual connection pooling; their transport work differs from this instrumented churn workload. Ownership revision comparisons must use the same connection-closing hooks. Managed allocation/retain counts, charged storage, connection/request finalization and queued-message bytes are measured. Empty I/O task lists establish completed task execution, not reclaimed task-object storage. Stack pools, other raw buffers, allocator/TLS/OS storage, server/process memory and timing are excluded. This establishes a closed-connection ownership baseline, not zero-cost abstractions, checked ARC or C/Rust parity."
+        report["limits"] = "Counted ownership with physical freeing. Raw interpretation and ordinary native output are functional references using their usual connection pooling; their transport work differs from this instrumented churn workload. Ownership revision comparisons must use the same connection-closing hooks. Managed allocation/retain counts, charged storage, connection/request finalization and queued-message bytes are measured. Empty I/O task lists establish completed task execution, not reclaimed task-object storage. Stack pools, other raw buffers, allocator/TLS/OS storage, server/process memory and timing are excluded. This establishes a closed-connection ownership baseline, not zero-cost abstractions, checked ARC or C/Rust parity."
         if baseline:
             report["limits"] += " The comparison additionally requires every created connection finalized and constant final managed charge across measured sizes."
     args.output.write_text(json.dumps(report, indent=2) + "\n")

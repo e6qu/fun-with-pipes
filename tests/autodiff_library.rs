@@ -18,16 +18,14 @@ record : I64 -> I64
 record = ad.tape | make { 0 = id, 1 = const 1.0, 2 = const -1, 3 = const 0.0 } | ad.push
 export probe : I64 -> I64
 probe = ad.scope record
-export live : I64 -> I64
-live = record
 export managed : I64 -> I64
-managed = const [0.0] | rev._seed | .1 | rev._seed | .1
-    | map (fork mul id id) | head | option.unwrap-or zero | .vertex
+managed = ad.scope (const [0.0] | rev._seed | .1 | rev._seed | .1
+    | map (fork mul id id) | head | option.unwrap-or zero | .vertex)
 "#,
     )
     .unwrap();
     let build = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["build", "--gc", "tracing", "--cdylib", "--emit-c"])
+        .args(["build", "--cdylib", "--emit-c"])
         .arg(&input)
         .arg("-o")
         .arg(&output)
@@ -58,7 +56,7 @@ managed = const [0.0] | rev._seed | .1 | rev._seed | .1
     )
     .replace("(double *)calloc(", "(double *)library_calloc(");
     let code=format!("{}\nstatic void *library_realloc(void *,size_t);\nstatic void *library_calloc(size_t,size_t);\nstatic void library_free(void *);\nstatic void *library_mem_alloc(size_t);\nstatic void *library_mem_realloc(void *,size_t,size_t);\nstatic void library_mem_free(void *);\nstatic void library_finished(void);\n{}{}\n{}",&source[..a],tape,&source[b..],include_str!("fixtures/autodiff_library_ledger.c"))
-        .replace("    fwp_tape_finish();\n    fwp_gc_finish();", "    fwp_tape_finish();library_finished();\n    fwp_gc_finish();");
+        .replace("    fwp_tape_finish();\n    fwp_heap_finish();", "    fwp_tape_finish();library_finished();\n    fwp_heap_finish();");
     assert!(code.contains("fwp_tape_finish();library_finished();"));
     let host = dir.join("host.c");
     let exe = dir.join(if cfg!(windows) { "host.exe" } else { "host" });
@@ -75,10 +73,14 @@ managed = const [0.0] | rev._seed | .1 | rev._seed | .1
         String::from_utf8_lossy(&built.stderr)
     );
     for opt in ["-O1", "-O2"] {
-        for omit in ["none", "finish", "weights"] {
+        for omit in ["none", "finish", "weights", "scope"] {
             let c = match omit {
                 "finish" => code.replace("fwp_tape_finish();library_finished();", ""),
                 "weights" => code.replace("library_mem_free(owner->weights);", ""),
+                "scope" => code.replace(
+                    "        fwp_tape_unlink_scope(t);\n        fwp_tape_buffers buffers",
+                    "        fwp_tape_buffers buffers",
+                ),
                 _ => code.clone(),
             };
             assert_eq!(c == code, omit == "none");
@@ -91,8 +93,6 @@ managed = const [0.0] | rev._seed | .1 | rev._seed | .1
                     .arg(&report)
                     .env("FWP_AD_WORKSPACE", cache)
                     .env("FWP_AD_LIBRARY_REPORT", &report)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
                     .output()
                     .unwrap();
                 assert_eq!(
@@ -100,6 +100,7 @@ managed = const [0.0] | rev._seed | .1 | rev._seed | .1
                     Some(match omit {
                         "finish" => 182,
                         "weights" => 183,
+                        "scope" => 186,
                         _ => 0,
                     }),
                     "{opt} omit={omit} cache={cache}: {}",

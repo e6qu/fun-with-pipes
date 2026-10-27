@@ -111,58 +111,38 @@ fn boxed_projection_transfers_unique_fields_and_preserves_shared_values() {
         .is_err());
     let dir = fwp::cgen::TempDir::new("boxed-projection").unwrap();
     let binary = dir.join("probe.exe");
-    for arc in [false, true] {
-        fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-            arc,
-            ..Default::default()
-        });
-        let generated = fwp::cgen::generate(&p).unwrap();
-        fwp::cgen::set_native_options(Default::default());
-        assert!(generated.contains("/* move sole boxed owner */"));
-        let code = generated.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic size_t projection_retains;")
+
+    let generated = fwp::cgen::generate(&p).unwrap();
+    assert!(generated.contains("/* move sole boxed owner */"));
+    let code = generated.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic size_t projection_retains;")
             .replace("static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {", "static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) { projection_retains++;")
             .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)")
             + include_str!("fixtures/boxed_projection_ownership.c");
-        let mut duplicated = String::new();
-        let mut stolen = String::new();
-        for line in code.lines() {
-            if line.contains("/* move sole boxed owner */") {
-                duplicated.push_str("if (0) { /* restore redundant retain */\n");
-                stolen.push_str("if (1) { /* steal from shared record */\n");
-            } else {
-                duplicated.push_str(line);
-                duplicated.push('\n');
-                stolen.push_str(line);
-                stolen.push('\n');
-            }
-        }
-        for opt in ["-O1", "-O2"] {
-            for broken in [&duplicated, &stolen] {
-                fwp::cgen::compile_c(broken, &binary, opt).unwrap();
-                let out = Command::new(&binary)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
-                assert_eq!(out.status.code(), Some(202), "broken projection: {out:?}");
-            }
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            for stress in if arc { &["0"][..] } else { &["0", "1"][..] } {
-                let out = Command::new(&binary)
-                    .env("FWP_GC", if arc { "off" } else { "on" })
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress)
-                    .output()
-                    .unwrap();
-                assert!(
-                    out.status.success(),
-                    "arc={arc}/{opt}/stress={stress}: {out:?}"
-                );
-            }
+    let mut duplicated = String::new();
+    let mut stolen = String::new();
+    for line in code.lines() {
+        if line.contains("/* move sole boxed owner */") {
+            duplicated.push_str("if (0) { /* restore redundant retain */\n");
+            stolen.push_str("if (1) { /* steal from shared record */\n");
+        } else {
+            duplicated.push_str(line);
+            duplicated.push('\n');
+            stolen.push_str(line);
+            stolen.push('\n');
         }
     }
+    for opt in ["-O1", "-O2"] {
+        for broken in [&duplicated, &stolen] {
+            fwp::cgen::compile_c(broken, &binary, opt).unwrap();
+            let out = Command::new(&binary).output().unwrap();
+            assert_eq!(out.status.code(), Some(202), "broken projection: {out:?}");
+        }
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+
+        let out = Command::new(&binary).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
+    }
+
     check_stack_array_projection();
 }
 
@@ -283,79 +263,56 @@ fn check_stack_array_projection() {
         .call_root(3, vec![input])
         .is_err());
     let dir = fwp::cgen::TempDir::new("stack-array-projection").unwrap();
-    for arc in [false, true] {
-        fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-            arc,
-            ..Default::default()
-        });
-        let generated = fwp::cgen::generate(&p).unwrap();
-        fwp::cgen::set_native_options(Default::default());
-        assert!(generated.contains("/* move stack array owner */"));
-        let count_site = "static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {";
-        assert!(generated.contains(count_site));
-        let code = generated.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic size_t stack_array_retains;\nstatic int stack_array_cancel;")
+
+    let generated = fwp::cgen::generate(&p).unwrap();
+    assert!(generated.contains("/* move stack array owner */"));
+    let count_site = "static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {";
+    assert!(generated.contains(count_site));
+    let code = generated.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic size_t stack_array_retains;\nstatic int stack_array_cancel;")
             .replace(count_site, &(count_site.to_string() + " stack_array_retains++;"))
             .replace("static V fwp_p_task_yield(void) {", "static V fwp_p_task_yield(void) { if (stack_array_cancel) fwp_cur->cancelled = 1;")
             .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)")
             + include_str!("fixtures/stack_array_projection.c");
-        let mut counted = String::new();
-        for line in code.lines() {
-            counted.push_str(line);
-            counted.push('\n');
-            if let Some(rest) = line.trim().strip_prefix("/* move stack array owner */ ") {
-                let local = rest.split(" = ").next().unwrap();
-                counted.push_str(&format!("fwp_rc_dup({local}); fwp_rc_drop({local});\n"));
-            }
+    let mut counted = String::new();
+    for line in code.lines() {
+        counted.push_str(line);
+        counted.push('\n');
+        if let Some(rest) = line.trim().strip_prefix("/* move stack array owner */ ") {
+            let local = rest.split(" = ").next().unwrap();
+            counted.push_str(&format!("fwp_rc_dup({local}); fwp_rc_drop({local});\n"));
         }
-        let missing_release =
-            code.replace("stack_array_drop(result);", "/* omitted result release */");
-        assert_ne!(counted, code);
-        assert_ne!(missing_release, code);
-        for opt in ["-O0", "-O2"] {
-            for (label, source, status) in [
-                ("moved", &code, 0),
-                ("extra-retain", &counted, 201),
-                ("missing-release", &missing_release, 204),
-            ] {
-                let binary = dir.join("array.exe");
-                fwp::cgen::compile_c(source, &binary, opt).unwrap();
-                for stress in if !arc && label == "moved" {
-                    &["0", "1"][..]
-                } else {
-                    &["0"][..]
-                } {
-                    let output = Command::new(&binary)
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", stress)
-                        .output()
-                        .unwrap();
-                    assert_eq!(
-                        output.status.code(),
-                        Some(status),
-                        "arc={arc} {opt} {label} stress={stress}: {output:?}"
-                    );
-                    if let Some(destination) = std::env::var_os("FWP_STACK_ARRAY_ARTIFACTS") {
-                        let destination = std::path::PathBuf::from(destination);
-                        std::fs::create_dir_all(&destination).unwrap();
-                        let name = format!(
-                            "{}-{opt}-{label}-{stress}",
-                            if arc { "arc" } else { "tracing" }
-                        );
-                        std::fs::write(destination.join(format!("{name}.c")), source).unwrap();
-                        std::fs::copy(&binary, destination.join(format!("{name}.exe"))).unwrap();
-                        std::fs::write(destination.join(format!("{name}.stdout")), &output.stdout)
-                            .unwrap();
-                        std::fs::write(destination.join(format!("{name}.stderr")), &output.stderr)
-                            .unwrap();
-                        std::fs::write(
-                            destination.join(format!("{name}.status")),
-                            format!("{status}\n"),
-                        )
-                        .unwrap();
-                    }
-                }
+    }
+    let missing_release = code.replace("stack_array_drop(result);", "/* omitted result release */");
+    assert_ne!(counted, code);
+    assert_ne!(missing_release, code);
+    for opt in ["-O0", "-O2"] {
+        for (label, source, status) in [
+            ("moved", &code, 0),
+            ("extra-retain", &counted, 201),
+            ("missing-release", &missing_release, 204),
+        ] {
+            let binary = dir.join("array.exe");
+            fwp::cgen::compile_c(source, &binary, opt).unwrap();
+
+            let output = Command::new(&binary).output().unwrap();
+            assert_eq!(
+                output.status.code(),
+                Some(status),
+                "{opt} {label}: {output:?}"
+            );
+            if let Some(destination) = std::env::var_os("FWP_STACK_ARRAY_ARTIFACTS") {
+                let destination = std::path::PathBuf::from(destination);
+                std::fs::create_dir_all(&destination).unwrap();
+                let name = format!("counted-{opt}-{label}");
+                std::fs::write(destination.join(format!("{name}.c")), source).unwrap();
+                std::fs::copy(&binary, destination.join(format!("{name}.exe"))).unwrap();
+                std::fs::write(destination.join(format!("{name}.stdout")), &output.stdout).unwrap();
+                std::fs::write(destination.join(format!("{name}.stderr")), &output.stderr).unwrap();
+                std::fs::write(
+                    destination.join(format!("{name}.status")),
+                    format!("{status}\n"),
+                )
+                .unwrap();
             }
         }
     }

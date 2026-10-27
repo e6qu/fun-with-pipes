@@ -5,7 +5,7 @@ static fwp_task stack_array_task;
 static int stack_array_recover(void) { return 1; }
 static const fwp_desc stack_array_element = {.kind = K_F64};
 static double stack_array_charge(void) {
-    return fwp_gc.total_alloc + (double)(fwp_gc.budget_given - fwp_gc.budget);
+    return (double)fwp_heap.live;
 }
 static V stack_array_input(void) {
     V value = fwp_array_typed_new(2, &stack_array_element);
@@ -22,11 +22,9 @@ static void stack_array_drop(V value) {
     fwp_fns[0].owned->drop_arguments(&value, 0, 1);
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table;
+    fwp_heap_start(); fwp_fns = fwp_fn_table;
     fwp_init_consts(); fwp_tasks_init();
     if (!fwp_fns[0].owned || !fwp_fns[0].owned->drop_arguments) return 200;
-    const char *stress = getenv("FWP_GC_STRESS");
-    int collecting = stress && !strcmp(stress, "1");
     double before = stack_array_charge();
     for (int alias = 0; alias < 2; alias++) for (int repeat = 0; repeat < 64; repeat++) {
         V input = stack_array_input(); if (alias) fwp_rc_dup(input);
@@ -39,7 +37,7 @@ int main(void) {
             if (!stack_array_valid(input) || *fwp_rc_slot(input) != 1) return 203;
             stack_array_drop(input);
         }
-        if (!collecting && stack_array_charge() != before) return 204;
+        if (stack_array_charge() != before) return 204;
         if (fwp_cleanups) return 205;
     }
     for (volatile int mode = 0; mode < 2; mode++) for (volatile int repeat = 0; repeat < 64; repeat++) {
@@ -50,9 +48,6 @@ int main(void) {
         memset(&stack_array_task, 0, sizeof stack_array_task);
         if (mode) {
             stack_array_task.identity = UINT64_MAX;
-#ifdef _WIN32
-            stack_array_task.ctx.top = previous->ctx.top;
-#endif
             stack_array_task.base = &stack_array_jump; fwp_cur = &stack_array_task;
         }
         stack_array_cancel = mode;
@@ -64,7 +59,7 @@ int main(void) {
         fwp_trap_recover = NULL; fwp_trap_jb = NULL;
         if (mode ? !stack_array_task.unwinding : strcmp(fwp_trap_msg, "stack array move") != 0) return 207;
         if (fwp_cleanups) return 208;
-        if (!collecting && stack_array_charge() != before) return 209;
+        if (stack_array_charge() != before) return 209;
     }
     return 0;
 }

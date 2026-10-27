@@ -54,7 +54,7 @@ def instrument(original):
     assert code.count(marker) == 1
     code = code.replace(marker, marker + HELPERS)
     for name, parameters, condition in [
-        ('fwp_gc_alloc', 'size_t n, int leaf', 'iteration_active && leaf!=0'),
+        ('fwp_heap_alloc', 'size_t n, int kind', 'iteration_active && kind!=0'),
         ('fwp_alloc_init', 'size_t n', 'iteration_active'),
     ]:
         signature = f'static inline void *{name}({parameters}) {{'
@@ -128,8 +128,7 @@ def main():
     out = parser.parse_args().output.resolve()
     out.mkdir(parents=True, exist_ok=True)
     compiler = ROOT / 'target/release/fwp'
-    environment = dict(os.environ, FWP_AD_WORKSPACE='1', FWP_GC_STRESS='0',
-                       FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+    environment = dict(os.environ, FWP_AD_WORKSPACE='1')
     environment.pop('FWP_NO_OPT', None)
     results = {}
     for name in ['identity', 'map', 'sustained-map', 'nested']:
@@ -138,7 +137,7 @@ def main():
         raw = run([compiler, 'run', '--interp', source], dict(environment, FWP_NO_OPT='1'))
         assert raw.stdout == expected and not raw.stderr
         emitted = out / (name + '.c')
-        run([compiler, 'build', '--gc', 'arc', '--emit-c', source, '-o', emitted], environment)
+        run([compiler, 'build', '--emit-c', source, '-o', emitted], environment)
         original = emitted.read_text()
         variants = {}
         for label, code in [('totals', metadata.checkpoint.instrument(original)), ('sites', instrument(original))]:
@@ -151,7 +150,8 @@ def main():
             assert measured.stdout == expected
             rows = list(map(json.loads, measured.stderr.splitlines()))
             tape, managed = rows[0], rows[-1]
-            assert tape['finalTapeBytes'] == managed['finalChargedBytes'] == managed['collections'] == 0
+            assert tape['finalTapeBytes'] == managed['finalChargedBytes'] == 0
+            assert set(managed) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
             data = dict(tape=tape, managed=managed, command=list(map(str, command)),
                 generatedSha256=hashlib.sha256(cfile.read_bytes()).hexdigest(),
                 binarySha256=hashlib.sha256(binary.read_bytes()).hexdigest())

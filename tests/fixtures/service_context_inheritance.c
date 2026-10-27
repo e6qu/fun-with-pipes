@@ -61,6 +61,7 @@ static uintptr_t scope_callback(uintptr_t ignored) {
     check_inherited();
     if (depth == 3) return 42;
     escaped = fwp_spawn_task(0, inherited_child, 0, 0, 1);
+    fwp_task_own_internal(escaped, 1);
     if (stage == 1) fwp_fail(fwp_cstr("scope failure"), &context_error);
     if (stage == 2) fwp_trap("scope trap");
     if (stage == 3) { entered = 1; fwp_park(0, 0); fwp_check_cancel(); _Exit(45); }
@@ -92,7 +93,7 @@ static void parent(void *arg, int stop) {
         } else {
             typed++;
             if (handler.desc != &context_error || strcmp(STR(handler.value)->d, "scope failure")) _Exit(47);
-            FWP_KEEP_ALIVE(handler.value);
+
         }
     } else {
         trapped++;
@@ -110,7 +111,7 @@ static void parent(void *arg, int stop) {
  * failure code. Successful runs still execute complete library shutdown. */
 int main(void) {
     fwp_lib_init();
-    fwp_gc_start(__builtin_frame_address(0));
+    fwp_heap_start();
     fwp_tasks_init();
     fwp_trap_recover = g_trap_recover;
     for (stage = 0; stage < 9; stage++) {
@@ -135,6 +136,7 @@ int main(void) {
         V nanoseconds = INT64_C(3600000000000);
         duration = fwp_record(1, &nanoseconds);
         fwp_task *task = fwp_spawn_task(0, parent, 0, 0, 0);
+        fwp_task_own_internal(task, 1);
         if (stage == 3) {
             fwp_p_task_yield();
             if (!entered || task->done) _Exit(50);
@@ -145,6 +147,7 @@ int main(void) {
             if (escaped || child_checked || !task->done || cancelled || typed || trapped != 1 ||
                 metadata_attempts != (stage == 4) || metadata_frees || fail_metadata ||
                 metadata_block || fwp_cur->gctx != &before || fwp_cleanups) _Exit(56);
+            fwp_task_drop(PTR(task));
             fwp_cur->gctx = 0;
             continue;
         }
@@ -152,6 +155,7 @@ int main(void) {
         if (!escaped || escaped->done || child_checked || !task->done ||
             cancelled != (stage == 3) || typed != (stage == 1) ||
             trapped != (stage == 2) || fwp_cur->gctx != &before || fwp_cleanups) _Exit(51);
+        fwp_task_drop(PTR(task));
         /* This private fixture mutates source buffers to detect borrowed copies. */
         memset(STR(original_name)->d, '?', STR(original_name)->len);
         memset(STR(original_value)->d, '?', STR(original_value)->len);
@@ -159,9 +163,10 @@ int main(void) {
         fwp_make_ready(escaped);
         fwp_await(escaped);
         if (child_checked != 1 || !escaped->done || escaped->gctx_owner) _Exit(52);
+        fwp_task_drop(PTR(escaped));
         if (metadata_attempts != 1 || metadata_frees != 1 || metadata_block) _Exit(54);
-        FWP_KEEP_ALIVE(PTR(task)); FWP_KEEP_ALIVE(PTR(escaped));
-        FWP_KEEP_ALIVE(metadata); FWP_KEEP_ALIVE(duration);
+
+
         fwp_cur->gctx = 0;
     }
     /* Failed child ownership is atomic across headers, TLS and capture. A

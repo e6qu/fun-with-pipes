@@ -64,45 +64,32 @@ main = read-all () | concat "heap-dependent text" | both id checks | echo
                 Command::new(fwp)
                     .env_remove("FWP_NO_OPT")
                     .env("FWP_STACK", stack)
-                    .args(["build", "--gc", "tracing"])
+                    .args(["build"])
                     .arg(&source)
                     .args([opt, "--emit-c", "-o"])
                     .arg(&cfile),
             );
-            checked(
-                Command::new(fwp)
-                    .env_remove("FWP_NO_OPT")
-                    .env("FWP_STACK", stack)
-                    .args(["build", "--gc", "tracing"])
-                    .arg(&source)
-                    .args([opt, "-o"])
-                    .arg(&exe),
-            );
+            let code = std::fs::read_to_string(&cfile).unwrap();
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
             std::fs::copy(&exe, artifacts.join(format!("{label}.bin"))).unwrap();
-            for verify in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", verify)
-                    .output()
-                    .unwrap();
-                let prefix = format!("{label}-reuse{verify}");
-                std::fs::write(artifacts.join(format!("{prefix}.stdout")), &out.stdout).unwrap();
-                std::fs::write(artifacts.join(format!("{prefix}.stderr")), &out.stderr).unwrap();
-                std::fs::write(
-                    artifacts.join(format!("{prefix}.status")),
-                    format!("{}\n", out.status),
-                )
-                .unwrap();
-                assert_eq!(
-                    out.status.code(),
-                    reference.status.code(),
-                    "{prefix}: {}",
-                    String::from_utf8_lossy(&out.stderr)
-                );
-                assert_eq!(out.stdout, reference.stdout, "{prefix}");
-                assert_eq!(out.stderr, reference.stderr, "{prefix}");
-            }
+
+            let out = Command::new(&exe).output().unwrap();
+            let prefix = &label;
+            std::fs::write(artifacts.join(format!("{prefix}.stdout")), &out.stdout).unwrap();
+            std::fs::write(artifacts.join(format!("{prefix}.stderr")), &out.stderr).unwrap();
+            std::fs::write(
+                artifacts.join(format!("{prefix}.status")),
+                format!("{}\n", out.status),
+            )
+            .unwrap();
+            assert_eq!(
+                out.status.code(),
+                reference.status.code(),
+                "{prefix}: {}",
+                String::from_utf8_lossy(&out.stderr)
+            );
+            assert_eq!(out.stdout, reference.stdout, "{prefix}");
+            assert_eq!(out.stderr, reference.stderr, "{prefix}");
         }
     }
     std::fs::remove_dir_all(&directory).unwrap();

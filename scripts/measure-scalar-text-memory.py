@@ -69,11 +69,10 @@ def main():
     directory, = (inputs / ('scalar-text-bench-' + args.host)
                   / 'bench-evidence' / args.source).iterdir()
     # The profiling children need no GitHub credentials or caller-selected fwp
-    # runtime switches. Their code and memory mode come from the saved source.
+    # runtime switches. Their implementation comes from the saved source.
     environment = {key: value for key, value in os.environ.items()
                    if not key.startswith('FWP_') and key not in ('GH_TOKEN', 'GITHUB_TOKEN')}
-    environment.update(FWP_GC_STRESS='0', FWP_GC_VERIFY='0',
-                       FWP_REUSE_VERIFY='0', FWP_LTO='0', LC_ALL='C')
+    environment.update(FWP_LTO='0', LC_ALL='C')
     compiler = run([args.cc, '--version'], environment).stdout.decode().splitlines()[0]
     assert compiler == source_report['cCompiler'], (compiler, source_report['cCompiler'])
     # Actions artifacts preserve bytes, but not executable permissions.
@@ -144,7 +143,7 @@ def main():
             assert counts['retains'] == 0, (label, counts)
             if label == 'ordinary':
                 assert counts['peakChargedBytes'] == counts['finalChargedBytes'] == 0, counts
-                assert counts['collections'] == 0, counts
+                assert set(counts) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}, counts
             else:
                 assert counts['peakChargedBytes'] > 0, counts
             samples.append(counts)

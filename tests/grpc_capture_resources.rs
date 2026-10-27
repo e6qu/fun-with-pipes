@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn metadata_capture_releases_after_callbacks_and_escaped_tasks() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let int = MT::con("std::I64");
     let pair = MT::Record(vec![
@@ -155,7 +151,7 @@ static uintptr_t observed_callback(uintptr_t f){
  if(stage==3){entered=1;fwp_park(0,0);fwp_check_cancel();_Exit(16);}
  if(stage==4||stage==5||stage==6||stage==7||stage==8){
   fwp_cleanup overflow_cleanup;if(stage==7){((g_capture*)watched)->users=SIZE_MAX;fwp_cleanup_push(&overflow_cleanup,overflow_restore,watched);}
-  fail_spawn=stage==6;spawned=fwp_spawn_task(0,child,0,0,stage==5);
+  fail_spawn=stage==6;spawned=fwp_spawn_task(0,child,0,0,stage==5);if(stage==5)fwp_task_own_internal(spawned,1);
   if(stage==6||stage==7)_Exit(17);
  }
  return 42;
@@ -171,21 +167,22 @@ static void call(void *arg,int stop){
    size_t n;V *items=fwp_list_items(OBJ(snapshot)->f[1],&n);
    if(OBJ(snapshot)->f[0]!=42||n!=1||strcmp(STR(OBJ(items[0])->f[1])->d,"before"))_Exit(18);
    if(frees!=(stage==4||stage==5||stage==8?0:1))_Exit(1);
-  }else{typed++;if(handler.desc!=&string_descriptor||strcmp(STR(handler.value)->d,"capture typed failure"))_Exit(19);FWP_KEEP_ALIVE(handler.value);}
+  }else{typed++;if(handler.desc!=&string_descriptor||strcmp(STR(handler.value)->d,"capture typed failure"))_Exit(19);}
  }else{trapped++;const char *expected=stage==6?"child prepare trap":stage==7?"too many metadata capture owners":"capture scope trap";if(strcmp(fwp_trap_msg,expected))_Exit(20);}
  fwp_handlers=handler.prev;fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;
  if(fwp_cur->gctx||fwp_cleanups)_Exit(1);
 }
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  for(stage=0;stage<11;stage++){
   frees=entered=cancelled=trapped=typed=scope_returned=fail_spawn=nested=0;watched=spawned=0;snapshot=0;
-  fwp_task *task=fwp_spawn_task(0,call,0,0,0);
+  fwp_task *task=fwp_spawn_task(0,call,0,0,0);fwp_task_own_internal(task,1);
   if(stage==3){fwp_p_task_yield();if(!entered||task->done||frees)return 2;fwp_p_task_cancel(PTR(task));}
   fwp_await(task);
-  if(stage==5){if(frees||!spawned||!entered||((fwp_task*)spawned)->done)return 3;fwp_make_ready(spawned);fwp_await(spawned);}
+  if(stage==5){if(frees||!spawned||!entered||((fwp_task*)spawned)->done)return 3;fwp_make_ready(spawned);fwp_await(spawned);fwp_task_drop(PTR(spawned));}
   if(!task->done||frees!=1||fwp_cleanups||cancelled!=(stage==3)||typed!=(stage==1)||trapped!=(stage==2||stage==6||stage==7)||task->gctx_owner)return 1;
-  FWP_KEEP_ALIVE(PTR(task));FWP_KEEP_ALIVE(PTR(spawned));if(snapshot)CAPTURE_TYPE->drop(snapshot);snapshot=0;
+  fwp_task_drop(PTR(task));
+  if(snapshot)CAPTURE_TYPE->drop(snapshot);snapshot=0;
  }
  // Failure to acquire capture ownership must not partially retain TLS options.
  g_tls *tls=g_tls_new("",0,"","","");tls->users=1;
@@ -200,7 +197,7 @@ int main(void){
  if(setjmp(failed))return 7;
  if(fwp_p_grpc_with_tls(options,0,0,1,2,3,4)!=42)return 7;
  if(tls_frees!=1||cap.users!=SIZE_MAX||fwp_cleanups||fwp_cur->gctx!=&context)return 8;
- fwp_cur->gctx=0;FWP_KEEP_ALIVE(options);
+ fwp_cur->gctx=0;
  // Failed capture allocation never enters the callback or installs a context.
  fail_capture=1;callback_entries=0;
  if(!setjmp(failed)){fwp_p_grpc_with_response_metadata(0,CAPTURE_TYPE);return 9;}
@@ -231,22 +228,13 @@ int main(void){
     for opt in ["-O1", "-O2"] {
         for broken in &controls {
             fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
-            let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+            let out = Command::new(&exe).output().unwrap();
             assert_eq!(out.status.code(), Some(1), "omitted capture owner: {out:?}");
         }
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-            }
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
     let unit = MT::unit();
     let pure = Program {

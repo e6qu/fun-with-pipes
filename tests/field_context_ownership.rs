@@ -9,12 +9,8 @@ mod record_probe;
 fn inlined_projection_releases_discarded_nested_children() {
     std::env::set_var("FWP_STACK", "0");
     fwp::cgen::set_static_memory(None);
-    for arc in [true, false] {
-        let mode = if arc { "arc" } else { "tracing" };
-        let stress = if arc { "0" } else { "1" };
-
+    {
         fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-            arc,
             static_link: false,
             pgo: None,
             cross: None,
@@ -124,14 +120,11 @@ fn inlined_projection_releases_discarded_nested_children() {
  .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
         let probe = r#"
 static int dead(V v) {
-#ifndef FWP_ARC_ONLY
- if(fwp_reuse_verify)return STR(v)->len==0;
-#endif
  return *fwp_rc_slot(v)==0;
 }
 int main(void) {
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
- intptr_t baseline=fwp_gc.budget;
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+ size_t baseline=fwp_heap.live;
  for(int round=0;round<32;round++){
  for(int alias=0;alias<2;alias++) {
   V input=fwp_rc_fresh(fwp_str_new("input",5));if(alias)fwp_rc_dup(input);observed=0;
@@ -140,9 +133,7 @@ int main(void) {
   if(alias){if(*fwp_rc_slot(input)!=1 || STR(input)->len!=5)return 4;fwp_rc_free_obj(input);}
   else if(!dead(input))return 5;
  }
-#ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
-#endif
+ if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
  }
  return 0;
 }
@@ -153,87 +144,44 @@ int main(void) {
                 *ty = MT::con("?");
             }
         }
-        let control = if arc {
-            let error =
-                fwp::cgen::generate(&erased).expect_err("ARC must reject erased ownership types");
-            assert!(error.contains("ownership:"), "{error}");
-            None
-        } else {
-            Some(fwp::cgen::generate(&erased).unwrap()
- .replace("fwp_p_str_repeat(l0, l1)","observe_repeat(l0, l1)")
- .replacen("/* repeat :","static V observed; static V observe_repeat(V n,V s) { V r=fwp_p_str_repeat(n,s);observed=r;return r; }\n/* repeat :",1)
- .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)"))
-        };
+
+        let error =
+            fwp::cgen::generate(&erased).expect_err("ARC must reject erased ownership types");
+        assert!(error.contains("ownership:"), "{error}");
+
         let dir = std::env::temp_dir().join(format!("fwp-field-context-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let exe = dir.join("probe.exe");
         std::fs::write(dir.join("probe.c"), &emitted).unwrap();
         for opt in ["-O1", "-O2"] {
-            if let Some(control) = &control {
-                fwp::cgen::compile_c(&format!("{control}\n{probe}"), &exe, opt).unwrap();
-                let old = Command::new(&exe)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "1")
-                    .output()
-                    .unwrap();
-                record_probe::save(
-                    "field_context_ownership",
-                    &format!("{mode}{opt}-ir-erased-type"),
-                    &format!("{control}\n{probe}"),
-                    &exe,
-                    &old,
-                );
-                assert_eq!(
-                    old.status.code(),
-                    Some(3),
-                    "erasing the discarded field type must expose its child leak"
-                );
-            }
-            if arc {
+            {
                 let missing = probe.replace("fwp_rc_free_obj(input);", "");
                 assert_ne!(missing, probe);
                 let code = format!("{runtime}\n{missing}");
                 fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-                let old = Command::new(&exe)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
+                let old = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "field_context_ownership",
-                    &format!("{mode}{opt}-ir-missing-release"),
+                    &format!("counted{opt}-ir-missing-release"),
                     &code,
                     &exe,
                     &old,
                 );
-                assert_eq!(old.status.code(), Some(90), "{mode} {opt}: {old:?}");
+                assert_eq!(old.status.code(), Some(90), "counted {opt}: {old:?}");
             }
             fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-            for poison in if arc { &["0"][..] } else { &["0", "1"][..] } {
-                let o = Command::new(&exe)
-                    .env("FWP_GC", if arc { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
+            {
+                let o = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "field_context_ownership",
-                    &format!("{mode}{opt}-ir-normal-poison{poison}"),
+                    &format!("counted{opt}-ir-normal"),
                     &format!("{runtime}\n{probe}"),
                     &exe,
                     &o,
                 );
                 assert!(
                     o.stdout.is_empty() && o.stderr.is_empty(),
-                    "{mode} {opt}: {o:?}"
+                    "counted {opt}: {o:?}"
                 );
                 assert!(
                     o.status.success(),
@@ -278,10 +226,9 @@ main = "input" | choose (read-all () | string.length | eq 0) | echo
         .output()
         .unwrap();
     assert!(reference.status.success());
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         let output = Command::new(fwp)
-            .args(["build", "--gc", mode, "--memory", "dynamic"])
+            .args(["build", "--memory", "dynamic"])
             .arg(&src)
             .args(["--emit-c", "-O2", "-o"])
             .arg(&cfile)
@@ -313,72 +260,49 @@ main = "input" | choose (read-all () | string.length | eq 0) | echo
  .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
         let probe=r#"
 static int dead(V v) {
-#ifndef FWP_ARC_ONLY
- if(fwp_reuse_verify)return STR(v)->len==0;
-#endif
  return *fwp_rc_slot(v)==0;
 }
 int main(void) {
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
- intptr_t baseline=fwp_gc.budget;
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+ size_t baseline=fwp_heap.live;
  for(int round=0;round<32;round++){
  for(int alias=0;alias<2;alias++){V input=fwp_rc_fresh(fwp_str_new("input",5));if(alias)fwp_rc_dup(input);observed=0;
  if(fFUNCTION(input)!=17)return 1;if(!observed||!dead(observed))return 3;
  if(alias){if(*fwp_rc_slot(input)!=1||STR(input)->len!=5)return 4;fwp_rc_free_obj(input);}else if(!dead(input))return 5;}
-#ifdef FWP_ARC_ONLY
- if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
-#endif
+ if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
  }
  return 0;
 }
 "#.replace("FUNCTION",id);
         for opt in ["-O1", "-O2"] {
-            if mode == "arc" {
+            {
                 let missing = probe.replace("fwp_rc_free_obj(input);", "");
                 assert_ne!(missing, probe);
                 let code = format!("{runtime}\n{missing}");
                 fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-                let output = Command::new(&exe)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
+                let output = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "field_context_ownership",
-                    &format!("{mode}{opt}-source-missing-release"),
+                    &format!("counted{opt}-source-missing-release"),
                     &code,
                     &exe,
                     &output,
                 );
-                assert_eq!(output.status.code(), Some(90), "{mode} {opt}: {output:?}");
+                assert_eq!(output.status.code(), Some(90), "counted {opt}: {output:?}");
             }
             fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-            for poison in if mode == "arc" {
-                &["0"][..]
-            } else {
-                &["0", "1"][..]
-            } {
-                let output = Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
+            {
+                let output = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "field_context_ownership",
-                    &format!("{mode}{opt}-source-normal-poison{poison}"),
+                    &format!("counted{opt}-source-normal"),
                     &format!("{runtime}\n{probe}"),
                     &exe,
                     &output,
                 );
                 assert!(
                     output.stdout.is_empty() && output.stderr.is_empty(),
-                    "{mode} {opt}: {output:?}"
+                    "counted {opt}: {output:?}"
                 );
                 assert!(
                     output.status.success(),
@@ -388,7 +312,7 @@ int main(void) {
                 );
             }
             let output = Command::new(fwp)
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe)
@@ -400,14 +324,7 @@ int main(void) {
                 "{}",
                 String::from_utf8_lossy(&output.stderr)
             );
-            let output = Command::new(&exe)
-                .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                .env("FWP_GC_STATS", "0")
-                .env("FWP_GC_STRESS", stress)
-                .env("FWP_GC_VERIFY", stress)
-                .env("FWP_REUSE_VERIFY", stress)
-                .output()
-                .unwrap();
+            let output = Command::new(&exe).output().unwrap();
             assert!(output.status.success());
             assert_eq!(output.stdout, reference.stdout);
         }

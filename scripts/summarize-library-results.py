@@ -26,8 +26,8 @@ def inspect(path, host, llvm, expected_exports):
     names = subprocess.check_output([str(llvm / 'llvm-nm'), str(path)], text=True)
     symbols = {line.split()[-1].removeprefix('_')
                for line in names.splitlines() if line.split()}
-    assert {'fwp_gc_alloc_slow', 'fwp_rc_free_obj'} <= symbols, (path, 'internal runtime names required')
-    tracing = sorted(symbols.intersection({'fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'}))
+    assert {'fwp_heap_alloc_slow', 'fwp_rc_free_obj'} <= symbols, (path, 'internal runtime names required')
+    tracing = sorted(symbols.intersection({'fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'}))
     assert not tracing, (path, tracing)
     public_exports = None
     if path.suffix == '.dll':
@@ -67,7 +67,7 @@ def interop(directory, host, llvm):
         assembly = subprocess.check_output([str(llvm / 'llvm-objdump'), '-d', str(binary)], text=True)
         assert 'file format ' + HOSTS[host][0] in assembly, binary
         binary.with_suffix(binary.suffix + '.disassembly.txt').write_text(assembly)
-        row = {'caller': language, 'linking': kind, 'library_mode': 'default (--gc tracing)',
+        row = {'caller': language, 'linking': kind, 'ownership': 'counted',
                'file': binary.name,
                'sha256': digest(binary), 'file_bytes': binary.stat().st_size,
                'stdout': expected}
@@ -109,7 +109,7 @@ def main():
         directory = args.artifacts / ('library-results-' + host)
         assert (directory / 'source.txt').read_text().strip() == audit['head']
         source = (directory / 'library.c').read_text()
-        assert '#define FWP_ARC_ONLY 1' in source
+        assert 'FWP_ARC_ONLY' not in source
         direct = args.record_results == 'direct'
         assert ('/* move C result fields */' in source) == direct
         expected = (directory / 'reference.stdout').read_bytes()
@@ -122,14 +122,14 @@ def main():
                     assert (directory / (stem + '.stdout')).read_bytes() == expected * repeats
                     # C diagnostic text streams may use CRLF; language output above is byte-exact.
                     memory = (directory / (stem + '.memory.txt')).read_text()
-                    assert memory == '0 0\n' * repeats, (host, stem, memory)
+                    assert memory == '0\n' * repeats, (host, stem, memory)
                     stderr = (directory / (stem + '.stderr')).read_text()
                     counts = 'library result retains: keep=0 twin=1'
                     if direct:
                         counts += '; result boxes: keep=0 twin=0'
                     assert stderr.count(counts + '\n') == repeats, (host, stem, stderr)
                     runs.append({'optimization': opt, 'shared': shared, 'workspace_cache': workspace,
-                                 'executions': repeats, 'shutdown_counted_bytes': 0, 'collections': 0,
+                                 'executions': repeats, 'shutdown_live_bytes': 0,
                                  'identity_retains': 0, 'two_alias_fields_retains': 1,
                                  'record_boxes_asserted': 0 if direct else None})
         controls = {'box': 186, 'host': 186, 'extra-counts': 202}
@@ -160,8 +160,8 @@ def main():
                        '256 repeated call batches after warmup; static or three dynamic load/unload executions. '
                        'One retain is necessary for two independently released fields sharing one string. '
                        'Retain counts exclude fresh count initialization and release work; input strings still copy. '
-                       'Shutdown counts exclude host memory, allocator capacity and operating-system RSS. '
-                       'The separate C/Rust interop programs use default library mode. '
+                       'Shutdown live bytes exclude host memory, allocator capacity and operating-system RSS. '
+                       'The separate C/Rust interop programs use the same counted ownership. '
                        'Their host sizes reflect different runtimes and linkage, not a language size comparison. '
                        'Instrumented binaries are inspected as data, never executed by this collector.',
               'hosts': hosts}

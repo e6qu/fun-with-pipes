@@ -64,11 +64,11 @@ main = [
             .args(["run", "--interp"])
             .arg(&source),
     );
-    for mode in ["tracing", "arc"] {
-        let cfile = dir.join(format!("{mode}.c"));
+    {
+        let cfile = dir.join("counted.c");
         checked(
             Command::new(compiler)
-                .args(["build", "--gc", mode, "--emit-c"])
+                .args(["build", "--emit-c"])
                 .arg(&source)
                 .arg("-o")
                 .arg(&cfile),
@@ -78,27 +78,19 @@ main = [
             .find("static void *fwp_main_thread(void *arg) {")
             .unwrap();
         let (runtime, main) = code.split_at(start);
-        let measured = if mode == "arc" {
+        let measured = {
             format!("{runtime}{}", main
-                .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t cli_budget=fwp_gc.budget;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < cli_budget) { fprintf(stderr,\"CLI bytes left: %ld\\n\",(long)(cli_budget-fwp_gc.budget)); exit(193); }\n"))
-        } else {
-            code
+                .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t cli_live_bytes=fwp_heap.live;\n")
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > cli_live_bytes) { fprintf(stderr,\"CLI bytes left: %ld\\n\",(long)(fwp_heap.live - cli_live_bytes)); exit(193); }\n"))
         };
         for opt in ["-O1", "-O2"] {
             let binary = dir.join(if cfg!(windows) { "cli.exe" } else { "cli" });
             fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
-            let stress = if mode == "arc" { "0" } else { "1" };
-            let output = checked(
-                Command::new(&binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
-            assert_eq!(output.stdout, reference.stdout, "{mode} {opt}");
-            assert_eq!(output.stderr, reference.stderr, "{mode} {opt}");
-            if mode == "arc" {
+
+            let output = checked(&mut Command::new(&binary));
+            assert_eq!(output.stdout, reference.stdout, "counted {opt}");
+            assert_eq!(output.stderr, reference.stderr, "counted {opt}");
+            {
                 let release = "if (state[k] && f->value->drop) f->value->drop(vals[k]);";
                 assert_eq!(measured.matches(release).count(), 1);
                 fwp::cgen::compile_c(
@@ -107,13 +99,7 @@ main = [
                     opt,
                 )
                 .unwrap();
-                let output = Command::new(&binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
+                let output = Command::new(&binary).output().unwrap();
                 assert_eq!(
                     output.status.code(),
                     Some(193),

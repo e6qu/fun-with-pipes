@@ -165,7 +165,7 @@ static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {
     fwp_cleanup server_cleanup;
     fwp_cleanup_push(&server_cleanup, w_server_release, &server_owner);
     c->fd = w_take(conn, &c->ssl);
-    FWP_KEEP_ALIVE(conn);
+
     c->out.len = 0;
     h2_our_settings(&c->out);
     unsigned char st[6] = {0, 3, 0, 0, 0, W_MAX_STREAMS};
@@ -326,7 +326,7 @@ static V fwp_p_http2_request(V call, const fwp_desc *type) {
     result.values[0] = fwp_rc_fresh(fwp_cstr(m ? m : ""));
     result.values[1] = fwp_rc_fresh(fwp_cstr(p ? p : ""));
     result.values[3] = fwp_rc_fresh(fwp_cstr(k->c->authority));
-    FWP_KEEP_ALIVE(call);
+
     return fwp_decode_record(&result);
 }
 
@@ -347,8 +347,7 @@ static V fwp_p_http2_body(V max, V timeout, V call, const fwp_desc *type) {
             fwp_decode_fields result;
             fwp_decode_fields_begin(&result, 1, type->vfields[0], 1, NULL);
             result.values[0] = fwp_rc_fresh(fwp_str_new((const char *)s->data.d, s->data.len));
-            /* Body bytes belong to the stream's malloc buffer, not the GC heap. */
-            FWP_KEEP_ALIVE(call);
+            /* The caller keeps the stream owner through the copy. */
             return fwp_decode_variant(&result, 0);
         }
         if (s->reset || k->c->dead) return w_err_code(0);
@@ -418,8 +417,8 @@ static V fwp_p_http2_respond(V status, V hs, V body, V end, V call) {
     fwp_wake_all(&c->writer_wl);
     if (n == 0) return FWP_TRUE;
     V result = g_send_data(c, s, (const unsigned char *)STR(body)->d, n, end == FWP_TRUE) ? FWP_TRUE : FWP_FALSE;
-    FWP_KEEP_ALIVE(body);
-    FWP_KEEP_ALIVE(call);
+
+
     return result;
 }
 
@@ -428,8 +427,8 @@ static V fwp_p_http2_data(V d, V end, V call) {
     if (STR(d)->len == 0 && end != FWP_TRUE) return !k->s->reset && !k->c->dead ? FWP_TRUE : FWP_FALSE;
     V result = g_send_data(k->c, k->s, (const unsigned char *)STR(d)->d, STR(d)->len, end == FWP_TRUE) ? FWP_TRUE
                                                                                                             : FWP_FALSE;
-    FWP_KEEP_ALIVE(d);
-    FWP_KEEP_ALIVE(call);
+
+
     return result;
 }
 
@@ -454,11 +453,11 @@ static V fwp_p_http2_send(V key, V conn, V req, const fwp_desc *err, const fwp_d
         fwp_socket_t fd = SOCK(transport)->fd;
         if (fd == FWP_INVALID_SOCKET) return fwp_io_error("closed", "connection is closed", err);
         c = g_conn_new(fd, "http2 ", STR(key)->d, 0);
-        FWP_KEEP_ALIVE(key); /* keep the source string through the allocating copy */
+        /* keep the source string through the allocating copy */
         fwp_rc_fresh(PTR(c)); /* transport_start storage, moved to this call */
         /* The input owns the socket/TLS session until allocation succeeds. */
         c->fd = w_take(transport, &c->ssl);
-        FWP_KEEP_ALIVE(conn);
+
         c->refs = 1;
         g_connect_start_owner transport_start = {c, 0, 0};
         fwp_cleanup transport_start_cleanup, io_owner;
@@ -517,7 +516,7 @@ static V fwp_p_http2_send(V key, V conn, V req, const fwp_desc *err, const fwp_d
         if (me->cancelled) { g_reset(c, s, 8); fwp_check_cancel(); }
         g_send_data(c, s, (const unsigned char *)STR(r[5])->d, bn, 1);
     }
-    FWP_KEEP_ALIVE(req); /* headers/body have now been copied into transport storage */
+    /* headers/body have now been copied into transport storage */
     for (;;) {
         if (s->remote_end) {
             const char *st = h2_get(&s->headers, ":status");
@@ -604,7 +603,7 @@ static V fwp_p_zlib_gunzip(V max, V d, const fwp_desc *type) {
     int ok = h2_gunzip((const unsigned char *)STR(d)->d, STR(d)->len, &out, m < 0 ? 0 : (size_t)m);
     V result = ok ? w_ok_bytes(&out, type) : fwp_http_err(h2_err, type);
     fwp_cleanup_pop(&cleanup); h2b_free(&out);
-    FWP_KEEP_ALIVE(d); return result;
+    return result;
 }
 
 static V fwp_p_zlib_gzip_chunk(V d) {
@@ -668,7 +667,7 @@ static V fwp_p_zlib_inflate(V max, V dv, const fwp_desc *type) {
     }
     V result = error ? fwp_http_err(error, type) : w_ok_bytes(&out, type);
     fwp_cleanup_pop(&cleanup); h2b_free(&out);
-    FWP_KEEP_ALIVE(dv); return result;
+    return result;
 }
 
 /* ---------------------------------------------------------------- WebSocket */
@@ -866,13 +865,13 @@ static V fwp_p_ws_parse(V maxv, V atv, V bufv, const fwp_desc *type) {
     fwp_str *r = (fwp_str *)fwp_alloc_leaf(sizeof(fwp_str) + len + 1);
     r->len = len;
     r->d[len] = 0;
-    b = (const unsigned char *)STR(bufv)->d + off; /* the collector does not move objects */
+    b = (const unsigned char *)STR(bufv)->d + off; /* the borrowed input remains live across allocation */
     if (masked)
         for (size_t i = 0; i < len; i++) r->d[i] = (char)(b[at + i] ^ key[i & 3]);
     else if (len)
         memcpy(r->d, b + at, len);
     V result = w_parsed((int64_t)(at + len), (b0 & 0x80) != 0, op | (b0 & 0x40), masked, PTR(r), type);
-    FWP_KEEP_ALIVE(bufv); return result;
+    return result;
 }
 
 /* permessage-deflate (RFC 7692) without context takeover, as
@@ -907,7 +906,7 @@ static V fwp_p_ws_inflate(V maxv, V dv, const fwp_desc *type) {
     V bytes = fwp_str_new(ok && out.d ? (const char *)out.d : "", ok ? out.len : 0);
     V result = w_bytes_pair(code, bytes, type);
     fwp_cleanup_pop(&output_cleanup); h2b_free(&out);
-    FWP_KEEP_ALIVE(dv); return result;
+    return result;
 }
 
 static V fwp_p_ws_close_payload(V codev, V reason) {
@@ -938,7 +937,7 @@ static V fwp_p_ws_close_parse(V p, const fwp_desc *type) {
     int valid = (code >= 1000 && code <= 1003) || (code >= 1007 && code <= 1014) || (code >= 3000 && code <= 4999);
     if (!valid || !fwp_valid_utf8(d + 2, n - 2)) return w_bytes_pair((V)(int64_t)-1, fwp_str_new("", 0), type);
     V result = w_bytes_pair((V)code, fwp_str_new((const char *)d + 2, n - 2), type);
-    FWP_KEEP_ALIVE(p); return result;
+    return result;
 }
 
 #endif /* __wasi__ */

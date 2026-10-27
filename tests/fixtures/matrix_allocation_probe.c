@@ -1,5 +1,5 @@
 int main(void){
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     const fwp_desc scalar={.kind=K_F64};
     static const size_t sizes[][3]={{31,35,33},{2,3,2},{0,3,2},{2,0,3},{2,3,0},{1,1,1},{17,17,17},{17,17,17}};
     puts("{\"cases\":[");
@@ -30,7 +30,7 @@ int main(void){
         }
         V af[]={k,left,m},bf[]={n,right,k};
         V a=fwp_rc_fresh(fwp_record(3,af)),b=fwp_rc_fresh(fwp_record(3,bf));
-        uint64_t calls=matrix_calls,bytes=matrix_bytes;double freed=fwp_gc.freed;
+        uint64_t calls=matrix_calls,bytes=matrix_bytes;double freed=fwp_heap.freed;
         V result=fPRODUCT_DATA(b,a);
         calls=matrix_calls-calls;bytes=matrix_bytes-bytes;
         if(fwp_array_len(result)!=m*n)return 211;
@@ -44,8 +44,8 @@ int main(void){
             fprintf(stderr,"blocked matrix allocated %llu requests, %llu bytes for %zux%zux%zu\n",(unsigned long long)calls,(unsigned long long)bytes,m,k,n);return 213;
         }
         if(!BLOCKED && m && k && n && calls<=1)return 214;
-        if(BLOCKED && fwp_gc.freed<=freed)return 215;
-        printf("%s{\"rows\":%zu,\"inner\":%zu,\"columns\":%zu,\"managedCalls\":%llu,\"managedRequestedBytes\":%llu,\"freedBytes\":%.0f,\"resultHash\":\"%016llx\"}",run?",\n":"",m,k,n,(unsigned long long)calls,(unsigned long long)bytes,fwp_gc.freed-freed,(unsigned long long)hash);
+        if(BLOCKED && fwp_heap.freed<=freed)return 215;
+        printf("%s{\"rows\":%zu,\"inner\":%zu,\"columns\":%zu,\"managedCalls\":%llu,\"managedRequestedBytes\":%llu,\"freedBytes\":%.0f,\"resultHash\":\"%016llx\"}",run?",\n":"",m,k,n,(unsigned long long)calls,(unsigned long long)bytes,fwp_heap.freed-freed,(unsigned long long)hash);
         fwp_rc_free_arr(result);
     }
     puts("]}");return 0;

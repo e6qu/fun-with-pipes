@@ -54,7 +54,6 @@
     "ffi",
     "map_set_ownership",
     "system_snapshots",
-    "old_reclamation",
     "fat",
     "wide_counts",
     "retained_thunk_ownership",
@@ -131,7 +130,7 @@
     "scalar_math",
     "debugger"
   ],
-  "gc": [
+  "ownership": [
     "web",
     "server_entry_ownership",
     "tls",
@@ -248,7 +247,7 @@
     "protocol",
     "closure_cleanup",
     "pipe_modes",
-    "gc",
+    "native_memory",
     "kernel_stack_bounds",
     "borrowed_callbacks",
     "compiler_options",

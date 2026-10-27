@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/allocation_report.rs"]
+mod allocation_report;
+
 #[path = "support/ownership_ledger.rs"]
 mod ownership_ledger;
 #[path = "support/record_probe.rs"]
@@ -112,7 +115,7 @@ main = ({rounds}, 0) | loop step | echo
                     Command::new(fwp)
                         .env_remove("FWP_NO_OPT")
                         .env("FWP_STACK", "1")
-                        .args(["build", "--gc", "arc", "--memory", memory, "--emit-c"])
+                        .args(["build", "--memory", memory, "--emit-c"])
                         .arg(&src)
                         .arg("-o")
                         .arg(&cfile),
@@ -121,7 +124,7 @@ main = ({rounds}, 0) | loop step | echo
                 let current = ownership_ledger::instrument_native(&current, 1 << 16);
                 let observation = "    owner_ledger_finish();\n";
                 assert_eq!(current.matches(observation).count(), 1);
-                let current = current.replace(observation, &format!("{observation}    if (fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < fwp_gc.budget_given) owner_ledger_error(207, \"unreclaimed stack-child bytes\");\n"));
+                let current = current.replace(observation, &format!("{observation}    if (fwp_heap.live > 0) owner_ledger_error(207, \"unreclaimed stack-child bytes\");\n"));
                 let retained = omit_stack_child_releases(&current);
                 for opt in ["-O1", "-O2"] {
                     for (case, code, status) in
@@ -131,11 +134,7 @@ main = ({rounds}, 0) | loop step | echo
                         let exe = dir.0.join(format!("{label}.exe"));
                         fwp::cgen::compile_c(code, &exe, opt).unwrap();
                         let out = Command::new(&exe)
-                            .env("FWP_GC", "off")
-                            .env("FWP_GC_STATS", "0")
-                            .env("FWP_GC_STRESS", "0")
-                            .env("FWP_GC_VERIFY", "0")
-                            .env("FWP_REUSE_VERIFY", "0")
+                            .env("FWP_ALLOC_STATS", "0")
                             .output()
                             .unwrap();
                         record_probe::save("stack_ownership", &label, code, &exe, &out);
@@ -184,7 +183,7 @@ main = (10000, 0) | loop step | echo
         let cfile = dir.0.join(format!("{name}.c"));
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args(["--emit-c", "-o"])
                 .arg(&cfile),
@@ -195,24 +194,15 @@ main = (10000, 0) | loop step | echo
         for (label, source) in [("retained", retained), ("released", current)] {
             let exe = dir.0.join(format!("{name}-{label}.exe"));
             fwp::cgen::compile_c(&source, &exe, "-O1").unwrap();
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STATS", "1"),
-            );
+            let out = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
             assert_eq!(out.stdout, expected.stdout);
             let stats = String::from_utf8_lossy(&out.stderr);
-            assert!(stats.contains("fwp gc: 0 collections"), "{stats}");
+
             freed.push(
-                stats
-                    .split(" MiB freed by counts")
-                    .next()
-                    .unwrap()
-                    .rsplit('(')
-                    .next()
-                    .unwrap()
-                    .parse::<f64>()
-                    .unwrap(),
+                allocation_report::parse(&stats)
+                    .expect("allocation report")
+                    .released as f64
+                    / 1_048_576.0,
             );
         }
         assert!(
@@ -259,41 +249,28 @@ main = [
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for memory in ["arc", "tracing"] {
-        let cfile = dir.0.join(format!("{memory}.c"));
+    {
+        let cfile = dir.0.join("counted.c");
         checked(
             Command::new(fwp)
                 .env_remove("FWP_NO_OPT")
                 .env("FWP_STACK", "1")
-                .args(["build", "--gc", memory, "--memory", "dynamic", "--emit-c"])
+                .args(["build", "--memory", "dynamic", "--emit-c"])
                 .arg(&src)
                 .arg("-o")
                 .arg(&cfile),
         );
         let code = std::fs::read_to_string(&cfile).unwrap();
-        let code = if memory == "arc" {
-            ownership_ledger::instrument_native(&code, 1 << 16)
-        } else {
-            code
-        };
+        let code = ownership_ledger::instrument_native(&code, 1 << 16);
         for opt in ["-O1", "-O2"] {
-            let exe = dir.0.join(format!("{memory}{opt}.exe"));
+            let exe = dir.0.join(format!("counted{opt}.exe"));
             fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-            for poison in if memory == "arc" {
-                &["0"][..]
-            } else {
-                &["0", "1"][..]
-            } {
-                let stress = if memory == "arc" { "0" } else { "1" };
+            {
                 let out = Command::new(&exe)
-                    .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", poison)
+                    .env("FWP_ALLOC_STATS", "0")
                     .output()
                     .unwrap();
-                let label = format!("aliases-{memory}{opt}-poison{poison}");
+                let label = format!("aliases-counted{opt}");
                 record_probe::save("stack_ownership", &label, &code, &exe, &out);
                 assert!(out.status.success(), "{label}: {out:?}");
                 assert_eq!(out.stdout, expected.stdout, "{label}");

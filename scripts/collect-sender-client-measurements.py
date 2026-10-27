@@ -91,7 +91,6 @@ def main():
         summaries = []
         for row in rows:
             mode, batches, rep = key(row)
-            assert row['collections'] == 0
             assert row['connections_created'] == row['connections_finalized'] == batches
             assert row['streams_created'] == row['streams_finalized'] == batches
             responses = 1 if mode == 'synchronous' else 3 if mode == 'early-completion' else 64

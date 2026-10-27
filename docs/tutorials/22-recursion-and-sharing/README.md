@@ -75,8 +75,7 @@ does neither. Keeping the whole graph alive also keeps its nodes alive.
 
 Automatic reference counting (ARC) frees an object when its last owner releases
 it. A cycle of owning references needs another release strategy; ordinary ARC
-alone cannot reclaim an unreachable cycle. fwp's checked ARC mode rejects
-unproved cases. Graph IDs are one useful representation, not automatic cycle repair.
+alone cannot reclaim an unreachable cycle. fwp rejects unproved owning cycles before execution. Graph IDs are one useful representation, not automatic cycle repair.
 
 ## Run the program
 

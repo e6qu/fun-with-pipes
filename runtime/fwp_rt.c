@@ -60,23 +60,10 @@ typedef uint64_t V;
 typedef __int128 i128;
 typedef unsigned __int128 u128;
 
-/* A conservative collector needs the owner alive while values preloaded
- * from it cross allocations. An empty compiler fence extends that lifetime
- * without adding machine instructions. Checked ARC keeps owners alive through
- * explicit ownership and has no conservative stack scan to protect. WebAssembly
- * likewise has no stack tracing. These are root-liveness fences, not thread
- * synchronization. */
-#if !defined(FWP_ARC_ONLY) && !defined(__wasi__) && !defined(__wasm__)
-#define FWP_KEEP_ALIVE(p) __asm__ volatile("" : : "r"(p) : "memory")
-#else
-#define FWP_KEEP_ALIVE(p) ((void)(p))
-#endif
-
-
 /* ------------------------------------------------------------------ alloc */
 
-/* runtime/fwp_rt_gc.c: the collected heap */
-static void *fwp_alloc(size_t n);      /* zeroed; scanned for values */
+/* runtime/fwp_rt_heap.c: counted storage */
+static void *fwp_alloc(size_t n);      /* zeroed runtime storage */
 static void *fwp_alloc_leaf(size_t n); /* zeroed; holds no values */
 /* whether runtime storage uses fixed startup budgets (runtime/fwp_rt_static.c) */
 #ifdef FWP_STATIC_MEMORY
@@ -84,14 +71,13 @@ static const int fwp_static_memory = 1;
 #else
 static const int fwp_static_memory = 0;
 #endif
-/* scanned for values; the caller writes all of its first n bytes before
- * anything else is allocated (only the slot's slack is zeroed) */
+/* The caller initializes all payload bytes before publishing the value. */
 static void *fwp_alloc_init(size_t n);
-/* runtime memory that may hold values (explicitly freed, or collected) */
+/* Runtime memory released explicitly by its owner. */
 static void *fwp_mem_alloc(size_t n);
 static void *fwp_mem_realloc(void *p, size_t old, size_t n);
 static void fwp_mem_free(void *p);
-static void fwp_gc_start(void *top);
+static void fwp_heap_start(void);
 static void fwp_trap(const char *msg);
 
 /* runtime/fwp_rt_task.c: preemption. A safe point (the entry of a
@@ -148,7 +134,7 @@ static V fwp_data(uint32_t tag, uint32_t n, const V *f) {
     o->n = n;
     for (uint32_t i = 0; i < n; i++) o->f[i] = f[i];
     /* Inlining may preload fields before allocation: retain their owner. */
-    FWP_KEEP_ALIVE(f);
+
     return PTR(o);
 }
 
@@ -166,7 +152,7 @@ static V fwp_str_new(const char *s, size_t len) {
     memcpy(r->d, s, len);
     r->d[len] = 0;
     /* A source slice can be the only remaining root of its allocation. */
-    FWP_KEEP_ALIVE(s);
+
     return PTR(r);
 }
 
@@ -193,7 +179,7 @@ static V *fwp_list_items(V xs, size_t *n) {
     *n = fwp_list_len(xs);
     V *a = (V *)fwp_alloc((*n + 1) * sizeof(V));
     for (size_t i = 0; i < *n; i++) { a[i] = OBJ(xs)->f[0]; xs = OBJ(xs)->f[1]; }
-    FWP_KEEP_ALIVE(owner);
+
     return a;
 }
 
@@ -203,7 +189,7 @@ static V fwp_list_from(const V *a, size_t n) {
     /* Clang can preload the elements of an inlined, short buffer and
      * discard its only pointer before the allocating constructors run.
      * Keep the owning buffer reachable until every cell has been built. */
-    FWP_KEEP_ALIVE(a);
+
     return r;
 }
 
@@ -501,6 +487,8 @@ static jmp_buf *fwp_trap_jb = 0;
 static fwp_cleanup *fwp_trap_cleanup = 0;
 static int (*fwp_trap_recover)(void) = 0;
 static char fwp_trap_msg[1024];
+typedef struct fwp_closure_drop_work fwp_closure_drop_work;
+static fwp_closure_drop_work *fwp_closure_drop_get(void);
 
 #ifdef FWP_TESTS
 /* Only the root of an in-language test may resume after a trap or exit.
@@ -515,16 +503,20 @@ static void fwp_test_abort(int kind, const char *message, int code);
 #endif
 
 static void fwp_trap(const char *msg) {
-    if (fwp_trap_recover && fwp_trap_recover() && fwp_trap_jb) {
+    /* Destruction has already consumed owners. A failed destructor cannot
+     * resume a server call or language test with a partly released graph. */
+    int destroying = fwp_closure_drop_get() != NULL;
+    if (!destroying && fwp_trap_recover && fwp_trap_recover() && fwp_trap_jb) {
         snprintf(fwp_trap_msg, sizeof fwp_trap_msg, "%s", msg);
         fwp_cleanup_unwind(fwp_trap_cleanup);
         longjmp(*fwp_trap_jb, 1);
     }
 #ifdef FWP_TESTS
-    fwp_test_abort(1, msg, 0);
+    if (!destroying) fwp_test_abort(1, msg, 0);
 #endif
     fwp_flush();
     fprintf(stderr, "fwp: trap: %s\n", msg);
+    if (destroying) { fflush(stderr); _Exit(101); }
     exit(101);
 }
 

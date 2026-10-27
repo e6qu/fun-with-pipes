@@ -12,16 +12,14 @@ static void conversion_drop_box(V v) {
 static int conversion_recover(void) { return 1; }
 static jmp_buf conversion_failure;
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
     fwp_fninfo table[sizeof fwp_fn_table / sizeof *fwp_fn_table];
     memcpy(table,fwp_fn_table,sizeof table);
     fwp_owned_fninfo factory=*table[2].owned;
     factory.entry=conversion_factory; table[2].owned=&factory; table[2].entry=conversion_factory;
     fwp_fns=table;
     fwp_clo callback={2,0};
-    const char *stress=getenv("FWP_GC_STRESS");
-    int collecting=stress&&!strcmp(stress,"1");
-    intptr_t budget=fwp_gc.budget;
+    size_t live_bytes=fwp_heap.live;
     for (volatile int shared=0;shared<2;shared++)
     for (volatile int children=0;children<2;children++)
     for (volatile int fail=0;fail<2;fail++)
@@ -58,7 +56,7 @@ int main(void) {
         }
         conversion_box=0;
         if(fwp_cleanups)return 217;
-        if(!collecting&&fwp_gc.budget!=budget)return 218;
+        if(fwp_heap.live!=live_bytes)return 218;
     }
     return 0;
 }

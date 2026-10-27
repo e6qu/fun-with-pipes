@@ -75,7 +75,7 @@ static int socket_pair(fwp_socket_t *a, fwp_socket_t *b) {
     return 0;
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     int result = poll_array_checks();
     if (result) return result;
     fwp_tasks_init();

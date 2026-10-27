@@ -121,6 +121,69 @@ compilation times. Budget failures retain all size/policy observations and need
 investigation; do not silently raise a limit. New inputs or proof precision need
 a reviewed replacement baseline.
 
+## Capture lookup repair
+
+[Run 40319010233](https://github.com/e6qu/fun-with-pipes/actions/runs/40319010233)
+failed the relative budget on Intel macOS at 32 workers: 20.69 ms for separate
+sites versus 11.18 ms for merged sites (1.85×). Absolute time and fact-count
+budgets passed. This is a failed gate, not evidence of acceptable overhead.
+
+Capture lookup used an ordered tree even though the proof never traverses
+captures in key order. Separating sites grows that table from 13 to 168 entries
+at this size, and each fixed-point round repeats the searches. The repair uses
+a hash table for these lookups, preserving the same identities, capture facts,
+ordered origin sets and validation. Both test policies use the same table.
+[Run 40322274748](https://github.com/e6qu/fun-with-pipes/actions/runs/40322274748)
+passed both analysis hosts on `3e1c14826b545f799824e11c9476704d52fc4a46`,
+without changing the 1.5× ratio or any absolute/count budget.
+
+| Host | Workers | Merged median | Separate median | Separate / Merged |
+|---|---:|---:|---:|---:|
+| Linux AMD64 | 16 | 1.29 ms | 1.64 ms | 1.273× |
+| Linux AMD64 | 32 | 2.22 ms | 3.00 ms | 1.352× |
+| Linux AMD64 | 64 | 4.08 ms | 5.77 ms | 1.416× |
+| Intel macOS | 16 | 4.69 ms | 6.08 ms | 1.297× |
+| Intel macOS | 32 | 7.90 ms | 10.72 ms | 1.357× |
+| Intel macOS | 64 | 14.03 ms | 19.55 ms | 1.393× |
+
+The run artifacts retain all seven samples per rule and size. These compare
+analysis rules within the repaired compiler; different runner sessions do not
+establish a paired speedup over the ordered-tree version. The older baseline
+above remains historical evidence. REST admission also passed: forms/entry
+fixtures took 6.42/3.85 seconds on Linux and 8.30/5.75 seconds on Intel macOS,
+within the unchanged ten-second limit. Production validation failed separately;
+passing analysis budgets alone does not verify collector removal.
+
+The next source, `690610786ecb5dfec751149cefc2509dc8797331`, failed Intel's
+32-worker relative gate in [run 40336921587](https://github.com/e6qu/fun-with-pipes/actions/runs/40336921587):
+10.063 ms Separate versus 6.612 ms Merged, or 1.522×. The 16/64-worker ratios,
+absolute/count limits and REST checks passed; Linux passed. A previous passing
+run does not override this failed gate.
+
+Source `4c79748ae670d90f85068a40eff0dcd37b63dc38` transfers new capture vectors
+instead of copying their sets and skips identical set merges. It still failed
+Intel in [run 40348021109](https://github.com/e6qu/fun-with-pipes/actions/runs/40348021109):
+32 workers took 53.717 ms Separate versus 33.427 ms Merged (1.607×), and raw forms
+admission took 10.146 s against the ten-second limit. The other REST fixture took
+6.685 s. Linux passed. These failures remain part of the evidence; earlier passing
+samples do not establish acceptance.
+
+The follow-up removes parameter-vector allocation from return-type queries,
+uses sequential snapshots instead of cloning the input search tree, avoids a
+second input-table lookup, and reads primitive result properties once per visit.
+Round snapshots, traversal order, identities, facts and budgets are unchanged.
+The existing acceptance/rejection tests and timing gates must verify this source;
+less allocation in the code alone is not a measured speedup.
+
+The follow-up source `4e6261326a9baea367afa7d5a6cdb277b4535a52` passes both
+hosts in [run 40356471366](https://github.com/e6qu/fun-with-pipes/actions/runs/40356471366),
+including 192 ordinary library tests and both separately executed budget tests. Separate/Merged ratios at 16/32/64 workers are
+1.267/1.337/1.393 on Linux and 1.305/1.357/1.405 on Intel macOS; the limit is 1.5.
+Forms/entry analysis takes 5.358/3.225 seconds on Linux and 7.467/4.746 seconds on
+Intel, each below ten seconds. Rounds, visits, summaries and facts match the prior
+source. Different runner sessions do not establish a paired speedup. Production
+still has separate platform-test failures; these timings do not verify GC removal.
+
 ## Reproduce and assess
 
 The [`ownership-analysis` suite](../../.github/workflows/numerics.yml)
@@ -202,3 +265,34 @@ caches 443 and 15,031. Both hosts produce identical analysis counts. This is a
 compiler-cost check, not an fwp-versus-C/Rust execution benchmark. Serving requests,
 listener startup and generated-program speed are outside the timer. Full server
 regressions and final-head production checks remain required.
+
+## Current budget repair
+
+At `2499e7b7`, [run 40423924014](https://github.com/e6qu/fun-with-pipes/actions/runs/40423924014)
+passed Linux and failed Intel macOS. At N=64 the separate-site median was
+35.57 ms versus 21.80 ms for merged sites (1.63 times, limit 1.5). Forms analysis
+took 12.02 seconds against the ten-second limit, with the same 591,732 visits,
+2,585 summary updates, 25,817 facts and 591/18,379 type/expression cache entries.
+These elapsed-time failures remain evidence even though previous runs passed.
+
+The repair removes temporary captured-argument copies when a call has
+all its arguments: input summaries can join the original sets directly. Partial
+applications still own their stored captures; over-application still evaluates
+the returned function with the remaining arguments. The analysis rules and timing
+limits are unchanged. Both-host measurements and the production matrix are
+required before claiming an improvement.
+
+[Focused run 40433091299](https://github.com/e6qu/fun-with-pipes/actions/runs/40433091299)
+at `5609b5c7fe4fbd3837781e3ba08a9e46750c09aa` passes both budget tests and all
+192 ordinary library tests on both hosts. Proof rounds, visits, summary updates,
+closure/fact counts and cache entries are unchanged.
+
+| Host | Separate/merged ratio at 16 / 32 / 64 workers | Forms analysis | Entry analysis |
+|---|---|---:|---:|
+| Linux AMD64 | 1.249 / 1.309 / 1.366 | 5.977 s | 3.692 s |
+| Intel macOS | 1.193 / 1.242 / 1.263 | 6.804 s | 4.181 s |
+
+These are passing sessions under the existing budgets. Host load differs from
+the failed session; the elapsed-time difference is not a paired speedup estimate.
+The concrete change removes temporary argument-set copies from fully supplied
+calls. The full native matrix must still verify the final published source.

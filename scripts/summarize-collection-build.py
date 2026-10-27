@@ -27,18 +27,13 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def inspect(binary, host, mode, llvm, *, require_tracing):
+def inspect(binary, host, llvm):
     names = command(llvm / 'llvm-nm', binary)
     symbols = {line.split()[-1].removeprefix('_') for line in names.splitlines() if line.split()}
     runtime = {name for name in symbols if name.startswith('fwp_')}
     assert len(runtime) > 10, (binary, 'missing internal symbols')
-    tracing = sorted(symbols.intersection({'fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'}))
-    assert mode in {'arc', 'tracing'}
-    assert not require_tracing or mode == 'tracing'
-    if mode == 'arc':
-        assert not tracing, (binary, tracing)
-    elif require_tracing:
-        assert tracing, (binary, 'expected allocation-using tracing control')
+    tracing = sorted(symbols.intersection({'fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'}))
+    assert not tracing, (binary, tracing)
     assembly = command(llvm / 'llvm-objdump', '-d', '--no-show-raw-insn', binary)
     assert 'file format ' + HOSTS[host] in assembly, binary
     binary.with_suffix(binary.suffix + '.disassembly.txt').write_text(assembly)
@@ -93,24 +88,22 @@ def set_requests(path):
 
 def compact_sets(directory, host, llvm):
     runs = []
-    for mode in ['arc', 'tracing']:
-        for opt in ['-O0', '-O2']:
-            label = f'compact-{mode}{opt}'
-            rows = set_requests(directory / f'{label}.txt')
-            binary = inspect(directory / f'{label}.exe', host, mode, llvm,
-                             require_tracing=mode == 'tracing')
-            source = directory / f'{label}.c'
-            assert source.stat().st_size and (directory / f'{label}.asm').stat().st_size
-            runs.append({'mode': mode, 'optimization': opt, 'sizes': rows,
-                         'generatedSha256': digest(source), 'binaryInspection': binary})
+    for opt in ['-O0', '-O2']:
+        label = f'compact-counted{opt}'
+        rows = set_requests(directory / f'{label}.txt')
+        binary = inspect(directory / f'{label}.exe', host, llvm)
+        source = directory / f'{label}.c'
+        assert source.stat().st_size and (directory / f'{label}.asm').stat().st_size
+        runs.append({'optimization': opt, 'sizes': rows,
+                     'generatedSha256': digest(source), 'binaryInspection': binary})
     control = (directory / 'compact-wasted-slot-control.txt').read_text().strip()
     assert control == 'set 1: requested 24, expected 16', control
     return {'runs': runs, 'wastedSlotControl': control,
             'scope': 'Observed requests to the managed allocator for a freshly built I64 set. '
                      'Charged bytes include allocator rounding, not process RAM or child storage. '
                      'Empty sets use static storage. The previous 8 + 16*n layout is calculated '
-                     'from its representation, not timed here. ARC charge returns to its starting '
-                     'value after each result is freed; tracing does not assert that ledger. '
+                     'from its representation, not timed here. Live charge must return to its '
+                     'starting value after each result is freed. '
                      'These instrumented executions are not a speed benchmark.'}
 
 
@@ -130,15 +123,13 @@ def range_requests(path, direct):
 
 def range_sets(directory, host, llvm):
     runs = []
-    for mode in ['arc', 'tracing']:
-        for opt in ['-O0', '-O2']:
-            for direct in ['0', '1']:
-                label = f'{mode}{opt}-direct-{direct}'
-                runs.append({'mode': mode, 'optimization': opt, 'direct': direct == '1',
-                             'sizes': range_requests(directory / f'{label}.txt', direct == '1'),
-                             'generatedSha256': digest(directory / f'{label}.c'),
-                             'binaryInspection': inspect(directory / f'{label}.exe', host, mode, llvm,
-                                                         require_tracing=mode == 'tracing')})
+    for opt in ['-O0', '-O2']:
+        for direct in ['0', '1']:
+            label = f'counted{opt}-direct-{direct}'
+            runs.append({'optimization': opt, 'direct': direct == '1',
+                         'sizes': range_requests(directory / f'{label}.txt', direct == '1'),
+                         'generatedSha256': digest(directory / f'{label}.c'),
+                         'binaryInspection': inspect(directory / f'{label}.exe', host, llvm)})
     return {'runs': runs,
             'scope': 'Observed managed allocation requests while an exported function builds '
                      'an I64 range set. Includes input list and scratch construction; excludes '
@@ -193,7 +184,8 @@ def main():
             assert all(sorted(order) == ['0', '1'] for order in case['executionOrder'])
             for fused, variant in case['variants'].items():
                 counters = variant['counters']
-                assert counters['retains'] == counters['finalChargedBytes'] == counters['collections'] == 0
+                assert set(counters) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
+                assert counters['retains'] == counters['finalChargedBytes'] == 0
                 count = case['inputs']
                 expected = (4 if fused == '1' else 2 * count + 5) if case['kind'] == 'set' else (5 if fused == '1' else 3 * count + 6)
                 if case['kind'] == 'range-set':
@@ -207,41 +199,36 @@ def main():
                 label = f'{case["kind"]}-{count}-fused-{fused}'
                 assert digest(costs / f'{label}.c') == variant['generatedSha256']
                 assert digest(costs / f'{case["kind"]}-{count}.fwp') == case['sourceSha256']
-                variant['binaryInspection'] = inspect(binary, host, 'arc', args.llvm_bin,
-                                                       require_tracing=False)
+                variant['binaryInspection'] = inspect(binary, host, args.llvm_bin)
             ratio = case['variants']['1']['medianProcessWallNs'] / case['variants']['0']['medianProcessWallNs']
             assert case['fusedToOrdinaryTimeRatio'] == ratio
         checks = directory / 'checks'
         binaries, exits = [], []
-        for mode in ['arc', 'tracing']:
-            for opt in ['-O1', '-O2']:
-                for reuse in (['0'] if mode == 'arc' else ['0', '1']):
-                    text = (checks / f'failures-{mode}{opt}-reuse-{reuse}.txt').read_text()
-                    assert text == '8 builders: 48 allocation failures and 64 callback exits cleaned; aliases preserved\n', text
-                    exits.append({'mode': mode, 'optimization': opt, 'reuseVerification': reuse == '1',
-                                  'allocationFailures': 48, 'callbackExits': 64})
-                broken = (checks / f'missing-cleanup-{mode}{opt}.txt').read_text()
-                assert 'collection live allocations: 2' in broken, broken
-                for kind in ['failures', 'missing-cleanup']:
-                    binaries.append(inspect(checks / f'{kind}-{mode}{opt}.bin', host, mode, args.llvm_bin,
-                                            require_tracing=mode == 'tracing'))
+        for opt in ['-O1', '-O2']:
+            text = (checks / f'failures-counted{opt}.txt').read_text()
+            assert text == '8 builders: 48 allocation failures and 64 callback exits cleaned; aliases preserved\n', text
+            exits.append({'optimization': opt, 'allocationFailures': 48, 'callbackExits': 64})
+            broken = (checks / f'missing-cleanup-counted{opt}.txt').read_text()
+            assert 'collection live allocations: 2' in broken, broken
+            for kind in ['failures', 'missing-cleanup']:
+                binaries.append(inspect(checks / f'{kind}-counted{opt}.bin', host, args.llvm_bin))
         rows.append({'host': host, 'job': job['databaseId'], 'passedTests': sum(completed_tests.values()),
                      'completedTargets': completed_tests,
-                     'failureConfigurations': exits, 'cleanupControls': 4,
+                     'failureConfigurations': exits, 'cleanupControls': 2,
                      'failureBinaries': binaries,
                      'compactSets': compact_sets(directory / 'sets', host, args.llvm_bin),
                      'rangeSets': range_sets(directory / 'sets/range-sets', host, args.llvm_bin),
                      'measurements': report})
-        print(host, sum(completed_tests.values()), 'tests, 38 actual binaries, nine cost cases verified', flush=True)
+        print(host, sum(completed_tests.values()), 'tests, 28 actual binaries, nine cost cases verified', flush=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps({
         'source': args.head, 'run': args.run,
-        'collectorSource': command('git', 'rev-parse', 'HEAD').strip(),
+        'auditSource': command('git', 'rev-parse', 'HEAD').strip(),
         'completeNativeMatrix': True,
-        'scope': 'Actual binaries are inspected as data, never executed by this collector. '
-                 'Each host has 44 focused tests, six failure configurations, four deliberately '
-                 'broken builder cleanup controls, four compact-set configurations, an extra-slot '
-                 'control, eight range-set allocation configurations and nine paired cost cases. '
+        'scope': 'Actual binaries are inspected as data, never executed by this audit tool. '
+                 'Each host has 44 focused tests, two failure configurations, two deliberately '
+                 'broken builder cleanup controls, two compact-set configurations, an extra-slot '
+                 'control, four range-set allocation configurations and nine paired cost cases. '
                  'Range-set tests also reject missing size guards, missing releases and ordinary '
                  'construction under a one-allocation budget. Timing compares fused and '
                  'ordinary fwp, not C/Rust. Native section sizes are recorded; assembly must be '

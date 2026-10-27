@@ -32,8 +32,7 @@ def main():
     args = parser.parse_args()
     assert args.samples > 0 and args.samples % (2*len(LABELS)) == 0
     assert args.warmups > 0
-    environment = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
-    environment.pop('FWP_GC', None)
+    environment = dict(os.environ)
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=True)
     metadata = json.loads(run(['gh', 'run', 'view', args.run, '--repo', REPO,
@@ -103,7 +102,7 @@ def main():
               'verified against source and binary hashes before execution. No recompilation. '
               'Balanced rotating/reversed whole-process wall and child-CPU samples include '
               'startup, construction, hashing and output. Original reports retain compiler '
-              'flags, allocation profiles, RSS and code sizes. Buffered/tracing variants are '
+              'flags, allocation profiles, RSS and code sizes. Buffered variants are '
               'excluded from this repeat to concentrate on the specialization and peer gaps. '
               'All samples remain visible; overlapping distributions do not prove improvement.')
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')

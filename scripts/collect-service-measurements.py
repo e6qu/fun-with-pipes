@@ -43,7 +43,7 @@ for host,job in sorted(jobs.items()):
     rows=[{k:v if k=='case' else int(v) for k,v in r.items()} for r in csv.DictReader((folder/'storage.tsv').open(),delimiter='\t')]
     indexed={(r['case'],r['iterations']):r for r in rows}
     assert len(rows)==21 and set(indexed)=={(case,n) for case in cases for n in [1,32,128]}
-    assert all(r['collections']==0 for r in rows)
+    assert all(set(r) == {'case', 'iterations', 'managed_requests', 'requested_bytes', 'final_charged_bytes'} for r in rows)
     extra={case:{k:Fraction(indexed[(case,128)][k]-indexed[(case,32)][k]-indexed[('plain',128)][k]+indexed[('plain',32)][k],96) for k in metrics} for case in cases[1:]}
     for case in ['gzip','deadline','empty-metadata','filtered-metadata']: assert set(extra[case].values())=={0},(host,case,extra[case])
     assert extra['metadata']['managed_requests']==1 and extra['metadata']['final_charged_bytes']==0
@@ -65,14 +65,13 @@ for host,job in sorted(jobs.items()):
         binaries[path.name]={**fingerprint(path),'format':subprocess.check_output(['file','-b',str(path)],text=True).strip()}
         for suffix in ['.fwp','.c','-measured.c']:
             path=folder/f'{case}-128{suffix}';files[path.name]=fingerprint(path)
-    for mode in ['arc','tracing']:
-        for prefix in ['scope','capture']:
-            for suffix in ['.c','.exe']:
-                path=folder/f'{prefix}-{mode}{suffix}';files[path.name]=fingerprint(path)
-        result=(folder/f'capture-{mode}.txt').read_text()
-        assert 'capture alias 0: 14 allocation failures; final charged delta 0; capture owners 0' in result
-        assert 'capture alias 1: 13 allocation failures; final charged delta 0; capture owners 0' in result
-        files[f'capture-{mode}.txt']=fingerprint(folder/f'capture-{mode}.txt')
+    for prefix in ['scope','capture']:
+        for suffix in ['.c','.exe']:
+            path=folder/f'{prefix}-counted{suffix}';files[path.name]=fingerprint(path)
+    result=(folder/'capture-counted.txt').read_text()
+    assert 'capture alias 0: 14 allocation failures; final charged delta 0; capture owners 0' in result
+    assert 'capture alias 1: 13 allocation failures; final charged delta 0; capture owners 0' in result
+    files['capture-counted.txt']=fingerprint(folder/'capture-counted.txt')
     iteration=None
     if args.each_comparison:
         for test in ['each_preserves_aliases_effect_order_and_early_failures','each_avoids_allocating_a_discarded_result_list']:
@@ -86,31 +85,28 @@ for host,job in sorted(jobs.items()):
         if 'dynamic_calls' in each_rows[0]:
             assert each_index[('fold',128)]['dynamic_calls']==each_index[('fold',32)]['dynamic_calls'],(host,each_rows)
         files['each-storage.tsv']=fingerprint(folder/'each-storage.tsv')
-        for mode in ['tracing','arc']:
-            for opt in ['-O1','-O2']:
-                for suffix in ['.fwp','.c','.exe','.txt']:
-                    name=f'each-trap-{mode}{opt}{suffix}'
-                    files[name]=fingerprint(folder/name)
+        for opt in ['-O1','-O2']:
+            for suffix in ['.fwp','.c','.exe','.txt']:
+                name=f'each-trap-counted{opt}{suffix}'
+                files[name]=fingerprint(folder/name)
         for kind in ['map','fold']:
             for n in [32,128]:
                 for suffix in ['.fwp','.c','.exe']:
                     name=f'each-{kind}-{n}{suffix}'
                     files[name]=fingerprint(folder/name)
-        iteration={'rows':each_rows,'saved_per_additional_element_between_32_and_128':{k:str(v) for k,v in savings.items()},'comparison':'Old map-based each versus fold-based each, identical counting program and input list, O2 with collection disabled. Includes input construction, startup and printing; slope differences cancel fixed costs. Managed allocation requests and requested payload bytes only, not elapsed time or peak/process memory.'}
+        iteration={'rows':each_rows,'saved_per_additional_element_between_32_and_128':{k:str(v) for k,v in savings.items()},'comparison':'Old map-based each versus fold-based each, identical counting program and input list, O2 with counted ownership. Includes input construction, startup and printing; slope differences cancel fixed costs. Managed allocation requests and requested payload bytes only, not elapsed time or peak/process memory.'}
     timing=None
     if args.each_comparison and host.startswith('ubuntu-'):
         timing_path=folder/'iteration-timing/timings.json'
         timing=json.loads(timing_path.read_text())
         assert timing['source_revision']==args.head
-        assert timing['runtime_settings']['FWP_GC']=='off'
-        assert timing['runtime_settings']['FWP_REUSE']=='1' and timing['runtime_settings']['FWP_FREE']=='1'
         assert [r['elements'] for r in timing['rows']]==[10000,100000,1000000]
         assert len(timing['programs'])==6
         for row in timing['rows']:
-            assert len(row['run_order'])==14
+            assert row['run_order'] == ['map', 'fold', 'fold', 'map'] * 4
             for label in ['map','fold']:
                 samples=row['samples'][label]
-                assert len(samples)==7 and all(s['process_wall_ns']>0 and s['peak_rss_kib']>0 for s in samples)
+                assert len(samples)==8 and all(s['process_wall_ns']>0 and s['peak_rss_kib']>0 for s in samples)
         for stem, program in timing['programs'].items():
             for key,suffix in [('source','.fwp'),('generated_c','.c'),('binary','')]:
                 artifact=folder/'iteration-timing'/(stem+suffix)
@@ -130,6 +126,6 @@ for host,job in sorted(jobs.items()):
             assert fingerprint(baseline_assembly)['sha256']==observations['baseline_assembly_sha256']
             files[observations['baseline_assembly']]=fingerprint(baseline_assembly)
     hosts.append({'runner':host,'iteration':iteration,'iteration_timing':timing,'binary_observations':observations,'job':{k:job[k] for k in ['name','databaseId','conclusion']},'environment':environment,'primitive_counts':inventory['counts'],'extra_per_call_versus_plain_between_32_and_128':{case:{k:str(v) for k,v in values.items()} for case,values in extra.items()},'layouts':{name:next({k:v for k,v in row.items() if k!='case'} for row in layouts if row['case']==name+'-128') for name in cases},'rows':rows,'files':files,'binaries':binaries})
-report={'title':'Memory used by service helpers and list iteration','source_revision':args.head,'run':run['url'],'comparison':'Each fwp service scope versus plain fwp state updates at 1/32/128 calls, O2, collection disabled. Managed requests, requested bytes and final charged storage from constant initialization through main cleanup. Fixed scheduler startup remains included in rows; per-call slopes subtract fixed costs.','limits':'Service allocation rows exclude raw TLS/capture buffers, allocator metadata, pages and total process memory; they do not measure speed. Separate iteration_timing entries retain elapsed time and peak process memory when present. Neither comparison establishes C/Rust parity. Plain programs omit service fields; their task sizes are not the old service-task baseline. Whole services and remote results remain outside checked ARC support.','hosts':hosts}
+report={'title':'Memory used by service helpers and list iteration','source_revision':args.head,'run':run['url'],'comparison':'Each fwp service scope versus plain fwp state updates at 1/32/128 calls, O2 with counted ownership. Managed requests, requested bytes and final charged storage from constant initialization through main cleanup. Fixed scheduler startup remains included in rows; per-call slopes subtract fixed costs.','limits':'Service allocation rows exclude raw TLS/capture buffers, allocator metadata, pages and total process memory; they do not measure speed. Separate iteration_timing entries retain elapsed time and peak process memory when present. Neither comparison establishes C/Rust parity. Plain programs omit service fields; their task sizes are not the old service-task baseline.','hosts':hosts}
 args.output.write_text(json.dumps(report,indent=2)+'\n')
 for host in hosts: print(host['runner'],host['extra_per_call_versus_plain_between_32_and_128'],host['layouts']['gzip'])

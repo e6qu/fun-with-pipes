@@ -29,7 +29,7 @@ assert os.environ['GITHUB_ACTIONS'] == 'true' and platform.system() == 'Linux'
 assert args.samples >= 3 and re.fullmatch('[0-9a-f]{40}', args.source)
 assert not args.output.exists(), 'Preserve completed memory measurements'
 inspection = json.loads(args.inspection.read_text())
-assert inspection['source'] == args.source and inspection['memory'] == 'arc'
+assert inspection['source'] == args.source and inspection['ownership'] == 'counted'
 assert inspection['architecture'] == platform.machine()
 directory, = (args.input / args.source).iterdir()
 args.output.mkdir(parents=True)
@@ -37,8 +37,7 @@ args.output.mkdir(parents=True)
 # Select runtime diagnostics explicitly; keep credentials out of child programs.
 environment = {key: value for key, value in os.environ.items()
                if not key.startswith('FWP_') and key not in {'GH_TOKEN', 'GITHUB_TOKEN'}}
-environment.update(FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0',
-                   FWP_LTO='0', LC_ALL='C')
+environment.update(FWP_LTO='0', LC_ALL='C')
 
 
 def run(command):
@@ -52,7 +51,7 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-result = dict(source=args.source, memory='arc', architecture=platform.machine(),
+result = dict(source=args.source, ownership='counted', architecture=platform.machine(),
               inspectionSha256=digest(args.inspection), samples=args.samples,
               cCompiler=run([args.cc, '--version']).stdout.decode(),
               timeTool=run([args.time, '--version']).stdout.decode(),
@@ -101,7 +100,7 @@ for program in inspection['programs']:
             (args.output / f'{stem}-{number}.stdout').write_bytes(actual.stdout)
             (args.output / f'{stem}-{number}.stderr').write_bytes(actual.stderr)
             counters = json.loads(actual.stderr)
-            assert counters['collections'] == 0
+            assert set(counters) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
             profiles.append(counters)
         assert all(counts == profiles[0] for counts in profiles)
         row['managedMemory'][label] = dict(profiles=profiles, command=list(map(str, command)),

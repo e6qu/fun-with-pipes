@@ -12,25 +12,17 @@ static int typed_failure(int code,unsigned line) {
 static void typed_drop_string(V value) {
     uint8_t *count=fwp_rc_slot(value);
     int last=count && *count==1;
-    double before=fwp_gc.freed;
-    /* A live State slot is an additional owner, including under poisoning.
+    double before=fwp_heap.freed;
+    /* A live State slot is an additional owner, independently of the caller.
      * Detect an omitted retain before destroying or reading its payload. */
     if(last && fwp_state_len && fwp_p_get()==value) exit(typed_failure(127,__LINE__));
     DROP_STRING(value);
     if(last) {
         count=fwp_rc_slot(value);
-#ifndef FWP_ARC_ONLY
-        if(fwp_reuse_verify) {
-            /* Verification retains the physical leaf and poisons its payload.
-             * Establish that storage still exists before inspecting poison. */
-            if(!count || *count!=1) exit(typed_failure(125,__LINE__));
-            if(STR(value)->len || STR(value)->d[0]) exit(typed_failure(125,__LINE__));
-        } else
-#endif
         {
             /* Small freed slots can still have a metadata address. Require a
              * cleared count and an actual counted-storage free counter change. */
-            if((count && *count) || fwp_gc.freed<=before) exit(typed_failure(125,__LINE__));
+            if((count && *count) || fwp_heap.freed<=before) exit(typed_failure(125,__LINE__));
         }
         if(value==typed_child_initial) typed_child_released++;
     }
@@ -50,10 +42,6 @@ static V typed_tuple(V first,V second) {
 static void typed_child_body(void *arg,int cancelled);
 static V typed_entry(V *args) {
     (void)args;
-#ifndef FWP_ARC_ONLY
-    fwp_gc_collect();
-    if(!fwp_gc.armed || !fwp_gc.ncollect) exit(typed_failure(129,__LINE__));
-#endif
     if(typed_mode==1) {
         V value=fwp_rc_fresh(fwp_cstr("replacement"));
         fwp_p_put_owned(value,fwp_rc_dup);typed_drop_string(value);
@@ -77,7 +65,7 @@ static V typed_entry(V *args) {
                 if(!typed_started) exit(typed_failure(130,__LINE__));
                 fwp_cancel_tree(typed_child);
             }
-            fwp_await(typed_child);
+            fwp_task_option_outer_drop(fwp_await_owned(typed_child,NULL));
             if(typed_mode==5 && typed_child_released!=1) exit(typed_failure(125,__LINE__));
             fwp_task_drop(PTR(typed_child));fwp_free_zombie();
         } else fwp_p_task_yield();
@@ -102,15 +90,14 @@ static void typed_child_body(void *arg,int cancelled) {
     initial=fwp_value_finish(&initial_owner,&initial_cleanup);typed_drop_string(initial);
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
     fwp_tasks_init();fwp_fns=typed_entries;
-    intptr_t baseline=fwp_gc.budget;
+    size_t baseline=fwp_heap.live;
     fwp_trap_recover=typed_recover;fwp_trap_jb=&typed_trap;fwp_trap_cleanup=0;
     for(int round=0;round<32;round++) {
     typed_started=0;
     for(typed_mode=0;typed_mode<7;typed_mode++) {
         V initial=fwp_rc_fresh(fwp_cstr("initial State"));
-        size_t before=fwp_gc.ncollect;
         if(typed_mode==2) {
             fwp_handler handler;handler.prev=fwp_handlers;handler.state_depth=0;handler.cleanup=fwp_cleanups;
             fwp_handlers=&handler;
@@ -134,11 +121,6 @@ int main(void) {
             fwp_state_restore(0);
         }
         if(fwp_state_owners || fwp_cleanups || fwp_state_len) return typed_failure(125,__LINE__);
-#ifndef FWP_ARC_ONLY
-        if(fwp_gc.ncollect<=before) return typed_failure(125,__LINE__);
-#else
-        if(fwp_gc.ncollect!=before) return typed_failure(129,__LINE__);
-#endif
         if(!fwp_rc_slot(initial) || *fwp_rc_slot(initial)!=1) return typed_failure(125,__LINE__);
         typed_drop_string(initial);
     }
@@ -148,16 +130,12 @@ int main(void) {
     if(!fwp_rc_slot(sentinel) || *fwp_rc_slot(sentinel)!=1) return typed_failure(133,__LINE__);
     fwp_state_restore(0);typed_drop_string(sentinel);
     fwp_tasks_finish();fwp_free_zombie();
-#ifdef FWP_ARC_ONLY
-    if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
-#endif
+    if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
     }
     fwp_trap_recover=NULL;fwp_trap_jb=NULL;fwp_fns=fwp_fn_table;
     fwp_native_tasks_finish();
-#ifdef FWP_ARC_ONLY
-    if(fwp_gc.budget!=fwp_gc.budget_given||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
-#endif
-    printf("typed State ownership; collections=%zu owner=%zu cleanup=%zu task=%zu\n",
-        fwp_gc.ncollect,sizeof(fwp_state_owner),sizeof(fwp_cleanup),sizeof(fwp_task));
+    if(fwp_heap.live!=0||fwp_heap.rc_wide_len)return 90;
+    printf("typed State ownership; owner=%zu cleanup=%zu task=%zu\n",
+        sizeof(fwp_state_owner),sizeof(fwp_cleanup),sizeof(fwp_task));
     return 0;
 }

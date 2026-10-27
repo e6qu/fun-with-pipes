@@ -164,11 +164,11 @@ fn narrow_unsigned_products_check_bounds_before_trapping() {
         );
         assert_eq!(&actual, expected, "interpreter U{bits}: {a} * {b}");
     }
-    for memory in ["arc", "tracing"] {
+    {
         let cfile = dir.join("products.c");
         let emitted = Command::new(fwp())
             .env_remove("FWP_NO_OPT")
-            .args(["build", "--cli", "--gc", memory, "--emit-c"])
+            .args(["build", "--cli", "--emit-c"])
             .arg(&input)
             .arg("-o")
             .arg(&cfile)
@@ -179,24 +179,18 @@ fn narrow_unsigned_products_check_bounds_before_trapping() {
         for opt in ["-O0", "-O2", "-O3"] {
             let binary = dir.join("products.exe");
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let stress = if memory == "arc" { "0" } else { "1" };
+
             for (bits, a, b, expected) in &cases {
                 let actual = outcome(
                     Command::new(&binary)
                         .args([format!("product{bits}"), a.to_string(), b.to_string()])
                         .env_remove("FWP_OUT")
-                        .env("FWP_TRANSPORT", "stdio")
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", stress),
+                        .env("FWP_TRANSPORT", "stdio"),
                 );
-                assert_eq!(&actual, expected, "{memory}/{opt} U{bits}: {a} * {b}");
+                assert_eq!(&actual, expected, "counted/{opt} U{bits}: {a} * {b}");
             }
         }
-        if memory == "tracing" {
-            continue;
-        }
+
         // Test the emitted primitive itself under UBSan. Dynamic argv operands
         // prevent constant folding from hiding undefined intermediate arithmetic.
         let marker = "/* prim.mul : U32 -> U32 -> U32 */\n";
@@ -293,7 +287,7 @@ fn full_width_unsigned_products_have_defined_overflow() {
     let cfile = dir.join("products.c");
     std::fs::write(&input, "main = ()\n").unwrap();
     let emitted = Command::new(fwp())
-        .args(["build", "--gc", "tracing", "--emit-c"])
+        .args(["build", "--emit-c"])
         .arg(&input)
         .arg("-o")
         .arg(&cfile)
@@ -431,11 +425,11 @@ fn signed_products_preserve_bounds_effects_and_defined_intermediates() {
         );
         assert_eq!(&actual, expected, "interpreter/{name}: {a} * {b}");
     }
-    for memory in ["arc", "tracing"] {
+    {
         let cfile = dir.join("products.c");
         let emitted = Command::new(fwp())
             .env_remove("FWP_NO_OPT")
-            .args(["build", "--cli", "--gc", memory, "--emit-c"])
+            .args(["build", "--cli", "--emit-c"])
             .arg(&input)
             .arg("-o")
             .arg(&cfile)
@@ -445,32 +439,26 @@ fn signed_products_preserve_bounds_effects_and_defined_intermediates() {
         let code = std::fs::read_to_string(&cfile).unwrap();
         if let Some(root) = &artifacts {
             std::fs::create_dir_all(root).unwrap();
-            std::fs::write(root.join(format!("products-{memory}.c")), &code).unwrap();
+            std::fs::write(root.join("products-counted.c"), &code).unwrap();
         }
         for opt in ["-O0", "-O1", "-O2", "-O3"] {
             let binary = dir.join("products.exe");
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
             if let Some(root) = &artifacts {
-                std::fs::copy(&binary, root.join(format!("products-{memory}{opt}.exe"))).unwrap();
+                std::fs::copy(&binary, root.join(format!("products-counted{opt}.exe"))).unwrap();
             }
-            let stress = if memory == "arc" { "0" } else { "1" };
+
             for (name, a, b, expected) in &cases {
                 let actual = outcome(
                     Command::new(&binary)
                         .args([(*name).into(), a.to_string(), b.to_string()])
                         .env_remove("FWP_OUT")
-                        .env("FWP_TRANSPORT", "stdio")
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", stress),
+                        .env("FWP_TRANSPORT", "stdio"),
                 );
-                assert_eq!(&actual, expected, "{memory}/{opt}/{name}: {a} * {b}");
+                assert_eq!(&actual, expected, "counted/{opt}/{name}: {a} * {b}");
             }
         }
-        if memory == "tracing" {
-            continue;
-        }
+
         let (_, tail) = code
             .split_once("/* prim.mul : I64 -> I64 -> I64 */\n")
             .unwrap();

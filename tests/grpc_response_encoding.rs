@@ -1,13 +1,10 @@
 //! Served responses and channel sends release buffers on failure and cancellation.
 use fwp::ir::*;
+use fwp::value::Value;
 use std::process::Command;
 
 #[test]
 fn served_buffers_release_on_decode_encode_traps_and_cancelled_send() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -119,7 +116,7 @@ static void no_release(void *p){(void)p;}
 static int observed_next(uintptr_t *cur,uintptr_t *value){if(*cur)return 0;*cur=1;*value=42;return 1;}
 static void serve(void *arg,int stop){if(stop){cancelled++;return;}jmp_buf trapped;jmp_buf *saved=fwp_cur->trap_jb;fwp_cleanup *saved_cleanup=fwp_cur->trap_cleanup;if(!setjmp(trapped)){fwp_cur->trap_jb=&trapped;fwp_cur->trap_cleanup=fwp_cleanups;if(kind==3){g_job *job=arg;g_sink sink={0};sink.c=job->c;sink.s=job->s;result=g_sink_send(&sink,42);}else{char *text=0;result=kind==4?g_reflect(arg,&text):g_run_method(arg,&text);if(text)_Exit(7);}}fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;}
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1, "", "local",&srv);
  const fwp_desc descriptor={.kind=K_I64,.name="I64"};
  /* Kinds: single response, response iterator, typed error, channel sender, reflection.
@@ -134,17 +131,18 @@ int main(void){
   const fwp_desc *request_fields[]={&descriptor};
   fwp_rpc method={0};method.result_drop=probe_result_drop;method.nreq=stage==4?1:0;method.req=request_fields;method.output=kind==1?1:0;method.resp=&descriptor;method.error=kind==2?&descriptor:0;
   g_route route={0};route.kind=G_ROUTE_METHOD;route.m=&method;g_job job={0};job.c=c;job.s=s;job.srv=&srv;job.route=&route;strcpy(job.what,"probe");
-  fwp_task *t=fwp_spawn_task(0,serve,&job,0,0);
+  fwp_task *t=fwp_spawn_task(0,serve,&job,0,0);fwp_task_own_internal(t,1);
   if(stage==1){fwp_p_task_yield();if(t->done||!watched_response||!watched_wire||response_frees||wire_frees)return 2;fwp_p_task_cancel(PTR(t));}
   fwp_await(t);
   if(!t->done||response_frees!=(stage>=3?0:1)||canonical_frees!=(kind==2&&stage!=4?1:0)||wire_frees!=(stage<2?1:0)||watched_response||watched_canonical||watched_wire||cancelled!=(stage==1)||fwp_cleanups||watched_request||request_frees!=(stage==4||kind==4?1:0))return 1;
+  fwp_task_drop(PTR(t));
   if(stage==0){if(result!=(kind==3?1:-1))return 3;int found=0;const unsigned char errorbytes[]={1,42,0,0,0,0,0,0,0};const void *expected=kind==2?(const void*)errorbytes:(const void*)"response";size_t n=kind==2?9:8;for(size_t i=0;i+n<=c->out.len;i++)if(!memcmp(c->out.d+i,expected,n))found=1;if(!found)return 4;}
   if(stage==2&&strcmp(fwp_trap_msg,"response trap"))return 5;
   if(stage==3&&strcmp(fwp_trap_msg,"canonical trap"))return 6;
   if(stage==4&&strcmp(fwp_trap_msg,"request decode trap"))return 8;
-  FWP_KEEP_ALIVE(PTR(t));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
+
  }
- FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
+ fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-response-encoding").unwrap();
@@ -197,32 +195,18 @@ int main(void){
             &received_omitted,
         ] {
             fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
-            let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+            let out = Command::new(&exe).output().unwrap();
             assert_eq!(out.status.code(), Some(1), "omitted cleanup: {out:?}");
         }
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-            }
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
 }
 
 #[test]
 fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
-    use fwp::value::Value;
     let unit = MT::unit();
     let string = MT::con("std::String");
     let integer = MT::con("std::I64");
@@ -401,7 +385,7 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
             "fwp_fns[fn].owned->entry(args)",
             "fwp_fns[fn].entry(args)",
             0,
-            242, // Unowned dispatch loses the returned value's counted owner.
+            242, // Unowned dispatch must reject the counted argument at its boundary.
         ),
     ];
     let dir = fwp::cgen::TempDir::new("served-value-owners").unwrap();
@@ -410,33 +394,24 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{declaration}{generated}\n{fixture}"), &exe, opt).unwrap();
         for stage in [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14] {
-            for gc in ["off", "on"] {
-                for poison in ["0", "1"] {
-                    let output = Command::new(&exe)
-                        .arg(stage.to_string())
-                        .env("FWP_GC", gc)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
-                    assert!(
-                        output.status.success(),
-                        "{opt}/{stage}/{gc}/{poison}: {output:?}"
-                    );
-                }
-            }
+            let output = Command::new(&exe).arg(stage.to_string()).output().unwrap();
+            assert!(output.status.success(), "{opt}/{stage}: {output:?}");
         }
         for (before, after, stage, expected) in controls {
             assert_eq!(generated.matches(before).count(), 1, "{before}");
             let broken = generated.replacen(before, after, 1);
-            fwp::cgen::compile_c(&format!("{declaration}{broken}\n{fixture}"), &exe, opt).unwrap();
-            let output = Command::new(&exe)
-                .arg(stage.to_string())
-                .env("FWP_GC", "off")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
+            let control = if before == "fwp_fns[fn].owned->entry(args)" {
+                "#define PROBE_UNOWNED_DISPATCH 1\n"
+            } else {
+                ""
+            };
+            fwp::cgen::compile_c(
+                &format!("{control}{declaration}{broken}\n{fixture}"),
+                &exe,
+                opt,
+            )
+            .unwrap();
+            let output = Command::new(&exe).arg(stage.to_string()).output().unwrap();
             assert_eq!(output.status.code(), Some(expected), "{before}: {output:?}");
         }
     }
@@ -444,10 +419,6 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
 
 #[test]
 fn native_output_channels_borrow_values_and_release_context() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -511,7 +482,7 @@ fn native_output_channels_borrow_values_and_release_context() {
         ),
         (
             "if (!c->closed) result = c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;",
-            "if (!c->closed) { fwp_rc_share(x); result = c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE; }",
+            "if (!c->closed) { fwp_rc_dup(x); result = c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE; }",
             0,
             231,
         ),
@@ -521,33 +492,14 @@ fn native_output_channels_borrow_values_and_release_context() {
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{generated}\n{fixture}"), &exe, opt).unwrap();
         for stage in 0..7 {
-            for gc in ["off", "on"] {
-                for poison in ["0", "1"] {
-                    let output = Command::new(&exe)
-                        .arg(stage.to_string())
-                        .env("FWP_GC", gc)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
-                    assert!(
-                        output.status.success(),
-                        "{opt}/{stage}/{gc}/{poison}: {output:?}"
-                    );
-                }
-            }
+            let output = Command::new(&exe).arg(stage.to_string()).output().unwrap();
+            assert!(output.status.success(), "{opt}/{stage}: {output:?}");
         }
         for (before, after, stage, expected) in controls {
             assert_eq!(generated.matches(before).count(), 1, "{before}");
             let broken = generated.replacen(before, after, 1);
             fwp::cgen::compile_c(&format!("{broken}\n{fixture}"), &exe, opt).unwrap();
-            let output = Command::new(&exe)
-                .arg(stage.to_string())
-                .env("FWP_GC", "off")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
+            let output = Command::new(&exe).arg(stage.to_string()).output().unwrap();
             assert_eq!(output.status.code(), Some(expected), "{before}: {output:?}");
         }
     }

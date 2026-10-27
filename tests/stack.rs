@@ -1,11 +1,13 @@
 //! Records, variants and closures that do not escape live on the stack
 //! (`src/escape.rs`; `FWP_STACK=0` when compiling turns it off). That
-//! every golden program behaves the same with them, under a stressed and
-//! verifying collector, is checked by tests/reuse.rs.
+//! tests/reuse.rs compares outputs with and without eligible storage reuse.
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
+
+#[path = "support/allocation_report.rs"]
+mod allocation_report;
 
 fn fwp() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_fwp"))
@@ -127,13 +129,13 @@ main = range 1 17 | map (flip string.repeat "seed" | alias) | echo
         "{}",
         String::from_utf8_lossy(&expected.stderr)
     );
-    for mode in ["tracing", "arc"] {
+    {
         for (opt, stack) in [("-O1", "0"), ("-O2", "1")] {
-            let exe = dir.0.join(format!("owned-{mode}-{stack}"));
+            let exe = dir.0.join(format!("owned-counted-{stack}"));
             let build = Command::new(fwp())
                 .arg("build")
                 .arg(&src)
-                .args(["--gc", mode, opt, "-o"])
+                .args([opt, "-o"])
                 .arg(&exe)
                 .env("FWP_STACK", stack)
                 .output()
@@ -143,24 +145,15 @@ main = range 1 17 | map (flip string.repeat "seed" | alias) | echo
                 "{}",
                 String::from_utf8_lossy(&build.stderr)
             );
-            let env = if mode == "tracing" {
-                vec![
-                    ("FWP_GC_STRESS", "1"),
-                    ("FWP_GC_VERIFY", "1"),
-                    ("FWP_REUSE_VERIFY", "1"),
-                ]
-            } else {
-                vec![]
-            };
-            let actual = run(&exe, &dir.0, b"", &env);
+            let actual = run(&exe, &dir.0, b"", &[]);
             assert_eq!(
                 actual.status.code(),
                 expected.status.code(),
-                "{mode}/{opt}: {}",
+                "counted/{opt}: {}",
                 String::from_utf8_lossy(&actual.stderr)
             );
-            assert_eq!(actual.stdout, expected.stdout, "{mode}/{opt}");
-            assert_eq!(actual.stderr, expected.stderr, "{mode}/{opt}");
+            assert_eq!(actual.stdout, expected.stdout, "counted/{opt}");
+            assert_eq!(actual.stderr, expected.stderr, "counted/{opt}");
         }
     }
 }
@@ -171,7 +164,7 @@ fn allocated(dir: &TempDir, name: &str, var: &str, value: &str, expected: &str) 
     let src = root().join(format!("tests/stack/{}.fwp", name));
     let exe = dir.0.join(format!("{}{}", name, value));
     let b = Command::new(fwp())
-        .args(["build", "--gc", "tracing"])
+        .args(["build"])
         .arg(&src)
         .arg("-o")
         .arg(&exe)
@@ -179,18 +172,14 @@ fn allocated(dir: &TempDir, name: &str, var: &str, value: &str, expected: &str) 
         .output()
         .unwrap();
     assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
-    let o = run(&exe, &dir.0, b"", &[("FWP_GC_STATS", "1")]);
+    let o = run(&exe, &dir.0, b"", &[("FWP_ALLOC_STATS", "1")]);
     assert_eq!(String::from_utf8_lossy(&o.stdout), expected);
     assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
     let err = String::from_utf8_lossy(&o.stderr);
-    let mib = err
-        .split(" MiB allocated")
-        .next()
-        .unwrap()
-        .rsplit(' ')
-        .next()
-        .unwrap();
-    mib.parse().unwrap()
+    allocation_report::parse(&err)
+        .expect("allocation report")
+        .allocated as f64
+        / 1_048_576.0
 }
 
 /// `tests/stack/<name>.fwp` prints `expected`, allocating more than 10 MiB

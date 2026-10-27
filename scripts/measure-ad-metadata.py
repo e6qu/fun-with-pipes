@@ -94,7 +94,7 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     compiler = ROOT / 'target/release/fwp'
     cc = os.environ.get('CC', 'cc')
-    environment = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+    environment = dict(os.environ)
     environment.pop('FWP_NO_OPT', None)
     baseline_tape = None
     if args.comparison == 'separate':
@@ -107,7 +107,7 @@ def main():
         reference = run([compiler, 'run', '--interp', source], dict(environment, FWP_NO_OPT='1'))
         assert reference.stdout == expected and not reference.stderr, reference
         emitted = out / (name + '.c')
-        run([compiler, 'build', '--gc', 'arc', '--emit-c', '-o', emitted, source], environment)
+        run([compiler, 'build', '--emit-c', '-o', emitted, source], environment)
         original = emitted.read_text()
         control = (original[:original.index(START)] + baseline_tape + original[original.index(END):]
                    if baseline_tape is not None else interleaved(original))
@@ -131,7 +131,7 @@ def main():
                 assert result.stdout == expected
                 metadata, tape, managed = map(json.loads, result.stderr.splitlines())
                 assert tape['finalTapeBytes'] == 0 and managed['finalChargedBytes'] == 0
-                assert managed['collections'] == 0
+                assert set(managed) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
                 caches[cache] = dict(metadata=metadata, tape=tape, managed=managed,
                                     processWallNs=[])
             assembly = ['otool', '-tvV', binary] if platform.system() == 'Darwin' else ['objdump', '-d', binary]

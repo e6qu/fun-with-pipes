@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn served_status_messages_release_after_encoding_and_on_cancellation() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -70,7 +66,7 @@ static jmp_buf failure;
 static int recover(void){return 1;}
 int main(int argc,char **argv){
  (void)argv;
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();
  g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1, "", "local",&srv);
  if(argc>1){
   g_serving sv={0};g_ctx ctx={0};ctx.serving=&sv;sv.task=fwp_cur;
@@ -97,7 +93,7 @@ int main(int argc,char **argv){
    for(size_t i=0;i+n<=c->out.len;i++)if(!memcmp(c->out.d+i,expected_text,n)){found=1;break;}
    if(!found)_Exit(3);
   }
-  FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
+
  }
  // Replacing cancellation status copies before dropping an aliased old message.
  allocations=frees=0;memset(messages,0,sizeof messages);stage=6;
@@ -113,7 +109,7 @@ int main(int argc,char **argv){
  fwp_cur->unwinding=0;fwp_cur->gctx=0;
  g_serving_peer_release(sv);if(!sv->msg||frees!=3)_Exit(6);
  g_serving_peer_release(sv);if(frees!=4||allocations!=4)_Exit(7);
- FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
+ fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-status-cleanup").unwrap();
@@ -131,7 +127,7 @@ int main(int argc,char **argv){
     for opt in ["-O1", "-O2"] {
         for broken in [&omitted, &unwind_omitted] {
             fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
-            let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+            let out = Command::new(&exe).output().unwrap();
             assert_eq!(out.status.code(), Some(2), "omitted release: {out:?}");
         }
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
@@ -147,17 +143,8 @@ int main(int argc,char **argv){
             "fwp: out of memory\n"
         );
         assert!(out.stdout.is_empty());
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-            }
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
 }

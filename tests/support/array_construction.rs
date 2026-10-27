@@ -125,120 +125,97 @@ fn array_construction_moves_only_unshared_prefixes_and_cleans_interruptions() {
             .args(["run", "--interp"])
             .arg(&input),
     );
-    for memory in ["arc", "tracing"] {
-        checked(
-            Command::new(compiler)
-                .env_remove("FWP_NO_OPT")
-                .env("FWP_FREE", "1")
-                .env("FWP_STACK", "0")
-                .env("FWP_REUSE", "1")
-                .env("FWP_ARRAY_FUSION", "0")
-                .env("FWP_PACKED_ARRAYS", "1")
-                .args([
-                    "build", "--gc", memory, "--memory", "dynamic", "--emit-c", "-O2", "-o",
-                ])
-                .arg(&cfile)
-                .arg(&input),
-        );
-        let emitted = std::fs::read_to_string(&cfile).unwrap();
-        let probe = allocation_probe(&emitted);
-        let changes = [
-            ("shared-tail", "move_prefix = 0;", "move_prefix = 1;", 205),
-            (
-                "missing-retain",
-                "if (dup && elem->kind != K_F128) dup(value);",
-                "(void)dup;",
-                205,
-            ),
-            (
-                "missing-input",
-                "fwp_value_owner input = {xs, drop_list};",
-                "fwp_value_owner input = {xs, NULL};",
-                211,
-            ),
-            (
-                "missing-result",
-                "static void fwp_array_builder_release(void *arg) {",
-                "static void fwp_array_builder_release(void *arg) { (void)arg; return;",
-                211,
-            ),
-            ("missing-node", "fwp_rc_free_obj(node);", "(void)node;", 211),
-            (
-                "missing-wide-release",
-                "fwp_array_store_owned(result.value, i, value, elem);",
-                "fwp_array_store(result.value, i, value, elem);",
-                211,
-            ),
-        ];
-        let mut cases = vec![
-            ("program", emitted.clone(), 0),
-            ("balanced", probe.clone(), 0),
-            ("no-reuse", format!("#define FWP_NO_REUSE 1\n{probe}"), 0),
-        ];
-        let start = probe.find("static V fwp_p_array_from_list_typed(").unwrap();
-        let end = start + probe[start..].find("\n}\n").unwrap() + 3;
-        for (name, before, after, status) in changes {
-            let mut changed = probe.clone();
-            if name == "missing-result" {
-                assert_eq!(changed.matches(before).count(), 1);
-                changed = changed.replace(before, after);
-            } else {
-                let body = &probe[start..end];
-                assert_eq!(body.matches(before).count(), 1, "{name}");
-                changed.replace_range(start..end, &body.replace(before, after));
-            }
-            cases.push((name, changed, status));
+
+    checked(
+        Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .env("FWP_STACK", "0")
+            .env("FWP_ARRAY_FUSION", "0")
+            .env("FWP_PACKED_ARRAYS", "1")
+            .args(["build", "--memory", "dynamic", "--emit-c", "-O2", "-o"])
+            .arg(&cfile)
+            .arg(&input),
+    );
+    let emitted = std::fs::read_to_string(&cfile).unwrap();
+    let probe = allocation_probe(&emitted);
+    let changes = [
+        ("shared-tail", "move_prefix = 0;", "move_prefix = 1;", 205),
+        (
+            "missing-retain",
+            "if (dup && elem->kind != K_F128) dup(value);",
+            "(void)dup;",
+            205,
+        ),
+        (
+            "missing-input",
+            "fwp_value_owner input = {xs, drop_list};",
+            "fwp_value_owner input = {xs, NULL};",
+            211,
+        ),
+        (
+            "missing-result",
+            "static void fwp_array_builder_release(void *arg) {",
+            "static void fwp_array_builder_release(void *arg) { (void)arg; return;",
+            211,
+        ),
+        ("missing-node", "fwp_rc_free_obj(node);", "(void)node;", 211),
+        (
+            "missing-wide-release",
+            "fwp_array_store_owned(result.value, i, value, elem);",
+            "fwp_array_store(result.value, i, value, elem);",
+            211,
+        ),
+    ];
+    let mut cases = vec![
+        ("program", emitted.clone(), 0),
+        ("balanced", probe.clone(), 0),
+        ("no-reuse", format!("#define FWP_NO_REUSE 1\n{probe}"), 0),
+    ];
+    let start = probe.find("static V fwp_p_array_from_list_typed(").unwrap();
+    let end = start + probe[start..].find("\n}\n").unwrap() + 3;
+    for (name, before, after, status) in changes {
+        let mut changed = probe.clone();
+        if name == "missing-result" {
+            assert_eq!(changed.matches(before).count(), 1);
+            changed = changed.replace(before, after);
+        } else {
+            let body = &probe[start..end];
+            assert_eq!(body.matches(before).count(), 1, "{name}");
+            changed.replace_range(start..end, &body.replace(before, after));
         }
-        for optimization in ["-O1", "-O2"] {
-            for (case, code, status) in &cases {
-                fwp::cgen::compile_c(code, &binary, optimization).unwrap();
-                for reuse in if memory == "tracing" && *status == 0 {
-                    &["0", "1"][..]
-                } else {
-                    &["0"][..]
-                } {
-                    let stress = if memory == "tracing" && *status == 0 {
-                        "1"
-                    } else {
-                        "0"
-                    };
-                    let mut command = Command::new(&binary);
-                    command
-                        .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", reuse);
-                    let output = if *case == "program" {
-                        program(&mut command)
-                    } else {
-                        command.output().unwrap()
-                    };
-                    let label = format!("{memory}{optimization}-{case}-reuse{reuse}");
-                    save(&label, code, &binary, &output);
-                    assert_eq!(output.status.code(), Some(*status), "{label}: {output:?}");
-                    if *case == "program" {
-                        assert_eq!(output.stdout, reference.stdout, "{label}");
-                    }
-                    if *status == 0 {
-                        assert!(output.stderr.is_empty(), "{label}: {output:?}");
-                        if *case != "program" {
-                            let text = String::from_utf8_lossy(&output.stdout);
-                            assert!(
-                                text.starts_with(
-                                    "array construction: 208 alias/bit-pattern cases and "
-                                ),
-                                "{label}: {text}"
-                            );
-                            assert!(
-                                text.ends_with(" allocation/retain interruptions cleaned\n"),
-                                "{text}"
-                            );
-                        }
-                    } else {
-                        assert!(output.stdout.is_empty(), "{label}: {output:?}");
-                    }
+        cases.push((name, changed, status));
+    }
+    for optimization in ["-O1", "-O2"] {
+        for (case, code, status) in &cases {
+            fwp::cgen::compile_c(code, &binary, optimization).unwrap();
+
+            let mut command = Command::new(&binary);
+            let output = if *case == "program" {
+                program(&mut command)
+            } else {
+                command.output().unwrap()
+            };
+            let label = format!("counted{optimization}-{case}");
+            save(&label, code, &binary, &output);
+            assert_eq!(output.status.code(), Some(*status), "{label}: {output:?}");
+            if *case == "program" {
+                assert_eq!(output.stdout, reference.stdout, "{label}");
+            }
+            if *status == 0 {
+                assert!(output.stderr.is_empty(), "{label}: {output:?}");
+                if *case != "program" {
+                    let text = String::from_utf8_lossy(&output.stdout);
+                    assert!(
+                        text.starts_with("array construction: 208 alias/bit-pattern cases and "),
+                        "{label}: {text}"
+                    );
+                    assert!(
+                        text.ends_with(" allocation/retain interruptions cleaned\n"),
+                        "{text}"
+                    );
                 }
+            } else {
+                assert!(output.stdout.is_empty(), "{label}: {output:?}");
             }
         }
     }

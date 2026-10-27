@@ -9,12 +9,12 @@ static void operation_dup(V value) {
 static void operation_drop(V value) { if (value) operation_retains--; }
 
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
     static int round;
     for(round=0;round<32;round++) {
     static fwp_tape_scope scope={-1};static fwp_cleanup scope_owner;
     fwp_cleanup_push(&scope_owner,fwp_tape_scope_release,&scope);
-    intptr_t baseline=fwp_gc.budget;
+    size_t baseline=fwp_heap.live;
     operation_tuple=fwp_rc_fresh(fwp_record(4,(V[4]){0,0,0,0}));
     operation_outputs=fwp_rc_fresh(fwp_arr_new(1)); operation_seeds=fwp_rc_fresh(fwp_arr_new(1));
     ARR(operation_seeds)->d[0]=fwp_from_f64(1.0);
@@ -69,11 +69,7 @@ int main(void) {
     operation_parameters=operation_tuple=operation_outputs=operation_seeds=0;
     fwp_cleanup_pop(&scope_owner);fwp_tape_scope_release(&scope);
     fwp_trap_cleanup=0;fwp_trap_recover=0;fwp_trap_jb=0;
-#ifdef FWP_ARC_ONLY
-    if(fwp_gc.budget!=baseline||fwp_gc.ncollect||fwp_gc.rc_wide_len)return 90;
-#else
-    (void)baseline;
-#endif
+    if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
     }
     puts("input nodes need no operation buffers; managed weight transfer is atomic");
     return 0;

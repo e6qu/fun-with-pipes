@@ -70,15 +70,15 @@ fn scalar_math_domains_precision_and_native_ownership() {
         .unwrap();
     assert!(interpreted.status.success(), "{interpreted:?}");
     assert_eq!(String::from_utf8(interpreted.stdout).unwrap(), expected);
-    for mode in ["arc", "tracing"] {
+    {
         for optimization in ["-O1", "-O2"] {
             let executable = directory.join(format!(
-                "{mode}{optimization}{}",
+                "counted{optimization}{}",
                 std::env::consts::EXE_SUFFIX
             ));
             let built = Command::new(compiler)
                 .env_remove("FWP_NO_OPT")
-                .args(["build", "--gc", mode, optimization])
+                .args(["build", optimization])
                 .arg(&source)
                 .arg("-o")
                 .arg(&executable)
@@ -87,17 +87,16 @@ fn scalar_math_domains_precision_and_native_ownership() {
             assert!(built.status.success(), "{built:?}");
             let result = Command::new(&executable)
                 .stdin(Stdio::null())
-                .env_remove("FWP_GC")
-                .env("FWP_GC_STRESS", if mode == "arc" { "0" } else { "1" })
-                .env("FWP_GC_VERIFY", if mode == "arc" { "0" } else { "1" })
-                .env("FWP_REUSE_VERIFY", if mode == "arc" { "0" } else { "1" })
                 .output()
                 .unwrap();
-            assert!(result.status.success(), "{mode} {optimization}: {result:?}");
+            assert!(
+                result.status.success(),
+                "counted {optimization}: {result:?}"
+            );
             assert_eq!(
                 std::str::from_utf8(&result.stdout).unwrap(),
                 expected,
-                "{mode} {optimization}"
+                "counted {optimization}"
             );
             assert!(result.stderr.is_empty(), "{result:?}");
         }

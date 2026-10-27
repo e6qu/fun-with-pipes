@@ -6,10 +6,6 @@ use std::process::{Command, Output};
 
 #[test]
 fn temporary_channel_fields_preserve_owners_and_nonlocal_cleanup() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let channel = MT::Con("std::Channel".into(), vec![MT::con("std::String")]);
     let integer = MT::con("std::I64");
     let pair = MT::Record(vec![
@@ -110,7 +106,7 @@ static volatile V live_channel;
 static int probe_sink(void *context,V value){(void)context;(void)value;return 0;}
 static void probe_drop(void *context){if(context!=&destroyed)abort();destroyed++;}
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_init_consts();fwp_fns=fwp_fn_table;fwp_tasks_init();
+ fwp_heap_start();fwp_init_consts();fwp_fns=fwp_fn_table;fwp_tasks_init();
  for(volatile int mode=0;mode<3;mode++)for(volatile int alias=0;alias<2;alias++){
   destroyed=0;
   live_channel=fwp_p_channel_make_owned(1,0);
@@ -157,30 +153,15 @@ int main(void){
             (&code, leaked.as_str(), 75),
         ] {
             fwp::cgen::compile_c(&format!("{candidate}\n{case_probe}"), &exe, opt).unwrap();
-            for poison in ["0", "1"] {
-                let output = Command::new(&exe)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert_eq!(
-                    output.status.code(),
-                    Some(status),
-                    "{opt}/{poison}: {output:?}"
-                );
-            }
+
+            let output = Command::new(&exe).output().unwrap();
+            assert_eq!(output.status.code(), Some(status), "{opt}: {output:?}");
         }
     }
 }
 
 #[test]
 fn borrowed_function_channels_preserve_native_context_destruction() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let channel = MT::Con(
         "std::Channel".into(),
         vec![MT::Fun(
@@ -267,7 +248,7 @@ static V native_channel(void) {
  return value;
 }
 int main(void) {
- fwp_gc_start(__builtin_frame_address(0));fwp_init_consts();fwp_fns=fwp_fn_table;fwp_tasks_init();
+ fwp_heap_start();fwp_init_consts();fwp_fns=fwp_fn_table;fwp_tasks_init();
  for(int alias=0;alias<2;alias++){
   destroyed=0;V channel=native_channel();
   if(alias)fwp_rc_dup(channel);
@@ -293,30 +274,15 @@ int main(void) {
     for opt in ["-O0", "-O2"] {
         for (code, status) in [(&runtime, 0), (&control, 11)] {
             fwp::cgen::compile_c(&format!("{code}\n{probe}"), &exe, opt).unwrap();
-            for poison in ["0", "1"] {
-                let output = Command::new(&exe)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert_eq!(
-                    output.status.code(),
-                    Some(status),
-                    "{opt}, poison {poison}: {output:?}"
-                );
-            }
+
+            let output = Command::new(&exe).output().unwrap();
+            assert_eq!(output.status.code(), Some(status), "{opt}: {output:?}");
         }
     }
 }
 
 #[test]
 fn direct_borrowed_fields_preserve_owners_on_success_failure_and_cancellation() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let string = MT::con("std::String");
     let integer = MT::con("std::I64");
     let pair = MT::Record(vec![
@@ -433,9 +399,9 @@ fn direct_borrowed_fields_preserve_owners_on_success_failure_and_cancellation() 
     ));
     let probe = r#"
 static volatile V input_value;
-static int dead(V value) { return fwp_reuse_verify ? STR(value)->len==0 : *fwp_rc_slot(value)==0; }
+static int dead(V value) { return *fwp_rc_slot(value)==0; }
 int main(void) {
- fwp_gc_start(__builtin_frame_address(0)); fwp_init_consts(); fwp_fns=fwp_fn_table;
+ fwp_heap_start(); fwp_init_consts(); fwp_fns=fwp_fn_table;
  for(volatile int mode=0;mode<2;mode++) for(volatile int alias=0;alias<2;alias++) {
   input_value=fwp_rc_fresh(fwp_str_new("input",5)); expected_owners=1+alias;
   if(alias) fwp_rc_dup(input_value);
@@ -494,20 +460,9 @@ int main(void) {
     for opt in ["-O0", "-O2"] {
         for (code, status) in [(&control, 20), (&runtime, 0)] {
             fwp::cgen::compile_c(&format!("{code}\n{probe}"), &exe, opt).unwrap();
-            for poison in ["0", "1"] {
-                let output = Command::new(&exe)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert_eq!(
-                    output.status.code(),
-                    Some(status),
-                    "{opt}, poison {poison}: {output:?}"
-                );
-            }
+
+            let output = Command::new(&exe).output().unwrap();
+            assert_eq!(output.status.code(), Some(status), "{opt}: {output:?}");
         }
     }
 }
@@ -558,7 +513,7 @@ fn actual_caller_releases_owned_values_and_preserves_aliases() {
     );
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -581,12 +536,12 @@ static volatile V input_value;
 static V caller_entry(V *args) { return fail_call ? GUARD(args[0]) : (V)7; }
 static const fwp_fninfo caller_fns[] = {{1, caller_entry, "caller probe", 0}};
 static fwp_clo caller_fn = {0, 0};
-static int released(V v) { return fwp_reuse_verify ? STR(v)->len == 0 : *fwp_rc_slot(v) == 0; }
+static int released(V v) { return *fwp_rc_slot(v) == 0; }
 int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_init_consts(); fwp_fns = caller_fns;
+    fwp_heap_start(); fwp_init_consts(); fwp_fns = caller_fns;
     input_value = fwp_rc_fresh(fwp_str_new("normal", 6));
     if (HOLD(PTR(&caller_fn), input_value) != input_value || fwp_cleanups ||
         *fwp_rc_slot(input_value) != 1) return 1;
@@ -595,7 +550,7 @@ int main(void) {
     for (int alias = 0; alias < 2; alias++) {
         input_value = fwp_rc_fresh(fwp_str_new("retained", 8));
         if (alias) fwp_rc_dup(input_value);
-        double before = fwp_gc.freed;
+        double before = fwp_heap.freed;
         fwp_handler h;
         h.prev = fwp_handlers; h.state_depth = fwp_state_len; h.cleanup = fwp_cleanups;
         fwp_handlers = &h; fail_call = 1;
@@ -609,7 +564,7 @@ int main(void) {
             fwp_mem_free((void *)(uintptr_t)input_value);
         } else {
             if (!released(input_value)) return 7;
-            if (!fwp_reuse_verify && fwp_gc.freed <= before) return 8;
+            if (fwp_heap.freed <= before) return 8;
         }
     }
     puts("live caller owners release exactly once");
@@ -624,28 +579,18 @@ int main(void) {
     );
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-            assert_eq!(out.stdout, b"live caller owners release exactly once\n");
-        }
+
+        let out = checked(&mut Command::new(&exe));
+        assert_eq!(out.stdout, b"live caller owners release exactly once\n");
+
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
         );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
+        let out = checked(&mut Command::new(&exe));
         assert_eq!(out.stdout, reference.stdout);
     }
 }
@@ -690,7 +635,7 @@ main = 2 | attempt (pair guard) | echo
     );
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -720,46 +665,38 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_init_consts(); fwp_fns = argument_fns;
+    fwp_heap_start(); fwp_init_consts(); fwp_fns = argument_fns;
     fwp_handler h;
     h.prev = fwp_handlers; h.state_depth = fwp_state_len; h.cleanup = fwp_cleanups;
     fwp_handlers = &h;
     if (!setjmp(h.jb)) { PAIR(PTR(&argument_fn), 2); return 1; }
     fwp_handlers = h.prev;
     if (!first_argument || fwp_cleanups) return 2;
-    if (fwp_reuse_verify ? STR(first_argument)->len != 0 : *fwp_rc_slot(first_argument) != 0) return 3;
+    if (*fwp_rc_slot(first_argument) != 0) return 3;
     puts("pending arguments release on later failure");
     return 0;
 }
-"#.replace("GUARD", &wrapper("guard")).replace("PAIR", &wrapper("pair"));
+"#
+    .replace("GUARD", &wrapper("guard"))
+    .replace("PAIR", &wrapper("pair"));
     let runtime = emitted.replace(
         "int main(int argc, char **argv)",
         "int original_main(int argc, char **argv)",
     );
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-            assert_eq!(out.stdout, b"pending arguments release on later failure\n");
-        }
+
+        let out = checked(&mut Command::new(&exe));
+        assert_eq!(out.stdout, b"pending arguments release on later failure\n");
+
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
         );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
+        let out = checked(&mut Command::new(&exe));
         assert_eq!(out.stdout, reference.stdout);
     }
 }
@@ -790,7 +727,7 @@ fn boxed_wrapper_and_unboxed_worker_release_separate_owners() {
     );
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -817,7 +754,7 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_init_consts(); fwp_fns = worker_fns;
+    fwp_heap_start(); fwp_init_consts(); fwp_fns = worker_fns;
     text_input = fwp_rc_fresh(fwp_str_new("child", 5));
     boxed_input = fwp_rc_fresh(fwp_record(1, (V[]){text_input}));
     fwp_handler h;
@@ -826,9 +763,7 @@ int main(void) {
     if (!setjmp(h.jb)) { HOLD(PTR(&worker_fn), boxed_input); return 1; }
     fwp_handlers = h.prev;
     if (fwp_cleanups) return 2;
-    if (fwp_reuse_verify) {
-        if (OBJ(boxed_input)->tag != 0xdead || STR(text_input)->len != 0) return 3;
-    } else if (*fwp_rc_slot(boxed_input) || *fwp_rc_slot(text_input)) return 4;
+    if (*fwp_rc_slot(boxed_input) || *fwp_rc_slot(text_input)) return 4;
     puts("wrapper and worker owners release exactly once");
     return 0;
 }
@@ -841,31 +776,21 @@ int main(void) {
     );
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-            assert_eq!(
-                out.stdout,
-                b"wrapper and worker owners release exactly once\n"
-            );
-        }
+
+        let out = checked(&mut Command::new(&exe));
+        assert_eq!(
+            out.stdout,
+            b"wrapper and worker owners release exactly once\n"
+        );
+
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
         );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
+        let out = checked(&mut Command::new(&exe));
         assert_eq!(out.stdout, reference.stdout);
     }
 }
@@ -882,7 +807,7 @@ fn incoming_parameters_release_before_cancelled_entry_tick() {
     std::fs::write(&src, source).unwrap();
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -910,7 +835,7 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_init_consts(); fwp_fns = entry_fns;
+    fwp_heap_start(); fwp_init_consts(); fwp_fns = entry_fns;
     incoming = fwp_rc_fresh(fwp_str_new("incoming", 8));
     cancelled_task.cancelled = 1;
     fwp_cur = &cancelled_task;
@@ -920,7 +845,7 @@ int main(void) {
     fwp_cur = 0;
     cancelled_task.base=NULL;
     if (entered_callback || fwp_cleanups || !cancelled_task.unwinding) return 2;
-    if (fwp_reuse_verify ? STR(incoming)->len != 0 : *fwp_rc_slot(incoming) != 0) return 3;
+    if (*fwp_rc_slot(incoming) != 0) return 3;
     puts("incoming owners release before cancellation");
     return 0;
 }
@@ -932,15 +857,9 @@ int main(void) {
     );
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-            assert_eq!(out.stdout, b"incoming owners release before cancellation\n");
-        }
+
+        let out = checked(&mut Command::new(&exe));
+        assert_eq!(out.stdout, b"incoming owners release before cancellation\n");
     }
 }
 
@@ -974,7 +893,7 @@ main = "owned" | concat " input" | attempt (hold guard) | echo
     );
     checked(
         Command::new(fwp)
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&cfile),
@@ -1006,7 +925,7 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_init_consts(); fwp_fns = variant_fns;
+    fwp_heap_start(); fwp_init_consts(); fwp_fns = variant_fns;
     payload = fwp_rc_fresh(fwp_str_new("payload", 7));
     fwp_handler h;
     h.prev = fwp_handlers; h.state_depth = fwp_state_len; h.cleanup = fwp_cleanups;
@@ -1014,7 +933,7 @@ int main(void) {
     if (!setjmp(h.jb)) { HOLD(PTR(&variant_fn), payload); return 1; }
     fwp_handlers = h.prev;
     if (fwp_cleanups) return 2;
-    if (fwp_reuse_verify ? STR(payload)->len != 0 : *fwp_rc_slot(payload) != 0) return 3;
+    if (*fwp_rc_slot(payload) != 0) return 3;
     puts("struct variant payload releases on unwind");
     return 0;
 }
@@ -1027,28 +946,18 @@ int main(void) {
     );
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-            assert_eq!(out.stdout, b"struct variant payload releases on unwind\n");
-        }
+
+        let out = checked(&mut Command::new(&exe));
+        assert_eq!(out.stdout, b"struct variant payload releases on unwind\n");
+
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
         );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
+        let out = checked(&mut Command::new(&exe));
         assert_eq!(out.stdout, reference.stdout);
     }
     // Normal transfer must also preserve the payload through the new struct
@@ -1070,17 +979,12 @@ int main(void) {
         );
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args(["-O2", "-o"])
                 .arg(&exe),
         );
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1"),
-        );
+        let out = checked(&mut Command::new(&exe));
         assert_eq!(out.stdout, reference.stdout);
     }
 }

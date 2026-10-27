@@ -23,27 +23,31 @@ static int capture_matches(V result){
  return list==0;
 }
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
+ fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
  capture_input=fwp_rc_fresh(fwp_cstr("callback result"));
- intptr_t budget=fwp_gc.budget;
+ size_t live_bytes=fwp_heap.live;
  for(capture_alias=0;capture_alias<2;capture_alias++){
-  int failed=0,completed=0;
-  for(int allocation=1;allocation<32;allocation++){
+  /* Check each request directly; do not carry a second loop tally across longjmp. */
+  const int failures=capture_alias?13:14;
+  for(int allocation=1;allocation<=failures+1;allocation++){
    fwp_trap_recover=capture_recover;fwp_trap_jb=&capture_jump;fwp_trap_cleanup=fwp_cleanups;capture_left=allocation;
    if(!setjmp(capture_jump)){
     V result=fwp_p_grpc_with_response_metadata(0,CAPTURE_TYPE);capture_left=0;
     if(!capture_matches(result)||capture_live)return 247;
     CAPTURE_TYPE->dup(result);CAPTURE_TYPE->drop(result);
     if(!capture_matches(result))return 247;
-    CAPTURE_TYPE->drop(result);completed=1;
-   }else failed++;
+    CAPTURE_TYPE->drop(result);
+    if(allocation<=failures){
+     fprintf(stderr,"capture alias %d: allocation %d did not fail\n",capture_alias,allocation);return 247;
+    }
+   }else if(allocation>failures||capture_left||strcmp(fwp_trap_msg,"injected capture allocation failure")){
+    fprintf(stderr,"capture alias %d: unexpected trap at allocation %d: %s\n",capture_alias,allocation,fwp_trap_msg);return 247;
+   }
    capture_left=0;fwp_trap_recover=NULL;fwp_trap_jb=NULL;
-   if(fwp_gc.budget!=budget||fwp_cleanups||capture_live||fwp_cur->gctx)return 248;
+   if(fwp_heap.live!=live_bytes||fwp_cleanups||capture_live||fwp_cur->gctx)return 248;
    if(!fwp_rc_last(capture_input))return 248;
-   if(completed)break;
   }
-  if(!completed||failed!=(capture_alias?13:14))return 247;
-  printf("capture alias %d: %d allocation failures; final charged delta 0; capture owners 0\n",capture_alias,failed);
+  printf("capture alias %d: %d allocation failures; final charged delta 0; capture owners 0\n",capture_alias,failures);
  }
  CAPTURE_TYPE->fields[0]->drop(capture_input);return 0;
 }

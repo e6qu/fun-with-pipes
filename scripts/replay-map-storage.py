@@ -29,8 +29,7 @@ def validate(folder, report, source, machine):
     assert [case['work'] for case in report['cases']] == ['full', 'construction']
     binaries = []
     for case in report['cases']:
-        assert set(case['variants']) == {'tracing-separate', 'tracing-joined',
-                                        'arc-separate', 'arc-joined'}
+        assert set(case['variants']) == {'counted-separate', 'counted-joined'}
         for variant in case['variants'].values():
             name = variant['binary']
             assert Path(name).name == name, 'binary must be inside its evidence directory'
@@ -56,7 +55,7 @@ def main():
     out = options.output.resolve()
     out.mkdir(parents=True, exist_ok=True)
     save(out / 'request.json', {'run': options.run, 'source': options.source})
-    env = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+    env = dict(os.environ)
     meta = json.loads(run(['gh', 'run', 'view', options.run, '--repo', 'e6qu/fun-with-pipes',
                           '--json', 'headSha,status,conclusion,jobs'], env).stdout)
     save(out / 'run.json', meta)
@@ -122,7 +121,7 @@ def main():
             for variant in variants.values():
                 variant['medianProcessWallNs'] = statistics.median(s['processWallNs'] for s in variant['samples'])
             case['joinedToSeparateTimeRatio'] = {mode: variants[mode + '-joined']['medianProcessWallNs'] /
-                variants[mode + '-separate']['medianProcessWallNs'] for mode in ['tracing', 'arc']}
+                variants[mode + '-separate']['medianProcessWallNs'] for mode in ['counted']}
             save(out / 'report.json', result)
             print(name, work, json.dumps(case['joinedToSeparateTimeRatio']), flush=True)
 

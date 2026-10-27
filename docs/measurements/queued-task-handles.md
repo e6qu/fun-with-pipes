@@ -1,5 +1,12 @@
 # Queued callbacks that retain task handles
 
+The G5 artifact audit now expects twenty binaries per host: normal and deliberately
+broken queue, callback-transfer, clock-owner, await-result and raw-buffer cases at
+O0/O2. Collector symbols must be absent from all of them. Callback transfers and
+direct await results retain their exact count comparisons. This updated matrix
+has not yet passed integrated G5 validation; historical reports below describe
+their recorded source and larger two-mode matrix.
+
 This extension passed full production acceptance in [PR #190](../roadmap-history.md#queued-task-owners-and-callback-transfers-pr-190).
 The measurements below keep their exact source revisions.
 

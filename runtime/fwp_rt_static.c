@@ -3,8 +3,8 @@
  *
  *   - the pool behind malloc, calloc, realloc and free, which this file
  *     defines (Windows uses private names and an explicit decimal allocator);
- *   - the managed heap and its metadata (runtime/fwp_rt_gc.c). Explicit
- *     tracing mode collects within this fixed heap; checked ARC frees released values;
+ *   - the managed heap and its metadata (runtime/fwp_rt_heap.c), where counted
+ *     ownership releases storage for reuse within the fixed region;
  *   - on POSIX, main/task/worker stacks. Windows commits OS-managed stacks
  *     separately at startup and reuses fixed fiber and worker pools.
  * External DLL allocations and OS resources are outside this storage budget.
@@ -68,7 +68,7 @@ static struct {
     void *pool_free[256];
     size_t pool_used, pool_peak;
     volatile int lock;
-    /* the collector's heap and metadata */
+    /* the counted heap and allocator metadata */
     char *heap, *meta;
     size_t heap_bytes, meta_bytes;
     /* stacks */
@@ -191,8 +191,8 @@ static char *fwp_static_carve(size_t n, size_t align) {
     return (char *)p;
 }
 
-/* bytes of collector metadata for a heap of `heap` bytes (GC_CHUNK and
- * gc_chunk come from runtime/fwp_rt_gc.c, which is included later) */
+/* bytes of allocator metadata for a heap of `heap` bytes (HEAP_CHUNK and
+ * heap_chunk come from runtime/fwp_rt_heap.c, which is included later) */
 static size_t fwp_static_meta_bytes(size_t heap);
 
 static void fwp_static_init(void) {

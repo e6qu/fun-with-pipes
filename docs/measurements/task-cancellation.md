@@ -1,5 +1,11 @@
 # Cancellation state on task stacks
 
+The G5 artifact audit expects twelve counted binaries per host: seven cancellation
+variants and five task-record variants. Windows adds eight context/ABI controls.
+The same O0/O2 layout comparisons and missing-entry/missing-clear failures remain;
+collector modes are removed. Integrated validation of this new matrix is pending.
+Historical results below retain their original matrix and source revision.
+
 The cancellation-storage comparison passed focused checks on all six native
 platforms and both WebAssembly runners. The repaired Windows ARC checks also
 passed on both architectures in

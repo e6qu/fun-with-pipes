@@ -131,12 +131,12 @@ fn interpreted(file: &Path) -> Server {
     start(cmd, Duration::from_secs(60))
 }
 
-fn compile_server(file: &Path, dir: &Path, mode: &str) -> PathBuf {
+fn compile_server(file: &Path, dir: &Path) -> PathBuf {
     let exe = dir.join("server");
     let out = Command::new(fwp())
         .arg("build")
         .arg(file)
-        .args(["--rest", "--gc", mode, "-O1", "-o"])
+        .args(["--rest", "-O1", "-o"])
         .arg(&exe)
         .output()
         .unwrap();
@@ -148,27 +148,21 @@ fn compile_server(file: &Path, dir: &Path, mode: &str) -> PathBuf {
     exe
 }
 
-fn native(exe: &Path, stress: bool) -> Server {
+fn native(exe: &Path) -> Server {
     let mut cmd = Command::new(exe);
-    cmd.args(["--listen", "127.0.0.1:0"])
-        .env("FWP_GC_STRESS", if stress { "16" } else { "0" });
+    cmd.args(["--listen", "127.0.0.1:0"]);
     start(cmd, Duration::from_secs(60))
 }
 
 // Only immutable executable bytes are shared within this test process. Every
-// call starts a fresh server with its own listener, state and stress setting.
-// ARC builds remain separate; no executable is reused across test processes.
+// call starts a fresh server with its own listener and state.
+// No executable is reused across test processes.
 static API_EXECUTABLE: LazyLock<PathBuf> =
-    LazyLock::new(|| compile_server(&fixture("api.fwp"), &temp_dir("shared-api"), "tracing"));
-static SECURE_EXECUTABLE: LazyLock<PathBuf> = LazyLock::new(|| {
-    compile_server(
-        &fixture("secure.fwp"),
-        &temp_dir("shared-secure"),
-        "tracing",
-    )
-});
+    LazyLock::new(|| compile_server(&fixture("api.fwp"), &temp_dir("shared-api")));
+static SECURE_EXECUTABLE: LazyLock<PathBuf> =
+    LazyLock::new(|| compile_server(&fixture("secure.fwp"), &temp_dir("shared-secure")));
 static FORMS_EXECUTABLE: LazyLock<PathBuf> =
-    LazyLock::new(|| compile_server(&fixture("forms.fwp"), &temp_dir("shared-forms"), "tracing"));
+    LazyLock::new(|| compile_server(&fixture("forms.fwp"), &temp_dir("shared-forms")));
 
 /// One request on its own connection: the status, the headers and the
 /// body of the response.
@@ -477,7 +471,7 @@ fn api_native() {
         eprintln!("skipping: no C compiler");
         return;
     }
-    exercise_api(&native(&API_EXECUTABLE, false));
+    exercise_api(&native(&API_EXECUTABLE));
 }
 
 fn exercise_books(srv: &Server) {
@@ -550,7 +544,7 @@ fn books_example() {
     exercise_books(&interpreted(&file));
     if have_cc() {
         let dir = temp_dir("books-native");
-        exercise_books(&native(&compile_server(&file, &dir, "tracing"), false));
+        exercise_books(&native(&compile_server(&file, &dir)));
         let _ = std::fs::remove_dir_all(dir);
     }
 }
@@ -847,7 +841,7 @@ fn secure_native() {
         eprintln!("skipping: no C compiler");
         return;
     }
-    exercise_secure(&native(&SECURE_EXECUTABLE, false));
+    exercise_secure(&native(&SECURE_EXECUTABLE));
 }
 
 /// `--cors` and `FWP_REST_CORS` replace the origins of `# cors:`.
@@ -1490,7 +1484,7 @@ fn client_round_trip() {
     }
     drop(srv);
     if have_cc() {
-        let srv = native(&API_EXECUTABLE, false);
+        let srv = native(&API_EXECUTABLE);
         let exe = dir.join("roundtrip");
         let b = Command::new(fwp())
             .arg("build")
@@ -1546,7 +1540,7 @@ fn secure_client_round_trip() {
     golden(&fixture("secureroundtrip.out"), &got);
     drop(srv);
     if have_cc() {
-        let srv = native(&SECURE_EXECUTABLE, false);
+        let srv = native(&SECURE_EXECUTABLE);
         let exe = dir.join("secureroundtrip");
         let b = Command::new(fwp())
             .arg("build")
@@ -2160,8 +2154,6 @@ fn exercise_forms(srv: &Server) {
     }
 }
 
-/// A native server with the collector running at every 16th allocation.
-
 #[test]
 fn forms_and_formats_interpreted() {
     exercise_forms(&interpreted(&fixture("forms.fwp")));
@@ -2173,7 +2165,7 @@ fn forms_and_formats_native() {
         eprintln!("skipping: no C compiler");
         return;
     }
-    exercise_forms(&native(&FORMS_EXECUTABLE, true));
+    exercise_forms(&native(&FORMS_EXECUTABLE));
 }
 
 /// The document lists the media types of bodies and responses.
@@ -2295,10 +2287,10 @@ fn client_runs(
     golden(golden_out, &got);
     drop(srv);
     if have_cc() {
-        let srv = native(executable, true);
+        let srv = native(executable);
         let exe = client_dir.join("client");
         let b = Command::new(fwp())
-            .args(["build", "--gc", "tracing"])
+            .args(["build"])
             .arg(client_dir.join(program))
             .args(["-O1", "-o"])
             .arg(&exe)
@@ -2307,7 +2299,6 @@ fn client_runs(
         assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
         let run = Command::new(&exe)
             .env("FWP_TEST_BASE", format!("http://{}", srv.addr))
-            .env("FWP_GC_STRESS", "16")
             .output()
             .unwrap();
         assert!(run.status.success());
@@ -2482,21 +2473,4 @@ fn uploads_example() {
         b,
         "name,message,stars\nAda,hello,5\nAlan,\"a, b, \"\"c\"\"\",\n"
     );
-}
-
-#[test]
-fn checked_arc_rest_preserves_api_authentication_and_form_results() {
-    let dir = fwp::cgen::TempDir::new("rest-arc").unwrap();
-    exercise_api(&native(
-        &compile_server(&fixture("api.fwp"), dir.path(), "arc"),
-        false,
-    ));
-    exercise_secure(&native(
-        &compile_server(&fixture("secure.fwp"), dir.path(), "arc"),
-        false,
-    ));
-    exercise_forms(&native(
-        &compile_server(&fixture("forms.fwp"), dir.path(), "arc"),
-        false,
-    ));
 }

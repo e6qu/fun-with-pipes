@@ -1,5 +1,12 @@
 # Saved CPU state in task stacks
 
+The numbers below describe the October 21 source and toolchain, not the current
+collector-removal branch. Keep the recorded source when reproducing them.
+Current tests retain both task layouts, register/rounding/signal restoration,
+explicit release, context alignment and teardown controls. They no longer test
+collector roots or run a second tracing mode. Their integrated validation and
+new measurements are pending.
+
 A task is work that can pause while other tasks run. Its **stack** holds active
 function calls. Its **task record** holds scheduling and ownership information.
 A task started by another task is its child; the original program task is the root.
@@ -47,8 +54,8 @@ so the final line prints `528`, the sum of 1 through 32.
 Both native variants use the same generated program. The control reconstructs
 the preceding heap layout in generated C; production has no layout switch or
 compatibility mode. Raw interpretation independently checks the output. fwp
-emits C at O1; the C compiler builds each layout at O0 and O2, under both checked
-ARC and tracing. ARC means automatic reference counting without a tracing
+emitted C at O1; the C compiler built each layout at O0 and O2, under both checked
+ARC and tracing in this historical measurement. ARC means automatic reference counting without a tracing
 collector. Collections and reuse verification are disabled for the counted runs,
 and physical freeing is enabled.
 
@@ -150,8 +157,8 @@ OS buffers. It does not measure service speed or orderly listener shutdown.
 
 ## Lifetime checks and reproduction
 
-A separate C probe excludes ordinary stack copies and checks that objects held
-only in saved root/child register images survive collection. Deliberately hiding
+At the recorded revision, a separate C probe excluded ordinary stack copies and checked that objects held
+only in saved root/child register images survived collection. Deliberately hiding
 those images must exit 191/192; omitting root-state cleanup must exit 193. All ten
 register/teardown omission controls passed across the two hosts. Two more controls
 detect unnecessary clearing in task-free programs. The probe also checks rounding

@@ -44,29 +44,22 @@ fn word_frequencies_preserve_separators_normalization_and_tie_order() {
             .args(["run", "--interp"])
             .arg(&source),
     );
-    for mode in ["arc", "tracing"] {
-        let cfile = dir.join("wordfreq.c");
-        checked(
-            Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .env_remove("FWP_NO_OPT")
-                .args(["build", "--gc", mode, "--emit-c", "-O2"])
-                .arg(&source)
-                .arg("-o")
-                .arg(&cfile),
-        );
-        let code = std::fs::read_to_string(cfile).unwrap();
-        for opt in ["-O0", "-O2"] {
-            let binary = dir.join("wordfreq.exe");
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let verify = if mode == "arc" { "0" } else { "1" };
-            check_cases(
-                Command::new(binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", verify)
-                    .env("FWP_GC_VERIFY", verify)
-                    .env("FWP_REUSE_VERIFY", verify),
-            );
-        }
+
+    let cfile = dir.join("wordfreq.c");
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--emit-c", "-O2"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    for opt in ["-O0", "-O2"] {
+        let binary = dir.join("wordfreq.exe");
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+
+        check_cases(&mut Command::new(binary));
     }
 }
 
@@ -122,57 +115,47 @@ fn maintained_text_tools_release_repeated_and_retained_results() {
             (&optimized.stdout, &optimized.stderr),
             (&reference.stdout, &reference.stderr)
         );
-        for gc in ["tracing", "arc"] {
-            let cfile = root.join("tool.c");
-            checked(
-                Command::new(env!("CARGO_BIN_EXE_fwp"))
-                    .env_remove("FWP_NO_OPT")
-                    .args(["build", "--gc", gc, "--emit-c"])
-                    .arg(&source)
-                    .arg("-o")
-                    .arg(&cfile),
+
+        let cfile = root.join("tool.c");
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .env_remove("FWP_NO_OPT")
+                .args(["build", "--emit-c"])
+                .arg(&source)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let mut code = std::fs::read_to_string(cfile).unwrap();
+
+        let start = code
+            .find("static void *fwp_main_thread(void *arg) {")
+            .unwrap();
+        let (runtime, main) = code.split_at(start);
+        assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
+        assert_eq!(
+            main.matches("    /* Ownership observation point: before runtime teardown. */\n")
+                .count(),
+            1
+        );
+        let measured = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t text_live_bytes = fwp_heap.live;\n")
+                    .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > text_live_bytes) exit(239);\n");
+        code = format!("{runtime}{measured}");
+
+        let binary = root.join("tool.exe");
+        for opt in ["-O1", "-O2"] {
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+
+            let actual = checked(Command::new(&binary).current_dir(root));
+            assert_eq!(
+                (&actual.stdout, &actual.stderr),
+                (&reference.stdout, &reference.stderr),
+                "{name} counted {opt}"
             );
-            let mut code = std::fs::read_to_string(cfile).unwrap();
-            if gc == "arc" {
-                let start = code
-                    .find("static void *fwp_main_thread(void *arg) {")
-                    .unwrap();
-                let (runtime, main) = code.split_at(start);
-                assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
-                assert_eq!(
-                    main.matches(
-                        "    /* Ownership observation point: before runtime teardown. */\n"
-                    )
-                    .count(),
-                    1
-                );
-                let measured = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t text_budget = fwp_gc.budget;\n")
-                    .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget < text_budget) exit(239);\n");
-                code = format!("{runtime}{measured}");
-            }
-            let binary = root.join("tool.exe");
-            for opt in ["-O1", "-O2"] {
-                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-                let verify = if gc == "arc" { "0" } else { "1" };
-                let actual = checked(
-                    Command::new(&binary)
-                        .current_dir(root)
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", verify)
-                        .env("FWP_GC_VERIFY", verify)
-                        .env("FWP_REUSE_VERIFY", verify),
-                );
-                assert_eq!(
-                    (&actual.stdout, &actual.stderr),
-                    (&reference.stdout, &reference.stderr),
-                    "{name} {gc} {opt}"
-                );
-                assert!(!root.join("tasks.txt").exists());
-                assert_eq!(
-                    std::fs::read_to_string(root.join("first.txt")).unwrap(),
-                    "Apple pie\nbanana\n世界\n"
-                );
-            }
+            assert!(!root.join("tasks.txt").exists());
+            assert_eq!(
+                std::fs::read_to_string(root.join("first.txt")).unwrap(),
+                "Apple pie\nbanana\n世界\n"
+            );
         }
     }
 }
@@ -207,7 +190,7 @@ fn maintained_text_command_lines_match_raw_interpretation() {
     ] {
         let source = root.join(format!("{name}.fwp"));
         std::fs::write(&source, library).unwrap();
-        for mode in ["interp", "tracing", "arc"] {
+        for mode in ["interp", "native"] {
             let todo = root.join("todo.txt");
             if todo.exists() {
                 std::fs::remove_file(&todo).unwrap();
@@ -215,7 +198,7 @@ fn maintained_text_command_lines_match_raw_interpretation() {
             let executable = root.join(format!("{name}{}", std::env::consts::EXE_SUFFIX));
             if mode != "interp" {
                 let mut build = Command::new(env!("CARGO_BIN_EXE_fwp"));
-                build.args(["build", "--gc", mode, "-O2"]).arg(&source);
+                build.args(["build", "-O2"]).arg(&source);
                 if name == "todo" {
                     build.arg("--cli");
                 } else {
@@ -236,16 +219,11 @@ fn maintained_text_command_lines_match_raw_interpretation() {
                 } else {
                     Command::new(&executable)
                 };
-                let verify = if mode == "tracing" { "1" } else { "0" };
                 let mut child = command
                     .args(arguments)
                     .current_dir(root)
                     .env_remove("TODO_FILE")
-                    .env_remove("FWP_GC")
                     .env_remove("FWP_OUT")
-                    .env("FWP_GC_STRESS", verify)
-                    .env("FWP_GC_VERIFY", verify)
-                    .env("FWP_REUSE_VERIFY", verify)
                     .stdin(Stdio::piped())
                     .stdout(Stdio::piped())
                     .stderr(Stdio::piped())
@@ -303,7 +281,7 @@ fn scaled_text_tools_release_partial_results_and_file_handles() {
         checked(
             Command::new(compiler)
                 .env_remove("FWP_NO_OPT")
-                .args(["build", "--gc", "arc", "--emit-c", "-O1"])
+                .args(["build", "--emit-c", "-O1"])
                 .arg(&source)
                 .arg("-o")
                 .arg(&cfile),
@@ -466,12 +444,7 @@ fn scaled_text_tools_release_partial_results_and_file_handles() {
                         "file application {program}: run variant {index}, {lines} lines, {opt}"
                     );
                     let mut command = Command::new(binary);
-                    command
-                        .current_dir(dir.path())
-                        .env_remove("FWP_GC")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "0")
-                        .env("FWP_REUSE_VERIFY", "0");
+                    command.current_dir(dir.path());
                     let (actual, resident) = if index == 0 {
                         file_application_memory::run_observed(&mut command)
                     } else {

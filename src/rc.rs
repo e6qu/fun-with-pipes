@@ -374,7 +374,37 @@ impl Pass<'_> {
 
     fn ty(&self, e: &Expr) -> MT {
         let func = |id: FuncId| &self.prog.funcs[id].ty;
-        type_of(&func, &self.prog.shapes, &self.locals, e).unwrap_or_else(unknown)
+        // Literal scalar representations determine their type. Nominal values
+        // still need the surrounding signature or whole-value pattern binding.
+        type_of(&func, &self.prog.shapes, &self.locals, e).unwrap_or_else(|| {
+            if let Expr::Const(value) = e {
+                let name = match value {
+                    crate::value::Value::I8(_) => "std::I8",
+                    crate::value::Value::I16(_) => "std::I16",
+                    crate::value::Value::I32(_) => "std::I32",
+                    crate::value::Value::I64(_) => "std::I64",
+                    crate::value::Value::I128(_) => "std::I128",
+                    crate::value::Value::U8(_) => "std::U8",
+                    crate::value::Value::U16(_) => "std::U16",
+                    crate::value::Value::U32(_) => "std::U32",
+                    crate::value::Value::U64(_) => "std::U64",
+                    crate::value::Value::U128(_) => "std::U128",
+                    crate::value::Value::F16(_) => "std::F16",
+                    crate::value::Value::BF16(_) => "std::BF16",
+                    crate::value::Value::F32(_) => "std::F32",
+                    crate::value::Value::F64(_) => "std::F64",
+                    crate::value::Value::F128(_) => "std::F128",
+                    crate::value::Value::Str(_) => "std::String",
+                    crate::value::Value::Bytes(_) => "std::Bytes",
+                    crate::value::Value::Trit(_) => "std::Trit",
+                    crate::value::Value::Record(fields) if fields.is_empty() => return MT::unit(),
+                    _ => return unknown(),
+                };
+                MT::con(name)
+            } else {
+                unknown()
+            }
+        })
     }
 
     /// The counted locals `e` reads that it does not bind.
@@ -1756,6 +1786,24 @@ mod tests {
 
     fn checked(p: &Program, e: Expr) -> Result<(), String> {
         check(p, &p.funcs[0], &e, &p.funcs[0].locals)
+    }
+
+    #[test]
+    fn literal_match_selectors_keep_concrete_temporary_types() {
+        for (value, ty) in [
+            (Value::I64(0), MT::con("std::I64")),
+            (Value::Str("key".into()), MT::con("std::String")),
+        ] {
+            let body = Expr::Match(
+                Box::new(Expr::Const(value)),
+                vec![(Pat::Wild, Expr::Const(Value::unit()))],
+            );
+            let mut p = prog(vec![], vec![], body);
+            p.funcs[0].ty = MT::unit();
+            let (_, locals) = counted(&p);
+            assert!(locals.contains(&ty), "{locals:?}");
+            assert!(!locals.contains(&unknown()), "{locals:?}");
+        }
     }
 
     fn cached_map_program() -> Program {

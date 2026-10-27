@@ -38,7 +38,7 @@ def object_details(path, system, arch, objdump):
     assembly = subprocess.check_output([objdump, '-d', str(path)])
     sizes = re.findall(rb'^\s*\d+\s+(?:\.text|__text)\s+([0-9a-fA-F]+)\s', sections, re.M)
     assert sizes and len(assembly) > 1000
-    assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_gc_(?:scan|mark_all|sweep)\b', sections)
+    assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_heap_(?:scan|mark_all|sweep)\b', sections)
     return dict(machine=machine, fileBytes=len(raw), textBytes=sum(int(size, 16) for size in sizes),
                 binarySha256=hashlib.sha256(raw).hexdigest(),
                 sectionsSha256=hashlib.sha256(sections).hexdigest(),
@@ -68,7 +68,7 @@ def main():
         assert not args.directory.exists() and not args.output.exists()
         args.directory.mkdir(parents=True)
         program = args.program.read_text()
-        assert program.count(runtime) == 1 and '#define FWP_ARC_ONLY 1' in program
+        assert program.count(runtime) == 1 and 'FWP_ARC_ONLY' not in program
         assert '#define FWP_EXACT_FLOAT 1' in program
         (args.directory / 'program.c').write_text(program)
         rows = []
@@ -98,7 +98,7 @@ def main():
     assert (report['source'], report['system'], report['arch']) == (args.source, args.system, args.arch)
     program = (args.directory / 'program.c').read_text()
     assert digest(args.directory / 'program.c') == report['programSha256']
-    assert program.count(runtime) == 1 and '#define FWP_ARC_ONLY 1' in program
+    assert program.count(runtime) == 1 and 'FWP_ARC_ONLY' not in program
     variants = dict(STORAGE.variants(program, 'array-owned'))
     assert [row['label'] for row in report['objects']] == [v + opt for v in variants for opt in ['-O1', '-O2']]
     reviewed = []

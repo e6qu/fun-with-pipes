@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn encoded_messages_release_on_cancel_and_preserve_plain_and_gzip_frames() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -75,7 +71,7 @@ static int check_frames(g_conn *c,int gzip){
  h2b_free(&encoded);h2b_free(&plain);return ok?0:16;
 }
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();
  for(size_t i=0;i<sizeof payload;i++)payload[i]=(unsigned char)(17*i);
  g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1, "", "local",&srv);
  for(int gzip=0;gzip<2;gzip++)for(stage=0;stage<6;stage++){
@@ -84,7 +80,7 @@ int main(void){
   g_stream *s=g_stream_new(c,(uint32_t)(1+2*stage));s->sent_headers=1;s->gzip=gzip;
   if(stage==3)c->dead=strdup("closed");if(stage==4)s->reset=strdup("reset");
   g_job job={0};job.c=c;job.s=s;
-  fwp_task *t=fwp_spawn_task(0,sender,&job,0,0);
+  fwp_task *t=fwp_spawn_task(0,sender,&job,0,0);fwp_task_own_internal(t,1);
   if(stage==1||stage==2||stage==5){
    fwp_p_task_yield();if(t->done||!watched_buffer||buffer_frees||result!=-1)return 2;
    if(stage==5){c->conn_window=s->window=65535;fwp_wake_all(&c->space_wl);}
@@ -92,12 +88,13 @@ int main(void){
   }
   fwp_await(t);
   if(!t->done||buffer_frees!=1||watched_buffer||cancelled!=(stage==1||stage==2)||fwp_cleanups)return 1;
+  fwp_task_drop(PTR(t));
   if(stage==0||stage==5){if(result!=1)return 3;int error=check_frames(c,gzip);if(error)return error;}
   else if(stage==3||stage==4){if(result!=0)return 4;}
   free(c->dead);c->dead=0;
-  FWP_KEEP_ALIVE(PTR(t));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
+
  }
- FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
+ fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-send-cleanup").unwrap();
@@ -111,20 +108,11 @@ int main(void){
     );
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{hooks}\n{omitted}\n{fixture}"), &exe, opt).unwrap();
-        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(out.status.code(), Some(1), "omitted cleanup: {out:?}");
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-            }
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
 }

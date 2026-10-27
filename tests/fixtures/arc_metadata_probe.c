@@ -3,35 +3,30 @@
 static void arc_metadata_probe(void) {
     const char *kind = getenv("FWP_METADATA_CASE");
     if (!kind) exit(51);
-    intptr_t before = fwp_gc.budget;
+    size_t before = fwp_heap.live;
     int reuse = 0;
     if (!strcmp(kind, "plain")) {
-        size_t sizes[] = {16, 257, GC_MAX_SMALL, GC_MAX_SMALL + 16};
+        size_t sizes[] = {16, 257, HEAP_MAX_SMALL, HEAP_MAX_SMALL + 16};
         for (size_t i = 0; i < sizeof sizes / sizeof *sizes; ++i) {
             V value = fwp_rc_fresh(PTR(fwp_alloc_leaf(sizes[i])));
             for (unsigned j = 0; j < 300; ++j) fwp_rc_dup(value);
-            if (fwp_rc_unique(value) || !fwp_gc.rc_wide_len) exit(52);
+            if (fwp_rc_unique(value) || !fwp_heap.rc_wide_len) exit(52);
             for (unsigned j = 0; j < 300; ++j)
                 if (fwp_rc_release_last(value)) exit(53);
-            if (fwp_rc_unique(value) != 1 || !fwp_rc_young(value) || fwp_gc.rc_wide_len) exit(54);
+            if (fwp_rc_unique(value) != 1 || fwp_heap.rc_wide_len) exit(54);
             fwp_rc_free_obj(value);
         }
-        if (fwp_gc.budget != before) exit(55);
+        if (fwp_heap.live != before) exit(55);
     } else {
-#ifdef _WIN32
-        if (_putenv_s("FWP_REUSE_VERIFY", "1")) exit(56);
-#else
-        if (setenv("FWP_REUSE_VERIFY", "1", 1)) exit(56);
-#endif
-        if (!strcmp(kind, "late-object")) {
+        if (!strcmp(kind, "object")) {
             V value = fwp_rc_fresh(PTR(fwp_alloc_leaf(64)));
             reuse = fwp_rc_unique(value);
             fwp_rc_free_obj(value);
-        } else if (!strcmp(kind, "late-array")) {
+        } else if (!strcmp(kind, "array")) {
             V value = fwp_rc_fresh(PTR(fwp_alloc(128)));
             reuse = fwp_rc_unique_mut(value);
             fwp_rc_free_arr(value);
-        } else if (!strcmp(kind, "late-file")) {
+        } else if (!strcmp(kind, "file")) {
             const char *path = getenv("FWP_METADATA_FILE");
             if (!path) exit(57);
             FILE *stream = fopen(path, "w+b");
@@ -45,7 +40,7 @@ static void arc_metadata_probe(void) {
             fwp_file_drop(value);
             if (file->refs != 1) exit(59);
             fwp_file_drop(value);
-        } else if (!strcmp(kind, "late-socket")) {
+        } else if (!strcmp(kind, "socket")) {
             fwp_socket_t descriptor = fwp_socket_open(AF_INET, SOCK_STREAM, 0);
             if (descriptor == FWP_INVALID_SOCKET) exit(60);
             V value = fwp_sock_new(descriptor, 1);
@@ -58,12 +53,8 @@ static void arc_metadata_probe(void) {
             exit(62);
         }
     }
-    size_t marks = 0;
-#ifndef FWP_ARC_ONLY
-    marks = sizeof(((gc_chunk *)0)->bits);
-#endif
-    if (fwp_gc.ncollect || fwp_gc.rc_wide_len) exit(63);
-    printf("%zu %zu %zu %zu %lld %d\n", GC_CHUNK, sizeof(gc_chunk), marks,
-           sizeof(((gc_chunk *)0)->rc), (long long)(before - fwp_gc.budget), reuse);
+    if (fwp_heap.rc_wide_len || fwp_heap.live != before) exit(63);
+    printf("%zu %zu %zu %zu %d\n", HEAP_CHUNK, sizeof(heap_chunk),
+           sizeof(((heap_chunk *)0)->rc), fwp_heap.live - before, reuse);
     exit(0);
 }

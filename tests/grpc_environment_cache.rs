@@ -3,10 +3,6 @@ use fwp::ir::*;
 use std::process::Command;
 
 fn runtime() -> String {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -79,7 +75,7 @@ int main(void){
  set_environment("FWP_SERVICE_CACHE_CA","first");
  for(int round=0;round<2;round++){
   expected=round?"second":"first";frees=entered=cancelled=finalized=order_error=0;memset(owned,0,sizeof owned);
-  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+  fwp_lib_init();fwp_heap_start();fwp_tasks_init();
   const g_tls *tls=g_env_tls("FWP_SERVICE_CACHE");if(!tls||strcmp(tls->ca,expected)||tls->users!=SIZE_MAX)return 4;
   if(g_env_tls("FWP_SERVICE_EMPTY"))return 5;
   char long_variable[1025],long_ca[1040];memset(long_variable,'X',sizeof long_variable-1);long_variable[sizeof long_variable-1]=0;
@@ -94,11 +90,11 @@ int main(void){
   g_ctx context={0};context.tls=tls;g_ctx_of();fwp_cur->gctx=&context;
   fwp_task *task=fwp_spawn_task(0,blocked,0,0,1);fwp_cur->gctx=0;fwp_p_task_yield();
   if(!entered||task->done||frees)return 8;
-  void *value=fwp_mem_alloc(16);fwp_gc_finalizer(value,finalizer);
+  void *value=fwp_mem_alloc(16);fwp_heap_finalizer(value,finalizer);
   fwp_lib_finish();
-  if(frees!=nowned||cancelled!=1||finalized!=1||order_error||g_env_options_known||g_pool||fwp_gctx_acquire||fwp_gctx_release||fwp_gc.ready)return 1;
+  if(frees!=nowned||cancelled!=1||finalized!=1||order_error||g_env_options_known||g_pool||fwp_gctx_acquire||fwp_gctx_release||fwp_heap.ready)return 1;
   fwp_lib_finish();if(frees!=nowned)return 9;
-  FWP_KEEP_ALIVE(value);
+
  }
  set_environment("FWP_SERVICE_CACHE_CA","");return 0;
 }
@@ -110,21 +106,12 @@ int main(void){
     let exe = dir.join("probe");
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
-        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(out.status.code(), Some(1), "omitted cache cleanup: {out:?}");
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-            }
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
 }
 
@@ -189,8 +176,8 @@ int main(void){
 #else
  if(setenv("FWP_SERVICE_FAILURE_CA","test-ca",1))return 212;
 #endif
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
- fwp_task *task=fwp_spawn_task(0,construct,0,0,0);fwp_await(task);
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();fwp_trap_recover=g_trap_recover;
+ fwp_task *task=fwp_spawn_task(0,construct,0,0,0);fwp_task_own_internal(task,1);fwp_await(task);fwp_task_drop(PTR(task));
  if(probe_error)return probe_error;
  if(fwp_cleanups||entry_allocations!=33||entry_frees!=32)return 205;
  fwp_lib_finish();
@@ -209,18 +196,11 @@ int main(void){
     let exe = dir.join("probe");
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
-        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        let out = Command::new(&exe).output().unwrap();
         assert_eq!(out.status.code(), Some(202), "omitted guard: {out:?}");
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            let out = Command::new(&exe)
-                .env("FWP_GC", gc)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1")
-                .output()
-                .unwrap();
-            assert!(out.status.success(), "{opt}/{gc}: {out:?}");
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
 }

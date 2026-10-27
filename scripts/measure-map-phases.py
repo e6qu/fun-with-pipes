@@ -33,13 +33,13 @@ static uint64_t map_probe_stamp(const char *stage, uint64_t before, size_t n, co
         ('    V result = fwp_map_typed_new(len, ops->columns);', 'deduplicate', 'keys, vals'),
         ('    MAP(result)->len = 0;', 'result-allocation', '(void *)(uintptr_t)result, NULL'),
         ('    fwp_value_finish(&owner, &cleanup);', 'materialize', '(void *)(uintptr_t)result, NULL'),
-        ('    FWP_KEEP_ALIVE(keys); FWP_KEEP_ALIVE(vals);', 'release-scratch', 'NULL, NULL'),
+        ('    return result;', 'release-scratch', 'NULL, NULL'),
     ]:
         assert builder.count(before) == 1, label
         stamp = f'    probe = map_probe_stamp("{label}", probe, n, {pointers});\n'
         builder = builder.replace(before, stamp + before)
     code = code[:start] + builder + code[end:]
-    signature = 'static __attribute__((noinline)) void *fwp_gc_alloc_big(size_t n, int leaf) {'
+    signature = 'static __attribute__((noinline)) void *fwp_heap_alloc_big(size_t n, int leaf) {'
     start = code.index(signature)
     end = code.index('\n}', start) + 2
     original = code[start:end]
@@ -63,22 +63,22 @@ def main():
     helper = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(helper)
     baseline = json.loads((original / 'report.json').read_text())
-    env = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+    env = dict(os.environ)
     cc = os.environ['CC']
     variants = {}
-    for mode in ['tracing', 'arc']:
-        for enabled in ['0', '1']:
-            label = f'{mode}-{enabled}'
-            source = original / f'construction-{mode}-fusion-{enabled}.c'
-            cfile = out / (label + '.c')
-            cfile.write_text(instrument(source.read_text()))
-            binary = out / label
-            command = [cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w',
-                       cfile, '-o', binary, '-lm', '-lpthread']
-            helper.run(command, env)
-            variants[label] = {**helper.inspect(binary, env), 'command': list(map(str, command)),
-                               'sourceSha256': helper.digest(source),
-                               'generatedSha256': helper.digest(cfile), 'samples': []}
+    mode = 'counted'
+    for enabled in ['0', '1']:
+        label = f'{mode}-{enabled}'
+        source = original / f'construction-{mode}-fusion-{enabled}.c'
+        cfile = out / (label + '.c')
+        cfile.write_text(instrument(source.read_text()))
+        binary = out / label
+        command = [cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w',
+                   cfile, '-o', binary, '-lm', '-lpthread']
+        helper.run(command, env)
+        variants[label] = {**helper.inspect(binary, env), 'command': list(map(str, command)),
+                           'sourceSha256': helper.digest(source),
+                           'generatedSha256': helper.digest(cfile), 'samples': []}
     labels = list(variants)
     orders = []
     for round_number in range(16):

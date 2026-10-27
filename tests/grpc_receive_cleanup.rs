@@ -30,10 +30,6 @@ fn receive_program() -> Program {
 }
 
 fn receive_runtime() -> String {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let (generated, _) =
         fwp::cgen::generate_library(&receive_program(), "grpc_receive", &[]).unwrap();
     generated
@@ -53,17 +49,17 @@ fn library_unload_closes_idle_connections_before_draining_tasks() {
         .find("static void fwp_library_tasks_finish(void) {")
         .unwrap();
     let drain = generated[library..]
-        .find("        while (fwp_gc_tasks) {")
+        .find("        while (fwp_tasks_active) {")
         .unwrap()
         + library;
     generated.insert_str(
-        drain + "        while (fwp_gc_tasks) {".len(),
+        drain + "        while (fwp_tasks_active) {".len(),
         " if(fwp_now_ns()>=test_deadline)_Exit(209);",
     );
     let fixture = r#"
 int main(int argc,char **argv){
  if(argc!=2)return 201;int unpooled=atoi(argv[1]);
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
+ fwp_lib_init();fwp_heap_start();
  V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);
  V address=fwp_p_local_addr(listener);char *error=0;
  g_conn *c=g_connect(STR(address)->d,0,&error);
@@ -71,16 +67,16 @@ int main(int argc,char **argv){
  // Allow reader and writer to enter their normal idle waits.
  fwp_p_task_sleep(fwp_record(1,(V[]){1000000}));
  int readers=0,writers=0;
- for(fwp_task *t=fwp_gc_tasks;t;t=t->gc_next){
+ for(fwp_task *t=fwp_tasks_active;t;t=t->all_next){
   if(t->done||!t->unwinding)return 203;
   readers+=t->cfn==g_reader;writers+=t->cfn==g_writer;
  }
  if(readers!=1||writers!=1||c->refs!=2||c->dead)return 204;
  if(unpooled){g_pool=c->next_pool;c->next_pool=0;g_conn_drop(c);}
  g_conn_drop(c); // caller releases; only I/O and any pool owner remain
- FWP_KEEP_ALIVE(listener);
+
  fwp_lib_finish();
- if(connection_finalized!=1||g_pool||fwp_cur||fwp_gc_tasks||fwp_gc.ready)return 205;
+ if(connection_finalized!=1||g_pool||fwp_cur||fwp_tasks_active||fwp_heap.ready)return 205;
  return 0;
 }
 "#;
@@ -94,21 +90,12 @@ int main(int argc,char **argv){
         for (source, expected) in [(&broken, 209), (&generated, 0)] {
             fwp::cgen::compile_c(&format!("{hooks}\n{source}\n{fixture}"), &binary, opt).unwrap();
             for unpooled in ["0", "1"] {
-                for gc in ["off", "on"] {
-                    let out = Command::new(&binary)
-                        .arg(unpooled)
-                        .env("FWP_GC", gc)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", "1")
-                        .output()
-                        .unwrap();
-                    assert_eq!(
-                        out.status.code(),
-                        Some(expected),
-                        "{opt}/{unpooled}/{gc}: {out:?}"
-                    );
-                }
+                let out = Command::new(&binary).arg(unpooled).output().unwrap();
+                assert_eq!(
+                    out.status.code(),
+                    Some(expected),
+                    "{opt}/{unpooled}: {out:?}"
+                );
             }
         }
     }
@@ -116,10 +103,6 @@ int main(int argc,char **argv){
 
 #[test]
 fn executable_shutdown_closes_idle_connections_before_draining_tasks() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let mut program = receive_program();
     program.main = Some(program.funcs.len());
     program.exports.clear();
@@ -143,7 +126,7 @@ static void *watched_connection;
     if(!c||error||g_pool!=c)exit(202);watched_connection=c;
     fwp_p_task_sleep(fwp_record(1,(V[]){1000000}));
     int readers=0,writers=0;
-    for(fwp_task *t=fwp_gc_tasks;t;t=t->gc_next){
+    for(fwp_task *t=fwp_tasks_active;t;t=t->all_next){
         if(t->done||!t->unwinding)exit(203);
         readers+=t->cfn==g_reader;writers+=t->cfn==g_writer;
     }
@@ -155,9 +138,9 @@ static void *watched_connection;
     for (before, after) in [
         ("static void g_conn_final(void *p) {".to_string(), "static void g_conn_final(void *p) { if(p==watched_connection)connection_finalized++;".to_string()),
         ("static void fwp_native_tasks_finish(void) {".to_string(), "static void fwp_native_tasks_finish(void) { int64_t test_deadline=fwp_now_ns()+1000000000LL;".to_string()),
-        ("        while (fwp_gc_tasks) {".to_string(), "        while (fwp_gc_tasks) { if(fwp_now_ns()>=test_deadline)_Exit(209);".to_string()),
+        ("        while (fwp_tasks_active) {".to_string(), "        while (fwp_tasks_active) { if(fwp_now_ns()>=test_deadline)_Exit(209);".to_string()),
         ("    fwp_init_consts();".to_string(), format!("    fwp_init_consts();\n{prepare}")),
-        ("\n    /* Ownership observation point: before runtime teardown. */\n".to_string(), "\n    /* Ownership observation point: before runtime teardown. */ FWP_KEEP_ALIVE(listener); if(connection_finalized!=1||g_pool||fwp_cur||fwp_gc_tasks)exit(205);\n".to_string()),
+        ("\n    /* Ownership observation point: before runtime teardown. */\n".to_string(), "\n    /* Ownership observation point: before runtime teardown. */ if(connection_finalized!=1||g_pool||fwp_cur||fwp_tasks_active)exit(205);\n".to_string()),
         ("int main(int argc, char **argv)".to_string(), "int original_main(int argc, char **argv)".to_string()),
     ] {
         // The library drain is present in the runtime source, but disabled in
@@ -175,21 +158,12 @@ static void *watched_connection;
         for (source, expected) in [(&broken, 209), (&generated, 0)] {
             fwp::cgen::compile_c(source, &binary, opt).unwrap();
             for unpooled in ["0", "1"] {
-                for gc in ["off", "on"] {
-                    let out = Command::new(&binary)
-                        .arg(unpooled)
-                        .env("FWP_GC", gc)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", "1")
-                        .output()
-                        .unwrap();
-                    assert_eq!(
-                        out.status.code(),
-                        Some(expected),
-                        "{opt}/{unpooled}/{gc}: {out:?}"
-                    );
-                }
+                let out = Command::new(&binary).arg(unpooled).output().unwrap();
+                assert_eq!(
+                    out.status.code(),
+                    Some(expected),
+                    "{opt}/{unpooled}: {out:?}"
+                );
             }
         }
     }
@@ -235,7 +209,7 @@ static void receive(void *arg,int stop){
 }
 
 int main(void){
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();
  g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1, "", "local",&srv);
  for(stage=0;stage<8;stage++){
   allocations=frees=cancelled=0;memset(owned,0,sizeof owned);
@@ -245,14 +219,15 @@ int main(void){
   if(stage==3||stage==4)s->bad=strdup("bad request");
   if(stage==6)s->reset=strdup("reset");
   g_job job={0};job.c=c;job.s=s;job.srv=&srv;
-  fwp_task *t=fwp_spawn_task(0,receive,&job,0,0);
+  fwp_task *t=fwp_spawn_task(0,receive,&job,0,0);fwp_task_own_internal(t,1);
   if(stage==5){fwp_p_task_yield();if(t->done||frees||s->mhead)_Exit(6);fwp_p_task_cancel(PTR(t));}
   fwp_await(t);
   int expected=stage==0?2:stage==1?3:stage==2?2:stage==3?1:stage==4?2:stage==5?1:stage==6?2:1;
   if(!t->done||allocations!=expected||frees!=expected||cancelled!=(stage==5||stage==6)||fwp_cleanups)return 1;
-  FWP_KEEP_ALIVE(PTR(t));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
+  fwp_task_drop(PTR(t));
+
  }
- FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
+ fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-receive-cleanup").unwrap();
@@ -280,22 +255,13 @@ int main(void){
     for opt in ["-O1", "-O2"] {
         for broken in [&unwind_omitted, &request_omitted, &reflection_omitted] {
             fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
-            let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+            let out = Command::new(&exe).output().unwrap();
             assert_eq!(out.status.code(), Some(1), "omitted release: {out:?}");
         }
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
-            }
-        }
+
+        let out = Command::new(&exe).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
     }
 }
 
@@ -330,8 +296,8 @@ static void attempt(void *arg, int cancelled) {
 }
 int main(int argc, char **argv) {
     (void)argv; compress_test=argc>1;
-    fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
-    fwp_task *task=fwp_spawn_task(0,attempt,0,0,0);fwp_await(task);
+    fwp_lib_init();fwp_heap_start();fwp_tasks_init();
+    fwp_task *task=fwp_spawn_task(0,attempt,0,0,0);fwp_task_own_internal(task,1);fwp_await(task);fwp_task_drop(PTR(task));
     return 201;
 }
 "#;
@@ -383,7 +349,7 @@ static void observed_message_free(void *);
     let source_connection =
         "    else g_stream_reader_release(c, s);\n    g_conn_drop(c);\n#ifndef FWP_RESOURCE_NO_FREE";
     let sender_connection = "    x->c = 0;\n    g_conn_drop(c);";
-    let connection_finalizer = "    fwp_gc_forget_finalizer(c);\n    g_conn_final(c);";
+    let connection_finalizer = "    fwp_heap_forget_finalizer(c);\n    g_conn_final(c);";
     let connection_storage = "    g_conn_final(c);\n    fwp_rc_resource_free_arr(PTR(c));";
     for marker in [
         source_connection,
@@ -397,7 +363,7 @@ static void observed_message_free(void *);
     let list_release = "    g_stream_drop(s); /* the active-list owner of a counted request */";
     let source_release = "    else g_stream_reader_release(c, s);";
     let sender_release = "    x->s = 0;\n    g_stream_drop(s);";
-    let finalizer_release = "    fwp_gc_forget_finalizer(s);\n    g_stream_final(s);";
+    let finalizer_release = "    fwp_heap_forget_finalizer(s);\n    g_stream_final(s);";
     for marker in [
         list_release,
         source_release,
@@ -444,14 +410,7 @@ static void observed_message_free(void *);
         let binary = dir.join("streams.exe");
         for (broken, mode, expected) in &controls {
             fwp::cgen::compile_c(broken, &binary, opt).unwrap();
-            let out = Command::new(&binary)
-                .arg(mode)
-                .env("FWP_GC", "off")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
+            let out = Command::new(&binary).arg(mode).output().unwrap();
             assert_eq!(out.status.code(), Some(*expected), "{opt}/{mode}: {out:?}");
         }
         for no_free in [false, true] {
@@ -463,22 +422,16 @@ static void observed_message_free(void *);
             fwp::cgen::compile_c(&format!("{prefix}{code}"), &binary, opt).unwrap();
             let mut layout = Vec::new();
             for mode in 0..11 {
-                for stress in [false, true] {
-                    let out = Command::new(&binary)
-                        .arg(mode.to_string())
-                        .env("FWP_GC", if stress { "on" } else { "off" })
-                        .env("FWP_GC_STRESS", if stress { "1" } else { "0" })
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", if stress { "1" } else { "0" })
-                        .output()
-                        .unwrap();
-                    assert!(
-                        out.status.success(),
-                        "{opt}/{mode}/no-free={no_free}/stress={stress}: {out:?}"
-                    );
-                    if mode == 0 && !stress {
-                        layout = out.stdout;
-                    }
+                let out = Command::new(&binary)
+                    .arg(mode.to_string())
+                    .output()
+                    .unwrap();
+                assert!(
+                    out.status.success(),
+                    "{opt}/{mode}/no-free={no_free}: {out:?}"
+                );
+                if mode == 0 {
+                    layout = out.stdout;
                 }
             }
             if let Some(path) = std::env::var_os("FWP_REPEATED_CLIENT_ARTIFACTS") {
@@ -550,6 +503,8 @@ fn fatal_runtime_allocations_report_errors_from_task_stacks() {
     let fixture = r#"
 static void attempt_transport(void *arg,int cancelled){
  (void)arg;(void)cancelled;
+ fwp_tape_scope tape_scope={-1};fwp_cleanup tape_cleanup;
+ fwp_cleanup_push(&tape_cleanup,fwp_tape_scope_release,&tape_scope);
  h2_buf buffer={0};h2_hdrs headers={0};
  if(failure_kind==0)h2b_reserve(&buffer,1);
  else if(failure_kind<4)h2_hdrs_add(&headers,"name",4,"value",5);
@@ -558,7 +513,7 @@ static void attempt_transport(void *arg,int cancelled){
   fwp_cur->gctx=&context;g_fail_call(GRPC_INTERNAL,"failure");
  }else if(failure_kind==5){buffer.len=SIZE_MAX;h2b_reserve(&buffer,1);}
  else if(failure_kind==6)h2_hdrs_add(&headers,"name",SIZE_MAX,"value",5);
- else if(failure_kind==7)fwp_gc_alloc_big(((size_t)1<<62)+1,2);
+ else if(failure_kind==7)fwp_heap_alloc_big(((size_t)1<<62)+1,2);
  else if(failure_kind==8){fwp_buf b={0};b.len=SIZE_MAX;buf_grow(&b,1);}
  else if(failure_kind==9){fwp_buf b={0};buf_grow(&b,1);}
  else if(failure_kind==10)fwp_k_malloc(1);
@@ -577,9 +532,9 @@ int main(int argc,char **argv){
   SSL_CTX *context=g_server_tls("unused-cert","unused-key","",&failed);
   return context==NULL&&failed==1?0:203;
  }
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();
  fputs("before fatal allocation\n",stdout);
- fwp_task *task=fwp_spawn_task(0,attempt_transport,0,0,0);fwp_await(task);
+ fwp_task *task=fwp_spawn_task(0,attempt_transport,0,0,0);fwp_task_own_internal(task,1);fwp_await(task);fwp_task_drop(PTR(task));
  return 201;
 }
 "#;

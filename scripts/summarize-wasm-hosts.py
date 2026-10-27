@@ -91,7 +91,7 @@ def module(path):
     assert names and any(name.startswith("fwp_") for name in names), (
         path, "runtime function names are required for tracing inspection")
     collectors = [name for name in names if name.startswith(
-        ("fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"))]
+        ("fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"))]
     assert not collectors, (path, collectors)
     return {"format": "WebAssembly 1, 32-bit memory", "bytes": len(data),
             "sha256": hashlib.sha256(data).hexdigest(), "sections": sections,
@@ -130,8 +130,8 @@ def main():
         for path in sorted(folder.glob("*.wasm")):
             entry = {"file": path.name, **module(path)}
             code = path.with_suffix(".c").read_bytes()
-            assert b"#define FWP_ARC_ONLY 1" in code
-            assert b"#define FWP_RESOURCE_OWNERS 1" in code
+            assert b"FWP_ARC_ONLY" not in code
+            assert b"FWP_RESOURCE_OWNERS" not in code
             entry["c_sha256"] = hashlib.sha256(code).hexdigest()
             if path.name.startswith("tasks-"):
                 assert path.with_suffix(".stdout").read_bytes() == expected

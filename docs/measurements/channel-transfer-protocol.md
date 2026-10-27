@@ -158,8 +158,10 @@ returns a function that ignores its later argument and returns `value`.
 ## Method and recorded units
 
 Run the explicit `channel-costs` suite in `numerics.yml`. It uses native Linux
-AMD64 and ARM64 runners, GCC, `-O2`, and both checked ARC and ordinary tracing
-builds. `compile_c` also supplies `-std=gnu11 -ffp-contract=off -w` and native
+AMD64 and ARM64 runners, GCC and `-O2`, with counted ownership.
+The current protocol produces 45 samples per host (five programs × three input
+sizes × three repetitions) and five ordinary binaries. Historical reports below
+used two memory modes; reproduce those with their recorded source revision. `compile_c` also supplies `-std=gnu11 -ffp-contract=off -w` and native
 runtime links. The workflow explicitly sets `FWP_LTO=0`, disabling link-time
 optimization. The recorded baseline and first transfer run also compiled without
 it: their C files are below the compiler's automatic size threshold of 1,000,000
@@ -175,13 +177,14 @@ be identical between repetitions. The zero-message case records entry, channel
 and loop setup costs; report it alongside nonzero cases rather than treating all
 allocations as message allocations.
 
-Counters start after constant initialization and finish after runtime cleanup.
+Counters start after constant initialization and finish after entry execution and
+cached-value cleanup, before whole-runtime shutdown.
 The existing managed-allocation probe records request count, requested bytes,
-effective retains, peak and final charged bytes, and collection count. Charged
+effective retains, and peak and final charged bytes. Charged
 bytes are the runtime's memory accounting, not resident process memory: allocator
 metadata, raw buffers, executable pages and thread stacks are excluded. Allocation
 wrappers sample after allocations; peaks are sampled, not a complete OS trace.
-ARC runs must end with zero additional charge and zero collections.
+Every measured run must end with zero additional charge.
 
 Additional counters record send calls, accepted queue insertions, payloads with
 one counted owner at insertion, and effective retains performed by the queue's

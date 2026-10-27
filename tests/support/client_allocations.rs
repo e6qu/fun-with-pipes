@@ -23,10 +23,10 @@ pub fn instrument_client_allocations(generated: &str) -> String {
     code = code.replacen(declaration, &format!("{declaration}\nstatic int client_active;\nstatic uint64_t client_requests, client_requested_bytes, client_retains;\nstatic double client_start_charge, client_peak_charge;\nstatic void client_sample(void);\n"), 1);
     wrap(
         &mut code,
-        "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
-        "fwp_gc_alloc",
-        "n, leaf",
-        "if(client_active && leaf != 0){client_requests++;client_requested_bytes+=n;}",
+        "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+        "fwp_heap_alloc",
+        "n, kind",
+        "if(client_active && kind != 0){client_requests++;client_requested_bytes+=n;}",
     );
     wrap(
         &mut code,

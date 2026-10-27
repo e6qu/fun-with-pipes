@@ -144,104 +144,83 @@ main = [
     assert!(String::from_utf8_lossy(&reference.stdout).ends_with(
         "1690\n(26, \"XXXXXXXXXXXXX\")\n(11, {first = \"first\", second = \"second\"})\n26\nErr \"callback text owned callback error\"\n26\nNone\n"
     ));
-    for gc in ["tracing", "arc"] {
-        let cfile = dir.join(format!("{gc}.c"));
-        checked(
-            Command::new(fwp)
-                .env_remove("FWP_NO_OPT")
-                .args(["build", "--emit-c", "--gc", gc])
-                .arg(&source)
-                .arg("-o")
-                .arg(&cfile),
-        );
-        let mut code = std::fs::read_to_string(cfile).unwrap();
-        code.push_str(
-            &std::fs::read_to_string(&host)
-                .unwrap()
-                .replace("struct fwp_binary128 { uint64_t low, high; };", "")
-                .replace(
-                    "struct fwp_c_CallbackWords { const char *first, *second; };",
-                    "",
-                ),
-        );
-        if gc == "arc" {
-            code = ownership_ledger::instrument_native(&code, 65536);
-            let start = code
-                .find("static void *fwp_main_thread(void *arg) {")
-                .unwrap();
-            let (runtime, main) = code.split_at(start);
-            assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
-            assert_eq!(
-                main.matches("    /* Ownership observation point: before runtime teardown. */\n")
-                    .count(),
-                1
-            );
-            code = format!("{runtime}{}", main
-                .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t foreign_budget=fwp_gc.budget_given;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_foreign_callbacks || fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < foreign_budget) { fprintf(stderr,\"foreign bytes left: %ld\\n\",(long)(foreign_budget-fwp_gc.budget)); exit(193); }\n"));
-        }
-        for opt in ["-O1", "-O2"] {
-            let binary = dir.join(format!("{gc}{opt}.exe"));
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let verify = if gc == "arc" { "0" } else { "1" };
-            let output = checked(
-                Command::new(&binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", verify)
-                    .env("FWP_GC_VERIFY", verify)
-                    .env("FWP_REUSE_VERIFY", verify),
-            );
-            assert_eq!(output.stdout, reference.stdout, "{gc} {opt}");
-            assert_eq!(output.stderr, reference.stderr, "{gc} {opt}");
-            if let Some(root) = std::env::var_os("FWP_POINTER_ARTIFACTS") {
-                let root = std::path::PathBuf::from(root);
-                std::fs::create_dir_all(&root).unwrap();
-                let stem = format!("callbacks-{gc}{opt}");
-                std::fs::write(root.join(format!("{stem}.c")), &code).unwrap();
-                std::fs::copy(&binary, root.join(format!("{stem}.exe"))).unwrap();
-                std::fs::write(root.join(format!("{stem}.stdout")), &output.stdout).unwrap();
-                std::fs::write(root.join(format!("{stem}.stderr")), &output.stderr).unwrap();
-                std::fs::write(root.join(format!("{stem}.status")), "0\n").unwrap();
-            }
 
-            if gc == "arc" {
-                let release = code
-                    .lines()
-                    .find(|line| line.contains("/* foreign callback result owner */"))
-                    .unwrap();
-                let omitted_release =
-                    code.replace(release, "    /* omit callback result release */");
-                fwp::cgen::compile_c(&omitted_release, &binary, opt).unwrap();
-                let output = Command::new(&binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
-                assert_eq!(
-                    output.status.code(),
-                    Some(193),
-                    "omitted callback release: {output:?}"
-                );
-                let needle = "    from->foreign_callbacks = fwp_foreign_callbacks;";
-                assert_eq!(code.matches(needle).count(), 1);
-                let omitted = code.replace(needle, "    /* omit suspended C callback context */");
-                fwp::cgen::compile_c(&omitted, &binary, opt).unwrap();
-                let output = Command::new(binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
-                assert!(
-                    !output.status.success(),
-                    "omitted context must fail: {output:?}"
-                );
-            }
+    let cfile = dir.join("counted.c");
+    checked(
+        Command::new(fwp)
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let mut code = std::fs::read_to_string(cfile).unwrap();
+    code.push_str(
+        &std::fs::read_to_string(&host)
+            .unwrap()
+            .replace("struct fwp_binary128 { uint64_t low, high; };", "")
+            .replace(
+                "struct fwp_c_CallbackWords { const char *first, *second; };",
+                "",
+            ),
+    );
+
+    code = ownership_ledger::instrument_native(&code, 65536);
+    let start = code
+        .find("static void *fwp_main_thread(void *arg) {")
+        .unwrap();
+    let (runtime, main) = code.split_at(start);
+    assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
+    assert_eq!(
+        main.matches("    /* Ownership observation point: before runtime teardown. */\n")
+            .count(),
+        1
+    );
+    code = format!("{runtime}{}", main
+                .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    size_t foreign_live_bytes=0;\n")
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_foreign_callbacks || fwp_heap.live > foreign_live_bytes) { fprintf(stderr,\"foreign bytes left: %ld\\n\",(long)(fwp_heap.live - foreign_live_bytes)); exit(193); }\n"));
+
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join(format!("counted{opt}.exe"));
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+
+        let output = checked(&mut Command::new(&binary));
+        assert_eq!(output.stdout, reference.stdout, "counted {opt}");
+        assert_eq!(output.stderr, reference.stderr, "counted {opt}");
+        if let Some(root) = std::env::var_os("FWP_POINTER_ARTIFACTS") {
+            let root = std::path::PathBuf::from(root);
+            std::fs::create_dir_all(&root).unwrap();
+            let stem = format!("callbacks-counted{opt}");
+            std::fs::write(root.join(format!("{stem}.c")), &code).unwrap();
+            std::fs::copy(&binary, root.join(format!("{stem}.exe"))).unwrap();
+            std::fs::write(root.join(format!("{stem}.stdout")), &output.stdout).unwrap();
+            std::fs::write(root.join(format!("{stem}.stderr")), &output.stderr).unwrap();
+            std::fs::write(root.join(format!("{stem}.status")), "0\n").unwrap();
         }
+
+        let release = code
+            .lines()
+            .find(|line| line.contains("/* foreign callback result owner */"))
+            .unwrap();
+        let omitted_release = code.replace(release, "    /* omit callback result release */");
+        fwp::cgen::compile_c(&omitted_release, &binary, opt).unwrap();
+        let output = Command::new(&binary).output().unwrap();
+        assert_eq!(
+            output.status.code(),
+            Some(193),
+            "omitted callback release: {output:?}"
+        );
+        let needle = "    from->foreign_callbacks = fwp_foreign_callbacks;";
+        assert_eq!(code.matches(needle).count(), 1);
+        let omitted = code.replace(needle, "    /* omit suspended C callback context */");
+        fwp::cgen::compile_c(&omitted, &binary, opt).unwrap();
+        let output = Command::new(binary).output().unwrap();
+        assert!(
+            !output.status.success(),
+            "omitted context must fail: {output:?}"
+        );
     }
+
     fwp::driver::with_big_stack(check_partial_callback_inputs);
 }
 
@@ -291,63 +270,45 @@ test "after" = True
         },
     )
     .unwrap_or_else(|failure| panic!("{}", failure.rendered));
-    for arc in [false, true] {
-        let mode = if arc { "arc" } else { "tracing" };
-        fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-            arc,
-            ..Default::default()
-        });
-        let mut code = fwp::cgen::generate_tests(&program).unwrap();
-        if arc {
-            code = ownership_ledger::instrument_native(&code, 65536);
-        }
-        let marker = "    /* Ownership observation point: before runtime teardown. */";
-        assert_eq!(code.matches(marker).count(), 1);
-        let check = if arc {
-            "if(fwp_foreign_callbacks || fwp_gc.budget < fwp_gc.budget_given) exit(197);"
-        } else {
-            "if(fwp_foreign_callbacks) exit(197);"
-        };
-        code = code.replace(marker, &format!("{marker}\n    {check}"));
-        code.push_str(c);
-        for opt in ["-O0", "-O2"] {
-            let mut cases = vec![("protected", code.clone(), 1)];
-            if arc {
-                let input = "fwp_rc_fresh(fwp_c_string(a0))";
-                assert!(code.contains(input));
-                cases.push((
-                    "missing-input-owner",
-                    code.replace(input, "fwp_c_string(a0)"),
-                    197,
-                ));
-            }
-            for (control, generated, status) in cases {
-                let label = format!("callback-input-errors-{mode}{opt}-{control}");
-                let binary = dir.join(format!("{label}.exe"));
-                fwp::cgen::compile_c(&generated, &binary, opt).unwrap();
-                let verification = if arc { "0" } else { "1" };
-                let actual = Command::new(&binary)
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", verification)
-                    .env("FWP_GC_VERIFY", verification)
-                    .env("FWP_REUSE_VERIFY", verification)
-                    .output()
+
+    let mut code = fwp::cgen::generate_tests(&program).unwrap();
+
+    code = ownership_ledger::instrument_native(&code, 65536);
+
+    let marker = "    /* Ownership observation point: before runtime teardown. */";
+    assert_eq!(code.matches(marker).count(), 1);
+    let check = "if(fwp_foreign_callbacks || fwp_heap.live > 0) exit(197);";
+    code = code.replace(marker, &format!("{marker}\n    {check}"));
+    code.push_str(c);
+    for opt in ["-O0", "-O2"] {
+        let mut cases = vec![("protected", code.clone(), 1)];
+
+        let input = "fwp_rc_fresh(fwp_c_string(a0))";
+        assert!(code.contains(input));
+        cases.push((
+            "missing-input-owner",
+            code.replace(input, "fwp_c_string(a0)"),
+            197,
+        ));
+
+        for (control, generated, status) in cases {
+            let label = format!("callback-input-errors-counted{opt}-{control}");
+            let binary = dir.join(format!("{label}.exe"));
+            fwp::cgen::compile_c(&generated, &binary, opt).unwrap();
+            let actual = Command::new(&binary).output().unwrap();
+            assert_eq!(actual.status.code(), Some(status), "{label}: {actual:?}");
+            assert_eq!(actual.stdout, reference.stdout, "{label}");
+            assert_eq!(actual.stderr, reference.stderr, "{label}");
+            if let Some(root) = std::env::var_os("FWP_POINTER_ARTIFACTS") {
+                let root = std::path::PathBuf::from(root);
+                std::fs::create_dir_all(&root).unwrap();
+                std::fs::write(root.join(format!("{label}.c")), generated).unwrap();
+                std::fs::copy(&binary, root.join(format!("{label}.exe"))).unwrap();
+                std::fs::write(root.join(format!("{label}.status")), format!("{status}\n"))
                     .unwrap();
-                assert_eq!(actual.status.code(), Some(status), "{label}: {actual:?}");
-                assert_eq!(actual.stdout, reference.stdout, "{label}");
-                assert_eq!(actual.stderr, reference.stderr, "{label}");
-                if let Some(root) = std::env::var_os("FWP_POINTER_ARTIFACTS") {
-                    let root = std::path::PathBuf::from(root);
-                    std::fs::create_dir_all(&root).unwrap();
-                    std::fs::write(root.join(format!("{label}.c")), generated).unwrap();
-                    std::fs::copy(&binary, root.join(format!("{label}.exe"))).unwrap();
-                    std::fs::write(root.join(format!("{label}.status")), format!("{status}\n"))
-                        .unwrap();
-                    std::fs::write(root.join(format!("{label}.stdout")), actual.stdout).unwrap();
-                    std::fs::write(root.join(format!("{label}.stderr")), actual.stderr).unwrap();
-                }
+                std::fs::write(root.join(format!("{label}.stdout")), actual.stdout).unwrap();
+                std::fs::write(root.join(format!("{label}.stderr")), actual.stderr).unwrap();
             }
         }
     }
-    fwp::cgen::set_native_options(Default::default());
 }

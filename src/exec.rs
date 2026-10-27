@@ -597,12 +597,7 @@ pub fn parse_pipeline(spec: &str) -> Result<Vec<Stage>, String> {
 /// binary typed protocol; the last stage prints text. Returns the exit code
 /// of the first failing stage (or 0). `interp` runs the stages with the
 /// interpreter instead of compiling them.
-pub fn run_pipeline(
-    fwp_exe: &std::path::Path,
-    spec: &str,
-    interp: bool,
-    arc: Option<bool>,
-) -> Result<i32, String> {
+pub fn run_pipeline(fwp_exe: &std::path::Path, spec: &str, interp: bool) -> Result<i32, String> {
     let stages = parse_pipeline(spec)?;
     let mut children = Vec::new();
     let mut prev_out: Option<std::process::ChildStdout> = None;
@@ -611,9 +606,6 @@ pub fn run_pipeline(
         let mut cmd = Command::new(fwp_exe);
         cmd.arg("exec");
         cmd.arg(if interp { "--interp" } else { "--native" });
-        if let Some(arc) = arc {
-            cmd.args(["--gc", if arc { "arc" } else { "tracing" }]);
-        }
         cmd.arg(&st.file).arg(&st.function).args(&st.args);
         if i + 1 < n {
             cmd.env("FWP_OUT", "bin").stdout(Stdio::piped());

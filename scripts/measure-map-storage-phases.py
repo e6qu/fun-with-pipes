@@ -55,7 +55,7 @@ def main():
         spec.loader.exec_module(modules[name])
     helper, phases = modules.values()
     baseline = json.loads((original / 'report.json').read_text())
-    env = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+    env = dict(os.environ)
     results = []
     for case in baseline['cases']:
         work, variants = case['work'], {}

@@ -5,10 +5,10 @@
  * argument alias, 9 iterator completion, 10 continuation trap, 11 iterator
  * encode trap, 12 iterator cancellation, 13 retained iterator, 14 closed send.
  * Stage 14 stops before exhaustion so normal cursor cleanup has live storage. */
-static int stage,decoded,encoded,cancelled,trapped,finished,poison;
+static int stage,decoded,encoded,cancelled,trapped,finished;
 static V first,external;
 static double before;
-static double owned_charge(void){return fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);}
+static double owned_charge(void){return (double)fwp_heap.live;}
 static void owned_no_release(void *arg){(void)arg;}
 static void owned_string_drop(V value){if(fwp_rc_release_last(value))fwp_rc_free_obj(value);}
 static g_msg *owned_request(void){g_msg *m=calloc(1,sizeof *m);if(!m)_Exit(240);return m;}
@@ -53,7 +53,7 @@ static void owned_finish(void){
   if(!external||!fwp_rc_last(external)||!OBJ(external)->f[1]||strcmp(STR(OBJ(external)->f[0])->d,"alpha"))_Exit(245);
   owned_iterator_drop(external);external=0;
  }
- if(!fwp_gc.enabled&&!poison&&owned_charge()!=before){fprintf(stderr,"stage %d: managed bytes %.0f -> %.0f\n",stage,before,owned_charge());_Exit(246);}
+ if(owned_charge()!=before){fprintf(stderr,"stage %d: managed bytes %.0f -> %.0f\n",stage,before,owned_charge());_Exit(246);}
  if(fwp_cleanups)_Exit(247);finished++;
 }
 static void owned_serve(void *arg,int stop){
@@ -63,6 +63,10 @@ static void owned_serve(void *arg,int stop){
  if(!setjmp(failure)){
   fwp_cur->trap_jb=&failure;fwp_cur->trap_cleanup=fwp_cleanups;
   char *message=0;int status=g_run_method(arg,&message);
+#ifdef PROBE_UNOWNED_DISPATCH
+  if(status!=GRPC_INTERNAL||!message||strcmp(message,"trap: internal: counted owner escaped ARC contract"))_Exit(254);
+  free(message);_Exit(242); /* the invalid call was rejected before producing a value */
+#endif
   if(stage==1){if(status!=GRPC_INVALID_ARGUMENT||!message)_Exit(248);}
   else if(stage==10){if(status!=GRPC_INTERNAL||!message||!strstr(message,"zero"))_Exit(248);}
   else if(status!=-1||message)_Exit(248);
@@ -77,8 +81,7 @@ static void owned_serve(void *arg,int stop){
 }
 int main(int argc,char **argv){
  if(argc!=2)_Exit(250);stage=atoi(argv[1]);
- const char *verify=getenv("FWP_REUSE_VERIFY");poison=verify&&*verify&&strcmp(verify,"0");
- fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
+ fwp_lib_init();fwp_heap_start();fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  // Real generated methods return the first argument or raise it as an error.
  // Iterator cases replace only the owning entry with a concrete test producer.
  fwp_fninfo table[sizeof fwp_fn_table/sizeof *fwp_fn_table];memcpy(table,fwp_fn_table,sizeof table);
@@ -94,11 +97,11 @@ int main(int argc,char **argv){
  g_stream *s=g_stream_new(c,1);s->sent_headers=1;s->remote_end=1;s->local_end=stage==14;
  g_route route={0};route.kind=G_ROUTE_METHOD;route.m=&method;
  g_job job={0};job.c=c;job.s=s;job.srv=&server;job.route=&route;strcpy(job.what,"owned-values");
- fwp_task *task=fwp_spawn_task(0,owned_serve,&job,0,0);
+ fwp_task *task=fwp_spawn_task(0,owned_serve,&job,0,0);fwp_task_own_internal(task,1);
  if(stage==4||stage==12){fwp_p_task_yield();if(task->done||encoded!=1)_Exit(251);fwp_p_task_cancel(PTR(task));}
- fwp_await(task);
+ fwp_await(task);fwp_task_drop(PTR(task));
  if(finished!=1||cancelled!=((stage==4||stage==12)?1:0)||trapped!=((stage==2||stage==3||stage==11)?1:0))_Exit(252);
  int expected=(stage==1||stage==2||stage==10)?0:1;if(encoded!=expected)_Exit(253);
- FWP_KEEP_ALIVE(PTR(c));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(task));
+
  fwp_lib_finish();return 0;
 }

@@ -1,14 +1,10 @@
-//! File ownership closes streams independently of tracing metadata.
+//! File aliases own streams through successful I/O, failure and final release.
 #![cfg(any(target_os = "linux", target_os = "macos"))]
 use fwp::ir::*;
 use std::process::Command;
 
 #[test]
 fn file_aliases_and_borrowed_io_unwind_preserve_stream_owners() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::Record(vec![]);
     let p = Program {
         funcs: vec![Func {
@@ -25,6 +21,9 @@ fn file_aliases_and_borrowed_io_unwind_preserve_stream_owners() {
     let hooks = r#"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+static uintptr_t watched_text;
+static unsigned watched_text_frees;
 static int fault, watched_fd, closes;
 static FILE *watched_stream;
 static FILE *observe_open(const char *,const char *);
@@ -58,22 +57,23 @@ static int observe_error(FILE *f){if(f==watched_stream&&fault==3){errno=EIO;retu
 static jmp_buf recovery;
 static int recover(void){return 1;}
 int main(int argc,char **argv){
- if(argc!=2)return 30;fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
- /* Deliberately clear the GC count. Resource counts must remain independent. */
- handle=fwp_p_file_open(fwp_cstr(argv[1]),0,0);fwp_file *h=(fwp_file *)(uintptr_t)handle;
- fwp_rc_share(handle);uint8_t *slot=fwp_rc_slot(handle);if(slot&&*slot)return 1;
+ if(argc!=2)return 30;fwp_lib_init();fwp_heap_start();
+ V path=fwp_rc_fresh(fwp_cstr(argv[1]));
+ V contents=fwp_rc_fresh(fwp_cstr("contents")), more=fwp_rc_fresh(fwp_cstr("more"));
+ handle=fwp_p_file_open(path,0,0);fwp_file *h=(fwp_file *)(uintptr_t)handle;
+ if(!fwp_rc_last(handle))return 1;
  for(int i=0;i<300;i++)fwp_file_dup(handle);
  if(h->refs!=301)return 2;
  for(int i=0;i<300;i++)fwp_file_drop(handle);
  if(h->refs!=1||closes||fcntl(watched_fd,F_GETFD)==-1)return 3;
- fwp_file_drop(handle);if(h->refs||closes!=1||fcntl(watched_fd,F_GETFD)!=-1||errno!=EBADF)return 4;
- handle=fwp_p_file_open(fwp_cstr(argv[1]),1,0);h=(fwp_file *)(uintptr_t)handle;closes=0;
+ fwp_file_drop(handle);if(closes!=1||fcntl(watched_fd,F_GETFD)!=-1||errno!=EBADF)return 4;
+ handle=fwp_p_file_open(path,1,0);h=(fwp_file *)(uintptr_t)handle;closes=0;
  fwp_file_dup(handle);fwp_p_file_close(handle);
  if(h->refs!=2||closes!=1)return 5;
  fwp_file_drop(handle);fwp_file_drop(handle);if(closes!=1)return 5;
  /* I/O returns an owned alias without consuming the caller's owner. */
- handle=fwp_p_file_open(fwp_cstr(argv[1]),1,0);h=(fwp_file *)(uintptr_t)handle;closes=0;
- V written=fwp_p_file_write_owned(fwp_cstr("contents"),handle,0);
+ handle=fwp_p_file_open(path,1,0);h=(fwp_file *)(uintptr_t)handle;closes=0;
+ V written=fwp_p_file_write_owned(contents,handle,0);
  if(written!=handle||h->refs!=2||fwp_cleanups)return 6;
  fwp_file_drop(written);rewind(h->f);
  V tuple=fwp_p_file_read_all_owned(handle,0);
@@ -86,25 +86,25 @@ int main(int argc,char **argv){
   fwp_handler handler;handler.prev=fwp_handlers;handler.state_depth=fwp_state_len;
   handler.cleanup=fwp_cleanups;fwp_handlers=&handler;
   int failed=setjmp(handler.jb);
-  if(!failed){if(mode==3)fwp_p_file_read_all_owned(handle,0);else fwp_p_file_write_owned(fwp_cstr("more"),handle,0);}
+  if(!failed){if(mode==3)fwp_p_file_read_all_owned(handle,0);else fwp_p_file_write_owned(more,handle,0);}
   fwp_handlers=handler.prev;fault=0;
   if(!failed||h->refs!=1||closes||fwp_cleanups||fcntl(watched_fd,F_GETFD)==-1)return 7;
   if(strcmp(STR(OBJ(handler.value)->f[0])->d,mode==3?"read":"write"))return 8;
   if(strcmp(STR(OBJ(handler.value)->f[1])->d,strerror(mode==1?ENOSPC:EIO)))return 8;
+  fwp_rc_free_obj(OBJ(handler.value)->f[0]);fwp_rc_free_obj(OBJ(handler.value)->f[1]);fwp_rc_free_obj(handler.value);
  }
  /* Allocation/conversion traps clean the extra alias and the fresh String. */
  for(volatile int mode=4;mode<6;mode++){
-  rewind(h->f);fault=mode;watched_text=0;double before=fwp_gc.freed;
+  rewind(h->f);fault=mode;watched_text=0;watched_text_frees=0;double before=fwp_heap.freed;
   fwp_trap_recover=recover;fwp_trap_jb=&recovery;fwp_trap_cleanup=0;
   int failed=setjmp(recovery);if(!failed)fwp_p_file_read_all_owned(handle,0);
   fwp_trap_recover=0;fwp_trap_jb=0;fault=0;
   if(!failed||h->refs!=1||closes||fwp_cleanups||fcntl(watched_fd,F_GETFD)==-1)return 9;
   if(mode==5){
 #ifndef FWP_RESOURCE_NO_FREE
-   if(fwp_reuse_verify){if(!watched_text||STR(watched_text)->len||STR(watched_text)->d[0])return 10;}
-   else if(fwp_gc.freed<=before)return 10;
+   if(!watched_text||watched_text_frees!=1||fwp_heap.freed<=before)return 10;
 #else
-   if(fwp_gc.freed!=before)return 10;
+   if(!watched_text||watched_text_frees||fwp_heap.freed!=before)return 10;
 #endif
   }
  }
@@ -115,7 +115,8 @@ int main(int argc,char **argv){
  if(!overflow||h->refs!=UINT64_MAX||closes||fwp_cleanups)return 11;
  h->refs=1;fwp_file_drop(handle);if(closes!=1)return 12;
  /* Library finalizers still see headers, but must not close discarded streams twice. */
- handle=0;fwp_gc_finish();if(closes!=1)return 13;return 0;
+ fwp_rc_free_obj(path);fwp_rc_free_obj(contents);fwp_rc_free_obj(more);
+ handle=0;fwp_heap_finish();if(closes!=1)return 13;return 0;
 }
 "#;
     let mut runtime = generated;
@@ -127,11 +128,11 @@ int main(int argc,char **argv){
         .replace("V result = fwp_tuple2(text, h);", "if(fault==5)fwp_trap(\"tuple failure\");V result = fwp_tuple2(text,h);");
     assert_ne!(original, instrumented);
     runtime.replace_range(start..end, &instrumented);
-    // The observed String is a weak test observation, not an ownership reference.
-    runtime = runtime.replacen(
-        "static V fwp_p_file_read_all(V ",
-        "static volatile V watched_text;\nstatic V fwp_p_file_read_all(V ",
-        1,
+    let free = "static void fwp_mem_free(void *p) {\n";
+    assert_eq!(runtime.matches(free).count(), 1);
+    runtime = runtime.replace(
+        free,
+        &format!("{free}    if(p && (uintptr_t)p==watched_text)watched_text_frees++;\n"),
     );
     let no_alias = runtime.replace("    fwp_file_dup(h);", "    (void)h;");
     assert_ne!(no_alias, runtime);
@@ -171,23 +172,15 @@ int main(int argc,char **argv){
             (&runtime, 0),
         ] {
             fwp::cgen::compile_c(&format!("{hooks}\n{code}\n{fixture}"), &exe, opt).unwrap();
-            for (gc, poison) in [("on", "0"), ("on", "1"), ("off", "0"), ("off", "1")] {
-                std::fs::write(&data, "contents").unwrap();
-                let out = Command::new(&exe)
-                    .arg(&data)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert_eq!(
-                    out.status.code(),
-                    Some(expected),
-                    "{opt}, GC {gc}, poison {poison}: {}",
-                    String::from_utf8_lossy(&out.stderr)
-                );
-            }
+
+            std::fs::write(&data, "contents").unwrap();
+            let out = Command::new(&exe).arg(&data).output().unwrap();
+            assert_eq!(
+                out.status.code(),
+                Some(expected),
+                "{opt}: {}",
+                String::from_utf8_lossy(&out.stderr)
+            );
         }
         fwp::cgen::compile_c(
             &format!("{hooks}\n#define FWP_RESOURCE_NO_FREE 1\n{runtime}\n{fixture}"),
@@ -195,23 +188,15 @@ int main(int argc,char **argv){
             opt,
         )
         .unwrap();
-        for (gc, poison) in [("on", "0"), ("on", "1"), ("off", "0"), ("off", "1")] {
-            std::fs::write(&data, "contents").unwrap();
-            let out = Command::new(&exe)
-                .arg(&data)
-                .env("FWP_GC", gc)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", poison)
-                .output()
-                .unwrap();
-            assert_eq!(
-                out.status.code(),
-                Some(0),
-                "{opt}, GC {gc}, no free: {}",
-                String::from_utf8_lossy(&out.stderr)
-            );
-        }
+
+        std::fs::write(&data, "contents").unwrap();
+        let out = Command::new(&exe).arg(&data).output().unwrap();
+        assert_eq!(
+            out.status.code(),
+            Some(0),
+            "{opt}, no free: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
     }
     std::fs::remove_dir_all(&dir).unwrap();
 }

@@ -154,7 +154,6 @@ report = tool.compare(
         Target("arm64-linux", "aarch64-linux-gnu-gcc", "aarch64-linux-gnu", triple=None, sysroot=None),
     ],
     levels=("O0", "O1", "O2", "O3"),
-    ownership="arc",
 )
 for target in report["targets"]:
     print(target["name"], target["generated_c"])
@@ -166,10 +165,10 @@ for variant in report["variants"]:
 ```
 
 Those compiler paths are examples: install matching toolchains for the requested
-targets. Tool paths, timeout, targets, optimization levels and ownership mode are
-all required. `ownership="arc"` selects checked ownership; `"tracing"` selects
-the collector for a deliberate comparison. The report records that choice and
-the exact C-generation command. An invalid mode fails before creating output.
+targets. Tool paths, timeout, targets and optimization levels are all required.
+Ownership is the same counted model as ordinary native execution. The report
+records it and each exact C-generation command. Invalid target names or
+optimization levels fail before creating output.
 
 The example allows 180 seconds per subprocess. The third `Target` argument
 selects fwp's C generation target: `"native"` for the host, or a supported Linux

@@ -38,26 +38,21 @@ fn wasi(binary: &Path, root: &Path) -> Command {
         .arg("--no-warnings")
         .arg(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/wasm/wasi-run.mjs"))
         .arg(binary)
-        .current_dir(root)
-        .env("FWP_GC", "off")
-        .env("FWP_GC_STRESS", "0")
-        .env("FWP_GC_VERIFY", "0")
-        .env("FWP_REUSE_VERIFY", "0");
+        .current_dir(root);
     command
 }
 fn emit(source: &Path, cfile: &Path, entry: &[&str], target: &str) -> String {
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "arc", "--target", target, "--emit-c"])
+            .args(["build", "--target", target, "--emit-c"])
             .args(entry)
             .arg(source)
             .arg("-o")
             .arg(cfile),
     );
     let code = std::fs::read_to_string(cfile).unwrap();
-    assert!(
-        code.contains("#define FWP_ARC_ONLY 1") && code.contains("#define FWP_RESOURCE_OWNERS 1")
-    );
+    assert!(!code.contains("FWP_ARC_ONLY"));
+    assert!(!code.contains("fwp_heap_collect("));
     code
 }
 
@@ -211,31 +206,11 @@ fn wasi_allocator_frees_graphs_and_rejects_escaped_counts() {
                     if target == fwp::cgen::Target::Wasi {
                         wasi(&binary, dir.path())
                     } else {
-                        let mut c = Command::new(&binary);
-                        c.env("FWP_GC", "off")
-                            .env("FWP_GC_STRESS", "0")
-                            .env("FWP_GC_VERIFY", "0")
-                            .env("FWP_REUSE_VERIFY", "0");
-                        c
+                        Command::new(&binary)
                     }
                 };
                 let result = command().output().unwrap();
                 assert_eq!(result.status.code(), Some(status), "{opt}: {result:?}");
-                if status == 0 {
-                    for (key, value) in [
-                        ("FWP_GC", "full"),
-                        ("FWP_GC_STRESS", "1"),
-                        ("FWP_GC_VERIFY", "1"),
-                        ("FWP_REUSE_VERIFY", "1"),
-                    ] {
-                        let result = command().env(key, value).output().unwrap();
-                        assert_eq!(result.status.code(), Some(101), "{key}: {result:?}");
-                        assert!(
-                            String::from_utf8_lossy(&result.stderr).contains("--gc arc cannot"),
-                            "{result:?}"
-                        );
-                    }
-                }
             }
         }
     }
@@ -259,14 +234,7 @@ fn wasi_arc_rejects_unproved_entries_and_native_library_flags() {
     ] {
         std::fs::write(&source, program).unwrap();
         let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args([
-                "build",
-                "--gc",
-                "arc",
-                "--target",
-                "wasm32-wasi",
-                "--emit-c",
-            ])
+            .args(["build", "--target", "wasm32-wasi", "--emit-c"])
             .args(extra)
             .arg(&source)
             .arg("-o")
@@ -382,7 +350,7 @@ main = [
         let missing_metrics_shutdown =
             instrumented.replace("if (atexit(fwp_metrics_finish))", "if (0)");
         let unclaimed = instrumented.replace(
-            "#if FWP_GC\n        if (!c) return;\n#endif",
+            "#if FWP_NATIVE_HEAP\n        if (!c) return;\n#endif",
             "        if (!c) return;",
         );
         let mut candidates = vec![(&instrumented, 0), (&omitted, 244)];
@@ -609,7 +577,7 @@ fn wasi_function_and_cli_entries_reclaim_inputs_and_results() {
                 symbols.contains("<_start>") && symbols.contains("<fwp_"),
                 "module symbols missing: {symbols}"
             );
-            for collector in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+            for collector in ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"] {
                 assert!(
                     !symbols.contains(collector),
                     "WASI ARC contains {collector}"
@@ -875,7 +843,7 @@ main = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | igno
         )
         .unwrap();
         let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc", "arc", "--emit-c", "--target", target])
+            .args(["build", "--emit-c", "--target", target])
             .arg(&source)
             .arg("-o")
             .arg(dir.join("rejected.c"))
@@ -1093,11 +1061,7 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
                                     Path::new(env!("CARGO_MANIFEST_DIR"))
                                         .join("tests/wasm/browser-run.mjs"),
                                 )
-                                .arg(binary.with_extension("js"))
-                                .env("FWP_GC", "off")
-                                .env("FWP_GC_STRESS", "0")
-                                .env("FWP_GC_VERIFY", "0")
-                                .env("FWP_REUSE_VERIFY", "0");
+                                .arg(binary.with_extension("js"));
                         }
                         if asyncify {
                             command.env("FWP_NO_JSPI", "1");
@@ -1129,7 +1093,9 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
                             if !symbols.contains("<_start>") || !symbols.contains("<fwp_") {
                                 failures.push(format!("{name}: runtime function names missing"));
                             }
-                            for collector in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                            for collector in
+                                ["fwp_heap_scan", "fwp_heap_mark_all", "fwp_heap_sweep"]
+                            {
                                 if symbols.contains(collector) {
                                     failures.push(format!("{name}: {collector} remains"));
                                 }

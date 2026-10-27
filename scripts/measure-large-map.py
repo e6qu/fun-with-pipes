@@ -51,8 +51,7 @@ def main():
     spec.loader.exec_module(iteration)
     compiler = ROOT / 'target/release/fwp'
     cc = os.environ['CC']
-    env = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
-    env.pop('FWP_GC', None)
+    env = dict(os.environ)
     env.pop('FWP_NO_OPT', None)
     source = ROOT / 'bench/map/main.fwp'
     text = source.read_text()
@@ -81,37 +80,37 @@ def main():
     for name, program, expected in [('full', source, reference),
                                      ('construction', construction, '500000\n')]:
         variants = dict(peers) if name == 'full' else {}
-        for mode in ['tracing', 'arc']:
-            for enabled in ['0', '1']:
-                label = f'{name}-{mode}-fusion-{enabled}'
-                binary = out / label
-                build_env = dict(env, FWP_MAP_BUILD=enabled)
-                command = [compiler, 'build', '--gc', mode, '-O2', program, '-o', binary]
-                start = time.perf_counter_ns()
-                run(command, build_env)
-                elapsed = time.perf_counter_ns() - start
-                generated = out / (label + '.c')
-                run([compiler, 'build', '--gc', mode, '-O2', '--emit-c', program, '-o', generated], build_env)
-                code = generated.read_text()
-                assert ('numeric map: direct callback fields' in code) == (enabled == '1')
-                measured_c = out / (label + '-profile.c')
-                measured_c.write_text(iteration.instrument(code))
-                measured = out / (label + '-profile')
-                profile_command = [cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w',
-                                   measured_c, '-o', measured, '-lm', '-lpthread']
-                run(profile_command, build_env)
-                result = run([measured], env)
-                assert result.stdout == expected
-                counters = json.loads(result.stderr)
-                if mode == 'arc':
-                    assert counters['finalChargedBytes'] == counters['collections'] == 0, counters
-                variants[f'{mode}-{enabled}'] = {
-                    **inspect(binary, env), 'mode': mode, 'constructionFusion': enabled == '1',
-                    'buildCommand': list(map(str, command)), 'buildNs': elapsed,
-                    'sourceSha256': digest(program), 'generatedSha256': digest(generated),
-                    'profileCommand': list(map(str, profile_command)),
-                    'profileSha256': digest(measured), 'counters': counters, 'processWallNs': [],
-                }
+        mode = 'counted'
+        for enabled in ['0', '1']:
+            label = f'{name}-{mode}-fusion-{enabled}'
+            binary = out / label
+            build_env = dict(env, FWP_MAP_BUILD=enabled)
+            command = [compiler, 'build', '-O2', program, '-o', binary]
+            start = time.perf_counter_ns()
+            run(command, build_env)
+            elapsed = time.perf_counter_ns() - start
+            generated = out / (label + '.c')
+            run([compiler, 'build', '-O2', '--emit-c', program, '-o', generated], build_env)
+            code = generated.read_text()
+            assert ('numeric map: direct callback fields' in code) == (enabled == '1')
+            measured_c = out / (label + '-profile.c')
+            measured_c.write_text(iteration.instrument(code))
+            measured = out / (label + '-profile')
+            profile_command = [cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w',
+                               measured_c, '-o', measured, '-lm', '-lpthread']
+            run(profile_command, build_env)
+            result = run([measured], env)
+            assert result.stdout == expected
+            counters = json.loads(result.stderr)
+            assert counters['finalChargedBytes'] == 0, counters
+            assert set(counters) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
+            variants[f'{mode}-{enabled}'] = {
+                **inspect(binary, env), 'mode': mode, 'constructionFusion': enabled == '1',
+                'buildCommand': list(map(str, command)), 'buildNs': elapsed,
+                'sourceSha256': digest(program), 'generatedSha256': digest(generated),
+                'profileCommand': list(map(str, profile_command)),
+                'profileSha256': digest(measured), 'counters': counters, 'processWallNs': [],
+            }
         # Every variant occupies every position twice, after one warmup each.
         labels = list(variants)
         for label in labels:
@@ -131,7 +130,7 @@ def main():
         for variant in variants.values():
             variant['medianProcessWallNs'] = statistics.median(variant['processWallNs'])
         ratios = {mode: variants[f'{mode}-1']['medianProcessWallNs']
-                  / variants[f'{mode}-0']['medianProcessWallNs'] for mode in ['tracing', 'arc']}
+                  / variants[f'{mode}-0']['medianProcessWallNs'] for mode in ['counted']}
         cases.append({'work': name, 'expected': expected, 'executionOrder': orders,
                       'variants': variants, 'enabledToDisabledTimeRatio': ratios})
         (out / 'cases.json').write_text(json.dumps(cases, indent=2) + '\n')
@@ -146,16 +145,15 @@ def main():
         'scope': 'Maintained map benchmark: generate 500,000 pairs with scrambled distinct keys, '
                  'sort them during map construction, and perform '
                  '2,000,000 lookups. C/Rust outputs agree with every fwp variant. Same runner, '
-                 'compiler and fwp source; compare numeric construction fusion on/off in both '
-                 'default tracing and checked ARC. Separate construction-only fwp programs print '
+                 'compiler and fwp source; compare numeric construction fusion on/off with '
+                 'counted ownership. Separate construction-only fwp programs print '
                  'the map size; their timings are not a direct measurement of lookup time and '
                  'must not be subtracted as one. Whole-process time includes startup, allocation, '
                  'construction, queries/output and shutdown. Build time includes fwp C generation, '
                  'native compilation/linking and any ordinary compiler cache effects. C/Rust '
                  'sorting and overflow rules differ; the guide explains these comparisons. '
                  'Counter instrumentation uses separate executables excluded from timing. '
-                 'Counted storage excludes allocator capacity and process RSS; tracing may retain '
-                 'uncollected storage. Every variant occupies every position twice after warmup. '
+                 'Counted storage excludes allocator capacity and process RSS. Every variant occupies every position twice after warmup. '
                  'Actual timed executables, sources, hashes, raw samples and disassembly are saved. '
                  'No universal speed threshold or cross-run regression conclusion is assumed.',
         'cases': cases,

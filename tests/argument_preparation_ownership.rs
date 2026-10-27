@@ -54,12 +54,11 @@ fn partial_duplicate_failures_preserve_aliases_and_pending_owned_arguments() {
             .args(["run", "--interp"])
             .arg(&src),
     );
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         checked(
             Command::new(fwp)
                 .env("FWP_STACK", "1")
-                .args(["build", "--gc", mode, "--memory", "dynamic"])
+                .args(["build", "--memory", "dynamic"])
                 .arg(&src)
                 .args(["--emit-c", "-O2", "-o"])
                 .arg(&cfile),
@@ -106,14 +105,11 @@ static volatile V first, second, last, scalar_word, function_value, argument;
 static jmp_buf preparing;
 static int recover_preparation(void) { return 1; }
 static int dead_cell(V v) {
-#ifndef FWP_ARC_ONLY
-    if (fwp_reuse_verify) return OBJ(v)->tag==0xdead;
-#endif
     size_t ci;
-    gc_chunk *chunk=fwp_gc_chunk_of((uintptr_t)v,&ci);
-    if (!chunk || chunk->type==GC_FREE) return 1;
-    if (chunk->type!=GC_SMALL) return 0;
-    for (char *p=fwp_gc.lists[chunk->leaf][chunk->cls].free;p;p=(char *)~*(uintptr_t *)p)
+    heap_chunk *chunk=fwp_heap_chunk_of((uintptr_t)v,&ci);
+    if (!chunk || chunk->type==HEAP_FREE) return 1;
+    if (chunk->type!=HEAP_SMALL) return 0;
+    for (char *p=fwp_heap.lists[chunk->leaf][chunk->cls].free;p;p=(char *)~*(uintptr_t *)p)
         if (PTR(p)==v) return 1;
     return 0;
 }
@@ -121,8 +117,8 @@ int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
-    intptr_t baseline=fwp_gc.budget;
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+    size_t baseline=fwp_heap.live;
     for(int round=0;round<32;round++){
     for (volatile int mode=0;mode<6;mode++) {
         first=fwp_rc_fresh(fwp_str_new("first",5));second=fwp_rc_fresh(fwp_str_new("second",6));
@@ -157,9 +153,7 @@ int main(void) {
         if (*fwp_rc_slot(last)!=1 || *fwp_rc_slot(scalar_word)!=1) return 8;
         fwp_rc_free_obj(first);fwp_rc_free_obj(second);fwp_rc_free_obj(last);fwp_rc_free_obj(scalar_word);
     }
-#ifdef FWP_ARC_ONLY
-    if(fwp_gc.budget!=baseline || fwp_gc.rc_wide_len || fwp_gc.ncollect)return 90;
-#endif
+    if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len)return 90;
     }
     puts("partial argument and capture preparation preserves aliases and releases pending owners");
     return 0;
@@ -179,29 +173,18 @@ int main(void) {
                 ("normal", format!("{runtime}\n{probe}"), 0),
                 ("missing-scope", format!("{unprotected}\n{probe}"), 2),
             ];
-            if mode == "arc" {
+            {
                 let missing = probe.replace("fwp_rc_free_obj(first);", "");
                 assert_ne!(missing, probe);
                 cases.push(("missing-release", format!("{runtime}\n{missing}"), 90));
             }
             for (label, code, status) in cases {
                 fwp::cgen::compile_c(&code, &exe, opt).unwrap();
-                for poison in if mode == "tracing" && label == "normal" {
-                    &["0", "1"][..]
-                } else {
-                    &["0"][..]
-                } {
-                    let out = Command::new(&exe)
-                        .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
+                {
+                    let out = Command::new(&exe).output().unwrap();
                     record_probe::save(
                         "argument_preparation_ownership",
-                        &format!("{mode}{opt}-arguments-{label}-poison{poison}"),
+                        &format!("counted{opt}-arguments-{label}"),
                         &code,
                         &exe,
                         &out,
@@ -209,9 +192,9 @@ int main(void) {
                     assert_eq!(
                         out.status.code(),
                         Some(status),
-                        "{mode} {opt} {label}: {out:?}"
+                        "counted {opt} {label}: {out:?}"
                     );
-                    assert!(out.stderr.is_empty(), "{mode} {opt} {label}: {out:?}");
+                    assert!(out.stderr.is_empty(), "counted {opt} {label}: {out:?}");
                     let expected = if status == 0 {
                         &b"partial argument and capture preparation preserves aliases and releases pending owners\n"[..]
                     } else {
@@ -223,19 +206,12 @@ int main(void) {
             checked(
                 Command::new(fwp)
                     .env("FWP_STACK", "1")
-                    .args(["build", "--gc", mode, "--memory", "dynamic"])
+                    .args(["build", "--memory", "dynamic"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe),
             );
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
+            let out = checked(&mut Command::new(&exe));
             assert_eq!(out.stdout, reference.stdout);
         }
     }
@@ -255,14 +231,11 @@ fn unique_closure_captures_move_through_partial_calls_and_failures() {
             .args(["run", "--interp"])
             .arg(&source),
     );
-    for mode in ["arc", "tracing"] {
-        let stress = if mode == "arc" { "0" } else { "1" };
+    {
         checked(
             Command::new(fwp)
                 .env("FWP_STACK", "1")
-                .args([
-                    "build", "--gc", mode, "--memory", "dynamic", "--emit-c", "-O2",
-                ])
+                .args(["build", "--memory", "dynamic", "--emit-c", "-O2"])
                 .arg(&source)
                 .arg("-o")
                 .arg(&cfile),
@@ -297,13 +270,8 @@ fn unique_closure_captures_move_through_partial_calls_and_failures() {
         assert_eq!(code.matches(transfer).count(), 2);
         let old = code.replace(transfer, "fi->owned->captures(f, 1);");
         let stolen = code.replace(transfer, "c->n = 0;");
-        let artifacts = std::env::var_os("FWP_STREAM_CLIENT_ARTIFACTS").map(|path| {
-            std::path::PathBuf::from(path).join(if mode == "arc" {
-                "capture-moves-arc"
-            } else {
-                "capture-moves"
-            })
-        });
+        let artifacts = std::env::var_os("FWP_STREAM_CLIENT_ARTIFACTS")
+            .map(|path| std::path::PathBuf::from(path).join("capture-moves"));
         if let Some(path) = &artifacts {
             std::fs::create_dir_all(path).unwrap();
             std::fs::write(path.join("captures.c"), &code).unwrap();
@@ -315,23 +283,17 @@ fn unique_closure_captures_move_through_partial_calls_and_failures() {
                 ("extra-retain", old.clone(), 201),
                 ("stolen-capture", stolen.clone(), 201),
             ];
-            if mode == "arc" {
+            {
                 let missing = code.replace("fwp_rc_free_obj(scalar);", "");
                 assert_ne!(missing, code);
                 controls.push(("missing-release", missing, 206));
             }
             for (label, control, status) in controls {
                 fwp::cgen::compile_c(&control, &binary, opt).unwrap();
-                let output = Command::new(&binary)
-                    .env("FWP_GC", "off")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
-                    .output()
-                    .unwrap();
+                let output = Command::new(&binary).output().unwrap();
                 record_probe::save(
                     "argument_preparation_ownership",
-                    &format!("{mode}{opt}-captures-{label}"),
+                    &format!("counted{opt}-captures-{label}"),
                     &control,
                     &binary,
                     &output,
@@ -339,39 +301,31 @@ fn unique_closure_captures_move_through_partial_calls_and_failures() {
                 assert_eq!(
                     output.status.code(),
                     Some(status),
-                    "{mode} {opt} {label}: {output:?}"
+                    "counted {opt} {label}: {output:?}"
                 );
-                assert!(output.stderr.is_empty(), "{mode} {opt} {label}: {output:?}");
+                assert!(
+                    output.stderr.is_empty(),
+                    "counted {opt} {label}: {output:?}"
+                );
             }
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
             if let Some(path) = &artifacts {
                 std::fs::copy(&binary, path.join(format!("captures{opt}.exe"))).unwrap();
             }
-            for &stress in if mode == "arc" {
-                &[false][..]
-            } else {
-                &[false, true][..]
-            } {
-                let output = Command::new(&binary)
-                    .env("FWP_GC", if stress { "on" } else { "off" })
-                    .env("FWP_GC_STRESS", if stress { "1" } else { "0" })
-                    .env("FWP_GC_VERIFY", if stress { "1" } else { "0" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_REUSE_VERIFY", if stress { "1" } else { "0" })
-                    .output()
-                    .unwrap();
+            {
+                let output = Command::new(&binary).output().unwrap();
                 record_probe::save(
                     "argument_preparation_ownership",
-                    &format!("{mode}{opt}-captures-normal-stress{stress}"),
+                    &format!("counted{opt}-captures-normal"),
                     &code,
                     &binary,
                     &output,
                 );
                 assert!(
                     output.status.success() && output.stderr.is_empty(),
-                    "{mode} {opt} {stress}: {output:?}"
+                    "counted {opt}: {output:?}"
                 );
-                if !stress {
+                {
                     if let Some(path) = &artifacts {
                         std::fs::write(path.join(format!("captures{opt}.tsv")), &output.stdout)
                             .unwrap();
@@ -379,14 +333,7 @@ fn unique_closure_captures_move_through_partial_calls_and_failures() {
                 }
             }
             fwp::cgen::compile_c(&generated, &binary, opt).unwrap();
-            let result = checked(
-                Command::new(&binary)
-                    .env("FWP_GC", if mode == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress),
-            );
+            let result = checked(&mut Command::new(&binary));
             assert_eq!(result.stdout, reference.stdout);
         }
     }

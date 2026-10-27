@@ -27,7 +27,7 @@ assert not args.output.exists()
 report = json.loads((args.input / 'report.json').read_text())
 inspection = json.loads(args.inspection.read_text())
 assert report['source'] == inspection['source'] == args.source
-assert report['memory'] == inspection['memory'] == 'arc'
+assert report['ownership'] == inspection['ownership'] == 'counted'
 assert report['architecture'] == inspection['architecture'] == args.arch
 assert report['inspectionSha256'] == hashlib.sha256(args.inspection.read_bytes()).hexdigest()
 assert report['samples'] >= 3
@@ -66,7 +66,7 @@ for row, measured in zip(report['programs'], inspection['programs'], strict=True
         symbols = subprocess.check_output([args.objdump, '--section-headers', '--syms', str(binary)])
         assembly = subprocess.check_output([args.objdump, '-d', str(binary)])
         assert len(assembly) > 1000
-        assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_gc_(scan|mark_all|sweep)\b', symbols)
+        assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_heap_(scan|mark_all|sweep)\b', symbols)
         sections = re.findall(rb'^\s*\d+\s+\.text\s+([0-9a-fA-F]+)\s', symbols, re.M)
         assert len(sections) == 1
         stack, = args.input.glob(stem + '*.su')
@@ -75,7 +75,8 @@ for row, measured in zip(report['programs'], inspection['programs'], strict=True
         for number, counts in enumerate(records['profiles']):
             assert (args.input / f'{stem}-{number}.stdout').read_text() == measured['stdout']
             assert json.loads((args.input / f'{stem}-{number}.stderr').read_text()) == counts
-            assert counts == records['profiles'][0] and counts['collections'] == 0
+            assert counts == records['profiles'][0]
+            assert set(counts) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
         images.append(dict(program=name, variant=label, binarySha256=records['binarySha256'],
                            generatedSha256=records['generatedSha256'], fileBytes=len(data),
                            textSectionBytes=int(sections[0], 16),

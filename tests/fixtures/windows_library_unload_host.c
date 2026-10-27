@@ -43,7 +43,7 @@ int main(int argc,char **argv) {
   for(int j=0;j<3;j++)if(!unmapped(s.stacks[j]))return 2;
   if(s.fibers_deleted!=3)return 2;
   if(s.finalized!=1||s.cancelled!=2)return 3;
-  if(s.wide_freed!=1||s.fins_freed!=1||s.marks_freed!=1||s.metrics_freed!=1||s.name_freed!=1||s.key_deleted!=1||s.finished!=1)return 4;
+  if(s.wide_freed!=1||s.fins_freed!=1||s.metrics_freed!=1||s.name_freed!=1||s.key_deleted!=1||s.finished!=1)return 4;
   if(s.signal_added!=1||s.signal_removed!=1)return 5;
   if(s.order_error||IsThreadAFiber()!=was_fiber)return 6;
   struct sockaddr_storage address;int size=sizeof address;

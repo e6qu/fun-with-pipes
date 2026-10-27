@@ -4,10 +4,6 @@ use std::process::Command;
 
 #[test]
 fn listener_stop_releases_context_after_accepted_sessions_finish() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     let unit = MT::Record(vec![]);
     let program = Program {
         funcs: vec![
@@ -195,22 +191,19 @@ int main(int argc,char **argv){int status=probe(argc,argv);if(status)_Exit(statu
     ];
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = Command::new(&exe)
-                .current_dir(&dir)
-                .args([dir.join("cert.pem"), dir.join("key.pem")])
-                .env("FWP_REUSE_VERIFY", poison)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .output()
-                .unwrap();
-            assert!(
-                out.status.success(),
-                "{opt}, poison {poison}: {:?}: {}",
-                out.status.code(),
-                String::from_utf8_lossy(&out.stderr)
-            );
-        }
+
+        let out = Command::new(&exe)
+            .current_dir(&dir)
+            .args([dir.join("cert.pem"), dir.join("key.pem")])
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "{opt}: {:?}: {}",
+            out.status.code(),
+            String::from_utf8_lossy(&out.stderr)
+        );
+
         for (needle, replacement, expected) in controls {
             assert!(generated.contains(needle), "missing control {needle}");
             let broken = generated.replacen(needle, replacement, 1);

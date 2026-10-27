@@ -55,7 +55,7 @@ static V sort_make(int kind, size_t n, int pattern) {
 }
 static int sort_case(int kind, size_t n, int pattern, int sharing,
                      int failure, int cancel, int *steps) {
-    intptr_t before = fwp_gc.budget_given - fwp_gc.budget;
+    size_t before = fwp_heap.live;
     array_probe_recording = 1; sort_failure = failure; sort_step = 0; sort_cancel = cancel;
     sort_input = sort_make(kind, n + (sharing == 2 ? 2 : 0), pattern);
     if (sharing == 1) { sort_alias = sort_input; fwp_rc_dup(sort_alias); }
@@ -89,9 +89,6 @@ static int sort_case(int kind, size_t n, int pattern, int sharing,
     sort_saved_task = fwp_cur; memset(&sort_task, 0, sizeof sort_task);
     if (cancel) {
         fwp_cur = &sort_task;
-#ifdef _WIN32
-        sort_task.ctx.top = fwp_gc.main_top;
-#endif
     }
     fwp_budget = 1000000; sort_armed = 1;
     fwp_trap_recover = sort_recover; fwp_trap_jb = &sort_jump;
@@ -110,8 +107,6 @@ static int sort_case(int kind, size_t n, int pattern, int sharing,
         int should_reuse = n < 2 || sharing == 0;
 #ifdef FWP_NO_REUSE
         if (n > 1) should_reuse = 0;
-#elif !defined(FWP_ARC_ONLY)
-        if (n > 1 && fwp_reuse_verify) should_reuse = 0;
 #endif
         if (reused != should_reuse) return 205;
         for (size_t i = 0; i < n; i++) {
@@ -132,18 +127,14 @@ static int sort_case(int kind, size_t n, int pattern, int sharing,
     if (sort_alias) sort_drops[kind](sort_alias);
     sort_alias = sort_input = 0; array_probe_recording = 0;
     if (sort_live) { fprintf(stderr, "array-sort live allocations: %d\n", sort_live); return 211; }
-#ifdef FWP_ARC_ONLY
-    if (fwp_gc.budget_given - fwp_gc.budget != before || fwp_gc.rc_wide_len || fwp_gc.ncollect) return 212;
-#else
-    (void)before;
-#endif
+    if (fwp_heap.live != before || fwp_heap.rc_wide_len) return 212;
     return 0;
 }
 int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     int cases = 0, failures = 0;
     const size_t lengths[] = {0, 1, 2, 3, 17, 257};
     for (int round = 0; round < 4; round++) {

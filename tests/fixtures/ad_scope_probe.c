@@ -30,12 +30,6 @@ static V scope_inner_entry(V *args) {
 static V scope_outer_entry(V *args) {
     (void)args;
     scope_base=fwp_p_ad_tape(2);scope_record_and_observe(scope_base,0);
-#if FWP_ARC_ONLY
-    if (fwp_gc.armed || fwp_gc.ncollect) scope_error=65;
-#else
-    fwp_gc_collect();
-    if (!fwp_gc.armed || !fwp_gc.ncollect) scope_error=65;
-#endif
     if (scope_mode==1) fwp_trap("gradient callback control");
     if (scope_mode==2) fwp_check_cancel();
     if (scope_mode==3) {
@@ -56,8 +50,8 @@ static const fwp_fninfo scope_entries[]={
 };
 static fwp_clo outer_scope_callback={0,0};
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
-    intptr_t baseline=fwp_gc.budget;
+    fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+    size_t baseline=fwp_heap.live;
     for(unsigned round=0;round<32;round++) {
     scope_outputs=fwp_rc_fresh(fwp_arr_new(1));scope_seeds=fwp_rc_fresh(fwp_arr_new(1));
     ARR(scope_seeds)->d[0]=fwp_from_f64(1);
@@ -69,10 +63,6 @@ int main(void) {
         if (scope_mode==2) {
             scope_saved_task=fwp_cur;memset(&scope_cancelled_task,0,sizeof(scope_cancelled_task));
             scope_cancelled_task.cancelled=1;fwp_cur=&scope_cancelled_task;
-#ifdef _WIN32
-            /* This synthetic task executes on the main thread stack. */
-            scope_cancelled_task.ctx.top=fwp_gc.main_top;
-#endif
             jmp_buf scope_cancelled_task_base; scope_cancelled_task.base = &scope_cancelled_task_base;
             if (!setjmp(scope_cancelled_task_base)) { fwp_p_ad_scope(PTR(&outer_scope_callback), FWP_UNIT);return 63; }
             scope_cancelled_task.base=NULL;fwp_cur=scope_saved_task;
@@ -105,18 +95,12 @@ int main(void) {
     if (*fwp_rc_slot(owned)!=1 || ARR(owned)->len!=1 || fwp_f64(ARR(owned)->d[0])!=1) return 76;
     fwp_rc_free_arr(owned);
     uint8_t *remaining=fwp_rc_slot(owned);
-#ifndef FWP_ARC_ONLY
-    if (fwp_reuse_verify) { if (ARR(owned)->len!=0) return 77; }
-    else
-#endif
     if (remaining && *remaining!=0) return 77;
     fwp_cleanup_pop(&owned_cleanup);fwp_tape_scope_release(&owned_scope);
     fwp_rc_free_arr(scope_outputs);fwp_rc_free_arr(scope_seeds);
     scope_outputs=scope_seeds=0;fwp_tape_finish();
     if(fwp_tapes||fwp_ntapes||fwp_tapes_cap||fwp_tape_cached_bytes)return 78;
-#ifdef FWP_ARC_ONLY
-    if(fwp_gc.budget!=baseline||fwp_gc.rc_wide_len||fwp_gc.ncollect)return 90;
-#endif
+    if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
     }
     printf("scoped autodiff releases callback tapes; tape=%zu align=%zu scope=%zu cleanup=%zu\n",
            sizeof(fwp_tape),_Alignof(fwp_tape),sizeof(fwp_tape_scope),sizeof(fwp_cleanup));

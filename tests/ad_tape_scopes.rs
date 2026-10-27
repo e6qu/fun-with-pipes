@@ -37,79 +37,77 @@ fn callback_scopes_release_live_tapes_without_per_scope_heap_owners() {
     let input = scratch.0.join("runtime.fwp");
     let cfile = scratch.0.join("runtime.c");
     std::fs::write(&input,"finish : I64 -> Array[F64]\nfinish = make { 0 = id, 1 = singleton | array.from-list, 2 = const [1.0] | array.from-list } | uncurry3 ad.backward\nmain = 1 | ad.scope (ad.tape | finish) | echo\n").unwrap();
-    for memory in ["arc", "tracing"] {
-        checked(
-            Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .env_remove("FWP_NO_OPT")
-                .env("FWP_STACK", "0")
-                .env("FWP_FREE", "1")
-                .env("FWP_REUSE", "1")
-                .args(["build", "--memory", "dynamic", "--gc", memory, "-O2"])
-                .arg(&input)
-                .args(["--emit-c", "-o"])
-                .arg(&cfile),
-        );
-        let original = std::fs::read_to_string(&cfile).unwrap();
-        let call = "fwp_p_ad_backward(l0, l1, l2)";
-        assert_eq!(original.matches(call).count(), 1);
-        let call_start = original.find(call).unwrap();
-        let backward_worker = format!(
-            "f{}",
-            original[..call_start]
-                .rsplit("static V f")
-                .next()
-                .unwrap()
-                .split('(')
-                .next()
-                .unwrap()
-        );
-        let probe = PROBE.replace("AD_BACKWARD", &backward_worker);
-        let release = "    fwp_rc_free_arr(owned);";
-        assert_eq!(probe.matches(release).count(), 1);
-        let unreleased_probe = probe.replace(release, "");
-        let start = original
-            .find("/* ------------------------------------------------------------------ tapes */")
-            .unwrap();
-        let end = original[start..]
-            .find("/* ---------------------------------------------------------------- kernels */")
+
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env_remove("FWP_NO_OPT")
+            .env("FWP_STACK", "0")
+            .args(["build", "--memory", "dynamic", "-O2"])
+            .arg(&input)
+            .args(["--emit-c", "-o"])
+            .arg(&cfile),
+    );
+    let original = std::fs::read_to_string(&cfile).unwrap();
+    let call = "fwp_p_ad_backward(l0, l1, l2)";
+    assert_eq!(original.matches(call).count(), 1);
+    let call_start = original.find(call).unwrap();
+    let backward_worker = format!(
+        "f{}",
+        original[..call_start]
+            .rsplit("static V f")
+            .next()
             .unwrap()
-            + start;
-        let declarations =
+            .split('(')
+            .next()
+            .unwrap()
+    );
+    let probe = PROBE.replace("AD_BACKWARD", &backward_worker);
+    let release = "    fwp_rc_free_arr(owned);";
+    assert_eq!(probe.matches(release).count(), 1);
+    let unreleased_probe = probe.replace(release, "");
+    let start = original
+        .find("/* ------------------------------------------------------------------ tapes */")
+        .unwrap();
+    let end = original[start..]
+        .find("/* ---------------------------------------------------------------- kernels */")
+        .unwrap()
+        + start;
+    let declarations =
         "static void scope_probe_free(void *);\nstatic void *scope_probe_calloc(size_t,size_t);\n";
-        let tape_code = c_instrument::calls(&original[start..end], &[("free", "scope_probe_free")])
-            .replace("(double *)calloc(", "(double *)scope_probe_calloc(");
-        let runtime = format!(
-            "{}{}{}{}",
-            &original[..start],
-            declarations,
-            tape_code,
-            &original[end..]
-        )
-        .replace(
-            "int main(int argc, char **argv)",
-            "int original_main(int argc, char **argv)",
-        );
-        let link = "    fwp_tape_link_scope(t, (int32_t)slot);";
-        let unlink = "    if (t->owned) fwp_trap(FWP_AD_REPRESENTATION);\n    fwp_tape_unlink_scope(t);\n    fwp_tape tp = *t;";
-        assert_eq!(runtime.matches(link).count(), 1);
-        assert_eq!(runtime.matches(unlink).count(), 1);
-        let unlinked = runtime.replace(link, "");
-        let unconsumed = runtime.replace(
-            unlink,
-            "    if (t->owned) fwp_trap(FWP_AD_REPRESENTATION);\n    fwp_tape tp = *t;",
-        );
-        let fresh = "fwp_rc_fresh(fwp_p_ad_backward(l0, l1, l2))";
-        assert_eq!(runtime.matches(fresh).count(), 1);
-        let uncounted = runtime.replace(fresh, call);
-        let mut cases = vec![
-            ("scoped", runtime.clone(), probe.clone(), 0),
-            ("unlinked", unlinked, probe.clone(), 61),
-            ("unconsumed", unconsumed, probe.clone(), 62),
-            ("uncounted", uncounted, probe.clone(), 76),
-            ("unreleased", runtime.clone(), unreleased_probe, 77),
-        ];
-        if memory == "arc" {
-            for (label, old, new) in [
+    let tape_code = c_instrument::calls(&original[start..end], &[("free", "scope_probe_free")])
+        .replace("(double *)calloc(", "(double *)scope_probe_calloc(");
+    let runtime = format!(
+        "{}{}{}{}",
+        &original[..start],
+        declarations,
+        tape_code,
+        &original[end..]
+    )
+    .replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let link = "    fwp_tape_link_scope(t, (int32_t)slot);";
+    let unlink = "    if (t->owned) fwp_trap(FWP_AD_REPRESENTATION);\n    fwp_tape_unlink_scope(t);\n    fwp_tape tp = *t;";
+    assert_eq!(runtime.matches(link).count(), 1);
+    assert_eq!(runtime.matches(unlink).count(), 1);
+    let unlinked = runtime.replace(link, "");
+    let unconsumed = runtime.replace(
+        unlink,
+        "    if (t->owned) fwp_trap(FWP_AD_REPRESENTATION);\n    fwp_tape tp = *t;",
+    );
+    let fresh = "fwp_rc_fresh(fwp_p_ad_backward(l0, l1, l2))";
+    assert_eq!(runtime.matches(fresh).count(), 1);
+    let uncounted = runtime.replace(fresh, call);
+    let mut cases = vec![
+        ("scoped", runtime.clone(), probe.clone(), 0),
+        ("unlinked", unlinked, probe.clone(), 61),
+        ("unconsumed", unconsumed, probe.clone(), 62),
+        ("uncounted", uncounted, probe.clone(), 76),
+        ("unreleased", runtime.clone(), unreleased_probe, 77),
+    ];
+
+    for (label, old, new) in [
                 (
                     "input-release-omitted",
                     "fwp_rc_free_arr(scope_seeds);",
@@ -124,52 +122,40 @@ fn callback_scopes_release_live_tapes_without_per_scope_heap_owners() {
                 assert_eq!(probe.matches(old).count(), 1);
                 cases.push((label, runtime.clone(), probe.replace(old, new), 90));
             }
-        }
-        for opt in ["-O1", "-O2"] {
-            for (label, source, observation, expected) in &cases {
-                let executable = scratch.0.join(format!("{memory}{opt}-{label}.exe"));
-                let code = format!("{source}\n{observation}");
-                fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-                for reuse in if memory == "arc" {
-                    &["0"][..]
-                } else {
-                    &["0", "1"][..]
-                } {
-                    let stress = if memory == "arc" { "0" } else { "1" };
-                    let output = Command::new(&executable)
-                        .env("FWP_AD_WORKSPACE", "0")
-                        .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", reuse)
-                        .output()
-                        .unwrap();
-                    let label = format!("{memory}{opt}-{label}-reuse{reuse}");
-                    if let Some(directory) = std::env::var_os("FWP_AD_SCOPE_ARTIFACTS") {
-                        let directory = PathBuf::from(directory);
-                        std::fs::create_dir_all(&directory).unwrap();
-                        let prefix = directory.join(&label);
-                        std::fs::copy(&executable, prefix.with_extension("bin")).unwrap();
-                        std::fs::write(prefix.with_extension("c"), &code).unwrap();
-                        std::fs::write(prefix.with_extension("stdout"), &output.stdout).unwrap();
-                        std::fs::write(prefix.with_extension("stderr"), &output.stderr).unwrap();
-                        std::fs::write(
-                            prefix.with_extension("status"),
-                            format!("{}\n", output.status),
-                        )
-                        .unwrap();
-                    }
-                    record_probe::save("ad_tape_scopes", &label, &code, &executable, &output);
-                    assert_eq!(output.status.code(), Some(*expected), "{label}: {output:?}");
-                    assert!(output.stderr.is_empty(), "{label}: {output:?}");
-                    if *expected == 0 {
-                        assert!(String::from_utf8_lossy(&output.stdout)
-                            .starts_with("scoped autodiff releases callback tapes; tape="));
-                    } else {
-                        assert!(output.stdout.is_empty(), "{label}: {output:?}");
-                    }
-                }
+
+    for opt in ["-O1", "-O2"] {
+        for (label, source, observation, expected) in &cases {
+            let executable = scratch.0.join(format!("counted{opt}-{label}.exe"));
+            let code = format!("{source}\n{observation}");
+            fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+
+            let output = Command::new(&executable)
+                .env("FWP_AD_WORKSPACE", "0")
+                .output()
+                .unwrap();
+            let label = format!("counted{opt}-{label}");
+            if let Some(directory) = std::env::var_os("FWP_AD_SCOPE_ARTIFACTS") {
+                let directory = PathBuf::from(directory);
+                std::fs::create_dir_all(&directory).unwrap();
+                let prefix = directory.join(&label);
+                std::fs::copy(&executable, prefix.with_extension("bin")).unwrap();
+                std::fs::write(prefix.with_extension("c"), &code).unwrap();
+                std::fs::write(prefix.with_extension("stdout"), &output.stdout).unwrap();
+                std::fs::write(prefix.with_extension("stderr"), &output.stderr).unwrap();
+                std::fs::write(
+                    prefix.with_extension("status"),
+                    format!("{}\n", output.status),
+                )
+                .unwrap();
+            }
+            record_probe::save("ad_tape_scopes", &label, &code, &executable, &output);
+            assert_eq!(output.status.code(), Some(*expected), "{label}: {output:?}");
+            assert!(output.stderr.is_empty(), "{label}: {output:?}");
+            if *expected == 0 {
+                assert!(String::from_utf8_lossy(&output.stdout)
+                    .starts_with("scoped autodiff releases callback tapes; tape="));
+            } else {
+                assert!(output.stdout.is_empty(), "{label}: {output:?}");
             }
         }
     }
@@ -239,68 +225,54 @@ fn scoped_gradient_functions_agree_with_raw_interpreter() {
             )
             .unwrap();
         }
-        for memory in ["arc", "tracing"] {
-            for opt in ["-O1", "-O2"] {
-                let executable = scratch.0.join(format!("{memory}{opt}-{label}.exe"));
-                let cfile = executable.with_extension("c");
-                for emit in [true, false] {
-                    let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
-                    command
-                        .env_remove("FWP_NO_OPT")
-                        .env("FWP_STACK", "0")
-                        .env("FWP_FREE", "1")
-                        .env("FWP_REUSE", "1")
-                        .args(["build", "--memory", "dynamic", "--gc", memory, opt])
-                        .arg(&input);
-                    if emit {
-                        command.arg("--emit-c");
-                    }
-                    command
-                        .arg("-o")
-                        .arg(if emit { &cfile } else { &executable });
-                    checked(&mut command);
+
+        for opt in ["-O1", "-O2"] {
+            let executable = scratch.0.join(format!("counted{opt}-{label}.exe"));
+            let cfile = executable.with_extension("c");
+            for emit in [true, false] {
+                let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
+                command
+                    .env_remove("FWP_NO_OPT")
+                    .env("FWP_STACK", "0")
+                    .args(["build", "--memory", "dynamic", opt])
+                    .arg(&input);
+                if emit {
+                    command.arg("--emit-c");
                 }
-                let code = std::fs::read_to_string(cfile).unwrap();
-                for reuse in if memory == "arc" {
-                    &["0"][..]
-                } else {
-                    &["0", "1"][..]
-                } {
-                    let stress = if memory == "arc" { "0" } else { "1" };
-                    let output = Command::new(&executable)
-                        .env("FWP_AD_WORKSPACE", "0")
-                        .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                        .env("FWP_GC_STATS", "0")
-                        .env("FWP_GC_STRESS", stress)
-                        .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", reuse)
-                        .output()
-                        .unwrap();
-                    let label = format!("{memory}{opt}-semantics-{label}-reuse{reuse}");
-                    if let Some(directory) = std::env::var_os("FWP_AD_SCOPE_ARTIFACTS") {
-                        let directory = PathBuf::from(directory);
-                        std::fs::create_dir_all(&directory).unwrap();
-                        let prefix = directory.join(&label);
-                        std::fs::copy(&executable, prefix.with_extension("bin")).unwrap();
-                        std::fs::write(prefix.with_extension("c"), &code).unwrap();
-                        std::fs::write(prefix.with_extension("stdout"), &output.stdout).unwrap();
-                        std::fs::write(prefix.with_extension("stderr"), &output.stderr).unwrap();
-                        std::fs::write(
-                            prefix.with_extension("status"),
-                            format!("{}\n", output.status),
-                        )
-                        .unwrap();
-                    }
-                    record_probe::save("ad_tape_scopes", &label, &code, &executable, &output);
-                    assert_eq!(
-                        output.status.code(),
-                        reference.status.code(),
-                        "{label}: {output:?}"
-                    );
-                    assert_eq!(output.stdout, reference.stdout, "{label}");
-                    assert_eq!(output.stderr, reference.stderr, "{label}");
-                }
+                command
+                    .arg("-o")
+                    .arg(if emit { &cfile } else { &executable });
+                checked(&mut command);
             }
+            let code = std::fs::read_to_string(cfile).unwrap();
+
+            let output = Command::new(&executable)
+                .env("FWP_AD_WORKSPACE", "0")
+                .output()
+                .unwrap();
+            let label = format!("counted{opt}-semantics-{label}");
+            if let Some(directory) = std::env::var_os("FWP_AD_SCOPE_ARTIFACTS") {
+                let directory = PathBuf::from(directory);
+                std::fs::create_dir_all(&directory).unwrap();
+                let prefix = directory.join(&label);
+                std::fs::copy(&executable, prefix.with_extension("bin")).unwrap();
+                std::fs::write(prefix.with_extension("c"), &code).unwrap();
+                std::fs::write(prefix.with_extension("stdout"), &output.stdout).unwrap();
+                std::fs::write(prefix.with_extension("stderr"), &output.stderr).unwrap();
+                std::fs::write(
+                    prefix.with_extension("status"),
+                    format!("{}\n", output.status),
+                )
+                .unwrap();
+            }
+            record_probe::save("ad_tape_scopes", &label, &code, &executable, &output);
+            assert_eq!(
+                output.status.code(),
+                reference.status.code(),
+                "{label}: {output:?}"
+            );
+            assert_eq!(output.stdout, reference.stdout, "{label}");
+            assert_eq!(output.stderr, reference.stderr, "{label}");
         }
     }
 }
@@ -358,67 +330,53 @@ main = read-all () | concat "runtime-owned scope input" | make {
         )
         .unwrap();
     }
-    for memory in ["arc", "tracing"] {
-        for opt in ["-O1", "-O2"] {
-            let executable = scratch.0.join(format!("{memory}{opt}-{label}.exe"));
-            let cfile = executable.with_extension("c");
-            for emit in [true, false] {
-                let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
-                command
-                    .env_remove("FWP_NO_OPT")
-                    .env("FWP_STACK", "0")
-                    .env("FWP_FREE", "1")
-                    .env("FWP_REUSE", "1")
-                    .args(["build", "--memory", "dynamic", "--gc", memory, opt])
-                    .arg(&input);
-                if emit {
-                    command.arg("--emit-c");
-                }
-                command
-                    .arg("-o")
-                    .arg(if emit { &cfile } else { &executable });
-                checked(&mut command);
+
+    for opt in ["-O1", "-O2"] {
+        let executable = scratch.0.join(format!("counted{opt}-{label}.exe"));
+        let cfile = executable.with_extension("c");
+        for emit in [true, false] {
+            let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
+            command
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_STACK", "0")
+                .args(["build", "--memory", "dynamic", opt])
+                .arg(&input);
+            if emit {
+                command.arg("--emit-c");
             }
-            let code = std::fs::read_to_string(cfile).unwrap();
-            for reuse in if memory == "arc" {
-                &["0"][..]
-            } else {
-                &["0", "1"][..]
-            } {
-                let stress = if memory == "arc" { "0" } else { "1" };
-                let output = Command::new(&executable)
-                    .env("FWP_AD_WORKSPACE", "0")
-                    .env("FWP_GC", if memory == "arc" { "off" } else { "on" })
-                    .env("FWP_GC_STATS", "0")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", reuse)
-                    .output()
-                    .unwrap();
-                let label = format!("{memory}{opt}-semantics-{label}-reuse{reuse}");
-                if let Some(directory) = std::env::var_os("FWP_AD_SCOPE_ARTIFACTS") {
-                    let directory = PathBuf::from(directory);
-                    std::fs::create_dir_all(&directory).unwrap();
-                    let prefix = directory.join(&label);
-                    std::fs::copy(&executable, prefix.with_extension("bin")).unwrap();
-                    std::fs::write(prefix.with_extension("c"), &code).unwrap();
-                    std::fs::write(prefix.with_extension("stdout"), &output.stdout).unwrap();
-                    std::fs::write(prefix.with_extension("stderr"), &output.stderr).unwrap();
-                    std::fs::write(
-                        prefix.with_extension("status"),
-                        format!("{}\n", output.status),
-                    )
-                    .unwrap();
-                }
-                record_probe::save("ad_tape_scopes", &label, &code, &executable, &output);
-                assert_eq!(
-                    output.status.code(),
-                    reference.status.code(),
-                    "{label}: {output:?}"
-                );
-                assert_eq!(output.stdout, reference.stdout, "{label}");
-                assert_eq!(output.stderr, reference.stderr, "{label}");
-            }
+            command
+                .arg("-o")
+                .arg(if emit { &cfile } else { &executable });
+            checked(&mut command);
         }
+        let code = std::fs::read_to_string(cfile).unwrap();
+
+        let output = Command::new(&executable)
+            .env("FWP_AD_WORKSPACE", "0")
+            .output()
+            .unwrap();
+        let label = format!("counted{opt}-semantics-{label}");
+        if let Some(directory) = std::env::var_os("FWP_AD_SCOPE_ARTIFACTS") {
+            let directory = PathBuf::from(directory);
+            std::fs::create_dir_all(&directory).unwrap();
+            let prefix = directory.join(&label);
+            std::fs::copy(&executable, prefix.with_extension("bin")).unwrap();
+            std::fs::write(prefix.with_extension("c"), &code).unwrap();
+            std::fs::write(prefix.with_extension("stdout"), &output.stdout).unwrap();
+            std::fs::write(prefix.with_extension("stderr"), &output.stderr).unwrap();
+            std::fs::write(
+                prefix.with_extension("status"),
+                format!("{}\n", output.status),
+            )
+            .unwrap();
+        }
+        record_probe::save("ad_tape_scopes", &label, &code, &executable, &output);
+        assert_eq!(
+            output.status.code(),
+            reference.status.code(),
+            "{label}: {output:?}"
+        );
+        assert_eq!(output.stdout, reference.stdout, "{label}");
+        assert_eq!(output.stderr, reference.stderr, "{label}");
     }
 }

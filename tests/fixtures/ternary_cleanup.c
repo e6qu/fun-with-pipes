@@ -13,11 +13,11 @@ static void ternary_drop(V value) {
     }
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
-    intptr_t initial_budget=fwp_gc.budget;
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
+    size_t initial_live_bytes=fwp_heap.live;
     V bytes=fwp_rc_fresh(fwp_str_new("abc",3));
     for(int which=0;which<2;which++) for(int repeat=0;repeat<32;repeat++) {
-        intptr_t budget=fwp_gc.budget;
+        size_t live_bytes=fwp_heap.live;
         ternary_remaining=4;
         fwp_trap_recover=ternary_recover; fwp_trap_jb=&ternary_jump;
         fwp_trap_cleanup=fwp_cleanups;
@@ -27,10 +27,10 @@ int main(void) {
             return 247;
         }
         fwp_trap_recover=NULL; fwp_trap_jb=NULL;
-        if(fwp_cleanups || fwp_gc.budget!=budget) return 248;
+        if(fwp_cleanups || fwp_heap.live!=live_bytes) return 248;
         if(!fwp_rc_last(bytes)) return 249;
     }
-    intptr_t budget=fwp_gc.budget;
+    size_t live_bytes=fwp_heap.live;
     ternary_remaining=-1;
     V digits=fwp_p_tint_trits((V)(int64_t)-23,40,ternary_drop);
     ternary_count_active=1; ternary_allocations=0;
@@ -46,8 +46,8 @@ int main(void) {
     if(fwp_rc_release_last(converted)) fwp_rc_resource_free_obj(converted);
     if(fwp_rc_release_last(packed)) fwp_rc_resource_free_obj(packed);
     ternary_drop(digits);
-    if(fwp_gc.budget!=budget) return 248;
+    if(fwp_heap.live!=live_bytes) return 248;
     if(fwp_rc_release_last(bytes)) fwp_rc_resource_free_obj(bytes);
-    if(fwp_gc.budget!=initial_budget) return 248;
+    if(fwp_heap.live!=initial_live_bytes) return 248;
     return 0;
 }

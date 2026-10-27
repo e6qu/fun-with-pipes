@@ -14,7 +14,6 @@ static fwp_cleanup *cleanups;
 static void fwp_cleanup_push(fwp_cleanup *c, void (*release)(void *), void *arg) { c->release=release;c->arg=arg;c->prev=cleanups;cleanups=c; }
 static void fwp_cleanup_pop(fwp_cleanup *c) { if(cleanups!=c)abort();cleanups=c->prev; }
 static void unwind(void) { while(cleanups) { fwp_cleanup *c=cleanups;cleanups=c->prev;c->release(c->arg); } }
-#define FWP_KEEP_ALIVE(v) ((void)(v))
 static V fwp_rc_fresh(V v) {return v;}
 static void fwp_rc_free_arr(V v) {free(ARR(v));}
 static void counted_free(void *p) {if (p == input_owner) input_owner = NULL; free(p);}

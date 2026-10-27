@@ -98,12 +98,12 @@ main = "{}" | file.open | reopen
         let exe = dir.0.join(opt);
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
         );
-        let native = limit_descriptors(Command::new(&exe).env("FWP_GC", "off"), 4)
+        let native = limit_descriptors(&mut Command::new(&exe), 4)
             .output()
             .unwrap();
         assert_eq!(native.status.code(), reference.status.code());
@@ -145,21 +145,22 @@ main = [discard (), discard ()] | ignore | const "closed" | print
     ));
     assert_eq!(optimized.stdout, reference.stdout);
     for opt in ["-O1", "-O2"] {
-        for flags in ["0", "1"] {
-            let exe = dir.0.join(format!("helper{opt}-{flags}"));
+        for copy in [false, true] {
+            let exe = dir.0.join(format!("helper{opt}-copy{copy}"));
+            let cfile = exe.with_extension("c");
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", "tracing"])
+                    .args(["build", "--emit-c"])
                     .arg(&src)
                     .args([opt, "-o"])
-                    .arg(&exe)
-                    .env("FWP_REUSE", flags)
-                    .env("FWP_FREE", flags),
+                    .arg(&cfile),
             );
-            let native = checked(limit_descriptors(
-                Command::new(&exe).env("FWP_GC", "off"),
-                4,
-            ));
+            let mut code = std::fs::read_to_string(cfile).unwrap();
+            if copy {
+                code.insert_str(0, "#define FWP_NO_REUSE 1\n");
+            }
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+            let native = checked(limit_descriptors(&mut Command::new(&exe), 4));
             assert_eq!(native.stdout, reference.stdout);
         }
     }
@@ -213,21 +214,14 @@ main = "PATH" | file.open | attempt give-error | match
             let exe = dir.0.join("probe");
             checked(
                 Command::new(fwp)
-                    .args(["build", "--gc", "tracing"])
+                    .args(["build"])
                     .arg(&src)
                     .args([opt, "-o"])
                     .arg(&exe),
             );
-            for poison in ["0", "1"] {
-                let native = checked(limit_descriptors(
-                    Command::new(&exe)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison),
-                    4,
-                ));
-                assert_eq!(native.stdout, reference.stdout);
-            }
+
+            let native = checked(limit_descriptors(&mut Command::new(&exe), 4));
+            assert_eq!(native.stdout, reference.stdout);
         }
     }
 }

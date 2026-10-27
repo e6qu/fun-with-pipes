@@ -62,41 +62,34 @@ empty-report = const ()
     let text = String::from_utf8_lossy(&reference.stdout);
     assert_eq!(text.matches("extension").count(), 64 * 3);
     assert!(text.contains("rs") && text.contains("txt") && text.contains("(none)"));
-    for mode in ["tracing", "arc"] {
+    {
         let cfile = dir.join("report.c");
         checked(
             Command::new(compiler)
-                .args(["build", "--gc", mode, "--emit-c"])
+                .args(["build", "--emit-c"])
                 .arg(&source)
                 .arg("-o")
                 .arg(&cfile),
         );
         let mut code = std::fs::read_to_string(cfile).unwrap();
-        if mode == "arc" {
+        {
             let start = code
                 .find("static void *fwp_main_thread(void *arg) {")
                 .unwrap();
             let (runtime, main) = code.split_at(start);
-            let measured = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t report_budget = fwp_gc.budget;\n")
-                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < report_budget) exit(229);\n");
+            let measured = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t report_live_bytes = fwp_heap.live;\n")
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > report_live_bytes) exit(229);\n");
             code = format!("{runtime}{measured}");
         }
         let binary = dir.join("report.exe");
         for opt in ["-O1", "-O2"] {
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let verify = if mode == "arc" { "0" } else { "1" };
-            let actual = checked(
-                Command::new(&binary)
-                    .current_dir(dir.join("."))
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", verify)
-                    .env("FWP_GC_VERIFY", verify)
-                    .env("FWP_REUSE_VERIFY", verify),
-            );
+
+            let actual = checked(Command::new(&binary).current_dir(dir.join(".")));
             assert_eq!(
                 (&actual.stdout, &actual.stderr),
                 (&reference.stdout, &reference.stderr),
-                "{mode} {opt}"
+                "counted {opt}"
             );
         }
     }
@@ -282,7 +275,7 @@ fn scaled_directory_reports_bound_live_storage_and_release_error_paths() {
     checked(
         Command::new(compiler)
             .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", "arc", "--emit-c", "-O1"])
+            .args(["build", "--emit-c", "-O1"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile),
@@ -340,12 +333,7 @@ fn scaled_directory_reports_bound_live_storage_and_release_error_paths() {
             assert!(reference.stderr.is_empty());
             check_scaled_report(&reference.stdout, &totals);
             let (actual, resident) = file_application_memory::run_observed(
-                Command::new(&binary)
-                    .current_dir(dir.path())
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0"),
+                Command::new(&binary).current_dir(dir.path()),
             );
             file_application_memory::save_execution(
                 "directory",
@@ -366,10 +354,6 @@ fn scaled_directory_reports_bound_live_storage_and_release_error_paths() {
                 let broken = Command::new(executable)
                     .env("FWP_FILE_APP_RSS", "0")
                     .current_dir(dir.path())
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0")
                     .output()
                     .unwrap();
                 file_application_memory::save_execution("directory", files, name, opt, &broken, "");

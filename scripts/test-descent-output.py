@@ -28,8 +28,7 @@ def main():
     out.mkdir(parents=True, exist_ok=False)
     environment = {k: v for k, v in os.environ.items() if not k.startswith('FWP_') and k not in {'GH_TOKEN', 'GITHUB_TOKEN'}}
     environment.update(CC=args.cc, FWP_LTO='0', FWP_AD_WORKSPACE='1', FWP_PACKED_ARRAYS='1',
-                       FWP_STACK='1', FWP_FREE='1', FWP_REUSE='1', FWP_ARRAY_FUSION='1',
-                       FWP_GC='off', FWP_GC_STATS='0', FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+                       FWP_STACK='1', FWP_ARRAY_FUSION='1')
     flags = ['-O2', '-std=gnu11', '-ffp-contract=off', '-fno-fast-math', '-fno-lto', '-march=' + args.c_arch]
     records, commands = [], []
 
@@ -51,7 +50,7 @@ def main():
         symbols = run([args.nm, str(binary)]).stdout
         assert len(asm) > 1000
         if binary.name.startswith('fwp'):
-            assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_gc_(?:scan|mark_all|sweep)\b', symbols)
+            assert not re.search(rb'(?<![A-Za-z0-9])_?fwp_heap_(?:scan|mark_all|sweep)\b', symbols)
         (binary.parent / (binary.name + '.asm')).write_bytes(asm)
         (binary.parent / (binary.name + '.symbols')).write_bytes(symbols)
         return dict(sha256=OUTPUT.digest(raw), sourceSha256=OUTPUT.digest(source.read_bytes()),
@@ -84,7 +83,7 @@ def main():
         assert reference.returncode == 0 and not reference.stderr
         OUTPUT.COORDINATE.check_vectors(reference.stdout, expected, 1)
         (directory / 'interpreter.stdout').write_bytes(reference.stdout)
-        run([str(args.compiler), 'build', '--gc', 'arc', '--memory', 'dynamic', '--emit-c', '-O2', str(source), '-o', str(generated)])
+        run([str(args.compiler), 'build', '--memory', 'dynamic', '--emit-c', '-O2', str(source), '-o', str(generated)])
         originals = dict(fwp=generated.read_text(),
             c=f'#define DIMENSIONS {points}\n#define UPDATES {updates}\n' + (ROOT / 'tests/fixtures/descent_coordinate.c').read_text(),
             rust=(ROOT / 'tests/fixtures/descent_coordinate.rs').read_text().replace('// Measurement parameters are inserted here.',
@@ -138,7 +137,8 @@ def main():
                         else:
                             assert checks == [dict(solve=i, managedLiveBytes=0, rawLiveBytes=0) for i in [1, 2]]
                             managed, raw = [row for row in rows if 'solve' not in row]
-                            assert managed['retains'] == managed['finalChargedBytes'] == managed['collections'] == 0
+                            assert managed['retains'] == managed['finalChargedBytes'] == 0
+                            assert set(managed) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
                             OUTPUT.BATCHES.PEERS.AD.RAW.check_profile(raw['rawDerivativeStorage'], 0, True)
                     else:
                         assert rows == [dict(solve=i, inputRequests=2*i, inputRequestedBytes=16*points*i,

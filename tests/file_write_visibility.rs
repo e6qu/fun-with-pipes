@@ -48,29 +48,19 @@ main = "{}" | file.create | observe | echo
         let exe = dir.0.join(opt);
         checked(
             Command::new(fwp)
-                .args(["build", "--gc", "tracing"])
+                .args(["build"])
                 .arg(&src)
                 .args([opt, "-o"])
                 .arg(&exe),
         );
-        for poison in ["0", "1"] {
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-            assert_eq!(out.stdout, reference.stdout);
-        }
+
+        let out = checked(&mut Command::new(&exe));
+        assert_eq!(out.stdout, reference.stdout);
     }
 }
 
 #[test]
 fn flush_failures_are_write_errors_and_preserve_the_borrowed_handle() {
-    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
-        arc: false,
-        ..Default::default()
-    });
     use fwp::ir::*;
     let p = Program {
         funcs: vec![Func {
@@ -109,7 +99,7 @@ static size_t observe_write(const void *p,size_t size,size_t n,FILE *f){
 static int observe_flush(FILE *f){if(f==watched){flushes++;if(mode==2){errno=EIO;return EOF;}}return fflush(f);}
 static int observe_close(FILE *f){if(f==watched)closes++;return fclose(f);}
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));
+ fwp_heap_start();
  for(mode=0;mode<3;mode++){
   watched=tmpfile();if(!watched)return 30;
   handle=fwp_file_value(watched,"probe");writes=flushes=closes=0;
@@ -138,25 +128,14 @@ int main(void){
     let exe = dir.0.join("probe");
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{hooks}\n{without_flush}\n{fixture}"), &exe, opt).unwrap();
-        let old = Command::new(&exe)
-            .env("FWP_GC_STRESS", "1")
-            .env("FWP_GC_VERIFY", "1")
-            .env("FWP_REUSE_VERIFY", "1")
-            .output()
-            .unwrap();
+        let old = Command::new(&exe).output().unwrap();
         assert_eq!(
             old.status.code(),
             Some(3),
             "omitted write flush must be detected"
         );
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-        }
+
+        checked(&mut Command::new(&exe));
     }
 }

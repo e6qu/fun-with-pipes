@@ -29,18 +29,12 @@ fn invalid_paths_fail_before_accessing_or_modifying_prefixes() {
     std::fs::write(root.join("user-data.txt"), "original").unwrap();
     std::fs::write(root.join("destination.txt"), "destination").unwrap();
     std::fs::create_dir(root.join("empty")).unwrap();
-    for (name, source, errors, modes) in [
-        (
-            "paths",
-            include_str!("fixtures/path_validation.fwp"),
-            13,
-            &["tracing", "arc"][..],
-        ),
+    for (name, source, errors) in [
+        ("paths", include_str!("fixtures/path_validation.fwp"), 13),
         (
             "resources",
             include_str!("fixtures/resource_path_validation.fwp"),
             3,
-            &["tracing", "arc"][..],
         ),
     ] {
         let path = root.join(format!("{name}.fwp"));
@@ -63,38 +57,22 @@ fn invalid_paths_fail_before_accessing_or_modifying_prefixes() {
             assert!(text.starts_with("[False, False]\n"), "{text}");
         }
         unchanged(root);
-        for mode in modes {
-            for opt in ["-O1", "-O2"] {
-                let exe = root.join(format!("{name}-{mode}-{opt}.exe"));
-                checked(
-                    Command::new(compiler)
-                        .args(["build", "--gc", mode, opt])
-                        .arg(&path)
-                        .arg("-o")
-                        .arg(&exe)
-                        .current_dir(root),
-                );
-                let stresses: &[&str] = if *mode == "tracing" {
-                    &["0", "1"]
-                } else {
-                    &["0"]
-                };
-                for stress in stresses {
-                    let result = checked(
-                        Command::new(&exe)
-                            .current_dir(root)
-                            .env("FWP_GC_STRESS", stress)
-                            .env("FWP_GC_VERIFY", stress)
-                            .env("FWP_REUSE_VERIFY", stress),
-                    );
-                    assert_eq!(
-                        result.stdout, reference.stdout,
-                        "{name} {mode} {opt} stress={stress}"
-                    );
-                    assert_eq!(result.stderr, reference.stderr);
-                    unchanged(root);
-                }
-            }
+
+        for opt in ["-O1", "-O2"] {
+            let exe = root.join(format!("{name}-counted-{opt}.exe"));
+            checked(
+                Command::new(compiler)
+                    .args(["build", opt])
+                    .arg(&path)
+                    .arg("-o")
+                    .arg(&exe)
+                    .current_dir(root),
+            );
+
+            let result = checked(Command::new(&exe).current_dir(root));
+            assert_eq!(result.stdout, reference.stdout, "{name} {opt}");
+            assert_eq!(result.stderr, reference.stderr);
+            unchanged(root);
         }
     }
 }

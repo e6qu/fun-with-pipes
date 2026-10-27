@@ -8,8 +8,8 @@ static void metrics_leaf_drop(V value) {
     if(fwp_rc_release_last(value)) fwp_rc_resource_free_obj(value);
 }
 int main(void) {
-    fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
-    intptr_t initial_budget=fwp_gc.budget;
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
+    size_t initial_live_bytes=fwp_heap.live;
     V name=fwp_rc_fresh(fwp_str_new("a\0b",3));
     V syntax=fwp_rc_fresh(fwp_data(SY_STR,1,&name));
     fwp_p_metrics_update(0,name,fwp_from_f64(1));
@@ -24,7 +24,7 @@ int main(void) {
     for(int which=0;which<2;which++) {
         int failures=0,completed=0;
         for(int allocation=1;allocation<64;allocation++) {
-            intptr_t budget=fwp_gc.budget;
+            size_t live_bytes=fwp_heap.live;
             fwp_trap_recover=metrics_recover; fwp_trap_jb=&metrics_jump;
             fwp_trap_cleanup=fwp_cleanups;
             metrics_left=allocation;
@@ -36,8 +36,8 @@ int main(void) {
                 completed=1;
             } else failures++;
             metrics_left=0; fwp_trap_recover=NULL; fwp_trap_jb=NULL;
-            if(fwp_cleanups || fwp_gc.budget!=budget || metrics_buffers) {
-                fprintf(stderr,"snapshot %d allocation %d: charged delta %lld; buffers %d\n",which,allocation,(long long)(budget-fwp_gc.budget),metrics_buffers);
+            if(fwp_cleanups || fwp_heap.live!=live_bytes || metrics_buffers) {
+                fprintf(stderr,"snapshot %d allocation %d: charged delta %lld; buffers %d\n",which,allocation,(long long)(fwp_heap.live - live_bytes),metrics_buffers);
                 return 248;
             }
             if(!fwp_rc_last(name) || !fwp_rc_last(syntax)) return 249;
@@ -52,6 +52,6 @@ int main(void) {
     fwp_metrics_finish();
     if(fwp_metrics || fwp_nmetrics || fwp_metrics_cap) return 249;
     metrics_leaf_drop(syntax); metrics_leaf_drop(name);
-    if(fwp_gc.budget!=initial_budget) return 248;
+    if(fwp_heap.live!=initial_live_bytes) return 248;
     return 0;
 }
