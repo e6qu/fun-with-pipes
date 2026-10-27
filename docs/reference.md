@@ -706,13 +706,13 @@ An owner keeps storage alive; a borrow uses it while an owner remains. The
 compiler inserts moves, borrows and count operations. Some values use direct
 fields or stack storage, but ARC does not imply zero allocations or zero counts.
 See [ownership](ownership.md) for contracts and [the plan](../PLAN.md) for remaining
-collector deletion and count-reduction work.
+count-reduction work. Tracing GC has been removed.
 
 Checked entries include executables, commands, HTTP/REST/MCP/gRPC services, C
 libraries and the documented WASI/browser subset. Interpreter entries also check
 queue, State and autodiff lifetimes before language effects; their values remain
 Rust-owned. [The admission table](ownership-admission.md) maps each entry to tests
-and restrictions. [The handoff](development-state.md) tracks the current G5 batch.
+and restrictions. [The handoff](development-state.md) tracks current implementation work.
 
 Examples of accepted and rejected ownership relationships:
 
@@ -966,7 +966,7 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 | `FWP_MATRIX_BLOCKING=0` | when compiling: retain the library F64 matrix implementation for comparison; specialization checks runtime shape and preserves ascending inner-index arithmetic |
 | `FWP_AD_WORKSPACE=0` | interpreter and native programs: release detached tape capacity instead of retaining the single bounded 512 KiB workspace; tape identity and scope lifetimes are unchanged |
 | `FWP_DUMP_IR=1` | prints the program's own functions in optimized IR to stderr when it is compiled (`all`: the standard library's too; `rc`: with their references counted) |
-| `FWP_ALLOC_STATS=1` | native programs: report allocated/released bytes, live/peak live bytes, heap extent and peak process RSS in KiB at exit; [field definitions](ownership-diagnostics.md#allocation-report-migration-g5-work-in-progress) |
+| `FWP_ALLOC_STATS=1` | native programs: report allocated/released bytes, live/peak live bytes, heap extent and peak process RSS in KiB at exit; [field definitions](ownership-diagnostics.md#allocation-reports) |
 | `CC` | the C compiler for native builds |
 | `FWP_CC_<triple>` | the C compiler (and its first arguments) for `--target <triple>`, such as `FWP_CC_aarch64_linux_gnu` (see [Cross-compiling](#cross-compiling)) |
 | `AR` | the archiver for `--staticlib` (cross builds: `<triple>-ar`, else `llvm-ar`) |

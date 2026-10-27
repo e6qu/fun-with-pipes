@@ -1,0 +1,20 @@
+# Runtime-sized arrays for the ownership-cost report. Inputs are lengths.
+# read combines length and first value; an empty array contributes zero.
+export read : Array[I64] -> I64
+read = both array.length (array.get 0 | option.unwrap-or 0) | uncurry add
+
+# The array stays local, and its final length read keeps it alive through read.
+export unique : I64 -> I64
+unique = flip array.generate id | both read array.length | uncurry add
+
+# Both returned fields must remain valid through printing and cleanup.
+export shared : I64 -> (Array[I64], Array[I64])
+shared = flip array.generate id | both id id
+
+# This exported function accepts a caller-supplied callback. A later ownership
+# proof must inspect that boundary before selecting an uncounted representation.
+export with-reader : (Array[I64] -> I64) -> Array[I64] -> I64
+with-reader = flip apply
+
+export callback : I64 -> I64
+callback = flip array.generate id | with-reader read

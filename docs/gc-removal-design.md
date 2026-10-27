@@ -213,7 +213,9 @@ the proof heap, and three sizes do not establish an asymptotic bound.
 ## Finite route to deleting tracing
 
 G3/G4 delivered the six contracts, weak channels, C registrations and replacement
-ownership diagnostics. G5 has three remaining implementation groups:
+ownership diagnostics. G5 completed the following groups in
+[#217](roadmap-history.md#tracing-gc-removal-pr-217). This records the removal
+requirements; it is not a second backlog:
 
 1. **Unify admission and move ordinary memory tests to ARC.** Apply queue and
    State/autodiff lifetime rules before interpreter entry effects, including

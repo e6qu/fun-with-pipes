@@ -23,18 +23,17 @@ unique buffers and general regions remain planned. APIs may change.
 
 ## Existing implementation
 
-The collector-deletion work has one native ownership policy: prove lifetimes
+fwp has one native ownership policy: prove lifetimes
 before generation, transfer or borrow existing owners where possible, and count
 remaining shared owners. Unsupported relationships are compile errors. There
 is no command-line memory-policy selector. `--memory static` chooses a bounded
 storage pool; it does not make every allocation a stack value.
 
-**Verification is incomplete.** The deletion source removes tracing code and
-selection, but the integrated compiler, replacement tests and actual binaries
-still need verification. [The handoff](development-state.md) records current
-checks. The latest delivered platform evidence is #215, before deletion: Linux,
-macOS and Windows, each on ARM64 and AMD64. Node-hosted browser-loader checks do
-not establish support in every browser engine.
+**Tracing removal is verified in [#217](roadmap-history.md#tracing-gc-removal-pr-217).**
+The integrated compiler, replacement ownership tests and binary checks passed
+on Linux, macOS and Windows, each on ARM64 and AMD64. Native packages contain
+the collector-free compiler. Node-hosted browser-loader checks do not establish
+support in every browser engine.
 
 The interpreter uses Rust-owned values and scheduled task lifetimes. Native ARC
 still has count slots, allocator size classes, cleanup functions and uniqueness
@@ -43,9 +42,8 @@ remove a JavaScript host's collector.
 
 ### What remains
 
-- Finish G5's collector-free tests, reports and six-target verification, including
-  binaries that contain no root discovery, marking or sweeping. Preserve the
-  independent [ownership diagnostics](ownership-diagnostics.md).
+- Preserve the independent [ownership diagnostics](ownership-diagnostics.md)
+  and binary checks for absent collector code as storage representations change.
 - Enforce the compiler analysis budgets in G2 as proof precision changes.
 - Use A2–A6 to remove measured count traffic and boxes, then give a proved unique
   buffer and one scoped workspace their own storage paths. A program with zero

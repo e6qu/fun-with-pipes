@@ -398,8 +398,9 @@ explicitly as described in [Contributing](../CONTRIBUTING.md#setting-up).
 
 ## Not implemented
 
-Verified tracing removal, count-free unique heap storage and the scoped-workspace
-target are unfinished [plan tasks](../PLAN.md). Explicit weak channels and retained
+Count-free unique heap storage and the scoped-workspace target are unfinished
+[plan tasks](../PLAN.md). Tracing removal passed integrated verification in
+[#217](roadmap-history.md#tracing-gc-removal-pr-217). Explicit weak channels and retained
 C callbacks are implemented; see [weak channels](weak-channels.md) and
 [retained callbacks](retained-callbacks.md) for their lifetime rules.
 General strong-cycle reclamation by ordinary ARC is not a goal. The selected

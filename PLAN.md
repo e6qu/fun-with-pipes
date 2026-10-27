@@ -3,7 +3,7 @@
 Build an ahead-of-time compiled, strongly typed language with simple pipes,
 immutable values and predictable memory use. Prefer moves, borrows and direct
 values; use automatic reference counting (ARC) only for necessary sharing.
-Remove the tracing garbage collector (GC). JIT compilation is excluded.
+Tracing garbage collection (GC) is removed. JIT compilation is excluded.
 
 This is early pre-alpha: every API, layout and calling convention may change.
 Builds must not require a previous fwp version or self-hosting. Preserve agreed
@@ -13,17 +13,13 @@ checked arithmetic, and observable effect/failure order.
 
 ## Where we are
 
-PR #216 delivered consistent lifetime checks across execution entries, fixed
-analysis caching, and clarified the language guides. All nine production jobs,
-documentation and analysis budgets passed; its merged tree matches the tested
-tree. Weak channels, retained C callbacks and replacement ownership diagnostics
-were delivered in #215. [Delivery history](docs/roadmap-history.md) records the source and CI
-IDs. Native packages cover Linux, macOS and Windows on ARM64 and AMD64.
-
-**GC removal is not verified.** The merged baseline still permits explicit tracing.
-The G5 branch removes that selection and collector code, migrates the tests and
-updates measurement tools. It still needs integrated compiler and native validation. Unproved owning cycles remain rejected; weak links
-and independently owned workers provide explicit alternatives.
+**GC removal is verified in PR #217.** Tracing selection, root discovery, marking
+and sweeping are removed. All nine production jobs, documentation and both
+analysis-budget hosts passed; the merged tree matches the tested tree. Native
+packages cover Linux, macOS and Windows on ARM64 and AMD64. Unproved owning cycles
+remain rejected; weak links and independently owned workers provide explicit
+alternatives. [Delivery history](docs/roadmap-history.md#tracing-gc-removal-pr-217)
+records the source, checks and repairs.
 
 **ARC minimization is incomplete.** Borrowing, moves, direct record/variant
 fields, selected stack storage and unique reuse already remove costs. Other
@@ -33,17 +29,17 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. Complete **G5** using the verified G3/G4 checks. First apply the same lifetime
-   rules to interpreter and native entries, and move allocation/RSS comparisons
-   to ARC. Then remove tracing selection, runtime code and collector-only checks.
-   Update reporting, examples and workflows together. See the finite deletion
-   table in [ownership diagnostics](docs/ownership-diagnostics.md).
-2. Preserve **G2**'s [verified analysis budgets](docs/measurements/ownership-analysis.md)
+1. Complete **A2**: refresh the fixed-fixture counts with the current compiler,
+   attribute remaining operations to their generated-C sites and owning values,
+   and measure the runtime-sized array that will be A5's first target. The
+   [measurement protocol](docs/measurements/arc-residual-costs.md) defines inputs,
+   checks and what each counter means.
+2. Implement **A5**'s count-free unique buffer after that baseline. Order
+   **A3/A4/A6** from the other measured costs. Removing every count and general
+   region inference remain separate goals with explicit acceptance requirements.
+3. Preserve **G2**'s [verified analysis budgets](docs/measurements/ownership-analysis.md)
    when changing lifetime analysis. Further precision needs a named failing example
    and an updated cost comparison, not more diagnostic scaffolding.
-3. After GC removal, use **A2** to measure the unique-buffer fixture, then implement
-   **A5**. Order **A3/A4/A6** from the remaining measured costs. General region
-   inference and removal of every count are separate from collector deletion.
 4. Use **B1** to set per-workload timing budgets before further CPU or derivative
    optimizations. Keep slower and inconclusive results visible.
 
@@ -103,18 +99,15 @@ Deliberately broken cleanup must fail each independent observer. The deletion
 table identifies collector-only assertions and the behavior/memory budgets that
 must survive. All nine production jobs and docs passed on the integrated source.
 
-**G5 — Delete tracing.** After G1–G4, remove tracing selection and code from
-`src/main.rs`, code generation, runtime allocator/root discovery, host adapters,
-CLI help and tests. Apply the agreed cycle/lifetime policy to interpreter entries
-as well as compiled entries. Shared entry admission is delivered. The current batch deletes the collector and
-migrates allocation/RSS, cleanup and evidence protocols; its acceptance is tracked in
-[the handoff](docs/development-state.md).
-Keep allocator, stack and resource functions needed without
-collection. Update protocols and examples together; no compatibility switch.
-**Done:** all maintained targets pass the replacement controls; actual binaries
-omit collector roots/marking/sweeping; supported programs retain their outputs,
-error order and cleanup. Neither `GC=off` nor rejecting formerly maintained valid
-programs counts as removal without an explicitly agreed language restriction.
+**G5 — Delivered in #217.** Tracing selection and runtime code are deleted, with
+no compatibility switch. Maintained native and WASI programs pass replacement
+ownership, failure/cancellation, physical-release and reuse controls. Actual
+binaries are checked for absent collector symbols. The interpreter and native
+entries retain the same agreed lifetime rules, outputs and error order.
+Allocator, task stacks, resource cleanup and necessary shared counts remain.
+[Ownership diagnostics](docs/ownership-diagnostics.md) records the preserved
+coverage. Historical measurements remain tied to their original sources;
+passing production checks does not remeasure every historical benchmark.
 
 ## 2. Minimize ARC in named unshared paths
 

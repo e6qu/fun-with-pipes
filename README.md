@@ -51,8 +51,8 @@ comparisons with C and Rust and the limits of the evidence.
 
 ## Project direction
 
-[PLAN.md](PLAN.md) has two separate memory milestones: remove tracing GC, then
-reduce reference-counting and allocation costs in named unshared workloads.
+[PLAN.md](PLAN.md) separates verified tracing-GC removal from the remaining
+reference-counting and allocation costs in named unshared workloads.
 [Weak channels](docs/weak-channels.md) and [retained C callbacks](docs/retained-callbacks.md)
 are implemented and verified. Count-free unique buffers and general scoped
 workspaces remain planned. Later milestones cover measured CPU performance,
@@ -62,8 +62,8 @@ The [design limits](docs/design-limits.md) explain achievable guarantees and
 tradeoffs. Eligible direct self-tail calls already reuse stack frames in native code and
 the interpreter. Resource-bearing frames and general mutual recursion have
 stricter limits; see [tail calls](docs/design.md#tail-calls-and-recursion).
-Complete collector removal remains unfinished; arbitrary strong-cycle
-reclamation through ordinary reference counting is not promised.
+Tracing removal passed integrated verification in [PR #217](docs/roadmap-history.md#tracing-gc-removal-pr-217).
+Arbitrary strong-cycle reclamation through ordinary reference counting is not promised.
 
 ## Supported platforms
 

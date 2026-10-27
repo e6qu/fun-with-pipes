@@ -13,7 +13,7 @@ Use [CONTRIBUTING.md](CONTRIBUTING.md) for repository conventions and test locat
 
 ## Language and performance goals
 
-- Remove tracing garbage collection (GC). Prefer compile-time ownership, moves,
+- Keep tracing garbage collection (GC) removed. Prefer compile-time ownership, moves,
   borrowing, stack storage and unique reuse; reserve automatic reference
   counting (ARC) for sharing. Follow the [accepted direction](docs/gc-removal-design.md):
   explicit weak links, reject unproved owning cycles, regions for bounded work.
@@ -50,7 +50,7 @@ implementation of currently supported external protocols.
   at a time. Fix every encountered issue immediately, including unrelated or
   pre-existing issues, regardless of who caused them. Do not hide or defer fixes;
   record the repair and verification. Queued CI gates merging, not independent work.
-- Group related G5 work and docs in one PR. Use necessary focused checks while
+- Group related roadmap work and docs in one PR. Use necessary focused checks while
   implementing; run the complete final-head matrix after the batch is ready.
 - Before pushing a CI repair, audit every failed job and completed test target,
   fix underlying causes and check affected callers. Batch all known fixes into
@@ -68,7 +68,7 @@ implementation of currently supported external protocols.
   also require the documentation audit. Preserve coverage as ownership evolves.
   Skipped or emulated checks do not establish native support.
 - Memory changes need failure/cancellation, exact owner and physical-free checks,
-  reuse controls and the full golden corpus. Verify replacements before claiming GC removal.
+  reuse controls and the full golden corpus. Preserve verified collector-free coverage.
   Inspect actual binaries for representation and tracing-removal claims.
 - Every commit message is exactly one line, at most 80 characters, with no body,
   trailers, AI attribution, `Co-authored-by` or `Authored-by`. Use ordinary author
