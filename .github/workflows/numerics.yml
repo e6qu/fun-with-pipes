@@ -14,14 +14,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh run download 40356438626 --repo e6qu/fun-with-pipes -n fwp-Linux-X64 -D ci-compiler
+          gh run download 40395391896 --repo e6qu/fun-with-pipes -n fwp-Linux-X64 -D ci-compiler
           tar -xzf ci-compiler/*.tar.gz -C ci-compiler
-      - name: Execute the service fixture with GCC
+      - name: Execute the actual Rust service test with GCC
         run: |
           compiler=$(find "$PWD/ci-compiler" -type f -name fwp)
-          python3 scripts/diagnose-service-values.py "$compiler" gcc
+          python3 scripts/diagnose-service-values.py "$compiler" gcc "$RUNNER_TEMP/service-actual"
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: service-diagnostic
-          path: service-diagnostic/
+          path: ${{ runner.temp }}/service-actual/
