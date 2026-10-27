@@ -1,0 +1,17 @@
+# Numeric selection must not acquire owners for unrelated text fields.
+export numeric : (String, I64, String) -> I64
+numeric = .1
+
+# A returned string still needs an owner independent of a shared record.
+export text : (String, I64, String) -> String
+text = .0
+
+# Keep task entry checks in the emitted functions for the unwind probe.
+export probe : () -> () ! {Async}
+probe = task.yield
+
+main = [
+    ("left", 37, "right") | numeric | echo,
+    ("left", 37, "right") | text | echo,
+    probe (),
+] | ignore

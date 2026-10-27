@@ -130,7 +130,7 @@ allocations or peak charge; sort reuse removes its measured copy request. Preser
 failure/cancellation and bit-pattern controls. Report the measured instruction
 and stack growth; do not claim a timing gain from count savings.
 
-**A2 — Account for remaining counts in fixed fixtures (measured; delivery pending).**
+**A2 — Account for remaining counts in fixed fixtures (delivered in #218).**
 The [current report](docs/measurements/arc-residual-costs.md) attributes all effective
 retains and releases by owner, with unchanged totals on both native Linux hosts.
 Use the text/function
