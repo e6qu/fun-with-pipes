@@ -1,116 +1,102 @@
 # Current work
 
-**Next:** add A5's generated-program, failure/cancellation and representation
-controls, then compile and run the complete focused batch on GitHub. Work is isolated in `/private/tmp/fwp-unique-array`,
-branch `unique-array-storage`. PR #218 remains the only open PR; monitor its
-production run `40480893046` at `4e504ee381d1d85f2172b508459d026300013ba5` and
-squash-merge only after all gates pass. Documentation `40480892776`, analysis
-`40480891997` and the benchmark job have passed. No platform failures reported.
+**Next:** finish A5's cancellation/escape controls and cost report in one batch.
+Keep monitoring PR #218's full CI; squash-merge it only after every gate passes.
+Do not open the next PR until #218 is merged.
 
-A5 preparation is **unverified**: `src/rc/unique.rs` is a proof draft with controls,
-connected to local I64 array generation but not yet compiled. It checks one release per
-normal path, rejects independent owners and requires nonescaping borrowed calls.
-The allocator draft separates chunk headers from count arrays and adds a unique
-allocation kind with no count slots. The backend draft selects it for known capture-free I64 generators whose
-verified ownership body has one release and only nonescaping borrowed uses.
-Metadata probes now cover absent unique counts and counted/unique chunk reuse,
-but the Rust compiler/tests have not been built. Extend teardown/physical
-observers and accounting before any claim of support. A guarded local diagnostic
-replaced the saved GCC-generated C's complete allocator section with the current
-allocator source (no compiler build). Clang O1/O2 passed zeroed unique storage,
-reuse, 301-owner wide counts and zero final live growth. It observed a 40-byte
-chunk header and 8-byte count pointer. This is not GCC or whole-compiler proof. Counted chunks now use a
-separate count allocation; measure its added pointer lookup and allocation cost. `/private/tmp/fwp-a5-review.md` records allocator
-options, exact source paths and the required physical-release/metadata controls.
-A stale ownership-module comment about tracing and the Windows failure-artifact
-step label were corrected. The working-tree primitive inventory passes (394 declarations, 384 symbols,
-40 aliases); its recorded HEAD is the base commit, not a published A5 source.
-Formatting passes. The 40-byte chunk-header probe covers all count slots; unique
-chunks have null count pointers, including counted/unique big-chunk reuse.
-Native metadata probes and generated-array probes are drafted but have not run
-with the current compiler. They require absent count metadata, exactly one free,
-partial-failure cleanup and rejection of omitted-free/extra-count controls.
-The fixture's raw-interpreter outputs and formatting pass with the verified #217
-compiler artifact; this is not new-backend verification. The `unique-arrays`
-focused suite builds current source and runs unit, allocator, array/unwind and
-library-unload checks plus Clippy on native Linux AMD64/ARM64 in one batch.
-All following A2/A3 evidence belongs to PR #218, not to verified A5 support.
+## Delivery being verified
 
-## Current batch
+PR [#218](https://github.com/e6qu/fun-with-pipes/pull/218), branch
+`arc-residual-costs`, worktree `/private/tmp/fwp-arc-residual-costs`, final head
+`4e504ee381d1d85f2172b508459d026300013ba5`:
 
-- Worktree: `/private/tmp/fwp-arc-residual-costs`; branch `arc-residual-costs`.
-- Base: `9dfa014596e1954e3e67c653123dad77a14f5241`, the verified #217 squash merge.
-- Added a current-compiler [A2 protocol](measurements/arc-residual-costs.md) for
-  channel payloads, cached-map reads, word frequency, packed descent and a
-  runtime-sized numeric buffer. Both native hosts pass run `40474903463` at
-  `405bcfde48afdc07267c76251ac3c70a0d346e97`: all 13 cases agree between hosts,
-  all repetitions agree and the omitted-observation control is rejected. The
-  checked report is `measurements/arc-residual-baseline-2026-10-27.json`.
-- Selected A3 change: known scalar array callbacks with no captures use the
-  existing direct-call generator. Target: remove N redundant retain attempts and
-  closure-release checks for N elements; preserve every effective count and
-  allocation/live-byte metric. Candidate verification passes on both hosts at `863a5215b39c9c04bceb14aacc96972e3b41752a`,
-  run `40479298165`. All 12 tests and 13 measured cases pass per host; logs and
-  all artifact hashes were audited. Full delivery CI remains pending.
-- Focused candidate `3c66e1f1`, run `40477814241`: both hosts passed the other
-  eleven array/capture/unwind checks; the new test tried to find helpers already
-  inlined out of `main`. The repair builds an explicit exported `probe` entry.
-  The failed test also prevented measurement/artifact creation. The workflow
-  now runs measurements after a successful compiler build even if tests fail,
-  and preserves generated probe C separately. Both failed logs were audited.
-- Profiles distinguish attempted/effective retains, releases, last-owner checks,
-  uniqueness checks, count initialization and typed frees. Generated-C sites
-  explain where operations happen; ordinary binaries retain size/frame evidence.
-- The unique-buffer fixture has local, shared-result and callback-reader cases.
-  These establish costs, not an implemented uncounted representation. A5 still
-  needs a lifetime proof and failure, cancellation, capture, unknown-call and
-  weak-link controls. Counts live in allocator chunk metadata, not inline in
-  the array payload; the future representation must address that storage too.
-- A2 now classifies each remaining owner and balances retains/non-final releases.
-  Candidate indirect sites distinguish map insertion from map-to-list key copies.
-  Ordinary buffer binaries shrink; entry frame estimates grow. No speed or peak
-  stack improvement is claimed. See the report for exact before/after figures.
-- Current docs now mark G5 complete and keep ARC minimization separate.
-  Historical reports keep their original sources and numerical claims.
+- Production `40480893046`: both macOS ARM64 jobs, Windows ARM64 and C/Rust benchmarks passed;
+  five Linux/Windows/Intel macOS jobs still running, with no failed steps reported.
+- Documentation `40480892776` and both analysis hosts `40480891997` passed.
+  Completed logs were audited. Expected panic/failure text belongs to deliberate
+  controls, followed by passing observer tests.
+- A2 attribution and the first A3 reduction pass paired native Linux measurements
+  `40479298165`. [The report](measurements/arc-residual-costs.md) retains counts,
+  owners, code sizes and the larger entry frames. No speedup is claimed.
+- Preserve the final PR head while gates run. Merge with an explicit single-line
+  subject <=80 characters and empty body; verify the resulting message/tree.
 
-## Verified baseline
+## Next implementation: A5
 
-G5 tracing removal passed all nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40433794313),
-[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40433794300) and
-both [analysis hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/40433851517)
-on `2721bf14a389f685e3dd64f5bf3d6921f61a6212`. All nine completed logs were audited;
-no failed target was hidden. [#217](https://github.com/e6qu/fun-with-pipes/pull/217)
-merged as `9dfa014596e1954e3e67c653123dad77a14f5241` with an identical tested tree
-and a one-line 57-character subject, empty body and no trailers. See
-[history](roadmap-history.md#tracing-gc-removal-pr-217) for repairs and evidence.
+Worktree `/private/tmp/fwp-unique-array`, branch `unique-array-storage`, based on
+#218's final head. Rebase onto its verified squash before opening the next PR.
+Current prototype source: `04bb2033f6b30f8a34049ae973e2c5b24c6dbd7b`.
 
-## Checks actually run for this batch
+- `src/rc/unique.rs` requires one release per normal path, no new owner/alias,
+  and explicitly nonescaping borrowed calls. It rejects a borrow whose owner is
+  released by a later argument. The backend selects local `Array[I64]` values
+  generated by known capture-free callbacks, outside specialized loops.
+- Native chunk headers now contain an optional count pointer; unique chunks
+  allocate no count slots. Header size is 40 bytes; the count pointer is 8 bytes.
+  Counted chunks allocate a separate count array. Measure that allocation and
+  pointer-lookup cost, including cached metadata; managed-value counters exclude it.
+  WASI unique storage bypasses the separate count table.
+- Success and per-call error cleanup free unique storage directly. Partial array
+  construction registers its own cleanup before invoking callbacks.
+- Focused `40487837146` passed on native Linux AMD64 and ARM64: 196 unit tests,
+  11 array-element tests, array borrowing/unwind, library unload, six allocator
+  tests and Clippy. Both logs were audited. Saved artifacts under
+  `/private/tmp/fwp-unique-evidence-{amd64,arm64}` agree: 12 generated owner/fault
+  probes and 12 static/dynamic unique metadata/reuse observations per host.
+- A source review found a needed follow-up bound: unused bytes at the end of a
+  small chunk must not index beyond its shorter count array. The working tree
+  checks `i < rc_len` and adds a padding-pointer regression. The next focused
+  run includes this fix and the related controls below; none is yet verified by
+  the earlier passing run.
+- New controls cover completed-array failure, cancellation and returned aliases.
+  The captured-array fixture now returns a record containing its callback: its
+  earlier curried form could flatten into a local array and was not an escaping
+  control. An exported unknown callback is invoked through a runtime function
+  value. Unsupported weak-array creation/acquisition must fail type checking.
+- `unique-arrays` now measures all 13 ARC cases against the frozen A3 candidate,
+  with an explicit new count budget for the two fully known local-buffer entries.
+  The old A3 comparison remains unchanged. Separate observations count metadata
+  allocation requests, requested/released bytes, peak bytes and cached bytes at
+  the end. These exclude malloc headers, fragmentation and process RSS.
 
-All local workloads use `python3 scripts/local-guard.py`; full compiler builds,
-full suites and measurements run on GitHub. The first sandboxed guard invocation
-could not read `ps`; rerunning with process-sampling permission kept all limits.
+## Remaining acceptance for this batch
 
-- `python3 scripts/test-ownership-profile.py`: eight reader/comparison controls pass.
-- `python3 /private/tmp/fwp-check-ownership-profile.py`: actual emitted runtime
-  control passes on Apple Clang 17 ARM64 at O1/O2. Exact totals cover 301 retains,
-  wide counts, indirect calls, two frees, unique/shared and unmanaged cases.
-  Uses the verified #217 macOS compiler artifact, whose hash was checked. This
-  is a diagnostic convenience, not a build dependency or GCC verification.
-- The same bounded check passes fixture formatting and interpreted outputs for
-  local/shared/callback arrays. It initially caught reversed `apply` arguments
-  in the new callback fixture; `flip apply` fixes the declared function type.
-- No full compiler build, suite or benchmark has run locally.
-- Guarded report audit: both complete artifact sets, hashes, profiles, three
-  samples per input and ordinary binary/stack records agree; 13 cases pass.
-  All focused-job logs are clean. Static-callback raw-interpreter outputs pass;
-  its formatting was corrected with the language formatter. Rust formatting,
-  workflow lint, staged whitespace and the 164-link documentation audit pass.
-- Per-owner audit checks that effective retains balance non-final releases and
-  verifies word-frequency string/record formulas on both hosts. A report-reader
-  bug counted alternative C-preprocessor braces together; function-range checks
-  now follow the emitter's layout and exclude global descriptors, with a regression
-  control. No observed counts changed. The explicit native probe entry survives
-  optimization in the verified compiler; formatting passes.
+1. Verify the new independent physical-free checks for cancellation and failure
+   while a completed array is live, and the alias/capture/unknown-call controls.
+   The earlier focused pass does not cover these new cases.
+2. Audit the paired A5 measurements, including count metadata, managed requests,
+   count operations, physical frees, ordinary code and frame sizes. Keep every
+   unexpected change visible and diagnose it before accepting the comparison.
+3. Check unique-proof analysis cost, native/WASI/static-memory behavior and all
+   affected metadata/teardown observers. Publish the bounds fix with those related
+   controls, then run the grouped focused batch before the full final-head matrix.
+4. Update the plan and ownership/allocator docs with measured support and limits.
+   A5 is not complete; captured/unknown-call storage and general regions are not
+   claimed. Keep one substantial delivery PR after #218 merges.
+
+## Local checks and recovery
+
+All focused checks used `scripts/local-guard.py`; no full local compiler build,
+suite or benchmark ran. Formatting, workflow lint, roadmap and the frozen primitive
+inventory pass (394 declarations, 384 symbols, 40 aliases). The inventory tested
+the working tree; its recorded HEAD was the base, not a published A5 revision.
+
+Bounded Clang O1/O2 checks replaced a saved generated C file's complete allocator
+section with the draft allocator. Unique zeroing/reuse, 301-owner counts, file/
+socket owners, the padding bound and zero final live growth passed. These are
+allocator diagnostics, not current-compiler or GCC evidence. The language fixture
+also passed raw interpretation/formatting with the verified #217 compiler artifact.
+No maintained build depends on an earlier fwp compiler.
+
+The follow-up passes guarded Rust/fwp formatting, workflow lint and all ten
+ownership-reader controls. Bounded Clang O1/O2 diagnostics also pass the actual
+escaping probe and its missing-owner fault (status 234), plus the new metadata
+reader's allocation/release accounting. Those diagnostics use saved generated C;
+only the upcoming GCC run verifies the current compiler and new native probes.
+
+Primary checkout is detached at #209 with a pointer to these worktrees; preserve
+its untracked compiler-abort report. `/private/tmp/fwp-a5-review.md` retains source
+review notes. No detached merger is running; timed active checks watch CI.
 
 ## Roadmap status
 
@@ -125,14 +111,12 @@ could not read `ps`; rerunning with process-sampling permission kept all limits.
 | 7 | In progress | B1–B2 reproducible comparisons and enforced budgets |
 | 8 | In progress | V1–V2 application correctness, cleanup and scaling matrix |
 
-## Recovery and open defect
+## Verified baseline and open defect
 
-Primary checkout remains detached at #209 with a local pointer to this worktree;
-preserve its untracked compiler-abort report. Do not replay old temporary G5
-migration scripts. No background publisher or detached merge watcher is running.
-After publication, monitor exact-head CI with timed wake-ups, repair every
-failure and squash-merge only passing gates with the required one-line message.
-
-The intermittent Intel compiler abort remains unexplained. Preserve
-[its evidence](measurements/compiler-abort.md); diagnose recurrence from source
+GC removal merged in #217 as `9dfa014596e1954e3e67c653123dad77a14f5241`, with the
+same tree as tested `2721bf14a389f685e3dd64f5bf3d6921f61a6212`. All nine production
+jobs `40433794313`, docs `40433794300` and analysis `40433851517` passed. See
+[history](roadmap-history.md#tracing-gc-removal-pr-217).
+The earlier Intel compiler abort remains unexplained; preserve
+[its evidence](measurements/compiler-abort.md) and diagnose recurrence from source
 and input, not speculative disassembly-led allocator experiments.

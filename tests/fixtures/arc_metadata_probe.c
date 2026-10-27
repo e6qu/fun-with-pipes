@@ -33,6 +33,13 @@ static void arc_metadata_probe(void) {
         size_t sizes[] = {16, 257, HEAP_MAX_SMALL, HEAP_MAX_SMALL + 16};
         for (size_t i = 0; i < sizeof sizes / sizeof *sizes; ++i) {
             V value = fwp_rc_fresh(PTR(fwp_alloc_leaf(sizes[i])));
+            size_t ci;
+            heap_chunk *chunk = fwp_heap_chunk_of((uintptr_t)value, &ci);
+            if (chunk->type == HEAP_SMALL && (size_t)chunk->nslots * chunk->slot < HEAP_CHUNK) {
+                V padding = PTR(fwp_heap_chunk_addr(ci) + (size_t)chunk->nslots * chunk->slot);
+                if (fwp_rc_slot(padding)) exit(71);
+                fwp_rc_dup(padding); fwp_rc_fresh(padding);
+            }
             for (unsigned j = 0; j < 300; ++j) fwp_rc_dup(value);
             if (fwp_rc_unique(value) || !fwp_heap.rc_wide_len) exit(52);
             for (unsigned j = 0; j < 300; ++j)

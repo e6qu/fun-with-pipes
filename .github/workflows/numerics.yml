@@ -85,6 +85,17 @@ jobs:
         run: |
           set -o pipefail
           cargo clippy --locked --lib --test native_allocator --test array_element_ownership -- -D warnings 2>&1 | tee unique-array-evidence/clippy.log
+      - name: Measure counts, metadata, code and stack costs against A3
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: |
+          python3 scripts/test-ownership-profile.py
+          python3 scripts/measure-arc-costs.py --compiler target/debug/fwp --cc gcc --objdump objdump --nm nm --samples 3 --timeout 240 --output unique-array-costs --comparison unique-arrays --baseline docs/measurements/arc-residual-candidate-2026-10-27.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: unique-array-costs-${{ matrix.runner }}
+          path: unique-array-costs/
+          if-no-files-found: error
       - uses: actions/upload-artifact@v7
         if: always()
         with:
