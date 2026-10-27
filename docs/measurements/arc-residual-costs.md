@@ -173,7 +173,9 @@ at `863a5215b39c9c04bceb14aacc96972e3b41752a`. The
 [audited candidate report](arc-residual-candidate-2026-10-27.json) confirms every
 predeclared count target, unchanged effective counts and allocation/live-byte
 metrics, and identical cross-host totals. All 12 focused tests pass per host.
-The full production matrix remains a separate delivery gate.
+All nine production jobs, documentation and both compiler-analysis hosts passed
+for the final #218 head; [delivery history](../roadmap-history.md#static-array-callbacks-and-remaining-arc-costs-pr-218)
+records the verified squash.
 
 A semantic fixture covers empty arrays,
 aliases, ordered effects, handled callback errors, yielding, cancellation and

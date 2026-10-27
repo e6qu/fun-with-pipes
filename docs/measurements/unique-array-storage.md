@@ -10,7 +10,10 @@ The prototype passed native Linux AMD64/ARM64 run `40487837146` at
 `04bb2033f6b30f8a34049ae973e2c5b24c6dbd7b`. Run `40492232784` at `b9d637b6` passed all 13 paired measurements, all other focused
 targets and Clippy on both hosts. Its new completed-array test failed because the
 fixture's temporary transfer kept counted storage; the corrected borrowed-read
-fixture and later controls still need verification. Neither run establishes final
+fixture, cancellation and actual WASI probes passed in `40494835629`. That run
+exposed a separate escaping-probe setup error: the ordinary main build removed
+needed exports. The repair uses an explicit function entry; its verification and
+the added static-memory probe remain pending. Neither run establishes final
 six-target support. [The handoff](../development-state.md) records remaining
 checks; this report must retain actual results before A5 can be marked complete.
 
@@ -124,6 +127,27 @@ makes 3/4/4 metadata allocations and requests 10,240/10,695/10,241 bytes for
 lengths 0/16/4,096. These are candidate-only observations; the earlier report did
 not measure separate metadata requests. They must not be presented as a measured
 process-memory reduction against A3.
+
+## Compiler cost
+
+[The complete-command samples](unique-array-analysis-2026-10-27.json) come from
+run `40494835629`, source `7cf8baf8`, with the production Rust O1 build and checked
+arithmetic/debug assertions. One warmup precedes five samples in alternating size
+order. The command parses, checks, optimizes and emits C; it does not invoke a C
+compiler or run the generated program. Linux `time -v` records child peak RSS.
+
+| Source calls | Actual unique sites in work / all emitted functions | AMD64 median seconds / maximum KiB | ARM64 median seconds / maximum KiB |
+|---|---:|---:|---:|
+| 16 | 16 / 16 | 0.422 / 44,528 | 0.371 / 44,080 |
+| 32 | 26 / 27 | 0.446 / 45,500 | 0.388 / 44,968 |
+| 64 | 26 / 27 | 0.467 / 50,004 | 0.407 / 49,588 |
+
+Larger sources reuse emitted helpers after the inlining limit, so source-call
+count is not the number of independent proof candidates. The current proof visits
+up to N expression nodes for each of M candidates: O(MN) worst-case work. These
+samples establish practical costs for the named inputs, not linear complexity,
+proof-only memory use, or an incremental time saving against A3. The existing G2
+analysis budgets remain a separate gate.
 
 ## Cleanup and rejection controls
 

@@ -29,13 +29,14 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. Deliver **A2 and the first A3 change** together: both native Linux hosts pass
-   the [per-owner report and callback reduction](docs/measurements/arc-residual-costs.md).
-   Finish the complete production/documentation gates before merging this batch.
-2. Implement **A5** next: prove the local runtime-sized array's lifetime and remove
-   its count slot, count initialization and last-owner checks. The report defines
-   the measured target and negative controls. Select later **A3/A4/A6** work from
-   its owner breakdown; general region inference remains separate.
+1. **A2 and the first A3 change shipped in #218.** All production, documentation
+   and analysis gates passed. The [per-owner report](docs/measurements/arc-residual-costs.md)
+   attributes residual costs and verifies the capture-free callback reduction.
+2. Finish **A5**: the [local-array path](docs/measurements/unique-array-storage.md)
+   removes count storage and the declared count operations. Native/WASI cleanup,
+   metadata and compiler-cost observations are retained; finish escaping/static
+   controls and the full final-head matrix before marking it complete. Select later
+   **A3/A4/A6** work from the owner breakdown; general regions remain separate.
 3. Preserve **G2**'s [verified analysis budgets](docs/measurements/ownership-analysis.md)
    when changing lifetime analysis. Further precision needs a named failing example
    and an updated cost comparison, not more diagnostic scaffolding.
@@ -137,10 +138,10 @@ retain, release, uniqueness-check and live-byte counts separately.
 names the next removable operation; a blanket “reduce ARC” item is not sufficient.
 
 **A3 — Remove only the identified redundant ownership work.** The first class
-passes focused native checks: a known scalar array callback with no captures
+shipped in #218: a known scalar array callback with no captures
 avoids one retain attempt and closure-release check per element. Allocation and
 effective counts are unchanged; the report records smaller code and larger entry
-frames. Full delivery gates remain. Implement one
+frames. All final delivery gates passed. Implement another
 coherent class from A2, covering nested matches, last use, aliases and exceptional
 exits. Extend existing direct-call, callback and runtime-call ownership tests.
 **Done:** the predeclared per-fixture count reaches its target, live aliases keep

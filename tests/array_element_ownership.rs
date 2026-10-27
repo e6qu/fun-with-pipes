@@ -952,15 +952,26 @@ fn unique_arrays_remove_counts_and_preserve_failure_cancel_and_escape() {
         assert_eq!(actual.stdout, reference.stdout, "{optimization}");
         assert_eq!(actual.stderr, reference.stderr, "{optimization}");
     }
-    for name in ["local", "partial", "completed", "cancelled"] {
-        checked(
-            Command::new(compiler)
-                .env_remove("FWP_NO_OPT")
-                .args(["build", "--fn", name, "--emit-c", "-O2"])
-                .arg(&source)
-                .arg("-o")
-                .arg(&cfile),
-        );
+    for (name, memory) in [
+        ("local", "dynamic"),
+        ("partial", "dynamic"),
+        ("completed", "dynamic"),
+        ("cancelled", "dynamic"),
+        ("local", "static"),
+    ] {
+        let mut build = Command::new(compiler);
+        build
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--fn", name, "--memory", memory, "--emit-c", "-O2"]);
+        if memory == "static" {
+            build.args(["--heap", "1M"]);
+        }
+        checked(build.arg(&source).arg("-o").arg(&cfile));
+        let label_prefix = if memory == "static" {
+            "local-static"
+        } else {
+            name
+        };
         let code = std::fs::read_to_string(&cfile).unwrap();
         let start = code
             .find(&format!("/* {name} :"))
@@ -1022,12 +1033,14 @@ fn unique_arrays_remove_counts_and_preserve_failure_cancel_and_escape() {
                     225,
                 ),
             ] {
-                let binary = dir.0.join(format!("{name}-{label}{optimization}.exe"));
+                let binary = dir
+                    .0
+                    .join(format!("{label_prefix}-{label}{optimization}.exe"));
                 fwp::cgen::compile_c(&code, &binary, optimization).unwrap();
                 let actual = Command::new(&binary).output().unwrap();
                 record_probe::save(
                     "unique-arrays",
-                    &format!("{name}-{label}{optimization}"),
+                    &format!("{label_prefix}-{label}{optimization}"),
                     &code,
                     &binary,
                     &actual,
@@ -1069,12 +1082,25 @@ fn unique_arrays_remove_counts_and_preserve_failure_cancel_and_escape() {
             );
         }
     }
+    // Ordinary main may inline or discard exports. An explicit function entry
+    // retains the separately callable exports used by the ownership probe.
+    checked(
+        Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args([
+                "build", "--fn", "local", "--memory", "dynamic", "--emit-c", "-O2",
+            ])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let escape_code = std::fs::read_to_string(&cfile).unwrap();
     let mut probe = include_str!("fixtures/unique_array_escape_probe.c").to_owned();
     for name in ["shared", "captured", "reader", "unknown"] {
-        let start = semantics
+        let start = escape_code
             .find(&format!("/* {name} :"))
             .expect("escape probe export");
-        let id = semantics[start..]
+        let id = escape_code[start..]
             .split("static V f")
             .nth(1)
             .unwrap()
@@ -1083,8 +1109,8 @@ fn unique_arrays_remove_counts_and_preserve_failure_cancel_and_escape() {
             .unwrap();
         probe = probe.replace(&format!("@{name}@"), &format!("f{id}"));
     }
-    assert_eq!(semantics.matches("static inline void *fwp_alloc_unique(size_t n) { return fwp_heap_alloc(n, HEAP_UNIQUE); }").count(), 1);
-    let measured = semantics
+    assert_eq!(escape_code.matches("static inline void *fwp_alloc_unique(size_t n) { return fwp_heap_alloc(n, HEAP_UNIQUE); }").count(), 1);
+    let measured = escape_code
         .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic size_t escape_probe_unique;")
         .replace(
             "static inline void *fwp_alloc_unique(size_t n) { return fwp_heap_alloc(n, HEAP_UNIQUE); }",
