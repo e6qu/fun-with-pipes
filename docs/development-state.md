@@ -1,21 +1,25 @@
 # Current work
 
-**Next:** rerun isolated sort timing with eightfold longer batches after auditing
-both hosts of `40513939015`. ARM64 passed both sizes; AMD64's 256-key identical-code
-control deviated by 12.7%, so that candidate was not measured. The 10% noise limit
-is unchanged. The short samples are retained; longer batches should reduce brief
-interruptions' relative weight. Draft PR #220 contains the whole A3/A4 batch.
+**Next:** monitor PR #220's final production/documentation/analysis gates and
+isolated timing. Keep the final head unchanged while passing gates run. Audit
+all completed targets; batch every necessary repair before rerunning affected
+checks. Squash-merge only after all gates pass, then continue A6. The primary
+checkout pointer records run IDs after dispatch.
+
+Work in `/private/tmp/fwp-sort-key-fields`, branch `borrow-sort-key-fields`, PR
+[#220](https://github.com/e6qu/fun-with-pipes/pull/220). PR #219 is merged; rebasing
+onto its squash preserved the measured tree. Compiler/runtime source remains
+`dfd844c1`, retained by `evidence/inline-sort-key-probe-dfd844c1`.
+
 Focused correctness `40512388783` and saved-artifact audit `40512399031` passed.
 All completed target logs and 62 probe statuses per host were audited, including
 12 inline-key and six scalar/fault outputs. The fixture's missing signatures and
-formatting are fixed. Full production/analysis validation follows timing.
-
-Work in `/private/tmp/fwp-sort-key-fields`, branch `borrow-sort-key-fields`.
-PR #219 is merged. The branch rebased onto its verified squash with an identical
-tree; the timing protocol source is `7da1a783`. Source `dfd844c1` remains the measured
-compiler/runtime, retained by `evidence/inline-sort-key-probe-dfd844c1`. The next
-commit adds timing and retained reports, not compiler/runtime changes. Keep one
-active PR and defer its full matrix until the batch is ready.
+formatting are fixed. The initial short timing run `40513939015` rejected AMD64's
+256-key identical-code control (12.7% deviation); ARM64 passed both sizes. Longer
+run `40514452443` uses eight times more work, retaining the 10% noise limit. It is
+queued at protocol source `4bc72c60`. Repeat it on the final protocol head to obtain
+an independent runner allocation and execute the new independent evidence reader.
+Do not repeat passing compiler/count measurements without a relevant code change.
 
 ## Combined A3/A4 work
 
@@ -32,10 +36,10 @@ active PR and defer its full matrix until the batch is ready.
 - New probes exercise empty/singleton inputs, equal-key stability, integer limits,
   every scratch/output allocation failure, callback-entry interruption and
   deliberately omitted String release or buffer freeing. Source programs cover
-  newly allocated key text, partial key failure and cancellation. All new probes passed at e19eed00. Concrete fixture signatures and formatting are repaired after auditing both
-  hosts. The failing source never reached these new C probes.
+  newly allocated key text, partial key failure and cancellation. All probes passed
+  at e19eed00 after fixing the fixture signatures and formatting.
 - Docs remove stale GC-removal status, shorten completed roadmap work and now
-  record verified A5. A5 delivery records now match its verified merge.
+  record verified A5.
 
 ## Existing evidence
 
@@ -53,7 +57,9 @@ declared budget; it does not replace or discard A3 observations. Sorting timing 
 production/analysis gates remain required before A4 acceptance.
 
 Local checks used `scripts/local-guard.py`: Rust formatting, workflow lint,
-twelve evidence-reader controls and documentation links passed. No compiler
+twelve ownership-reader controls, four timing-reader controls and documentation
+links passed. The timing reader independently verified both initial artifacts,
+including exact binary hashes, every pair and the rejected control. No compiler
 build, full suite or benchmark ran locally. Keep the fixed limits. Free disk was
 about 73 GiB; check it before another workload or large artifact download.
 

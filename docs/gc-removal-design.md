@@ -4,7 +4,7 @@ The accepted design combines inferred moves and borrows, reference counting for
 sharing, and explicit weak links where an owning cycle would otherwise form.
 Weak channels and retained C callbacks passed all production gates in #215.
 A [restricted count-free array path](measurements/unique-array-storage.md) is
-implemented and undergoing verification. General regions remain planned.
+verified in #219. General regions remain planned.
 
 [PLAN.md](../PLAN.md) gives the work order and completion checks;
 [ownership.md](ownership.md) describes current implementation. APIs and layouts
@@ -14,8 +14,8 @@ may change freely during pre-alpha.
 
 - Infer moves and borrows; use direct values and count-free unique storage where
   their complete lifetime is proved. Use ARC for independent shared ownership.
-- Reject unproved owning cycles. Add explicit weak references for selected
-  identity-bearing objects before removing tracing. Never weaken captures
+- Reject unproved owning cycles. Use explicit weak links for selected
+  identity-bearing objects; weak channels are implemented. Never weaken captures
   implicitly or permit unexplained retention in place of a lifetime proof.
 - Preserve escaping functions, returned partial applications, immutable values,
   checked arithmetic and effect/failure order. No new pipe syntax is required.
@@ -235,11 +235,12 @@ requirements; it is not a second backlog:
    failure before publishing a repair.
 
 ARC minimization remains separate from the completed collector deletion.
-PLAN A5 implements a [restricted local-array path](measurements/unique-array-storage.md)
+PLAN A5 verified a [restricted local-array path](measurements/unique-array-storage.md)
 with one proved owner, no count slot and direct cleanup on normal and exceptional
-exits. Its final production verification is pending. The following
-[sort-key batch](measurements/sort-key-ownership.md) targets two redundant owners
-per distinct word. Both reports distinguish count savings from actual storage,
+exits. All final production, documentation and analysis gates passed in #219.
+The next batch combines [redundant sort owners](measurements/sort-key-ownership.md)
+and [contiguous key storage](measurements/inline-sort-keys.md). Their reports
+distinguish count savings from actual storage,
 code size, stack use and execution speed.
 
 ## Performance comparisons to run

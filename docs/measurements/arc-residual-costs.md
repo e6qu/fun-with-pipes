@@ -211,12 +211,12 @@ comparing later representation changes.
 
 ## A5 follow-up: remove the unique array's count storage
 
-These A3 measurements define the next target. At length 4,096, `buffer-unique`
+These historical A3 measurements defined A5’s target. At length 4,096, `buffer-unique`
 still has one array count initialization, one last-owner release, one last-owner
 query and one counted-array free call. Its unrelated CLI String also has an owner;
 removing the array's count cannot remove that String's storage.
 
-The [A5 report](unique-array-storage.md) now records the implemented local-array
-path, paired measurements, metadata layout and cleanup/escape controls. It keeps
-payload allocations separate from count storage and distinguishes implemented
-code from completed platform acceptance. General region inference remains separate.
+The [A5 report](unique-array-storage.md) records the local-array path verified
+in #219, with paired measurements, metadata layout and cleanup/escape controls.
+Payload allocations remain separate from count storage. General region inference
+remains separate.

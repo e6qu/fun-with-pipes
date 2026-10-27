@@ -36,13 +36,12 @@ collector is not the same as removing these costs. The
    removes count storage and the declared count operations. All nine production
    jobs, documentation and both analysis hosts passed; native/WASI cleanup,
    metadata and compiler-cost observations are retained.
-3. The next **A3/A4** batch removes two temporary owners per distinct word:
-   the numeric selector's String owner and the key function's duplicate pair.
-   [Its protocol](docs/measurements/sort-key-ownership.md) defines the 2D count
-   target, unchanged memory budget, alias and failure controls. Both Linux hosts'
-   correctness checks and the independent artifact audit pass. A4 now joins this batch: [contiguous key storage](docs/measurements/inline-sort-keys.md)
-   has a declared allocation budget and cleanup probes, with validation pending.
-   Finish focused validation, then publish and complete the combined final matrix.
+3. **A3/A4 are bundled in PR #220.** [Scalar reads and callback specialization](docs/measurements/sort-key-ownership.md)
+   remove two temporary owners per distinct word. [Contiguous key storage](docs/measurements/inline-sort-keys.md)
+   removes another owner and one key allocation. Both Linux hosts' correctness
+   checks, exact budgets and independent artifact audits pass. Finish isolated
+   timing and the final production/analysis matrix; keep its head unchanged while
+   passing gates run. The initial noisy timing control is retained, not accepted.
    **A6** remains the separately scoped parser-workspace task below.
 4. Preserve **G2**'s [verified analysis budgets](docs/measurements/ownership-analysis.md)
    when changing lifetime analysis. Further precision needs a named failing example

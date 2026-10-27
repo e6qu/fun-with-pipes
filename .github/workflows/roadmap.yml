@@ -36,3 +36,5 @@ jobs:
         run: python3 scripts/test-collection-evidence.py
       - name: Ownership operation evidence controls
         run: python3 scripts/test-ownership-profile.py
+      - name: Sorting-time evidence controls
+        run: python3 scripts/test-sort-time-evidence.py

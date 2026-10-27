@@ -105,6 +105,8 @@ jobs:
           --candidate-source "$MEASUREMENT_SOURCE" --cc gcc --cpu 1 --samples 6 --warmups 2
           --small-rounds 32768 --large-rounds 2048 --max-control-ratio 1.10 --timeout 120
           --output sort-timing
+      - name: Audit saved binaries, samples and frozen budgets
+        run: python3 scripts/inspect-inline-sort-time.py --input sort-timing --source "${{ github.sha }}"
       - uses: actions/upload-artifact@v7
         if: always()
         with:
