@@ -34,7 +34,10 @@ You need:
   `scripts/setup-windows-tls.ps1` supplies matching OpenSSL dependencies. The
   [Windows workflow](.github/workflows/windows.yml) records the full runner setup.
 - Optional, for the WebAssembly tests: clang with a WASI sysroot and lld
-  (Debian/Ubuntu: `clang llvm lld wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32`), the
+  (Debian/Ubuntu: `clang-18 llvm-18 lld-18 wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32`), the
+  matching LLVM 18 executables on `PATH` (`/usr/lib/llvm-18/bin`) and
+  `FWP_WASM_CC=/usr/bin/clang-18`. CI uses `scripts/setup-wasi-linux.sh` to keep
+  compiler, linker and runtime libraries aligned. Also install the
   `wasm32-wasip1` Rust target (`rustup target add wasm32-wasip1`), node 24,
   and binaryen's `wasm-opt` (`npm install -g binaryen`).
 - Optional, for the cross-compilation tests: an aarch64 C compiler and

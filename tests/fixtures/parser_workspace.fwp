@@ -50,6 +50,17 @@ nested =
     | tap (const "+ 2" | attempt calculate | ignore)
     | evaluate
 
+# Keep the outer tree alive across a recursive call to this same public entry.
+# Four recursive calls plus the initial invocation each contribute 14: 70.
+export recursive : (I64, String) -> I64 ! {Error[String]}
+rec recursive =
+    make { 0 = .0, 1 = .1, 2 = .1 | words | parse-expression | .0 }
+    | if
+        (.0 | gt 0)
+        (both (make { 0 = .0 | sub 1, 1 = .1 } | recursive) (.2 | evaluate)
+            | uncurry add)
+        (.2 | evaluate)
+
 # Suspend only after constructing the tree, then cancel before traversal.
 export suspended : String -> I64 ! {Async, Error[String]}
 suspended =
@@ -77,6 +88,7 @@ main = [
     "+ 1 no" | attempt calculate | echo,
     "1 2" | attempt calculate | echo,
     "+ 2 * 3 4" | nested | echo,
+    (4, "+ 2 * 3 4") | recursive | echo,
     "+ 2 * 3 4" | cancelled | echo,
     "+ 2 3" | escaping | both evaluate evaluate | echo,
     read-cached () | echo,

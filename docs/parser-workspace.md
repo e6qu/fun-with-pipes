@@ -53,7 +53,8 @@ program. It would also make mixed records easy to destroy incorrectly.
 
 Pass the region address explicitly between specialized internal helpers. Do not
 use a process/thread-global current region: nested invocations and task suspension
-must preserve the correct owner. The original public function signature remains
+must preserve the correct owner. A recursive call to the public entry creates a
+fresh owner; helper recursion within one parse uses that parse's existing owner. The original public function signature remains
 unchanged. The lowering uses an internal region-entry body that creates
 the owner and calls a worker with an explicit extra context parameter. Specialized
 node shapes carry region identity; selection must never depend on a generated

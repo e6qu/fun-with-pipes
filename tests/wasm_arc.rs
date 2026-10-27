@@ -15,23 +15,36 @@ fn available() -> bool {
     let dir = fwp::cgen::TempDir::new("wasi-arc-toolchain").unwrap();
     let source = dir.join("probe.c");
     std::fs::write(&source, "int main(void){return 0;}\n").unwrap();
-    let ready = Command::new(std::env::var("FWP_WASM_CC").unwrap_or_else(|_| "clang".into()))
+    let cc = std::env::var("FWP_WASM_CC").unwrap_or_else(|_| "clang".into());
+    let compiler = Command::new(&cc)
         .arg("--target=wasm32-wasi")
         .arg(source)
         .arg("-o")
         .arg(dir.join("probe.wasm"))
-        .output()
-        .is_ok_and(|o| o.status.success())
-        && Command::new("node")
-            .arg("--version")
-            .output()
-            .is_ok_and(|o| o.status.success());
+        .output();
+    let node = Command::new("node").arg("--version").output();
+    let ready = compiler.as_ref().is_ok_and(|o| o.status.success())
+        && node.as_ref().is_ok_and(|o| o.status.success());
+    let diagnostic = |output: &std::io::Result<Output>| match output {
+        Ok(output) => format!(
+            "{}: {}",
+            output.status,
+            String::from_utf8_lossy(&output.stderr)
+        ),
+        Err(error) => error.to_string(),
+    };
     assert!(
         ready || std::env::var_os("FWP_REQUIRE_WASI_ARC").is_none(),
-        "required WASI ARC toolchain unavailable"
+        "required WASI ARC toolchain unavailable; {cc}: {}; node: {}",
+        diagnostic(&compiler),
+        diagnostic(&node)
     );
     if !ready {
-        eprintln!("skipping actual WASI ARC: toolchain unavailable");
+        eprintln!(
+            "skipping actual WASI ARC; {cc}: {}; node: {}",
+            diagnostic(&compiler),
+            diagnostic(&node)
+        );
     }
     ready
 }

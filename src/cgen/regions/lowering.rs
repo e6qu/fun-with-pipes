@@ -95,7 +95,10 @@ impl Rewrite<'_> {
                     .zip(parameters)
                     .map(|(a, t)| visit(a, Some(t)))
                     .collect::<Option<Vec<_>>>()?;
-                let id = if let Some(new) = self.ids.get(id) {
+                // Reentering the public root starts a new invocation owner.
+                // Sharing this context across recursive root calls would retain
+                // inner trees until the outermost call finished.
+                let id = if let Some(new) = self.ids.get(id).filter(|_| *id != self.plan.root) {
                     args.push(Expr::Local(arity));
                     *new
                 } else {

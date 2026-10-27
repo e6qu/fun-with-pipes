@@ -63,7 +63,7 @@ jobs:
           node-version: 24
           package-manager-cache: false
       - name: WASI toolchain
-        run: sudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+        run: bash scripts/setup-wasi-linux.sh
       - name: Record source and fetch locked dependencies
         run: |
           mkdir parser-workspace-evidence
@@ -97,7 +97,7 @@ jobs:
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         env:
           FWP_REQUIRE_WASI_ARC: 1
-          FWP_WASM_CC: clang
+          FWP_WASM_CC: /usr/bin/clang-18
           FWP_WASI_ARC_ARTIFACTS: parser-workspace-evidence/wasi
         run: |
           set -o pipefail
@@ -289,7 +289,7 @@ jobs:
           node-version: 24
           package-manager-cache: false
       - name: WASI toolchain
-        run: sudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+        run: bash scripts/setup-wasi-linux.sh
       - name: Record source and fetch locked dependencies
         run: |
           mkdir unique-array-evidence
@@ -321,7 +321,7 @@ jobs:
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         env:
           FWP_REQUIRE_WASI_ARC: 1
-          FWP_WASM_CC: clang
+          FWP_WASM_CC: /usr/bin/clang-18
           FWP_WASI_ARC_ARTIFACTS: unique-array-evidence/wasi
         run: |
           set -o pipefail
@@ -1453,7 +1453,7 @@ jobs:
           package-manager-cache: false
       - name: Install explicit 32-bit toolchains
         run: |
-          sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+          bash scripts/setup-wasi-linux.sh
           rustup target add wasm32-wasip1
       - name: Actual 32-bit interpreter reads, writes and allocation bounds
         env:
@@ -1467,7 +1467,7 @@ jobs:
         env:
           FWP_REQUIRE_WASI_ARC: '1'
           FWP_WASI_ARC_ARTIFACTS: pointer-width-evidence
-          FWP_WASM_CC: clang
+          FWP_WASM_CC: /usr/bin/clang-18
         run: cargo test --locked --test wasm_arc synchronous_wasi_raw_pointer_width_and_allocation_bounds -- --nocapture
       - uses: actions/upload-artifact@v7
         if: always()
@@ -3115,7 +3115,7 @@ jobs:
           node-version: 24
           package-manager-cache: false
       - name: WASI toolchain
-        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+        run: bash scripts/setup-wasi-linux.sh
       - name: Asyncify toolchain
         run: npm install -g binaryen
       - name: Checked WASI ownership, queues and static capture initialization
@@ -3734,7 +3734,7 @@ jobs:
           node-version: 24
           package-manager-cache: false
       - name: WASI toolchain
-        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+        run: bash scripts/setup-wasi-linux.sh
       - name: Positive 64-bit counts on the actual 32-bit target
         run: cargo test --test wasm positive_64_bit_counts_saturate_before_wasi_allocation_and_slice_bounds -- --exact
   array_borrow:
@@ -3885,7 +3885,7 @@ jobs:
           package-manager-cache: false
       - name: Synchronous WASI toolchain
         run: |
-          sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+          bash scripts/setup-wasi-linux.sh
           rustup target add wasm32-wasip1
       - run: cargo fmt --all -- --check
       - run: cargo build --locked --release --bin fwp
@@ -3916,7 +3916,7 @@ jobs:
         env:
           FWP_REQUIRE_WASI_ARC: '1'
           FWP_WASI_ARC_ARTIFACTS: text-wasi-evidence
-          FWP_WASM_CC: clang
+          FWP_WASM_CC: /usr/bin/clang-18
         run: cargo test --locked --release --test wasm_arc synchronous_wasi_ -- --nocapture
       - uses: actions/upload-artifact@v7
         if: always()
@@ -4725,7 +4725,7 @@ jobs:
           package-manager-cache: false
       - name: WebAssembly toolchain
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+        run: bash scripts/setup-wasi-linux.sh
       - name: OpenSSL 3
         if: runner.os == 'macOS'
         run: |
@@ -4818,7 +4818,9 @@ jobs:
           package-manager-cache: false
       - name: Linux toolchains
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y clang llvm lld libssl-dev wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+        run: |
+          bash scripts/setup-wasi-linux.sh
+          sudo apt-get install -y libssl-dev
       - name: OpenSSL on macOS
         if: runner.os == 'macOS'
         run: |
@@ -4958,7 +4960,7 @@ jobs:
           node-version: 24
           package-manager-cache: false
       - name: WASI toolchain
-        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+        run: bash scripts/setup-wasi-linux.sh
       - name: Asyncify toolchain
         if: inputs.suite == 'wasi-arc' || inputs.suite == 'wasm-hosts'
         run: npm install -g binaryen

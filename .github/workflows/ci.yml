@@ -333,8 +333,8 @@ jobs:
       - name: WebAssembly toolchain, OpenSSL headers (TLS)
         timeout-minutes: 10
         run: |
-          sudo apt-get -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o APT::Update::Error-Mode=any update
-          sudo env DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o DPkg::Lock::Timeout=60 install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32 libssl-dev openssl
+          bash scripts/setup-wasi-linux.sh
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o DPkg::Lock::Timeout=60 install -y libssl-dev openssl
       - name: aarch64 cross compiler and qemu (tests/cross.rs)
         if: runner.arch == 'X64'
         timeout-minutes: 10

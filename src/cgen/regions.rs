@@ -552,4 +552,30 @@ mod tests {
             );
         }
     }
+    #[test]
+    fn recursive_root_calls_reenter_the_owner_instead_of_extending_its_lifetime() {
+        let (mut prog, _) = program();
+        prog.funcs[0].locals.push(MT::con("std::I64"));
+        prog.funcs[0].body = Body::Expr(Expr::Let(
+            1,
+            Box::new(Expr::Call(1, vec![Expr::Local(0)])),
+            Box::new(Expr::Let(
+                2,
+                Box::new(Expr::Call(0, vec![Expr::Local(0)])),
+                Box::new(Expr::Call(2, vec![Expr::Local(1)])),
+            )),
+        ));
+        let lowered = lower(&prog);
+        crate::ir::check_locals(&lowered).unwrap();
+        let Body::RegionEntry { worker } = lowered.funcs[0].body else {
+            panic!("no owner");
+        };
+        let Body::Expr(Expr::Let(_, _, body)) = &lowered.funcs[worker].body else {
+            panic!("no body");
+        };
+        let Expr::Let(_, call, _) = &**body else {
+            panic!("no recursive call");
+        };
+        assert!(matches!(&**call, Expr::Call(0, args) if args.len() == 1));
+    }
 }

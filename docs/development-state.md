@@ -1,8 +1,8 @@
 # Current work
 
-**Next:** validate A6's integrated compiler transformation in the focused
-Linux ARM64/AMD64 runner suite, fix every failure, then complete WASI and the
-C/Rust measurement evidence in the same draft PR before the full production gate.
+**Next:** validate the pinned WASI toolchain and recursive-owner repair together
+in the focused Linux ARM64/AMD64 suite. Then complete C/Rust comparisons,
+compiler-cost evidence and cancellation observations before the full production gate.
 
 [Draft PR #221](https://github.com/e6qu/fun-with-pipes/pull/221) uses
 `/private/tmp/fwp-parser-workspace`, branch `scoped-parser-workspace`, based on
@@ -21,21 +21,29 @@ fixed inputs. The compiler changes are not verified support yet.
   the block allocator. Mixed records retain their String/token-list owners.
 - Analysis and cloning have program-size budgets. A reverse call graph propagates
   context requirements without repeatedly walking recursive helper bodies.
-- Twelve unit controls, four native integration tests and one WASI test cover admission, semantic
-  agreement, overflow, nested calls, suspension/cancellation, escaped/cached trees,
-  block alignment, physical cleanup and every block-allocation failure. The
-  generated-parser probe rejects any count operation on a live internal link;
-  deliberate extra-count and missing-free mutations must fail their observers.
-- First focused run `40556027459` at `f16da74d` built on both Linux hosts.
-  All 207 units, six allocator tests and two record tests passed. Three parser
-  tests stopped because the ownership checker lacked the new link-shape contract;
-  the block probe passed. Both Clippy jobs reported the same three needless
-  borrows in test paths. Complete logs were audited. The repair checks region
-  owner/field contracts explicitly, adds invalid-contract unit controls and fixes
-  all three lint errors. It also shares the actual-parser observer with WASI,
-  checking physical storage after the handler frame returns. These repairs and
-  WASI execution still need a runner check.
-  Full CI remains deferred until this whole batch and its evidence are ready.
+- Thirteen unit controls, five native integration tests and one WASI test cover
+  admission, values/traps, nested/reentrant calls, cancellation, escaped/cached
+  trees, alignment and physical cleanup. Deliberate extra-count and missing-free
+  mutations must fail their observers.
+- Run `40557195444` at `4ec06337` passed all 208 units, six allocator tests, four
+  parser tests, two record tests and Clippy on both Linux hosts. ARM64 also passed
+  actual WASI; its 20 native/WASI probes were independently audited for complete
+  outputs, statuses, zero final live bytes and binary architecture headers.
+- AMD64's WASI preflight failed because Ubuntu's unversioned Clang advanced to 21
+  while jobs installed LLVM 18 WASI libraries. Logs from both jobs were audited.
+  `scripts/setup-wasi-linux.sh` now pins compiler, linker and libraries together,
+  runs a link preflight, and is shared by all affected CI/focused workflows.
+  Missing-tool errors now include the actual compiler and Node diagnostics.
+- Source review also found recursive public calls sharing the outer context.
+  They now reenter the owning entry. A source example evaluates five trees to 70;
+  the new native observer requires five distinct live owners. Raw interpretation
+  and formatting pass with the unchanged verified frontend. The native fix,
+  regression controls and toolchain repair need the next focused runner batch.
+- First run `40556027459` at `f16da74d` failed three parser tests because the
+  ownership checker lacked a link-shape contract, and Clippy found three needless
+  test-path borrows. Those repairs passed in `40557195444`; invalid owner/field
+  metadata now has explicit rejection controls. This is not final full validation.
+
 
 ## Checks and the incidental repair
 
