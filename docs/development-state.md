@@ -10,8 +10,7 @@ PR [#218](https://github.com/e6qu/fun-with-pipes/pull/218), branch
 `arc-residual-costs`, worktree `/private/tmp/fwp-arc-residual-costs`, final head
 `4e504ee381d1d85f2172b508459d026300013ba5`:
 
-- Production `40480893046`: both macOS ARM64 jobs, Windows ARM64 and C/Rust benchmarks passed;
-  five Linux/Windows/Intel macOS jobs still running, with no failed steps reported.
+- Production `40480893046`: eight production jobs passed; only Linux AMD64 is still running, with no failed steps reported.
 - Documentation `40480892776` and both analysis hosts `40480891997` passed.
   Completed logs were audited. Expected panic/failure text belongs to deliberate
   controls, followed by passing observer tests.
@@ -25,7 +24,7 @@ PR [#218](https://github.com/e6qu/fun-with-pipes/pull/218), branch
 
 Worktree `/private/tmp/fwp-unique-array`, branch `unique-array-storage`, based on
 #218's final head. Rebase onto its verified squash before opening the next PR.
-Current prototype source: `04bb2033f6b30f8a34049ae973e2c5b24c6dbd7b`.
+Current published source: `b9d637b6336f8a66b05c0b721f7b010aaa5aa998`.
 
 - `src/rc/unique.rs` requires one release per normal path, no new owner/alias,
   and explicitly nonescaping borrowed calls. It rejects a borrow whose owner is
@@ -46,8 +45,8 @@ Current prototype source: `04bb2033f6b30f8a34049ae973e2c5b24c6dbd7b`.
 - A source review found a needed follow-up bound: unused bytes at the end of a
   small chunk must not index beyond its shorter count array. The working tree
   checks `i < rc_len` and adds a padding-pointer regression. The next focused
-  run includes this fix and the related controls below; none is yet verified by
-  the earlier passing run.
+  run includes this fix and the related controls below. Run `40492232784` verified
+  the padding repair on both native Linux hosts.
 - New controls cover completed-array failure, cancellation and returned aliases.
   The captured-array fixture now returns a record containing its callback: its
   earlier curried form could flatten into a local array and was not an escaping
@@ -58,6 +57,26 @@ Current prototype source: `04bb2033f6b30f8a34049ae973e2c5b24c6dbd7b`.
   The old A3 comparison remains unchanged. Separate observations count metadata
   allocation requests, requested/released bytes, peak bytes and cached bytes at
   the end. These exclude malloc headers, fragmentation and process RSS.
+
+Both complete logs from `40492232784` were audited. The only failed target was
+`array_element_ownership`: the completed-array control returned 227 because its
+`tap` form transferred the array through a temporary local, outside this initial
+proof. The working tree uses `both (array.length | checked-index) read | uncurry add`
+so a known scalar call can fail while the same array owner remains live. The
+harness now records all executable-probe failures instead of stopping at the first.
+Cancellation and escaping-owner probes also passed bounded Clang diagnostics using
+the actual runner-generated C, including omitted-free and omitted-owner faults;
+these diagnostics do not replace the upcoming GCC run.
+
+All 13 paired count/metadata measurements in that run passed on both hosts; hashes,
+rows, three samples per input and cross-host managed counts were audited. The
+[report](measurements/unique-array-storage.md) and JSON retain those results,
+including slightly larger complete executables and the shared control's code growth.
+The current working tree adds actual WASI allocation/count-table checks and a
+separate 16/32/64-source-call compiler-cost experiment. Neither is verified yet.
+`unique-array-checks` reruns the affected controls without repeating unchanged
+operation-count measurements. Compiler/runtime implementation is unchanged since
+`b9d637b6`; the upcoming changes are fixtures, probes, measurements and docs.
 
 ## Remaining acceptance for this batch
 
