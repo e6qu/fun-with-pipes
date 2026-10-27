@@ -6,6 +6,34 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Tracing GC removal (PR #217)
+
+The collector and `--gc` selection are deleted. Native programs use compiler
+ownership, typed destruction and counts where sharing remains. Weak links and
+rejection of unproved owning cycles preserve the agreed lifetime model. Native
+and WASI tests retain physical-free, alias, cancellation, failure and reuse
+controls; tools and reports use the same memory policy.
+
+All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40433794313),
+[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40433794300) and
+both [analysis-budget hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/40433851517)
+passed on `2721bf14a389f685e3dd64f5bf3d6921f61a6212`. Every completed production
+log was audited for failed targets. [PR #217](https://github.com/e6qu/fun-with-pipes/pull/217)
+was squash-merged as `9dfa014596e1954e3e67c653123dad77a14f5241`; its tree matches
+the tested tree, and its message is one 57-character line without trailers.
+
+Repairs addressed missing cleanup in protocol fixtures, portable trap/failure
+controls, Windows header ordering and a slow Ubuntu package mirror that prevented
+the required WASI tool installation. Fully supplied ownership-analysis calls
+now join existing captures directly instead of copying temporary sets. Both
+analysis hosts pass the unchanged count/time budgets; see the
+[analysis measurements](measurements/ownership-analysis.md). No timing budget
+was raised or required test skipped. The older intermittent Intel compiler abort
+remains unexplained; [its evidence](measurements/compiler-abort.md) is retained.
+
+G1–G5 are complete. ARC minimization remains A2–A6. Historical benchmark results
+are not relabeled as measurements of this source.
+
 ## Shared lifetime checks and clearer guides (PR #216)
 
 Interpreter and native entries now enforce the same ownership rules before

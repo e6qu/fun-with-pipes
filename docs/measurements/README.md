@@ -7,6 +7,10 @@ The files here are evidence at recorded revisions, not live project status.
 records merges and platform validation. Raw JSON retains samples and source/tool
 identities. Do not edit observations to make an old experiment describe new code.
 
+## Ownership costs
+
+- [Remaining ARC operations after GC removal](arc-residual-costs.md): A2 per-owner attribution and measured static-callback reduction, including code/stack costs.
+
 ## Numerical applications
 
 These reports follow different versions of derivative descent. Read the variant table and timing boundary before comparing ratios across reports. A protocol describes an experiment, not an outstanding task.

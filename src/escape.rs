@@ -14,9 +14,8 @@
 //! position is compiled as a jump, which reuses the frame that holds it.
 //!
 //! The C backend allocates a record, variant or closure that does not
-//! escape on the stack (`src/cgen.rs`): its fields are on the stack the
-//! collector scans, and the runtime counts no references of a value off
-//! its heap.
+//! escape on the stack (`src/cgen.rs`). Their children still follow typed
+//! ownership rules; the runtime keeps no count for the stack container itself.
 
 use crate::ir::{Body, Expr, FuncId, Local, Pat, Program};
 

@@ -332,7 +332,7 @@ The immutable baseline and exact contract promotions distinguish counted
 boundaries from operations that still require a specific lifetime proof. Preparation and historical
 binary/GC/reuse/omission controls remain in [history](roadmap-history.md).
 The [eligibility contract](ownership.md) defines allowed lifetimes. Collector
-removal remains unverified until the final integrated checks pass.
+removal passed the integrated checks in [#217](roadmap-history.md#tracing-gc-removal-pr-217).
 
 ## Validation and limits
 

@@ -4,8 +4,9 @@ An owner keeps an allocation alive. A retain adds an owner; a release gives one
 up. Removing tracing GC requires checks that catch lost owners, premature release
 and unsafe storage reuse without a collector keeping the affected objects alive.
 G4 passed all nine production jobs and documentation in [#215](roadmap-history.md#weak-channels-and-retained-callbacks-pr-215).
-The G5 branch replaces collector-specific controls while retaining these ownership
-checks. Its integrated acceptance is pending in [PR #217](https://github.com/e6qu/fun-with-pipes/pull/217).
+G5 replaced collector-specific controls while retaining these ownership checks.
+All nine production jobs, documentation and both analysis-budget hosts passed in
+[PR #217](roadmap-history.md#tracing-gc-removal-pr-217).
 
 ## Closure destruction and loop releases
 
@@ -20,15 +21,15 @@ Failure to grow the queue terminates with status 102, matching allocator
 exhaustion. A trap during destruction terminates with status 101. Neither may
 resume a server call or language test after abandoning partially released owners.
 Ordinary traps outside destruction keep their existing recovery rules.
-The focused Clang ARM64 O1/O2 probe passes; integrated target checks are pending.
+The focused Clang ARM64 O1/O2 probe and integrated target checks pass.
 
 The loop probe compares the same 10,000-step program with and without its typed
 loop releases. Both must match the raw interpreter's output. The missing-release
 control must release at least 314,573 fewer bytes and leave at least that many
 extra live bytes. Separate alias tests cover O1/O2, stack placement on/off and
 normal reuse versus the explicit `FWP_NO_REUSE` copy control. These are memory
-correctness checks, not timing comparisons with C or Rust. Integrated validation
-of the migrated loop probe is pending.
+correctness checks, not timing comparisons with C or Rust. The migrated loop
+probe passed integrated validation in #217.
 
 The list application probe runs every function over every input; flat-map joins
 the lists returned by its callback. Both check result order, shared elements,
@@ -38,7 +39,7 @@ the initial live-byte balance. The separate State-slot probe uses scalar markers
 to test clearing and restoration after growth, errors, served calls and task exit.
 It explicitly releases task handles and result boxes. Owned State values and
 aliases remain covered by `typed_state_ownership` and interpreter/native examples.
-These migrated probes still require integrated validation.
+These migrated probes passed integrated validation in #217.
 
 ## Native live-allocation ledger
 
@@ -251,8 +252,8 @@ is included in dynamic/static native and WASI JSPI/Asyncify execution.
 The [WASI physical ledger](../tests/fixtures/wasm_arc_allocations.c) now detects
 duplicate addresses even when an earlier slot is empty. Its regression test
 checks normal reuse, duplicate registration and duplicate removal on native and
-WASI hosts. Their #215 results establish the starting point; the migrated G5
-controls still need integrated native and WASI validation.
+WASI hosts. The migrated G5 controls pass integrated native and WASI validation
+in #217; the original #215 results remain historical evidence.
 
 ## Which collector checks need replacement?
 
@@ -298,15 +299,15 @@ that variant only after its ARC run passes; a `0` setting is merely disabling a
 check. The source inventory retains exact locations, including dynamically
 selected settings, so that deletion can be reviewed without guessing from names.
 
-This G5 batch moves record/tree/array/map allocation comparisons and ordinary
+G5 moved record/tree/array/map allocation comparisons and ordinary
 loop/HTTP/REST RSS checks to ARC. Both reuse variants keep reference counts;
 `FWP_NO_REUSE` disables only in-place updates in the copy control. The numeric
 budgets remain unchanged. This measures allocation cost, not elapsed time or
 parity with C/Rust. [The handoff](development-state.md) records validation status.
 
-## Allocation report migration (G5 work in progress)
+## Allocation reports
 
-`FWP_ALLOC_STATS=1` replaces the collector report in the deletion branch. Its
+`FWP_ALLOC_STATS=1` reports allocator activity without a collector. Its
 fields have explicit units:
 
 ```text
@@ -329,11 +330,11 @@ The strict test parser rejects missing fields, duplicate reports, wrong units
 and invalid numbers. Existing historical measurements keep their original schema
 and source identity. New measurements must identify this report format.
 
-The allocator/report code, parser probes and migrated consumers are published
-in draft PR #217. Integrated validation is unfinished; see
-[the handoff](development-state.md).
+The allocator/report code, parser probes and maintained consumers passed the
+integrated #217 checks. Historical benchmark numbers have not been remeasured
+merely by migrating their producers or readers.
 
-## Remaining acceptance
+## Preserved acceptance checks
 
 The shared `client-memory` report has five columns after its label: allocation
 requests, requested bytes, effective retains, peak live-byte growth and final
@@ -342,10 +343,9 @@ the generated ownership observation point, before full runtime shutdown. HTTP
 server probes that reuse this observer call the same row `server-memory`.
 Neither row includes collection counts. They exclude raw network buffers,
 allocator metadata, OS resources and process RSS; separate observers cover those.
-Their migrated consumers still require integrated validation.
+The integrated production consumers pass. Separately dispatched measurement
+protocols require their own new runs before publishing new numerical results.
 
-The report/workflow migration and collector deletion are implemented. G5 must
-verify their integrated behavior and inspect binaries for actual tracing removal.
 Preserve all behavioral assertions and broken-ownership controls. An address
 ledger cannot catch every stale raw read; compiler lifetime checks and alias/output
 comparisons remain necessary. Run all nine production jobs and documentation
@@ -365,5 +365,5 @@ Workspace checks retain both direct runtime calls inside an explicit scope and
 library-style callback scopes, at O1/O2 with caching enabled and disabled. They
 compare six gradient hashes and require storage cleanup on completion, failure
 and cancellation. Collector settings are not needed to exercise these paths.
-The local Clang probes pass; integrated generated programs and all other targets
-remain part of G5's final validation.
+The local Clang probes and integrated generated programs pass in #217. They
+remain required when changing ownership or workspace representation.

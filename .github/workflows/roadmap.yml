@@ -34,3 +34,5 @@ jobs:
         run: python3 scripts/test-native-test-runner.py
       - name: Collection evidence completeness and memory controls
         run: python3 scripts/test-collection-evidence.py
+      - name: Ownership operation evidence controls
+        run: python3 scripts/test-ownership-profile.py
