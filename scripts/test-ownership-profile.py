@@ -78,10 +78,45 @@ class Evidence(unittest.TestCase):
         current['operations']['dup']['calls'] -= 16
         current['operations']['release_last']['calls'] -= 16
         report = dict(machine='x86_64', cases={'buffer-unique': dict(sourceSha256='same', inputs={'16': [current]})})
-        self.assertEqual(ARC.comparison_failures(report, baseline), [])
+        self.assertEqual(ARC.comparison_failures(report, baseline, 'compare'), [])
         current['operations']['dup']['effective'] -= 1
         current['managed']['requests'] += 1
-        self.assertEqual(len(ARC.comparison_failures(report, baseline)), 2)
+        self.assertEqual(len(ARC.comparison_failures(report, baseline, 'compare')), 2)
+
+    def test_unique_array_comparison_requires_the_declared_count_saving(self):
+        baseline = json.loads((ARC.ROOT / 'docs/measurements/arc-residual-candidate-2026-10-27.json').read_text())
+        cases = baseline['hosts']['x86_64']['cases']
+        report = dict(machine='x86_64', cases={})
+        for name, case in cases.items():
+            current = dict(sourceSha256=case['sourceSha256'], inputs={})
+            for label, profile in case['inputs'].items():
+                profile = copy.deepcopy(profile)
+                if name in ('buffer-unique', 'buffer-callback'):
+                    for operation in ('fresh', 'release_last', 'last', 'free_arr'):
+                        profile['operations'][operation]['calls'] -= 1
+                        profile['operations'][operation]['effective'] -= 1
+                    profile['operations']['release_last']['last'] -= 1
+                current['inputs'][label] = [profile]
+            report['cases'][name] = current
+        self.assertEqual(ARC.comparison_failures(report, baseline, 'unique-arrays'), [])
+        self.assertTrue(ARC.comparison_failures(report, baseline, 'compare'))
+        report['cases']['buffer-unique']['inputs']['16'][0]['operations']['fresh']['calls'] += 1
+        self.assertEqual(len(ARC.comparison_failures(report, baseline, 'unique-arrays')), 1)
+
+    def test_metadata_accounting_and_missing_observations(self):
+        metadata = dict(allocationRequests=1, requestedCountBytes=16, releasedCountBytes=0,
+                        initialCountBytes=4, finalCountBytes=20, peakCountBytes=20,
+                        chunkHeaderBytes=40, countPointerBytes=8)
+        raw = lambda value: (json.dumps(value) + '\n' + json.dumps(self.managed) + '\n').encode()
+        self.assertEqual(ARC.parse_metadata(raw(metadata)), (metadata, self.managed))
+        for field, value in (('allocationRequests', 0), ('requestedCountBytes', 0),
+                             ('releasedCountBytes', 1), ('finalCountBytes', 19),
+                             ('peakCountBytes', 19), ('chunkHeaderBytes', 4128)):
+            broken = dict(metadata, **{field: value})
+            with self.subTest(field=field), self.assertRaises(AssertionError):
+                ARC.parse_metadata(raw(broken))
+        with self.assertRaises(AssertionError):
+            ARC.parse_metadata(raw(metadata) + b'{}\n')
 
 
 if __name__ == '__main__':

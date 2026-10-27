@@ -6,6 +6,22 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Static array callbacks and remaining ARC costs (PR #218)
+
+Creating N array elements through a known capture-free callback no longer makes
+N no-op retain attempts and callback-release checks. Effective owner counts,
+allocation requests and live bytes are unchanged. The
+[cost report](measurements/arc-residual-costs.md) attributes remaining owners and
+records smaller code but larger entry frames; no speedup is claimed.
+
+Merged as `cd0b53e27ff71bb266658415886c7bfc117ce9cb`, with tree
+`3f2051728853f89c28225d16824f47f2bdf314e7`, identical to tested
+`4e504ee381d1d85f2172b508459d026300013ba5`. All nine production jobs `40480893046`,
+docs `40480892776` and both analysis hosts `40480891997` passed; completed logs
+were audited. The squash subject is one line, 69 characters, with no body or trailers.
+Duplicate postmerge CI/docs runs were cancelled after verifying the identical tree.
+A2 and the first A3 class are delivered; A5 and the rest of ARC minimization remain open.
+
 ## Tracing GC removal (PR #217)
 
 The collector and `--gc` selection are deleted. Native programs use compiler

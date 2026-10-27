@@ -153,7 +153,7 @@ jobs:
         run: |
           cargo test --test device_bounds device_output_limits_preserve_kernel_validation_order -- --exact
           exit $LASTEXITCODE
-      - name: Array bounds and retained GC failure artifacts
+      - name: Array bounds and ownership failure artifacts
         if: ${{ !cancelled() && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: |

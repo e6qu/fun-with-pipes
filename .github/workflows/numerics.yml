@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -33,6 +33,94 @@ on:
         description: Exact focused API run supplying native diagnostic executables
         type: string
 jobs:
+  unique_arrays:
+    if: inputs.suite == 'unique-arrays' || inputs.suite == 'unique-array-checks'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CC: gcc
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      FWP_LTO: '0'
+      FWP_ARC_ARTIFACTS: unique-array-evidence
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: WASI toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+      - name: Record source and fetch locked dependencies
+        run: |
+          mkdir unique-array-evidence
+          git rev-parse HEAD > unique-array-evidence/source.txt
+          cargo fetch --locked
+          echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
+      - name: Build the current compiler
+        id: compiler
+        run: |
+          set -o pipefail
+          cargo build --locked --bin fwp 2>&1 | tee unique-array-evidence/build.log
+      - name: Formatting and primitive contracts
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: |
+          cargo fmt --all -- --check
+          target/debug/fwp fmt --check tests/fixtures/unique_array_ownership.fwp
+          python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output unique-array-evidence/inventory.json
+      - name: Verify proof, allocator, generated arrays and cleanup
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: |
+          set -o pipefail
+          cargo test --locked --no-fail-fast --lib --test native_allocator --test array_element_ownership --test array_unwind_ownership --test array_loop_borrows --test library_unload -- --nocapture 2>&1 | tee unique-array-evidence/tests.log
+      - name: Check compiler and regression code
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: |
+          set -o pipefail
+          cargo clippy --locked --lib --test native_allocator --test array_element_ownership -- -D warnings 2>&1 | tee unique-array-evidence/clippy.log
+      - name: Verify actual WASI unique storage
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        env:
+          FWP_REQUIRE_WASI_ARC: 1
+          FWP_WASM_CC: clang
+          FWP_WASI_ARC_ARTIFACTS: unique-array-evidence/wasi
+        run: |
+          set -o pipefail
+          cargo test --locked --test wasm_arc wasi_unique_arrays_have_no_count_entries_and_free_on_failure -- --exact --nocapture 2>&1 | tee unique-array-evidence/wasi.log
+      - name: Measure compiler cost for multiple local arrays
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: python3 scripts/measure-unique-array-analysis.py --compiler target/debug/fwp --samples 5 --timeout 120 --output unique-array-evidence/compiler-cost
+      - name: Measure counts, metadata, code and stack costs against A3
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' && inputs.suite == 'unique-arrays' }}
+        run: |
+          python3 scripts/test-ownership-profile.py
+          python3 scripts/measure-arc-costs.py --compiler target/debug/fwp --cc gcc --objdump objdump --nm nm --samples 3 --timeout 240 --output unique-array-costs --comparison unique-arrays --baseline docs/measurements/arc-residual-candidate-2026-10-27.json
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'unique-arrays'
+        with:
+          name: unique-array-costs-${{ matrix.runner }}
+          path: unique-array-costs/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: unique-arrays-${{ matrix.runner }}
+          path: unique-array-evidence/
+          if-no-files-found: error
+
   arc_costs:
     if: inputs.suite == 'arc-costs'
     strategy:

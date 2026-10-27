@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import subprocess
 
 
@@ -95,8 +96,9 @@ def cases():
         yield 'buffer-' + entry, source, entry, [(str(n), b'') for n in (0, 16, 4096)]
 
 
-def comparison_failures(report, baseline):
+def comparison_failures(report, baseline, policy):
     """Check the declared no-capture callback saving without hiding other costs."""
+    assert policy in ('compare', 'unique-arrays')
     old = baseline['hosts'][report['machine']]['cases']
     assert set(report['cases']) == set(old)
     failures = []
@@ -111,12 +113,70 @@ def comparison_failures(report, baseline):
                 failures.append(f'{name}/{label}: allocation/retain/live-byte totals changed')
             for operation, counts in expected['operations'].items():
                 target = dict(counts)
-                if name.startswith('buffer-') and operation in ('dup', 'release_last'):
+                if policy == 'compare' and name.startswith('buffer-') and operation in ('dup', 'release_last'):
                     target['calls'] -= int(label)
+                if policy == 'unique-arrays' and name in ('buffer-unique', 'buffer-callback'):
+                    if operation in ('fresh', 'release_last', 'last', 'free_arr'):
+                        target['calls'] -= 1
+                        target['effective'] -= 1
+                        if operation == 'release_last':
+                            target['last'] -= 1
                 if actual['operations'][operation] != target:
                     failures.append(f'{name}/{label}/{operation}: '
                                     f'{actual["operations"][operation]} != {target}')
     return failures
+
+
+def instrument_metadata(code):
+    """Observe separately allocated count slots, including cached storage."""
+    declaration = '''typedef uint64_t V;
+static size_t metadata_requests, metadata_bytes, metadata_released;
+static size_t metadata_initial, metadata_peak;
+'''
+    assert code.count('typedef uint64_t V;') == 1
+    code = code.replace('typedef uint64_t V;', declaration)
+    allocation = '        fwp_heap.rc_bytes += slots;'
+    assert code.count(allocation) == 1
+    code = code.replace(allocation, allocation + '''
+        if (iteration_active && slots) {
+            metadata_requests++; metadata_bytes += slots;
+            if (fwp_heap.rc_bytes > metadata_peak) metadata_peak = fwp_heap.rc_bytes;
+        }''')
+    release = re.compile(r'fwp_heap\.rc_bytes -= ([^;\n]+);')
+    assert len(release.findall(code)) == 1
+    code = release.sub(lambda match: 'if (iteration_active) metadata_released += '
+                       + match[1] + '; ' + match[0], code)
+    start = 'iteration_start_charge=iteration_charge();iteration_active=1;'
+    assert code.count(start) == 1
+    code = code.replace(start, start + 'metadata_initial=metadata_peak=fwp_heap.rc_bytes;')
+    end = '    iteration_active=0;'
+    assert code.count(end) == 1
+    observation = r'''
+    size_t metadata_sum = 0;
+    for (size_t ci = 0; ci < fwp_heap.top; ci++) metadata_sum += fwp_heap.meta[ci].rc_len;
+    if (metadata_sum != fwp_heap.rc_bytes) exit(96);
+    fprintf(stderr,"{\"allocationRequests\":%zu,\"requestedCountBytes\":%zu,\"releasedCountBytes\":%zu,\"initialCountBytes\":%zu,\"finalCountBytes\":%zu,\"peakCountBytes\":%zu,\"chunkHeaderBytes\":%zu,\"countPointerBytes\":%zu}\n",
+            metadata_requests, metadata_bytes, metadata_released, metadata_initial,
+            fwp_heap.rc_bytes, metadata_peak, sizeof(heap_chunk), sizeof(fwp_heap.meta[0].rc));
+'''
+    return code.replace(end, end + observation)
+
+
+def parse_metadata(stderr):
+    rows = stderr.decode().splitlines()
+    assert len(rows) == 2, rows
+    metadata, managed = map(json.loads, rows)
+    assert set(metadata) == {'allocationRequests', 'requestedCountBytes', 'releasedCountBytes',
+                             'initialCountBytes', 'finalCountBytes', 'peakCountBytes',
+                             'chunkHeaderBytes', 'countPointerBytes'}, metadata
+    assert all(type(value) is int and value >= 0 for value in metadata.values()), metadata
+    assert metadata['chunkHeaderBytes'] == 40 and metadata['countPointerBytes'] == 8, metadata
+    assert metadata['initialCountBytes'] + metadata['requestedCountBytes'] == (
+        metadata['releasedCountBytes'] + metadata['finalCountBytes']), metadata
+    assert metadata['peakCountBytes'] >= max(metadata['initialCountBytes'], metadata['finalCountBytes'])
+    assert metadata['allocationRequests'] <= metadata['requestedCountBytes'], metadata
+    assert bool(metadata['allocationRequests']) == bool(metadata['requestedCountBytes']), metadata
+    return metadata, managed
 
 
 def main():
@@ -128,11 +188,11 @@ def main():
     parser.add_argument('--samples', required=True, type=int)
     parser.add_argument('--timeout', required=True, type=int)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('record', 'compare'))
+    parser.add_argument('--comparison', required=True, choices=('record', 'compare', 'unique-arrays'))
     parser.add_argument('--baseline', type=Path)
     args = parser.parse_args()
-    if (args.comparison == 'compare') != (args.baseline is not None):
-        parser.error('compare requires --baseline; record does not accept one')
+    if (args.comparison != 'record') != (args.baseline is not None):
+        parser.error('comparison requires --baseline; record does not accept one')
     assert os.environ.get('GITHUB_ACTIONS') == 'true', 'full measurements run on GitHub'
     assert platform.system() == 'Linux' and args.samples >= 2 and args.timeout > 0
     output = args.output.resolve()
@@ -183,8 +243,12 @@ def main():
         measured, sites = OWNERSHIP.instrument(base)
         (directory / 'profile-sites.c').write_text(measured)
         (directory / 'sites.json').write_text(json.dumps(sites, indent=2) + '\n')
+        profiles_to_build = ['ordinary', 'profile-base', 'profile-sites']
+        if args.comparison == 'unique-arrays':
+            (directory / 'profile-metadata.c').write_text(instrument_metadata(base))
+            profiles_to_build.append('profile-metadata')
         binaries = {}
-        for label in ('ordinary', 'profile-base', 'profile-sites'):
+        for label in profiles_to_build:
             binary = directory / (label + '.exe')
             run([args.cc, *flags, directory / (label + '.c'), '-o', binary, '-lm', '-lpthread', '-ldl'], b'', False)
             binaries[label] = binary
@@ -214,6 +278,7 @@ def main():
             base_counts = json.loads(baseline.stderr)
             previous = None
             profiles = []
+            metadata_profiles = []
             for sample in range(args.samples):
                 measured_result = run([binaries['profile-sites'], *arguments], data, False)
                 assert measured_result.stdout == reference.stdout
@@ -232,12 +297,23 @@ def main():
                                                peakChargedBytes=32, finalChargedBytes=0), base_counts
                 if previous is not None:
                     assert parsed == previous, (name, label, 'unstable counts')
+                if args.comparison == 'unique-arrays':
+                    metadata_result = run([binaries['profile-metadata'], *arguments], data, False)
+                    assert metadata_result.stdout == reference.stdout
+                    metadata, metadata_managed = parse_metadata(metadata_result.stderr)
+                    assert metadata_managed == base_counts
+                    if metadata_profiles:
+                        assert metadata == metadata_profiles[0], (name, label, 'unstable metadata')
+                    metadata_profiles.append(metadata)
+                    (directory / f'{label or "main"}-{sample}.metadata.stderr').write_bytes(metadata_result.stderr)
                 previous = parsed
                 profiles.append(parsed)
                 (directory / f'{label or "main"}-{sample}.stderr').write_bytes(measured_result.stderr)
             (directory / f'{label or "main"}.stdin').write_bytes(data)
             (directory / f'{label or "main"}.stdout').write_bytes(reference.stdout)
             result['inputs'][label or 'main'] = profiles
+            if metadata_profiles:
+                result.setdefault('countMetadata', {})[label or 'main'] = metadata_profiles
         if name == 'observer-control':
             start = measured.index('static inline void fwp_rc_dup_profile(')
             opening = measured.index('{', start)
@@ -262,10 +338,10 @@ def main():
         result['files'] = {path.name: digest(path) for path in sorted(directory.iterdir()) if path.is_file()}
         (output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
         print(name + ': outputs, baseline counts, site totals and repetitions agree', flush=True)
-    if args.comparison == 'compare':
+    if args.comparison != 'record':
         baseline = json.loads(args.baseline.read_text())
-        failures = comparison_failures(report, baseline)
-        report['comparison'] = dict(baselineSource=baseline['source'],
+        failures = comparison_failures(report, baseline, args.comparison)
+        report['comparison'] = dict(policy=args.comparison, baselineSource=baseline['source'],
                                     baselineSha256=digest(args.baseline), failures=failures)
         (output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
         assert not failures, '\n'.join(failures)

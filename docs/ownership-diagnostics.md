@@ -334,6 +334,38 @@ The allocator/report code, parser probes and maintained consumers passed the
 integrated #217 checks. Historical benchmark numbers have not been remeasured
 merely by migrating their producers or readers.
 
+## Unique-array storage checks
+
+The [unique-array report](measurements/unique-array-storage.md) covers the first
+array representation without counts. `array_element_ownership` invokes actual
+exported functions at O1/O2 and checks allocation/free counts, absence of count
+operations on the array, empty count metadata, and restored live-byte charge.
+An extra count call fails with probe status 224; recording a free while skipping
+its allocator body fails with 225. These are observer exits, not language error
+codes. Failure during generation, failure while a completed array is live and
+cancellation use the same independent checks. A static-memory generated entry
+supplements the allocator's static allocation/reuse checks.
+
+Returned aliases, escaped callbacks and unknown calls must keep counted ownership.
+The callback probe returns a record containing the function, releases that record,
+then invokes the function twice. Removing an owner fails with 234. Injecting a
+unique allocation into these controls fails with 233. Use an explicit function
+entry when generating the probe: ordinary main compilation can remove or inline
+exports and leave no separately callable function to inspect.
+
+`wasm_arc` runs the selected array entries as actual WASI modules. Its independent
+libc-allocation ledger checks physical storage while the count table is checked
+separately. Missing frees and extra count operations must fail, even if ordinary
+program output remains correct. Completed focused probes do not replace all
+final-head platform gates; the report names verified hosts and remaining checks.
+
+Count-metadata measurements in `measure-arc-costs.py` use a separate instrumented
+binary. They count new metadata requests, requested/released bytes, peak bytes and
+cached bytes before shutdown. The byte balance must agree with actual chunk
+metadata lengths. The usual managed-value report excludes this storage, so it
+cannot alone support a metadata-saving claim. Neither report measures malloc
+headers, fragmentation or whole-process resident memory.
+
 ## Preserved acceptance checks
 
 The shared `client-memory` report has five columns after its label: allocation

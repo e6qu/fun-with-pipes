@@ -65,6 +65,7 @@ typedef unsigned __int128 u128;
 /* runtime/fwp_rt_heap.c: counted storage */
 static void *fwp_alloc(size_t n);      /* zeroed runtime storage */
 static void *fwp_alloc_leaf(size_t n); /* zeroed; holds no values */
+static void *fwp_alloc_unique(size_t n); /* zeroed; compiler proves one lifetime */
 /* whether runtime storage uses fixed startup budgets (runtime/fwp_rt_static.c) */
 #ifdef FWP_STATIC_MEMORY
 static const int fwp_static_memory = 1;

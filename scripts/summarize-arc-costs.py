@@ -69,6 +69,15 @@ def audit(directory, source, machine):
             location, size, kind = line.split('\t')
             frames.append(dict(function=location.rsplit(':', 1)[1], bytes=int(size), kind=kind))
         text, = re.findall(r'^\s*\d+ \.text\s+([0-9a-fA-F]+)\s', (root / 'ordinary.sections').read_text(), re.M)
+        metadata_inputs = {}
+        if report.get("comparison", {}).get("policy") == "unique-arrays":
+            assert set(case["countMetadata"]) == set(case["inputs"])
+            for label, samples in case["countMetadata"].items():
+                assert len(samples) == 3 and all(sample == samples[0] for sample in samples)
+                for sample, expected in enumerate(samples):
+                    actual, managed = ARC.parse_metadata((root / f"{label}-{sample}.metadata.stderr").read_bytes())
+                    assert actual == expected and managed == case["inputs"][label][sample]["managed"]
+                metadata_inputs[label] = samples[0]
         active = set()
         inputs = {}
         for label, samples in case['inputs'].items():
@@ -128,6 +137,8 @@ def audit(directory, source, machine):
                              binarySha256=case['binarySha256'], sourceSha256=case['sourceSha256'],
                              frames=frames, inputs=inputs, activeSites=selected_sites,
                              fileHashes=case['files'])
+        if metadata_inputs:
+            results[name]['countMetadata'] = metadata_inputs
     return dict(machine=machine, platform=report['platform'], cpu=report['cpu'],
                 cc=report['cc'], compilerSha256=report['compilerSha256'],
                 reportSha256=ARC.digest(directory / 'report.json'), cases=results)
