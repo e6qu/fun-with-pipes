@@ -79,18 +79,21 @@ fn copied_service_values_release_partial_results_and_preserve_aliases() {
     );
     assert_ne!(code, broken);
     let missed_failure = code.replace("if(service_left>0 && !--service_left)", "if(0)");
-    let unrelated_trap = code.replace(
-        "injected service-result allocation failure",
-        "unrelated runtime failure",
-    );
+    // Change the producer only; the fixture must still expect the injected error.
+    let injected_trap = r#"fwp_trap("injected service-result allocation failure")"#;
+    let expected_trap = r#"strcmp(fwp_trap_msg,"injected service-result allocation failure")"#;
+    assert_eq!(code.matches(injected_trap).count(), 1);
+    assert_eq!(code.matches(expected_trap).count(), 1);
+    let unrelated_trap = code.replace(injected_trap, r#"fwp_trap("unrelated runtime failure")"#);
+    assert_eq!(unrelated_trap.matches(expected_trap).count(), 1);
     assert_ne!(code, missed_failure);
     assert_ne!(code, unrelated_trap);
     for opt in ["-O1", "-O2"] {
-        for (source, expected) in [
-            (&code, 0),
-            (&broken, 248),
-            (&missed_failure, 247),
-            (&unrelated_trap, 247),
+        for (case, source, expected) in [
+            ("normal", &code, 0),
+            ("missing-field-drop", &broken, 248),
+            ("missed-injection", &missed_failure, 247),
+            ("unrelated-trap", &unrelated_trap, 247),
         ] {
             fwp::cgen::compile_c(source, &binary, opt).unwrap();
             let output = Command::new(&binary).output().unwrap();
@@ -124,7 +127,7 @@ fn copied_service_values_release_partial_results_and_preserve_aliases() {
             assert_eq!(
                 output.status.code(),
                 Some(expected),
-                "counted/{opt}: {output:?}"
+                "counted/{case}/{opt}: {output:?}"
             );
         }
     }

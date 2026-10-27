@@ -7,53 +7,35 @@ when all required jobs pass on the same head; then continue PLAN.md A2–A6.
 ## Delivery and evidence
 
 - Worktree: `/private/tmp/fwp-delete-tracing`; branch `delete-tracing-collector`.
-- [PR #217](https://github.com/e6qu/fun-with-pipes/pull/217) is open.
-- Published repair: `4e6261326a9baea367afa7d5a6cdb277b4535a52`.
-- [Production 40356438626](https://github.com/e6qu/fun-with-pipes/actions/runs/40356438626):
-  Linux ARM64, Intel regular macOS and both ownership macOS jobs pass. Linux AMD64
-  fails only `service_value_ownership` (exit 247 at O1); both Windows jobs fail only
-  `http2_body_roots` (system headers precede the Windows API contract).
-- Bench job `121690063677` never reached benchmarks: `apt-get update` stopped
-  making progress on `azure.archive.ubuntu.com` at 16:38 UTC and remained there
-  until cancellation at 19:38 UTC. Normal cancellation finished; a subsequent
-  force-cancel request returned 409 because the run was already complete.
-  Completed job results and artifacts remain available. Regular macOS ARM64 was
-  already cancelled with no assigned runner, step list or downloadable log; it
-  still requires a fresh passing job.
-- [Analysis 40356471366](https://github.com/e6qu/fun-with-pipes/actions/runs/40356471366)
-  passes both hosts, 192 ordinary library tests and both budget tests. Limits and
-  proof counts are unchanged; [measurements](measurements/ownership-analysis.md)
-  record the timings. This does not replace production acceptance.
-- Native [GCC diagnosis 40390897932](https://github.com/e6qu/fun-with-pipes/actions/runs/40390897932)
-  reproduces the service fixture failure at O1/O2. Its redundant failure tally
-  reports 24 instead of 12. [Per-attempt trace 40393922521](https://github.com/e6qu/fun-with-pipes/actions/runs/40393922521)
-  reaches the expected twelve failures and one success; adding the trace changes
-  GCC's result. A separate bounded GCC experiment isolates the tally/index:
-  making either volatile restores 12; making the completion flag volatile does not.
-- The repair removes that redundant tally. Service, HTTP/2 and capture fixtures
-  require each specified allocation to fail with the injected reason, then require
-  the next attempt to succeed. Existing alias and storage checks remain. New
-  controls reject missed injections and unrelated traps.
-- Focused native [repair validation 40394950374](https://github.com/e6qu/fun-with-pipes/actions/runs/40394950374)
-  uses the failing head's compiler and repaired fixture, with O1/O2 cleanup checks
-  and deliberate missed-injection/unrelated-trap controls. It was queued at this
-  update. Temporary branch `ci-service-value-diagnosis`, source `25e033a4`;
-  no previous compiler becomes a project build dependency.
-- Verified base: #216 squash `f5621cb46828273f7ce8edf92be4062ccec0f17c`, identical
-  tree to tested `1dd5fcaed7792b5505283b1037a9c22d788a3be5`. Nine production jobs
-  `40274667944`, docs `40273010537` and analysis jobs `40273030485` passed.
+- [PR #217](https://github.com/e6qu/fun-with-pipes/pull/217) is open. Last full run:
+  `6c84631a425ca05c1ce7556cbe1988a0848c5c59`.
+- [Production 40395391896](https://github.com/e6qu/fun-with-pipes/actions/runs/40395391896):
+  benchmarks and both regular macOS jobs pass. Both Linux, both Windows and both
+  macOS ownership jobs fail only the unrelated-error control in
+  `copied_service_values_release_partial_results_and_preserve_aliases`.
+  Completed target audit: Linux 255 per host, regular macOS 131 per host,
+  ownership macOS 124 per host, Windows 149 per host; no other target failed.
+- [Documentation 40395391710](https://github.com/e6qu/fun-with-pipes/actions/runs/40395391710)
+  and both [analysis hosts 40395432328](https://github.com/e6qu/fun-with-pipes/actions/runs/40395432328)
+  pass. The Windows header-order and package-setup repairs are verified by this run.
+- The remaining failure is in the newly added test control: a global string
+  replacement changed both the emitted error and its expected message. Therefore
+  the control returned 0 instead of 247 on all six hosts. The earlier focused
+  probe changed only the producing call, so its success missed the Rust test bug.
+- Repair: replace the complete, uniquely matched `fwp_trap(...)` call; assert the
+  fixture's comparison still expects the original message. Name every variant in
+  assertion failures. Keep all allocation, alias and cleanup checks unchanged.
+- Focused [actual-test verification 40423724806](https://github.com/e6qu/fun-with-pipes/actions/runs/40423724806)
+  uses native GCC and CI compiler `6c84631a`. Diagnostic source `c1e63d04` on
+  `ci-service-value-diagnosis`; passes (6.57 s test execution). It compiles
+  the actual first Rust test body with temporary-directory/C-compiler adapters,
+  rather than reimplementing the control replacements in Python. Full compiler
+  integration still requires the final production matrix.
+- Verified base remains #216 squash `f5621cb46828273f7ce8edf92be4062ccec0f17c`,
+  identical tree to tested `1dd5fcaed7792b5505283b1037a9c22d788a3be5`.
 
-### Current repair and failure coverage
-
-| Failure | Repair/status |
-|---|---|
-| Windows body-copy fixture includes a system header before the runtime | Insert declarations after the runtime's `V` declaration; preserve the Windows API contract and use an explicit `.exe` path. Local edit; native verification pending. |
-| Linux AMD64 service-value fixture miscounts recovered failures | Check every allocation index and trap reason directly in all three related fixtures. GCC O1/O2 focused checks pass; native final-head integration remains required. |
-| Benchmark setup waits three hours on Ubuntu mirror | Ten-minute package-step deadlines, explicit network/lock limits and noninteractive installation; benchmark job bounded at 90 minutes. Same package limits apply to production Linux setup. No skipped dependency checks or alternate toolchain. |
-
-**GC removal remains unverified.** Integrated Rust/compiler, generated-library,
-GCC, Windows and WASI checks must pass on the repaired source. Focused fixture checks
-below establish only their stated paths, not whole-platform acceptance.
+**GC removal remains unverified.** Require all nine production jobs, documentation
+and both analysis hosts on the repaired final head before merging.
 
 ## What changed
 
@@ -238,3 +220,20 @@ sampled container memory. This is diagnosis, not native platform acceptance.
   checks pass: 163 link sets, 106 immutable preparation anchors, eight roadmap
   steps. Full native checks for the related HTTP/2/capture fixture edits and the
   Windows header-order repair remain final-head CI requirements.
+
+### Error-control repair checks
+
+- Guarded actual Rust test body, Apple Clang 17 ARM64 with CI compiler `4c79748a`:
+  the unmodified `6c84631a` test reproduces exit 0 versus expected 247 (4.59 s).
+  The repaired body passes (5.49 s), including raw/optimized interpreter equality,
+  generated program output, normal and three negative variants at O1/O2, and
+  the existing O2 symbol check. No full local compiler build or suite ran.
+- Command: `python3 /private/tmp/fwp-217-check-actual-service-test.py
+  /private/tmp/fwp-217-4c79-compiler/fwp-macos-arm64/fwp /usr/bin/clang
+  /private/tmp/fwp-217-actual-service-after`, with explicit OpenSSL include/library
+  paths under `scripts/local-guard.py`. Only temporary-directory and C-compilation
+  adapters replace crate helpers; the repository test body is unchanged.
+- Native GCC actual-test verification passes all four variants at O1/O2,
+  interpreter comparisons and the O2 symbol check; see run `40423724806` above.
+- Guarded Rust formatting, documentation audit and whitespace checks pass:
+  163 link sets, 106 immutable preparation anchors and eight roadmap steps.
