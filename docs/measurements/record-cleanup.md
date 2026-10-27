@@ -3,9 +3,10 @@
 An **owner** keeps a value alive and is responsible for releasing its storage.
 An **alias** is another live reference to that value. Automatic reference counting
 (ARC) tracks owners when sharing is necessary. These checks verify cleanup under
-ARC. G5 removes their duplicate tracing and poisoned-storage executions while
+ARC. G5 removed duplicate tracing and poisoned-storage executions while
 preserving each distinct alias, failure, cancellation and missing-release case.
-Integrated validation of these migrations is pending. They do not measure
+These changes passed integrated validation in
+[#217](../roadmap-history.md#tracing-gc-removal-pr-217). They do not measure
 execution speed or establish parity with a C/Rust application.
 
 In the examples, `x | f` passes a value to a function; `f | g` combines two
@@ -190,7 +191,8 @@ and stack placement on/off. The older two-mode run produced 56 saved outcomes.
 The current single-mode suite produces 20 at C O1/O2: 16 probe cases and four
 whole-program cases. It also releases the result box returned when awaiting an
 injected task. The report contains owner-record, cleanup-record and task sizes
-in bytes; it no longer prints a collection count. Final verification is pending.
+in bytes; it no longer prints a collection count. This suite passed the same
+integrated #217 validation.
 
 A deadline sets the current task's time limit and passes its input through.
 `42 | task.deadline 1h` returns `42` and sets a one-hour limit; an earlier existing
