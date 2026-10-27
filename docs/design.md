@@ -162,6 +162,23 @@ The caller keeps the borrowed owner alive and releases it on failure.
 See [the ownership contracts](ownership.md#ownership-boundaries)
 for examples, restrictions and tests.
 
+### Proving a local array has one owner
+
+`src/rc/unique.rs` checks the ownership-lowered body after a candidate allocation.
+It follows sequential evaluation and match branches, allowing only nonescaping
+borrows until exactly one destruction on each normal path. An earlier borrowed
+argument must remain live while later arguments are evaluated. Alias creation,
+returns, captures and unknown calls prevent selection. Generated call-liveness
+cleanup handles exceptional exits separately.
+
+The current check walks the remaining expression tree once per candidate: for
+M candidates and N expression nodes, its worst-case work is O(MN). It adds no
+whole-program inference or runtime uniqueness test. Measure compiler cost on
+functions with multiple candidate arrays before expanding this selection; the
+existing lifetime-analysis budgets remain required. The
+[storage report](measurements/unique-array-storage.md) defines the narrow supported
+shape, allocation layout, negative controls and incomplete acceptance evidence.
+
 ## Numerical specialization
 
 The optimizer removes work only when doing so preserves observable behavior:

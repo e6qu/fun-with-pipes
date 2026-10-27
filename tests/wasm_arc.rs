@@ -1308,3 +1308,112 @@ main = [16 | mem.alloc | check, [0, -1, -9223372036854775808] | each (mem.alloc 
         }
     }
 }
+
+#[test]
+fn wasi_unique_arrays_have_no_count_entries_and_free_on_failure() {
+    if !available() {
+        return;
+    }
+    let dir = fwp::cgen::TempDir::new("wasi-unique-arrays").unwrap();
+    let mut failures = Vec::new();
+    let source = dir.join("unique.fwp");
+    let synchronous = include_str!("fixtures/unique_array_ownership.fwp")
+        .split_once("yield-index :")
+        .unwrap()
+        .0;
+    std::fs::write(&source, synchronous).unwrap();
+    for name in ["local", "partial", "completed"] {
+        let code = emit(
+            &source,
+            &dir.join("unique.c"),
+            &["--fn", name, "-O2"],
+            "wasm32-wasi",
+        );
+        assert!(code.contains("/* proved unique I64 array: no reference-count metadata */"));
+        let start = code.find(&format!("/* {name} :")).unwrap();
+        let id = code[start..]
+            .split("static V f")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let probe = include_str!("fixtures/unique_array_wasi_probe.c")
+            .replace("@ENTRY@", &format!("f{id}"))
+            .replace("@PARTIAL@", if name == "local" { "0" } else { "1" })
+            .replace("@FAIL_LENGTH@", if name == "completed" { "2" } else { "4" });
+        let allocate = "static void *fwp_alloc_unique(size_t n) { return fwp_alloc(n); }";
+        let free = "static void fwp_mem_free(void *p) { free(p); }";
+        assert_eq!(code.matches(allocate).count(), 1);
+        assert_eq!(code.matches(free).count(), 1);
+        let mut measured = code
+            .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int unique_probe_active;\nstatic V unique_probe_owner;\nstatic size_t unique_probe_allocations, unique_probe_frees, unique_probe_counts;")
+            .replace(allocate, "static void *fwp_alloc_unique(size_t n) { void *p = fwp_alloc(n); if (unique_probe_active) { unique_probe_owner = (V)(uintptr_t)p; unique_probe_allocations++; } return p; }")
+            .replace(free, "static void fwp_mem_free(void *p) { if (unique_probe_active && (V)(uintptr_t)p == unique_probe_owner) unique_probe_frees++; /* missing-free-control */ free(p); }")
+            .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)");
+        for signature in [
+            "static inline V fwp_rc_fresh(V value) {",
+            "static inline void fwp_rc_dup(V value) {",
+            "static inline void fwp_rc_drop(V value) {",
+            "static inline int fwp_rc_release_last(V value) {",
+            "static inline int fwp_rc_unique(V value) {",
+            "static inline int fwp_rc_unique_mut(V value) {",
+            "static inline int fwp_rc_last(V value) {",
+        ] {
+            assert_eq!(measured.matches(signature).count(), 1);
+            measured = measured.replace(signature, &format!("{signature} if (unique_probe_active && value == unique_probe_owner) unique_probe_counts++;"));
+        }
+        let measured = format!(
+            "{}\n{measured}\n{probe}",
+            include_str!("fixtures/wasm_arc_allocations.c")
+        );
+        for opt in ["-O1", "-O2"] {
+            for (label, candidate, expected) in [
+                ("owned", measured.clone(), 0),
+                (
+                    "extra-count",
+                    measured.replace(
+                        "/* extra-count-control */",
+                        "fwp_rc_fresh(unique_probe_owner);",
+                    ),
+                    224,
+                ),
+                (
+                    "missing-free",
+                    measured.replace(
+                        "/* missing-free-control */",
+                        "if (unique_probe_active && (V)(uintptr_t)p == unique_probe_owner) return;",
+                    ),
+                    225,
+                ),
+            ] {
+                let binary = dir.join("probe.wasm");
+                fwp::cgen::compile_for(&candidate, &binary, opt, fwp::cgen::Target::Wasi).unwrap();
+                let output = wasi(&binary, dir.path()).output().unwrap();
+                if let Some(root) = std::env::var_os("FWP_WASI_ARC_ARTIFACTS") {
+                    let path = std::path::PathBuf::from(root);
+                    std::fs::create_dir_all(&path).unwrap();
+                    let stem = format!("unique-{name}-{label}{opt}");
+                    std::fs::write(path.join(format!("{stem}.c")), &candidate).unwrap();
+                    std::fs::copy(&binary, path.join(format!("{stem}.wasm"))).unwrap();
+                    std::fs::write(path.join(format!("{stem}.stdout")), &output.stdout).unwrap();
+                    std::fs::write(path.join(format!("{stem}.stderr")), &output.stderr).unwrap();
+                    std::fs::write(
+                        path.join(format!("{stem}.status")),
+                        format!("{:?}\n", output.status.code()),
+                    )
+                    .unwrap();
+                }
+                if output.status.code() != Some(expected)
+                    || !output.stdout.is_empty()
+                    || !output.stderr.is_empty()
+                {
+                    failures.push(format!(
+                        "{name}/{label}/{opt}: expected {expected}, got {output:?}"
+                    ));
+                }
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}

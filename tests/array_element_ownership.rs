@@ -925,6 +925,7 @@ int main(void) {{
 #[test]
 fn unique_arrays_remove_counts_and_preserve_failure_cancel_and_escape() {
     let dir = Scratch::new("unique-arrays");
+    let mut failures = Vec::new();
     let source = dir.0.join("unique.fwp");
     std::fs::write(&source, include_str!("fixtures/unique_array_ownership.fwp")).unwrap();
     let compiler = env!("CARGO_BIN_EXE_fwp");
@@ -1031,15 +1032,14 @@ fn unique_arrays_remove_counts_and_preserve_failure_cancel_and_escape() {
                     &binary,
                     &actual,
                 );
-                assert_eq!(
-                    actual.status.code(),
-                    Some(expected),
-                    "{name}/{label}/{optimization}: {actual:?}"
-                );
-                assert!(
-                    actual.stdout.is_empty() && actual.stderr.is_empty(),
-                    "{actual:?}"
-                );
+                if actual.status.code() != Some(expected)
+                    || !actual.stdout.is_empty()
+                    || !actual.stderr.is_empty()
+                {
+                    failures.push(format!(
+                        "{name}/{label}/{optimization}: expected {expected}, got {actual:?}"
+                    ));
+                }
             }
         }
     }
@@ -1118,15 +1118,15 @@ fn unique_arrays_remove_counts_and_preserve_failure_cancel_and_escape() {
                 &binary,
                 &actual,
             );
-            assert_eq!(
-                actual.status.code(),
-                Some(expected),
-                "{label}/{optimization}: {actual:?}"
-            );
-            assert!(
-                actual.stdout.is_empty() && actual.stderr.is_empty(),
-                "{actual:?}"
-            );
+            if actual.status.code() != Some(expected)
+                || !actual.stdout.is_empty()
+                || !actual.stderr.is_empty()
+            {
+                failures.push(format!(
+                    "{label}/{optimization}: expected {expected}, got {actual:?}"
+                ));
+            }
         }
     }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
 }

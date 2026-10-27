@@ -18,8 +18,9 @@ implementation tasks. [Primitive ownership](primitive-ownership.md) specifies
 individual operations; [measurements](benchmarks.md) report actual costs.
 The [accepted ownership direction](gc-removal-design.md) specifies explicit weak
 links, rejection of unproved owning cycles, count-free unique storage and scoped
-regions. Weak channels and retained C registrations are implemented; count-free
-unique buffers and general regions remain planned. APIs may change.
+regions. Weak channels and retained C registrations are implemented. A restricted
+[count-free local array path](measurements/unique-array-storage.md) is implemented
+and under verification; general regions remain planned. APIs may change.
 
 ## Existing implementation
 
@@ -35,9 +36,10 @@ on Linux, macOS and Windows, each on ARM64 and AMD64. Native packages contain
 the collector-free compiler. Node-hosted browser-loader checks do not establish
 support in every browser engine.
 
-The interpreter uses Rust-owned values and scheduled task lifetimes. Native ARC
-still has count slots, allocator size classes, cleanup functions and uniqueness
-checks. Neither engine can prove arbitrary foreign code obeys its contract or
+The interpreter uses Rust-owned values and scheduled task lifetimes. Counted native
+values still need count slots and uniqueness checks. Selected local arrays can
+instead use direct destruction without count storage; allocator size classes and
+failure/cancellation cleanup remain necessary. Neither engine can prove arbitrary foreign code obeys its contract or
 remove a JavaScript host's collector.
 
 ### What remains

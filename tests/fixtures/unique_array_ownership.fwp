@@ -12,7 +12,9 @@ partial = flip array.generate checked-index | read
 
 export completed : I64 -> I64 ! {Error[String]}
 completed =
-    flip array.generate id | tap (array.length | checked-index | ignore) | read
+    flip array.generate id
+    | both (array.length | checked-index) read
+    | uncurry add
 
 export reader : () -> {callback: Array[I64] -> I64}
 reader = const { callback = read }
