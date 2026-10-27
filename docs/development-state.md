@@ -1,6 +1,8 @@
 # Current work
 
-**Next:** monitor PR #219's final production, documentation and analysis gates.
+**Next:** monitor PR #219's production gate `40498383568` at
+`aab8fe71f4f08ff4dcc8a13624dcfdacfd45e031`. Documentation `40498379836`
+and both analysis hosts `40498382182` passed.
 Fix any failure, audit all completed targets and squash-merge only after every
 final-head gate passes. Keep the head unchanged while passing gates run. A5 is
 not complete until that integrated verification passes.
@@ -25,6 +27,24 @@ checkout pointer records them once dispatch completes.
 - [The report](measurements/unique-array-storage.md) records implemented limits,
   exact counts, metadata, code/stack costs and outstanding acceptance. No timing
   improvement, RSS reduction or universal count-free-array support is claimed.
+
+## Next batch preparation
+
+Worktree `/private/tmp/fwp-sort-key-fields`, branch `borrow-sort-key-fields`, starts
+from #219's final head. No second PR until #219 merges. A scalar record projection
+prototype emits its existing boxed body directly for function-value calls, while
+keeping the direct worker for callers that already hold separate fields. Selection
+requires one consumed record, an immediate scalar result and a pure field read;
+resource records and borrowed-worker contracts are excluded. This avoids retaining
+unrelated fields merely to release them in the worker.
+
+The new record-conversion probe covers unique/shared parents, a string-valued
+projection that still needs ownership, pointer-shaped scalar bits, physical
+release and interruption at the real entry tick. Deliberate extra-owner and
+missing-free variants must fail. Compiler and tests are not yet verified; use the
+`scalar-projections` runner suite. Format passed through the local guard; no local
+compiler build ran. After focused checks, measure the word-frequency D count
+saving and inspect related pair duplication before assembling the next PR.
 
 ## Passing focused checks
 
