@@ -43,11 +43,43 @@ if mode == 'oversize':
 os.execv('/usr/bin/du', ['du', *sys.argv[1:]])
 """)
             sampler.chmod(0o755)
+            # These tests exercise guard decisions, not the host's available
+            # disk. Keep production sampling unchanged; isolate readings only
+            # in the copied script's test process.
+            launcher = root / "launch.py"
+            launcher.write_text(r"""#!/usr/bin/env python3
+import os
+from pathlib import Path
+import runpy
+import sys
+from types import SimpleNamespace
+from unittest.mock import patch
+
+guard = Path(sys.argv.pop(1))
+sys.argv[0] = str(guard)
+mode = os.environ['FWP_GUARD_TEST_MODE']
+samples = 0
+
+def disk_usage(path):
+    global samples
+    assert Path(path).resolve() == guard.parent.parent.resolve()
+    samples += 1
+    free = 128 * 1024**3
+    if mode == 'boundary':
+        free = 64 * 1024**3
+    elif mode == 'low-before' or (mode == 'low-during' and samples > 1):
+        free = 64 * 1024**3 - 1
+    return SimpleNamespace(free=free)
+
+with patch('shutil.disk_usage', side_effect=disk_usage):
+    runpy.run_path(str(guard), run_name='__main__')
+""")
             marker = root / "completed"
             workload = "import pathlib,time; time.sleep(0.4); pathlib.Path(%r).write_text('done')" % str(marker)
             env = dict(os.environ, PATH=str(root / "bin") + os.pathsep + os.environ['PATH'],
                        FWP_GUARD_TEST_MODE=mode)
-            result = subprocess.run([sys.executable, str(guard), sys.executable, '-c', workload],
+            result = subprocess.run([sys.executable, str(launcher), str(guard),
+                                     sys.executable, '-c', workload],
                                     env=env, capture_output=True, text=True, timeout=10)
             return result, marker.exists()
 
@@ -66,6 +98,23 @@ os.execv('/usr/bin/du', ['du', *sys.argv[1:]])
         result, completed = self.run_guard('oversize')
         self.assertEqual(result.returncode, 1, result.stderr)
         self.assertIn('target exceeded 2 GiB', result.stderr)
+        self.assertFalse(completed)
+
+    def test_exact_free_disk_boundary_is_accepted(self):
+        result, completed = self.run_guard('boundary')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(completed)
+
+    def test_low_disk_prevents_workload_start(self):
+        result, completed = self.run_guard('low-before')
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn('less than 64 GiB free disk', result.stderr)
+        self.assertFalse(completed)
+
+    def test_low_disk_during_sampling_stops_workload(self):
+        result, completed = self.run_guard('low-during')
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn('free disk below 64 GiB', result.stderr)
         self.assertFalse(completed)
 
 

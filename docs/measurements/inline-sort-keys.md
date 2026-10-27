@@ -1,11 +1,9 @@
 # Keeping sort keys together
 
-This is the A4 implementation and its declared acceptance protocol. All 13
-allocation/count comparisons passed on both Linux architectures; the independent
-artifact audit `40512399031` passed. [The handoff](../development-state.md) tracks
-correctness checks, timing and the remaining production gates.
-It extends [the scalar-read and sort-callback batch](sort-key-ownership.md) before
-that batch's full production validation.
+A4 is verified in [PR #220](../roadmap-history.md#temporary-record-owners-and-sort-keys-pr-220),
+including all 13 allocation/count comparisons, independent artifact audits,
+repeated timing and the full production/documentation/analysis gates. It extends
+[the scalar-read and sort-callback batch](sort-key-ownership.md).
 
 The word-frequency program sorts `(word, count)` records using `(-count, word)`
 keys. The previous path allocated one 24-byte key record for every distinct word.
@@ -99,10 +97,10 @@ Deliberately missing String release or buffer freeing must be rejected.
 Source programs also compare raw interpretation with native output for newly
 allocated key text, partial key failure and cancellation.
 
-Before A4 is complete, retain the observed allocation/count/binary results, measure
-sorting time against the same-host A3 implementation with an identical-code noise
-control, and pass the full production, documentation and analysis gates. Timing
-needs the B1 protocol; operation-count success alone is not a timing result.
+These controls and the complete production/documentation/analysis gates passed.
+The retained allocation/count/binary observations and repeated sorting-time
+results below complete this scoped A4 comparison. Preserve both kinds of evidence;
+operation-count success alone is not a timing result.
 
 ## Sorting-time protocol
 
@@ -164,4 +162,4 @@ The isolated sort and cleanup took about 49–56% of the previous fwp path's tim
 in these observations. The AMD64 allocations used different EPYC models; each
 ratio compares programs on the same runner. This does not measure whole-program
 speed or overhead relative to C/Rust. The initial rejected short control remains
-linked above. Full platform delivery is tracked in the handoff.
+linked above. Full platform delivery is recorded in the linked history.

@@ -6,6 +6,31 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Temporary record owners and sort keys (PR #220)
+
+Scalar projections and known sort callbacks remove two temporary owners per
+word-frequency key. Contiguous integer/string keys remove another owner and one
+allocation. The [A3 report](measurements/sort-key-ownership.md) and
+[A4 report](measurements/inline-sort-keys.md) retain exact counts, cleanup/binary
+controls and repeated timing. Sorting and result cleanup took 49–56% of the
+previous fwp path's time; input construction and whole-program execution are not
+included. The initial noisy short timing control remains a rejected observation.
+
+All nine production jobs `40516763516`, docs `40516754393`, both G2 hosts
+`40516769076` and both timing hosts `40516778004` passed on final head
+`06e3a92375bf2a3802853766998e5f0dcbe265ff`. The first longer timing run
+`40514452443` also passed; both complete artifact sets were independently audited.
+Completed production logs contained 256 passing target summaries per Linux host,
+132 per regular macOS host, 126 per ownership macOS host and 201 per Windows host.
+
+Squash `56d5aac63a9963ae6b16574f10d6dc3087a08d8a` has the identical tested tree
+`1c824b804dddd30460bb11b2f5a9a40dd9fe16b4`. Its message is one 55-character line
+with no body/trailers. Duplicate postmerge CI `40552108647` was cancelled after
+that verification. Separate postmerge docs `40552108553` exposed a guard-test
+fixture depending on 64 GiB of real runner free space. The next batch isolates
+its test readings and adds refusal/boundary controls; the production guard's
+limits are unchanged. [The handoff](development-state.md) tracks that repair.
+
 ## Unique local arrays without counts (PR #219)
 
 Selected local `Array[I64]` values now have a compiler-proved single owner,

@@ -46,8 +46,8 @@ remove a JavaScript host's collector.
 - Preserve the independent [ownership diagnostics](ownership-diagnostics.md)
   and binary checks for absent collector code as storage representations change.
 - Enforce the compiler analysis budgets in G2 as proof precision changes.
-- Use A2–A6 to remove measured count traffic and boxes, then give a proved unique
-  buffer and one scoped workspace their own storage paths. A program with zero
+- Finish A6's scoped parser workspace. A1–A5 already remove their selected count
+  traffic and boxes, including a count-free local buffer. A program with zero
   retains may still allocate or check a count during destruction.
 
 [PLAN.md](../PLAN.md) defines the fixtures and completion evidence.

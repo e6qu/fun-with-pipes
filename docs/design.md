@@ -195,13 +195,13 @@ whole key calculation and avoid duplicating a pair just to call its selectors.
 Captures are evaluated once in their original order; callbacks still run in the
 sort primitive's original order. Runtime-selected callbacks keep ordinary calls.
 The [measurement protocol](measurements/sort-key-ownership.md) separates these
-implemented changes from their pending verification and count targets.
+verified changes from their exact count targets and measurement limits.
 
-The A4 candidate stores known `(I64, String)` keys in an aligned field buffer
+The verified A4 path stores known `(I64, String)` keys in an aligned field buffer
 and calls the existing worker directly on `(String, I64)` inputs. Its initialized
 prefix owns the saved Strings; merge scratch borrows them. Other callback shapes
 retain ordinary calls and key records. [The protocol](measurements/inline-sort-keys.md)
-defines selection, cleanup, exact budgets and pending validation.
+defines selection, cleanup, exact budgets and completed validation.
 
 ## Numerical specialization
 
