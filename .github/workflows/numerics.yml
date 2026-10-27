@@ -4793,3 +4793,35 @@ jobs:
           name: macos-shard-probe-${{ matrix.runner }}
           path: ${{ runner.temp }}/macos-shard-probe/
           if-no-files-found: warn
+
+  linux_package_setup:
+    if: inputs.suite == 'ownership-analysis'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Select the Ubuntu archive for AMD64 packages
+        if: runner.arch == 'X64'
+        run: printf 'https://archive.ubuntu.com/ubuntu/\n' | sudo tee /etc/apt/apt-mirrors.txt
+      - name: WebAssembly toolchain, OpenSSL headers (TLS)
+        timeout-minutes: 10
+        run: |
+          sudo apt-get -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o APT::Update::Error-Mode=any update
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o DPkg::Lock::Timeout=60 install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32 libssl-dev openssl
+      - name: aarch64 cross compiler and qemu (tests/cross.rs)
+        if: runner.arch == 'X64'
+        timeout-minutes: 10
+        run: sudo env DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o DPkg::Lock::Timeout=60 install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user musl-tools
+      - name: binaryen's wasm-opt (`--wasm-async=asyncify`; tests skip without it)
+        run: npm install -g binaryen
+      - name: Verify required tools
+        run: |
+          aarch64-linux-gnu-gcc --version
+          qemu-aarch64 --version
+          musl-gcc --version
+          wasm-opt --version
+          clang --version

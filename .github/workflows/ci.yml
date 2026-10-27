@@ -327,6 +327,9 @@ jobs:
         with:
           node-version: 24
           package-manager-cache: false
+      - name: Select the Ubuntu archive for AMD64 packages
+        if: runner.arch == 'X64'
+        run: printf 'https://archive.ubuntu.com/ubuntu/\n' | sudo tee /etc/apt/apt-mirrors.txt
       - name: WebAssembly toolchain, OpenSSL headers (TLS)
         timeout-minutes: 10
         run: |
@@ -485,6 +488,9 @@ jobs:
         run: |
           cargo fetch --locked
           echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
+      - name: Select the Ubuntu archive for AMD64 packages
+        if: runner.arch == 'X64'
+        run: printf 'https://archive.ubuntu.com/ubuntu/\n' | sudo tee /etc/apt/apt-mirrors.txt
       - name: OpenSSL headers (TLS)
         timeout-minutes: 10
         run: |

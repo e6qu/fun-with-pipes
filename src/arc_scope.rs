@@ -578,7 +578,7 @@ impl Proof<'_> {
                 )?;
                 let mut args = vec![Targets::new(); function.arity as usize];
                 args[0] = input;
-                self.request(method.func, 0, &args);
+                self.request(method.func, 0, None, &args);
             }
             if matches!(shape.output, crate::rpc::Output::Iter(_)) {
                 let returned = self
@@ -594,13 +594,24 @@ impl Proof<'_> {
         Ok(())
     }
 
-    fn request(&mut self, id: FuncId, scoped: u8, args: &[Targets]) -> Targets {
+    fn request(
+        &mut self,
+        id: FuncId,
+        scoped: u8,
+        capture: Option<Origin>,
+        args: &[Targets],
+    ) -> Targets {
         let key = (id, scoped);
         let inputs = self.inputs.entry(key).or_insert_with(|| {
             self.changed = true;
             vec![Targets::new(); self.program.funcs[id].arity as usize]
         });
-        for (slot, value) in inputs.iter_mut().zip(args) {
+        // A saturated call only joins facts into its input summary. Borrow the
+        // capture sets directly instead of cloning a temporary argument vector
+        // on every fixed-point visit.
+        let captured = capture.and_then(|origin| self.captures.get(&origin));
+        let values = captured.into_iter().flatten().chain(args);
+        for (slot, value) in inputs.iter_mut().zip(values) {
             self.changed |= join(slot, value);
         }
         self.outputs.get(&key).cloned().unwrap_or_default()
@@ -665,18 +676,24 @@ impl Proof<'_> {
                 result.insert(Origin::UnknownFunction);
                 continue;
             };
-            let mut all = self.captures.get(&closure).cloned().unwrap_or_default();
-            all.extend_from_slice(args);
             let arity = self.program.funcs[id].arity as usize;
+            let captured = self
+                .captures
+                .get(&closure)
+                .map(Vec::as_slice)
+                .unwrap_or(&[]);
+            if captured.len() + args.len() == arity {
+                let returned = self.request(id, scoped, Some(closure), args);
+                join(&mut result, &returned);
+                continue;
+            }
+            let mut all = captured.to_vec();
+            all.extend_from_slice(args);
             let value = if all.len() < arity {
                 self.partial(id, all, scoped, site)
             } else {
-                let returned = self.request(id, scoped, &all[..arity]);
-                if all.len() == arity {
-                    returned
-                } else {
-                    self.apply(&returned, &all[arity..], scoped, site)?
-                }
+                let returned = self.request(id, scoped, None, &all[..arity]);
+                self.apply(&returned, &all[arity..], scoped, site)?
             };
             join(&mut result, &value);
         }
@@ -812,14 +829,16 @@ impl Proof<'_> {
         let mut result = match expr {
             Expr::Local(local) => locals[*local as usize].clone(),
             Expr::Const(value) => self.constant(value, next_site),
-            Expr::Func(id) if self.program.funcs[*id].arity == 0 => self.request(*id, scoped, &[]),
+            Expr::Func(id) if self.program.funcs[*id].arity == 0 => {
+                self.request(*id, scoped, None, &[])
+            }
             Expr::Func(id) => BTreeSet::from([Origin::Function(*id, 0, 0, None)]),
             Expr::Call(id, args) => {
                 let values = args
                     .iter()
                     .map(|arg| self.expr(arg, locals, local_types, scoped, next_site))
                     .collect::<Result<Vec<_>, _>>()?;
-                self.request(*id, scoped, &values)
+                self.request(*id, scoped, None, &values)
             }
             Expr::Apply(callee, args) => {
                 let targets = self.expr(callee, locals, local_types, scoped, next_site)?;
@@ -845,7 +864,7 @@ impl Proof<'_> {
                 result
             }
             Expr::BorrowGlobal(local, global, body) => {
-                locals[*local as usize] = self.request(*global, scoped, &[]);
+                locals[*local as usize] = self.request(*global, scoped, None, &[]);
                 self.expr(body, locals, local_types, scoped, next_site)?
             }
             Expr::Let(local, value, body) => {
@@ -1394,7 +1413,7 @@ pub(crate) fn check(
                 origins
             })
             .collect();
-        proof.request(entry, 0, &args);
+        proof.request(entry, 0, None, &args);
     }
     #[cfg(test)]
     let mut stats = AnalysisStats::default();
