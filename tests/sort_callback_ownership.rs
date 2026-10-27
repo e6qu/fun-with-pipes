@@ -8,6 +8,9 @@ mod allocation_report;
 #[path = "support/list_copy.rs"]
 mod list_copy;
 
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -312,4 +315,139 @@ fn specialized_sort_keys_preserve_capture_order_failure_and_cancellation() {
             assert_eq!(report.live, 0, "{stack}/{opt}: {report:?}");
         }
     }
+}
+
+#[test]
+fn inline_keys_preserve_fields_order_and_partial_cleanup() {
+    let dir = Scratch::new("inline-keys");
+    let source = dir.0.join("keys.fwp");
+    let cfile = dir.0.join("keys.c");
+    std::fs::write(&source, include_str!("fixtures/inline_sort_keys.fwp")).unwrap();
+    let fwp = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(fwp)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    let mut failures = Vec::new();
+    for typed in ["0", "1"] {
+        checked(
+            Command::new(fwp)
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_TYPED_ABI", typed)
+                .args(["build", "--memory", "dynamic", "--emit-c", "-O2"])
+                .arg(&source)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let ordinary = std::fs::read_to_string(&cfile).unwrap();
+        assert!(
+            ordinary.contains("static V fwp_sort_keys"),
+            "typed key selection"
+        );
+        checked(
+            Command::new(fwp)
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_TYPED_ABI", typed)
+                .args([
+                    "build", "--fn", "probe", "--memory", "dynamic", "--emit-c", "-O2",
+                ])
+                .arg(&source)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let mut emitted = std::fs::read_to_string(&cfile).unwrap();
+        let marker = emitted.find("/* key :").expect("exported key");
+        let worker = emitted[marker..]
+            .split(" w")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let kernel = format!("fwp_sort_keys{worker}");
+        let start = emitted
+            .find(&format!("static V {kernel}(V xs) {{"))
+            .unwrap();
+        let end = start + emitted[start..].find("\n}\n").unwrap() + 3;
+        let body = &emitted[start..end];
+        let list = body
+            .split("fwp_copy_finish(vals, n, 0, ")
+            .nth(1)
+            .unwrap()
+            .split(')')
+            .next()
+            .unwrap()
+            .to_string();
+        assert!(
+            !body.contains("fwp_record("),
+            "key records must remain unboxed"
+        );
+        let worker_start = emitted.find(&format!(" w{worker}(")).unwrap();
+        // Locate the definition after its comment, not the earlier prototype.
+        let entry = marker + emitted[marker..].find("FWP_TICK();").unwrap();
+        assert!(entry > worker_start);
+        emitted.replace_range(
+            entry..entry + "FWP_TICK();".len(),
+            "key_entry(); FWP_TICK();",
+        );
+        let declarations =
+            "typedef uint64_t V;\nstatic void key_allocation(void);\nstatic void key_entry(void);";
+        let measured = emitted
+            .replace("typedef uint64_t V;", declarations)
+            .replace(
+                "static inline void *fwp_alloc(size_t n) {",
+                "static inline void *fwp_alloc(size_t n) { key_allocation();",
+            )
+            .replace(
+                "static inline void *fwp_alloc_init(size_t n) {",
+                "static inline void *fwp_alloc_init(size_t n) { key_allocation();",
+            )
+            .replace(
+                "int main(int argc, char **argv)",
+                "int original_main(int argc, char **argv)",
+            )
+            + &include_str!("fixtures/inline_sort_keys_probe.c")
+                .replace("@sort@", &kernel)
+                .replace("@list@", &list);
+        for opt in ["-O1", "-O2"] {
+            let executable = dir.0.join(format!("main-{typed}{opt}.exe"));
+            fwp::cgen::compile_c(&ordinary, &executable, opt).unwrap();
+            let actual = checked(Command::new(&executable).env("FWP_ALLOC_STATS", "1"));
+            assert_eq!(actual.stdout, reference.stdout, "{typed}/{opt}");
+            assert_eq!(
+                allocation_report::parse(&String::from_utf8_lossy(&actual.stderr))
+                    .unwrap()
+                    .live,
+                0
+            );
+            for (name, code, status) in [
+                ("owners", measured.clone(), 0),
+                (
+                    "missing-field-release",
+                    measured.replace("owner->drop_text(keys[i].text);", "(void)keys[i].text;"),
+                    227,
+                ),
+                (
+                    "missing-buffer-free",
+                    measured.replace("if (keys) fwp_mem_free(keys);", "/* omitted buffer free */"),
+                    229,
+                ),
+            ] {
+                let label = format!("{name}-{typed}{opt}");
+                let executable = dir.0.join(format!("{label}.exe"));
+                fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+                let actual = Command::new(&executable).output().unwrap();
+                record_probe::save("inline-sort-keys", &label, &code, &executable, &actual);
+                if actual.status.code() != Some(status)
+                    || !actual.stdout.is_empty()
+                    || !actual.stderr.is_empty()
+                {
+                    failures.push(format!("{label}: expected {status}, got {actual:?}"));
+                }
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
 }

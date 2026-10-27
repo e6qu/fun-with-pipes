@@ -40,8 +40,9 @@ collector is not the same as removing these costs. The
    the numeric selector's String owner and the key function's duplicate pair.
    [Its protocol](docs/measurements/sort-key-ownership.md) defines the 2D count
    target, unchanged memory budget, alias and failure controls. Both Linux hosts'
-   correctness checks and the independent artifact audit pass. Publish this batch
-   after #219 merges, then complete its final production matrix.
+   correctness checks and the independent artifact audit pass. A4 now joins this batch: [contiguous key storage](docs/measurements/inline-sort-keys.md)
+   has a declared allocation budget and cleanup probes, with validation pending.
+   Publish after #219 merges and complete the combined final production matrix.
    **A6** remains the separately scoped parser-workspace task below.
 4. Preserve **G2**'s [verified analysis budgets](docs/measurements/ownership-analysis.md)
    when changing lifetime analysis. Further precision needs a named failing example

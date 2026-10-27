@@ -1150,7 +1150,7 @@ static V fwp_apply_borrowed(V f, uint32_t n, V *args) {
 }
 
 /* Numeric arrays may use pointer-free leaf slots. Keep generic reuse's
- * scanned-slot restriction so record constructors cannot acquire leaf storage. */
+ * ordinary-object slot restriction so records cannot acquire leaf storage. */
 static inline size_t fwp_array_capacity(V v, const fwp_desc *elem) {
     if (fwp_array_is_view(v)) return 0;
     size_t capacity = fwp_rc_capacity(v);
