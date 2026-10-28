@@ -1,20 +1,23 @@
 # Current work
 
-**Next:** publish the longer timing batches and fixed F1 count expectations, then
-run `functional-probes` on Linux ARM64/AMD64. Audit its measured decisions before
-starting full final-head gates and G2. F1–F3 remain unaccepted; A6 is verified.
+**Next:** monitor full platform checks and G2 on the final PR head; audit the
+longer timing run `40721041382` at `98a1d8eb4b250c036d1cd062f2fe79b624ac8fea`.
+Its compiler, runtime, tests and measurement settings also apply to the following
+documentation-only commit. Do not accept F3 from a successful collection job
+alone: every measured decision must pass its unchanged limits.
 
 Worktree: `/private/tmp/fwp-parser-workspace`; branch:
-`functional-calls-and-tail-loops`; [draft PR #222](https://github.com/e6qu/fun-with-pipes/pull/222).
-Published head: `ca914eec2ede1b5de61ac42f1c8068d8de3942e9`.
-Focused run `40719252691` and docs `40719100185` pass. All complete logs are
-audited: each host passes 218 units (four intentionally ignored), nine call tests,
-four tail/stack tests and the emitter; formatting and Clippy pass without warnings.
-The benchmark collection succeeded, but AMD64 O2 timing is inconclusive, not accepted.
+`functional-calls-and-tail-loops`; [PR #222](https://github.com/e6qu/fun-with-pipes/pull/222).
+F1–F3 remain unaccepted; A6 is verified. The initial full/G2 runs at `98a1d8eb`
+were queued before a final documentation correction; use the replacement
+final-head runs for merge. Exact IDs are available from `gh pr checks 222` and
+`gh run list --branch functional-calls-and-tail-loops`.
 
-The POSIX handler now retains the numeric stack-marker address instead of a
-pointer whose local lifetime ended. Its O0/O2 overflow controls pass on both
-Linux hosts. This does not explain the separate original Intel compiler abort.
+Focused `40719252691` and docs `40719100185` pass at `ca914eec`.
+Every completed log is audited: each host passes 218 units (four intentionally
+ignored), nine call tests, four tail/stack tests and the emitter; formatting and
+Clippy pass without warnings. Collection succeeded, but AMD64 O2 timing is
+inconclusive. The saved-address overflow controls pass on both Linux hosts.
 
 ## Implementation and evidence
 
@@ -55,14 +58,14 @@ Both hosts of `40719252691` pass the repaired F1 callback matrix and all tail
 controls. All 128 count rows agree across architectures and O0/O2. The native
 probe verifies callback metadata, results, per-call cleanup and final teardown.
 The fixture exposes actual first-class function identities; no blanket runtime
-callback emission or compatibility wrapper was added. Known-call count expectations
-now include remaining per-element State `each` allocations.
+callback emission or compatibility wrapper was added. Known-call count expectations at `98a1d8eb`
+include remaining per-element State `each` allocations.
 
 [The guide](functional-costs.md) owns the results and limitations. First timing
 session `40714605188` accepts all four comparisons. The second session accepts
 three but marks AMD64 O2 inconclusive: identical-binary noise is 1.150 versus
 1.10 allowed. All binary/hash/stack/profile/sample checks pass independent audit.
-Retain both raw records. The next run uses 65,536 rather than 1,024 invocations
+Retain both raw records. Run `40721041382` uses 65,536 rather than 1,024 invocations
 per sample; all inputs, flags, sample counts and acceptance limits stay unchanged.
 No F3 acceptance follows from a green collection job alone.
 

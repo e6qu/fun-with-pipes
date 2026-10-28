@@ -370,7 +370,7 @@ handles whose payload type names a callback or task. Upgrading a handle creates
 a strong owner; keeping that owner in a local still prevents frame reuse.
 Swapping two weak handles first prepares both next arguments and only then
 releases the old locals. This avoids dropping metadata that the next iteration
-still needs. Runtime and platform verification of this extension is pending.
+still needs. Linux ARM64/AMD64 O0/O2 controls pass; full platform acceptance is pending.
 
 A known function with no supplied arguments owns no captures. A partial
 application of a known function owns exactly its supplied arguments; the compiler
