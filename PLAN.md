@@ -123,6 +123,10 @@ universal region system; D2 may extend it to AD after measuring that workload.
 
 ## 3. Functional calls and recursion
 
+The grouped implementation and concrete measurement limits are described in
+[Measuring calls and recursion](docs/functional-costs.md). PR #222 is a draft;
+none of F1–F3 is accepted until its evidence and final platform gates pass.
+
 **F1 — Define the acceptance fixtures.** Cover a composed pipe, partial
 application, borrowed callback, captured closure, record/variant result, `each`,
 `fold` and state loop. Pair each eligible case with an escaping/unknown-call case.

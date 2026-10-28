@@ -65,7 +65,7 @@ jobs:
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: |
           cargo fmt --all -- --check
-          target/debug/fwp fmt --check tests/fixtures/weak_tail_recursion.fwp tests/fixtures/mutual_tail_recursion.fwp
+          target/debug/fwp fmt --check tests/fixtures/weak_tail_recursion.fwp tests/fixtures/mutual_tail_recursion.fwp tests/fixtures/functional_costs.fwp
       - name: All-target lint before native tests
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: cargo clippy --locked --offline --keep-going --all-targets -- -D warnings
@@ -75,6 +75,17 @@ jobs:
       - name: Native calls, weak swaps, failures and cancellation at O0 and O2
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: cargo test --locked --offline --no-fail-fast --test tail_recursion --test compiler_call_liveness --test borrowed_callbacks --test closure_ownership --test state_sequence_ownership -- --nocapture
+      - name: Emit matched ordinary, grouped and explicit-loop programs
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        env:
+          FWP_MUTUAL_EVIDENCE: functional-evidence/mutual
+        run: cargo test --locked --offline --lib tailrec::pairs::tests::emit_mutual_recursion_comparison -- --ignored --exact --nocapture
+      - name: Measure the mutual-recursion decision with fixed budgets
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: >-
+          python3 scripts/measure-mutual-recursion.py --input functional-evidence/mutual
+          --cc gcc --objdump objdump --iterations 4096 --repeats 1024 --samples 8
+          --warmups 2 --timeout 180 --max-control-ratio 1.10 --max-loop-ratio 1.25
       - uses: actions/upload-artifact@v7
         if: always()
         with:

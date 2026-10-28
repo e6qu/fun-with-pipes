@@ -35,7 +35,7 @@ fn deep_self_recursion_preserves_swaps_aliases_effects_and_failure_order() {
         (
             "mutual-tail-recursion",
             include_str!("fixtures/mutual_tail_recursion.fwp"),
-            &b"0\n1\n1\n0\n"[..],
+            &b"0\n1\n1\n0\n3\n2\n1\nErr \"stop\"\n"[..],
             &["$tail-pair"][..],
             &[][..],
         ),
@@ -208,7 +208,7 @@ fn tail_loop_remains_cancellable() {
         ("rec weak-spin : WeakChannel[I64] -> WeakChannel[I64]\nweak-spin = id | weak-spin\nexpired : () -> WeakChannel[I64] ! {Async}\nexpired = const 1 | channel.make | channel.downgrade\nmain = expired () | const | flip compose (tap (const \"entered\" | echo) | weak-spin) | task.within 100ms | option.is-none | echo\n", "entered\nTrue\n"),
         ("rec ping : I64 -> I64\nping = sub 1 | pong\nrec pong : I64 -> I64\npong = add 1 | ping\nmain = task.within 10ms (const 0 | ping) | echo\n", "None\n"),
     ];
-    for (source, expected) in sources {
+    for (case, (source, expected)) in sources.into_iter().enumerate() {
         let dir = fwp::cgen::TempDir::new("tail-cancel").unwrap();
         let src = dir.join("cancel.fwp");
         std::fs::write(&src, source).unwrap();
@@ -220,16 +220,67 @@ fn tail_loop_remains_cancellable() {
                 .arg(&src),
         );
         assert_eq!(interpreted.stdout, expected.as_bytes());
-        let binary = dir.join("cancel.exe");
+        let cfile = dir.join("cancel.c");
         checked(
             Command::new(compiler)
-                .args(["build", "-O0"])
+                .args(["build", "--emit-c"])
                 .arg(&src)
                 .arg("-o")
-                .arg(&binary),
+                .arg(&cfile),
         );
-        let native = checked(Command::new(binary).env("FWP_PREEMPT", "37"));
-        assert_eq!(native.stdout, interpreted.stdout);
+        let code = std::fs::read_to_string(&cfile).unwrap();
+        assert!(code.contains("fwp_self_again:;"));
+        let code = code
+            .replace(
+                "typedef uint64_t V;",
+                "typedef uint64_t V;\nstatic size_t tail_cancel_visits;",
+            )
+            .replace("fwp_self_again:;", "fwp_self_again:; tail_cancel_visits++;");
+        let start = code
+            .find("static void *fwp_main_thread(void *arg) {")
+            .unwrap();
+        let (prefix, body) = code.split_at(start);
+        let init = "    fwp_init_consts();\n";
+        let observe = "    /* Ownership observation point: before runtime teardown. */\n";
+        assert_eq!(body.matches(init).count(), 1);
+        assert_eq!(body.matches(observe).count(), 1);
+        let code = prefix.to_owned()
+            + &body
+                .replace(
+                    init,
+                    &format!("{init}    size_t tail_cancel_baseline = fwp_heap.live;\n"),
+                )
+                .replace(
+                    observe,
+                &format!("{observe}    if(fwp_heap.live != tail_cancel_baseline) exit(196);\n    if(tail_cancel_visits < 2) exit(197);\n"),
+                );
+        for optimization in ["-O0", "-O2"] {
+            let binary = dir.join(format!("cancel{optimization}.exe"));
+            fwp::cgen::compile_c(&code, &binary, optimization).unwrap();
+            let native = Command::new(&binary)
+                .env("FWP_PREEMPT", "37")
+                .output()
+                .unwrap();
+            if let Some(root) = std::env::var_os("FWP_TAIL_ARTIFACTS") {
+                let root = std::path::PathBuf::from(root);
+                std::fs::create_dir_all(&root).unwrap();
+                let prefix = root.join(format!("cancel-{case}{optimization}"));
+                std::fs::write(prefix.with_extension("c"), &code).unwrap();
+                std::fs::copy(&binary, prefix.with_extension("exe")).unwrap();
+                std::fs::write(prefix.with_extension("stdout"), &native.stdout).unwrap();
+                std::fs::write(prefix.with_extension("stderr"), &native.stderr).unwrap();
+                std::fs::write(
+                    prefix.with_extension("status"),
+                    format!("{:?}\n", native.status.code()),
+                )
+                .unwrap();
+            }
+            assert!(
+                native.status.success(),
+                "cancel case {case} {optimization}: {native:?}"
+            );
+            assert_eq!(native.stdout, interpreted.stdout);
+        }
     }
 }
 

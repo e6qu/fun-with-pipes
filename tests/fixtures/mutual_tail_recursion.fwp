@@ -8,9 +8,19 @@ parity-odd = match
     0 -> 1
     _ -> sub 1 | parity-even
 
+rec observed-left : I64 -> I64 ! {IO, Error[String]}
+observed-left = match
+    0 -> "stop" | fail
+    _ -> tap echo | sub 1 | observed-right
+rec observed-right : I64 -> I64 ! {IO, Error[String]}
+observed-right = match
+    0 -> "stop" | fail
+    _ -> tap echo | sub 1 | observed-left
+
 main = [
     200000 | parity-even | echo,
     200001 | parity-even | echo,
     200000 | parity-odd | echo,
     200001 | parity-odd | echo,
+    3 | attempt observed-left | echo,
 ] | ignore

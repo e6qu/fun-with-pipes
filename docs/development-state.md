@@ -9,7 +9,8 @@ at the latest check. Roll failures into this batch. A6 platform acceptance is pe
 
 The active worktree remains `/private/tmp/fwp-parser-workspace`, now on branch
 `functional-calls-and-tail-loops`, based on merged #221
-`ef037415f401cdf9ed44c7deffe735edfa99e0cd`. No new PR is open yet.
+`ef037415f401cdf9ed44c7deffe735edfa99e0cd`. The grouped delivery is
+[draft PR #222](https://github.com/e6qu/fun-with-pipes/pull/222).
 The user merged #221 before the final production matrix. The merge tree
 `531fcffc2796aed8fb8b06b00145dddf2e7309d9` exactly matches focused-tested head
 `50dd674aa7f764d9e2a0ef75dbc736ace3e4f9c1`. Its message is one 49-character line,
@@ -23,7 +24,7 @@ F3 compares a restricted tagged loop with mutual calls and an explicit source
 loop, at O0/O2, before accepting or rejecting the optimization. Preparation and
 existing-test pointers are in `/private/tmp/fwp-next-functional-notes.md`.
 
-Uncommitted F2 implementation admits weak metadata in `tailrec::plain_data` and
+F2 implementation admits weak metadata in `tailrec::plain_data` and
 tests its shared borrowed-parameter caller contract. Deep weak swaps, aliases,
 callback payloads, argument failure and cancellation have fixtures. Native tail
 tests now sample executed loop-frame addresses at O0/O2 and include a deliberately
@@ -31,7 +32,19 @@ bad-stack observer control. F3's scalar-pair prototype lives in
 `src/tailrec/pairs.rs`; it preserves separate entries and ordinary non-tail calls.
 Unit controls cover both entries, renamed pattern locals, deep parity, repeated
 pass execution and rejection of resources, debug frames and dynamic calls.
-These edits are not yet compiled. F1 observations and F3 measurements remain open.
+First focused run `40696627458` at `8787b42d` failed compilation on both hosts:
+seven diagnostics all came from using the IR's u32 arity as a usize vector index
+in the new pair pass. Both full logs are saved in
+`/private/tmp/fwp-222-8787-failed.log`; no tests ran. The repair converts once at
+the indexing boundary and checks the combined frame's arity/local limits.
+F1 now has eight executable fixture pairs in `tests/fixtures/functional_costs.fwp`
+and an observer in the existing call-liveness target. It measures allocations,
+bytes, runtime application requests, boxes and effective retains inside actual
+exported calls at two input sizes and O0/O2. No timing claim follows from counts.
+F3 emits ordinary/grouped versions of identical typed IR and an explicit fwp loop.
+Its runner script freezes timing, allocation, code-size and stack budgets before
+measurement and retains every sample. A failed budget requires an explicit
+rejection or repair, not an acceptance claim. These additions await validation.
 The new `functional-calls` focused workflow uses production GCC on Linux ARM64
 and AMD64; full final-head gates run after the implementation batch is ready.
 

@@ -4,6 +4,9 @@ use fwp::value::Value;
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/functional_costs.rs"]
+mod functional_costs;
+
 #[test]
 fn temporary_channel_fields_preserve_owners_and_nonlocal_cleanup() {
     let channel = MT::Con("std::Channel".into(), vec![MT::con("std::String")]);

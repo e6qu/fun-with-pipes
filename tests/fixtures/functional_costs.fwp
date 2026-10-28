@@ -1,0 +1,67 @@
+# Each pair computes the same scalar result. Exports keep the unknown-call or
+# escaping-result boundary available to the native caller used by the test.
+export pipe : I64 -> I64
+pipe = add 1 | mul 2
+export unknown-pipe : (I64 -> I64) -> I64 -> I64
+unknown-pipe = flip compose (mul 2)
+export increment : () -> (I64 -> I64)
+increment = const (add 1)
+
+export partial : I64 -> I64
+partial = both add id | uncurry (flip apply)
+export escaped-partial : I64 -> (I64 -> I64)
+escaped-partial = add
+
+export borrowed : I64 -> I64
+borrowed = flip array.generate id | array.map (add 1) | array.fold add 0
+export unknown-borrowed : (I64 -> I64) -> I64 -> I64
+unknown-borrowed = curry (both .0 (.1 | flip array.generate id)
+    | uncurry array.map | array.fold add 0)
+
+export captured : I64 -> I64
+captured = both (add | flip compose (mul 2)) (const 3) | uncurry (flip apply)
+export escaped-captured : I64 -> (I64 -> I64)
+escaped-captured = add | flip compose (mul 2)
+
+Pair = { left: I64, right: I64 }
+export produce : I64 -> Option[Pair]
+produce = make { left = id, right = add 1 } | Some
+export consume : Option[Pair] -> I64
+consume = option.map (both .left .right | uncurry add) | option.unwrap-or 0
+export result : I64 -> I64
+result = produce | consume
+
+export each-count : I64 -> I64
+each-count = range 0 | run-state 0 (each (add | modify)) | .1
+export unknown-each : (I64 -> () ! {State[I64]}) -> I64 -> I64
+unknown-each = curry (run-state 0 (both .0 (.1 | range 0) | uncurry each) | .1)
+export accumulate : () -> (I64 -> () ! {State[I64]})
+accumulate = const (add | modify)
+
+export folded : I64 -> I64
+folded = range 0 | fold add 0
+export unknown-fold : (I64 -> I64 -> I64) -> I64 -> I64
+unknown-fold = curry (both (fork fold .0 (const 0)) (.1 | range 0)
+    | uncurry (flip apply))
+export addition : () -> (I64 -> I64 -> I64)
+addition = const add
+
+state-step : I64 -> Step[I64, ()] ! {State[I64]}
+state-step = if (eq 0) (const () | Stop) (tap (add | modify) | sub 1 | Again)
+export state-loop : I64 -> I64
+state-loop = run-state 0 (loop state-step) | .1
+export unknown-state : (I64 -> Step[I64, ()] ! {State[I64]}) -> I64 -> I64
+unknown-state = curry (run-state 0 (both .0 .1 | uncurry loop) | .1)
+export state-callback : () -> (I64 -> Step[I64, ()] ! {State[I64]})
+state-callback = const state-step
+
+main = [
+    32 | both pipe (unknown-pipe (increment ())) | echo,
+    32 | both partial (both escaped-partial id | uncurry (flip apply)) | echo,
+    32 | both borrowed (unknown-borrowed (increment ())) | echo,
+    32 | both captured (escaped-captured | apply 3) | echo,
+    32 | both result (produce | consume) | echo,
+    32 | both each-count (unknown-each (accumulate ())) | echo,
+    32 | both folded (unknown-fold (addition ())) | echo,
+    32 | both state-loop (unknown-state (state-callback ())) | echo,
+] | ignore

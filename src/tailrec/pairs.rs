@@ -112,7 +112,7 @@ pub(super) fn lower(prog: &mut Program) {
             };
             if f.arity == 0
                 || !f.locals.iter().all(scalar)
-                || !scalar(f.ty.after_args(f.arity))
+                || !scalar(f.ty.after_args(f.arity as usize))
                 || !eligible(body)
             {
                 return None;
@@ -139,7 +139,22 @@ pub(super) fn lower(prog: &mut Program) {
         if left.arity != right.arity || left.ty != right.ty {
             continue;
         }
-        let arity = left.arity;
+        let arity = left.arity as usize;
+        let Some(worker_arity) = left.arity.checked_add(1) else {
+            continue;
+        };
+        let Some(total_locals) = left
+            .locals
+            .len()
+            .checked_add(right.locals.len())
+            .and_then(|n| n.checked_add(1))
+            .and_then(|n| n.checked_sub(arity))
+        else {
+            continue;
+        };
+        if Local::try_from(total_locals).is_err() {
+            continue;
+        }
         let worker = prog.funcs.len();
         let mut locals = vec![MT::con("std::I64")];
         locals.extend_from_slice(&left.locals[..arity]);
@@ -170,7 +185,7 @@ pub(super) fn lower(prog: &mut Program) {
         let name = format!("{}+{}$tail-pair", left.name, right.name);
         prog.funcs.push(Func {
             name,
-            arity: arity + 1,
+            arity: worker_arity,
             locals,
             ty,
             body: Body::Expr(Expr::Match(Box::new(Expr::Local(0)), arms)),
@@ -307,6 +322,69 @@ mod tests {
             let before = format!("{p:?}");
             lower(&mut p);
             assert_eq!(format!("{p:?}"), before, "variant {variant}");
+        }
+    }
+
+    #[test]
+    #[ignore = "runner-only inputs for the O0/O2 mutual-recursion measurement"]
+    fn emit_mutual_recursion_comparison() {
+        let directory = std::path::PathBuf::from(std::env::var_os("FWP_MUTUAL_EVIDENCE").unwrap());
+        std::fs::create_dir_all(&directory).unwrap();
+        let mut ordinary = pair();
+        ordinary.main = Some(ordinary.funcs.len());
+        ordinary.funcs.push(Func {
+            name: "main".into(),
+            arity: 0,
+            locals: vec![],
+            ty: MT::con("std::I64"),
+            body: Body::Expr(Expr::Call(0, vec![Expr::Const(Value::I64(0))])),
+        });
+        let mut grouped = ordinary.clone();
+        lower(&mut grouped);
+        super::super::analyze(&mut grouped);
+        assert_eq!(grouped.funcs.len(), ordinary.funcs.len() + 1);
+        assert_eq!(grouped.self_tail.len(), 1);
+        let source = "step : (I64, I64) -> Step[(I64, I64), I64]\nstep = if (.0 | eq 0) (.1 | Stop) (make { 0 = .0 | sub 1, 1 = .1 | flip sub 1 } | Again)\nexport parity : I64 -> I64\nparity = both id (const 0) | loop step\nmain = parity 0 | ignore\n";
+        let (_, explicit) = crate::driver::compile_source(
+            "explicit.fwp",
+            source,
+            crate::mono::Roots {
+                main: true,
+                exports: true,
+                ..Default::default()
+            },
+        )
+        .map_err(|e| e.rendered)
+        .unwrap();
+        let entry = explicit
+            .exports
+            .iter()
+            .find(|(name, _)| name == "parity")
+            .unwrap()
+            .1;
+        std::fs::write(directory.join("explicit.fwp"), source).unwrap();
+        for (name, program, entry) in [
+            ("ordinary", ordinary, 0),
+            ("grouped", grouped, 0),
+            ("explicit", explicit, entry),
+        ] {
+            crate::ir::check_locals(&program).unwrap();
+            let mut interpreter =
+                crate::interp::Interp::new(&program, Box::new(std::io::sink())).unwrap();
+            for n in [0, 1, 20, 21] {
+                assert_eq!(
+                    interpreter.call_root(entry, vec![Value::I64(n)]).unwrap(),
+                    Value::I64(n % 2)
+                );
+            }
+            let code = crate::cgen::generate(&program).unwrap();
+            std::fs::write(directory.join(format!("{name}.c")), code).unwrap();
+            std::fs::write(directory.join(format!("{name}.entry")), format!("f{entry}")).unwrap();
+            std::fs::write(
+                directory.join(format!("{name}.ir")),
+                format!("{program:#?}"),
+            )
+            .unwrap();
         }
     }
 }
