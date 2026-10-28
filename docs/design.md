@@ -223,6 +223,12 @@ matches can expose direct callbacks, but multiple tested fields, whole-value use
 and protected resources retain their required representation. A compiler-generated
 loop is not permission to interleave two trapping eager stages.
 
+A fused integer range advances its index only while `position < end`. Both values
+have the same integer type, so `position + 1 <= end` proves the update cannot
+overflow. The compiler reuses wrapping addition for this index update, as it
+already does for bounded array indices; no wrapping occurs under that proof.
+User callbacks and the accumulated result retain their checked arithmetic.
+
 The F64 matrix path uses blocks of 32 over contiguous arrays and accumulates in
 ascending inner-index order. Multiply and add remain separate. Shape validation
 precedes the specialized work; malformed cast shapes retain their specified
@@ -248,8 +254,10 @@ Literal lengths count Unicode scalar values, as ordinary `string.length` does.
 `src/cgen/scalar_text.rs` performs this rewrite before ownership lowering adds
 temporary locals. It handles signed and unsigned integers up to 64 bits and
 preserves the order of integer-producing expressions, including their effects
-and traps. A static bound proves that combining the lengths fits I64; the
-generated sum still uses ordinary checked addition. Shared strings, unknown
+and traps. A static bound proves every partial length sum is nonnegative and fits
+I64. These introduced sums reuse wrapping addition: the bound makes wrapping
+impossible, so no overflow check is needed. Arithmetic used to produce the integer
+itself remains checked. Shared strings, unknown
 string producers, floating-point displays and wider integers keep their storage.
 The private integer-length operation has no source-language declaration.
 Its scalar runtime counts decimal digits in descending groups of 16, 8, 4, 2

@@ -76,6 +76,9 @@ effects = fork concat (tap echo | show) (add 1 | tap echo | show) | string.lengt
 # expose: cli
 export trap : I64 -> I64 ! {IO}
 trap = fork concat (tap echo | div 0 | show) (add 1 | tap echo | show) | string.length
+# expose: cli
+export checked-length : I64 -> I64 ! {IO}
+checked-length = tap echo | add 1 | show | concat "é🙂" | string.length
 "#,
     );
     std::fs::write(&input, source).unwrap();
@@ -87,6 +90,7 @@ trap = fork concat (tap echo | div 0 | show) (add 1 | tap echo | show) | string.
             ("shared", b"-12\n0\n".as_slice(), 0),
             ("effects", b"7\n".as_slice(), 0),
             ("trap", b"7\n".as_slice(), 101),
+            ("checked-length", b"9223372036854775807\n".as_slice(), 101),
         ])
         .collect();
     let references: Vec<_> = cases
@@ -430,6 +434,136 @@ fn integer_print_keeps_binary_protocol_output_on_its_own_stream() {
                 (&result.stdout, &result.stderr, result.status.code()),
                 (&raw.stdout, &raw.stderr, raw.status.code()),
                 "counted/{opt}"
+            );
+        }
+    }
+}
+
+#[test]
+fn proved_range_updates_preserve_integer_endpoints_and_user_overflow() {
+    let dir = fwp::cgen::TempDir::new("proved-range-indices").unwrap();
+    let input = dir.join("ranges.fwp");
+    let mut source = String::new();
+    let mut cases = Vec::new();
+    // Every range remains small, but its runtime endpoints cover both limits,
+    // equality and descending order. The expected lengths do not come from fwp.
+    for (ty, bits, signed) in [
+        ("I8", 8, true),
+        ("U8", 8, false),
+        ("I16", 16, true),
+        ("U16", 16, false),
+        ("I32", 32, true),
+        ("U32", 32, false),
+        ("I64", 64, true),
+        ("U64", 64, false),
+        ("ISize", usize::BITS, true),
+        ("USize", usize::BITS, false),
+        ("I128", 128, true),
+        ("U128", 128, false),
+    ] {
+        let name = format!("count-{}", ty.to_lowercase());
+        source.push_str(&format!(
+            "# expose: cli\nexport {name} : ({ty}, {ty}) -> I64\n\
+             {name} = uncurry range | length\n"
+        ));
+        let maximum = if signed {
+            (1_u128 << (bits - 1)) - 1
+        } else {
+            u128::MAX >> (128 - bits)
+        };
+        let minimum = if signed {
+            format!("-{}", maximum + 1)
+        } else {
+            "0".into()
+        };
+        let low_end = if signed {
+            format!("-{}", maximum - 1)
+        } else {
+            "2".into()
+        };
+        let data = format!(
+            "({}, {maximum})\n({minimum}, {low_end})\n({maximum}, {maximum})\n({maximum}, {minimum})\n",
+            maximum - 2
+        );
+        cases.push((name, data, "2\n2\n0\n0\n", "", 0));
+    }
+    source.push_str(
+        r#"
+# expose: cli
+export callback-overflow : I64 -> I64
+callback-overflow = range 0 | map (add 9223372036854775807) | sum
+# expose: cli
+export fold-overflow : I64 -> I64
+fold-overflow = range 0 | map (const 9223372036854775807) | sum
+"#,
+    );
+    for name in ["callback-overflow", "fold-overflow"] {
+        cases.push((
+            name.into(),
+            "2\n".into(),
+            "",
+            "fwp: trap: arithmetic overflow in I64\n",
+            101,
+        ));
+    }
+    std::fs::write(&input, source).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    for raw in [true, false] {
+        for (name, data, stdout, stderr, status) in &cases {
+            let mut command = Command::new(compiler);
+            command.env_remove("FWP_NO_OPT");
+            if raw {
+                command.env("FWP_NO_OPT", "1");
+            }
+            let actual = run(
+                command
+                    .env("FWP_OUT", "text")
+                    .env("FWP_TRANSPORT", "stdio")
+                    .args(["exec", "--interp", "--cli"])
+                    .arg(&input)
+                    .arg(name),
+                data.as_bytes(),
+            );
+            assert_eq!(
+                (
+                    actual.stdout.as_slice(),
+                    actual.stderr.as_slice(),
+                    actual.status.code()
+                ),
+                (stdout.as_bytes(), stderr.as_bytes(), Some(*status)),
+                "{name}/raw={raw}"
+            );
+        }
+    }
+    let cfile = dir.join("ranges.c");
+    checked(
+        Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--cli", "--emit-c"])
+            .arg(&input)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    for opt in ["-O0", "-O1", "-O2", "-O3"] {
+        let binary = dir.join("ranges.exe");
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        for (name, data, stdout, stderr, status) in &cases {
+            let actual = run(
+                Command::new(&binary)
+                    .arg(name)
+                    .env("FWP_OUT", "text")
+                    .env("FWP_TRANSPORT", "stdio"),
+                data.as_bytes(),
+            );
+            assert_eq!(
+                (
+                    actual.stdout.as_slice(),
+                    actual.stderr.as_slice(),
+                    actual.status.code()
+                ),
+                (stdout.as_bytes(), stderr.as_bytes(), Some(*status)),
+                "{name}/{opt}"
             );
         }
     }

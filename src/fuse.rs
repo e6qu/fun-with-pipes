@@ -1643,7 +1643,12 @@ impl Fuser<'_> {
         let (elem0, next_pos, cell) = match &producer {
             Producer::Range(_, _, t) => {
                 let one = Expr::Const(crate::interp::from_i128(t, 1).ok()?);
-                let add = self.prim("prim.add", fun2(t, t, t), 2);
+                // The range step runs only while position < end, and end fits
+                // this integer type. Thus position + 1 <= end cannot overflow,
+                // including at signed/unsigned maxima. Reuse wrapping arithmetic
+                // for this proved index update; callback/fold arithmetic keeps
+                // its ordinary overflow checks and evaluation order.
+                let add = self.prim("wrapping.add", fun2(t, t, t), 2);
                 (st(0), Expr::Call(add, vec![one, st(0)]), None)
             }
             Producer::List(_) | Producer::Array(_) => {

@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -4517,7 +4517,7 @@ jobs:
           path: remote-arc-evidence/
           if-no-files-found: ignore
   benchmark_comparison:
-    if: inputs.suite == 'cpu-baselines' || inputs.suite == 'benchmark-comparison' || inputs.suite == 'checked-bounds' || inputs.suite == 'map-order' || inputs.suite == 'list-copy-costs'
+    if: inputs.suite == 'cpu-baselines' || inputs.suite == 'benchmark-comparison' || inputs.suite == 'list-copy-costs'
     strategy:
       fail-fast: false
       matrix:
@@ -4595,28 +4595,6 @@ jobs:
             *) exit 1 ;;
           esac
           python3 scripts/cpu-baselines.py measure --input target/bench-evidence --inspection target/bench-inspection.json --memory target/bench-memory --memory-inspection target/bench-memory-inspection.json --source "$GITHUB_SHA" --architecture "$architecture" --session "${{ matrix.session }}" --cpu-policy all --samples 32 --warmups 2 --loop-processes 1 --text-processes 32 --timeout 120 --max-control-ratio 1.03 --max-pair-ratio 1.10 --output target/cpu-baseline
-      - name: Measure ordered-range sort candidates and identical controls
-        if: ${{ !cancelled() && steps.evidence.outcome == 'success' && inputs.suite == 'map-order' }}
-        shell: bash
-        run: |
-          case "$RUNNER_ARCH" in
-            X64) architecture=x86_64 ;;
-            ARM64) architecture=aarch64 ;;
-            *) echo "Unsupported benchmark architecture: $RUNNER_ARCH" >&2; exit 1 ;;
-          esac
-          python3 scripts/measure-map-order.py --input target/bench-evidence --inspection target/bench-inspection.json --source "$GITHUB_SHA" --cc gcc --samples 32 --warmups 2 --cpu-policy all --max-control-change-percent 3 --min-map-gain-percent 5 --max-other-slowdown-percent 3 --output target/map-order
-          python3 scripts/inspect-map-order.py --input target/map-order --benchmarks target/bench-evidence --inspection target/bench-inspection.json --source "$GITHUB_SHA" --arch "$architecture" --objdump objdump --output target/map-order-inspection.json
-      - name: Measure checked-expression candidates and identical controls
-        if: ${{ !cancelled() && steps.evidence.outcome == 'success' && inputs.suite == 'checked-bounds' }}
-        shell: bash
-        run: |
-          case "$RUNNER_ARCH" in
-            X64) architecture=x86_64 ;;
-            ARM64) architecture=aarch64 ;;
-            *) echo "Unsupported benchmark architecture: $RUNNER_ARCH" >&2; exit 1 ;;
-          esac
-          python3 scripts/measure-checked-bounds.py --input target/bench-evidence --inspection target/bench-inspection.json --source "$GITHUB_SHA" --cc gcc --samples 32 --warmups 2 --cpu-policy all --max-control-change-percent 3 --min-loop-gain-percent 5 --max-other-slowdown-percent 3 --output target/checked-bounds
-          python3 scripts/inspect-checked-bounds.py --input target/checked-bounds --benchmarks target/bench-evidence --inspection target/bench-inspection.json --source "$GITHUB_SHA" --arch "$architecture" --objdump objdump --output target/checked-bounds-inspection.json
       - name: Measure list and array sort scratch storage
         if: ${{ !cancelled() && steps.evidence.outcome == 'success' && inputs.suite == 'list-copy-costs' }}
         shell: bash
@@ -4638,15 +4616,11 @@ jobs:
             target/bench-peer-inspection.json
             target/bench-memory/
             target/bench-memory-inspection.json
-            target/map-order/
-            target/map-order-inspection.json
             target/list-sort-storage/
             target/list-sort-inspection.json
             target/array-sort-wide.c
             target/array-sort-layout/
             target/array-sort-layout-inspection.json
-            target/checked-bounds/
-            target/checked-bounds-inspection.json
             target/bench-evidence/
           if-no-files-found: error
   performance:

@@ -1,16 +1,35 @@
-# Current work
+# Follow-on preparation: not yet a PR
 
-**Next:** monitor all nine final-head production jobs plus documentation for
-[PR #223](https://github.com/e6qu/fun-with-pipes/pull/223). Audit every target and
-compiler diagnostic, repair failures, then squash-merge only after every gate
-passes. Continue with P2/P3: isolate one proved redundant cost and compare it
-against the frozen same-job baseline. No CPU optimization is claimed in #223.
+Active published work remains PR #223 at `a4cceb8d`, in
+`/private/tmp/fwp-parser-workspace`. Its documentation gate `40771144344` passes;
+production `40771179934` is running. Preserve that tested head. This worktree,
+`/private/tmp/fwp-scalar-bounds` on `proved-scalar-bounds`, prepares P2/P3 while
+those gates finish. Guarded Rustfmt, Actionlint and the documentation audit (172 link sets) pass
+here; no implementation tests or timings have run. The prepared changes are unpublished and must be preserved.
 
-Worktree: `/private/tmp/fwp-parser-workspace`; branch `cpu-baselines-and-budgets`.
-Base: merged #222, `17978b97373f3e9236468ac19c1b8e0d290816d7`.
-Measurement source: `ec03d9cd81c001bf006a73e7dbfb044155884611`.
-Subsequent edits add reader checks, retained evidence and docs; the measured
-compiler and collection routine are unchanged.
+**Next:** implement [the declared experiment](measurements/proved-scalar-bounds.md)
+for the two proved bounds, then validate it on runners. Range-index advances reuse existing `wrapping.add` only
+under `position < end`; text-length sums reuse it only after the existing bound
+proof. User arithmetic remains checked. Tests add dynamic endpoints across all
+integer widths, interpreter/native O0–O3 comparisons and callback/fold overflow.
+No new API, primitive or runtime wrapper is added, and no speedup is claimed.
+
+Use the frozen CPU table from #223. Isolate each change and their combination,
+retain identical-code controls and all slower/inconclusive rows, and record actual
+code/stack/memory costs. Do not run full local builds or benchmarks. Merge #223
+only after its final gates pass, then carry these changes onto that squash merge
+before opening the next PR. Detailed review notes:
+`/private/tmp/fwp-next-cpu-candidate-notes.md`.
+
+Incidental cleanup: remove the closed `checked-bounds` and `map-order` workflow
+options and their four scripts, whose readers still required the retired
+`memory: arc` schema. Historical protocols now link to the exact original scripts
+and revisions; no historical result is deleted or relabelled. Current benchmark
+comparison and CPU-baseline commands remain. All surviving script links point to verified original revisions. Guarded
+Actionlint and the 172-file documentation audit pass for this cleanup.
+
+The following record describes the published prerequisite, not completed tests
+of this preparation.
 
 ## Completed batch, acceptance pending
 
