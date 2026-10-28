@@ -16,7 +16,9 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 enum Origin {
-    Function(FuncId, usize, u8, Option<Site>),
+    // Capture counts share the IR's u32 arity range. Keep them compact in every
+    // origin set and dependency key; conversion at construction is checked.
+    Function(FuncId, u32, u8, Option<Site>),
     UnknownFunction,
     Queue(FuncId),
     GrpcSender(FuncId),
@@ -520,11 +522,11 @@ impl<'a> Proof<'a> {
             let captures = self
                 .captures
                 .get(&closure)
-                .filter(|args| args.len() == supplied)
+                .filter(|args| args.len() == supplied as usize)
                 .ok_or_else(|| {
                     "ownership: missing captured values for a queued function".to_string()
                 })?;
-            let types = self.program.funcs[id].ty.params(supplied).0;
+            let types = self.program.funcs[id].ty.params(supplied as usize).0;
             for (ty, value) in types.iter().zip(captures) {
                 self.queued_value(ty, value, seen)?;
             }
@@ -694,7 +696,7 @@ impl<'a> Proof<'a> {
                 }
                 continue;
             };
-            let count = self.program.funcs[target].arity as usize - supplied;
+            let count = self.program.funcs[target].arity as usize - supplied as usize;
             let next = self.apply(
                 &BTreeSet::from([closure]),
                 &vec![Targets::new(); count],
@@ -794,7 +796,7 @@ impl<'a> Proof<'a> {
         // still checks the invocation's scope after a partial escapes.
         let key = Origin::Function(
             id,
-            args.len(),
+            u32::try_from(args.len()).expect("capture count must fit the IR's u32 arity"),
             if args.is_empty() { 0 } else { scoped },
             if args.is_empty() {
                 None
@@ -849,18 +851,20 @@ impl<'a> Proof<'a> {
                 continue;
             };
             let arity = self.program.funcs[id].arity as usize;
-            self.read(Summary::Capture(closure));
             let captured = self
                 .captures
                 .get(&closure)
                 .map(Vec::as_slice)
                 .unwrap_or(&[]);
             if captured.len() + args.len() == arity {
+                // request records the capture dependency. Nothing can change
+                // captures between the length query above and that read.
                 let returned = self.request(id, scoped, Some(closure), args);
                 join(&mut result, &returned);
                 continue;
             }
             let mut all = captured.to_vec();
+            self.read(Summary::Capture(closure));
             all.extend_from_slice(args);
             let value = if all.len() < arity {
                 self.partial(id, all, scoped, site)
@@ -983,7 +987,7 @@ impl<'a> Proof<'a> {
             Origin::UnknownFunction => true,
             Origin::Function(id, supplied, _, _) => crate::ir::same_type(
                 &self.program.shapes,
-                self.program.funcs[*id].ty.after_args(*supplied),
+                self.program.funcs[*id].ty.after_args(*supplied as usize),
                 ty,
             ),
         });
@@ -1287,7 +1291,7 @@ impl<'a> Proof<'a> {
                             }
                             continue;
                         };
-                        let count = self.program.funcs[target].arity as usize - supplied;
+                        let count = self.program.funcs[target].arity as usize - supplied as usize;
                         self.apply(
                             &BTreeSet::from([closure]),
                             &vec![Targets::new(); count],
@@ -1391,7 +1395,7 @@ impl<'a> Proof<'a> {
                             }
                             continue;
                         };
-                        let count = self.program.funcs[target].arity as usize - supplied;
+                        let count = self.program.funcs[target].arity as usize - supplied as usize;
                         result.extend(self.apply(
                             &BTreeSet::from([closure]),
                             &vec![result.clone(); count],
@@ -1426,7 +1430,7 @@ impl<'a> Proof<'a> {
                         result.insert(Origin::UnknownFunction);
                         continue;
                     };
-                    let count = self.program.funcs[target].arity as usize - supplied;
+                    let count = self.program.funcs[target].arity as usize - supplied as usize;
                     let values = vec![data.clone(); count];
                     let returned = self.apply(&BTreeSet::from([closure]), &values, scoped, site)?;
                     // A fold/loop may feed a returned closure into a later

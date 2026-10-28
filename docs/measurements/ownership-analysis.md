@@ -1,9 +1,9 @@
 # Ownership-analysis cost
 
 This measures compiler work, not the execution speed of a compiled fwp program.
-For the 64-worker fixture below, the repaired proof took 29.8 ms on Linux AMD64
-and 80.8 ms on Intel macOS. It fixes a false rejection; this is not a compiler
-speedup claim or a proved linear bound.
+Each measurement below identifies its source and host. Earlier samples remain
+part of the evidence, not a claim about current compiler speed. The finite proof
+does not promise linear running time.
 
 ## Current repair: revisit changed dependencies
 
@@ -53,7 +53,21 @@ the current wave. Both function-ID orders now have a regression check.
 [The complete attempt record](ownership-worklist-2026-10-28.json) retains the
 original timeout and failed worklist run, with all samples and host descriptions.
 
-**Verification pending:** the ordering repair needs both G2 hosts and all final
+The ordered version `dd91cc9c4f8ba7306d1848542b3a63f60817fee1`, run `40683252110`,
+needs nine small-fixture waves and passes all Intel macOS gates. Both hosts pass
+212 units, Clippy, full-fact comparisons and REST budgets. Linux forms/entry
+analysis takes 0.380/0.276 seconds; Intel macOS takes 0.725/0.575 seconds.
+The sole remaining failure is Linux N=64: 2.008 ms for separate sites against
+1.321 ms merged, a ratio of 1.5204 exceeding the unchanged 1.5 limit.
+
+The next repair uses the IR's existing `u32` arity range for capture counts,
+with checked conversion. A focused Rust O1 probe measures 40 bytes per origin
+instead of 48 on local ARM64; this is a value size, not measured peak memory.
+Saturated calls also register each capture dependency once instead of twice.
+The 328 distinct closure identities and their facts at N=64 remain separate;
+the test control retains 13 merged identities.
+
+**Verification pending:** these cost reductions need both G2 hosts and all final
 platform gates. Timing, size and separate/merged-site limits are unchanged.
 
 ## Why this measurement is needed

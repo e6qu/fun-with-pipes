@@ -1,28 +1,36 @@
 # Current work
 
-**Next:** verify the ordered-worklist repair on both G2 hosts, then run the
-final nine production jobs, docs and G2 before squash merge. PR #221 is draft.
-Run `40680214359` at `ba38308f3e333aff1fede3e02e71db83241bea51` passed 212 units,
-all-target Clippy and exact fact-set comparisons on both hosts. REST forms/entry
-analysis took 0.339/0.264 seconds on Linux and 0.707/0.512 on Intel macOS, within
-the unchanged 10-second limit. Both hosts failed only the small fixture's wave
-budget: 19 versus 16. All logs are audited; no other failures or warnings.
-Docs `40680191794` passed, including its evidence-rejection controls.
-The PR, parser guides and fixture comment now distinguish quoted benchmark input
+**Next:** verify compact ownership origins and single capture-dependency reads
+on both G2 hosts. PR #221 remains draft; all nine production jobs, docs and G2
+must pass on the final head before squash merge and then F1–F3.
+
+Run `40683252110` at `dd91cc9c4f8ba7306d1848542b3a63f60817fee1` passes every Intel
+macOS gate. Both hosts pass 212 units, all-target Clippy, exact fact sets and REST
+budgets. Small fixtures need nine waves (limit 16). Linux fails only the N=64
+separate/merged ratio: 2.008451/1.320981 ms = 1.5204, limit 1.5. All logs audited;
+no other diagnostics. Docs `40683195261` passed and its complete log was audited.
+Artifacts: `/private/tmp/fwp-221-dd91-analysis`.
+
+The repair stores capture counts in the IR's existing `u32` range, with checked
+conversion, and registers saturated-call capture dependencies once rather than
+twice. A guarded extracted Rust O1 probe measures origin size 48 → 40 bytes on
+local ARM64 and passes conversion bounds. This is not a full compiler test or
+peak-memory measurement. Run:
+`python3 scripts/local-guard.py python3 /private/tmp/check-fwp-origin-layout.py`.
+
+[Every attempt](measurements/ownership-worklist-2026-10-28.json) retains its samples
+and source: original Intel timeout, first worklist's 19-wave failure and current
+Linux ratio failure. Keep all budgets unchanged. Earlier/self readers wait for
+the next ordered wave; later readers can use new facts in the same wave. The
+128-call regression tests both ID orders against a test-only full scan.
+
+The PR, parser guides and fixture comments distinguish quoted benchmark input
 from fwp syntax. fwp uses infix arithmetic (`2 + 3 * 4`); the toy parser consumes
 its own text format. No language grammar or benchmark calculation changed.
 
-The new queue ordering admits later functions in the current wave and defers
-earlier/self readers to the next. A 128-call chain in both ID orders compares
-all facts, wave counts and function visits with the test-only full scan. Keep
-all existing budgets. The [attempt record](measurements/ownership-worklist-2026-10-28.json)
-preserves the initial Intel timeout and the first worklist's wave-budget failure.
-The ordering repair still needs runner validation; do not claim it passed.
-
-Superseded production runs `40674858299` and `40676851764` are cancelled, as is
-old queued docs `40676851675`. The draft production run is skipped, not verified.
-After all final-head gates pass, squash-merge and begin F1–F3 together. Monitor
-failed steps while jobs continue; never merge a cancelled or skipped head.
+Superseded production `40674858299`, `40676851764` and old docs `40676851675` are
+cancelled. Draft production is skipped, not verified. Inspect failed steps while
+jobs run; audit all targets before batching repairs. Never merge a skipped gate.
 
 [PR #221](https://github.com/e6qu/fun-with-pipes/pull/221) uses
 `/private/tmp/fwp-parser-workspace`, branch `scoped-parser-workspace`, based on
