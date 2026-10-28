@@ -5,7 +5,7 @@ Each measurement below identifies its source and host. Earlier samples remain
 part of the evidence, not a claim about current compiler speed. The finite proof
 does not promise linear running time.
 
-## Current repair: revisit changed dependencies
+## Current implementation: revisit changed dependencies
 
 PR #221 run `40674942219`, source `45f9e81013fdf3b9e07aa0d4222c87bcde289e2d`,
 failed the Intel macOS forms limit: 12.824 seconds against 10 seconds. Its
@@ -60,15 +60,30 @@ analysis takes 0.380/0.276 seconds; Intel macOS takes 0.725/0.575 seconds.
 The sole remaining failure is Linux N=64: 2.008 ms for separate sites against
 1.321 ms merged, a ratio of 1.5204 exceeding the unchanged 1.5 limit.
 
-The next repair uses the IR's existing `u32` arity range for capture counts,
+The cost repair uses the IR's existing `u32` arity range for capture counts,
 with checked conversion. A focused Rust O1 probe measures 40 bytes per origin
 instead of 48 on local ARM64; this is a value size, not measured peak memory.
 Saturated calls also register each capture dependency once instead of twice.
 The 328 distinct closure identities and their facts at N=64 remain separate;
 the test control retains 13 merged identities.
 
-**Verification pending:** these cost reductions need both G2 hosts and all final
-platform gates. Timing, size and separate/merged-site limits are unchanged.
+Run `40685939711` passes both hosts at
+`50dd674aa7f764d9e2a0ef75dbc736ace3e4f9c1`: 212 units, all-target Clippy,
+complete fact-set comparisons and every unchanged analysis budget. Both hosts
+measure 40 bytes per origin and nine waves for the small fixtures.
+
+| Host | 64-worker merged / separate median | Separate / merged | Forms / entry analysis |
+|---|---|---|---|
+| Linux AMD64 | 1.025 / 1.485 ms | 1.449 | 0.304 / 0.249 s |
+| Intel macOS | 3.009 / 4.136 ms | 1.374 | 1.586 / 0.651 s |
+
+The limits remain 1.5 for the ratio, 16 small-fixture waves and 10 seconds per
+REST fixture. Forms/entry visits are 14,454/12,791 versus 591,732/379,958 in the
+original full scan. Final stored facts agree exactly; this is a reduction in
+repeated proof work, not a change in admission rules. Timings are host-specific
+samples, not a controlled cross-revision speedup ratio. The full final-head
+platform matrix remains required for acceptance: the user merged #221 before
+that gate completed. The handoff tracks postmerge verification and repairs.
 
 ## Why this measurement is needed
 

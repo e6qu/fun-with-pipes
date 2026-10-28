@@ -6,6 +6,23 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Scoped parser storage and analysis work (PR #221)
+
+A selected parser invocation owns aligned storage blocks; integer/link tree nodes
+need no individual counts. [The report](measurements/parser-workspace.md) records
+18–28% less parser time than previous fwp, alongside 4–14% more allocated bytes
+and the remaining C/Rust gap. The [analysis repair](measurements/ownership-analysis.md)
+rechecks changed dependencies and preserves every lifetime fact and budget.
+
+The user merged #221 as `ef037415f401cdf9ed44c7deffe735edfa99e0cd` before final
+production verification. Its tree `531fcffc2796aed8fb8b06b00145dddf2e7309d9`
+matches focused-tested head `50dd674aa7f764d9e2a0ef75dbc736ace3e4f9c1`; its message
+is one 49-character line with no body or trailers. Both G2 hosts `40685939711`
+and docs `40685831377` passed. Earlier parser native/WASI checks and four timing
+sessions are independently audited in the report. **Full platform acceptance
+is pending:** postmerge production `40691815018` and docs `40691814677` are active.
+The next F1–F3 PR carries any further repairs and the final evidence updates.
+
 ## Temporary record owners and sort keys (PR #220)
 
 Scalar projections and known sort callbacks remove two temporary owners per
@@ -28,8 +45,8 @@ Squash `56d5aac63a9963ae6b16574f10d6dc3087a08d8a` has the identical tested tree
 with no body/trailers. Duplicate postmerge CI `40552108647` was cancelled after
 that verification. Separate postmerge docs `40552108553` exposed a guard-test
 fixture depending on 64 GiB of real runner free space. The next batch isolates
-its test readings and adds refusal/boundary controls; the production guard's
-limits are unchanged. [The handoff](development-state.md) tracks that repair.
+its test readings and adds refusal/boundary controls in #221; the production
+guard's limits are unchanged. [The handoff](development-state.md) tracks acceptance.
 
 ## Unique local arrays without counts (PR #219)
 

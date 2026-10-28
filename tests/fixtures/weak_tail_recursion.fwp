@@ -1,0 +1,43 @@
+# Swapping weak handles must keep metadata alive without keeping targets alive.
+rec weak-swap : (I64, WeakChannel[a], WeakChannel[a]) -> (WeakChannel[a], WeakChannel[a])
+weak-swap = if (.0 | eq 0)
+    (both .1 .2)
+    (make { 0 = .0 | sub 1, 1 = .2, 2 = .1 } | weak-swap)
+
+expired : () -> WeakChannel[I64] ! {Async}
+expired = const 1 | channel.make | channel.downgrade
+
+live-swap : Channel[I64] -> (Bool, Bool, Bool) ! {Async}
+live-swap = channel.downgrade
+    | both id (make { 0 = const 200001, 1 = id, 2 = const () | expired } | weak-swap)
+    | make {
+        0 = .1 | .0 | channel.upgrade | option.is-none,
+        1 = .1 | .1 | channel.upgrade | option.is-some,
+        2 = both .0 (.1 | .1) | uncurry eq,
+    }
+
+aliases : WeakChannel[a] -> Bool
+aliases = both id (make { 0 = const 200001, 1 = id, 2 = id } | weak-swap)
+    | make { 0 = both .0 (.1 | .0) | uncurry eq, 1 = both .0 (.1 | .1) | uncurry eq }
+    | uncurry and
+
+# The callback payload is a type argument, not an owned closure in this frame.
+callback-channel : I64 -> Channel[() -> I64] ! {Async}
+callback-channel = channel.make
+
+rec weak-failure : (I64, WeakChannel[I64]) -> WeakChannel[I64] ! {Error[String], IO}
+weak-failure = if (.0 | eq 0)
+    .1
+    (make {
+        0 = .0 | tap echo | sub 1,
+        1 = if (.0 | eq 1) (const "argument" | fail) .1,
+    } | weak-failure)
+
+main = [
+    1 | channel.make | live-swap | echo,
+    () | expired | aliases | echo,
+    1 | callback-channel | channel.downgrade | aliases | echo,
+    () | expired | both (const 3) id | attempt weak-failure | match
+        Ok _ -> const False | echo
+        Err _ -> eq "argument" | echo,
+] | ignore

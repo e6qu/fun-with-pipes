@@ -1,0 +1,16 @@
+# The two functions retain separate callable entries and share a scalar loop.
+rec parity-even : I64 -> I64
+parity-even = match
+    0 -> 0
+    _ -> sub 1 | parity-odd
+rec parity-odd : I64 -> I64
+parity-odd = match
+    0 -> 1
+    _ -> sub 1 | parity-even
+
+main = [
+    200000 | parity-even | echo,
+    200001 | parity-even | echo,
+    200000 | parity-odd | echo,
+    200001 | parity-odd | echo,
+] | ignore

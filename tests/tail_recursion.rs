@@ -25,6 +25,20 @@ fn deep_self_recursion_preserves_swaps_aliases_effects_and_failure_order() {
             &["mixed", "mixed-swap", "nested", "observed", "ordered", "wide-mixed"][..],
             &[][..],
         ),
+        (
+            "weak-tail-recursion",
+            include_str!("fixtures/weak_tail_recursion.fwp"),
+            &b"(True, True, True)\nTrue\nTrue\n3\n2\n1\nTrue\n"[..],
+            &["weak-swap", "weak-failure"][..],
+            &[][..],
+        ),
+        (
+            "mutual-tail-recursion",
+            include_str!("fixtures/mutual_tail_recursion.fwp"),
+            &b"0\n1\n1\n0\n"[..],
+            &["$tail-pair"][..],
+            &[][..],
+        ),
     ];
     for (name, source, expected, tails, ordinary) in cases {
         let dir = fwp::cgen::TempDir::new(name).unwrap();
@@ -74,6 +88,42 @@ fn deep_self_recursion_preserves_swaps_aliases_effects_and_failure_order() {
             checked(command.arg(&src).arg("-o").arg(&cfile));
             let mut code = std::fs::read_to_string(&cfile).unwrap();
             assert!(code.contains("fwp_self_again:"));
+            // Observe actual frame addresses at every executed back edge.
+            // Count each generated loop separately so unrelated caller frames
+            // cannot hide growth or inflate the range being measured.
+            let loops = code.matches("fwp_self_again:;").count();
+            let mut index = 0;
+            code = code
+                .split("fwp_self_again:;")
+                .enumerate()
+                .map(|(part, text)| {
+                    if part == 0 {
+                        return text.to_string();
+                    }
+                    let probe = format!(
+                        "fwp_self_again:;\n    volatile unsigned char tail_marker;\n    tail_probe({index}, (uintptr_t)&tail_marker);\n{text}"
+                    );
+                    index += 1;
+                    probe
+                })
+                .collect();
+            let marker = "typedef uint64_t V;";
+            assert_eq!(code.matches(marker).count(), 1);
+            code = code.replacen(
+                marker,
+                &format!(
+                    r#"{marker}
+static uintptr_t tail_low[{loops}], tail_high[{loops}];
+static size_t tail_visits[{loops}];
+static void tail_probe(size_t id, uintptr_t address) {{
+    if (!tail_visits[id] || address < tail_low[id]) tail_low[id] = address;
+    if (!tail_visits[id] || address > tail_high[id]) tail_high[id] = address;
+    tail_visits[id]++;
+}}
+"#
+                ),
+                1,
+            );
             {
                 let start = code
                     .find("static void *fwp_main_thread(void *arg) {")
@@ -91,12 +141,36 @@ fn deep_self_recursion_preserves_swaps_aliases_effects_and_failure_order() {
                     .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > tail_live_bytes) { fprintf(stderr, \"tail recursion retained %ld bytes\\n\", (long)(fwp_heap.live - tail_live_bytes)); exit(193); }\n");
                 code = format!("{runtime}{main}");
             }
+            let observation = "    /* Ownership observation point: before runtime teardown. */\n";
+            code = code.replace(
+                observation,
+                &format!(
+                    r#"{observation}
+    size_t tail_total_visits = 0;
+    if (getenv("FWP_TEST_TAIL_BAD_STACK")) {{ tail_low[0] = 0; tail_high[0] = 65537; }}
+    for (size_t i = 0; i < {loops}; i++) {{
+        tail_total_visits += tail_visits[i];
+        if (tail_high[i] - tail_low[i] > 65536) exit(194);
+    }}
+    if (tail_total_visits < 200000) exit(195);
+"#
+                ),
+            );
             for opt in ["-O0", "-O2"] {
                 let binary = dir.join(format!("counted{opt}.exe"));
                 fwp::cgen::compile_c(&code, &binary, opt).unwrap();
                 let output = checked(&mut Command::new(&binary));
                 assert_eq!(output.stdout, raw.stdout, "{name} counted {opt}");
                 assert_eq!(output.stderr, raw.stderr, "{name} counted {opt}");
+                let broken = Command::new(&binary)
+                    .env("FWP_TEST_TAIL_BAD_STACK", "1")
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    broken.status.code(),
+                    Some(194),
+                    "stack observer: {broken:?}"
+                );
                 if let Some(path) = std::env::var_os("FWP_TAIL_ARTIFACTS") {
                     let path = std::path::PathBuf::from(path);
                     std::fs::create_dir_all(&path).unwrap();
@@ -129,10 +203,12 @@ fn deep_self_recursion_preserves_swaps_aliases_effects_and_failure_order() {
 #[test]
 fn tail_loop_remains_cancellable() {
     let sources = [
-        "rec spin : () -> ()\nspin = const () | spin\nmain = task.within 10ms spin | echo\n",
-        "rec spin : I64 -> I64\nspin = match\n    0 -> 1 | spin | add 1\n    _ -> spin\nmain = task.within 10ms (const 1 | spin) | echo\n",
+        ("rec spin : () -> ()\nspin = const () | spin\nmain = task.within 10ms spin | echo\n", "None\n"),
+        ("rec spin : I64 -> I64\nspin = match\n    0 -> 1 | spin | add 1\n    _ -> spin\nmain = task.within 10ms (const 1 | spin) | echo\n", "None\n"),
+        ("rec weak-spin : WeakChannel[I64] -> WeakChannel[I64]\nweak-spin = id | weak-spin\nexpired : () -> WeakChannel[I64] ! {Async}\nexpired = const 1 | channel.make | channel.downgrade\nmain = expired () | const | flip compose (tap (const \"entered\" | echo) | weak-spin) | task.within 100ms | option.is-none | echo\n", "entered\nTrue\n"),
+        ("rec ping : I64 -> I64\nping = sub 1 | pong\nrec pong : I64 -> I64\npong = add 1 | ping\nmain = task.within 10ms (const 0 | ping) | echo\n", "None\n"),
     ];
-    for source in sources {
+    for (source, expected) in sources {
         let dir = fwp::cgen::TempDir::new("tail-cancel").unwrap();
         let src = dir.join("cancel.fwp");
         std::fs::write(&src, source).unwrap();
@@ -143,7 +219,7 @@ fn tail_loop_remains_cancellable() {
                 .args(["run", "--interp"])
                 .arg(&src),
         );
-        assert_eq!(interpreted.stdout, b"None\n");
+        assert_eq!(interpreted.stdout, expected.as_bytes());
         let binary = dir.join("cancel.exe");
         checked(
             Command::new(compiler)

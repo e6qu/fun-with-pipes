@@ -2,8 +2,17 @@
 use crate::ir::*;
 use std::collections::HashSet;
 
-/// Immutable data can leave a frame without closing a resource or cancelling
-/// an operation. Unknown captures and opaque handles need a stronger proof.
+mod pairs;
+
+/// Lower eligible scalar mutual pairs before proving frame reuse. Kept separate
+/// from `analyze` so tests can compare the same typed IR with ordinary calls.
+pub fn lower_pairs(prog: &mut Program) {
+    pairs::lower(prog);
+}
+
+/// Values whose release cannot close a resource or cancel an operation.
+/// Weak handles own expiration metadata, not the target or its payload.
+/// Unknown captures and other opaque handles need a stronger proof.
 pub(crate) fn plain_data(shapes: &Shapes, ty: &MT, seen: &mut HashSet<MT>) -> bool {
     if !seen.insert(ty.clone()) {
         return true;
@@ -12,6 +21,10 @@ pub(crate) fn plain_data(shapes: &Shapes, ty: &MT, seen: &mut HashSet<MT>) -> bo
         MT::Fun(..) => false,
         MT::Nat(_) => true,
         MT::Record(fields) => fields.iter().all(|(_, t)| plain_data(shapes, t, seen)),
+        // Inspect this before the type arguments: WeakChannel[Task[a]] owns
+        // neither a task nor the channel that carries it. Both runtimes release
+        // only metadata here. An upgrade's strong owner remains ineligible.
+        MT::Con(name, args) if name == "std::WeakChannel" => args.len() == 1,
         MT::Con(name, args) => {
             if !args.iter().all(|t| plain_data(shapes, t, seen)) {
                 return false;
@@ -104,6 +117,43 @@ pub fn analyze(prog: &mut Program) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn weak_metadata_can_leave_a_frame_but_its_target_owners_cannot() {
+        let integer = MT::con("std::I64");
+        let callback = MT::Fun(Box::new(integer.clone()), Box::new(integer.clone()));
+        for payload in [
+            integer.clone(),
+            callback,
+            MT::con("std::File"),
+            MT::Con("std::Task".into(), vec![integer]),
+        ] {
+            let weak = MT::Con("std::WeakChannel".into(), vec![payload.clone()]);
+            let strong = MT::Con("std::Channel".into(), vec![payload]);
+            for ty in [weak.clone(), MT::Record(vec![("link".into(), weak)])] {
+                let mut program = Program::default();
+                program.funcs.push(Func {
+                    name: "carry".into(),
+                    arity: 1,
+                    locals: vec![ty.clone()],
+                    ty: MT::Fun(Box::new(ty.clone()), Box::new(ty)),
+                    body: Body::Expr(Expr::Call(0, vec![Expr::Local(0)])),
+                });
+                analyze(&mut program);
+                assert!(program.self_tail.contains(&0));
+                // A strong value created by upgrade still prevents reuse,
+                // even when the recursive argument itself is only weak.
+                program.funcs[0].locals.push(strong.clone());
+                analyze(&mut program);
+                assert!(program.self_tail.is_empty());
+            }
+        }
+        assert!(!plain_data(
+            &Shapes::new(),
+            &MT::Con("std::WeakChannel".into(), vec![]),
+            &mut HashSet::new(),
+        ));
+    }
 
     #[test]
     fn mixed_calls_preserve_ordinary_argument_binding_and_scrutinee_calls() {

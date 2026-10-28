@@ -93,9 +93,10 @@ fn recursive(id: FuncId, graph: &[BTreeSet<FuncId>]) -> bool {
 pub(super) fn parameter_type(prog: &Program, ty: &MT) -> bool {
     fn leaf(prog: &Program, ty: &MT) -> bool {
         let plain = |ty| crate::tailrec::plain_data(&prog.shapes, ty, &mut HashSet::new());
-        // Borrow the handle, not its queued values. The continuing owner keeps
-        // the whole queue and native sink context alive; payload cycle/capture
-        // eligibility remains the separate ARC proof.
+        // A strong handle borrows the queue and its native sink context. A weak
+        // handle borrows only expiration metadata, never the target. In either
+        // case the caller must keep the same handle past this call; payload
+        // cycle/capture eligibility remains the separate ARC proof.
         (matches!(ty, MT::Con(name, args)
             if name == "std::Channel" && args.len() == 1)
             || plain(ty))
@@ -579,6 +580,20 @@ mod tests {
                 "channel.close",
                 MT::unit(),
             ),
+            (
+                MT::Con(
+                    "std::WeakChannel".into(),
+                    vec![MT::Fun(Box::new(MT::unit()), Box::new(MT::unit()))],
+                ),
+                "channel.upgrade",
+                MT::Con(
+                    "std::Option".into(),
+                    vec![MT::Con(
+                        "std::Channel".into(),
+                        vec![MT::Fun(Box::new(MT::unit()), Box::new(MT::unit()))],
+                    )],
+                ),
+            ),
         ] {
             let pair = MT::Record(vec![
                 ("0".into(), input.clone()),
@@ -617,8 +632,22 @@ mod tests {
                         Box::new(later),
                     )),
                 });
-                let contracts = infer(&p, &[false, true, true], &[true, true, true]);
-                assert_eq!(contracts.contains_key(&0), expected, "{p:?}");
+                p.borrowed_parameters = infer(&p, &[false, true, true], &[true, true, true]);
+                assert_eq!(p.borrowed_parameters.contains_key(&0), expected, "{p:?}");
+                if expected {
+                    let (body, locals) = super::super::insert(&p)[0].clone().unwrap();
+                    super::super::ownership_liveness(&p, &p.funcs[0], &body, &locals, &[0])
+                        .unwrap();
+                    let broken = Expr::Drop(0, Box::new(body));
+                    assert!(super::super::ownership_liveness(
+                        &p,
+                        &p.funcs[0],
+                        &broken,
+                        &locals,
+                        &[0],
+                    )
+                    .is_err());
+                }
             }
         }
     }

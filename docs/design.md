@@ -364,8 +364,16 @@ tail transfers has bounded stack use; other recursion can still grow the stack.
 For example, [lesson 22](tutorials/22-recursion-and-sharing/README.md) mixes a
 tail countdown with a branch that performs one addition after a recursive call.
 
-Closures with unknown captures and resource/task/channel owners still prevent
-frame reuse. Resource regions and debugger frames cannot be discarded. Function
+Weak channel handles own expiration metadata, not the channel or its queued
+values. The current extension allows these handles in a reused frame, including
+handles whose payload type names a callback or task. Upgrading a handle creates
+a strong owner; keeping that owner in a local still prevents frame reuse.
+Swapping two weak handles first prepares both next arguments and only then
+releases the old locals. This avoids dropping metadata that the next iteration
+still needs. Runtime and platform verification of this extension is pending.
+
+Closures with unknown captures and resource/task/strong-channel owners still
+prevent frame reuse. Resource regions and debugger frames cannot be discarded. Function
 parameters are prepared in their original order before becoming next-iteration
 state, including swaps and multiple curried arguments. This adds no source
 syntax or intermediate `Step` values. Native record/variant arguments keep their
@@ -382,6 +390,16 @@ optimizations and remains the small-case semantic reference. The source debugger
 also retains original recursive frames. Deep recursion in those modes can still
 reach the stack limit. Calls made inside an iteration have their own stack costs,
 and a loop can still retain growing data.
+
+A mutual-recursion prototype groups a pair with matching scalar signatures into
+one internal loop. A small integer chooses which original body runs next. The
+original entries select that integer; only direct tail calls change it. Calls
+whose results require further work keep ordinary frames. The prototype admits
+only I64, Bool and unit locals, rejects dynamic calls and observable cleanup or
+debugger frames, and scans each candidate once. It does not promise constant
+stack space for arbitrary groups or foreign calls. F3 in [the plan](../PLAN.md#3-functional-calls-and-recursion)
+requires O0/O2 measurements against ordinary recursion and an explicit fwp loop
+before accepting this change. The prototype is not yet verified support.
 
 The existing `loop step state` API remains available when the source program
 needs explicit iteration. `FnGen::tail_tokens` also releases unused storage-reuse

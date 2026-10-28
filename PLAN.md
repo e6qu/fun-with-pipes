@@ -33,14 +33,16 @@ collector is not the same as removing these costs. The
    selected array-copy, callback, temporary-owner and key-box costs. Preserve
    their [ownership measurements](docs/measurements/README.md), failure controls
    and actual-binary evidence. This does not make all containers count-free.
-2. **A6 is current:** complete the final platform gates for the
-   [parser workspace](docs/parser-workspace.md). Focused native/WASI checks,
+2. **A6 is merged in #221; platform acceptance is pending.** Keep the full
+   postmerge gates for the [parser workspace](docs/parser-workspace.md). Focused native/WASI checks,
    direct cancellation and four independently audited
-   [measurement sessions](docs/measurements/parser-workspace.md) pass. Repair
-   the latest G2 forms-analysis budget failure before final platform acceptance. The
+   [measurement sessions](docs/measurements/parser-workspace.md) pass. The G2
+   analysis repair passes both focused hosts with unchanged limits. The
    comparison reports faster parsing alongside increased allocated bytes and
    the remaining C/Rust gap. [The handoff](docs/development-state.md) owns gate
-   status. After verified merge, group F1–F3 into the next substantial PR.
+   status. Roll any remaining failure into the current F1–F3 batch.
+   **F1–F3 are current:** group functional-call evidence, safe weak-handle tail
+   reuse and the measured mutual-recursion decision into one substantial PR.
 3. Preserve **G2**'s [analysis budgets](docs/measurements/ownership-analysis.md)
    and measure the new region-selection work separately. Further precision needs
    a named example and a cost comparison, not more diagnostic scaffolding.
