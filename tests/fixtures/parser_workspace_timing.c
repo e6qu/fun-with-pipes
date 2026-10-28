@@ -3,7 +3,7 @@
 /* DECLARATIONS */
 #include <inttypes.h>
 static uint64_t parser_token_ns, parser_construct_ns, parser_release_ns;
-static size_t parser_nodes, parser_blocks, parser_payload, parser_requested, parser_rounded, parser_unused, parser_heap_allocations, parser_payload;
+static size_t parser_nodes, parser_blocks, parser_payload, parser_requested, parser_rounded, parser_unused, parser_heap_allocations;
 static uint64_t parser_now(void) {
     struct timespec t;
     if (clock_gettime(CLOCK_MONOTONIC, &t)) exit(90);

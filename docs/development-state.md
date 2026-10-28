@@ -1,97 +1,79 @@
 # Current work
 
-**Next:** diagnose AMD64 timing variability using whole-process CPU time and
-context switches in two focused sessions. Keep the fixed wall-time rule and all
-rejected samples. Then publish the comparison and start the complete final-head
-production/documentation/G2 gates. Monitor on a timer and repair failures before
-merging.
+**Next:** monitor all nine final-head production jobs plus documentation and G2
+for PR #221. Monitor on a timer,
+audit every failed/completed target, and batch any needed repairs before pushing.
+Squash-merge only after all gates pass; then begin F1–F3 together in the next PR.
 
-[Draft PR #221](https://github.com/e6qu/fun-with-pipes/pull/221) uses
+[PR #221](https://github.com/e6qu/fun-with-pipes/pull/221) uses
 `/private/tmp/fwp-parser-workspace`, branch `scoped-parser-workspace`, based on
 verified #220 squash `56d5aac63a9963ae6b16574f10d6dc3087a08d8a`.
-A6 is implemented, but complete platform acceptance is pending.
+A6 is implemented and measured; complete platform acceptance is pending.
 [The lifetime contract](parser-workspace.md) and
-[measurement protocol](measurements/parser-workspace.md) define its scope.
+[the measured comparison](measurements/parser-workspace.md) define its limits.
 
-## Current source and checks
+## Source and completed checks
 
-The compiler/runtime source is `ca56023eb362259cf2099c9c9d477b20b3cf6793`.
-Current changes only add measurement diagnostics and update tools/docs.
-Do not repeat the passing focused compiler suite for that sampling-only change;
-the final-head full matrix is still required.
-
+- Compiler/runtime source is `ca56023eb362259cf2099c9c9d477b20b3cf6793`.
+  Later changes add measurement diagnostics and docs; the source diff is empty.
+  Do not repeat passing focused compiler tests for report-only changes.
 - Native Linux ARM64/AMD64 run `40650396700` passed: 211 units, six allocator
   tests, six parser tests, two record tests, Clippy and actual WASI O1/O2 checks.
-  All logs and 26 actual native/WASI probes per host were independently audited:
+  All logs and 26 native/WASI probes per host were independently audited for
   outputs, statuses, physical cleanup, deliberate mutations and binary targets.
-- Measurement run `40650400349` passed three sessions. AMD64 session 1 rejected
-  its identical-binary small-case control at 10.08%, above the fixed 10% limit.
-  That candidate timing was correctly absent. Every other runtime/scale row
-  passed; all four artifacts were independently audited, including the rejection.
-- Longer small samples (131,072 calls) in run `40652914476` at `a51bde95`
-  passed both ARM64 sessions but rejected both AMD64 sessions: medium 10.44%
-  and small 10.47% identical-binary deviations. Their candidate timings are absent.
-  All jobs/logs were inspected. Longer samples alone did not resolve variability.
-- Add whole-process wall/CPU time and context-switch observations around each
-  serial child, without changing inner wall-time acceptance or excluding samples.
-  Eleven evidence controls pass. Diagnose AMD64 first; final evidence still needs
-  two independent sessions on each architecture.
-- Earlier run `40642686229` at `ec36e79f` passed all four measurements with the
-  growing-payload policy. Its audit exposed rounding after adding block headers.
-  Current whole-block sizing removes that waste; requested and rounded block
-  bytes match on both hosts, and all four cases match prior fwp's peak live slots.
-- No full local compiler build, suite or benchmark ran. Guarded Clang O1/O2
-  controls cover block boundaries, medium/large oversized nodes, subsequent
-  growth, nested owners, every allocation failure and omitted cleanup. Small
-  generated-C/peer controls check values, malformed input and checked overflow.
-  Workflows, documentation links and formatting pass their focused checks.
+- Measurements at `35250b3a5ecdaa8f3e02ddb7af9664c84068f186` passed twice per
+  architecture: AMD64 `40656341807`, ARM64 `40657569359`. All logs and artifacts
+  passed independent audit: samples, budgets, allocation/cleanup, actual binary
+  headers and text sizes, compiler scale and GCC stack observations.
+- [The retained data](measurements/parser-workspace-2026-10-28.json) includes
+  every current sample and prior measurement attempt. Three earlier identical-
+  binary controls failed at 10.08%, 10.44% and 10.47%; their candidate timings are
+  absent. Longer samples did not eliminate failures. Added CPU/scheduling data
+  does not establish their cause. Preserve the unchanged 10% limit and reject
+  future unstable controls; never discard failed samples or reset budgets.
+- Eleven measurement evidence controls, actionlint and the documentation audit
+  passed locally under the guard; docs CI `40656331725` passed. The consolidated
+  final report audit passes 169 link sets, 106 preparation pairs and eight steps.
+- No full local build, suite or benchmark ran. Earlier guarded Clang O1/O2
+  checks cover allocation boundaries, oversized nodes, growth, nested owners,
+  every allocation failure and missing cleanup. GCC results come from CI.
 
-## Implemented scope
+## Result and limits
 
-Selected recursive variants contain only integers and links. One invocation owns
-aligned blocks; allocation helpers receive its context explicitly, while readers
-need none. Public recursive calls start separate owners. Escaping/cached trees,
-unknown or captured uses, managed node fields and self-tail roots keep ordinary
-ownership. Strings and token lists retain their existing owners.
+One invocation owns aligned 256-to-4,096-byte blocks. Admitted recursive nodes
+contain only integers and internal links; the links have no counts. Allocation
+helpers receive context explicitly; readers need none. Recursive public calls
+start new owners. Escaping/cached trees, unknown/captured uses, managed node
+fields and self-tail roots keep ordinary ownership. Strings/tokens retain theirs.
+Completed helper clones obey actual code-growth limits. Cancellation is observed
+after a tree exists; omitted cleanup must fail the physical-storage check.
 
-Whole blocks grow through 256/512/1,024/2,048/4,096 bytes, including headers.
-Oversized nodes receive their checked exact requested size. Completed helper
-clones obey an actual expression/local growth limit; unsupported candidates do
-not change language semantics. Cancellation is observed after the tree exists,
-and the missing-free mutation must leave detectable live storage.
+The four fixed trees parse in 18–28% less time than previous fwp, but take
+5.7–9.4× C and 5.2–8.6× Rust time. The peers borrow tokens; fwp owns them.
+Allocations decrease while total allocated slot bytes rise 4–14%; peak live
+slots match previous fwp. Report these tradeoffs, individual stack frames and
+compiler RSS, not only removed counts. This is one workspace, not general regions.
 
-The comparison builds the same prefix-expression trees in previous fwp, current
-fwp and explicit C/Rust arenas. Peers borrow token slices; fwp owns its tokens.
-Report their substantial remaining timing gap, allocated bytes, code/stack costs
-and compiler RSS honestly. Fewer count operations do not imply fewer bytes.
+## Repairs and artifacts
 
-## Repairs and retained evidence
+This PR also fixes guard tests that depended on host disk capacity and Linux
+WASI jobs that mixed Clang 21 with LLVM 18 libraries. Production guard limits
+remain unchanged; the shared WASI setup pins and preflights matching tools.
+Measurement repairs recognize the previous unboxed worker/public bridge and
+require actual exported roots in compiler-scale output. Invalid earlier compiler
+rows are retained and labeled in the report.
 
-All encountered failures were audited across every job before batching repairs:
-
-- Guard tests depended on host disk capacity. Their copied subprocesses now
-  control disk readings; the real 64 GiB guard and other limits are unchanged.
-- Linux mixed unversioned Clang 21 with LLVM 18 WASI libraries. One shared setup
-  pins and preflights compiler, linker and libraries together; both hosts pass.
-- The first measurement adapter missed the baseline's unboxed scalar worker and
-  public bridge. The repaired adapter checks and times the public entry.
-- Compiler-scale commands initially selected empty `main`, omitting exports.
-  They now select exports explicitly; both writer and auditor require every
-  expected root. The old compiler-scale observations are invalid.
-
-Current evidence is in `/private/tmp/fwp-221-ca560-checks` and
-`/private/tmp/fwp-221-ca560-measurements`; the longer-sample results are in
-`/private/tmp/fwp-221-a51-measurements`. Preserve the earlier policy samples in
-`/private/tmp/fwp-221-ec36-measurements`, `/private/tmp/fwp-221-ec36-published.json`
-and `/private/tmp/fwp-221-a55-measurements`; distinguish their source and limits.
-No detached merger runs.
+Current artifacts: `/private/tmp/fwp-221-ca560-checks` and
+`/private/tmp/fwp-221-35250-measurements`. Earlier artifacts and audits remain in
+`/private/tmp/fwp-221-{a55,ec36,ca560,a51}-measurements`; do not remove evidence
+needed to reproduce the published record. No detached merger runs.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | Verified | Maintain collector-free ownership and cycle checks |
-| 2 | In progress | A6 measurement and full platform acceptance |
+| 2 | In progress | A6 final platform acceptance |
 | 3 | Pending | Functional calls and recursion fixtures/optimizations |
 | 4 | Pending | Close named CPU performance gaps |
 | 5 | Pending | Derivative storage, timing and precision |
@@ -101,16 +83,15 @@ No detached merger runs.
 
 ## Recovery
 
-GC removal is verified in #217; A1–A5 are verified through #220. A6 needs the
-remaining measurement and final platform gates. Roadmap steps 3–8 remain open.
-[History](roadmap-history.md) owns completed delivery IDs; [PLAN.md](../PLAN.md)
-owns the next tasks. The original intermittent Intel compiler abort remains
-unexplained; preserve its evidence and investigate source/input on recurrence.
+GC removal is verified in #217; A1–A5 through #220. A6 needs final platform gates;
+steps 3–8 remain open. [History](roadmap-history.md) owns completed delivery IDs;
+[PLAN.md](../PLAN.md) owns tasks. The original intermittent Intel compiler abort
+remains unexplained; preserve evidence and investigate source/input on recurrence.
 
-The primary checkout remains detached at #209 with a recovery pointer and an
-untracked compiler-abort report; preserve both. Disk is about 75 GiB free. Keep
-the fixed 64 GiB/2 GiB/1 GiB/180-second local limits and use `local-guard.py`.
+The primary checkout is detached at #209 with a recovery pointer and an untracked
+compiler-abort report; preserve both. Disk is about 76 GiB free. Keep the fixed
+64 GiB/2 GiB/1 GiB/180-second limits and use `local-guard.py` for local checks.
 
 Publication and squash merge are authorized after all final-head gates pass:
 one line <=80 characters, empty body, no trailers/attribution. Verify the merged
-tree and message, then continue the plan in the next substantial PR.
+tree and message, then continue the next substantial PR.

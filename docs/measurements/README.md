@@ -9,7 +9,7 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Ownership costs
 
-- [Parser workspace comparison](parser-workspace.md): pending A6 measurements, with exact C/Rust work and storage/timing boundaries.
+- [Parser workspace comparison](parser-workspace.md): four accepted sessions, C/Rust gaps, allocation tradeoffs and retained failed controls.
 
 - [Remaining ARC operations after GC removal](arc-residual-costs.md): per-owner attribution and static-callback reduction.
 - [Unique local arrays without counts](unique-array-storage.md): verified storage, lifetime proof and native/WASI cleanup.

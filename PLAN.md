@@ -33,11 +33,13 @@ collector is not the same as removing these costs. The
    selected array-copy, callback, temporary-owner and key-box costs. Preserve
    their [ownership measurements](docs/measurements/README.md), failure controls
    and actual-binary evidence. This does not make all containers count-free.
-2. **A6 is current:** finish the [parser workspace](docs/parser-workspace.md).
-   Its lifetime transformation passes focused native/WASI checks. Complete the
-   [measured comparison](docs/measurements/parser-workspace.md), direct cancellation
-   and compiler-budget controls in one batch, then run the full platform matrix. Include the guard-test fixture repair
-   discovered after #220; [the handoff](docs/development-state.md) records it.
+2. **A6 is current:** complete the final platform gates for the
+   [parser workspace](docs/parser-workspace.md). Focused native/WASI checks,
+   direct cancellation, compiler budgets and four independently audited
+   [measurement sessions](docs/measurements/parser-workspace.md) pass. The
+   comparison reports faster parsing alongside increased allocated bytes and
+   the remaining C/Rust gap. [The handoff](docs/development-state.md) owns gate
+   status. After verified merge, group F1–F3 into the next substantial PR.
 3. Preserve **G2**'s [analysis budgets](docs/measurements/ownership-analysis.md)
    and measure the new region-selection work separately. Further precision needs
    a named example and a cost comparison, not more diagnostic scaffolding.
