@@ -3,9 +3,10 @@
 **Next:** implement F1–F3 together: a finite functional-call cost matrix,
 weak-handle self-tail reuse with cleanup controls, and a measured mutual-recursion
 prototype. Carry the pending analysis evidence and stale-comment fix into this
-next PR. Postmerge docs `40691814677` and the production benchmark job pass;
-the other eight jobs of `40691815018` are running/queued with no failed steps
-at the latest check. Roll failures into this batch. A6 platform acceptance is pending.
+next PR. Postmerge docs `40691814677`, the benchmark and both macOS ownership jobs
+pass. Both ownership logs have 125 successful targets and no compiler diagnostics;
+the benchmark log is also audited. Six jobs of `40691815018` remain running with
+no failed steps at the latest check. Roll failures into this batch; A6 acceptance is pending.
 
 The active worktree remains `/private/tmp/fwp-parser-workspace`, now on branch
 `functional-calls-and-tail-loops`, based on merged #221
@@ -47,6 +48,18 @@ measurement and retains every sample. A failed budget requires an explicit
 rejection or repair, not an acceptance claim. These additions await validation.
 The new `functional-calls` focused workflow uses production GCC on Linux ARM64
 and AMD64; full final-head gates run after the implementation batch is ready.
+
+The grouped second head `8b0fc929b92604898bd1078275f55c65fb435d67` has focused
+run `40699575855` and docs `40699544670` queued. Before they started, source review
+found short C calls in the F1 probe to curried entries. Native entries need full
+arity: the repaired probe uses the runtime's owned partial-application constructor
+for scalar/unit captures and asserts arities. The probe also calls the normal
+root-completion operation before its live-storage check, releasing State scratch
+while keeping its allocation inside the measured call. No language wrapper is added.
+The next push also adds tested measurement decisions (four guarded Python tests
+pass), retains successful compiler diagnostics, and preserves F1 artifacts through
+the existing ARC evidence setting on every production host. No measured result yet.
+After publishing, supersede the queued old head with one focused run of the batch.
 
 [The parser contract](parser-workspace.md), [parser measurements](measurements/parser-workspace.md)
 and [analysis report](measurements/ownership-analysis.md) own the A6 evidence.

@@ -100,7 +100,8 @@ fn transfer(
 
 /// One candidate scan plus one clone of each selected body. Original
 /// entries stay available to callers and function values; no body is duplicated
-/// per call site. The maximum added state is one scalar tag per pair.
+/// per call site. Arguments gain one scalar tag; locals from both branches
+/// remain distinct. Native measurements account for the combined frame size.
 pub(super) fn lower(prog: &mut Program) {
     let partners: Vec<_> = prog
         .funcs

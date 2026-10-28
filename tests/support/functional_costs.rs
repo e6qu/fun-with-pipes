@@ -34,9 +34,18 @@ fn functional_call_matrix_counts_executed_work_and_releases_owners() {
     )
     .map_err(|e| e.rendered)
     .unwrap();
-    let entry = |name: &str| {
+    let function = |name: &str| {
         let (_, id) = program.exports.iter().find(|(n, _)| n == name).unwrap();
-        format!("f{id}")
+        *id
+    };
+    let entry = |name| format!("f{}", function(name));
+    // Arrow-spine functions use saturated C entries. A caller supplying fewer
+    // arguments constructs an owned partial application, not a short C call.
+    // All captures in this fixture are scalars or unit, so no child owner moves.
+    let partial = |name: &str, argument: &str, arity: u32| {
+        let id = function(name);
+        assert_eq!(program.funcs[id].arity, arity);
+        format!("fwp_rc_fresh(fwp_pap({id}, 1, (V[]){{{argument}}}))")
     };
     let mut code = fwp::cgen::generate(&program).unwrap();
     let declaration = "typedef uint64_t V;";
@@ -58,31 +67,35 @@ fn functional_call_matrix_counts_executed_work_and_releases_owners() {
     for (name, control, expected) in [
         (
             "pipe",
-            format!("{}({}(0), n)", entry("unknown-pipe"), entry("increment")),
+            format!(
+                "{}({}, n)",
+                entry("unknown-pipe"),
+                partial("increment", "0", 2)
+            ),
             "2 * (n + 1)",
         ),
         (
             "partial",
             format!(
-                "fwp_apply_owned({}(n), 1, (V[]){{n}})",
-                entry("escaped-partial")
+                "fwp_apply_owned({}, 1, (V[]){{n}})",
+                partial("escaped-partial", "n", 2)
             ),
             "2 * n",
         ),
         (
             "borrowed",
             format!(
-                "{}({}(0), n)",
+                "{}({}, n)",
                 entry("unknown-borrowed"),
-                entry("increment")
+                partial("increment", "0", 2)
             ),
             "n * (n + 1) / 2",
         ),
         (
             "captured",
             format!(
-                "fwp_apply_owned({}(n), 1, (V[]){{3}})",
-                entry("escaped-captured")
+                "fwp_apply_owned({}, 1, (V[]){{3}})",
+                partial("escaped-captured", "n", 2)
             ),
             "2 * (n + 3)",
         ),
@@ -93,20 +106,28 @@ fn functional_call_matrix_counts_executed_work_and_releases_owners() {
         ),
         (
             "each-count",
-            format!("{}({}(0), n)", entry("unknown-each"), entry("accumulate")),
+            format!(
+                "{}({}, n)",
+                entry("unknown-each"),
+                partial("accumulate", "0", 2)
+            ),
             "n * (n - 1) / 2",
         ),
         (
             "folded",
-            format!("{}({}(0), n)", entry("unknown-fold"), entry("addition")),
+            format!(
+                "{}({}, n)",
+                entry("unknown-fold"),
+                partial("addition", "0", 3)
+            ),
             "n * (n - 1) / 2",
         ),
         (
             "state-loop",
             format!(
-                "{}({}(0), n)",
+                "{}({}, n)",
                 entry("unknown-state"),
-                entry("state-callback")
+                partial("state-callback", "0", 2)
             ),
             "n * (n + 1) / 2",
         ),
@@ -120,9 +141,10 @@ fn functional_call_matrix_counts_executed_work_and_releases_owners() {
     cost_requests = cost_bytes = cost_apply = cost_boxes = cost_retains = 0;
     cost_active = 1;
     result = {expression};
+    fwp_tasks_finish();
     cost_active = 0;
     if(result != (V)({expected})) return 211;
-    if(fwp_heap.live != baseline || fwp_cleanups) return 212;
+    if(fwp_heap.live != baseline || fwp_cleanups || fwp_state_len || fwp_state_owners) return 212;
     printf("{name} {variant} %llu %llu %llu %llu %llu %llu\n",
         (unsigned long long)n, cost_requests, cost_bytes, cost_apply, cost_boxes, cost_retains);
 "#
@@ -147,7 +169,7 @@ int main(int argc, char **argv) {{
     ));
     for optimization in ["-O0", "-O2"] {
         let binary = dir.join(format!("functional{optimization}.exe"));
-        let artifact = std::env::var_os("FWP_CONTEXT_ARTIFACTS").map(|root| {
+        let artifact = std::env::var_os("FWP_ARC_ARTIFACTS").map(|root| {
             let root = PathBuf::from(root).join("functional");
             std::fs::create_dir_all(&root).unwrap();
             std::fs::write(root.join("functional.fwp"), source).unwrap();

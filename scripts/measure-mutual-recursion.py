@@ -3,12 +3,41 @@
 import argparse
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import platform
 import statistics
 import subprocess
 import time
+
+
+def assess(case, budgets):
+    """Recompute the decision from raw samples; failed controls are inconclusive."""
+    control = [statistics.median(pair[i] for pair in case["controls"]) for i in range(2)]
+    variants = case["variants"]
+    grouped, explicit, ordinary = [variants[name] for name in ["grouped", "explicit", "ordinary"]]
+    samples = [t for pair in case["controls"] for t in pair]
+    samples.extend(t for variant in variants.values() for t in variant["seconds"])
+    if any(not math.isfinite(t) or t <= 0 for t in samples):
+        raise ValueError("timing samples must be finite and positive")
+    control_ratio = max(control) / min(control)
+    loop_ratio = statistics.median(grouped["seconds"]) / statistics.median(explicit["seconds"])
+    valid = control_ratio <= budgets["controlRatio"]
+    if case["level"] == "O0":
+        valid &= ordinary["profiles"][1]["stackRange"] > ordinary["profiles"][0]["stackRange"] * 8
+    checks = {
+        "timing": loop_ratio <= budgets["groupedOverExplicit"],
+        "codeSize": grouped["textBytes"] <= ordinary["textBytes"] + budgets["extraTextBytes"],
+        "allocation": all(p["allocations"] == budgets["managedRequests"]
+                          for v in variants.values() for p in v["profiles"]),
+        "stack": all(v["profiles"][1]["stackRange"] <= v["profiles"][0]["stackRange"] + budgets["extraStackRangeBytes"]
+                     for v in [grouped, explicit]),
+    }
+    accepted = valid and all(checks.values())
+    return {"controlRatio": control_ratio, "groupedOverExplicit": loop_ratio,
+            "validControls": valid, "checks": checks, "accepted": accepted,
+            "decision": "inconclusive" if not valid else "accept" if accepted else "reject"}
 
 
 def main():
@@ -36,9 +65,11 @@ def main():
     environment = dict(os.environ, FWP_ALLOC_STATS="0")
 
     def run(command):
-        commands.append(list(map(str, command)))
         out = subprocess.run(list(map(str, command)), env=environment,
                              capture_output=True, text=True, timeout=args.timeout)
+        commands.append({"command": list(map(str, command)), "status": out.returncode,
+                         "stderr": out.stderr, "failedStdout": out.stdout if out.returncode else ""})
+        (root / "commands.json").write_text(json.dumps(commands, indent=2) + "\n")
         if out.returncode:
             raise RuntimeError(f"{command}: status {out.returncode}\n{out.stdout}\n{out.stderr}")
         return out
@@ -161,28 +192,16 @@ void __attribute__((no_instrument_function)) __cyg_profile_func_exit(void *fn, v
         # Identical-binary alternating samples establish runner noise first.
         for _ in range(args.samples):
             case["controls"].append([timed("explicit"), timed("explicit")])
-        medians = [statistics.median(pair[i] for pair in case["controls"]) for i in range(2)]
-        case["controlRatio"] = max(medians) / min(medians)
         names = list(case["variants"])
         for round_index in range(args.samples):
             offset = round_index % len(names)
             for name in names[offset:] + names[:offset]:
                 case["variants"][name]["seconds"].append(timed(name))
-        grouped, explicit, ordinary = [case["variants"][name] for name in ["grouped", "explicit", "ordinary"]]
-        case["groupedOverExplicit"] = statistics.median(grouped["seconds"]) / statistics.median(explicit["seconds"])
-        case["accepted"] = (
-            case["controlRatio"] <= args.max_control_ratio
-            and case["groupedOverExplicit"] <= args.max_loop_ratio
-            and grouped["textBytes"] <= ordinary["textBytes"] + 1024
-            and all(p["allocations"] == 0 for v in case["variants"].values() for p in v["profiles"])
-            and all(v["profiles"][1]["stackRange"] <= v["profiles"][0]["stackRange"] + 1024
-                    for v in [grouped, explicit]))
-        if level == "O0" and ordinary["profiles"][1]["stackRange"] <= ordinary["profiles"][0]["stackRange"] * 8:
-            raise ValueError("ordinary-recursion stack control did not grow")
+        case.update(assess(case, report["budgets"]))
         save()
     # A measured rejection is evidence for the design decision, not a passing
     # implementation budget. The PR must explicitly accept or remove the prototype.
-    print(json.dumps([{k: c[k] for k in ["level", "controlRatio", "groupedOverExplicit", "accepted"]}
+    print(json.dumps([{k: c[k] for k in ["level", "controlRatio", "groupedOverExplicit", "decision"]}
                       for c in report["cases"]], indent=2))
 
 

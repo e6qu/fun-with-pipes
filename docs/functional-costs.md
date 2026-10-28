@@ -14,29 +14,35 @@ supplies a callback or receives a value before using it. This prevents the fwp
 compiler from assuming which function an unknown callback denotes or that an
 escaped result can be destroyed inside its producer.
 
-| Construct | Work for input `n` | Boundary control |
-|---|---|---|
-| Composed pipe | Add one, then double | Caller supplies the first function |
-| Partial application | Capture `n` in addition, then add `n` | Addition closure leaves its producer |
-| Borrowed array callback | Sum `1` through `n` after mapping an array | Caller supplies the mapping function |
-| Captured closure | Add three to captured `n`, then double | Closure leaves its producer before application |
-| Record and variant result | Sum record fields `n` and `n + 1` inside `Some` | Producer and consumer are separate exported calls |
-| `each` | Add integers `0` through `n - 1` to State | Caller supplies the State callback |
-| `fold` | Sum integers `0` through `n - 1` | Caller supplies the two-argument addition function |
-| State loop | Count down and sum `n` through `1` | Caller supplies the loop step |
-
 State is a scoped value updated by `modify` and returned by `run-state`. It is
 not a global variable. Partial application supplies one argument to a curried
 function and obtains a function waiting for the next argument. A closure is that
 function together with any captured values it needs. An exported function remains
-callable from outside the compilation unit.
+callable from outside the compilation unit. `Some` wraps a present optional value;
+the record below has two named integer fields, `left` and `right`.
+
+| Construct | Work for input `n` | Boundary control |
+|---|---|---|
+| Composed pipe | Add one, then double | Caller supplies the first function |
+| Partial application | Capture `n` in addition, then add `n` | Caller owns the partial application before using it |
+| Borrowed array callback | Sum `1` through `n` after mapping an array | Caller supplies the mapping function |
+| Captured closure | Add three to captured `n`, then double | Caller owns the captured function before using it |
+| Record and variant result | Sum record fields `n` and `n + 1` inside `Some` | Producer and consumer are separate exported calls |
+| `each` | Add integers `0` through `n - 1` to State | Caller supplies the State callback |
+| `fold` | Sum integers `0` through `n - 1` | Caller supplies the two-argument addition function |
+| State loop | Count down and sum `n` through `1` | Caller supplies the loop step |
 
 The test runs an unoptimized interpreter reference at `n = 32`, then invokes the
 actual native exported entries at `n = 32` and `128`, compiled at O0 and O2.
 Allocation requests, requested bytes, runtime application requests, record/variant
 construction requests and effective count increments are recorded only during
 the measured calls. Inputs are supplied by the native caller. All pairs must
+use the actual saturated C entry signatures. Supplying fewer curried arguments
+uses the runtime's owned partial-application constructor, including that allocation
+in the control's counts. Captures here are integers or unit. Both versions must
 return the expected results and restore the live-storage baseline after each call.
+The normal root-completion operation runs after each entry; it releases empty
+State scratch storage. That storage's allocation remains inside the measurement.
 Unknown-call controls must execute a runtime application; known callbacks must
 not add applications as input size grows. Existing alias, callback-failure and
 caller-cleanup tests run alongside this matrix.
@@ -95,7 +101,9 @@ Their instrumentation changes frames, so retained compiler stack-use reports fro
 the uninstrumented build are reported separately. Actual binaries, code, compiler
 and hardware details, all samples and failed budgets are retained. A failed budget
 requires repair or a documented rejection of the prototype; a completed workflow
-alone does not accept it.
+alone does not accept it. Excessive timing noise or a missing ordinary-stack
+control makes the comparison inconclusive; it cannot justify accepting or
+rejecting the optimization. Synthetic controls test all these decision rules.
 
 The focused runner suite is `functional-calls` in
 [numerics.yml](../.github/workflows/numerics.yml). Full platform acceptance remains
