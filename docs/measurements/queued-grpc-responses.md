@@ -6,9 +6,10 @@ be released whether the function runs, is discarded, fails or is cancelled.
 These are ownership checks, not timing benchmarks or comparisons with C/Rust.
 
 The compiler checks supported lifetime and cycle rules; automatic reference
-counting (ARC) handles shared owners. G5 removes the tracing selector. Its current
-O0/O2 tests and fourteen-field final server report still need integrated validation;
-the recorded results below belong to the earlier two-mode implementation.
+counting (ARC) handles shared owners. The tracing selector is removed. Current
+O0/O2 tests and the fourteen-field final server report passed
+[PR #217's platform gates](../roadmap-history.md#tracing-gc-removal-pr-217).
+The recorded measurements below belong to the earlier two-mode implementation.
 
 ## Two channel implementations
 

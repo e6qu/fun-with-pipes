@@ -195,13 +195,13 @@ whole key calculation and avoid duplicating a pair just to call its selectors.
 Captures are evaluated once in their original order; callbacks still run in the
 sort primitive's original order. Runtime-selected callbacks keep ordinary calls.
 The [measurement protocol](measurements/sort-key-ownership.md) separates these
-implemented changes from their pending verification and count targets.
+verified changes from their exact count targets and measurement limits.
 
-The A4 candidate stores known `(I64, String)` keys in an aligned field buffer
+The verified A4 path stores known `(I64, String)` keys in an aligned field buffer
 and calls the existing worker directly on `(String, I64)` inputs. Its initialized
 prefix owns the saved Strings; merge scratch borrows them. Other callback shapes
 retain ordinary calls and key records. [The protocol](measurements/inline-sort-keys.md)
-defines selection, cleanup, exact budgets and pending validation.
+defines selection, cleanup, exact budgets and completed validation.
 
 ## Numerical specialization
 
@@ -439,9 +439,13 @@ explicitly as described in [Contributing](../CONTRIBUTING.md#setting-up).
 
 ## Remaining memory work
 
-The [restricted unique-array path](measurements/unique-array-storage.md) is
-implemented and undergoing final verification. General regions and the scoped
-workspace remain [plan tasks](../PLAN.md). Tracing removal passed integrated verification in
+The [restricted unique-array path](measurements/unique-array-storage.md) was
+verified in PR #219. [The scoped parser path](parser-workspace.md) is implemented
+in `src/cgen/regions.rs` and `runtime/fwp_rt_region.c`; full platform acceptance
+remains pending. A selected call owns aligned blocks and passes an explicit
+context to allocation helpers. Internal node links have no counts; escaped trees
+keep ordinary ownership. [Measurements](measurements/parser-workspace.md) separate
+this storage change from input/token costs and from general region inference. Tracing removal passed integrated verification in
 [#217](roadmap-history.md#tracing-gc-removal-pr-217). Explicit weak channels and retained
 C callbacks are implemented; see [weak channels](weak-channels.md) and
 [retained callbacks](retained-callbacks.md) for their lifetime rules.

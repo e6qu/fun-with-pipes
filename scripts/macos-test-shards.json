@@ -254,6 +254,7 @@
     "static_memory",
     "builds",
     "bench",
-    "string_map_ownership"
+    "string_map_ownership",
+    "parser_workspace"
   ]
 }

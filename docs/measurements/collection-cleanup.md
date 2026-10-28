@@ -7,8 +7,9 @@ valid.
 
 Automatic reference counting (ARC) releases storage when its last counted owner
 finishes using it. An alias is another reference to the same value. These checks
-exercise that cleanup directly. G5 removes duplicate tracing executions; the
-migrated tests still need full target validation.
+exercise that cleanup directly. Duplicate tracing executions were removed;
+the collector-free tests passed
+[full platform validation in PR #217](../roadmap-history.md#tracing-gc-removal-pr-217).
 
 `String -> String` means a function from text to text. The following
 `! {Error[String]}` allows it to fail with a string message. `const "expected"`

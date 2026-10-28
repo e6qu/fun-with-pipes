@@ -1,9 +1,74 @@
 # Ownership-analysis cost
 
 This measures compiler work, not the execution speed of a compiled fwp program.
-For the 64-worker fixture below, the repaired proof took 29.8 ms on Linux AMD64
-and 80.8 ms on Intel macOS. It fixes a false rejection; this is not a compiler
-speedup claim or a proved linear bound.
+Each measurement below identifies its source and host. Earlier samples remain
+part of the evidence, not a claim about current compiler speed. The finite proof
+does not promise linear running time.
+
+## Current repair: revisit changed dependencies
+
+PR #221 run `40674942219`, source `45f9e81013fdf3b9e07aa0d4222c87bcde289e2d`,
+failed the Intel macOS forms limit: 12.824 seconds against 10 seconds. Its
+591,732 function visits produced only 2,585 output updates. The entry fixture
+passed at 7.358 seconds; Linux passed at 5.991 and 4.070 seconds. Both hosts
+passed the unit tests and 16/32/64-worker limits. Earlier passing samples do
+not erase this failure.
+
+The repair changes scheduling, not the ownership rules. A function is queued
+when first reached or when its input facts grow. While checking it, the compiler
+records which outputs, captures, callback continuations, channel payloads,
+task results, State values and error values it reads. A growing set queues its
+readers again, including readers that first saw an empty set. Service boundaries
+participate too. Task computations are collected for final cycle validation;
+no transfer function reads that table during iteration.
+
+For example, if `a` calls `b` and `b` later returns a newly discovered closure,
+`a` must be checked again. An unrelated function need not be. Reads are recorded
+by finite function/scope and closure-site identities. Facts and dependencies only
+grow; the finite sets ensure termination, not linear complexity. A deterministic
+ordered queue preserves function order within each wave. Newly ready later
+functions run in that wave; earlier/self readers wait for the next one, preventing
+one function from starving others. A wave visits only queued functions; old
+round counts described whole-program scans.
+
+The test harness retains a full-scan scheduling reference, unavailable in the
+compiler binary. Positive fixtures compare every input, output, capture, callback,
+channel, task, State and error set; negative fixtures must still reject. Validation
+must add no facts after convergence. A 128-call chain in both function-ID orders checks late propagation, no extra
+waves and fewer than one quarter of the reference's visits. Both raw REST fixtures
+also compare complete facts outside their unchanged analysis timer. Those extra
+reference checks are not part of the reported production-scheduling time.
+
+The first worklist attempt, `ba38308f3e333aff1fede3e02e71db83241bea51`, ran in
+`40680214359`. Both hosts passed 212 units, all-target Clippy, exact-fact checks
+and REST budgets. Forms/entry analysis took 0.339/0.264 seconds on Linux and
+0.707/0.512 seconds on Intel macOS. Forms visits fell from 591,732 to 13,503;
+entry visits fell from 379,958 to 11,787. Their final facts remained identical.
+These elapsed samples come from different runs; they are not a paired speed ratio.
+
+That attempt still failed: each small fixture needed 19 waves, above the unchanged
+limit of 16. Freezing the queue at each wave delayed later functions even when
+they could already use a new result. The ordering repair above lets them run in
+the current wave. Both function-ID orders now have a regression check.
+[The complete attempt record](ownership-worklist-2026-10-28.json) retains the
+original timeout and failed worklist run, with all samples and host descriptions.
+
+The ordered version `dd91cc9c4f8ba7306d1848542b3a63f60817fee1`, run `40683252110`,
+needs nine small-fixture waves and passes all Intel macOS gates. Both hosts pass
+212 units, Clippy, full-fact comparisons and REST budgets. Linux forms/entry
+analysis takes 0.380/0.276 seconds; Intel macOS takes 0.725/0.575 seconds.
+The sole remaining failure is Linux N=64: 2.008 ms for separate sites against
+1.321 ms merged, a ratio of 1.5204 exceeding the unchanged 1.5 limit.
+
+The next repair uses the IR's existing `u32` arity range for capture counts,
+with checked conversion. A focused Rust O1 probe measures 40 bytes per origin
+instead of 48 on local ARM64; this is a value size, not measured peak memory.
+Saturated calls also register each capture dependency once instead of twice.
+The 328 distinct closure identities and their facts at N=64 remain separate;
+the test control retains 13 merged identities.
+
+**Verification pending:** these cost reductions need both G2 hosts and all final
+platform gates. Timing, size and separate/merged-site limits are unchanged.
 
 ## Why this measurement is needed
 

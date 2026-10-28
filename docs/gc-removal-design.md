@@ -4,7 +4,8 @@ The accepted design combines inferred moves and borrows, reference counting for
 sharing, and explicit weak links where an owning cycle would otherwise form.
 Weak channels and retained C callbacks passed all production gates in #215.
 A [restricted count-free array path](measurements/unique-array-storage.md) is
-verified in #219. General regions remain planned.
+verified in #219. The [scoped parser path](parser-workspace.md) now implements
+one bounded region proof; its complete platform validation is pending.
 
 [PLAN.md](../PLAN.md) gives the work order and completion checks;
 [ownership.md](ownership.md) describes current implementation. APIs and layouts
@@ -131,8 +132,9 @@ this is not a promise to prove arbitrary external code safe.
 
 ## Six implementation examples
 
-These contracts and regression cases were verified in #215. Count-free parser
-regions remain a later optimization (A6), not an implemented API.
+These boundary contracts and regression cases were verified in #215. A6 adds
+[count-free parser storage](parser-workspace.md) inside the compiler without a
+new public API; its full platform acceptance is pending.
 
 | Case | Accepted shape to implement or preserve | Required rejection or cleanup check |
 |---|---|---|
@@ -180,10 +182,9 @@ runtime-created functions still cannot cross C as values; function fields in
 `repr(C)` records remain rejected. Ordinary scoped callbacks retain their scope.
 
 The [admission matrix](ownership-admission.md) maps these contracts to execution
-and rejection tests. When removing tracing, preserve each behavior or replace
-its obsolete expectation with the agreed ownership diagnostic.
-The workspace row preserves the existing scoped lifetime guarantees; the new count-free parser region is A6, after GC removal. General
-region inference is not an extra gate on G5.
+and rejection tests. Preserve those verified contracts as representations change.
+A6 changes parser node storage within one proved invocation lifetime; it does not
+introduce general region inference or alter the completed collector removal.
 
 ## Keep compiler cost bounded and visible
 

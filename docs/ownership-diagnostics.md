@@ -293,17 +293,17 @@ containing `gc` as permission to delete its complete test target.
 | [WASI ARC](../tests/wasm_arc.rs) | No native root/mark substitute applies | Physical allocations, count-table entries, task stacks/scheduler, host errors and both JSPI/Asyncify paths; omitted free/table cleanup/scheduler release must still fail |
 
 Other semantic/numeric/protocol suites keep their inputs, expected outputs,
-error ordering and cleanup assertions. A positive stress/poison setting there
-is an execution variant, not an independent language requirement. G5 removes
-that variant only after its ARC run passes; a `0` setting is merely disabling a
-check. The source inventory retains exact locations, including dynamically
-selected settings, so that deletion can be reviewed without guessing from names.
+error ordering and cleanup assertions. Collector stress/poison variants were
+removed after their counted-ownership replacements passed. The deletion inventory
+retains their original source locations, including dynamically selected settings,
+so the change can be reviewed without guessing from test names.
 
 G5 moved record/tree/array/map allocation comparisons and ordinary
 loop/HTTP/REST RSS checks to ARC. Both reuse variants keep reference counts;
 `FWP_NO_REUSE` disables only in-place updates in the copy control. The numeric
 budgets remain unchanged. This measures allocation cost, not elapsed time or
-parity with C/Rust. [The handoff](development-state.md) records validation status.
+parity with C/Rust. [PR #217](roadmap-history.md#tracing-gc-removal-pr-217)
+records the completed validation.
 
 ## Allocation reports
 

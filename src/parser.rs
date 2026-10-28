@@ -951,7 +951,7 @@ impl<'a> Parser<'a> {
             compared |= op.comparison();
             let span = self.bump().span;
             let rhs = self.operator_expr(op.precedence() + 1)?;
-            // Prefix operators are data-last. `flip op lhs rhs` keeps the
+            // Named arithmetic functions are data-last. `flip op lhs rhs` keeps the
             // operands' evaluation order while passing their values to op.
             let flip = self.mk(span, ExprKind::Var("::std::flip".into()));
             let function = self.mk(span, ExprKind::Var(format!("::std::{}", op.function())));

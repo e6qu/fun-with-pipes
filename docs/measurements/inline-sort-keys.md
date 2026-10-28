@@ -1,11 +1,9 @@
 # Keeping sort keys together
 
-This is the A4 implementation and its declared acceptance protocol. All 13
-allocation/count comparisons passed on both Linux architectures; the independent
-artifact audit `40512399031` passed. [The handoff](../development-state.md) tracks
-correctness checks, timing and the remaining production gates.
-It extends [the scalar-read and sort-callback batch](sort-key-ownership.md) before
-that batch's full production validation.
+A4 is verified in [PR #220](../roadmap-history.md#temporary-record-owners-and-sort-keys-pr-220),
+including all 13 allocation/count comparisons, independent artifact audits,
+repeated timing and the full production/documentation/analysis gates. It extends
+[the scalar-read and sort-callback batch](sort-key-ownership.md).
 
 The word-frequency program sorts `(word, count)` records using `(-count, word)`
 keys. The previous path allocated one 24-byte key record for every distinct word.
@@ -99,10 +97,10 @@ Deliberately missing String release or buffer freeing must be rejected.
 Source programs also compare raw interpretation with native output for newly
 allocated key text, partial key failure and cancellation.
 
-Before A4 is complete, retain the observed allocation/count/binary results, measure
-sorting time against the same-host A3 implementation with an identical-code noise
-control, and pass the full production, documentation and analysis gates. Timing
-needs the B1 protocol; operation-count success alone is not a timing result.
+These controls and the complete production/documentation/analysis gates passed.
+The retained allocation/count/binary observations and repeated sorting-time
+results below complete this scoped A4 comparison. Preserve both kinds of evidence;
+operation-count success alone is not a timing result.
 
 ## Sorting-time protocol
 
@@ -141,3 +139,27 @@ running that candidate. One identical-code pair took 109.47 versus 123.40 ms, a
 12.7% difference above the declared 10% limit. The revised workload lengthens
 both batches eightfold; it keeps the same timer scope, inputs, sampling order and
 noise limit. The rejected samples remain evidence, not a performance result.
+
+## Repeated timing observations
+
+The [complete timing report](inline-sort-key-time-2026-10-27.json) retains two
+independent runner allocations per architecture: `40514452443` and `40516778004`.
+Both passed the unchanged noise limit and frozen budgets. Independent inspection
+verified the binaries, every sample pair and each budget saved before measurement.
+
+| Runner allocation | Keys | Candidate/baseline median ratios, two sessions | Maximum control deviation |
+|---|---:|---|---:|
+| 40514452443 / AMD EPYC 7763 64-Core Processor | 256 | 0.5037, 0.5028 | 5.31% |
+| 40514452443 / AMD EPYC 7763 64-Core Processor | 4096 | 0.5130, 0.5123 | 3.06% |
+| 40514452443 / Neoverse-N2 | 256 | 0.4856, 0.4861 | 1.27% |
+| 40514452443 / Neoverse-N2 | 4096 | 0.4863, 0.4846 | 1.40% |
+| 40516778004 / AMD EPYC 9V45 96-Core Processor | 256 | 0.5571, 0.5571 | 4.86% |
+| 40516778004 / AMD EPYC 9V45 96-Core Processor | 4096 | 0.5366, 0.5363 | 5.39% |
+| 40516778004 / Neoverse-N2 | 256 | 0.4856, 0.4862 | 0.57% |
+| 40516778004 / Neoverse-N2 | 4096 | 0.4858, 0.4857 | 0.90% |
+
+The isolated sort and cleanup took about 49–56% of the previous fwp path's time
+in these observations. The AMD64 allocations used different EPYC models; each
+ratio compares programs on the same runner. This does not measure whole-program
+speed or overhead relative to C/Rust. The initial rejected short control remains
+linked above. Full platform delivery is recorded in the linked history.

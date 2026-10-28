@@ -52,9 +52,9 @@ implementation of currently supported external protocols.
   record the repair and verification. Queued CI gates merging, not independent work.
 - Group related roadmap work and docs in one PR. Use necessary focused checks while
   implementing; run the complete final-head matrix after the batch is ready.
-- Before pushing a CI repair, audit every failed job and completed test target,
-  fix underlying causes and check affected callers. Batch all known fixes into
-  one push; preserve passing final heads while their remaining gates run.
+- Audit failed steps while jobs run, then every completed target and compiler
+  diagnostic, including warnings in passing logs. Fix causes and affected callers.
+  Batch known fixes in one push; preserve passing heads as remaining gates run.
 - Contract changes must pass the primitive inventory against its frozen baseline;
   new test targets must pass the native shard coverage check before publication.
 - Focused checks must use the production compilers and optimization settings.

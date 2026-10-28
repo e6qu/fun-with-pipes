@@ -1,11 +1,12 @@
 # Saved CPU state in task stacks
 
 The numbers below describe the October 21 source and toolchain, not the current
-collector-removal branch. Keep the recorded source when reproducing them.
+compiler. Keep the recorded source when reproducing them.
 Current tests retain both task layouts, register/rounding/signal restoration,
 explicit release, context alignment and teardown controls. They no longer test
-collector roots or run a second tracing mode. Their integrated validation and
-new measurements are pending.
+collector roots or run a second tracing mode. They passed
+[PR #217's platform gates](../roadmap-history.md#tracing-gc-removal-pr-217).
+New measurements are separate work; the numbers below have not been refreshed.
 
 A task is work that can pause while other tasks run. Its **stack** holds active
 function calls. Its **task record** holds scheduling and ownership information.

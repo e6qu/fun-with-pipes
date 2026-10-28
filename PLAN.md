@@ -29,24 +29,22 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. **A2 and the first A3 change shipped in #218.** All production, documentation
-   and analysis gates passed. The [per-owner report](docs/measurements/arc-residual-costs.md)
-   attributes residual costs and verifies the capture-free callback reduction.
-2. **A5 shipped in #219.** The [local-array path](docs/measurements/unique-array-storage.md)
-   removes count storage and the declared count operations. All nine production
-   jobs, documentation and both analysis hosts passed; native/WASI cleanup,
-   metadata and compiler-cost observations are retained.
-3. **A3/A4 are bundled in PR #220.** [Scalar reads and callback specialization](docs/measurements/sort-key-ownership.md)
-   remove two temporary owners per distinct word. [Contiguous key storage](docs/measurements/inline-sort-keys.md)
-   removes another owner and one key allocation. Both Linux hosts' correctness
-   checks, exact budgets and independent artifact audits pass. Finish isolated
-   timing and the final production/analysis matrix; keep its head unchanged while
-   passing gates run. The initial noisy timing control is retained, not accepted.
-   **A6** remains the separately scoped parser-workspace task below.
-4. Preserve **G2**'s [verified analysis budgets](docs/measurements/ownership-analysis.md)
-   when changing lifetime analysis. Further precision needs a named failing example
-   and an updated cost comparison, not more diagnostic scaffolding.
-5. Use **B1** to set per-workload timing budgets before further CPU or derivative
+1. **A1–A5 are verified.** Deliveries #212, #218, #219 and #220 removed the
+   selected array-copy, callback, temporary-owner and key-box costs. Preserve
+   their [ownership measurements](docs/measurements/README.md), failure controls
+   and actual-binary evidence. This does not make all containers count-free.
+2. **A6 is current:** complete the final platform gates for the
+   [parser workspace](docs/parser-workspace.md). Focused native/WASI checks,
+   direct cancellation and four independently audited
+   [measurement sessions](docs/measurements/parser-workspace.md) pass. Repair
+   the latest G2 forms-analysis budget failure before final platform acceptance. The
+   comparison reports faster parsing alongside increased allocated bytes and
+   the remaining C/Rust gap. [The handoff](docs/development-state.md) owns gate
+   status. After verified merge, group F1–F3 into the next substantial PR.
+3. Preserve **G2**'s [analysis budgets](docs/measurements/ownership-analysis.md)
+   and measure the new region-selection work separately. Further precision needs
+   a named example and a cost comparison, not more diagnostic scaffolding.
+4. Use **B1** to set per-workload timing budgets before further CPU or derivative
    optimizations. Keep slower and inconclusive results visible.
 
 The original intermittent Intel macOS compiler abort remains an open defect.
@@ -90,29 +88,17 @@ accounts for effective retains/releases in channels, cached maps, word frequency
 packed descent and local/shared arrays. Use its named owners to select changes;
 preserve source IDs and distinguish code/stack costs from execution speed.
 
-**A3 — Remove only the identified redundant ownership work.** The first class
-shipped in #218: a known scalar array callback with no captures
-avoids one retain attempt and closure-release check per element. Allocation and
-effective counts are unchanged; the report records smaller code and larger entry
-frames. All final delivery gates passed. Implement another
-coherent class from A2, covering nested matches, last use, aliases and exceptional
-exits. Extend existing direct-call, callback and runtime-call ownership tests.
-**Done:** the predeclared per-fixture count reaches its target, live aliases keep
-their values, and destruction timing is unchanged. Necessary shared owners remain.
+**A3 is verified in #218/#220.** Known scalar array callbacks avoid no-op count
+attempts. Scalar record reads and known sort callbacks remove two temporary owners
+per distinct word in the [word-frequency cases](docs/measurements/sort-key-ownership.md).
+Required shared owners, evaluation order and exceptional cleanup remain tested.
 
-**A4 — Remove the word-frequency sort-key boxes.** The A3 batch still allocates
-one `(I64, String)` key record per distinct word. Prototype contiguous typed key
-storage for this known callback and fixed key layout. Keep the saved String's
-independent owner; comparisons borrow fields, and success/failure/cancellation
-release every initialized field and scratch buffer. Unknown callbacks and other
-layouts retain their existing supported representation.
-Use the existing 256/4,096-distinct-word cases, shared input, equal keys and
-partial-key failures. Compare against the retained A3 report before extending
-record/variant or loop-state storage elsewhere.
-**Done:** D key-box allocations disappear for D distinct words, with no added
-reference counts or escaped scratch addresses. Measure total requested/peak
-bytes, alignment, code size, stack use and sorting time; contiguous storage alone
-does not establish a speedup. This does not require escaping data to live on the stack.
+**A4 is verified in #220.** [Contiguous integer/string sort keys](docs/measurements/inline-sort-keys.md)
+remove one box and another temporary owner per distinct word. Exact budgets,
+alignment, alias/failure/cancellation controls, binary/stack observations and two
+independent timing runs passed. Isolated sorting and cleanup took 49–56% of the
+previous fwp path's time on the measured hosts; this is not whole-program or
+C/Rust parity. All nine final-head production jobs, docs and G2 passed.
 
 **A5 is verified in #219.** The [restricted local-array path](docs/measurements/unique-array-storage.md)
 proves one owner for the whole lifetime, allocates no count slots and frees storage
@@ -121,7 +107,8 @@ type controls, actual WASI allocation and native binary checks passed. Preserve
 these controls; broader element types, local transfers and loops need their own
 lifetime proof and measured costs before this representation is extended.
 
-**A6 — Give one workspace a region lifetime.** Use a recursive parser that builds
+**A6 — Give one workspace a region lifetime.** Follow the concrete
+[parser-workspace contract](docs/parser-workspace.md). Use a recursive parser that builds
 and walks an expression graph inside one invocation. The invocation owns the
 storage; internal links do not own individual nodes. Return a scalar result or
 an explicitly owned copy, never an expired internal link. Add success, parse-error,
@@ -165,6 +152,10 @@ integer loop about 24%/15% slower than Rust on AMD64/ARM64 and direct character
 counting about 58%/94% slower than C. These are historical host-specific results,
 not current universal overhead. Rerun the actual `bench/loop` and
 `bench/text-length` work with matched arithmetic, flags and outputs.
+Also preserve the [parser comparison](docs/measurements/parser-workspace.md):
+31/511/8,191-node balanced trees and a 127-node left-nested tree against its
+explicit C/Rust peers. Tokenization and construction remain measurable costs;
+keep owned-token versus borrowed-token differences explicit when selecting a fix.
 **Done:** repeated comparable baselines distinguish a persistent gap from noise.
 
 **P2 — Repair one measured cost at a time.** For the persistent gap, separate

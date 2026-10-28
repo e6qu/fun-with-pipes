@@ -224,6 +224,9 @@ impl<'p> Interp<'p> {
             Body::Ctor(tag) => Value::data(*tag, args),
             Body::ForeignC { .. } => self.call_foreign(id, args)?,
             Body::Remote(r) => crate::grpc::call_remote(self, id, r, args)?,
+            Body::RegionEntry { .. } | Body::RegionCtor(_) => {
+                return trap("internal: native region body reached interpreter");
+            }
         };
         if f.arity == 0 {
             self.cafs.borrow_mut()[id] = Some(v.clone());

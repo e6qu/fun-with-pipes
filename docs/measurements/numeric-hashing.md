@@ -1,13 +1,13 @@
 # Hashing values without constructing their encoded bytes
 
-The current G5 protocol keeps five implementations: specialized fwp, generic fwp,
+The current protocol keeps five implementations: specialized fwp, generic fwp,
 fwp with a temporary encoding buffer, C and Rust. It runs ten process samples per
 implementation, rotating and reversing their order so each occupies every
 position twice. Separate allocation profiles have five managed-memory fields;
 every fwp profile must restore its final live-byte baseline. Correctness artifacts
 cover eight numeric binaries per host: typed dispatch off/on, packed arrays off/on,
-and O0/O2. All must omit collector symbols. Integrated execution of this updated
-protocol is pending; historical results below retain their original sources and
+and O0/O2. All must omit collector symbols. A new run of this standalone comparison
+is still needed; historical results below retain their original sources and
 six-implementation, twelve-sample protocol.
 
 Historical measurements at the revisions named below. Counts and timings are

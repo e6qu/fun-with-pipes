@@ -3,9 +3,9 @@
 This batch removes two temporary owners in the word-frequency example. Both
 native Linux hosts passed the correctness tests; [runner audit 40503213568](https://github.com/e6qu/fun-with-pipes/actions/runs/40503213568)
 verified their [complete measurements](sort-key-ownership-2026-10-27.json).
-Full production verification remains pending. [The handoff](../development-state.md)
-tracks delivery. PR #219 is merged; A4 now joins this batch under
-[its own storage and cleanup protocol](inline-sort-keys.md).
+The complete production, documentation and analysis gates passed in
+[PR #220](../roadmap-history.md#temporary-record-owners-and-sort-keys-pr-220),
+together with [A4 storage and cleanup](inline-sort-keys.md).
 
 A **record** groups fields into one value; `(word, count)` is a two-field record.
 `.1` selects its second field. In the word-frequency sort key,
@@ -114,7 +114,6 @@ original operation and memory totals.
 | ARM64 `main` frame | 160 bytes | 160 bytes |
 
 These GCC frame estimates are per function, not measured peak call-stack use.
-The named specialized key still returns a boxed `(I64, String)` record to the
-sort runtime. That per-key allocation remains an A4 candidate; this batch does
-not claim to eliminate it. Extending the sort's key storage needs a separate
-layout/cleanup proof, allocation budget and failure/cancellation controls.
+The measured A3 program still boxed each `(I64, String)` key. A4 subsequently
+removed that allocation in #220; its [separate report](inline-sort-keys.md) owns
+the layout, cleanup, allocation and timing evidence for that change.
