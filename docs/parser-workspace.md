@@ -1,13 +1,15 @@
 # One lifetime for a parser's tree
 
-A6 is under validation, not verified support yet. The first example is
+A6 optimizes a parser written in fwp. It passes focused native/WASI checks;
+full platform acceptance is pending. The example is
 [the prefix-expression parser](../tests/fixtures/parser_workspace.fwp):
 `+ 2 * 3 4` builds the tree for `2 + (3 * 4)` and evaluates to `14`.
 All nodes contain either an integer or links to other nodes. The input Strings
 and token list keep their ordinary owners.
 
 Before A6, each heap node has an individual lifetime. The candidate implementation
-lets one invocation own a collection of storage blocks, called a region. Links
+lets one function call own a collection of storage blocks, called a region.
+Each recursive call is a separate invocation. Links
 within those blocks need neither ownership counts nor individual destruction.
 The invocation releases all its blocks after evaluation, including on failure.
 This trades earlier individual frees for bulk cleanup; peak storage must be
@@ -15,7 +17,8 @@ measured, not assumed to improve.
 
 ## Admission proof
 
-Start with a recursive variant whose fields are only I64 or that same variant.
+The admitted node type is a recursive variant whose fields are I64 (signed
+64-bit integers) or links to that same variant.
 Do not admit Strings, files, channels, closures or unrelated managed fields in
 nodes. Their destruction could have obligations beyond freeing region storage.
 

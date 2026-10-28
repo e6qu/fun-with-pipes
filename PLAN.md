@@ -34,7 +34,7 @@ collector is not the same as removing these costs. The
    their [ownership measurements](docs/measurements/README.md), failure controls
    and actual-binary evidence. This does not make all containers count-free.
 2. **A6 is current:** finish the [parser workspace](docs/parser-workspace.md).
-   Its lifetime transformation is integrated but not yet verified. Complete the
+   Its lifetime transformation passes focused native/WASI checks. Complete the
    [measured comparison](docs/measurements/parser-workspace.md), direct cancellation
    and compiler-budget controls in one batch, then run the full platform matrix. Include the guard-test fixture repair
    discovered after #220; [the handoff](docs/development-state.md) records it.
@@ -149,6 +149,10 @@ integer loop about 24%/15% slower than Rust on AMD64/ARM64 and direct character
 counting about 58%/94% slower than C. These are historical host-specific results,
 not current universal overhead. Rerun the actual `bench/loop` and
 `bench/text-length` work with matched arithmetic, flags and outputs.
+Also preserve the [parser comparison](docs/measurements/parser-workspace.md):
+31/511/8,191-node balanced trees and a 127-node left-nested tree against its
+explicit C/Rust peers. Tokenization and construction remain measurable costs;
+keep owned-token versus borrowed-token differences explicit when selecting a fix.
 **Done:** repeated comparable baselines distinguish a persistent gap from noise.
 
 **P2 — Repair one measured cost at a time.** For the persistent gap, separate

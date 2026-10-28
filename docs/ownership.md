@@ -19,7 +19,10 @@ individual operations; [measurements](benchmarks.md) report actual costs.
 The [accepted ownership direction](gc-removal-design.md) specifies explicit weak
 links, rejection of unproved owning cycles, count-free unique storage and scoped
 regions. Weak channels and retained C registrations are implemented. A restricted
-[count-free local array path](measurements/unique-array-storage.md) is verified in #219; general regions remain planned. APIs may change.
+[count-free local array path](measurements/unique-array-storage.md) is verified in
+#219. The [scoped parser path](parser-workspace.md) is implemented and has passed
+focused native/WASI checks; full platform acceptance is pending. It proves one
+function-call lifetime, not arbitrary region relationships. APIs may change.
 
 ## Existing implementation
 
@@ -46,7 +49,8 @@ remove a JavaScript host's collector.
 - Preserve the independent [ownership diagnostics](ownership-diagnostics.md)
   and binary checks for absent collector code as storage representations change.
 - Enforce the compiler analysis budgets in G2 as proof precision changes.
-- Finish A6's scoped parser workspace. A1–A5 already remove their selected count
+- Complete A6's full platform validation and preserve its
+  [measured costs and limits](measurements/parser-workspace.md). A1–A5 remove their selected count
   traffic and boxes, including a count-free local buffer. A program with zero
   retains may still allocate or check a count during destruction.
 

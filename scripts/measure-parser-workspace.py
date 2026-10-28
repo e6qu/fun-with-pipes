@@ -119,6 +119,7 @@ def main():
     parser.add_argument('--samples', required=True, type=int)
     parser.add_argument('--warmups', required=True, type=int)
     parser.add_argument('--rounds', required=True, type=int)
+    parser.add_argument('--small-rounds', required=True, type=int)
     parser.add_argument('--max-control-ratio', required=True, type=float)
     parser.add_argument('--timeout', required=True, type=int)
     parser.add_argument('--output', required=True, type=Path)
@@ -126,6 +127,7 @@ def main():
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
     assert re.fullmatch('[0-9a-f]{40}', args.candidate_source)
     assert args.samples >= 6 and args.samples % 2 == 0 and args.warmups >= 1
+    assert args.small_rounds >= args.rounds
     assert args.rounds >= 1024 and args.timeout > 0 and 1 < args.max_control_ratio < 2
     assert args.cpu in os.sched_getaffinity(0)
     args.output.mkdir(parents=True, exist_ok=False)
@@ -218,7 +220,7 @@ def main():
         text, nodes, expected = input_case(depth, left)
         input_file = args.output / f'{case}.txt'
         input_file.write_text(text)
-        rounds = args.rounds if case != 'large' else args.rounds // 16
+        rounds = args.small_rounds if case == 'small' else args.rounds // (16 if case == 'large' else 1)
         row = dict(nodes=nodes, depth=depth, result=expected, rounds=rounds,
                    inputSha256=digest(input_file), control=[], samples=[], profiles={})
         report['cases'][case] = row

@@ -35,7 +35,8 @@ def check_case(name, row, settings):
     assert (row['nodes'], row['depth']) == shapes[name]
     expected = sum(i % 17 - 8 for i in range((row['nodes'] + 1) // 2))
     assert row['result'] == expected
-    assert row['rounds'] == settings['rounds'] // (16 if name == 'large' else 1)
+    expected_rounds = settings['small_rounds'] if name == 'small' else settings['rounds'] // (16 if name == 'large' else 1)
+    assert row['rounds'] == expected_rounds
 
     def sample(label, value, count):
         assert value['rounds'] == count and value['nodes'] == row['nodes'] and value['result'] == expected
@@ -120,6 +121,7 @@ def audit(directory, source):
     assert report['baselineSource'] == '56d5aac63a9963ae6b16574f10d6dc3087a08d8a'
     settings = report['settings']
     assert settings['samples'] == 6 and settings['warmups'] == 2 and settings['cpu'] == 1
+    assert settings['small_rounds'] == 131072
     assert settings['rounds'] == 32768 and settings['max_control_ratio'] == 1.10
     required = {'baseline.exe', 'candidate.exe', 'baseline-copy.exe', 'baseline-profile.exe',
                 'candidate-profile.exe', 'c.exe', 'rust.exe', 'baseline-original.c', 'candidate-original.c',

@@ -71,7 +71,7 @@ jobs:
           --baseline "$RUNNER_TEMP/parser-baseline/target/debug/fwp"
           --candidate "$PWD/target/debug/fwp" --candidate-source "${{ github.sha }}"
           --analysis-report parser-analysis.json
-          --cc gcc --rustc rustc --cpu 1 --samples 6 --warmups 2 --rounds 32768
+          --cc gcc --rustc rustc --cpu 1 --samples 6 --warmups 2 --rounds 32768 --small-rounds 131072
           --max-control-ratio 1.10 --timeout 180 --output parser-measurements
       - name: Audit all retained samples and binaries
         run: python3 scripts/inspect-parser-workspace.py --input parser-measurements --source "${{ github.sha }}"

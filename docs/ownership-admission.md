@@ -73,6 +73,23 @@ The diagnostic says the compiler lacks a cycle-freedom proof. It does not claim
 that every `Link` value is cyclic. [Lesson 23](tutorials/23-ownership-scopes/README.md)
 shows a graph whose edges are integer IDs: a logical cycle without owning cycles.
 
+## Scoped parser storage
+
+[A6](parser-workspace.md) selects recursive integer/link trees whose nodes stay
+inside one function call. Escaping trees remain legal with ordinary ownership;
+unknown calls, captured links and managed fields prevent region selection.
+This is a compiler optimization, not a new entry form or public API.
+
+[parser_workspace](../tests/parser_workspace.rs) compares raw interpretation and
+native results, including arithmetic traps. It checks actual count operations,
+every block-allocation failure, nested/recursive owners and cancellation after
+tree construction. Deliberate extra-count and missing-free controls must fail.
+[wasm_arc](../tests/wasm_arc.rs),
+`wasi_parser_regions_release_blocks_and_keep_links_out_of_count_tables`, checks
+actual WASI allocation and release. Focused Linux/WASI validation passes; full
+platform acceptance is pending. [The report](measurements/parser-workspace.md)
+separates node storage from the remaining owned Strings and token list.
+
 ## Remaining relationships with explicit controls
 
 | Relationship | Smallest maintained control | Current rule and required follow-up |

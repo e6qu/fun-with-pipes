@@ -17,7 +17,7 @@ MEASURE_SPEC.loader.exec_module(MEASURE)
 
 class ParserEvidence(unittest.TestCase):
     def setUp(self):
-        self.settings = dict(samples=6, rounds=32768, max_control_ratio=1.10)
+        self.settings = dict(samples=6, rounds=32768, small_rounds=32768, max_control_ratio=1.10)
 
         def sample(label, count):
             total = {'baseline': 100_000_000, 'baseline-copy': 102_000_000,
@@ -75,6 +75,20 @@ class ParserEvidence(unittest.TestCase):
         self.row['ratios'] = dict(baseline=1.2, c=4.0, rust=3.0)
         self.assertEqual(READER.check_case('small', self.row, self.settings),
                          ['small: candidate exceeds the frozen timing budget'])
+
+    def test_rejected_noise_keeps_candidate_absent(self):
+        row = copy.deepcopy(self.row)
+        value = row['control'][0]['baseline-copy']
+        for key in ['totalNs', 'tokenizeNs', 'constructNs', 'walkAndReleaseNs']:
+            value[key] *= 2
+        noise = abs(2.04 - 1)
+        row.update(controlEnvelope=noise, allowedCandidateRatio=1 + 2 * noise, samples=[])
+        del row['ratios']
+        self.assertEqual(READER.check_case('small', row, self.settings),
+                         ['small: unstable identical-code timing control'])
+        row['samples'] = self.row['samples']
+        with self.assertRaises(AssertionError):
+            READER.check_case('small', row, self.settings)
 
     def test_wrong_value_leak_or_inconsistent_phase(self):
         for field in ['result', 'finalLiveBytes', 'tokenizeNs']:
