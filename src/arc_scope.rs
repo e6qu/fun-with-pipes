@@ -48,6 +48,25 @@ type Context = (FuncId, u8);
 // Sites are finite positions in the immutable IR, never dynamic call histories.
 type Site = (FuncId, usize);
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+enum Work {
+    Service,
+    Function(Context),
+}
+
+// Record reads even when the set is still empty. Later writes must wake every
+// consumer, including recursive callers and runtime/service boundaries.
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+enum Summary {
+    Output(Context),
+    Capture(Origin),
+    Callback(Context),
+    Channel(MT),
+    TaskResult(FuncId),
+    State,
+    Error,
+}
+
 #[derive(Clone, Copy, Debug)]
 pub(crate) enum ClosureSites {
     Separate,
@@ -83,6 +102,10 @@ struct Proof<'a> {
     channel_values: BTreeMap<MT, Targets>,
     task_thunks: BTreeMap<FuncId, Targets>,
     task_results: BTreeMap<FuncId, Targets>,
+    pending: BTreeSet<Work>,
+    readers: HashMap<Summary, BTreeSet<Work>>,
+    current: Option<Work>,
+    #[cfg(test)]
     changed: bool,
     validate: bool,
     state_values: Targets,
@@ -296,7 +319,140 @@ fn queued_capture_type(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> R
     }
 }
 
-impl Proof<'_> {
+impl<'a> Proof<'a> {
+    fn new(program: &'a Program, sites: ClosureSites) -> Self {
+        Self {
+            program,
+            sites,
+            type_cache: RefCell::new(HashMap::new()),
+            expression_types: HashMap::new(),
+            captures: HashMap::new(),
+            inputs: BTreeMap::new(),
+            outputs: BTreeMap::new(),
+            callback_values: BTreeMap::new(),
+            channel_values: BTreeMap::new(),
+            task_thunks: BTreeMap::new(),
+            task_results: BTreeMap::new(),
+            pending: BTreeSet::new(),
+            readers: HashMap::new(),
+            current: None,
+            #[cfg(test)]
+            changed: false,
+            validate: false,
+            state_values: Targets::new(),
+            error_values: Targets::new(),
+        }
+    }
+
+    fn read(&mut self, summary: Summary) {
+        if let Some(work) = self.current {
+            self.readers.entry(summary).or_default().insert(work);
+        }
+    }
+
+    fn publish(&mut self, summary: Summary, changed: bool) {
+        if changed {
+            #[cfg(test)]
+            {
+                self.changed = true;
+            }
+            if let Some(readers) = self.readers.get(&summary) {
+                self.pending.extend(readers);
+            }
+        }
+    }
+
+    fn visit(
+        &mut self,
+        (id, scoped): Context,
+        args: &[Targets],
+        _stats: &mut AnalysisStats,
+    ) -> Result<(), String> {
+        #[cfg(test)]
+        {
+            _stats.visits += 1;
+        }
+        let mut result = self.function(id, scoped, args).map_err(|error| {
+            format!(
+                "{error}\n  while checking `{}`",
+                self.program.funcs[id].name
+            )
+        })?;
+        let function = &self.program.funcs[id];
+        let result_type = function.ty.after_args(function.arity as usize);
+        if result.iter().any(|origin| origin.callable()) && !self.properties(result_type).functions
+        {
+            result.retain(|origin| !origin.callable());
+        }
+        self.refine_origins(&mut result, result_type);
+        let updated = join(self.outputs.entry((id, scoped)).or_default(), &result);
+        self.publish(Summary::Output((id, scoped)), updated);
+        #[cfg(test)]
+        {
+            _stats.summary_updates += usize::from(updated);
+        }
+        Ok(())
+    }
+
+    fn solve(&mut self, entries: &[FuncId], stats: &mut AnalysisStats) -> Result<(), String> {
+        self.pending.insert(Work::Service);
+        while !self.pending.is_empty() {
+            #[cfg(test)]
+            {
+                stats.rounds += 1;
+            }
+            if self.pending.remove(&Work::Service) {
+                self.current = Some(Work::Service);
+                self.service_boundaries(entries)?;
+            }
+            // Freeze only affected inputs, in the same function order as the
+            // original scan. Changes during this wave schedule the next one.
+            let pending = std::mem::take(&mut self.pending);
+            let mut inputs = Vec::new();
+            for work in pending {
+                match work {
+                    Work::Service => {
+                        self.pending.insert(work);
+                    }
+                    Work::Function(key) => inputs.push((key, self.inputs[&key].clone())),
+                }
+            }
+            for (key, args) in inputs {
+                self.current = Some(Work::Function(key));
+                self.visit(key, &args, stats)?;
+            }
+        }
+        self.current = None;
+        Ok(())
+    }
+
+    // Independent scheduling reference. This always rescans all contexts and
+    // never reads dependency edges. It is unavailable in the compiler binary.
+    #[cfg(test)]
+    fn solve_full_scan(
+        &mut self,
+        entries: &[FuncId],
+        stats: &mut AnalysisStats,
+    ) -> Result<(), String> {
+        loop {
+            stats.rounds += 1;
+            self.changed = false;
+            self.service_boundaries(entries)?;
+            let inputs: Vec<_> = self
+                .inputs
+                .iter()
+                .map(|(&key, args)| (key, args.clone()))
+                .collect();
+            for (key, args) in inputs {
+                self.visit(key, &args, stats)?;
+            }
+            if !self.changed {
+                break;
+            }
+        }
+        Ok(())
+    }
+
     fn properties(&self, ty: &MT) -> TypeProperties {
         if let Some(properties) = self.type_cache.borrow().get(ty) {
             return *properties;
@@ -522,6 +678,7 @@ impl Proof<'_> {
         initial: &Targets,
     ) -> Result<(), String> {
         let key = (id, scoped);
+        self.read(Summary::Callback(key));
         let mut steps = initial.clone();
         steps.extend(
             self.callback_values
@@ -547,7 +704,8 @@ impl Proof<'_> {
                 (id, 0),
             )?;
             // Later positions can introduce different continuations.
-            self.changed |= join(self.callback_values.entry(key).or_default(), &next);
+            let changed = join(self.callback_values.entry(key).or_default(), &next);
+            self.publish(Summary::Callback(key), changed);
         }
         Ok(())
     }
@@ -581,6 +739,7 @@ impl Proof<'_> {
                 self.request(method.func, 0, None, &args);
             }
             if matches!(shape.output, crate::rpc::Output::Iter(_)) {
+                self.read(Summary::Output((method.func, 0)));
                 let returned = self
                     .outputs
                     .get(&(method.func, 0))
@@ -602,8 +761,13 @@ impl Proof<'_> {
         args: &[Targets],
     ) -> Targets {
         let key = (id, scoped);
+        self.read(Summary::Output(key));
+        if let Some(capture) = capture {
+            self.read(Summary::Capture(capture));
+        }
+        let mut changed = false;
         let inputs = self.inputs.entry(key).or_insert_with(|| {
-            self.changed = true;
+            changed = true;
             vec![Targets::new(); self.program.funcs[id].arity as usize]
         });
         // A saturated call only joins facts into its input summary. Borrow the
@@ -612,7 +776,14 @@ impl Proof<'_> {
         let captured = capture.and_then(|origin| self.captures.get(&origin));
         let values = captured.into_iter().flatten().chain(args);
         for (slot, value) in inputs.iter_mut().zip(values) {
-            self.changed |= join(slot, value);
+            changed |= join(slot, value);
+        }
+        if changed {
+            self.pending.insert(Work::Function(key));
+            #[cfg(test)]
+            {
+                self.changed = true;
+            }
         }
         self.outputs.get(&key).cloned().unwrap_or_default()
     }
@@ -637,19 +808,22 @@ impl Proof<'_> {
                 }
             },
         );
+        let mut changed = false;
         match self.captures.entry(key) {
             std::collections::hash_map::Entry::Vacant(entry) => {
                 // The caller already owns these sets. Transfer them instead
                 // of allocating a second vector and copying every origin.
-                self.changed |= args.iter().any(|value| !value.is_empty());
+                // The vector length also controls partial/saturated calls.
+                changed = true;
                 entry.insert(args);
             }
             std::collections::hash_map::Entry::Occupied(mut entry) => {
                 for (slot, value) in entry.get_mut().iter_mut().zip(&args) {
-                    self.changed |= join(slot, value);
+                    changed |= join(slot, value);
                 }
             }
         }
+        self.publish(Summary::Capture(key), changed);
         BTreeSet::from([key])
     }
 
@@ -677,6 +851,7 @@ impl Proof<'_> {
                 continue;
             };
             let arity = self.program.funcs[id].arity as usize;
+            self.read(Summary::Capture(closure));
             let captured = self
                 .captures
                 .get(&closure)
@@ -935,9 +1110,16 @@ impl Proof<'_> {
             Body::Prim(symbol) if symbol == "task.spawn" => {
                 // Fresh tasks have independent State/AD stacks. Keep their
                 // hidden owners separate from the values later returned by await.
-                self.changed |= join(self.task_thunks.entry(id).or_default(), &args[0]);
+                // Thunks are inspected only after convergence; no transfer
+                // function reads them, so they need no dependency key.
+                let _changed = join(self.task_thunks.entry(id).or_default(), &args[0]);
+                #[cfg(test)]
+                {
+                    self.changed |= _changed;
+                }
                 let result = self.apply(&args[0], &[Targets::new()], 0, site)?;
-                self.changed |= join(self.task_results.entry(id).or_default(), &result);
+                let changed = join(self.task_results.entry(id).or_default(), &result);
+                self.publish(Summary::TaskResult(id), changed);
                 Ok(Targets::from([Origin::Task(id)]))
             }
             Body::Prim(symbol) if symbol == "task.within" => {
@@ -948,6 +1130,7 @@ impl Proof<'_> {
                 for origin in &args[0] {
                     match origin {
                         Origin::Task(producer) => {
+                            self.read(Summary::TaskResult(*producer));
                             result.extend(
                                 self.task_results
                                     .get(producer)
@@ -985,8 +1168,10 @@ impl Proof<'_> {
                 // State cells are stack owners, never captured addresses. A
                 // callback can return a closure, but that closure must execute
                 // under a fresh State scope before it uses get/put/modify.
-                self.changed |= join(&mut self.state_values, &args[0]);
+                let changed = join(&mut self.state_values, &args[0]);
+                self.publish(Summary::State, changed);
                 let mut result = self.apply(&args[1], &args[2..], scoped | STATE, site)?;
+                self.read(Summary::State);
                 result.extend(self.state_values.iter().copied());
                 Ok(result)
             }
@@ -1004,7 +1189,11 @@ impl Proof<'_> {
                 if self.validate && self.properties(payload).tasks {
                     self.queued_value(payload, &args[1], &mut BTreeSet::new())?;
                 }
-                self.changed |= join(self.channel_values.entry(channel).or_default(), &args[1]);
+                let changed = join(
+                    self.channel_values.entry(channel.clone()).or_default(),
+                    &args[1],
+                );
+                self.publish(Summary::Channel(channel), changed);
                 Ok(Targets::new())
             }
             Body::Prim(symbol)
@@ -1012,6 +1201,7 @@ impl Proof<'_> {
             {
                 let index = usize::from(symbol == "channel.recv-for");
                 let channel = function.ty.params(function.arity as usize).0[index];
+                self.read(Summary::Channel(channel.clone()));
                 let mut values = self
                     .channel_values
                     .get(channel)
@@ -1036,11 +1226,13 @@ impl Proof<'_> {
             }
             Body::Prim(symbol) if symbol == "channel.close" => Ok(Targets::new()),
             Body::Prim(symbol) if symbol == "fail" => {
-                self.changed |= join(&mut self.error_values, &args[0]);
+                let changed = join(&mut self.error_values, &args[0]);
+                self.publish(Summary::Error, changed);
                 Ok(Targets::new())
             }
             Body::Prim(symbol) if symbol == "attempt" => {
                 let mut result = self.apply(&args[0], &args[1..], scoped, site)?;
+                self.read(Summary::Error);
                 result.extend(self.error_values.iter().copied());
                 Ok(result)
             }
@@ -1049,16 +1241,22 @@ impl Proof<'_> {
                     return Err(format!("ownership: primitive `{symbol}` has no tracing-free lifetime policy outside a State scope"));
                 }
                 match symbol.as_str() {
-                    "get" => Ok(self.state_values.clone()),
+                    "get" => {
+                        self.read(Summary::State);
+                        Ok(self.state_values.clone())
+                    }
                     "put" => {
-                        self.changed |= join(&mut self.state_values, &args[0]);
+                        let changed = join(&mut self.state_values, &args[0]);
+                        self.publish(Summary::State, changed);
                         Ok(Targets::new())
                     }
                     _ => {
+                        self.read(Summary::State);
                         let state = self.state_values.clone();
                         let value =
                             self.apply(&args[0], std::slice::from_ref(&state), scoped, site)?;
-                        self.changed |= join(&mut self.state_values, &value);
+                        let changed = join(&mut self.state_values, &value);
+                        self.publish(Summary::State, changed);
                         Ok(Targets::new())
                     }
                 }
@@ -1212,6 +1410,7 @@ impl Proof<'_> {
                     .filter(|(index, _)| *index != callback)
                     .flat_map(|(_, value)| value.iter().copied())
                     .collect();
+                self.read(Summary::Callback((id, scoped)));
                 data.extend(
                     self.callback_values
                         .get(&(id, scoped))
@@ -1234,10 +1433,11 @@ impl Proof<'_> {
                     let returned = self.apply(&BTreeSet::from([closure]), &values, scoped, site)?;
                     // A fold/loop may feed a returned closure into a later
                     // iteration even if its eventual result contains none.
-                    self.changed |= join(
+                    let changed = join(
                         self.callback_values.entry((id, scoped)).or_default(),
                         &returned,
                     );
+                    self.publish(Summary::Callback((id, scoped)), changed);
                     result.extend(returned);
                 }
                 Ok(result)
@@ -1318,11 +1518,63 @@ pub(crate) struct AnalysisStats {
     cached_expressions: usize,
 }
 
+// Compare complete facts, not just equal counts or the final admission result.
+#[cfg(test)]
+#[derive(Debug, PartialEq, Eq)]
+struct Facts {
+    captures: HashMap<Origin, Vec<Targets>>,
+    inputs: BTreeMap<Context, Vec<Targets>>,
+    outputs: BTreeMap<Context, Targets>,
+    callback_values: BTreeMap<Context, Targets>,
+    channel_values: BTreeMap<MT, Targets>,
+    task_thunks: BTreeMap<FuncId, Targets>,
+    task_results: BTreeMap<FuncId, Targets>,
+    state_values: Targets,
+    error_values: Targets,
+}
+
+#[cfg(test)]
+impl From<&Proof<'_>> for Facts {
+    fn from(proof: &Proof<'_>) -> Self {
+        Self {
+            captures: proof.captures.clone(),
+            inputs: proof.inputs.clone(),
+            outputs: proof.outputs.clone(),
+            callback_values: proof.callback_values.clone(),
+            channel_values: proof.channel_values.clone(),
+            task_thunks: proof.task_thunks.clone(),
+            task_results: proof.task_results.clone(),
+            state_values: proof.state_values.clone(),
+            error_values: proof.error_values.clone(),
+        }
+    }
+}
+
 pub(crate) fn check(
     program: &Program,
     entries: &[FuncId],
     entry_channels: EntryChannels,
     sites: ClosureSites,
+) -> Result<AnalysisStats, String> {
+    check_scheduled(
+        program,
+        entries,
+        entry_channels,
+        sites,
+        #[cfg(test)]
+        false,
+        #[cfg(test)]
+        None,
+    )
+}
+
+fn check_scheduled(
+    program: &Program,
+    entries: &[FuncId],
+    entry_channels: EntryChannels,
+    sites: ClosureSites,
+    #[cfg(test)] full_scan: bool,
+    #[cfg(test)] observed: Option<&mut Option<Facts>>,
 ) -> Result<AnalysisStats, String> {
     // This is one existential query over the immutable type graph. A type
     // already visited from an earlier function cannot add a new owner edge.
@@ -1337,23 +1589,7 @@ pub(crate) fn check(
     if !queued_owners && !program.funcs.iter().any(|f| matches!(&f.body, Body::Prim(s) if matches!(s.as_str(), "task.spawn" | "ad.tape" | "ad.push" | "ad.backward" | "ad.tape-owned" | "ad.push-owned" | "ad.backward-owned" | "run-state" | "get" | "put" | "modify"))) {
         return Ok(AnalysisStats::default());
     }
-    let mut proof = Proof {
-        program,
-        sites,
-        type_cache: RefCell::new(HashMap::new()),
-        expression_types: HashMap::new(),
-        captures: HashMap::new(),
-        inputs: BTreeMap::new(),
-        outputs: BTreeMap::new(),
-        callback_values: BTreeMap::new(),
-        channel_values: BTreeMap::new(),
-        task_thunks: BTreeMap::new(),
-        task_results: BTreeMap::new(),
-        changed: false,
-        validate: false,
-        state_values: Targets::new(),
-        error_values: Targets::new(),
-    };
+    let mut proof = Proof::new(program, sites);
     for &entry in entries {
         // Wire inputs have no language closures. An external function-valued
         // input remains unknown, even if joined with a known function later.
@@ -1421,49 +1657,18 @@ pub(crate) fn check(
             .collect();
         proof.request(entry, 0, None, &args);
     }
-    #[cfg(test)]
     let mut stats = AnalysisStats::default();
-    loop {
-        #[cfg(test)]
-        {
-            stats.rounds += 1;
-        }
-        proof.changed = false;
-        proof.service_boundaries(entries)?;
-        // Freeze this round's inputs in the same order without rebuilding a
-        // search tree that the traversal only consumes sequentially.
-        let inputs: Vec<_> = proof
-            .inputs
-            .iter()
-            .map(|(&key, args)| (key, args.clone()))
-            .collect();
-        for ((id, scoped), args) in inputs {
-            #[cfg(test)]
-            {
-                stats.visits += 1;
-            }
-            let mut result = proof.function(id, scoped, &args).map_err(|error| {
-                format!("{error}\n  while checking `{}`", program.funcs[id].name)
-            })?;
-            let function = &program.funcs[id];
-            let result_type = function.ty.after_args(function.arity as usize);
-            if result.iter().any(|origin| origin.callable())
-                && !proof.properties(result_type).functions
-            {
-                result.retain(|origin| !origin.callable());
-            }
-            proof.refine_origins(&mut result, result_type);
-            let updated = join(proof.outputs.entry((id, scoped)).or_default(), &result);
-            proof.changed |= updated;
-            #[cfg(test)]
-            {
-                stats.summary_updates += usize::from(updated);
-            }
-        }
-        if !proof.changed {
-            break;
-        }
+    #[cfg(test)]
+    if full_scan {
+        proof.solve_full_scan(entries, &mut stats)?;
+    } else {
+        proof.solve(entries, &mut stats)?;
     }
+    #[cfg(not(test))]
+    proof.solve(entries, &mut stats)?;
+    #[cfg(test)]
+    let before_validation = observed.as_ref().map(|_| Facts::from(&proof));
+    proof.current = None;
     proof.validate = true;
     proof.service_boundaries(entries)?;
     let inputs: Vec<_> = proof
@@ -1481,6 +1686,15 @@ pub(crate) fn check(
     }
     #[cfg(test)]
     {
+        if let Some(observed) = observed {
+            let facts = Facts::from(&proof);
+            assert_eq!(
+                before_validation.as_ref(),
+                Some(&facts),
+                "validation added facts after convergence"
+            );
+            *observed = Some(facts);
+        }
         stats.cached_types = proof.type_cache.borrow().len();
         stats.cached_expressions = proof.expression_types.len();
         stats.contexts = proof.inputs.len();
@@ -1514,6 +1728,94 @@ mod tests {
     use super::*;
     use crate::ir::{Func, ServedFn, ServiceDef};
     use std::time::Instant;
+
+    // Existing positive and negative lifetime fixtures run under both
+    // schedulers. Measurements below explicitly call super::check instead.
+    fn check(
+        program: &Program,
+        entries: &[FuncId],
+        entry_channels: EntryChannels,
+        sites: ClosureSites,
+    ) -> Result<AnalysisStats, String> {
+        let mut actual_facts = None;
+        let mut reference_facts = None;
+        let actual = check_scheduled(
+            program,
+            entries,
+            entry_channels,
+            sites,
+            false,
+            Some(&mut actual_facts),
+        );
+        let reference = check_scheduled(
+            program,
+            entries,
+            entry_channels,
+            sites,
+            true,
+            Some(&mut reference_facts),
+        );
+        assert_eq!(
+            actual.is_ok(),
+            reference.is_ok(),
+            "worklist: {actual:?}; full scan: {reference:?}"
+        );
+        assert_eq!(actual_facts, reference_facts);
+        actual
+    }
+
+    #[test]
+    fn long_call_chain_reaches_the_same_facts_without_rescanning_every_function() {
+        let mut program = state_program(true);
+        let unit = MT::unit();
+        let getter = program.funcs[1].ty.clone();
+        // Return the getter through a long chain, then invoke it inside State.
+        // Its output arrives much later than each caller's first empty read.
+        let length = 128;
+        let first = program.funcs.len();
+        for offset in 0..length {
+            program.funcs.push(Func {
+                name: format!("link-{offset}"),
+                arity: 1,
+                locals: vec![unit.clone()],
+                ty: arrow(unit.clone(), getter.clone()),
+                body: Body::Expr(if offset + 1 == length {
+                    Expr::Func(1)
+                } else {
+                    Expr::Call(first + offset + 1, vec![Expr::Local(0)])
+                }),
+            });
+        }
+        let Body::Expr(Expr::Call(_, arguments)) = &mut program.funcs[0].body else {
+            panic!("expected the State handler fixture");
+        };
+        arguments[1] = Expr::Call(first, vec![Expr::Const(Value::unit())]);
+        let mut facts = None;
+        let mut reference_facts = None;
+        let actual = check_scheduled(
+            &program,
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate,
+            false,
+            Some(&mut facts),
+        )
+        .unwrap();
+        let reference = check_scheduled(
+            &program,
+            &[0],
+            EntryChannels::Unknown,
+            ClosureSites::Separate,
+            true,
+            Some(&mut reference_facts),
+        )
+        .unwrap();
+        assert_eq!(facts, reference_facts);
+        assert!(
+            actual.visits * 4 < reference.visits,
+            "worklist: {actual:?}; scan: {reference:?}"
+        );
+    }
 
     fn arrow(a: MT, b: MT) -> MT {
         MT::Fun(Box::new(a), Box::new(b))
@@ -1715,17 +2017,22 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                     })
                     .sum();
                 let policies = [ClosureSites::Merged, ClosureSites::Separate];
-                let expected = policies
-                    .map(|sites| check(&program, &entries, EntryChannels::Unknown, sites).unwrap());
+                let expected = policies.map(|sites| {
+                    super::check(&program, &entries, EntryChannels::Unknown, sites).unwrap()
+                });
                 let mut samples = [Vec::new(), Vec::new()];
                 // Warmups above are outside timing. Alternate the paired order;
                 // each timed check constructs and destroys a fresh proof.
                 for repeat in 0..7 {
                     for index in if repeat % 2 == 0 { [0, 1] } else { [1, 0] } {
                         let start = Instant::now();
-                        let actual =
-                            check(&program, &entries, EntryChannels::Unknown, policies[index])
-                                .unwrap();
+                        let actual = super::check(
+                            &program,
+                            &entries,
+                            EntryChannels::Unknown,
+                            policies[index],
+                        )
+                        .unwrap();
                         samples[index].push(start.elapsed().as_nanos());
                         assert_eq!(actual, expected[index]);
                     }
@@ -1974,6 +2281,15 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                     "rest-startup fixture={fixture} raw=true functions={} compile_seconds={compile_seconds:.6} analysis_seconds={analysis_seconds:.6} analysis_limit_seconds=10 stats={stats:?}",
                     program.funcs.len(),
                 );
+                let compared = check(
+                    &program,
+                    &[program.main.unwrap()],
+                    EntryChannels::Unknown,
+                    ClosureSites::Separate,
+                )
+                .unwrap();
+                assert_eq!(stats, compared);
+                eprintln!("rest-worklist fixture={fixture} full_scan_facts=equal validation_added_facts=false");
                 if analysis_seconds > 10.0 {
                     failures.push(format!(
                         "{fixture}: lifetime analysis exceeded the startup budget"
@@ -2004,23 +2320,7 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                 b.clone(),
                 TypeShape::Record(vec![("back".into(), a.clone())]),
             );
-            let proof = Proof {
-                program: &program,
-                sites: ClosureSites::Separate,
-                type_cache: RefCell::new(HashMap::new()),
-                expression_types: HashMap::new(),
-                captures: HashMap::new(),
-                inputs: BTreeMap::new(),
-                outputs: BTreeMap::new(),
-                callback_values: BTreeMap::new(),
-                channel_values: BTreeMap::new(),
-                task_thunks: BTreeMap::new(),
-                task_results: BTreeMap::new(),
-                changed: false,
-                validate: false,
-                state_values: Targets::new(),
-                error_values: Targets::new(),
-            };
+            let proof = Proof::new(&program, ClosureSites::Separate);
             // Visiting A first crosses B's back edge before reaching A's
             // payload. That provisional negative result must not be cached for B.
             let expected = TypeProperties {
@@ -2048,23 +2348,8 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
     #[test]
     fn joining_a_known_target_does_not_hide_an_unknown_function() {
         let program = state_program(true);
-        let mut proof = Proof {
-            program: &program,
-            sites: ClosureSites::Separate,
-            type_cache: RefCell::new(HashMap::new()),
-            expression_types: HashMap::new(),
-            captures: HashMap::new(),
-            inputs: BTreeMap::new(),
-            outputs: BTreeMap::new(),
-            callback_values: BTreeMap::new(),
-            channel_values: BTreeMap::new(),
-            task_thunks: BTreeMap::new(),
-            task_results: BTreeMap::new(),
-            changed: false,
-            validate: true,
-            state_values: Targets::new(),
-            error_values: Targets::new(),
-        };
+        let mut proof = Proof::new(&program, ClosureSites::Separate);
+        proof.validate = true;
         let mut functions = Targets::from([Origin::Function(1, 0, 0, None)]);
         assert!(proof
             .apply(&Targets::new(), &[Targets::new()], STATE, (0, 0))
@@ -2161,23 +2446,8 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                     body: Body::Expr(Expr::Apply(Box::new(Expr::Local(0)), vec![Expr::Local(1)])),
                 },
             ]);
-            let mut proof = Proof {
-                program: &program,
-                sites: ClosureSites::Separate,
-                type_cache: RefCell::new(HashMap::new()),
-                expression_types: HashMap::new(),
-                captures: HashMap::new(),
-                inputs: BTreeMap::new(),
-                outputs: BTreeMap::new(),
-                callback_values: BTreeMap::new(),
-                channel_values: BTreeMap::new(),
-                task_thunks: BTreeMap::new(),
-                task_results: BTreeMap::new(),
-                changed: false,
-                validate: true,
-                state_values: Targets::new(),
-                error_values: Targets::new(),
-            };
+            let mut proof = Proof::new(&program, ClosureSites::Separate);
+            proof.validate = true;
             let captured = proof.partial(3, vec![Targets::new()], 0, (0, 0));
             let nested = proof.partial(4, vec![captured.clone()], 0, (0, 0));
             for value in [captured, nested] {
@@ -2693,23 +2963,8 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
             ClosureSites::Separate,
         )
         .unwrap();
-        let mut proof = Proof {
-            program: &program,
-            sites: ClosureSites::Separate,
-            type_cache: RefCell::new(HashMap::new()),
-            expression_types: HashMap::new(),
-            captures: HashMap::new(),
-            inputs: BTreeMap::new(),
-            outputs: BTreeMap::new(),
-            callback_values: BTreeMap::new(),
-            channel_values: BTreeMap::new(),
-            task_thunks: BTreeMap::new(),
-            task_results: BTreeMap::new(),
-            changed: false,
-            validate: true,
-            state_values: Targets::new(),
-            error_values: Targets::new(),
-        };
+        let mut proof = Proof::new(&program, ClosureSites::Separate);
+        proof.validate = true;
         let queue = proof.function(0, 0, &[Targets::new()]).unwrap();
         assert_eq!(queue, Targets::from([Origin::Queue(0)]));
         let captured = proof.partial(3, vec![queue.clone()], 0, (0, 0));
@@ -2912,23 +3167,7 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
             ty: arrow(unit, getter.clone()),
             body: Body::Prim("unmodeled-function-producer".into()),
         });
-        let mut proof = Proof {
-            program: &program,
-            sites: ClosureSites::Separate,
-            type_cache: RefCell::new(HashMap::new()),
-            expression_types: HashMap::new(),
-            captures: HashMap::new(),
-            inputs: BTreeMap::new(),
-            outputs: BTreeMap::new(),
-            callback_values: BTreeMap::new(),
-            channel_values: BTreeMap::new(),
-            task_thunks: BTreeMap::new(),
-            task_results: BTreeMap::new(),
-            changed: false,
-            validate: false,
-            state_values: Targets::new(),
-            error_values: Targets::new(),
-        };
+        let mut proof = Proof::new(&program, ClosureSites::Separate);
         let produced = proof.function(3, STATE, &[Targets::new()]).unwrap();
         assert!(produced.contains(&Origin::UnknownFunction));
         assert!(proof

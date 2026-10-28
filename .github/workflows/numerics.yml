@@ -436,6 +436,11 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked --lib 2>&1 | tee ownership-analysis-evidence/build.log
+      - name: Lint production and test analysis code
+        if: ${{ !cancelled() }}
+        run: |
+          set -o pipefail
+          cargo clippy --locked --keep-going --all-targets -- -D warnings 2>&1 | tee ownership-analysis-evidence/clippy.log
       - name: Measure both analysis rules at N, 2N and 4N
         run: |
           set -o pipefail

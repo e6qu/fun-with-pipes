@@ -5,6 +5,42 @@ For the 64-worker fixture below, the repaired proof took 29.8 ms on Linux AMD64
 and 80.8 ms on Intel macOS. It fixes a false rejection; this is not a compiler
 speedup claim or a proved linear bound.
 
+## Current repair: revisit changed dependencies
+
+PR #221 run `40674942219`, source `45f9e81013fdf3b9e07aa0d4222c87bcde289e2d`,
+failed the Intel macOS forms limit: 12.824 seconds against 10 seconds. Its
+591,732 function visits produced only 2,585 output updates. The entry fixture
+passed at 7.358 seconds; Linux passed at 5.991 and 4.070 seconds. Both hosts
+passed the unit tests and 16/32/64-worker limits. Earlier passing samples do
+not erase this failure.
+
+The repair changes scheduling, not the ownership rules. A function is queued
+when first reached or when its input facts grow. While checking it, the compiler
+records which outputs, captures, callback continuations, channel payloads,
+task results, State values and error values it reads. A growing set queues its
+readers again, including readers that first saw an empty set. Service boundaries
+participate too. Task computations are collected for final cycle validation;
+no transfer function reads that table during iteration.
+
+For example, if `a` calls `b` and `b` later returns a newly discovered closure,
+`a` must be checked again. An unrelated function need not be. Reads are recorded
+by finite function/scope and closure-site identities. Facts and dependencies only
+grow; the finite sets ensure termination, not linear complexity. A deterministic
+ordered queue preserves function order within each wave. A wave now visits only
+queued functions; old round counts described whole-program scans.
+
+The test harness retains a full-scan scheduling reference, unavailable in the
+compiler binary. Positive fixtures compare every input, output, capture, callback,
+channel, task, State and error set; negative fixtures must still reject. Validation
+must add no facts after convergence. A 128-call chain checks late propagation and
+requires fewer than one quarter of the reference's visits. Both raw REST fixtures
+also compare complete facts outside their unchanged analysis timer. Those extra
+reference checks are not part of the reported production-scheduling time.
+
+**Verification pending:** the repair needs both G2 hosts and all final platform
+gates. Existing measurements below retain their source IDs. Timing, size and
+separate/merged-site limits are unchanged; no new speedup is claimed yet.
+
 ## Why this measurement is needed
 
 The lifetime proof used to merge partial applications with the same function,

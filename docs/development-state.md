@@ -1,13 +1,22 @@
 # Current work
 
-**Next:** monitor the final PR #221 head through all nine production jobs,
-documentation and G2 after the TLS snapshot repair below. Every job and target
-from old production run `40659395283` was audited; both known failures are fixed.
-Supersede the intermediate `45f9e810` gates with this complete repair batch.
-The CI workflow does not cancel older runs automatically; cancel superseded
-incomplete runs explicitly so they do not consume final verification capacity.
-Monitor on a timer and inspect failed steps even while their jobs continue.
-Squash-merge only after all gates pass; then begin F1–F3 together in the next PR.
+**Next:** finish and verify the dependency-driven lifetime-analysis repair.
+G2 run `40674942219` at `45f9e810` failed the unchanged 10-second Intel macOS
+forms budget: 12.824 seconds, 289 rounds, 591,732 visits, 2,585 output updates.
+Both hosts passed all 211 unit tests and the small scaling budgets. Linux REST
+analysis passed at 5.991/4.070 seconds; Intel entry analysis passed at 7.358.
+All artifact logs were audited; there are no other G2 failures or diagnostics.
+
+PR #221 is draft again. Superseded production runs `40674858299` and
+`40676851764` are cancelled. Latest published head is
+`191acf0d811a640bd852752ed17dbaffc9e1f7ec`; it includes the TLS repair below.
+Local work now replaces repeated whole-program scans with tracked dependencies.
+The test-only full-scan reference must agree on every stored fact and lifetime
+admission decision; final validation must not add new facts. Keep timing and
+size budgets unchanged. Run focused G2 on both hosts before the full matrix.
+After all nine final-head production jobs, docs and G2 pass, squash-merge and
+begin F1–F3 together. Monitor failed steps while jobs continue; never merge a
+cancelled, skipped or unverified head.
 
 [PR #221](https://github.com/e6qu/fun-with-pipes/pull/221) uses
 `/private/tmp/fwp-parser-workspace`, branch `scoped-parser-workspace`, based on
@@ -19,8 +28,9 @@ A6 is implemented and measured; complete platform acceptance is pending.
 ## Source and completed checks
 
 - Production compiler/runtime source is `ca56023eb362259cf2099c9c9d477b20b3cf6793`.
-  Later changes add measurement diagnostics, docs and the test-only lint repair
-  below. Do not repeat performance measurements for these changes.
+  Published later changes add measurement diagnostics, docs and test-only repairs.
+  The new analysis scheduling changes compiler performance and needs fresh G2
+  evidence. Existing parser measurements retain their original source IDs.
 - Native Linux ARM64/AMD64 run `40650396700` passed: 211 units, six allocator
   tests, six parser tests, two record tests, Clippy and actual WASI O1/O2 checks.
   All logs and 26 native/WASI probes per host were independently audited for
@@ -96,7 +106,8 @@ output, failure-code, physical-storage and Mach-O/PE architecture checks.
 The retained ARM crash report is the deliberate
 `cleanup_panic_aborts_before_borrowed_tasks_escape` control, confirmed from its
 source stack and passing unit test. Require every final-head gate again.
-Production code and measurements are unchanged by these test-only repairs.
+The lint/TLS repairs do not change production behavior. The subsequent analysis
+repair is separate and still needs verification.
 The repair batch also corrects guides that still called GC-removal validation
 pending. Standalone comparisons without refreshed measurements remain explicitly
 unmeasured; historical sources, modes and numbers are unchanged.

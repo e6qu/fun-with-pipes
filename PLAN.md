@@ -35,8 +35,9 @@ collector is not the same as removing these costs. The
    and actual-binary evidence. This does not make all containers count-free.
 2. **A6 is current:** complete the final platform gates for the
    [parser workspace](docs/parser-workspace.md). Focused native/WASI checks,
-   direct cancellation, compiler budgets and four independently audited
-   [measurement sessions](docs/measurements/parser-workspace.md) pass. The
+   direct cancellation and four independently audited
+   [measurement sessions](docs/measurements/parser-workspace.md) pass. Repair
+   the latest G2 forms-analysis budget failure before final platform acceptance. The
    comparison reports faster parsing alongside increased allocated bytes and
    the remaining C/Rust gap. [The handoff](docs/development-state.md) owns gate
    status. After verified merge, group F1–F3 into the next substantial PR.
