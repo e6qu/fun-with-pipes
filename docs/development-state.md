@@ -79,7 +79,20 @@ Current evidence is in `/private/tmp/fwp-221-ca560-checks` and
 and `/private/tmp/fwp-221-a55-measurements`; distinguish their source and limits.
 No detached merger runs.
 
-## Roadmap and recovery
+## Roadmap status
+
+| Step | Status | Remaining work |
+|---|---|---|
+| 1 | Verified | Maintain collector-free ownership and cycle checks |
+| 2 | In progress | A6 measurement and full platform acceptance |
+| 3 | Pending | Functional calls and recursion fixtures/optimizations |
+| 4 | Pending | Close named CPU performance gaps |
+| 5 | Pending | Derivative storage, timing and precision |
+| 6 | Pending | CPU numerical kernels |
+| 7 | In progress | Extend fixed comparison budgets and audit controls |
+| 8 | Pending | Larger-program correctness, cleanup and scale matrix |
+
+## Recovery
 
 GC removal is verified in #217; A1–A5 are verified through #220. A6 needs the
 remaining measurement and final platform gates. Roadmap steps 3–8 remain open.
