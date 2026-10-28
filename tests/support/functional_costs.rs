@@ -250,6 +250,27 @@ int main(int argc, char **argv) {{
             }
         }
         assert_eq!(observations.len(), 32);
+        // Freeze the measured known-call costs, including costs still present.
+        // All supported native targets use 64-bit values. These are runtime
+        // requests, not C instructions; changing them needs a measured decision.
+        for n in [32_u64, 128] {
+            for (name, expected) in [
+                ("pipe", [0, 0, 0, 0, 0]),
+                ("partial", [0, 0, 0, 0, 0]),
+                ("borrowed", [1, 8 * (n + 1), 0, 0, 0]),
+                ("captured", [0, 0, 0, 0, 0]),
+                ("result", [1, 24, 0, 1, 1]),
+                ("each-count", [n + 2, 24 * n + 152, 2, n + 1, 1]),
+                ("folded", [0, 0, 0, 0, 0]),
+                ("state-loop", [2, 152, 2, 1, 0]),
+            ] {
+                assert_eq!(
+                    observations[&(name.into(), "known".into(), n)],
+                    expected,
+                    "known-call cost changed: {name} n={n}: {report}"
+                );
+            }
+        }
         for name in [
             "pipe",
             "partial",

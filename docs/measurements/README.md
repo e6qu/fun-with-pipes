@@ -167,3 +167,8 @@ These are historical observations, not current compiler budgets:
 Other dated JSON files are linked by their corresponding reports or delivery
 records. A missing or expired external artifact is a limitation of that evidence;
 regenerating a binary does not recreate the original measured binary.
+
+[Functional call observations](functional-calls-2026-10-28.json) retain the eight
+known/boundary pairs. The [second mutual-recursion session](mutual-recursion-2026-10-28-second.json)
+retains an inconclusive noisy row; [the guide](../functional-costs.md) explains
+why the next comparison uses longer batches with unchanged acceptance limits.

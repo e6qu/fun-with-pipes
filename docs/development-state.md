@@ -1,24 +1,20 @@
 # Current work
 
-**Next:** publish the callback-fixture and stack-marker repairs, rerun
-`functional-probes` on Linux ARM64/AMD64, then start full final-head gates/G2
-when focused results pass. Both hosts of `40714605188` finished; docs
-`40714567963` passes. Resolve the measured mutual-loop
-decision before starting the full final-head platform gates and G2 budgets.
-F1–F3 remain unaccepted. A6 is now verified.
+**Next:** publish the longer timing batches and fixed F1 count expectations, then
+run `functional-probes` on Linux ARM64/AMD64. Audit its measured decisions before
+starting full final-head gates and G2. F1–F3 remain unaccepted; A6 is verified.
 
 Worktree: `/private/tmp/fwp-parser-workspace`; branch:
 `functional-calls-and-tail-loops`; [draft PR #222](https://github.com/e6qu/fun-with-pipes/pull/222).
-Published head: `b2f45840f936d96f49c3ed069094ac92b4d574f0`; compiler code
-remains `e85d794c`. Probe repairs shipped at `e2bf6818`; the required roadmap
-table was restored at `b2f45840`. Old docs run `40714402852` was cancelled.
+Published head: `ca914eec2ede1b5de61ac42f1c8068d8de3942e9`.
+Focused run `40719252691` and docs `40719100185` pass. All complete logs are
+audited: each host passes 218 units (four intentionally ignored), nine call tests,
+four tail/stack tests and the emitter; formatting and Clippy pass without warnings.
+The benchmark collection succeeded, but AMD64 O2 timing is inconclusive, not accepted.
 
-One follow-up source repair is uncommitted: the POSIX stack handler stored a
-pointer to an expired local marker. It now retains only the numeric address.
-A bounded 256 KiB main-stack test checks the handler after initialization returns,
-at O0/O2. It deliberately uses unknown C recursion to prevent tail elimination;
-this tests runtime handling, not fwp lowering. Rustfmt passes; native verification
-is pending. This does not explain the separate original Intel compiler abort.
+The POSIX handler now retains the numeric stack-marker address instead of a
+pointer whose local lifetime ended. Its O0/O2 overflow controls pass on both
+Linux hosts. This does not explain the separate original Intel compiler abort.
 
 ## Implementation and evidence
 
@@ -53,36 +49,32 @@ These compare visits across several invocations, not just one frame or elapsed
 speed. Callback offset controls independently exit 210 when either guard is
 removed; valid production/UBSan paths pass at O1/O2.
 
-## Latest audit and pending repairs
+## Latest audit and pending measurement
 
-Both hosts of `40714605188` pass all three tail tests: weak swaps/failure,
-cancellation and mixed self/mutual recursion. The measurement also passes all
-four O0/O2 comparisons. [The report](functional-costs.md#first-measured-decision)
-and [raw record](measurements/mutual-recursion-2026-10-28-first.json) retain the
-full data, including AMD64 O2's small slowdown versus ordinary calls. The
-independent audit `/private/tmp/fwp-audit-b2f.py` passes sample/flag/ELF/hash/
-stack/profile checks. Timed work excludes evidence writes. Subsequent records
-also retain successful executable stdout, not just failed output.
+Both hosts of `40719252691` pass the repaired F1 callback matrix and all tail
+controls. All 128 count rows agree across architectures and O0/O2. The native
+probe verifies callback metadata, results, per-call cleanup and final teardown.
+The fixture exposes actual first-class function identities; no blanket runtime
+callback emission or compatibility wrapper was added. Known-call count expectations
+now include remaining per-element State `each` allocations.
 
-The only failing native test is F1. The probe constructed partial applications
-for direct-call-only exports; their function-table entries correctly lacked
-callback ownership metadata. Both hosts trap at the first boundary call with
-“counted owner escaped ARC contract.” The repaired source fixture explicitly
-exports the same function identities as first-class values, making metadata
-necessary. The native probe now checks those entries before allocating inputs.
-The identity record is not part of the measured work; no compiler/runtime
-compatibility wrapper or blanket callback-table emission is added.
+[The guide](functional-costs.md) owns the results and limitations. First timing
+session `40714605188` accepts all four comparisons. The second session accepts
+three but marks AMD64 O2 inconclusive: identical-binary noise is 1.150 versus
+1.10 allowed. All binary/hash/stack/profile/sample checks pass independent audit.
+Retain both raw records. The next run uses 65,536 rather than 1,024 invocations
+per sample; all inputs, flags, sample counts and acceptance limits stay unchanged.
+No F3 acceptance follows from a green collection job alone.
 
-The executable teardown, weak task application and mixed mutual fixture repairs
-at `e2bf6818`/`b2f45840` are verified. The separate POSIX saved-address repair
-above and its bounded stack test still need CI. Keep the working-tree changes;
-no F1 acceptance or final platform claim yet.
+Latest log: `/private/tmp/fwp-222-ca914.log`; artifacts:
+`/private/tmp/fwp-222-ca914-artifacts`. Guarded audits
+`/private/tmp/fwp-audit-ca914.py` and `/private/tmp/fwp-audit-calls.py` pass,
+including the explicit inconclusive result. Four decision controls pass.
 
-`functional-probes` reruns the affected call/tail targets and measurement, plus
-units, formatting and Clippy. `functional-calls` also runs the eight existing
-resource/ownership targets; use it after compiler ownership changes. Full final
-platform gates still cover all maintained tests. Four measurement-decision
-controls pass; timing noise remains inconclusive rather than silently accepted.
+`functional-probes` runs the changed call/tail targets, compiler units, formatting,
+Clippy and measurement. The eight other affected resource targets passed at
+`e85d794c`; production compiler ownership code has not changed since then.
+All maintained tests still require the full final-head platform gates.
 
 ## Earlier repairs and retained records
 
@@ -92,7 +84,7 @@ controls pass; timing noise remains inconclusive rather than silently accepted.
 | `8b0fc929` / `40699575855` | Full failure audit found a wrong manual primitive name, source formatting/typing mistakes, too-short C calls, conservative capture anchors and an unreliable sanitizer control |
 | `c56d644f` / `40703270836` | Owned partial applications replace short C calls; queued run cancelled before the complete batch |
 | `1f65b46f` / `40708352241` | Capture proof and source controls added; queued run superseded and cancelled |
-| `e85d794c` / `40710069104` | Compiler/lifetime controls pass; three remaining probe causes listed above |
+| `e85d794c` / `40710069104` | Compiler/lifetime controls pass; three probe errors repaired in later commits |
 
 Logs: `/private/tmp/fwp-222-{8787,8b0}-failed.log` and
 `/private/tmp/fwp-222-e85-{arm,amd}.{log,txt}`. Artifacts:

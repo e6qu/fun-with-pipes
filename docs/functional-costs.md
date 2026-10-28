@@ -3,7 +3,8 @@
 These checks answer two different questions: what runtime work a convenient
 source construct introduces, and whether a recursive computation can use a
 bounded call stack. They are the F1–F3 work in [PLAN.md](../PLAN.md#3-functional-calls-and-recursion).
-The implementation is under review in PR #222; results and acceptance are pending.
+The implementation is under review in PR #222. Linux correctness and cost probes
+pass; full platform acceptance and the longer timing comparison remain pending.
 
 ## Function-call pairs
 
@@ -58,6 +59,31 @@ The saved generated C, actual executables and disassembly allow inspection of
 the entry and the worker it calls. A generic dispatch table present in an unused
 part of a binary does not establish a cost on the measured path.
 
+### Measured call costs
+
+Run `40719252691`, source `ca914eec2ede1b5de61ac42f1c8068d8de3942e9`, passes on Linux ARM64
+and AMD64 at O0/O2. All four combinations produce the same request counts.
+The [raw observations](measurements/functional-calls-2026-10-28.json) retain each
+pair, binary hashes and stack observations. Outputs match the interpreter and
+all calls restore their live-storage baseline. The known-call rows are now
+regression expectations; they include remaining costs instead of claiming that
+every abstraction is free.
+
+| Known construct | Allocations | Requested bytes | Applications | Boxes | Retains |
+|---|---:|---:|---:|---:|---:|
+| Pipe, partial application, captured arithmetic function, fold | 0 | 0 | 0 | 0 | 0 |
+| Borrowed array callback | 1 | `8(n + 1)` | 0 | 0 | 0 |
+| Record/variant result | 1 | 24 | 0 | 1 | 1 |
+| `each` with State | `n + 2` | `24n + 152` | 2 | `n + 1` | 1 |
+| State loop | 2 | 152 | 2 | 1 | 0 |
+
+For example, at `n = 128` the known array callback requests one allocation and
+no applications or retains; its unknown-callback control requests three
+allocations, 512 applications and 128 retains. The known fold requests none;
+its control requests 129 allocations, 256 applications and 128 retains. The
+known `each` still allocates per element. These are selected fixture results,
+not universal costs for all callbacks or proof of parity with C/Rust.
+
 ## Tail calls and weak handles
 
 A tail call returns its callee's result without further work. Reusing its frame
@@ -93,7 +119,9 @@ Non-tail calls retain ordinary frames. Only I64, Bool and unit locals qualify.
 The measurement computes parity by alternating two countdown functions. It compares
 ordinary mutual calls, the grouped version of the **same typed intermediate code**,
 and an explicit fwp `loop`. Each invocation counts down from 4,096 or 4,097;
-1,024 invocations must produce checksum 512. Timed binaries contain no counters.
+65,536 invocations must produce checksum 32,768. The first two sessions used
+1,024 invocations/checksum 512; their source IDs and original settings remain
+unchanged in the records. Timed binaries contain no counters.
 A common volatile native entry pointer prevents the C compiler from hoisting
 repeated invocations. Wall time includes process startup, all invocations, checksum
 output and cleanup. Saving measurement logs is outside the timer. This is a
@@ -127,7 +155,8 @@ retains all samples, controls, profiles, toolchain/hardware details and hashes.
 An independent audit recomputes ratios and verifies actual ELF text sizes,
 binary hashes, sample order, compile flags and stack reports. This supports
 retaining the prototype for final platform verification; F1 and the full PR
-are still pending. Another run will verify the subsequent runtime repair.
+were still pending at this source. The next session verifies the runtime repair
+but has one inconclusive timing row, described below.
 
 Median milliseconds include process startup and 1,024 countdown invocations:
 
@@ -147,6 +176,22 @@ and 96 on AMD64. Its instrumented stack range stays 320 bytes at O0 and 34 at
 O2 as input grows from 16 to 4,096. Ordinary O0 grows from 1,728 to 393,408
 bytes, validating the stack-growth control. Instrumentation changes frames;
 these ranges are distinct from the retained uninstrumented compiler reports.
+
+### Second session and timing repair
+
+Run `40719252691` at `ca914eec2ede1b5de61ac42f1c8068d8de3942e9` passes all correctness,
+cleanup and stack controls, including the saved POSIX stack-address repair.
+The [second raw record](measurements/mutual-recursion-2026-10-28-second.json)
+keeps three accepted comparisons and **inconclusive AMD64 O2**: its identical-code
+control ratio is 1.150, exceeding 1.10. A successful collection job does not
+turn that row into accepted evidence. The independent audit preserves the result.
+
+The samples last only a few milliseconds at O2, so scheduling and process startup
+can dominate them. The next run increases each batch from 1,024 to 65,536
+invocations for every variant and both levels. Inputs, sample count, order,
+compiler flags and all acceptance limits stay unchanged. This increases useful
+work without retrying until a noisy short sample happens to pass. Startup and
+checksum output remain inside the timer. The longer comparison is pending.
 
 The focused runner suite is `functional-calls` in
 [numerics.yml](../.github/workflows/numerics.yml). Full platform acceptance remains
