@@ -171,7 +171,7 @@ regenerating a binary does not recreate the original measured binary.
 [Functional call observations](functional-calls-2026-10-28.json) retain the eight
 known/boundary pairs. The [second mutual-recursion session](mutual-recursion-2026-10-28-second.json)
 retains an inconclusive noisy row; [the guide](../functional-costs.md) explains
-why the next comparison uses longer batches with unchanged acceptance limits.
+why the accepted comparison uses longer batches with unchanged acceptance limits.
 
 [CPU baselines](cpu-baselines.md) define the current repeated loop/text-length
 comparison and frozen-budget rules. [Longer recursion measurements](mutual-recursion-2026-10-28-long.json)

@@ -2,14 +2,18 @@
 """Reject incomplete baselines, false comparisons and silently reset limits."""
 import copy
 import importlib.util
+import json
 from pathlib import Path
+import subprocess
+import sys
+import tempfile
 import unittest
 
 
 SPEC = importlib.util.spec_from_file_location('cpu_baselines', Path(__file__).with_name('cpu-baselines.py'))
 CPU = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CPU)
-SETTINGS = dict(samples=8, warmups=2, cpuPolicy='all', timeout=120, maxControlRatio=1.03, maxPairRatio=1.10)
+SETTINGS = dict(samples=8, warmups=2, cpuPolicy='all', timeout=120, processes={'loop': 1, 'text-length': 2}, maxControlRatio=1.03, maxPairRatio=1.10)
 
 
 def report(architecture, session):
@@ -28,10 +32,13 @@ def report(architecture, session):
             for index in range(rounds):
                 for position in range(4):
                     kind = CPU.KINDS[(index + position) % 4]
+                    seconds = {'c': 0.5, 'rs': 0.8, 'fwp': 1.0, 'identical': 1.01}[kind]
+                    processes = [dict(seconds=seconds, stdout='42\n', stderr='', status=0)
+                                 for _ in range(SETTINGS['processes'][name])]
                     row['observations'].append(dict(kind=kind, phase=phase, round=index,
-                        seconds={'c': 0.5, 'rs': 0.8, 'fwp': 1.0, 'identical': 1.01}[kind],
-                        stdout='42\n', stderr='', status=0, binarySha256='a' * 64))
-        row['result'] = CPU.check_case(row, SETTINGS)
+                        seconds=sum(p['seconds'] for p in processes), processes=processes,
+                        binarySha256='a' * 64))
+        row['result'] = CPU.check_case(name, row, SETTINGS)
         programs[name] = row
     return dict(source='c' * 40, settings=SETTINGS.copy(), architecture=architecture,
                 run=123, session=session, host=dict(model=architecture, vendor='test', architecture=architecture),
@@ -72,7 +79,7 @@ class Baselines(unittest.TestCase):
                 CPU.freeze(data)
 
     def test_missing_wrong_or_fabricated_observations_fail(self):
-        for change in ['missing', 'order', 'output', 'stderr', 'status', 'hash', 'statistic', 'nan', 'zero']:
+        for change in ['missing', 'order', 'output', 'stderr', 'status', 'hash', 'statistic', 'nan', 'zero', 'batch', 'sum']:
             data = copy.deepcopy(self.reports)
             row = data[0]['programs']['loop']
             sample = row['observations'][-1]
@@ -81,17 +88,21 @@ class Baselines(unittest.TestCase):
             elif change == 'order':
                 sample['round'] = 0
             elif change == 'output':
-                sample['stdout'] = '41\n'
+                sample['processes'][0]['stdout'] = '41\n'
             elif change == 'stderr':
-                sample['stderr'] = 'warning'
+                sample['processes'][0]['stderr'] = 'warning'
             elif change == 'status':
-                sample['status'] = 1
+                sample['processes'][0]['status'] = 1
             elif change == 'hash':
                 sample['binarySha256'] = 'd' * 64
             elif change == 'statistic':
                 row['result']['fwpOverC'] = 0.5
+            elif change == 'batch':
+                sample['processes'].pop()
+            elif change == 'sum':
+                sample['seconds'] += 1
             else:
-                sample['seconds'] = float('nan') if change == 'nan' else 0
+                sample['processes'][0]['seconds'] = float('nan') if change == 'nan' else 0
             with self.assertRaises(AssertionError, msg=change):
                 CPU.freeze(data)
 
@@ -103,13 +114,14 @@ class Baselines(unittest.TestCase):
                 if item['kind'] == 'identical' and item['phase'] == 'sample':
                     if change == 'median' or item['round'] == 7:
                         item['seconds'] = 1.04 if change == 'median' else 1.11
-            row['result'] = CPU.check_case(row, SETTINGS)
+                        item['processes'][0]['seconds'] = item['seconds']
+            row['result'] = CPU.check_case('loop', row, SETTINGS)
             self.assertEqual(row['result']['decision'], 'inconclusive')
             with self.assertRaisesRegex(AssertionError, 'inconclusive'):
                 CPU.freeze(data)
 
     def test_memory_and_size_evidence_cannot_disappear(self):
-        for change in ['rss', 'leak', 'retained', 'stack', 'text']:
+        for change in ['rss', 'leak', 'retained', 'stack', 'empty-stack', 'text']:
             data = copy.deepcopy(self.reports)
             row = data[0]['programs']['loop']
             if change == 'rss':
@@ -120,10 +132,37 @@ class Baselines(unittest.TestCase):
                 row['memory']['managedMemory']['ordinary']['profiles'][0]['finalChargedBytes'] = 16
             elif change == 'stack':
                 row['instrumentedStack'] = {}
+            elif change == 'empty-stack':
+                row['instrumentedStack'] = {'profile.su': ''}
             else:
                 row['textBytes']['fwp'] = 0
             with self.assertRaises(AssertionError, msg=change):
                 CPU.freeze(data)
+
+
+    def test_cli_verifies_the_original_table_and_rejects_a_relaxed_limit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            paths = []
+            for index, value in enumerate(self.reports):
+                path = root / f'session-{index}.json'
+                path.write_text(json.dumps(value))
+                paths.append(str(path))
+            table = root / 'budgets.json'
+            command = [sys.executable, str(Path(CPU.__file__))]
+            result = subprocess.run(command + ['freeze', '--reports', *paths, '--output', str(table)],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = subprocess.run(command + ['verify', '--reports', *paths, '--table', str(table)],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            data = json.loads(table.read_text())
+            data['rows'][0]['maxCandidateRatio'] = 1.5
+            table.write_text(json.dumps(data))
+            result = subprocess.run(command + ['verify', '--reports', *paths, '--table', str(table)],
+                                    capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('frozen table differs', result.stderr)
 
 
 if __name__ == '__main__':

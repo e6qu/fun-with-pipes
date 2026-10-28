@@ -25,9 +25,11 @@ def write_json(path, value):
     path.write_text(json.dumps(value, indent=2, allow_nan=False) + '\n')
 
 
-def check_case(row, settings):
+def check_case(name, row, settings):
     """Recompute every statistic from complete, ordered process observations."""
     count = settings['samples']
+    process_count = settings['processes'][name]
+    assert isinstance(process_count, int) and process_count > 0
     assert count >= 8 and count % 4 == 0
     assert settings['warmups'] >= 2
     assert settings['cpuPolicy'] == 'all' and math.isfinite(settings['timeout']) and settings['timeout'] > 0
@@ -47,9 +49,13 @@ def check_case(row, settings):
         kind = KINDS[(phase_round + position) % 4]
         assert (observation['kind'], observation['phase'], observation['round']) == (
             kind, 'warmup' if warmup else 'sample', phase_round)
-        assert observation['status'] == 0 and not observation['stderr']
-        assert observation['stdout'] == row['stdout']
-        assert math.isfinite(observation['seconds']) and observation['seconds'] > 0
+        processes = observation['processes']
+        assert len(processes) == process_count
+        for process in processes:
+            assert process['status'] == 0 and not process['stderr']
+            assert process['stdout'] == row['stdout']
+            assert math.isfinite(process['seconds']) and process['seconds'] > 0
+        assert observation['seconds'] == sum(p['seconds'] for p in processes)
         assert observation['binarySha256'] == row['binaries'][kind]['sha256']
         if not warmup:
             times[kind].append(observation['seconds'])
@@ -59,7 +65,7 @@ def check_case(row, settings):
     # Nearest-rank 95th percentile, including both directions of each difference.
     spread = pair_ratios[math.ceil(0.95 * count) - 1]
     stable = control <= settings['maxControlRatio'] and spread <= settings['maxPairRatio']
-    return dict(medianSeconds=medians, controlRatio=control, pairRatio95=spread,
+    return dict(medianBatchSeconds=medians, controlRatio=control, pairRatio95=spread,
                 fwpOverC=medians['fwp'] / medians['c'],
                 fwpOverRust=medians['fwp'] / medians['rs'],
                 decision='stable' if stable else 'inconclusive')
@@ -82,7 +88,7 @@ def freeze(reports):
         assert report['host']['model'] and report['toolchains']
         groups.setdefault(report['architecture'], []).append(report)
         for name, row in report['programs'].items():
-            assert row['result'] == check_case(row, settings), 'stored statistics differ'
+            assert row['result'] == check_case(name, row, settings), 'stored statistics differ'
             assert row['result']['decision'] == 'stable', f'{name}: inconclusive control'
             memory = row['memory']
             assert memory['leakDetected']
@@ -104,11 +110,12 @@ def freeze(reports):
             assert all(n > 0 for n in row['textBytes'].values())
             assert set(row['inputs']) == {'c', 'rs', 'fwp'}
             assert all(re.fullmatch('[0-9a-f]{64}', value) for value in row['inputs'].values())
-            assert row['instrumentedStack'], 'missing separately instrumented stack reports'
+            assert row['instrumentedStack'] and all(text.strip() for text in row['instrumentedStack'].values()), 'missing separately instrumented stack reports'
     assert set(groups) == {'x86_64', 'aarch64'}
     rows = []
     for architecture, sessions in sorted(groups.items()):
         assert len(sessions) == 2 and {r['session'] for r in sessions} == {1, 2}
+        sessions.sort(key=lambda report: report['session'])
         first, second = sessions
         assert first['host'] == second['host'], 'different CPU models need their own repeated baseline'
         assert first['toolchains'] == second['toolchains'], 'toolchains changed between sessions'
@@ -131,6 +138,7 @@ def measure(args):
     assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip() == args.source
     assert args.samples >= 8 and args.samples % 4 == 0 and args.warmups >= 2
     assert math.isfinite(args.timeout) and args.timeout > 0
+    assert args.loop_processes > 0 and args.text_processes > 0
     assert 1 < args.max_control_ratio <= args.max_pair_ratio and math.isfinite(args.max_pair_ratio)
     args.output.mkdir(parents=True, exist_ok=False)
     inspection = json.loads(args.inspection.read_text())
@@ -154,8 +162,9 @@ def measure(args):
                             allowedCpuCount=len(os.sched_getaffinity(0))),
                   toolchains=toolchains,
                   settings=dict(samples=args.samples, warmups=args.warmups, cpuPolicy=args.cpu_policy, timeout=args.timeout,
+                                processes={'loop': args.loop_processes, 'text-length': args.text_processes},
                                 maxControlRatio=args.max_control_ratio, maxPairRatio=args.max_pair_ratio),
-                  scope='Fresh-process wall time including startup, computation, output and cleanup; compilation and evidence writes excluded. Same checked work as the seven-peer suite. Memory profiles are separate and never timed. No C/Rust allocation-count claim.',
+                  scope='Sum of fresh-process wall times in each explicitly sized batch, including startup, computation, output and cleanup; compilation and evidence writes excluded. Same checked work as the seven-peer suite. Memory profiles are separate and never timed. No C/Rust allocation-count claim.',
                   evidence=dict(inspection=digest(args.inspection), memory=digest(args.memory / 'report.json'),
                                 memoryInspection=digest(args.memory_inspection)), programs={})
     environment = {k: v for k, v in os.environ.items() if not k.startswith('FWP_') and k not in ('GH_TOKEN', 'GITHUB_TOKEN')}
@@ -181,23 +190,30 @@ def measure(args):
             for index in range(rounds):
                 for position in range(4):
                     kind = KINDS[(index + position) % 4]
-                    start = time.perf_counter()
-                    try:
-                        result = subprocess.run([str(paths[kind].resolve())], env=environment,
-                                                capture_output=True, text=True, timeout=args.timeout)
-                    except subprocess.TimeoutExpired as error:
-                        write_json(args.output / 'timeout.json', dict(program=name, kind=kind, phase=phase,
-                                   round=index, timeout=args.timeout,
-                                   stdout=(error.stdout or b'').decode(errors='replace'),
-                                   stderr=(error.stderr or b'').decode(errors='replace')))
-                        raise
-                    elapsed = time.perf_counter() - start
-                    row['observations'].append(dict(kind=kind, phase=phase, round=index, seconds=elapsed,
-                        status=result.returncode, stdout=result.stdout, stderr=result.stderr,
-                        binarySha256=binaries[kind]['sha256']))
+                    observation = dict(kind=kind, phase=phase, round=index,
+                                       binarySha256=binaries[kind]['sha256'], processes=[], seconds=0)
+                    row['observations'].append(observation)
+                    for process_index in range(report['settings']['processes'][name]):
+                        start = time.perf_counter()
+                        try:
+                            result = subprocess.run([str(paths[kind].resolve())], env=environment,
+                                                    capture_output=True, text=True, timeout=args.timeout)
+                        except subprocess.TimeoutExpired as error:
+                            write_json(args.output / 'report.json', report)
+                            write_json(args.output / 'timeout.json', dict(program=name, kind=kind, phase=phase,
+                                       round=index, process=process_index, timeout=args.timeout,
+                                       stdout=(error.stdout or b'').decode(errors='replace'),
+                                       stderr=(error.stderr or b'').decode(errors='replace')))
+                            raise
+                        elapsed = time.perf_counter() - start
+                        observation['processes'].append(dict(seconds=elapsed, status=result.returncode,
+                                                            stdout=result.stdout, stderr=result.stderr))
+                        observation['seconds'] += elapsed
+                        if result.returncode != 0 or result.stdout != row['stdout'] or result.stderr:
+                            write_json(args.output / 'report.json', report)
+                            raise AssertionError(f'{name}/{kind}: unexpected process result: {result}')
                     write_json(args.output / 'report.json', report)
-                    assert result.returncode == 0 and result.stdout == row['stdout'] and not result.stderr
-        row['result'] = check_case(row, report['settings'])
+        row['result'] = check_case(name, row, report['settings'])
         write_json(args.output / 'report.json', report)
     print(json.dumps({name: row['result'] for name, row in report['programs'].items()}, indent=2))
     assert all(row['result']['decision'] == 'stable' for row in report['programs'].values()), 'inconclusive baseline; retain evidence and repair measurement'
@@ -213,21 +229,26 @@ def main():
     run.add_argument('--cpu-policy', choices=['all'], required=True)
     run.add_argument('--architecture', choices=['x86_64', 'aarch64'], required=True)
     run.add_argument('--session', type=int, choices=[1, 2], required=True)
-    for name in ['samples', 'warmups']:
+    for name in ['samples', 'warmups', 'loop-processes', 'text-processes']:
         run.add_argument('--' + name, type=int, required=True)
     for name in ['timeout', 'max-control-ratio', 'max-pair-ratio']:
         run.add_argument('--' + name, type=float, required=True)
-    collect = commands.add_parser('freeze')
-    collect.add_argument('--reports', type=Path, nargs=4, required=True)
-    collect.add_argument('--output', type=Path, required=True)
+    for command, argument in [('freeze', '--output'), ('verify', '--table')]:
+        collect = commands.add_parser(command)
+        collect.add_argument('--reports', type=Path, nargs=4, required=True)
+        collect.add_argument(argument, dest='table', type=Path, required=True)
     args = parser.parse_args()
     if args.command == 'measure':
         measure(args)
     else:
-        assert not args.output.exists(), 'preserve frozen budgets'
         result = freeze([json.loads(p.read_text()) for p in args.reports])
-        result['records'] = {str(p): digest(p) for p in args.reports}
-        write_json(args.output, result)
+        result['records'] = sorted(digest(p) for p in args.reports)
+        if args.command == 'freeze':
+            assert not args.table.exists(), 'preserve frozen budgets'
+            write_json(args.table, result)
+        else:
+            assert json.loads(args.table.read_text()) == result, 'frozen table differs from the original baseline evidence'
+            print('Frozen CPU limits match all four original baseline records')
 
 
 if __name__ == '__main__':

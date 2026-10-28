@@ -4594,7 +4594,7 @@ jobs:
             ARM64) architecture=aarch64 ;;
             *) exit 1 ;;
           esac
-          python3 scripts/cpu-baselines.py measure --input target/bench-evidence --inspection target/bench-inspection.json --memory target/bench-memory --memory-inspection target/bench-memory-inspection.json --source "$GITHUB_SHA" --architecture "$architecture" --session "${{ matrix.session }}" --cpu-policy all --samples 32 --warmups 2 --timeout 120 --max-control-ratio 1.03 --max-pair-ratio 1.10 --output target/cpu-baseline
+          python3 scripts/cpu-baselines.py measure --input target/bench-evidence --inspection target/bench-inspection.json --memory target/bench-memory --memory-inspection target/bench-memory-inspection.json --source "$GITHUB_SHA" --architecture "$architecture" --session "${{ matrix.session }}" --cpu-policy all --samples 32 --warmups 2 --loop-processes 1 --text-processes 32 --timeout 120 --max-control-ratio 1.03 --max-pair-ratio 1.10 --output target/cpu-baseline
       - name: Measure ordered-range sort candidates and identical controls
         if: ${{ !cancelled() && steps.evidence.outcome == 'success' && inputs.suite == 'map-order' }}
         shell: bash

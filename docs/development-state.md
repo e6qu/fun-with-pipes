@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** publish the grouped CPU-baseline work as one draft PR and dispatch
-`cpu-baselines` with `native_runner=all`. Audit all four independent sessions,
+**Next:** dispatch and audit all four `cpu-baselines` sessions for
+[draft PR #223](https://github.com/e6qu/fun-with-pipes/pull/223).
 freeze per-workload limits from their unchanged noise controls, then run the
 full final-head matrix. No CPU optimization or new timing result is claimed yet.
 
@@ -16,8 +16,11 @@ F1–F3 record and removal of obsolete pending/queue instructions.
 Current tasks are B1/P1 and the corresponding B2 evidence checks for `loop` and
 `text-length`. Build the existing checked C/Rust/fwp peers independently from
 source. Two jobs per architecture use the same inputs, CPU model and compiler
-settings. Each records two warmups and 32 rotating samples per variant, including
-a second execution of the identical fwp image. Preserve process startup/output/
+settings. Each records two warmup batches and 32 rotating batches per variant, including
+a second execution of the identical fwp image. A loop batch has one process;
+a text-length batch has 32 fresh processes. Every output and summed duration
+is checked. Short prior text timings justify batching without changing inputs
+or acceptance limits. Preserve process startup/output/
 cleanup inside timing and evidence writes outside it.
 
 Median identical-code ratio must be <=1.03 and its nearest-rank 95th-percentile
@@ -30,7 +33,10 @@ B1/B2 for other ownership, derivative and numerical workloads remains open.
 The Python controls reject missing/reordered/wrong samples, changed source or
 compiler, duplicate sessions, false statistics, noisy controls, and missing
 memory/stack evidence. The suite reuses the actual benchmark binary and memory
-audits. All original seven-peer measurements remain available; extra repeated
+audits. `verify` rejects edits to a frozen table by recomputing it from the four
+original records. Initial run `40764926704` was cancelled while all four jobs
+were queued, before applying the short-sample repair; no completed evidence was
+discarded. All original seven-peer measurements remain available; extra repeated
 timing targets only the two named CPU gaps.
 
 ## Verified previous delivery
@@ -73,7 +79,7 @@ or new source evidence appeared. Do not resume disassembly-led allocator experim
 
 ## Local checks and recovery
 
-Guarded independent recursion and log audits pass. Five focused baseline tests, workflow lint and documentation audit pass.
+Guarded independent recursion and log audits pass. Six focused baseline test groups, workflow lint and documentation audit pass.
 Local commands use `python3 scripts/local-guard.py` with the respective Python
 script or Actionlint; no limits were changed. No full local build, suite or benchmark runs. Keep the
 64 GiB free / 2 GiB target / 1 GiB RSS / 180-second guard limits; last free disk

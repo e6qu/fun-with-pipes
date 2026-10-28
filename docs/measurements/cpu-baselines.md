@@ -24,12 +24,18 @@ link-time optimization. Execution explicitly allows all CPUs assigned to the
 runner; it does not pin a core or fix CPU frequency. Compiler versions and flags are copied from the build
 record, not guessed from the host. No previous fwp executable is needed to build.
 
-Each program gets two warmups per variant, then 32 samples per variant. Order
-rotates through C, Rust, fwp and a second execution of the **same fwp executable**.
+Each program gets two warmup batches per variant, then 32 measured batches.
+A loop batch contains one process; a character-counting batch contains 32 fresh
+processes, each with the original two-million-index input and output check.
+Order rotates through C, Rust, fwp and the **same fwp executable** again.
 That last variant is the noise control: identical code should take similar time.
-The timer encloses process creation, runtime startup, all work, output and cleanup.
-Compilation, JSON writes and memory profiling are outside the timer. Every sample
-retains its status, output, error output, order, duration and binary hash.
+Each process timer encloses creation, runtime startup, all work, output and
+cleanup. A batch observation sums those process durations. The shorter workload
+uses 32 processes because the previous complete-program log has roughly 7 ms
+runs with substantial variation; batching reduces that noise without excluding
+startup or relaxing a limit. Compilation, JSON writes and memory profiling are
+outside the timers. Every process retains its status, output, error output and
+duration; each batch also records order, binary hash and its checked sum.
 
 Two stability checks are fixed before the run:
 
@@ -70,7 +76,9 @@ text sizes, binary hashes and source hashes remain linked to their original audi
 The reader rejects missing samples, changed order/output/status, false statistics,
 changed binaries, duplicate sessions, different inputs/toolchains, missing memory
 or stack records, and hidden inconclusive controls. Synthetic corruption tests
-run in the documentation gate. Full platform tests remain separate acceptance
+run in the documentation gate. The `verify` command recomputes a frozen table
+from its four original records and rejects changed limits; it never rewrites the
+table. Full platform tests remain separate acceptance
 requirements; a baseline record is not a correctness test of all fwp programs.
 
 ## Status
