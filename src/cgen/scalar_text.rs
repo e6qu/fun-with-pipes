@@ -51,7 +51,7 @@ fn target(
         if operation == Operation::LengthSum {
             if let Some(id) = funcs.iter().position(|function| {
                 if function.arity != 2
-                    || !matches!(&function.body, Body::Prim(name) if name == "wrapping.add")
+                    || !matches!(&function.body, Body::Prim(name) if name == "prim.add")
                 {
                     return false;
                 }
@@ -75,8 +75,8 @@ fn target(
                 integer,
             ),
             Operation::LengthSum => (
-                "wrapping.add",
-                "wrapping.add",
+                "prim.add",
+                "prim.add",
                 vec![integer.clone(), integer.clone()],
                 integer,
             ),
@@ -114,10 +114,8 @@ fn length(
             ),
             Some("concat") => {
                 // Keep the original argument order, including effects/traps in
-                // integer-producing expressions. length_bound proved every
-                // partial sum is nonnegative and <= I64::MAX. The existing
-                // wrapping operation therefore gives the same exact sum without
-                // an impossible overflow check. User arithmetic stays checked.
+                // integer-producing expressions. The added arithmetic is pure
+                // and bounded, and still uses the ordinary checked add.
                 let parts = args
                     .into_iter()
                     .map(|arg| length(arg, funcs, made, targets))

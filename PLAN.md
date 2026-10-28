@@ -152,10 +152,14 @@ explicit C/Rust peers. Tokenization and construction remain measurable costs;
 keep owned-token versus borrowed-token differences explicit when selecting a fix.
 **Done:** repeated comparable baselines distinguish a persistent gap from noise.
 
-**P2 — Repair one measured cost at a time.** The active
-[proved-bounds experiment](docs/measurements/proved-scalar-bounds.md) isolates
-range-index and character-count additions, with user arithmetic still checked.
-Its compiler changes are not yet verified or accepted. For the persistent gap, separate
+**P2 — Repair one measured cost at a time.** The
+[proved-bounds experiment](docs/measurements/proved-scalar-bounds.md) rejected both
+range-index and character-sum changes: neither meets the fixed improvement rule.
+Keep its boundary tests and results; do not repeat those candidates as a speedup.
+Next, measure runtime setup, calculation, output and cleanup separately for the
+existing loop/text inputs and C/Rust peers. Keep instrumented diagnostic timings
+separate from the unchanged whole-process baseline. Use the largest demonstrated
+extra cost to choose the next compiler/runtime change. For the persistent gap, separate
 calculation, input/output, allocation and dispatch with explicit paired controls.
 Inspect generated C and machine code for the selected program after checking
 source correctness. Change only the proved redundant operation or representation;

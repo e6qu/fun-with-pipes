@@ -177,6 +177,6 @@ why the accepted comparison uses longer batches with unchanged acceptance limits
 comparison and frozen-budget rules. [Longer recursion measurements](mutual-recursion-2026-10-28-long.json)
 complete the accepted scalar-pair decision without discarding the noisy session.
 
-[Proved scalar bounds](proved-scalar-bounds.md) declares the next controlled
-range-index/character-count comparison. Its runner is implemented; no candidate
-measurements or optimization acceptance have been recorded yet.
+[Proved scalar bounds](proved-scalar-bounds.md) rejects both range-index and
+character-sum candidates under the unchanged CPU limits. Boundary tests, all
+observations and report-integrity checks remain; no compiler speedup is accepted.

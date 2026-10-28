@@ -129,5 +129,27 @@ class ScalarBounds(unittest.TestCase):
             BOUNDS.check_report(report, TABLE)
 
 
+class RetainedExperiment(unittest.TestCase):
+    def test_original_records_and_corrupted_artifacts(self):
+        directory = BOUNDS.ROOT / 'docs/measurements'
+        table_path = directory / 'cpu-budgets-2026-10-28.json'
+        reports = [json.loads((directory / f'scalar-bounds-2026-10-29-{arch}.json').read_text()) for arch in ('arm', 'amd')]
+        rejected = json.loads((directory / 'scalar-bounds-2026-10-29-unqualified.json').read_text())
+        artifacts = json.loads((directory / 'scalar-bounds-artifacts-2026-10-29.json').read_text())
+        BOUNDS.verify(reports, rejected, TABLE, BOUNDS.digest(table_path), artifacts)
+        changed = copy.deepcopy(artifacts)
+        changed['aarch64']['variants']['index']['memory'] += ' '
+        with self.assertRaisesRegex(AssertionError, 'archived artifact differs'):
+            BOUNDS.verify(reports, rejected, TABLE, BOUNDS.digest(table_path), changed)
+        changed_reports = copy.deepcopy(reports)
+        changed_reports[0]['variants']['index']['sources']['src/fuse.rs'] = 'b' * 64
+        with self.assertRaisesRegex(AssertionError, 'wrong compiler source'):
+            BOUNDS.verify(changed_reports, rejected, TABLE, BOUNDS.digest(table_path), artifacts)
+        executed = copy.deepcopy(rejected)
+        executed['variants']['both'] = {}
+        with self.assertRaisesRegex(AssertionError, 'unqualified host executed'):
+            BOUNDS.verify(reports, executed, TABLE, BOUNDS.digest(table_path), artifacts)
+
+
 if __name__ == '__main__':
     unittest.main()

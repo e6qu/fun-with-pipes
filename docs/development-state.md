@@ -1,54 +1,57 @@
-# Proved scalar bounds: next delivery
+# Scalar arithmetic controls and rejected optimization
 
-PR #223 is merged and verified. Active work is branch `proved-scalar-bounds` in
-`/private/tmp/fwp-scalar-bounds`, based on squash merge
-`330a08939ea68a7967aecdc60a2c77ac9b55a1bb`. No follow-on PR is published yet.
+Active draft [PR #224](https://github.com/e6qu/fun-with-pipes/pull/224), branch
+`proved-scalar-bounds`, is in `/private/tmp/fwp-scalar-bounds`. The experiment
+used `08039d8698743116c31cc0b8929e705c3562f833`; the final batch removes both
+compiler candidates and retains tests/evidence. No compiler speedup is accepted.
 
-**Next:** validate and publish the grouped P2/P3 experiment, then dispatch its
-native runner checks. Select a compiler change only from the
-[declared experiment](measurements/proved-scalar-bounds.md), using #223's frozen
-limits. No compiler test or candidate timing has run yet.
+**Next:** monitor #224's final-head production and documentation gates, audit every
+completed target and diagnostic, fix failures together, and merge only after all
+nine production jobs plus documentation pass. The PR checks identify the run IDs.
 
-## Current implementation
+## Final scope and evidence
 
-- Range advances use existing wrapping addition only under `position < end`.
-  Character sums use it only after the existing nonnegative I64 bound proof.
-  Wrapping cannot occur under these proofs; user arithmetic remains checked.
-- Runtime endpoint controls cover all twelve integer types, equal/descending
-  ranges, raw/optimized interpretation and native O0–O3. Callback/fold overflow
-  and overflow before integer display must still trap.
-- The runner builds baseline, index-only, length-only and combined compilers from
-  Rust source, preserving patches and actual images. It requires a qualified
-  CPU/toolchain before timing and retains seven-peer, arithmetic, memory and
-  stack controls for every variant. Repeated comparisons use 56 rotating batches
-  and an identical-baseline control. No improvement is claimed.
-- Closed `map-order`/`checked-bounds` workflow options and four obsolete scripts
-  are removed. Their old readers required the retired `memory: arc` schema.
-  Historical protocols link to the original scripts; raw results remain intact.
+The [proved-bounds experiment](measurements/proved-scalar-bounds.md) tested range
+advances and bounded character sums, separately and together. Both candidates are
+removed: stable text timings miss the unchanged improvement limits on ARM64 and
+AMD64. AMD64 loop noise is inconclusive and remains visible. Compiler, runtime,
+library and benchmark sources now match #223's verified merge.
 
-Consolidated guarded checks pass: six evidence-control groups, Rustfmt for the
-three changed Rust files, Actionlint for both workflows, and documentation audit
-(172 link sets, 106 immutable pairs and eight roadmap steps). The first evidence
-control run exposed a fixture alias: corrupting its input also changed its copied
-reference. Independent copies fix the fixture and the rejection control passes. Full builds, suites and measurements run on GitHub.
-Keep the guard's 64 GiB free disk, 2 GiB target, 1 GiB RSS and 180-second limits.
+Keep the new runtime endpoint tests for all twelve integer types, empty/descending
+ranges, raw/optimized interpretation and native O0–O3. Callback/fold overflow and
+overflow before integer display must still trap. The experiment's four compilers
+passed all six integer-output groups, seven-peer checks and memory controls on
+both hosts. Actual code, source patches, profiles, raw samples and logs are audited.
+No compiler warning or failed test target remains in the qualified jobs.
 
-## Verified prerequisite
+Qualified jobs: ARM64 `123159395558` in `40786050786`; AMD64 `123161045925` in
+`40786537977`, both at the experiment head. The first run's AMD64 job rejected
+an unqualified Xeon 6973P-C before candidate execution; preserve its empty timing
+record. Documentation `40786054592` passes, including the original six comparison
+controls. Draft-skipped production is not acceptance of the final batch.
 
-#223 final `a4cceb8d5a219ab7d691127844bc3ddc23a24001` passes all nine production
-jobs `40771179934` and docs `40771144344`; all completed targets and compiler
-diagnostics are audited. No failed target or compiler warning remains.
-The squash merge has the identical tree `e3774208e2da356915f479688e5839d37d404b79`
-and a compliant one-line message, with no body or trailers.
-[History](roadmap-history.md#fixed-cpu-baselines-pr-223) owns the acceptance record.
+All observations and original peer/memory records are retained under
+`docs/measurements/scalar-bounds-*.json`. The active reader checks source identity,
+raw timing decisions and archive hashes. The closed build/measurement runner is
+linked at its original source, not maintained as a command for reverted code.
+The two older closed map-order/checked-bounds options and four stale readers are
+also removed; their historical data and original script links remain.
 
-The frozen baseline measurement source is `ec03d9cd81c001bf006a73e7dbfb044155884611`.
-Fetch it explicitly in a clean runner: it is retained through #223, not an ancestor
-of the squash merge. Six original sessions remain; host selection used first
-repeat in run/session order, never speed/noise. Selected CPUs are Neoverse-N2 and
-EPYC 7763. An unqualified host needs a baseline before candidate timing.
-All observations and fixed decision limits are in
-[the CPU report](measurements/cpu-baselines.md). Broader B1/B2 remains open.
+## Checks
+
+Guarded independent audits pass for both full artifacts: source patches/hashes,
+168 timed peer images, 112 instrumented images, memory/stack records and raw
+observations. Complete command logs contain no compiler diagnostics or failed
+targets. The audit normalizes Git's seven-versus-eight-digit display abbreviations
+while still verifying full source hashes; that presentation difference was not
+a source mismatch. No downloaded native image was executed locally.
+
+Seven local evidence-control groups now pass, including corrupted archive and
+wrong compiler-source rejection. Rustfmt and final workflow lint pass. The doc check caught a missing
+roadmap-status table during the rewrite; restoring its eight rows fixes it. The
+172-link-set audit and exact CI record-verification command now pass. No
+full local build, suite or benchmark. Preserve 64 GiB free disk, 2 GiB target,
+1 GiB RSS and the guard's 180-second deadline.
 
 ## Roadmap status
 
@@ -57,25 +60,39 @@ All observations and fixed decision limits are in
 | 1 | Verified | Maintain collector-free ownership and cycle checks |
 | 2 | Verified | Maintain named A1–A6 guarantees |
 | 3 | Verified | Maintain scoped F1–F3 call and recursion guarantees |
-| 4 | In progress | Measure the two proved-bound changes; retain only a qualifying change |
+| 4 | In progress | Separate execution costs before the next measured repair |
 | 5 | Pending | Derivative storage, timing and precision |
 | 6 | Pending | CPU numerical kernels |
 | 7 | In progress | Extend fixed baselines and integrity controls beyond these CPU cases |
 | 8 | Pending | Larger-program correctness, cleanup and scale |
 
-The historical Intel [compiler abort](measurements/compiler-abort.md) remains
-unexplained. Diagnose any recurrence from source and input; do not resume
-unproductive disassembly-led allocator experiments.
+GC removal, named A1–A6 ownership work and scoped F1–F3 call/recursion work remain
+verified. #223 establishes the two fixed CPU baselines and their integrity checks.
+P2/P3 remains open: before another optimization, measure setup, calculation, output
+and cleanup for the existing loop/text inputs and peers; keep instrumented
+observations separate from unchanged whole-process timings. Broader baselines,
+derivatives, CPU kernels and larger applications remain in [PLAN.md](../PLAN.md).
+
+The historical Intel [compiler abort](measurements/compiler-abort.md) is still
+unexplained. Diagnose recurrence from source/input; do not resume unproductive
+disassembly-led allocator experiments.
 
 ## Recovery and delivery
 
-The primary checkout remains detached at #209 with a recovery pointer and
-untracked compiler-abort evidence; preserve both. #223's clean worktree is
-`/private/tmp/fwp-parser-workspace`. Its raw artifacts and audited logs remain
-under `/private/tmp/fwp-223-*`; earlier #221/#222 evidence is also retained.
-`/private/tmp/fwp-audit-production-log.py` checked every completed production log.
+#223 final `a4cceb8d` passes all nine production jobs `40771179934` and docs
+`40771144344`, with every complete log audited. Squash `330a08939ea68a7967aecdc60a2c77ac9b55a1bb`
+has the identical tree `e3774208e2da356915f479688e5839d37d404b79` and compliant
+one-line message. Duplicate same-tree postmerge production `40785172656` was
+cancelled; acceptance uses the audited premerge run. Postmerge docs passed.
+[History](roadmap-history.md#fixed-cpu-baselines-pr-223) owns that record.
 
-Keep one published PR at a time. Publication and squash merge are authorized
-after all nine final-head production jobs and documentation pass. Supply one
-line <=80 characters with empty body and no trailers/attribution; verify the
-merged tree/message and continue [PLAN.md](../PLAN.md).
+Raw current artifacts: `/private/tmp/fwp-224-arm-initial`,
+`/private/tmp/fwp-224-amd-qualified`, `/private/tmp/fwp-224-amd-unqualified-1`.
+Logs: `/private/tmp/fwp-224-*.log`; independent audit:
+`/private/tmp/fwp-audit-scalar-session.py`. Earlier #221/#222/#223 evidence remains.
+The primary checkout is detached at #209 with a recovery pointer and untracked
+compiler-abort evidence; preserve both. #223's worktree is clean and retained.
+
+Keep one published PR active. Publication and squash merge are authorized after
+all final-head gates pass: explicit one-line subject <=80 characters, empty body,
+no trailers/attribution. Verify tree/message and continue the roadmap.

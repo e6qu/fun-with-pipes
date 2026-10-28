@@ -1,17 +1,13 @@
 #!/usr/bin/env python3
-"""Runner experiment for proved range-index and character-count additions."""
+"""Verify the retained scalar-bound experiment against its unchanged CPU limits."""
 import argparse
 import hashlib
 import json
 import math
-import os
 from pathlib import Path
-import platform
 import re
-import shutil
 import statistics
 import subprocess
-import time
 
 ROOT = Path(__file__).resolve().parent.parent
 FILES = ('src/fuse.rs', 'src/cgen/scalar_text.rs')
@@ -23,14 +19,6 @@ BASELINE = 'ec03d9cd81c001bf006a73e7dbfb044155884611'
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def write_json(path, value):
-    path.write_text(json.dumps(value, indent=2, allow_nan=False) + '\n')
-
-
-def output(command):
-    return subprocess.check_output(list(map(str, command)), cwd=ROOT, text=True).strip()
 
 
 def qualify(table, host, compilers, inputs):
@@ -96,137 +84,75 @@ def check_report(report, table):
             and report['programs']['text-length']['result']['improvement'][kind]]
 
 
-def experiment(args):
-    assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
-    assert args.architecture == platform.machine()
-    assert output(['git', 'rev-parse', 'HEAD']) == args.source
-    assert not output(['git', 'status', '--porcelain', '--untracked-files=no']), 'start with committed source'
-    assert output(['git', 'diff', '--name-only', BASELINE, args.source, '--', 'src', 'runtime', 'lib', 'bench', 'Cargo.toml', 'Cargo.lock', 'build.rs']).splitlines() == sorted(FILES), 'unexpected compiler/runtime/library changes'
-    args.output = args.output.resolve()
-    args.output.mkdir(parents=True, exist_ok=False)
-    table = json.loads(args.table.read_text())
-    cpu = {r['field']: r['data'] for r in json.loads(output(['lscpu', '-J']))['lscpu']}
-    host = dict(model=cpu['Model name:'], vendor=cpu['Vendor ID:'], architecture=cpu['Architecture:'], allowedCpuCount=len(os.sched_getaffinity(0)))
-    compilers = [output([args.cc, '--version']), output([args.rustc, '-vV'])]
-    inputs = {name: {kind: digest(ROOT / f'bench/{name}/main.{kind}') for kind in ('c', 'rs', 'fwp')} for name in PROGRAMS}
-    report = dict(baseline=BASELINE, candidate=args.source, architecture=args.architecture,
-                  run=int(os.environ['GITHUB_RUN_ID']), host=host, compilers=compilers, inputs=inputs,
-                  tableSha256=digest(args.table), variants={}, programs={},
-                  settings=dict(samples=56, warmups=2, processes={'loop': 1, 'text-length': 32}, timeout=120, cpuPolicy='all'),
-                  scope='Fresh-process wall time including startup, calculation, output and cleanup. Compilation, memory profiles and evidence writes excluded. All samples retained. Variant patches identify the compiler source; nested benchmark reports use the harness checkout revision.')
-    write_json(args.output / 'report.json', report)
-    budgets = qualify(table, host, compilers, inputs)  # Before any candidate timing.
-    environment = {k: v for k, v in os.environ.items() if not k.startswith('FWP_') and k not in ('GH_TOKEN', 'GITHUB_TOKEN')}
-    environment.update(CC=args.cc, FWP_LTO='0', LC_ALL='C', RUST_TEST_THREADS='1')
-
-    def run(command, log):
-        print('Running:', ' '.join(map(str, command)), flush=True)
-        with log.open('wb') as stream:
-            result = subprocess.run(list(map(str, command)), cwd=ROOT, env=environment,
-                                    stdout=stream, stderr=subprocess.STDOUT, timeout=1800)
-        if result.returncode:
-            print(log.read_text(errors='replace')[-16000:], flush=True)
-        assert result.returncode == 0, (command, result.returncode, str(log))
-
-    # The existing peer audit covers all seven programs, including overflow and
-    # deliberately broken checks. Keep its original evidence, not a two-row proxy.
-    run(['python3', 'scripts/check-benchmark-peers.py', '--source', args.source, '--cc', args.cc,
-         '--rustc', args.rustc, '--arch', args.architecture, '--output', args.output / 'peers'], args.output / 'peer-check.log')
-    run(['python3', 'scripts/inspect-benchmark-peers.py', '--input', args.output / 'peers', '--source', args.source,
-         '--arch', args.architecture, '--objdump', args.objdump, '--output', args.output / 'peer-inspection.json'], args.output / 'peer-inspect.log')
-    originals = {name: (ROOT / name).read_bytes() for name in FILES}
-    baseline = {name: subprocess.check_output(['git', 'show', f'{BASELINE}:{name}'], cwd=ROOT) for name in FILES}
-    assert not (ROOT / 'target/bench-evidence').exists(), 'do not mix independent benchmark invocations'
-    binaries = {}
-    try:
-        for kind in VARIANTS:
-            directory = args.output / kind
-            directory.mkdir()
-            for index, name in enumerate(FILES):
-                changed = kind == 'both' or kind == ('index', 'length')[index]
-                (ROOT / name).write_bytes(originals[name] if changed else baseline[name])
-            patch = subprocess.check_output(['git', 'diff', BASELINE, '--', *FILES], cwd=ROOT)
-            (directory / 'compiler.patch').write_bytes(patch)
-            report['variants'][kind] = dict(patchSha256=digest(directory / 'compiler.patch'),
-                sources={name: digest(ROOT / name) for name in FILES})
-            write_json(args.output / 'report.json', report)
-            # Production test optimization and checks are explicit in the workflow.
-            run(['cargo', 'test', '--locked', '--offline', '--test', 'integer_output', '--', '--nocapture'], directory / 'correctness.log')
-            run(['cargo', 'test', '--locked', '--offline', '--release', '--test', 'bench', 'benchmarks', '--', '--ignored', '--exact', '--nocapture'], directory / 'benchmark.log')
-            shutil.copy2(ROOT / 'target/release/fwp', directory / 'compiler.exe')
-            report['variants'][kind]['compilerSha256'] = digest(directory / 'compiler.exe')
-            # Move, never overwrite, every actual timed executable and sample.
-            shutil.move(ROOT / 'target/bench-evidence', directory / 'bench-evidence')
-            for script, destination in [('inspect-benchmark-binaries.py', 'inspection.json'), ('test-benchmark-evidence.py', 'controls.json')]:
-                run(['python3', 'scripts/' + script, '--input', directory / 'bench-evidence', '--source', args.source,
-                     '--arch', args.architecture, '--objdump', args.objdump, '--output', directory / destination], directory / (destination + '.log'))
-            run(['python3', 'scripts/measure-benchmark-memory.py', '--input', directory / 'bench-evidence', '--inspection', directory / 'inspection.json',
-                 '--source', args.source, '--cc', args.cc, '--time', args.time, '--samples', '3', '--output', directory / 'memory'], directory / 'memory.log')
-            run(['python3', 'scripts/inspect-benchmark-memory.py', '--input', directory / 'memory', '--benchmarks', directory / 'bench-evidence',
-                 '--inspection', directory / 'inspection.json', '--source', args.source, '--arch', args.architecture, '--objdump', args.objdump,
-                 '--output', directory / 'memory-inspection.json'], directory / 'memory-inspect.log')
-            timed, = (directory / 'bench-evidence' / args.source).iterdir()
-            inspection = json.loads((directory / 'inspection.json').read_text())
-            memory = json.loads((directory / 'memory/report.json').read_text())
+def verify(reports, rejected, table, table_digest, artifacts):
+    assert len(reports) == 2 and {r['architecture'] for r in reports} == {'aarch64', 'x86_64'}
+    assert set(artifacts) == {'aarch64', 'x86_64'}
+    candidate = '08039d8698743116c31cc0b8929e705c3562f833'
+    results = []
+    for report in reports:
+        assert report['candidate'] == candidate and report['tableSha256'] == table_digest
+        assert set(report['variants']) == set(VARIANTS)
+        archive = artifacts[report['architecture']]
+        assert archive['run'] == report['run'] and set(archive['variants']) == set(VARIANTS)
+        assert report['qualifyingVariants'] == check_report(report, table)
+        results.append(set(report['qualifyingVariants']))
+        for kind, variant in report['variants'].items():
+            changed = [name for index, name in enumerate(FILES)
+                       if kind == 'both' or kind == ('index', 'length')[index]]
+            assert set(variant['sources']) == set(FILES)
+            for name in FILES:
+                revision = candidate if name in changed else BASELINE
+                actual = subprocess.check_output(['git', 'show', revision + ':' + name], cwd=ROOT)
+                assert hashlib.sha256(actual).hexdigest() == variant['sources'][name], 'wrong compiler source'
+            for key in ['patchSha256', 'compilerSha256', 'inspectionSha256', 'memorySha256', 'memoryInspectionSha256']:
+                assert re.fullmatch('[0-9a-f]{64}', variant[key]), 'missing artifact identity'
+            assert len(variant['costs']) == 7
+            assert all(r['textBytes'] > 0 and r['binaryBytes'] > r['textBytes'] for r in variant['costs'].values())
+            assert len(variant['instrumentedStack']) == 7 and all(variant['instrumentedStack'].values())
+            saved = archive['variants'][kind]
+            for key in ('inspection', 'memory', 'memoryInspection'):
+                assert hashlib.sha256(saved[key].encode()).hexdigest() == variant[key + 'Sha256'], 'archived artifact differs'
+            inspection = json.loads(saved['inspection'])
+            memory = json.loads(saved['memory'])
+            images = json.loads(saved['memoryInspection'])
+            assert all(r['source'] == candidate and r['architecture'] == report['architecture'] for r in (inspection, memory, images))
+            assert inspection['ownership'] == memory['ownership'] == 'counted'
+            assert hashlib.sha256(saved['benchmark'].encode()).hexdigest() == inspection['reportSha256']
+            assert memory['inspectionSha256'] == variant['inspectionSha256']
+            assert images['reportSha256'] == variant['memorySha256']
+            assert len(inspection['programs']) == len(memory['programs']) == 7 and len(images['images']) == 14
+            assert set(saved['codeSections']) == set(PROGRAMS)
             for name in PROGRAMS:
-                observed, = [p for p in memory['programs'] if p['name'] == name]
-                assert all(all(value == 0 for value in p.values()) for p in observed['managedMemory']['ordinary']['profiles']), 'expected zero managed allocation/count cost'
-                binaries[name, kind] = timed / f'{name}-fwp'
-                if kind == 'baseline':
-                    binaries[name, 'c'] = timed / f'{name}-c'
-                    binaries[name, 'rs'] = timed / f'{name}-rs'
-                    binaries[name, 'identical'] = binaries[name, kind]
-            report['variants'][kind].update(inspectionSha256=digest(directory / 'inspection.json'), memorySha256=digest(directory / 'memory/report.json'),
-                memoryInspectionSha256=digest(directory / 'memory-inspection.json'),
-                costs={p['name']: dict(textBytes=p['files']['fwp']['textSectionBytes'], binaryBytes=p['files']['fwp']['fileBytes']) for p in inspection['programs']},
-                instrumentedStack={p.name: p.read_text() for p in (directory / 'memory').glob('*-ordinary*.su')})
-            write_json(args.output / 'report.json', report)
-    finally:
-        for name, data in originals.items():
-            (ROOT / name).write_bytes(data)
-    for name in PROGRAMS:
-        row = dict(stdout={'loop': '300000003\n', 'text-length': '28518516\n'}[name], observations=[],
-                   binaries={kind: dict(sha256=digest(binaries[name, kind]), bytes=binaries[name, kind].stat().st_size) for kind in KINDS})
-        report['programs'][name] = row
-        for phase, rounds in [('warmup', 2), ('sample', 56)]:
-            for index in range(rounds):
-                for position in range(7):
-                    kind = KINDS[(index + position) % 7]
-                    observation = dict(kind=kind, phase=phase, round=index, binarySha256=row['binaries'][kind]['sha256'], processes=[], seconds=0)
-                    row['observations'].append(observation)
-                    for process_index in range(report['settings']['processes'][name]):
-                        start = time.perf_counter()
-                        try:
-                            result = subprocess.run([str(binaries[name, kind])], env=environment, capture_output=True, text=True, timeout=120)
-                        except subprocess.TimeoutExpired as error:
-                            write_json(args.output / 'report.json', report)
-                            write_json(args.output / 'timeout.json', dict(program=name, kind=kind, phase=phase, round=index, process=process_index,
-                                stdout=(error.stdout or b'').decode(errors='replace'), stderr=(error.stderr or b'').decode(errors='replace')))
-                            raise
-                        elapsed = time.perf_counter() - start
-                        observation['processes'].append(dict(seconds=elapsed, status=result.returncode, stdout=result.stdout, stderr=result.stderr))
-                        observation['seconds'] += elapsed
-                        if result.returncode or result.stderr or result.stdout != row['stdout']:
-                            write_json(args.output / 'report.json', report)
-                            raise AssertionError(f'{name}/{kind}: wrong process output')
-                    write_json(args.output / 'report.json', report)
-        row['result'] = check_case(name, row, report['settings'], budgets[name])
-        write_json(args.output / 'report.json', report)
-    report['qualifyingVariants'] = check_report(report, table)
-    write_json(args.output / 'report.json', report)
-    print(json.dumps({name: row['result'] for name, row in report['programs'].items()}, indent=2), flush=True)
-    print('Qualifying on this host only:', report['qualifyingVariants'], flush=True)
+                image, = [p for p in inspection['programs'] if p['name'] == name]
+                mem, = [p for p in memory['programs'] if p['name'] == name]
+                timed = report['programs'][name]['binaries'][kind]
+                assert timed == dict(sha256=image['files']['fwp']['binarySha256'], bytes=image['files']['fwp']['fileBytes'])
+                assert mem['processMemory']['fwp']['binarySha256'] == timed['sha256']
+                assert len(mem['processMemory']['fwp']['peakRssKiB']) == 3
+                normal = mem['managedMemory']['ordinary']['profiles']
+                leak = mem['managedMemory']['injected-leak']['profiles']
+                assert len(normal) == len(leak) == 3 and mem['leakDetected']
+                assert all(all(value == 0 for value in profile.values()) for profile in normal)
+                assert all(profile['requests'] == 1 and profile['requestedBytes'] == 16
+                           and profile['retains'] == 0 and profile['finalChargedBytes'] > 0 for profile in leak)
+                assert re.fullmatch('[0-9a-f]{64}', saved['codeSections'][name])
+    assert not set.intersection(*results), 'retained observations no longer support rejection'
+    assert rejected['candidate'] == candidate and rejected['baseline'] == BASELINE
+    assert rejected['tableSha256'] == table_digest
+    assert not rejected['programs'] and not rejected['variants'], 'unqualified host executed a candidate'
+    assert all(row['host'] != rejected['host'] for row in table['rows'])
+    print('Both complete sessions and the rejected host record preserve the fixed limits; no candidate qualifies')
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--source', required=True)
-    parser.add_argument('--architecture', choices=['x86_64', 'aarch64'], required=True)
-    for name in ('cc', 'rustc', 'objdump', 'time'):
-        parser.add_argument('--' + name, required=True)
-    for name in ('table', 'output'):
-        parser.add_argument('--' + name, type=Path, required=True)
-    experiment(parser.parse_args())
+    parser.add_argument('--reports', type=Path, nargs=2, required=True)
+    parser.add_argument('--unqualified', type=Path, required=True)
+    parser.add_argument('--table', type=Path, required=True)
+    parser.add_argument('--artifacts', type=Path, required=True)
+    args = parser.parse_args()
+    verify([json.loads(p.read_text()) for p in args.reports], json.loads(args.unqualified.read_text()),
+           json.loads(args.table.read_text()), digest(args.table), json.loads(args.artifacts.read_text()))
 
 
 if __name__ == '__main__':
