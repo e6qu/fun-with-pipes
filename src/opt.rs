@@ -11,6 +11,7 @@
 //! expressions are substituted.
 
 use crate::ir::*;
+use std::collections::HashSet;
 
 const INLINE_SIZE: usize = 40;
 const MAX_BODY: usize = 4000;
@@ -607,7 +608,22 @@ impl<'p> Opt<'p> {
             return Expr::Call(id, args);
         }
         self.budget -= body_size as isize;
-        let body = body.clone();
+        let mut body = body.clone();
+        let safe = args
+            .iter()
+            .enumerate()
+            .filter_map(|(i, arg)| {
+                crate::resource::unobservable_value(
+                    self.funcs,
+                    self.shapes,
+                    &self.locals,
+                    arg,
+                    Some(&callee.locals[i]),
+                )
+                .then_some(i as Local)
+            })
+            .collect::<HashSet<_>>();
+        crate::resource::remove_anchors(&mut body, &safe);
         let arity = callee.arity;
         let types = &callee.locals;
         // map callee locals to caller expressions/locals
@@ -615,7 +631,7 @@ impl<'p> Opt<'p> {
         let mut subst: Vec<Option<Expr>> = vec![None; types.len()];
         for (i, a) in args.into_iter().enumerate() {
             let n = uses(&body, i as u32);
-            let anchored = matches!(&body, Expr::ResourceRegion { parameters, .. } if parameters.contains(&(i as Local)));
+            let anchored = crate::resource::anchored(&body, i as Local);
             // An aggregate carries its field/variant types through the callee
             // parameter. Preserve that existing typed local when substituting
             // the value would erase the context needed for child ownership.
@@ -843,7 +859,17 @@ pub fn optimize(prog: &mut Program) {
                 budget: 600,
                 resource_locals: Vec::new(),
             };
-            let new = o.expr(body.clone(), 0);
+            let mut body = body.clone();
+            let mut safe = HashSet::new();
+            crate::resource::unobservable_bindings(
+                &body,
+                &snapshot,
+                &prog.shapes,
+                &o.locals,
+                &mut safe,
+            );
+            crate::resource::remove_anchors(&mut body, &safe);
+            let new = o.expr(body, 0);
             let f = &mut prog.funcs[id];
             f.body = Body::Expr(new);
             f.locals = o.locals;
@@ -869,6 +895,9 @@ pub(crate) fn simplify(
     };
     let mut body = body;
     for _ in 0..ROUNDS {
+        let mut safe = HashSet::new();
+        crate::resource::unobservable_bindings(&body, funcs, shapes, &o.locals, &mut safe);
+        crate::resource::remove_anchors(&mut body, &safe);
         body = o.expr(body, 0);
     }
     (body, o.locals)

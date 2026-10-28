@@ -73,6 +73,44 @@ fn tail(e: &Expr, id: FuncId) -> Result<bool, &'static str> {
     }
 }
 
+// Inlining leaves unused type-table slots behind. They own no runtime value.
+// Inspect every remaining read and binding (including unused bound values),
+// while the caller separately checks all parameters, even unused parameters.
+fn plain_frame(e: &Expr, safe: &[bool]) -> bool {
+    fn pattern(p: &Pat, safe: &[bool]) -> bool {
+        match p {
+            Pat::Bind(l) => safe[*l as usize],
+            Pat::Construct(_, ps) | Pat::Record(ps) => ps.iter().all(|p| pattern(p, safe)),
+            Pat::Wild | Pat::Lit(_) => true,
+        }
+    }
+    let visit = |e| plain_frame(e, safe);
+    match e {
+        Expr::Local(l) => safe[*l as usize],
+        Expr::Let(l, a, b) => safe[*l as usize] && visit(a) && visit(b),
+        Expr::ResourceRegion {
+            parameters,
+            bindings,
+            body,
+        } => parameters.iter().chain(bindings).all(|l| safe[*l as usize]) && visit(body),
+        Expr::Dup(l, b) | Expr::Drop(l, b) | Expr::BorrowGlobal(l, _, b) => {
+            safe[*l as usize] && visit(b)
+        }
+        Expr::Trace(_, b) | Expr::Field(b, _) => visit(b),
+        Expr::Call(_, args) | Expr::Construct(_, args) | Expr::Record(args) => {
+            args.iter().all(visit)
+        }
+        Expr::Apply(f, args) => visit(f) && args.iter().all(visit),
+        Expr::SetFields(base, fields) => {
+            visit(base) && fields.iter().all(|(_, value)| visit(value))
+        }
+        Expr::Match(value, arms) => {
+            visit(value) && arms.iter().all(|(p, body)| pattern(p, safe) && visit(body))
+        }
+        Expr::Const(_) | Expr::Func(_) => true,
+    }
+}
+
 /// Both backends consume this proof. Keep the source-shaped IR so native
 /// representation analysis can still pass records and variants as direct fields.
 pub fn analyze(prog: &mut Program) {
@@ -89,11 +127,12 @@ pub fn analyze(prog: &mut Program) {
             if f.arity == 0 {
                 return Err("a cached value needs its initialization frame");
             }
-            if !f
+            let safe: Vec<bool> = f
                 .locals
                 .iter()
-                .all(|t| plain_data(&prog.shapes, t, &mut HashSet::new()))
-            {
+                .map(|t| plain_data(&prog.shapes, t, &mut HashSet::new()))
+                .collect();
+            if !safe[..f.arity as usize].iter().all(|safe| *safe) || !plain_frame(body, &safe) {
                 return Err("the frame may own a resource, task, channel or unknown capture");
             }
             Ok(())
@@ -144,6 +183,24 @@ mod tests {
                 // A strong value created by upgrade still prevents reuse,
                 // even when the recursive argument itself is only weak.
                 program.funcs[0].locals.push(strong.clone());
+                // A leftover type-table entry is not an allocated owner.
+                analyze(&mut program);
+                assert!(program.self_tail.contains(&0));
+                let input = program.funcs[0].locals[0].clone();
+                program.funcs.push(Func {
+                    name: "new-owner".into(),
+                    arity: 1,
+                    ty: MT::Fun(Box::new(input.clone()), Box::new(strong.clone())),
+                    locals: vec![input],
+                    body: Body::Prim("fixture-owner".into()),
+                });
+                let body = Expr::Let(
+                    1,
+                    Box::new(Expr::Call(1, vec![Expr::Local(0)])),
+                    Box::new(Expr::Call(0, vec![Expr::Local(0)])),
+                );
+                program.funcs[0].body = Body::Expr(body);
+                crate::ir::check_locals(&program).unwrap();
                 analyze(&mut program);
                 assert!(program.self_tail.is_empty());
             }

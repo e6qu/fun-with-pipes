@@ -1,65 +1,97 @@
 # Current work
 
-**Next:** implement F1–F3 together: a finite functional-call cost matrix,
-weak-handle self-tail reuse with cleanup controls, and a measured mutual-recursion
-prototype. Carry the pending analysis evidence and stale-comment fix into this
-next PR. Postmerge docs `40691814677`, the benchmark and both macOS ownership jobs
-pass. Both ownership logs have 125 successful targets and no compiler diagnostics;
-the benchmark log is also audited. Six jobs of `40691815018` remain running with
-no failed steps at the latest check. Roll failures into this batch; A6 acceptance is pending.
+**Next:** publish the batched F1–F3 repairs and run `functional-calls` on Linux
+ARM64/AMD64. Audit every result, resolve the measured mutual-recursion decision,
+then run the full final-head gates. No F1–F3 acceptance or speed claim yet.
 
-The active worktree remains `/private/tmp/fwp-parser-workspace`, now on branch
-`functional-calls-and-tail-loops`, based on merged #221
-`ef037415f401cdf9ed44c7deffe735edfa99e0cd`. The grouped delivery is
-[draft PR #222](https://github.com/e6qu/fun-with-pipes/pull/222).
-The user merged #221 before the final production matrix. The merge tree
-`531fcffc2796aed8fb8b06b00145dddf2e7309d9` exactly matches focused-tested head
-`50dd674aa7f764d9e2a0ef75dbc736ace3e4f9c1`. Its message is one 49-character line,
-without a body or trailers. Merge is not full acceptance.
+Worktree: `/private/tmp/fwp-parser-workspace`; branch:
+`functional-calls-and-tail-loops`; [draft PR #222](https://github.com/e6qu/fun-with-pipes/pull/222).
+Base is merged #221, `ef037415f401cdf9ed44c7deffe735edfa99e0cd`, whose tree
+`531fcffc2796aed8fb8b06b00145dddf2e7309d9` matches focused-tested `50dd674a`.
+The squash message is one 49-character line with no body/trailers.
 
-F1 reuses existing callback, closure, `each` and call-liveness tests, adding only
-missing executed dispatch/allocation observations and escaping/unknown controls.
-F2 admits metadata-only WeakChannel handles before traversing phantom payloads;
-strong owners, unknown captures, resource regions and debugger frames stay out.
-F3 compares a restricted tagged loop with mutual calls and an explicit source
-loop, at O0/O2, before accepting or rejecting the optimization. Preparation and
-existing-test pointers are in `/private/tmp/fwp-next-functional-notes.md`.
+## What this batch changes
 
-F2 implementation admits weak metadata in `tailrec::plain_data` and
-tests its shared borrowed-parameter caller contract. Deep weak swaps, aliases,
-callback payloads, argument failure and cancellation have fixtures. Native tail
-tests now sample executed loop-frame addresses at O0/O2 and include a deliberately
-bad-stack observer control. F3's scalar-pair prototype lives in
-`src/tailrec/pairs.rs`; it preserves separate entries and ordinary non-tail calls.
-Unit controls cover both entries, renamed pattern locals, deep parity, repeated
-pass execution and rejection of resources, debug frames and dynamic calls.
-First focused run `40696627458` at `8787b42d` failed compilation on both hosts:
-seven diagnostics all came from using the IR's u32 arity as a usize vector index
-in the new pair pass. Both full logs are saved in
-`/private/tmp/fwp-222-8787-failed.log`; no tests ran. The repair converts once at
-the indexing boundary and checks the combined frame's arity/local limits.
-F1 now has eight executable fixture pairs in `tests/fixtures/functional_costs.fwp`
-and an observer in the existing call-liveness target. It measures allocations,
-bytes, runtime application requests, boxes and effective retains inside actual
-exported calls at two input sizes and O0/O2. No timing claim follows from counts.
-F3 emits ordinary/grouped versions of identical typed IR and an explicit fwp loop.
-Its runner script freezes timing, allocation, code-size and stack budgets before
-measurement and retains every sample. A failed budget requires an explicit
-rejection or repair, not an acceptance claim. These additions await validation.
-The new `functional-calls` focused workflow uses production GCC on Linux ARM64
-and AMD64; full final-head gates run after the implementation batch is ready.
+- F1: eight pairs compare known function uses with exported/unknown boundaries.
+  Native O0/O2 observations count allocations, application requests, boxes and
+  effective retains; they do not measure speed. The probe uses saturated C
+  signatures or the owned partial-application constructor and includes State
+  scratch allocation and root cleanup. Actual C/binaries/results are retained.
+- F2: weak handles own metadata, so their phantom payload type does not prevent
+  tail-frame reuse. Swaps, aliases, callback payloads, argument failure and
+  cancellation have interpreter/native controls. Known partial applications
+  containing only plain data or weak handles can lose their cleanup anchor;
+  strong/unknown captures and cached or saturated closure factories cannot.
+  Tail analysis ignores removed variables' unused type-table slots, while checking
+  all parameters and every remaining binding/use. O0/O2 loops sample stack
+  addresses and reject a deliberately broken observation.
+- F3: a scalar mutual pair can select bodies inside one tagged worker. Original
+  entries and non-tail calls remain. The measurement compares identical typed IR
+  before/after lowering with an explicit fwp loop. Fixed timing/allocation/text/
+  stack limits must accept or reject the prototype; noisy controls are inconclusive.
+  [The measurement guide](functional-costs.md) owns the exact matrix and limits.
 
-The grouped second head `8b0fc929b92604898bd1078275f55c65fb435d67` has focused
-run `40699575855` and docs `40699544670` queued. Before they started, source review
-found short C calls in the F1 probe to curried entries. Native entries need full
-arity: the repaired probe uses the runtime's owned partial-application constructor
-for scalar/unit captures and asserts arities. The probe also calls the normal
-root-completion operation before its live-storage check, releasing State scratch
-while keeping its allocation inside the measured call. No language wrapper is added.
-The next push also adds tested measurement decisions (four guarded Python tests
-pass), retains successful compiler diagnostics, and preserves F1 artifacts through
-the existing ARC evidence setting on every production host. No measured result yet.
-After publishing, supersede the queued old head with one focused run of the batch.
+## Focused failures and repairs
+
+`8787b42d`: run `40696627458` failed compilation on both hosts (seven u32/usize
+arity diagnostics, one cause). `8b0fc929` fixes indexing and checks frame-size
+limits. Both hosts of `40699575855` then compiled and passed all-target Clippy;
+the run completed before cancellation was attempted. It exposed all of these:
+
+- Manual recursion IR called `sub` instead of primitive `prim.sub` (one unit and
+  the measurement emitter failed). The downstream missing C file was a consequence;
+  measurement now requires a successful emitter.
+- Two fixtures needed formatting. The repository formatter, built alone under
+  the guard, has formatted them and checked syntax equivalence and idempotence.
+- The weak cancellation fixture composed incompatible function types; it now
+  uses an explicitly typed curried task callback.
+- Weak swaps retained cleanup anchors for known scalar/weak-only closures. The
+  new value proof removes only these anchors before substitution, preserving
+  effect order and unknown/strong owners. Unit controls cover both admission
+  and rejection. This compiler change still needs execution on CI.
+- The F1 native probe called curried C entries with too few arguments. Published
+  repair `c56d644f` uses owned partial applications and checks entry arities.
+- The existing borrowed-callback negative sanitizer control returned success:
+  an unused NULL+0 result need not survive C optimization. A source observer now
+  checks the offset operation before it can disappear. Removing either guard
+  must exit 210 at production O1/O2 on every native platform. Original runtime
+  arithmetic also runs under Clang UBSan on Unix. Production guards are unchanged.
+
+At `8b0fc929`, 215 units passed, one failed, four were ignored. Closure ownership
+(3), State sequence ownership (4), and eight pre-existing call-liveness tests
+passed. Tail tests had one pass/two failures. Full failed logs are saved at
+`/private/tmp/fwp-222-8b0-failed.log` and normalized `.txt`; the earlier compile
+log is `/private/tmp/fwp-222-8787-failed.log`. Expected scheduler panic controls
+passed. Docs passed at all three published heads (`40696632338`, `40699544670`,
+`40703221563`). Focused `40703270836` at `c56d644f` is cancelled because the
+completed older run revealed the additional repairs above. Draft full-gate skips
+are not validation.
+
+## Postmerge A6 gates
+
+Production `40691815018`: benchmark, both Windows jobs, Linux ARM64, regular
+macOS ARM64 and both macOS ownership jobs pass. Linux AMD64 and regular Intel
+macOS are still running without reported failures. Docs `40691814677` passes.
+Completed logs are saved under `/private/tmp/fwp-221-ef037-*.log` and audited:
+Linux ARM64 has 257 passing summaries/969 tests, regular macOS ARM64 132/610,
+each Windows host 202/790. Each macOS ownership job has 125 targets and 127
+passing summaries/356 tests including controls. No compiler warnings/errors.
+A6 platform acceptance remains pending the last two jobs and their log audit.
+
+The benchmark's current-host loop ratio is 1.392× Rust and text-length 1.905× C.
+These are not paired cross-revision regressions. Its missing-cleanup leak is an
+expected negative control. Preserve the unexplained original Intel compiler
+abort evidence; a passing rerun does not establish its cause.
+
+## Local checks
+
+Guarded checks: Rustfmt, four measurement-decision Python controls, workflow
+Actionlint and roadmap audit passed before the current repairs. Current repairs:
+Rustfmt, Actionlint and the roadmap audit pass; the actual formatter modules built at Rust O1 (2.51 CPU seconds,
+4.98 seconds elapsed), then formatted all three fixtures with syntax-equivalence
+and idempotence checks. The first guarded invocation was denied process inspection
+by the sandbox; the same guard ran with permission, without raised limits.
+Full compiler builds, native tests and measurements remain on GitHub.
 
 [The parser contract](parser-workspace.md), [parser measurements](measurements/parser-workspace.md)
 and [analysis report](measurements/ownership-analysis.md) own the A6 evidence.

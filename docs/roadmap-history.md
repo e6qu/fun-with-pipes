@@ -20,7 +20,8 @@ matches focused-tested head `50dd674aa7f764d9e2a0ef75dbc736ace3e4f9c1`; its mess
 is one 49-character line with no body or trailers. Both G2 hosts `40685939711`
 and docs `40685831377` passed. Earlier parser native/WASI checks and four timing
 sessions are independently audited in the report. **Full platform acceptance
-is pending:** postmerge production `40691815018` and docs `40691814677` are active.
+is pending:** docs `40691814677` passes; postmerge production `40691815018`
+remains active. The [handoff](development-state.md) records the remaining gates.
 The next F1–F3 PR carries any further repairs and the final evidence updates.
 
 ## Temporary record owners and sort keys (PR #220)

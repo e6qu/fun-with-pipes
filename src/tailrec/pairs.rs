@@ -238,7 +238,7 @@ mod tests {
             arity: 2,
             locals: vec![integer.clone(), integer.clone()],
             ty: MT::Fun(Box::new(integer), Box::new(unary)),
-            body: Body::Prim("sub".into()),
+            body: Body::Prim("prim.sub".into()),
         });
         p
     }

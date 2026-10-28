@@ -372,8 +372,17 @@ Swapping two weak handles first prepares both next arguments and only then
 releases the old locals. This avoids dropping metadata that the next iteration
 still needs. Runtime and platform verification of this extension is pending.
 
+A known function with no supplied arguments owns no captures. A partial
+application of a known function owns exactly its supplied arguments; the compiler
+can remove its cleanup boundary when each argument contains only plain values
+or weak metadata. This proof does not apply to unknown function values, cached
+closures or a fully applied call returning a closure. The existing evaluation
+and trap-order checks still apply. No whole-program capture search is added.
+
 Closures with unknown captures and resource/task/strong-channel owners still
-prevent frame reuse. Resource regions and debugger frames cannot be discarded. Function
+prevent frame reuse. Remaining resource regions and debugger frames cannot be
+discarded. Tail analysis checks all parameters and every remaining local binding
+or use; an unused type-table slot left by inlining owns no value. Function
 parameters are prepared in their original order before becoming next-iteration
 state, including swaps and multiple curried arguments. This adds no source
 syntax or intermediate `Step` values. Native record/variant arguments keep their

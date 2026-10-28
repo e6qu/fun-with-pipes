@@ -205,7 +205,7 @@ fn tail_loop_remains_cancellable() {
     let sources = [
         ("rec spin : () -> ()\nspin = const () | spin\nmain = task.within 10ms spin | echo\n", "None\n"),
         ("rec spin : I64 -> I64\nspin = match\n    0 -> 1 | spin | add 1\n    _ -> spin\nmain = task.within 10ms (const 1 | spin) | echo\n", "None\n"),
-        ("rec weak-spin : WeakChannel[I64] -> WeakChannel[I64]\nweak-spin = id | weak-spin\nexpired : () -> WeakChannel[I64] ! {Async}\nexpired = const 1 | channel.make | channel.downgrade\nmain = expired () | const | flip compose (tap (const \"entered\" | echo) | weak-spin) | task.within 100ms | option.is-none | echo\n", "entered\nTrue\n"),
+        ("rec weak-spin : WeakChannel[I64] -> WeakChannel[I64]\nweak-spin = id | weak-spin\nexpired : () -> WeakChannel[I64] ! {Async}\nexpired = const 1 | channel.make | channel.downgrade\nrun-weak : WeakChannel[I64] -> () -> WeakChannel[I64] ! {IO}\nrun-weak = curry (.0 | tap (const \"entered\" | echo) | weak-spin)\nmain = expired () | run-weak | task.within 100ms | option.is-none | echo\n", "entered\nTrue\n"),
         ("rec ping : I64 -> I64\nping = sub 1 | pong\nrec pong : I64 -> I64\npong = add 1 | ping\nmain = task.within 10ms (const 0 | ping) | echo\n", "None\n"),
     ];
     for (case, (source, expected)) in sources.into_iter().enumerate() {

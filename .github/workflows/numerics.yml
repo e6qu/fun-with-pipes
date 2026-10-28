@@ -60,7 +60,7 @@ jobs:
       - run: cargo fetch --locked
       - name: Compile all changed call and cleanup tests
         id: compiler
-        run: cargo test --locked --offline --no-run --lib --test tail_recursion --test compiler_call_liveness --test borrowed_callbacks --test closure_ownership --test state_sequence_ownership
+        run: cargo test --locked --offline --no-run --lib --test tail_recursion --test compiler_call_liveness --test borrowed_callbacks --test closure_ownership --test state_sequence_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test queued_functions
       - name: Rust and language formatting
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: |
@@ -74,14 +74,15 @@ jobs:
         run: cargo test --locked --offline --lib -- --nocapture
       - name: Native calls, weak swaps, failures and cancellation at O0 and O2
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
-        run: cargo test --locked --offline --no-fail-fast --test tail_recursion --test compiler_call_liveness --test borrowed_callbacks --test closure_ownership --test state_sequence_ownership -- --nocapture
+        run: cargo test --locked --offline --no-fail-fast --test tail_recursion --test compiler_call_liveness --test borrowed_callbacks --test closure_ownership --test state_sequence_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test queued_functions -- --nocapture
       - name: Emit matched ordinary, grouped and explicit-loop programs
+        id: mutual_programs
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         env:
           FWP_MUTUAL_EVIDENCE: functional-evidence/mutual
         run: cargo test --locked --offline --lib tailrec::pairs::tests::emit_mutual_recursion_comparison -- --ignored --exact --nocapture
       - name: Measure the mutual-recursion decision with fixed budgets
-        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.mutual_programs.outcome == 'success' }}
         run: >-
           python3 scripts/measure-mutual-recursion.py --input functional-evidence/mutual
           --cc gcc --objdump objdump --iterations 4096 --repeats 1024 --samples 8

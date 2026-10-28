@@ -67,8 +67,11 @@ whose payload type is a callback, fail during next-argument evaluation and cance
 an active loop. Raw interpretation of small inputs supplies the semantic reference.
 Native O0/O2 checks execute deep inputs, sample frame addresses at loop entries,
 reject a deliberately broken stack observation, and check storage after cleanup.
-Strong owners, unknown captures, resource regions and source-debugger frames keep
-their existing restrictions. See [the design](design.md#implemented-lowering-and-its-limits).
+Known partial applications containing only plain data or weak handles can lose
+their cleanup boundary, allowing direct calls to emerge. Unknown or strong
+captures, cached closures and fully applied closure factories keep their boundary.
+Unused type-table slots left by inlining do not represent live owners. Strong
+owners, remaining resource regions and source-debugger frames keep their restrictions. See [the design](design.md#implemented-lowering-and-its-limits).
 
 ## Mutual-recursion decision
 
