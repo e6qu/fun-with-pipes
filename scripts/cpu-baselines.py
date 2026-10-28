@@ -73,7 +73,7 @@ def check_case(name, row, settings):
 
 def freeze(reports):
     """Require two independent jobs per architecture before fixing budgets."""
-    assert len(reports) == 4, 'need two independent sessions on each architecture'
+    assert len(reports) >= 4, 'need two independent sessions on each architecture'
     source, settings = reports[0]['source'], reports[0]['settings']
     assert re.fullmatch('[0-9a-f]{40}', source)
     groups = {}
@@ -83,13 +83,12 @@ def freeze(reports):
         identity = (report['run'], report['architecture'], report['session'])
         assert identity not in identities, 'duplicate session'
         identities.add(identity)
-        assert report['architecture'] in ('x86_64', 'aarch64')
+        assert report['architecture'] in ('x86_64', 'aarch64') and report['session'] in (1, 2)
         assert set(report['programs']) == set(PROGRAMS)
         assert report['host']['model'] and report['toolchains']
         groups.setdefault(report['architecture'], []).append(report)
         for name, row in report['programs'].items():
             assert row['result'] == check_case(name, row, settings), 'stored statistics differ'
-            assert row['result']['decision'] == 'stable', f'{name}: inconclusive control'
             memory = row['memory']
             assert memory['leakDetected']
             profiles = memory['managedMemory']['ordinary']['profiles']
@@ -112,23 +111,39 @@ def freeze(reports):
             assert all(re.fullmatch('[0-9a-f]{64}', value) for value in row['inputs'].values())
             assert row['instrumentedStack'] and all(text.strip() for text in row['instrumentedStack'].values()), 'missing separately instrumented stack reports'
     assert set(groups) == {'x86_64', 'aarch64'}
-    rows = []
+    rows, selected = [], set()
     for architecture, sessions in sorted(groups.items()):
-        assert len(sessions) == 2 and {r['session'] for r in sessions} == {1, 2}
-        sessions.sort(key=lambda report: report['session'])
-        first, second = sessions
-        assert first['host'] == second['host'], 'different CPU models need their own repeated baseline'
-        assert first['toolchains'] == second['toolchains'], 'toolchains changed between sessions'
+        sessions.sort(key=lambda report: (report['run'], report['session']))
+        assert all(r['toolchains'] == sessions[0]['toolchains'] for r in sessions), 'toolchains changed between sessions'
+        assert all(r['programs'][name]['inputs'] == sessions[0]['programs'][name]['inputs']
+                   for r in sessions for name in PROGRAMS), 'benchmark work changed between sessions'
+        pair = None
+        for index, second in enumerate(sessions):
+            earlier = [first for first in sessions[:index] if first['host'] == second['host']]
+            if earlier:
+                pair = [earlier[0], second]
+                break
+        assert pair is not None, 'different CPU models need their own repeated baseline'
+        first, second = pair
+        selected.update((r['run'], architecture, r['session']) for r in pair)
         for name in PROGRAMS:
-            a, b = (r['programs'][name] for r in sessions)
+            a, b = (r['programs'][name] for r in pair)
+            assert all(row['result']['decision'] == 'stable' for row in [a, b]), f'{name}: inconclusive control'
             assert a['inputs'] == b['inputs'], 'benchmark work changed between sessions'
             spread = max(a['result']['pairRatio95'], b['result']['pairRatio95'])
             rows.append(dict(architecture=architecture, host=first['host'], toolchains=first['toolchains'], program=name,
                              maxCandidateRatio=1 + 2 * (spread - 1),
+                             maxRatioForImprovement=1 / (1 + 2 * (spread - 1)),
                              maxControlPairRatio=spread,
-                             baseline=[a['result'], b['result']], inputs=a['inputs']))
-    return dict(source=source, settings=settings, rows=rows,
-                rule='Future same-session candidate/baseline median ratio must be <= 1 + twice the larger baseline-session 95th-percentile identical-code deviation. Its control must stay inside the frozen control envelope. Never compare wall times from different jobs as a speedup.',
+                             baseline=[a['result'], b['result']], inputs=a['inputs'],
+                             sessions=[dict(run=r['run'], session=r['session']) for r in pair]))
+    additional = [dict(run=r['run'], architecture=r['architecture'], session=r['session'], host=r['host'],
+                       results={name: row['result'] for name, row in r['programs'].items()})
+                  for r in sorted(reports, key=lambda r: (r['run'], r['architecture'], r['session']))
+                  if (r['run'], r['architecture'], r['session']) not in selected]
+    return dict(source=source, settings=settings, rows=rows, additionalSessions=additional,
+                selection='Order jobs by workflow run and session label per architecture; use the first repeated CPU model, independent of its speed or noise result. Preserve and validate every additional session.',
+                rule='Future same-session candidate/baseline median ratio must be <= 1 + twice the larger baseline-session 95th-percentile identical-code deviation. A speedup claim additionally needs a ratio below the reciprocal limit. Its control must stay inside the frozen control envelope. These are empirical decision limits, not statistical confidence guarantees. Never compare wall times from different jobs as a speedup.',
                 scope='Only loop and text-length on these CPUs/toolchains. Other programs and architectures require their own baselines.')
 
 
@@ -235,7 +250,7 @@ def main():
         run.add_argument('--' + name, type=float, required=True)
     for command, argument in [('freeze', '--output'), ('verify', '--table')]:
         collect = commands.add_parser(command)
-        collect.add_argument('--reports', type=Path, nargs=4, required=True)
+        collect.add_argument('--reports', type=Path, nargs='+', required=True)
         collect.add_argument(argument, dest='table', type=Path, required=True)
     args = parser.parse_args()
     if args.command == 'measure':
@@ -248,7 +263,7 @@ def main():
             write_json(args.table, result)
         else:
             assert json.loads(args.table.read_text()) == result, 'frozen table differs from the original baseline evidence'
-            print('Frozen CPU limits match all four original baseline records')
+            print('Frozen CPU limits match every original baseline record')
 
 
 if __name__ == '__main__':

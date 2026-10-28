@@ -54,9 +54,40 @@ class Baselines(unittest.TestCase):
         self.assertEqual(len(result['rows']), 4)
         for row in result['rows']:
             self.assertAlmostEqual(row['maxCandidateRatio'], 1.02)
+            self.assertAlmostEqual(row['maxRatioForImprovement'], 1 / 1.02)
             self.assertAlmostEqual(row['maxControlPairRatio'], 1.01)
             self.assertEqual(row['baseline'][0]['fwpOverC'], 2.0)
             self.assertEqual(row['baseline'][0]['fwpOverRust'], 1.25)
+
+    def test_distinct_workflows_can_repeat_the_same_session_label(self):
+        self.reports[1]['run'] = 124
+        self.reports[1]['session'] = 1
+        self.assertEqual(len(CPU.freeze(self.reports)['rows']), 4)
+
+    def test_host_selection_is_deterministic_and_keeps_other_results(self):
+        # The first two AMD64 jobs landed on different CPU models. The next
+        # workflow repeats model B first, so model B wins regardless of timing.
+        self.reports[1]['host']['model'] = 'model B'
+        repeat = copy.deepcopy(self.reports[1])
+        repeat.update(run=124, session=1)
+        self.reports.append(repeat)
+        later = copy.deepcopy(self.reports[0])
+        later.update(run=124, session=2)
+        self.reports.append(later)
+        result = CPU.freeze(self.reports)
+        rows = [row for row in result['rows'] if row['architecture'] == 'x86_64']
+        self.assertTrue(all(row['host']['model'] == 'model B' for row in rows))
+        self.assertEqual(len(result['additionalSessions']), 2)
+        self.assertEqual(result, CPU.freeze(list(reversed(self.reports))))
+        # A noisy selected pair cannot be replaced by a later stable pair.
+        row = repeat['programs']['loop']
+        for sample in row['observations']:
+            if sample['kind'] == 'identical':
+                sample['seconds'] = 1.2
+                sample['processes'][0]['seconds'] = 1.2
+        row['result'] = CPU.check_case('loop', row, SETTINGS)
+        with self.assertRaisesRegex(AssertionError, 'inconclusive'):
+            CPU.freeze(self.reports)
 
     def test_missing_duplicate_or_different_sessions_fail(self):
         for change in ['missing', 'duplicate', 'source', 'settings', 'host', 'compiler', 'input']:

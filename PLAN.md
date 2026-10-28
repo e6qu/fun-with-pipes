@@ -44,11 +44,13 @@ collector is not the same as removing these costs. The
 3. Preserve **G2**'s [analysis budgets](docs/measurements/ownership-analysis.md)
    and measure the new region-selection work separately. Further precision needs
    a named example and a cost comparison, not more diagnostic scaffolding.
-4. **B1/P1 and the corresponding B2 controls are current.** Establish two
-   independent sessions per architecture for `loop` and `text-length`, retaining
-   the checked C/Rust peers and identical-code noise controls. Freeze the
-   [per-workload limits](docs/measurements/cpu-baselines.md) before a candidate
-   optimization. Broader B1/B2 coverage for A/D/N remains open.
+4. **B1/P1's two CPU baselines and their B2 integrity checks are implemented
+   in #223; final acceptance is pending.** Six audited sessions establish matching
+   Neoverse-N2 and EPYC 7763 pairs. [Frozen limits](docs/measurements/cpu-baselines.md)
+   retain all observations and reject silent budget resets. Next, P2/P3 must isolate
+   a redundant cost and compare a candidate against the same-job baseline, while
+   preserving checked arithmetic and recording code/stack tradeoffs. Broader
+   B1/B2 coverage for A/D/N remains open.
 
 The original intermittent Intel macOS compiler abort remains an open defect.
 Source lifetime repairs and passing reruns did not establish its cause. Preserve
@@ -136,11 +138,14 @@ resource frames, foreign calls and all recursion are not constant-stack promises
 
 ## 4. CPU performance
 
-**P1 — Refresh the checked-peer gaps using B1.** The recorded sessions show the
-integer loop about 24%/15% slower than Rust on AMD64/ARM64 and direct character
-counting about 58%/94% slower than C. These are historical host-specific results,
-not current universal overhead. Rerun the actual `bench/loop` and
-`bench/text-length` work with matched arithmetic, flags and outputs.
+**P1 — Repeated CPU gaps are measured; #223's final gates are pending.** The
+[frozen CPU baseline](docs/measurements/cpu-baselines.md) covers checked `loop`
+and `text-length` peers in six audited sessions. On the selected hosts, the loop
+is about 14.4–14.5% slower than Rust on ARM64 and 39–40% slower on AMD64.
+Character counting is about 92–95% slower than C on ARM64 and 106–107% slower
+on AMD64. These complete-program timings include startup and cleanup; both fwp
+programs report zero managed allocation requests and retains. The cause of the
+remaining gaps is not established. All alternative-host results stay visible.
 Also preserve the [parser comparison](docs/measurements/parser-workspace.md):
 31/511/8,191-node balanced trees and a 127-node left-nested tree against its
 explicit C/Rust peers. Tokenization and construction remain measurable costs;
