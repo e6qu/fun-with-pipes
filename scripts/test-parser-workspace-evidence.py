@@ -31,9 +31,9 @@ class ParserEvidence(unittest.TestCase):
             if label.startswith('baseline'):
                 value['releaseNs'] = None
             if label == 'candidate-profile':
-                value.update(regionBlocks=2 * count, regionRequestedBytes=816 * count,
-                             regionRoundedBytes=832 * count, regionUnusedBytes=152 * count,
-                             regionPayloadBytes=768 * count)
+                value.update(regionBlocks=2 * count, regionRequestedBytes=768 * count,
+                             regionRoundedBytes=768 * count, regionUnusedBytes=104 * count,
+                             regionPayloadBytes=720 * count)
             if label in ['c', 'rust']:
                 value.update(nodeSize=24, nodeCapacityBytes=768, tokenCapacityBytes=512, allocations=6)
             return value

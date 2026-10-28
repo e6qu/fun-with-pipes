@@ -12,8 +12,9 @@ typedef struct {
     fwp_region_block *blocks;
 } fwp_region;
 
-enum { FWP_REGION_FIRST_PAYLOAD = 256, FWP_REGION_MAX_PAYLOAD = 4096 };
+enum { FWP_REGION_FIRST_BYTES = 256, FWP_REGION_MAX_BYTES = 4096 };
 
+_Static_assert(FWP_REGION_FIRST_BYTES > sizeof(fwp_region_block), "region first block holds nodes");
 _Static_assert(_Alignof(fwp_obj) <= 8, "region node alignment");
 _Static_assert(sizeof(fwp_region_block) % 8 == 0, "region payload alignment");
 _Static_assert(sizeof(fwp_obj) % 8 == 0, "region node header alignment");
@@ -39,14 +40,17 @@ static V fwp_region_data(V context, uint32_t tag, uint32_t count, const V *field
     fwp_region *region = (fwp_region *)(uintptr_t)context;
     fwp_region_block *block = region->blocks;
     if (!block || bytes > block->capacity - block->used) {
-        /* Small trees should not retain a 4 KiB first block. Grow payloads
-         * 256/512/1024/2048/4096 bytes, then keep 4096. Oversized nodes get
-         * their checked exact size; existing addresses never move. The guard
-         * below also keeps doubling bounded after an oversized allocation. */
-        size_t capacity = FWP_REGION_FIRST_PAYLOAD;
-        if (block)
-            capacity = block->capacity < FWP_REGION_MAX_PAYLOAD / 2
-                ? block->capacity * 2 : FWP_REGION_MAX_PAYLOAD;
+        /* Whole block sizes, including the header, fit native size classes:
+         * 256/512/1024/2048/4096 bytes. A payload-only power of two would round
+         * up again after adding the header. Oversized nodes get their checked
+         * exact requested size; existing addresses never move. At most four
+         * bounded doublings choose the next class, even after an oversized node. */
+        const size_t header = sizeof(fwp_region_block);
+        size_t block_bytes = FWP_REGION_FIRST_BYTES;
+        while (block && block_bytes < FWP_REGION_MAX_BYTES &&
+               block->capacity >= block_bytes - header)
+            block_bytes *= 2;
+        size_t capacity = block_bytes - header;
         if (bytes > capacity) capacity = bytes;
         if (capacity > SIZE_MAX - sizeof(fwp_region_block))
             fwp_trap("region block too large");

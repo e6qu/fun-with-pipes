@@ -19,13 +19,13 @@ def expected_blocks(depth, left):
             yield from sizes(level - 1)
             yield from sizes(1 if left else level - 1)
             yield 24
-    blocks = payload = capacity = remaining = 0
+    blocks = payload = block_bytes = remaining = 0
     for size in sizes(depth):
         if size > remaining:
-            capacity = min(4096, capacity * 2) if capacity else 256
+            block_bytes = min(4096, block_bytes * 2) if block_bytes else 256
             blocks += 1
-            payload += capacity
-            remaining = capacity
+            payload += block_bytes - 24
+            remaining = block_bytes - 24
         remaining -= size
     return blocks, payload
 
@@ -62,7 +62,7 @@ def check_case(name, row, settings):
             assert blocks == expected_count * count
             assert value['regionPayloadBytes'] == payload * count
             assert value['regionRequestedBytes'] == value['regionPayloadBytes'] + blocks * 24
-            assert value['regionRoundedBytes'] >= value['regionRequestedBytes']
+            assert value['regionRoundedBytes'] == value['regionRequestedBytes']
             assert value['regionUnusedBytes'] == value['regionPayloadBytes'] - used
             assert value['heapAllocations'] >= blocks
         if label in ['c', 'rust']:

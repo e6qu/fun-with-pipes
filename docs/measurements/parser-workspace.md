@@ -78,10 +78,12 @@ leave zero live heap slots. Required observations include:
   live slot bytes above the retained input. Slot bytes include size-class rounding;
   they exclude reserved heap pages, allocator metadata, stacks and process RSS.
 - Candidate block count, requested bytes, actual rounded allocation bytes and
-  unused payload. Blocks request a 24-byte header plus payloads of 256, 512,
-  1,024, 2,048, then 4,096 bytes. Further blocks keep 4,096 bytes; an oversized
-  node gets its checked exact size. The auditor independently reconstructs
-  postorder construction and packing from the fixed tree, including unused bytes.
+  unused payload. Whole blocks request 256, 512, 1,024, 2,048, then 4,096 bytes,
+  including a 24-byte native header. Further blocks keep 4,096 bytes; oversized
+  nodes get their checked exact requested size. The auditor reconstructs postorder
+  construction and packing, and requires requested block bytes to equal actual
+  native size-class bytes for these inputs. Header-aware sizes avoid a second
+  round-up that wasted about 25% with power-of-two payloads.
 - C/Rust node/token capacities and allocation/reallocation calls. These report
   requested retained payload, not allocator rounding or a reallocation's transient
   peak. They cannot be equated with fwp's physical-slot observations.

@@ -1,8 +1,8 @@
 # Current work
 
-**Next:** run focused correctness and four measurement jobs for the smaller-block
-policy and compiler-scale repair. Audit every job/artifact before publishing
-measurements and starting the full final-head production/G2 gate.
+**Next:** validate whole-block size-class alignment in the focused native/WASI
+suite and four measurement jobs. Publish the final data, then start the full
+production/documentation/G2 gate. Do not repeat the older rejected adapters.
 
 [Draft PR #221](https://github.com/e6qu/fun-with-pipes/pull/221) uses
 `/private/tmp/fwp-parser-workspace`, branch `scoped-parser-workspace`, based on
@@ -61,6 +61,23 @@ fwp/C/Rust comparison. A6 is not verified support yet.
   nested owners, oversized nodes, each allocation failure and deliberate omitted
   release. The instrumented parser and peers pass small-value/cleanup checks.
   Nine evidence controls include rejection of empty-main compiler observations.
+- Both correctness jobs `40642682805` and all four measurement jobs `40642686229`
+  passed at `ec36e79fa4ffcf228c61ff440355a97fc6a86788`; docs `40642635159` passed.
+  All logs, 26 native/WASI probes per architecture, complete timing/storage rows,
+  frozen budgets, compiler-scale observations and actual ELF/stack records were
+  independently audited. Full final-head platform validation has not started.
+- That audit found another avoidable allocation cost: adding a header to a
+  power-of-two payload pushes the block into a larger size class. The pending
+  policy sizes whole blocks (256 through 4,096 bytes), including headers, and
+  checks that requested bytes equal rounded bytes for the fixed parser inputs.
+  It also handles subsequent growth after an oversized node. Clang O1/O2 tests
+  cover medium/large oversized nodes, every boundary/failure and omitted frees.
+  Nine evidence controls pass; runtime timing must be repeated for this change.
+- Retain the intermediate measurements in `/private/tmp/fwp-221-ec36-measurements`
+  and `/private/tmp/fwp-221-ec36-published.json`. They are valid at their source,
+  not observations of the pending whole-block rule. Runtime was about 18–28%
+  faster than prior fwp but still 5.9–10.5 times the C peer's time. Allocation
+  totals and compiler RSS increased in some rows; preserve those tradeoffs.
 - New measurement tools compare the previous fwp program, the candidate and
   explicit C/Rust indexed arenas. Four fixed tree shapes, 1/16/256 repetitions,
   independently frozen timing budgets, compiler scale, actual binary hashes,
