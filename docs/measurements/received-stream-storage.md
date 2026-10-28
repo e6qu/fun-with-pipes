@@ -1,11 +1,12 @@
 # Storage for received stream values
 
-The G5 probe owns its cache and drops it after the read sample. Its eleven-field
+The current probe owns its cache and drops it after the read sample. Its eleven-field
 report includes bytes after owner release, which must be zero; all queued
 messages must be freed. Omitting the cache drop must exit 40. Borrowed reads keep
 the root alive throughout, so this measures cache representation, not consuming
-iteration or network performance. Integrated validation is pending. The results
-below use their original source and collection-era schema.
+iteration or network performance. A refreshed standalone measurement run is
+still needed. The results below use their original source and collection-era
+schema; they are not measurements of the collector-free compiler.
 
 Historical measurements at the revisions named below. Counts and timings are
 observations of those programs, not current compiler budgets. Commands refer

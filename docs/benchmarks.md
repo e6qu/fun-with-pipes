@@ -32,7 +32,10 @@ explains how to record a fresh C/Rust baseline or compare a named prior fwp buil
 Saved JSON and tables retain their original revisions, modes and observations.
 Use the scripts at that revision to reproduce them. Current readers deliberately
 reject obsolete schemas; they do not convert old tracing evidence into evidence
-for GC removal. The G5 scripts and compiler still need integrated runner validation.
+for GC removal. The collector-free compiler passed
+[integrated validation in PR #217](roadmap-history.md#tracing-gc-removal-pr-217).
+That does not refresh historical timings: each report identifies any comparison
+that still needs a new measurement run.
 
 ## Planned ownership comparisons
 

@@ -180,7 +180,8 @@ fn prove(prog: &Program, root: FuncId, node: &MT) -> Option<Plan> {
     let types = Types::new(prog);
     let containing = types.containing(node);
     let unknown = types.containing(&MT::con("?"));
-    prove_cached(prog, root, node, &containing, &unknown, &mut usize::MAX)
+    let mut budget = usize::MAX;
+    prove_cached(prog, root, node, &containing, &unknown, &mut budget)
 }
 
 fn prove_cached(

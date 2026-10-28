@@ -2,7 +2,8 @@
 
 Implemented and verified in [PR #215](roadmap-history.md#weak-channels-and-retained-callbacks-pr-215).
 Weak links let a queue refer back to itself without owning itself. They do not
-remove tracing from the compiler or make every cyclic design safe.
+make every cyclic design safe. Tracing GC was removed separately in
+[PR #217](roadmap-history.md#tracing-gc-removal-pr-217).
 
 ## Operations and lifetime
 
@@ -96,7 +97,7 @@ active-call protocol; weak channels do not supply one implicitly.
 Weak channels use the ordinary counted ownership model. Their metadata stores
 an identity and expiration state without owning the target; no scan can turn
 that address into a strong edge. Allocator/static-pool and WASI checks passed
-with #215. G5 must pass them again on the collector-free implementation.
+with #215 and again on the collector-free implementation in #217.
 
 ## Required evidence and remaining work
 

@@ -1,8 +1,13 @@
 # Current work
 
-**Next:** monitor all nine final-head production jobs plus documentation and G2
-for PR #221. Monitor on a timer,
-audit every failed/completed target, and batch any needed repairs before pushing.
+**Next:** monitor the repaired PR #221 head through all nine production jobs,
+documentation and G2. Also finish auditing the old Linux AMD64 job in production
+run `40659395283` at `dbf1c0ba1614999e14fc67e6eadaf1689801e5d6`.
+The CI workflow does not cancel older runs on a push: preserve that job and
+inspect its complete log when it ends. All eight completed jobs were audited;
+do not infer the final job's result from them. Batch any further repairs.
+Documentation `40659374476` and G2 `40659399950` passed on the old head.
+Monitor on a timer and inspect failed steps even while their jobs continue.
 Squash-merge only after all gates pass; then begin F1–F3 together in the next PR.
 
 [PR #221](https://github.com/e6qu/fun-with-pipes/pull/221) uses
@@ -14,9 +19,9 @@ A6 is implemented and measured; complete platform acceptance is pending.
 
 ## Source and completed checks
 
-- Compiler/runtime source is `ca56023eb362259cf2099c9c9d477b20b3cf6793`.
-  Later changes add measurement diagnostics and docs; the source diff is empty.
-  Do not repeat passing focused compiler tests for report-only changes.
+- Production compiler/runtime source is `ca56023eb362259cf2099c9c9d477b20b3cf6793`.
+  Later changes add measurement diagnostics, docs and the test-only lint repair
+  below. Do not repeat performance measurements for these changes.
 - Native Linux ARM64/AMD64 run `40650396700` passed: 211 units, six allocator
   tests, six parser tests, two record tests, Clippy and actual WASI O1/O2 checks.
   All logs and 26 native/WASI probes per host were independently audited for
@@ -54,6 +59,43 @@ Allocations decrease while total allocated slot bytes rise 4–14%; peak live
 slots match previous fwp. Report these tradeoffs, individual stack frames and
 compiler RSS, not only removed counts. This is one workspace, not general regions.
 
+## Lint repair and gate audit
+
+The passing Linux G2 log exposed `const_item_mutation` in the test-only `prove`
+helper: it borrowed a mutable temporary from `usize::MAX`. Use an explicit local
+budget instead. This does not change compiler/runtime behavior or measurements.
+The focused parser lint step now checks all targets, including the unit-test
+harness that its prior selection omitted. Full CI now uploads failed native/WASI
+Clippy diagnostics before long tests, so failures can be diagnosed immediately.
+Four full CI jobs have failed Clippy. Both complete regular macOS logs and the
+Linux ARM64 log confirm the test helper is their only Clippy error. All other
+executed steps pass. Linux AMD64 is still testing; inspect its full diagnostics
+when the job completes. Audited target logs pass:
+
+- Each regular macOS shard: 131 targets, 608 tests.
+- Each macOS ownership shard: 125 targets, 353 tests.
+- Each Windows host: 150 retained targets, 408 tests, plus the direct unit,
+  library, SDK, protocol, golden and package steps in the complete job log.
+- Linux ARM64: 256 targets, 966 tests, including all six parser tests and all
+  21 WebAssembly ownership tests.
+
+All 20 saved parser probes on each macOS/Windows architecture pass independent
+output, failure-code, physical-storage and Mach-O/PE architecture checks.
+The retained ARM crash report is the deliberate
+`cleanup_panic_aborts_before_borrowed_tasks_escape` control, confirmed from its
+source stack and passing unit test. The known repair can start its final gates
+while the old Linux job finishes; no job is cancelled or accepted without review.
+Require every final-head gate again. Production code and measurements are
+unchanged by the test-only budget variable.
+The repair batch also corrects guides that still called GC-removal validation
+pending. Standalone comparisons without refreshed measurements remain explicitly
+unmeasured; historical sources, modes and numbers are unchanged.
+
+Guarded local checks passed: `cargo fmt --all -- --check`, actionlint for both
+changed workflows, and `python3 scripts/check-roadmap.py` (169 link sets,
+106 preparation pairs, eight roadmap steps). `git diff --check` passes;
+`AGENTS.md` remains 99 lines. Full builds, suites and measurements stayed on CI.
+
 ## Repairs and artifacts
 
 This PR also fixes guard tests that depended on host disk capacity and Linux
@@ -63,8 +105,10 @@ Measurement repairs recognize the previous unboxed worker/public bridge and
 require actual exported roots in compiler-scale output. Invalid earlier compiler
 rows are retained and labeled in the report.
 
-Current artifacts: `/private/tmp/fwp-221-ca560-checks` and
-`/private/tmp/fwp-221-35250-measurements`. Earlier artifacts and audits remain in
+Current artifacts: `/private/tmp/fwp-221-ca560-checks`,
+`/private/tmp/fwp-221-35250-measurements` and
+`/private/tmp/fwp-221-dbf1-{macos,windows}-{arm,amd}-parser` (native probe audits).
+Earlier artifacts and audits remain in
 `/private/tmp/fwp-221-{a55,ec36,ca560,a51}-measurements`; do not remove evidence
 needed to reproduce the published record. No detached merger runs.
 
@@ -89,7 +133,7 @@ steps 3–8 remain open. [History](roadmap-history.md) owns completed delivery I
 remains unexplained; preserve evidence and investigate source/input on recurrence.
 
 The primary checkout is detached at #209 with a recovery pointer and an untracked
-compiler-abort report; preserve both. Disk is about 76 GiB free. Keep the fixed
+compiler-abort report; preserve both. Disk is about 74 GiB free. Keep the fixed
 64 GiB/2 GiB/1 GiB/180-second limits and use `local-guard.py` for local checks.
 
 Publication and squash merge are authorized after all final-head gates pass:

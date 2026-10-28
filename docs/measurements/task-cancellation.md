@@ -116,11 +116,11 @@ section measurement. This experiment establishes no speed or process-memory gain
 
 ## Removing collector-only Windows ARC copies
 
-Windows fibers already preserve the CPU state needed to resume a task. Tracing
-builds make an additional register copy so the collector can find pointers in
-suspended tasks. ARC does not scan those roots. ARC now omits that extra
-buffer, stack marker, capture and clearing from ARC builds, retaining them for
-tracing. This is separate from the cancellation buffer measured above.
+Windows fibers already preserve the CPU state needed to resume a task. At the
+historical revision measured here, tracing builds made an additional register
+copy so the collector could find pointers in suspended tasks. ARC builds omitted
+that extra buffer, stack marker, capture and clearing. This is separate from the
+cancellation buffer measured above. Tracing has since been removed entirely.
 
 The new comparison reconstructs the preceding collector snapshot in the same
 ARC-generated C and runs the same task fixture at native O0/O2. It records the
@@ -128,7 +128,9 @@ allocation counters above, context/task sizes, switch count and snapshot count.
 An independent O0/O1/O2 fiber probe keeps pointer and floating-point values live
 in specified registers, checks stack contents and per-fiber rounding, and checks
 host-owned fiber teardown. Restoring the unwanted snapshot must exit with 211;
-normal execution must pass. Existing tracing-root and static-memory tests remain.
+normal execution must pass. The current suite retains static-memory checks;
+collector-root tests were removed in
+[PR #217](../roadmap-history.md#tracing-gc-removal-pr-217).
 Both Windows hosts passed every probe after its exact-byte stdout assertion was
 corrected to expect the native C runtime's CRLF line ending. All O0/O1/O2 probes
 pass normally and exit 211 when the unwanted snapshot is restored.

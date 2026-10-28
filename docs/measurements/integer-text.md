@@ -128,8 +128,9 @@ and their generated C/disassembly are archived across the two hosts.
 
 The current `scalar-text` suite runs one counted runtime at O0/O2, retaining
 all inputs and allocation-failure controls. Its six binaries per host replace
-the historical twelve that included tracing variants. Collector-deletion
-validation is still pending; see [the handoff](../development-state.md).
+the historical twelve that included tracing variants. Collector-free tests passed
+[PR #217's platform gates](../roadmap-history.md#tracing-gc-removal-pr-217);
+the timing samples above remain measurements of their original revision.
 
 Run that suite in `.github/workflows/numerics.yml`, download its
 artifacts, then use `scripts/summarize-scalar-text.py` with explicit `--run`,
