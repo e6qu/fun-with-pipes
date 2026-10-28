@@ -18,7 +18,7 @@ allocation from this program.
 | [C peer](../../tests/fixtures/parser_arena_peer.c) | Growable contiguous array, child indices | Growable array of borrowed input views; checked signed 64-bit operations |
 | [Rust peer](../../tests/fixtures/parser_arena_peer.rs) | Growable contiguous vector, child indices | Vector of borrowed slices; checked `i64` operations |
 
-All four parse the same prefix grammar (`+`, `*`, signed integers), build every
+The fixed inputs use ASCII whitespace. All four parse the same prefix grammar (`+`, `*`, signed integers), build every
 node, reject trailing input, and recursively walk the tree. Neither peer
 computes the answer directly from tokens. The C/Rust arrays start with capacity
 eight and double when full. Their 24-byte nodes store an operation tag, a value
@@ -78,8 +78,10 @@ leave zero live heap slots. Required observations include:
   live slot bytes above the retained input. Slot bytes include size-class rounding;
   they exclude reserved heap pages, allocator metadata, stacks and process RSS.
 - Candidate block count, requested bytes, actual rounded allocation bytes and
-  unused payload. Each block requests a 24-byte header plus 4,096 payload bytes.
-  The auditor independently reconstructs used node bytes from the fixed tree.
+  unused payload. Blocks request a 24-byte header plus payloads of 256, 512,
+  1,024, 2,048, then 4,096 bytes. Further blocks keep 4,096 bytes; an oversized
+  node gets its checked exact size. The auditor independently reconstructs
+  postorder construction and packing from the fixed tree, including unused bytes.
 - C/Rust node/token capacities and allocation/reallocation calls. These report
   requested retained payload, not allocator rounding or a reallocation's transient
   peak. They cannot be equated with fwp's physical-slot observations.
@@ -125,6 +127,14 @@ expression/local weight and actual added weight. Completed clones must add at
 most twice the original weight. The pass also has its finite proof budget; these
 are work/code-growth limits, not an elapsed-time guarantee. Programs without an eligible
 node type or owning entry no longer copy the whole program just to return it unchanged.
+
+The initial timing run `40596927743` passed its runtime budgets but failed the
+compiler-scale audit: its command selected only empty `main`, excluding exports.
+Those compiler observations are invalid. The repair explicitly selects exported
+entries and checks every expected function in generated C. The valid runtime
+rows also exposed the first policy's 4 KiB overhead on small trees; the current
+policy starts smaller as described above. Repeat measurements before publishing
+final performance or memory claims.
 
 Separately, generate source programs with 16/32/64 distinct exported parser roots.
 For both compilers record three complete C-emission samples, process peak RSS,

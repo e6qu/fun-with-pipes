@@ -2,6 +2,7 @@
 """Reject fabricated parser timing, storage and phase-boundary evidence."""
 
 import copy
+import hashlib
 import importlib.util
 from pathlib import Path
 import unittest
@@ -26,12 +27,13 @@ class ParserEvidence(unittest.TestCase):
                          walkAndReleaseNs=total * 3 // 10, releaseNs=total // 10,
                          peakHeapSlotBytes=8192, allocatedHeapSlotBytes=8192 * count,
                          finalLiveBytes=0, regionBlocks=0, regionRequestedBytes=0,
-                         regionRoundedBytes=0, regionUnusedBytes=0, heapAllocations=100 * count)
+                         regionRoundedBytes=0, regionUnusedBytes=0, regionPayloadBytes=0, heapAllocations=100 * count)
             if label.startswith('baseline'):
                 value['releaseNs'] = None
             if label == 'candidate-profile':
-                value.update(regionBlocks=count, regionRequestedBytes=4120 * count,
-                             regionRoundedBytes=4608 * count, regionUnusedBytes=3480 * count)
+                value.update(regionBlocks=2 * count, regionRequestedBytes=816 * count,
+                             regionRoundedBytes=832 * count, regionUnusedBytes=152 * count,
+                             regionPayloadBytes=768 * count)
             if label in ['c', 'rust']:
                 value.update(nodeSize=24, nodeCapacityBytes=768, tokenCapacityBytes=512, allocations=6)
             return value
@@ -81,7 +83,7 @@ class ParserEvidence(unittest.TestCase):
                 READER.check_case('small', row, self.settings)
 
     def test_block_rounding_and_unused_bytes(self):
-        for field in ['regionRequestedBytes', 'regionRoundedBytes', 'regionUnusedBytes']:
+        for field in ['regionPayloadBytes', 'regionRequestedBytes', 'regionRoundedBytes', 'regionUnusedBytes']:
             row = copy.deepcopy(self.row)
             row['profiles']['candidate-profile'][1][field] = 0
             with self.assertRaises(AssertionError):
@@ -92,6 +94,21 @@ class ParserEvidence(unittest.TestCase):
         row['profiles']['candidate-profile'][2]['peakHeapSlotBytes'] += 4096
         with self.assertRaises(AssertionError):
             READER.check_case('small', row, self.settings)
+
+    def test_compiler_scale_requires_real_exported_roots(self):
+        code = b'/* job0 : String -> I64 */\n/* job1 : String -> I64 */\nfwp_region region = {0};'
+        row = dict(emittedBytes=len(code), sha256=hashlib.sha256(code).hexdigest(),
+                   selectedEntries=1, samples=[dict(seconds=0.1, maxRssKiB=1000)] * 3)
+        READER.check_compilation('2', 'candidate', row, code)
+        for broken in [b'int main(void) {}', code.replace(b'job1', b'missing')]:
+            matching = dict(row, emittedBytes=len(broken), sha256=hashlib.sha256(broken).hexdigest())
+            with self.assertRaises(AssertionError):
+                READER.check_compilation('2', 'candidate', matching, broken)
+        no_regions = code.replace(b'fwp_region region = {0};', b'')
+        matching = dict(row, emittedBytes=len(no_regions), sha256=hashlib.sha256(no_regions).hexdigest(), selectedEntries=0)
+        READER.check_compilation('2', 'baseline', matching, no_regions)
+        with self.assertRaises(AssertionError):
+            READER.check_compilation('2', 'candidate', matching, no_regions)
 
     def test_input_shapes_and_independent_oracle(self):
         for depth, left, expected_nodes in [(5, False, 31), (9, False, 511), (13, False, 8191), (64, True, 127)]:

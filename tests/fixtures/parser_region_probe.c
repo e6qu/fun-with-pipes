@@ -63,14 +63,43 @@ static int region_case(size_t count, size_t fail_at, size_t expected_allocations
     return 0;
 }
 
+/* An oversized node gets exact storage, then the next small node resumes the
+ * capped policy. Fail each allocation and preserve the existing owner chain. */
+static int region_large_case(size_t failure) {
+    size_t baseline = fwp_heap.live;
+    fwp_handler handler = {0};
+    handler.prev = fwp_handlers; handler.state_depth = fwp_state_len;
+    handler.cleanup = fwp_cleanups; fwp_handlers = &handler;
+    region_allocations = 0; region_fail_at = failure;
+    if (!setjmp(handler.jb)) {
+        fwp_region region = {NULL}; fwp_cleanup cleanup;
+        fwp_cleanup_push(&cleanup, fwp_region_release, &region);
+        V fields[600];
+        for (size_t i = 0; i < 600; i++) fields[i] = i;
+        V large = fwp_region_data(PTR(&region), 7, 600, fields);
+        if (region.blocks->capacity != sizeof(fwp_obj) + sizeof fields) return 249;
+        V small = fwp_region_data(PTR(&region), 0, 1, (V[]){42});
+        if (region.blocks->capacity != 4096 || region_allocations != 2) return 249;
+        if (OBJ(small)->f[0] != 42 || large % 8 || fwp_rc_slot(large)) return 249;
+        for (size_t i = 0; i < 600; i++) if (OBJ(large)->f[i] != i) return 249;
+        fwp_cleanup_pop(&cleanup); fwp_region_release(&region);
+        if (failure) return 245;
+    } else if (!failure || region_allocations != failure) return 246;
+    fwp_handlers = handler.prev;
+    if (fwp_cleanups != handler.cleanup || fwp_heap.live != baseline) return 248;
+    return 0;
+}
+
 int main(void) {
     fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     size_t baseline = fwp_heap.live;
-    const size_t counts[] = {0, 1, 257, 8193};
+    /* 24-byte nodes: block boundaries are 10, 31, 73 and 158 nodes.
+     * Include the independently owned inner node in each nonempty count. */
+    const size_t counts[] = {0, 1, 10, 11, 31, 32, 73, 74, 158, 159, 257, 8193};
+    const size_t allocations[] = {0, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 53};
     for (size_t c = 0; c < sizeof counts / sizeof counts[0]; c++) {
         size_t count = counts[c];
-        size_t per_block = 4096 / (sizeof(fwp_obj) + 2 * sizeof(V));
-        size_t expected = count ? (count + per_block - 1) / per_block + 1 : 0;
+        size_t expected = allocations[c];
         for (size_t repeat = 0; repeat < 3; repeat++) {
             int result = region_case(count, 0, expected);
             if (result) return result;
@@ -79,6 +108,10 @@ int main(void) {
             int result = region_case(count, failure, expected);
             if (result) return result;
         }
+    }
+    for (size_t failure = 0; failure <= 2; failure++) {
+        int result = region_large_case(failure);
+        if (result) return result;
     }
     return fwp_heap.live == baseline ? 0 : 248;
 }

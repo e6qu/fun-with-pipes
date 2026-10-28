@@ -99,9 +99,13 @@ checks values/alignment/count-slot absence, and fails every block allocation. It
 missing-free control must fail the physical-storage check. These are allocator
 checks; the generated parser still needs its own ownership observations.
 
-The draft allocator uses 4,096-byte payload blocks plus an owner header. Report
-unused payload bytes explicitly, especially for small trees: removing individual
-counts can increase retained storage. Do not infer a memory win from block count.
+The allocator starts with a 256-byte payload and doubles through 512, 1,024 and
+2,048 bytes, then keeps 4,096-byte payloads. Oversized nodes receive their exact
+checked size. Each block also has an owner header. The initial fixed 4,096-byte
+policy wasted 3,480 payload bytes for the 31-node tree; the growing policy uses
+768 payload bytes for its 616 bytes of nodes. Measure actual rounded allocation
+and peak storage too: removing individual counts can increase retained storage.
+Do not infer a memory win from block count.
 
 The [measurement protocol](measurements/parser-workspace.md) defines the peers,
 phase boundaries, storage accounting, repeated sessions and rejection controls.

@@ -3,7 +3,7 @@
 /* DECLARATIONS */
 #include <inttypes.h>
 static uint64_t parser_token_ns, parser_construct_ns, parser_release_ns;
-static size_t parser_nodes, parser_blocks, parser_requested, parser_rounded, parser_unused, parser_heap_allocations;
+static size_t parser_nodes, parser_blocks, parser_payload, parser_requested, parser_rounded, parser_unused, parser_heap_allocations, parser_payload;
 static uint64_t parser_now(void) {
     struct timespec t;
     if (clock_gettime(CLOCK_MONOTONIC, &t)) exit(90);
@@ -47,9 +47,9 @@ int main(int argc, char **argv) {
     printf("{\"rounds\":%zu,\"result\":%" PRId64 ",\"nodes\":%zu,\"tokenizeNs\":%" PRIu64
         ",\"constructNs\":%" PRIu64 ",\"walkAndReleaseNs\":%" PRIu64 ",\"releaseNs\":@release_format@"
         ",\"totalNs\":%" PRIu64 ",\"peakHeapSlotBytes\":%zu,\"allocatedHeapSlotBytes\":%.0f"
-        ",\"heapAllocations\":%zu,\"regionBlocks\":%zu,\"regionRequestedBytes\":%zu,\"regionRoundedBytes\":%zu,\"regionUnusedBytes\":%zu,\"finalLiveBytes\":%zu}\n",
+        ",\"heapAllocations\":%zu,\"regionBlocks\":%zu,\"regionPayloadBytes\":%zu,\"regionRequestedBytes\":%zu,\"regionRoundedBytes\":%zu,\"regionUnusedBytes\":%zu,\"finalLiveBytes\":%zu}\n",
         rounds, expected, nodes, parser_token_ns, parser_construct_ns,
         total - parser_token_ns - parser_construct_ns, @release_argument@
-        total, peak, allocated, parser_heap_allocations - allocations_before, parser_blocks, parser_requested, parser_rounded, parser_unused, fwp_heap.live);
+        total, peak, allocated, parser_heap_allocations - allocations_before, parser_blocks, parser_payload, parser_requested, parser_rounded, parser_unused, fwp_heap.live);
     return 0;
 }

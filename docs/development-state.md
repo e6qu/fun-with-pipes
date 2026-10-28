@@ -1,9 +1,8 @@
 # Current work
 
-**Next:** rerun the four parser measurement jobs with the repaired entry adapter,
-audit every sample/artifact and fix any remaining failures. Compiler/runtime code
-is unchanged from the passing focused batch. Then publish the measurements and
-run the full final-head production/G2 gate.
+**Next:** run focused correctness and four measurement jobs for the smaller-block
+policy and compiler-scale repair. Audit every job/artifact before publishing
+measurements and starting the full final-head production/G2 gate.
 
 [Draft PR #221](https://github.com/e6qu/fun-with-pipes/pull/221) uses
 `/private/tmp/fwp-parser-workspace`, branch `scoped-parser-workspace`, based on
@@ -47,12 +46,27 @@ fwp/C/Rust comparison. A6 is not verified support yet.
   preserve five separate owners, and Linux WASI compiler/linker/libraries now
   share an explicitly checked LLVM 18 setup. Unversioned Clang 21 had caused the
   previous AMD64 link failure; all affected workflows use the shared repair.
+- Run `40596927743` at `a55f0ee7` completed runtime measurements on all four
+  hosts, then correctly failed audit because the scale command compiled empty
+  `main` instead of the exported parser roots. All logs and retained artifacts
+  were audited. Runtime samples, frozen budgets, values, cleanup and binaries
+  passed; every whole-compilation row is invalid and must be replaced. The
+  command now selects exports explicitly and both writer/auditor check all roots.
+- Those runtime samples exposed wasted space in the fixed 4 KiB first block:
+  the small tree used 616 node bytes but retained 4,096 payload bytes. The new
+  policy starts at 256 bytes, doubles to a 4,096-byte cap, and uses exact storage
+  for oversized nodes. Small-tree payload becomes 768 bytes. Actual heap peaks
+  and timing still need the new runner batch; there is no C/Rust parity claim.
+- The real allocator passes local Clang O1/O2 controls for every growth boundary,
+  nested owners, oversized nodes, each allocation failure and deliberate omitted
+  release. The instrumented parser and peers pass small-value/cleanup checks.
+  Nine evidence controls include rejection of empty-main compiler observations.
 - New measurement tools compare the previous fwp program, the candidate and
   explicit C/Rust indexed arenas. Four fixed tree shapes, 1/16/256 repetitions,
   independently frozen timing budgets, compiler scale, actual binary hashes,
   stack files and precise allocation ledgers run in two independent sessions
   on each Linux architecture. Results are pending, not a claimed speedup.
-- Eight evidence controls pass locally under the guard. Small Clang O2/Rust O2
+- Nine evidence controls pass locally under the guard. Small Clang O2/Rust O2
   harness checks passed values, balanced/left-nested shapes, cleanup, malformed
   input and overflow. The generated-C harness checks instrumentation; it does not replace GCC
   verification or the complete final-head platform matrix.

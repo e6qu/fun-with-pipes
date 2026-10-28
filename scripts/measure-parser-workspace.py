@@ -89,7 +89,8 @@ def instrument(code, region, profile):
                 ('        fwp_region_block *fresh =',
                  '        size_t before = fwp_heap.live;\n        fwp_region_block *fresh ='),
                 ('        fresh->capacity = capacity;', '        fresh->capacity = capacity;\n'
-                 '        parser_blocks++; parser_requested += sizeof(*fresh) + capacity;\n'
+                 '        parser_blocks++; parser_payload += capacity;\n'
+                 '        parser_requested += sizeof(*fresh) + capacity;\n'
                  '        parser_rounded += fwp_heap.live - before;'),
                 ('    return PTR(node);', '    parser_nodes++;\n    return PTR(node);'),
                 ('        fwp_mem_free(block);',
@@ -277,10 +278,12 @@ def main():
                 cfile = args.output / f'{label}-scale-{count}.c'
                 stats = args.output / f'{label}-scale-{count}-{repeat}.time'
                 run(['/usr/bin/time', '-f', '%e %M', '-o', stats, compiler, 'build', '--emit-c',
-                     '--memory', 'dynamic', scale, '-o', cfile])
+                     '--memory', 'dynamic', '--fn', 'job0', scale, '-o', cfile])
                 seconds, rss = stats.read_text().split()
                 samples.append(dict(seconds=float(seconds), maxRssKiB=int(rss)))
             code = cfile.read_text()
+            exported = set(map(int, re.findall(r'/\* job(\d+) :', code)))
+            assert exported == set(range(count)), (label, count, exported)
             observations[label] = dict(samples=samples, emittedBytes=cfile.stat().st_size,
                                        selectedEntries=code.count('fwp_region region = {0};'),
                                        sha256=digest(cfile))

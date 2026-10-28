@@ -5,7 +5,29 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import re
 import statistics
+
+
+def expected_blocks(depth, left):
+    # Independently reconstruct parser construction order: two children precede
+    # their parent. Leaves need 16 bytes; operators need 24, all aligned to 8.
+    def sizes(level):
+        if level == 1:
+            yield 16
+        else:
+            yield from sizes(level - 1)
+            yield from sizes(1 if left else level - 1)
+            yield 24
+    blocks = payload = capacity = remaining = 0
+    for size in sizes(depth):
+        if size > remaining:
+            capacity = min(4096, capacity * 2) if capacity else 256
+            blocks += 1
+            payload += capacity
+            remaining = capacity
+        remaining -= size
+    return blocks, payload
 
 
 def check_case(name, row, settings):
@@ -29,16 +51,19 @@ def check_case(name, row, settings):
         if label.startswith('baseline'):
             assert value['releaseNs'] is None
             assert all(value[key] == 0 for key in
-                       ['regionBlocks', 'regionRequestedBytes', 'regionRoundedBytes', 'regionUnusedBytes'])
+                       ['regionBlocks', 'regionPayloadBytes', 'regionRequestedBytes', 'regionRoundedBytes', 'regionUnusedBytes'])
         else:
             assert type(value['releaseNs']) is int and 0 <= value['releaseNs'] <= value['walkAndReleaseNs']
         if label == 'candidate-profile':
             blocks = value['regionBlocks']
             used = ((row['nodes'] + 1) // 2 * 16 + (row['nodes'] - 1) // 2 * 24) * count
             assert blocks > 0 and blocks % count == 0
-            assert value['regionRequestedBytes'] == blocks * (4096 + 24)
+            expected_count, payload = expected_blocks(row['depth'], name == 'left')
+            assert blocks == expected_count * count
+            assert value['regionPayloadBytes'] == payload * count
+            assert value['regionRequestedBytes'] == value['regionPayloadBytes'] + blocks * 24
             assert value['regionRoundedBytes'] >= value['regionRequestedBytes']
-            assert value['regionUnusedBytes'] == blocks * 4096 - used
+            assert value['regionUnusedBytes'] == value['regionPayloadBytes'] - used
             assert value['heapAllocations'] >= blocks
         if label in ['c', 'rust']:
             assert value['nodeSize'] == 24
@@ -75,6 +100,18 @@ def check_case(name, row, settings):
     assert row['ratios'] == ratios
     return ([f'{name}: candidate exceeds the frozen timing budget']
             if ratios['baseline'] > row['allowedCandidateRatio'] else [])
+
+
+def check_compilation(count, label, row, code):
+    assert set(map(int, re.findall(rb'/\* job(\d+) :', code))) == set(range(int(count)))
+    assert len(code) == row['emittedBytes'] and hashlib.sha256(code).hexdigest() == row['sha256']
+    assert len(row['samples']) == 3
+    assert all(v['seconds'] > 0 and v['maxRssKiB'] > 0 for v in row['samples'])
+    assert row['selectedEntries'] == code.count(b'fwp_region region = {0};')
+    if label == 'baseline':
+        assert row['selectedEntries'] == 0
+    else:
+        assert label == 'candidate' and 0 < row['selectedEntries'] <= int(count)
 
 
 def audit(directory, source):
@@ -129,11 +166,7 @@ def audit(directory, source):
         assert set(variants) == {'baseline', 'candidate'}
         for label, row in variants.items():
             code = (directory / f'{label}-scale-{count}.c').read_bytes()
-            assert len(code) == row['emittedBytes'] and hashlib.sha256(code).hexdigest() == row['sha256']
-            assert len(row['samples']) == 3
-            assert all(v['seconds'] > 0 and v['maxRssKiB'] > 0 for v in row['samples'])
-            assert row['selectedEntries'] == code.count(b'fwp_region region = {0};')
-            assert row['selectedEntries'] == 0 if label == 'baseline' else 0 < row['selectedEntries'] <= int(count)
+            check_compilation(count, label, row, code)
     assert report['failures'] == failures
     return report
 
