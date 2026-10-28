@@ -1,117 +1,81 @@
-# Follow-on preparation: not yet a PR
+# Proved scalar bounds: next delivery
 
-Active published work remains PR #223 at `a4cceb8d`, in
-`/private/tmp/fwp-parser-workspace`. Its documentation gate `40771144344` passes;
-production `40771179934` is running. Preserve that tested head. This worktree,
-`/private/tmp/fwp-scalar-bounds` on `proved-scalar-bounds`, prepares P2/P3 while
-those gates finish. Guarded Rustfmt, Actionlint and the documentation audit (172 link sets) pass
-here; no implementation tests or timings have run. The prepared changes are unpublished and must be preserved.
+PR #223 is merged and verified. Active work is branch `proved-scalar-bounds` in
+`/private/tmp/fwp-scalar-bounds`, based on squash merge
+`330a08939ea68a7967aecdc60a2c77ac9b55a1bb`. No follow-on PR is published yet.
 
-**Next:** implement [the declared experiment](measurements/proved-scalar-bounds.md)
-for the two proved bounds, then validate it on runners. Range-index advances reuse existing `wrapping.add` only
-under `position < end`; text-length sums reuse it only after the existing bound
-proof. User arithmetic remains checked. Tests add dynamic endpoints across all
-integer widths, interpreter/native O0–O3 comparisons and callback/fold overflow.
-No new API, primitive or runtime wrapper is added, and no speedup is claimed.
+**Next:** validate and publish the grouped P2/P3 experiment, then dispatch its
+native runner checks. Select a compiler change only from the
+[declared experiment](measurements/proved-scalar-bounds.md), using #223's frozen
+limits. No compiler test or candidate timing has run yet.
 
-Use the frozen CPU table from #223. Isolate each change and their combination,
-retain identical-code controls and all slower/inconclusive rows, and record actual
-code/stack/memory costs. Do not run full local builds or benchmarks. Merge #223
-only after its final gates pass, then carry these changes onto that squash merge
-before opening the next PR. Detailed review notes:
-`/private/tmp/fwp-next-cpu-candidate-notes.md`.
+## Current implementation
 
-Incidental cleanup: remove the closed `checked-bounds` and `map-order` workflow
-options and their four scripts, whose readers still required the retired
-`memory: arc` schema. Historical protocols now link to the exact original scripts
-and revisions; no historical result is deleted or relabelled. Current benchmark
-comparison and CPU-baseline commands remain. All surviving script links point to verified original revisions. Guarded
-Actionlint and the 172-file documentation audit pass for this cleanup.
+- Range advances use existing wrapping addition only under `position < end`.
+  Character sums use it only after the existing nonnegative I64 bound proof.
+  Wrapping cannot occur under these proofs; user arithmetic remains checked.
+- Runtime endpoint controls cover all twelve integer types, equal/descending
+  ranges, raw/optimized interpretation and native O0–O3. Callback/fold overflow
+  and overflow before integer display must still trap.
+- The runner builds baseline, index-only, length-only and combined compilers from
+  Rust source, preserving patches and actual images. It requires a qualified
+  CPU/toolchain before timing and retains seven-peer, arithmetic, memory and
+  stack controls for every variant. Repeated comparisons use 56 rotating batches
+  and an identical-baseline control. No improvement is claimed.
+- Closed `map-order`/`checked-bounds` workflow options and four obsolete scripts
+  are removed. Their old readers required the retired `memory: arc` schema.
+  Historical protocols link to the original scripts; raw results remain intact.
 
-The following record describes the published prerequisite, not completed tests
-of this preparation.
+Consolidated guarded checks pass: six evidence-control groups, Rustfmt for the
+three changed Rust files, Actionlint for both workflows, and documentation audit
+(172 link sets, 106 immutable pairs and eight roadmap steps). The first evidence
+control run exposed a fixture alias: corrupting its input also changed its copied
+reference. Independent copies fix the fixture and the rejection control passes. Full builds, suites and measurements run on GitHub.
+Keep the guard's 64 GiB free disk, 2 GiB target, 1 GiB RSS and 180-second limits.
 
-## Completed batch, acceptance pending
+## Verified prerequisite
 
-B1/P1's `loop` and `text-length` sessions and corresponding B2 integrity checks
-are implemented. [The report](measurements/cpu-baselines.md) owns exact inputs,
-timing scope, toolchains, all observations, costs and frozen decision limits.
-All four jobs of `40765920239` and both extra AMD64 jobs of `40768027818` pass.
-Every log and artifact is audited: each job checks 21 timed images, 14 instrumented
-images, 21 RSS distributions and eleven peer-control images. No compiler warnings
-or failed targets. Documentation `40765901608` passes at the measurement head;
-its draft-skipped production run is not final acceptance.
+#223 final `a4cceb8d5a219ab7d691127844bc3ddc23a24001` passes all nine production
+jobs `40771179934` and docs `40771144344`; all completed targets and compiler
+diagnostics are audited. No failed target or compiler warning remains.
+The squash merge has the identical tree `e3774208e2da356915f479688e5839d37d404b79`
+and a compliant one-line message, with no body or trailers.
+[History](roadmap-history.md#fixed-cpu-baselines-pr-223) owns the acceptance record.
 
-The first AMD64 pair used different CPU models, so freezing correctly failed.
-All six raw records are retained. The first repeated CPU model in run/session
-order selects Neoverse-N2 and EPYC 7763, without selecting for speed or noise.
-Xeon 8370C and EPYC 9V74 remain additional observations. A noisy selected pair
-cannot be replaced by a later stable pair. The frozen table retains hashes of
-all original records; CI recomputes it and rejects edited limits.
-
-Two warmup batches and 32 rotating batches include identical-fwp controls.
-Each loop batch has one process; character counting has 32 fresh processes with
-unchanged input and individual output checks. Limits derive from observed noise
-before any candidate measurement. EPYC character counting needs more than about
-9.5% less time for a speedup claim; smaller gains are inconclusive. Both fwp
-programs have zero managed requests/retains, but this excludes raw runtime storage
-and stack use. Whole-process RSS, timed code sizes and separately instrumented
-stack reports are retained. B1/B2 for A/D/N remains open.
-
-Run `40764926704` was cancelled while every job was queued, before the short-sample
-batching repair. No completed evidence was discarded. Preserve all seven original
-peer comparisons; additional repeated timing targets only the two named gaps.
-
-## Verified previous delivery
-
-F1–F3 are verified in #222. Final `b69f111e` and merge `17978b97` share tree
-`5a434a44f164e664b31c70a8d7b1db9e8dc8ab5d`; the squash message meets the one-line
-rule. All nine production jobs `40721714559`, docs `40721714558` and both G2 hosts
-`40721764744` pass. [History](roadmap-history.md#functional-calls-and-recursion-pr-222)
-owns counts and links. Postmerge runs also pass; acceptance uses audited final-head
-runs. G2 preserves exact lifetime facts, 40-byte origins and unchanged budgets.
-
-Long timing `40721041382` at `98a1d8eb` accepts all four original limits after
-increasing batches to 65,536 invocations. Only docs changed before the final head.
-ARM64 O2 remains about 1.9% slower than ordinary calls, despite beating the explicit
-loop. Earlier noisy results remain inconclusive. [The report](functional-costs.md)
-owns all sessions. State `each` still allocates per element.
-
-The historical Intel [compiler abort](measurements/compiler-abort.md) remains
-unexplained; no recurrence or new source evidence appeared. Diagnose a recurrence
-from source and input; do not resume disassembly-led allocator experiments.
+The frozen baseline measurement source is `ec03d9cd81c001bf006a73e7dbfb044155884611`.
+Fetch it explicitly in a clean runner: it is retained through #223, not an ancestor
+of the squash merge. Six original sessions remain; host selection used first
+repeat in run/session order, never speed/noise. Selected CPUs are Neoverse-N2 and
+EPYC 7763. An unqualified host needs a baseline before candidate timing.
+All observations and fixed decision limits are in
+[the CPU report](measurements/cpu-baselines.md). Broader B1/B2 remains open.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | Verified | Maintain collector-free ownership and cycle checks |
-| 2 | Verified | Maintain the named A1–A6 guarantees |
-| 3 | Verified | Maintain the scoped F1–F3 call and recursion guarantees |
-| 4 | In progress | Accept CPU baselines, then isolate and measure a proved repair |
+| 2 | Verified | Maintain named A1–A6 guarantees |
+| 3 | Verified | Maintain scoped F1–F3 call and recursion guarantees |
+| 4 | In progress | Measure the two proved-bound changes; retain only a qualifying change |
 | 5 | Pending | Derivative storage, timing and precision |
 | 6 | Pending | CPU numerical kernels |
-| 7 | In progress | Accept the CPU integrity controls; broader B1/B2 remains open |
+| 7 | In progress | Extend fixed baselines and integrity controls beyond these CPU cases |
 | 8 | Pending | Larger-program correctness, cleanup and scale |
 
-## Local checks and recovery
+The historical Intel [compiler abort](measurements/compiler-abort.md) remains
+unexplained. Diagnose any recurrence from source and input; do not resume
+unproductive disassembly-led allocator experiments.
 
-Guarded independent audits of all six CPU sessions pass, including mathematical
-output checks, per-process data, original sources, native binaries and memory
-records. Consolidated checks pass under `python3 scripts/local-guard.py`: eight Python
-control groups (`scripts/test-cpu-baselines.py`), frozen-table `verify`, Actionlint
-on both changed workflows, and `scripts/check-roadmap.py` (171 doc link sets,
-106 immutable pairs and eight roadmap steps). No full local build, suite or benchmark. Keep 64 GiB free,
-2 GiB target, 1 GiB RSS and 180-second guard limits unchanged.
+## Recovery and delivery
 
-Raw CPU artifacts: `/private/tmp/fwp-223-{arm,amd}-{1,2}` and
-`/private/tmp/fwp-223-amd-extra-{1,2}`. Logs: `/private/tmp/fwp-223-baselines.log`
-and `/private/tmp/fwp-223-extra.log`. Audit: `/private/tmp/fwp-audit-cpu-session.py`.
-Original reports and frozen limits live in `docs/measurements/cpu-*.json`.
-Previous delivery evidence remains under `/private/tmp/fwp-222-*` and
-`/private/tmp/fwp-221-*`; preserve it. Primary checkout is detached at #209 with
-a recovery pointer and untracked compiler-abort evidence; preserve both.
+The primary checkout remains detached at #209 with a recovery pointer and
+untracked compiler-abort evidence; preserve both. #223's clean worktree is
+`/private/tmp/fwp-parser-workspace`. Its raw artifacts and audited logs remain
+under `/private/tmp/fwp-223-*`; earlier #221/#222 evidence is also retained.
+`/private/tmp/fwp-audit-production-log.py` checked every completed production log.
 
-Publication and squash merge are authorized after all final-head gates pass:
-one line <=80 characters, empty body, no trailers/attribution. Verify merged tree
-and message, then continue [PLAN.md](../PLAN.md) in substantial groups.
+Keep one published PR at a time. Publication and squash merge are authorized
+after all nine final-head production jobs and documentation pass. Supply one
+line <=80 characters with empty body and no trailers/attribution; verify the
+merged tree/message and continue [PLAN.md](../PLAN.md).

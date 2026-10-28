@@ -6,6 +6,27 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Fixed CPU baselines (PR #223)
+
+[Six retained sessions](measurements/cpu-baselines.md) establish repeated
+Neoverse-N2 and EPYC 7763 baselines for the checked loop and character-counting
+programs, with equivalent C/Rust peers. The frozen limits reject incomplete
+records, mismatched hosts and silent budget resets. No compiler speedup is claimed.
+
+Final head `a4cceb8d5a219ab7d691127844bc3ddc23a24001` passes all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40771179934)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40771144344).
+Every completed test target and compiler diagnostic was audited: 977 passing tests
+per Linux host, 617 per regular macOS host, 357 per ownership macOS host and 797
+per Windows host. The benchmark job's two targets and all evidence controls pass.
+No failed target or compiler warning remains; Brew's already-installed notice is
+informational. Draft-skipped runs are not acceptance.
+
+Squash merge `330a08939ea68a7967aecdc60a2c77ac9b55a1bb` has the same tree,
+`e3774208e2da356915f479688e5839d37d404b79`, and a single-line message with no body
+or trailers. B1/P1 and the B2 integrity controls are complete for these two programs;
+P2/P3 and broader A/D/N baselines remain open.
+
 ## Functional calls and recursion (PR #222)
 
 [The call/recursion report](functional-costs.md) verifies eight known/boundary

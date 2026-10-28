@@ -44,8 +44,8 @@ collector is not the same as removing these costs. The
 3. Preserve **G2**'s [analysis budgets](docs/measurements/ownership-analysis.md)
    and measure the new region-selection work separately. Further precision needs
    a named example and a cost comparison, not more diagnostic scaffolding.
-4. **B1/P1's two CPU baselines and their B2 integrity checks are implemented
-   in #223; final acceptance is pending.** Six audited sessions establish matching
+4. **B1/P1's two CPU baselines and their B2 integrity checks are verified
+   in #223.** Six audited sessions establish matching
    Neoverse-N2 and EPYC 7763 pairs. [Frozen limits](docs/measurements/cpu-baselines.md)
    retain all observations and reject silent budget resets. Next, P2/P3 must isolate
    a redundant cost and compare a candidate against the same-job baseline, while
@@ -138,7 +138,7 @@ resource frames, foreign calls and all recursion are not constant-stack promises
 
 ## 4. CPU performance
 
-**P1 — Repeated CPU gaps are measured; #223's final gates are pending.** The
+**P1 — Repeated CPU gaps are verified in #223.** The
 [frozen CPU baseline](docs/measurements/cpu-baselines.md) covers checked `loop`
 and `text-length` peers in six audited sessions. On the selected hosts, the loop
 is about 14.4–14.5% slower than Rust on ARM64 and 39–40% slower on AMD64.
@@ -152,7 +152,10 @@ explicit C/Rust peers. Tokenization and construction remain measurable costs;
 keep owned-token versus borrowed-token differences explicit when selecting a fix.
 **Done:** repeated comparable baselines distinguish a persistent gap from noise.
 
-**P2 — Repair one measured cost at a time.** For the persistent gap, separate
+**P2 — Repair one measured cost at a time.** The active
+[proved-bounds experiment](docs/measurements/proved-scalar-bounds.md) isolates
+range-index and character-count additions, with user arithmetic still checked.
+Its compiler changes are not yet verified or accepted. For the persistent gap, separate
 calculation, input/output, allocation and dispatch with explicit paired controls.
 Inspect generated C and machine code for the selected program after checking
 source correctness. Change only the proved redundant operation or representation;

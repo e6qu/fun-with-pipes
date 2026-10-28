@@ -1,6 +1,6 @@
 # Preserve two proved integer bounds
 
-**Prepared, not yet tested or accepted.** This is the next P2/P3 experiment after
+**Implemented experiment, not yet executed or accepted.** This is the next P2/P3 experiment after
 [the frozen CPU baselines](cpu-baselines.md). It adds no language syntax or API.
 
 Two compiler-generated additions already have a proof that overflow is impossible:
@@ -31,7 +31,7 @@ scalar-arithmetic tests remain required. Use production GCC and Clang; formattin
 alone does not verify the change. Preserve the primitive inventory and both G2
 analysis budgets, then require all final-head production and documentation gates.
 
-## Experiment to implement
+## Runner experiment
 
 Build four actual compiler variants from Rust source: unchanged baseline,
 range-index change only, character-sum change only, and both changes. Record the
@@ -67,3 +67,21 @@ architectures. If none qualifies, retain all observations and do not adopt the
 compiler change as a performance improvement. All slower or inconclusive variants
 remain in the report. This is an empirical decision rule, not a statistical
 confidence guarantee or a claim of C/Rust parity.
+
+Run the `scalar-bounds` suite in the Numerical and ownership evidence workflow.
+[scripts/scalar-bounds.py](../../scripts/scalar-bounds.py) qualifies the host first,
+then builds each variant from Rust source and runs `integer_output` before timing.
+It preserves each exact source patch, compiler image, generated C, timed image,
+seven-peer correctness/overflow audit, separate memory profiles and stack reports.
+Nested benchmark records identify the harness checkout; the enclosing variant
+manifest identifies the baseline plus patch actually compiled. No old compiler
+executable is a build dependency. Candidate source files are restored on failure.
+
+The repeated comparison retains 56 seven-way batches per program. All seven
+original benchmark programs also run for each compiler variant; those six-sample
+rows provide context and are not substituted for the frozen two-program limits.
+Unknown hosts fail qualification before any candidate timing and retain their
+host/toolchain record. No time limit or noise threshold is loosened for a rerun.
+The focused evidence controls reject missing/reordered samples, failed output,
+changed binaries, unmatched hosts/toolchains, noise and a loop regression hidden
+behind a character-counting improvement. Full production gates follow selection.
