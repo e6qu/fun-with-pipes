@@ -39,7 +39,11 @@ construction requests and effective count increments are recorded only during
 the measured calls. Inputs are supplied by the native caller. All pairs must
 use the actual saturated C entry signatures. Supplying fewer curried arguments
 uses the runtime's owned partial-application constructor, including that allocation
-in the control's counts. Captures here are integers or unit. Both versions must
+in the control's counts. Captures here are integers or unit. The fixture also
+exports these identities as first-class values, so the compiler emits their
+typed runtime callback entries. A direct-call export alone does not require
+those entries. A native preflight checks them; the returned identity record is
+not constructed inside the measured work. Both versions must
 return the expected results and restore the live-storage baseline after each call.
 The normal root-completion operation runs after each entry; it releases empty
 State scratch storage. That storage's allocation remains inside the measurement.
@@ -114,6 +118,35 @@ requires repair or a documented rejection of the prototype; a completed workflow
 alone does not accept it. Excessive timing noise or a missing ordinary-stack
 control makes the comparison inconclusive; it cannot justify accepting or
 rejecting the optimization. Synthetic controls test all these decision rules.
+
+### First measured decision
+
+Both Linux hosts in run `40714605188`, source `b2f45840`, meet every frozen
+limit. The [raw record](measurements/mutual-recursion-2026-10-28-first.json)
+retains all samples, controls, profiles, toolchain/hardware details and hashes.
+An independent audit recomputes ratios and verifies actual ELF text sizes,
+binary hashes, sample order, compile flags and stack reports. This supports
+retaining the prototype for final platform verification; F1 and the full PR
+are still pending. Another run will verify the subsequent runtime repair.
+
+Median milliseconds include process startup and 1,024 countdown invocations:
+
+| Host / optimization | Ordinary calls | Grouped loop | Explicit loop | Grouped / explicit |
+|---|---:|---:|---:|---:|
+| ARM64 O0 | 68.033 | 53.291 | 64.398 | 0.828× |
+| ARM64 O2 | 2.167 | 2.126 | 2.776 | 0.766× |
+| AMD64 O0 | 42.484 | 22.839 | 81.215 | 0.281× |
+| AMD64 O2 | 2.154 | 2.168 | 3.562 | 0.609× |
+
+AMD64 O2 is about 0.7% slower than ordinary calls, despite beating the explicit
+loop. These short O2 timings include substantial startup cost; they do not
+isolate per-iteration language overhead. Identical-code control ratios are
+1.002–1.021, within 1.10. Every numeric entry makes zero managed allocations.
+Grouped text grows by 112 bytes at O0; at O2 it shrinks by 144 bytes on ARM64
+and 96 on AMD64. Its instrumented stack range stays 320 bytes at O0 and 34 at
+O2 as input grows from 16 to 4,096. Ordinary O0 grows from 1,728 to 393,408
+bytes, validating the stack-growth control. Instrumentation changes frames;
+these ranges are distinct from the retained uninstrumented compiler reports.
 
 The focused runner suite is `functional-calls` in
 [numerics.yml](../.github/workflows/numerics.yml). Full platform acceptance remains

@@ -9,6 +9,70 @@ fn checked(command: &mut Command) -> Output {
 }
 
 #[test]
+#[cfg(unix)]
+fn main_stack_overflow_uses_the_saved_address_after_initialization_returns() {
+    let dir = fwp::cgen::TempDir::new("main-stack-handler").unwrap();
+    let (_, program) = fwp::driver::compile_source(
+        "main-stack.fwp",
+        "main = ()\n",
+        fwp::mono::Roots {
+            main: true,
+            ..Default::default()
+        },
+    )
+    .map_err(|e| e.rendered)
+    .unwrap();
+    let code = fwp::cgen::generate(&program).unwrap();
+    let stack = "static size_t fwp_main_stack = (size_t)1 << 30;";
+    let initialize = "    fwp_stack_guard_init(fwp_main_stack);";
+    assert_eq!(code.matches(stack).count(), 1);
+    assert_eq!(code.matches(initialize).count(), 1);
+    // An unknown volatile entry and a live local after its return prevent C
+    // tail-call elimination. This tests the runtime handler, not fwp lowering.
+    let code = code
+        .replace(
+            stack,
+            r#"
+static size_t fwp_main_stack = (size_t)256 << 10;
+static uint64_t main_stack_probe(uint64_t n);
+static uint64_t (*volatile main_stack_next)(uint64_t) = main_stack_probe;
+static uint64_t main_stack_probe(uint64_t n) {
+    volatile unsigned char frame[256];
+    frame[n & 255] = (unsigned char)n;
+    uint64_t result = main_stack_next(n + 1);
+    return result + frame[n & 255];
+}
+"#,
+        )
+        .replace(
+            initialize,
+            &format!("{initialize}\n    (void)main_stack_probe(0);"),
+        );
+    for optimization in ["-O0", "-O2"] {
+        let executable = dir.join(format!("main-stack{optimization}.exe"));
+        fwp::cgen::compile_c(&code, &executable, optimization).unwrap();
+        let out = Command::new(&executable).output().unwrap();
+        if let Some(root) = std::env::var_os("FWP_TAIL_ARTIFACTS") {
+            let root = std::path::PathBuf::from(root);
+            std::fs::create_dir_all(&root).unwrap();
+            let prefix = root.join(format!("main-stack{optimization}"));
+            std::fs::write(prefix.with_extension("c"), &code).unwrap();
+            std::fs::copy(&executable, prefix.with_extension("exe")).unwrap();
+            std::fs::write(prefix.with_extension("stdout"), &out.stdout).unwrap();
+            std::fs::write(prefix.with_extension("stderr"), &out.stderr).unwrap();
+            std::fs::write(
+                prefix.with_extension("status"),
+                format!("{:?}\n", out.status.code()),
+            )
+            .unwrap();
+        }
+        assert_eq!(out.status.code(), Some(101), "{optimization}: {out:?}");
+        assert!(out.stdout.is_empty(), "{optimization}: {out:?}");
+        assert_eq!(out.stderr, b"fwp: trap: stack overflow\n", "{optimization}");
+    }
+}
+
+#[test]
 fn deep_self_recursion_preserves_swaps_aliases_effects_and_failure_order() {
     let cases = [
         (

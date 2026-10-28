@@ -2514,7 +2514,8 @@ static void fwp_stack_guard_init(size_t size) {
  * and exit code of the interpreter. Other faults keep their default
  * action. The handler runs on an alternate signal stack. */
 
-static char *fwp_main_stack_top = 0;
+/* Retain an address, not a pointer whose local marker's lifetime has ended. */
+static uintptr_t fwp_main_stack_top = 0;
 static size_t fwp_main_stack_size = 0;
 
 static int fwp_near(uintptr_t a, uintptr_t lo, uintptr_t hi) { return a >= lo && a < hi; }
@@ -2527,7 +2528,7 @@ static void fwp_segv(int sig, siginfo_t *si, void *uc) {
         uintptr_t lo = (uintptr_t)fwp_cur->stack;
         overflow = fwp_near(a, lo > slack ? lo - slack : 0, lo + (uintptr_t)sysconf(_SC_PAGESIZE));
     } else if (fwp_main_stack_top) {
-        uintptr_t end = (uintptr_t)fwp_main_stack_top - fwp_main_stack_size;
+        uintptr_t end = fwp_main_stack_top - fwp_main_stack_size;
         overflow = fwp_near(a, end - slack, end + slack);
     }
     if (!overflow) {
@@ -2543,7 +2544,7 @@ static void fwp_segv(int sig, siginfo_t *si, void *uc) {
 /* called at the top of the main thread, whose stack has `size` bytes */
 static void fwp_stack_guard_init(size_t size) {
     char here;
-    fwp_main_stack_top = &here;
+    fwp_main_stack_top = (uintptr_t)&here;
     fwp_main_stack_size = size;
     static char alt[1 << 16];
     stack_t ss;

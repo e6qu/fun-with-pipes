@@ -16,6 +16,10 @@ identities. Do not edit observations to make an old experiment describe new code
 - [Scalar reads and sort callbacks](sort-key-ownership.md): remove temporary String and pair owners.
 - [Contiguous sort keys](inline-sort-keys.md): remove key boxes, with exact allocation budgets and separate sorting-time controls.
 
+## Function calls and recursion
+
+- [Call-cost matrix and mutual-loop decision](../functional-costs.md): exact scopes and budgets, first measured comparisons and remaining verification.
+
 ## Numerical applications
 
 These reports follow different versions of derivative descent. Read the variant table and timing boundary before comparing ratios across reports. A protocol describes an experiment, not an outstanding task.

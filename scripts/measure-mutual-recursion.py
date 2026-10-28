@@ -81,7 +81,8 @@ def main():
         elapsed = time.perf_counter() - started
         commands.append({"command": list(map(str, command)), "status": out.returncode,
                          "seconds": elapsed,
-                         "stderr": out.stderr, "failedStdout": out.stdout if out.returncode else ""})
+                         "stderr": out.stderr,
+                         "stdout": out.stdout if out.returncode or Path(command[0]).suffix == ".exe" else ""})
         (root / "commands.json").write_text(json.dumps(commands, indent=2) + "\n")
         if out.returncode:
             raise RuntimeError(f"{command}: status {out.returncode}\n{out.stdout}\n{out.stderr}")

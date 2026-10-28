@@ -56,6 +56,27 @@ unknown-state = curry (run-state 0 (both .0 .1 | uncurry loop) | .1)
 export state-callback : () -> I64 -> Step[I64, ()] ! {State[I64]}
 state-callback = const state-step
 
+# A direct-call export alone does not need runtime callback metadata. This
+# export makes the native caller's callback identities first-class values too.
+# The measurement does not construct this record; partial inputs are counted.
+Callables = {
+    increment: () -> I64 -> I64,
+    partial: I64 -> I64 -> I64,
+    captured: I64 -> I64 -> I64,
+    accumulate: () -> I64 -> () ! {State[I64]},
+    addition: () -> I64 -> I64 -> I64,
+    state: () -> I64 -> Step[I64, ()] ! {State[I64]},
+}
+export callable-values : () -> Callables
+callable-values = make {
+    increment = const increment,
+    partial = const escaped-partial,
+    captured = const escaped-captured,
+    accumulate = const accumulate,
+    addition = const addition,
+    state = const state-callback,
+}
+
 main = [
     32 | both pipe (unknown-pipe (increment ())) | echo,
     32 | both partial (both escaped-partial id | uncurry (flip apply)) | echo,

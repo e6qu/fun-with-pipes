@@ -154,10 +154,25 @@ fn functional_call_matrix_counts_executed_work_and_releases_owners() {
     let main = "int main(int argc, char **argv)";
     assert_eq!(code.matches(main).count(), 1);
     code = code.replace(main, "int original_main(int argc, char **argv)");
+    let mut callable_checks = String::new();
+    for name in [
+        "increment",
+        "escaped-partial",
+        "escaped-captured",
+        "accumulate",
+        "addition",
+        "state-callback",
+    ] {
+        let id = function(name);
+        callable_checks.push_str(&format!(
+            "    if(!fwp_fn_table[{id}].entry || !fwp_fn_table[{id}].owned) {{ fputs(\"missing typed callback entry: {name}\\n\", stderr); return 214; }}\n"
+        ));
+    }
     code.push_str(&format!(
         r#"
 int main(int argc, char **argv) {{
     if(argc != 2) return 210;
+    {callable_checks}
     V n = (V)strtoull(argv[1], NULL, 10), result;
     fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     size_t baseline = fwp_heap.live;

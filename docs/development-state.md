@@ -1,14 +1,24 @@
 # Current work
 
-**Next:** publish the test/measurement repairs below, run `functional-probes`
-on Linux ARM64/AMD64, and audit every result. Resolve the measured mutual-loop
+**Next:** publish the callback-fixture and stack-marker repairs, rerun
+`functional-probes` on Linux ARM64/AMD64, then start full final-head gates/G2
+when focused results pass. Both hosts of `40714605188` finished; docs
+`40714567963` passes. Resolve the measured mutual-loop
 decision before starting the full final-head platform gates and G2 budgets.
 F1–F3 remain unaccepted. A6 is now verified.
 
 Worktree: `/private/tmp/fwp-parser-workspace`; branch:
 `functional-calls-and-tail-loops`; [draft PR #222](https://github.com/e6qu/fun-with-pipes/pull/222).
-Published compiler source: `e85d794cfca78f48752537918ed9bf88cfb9a6e5`.
-Current edits change tests, measurement and docs, not the compiler/runtime.
+Published head: `b2f45840f936d96f49c3ed069094ac92b4d574f0`; compiler code
+remains `e85d794c`. Probe repairs shipped at `e2bf6818`; the required roadmap
+table was restored at `b2f45840`. Old docs run `40714402852` was cancelled.
+
+One follow-up source repair is uncommitted: the POSIX stack handler stored a
+pointer to an expired local marker. It now retains only the numeric address.
+A bounded 256 KiB main-stack test checks the handler after initialization returns,
+at O0/O2. It deliberately uses unknown C recursion to prevent tail elimination;
+this tests runtime handling, not fwp lowering. Rustfmt passes; native verification
+is pending. This does not explain the separate original Intel compiler abort.
 
 ## Implementation and evidence
 
@@ -43,28 +53,36 @@ These compare visits across several invocations, not just one frame or elapsed
 speed. Callback offset controls independently exit 210 when either guard is
 removed; valid production/UBSan paths pass at O1/O2.
 
-## Remaining failures, all repaired in the current edits
+## Latest audit and pending repairs
 
-Both hosts found the same three causes; no compiler warnings remain outside the
-first probe's invalid teardown call:
+Both hosts of `40714605188` pass all three tail tests: weak swaps/failure,
+cancellation and mixed self/mutual recursion. The measurement also passes all
+four O0/O2 comparisons. [The report](functional-costs.md#first-measured-decision)
+and [raw record](measurements/mutual-recursion-2026-10-28-first.json) retain the
+full data, including AMD64 O2's small slowdown versus ordinary calls. The
+independent audit `/private/tmp/fwp-audit-b2f.py` passes sample/flag/ELF/hash/
+stack/profile checks. Timed work excludes evidence writes. Subsequent records
+also retain successful executable stdout, not just failed output.
 
-1. F1 and the F3 harness called `fwp_heap_finish`, which exists only for loaded
-   libraries. They now use the executable's task, cached-value and native-task
-   cleanup and require zero live managed storage before process exit. No shim or
-   conditional compatibility wrapper is added.
-2. The weak cancellation fixture piped a returned function into `task.within`,
-   which selected function composition. It now supplies the computed function
-   explicitly: `task.within 100ms (run-weak (expired ()))`.
-3. The simple even/odd fixture was already lowered to self recursion by existing
-   inlining, so its assertion that the new pass ran failed. The new fixture has
-   both self and mutual tail branches: subtracting two preserves parity, while
-   subtracting one switches partner. It tests the new pass directly.
+The only failing native test is F1. The probe constructed partial applications
+for direct-call-only exports; their function-table entries correctly lacked
+callback ownership metadata. Both hosts trap at the first boundary call with
+“counted owner escaped ARC contract.” The repaired source fixture explicitly
+exports the same function identities as first-class values, making metadata
+necessary. The native probe now checks those entries before allocating inputs.
+The identity record is not part of the measured work; no compiler/runtime
+compatibility wrapper or blanket callback-table emission is added.
 
-`functional-probes` explicitly reruns the two affected native targets and the
-measurement, plus units, formatting and Clippy. The ten-target `functional-calls`
-selection remains required after compiler changes. The timer excludes evidence
-serialization; timeouts retain output and nonfinite settings are rejected.
-The four measurement-decision controls pass; no successful timing result yet.
+The executable teardown, weak task application and mixed mutual fixture repairs
+at `e2bf6818`/`b2f45840` are verified. The separate POSIX saved-address repair
+above and its bounded stack test still need CI. Keep the working-tree changes;
+no F1 acceptance or final platform claim yet.
+
+`functional-probes` reruns the affected call/tail targets and measurement, plus
+units, formatting and Clippy. `functional-calls` also runs the eight existing
+resource/ownership targets; use it after compiler ownership changes. Full final
+platform gates still cover all maintained tests. Four measurement-decision
+controls pass; timing noise remains inconclusive rather than silently accepted.
 
 ## Earlier repairs and retained records
 
@@ -80,7 +98,11 @@ Logs: `/private/tmp/fwp-222-{8787,8b0}-failed.log` and
 `/private/tmp/fwp-222-e85-{arm,amd}.{log,txt}`. Artifacts:
 `/private/tmp/fwp-222-e85-{arm,amd}-artifact`. Independent audit:
 `python3 scripts/local-guard.py python3 /private/tmp/fwp-audit-e85.py` (passes).
-Failed F3 reports retain the exact source and no accepted result.
+Failed F3 reports retain the exact source and no accepted result. Later logs
+are `/private/tmp/fwp-222-b2f-{arm,amd}.{log,txt}`; artifacts are
+`/private/tmp/fwp-222-b2f-{arm,amd}-artifact`. Both complete logs are audited: 218
+units, eight old call-liveness cases, three tail tests and the emitter pass;
+only the F1 fixture fails. No compiler warnings.
 
 ## Completed parser delivery
 
