@@ -1,12 +1,11 @@
 # Current work
 
-**Next:** monitor the repaired PR #221 head through all nine production jobs,
-documentation and G2. Also finish auditing the old Linux AMD64 job in production
-run `40659395283` at `dbf1c0ba1614999e14fc67e6eadaf1689801e5d6`.
-The CI workflow does not cancel older runs on a push: preserve that job and
-inspect its complete log when it ends. All eight completed jobs were audited;
-do not infer the final job's result from them. Batch any further repairs.
-Documentation `40659374476` and G2 `40659399950` passed on the old head.
+**Next:** monitor the final PR #221 head through all nine production jobs,
+documentation and G2 after the TLS snapshot repair below. Every job and target
+from old production run `40659395283` was audited; both known failures are fixed.
+Supersede the intermediate `45f9e810` gates with this complete repair batch.
+The CI workflow does not cancel older runs automatically; cancel superseded
+incomplete runs explicitly so they do not consume final verification capacity.
 Monitor on a timer and inspect failed steps even while their jobs continue.
 Squash-merge only after all gates pass; then begin F1–F3 together in the next PR.
 
@@ -59,7 +58,7 @@ Allocations decrease while total allocated slot bytes rise 4–14%; peak live
 slots match previous fwp. Report these tradeoffs, individual stack frames and
 compiler RSS, not only removed counts. This is one workspace, not general regions.
 
-## Lint repair and gate audit
+## Repairs and complete gate audit
 
 The passing Linux G2 log exposed `const_item_mutation` in the test-only `prove`
 helper: it borrowed a mutable temporary from `usize::MAX`. Use an explicit local
@@ -67,10 +66,10 @@ budget instead. This does not change compiler/runtime behavior or measurements.
 The focused parser lint step now checks all targets, including the unit-test
 harness that its prior selection omitted. Full CI now uploads failed native/WASI
 Clippy diagnostics before long tests, so failures can be diagnosed immediately.
-Four full CI jobs have failed Clippy. Both complete regular macOS logs and the
-Linux ARM64 log confirm the test helper is their only Clippy error. All other
-executed steps pass. Linux AMD64 is still testing; inspect its full diagnostics
-when the job completes. Audited target logs pass:
+All four failed Clippy logs at `dbf1c0ba` contain only that test-helper error.
+All four Clippy steps pass at `45f9e81013fdf3b9e07aa0d4222c87bcde289e2d`
+in intermediate production run `40674858299`.
+The complete old run `40659395283` passed these audited targets:
 
 - Each regular macOS shard: 131 targets, 608 tests.
 - Each macOS ownership shard: 125 targets, 353 tests.
@@ -78,15 +77,26 @@ when the job completes. Audited target logs pass:
   library, SDK, protocol, golden and package steps in the complete job log.
 - Linux ARM64: 256 targets, 966 tests, including all six parser tests and all
   21 WebAssembly ownership tests.
+- Linux AMD64: 965 tests passed; only `tls::streams` failed, as described below.
+  All 256 targets finished, with no other failed target or compiler diagnostic.
+
+The TLS fixture deliberately connects to a plain-text server. Ubuntu's OpenSSL
+`3.5.5-1ubuntu3.7` reported `record layer failure` instead of the snapshot's
+`wrong version number`. Both backends use OpenSSL's reason text, whose spelling
+is not a stable language contract. The snapshot accepts those two reasons only
+on this complete client line. Other messages, certificate failures and successful
+connections remain distinct; production TLS behavior is unchanged.
+The actual snapshot code, compiled at Rust O1 with assertions/overflow checks,
+passes replay of the complete CI output and the new rejection controls. The old
+code fails both controls (exit 101). Full interpreter/native TLS execution remains
+required on the final head; this local replay is not a full TLS test.
 
 All 20 saved parser probes on each macOS/Windows architecture pass independent
 output, failure-code, physical-storage and Mach-O/PE architecture checks.
 The retained ARM crash report is the deliberate
 `cleanup_panic_aborts_before_borrowed_tasks_escape` control, confirmed from its
-source stack and passing unit test. The known repair can start its final gates
-while the old Linux job finishes; no job is cancelled or accepted without review.
-Require every final-head gate again. Production code and measurements are
-unchanged by the test-only budget variable.
+source stack and passing unit test. Require every final-head gate again.
+Production code and measurements are unchanged by these test-only repairs.
 The repair batch also corrects guides that still called GC-removal validation
 pending. Standalone comparisons without refreshed measurements remain explicitly
 unmeasured; historical sources, modes and numbers are unchanged.
@@ -94,7 +104,9 @@ unmeasured; historical sources, modes and numbers are unchanged.
 Guarded local checks passed: `cargo fmt --all -- --check`, actionlint for both
 changed workflows, and `python3 scripts/check-roadmap.py` (169 link sets,
 106 preparation pairs, eight roadmap steps). `git diff --check` passes;
-`AGENTS.md` remains 99 lines. Full builds, suites and measurements stayed on CI.
+`AGENTS.md` remains 99 lines. TLS replay command:
+`python3 scripts/local-guard.py python3 /private/tmp/check-fwp-tls-snapshot.py`.
+Full builds, suites and measurements stayed on CI.
 
 ## Repairs and artifacts
 

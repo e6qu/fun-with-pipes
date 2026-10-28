@@ -301,6 +301,14 @@ fn stream_snapshot(text: &str) -> String {
         "TLS handshake failed: ssl/tls alert bad certificate",
         "TLS handshake failed: sslv3 alert bad certificate",
     );
+    // The fixture's plain server sends "hello, plain text", which is not a TLS
+    // record. OpenSSL can expose the record-header error or its enclosing record
+    // layer failure. Match only this complete client line; other diagnostics,
+    // certificate failures and a successful connection must remain distinct.
+    result = result.replace(
+        "\nclient: tls error: 127.0.0.1:PORT: TLS handshake failed: record layer failure\n",
+        "\nclient: tls error: 127.0.0.1:PORT: TLS handshake failed: wrong version number\n",
+    );
     if cfg!(windows) {
         // Windows may reset the TCP connection before its peer reads the TLS
         // rejection alert. Preserve the client's exact certificate diagnostic
@@ -320,6 +328,30 @@ fn stream_snapshot(text: &str) -> String {
         }
     }
     result
+}
+
+#[test]
+fn plaintext_peer_snapshot_preserves_other_failures_and_success() {
+    let expected = "before\nclient: tls error: 127.0.0.1:PORT: TLS handshake failed: wrong version number\nafter\n";
+    let observed = expected.replace("wrong version number", "record layer failure");
+    assert_eq!(stream_snapshot(&observed), stream_snapshot(expected));
+    for detail in [
+        "unknown error",
+        "unexpected message",
+        "record layer failure with extra diagnostic",
+    ] {
+        let different = expected.replace("wrong version number", detail);
+        assert_ne!(stream_snapshot(&different), stream_snapshot(expected));
+    }
+    for different in [
+        "before\nclient: connected\nafter\n",
+        "before\nclient: tls error: 127.0.0.1:PORT: certificate verify failed: hostname mismatch\nafter\n",
+        "before\nserver: TLS handshake failed: record layer failure\nafter\n",
+        "before\nclient: tls error: localhost:PORT: TLS handshake failed: record layer failure\nafter\n",
+    ] {
+        assert_eq!(stream_snapshot(different), different);
+        assert_ne!(stream_snapshot(different), stream_snapshot(expected));
+    }
 }
 
 /// TLS connections in one program, interpreted and native: the same

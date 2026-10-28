@@ -196,19 +196,24 @@ client = tls.options | tls.with-ca "ca.pem" | tls.with-cert "client.pem" "client
 
 ### Errors
 
-Failures are `IoError`s of kind `"tls"`, with OpenSSL's reasons, and the
-address for clients:
+Failures are `IoError`s of kind `"tls"`, with OpenSSL's reasons and the client
+address where applicable. The table shows example messages.
 
-| Message | |
+The reason text can differ between OpenSSL versions. For example, connecting
+TLS to a plain-text server can report `wrong version number` or
+`record layer failure`; both are failed TLS handshakes. Match the structured
+error kind in a program rather than depending on one library's exact wording.
+
+| Message | Meaning |
 |---|---|
 | `localhost:8443: certificate verify failed: unable to get local issuer certificate` | the server's CA is not trusted |
 | `localhost:8443: certificate verify failed: hostname mismatch` | the certificate is for another name |
-| `localhost:8443: certificate verify failed: certificate has expired` | |
+| `localhost:8443: certificate verify failed: certificate has expired` | the certificate's validity period has ended |
 | `127.0.0.1:8080: TLS handshake failed: wrong version number` | the server does not speak TLS |
 | `TLS handshake failed: http request` | (server side) a plain HTTP request on a TLS port |
 | `TLS handshake failed: tlsv1 alert unknown ca` | (server side) the client did not trust our certificate |
-| `server.pem: No such file or directory` | |
-| `server.key: cannot load the private key: key values mismatch` | |
+| `server.pem: No such file or directory` | the configured certificate file does not exist |
+| `server.key: cannot load the private key: key values mismatch` | the key does not match the certificate |
 
 A peer that closes a connection without TLS's `close_notify` ends the
 stream like a TCP close (most HTTP peers do), rather than failing the
