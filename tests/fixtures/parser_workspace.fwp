@@ -1,5 +1,6 @@
-# Prefix arithmetic makes the workspace lifetime independent of precedence rules.
-# For example, "+ 2 * 3 4" builds a tree for 2 + (3 * 4), then evaluates to 14.
+# This benchmark uses a text format without precedence rules.
+# The quoted input "+ 2 * 3 4" is benchmark data, not fwp arithmetic syntax.
+# fwp uses infix arithmetic: 2 + 3 * 4. Both calculations produce 14.
 Expression =
     | Expression.Number I64
     | Expression.Add Expression Expression

@@ -1,11 +1,16 @@
 # One lifetime for a parser's tree
 
 A6 optimizes a parser written in fwp. It passes focused native/WASI checks;
-full platform acceptance is pending. The example is
-[the prefix-expression parser](../tests/fixtures/parser_workspace.fwp):
-`+ 2 * 3 4` builds the tree for `2 + (3 * 4)` and evaluates to `14`.
-All nodes contain either an integer or links to other nodes. The input Strings
-and token list keep their ordinary owners.
+full platform acceptance is pending. It does not change fwp's source parser.
+fwp arithmetic uses infix notation: `2 + 3 * 4` evaluates to `14`.
+
+The [benchmark program](../tests/fixtures/parser_workspace.fwp) reads a different,
+deliberately small text format: each operator precedes its two operands. Its
+input string `"+ 2 * 3 4"` builds a five-node tree for that calculation. This is
+quoted input data, not legal fwp arithmetic syntax. All tree nodes contain either
+an integer or links to other nodes. Input Strings and the token list keep their
+ordinary owners. See [fwp operator precedence](compiler-pipeline.md#tokens-layout-and-precedence)
+for the language grammar.
 
 Before A6, each heap node has an individual lifetime. The candidate implementation
 lets one function call own a collection of storage blocks, called a region.

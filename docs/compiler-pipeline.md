@@ -132,6 +132,11 @@ atom         := name | literal | selector | grouped expression | collection
 | `== != < <= > >=` | Parentheses required for successive comparisons |
 | Pipe: `a \| b` | Left |
 
+Symbolic arithmetic is infix: `2 + 3 * 4`, not `+ 2 * 3 4`. Named functions
+such as `add 2 | mul 3` use ordinary application and pipes; they add no second
+operator grammar. The [parser workspace benchmark](parser-workspace.md) consumes
+a quoted text format of its own, separate from fwp source syntax.
+
 `2 + 3 * 4 | echo` groups as `(2 + (3 * 4)) | echo` and prints `14`.
 `20 - 6 - 2` groups as `(20 - 6) - 2` and gives `12`. In
 `operator_expr(min_precedence)`, the right operand uses `precedence + 1`; that is

@@ -401,26 +401,24 @@ impl<'a> Proof<'a> {
             {
                 stats.rounds += 1;
             }
-            if self.pending.remove(&Work::Service) {
-                self.current = Some(Work::Service);
-                self.service_boundaries(entries)?;
-            }
-            // Freeze only affected inputs, in the same function order as the
-            // original scan. Changes during this wave schedule the next one.
-            let pending = std::mem::take(&mut self.pending);
-            let mut inputs = Vec::new();
-            for work in pending {
+            let mut next_wave = BTreeSet::new();
+            while let Some(work) = self.pending.pop_first() {
+                self.current = Some(work);
                 match work {
-                    Work::Service => {
-                        self.pending.insert(work);
+                    Work::Service => self.service_boundaries(entries)?,
+                    Work::Function(key) => {
+                        let args = self.inputs[&key].clone();
+                        self.visit(key, &args, stats)?;
                     }
-                    Work::Function(key) => inputs.push((key, self.inputs[&key].clone())),
+                }
+                // A later function can use a new fact in this wave, just as
+                // in an ordered full scan. Earlier/self readers wait for the
+                // next wave, so repeated self-writes cannot starve other work.
+                while self.pending.first().is_some_and(|next| *next <= work) {
+                    next_wave.insert(self.pending.pop_first().unwrap());
                 }
             }
-            for (key, args) in inputs {
-                self.current = Some(Work::Function(key));
-                self.visit(key, &args, stats)?;
-            }
+            self.pending = next_wave;
         }
         self.current = None;
         Ok(())
@@ -1766,55 +1764,69 @@ mod tests {
 
     #[test]
     fn long_call_chain_reaches_the_same_facts_without_rescanning_every_function() {
-        let mut program = state_program(true);
-        let unit = MT::unit();
-        let getter = program.funcs[1].ty.clone();
-        // Return the getter through a long chain, then invoke it inside State.
-        // Its output arrives much later than each caller's first empty read.
-        let length = 128;
-        let first = program.funcs.len();
-        for offset in 0..length {
-            program.funcs.push(Func {
-                name: format!("link-{offset}"),
-                arity: 1,
-                locals: vec![unit.clone()],
-                ty: arrow(unit.clone(), getter.clone()),
-                body: Body::Expr(if offset + 1 == length {
-                    Expr::Func(1)
+        // Both ID orders matter: a newly ready later function must run in the
+        // current wave; a previously visited function waits for the next one.
+        for reverse in [false, true] {
+            let mut program = state_program(true);
+            let unit = MT::unit();
+            let getter = program.funcs[1].ty.clone();
+            // Return the getter through a long chain, then invoke it inside State.
+            // Its output arrives much later than each caller's first empty read.
+            let length: usize = 128;
+            let first = program.funcs.len();
+            for offset in 0..length {
+                let next = if reverse {
+                    offset.checked_sub(1)
                 } else {
-                    Expr::Call(first + offset + 1, vec![Expr::Local(0)])
-                }),
-            });
+                    (offset + 1 < length).then_some(offset + 1)
+                };
+                program.funcs.push(Func {
+                    name: format!("link-{offset}"),
+                    arity: 1,
+                    locals: vec![unit.clone()],
+                    ty: arrow(unit.clone(), getter.clone()),
+                    body: Body::Expr(if let Some(next) = next {
+                        Expr::Call(first + next, vec![Expr::Local(0)])
+                    } else {
+                        Expr::Func(1)
+                    }),
+                });
+            }
+            let Body::Expr(Expr::Call(_, arguments)) = &mut program.funcs[0].body else {
+                panic!("expected the State handler fixture");
+            };
+            let start = if reverse { first + length - 1 } else { first };
+            arguments[1] = Expr::Call(start, vec![Expr::Const(Value::unit())]);
+            let mut facts = None;
+            let mut reference_facts = None;
+            let actual = check_scheduled(
+                &program,
+                &[0],
+                EntryChannels::Unknown,
+                ClosureSites::Separate,
+                false,
+                Some(&mut facts),
+            )
+            .unwrap();
+            let reference = check_scheduled(
+                &program,
+                &[0],
+                EntryChannels::Unknown,
+                ClosureSites::Separate,
+                true,
+                Some(&mut reference_facts),
+            )
+            .unwrap();
+            assert_eq!(facts, reference_facts);
+            assert!(
+                actual.rounds <= reference.rounds,
+                "reverse={reverse}; worklist: {actual:?}; scan: {reference:?}"
+            );
+            assert!(
+                actual.visits * 4 < reference.visits,
+                "worklist: {actual:?}; scan: {reference:?}"
+            );
         }
-        let Body::Expr(Expr::Call(_, arguments)) = &mut program.funcs[0].body else {
-            panic!("expected the State handler fixture");
-        };
-        arguments[1] = Expr::Call(first, vec![Expr::Const(Value::unit())]);
-        let mut facts = None;
-        let mut reference_facts = None;
-        let actual = check_scheduled(
-            &program,
-            &[0],
-            EntryChannels::Unknown,
-            ClosureSites::Separate,
-            false,
-            Some(&mut facts),
-        )
-        .unwrap();
-        let reference = check_scheduled(
-            &program,
-            &[0],
-            EntryChannels::Unknown,
-            ClosureSites::Separate,
-            true,
-            Some(&mut reference_facts),
-        )
-        .unwrap();
-        assert_eq!(facts, reference_facts);
-        assert!(
-            actual.visits * 4 < reference.visits,
-            "worklist: {actual:?}; scan: {reference:?}"
-        );
     }
 
     fn arrow(a: MT, b: MT) -> MT {

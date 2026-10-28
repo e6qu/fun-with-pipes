@@ -26,20 +26,35 @@ For example, if `a` calls `b` and `b` later returns a newly discovered closure,
 `a` must be checked again. An unrelated function need not be. Reads are recorded
 by finite function/scope and closure-site identities. Facts and dependencies only
 grow; the finite sets ensure termination, not linear complexity. A deterministic
-ordered queue preserves function order within each wave. A wave now visits only
-queued functions; old round counts described whole-program scans.
+ordered queue preserves function order within each wave. Newly ready later
+functions run in that wave; earlier/self readers wait for the next one, preventing
+one function from starving others. A wave visits only queued functions; old
+round counts described whole-program scans.
 
 The test harness retains a full-scan scheduling reference, unavailable in the
 compiler binary. Positive fixtures compare every input, output, capture, callback,
 channel, task, State and error set; negative fixtures must still reject. Validation
-must add no facts after convergence. A 128-call chain checks late propagation and
-requires fewer than one quarter of the reference's visits. Both raw REST fixtures
+must add no facts after convergence. A 128-call chain in both function-ID orders checks late propagation, no extra
+waves and fewer than one quarter of the reference's visits. Both raw REST fixtures
 also compare complete facts outside their unchanged analysis timer. Those extra
 reference checks are not part of the reported production-scheduling time.
 
-**Verification pending:** the repair needs both G2 hosts and all final platform
-gates. Existing measurements below retain their source IDs. Timing, size and
-separate/merged-site limits are unchanged; no new speedup is claimed yet.
+The first worklist attempt, `ba38308f3e333aff1fede3e02e71db83241bea51`, ran in
+`40680214359`. Both hosts passed 212 units, all-target Clippy, exact-fact checks
+and REST budgets. Forms/entry analysis took 0.339/0.264 seconds on Linux and
+0.707/0.512 seconds on Intel macOS. Forms visits fell from 591,732 to 13,503;
+entry visits fell from 379,958 to 11,787. Their final facts remained identical.
+These elapsed samples come from different runs; they are not a paired speed ratio.
+
+That attempt still failed: each small fixture needed 19 waves, above the unchanged
+limit of 16. Freezing the queue at each wave delayed later functions even when
+they could already use a new result. The ordering repair above lets them run in
+the current wave. Both function-ID orders now have a regression check.
+[The complete attempt record](ownership-worklist-2026-10-28.json) retains the
+original timeout and failed worklist run, with all samples and host descriptions.
+
+**Verification pending:** the ordering repair needs both G2 hosts and all final
+platform gates. Timing, size and separate/merged-site limits are unchanged.
 
 ## Why this measurement is needed
 

@@ -1,10 +1,13 @@
 # Measuring one parser's tree lifetime
 
 **Four measurement sessions pass; full platform acceptance remains open in #221.**
-This measures the [parser](../parser-workspace.md) that builds a tree and evaluates
-it. For example, `+ 2 * 3 4` builds five nodes and computes `2 + (3 * 4) = 14`.
-Removing tree-node reference counts does not remove tokenization or every heap
-allocation from this program.
+This measures a [parser program written in fwp](../parser-workspace.md), not
+fwp's source parser. For example, fwp arithmetic `2 + 3 * 4` evaluates to `14`.
+The benchmark's separate input format puts operators before operands: the string
+`"+ 2 * 3 4"` builds five nodes for the same calculation. C, Rust and fwp peers
+all parse that format. It is input data, not fwp arithmetic syntax. Removing
+tree-node reference counts does not remove tokenization or every heap allocation
+from this program.
 
 ## Verified storage so far
 
