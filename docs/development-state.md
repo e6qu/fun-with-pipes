@@ -95,12 +95,27 @@ language-wide zero overhead or no ARC.
 Preserve the unexplained [Intel compiler-abort evidence](measurements/compiler-abort.md).
 Passing reruns do not establish its cause. No disassembly-led allocator experiments.
 
+## Roadmap status
+
+| Step | Status | Remaining work |
+|---|---|---|
+| 1 | Verified | Maintain collector-free ownership and cycle checks |
+| 2 | Verified | Maintain the named A1–A6 guarantees |
+| 3 | In progress | Finish F1–F3 probes, measurement decision and platform gates |
+| 4 | Pending | Close measured CPU performance gaps |
+| 5 | Pending | Derivative storage, timing and precision |
+| 6 | Pending | CPU numerical kernels |
+| 7 | In progress | Fixed comparison budgets and complete evidence |
+| 8 | Pending | Larger-program correctness, cleanup and scale |
+
 ## Local checks and recovery
 
 Guarded Rustfmt, Actionlint, fixture formatting, measurement-decision controls
 and independent artifact audit pass. The actual formatter modules built alone
 at Rust O1, then checked syntax equivalence and idempotence. No full local build,
-suite or benchmark ran. The roadmap/link audit passes after the doc changes.
+suite or benchmark ran. The handoff rewrite initially omitted the required
+eight-step status table; it is restored above. The repaired audit passes all
+170 link sets, 106 preparation records, eight steps and commit-message checks.
 
 The primary checkout remains detached at #209, with a recovery pointer and an
 untracked compiler-abort report; preserve both. Prior raw records remain in
