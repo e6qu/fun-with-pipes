@@ -115,6 +115,8 @@ fn deep_self_recursion_preserves_swaps_aliases_effects_and_failure_order() {
                     r#"{marker}
 static uintptr_t tail_low[{loops}], tail_high[{loops}];
 static size_t tail_visits[{loops}];
+static int tail_active;
+static size_t tail_allocations, tail_requested_bytes;
 static void tail_probe(size_t id, uintptr_t address) {{
     if (!tail_visits[id] || address < tail_low[id]) tail_low[id] = address;
     if (!tail_visits[id] || address > tail_high[id]) tail_high[id] = address;
@@ -124,6 +126,16 @@ static void tail_probe(size_t id, uintptr_t address) {{
                 ),
                 1,
             );
+            for (marker, condition) in [
+                ("static inline void *fwp_alloc_init(size_t n) {", "1"),
+                (
+                    "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+                    "kind != 0",
+                ),
+            ] {
+                assert_eq!(code.matches(marker).count(), 1);
+                code = code.replace(marker, &format!("{marker} if(tail_active && ({condition})) {{ tail_allocations++; tail_requested_bytes += n; }}"));
+            }
             {
                 let start = code
                     .find("static void *fwp_main_thread(void *arg) {")
@@ -137,7 +149,7 @@ static void tail_probe(size_t id, uintptr_t address) {{
                     .count(),
                     1
                 );
-                let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t tail_live_bytes = fwp_heap.live;\n")
+                let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    size_t tail_live_bytes = fwp_heap.live;\n    tail_active = 1;\n")
                     .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_heap.live > tail_live_bytes) { fprintf(stderr, \"tail recursion retained %ld bytes\\n\", (long)(fwp_heap.live - tail_live_bytes)); exit(193); }\n");
                 code = format!("{runtime}{main}");
             }
@@ -153,15 +165,32 @@ static void tail_probe(size_t id, uintptr_t address) {{
         if (tail_high[i] - tail_low[i] > 65536) exit(194);
     }}
     if (tail_total_visits < 200000) exit(195);
+    tail_active = 0;
+    const char *tail_report_path = getenv("FWP_TEST_TAIL_REPORT");
+    if (tail_report_path) {{
+        FILE *report = fopen(tail_report_path, "w");
+        if (!report) exit(198);
+        fprintf(report, "allocations %zu bytes %zu live-before %zu live-after %zu\n",
+            tail_allocations, tail_requested_bytes, tail_live_bytes, fwp_heap.live);
+        for (size_t i = 0; i < {loops}; i++)
+            fprintf(report, "loop %zu visits %zu stack-range %zu\n", i, tail_visits[i],
+                (size_t)(tail_high[i] - tail_low[i]));
+        if (fclose(report)) exit(198);
+    }}
 "#
                 ),
             );
             for opt in ["-O0", "-O2"] {
                 let binary = dir.join(format!("counted{opt}.exe"));
+                let report_path = dir.join(format!("counted{opt}.txt"));
                 fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-                let output = checked(&mut Command::new(&binary));
+                let output =
+                    checked(Command::new(&binary).env("FWP_TEST_TAIL_REPORT", &report_path));
                 assert_eq!(output.stdout, raw.stdout, "{name} counted {opt}");
                 assert_eq!(output.stderr, raw.stderr, "{name} counted {opt}");
+                let report = std::fs::read_to_string(&report_path).unwrap();
+                assert_eq!(report.lines().count(), loops + 1);
+                eprintln!("{name} {opt}\n{report}");
                 let broken = Command::new(&binary)
                     .env("FWP_TEST_TAIL_BAD_STACK", "1")
                     .output()
@@ -176,6 +205,19 @@ static void tail_probe(size_t id, uintptr_t address) {{
                     std::fs::create_dir_all(&path).unwrap();
                     let label = format!("{name}-counted{opt}");
                     std::fs::write(path.join(format!("{label}.c")), &code).unwrap();
+                    std::fs::write(path.join(format!("{label}.txt")), &report).unwrap();
+                    std::fs::write(path.join(format!("{label}.stdout")), &output.stdout).unwrap();
+                    std::fs::write(path.join(format!("{label}.stderr")), &output.stderr).unwrap();
+                    std::fs::write(
+                        path.join(format!("{label}.status")),
+                        format!("{:?}\n", output.status.code()),
+                    )
+                    .unwrap();
+                    std::fs::write(
+                        path.join(format!("{label}-bad-stack.status")),
+                        format!("{:?}\n", broken.status.code()),
+                    )
+                    .unwrap();
                     std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
                     let mut disassemble = Command::new(if cfg!(target_os = "macos") {
                         "otool"

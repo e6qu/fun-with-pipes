@@ -67,6 +67,10 @@ whose payload type is a callback, fail during next-argument evaluation and cance
 an active loop. Raw interpretation of small inputs supplies the semantic reference.
 Native O0/O2 checks execute deep inputs, sample frame addresses at loop entries,
 reject a deliberately broken stack observation, and check storage after cleanup.
+The report records each loop’s visits and observed stack range, plus allocation
+requests, requested bytes and live storage before/after execution. Allocation
+counts include the whole fixture after constant initialization—including output
+and cleanup—not just the recursive body. They do not measure elapsed speed.
 Known partial applications containing only plain data or weak handles can lose
 their cleanup boundary, allowing direct calls to emerge. Unknown or strong
 captures, cached closures and fully applied closure factories keep their boundary.
@@ -86,7 +90,8 @@ and an explicit fwp `loop`. Each invocation counts down from 4,096 or 4,097;
 1,024 invocations must produce checksum 512. Timed binaries contain no counters.
 A common volatile native entry pointer prevents the C compiler from hoisting
 repeated invocations. Wall time includes process startup, all invocations, checksum
-output and cleanup. This is a comparison among fwp implementations, not C/Rust parity.
+output and cleanup. Saving measurement logs is outside the timer. This is a
+comparison among fwp implementations, not C/Rust parity.
 
 Before measuring, the runner records these acceptance limits:
 

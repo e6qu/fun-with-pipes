@@ -1,6 +1,6 @@
 # Current work
 
-**Next:** publish the batched F1–F3 repairs and run `functional-calls` on Linux
+**Next:** audit the batched F1–F3 repairs with `functional-calls` on Linux
 ARM64/AMD64. Audit every result, resolve the measured mutual-recursion decision,
 then run the full final-head gates. No F1–F3 acceptance or speed claim yet.
 
@@ -23,8 +23,9 @@ The squash message is one 49-character line with no body/trailers.
   containing only plain data or weak handles can lose their cleanup anchor;
   strong/unknown captures and cached or saturated closure factories cannot.
   Tail analysis ignores removed variables' unused type-table slots, while checking
-  all parameters and every remaining binding/use. O0/O2 loops sample stack
-  addresses and reject a deliberately broken observation.
+  all parameters and every remaining binding/use. Both self-tail and mutual-pair
+  eligibility use this rule. O0/O2 loops sample stack addresses, record whole-fixture
+  allocation requests/bytes and live storage, and reject a broken stack observation.
 - F3: a scalar mutual pair can select bodies inside one tagged worker. Original
   entries and non-tail calls remain. The measurement compares identical typed IR
   before/after lowering with an explicit fwp loop. Fixed timing/allocation/text/
@@ -92,6 +93,15 @@ Rustfmt, Actionlint and the roadmap audit pass; the actual formatter modules bui
 and idempotence checks. The first guarded invocation was denied process inspection
 by the sandbox; the same guard ran with permission, without raised limits.
 Full compiler builds, native tests and measurements remain on GitHub.
+
+Published repair `1f65b46f` started focused run `40708352241` and docs
+`40708331268`, both queued at the last check. Follow-up review found the mutual
+pass also needed to ignore unused type-table slots. It now shares the same
+frame-binding check, with a real bound-resource rejection control. The measurement
+timer also included JSON evidence writes; the repaired timer covers only the
+subprocess, retains timeout output and rejects nonfinite settings. The four
+decision controls still pass. Supersede the queued focused run with this batch;
+its old timer must not establish the prototype’s performance decision.
 
 [The parser contract](parser-workspace.md), [parser measurements](measurements/parser-workspace.md)
 and [analysis report](measurements/ownership-analysis.md) own the A6 evidence.

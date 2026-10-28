@@ -58,6 +58,7 @@ def main():
     if (args.iterations < 64 or args.iterations > 4096 or args.iterations % 2
             or args.repeats < 2 or args.repeats % 2 or args.samples < 6
             or args.warmups < 2 or args.timeout <= 0
+            or not all(math.isfinite(n) for n in [args.timeout, args.max_control_ratio, args.max_loop_ratio])
             or args.max_control_ratio <= 1 or args.max_loop_ratio <= 1):
         parser.error("use an even input in [64,4096], even repeats, >=6 samples and >=2 warmups")
     root = args.input.resolve()
@@ -65,9 +66,21 @@ def main():
     environment = dict(os.environ, FWP_ALLOC_STATS="0")
 
     def run(command):
-        out = subprocess.run(list(map(str, command)), env=environment,
-                             capture_output=True, text=True, timeout=args.timeout)
+        started = time.perf_counter()
+        try:
+            out = subprocess.run(list(map(str, command)), env=environment,
+                                 capture_output=True, text=True, timeout=args.timeout)
+        except subprocess.TimeoutExpired as error:
+            commands.append({"command": list(map(str, command)), "timeout": args.timeout,
+                             "seconds": time.perf_counter() - started})
+            (root / "commands.json").write_text(json.dumps(commands, indent=2) + "\n")
+            # TimeoutExpired carries captured bytes even for text-mode runs.
+            (root / "timeout.stdout").write_bytes(error.stdout or b"")
+            (root / "timeout.stderr").write_bytes(error.stderr or b"")
+            raise
+        elapsed = time.perf_counter() - started
         commands.append({"command": list(map(str, command)), "status": out.returncode,
+                         "seconds": elapsed,
                          "stderr": out.stderr, "failedStdout": out.stdout if out.returncode else ""})
         (root / "commands.json").write_text(json.dumps(commands, indent=2) + "\n")
         if out.returncode:
@@ -179,9 +192,10 @@ void __attribute__((no_instrument_function)) __cyg_profile_func_exit(void *fn, v
             save()
 
         def timed(name):
-            started = time.perf_counter()
             result = run([root / case["variants"][name]["binary"], args.iterations, args.repeats])
-            elapsed = time.perf_counter() - started
+            # Evidence serialization and disk writes occur after the subprocess
+            # timer stops; their growing cost is not program execution time.
+            elapsed = commands[-1]["seconds"]
             if result.stdout != f"{args.repeats // 2}\n" or result.stderr:
                 raise ValueError(f"wrong timed output: {name}: {result}")
             return elapsed

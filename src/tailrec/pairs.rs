@@ -111,8 +111,10 @@ pub(super) fn lower(prog: &mut Program) {
             let Body::Expr(body) = &f.body else {
                 return None;
             };
+            let safe: Vec<bool> = f.locals.iter().map(scalar).collect();
             if f.arity == 0
-                || !f.locals.iter().all(scalar)
+                || !safe[..f.arity as usize].iter().all(|safe| *safe)
+                || !super::plain_frame(body, &safe)
                 || !scalar(f.ty.after_args(f.arity as usize))
                 || !eligible(body)
             {
@@ -245,7 +247,12 @@ mod tests {
 
     #[test]
     fn scalar_pair_preserves_both_entries_patterns_and_deep_parity() {
-        let original = pair();
+        let mut original = pair();
+        // Inlining can leave the types of eliminated function bindings behind.
+        original.funcs[0].locals.push(MT::Fun(
+            Box::new(MT::con("std::I64")),
+            Box::new(MT::con("std::I64")),
+        ));
         let mut lowered = original.clone();
         lower(&mut lowered);
         assert_eq!(lowered.funcs.len(), original.funcs.len() + 1);
@@ -291,7 +298,24 @@ mod tests {
                 unreachable!()
             };
             match variant {
-                0 => p.funcs[0].locals.push(MT::con("std::File")),
+                0 => {
+                    let file = MT::con("std::File");
+                    let int = MT::con("std::I64");
+                    p.funcs[0].locals.push(file.clone());
+                    p.funcs.push(Func {
+                        name: "open".into(),
+                        arity: 1,
+                        ty: MT::Fun(Box::new(int.clone()), Box::new(file)),
+                        locals: vec![int],
+                        body: Body::Prim("fixture-open".into()),
+                    });
+                    p.funcs[0].body = Body::Expr(Expr::Let(
+                        2,
+                        Box::new(Expr::Call(3, vec![Expr::Local(0)])),
+                        Box::new(body),
+                    ));
+                    crate::ir::check_locals(&p).unwrap();
+                }
                 1 => {
                     p.funcs[0].body = Body::Expr(Expr::ResourceRegion {
                         parameters: vec![],
