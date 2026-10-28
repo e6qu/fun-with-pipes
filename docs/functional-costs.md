@@ -3,8 +3,9 @@
 These checks answer two different questions: what runtime work a convenient
 source construct introduces, and whether a recursive computation can use a
 bounded call stack. They are the F1–F3 work in [PLAN.md](../PLAN.md#3-functional-calls-and-recursion).
-The implementation is under review in PR #222. Linux correctness and cost probes
-pass; full platform acceptance and the longer timing comparison remain pending.
+F1–F3 are verified in PR #222. [Delivery history](roadmap-history.md#functional-calls-and-recursion-pr-222)
+records all nine platform jobs, documentation and analysis budgets. The accepted
+scope is these fixtures and lifetime rules, not zero overhead for every function.
 
 ## Function-call pairs
 
@@ -191,11 +192,33 @@ can dominate them. The next run increases each batch from 1,024 to 65,536
 invocations for every variant and both levels. Inputs, sample count, order,
 compiler flags and all acceptance limits stay unchanged. This increases useful
 work without retrying until a noisy short sample happens to pass. Startup and
-checksum output remain inside the timer. The longer comparison is pending.
+checksum output remain inside the timer. The completed comparison follows.
+
+### Accepted longer comparison
+
+Run `40721041382` at `98a1d8eb4b250c036d1cd062f2fe79b624ac8fea` uses 65,536
+invocations per sample. [The raw record](measurements/mutual-recursion-2026-10-28-long.json)
+passes independent sample/order/output/flag/hash/ELF/stack verification. All four
+comparisons meet the original limits. Subsequent commits through the merged tree
+change documentation only. The full final-head production and analysis gates pass.
+
+| Host / level | Ordinary calls, ms | Grouped loop, ms | Explicit loop, ms | Grouped / explicit |
+|---|---:|---:|---:|---:|
+| ARM64 O0 | 4,263.193 | 3,329.036 | 4,026.230 | 0.827× |
+| ARM64 O2 | 80.892 | 82.392 | 120.242 | 0.685× |
+| AMD64 O0 | 2,204.363 | 1,178.006 | 3,611.773 | 0.326× |
+| AMD64 O2 | 75.472 | 75.203 | 148.375 | 0.507× |
+
+Noise-control ratios are 1.0003–1.0060. The numeric calls allocate no managed
+storage and grouped stack ranges remain bounded. Code-size limits pass. ARM64
+O2 grouped recursion takes about 1.9% more time than ordinary calls, despite
+beating the explicit loop; keep that tradeoff visible. Accept the restricted
+scalar-pair transformation. This supplies bounded-stack behavior at O0 as well
+as O2, without promising a speedup over every C compiler's ordinary-call lowering.
 
 The focused runner suite is `functional-calls` in
-[numerics.yml](../.github/workflows/numerics.yml). Full platform acceptance remains
-the nine production jobs and documentation audit on the final PR commit.
+[numerics.yml](../.github/workflows/numerics.yml). Future changes still require
+the nine production jobs and documentation audit on their final PR commit.
 After test-only repairs, `functional-probes` reruns the call/tail targets and
 measurement; it does not repeat unchanged resource tests. Compiler changes use
 the full `functional-calls` selection.

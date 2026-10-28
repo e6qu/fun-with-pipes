@@ -42,3 +42,5 @@ jobs:
         run: python3 scripts/test-parser-workspace-evidence.py
       - name: Recursion measurement evidence controls
         run: python3 scripts/test-mutual-recursion.py
+      - name: CPU baseline completeness and budget controls
+        run: python3 scripts/test-cpu-baselines.py

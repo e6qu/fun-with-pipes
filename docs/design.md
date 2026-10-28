@@ -370,7 +370,7 @@ handles whose payload type names a callback or task. Upgrading a handle creates
 a strong owner; keeping that owner in a local still prevents frame reuse.
 Swapping two weak handles first prepares both next arguments and only then
 releases the old locals. This avoids dropping metadata that the next iteration
-still needs. Linux ARM64/AMD64 O0/O2 controls pass; full platform acceptance is pending.
+still needs. O0/O2 stack, cleanup and cancellation controls pass on the native platform matrix.
 
 A known function with no supplied arguments owns no captures. A partial
 application of a known function owns exactly its supplied arguments; the compiler
@@ -400,15 +400,15 @@ also retains original recursive frames. Deep recursion in those modes can still
 reach the stack limit. Calls made inside an iteration have their own stack costs,
 and a loop can still retain growing data.
 
-A mutual-recursion prototype groups a pair with matching scalar signatures into
+The accepted mutual-recursion pass groups a pair with matching scalar signatures into
 one internal loop. A small integer chooses which original body runs next. The
 original entries select that integer; only direct tail calls change it. Calls
-whose results require further work keep ordinary frames. The prototype admits
+whose results require further work keep ordinary frames. The pass admits
 only I64, Bool and unit locals, rejects dynamic calls and observable cleanup or
 debugger frames, and scans each candidate once. It does not promise constant
-stack space for arbitrary groups or foreign calls. F3 in [the plan](../PLAN.md#3-functional-calls-and-recursion)
-requires O0/O2 measurements against ordinary recursion and an explicit fwp loop
-before accepting this change. The prototype is not yet verified support.
+stack space for arbitrary groups or foreign calls. [The measured decision](functional-costs.md#accepted-longer-comparison)
+compares O0/O2 ordinary calls, grouped recursion and an explicit fwp loop. The
+restricted transformation passes its fixed limits and the full platform gates.
 
 The existing `loop step state` API remains available when the source program
 needs explicit iteration. `FnGen::tail_tokens` also releases unused storage-reuse
@@ -418,8 +418,8 @@ and function-call recursion are separate stack concerns.
 
 ### Remaining work
 
-[Plan tasks F2–F3](../PLAN.md#3-functional-calls-and-recursion) specify the remaining
-resource-frame proofs and a measured mutual-recursion decision. Next arguments
+Broader resource-frame reuse would need a new lifetime proof and measured benefit
+beyond the verified F2–F3 cases. Next arguments
 must be prepared before releasing anything they borrow. Pending destructors,
 handlers, state/derivative scopes and callback registrations cannot be discarded
 or run early. Unknown/foreign calls have separate ABI and lifetime constraints;
@@ -468,8 +468,7 @@ explicitly as described in [Contributing](../CONTRIBUTING.md#setting-up).
 
 The [restricted unique-array path](measurements/unique-array-storage.md) was
 verified in PR #219. [The scoped parser path](parser-workspace.md) is implemented
-in `src/cgen/regions.rs` and `runtime/fwp_rt_region.c`; full platform acceptance
-remains pending. A selected call owns aligned blocks and passes an explicit
+in `src/cgen/regions.rs` and `runtime/fwp_rt_region.c` and verified in PR #221. A selected call owns aligned blocks and passes an explicit
 context to allocation helpers. Internal node links have no counts; escaped trees
 keep ordinary ownership. [Measurements](measurements/parser-workspace.md) separate
 this storage change from input/token costs and from general region inference. Tracing removal passed integrated verification in

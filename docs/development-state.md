@@ -1,116 +1,62 @@
 # Current work
 
-**Next:** monitor full platform checks and G2 on the final PR head; audit the
-longer timing run `40721041382` at `98a1d8eb4b250c036d1cd062f2fe79b624ac8fea`.
-Its compiler, runtime, tests and measurement settings also apply to the following
-documentation-only commit. Do not accept F3 from a successful collection job
-alone: every measured decision must pass its unchanged limits.
+**Next:** publish the grouped CPU-baseline work as one draft PR and dispatch
+`cpu-baselines` with `native_runner=all`. Audit all four independent sessions,
+freeze per-workload limits from their unchanged noise controls, then run the
+full final-head matrix. No CPU optimization or new timing result is claimed yet.
 
-Worktree: `/private/tmp/fwp-parser-workspace`; branch:
-`functional-calls-and-tail-loops`; [PR #222](https://github.com/e6qu/fun-with-pipes/pull/222).
-F1–F3 remain unaccepted; A6 is verified. The initial full/G2 runs at `98a1d8eb`
-were queued before a final documentation correction; use the replacement
-final-head runs for merge. Exact IDs are available from `gh pr checks 222` and
-`gh run list --branch functional-calls-and-tail-loops`.
+Worktree: `/private/tmp/fwp-parser-workspace`; branch `cpu-baselines-and-budgets`.
+Base: merged #222, `17978b97373f3e9236468ac19c1b8e0d290816d7`.
+The batch adds the repeated collector, corruption controls,
+runner selection and [protocol](measurements/cpu-baselines.md), plus the accepted
+F1–F3 record and removal of obsolete pending/queue instructions.
 
-Focused `40719252691` and docs `40719100185` pass at `ca914eec`.
-Every completed log is audited: each host passes 218 units (four intentionally
-ignored), nine call tests, four tail/stack tests and the emitter; formatting and
-Clippy pass without warnings. Collection succeeded, but AMD64 O2 timing is
-inconclusive. The saved-address overflow controls pass on both Linux hosts.
+## Scope and acceptance
 
-## Implementation and evidence
+Current tasks are B1/P1 and the corresponding B2 evidence checks for `loop` and
+`text-length`. Build the existing checked C/Rust/fwp peers independently from
+source. Two jobs per architecture use the same inputs, CPU model and compiler
+settings. Each records two warmups and 32 rotating samples per variant, including
+a second execution of the identical fwp image. Preserve process startup/output/
+cleanup inside timing and evidence writes outside it.
 
-[The measurement guide](functional-costs.md) owns the exact F1–F3 fixtures,
-scopes and budgets. F1 compares eight known/unknown function boundaries with
-executed allocation, dispatch, box and retain observations. F2 permits weak
-metadata in reused frames, removes only proved plain-capture cleanup anchors,
-and ignores removed variables' unused type slots. Strong/unknown captures,
-cached closures and fully applied closure factories retain their boundaries.
-F3 prototypes a scalar mutual pair as one tagged worker, retaining callable
-entries and ordinary non-tail calls. The comparison must accept or reject it
-against ordinary calls and an explicit loop; noisy controls are inconclusive.
+Median identical-code ratio must be <=1.03 and its nearest-rank 95th-percentile
+paired ratio <=1.10. Unstable data is inconclusive. Freeze a candidate regression
+limit of twice the larger session's observed 95th-percentile deviation, per
+workload/host, before any candidate measurement. Future controls must stay inside
+that frozen envelope. The protocol owns the complete rules and memory exclusions.
+B1/B2 for other ownership, derivative and numerical workloads remains open.
 
-Focused `40710069104` at `e85d794c` finished on both Linux hosts. Both passed
-compilation, formatting, all-target Clippy, 218 compiler units and the IR emitter.
-Four units are intentionally ignored. Both docs `40709965204` and the preceding
-docs `40708331268` pass.
+The Python controls reject missing/reordered/wrong samples, changed source or
+compiler, duplicate sessions, false statistics, noisy controls, and missing
+memory/stack evidence. The suite reuses the actual benchmark binary and memory
+audits. All original seven-peer measurements remain available; extra repeated
+timing targets only the two named CPU gaps.
 
-All existing affected native targets pass: borrowed callbacks (1 test), closure
-ownership (3), eight existing call-liveness cases, queued/weak functions (12),
-resource fields (1), resource variants (1), resource frames (3), match cleanup
-(1), State sequences (4), and the tail rejection control (1). Both complete logs
-are audited; expected scheduler panic controls passed.
+## Verified previous delivery
 
-The weak-tail fixture passes raw/optimized interpretation and native O0/O2 before
-the later mutual-fixture assertion fails. Independent saved-artifact audit verifies
-outputs, zero live managed storage, ELF architectures and broken-stack exit 194.
-Across 600,009 observed loop entries it requests 23 allocations / 1,090 bytes
-for the whole fixture, including setup, output and cleanup. Maximum observed
-stack ranges: ARM64 2,112/1,760 bytes and AMD64 2,496/2,160 bytes at O0/O2.
-These compare visits across several invocations, not just one frame or elapsed
-speed. Callback offset controls independently exit 210 when either guard is
-removed; valid production/UBSan paths pass at O1/O2.
+F1–F3 are verified in #222. Final `b69f111e` and merge `17978b97` share tree
+`5a434a44f164e664b31c70a8d7b1db9e8dc8ab5d`; the squash message is one line <=80
+characters, without body or trailers. All nine production jobs `40721714559`,
+docs `40721714558` and both G2 hosts `40721764744` pass. Every completed log is
+audited without compiler warnings or failed targets. [History](roadmap-history.md#functional-calls-and-recursion-pr-222)
+owns counts and links. Postmerge CI `40749834807` and docs `40749834937` also
+report success; the acceptance record relies on the audited final-head runs.
 
-## Latest audit and pending measurement
+Long timing `40721041382` at `98a1d8eb` accepts all four original limits after
+increasing batches to 65,536 invocations. Only docs changed before the final head.
+The independent audit verifies samples, order, outputs, compiler flags, actual
+ELF hashes/text sizes, profiles and stack reports. ARM64 O2 remains about 1.9%
+slower than ordinary calls; it beats the explicit loop and stays within the
+fixed acceptance limit. The short noisy session remains inconclusive in its
+original record. [The report](functional-costs.md) owns all three timing sessions.
 
-Both hosts of `40719252691` pass the repaired F1 callback matrix and all tail
-controls. All 128 count rows agree across architectures and O0/O2. The native
-probe verifies callback metadata, results, per-call cleanup and final teardown.
-The fixture exposes actual first-class function identities; no blanket runtime
-callback emission or compatibility wrapper was added. Known-call count expectations at `98a1d8eb`
-include remaining per-element State `each` allocations.
-
-[The guide](functional-costs.md) owns the results and limitations. First timing
-session `40714605188` accepts all four comparisons. The second session accepts
-three but marks AMD64 O2 inconclusive: identical-binary noise is 1.150 versus
-1.10 allowed. All binary/hash/stack/profile/sample checks pass independent audit.
-Retain both raw records. Run `40721041382` uses 65,536 rather than 1,024 invocations
-per sample; all inputs, flags, sample counts and acceptance limits stay unchanged.
-No F3 acceptance follows from a green collection job alone.
-
-Latest log: `/private/tmp/fwp-222-ca914.log`; artifacts:
-`/private/tmp/fwp-222-ca914-artifacts`. Guarded audits
-`/private/tmp/fwp-audit-ca914.py` and `/private/tmp/fwp-audit-calls.py` pass,
-including the explicit inconclusive result. Four decision controls pass.
-
-`functional-probes` runs the changed call/tail targets, compiler units, formatting,
-Clippy and measurement. The eight other affected resource targets passed at
-`e85d794c`; production compiler ownership code has not changed since then.
-All maintained tests still require the full final-head platform gates.
-
-## Earlier repairs and retained records
-
-| Source | Focused result / repair |
-|---|---|
-| `8787b42d` / `40696627458` | u32/usize arity errors; fixed once at the indexing boundary with checked frame limits |
-| `8b0fc929` / `40699575855` | Full failure audit found a wrong manual primitive name, source formatting/typing mistakes, too-short C calls, conservative capture anchors and an unreliable sanitizer control |
-| `c56d644f` / `40703270836` | Owned partial applications replace short C calls; queued run cancelled before the complete batch |
-| `1f65b46f` / `40708352241` | Capture proof and source controls added; queued run superseded and cancelled |
-| `e85d794c` / `40710069104` | Compiler/lifetime controls pass; three probe errors repaired in later commits |
-
-Logs: `/private/tmp/fwp-222-{8787,8b0}-failed.log` and
-`/private/tmp/fwp-222-e85-{arm,amd}.{log,txt}`. Artifacts:
-`/private/tmp/fwp-222-e85-{arm,amd}-artifact`. Independent audit:
-`python3 scripts/local-guard.py python3 /private/tmp/fwp-audit-e85.py` (passes).
-Failed F3 reports retain the exact source and no accepted result. Later logs
-are `/private/tmp/fwp-222-b2f-{arm,amd}.{log,txt}`; artifacts are
-`/private/tmp/fwp-222-b2f-{arm,amd}-artifact`. Both complete logs are audited: 218
-units, eight old call-liveness cases, three tail tests and the emitter pass;
-only the F1 fixture fails. No compiler warnings.
-
-## Completed parser delivery
-
-All nine postmerge production jobs `40691815018`, docs `40691814677` and both
-G2 hosts `40685939711` pass. Every completed log is audited, including warnings
-and individual test summaries. [History](roadmap-history.md#scoped-parser-storage-and-analysis-work-pr-221)
-owns the merge/tree/message verification and host counts. The parser and analysis
-reports retain their separate source IDs and four timing sessions. The parser
-remains slower than its C/Rust peers; GC removal and scoped storage do not imply
-language-wide zero overhead or no ARC.
-
-Preserve the unexplained [Intel compiler-abort evidence](measurements/compiler-abort.md).
-Passing reruns do not establish its cause. No disassembly-led allocator experiments.
+Logs: `/private/tmp/fwp-222-{final,g2,long}.log`. Artifacts:
+`/private/tmp/fwp-222-long-artifacts`, `/private/tmp/fwp-222-g2-artifacts`.
+Guarded `/private/tmp/fwp-audit-long.py` passes. G2 preserves exact lifetime facts,
+40-byte origins and the original work/time budgets. The existing historical Intel
+[compiler abort](measurements/compiler-abort.md) remains unexplained; no recurrence
+or new source evidence appeared. Do not resume disassembly-led allocator experiments.
 
 ## Roadmap status
 
@@ -118,34 +64,27 @@ Passing reruns do not establish its cause. No disassembly-led allocator experime
 |---|---|---|
 | 1 | Verified | Maintain collector-free ownership and cycle checks |
 | 2 | Verified | Maintain the named A1–A6 guarantees |
-| 3 | In progress | Finish F1–F3 probes, measurement decision and platform gates |
-| 4 | Pending | Close measured CPU performance gaps |
+| 3 | Verified | Maintain the scoped F1–F3 call and recursion guarantees |
+| 4 | In progress | Establish repeatable CPU gaps, then select a proved repair |
 | 5 | Pending | Derivative storage, timing and precision |
 | 6 | Pending | CPU numerical kernels |
-| 7 | In progress | Fixed comparison budgets and complete evidence |
+| 7 | In progress | Freeze the two CPU budgets; broader B1/B2 remains open |
 | 8 | Pending | Larger-program correctness, cleanup and scale |
 
 ## Local checks and recovery
 
-Guarded Rustfmt, Actionlint, fixture formatting, measurement-decision controls
-and independent artifact audit pass. The actual formatter modules built alone
-at Rust O1, then checked syntax equivalence and idempotence. No full local build,
-suite or benchmark ran. The handoff rewrite initially omitted the required
-eight-step status table; it is restored above. The repaired audit passes all
-170 link sets, 106 preparation records, eight steps and commit-message checks.
+Guarded independent recursion and log audits pass. Five focused baseline tests, workflow lint and documentation audit pass.
+Local commands use `python3 scripts/local-guard.py` with the respective Python
+script or Actionlint; no limits were changed. No full local build, suite or benchmark runs. Keep the
+64 GiB free / 2 GiB target / 1 GiB RSS / 180-second guard limits; last free disk
+observation is 74 GiB. Primary checkout remains detached at #209 with a recovery
+pointer and untracked compiler-abort evidence; preserve both.
 
-The primary checkout remains detached at #209, with a recovery pointer and an
-untracked compiler-abort report; preserve both. Prior raw records remain in
-`/private/tmp/fwp-221-50dd-analysis`, `fwp-221-{45f9,ba383,dd91}-analysis`,
-`fwp-221-35250-measurements`, `fwp-221-dbf1-{macos,windows}-{arm,amd}-parser`
-and `/private/tmp/fwp-221-ef037-*.log`. Do not delete failed evidence.
-Disk is about 73 GiB free; keep the 64 GiB/2 GiB/1 GiB/180-second guard limits.
-
-GitHub lists old run `38888712709` as active although every job completed on
-October 16. Normal cancellation says completed; force-cancel returns HTTP 409
-“not in progress.” It has no active job and did not prevent current checks.
+Earlier raw records remain under `/private/tmp/fwp-221-*`,
+`/private/tmp/fwp-222-ca914-artifacts` and `/private/tmp/fwp-222-b2f-*-artifact`.
+GitHub's old `38888712709` status was inconsistent with all jobs completed;
+cancellation said already completed. Do not treat it as a running workload.
 
 Publication and squash merge are authorized after all final-head gates pass:
 one line <=80 characters, empty body, no trailers/attribution. Verify the merged
-tree and message, then continue the next substantial PR. [PLAN.md](../PLAN.md)
-owns the remaining roadmap; a completed PR does not complete it.
+tree and message, then continue [PLAN.md](../PLAN.md) in substantial groups.
