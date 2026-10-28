@@ -38,13 +38,19 @@ collector is not the same as removing these costs. The
    audited [measurement sessions](docs/measurements/parser-workspace.md). The G2
    repair passes both analysis hosts with unchanged limits. Parsing is faster
    than previous fwp, but allocated bytes rise and the C/Rust gap remains.
-   **F1–F3 are current:** group functional-call evidence, safe weak-handle tail
-   reuse and the measured mutual-recursion decision into one substantial PR.
+   **F1–F3 are verified in #222:** preserve the measured call costs, weak-handle
+   frame rules and restricted scalar mutual loops. Remaining State `each`
+   allocations are explicit in the report; functional syntax is not universally free.
 3. Preserve **G2**'s [analysis budgets](docs/measurements/ownership-analysis.md)
    and measure the new region-selection work separately. Further precision needs
    a named example and a cost comparison, not more diagnostic scaffolding.
-4. Use **B1** to set per-workload timing budgets before further CPU or derivative
-   optimizations. Keep slower and inconclusive results visible.
+4. **B1/P1's two CPU baselines and their B2 integrity checks are implemented
+   in #223; final acceptance is pending.** Six audited sessions establish matching
+   Neoverse-N2 and EPYC 7763 pairs. [Frozen limits](docs/measurements/cpu-baselines.md)
+   retain all observations and reject silent budget resets. Next, P2/P3 must isolate
+   a redundant cost and compare a candidate against the same-job baseline, while
+   preserving checked arithmetic and recording code/stack tradeoffs. Broader
+   B1/B2 coverage for A/D/N remains open.
 
 The original intermittent Intel macOS compiler abort remains an open defect.
 Source lifetime repairs and passing reruns did not establish its cause. Preserve
@@ -117,42 +123,29 @@ D2 may extend the approach to AD after measuring that workload.
 
 ## 3. Functional calls and recursion
 
-The grouped implementation and concrete measurement limits are described in
-[Measuring calls and recursion](docs/functional-costs.md). PR #222 is under review. Linux call/stack controls pass; a noisy timing row
-requires longer batches. None of F1–F3 is accepted until the measurement decision
-and final platform gates pass.
+**F1–F3 are verified in #222.** [Calls and recursion](docs/functional-costs.md)
+owns the eight paired call fixtures, lifetime rules, actual allocation/stack
+observations and accepted mutual-loop decision. All nine final-head production
+jobs, docs and both G2 hosts pass; the merged tree matches that tested head.
 
-**F1 — Define the acceptance fixtures.** Cover a composed pipe, partial
-application, borrowed callback, captured closure, record/variant result, `each`,
-`fold` and state loop. Pair each eligible case with an escaping/unknown-call case.
-Use `src/mono.rs`, `src/opt.rs`, `src/cgen.rs` and the existing call-liveness tests.
-Record expected direct calls, loops, boxes and necessary dispatch.
-**Done:** interpreter/native outputs and effects agree, and each cost claim has
-an allocation observation and inspection of the compiled program.
-
-**F2 — Extend self-tail reuse only where cleanup permits.** Eligible direct
-self-tail calls already reuse frames in the interpreter and native code, including
-O0. Remaining cases include resource/task/channel owners and unknown captures.
-For each proposed extension to `src/tailrec.rs`, specify when old owners die and
-prove next arguments remain valid. Test swaps, failures, cancellation and deep
-recurrence; retain ordinary-recursion and source-debugger controls.
-**Done:** bounded call-stack use for the admitted recurrence, with measured heap
-and frame costs. Do not mark existing plain-data support as unfinished work.
-
-**F3 — Decide mutual recursion from a measured prototype.** Compare an internal
-tagged loop with the equivalent explicit fwp loop for a fixed mutually recursive
-pair. Measure dispatch, argument storage and code growth at O0/O2.
-**Done:** accept with a lifetime proof and stated budgets, or record rejection
-and retain ordinary call semantics. General foreign/unknown tail calls are not
-an unconditional constant-stack promise.
+F1 keeps exact known-call cost expectations alongside necessary unknown-call
+controls. Some constructs still allocate: State `each` remains per-element.
+F2 admits weak metadata and proved plain captures without discarding observable
+cleanup. Strong resources, tasks and unknown captures keep their restrictions.
+F3 accepts only matching scalar pairs; the longer O0/O2 measurements meet the
+frozen limits, including visible slower results versus ordinary calls. Arbitrary
+resource frames, foreign calls and all recursion are not constant-stack promises.
 
 ## 4. CPU performance
 
-**P1 — Refresh the checked-peer gaps using B1.** The recorded sessions show the
-integer loop about 24%/15% slower than Rust on AMD64/ARM64 and direct character
-counting about 58%/94% slower than C. These are historical host-specific results,
-not current universal overhead. Rerun the actual `bench/loop` and
-`bench/text-length` work with matched arithmetic, flags and outputs.
+**P1 — Repeated CPU gaps are measured; #223's final gates are pending.** The
+[frozen CPU baseline](docs/measurements/cpu-baselines.md) covers checked `loop`
+and `text-length` peers in six audited sessions. On the selected hosts, the loop
+is about 14.4–14.5% slower than Rust on ARM64 and 39–40% slower on AMD64.
+Character counting is about 92–95% slower than C on ARM64 and 106–107% slower
+on AMD64. These complete-program timings include startup and cleanup; both fwp
+programs report zero managed allocation requests and retains. The cause of the
+remaining gaps is not established. All alternative-host results stay visible.
 Also preserve the [parser comparison](docs/measurements/parser-workspace.md):
 31/511/8,191-node balanced trees and a 127-node left-nested tree against its
 explicit C/Rust peers. Tokenization and construction remain measurable costs;

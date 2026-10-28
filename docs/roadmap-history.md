@@ -6,6 +6,39 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Functional calls and recursion (PR #222)
+
+[The call/recursion report](functional-costs.md) verifies eight known/boundary
+pairs, weak-metadata frame reuse and restricted scalar mutual loops. Strong or
+unknown captures retain cleanup boundaries. POSIX stack handling now stores a
+numeric address instead of a pointer to an expired local. Callback guard controls
+remain detectable under production C optimization. The historical Intel abort's
+cause remains unknown; this repair does not close that defect.
+
+Final head `b69f111e03802ab4041cf9f6d7fbfce94194c379` passes all nine production
+jobs [40721714559](https://github.com/e6qu/fun-with-pipes/actions/runs/40721714559),
+[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/40721714558) and both
+[G2 hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/40721764744).
+Every complete log is audited without compiler warnings or failed targets:
+977 passing tests per Linux host, 617 per regular macOS host, 357 per ownership
+macOS host and 797 per Windows host. Benchmark comparison and rejection controls
+also pass. These counts include separate test invocations, not unique source tests.
+[Raw G2 evidence](measurements/ownership-analysis-2026-10-28-final.json) preserves
+unchanged limits, equal lifetime facts and both hosts' timing samples.
+
+The longer [timing run](https://github.com/e6qu/fun-with-pipes/actions/runs/40721041382)
+at `98a1d8eb` passes every original limit. Independent review verifies its samples,
+outputs, actual binaries, flags, profiles and stack reports. The final head changes
+only documentation from that source. The short noisy session remains recorded as
+inconclusive; it was not relabelled or used to loosen acceptance.
+
+The user merged as `17978b97373f3e9236468ac19c1b8e0d290816d7`, tree
+`5a434a44f164e664b31c70a8d7b1db9e8dc8ab5d`, identical to the tested head. The
+squash message is one line, at most 80 characters, with no body or trailers.
+Postmerge production `40749834807` and docs `40749834937` also report success;
+acceptance above relies on the audited final-head runs. F1–F3 are complete for
+the stated cases; B/P/D/N and application work remain in the plan.
+
 ## Scoped parser storage and analysis work (PR #221)
 
 A selected parser invocation owns aligned storage blocks; integer/link tree nodes

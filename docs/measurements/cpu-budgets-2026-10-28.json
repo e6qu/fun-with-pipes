@@ -1,0 +1,336 @@
+{
+  "source": "ec03d9cd81c001bf006a73e7dbfb044155884611",
+  "settings": {
+    "samples": 32,
+    "warmups": 2,
+    "cpuPolicy": "all",
+    "timeout": 120.0,
+    "processes": {
+      "loop": 1,
+      "text-length": 32
+    },
+    "maxControlRatio": 1.03,
+    "maxPairRatio": 1.1
+  },
+  "rows": [
+    {
+      "architecture": "aarch64",
+      "host": {
+        "model": "Neoverse-N2",
+        "vendor": "ARM",
+        "architecture": "aarch64",
+        "allowedCpuCount": 4
+      },
+      "toolchains": "`gcc -std=c11 -O2 -ffp-contract=off`):\n\n```text\ngcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n```\n\nRust compiler (`rustc --edition=2021 -O`):\n\n```text\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n```\n\nfwp build flags: `-O2`, `FWP_LTO=0`; generated C is compiled\nas one source file, without link-time optimization.\n\n",
+      "program": "loop",
+      "maxCandidateRatio": 1.0137102296293898,
+      "maxRatioForImprovement": 0.9864751985048013,
+      "maxControlPairRatio": 1.006855114814695,
+      "baseline": [
+        {
+          "medianBatchSeconds": {
+            "c": 0.17658320800001093,
+            "rs": 0.11421769800000448,
+            "fwp": 0.1306970239999714,
+            "identical": 0.13080544049995524
+          },
+          "controlRatio": 1.000829525391365,
+          "pairRatio95": 1.0049062521943584,
+          "fwpOverC": 0.7401441251422011,
+          "fwpOverRust": 1.1442799696415373,
+          "decision": "stable"
+        },
+        {
+          "medianBatchSeconds": {
+            "c": 0.17651280999996288,
+            "rs": 0.11423454900000252,
+            "fwp": 0.1307970435000243,
+            "identical": 0.13081882149998592
+          },
+          "controlRatio": 1.0001665022341397,
+          "pairRatio95": 1.006855114814695,
+          "fwpOverC": 0.7410059558853083,
+          "fwpOverRust": 1.1449867368935944,
+          "decision": "stable"
+        }
+      ],
+      "inputs": {
+        "c": "92668a9bbff2b609c08be4f0504f7a587d7545f3504fa4d1d8250332221aa2e9",
+        "rs": "05de58a23d02391e00a0cc3949d994042d623cf96c0421d7f54001cb66c5e50c",
+        "fwp": "9bdaa22b8a61325f5b441352434608acba2a272ace83f15a1a1dd063b1c6c365"
+      },
+      "sessions": [
+        {
+          "run": 40765920239,
+          "session": 1
+        },
+        {
+          "run": 40765920239,
+          "session": 2
+        }
+      ]
+    },
+    {
+      "architecture": "aarch64",
+      "host": {
+        "model": "Neoverse-N2",
+        "vendor": "ARM",
+        "architecture": "aarch64",
+        "allowedCpuCount": 4
+      },
+      "toolchains": "`gcc -std=c11 -O2 -ffp-contract=off`):\n\n```text\ngcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n```\n\nRust compiler (`rustc --edition=2021 -O`):\n\n```text\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n```\n\nfwp build flags: `-O2`, `FWP_LTO=0`; generated C is compiled\nas one source file, without link-time optimization.\n\n",
+      "program": "text-length",
+      "maxCandidateRatio": 1.050844659589738,
+      "maxRatioForImprovement": 0.9516154370431987,
+      "maxControlPairRatio": 1.025422329794869,
+      "baseline": [
+        {
+          "medianBatchSeconds": {
+            "c": 0.10741509049995557,
+            "rs": 0.19291832000001818,
+            "fwp": 0.20939454499998078,
+            "identical": 0.20916724150009713
+          },
+          "controlRatio": 1.0010867069731066,
+          "pairRatio95": 1.025422329794869,
+          "fwpOverC": 1.9493959743027671,
+          "fwpOverRust": 1.0854051859873186,
+          "decision": "stable"
+        },
+        {
+          "medianBatchSeconds": {
+            "c": 0.10364886450008726,
+            "rs": 0.18665033550013277,
+            "fwp": 0.1990445695000176,
+            "identical": 0.20008305049992714
+          },
+          "controlRatio": 1.005217328975707,
+          "pairRatio95": 1.0230845198252645,
+          "fwpOverC": 1.9203738551313316,
+          "fwpOverRust": 1.0664034916769598,
+          "decision": "stable"
+        }
+      ],
+      "inputs": {
+        "c": "0db1225be1688b712065edb343f25519be3771efe3120d2d0c4fcd86af499c16",
+        "rs": "acff66bf1919bf53b5f42e8138f4bfa2c37cfd5d43f115afaeaf6b4861e87684",
+        "fwp": "532f5f77f4d79f2802f3f54329ce4d84b7e45a66d5680ad9754ad3bf12e56810"
+      },
+      "sessions": [
+        {
+          "run": 40765920239,
+          "session": 1
+        },
+        {
+          "run": 40765920239,
+          "session": 2
+        }
+      ]
+    },
+    {
+      "architecture": "x86_64",
+      "host": {
+        "model": "AMD EPYC 7763 64-Core Processor",
+        "vendor": "AuthenticAMD",
+        "architecture": "x86_64",
+        "allowedCpuCount": 4
+      },
+      "toolchains": "`gcc -std=c11 -O2 -ffp-contract=off`):\n\n```text\ngcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n```\n\nRust compiler (`rustc --edition=2021 -O`):\n\n```text\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n```\n\nfwp build flags: `-O2`, `FWP_LTO=0`; generated C is compiled\nas one source file, without link-time optimization.\n\n",
+      "program": "loop",
+      "maxCandidateRatio": 1.0375772381073647,
+      "maxRatioForImprovement": 0.9637836714923421,
+      "maxControlPairRatio": 1.0187886190536823,
+      "baseline": [
+        {
+          "medianBatchSeconds": {
+            "c": 0.12705913250000833,
+            "rs": 0.10684090300000548,
+            "fwp": 0.14971186850000606,
+            "identical": 0.14915406699999778
+          },
+          "controlRatio": 1.0037397672837731,
+          "pairRatio95": 1.014623591452888,
+          "fwpOverC": 1.1782849886842746,
+          "fwpOverRust": 1.4012598573787642,
+          "decision": "stable"
+        },
+        {
+          "medianBatchSeconds": {
+            "c": 0.126465117500004,
+            "rs": 0.1069464205000088,
+            "fwp": 0.14881044799999188,
+            "identical": 0.14934084200001507
+          },
+          "controlRatio": 1.0035642255443196,
+          "pairRatio95": 1.0187886190536823,
+          "fwpOverC": 1.1766916517512205,
+          "fwpOverRust": 1.3914486086047138,
+          "decision": "stable"
+        }
+      ],
+      "inputs": {
+        "c": "92668a9bbff2b609c08be4f0504f7a587d7545f3504fa4d1d8250332221aa2e9",
+        "rs": "05de58a23d02391e00a0cc3949d994042d623cf96c0421d7f54001cb66c5e50c",
+        "fwp": "9bdaa22b8a61325f5b441352434608acba2a272ace83f15a1a1dd063b1c6c365"
+      },
+      "sessions": [
+        {
+          "run": 40765920239,
+          "session": 2
+        },
+        {
+          "run": 40768027818,
+          "session": 1
+        }
+      ]
+    },
+    {
+      "architecture": "x86_64",
+      "host": {
+        "model": "AMD EPYC 7763 64-Core Processor",
+        "vendor": "AuthenticAMD",
+        "architecture": "x86_64",
+        "allowedCpuCount": 4
+      },
+      "toolchains": "`gcc -std=c11 -O2 -ffp-contract=off`):\n\n```text\ngcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n```\n\nRust compiler (`rustc --edition=2021 -O`):\n\n```text\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n```\n\nfwp build flags: `-O2`, `FWP_LTO=0`; generated C is compiled\nas one source file, without link-time optimization.\n\n",
+      "program": "text-length",
+      "maxCandidateRatio": 1.1048886986668203,
+      "maxRatioForImprovement": 0.905068538764691,
+      "maxControlPairRatio": 1.0524443493334101,
+      "baseline": [
+        {
+          "medianBatchSeconds": {
+            "c": 0.11436524800002701,
+            "rs": 0.21613113850000332,
+            "fwp": 0.23649998550000362,
+            "identical": 0.23518085900005303
+          },
+          "controlRatio": 1.0056089875067182,
+          "pairRatio95": 1.0465947321678972,
+          "fwpOverC": 2.0679357552737327,
+          "fwpOverRust": 1.0942430005290513,
+          "decision": "stable"
+        },
+        {
+          "medianBatchSeconds": {
+            "c": 0.11437839399999916,
+            "rs": 0.21607318600003111,
+            "fwp": 0.23507968449997918,
+            "identical": 0.23278088950004872
+          },
+          "controlRatio": 1.009875359634838,
+          "pairRatio95": 1.0524443493334101,
+          "fwpOverC": 2.055280514779574,
+          "fwpOverRust": 1.0879632445459722,
+          "decision": "stable"
+        }
+      ],
+      "inputs": {
+        "c": "0db1225be1688b712065edb343f25519be3771efe3120d2d0c4fcd86af499c16",
+        "rs": "acff66bf1919bf53b5f42e8138f4bfa2c37cfd5d43f115afaeaf6b4861e87684",
+        "fwp": "532f5f77f4d79f2802f3f54329ce4d84b7e45a66d5680ad9754ad3bf12e56810"
+      },
+      "sessions": [
+        {
+          "run": 40765920239,
+          "session": 2
+        },
+        {
+          "run": 40768027818,
+          "session": 1
+        }
+      ]
+    }
+  ],
+  "additionalSessions": [
+    {
+      "run": 40765920239,
+      "architecture": "x86_64",
+      "session": 1,
+      "host": {
+        "model": "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz",
+        "vendor": "GenuineIntel",
+        "architecture": "x86_64",
+        "allowedCpuCount": 4
+      },
+      "results": {
+        "loop": {
+          "medianBatchSeconds": {
+            "c": 0.16182625199996892,
+            "rs": 0.11543923150000523,
+            "fwp": 0.1466577225000094,
+            "identical": 0.14738238300000717
+          },
+          "controlRatio": 1.0049411683724851,
+          "pairRatio95": 1.0338114119003041,
+          "fwpOverC": 0.9062665710136918,
+          "fwpOverRust": 1.2704322490227489,
+          "decision": "stable"
+        },
+        "text-length": {
+          "medianBatchSeconds": {
+            "c": 0.11100953000007507,
+            "rs": 0.21323795299989,
+            "fwp": 0.22970979999988117,
+            "identical": 0.232097691000007
+          },
+          "controlRatio": 1.0103952508779646,
+          "pairRatio95": 1.078884775986333,
+          "fwpOverC": 2.069279997849967,
+          "fwpOverRust": 1.0772463192797563,
+          "decision": "stable"
+        }
+      }
+    },
+    {
+      "run": 40768027818,
+      "architecture": "x86_64",
+      "session": 2,
+      "host": {
+        "model": "AMD EPYC 9V74 80-Core Processor",
+        "vendor": "AuthenticAMD",
+        "architecture": "x86_64",
+        "allowedCpuCount": 4
+      },
+      "results": {
+        "loop": {
+          "medianBatchSeconds": {
+            "c": 0.11089186349997249,
+            "rs": 0.09665185150001321,
+            "fwp": 0.11498068949998697,
+            "identical": 0.11483267750000437
+          },
+          "controlRatio": 1.001288936243628,
+          "pairRatio95": 1.0191571069589065,
+          "fwpOverC": 1.0368721912587888,
+          "fwpOverRust": 1.189637732909558,
+          "decision": "stable"
+        },
+        "text-length": {
+          "medianBatchSeconds": {
+            "c": 0.09778789700001767,
+            "rs": 0.19876375749990416,
+            "fwp": 0.19752792899996052,
+            "identical": 0.197617787500036
+          },
+          "controlRatio": 1.0004549154164195,
+          "pairRatio95": 1.031702842784239,
+          "fwpOverC": 2.0199629510380497,
+          "fwpOverRust": 0.9937824253501334,
+          "decision": "stable"
+        }
+      }
+    }
+  ],
+  "selection": "Order jobs by workflow run and session label per architecture; use the first repeated CPU model, independent of its speed or noise result. Preserve and validate every additional session.",
+  "rule": "Future same-session candidate/baseline median ratio must be <= 1 + twice the larger baseline-session 95th-percentile identical-code deviation. A speedup claim additionally needs a ratio below the reciprocal limit. Its control must stay inside the frozen control envelope. These are empirical decision limits, not statistical confidence guarantees. Never compare wall times from different jobs as a speedup.",
+  "scope": "Only loop and text-length on these CPUs/toolchains. Other programs and architectures require their own baselines.",
+  "records": [
+    "115fd03fd580a9ad6cee6b83af9ae11b0af26da85b468912f5aaa4ab1650acd5",
+    "3f2b0f1154e2f9b6f4033bc1071b20c6046758e613a3724b43f1534107f546ff",
+    "6814c1e1f8092fa51279369c8aa21a83880b2be7e5cc58975f02beda6984d1fc",
+    "7e5b24e1ecebf745ec7627015c2be6d16617b2d8458b40f64f678c065337656c",
+    "8b9fa516af8c21f5425ab235d105aa75f51a9308e5ed1d40eb49a503d281e61b",
+    "c2fa89dc2ce33451666e56d28089d008d9ca6b77fb399d6921c6cfb696b11df6"
+  ]
+}
