@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -33,6 +33,73 @@ on:
         description: Exact focused API run supplying native diagnostic executables
         type: string
 jobs:
+  functional_calls:
+    if: inputs.suite == 'functional-calls' || inputs.suite == 'functional-probes'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 35
+    env:
+      CC: gcc
+      FWP_LTO: '0'
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      FWP_TAIL_ARTIFACTS: functional-evidence/tail
+      FWP_ARC_ARTIFACTS: functional-evidence/owners
+      FWP_CONTEXT_ARTIFACTS: functional-evidence/calls
+      # Probe-only reruns follow test/measurement repairs; compiler changes need the full selection.
+      FWP_FUNCTIONAL_TESTS: ${{ inputs.suite == 'functional-probes' && '--test tail_recursion --test compiler_call_liveness' || '--test tail_recursion --test compiler_call_liveness --test borrowed_callbacks --test closure_ownership --test state_sequence_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test queued_functions' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fetch --locked
+      - name: Compile all changed call and cleanup tests
+        id: compiler
+        run: |
+          read -r -a fwp_tests <<< "$FWP_FUNCTIONAL_TESTS"
+          cargo test --locked --offline --no-run --lib "${fwp_tests[@]}"
+      - name: Rust and language formatting
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: |
+          cargo fmt --all -- --check
+          target/debug/fwp fmt --check tests/fixtures/weak_tail_recursion.fwp tests/fixtures/mutual_tail_recursion.fwp tests/fixtures/functional_costs.fwp
+      - name: All-target lint before native tests
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: cargo clippy --locked --offline --keep-going --all-targets -- -D warnings
+      - name: Ownership contracts and tail-frame proofs
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: cargo test --locked --offline --lib -- --nocapture
+      - name: Native calls, weak swaps, failures and cancellation at O0 and O2
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: |
+          read -r -a fwp_tests <<< "$FWP_FUNCTIONAL_TESTS"
+          cargo test --locked --offline --no-fail-fast "${fwp_tests[@]}" -- --nocapture
+      - name: Emit matched ordinary, grouped and explicit-loop programs
+        id: mutual_programs
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        env:
+          FWP_MUTUAL_EVIDENCE: functional-evidence/mutual
+        run: cargo test --locked --offline --lib tailrec::pairs::tests::emit_mutual_recursion_comparison -- --ignored --exact --nocapture
+      - name: Measure the mutual-recursion decision with fixed budgets
+        if: ${{ !cancelled() && steps.mutual_programs.outcome == 'success' }}
+        run: >-
+          python3 scripts/measure-mutual-recursion.py --input functional-evidence/mutual
+          --cc gcc --objdump objdump --iterations 4096 --repeats 65536 --samples 8
+          --warmups 2 --timeout 180 --max-control-ratio 1.10 --max-loop-ratio 1.25
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: functional-evidence-${{ matrix.runner }}
+          path: functional-evidence/
+          if-no-files-found: warn
+
   parser_measurements:
     if: inputs.suite == 'parser-measurements'
     strategy:

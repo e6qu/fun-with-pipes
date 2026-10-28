@@ -16,6 +16,10 @@ identities. Do not edit observations to make an old experiment describe new code
 - [Scalar reads and sort callbacks](sort-key-ownership.md): remove temporary String and pair owners.
 - [Contiguous sort keys](inline-sort-keys.md): remove key boxes, with exact allocation budgets and separate sorting-time controls.
 
+## Function calls and recursion
+
+- [Call-cost matrix and mutual-loop decision](../functional-costs.md): exact scopes and budgets, first measured comparisons and remaining verification.
+
 ## Numerical applications
 
 These reports follow different versions of derivative descent. Read the variant table and timing boundary before comparing ratios across reports. A protocol describes an experiment, not an outstanding task.
@@ -163,3 +167,8 @@ These are historical observations, not current compiler budgets:
 Other dated JSON files are linked by their corresponding reports or delivery
 records. A missing or expired external artifact is a limitation of that evidence;
 regenerating a binary does not recreate the original measured binary.
+
+[Functional call observations](functional-calls-2026-10-28.json) retain the eight
+known/boundary pairs. The [second mutual-recursion session](mutual-recursion-2026-10-28-second.json)
+retains an inconclusive noisy row; [the guide](../functional-costs.md) explains
+why the next comparison uses longer batches with unchanged acceptance limits.

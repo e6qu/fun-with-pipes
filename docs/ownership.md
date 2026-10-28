@@ -20,8 +20,8 @@ The [accepted ownership direction](gc-removal-design.md) specifies explicit weak
 links, rejection of unproved owning cycles, count-free unique storage and scoped
 regions. Weak channels and retained C registrations are implemented. A restricted
 [count-free local array path](measurements/unique-array-storage.md) is verified in
-#219. The [scoped parser path](parser-workspace.md) is implemented and has passed
-focused native/WASI checks; full platform acceptance is pending. It proves one
+#219. The [scoped parser path](parser-workspace.md) is verified in #221, including
+all native platform gates and the declared WASI checks. It proves one
 function-call lifetime, not arbitrary region relationships. APIs may change.
 
 ## Existing implementation

@@ -1,178 +1,151 @@
 # Current work
 
-**Next:** verify compact ownership origins and single capture-dependency reads
-on both G2 hosts. PR #221 remains draft; all nine production jobs, docs and G2
-must pass on the final head before squash merge and then F1–F3.
+**Next:** monitor full platform checks and G2 on the final PR head; audit the
+longer timing run `40721041382` at `98a1d8eb4b250c036d1cd062f2fe79b624ac8fea`.
+Its compiler, runtime, tests and measurement settings also apply to the following
+documentation-only commit. Do not accept F3 from a successful collection job
+alone: every measured decision must pass its unchanged limits.
 
-Run `40683252110` at `dd91cc9c4f8ba7306d1848542b3a63f60817fee1` passes every Intel
-macOS gate. Both hosts pass 212 units, all-target Clippy, exact fact sets and REST
-budgets. Small fixtures need nine waves (limit 16). Linux fails only the N=64
-separate/merged ratio: 2.008451/1.320981 ms = 1.5204, limit 1.5. All logs audited;
-no other diagnostics. Docs `40683195261` passed and its complete log was audited.
-Artifacts: `/private/tmp/fwp-221-dd91-analysis`.
+Worktree: `/private/tmp/fwp-parser-workspace`; branch:
+`functional-calls-and-tail-loops`; [PR #222](https://github.com/e6qu/fun-with-pipes/pull/222).
+F1–F3 remain unaccepted; A6 is verified. The initial full/G2 runs at `98a1d8eb`
+were queued before a final documentation correction; use the replacement
+final-head runs for merge. Exact IDs are available from `gh pr checks 222` and
+`gh run list --branch functional-calls-and-tail-loops`.
 
-The repair stores capture counts in the IR's existing `u32` range, with checked
-conversion, and registers saturated-call capture dependencies once rather than
-twice. A guarded extracted Rust O1 probe measures origin size 48 → 40 bytes on
-local ARM64 and passes conversion bounds. This is not a full compiler test or
-peak-memory measurement. Run:
-`python3 scripts/local-guard.py python3 /private/tmp/check-fwp-origin-layout.py`.
+Focused `40719252691` and docs `40719100185` pass at `ca914eec`.
+Every completed log is audited: each host passes 218 units (four intentionally
+ignored), nine call tests, four tail/stack tests and the emitter; formatting and
+Clippy pass without warnings. Collection succeeded, but AMD64 O2 timing is
+inconclusive. The saved-address overflow controls pass on both Linux hosts.
 
-[Every attempt](measurements/ownership-worklist-2026-10-28.json) retains its samples
-and source: original Intel timeout, first worklist's 19-wave failure and current
-Linux ratio failure. Keep all budgets unchanged. Earlier/self readers wait for
-the next ordered wave; later readers can use new facts in the same wave. The
-128-call regression tests both ID orders against a test-only full scan.
+## Implementation and evidence
 
-The PR, parser guides and fixture comments distinguish quoted benchmark input
-from fwp syntax. fwp uses infix arithmetic (`2 + 3 * 4`); the toy parser consumes
-its own text format. No language grammar or benchmark calculation changed.
+[The measurement guide](functional-costs.md) owns the exact F1–F3 fixtures,
+scopes and budgets. F1 compares eight known/unknown function boundaries with
+executed allocation, dispatch, box and retain observations. F2 permits weak
+metadata in reused frames, removes only proved plain-capture cleanup anchors,
+and ignores removed variables' unused type slots. Strong/unknown captures,
+cached closures and fully applied closure factories retain their boundaries.
+F3 prototypes a scalar mutual pair as one tagged worker, retaining callable
+entries and ordinary non-tail calls. The comparison must accept or reject it
+against ordinary calls and an explicit loop; noisy controls are inconclusive.
 
-Superseded production `40674858299`, `40676851764` and old docs `40676851675` are
-cancelled. Draft production is skipped, not verified. Inspect failed steps while
-jobs run; audit all targets before batching repairs. Never merge a skipped gate.
+Focused `40710069104` at `e85d794c` finished on both Linux hosts. Both passed
+compilation, formatting, all-target Clippy, 218 compiler units and the IR emitter.
+Four units are intentionally ignored. Both docs `40709965204` and the preceding
+docs `40708331268` pass.
 
-[PR #221](https://github.com/e6qu/fun-with-pipes/pull/221) uses
-`/private/tmp/fwp-parser-workspace`, branch `scoped-parser-workspace`, based on
-verified #220 squash `56d5aac63a9963ae6b16574f10d6dc3087a08d8a`.
-A6 is implemented and measured; complete platform acceptance is pending.
-[The lifetime contract](parser-workspace.md) and
-[the measured comparison](measurements/parser-workspace.md) define its limits.
+All existing affected native targets pass: borrowed callbacks (1 test), closure
+ownership (3), eight existing call-liveness cases, queued/weak functions (12),
+resource fields (1), resource variants (1), resource frames (3), match cleanup
+(1), State sequences (4), and the tail rejection control (1). Both complete logs
+are audited; expected scheduler panic controls passed.
 
-## Source and completed checks
+The weak-tail fixture passes raw/optimized interpretation and native O0/O2 before
+the later mutual-fixture assertion fails. Independent saved-artifact audit verifies
+outputs, zero live managed storage, ELF architectures and broken-stack exit 194.
+Across 600,009 observed loop entries it requests 23 allocations / 1,090 bytes
+for the whole fixture, including setup, output and cleanup. Maximum observed
+stack ranges: ARM64 2,112/1,760 bytes and AMD64 2,496/2,160 bytes at O0/O2.
+These compare visits across several invocations, not just one frame or elapsed
+speed. Callback offset controls independently exit 210 when either guard is
+removed; valid production/UBSan paths pass at O1/O2.
 
-- Parser representation/runtime source is `ca56023eb362259cf2099c9c9d477b20b3cf6793`.
-  Published later changes add measurement diagnostics, docs and test-only repairs.
-  The new analysis scheduling changes compiler performance and needs fresh G2
-  evidence. Existing parser measurements retain their original source IDs.
-- Native Linux ARM64/AMD64 run `40650396700` passed: 211 units, six allocator
-  tests, six parser tests, two record tests, Clippy and actual WASI O1/O2 checks.
-  All logs and 26 native/WASI probes per host were independently audited for
-  outputs, statuses, physical cleanup, deliberate mutations and binary targets.
-- Measurements at `35250b3a5ecdaa8f3e02ddb7af9664c84068f186` passed twice per
-  architecture: AMD64 `40656341807`, ARM64 `40657569359`. All logs and artifacts
-  passed independent audit: samples, budgets, allocation/cleanup, actual binary
-  headers and text sizes, compiler scale and GCC stack observations.
-- [The retained data](measurements/parser-workspace-2026-10-28.json) includes
-  every current sample and prior measurement attempt. Three earlier identical-
-  binary controls failed at 10.08%, 10.44% and 10.47%; their candidate timings are
-  absent. Longer samples did not eliminate failures. Added CPU/scheduling data
-  does not establish their cause. Preserve the unchanged 10% limit and reject
-  future unstable controls; never discard failed samples or reset budgets.
-- Eleven measurement evidence controls, actionlint and the documentation audit
-  passed locally under the guard; docs CI `40656331725` passed. The consolidated
-  final report audit passes 169 link sets, 106 preparation pairs and eight steps.
-- No full local build, suite or benchmark ran. Earlier guarded Clang O1/O2
-  checks cover allocation boundaries, oversized nodes, growth, nested owners,
-  every allocation failure and missing cleanup. GCC results come from CI.
+## Latest audit and pending measurement
 
-## Result and limits
+Both hosts of `40719252691` pass the repaired F1 callback matrix and all tail
+controls. All 128 count rows agree across architectures and O0/O2. The native
+probe verifies callback metadata, results, per-call cleanup and final teardown.
+The fixture exposes actual first-class function identities; no blanket runtime
+callback emission or compatibility wrapper was added. Known-call count expectations at `98a1d8eb`
+include remaining per-element State `each` allocations.
 
-One invocation owns aligned 256-to-4,096-byte blocks. Admitted recursive nodes
-contain only integers and internal links; the links have no counts. Allocation
-helpers receive context explicitly; readers need none. Recursive public calls
-start new owners. Escaping/cached trees, unknown/captured uses, managed node
-fields and self-tail roots keep ordinary ownership. Strings/tokens retain theirs.
-Completed helper clones obey actual code-growth limits. Cancellation is observed
-after a tree exists; omitted cleanup must fail the physical-storage check.
+[The guide](functional-costs.md) owns the results and limitations. First timing
+session `40714605188` accepts all four comparisons. The second session accepts
+three but marks AMD64 O2 inconclusive: identical-binary noise is 1.150 versus
+1.10 allowed. All binary/hash/stack/profile/sample checks pass independent audit.
+Retain both raw records. Run `40721041382` uses 65,536 rather than 1,024 invocations
+per sample; all inputs, flags, sample counts and acceptance limits stay unchanged.
+No F3 acceptance follows from a green collection job alone.
 
-The four fixed trees parse in 18–28% less time than previous fwp, but take
-5.7–9.4× C and 5.2–8.6× Rust time. The peers borrow tokens; fwp owns them.
-Allocations decrease while total allocated slot bytes rise 4–14%; peak live
-slots match previous fwp. Report these tradeoffs, individual stack frames and
-compiler RSS, not only removed counts. This is one workspace, not general regions.
+Latest log: `/private/tmp/fwp-222-ca914.log`; artifacts:
+`/private/tmp/fwp-222-ca914-artifacts`. Guarded audits
+`/private/tmp/fwp-audit-ca914.py` and `/private/tmp/fwp-audit-calls.py` pass,
+including the explicit inconclusive result. Four decision controls pass.
 
-## Repairs and complete gate audit
+`functional-probes` runs the changed call/tail targets, compiler units, formatting,
+Clippy and measurement. The eight other affected resource targets passed at
+`e85d794c`; production compiler ownership code has not changed since then.
+All maintained tests still require the full final-head platform gates.
 
-The passing Linux G2 log exposed `const_item_mutation` in the test-only `prove`
-helper: it borrowed a mutable temporary from `usize::MAX`. Use an explicit local
-budget instead. This does not change compiler/runtime behavior or measurements.
-The focused parser lint step now checks all targets, including the unit-test
-harness that its prior selection omitted. Full CI now uploads failed native/WASI
-Clippy diagnostics before long tests, so failures can be diagnosed immediately.
-All four failed Clippy logs at `dbf1c0ba` contain only that test-helper error.
-All four Clippy steps pass at `45f9e81013fdf3b9e07aa0d4222c87bcde289e2d`
-in intermediate production run `40674858299`.
-The complete old run `40659395283` passed these audited targets:
+## Earlier repairs and retained records
 
-- Each regular macOS shard: 131 targets, 608 tests.
-- Each macOS ownership shard: 125 targets, 353 tests.
-- Each Windows host: 150 retained targets, 408 tests, plus the direct unit,
-  library, SDK, protocol, golden and package steps in the complete job log.
-- Linux ARM64: 256 targets, 966 tests, including all six parser tests and all
-  21 WebAssembly ownership tests.
-- Linux AMD64: 965 tests passed; only `tls::streams` failed, as described below.
-  All 256 targets finished, with no other failed target or compiler diagnostic.
+| Source | Focused result / repair |
+|---|---|
+| `8787b42d` / `40696627458` | u32/usize arity errors; fixed once at the indexing boundary with checked frame limits |
+| `8b0fc929` / `40699575855` | Full failure audit found a wrong manual primitive name, source formatting/typing mistakes, too-short C calls, conservative capture anchors and an unreliable sanitizer control |
+| `c56d644f` / `40703270836` | Owned partial applications replace short C calls; queued run cancelled before the complete batch |
+| `1f65b46f` / `40708352241` | Capture proof and source controls added; queued run superseded and cancelled |
+| `e85d794c` / `40710069104` | Compiler/lifetime controls pass; three probe errors repaired in later commits |
 
-The TLS fixture deliberately connects to a plain-text server. Ubuntu's OpenSSL
-`3.5.5-1ubuntu3.7` reported `record layer failure` instead of the snapshot's
-`wrong version number`. Both backends use OpenSSL's reason text, whose spelling
-is not a stable language contract. The snapshot accepts those two reasons only
-on this complete client line. Other messages, certificate failures and successful
-connections remain distinct; production TLS behavior is unchanged.
-The actual snapshot code, compiled at Rust O1 with assertions/overflow checks,
-passes replay of the complete CI output and the new rejection controls. The old
-code fails both controls (exit 101). Full interpreter/native TLS execution remains
-required on the final head; this local replay is not a full TLS test.
+Logs: `/private/tmp/fwp-222-{8787,8b0}-failed.log` and
+`/private/tmp/fwp-222-e85-{arm,amd}.{log,txt}`. Artifacts:
+`/private/tmp/fwp-222-e85-{arm,amd}-artifact`. Independent audit:
+`python3 scripts/local-guard.py python3 /private/tmp/fwp-audit-e85.py` (passes).
+Failed F3 reports retain the exact source and no accepted result. Later logs
+are `/private/tmp/fwp-222-b2f-{arm,amd}.{log,txt}`; artifacts are
+`/private/tmp/fwp-222-b2f-{arm,amd}-artifact`. Both complete logs are audited: 218
+units, eight old call-liveness cases, three tail tests and the emitter pass;
+only the F1 fixture fails. No compiler warnings.
 
-All 20 saved parser probes on each macOS/Windows architecture pass independent
-output, failure-code, physical-storage and Mach-O/PE architecture checks.
-The retained ARM crash report is the deliberate
-`cleanup_panic_aborts_before_borrowed_tasks_escape` control, confirmed from its
-source stack and passing unit test. Require every final-head gate again.
-The lint/TLS repairs do not change production behavior. The subsequent analysis
-repair is separate and still needs verification.
-The repair batch also corrects guides that still called GC-removal validation
-pending. Standalone comparisons without refreshed measurements remain explicitly
-unmeasured; historical sources, modes and numbers are unchanged.
+## Completed parser delivery
 
-Guarded local checks passed: `cargo fmt --all -- --check`, actionlint for both
-changed workflows, and `python3 scripts/check-roadmap.py` (169 link sets,
-106 preparation pairs, eight roadmap steps). `git diff --check` passes;
-`AGENTS.md` remains 99 lines. TLS replay command:
-`python3 scripts/local-guard.py python3 /private/tmp/check-fwp-tls-snapshot.py`.
-Full builds, suites and measurements stayed on CI.
+All nine postmerge production jobs `40691815018`, docs `40691814677` and both
+G2 hosts `40685939711` pass. Every completed log is audited, including warnings
+and individual test summaries. [History](roadmap-history.md#scoped-parser-storage-and-analysis-work-pr-221)
+owns the merge/tree/message verification and host counts. The parser and analysis
+reports retain their separate source IDs and four timing sessions. The parser
+remains slower than its C/Rust peers; GC removal and scoped storage do not imply
+language-wide zero overhead or no ARC.
 
-## Repairs and artifacts
-
-This PR also fixes guard tests that depended on host disk capacity and Linux
-WASI jobs that mixed Clang 21 with LLVM 18 libraries. Production guard limits
-remain unchanged; the shared WASI setup pins and preflights matching tools.
-Measurement repairs recognize the previous unboxed worker/public bridge and
-require actual exported roots in compiler-scale output. Invalid earlier compiler
-rows are retained and labeled in the report.
-
-Current artifacts: `/private/tmp/fwp-221-ca560-checks`,
-`/private/tmp/fwp-221-35250-measurements` and
-`/private/tmp/fwp-221-dbf1-{macos,windows}-{arm,amd}-parser` (native probe audits).
-Earlier artifacts and audits remain in
-`/private/tmp/fwp-221-{a55,ec36,ca560,a51}-measurements`; do not remove evidence
-needed to reproduce the published record. No detached merger runs.
+Preserve the unexplained [Intel compiler-abort evidence](measurements/compiler-abort.md).
+Passing reruns do not establish its cause. No disassembly-led allocator experiments.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | Verified | Maintain collector-free ownership and cycle checks |
-| 2 | In progress | A6 final platform acceptance |
-| 3 | Pending | Functional calls and recursion fixtures/optimizations |
-| 4 | Pending | Close named CPU performance gaps |
+| 2 | Verified | Maintain the named A1–A6 guarantees |
+| 3 | In progress | Finish F1–F3 probes, measurement decision and platform gates |
+| 4 | Pending | Close measured CPU performance gaps |
 | 5 | Pending | Derivative storage, timing and precision |
 | 6 | Pending | CPU numerical kernels |
-| 7 | In progress | Extend fixed comparison budgets and audit controls |
-| 8 | Pending | Larger-program correctness, cleanup and scale matrix |
+| 7 | In progress | Fixed comparison budgets and complete evidence |
+| 8 | Pending | Larger-program correctness, cleanup and scale |
 
-## Recovery
+## Local checks and recovery
 
-GC removal is verified in #217; A1–A5 through #220. A6 needs final platform gates;
-steps 3–8 remain open. [History](roadmap-history.md) owns completed delivery IDs;
-[PLAN.md](../PLAN.md) owns tasks. The original intermittent Intel compiler abort
-remains unexplained; preserve evidence and investigate source/input on recurrence.
+Guarded Rustfmt, Actionlint, fixture formatting, measurement-decision controls
+and independent artifact audit pass. The actual formatter modules built alone
+at Rust O1, then checked syntax equivalence and idempotence. No full local build,
+suite or benchmark ran. The handoff rewrite initially omitted the required
+eight-step status table; it is restored above. The repaired audit passes all
+170 link sets, 106 preparation records, eight steps and commit-message checks.
 
-The primary checkout is detached at #209 with a recovery pointer and an untracked
-compiler-abort report; preserve both. Disk is about 74 GiB free. Keep the fixed
-64 GiB/2 GiB/1 GiB/180-second limits and use `local-guard.py` for local checks.
+The primary checkout remains detached at #209, with a recovery pointer and an
+untracked compiler-abort report; preserve both. Prior raw records remain in
+`/private/tmp/fwp-221-50dd-analysis`, `fwp-221-{45f9,ba383,dd91}-analysis`,
+`fwp-221-35250-measurements`, `fwp-221-dbf1-{macos,windows}-{arm,amd}-parser`
+and `/private/tmp/fwp-221-ef037-*.log`. Do not delete failed evidence.
+Disk is about 73 GiB free; keep the 64 GiB/2 GiB/1 GiB/180-second guard limits.
+
+GitHub lists old run `38888712709` as active although every job completed on
+October 16. Normal cancellation says completed; force-cancel returns HTTP 409
+“not in progress.” It has no active job and did not prevent current checks.
 
 Publication and squash merge are authorized after all final-head gates pass:
 one line <=80 characters, empty body, no trailers/attribution. Verify the merged
-tree and message, then continue the next substantial PR.
+tree and message, then continue the next substantial PR. [PLAN.md](../PLAN.md)
+owns the remaining roadmap; a completed PR does not complete it.

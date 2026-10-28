@@ -1,5 +1,5 @@
 //! Raw interpreter oracles, tracked effects, and bounded-stack traversal for
-//! direct consumers. Golden suites separately cover GC stress and reuse.
+//! direct consumers. Golden suites separately cover ownership checks and reuse.
 use fwp::driver::check_source;
 use std::path::Path;
 use std::process::Command;

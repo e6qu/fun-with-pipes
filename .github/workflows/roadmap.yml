@@ -40,3 +40,5 @@ jobs:
         run: python3 scripts/test-sort-time-evidence.py
       - name: Parser measurement evidence controls
         run: python3 scripts/test-parser-workspace-evidence.py
+      - name: Recursion measurement evidence controls
+        run: python3 scripts/test-mutual-recursion.py

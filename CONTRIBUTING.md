@@ -101,9 +101,11 @@ replace the production correctness gates.
 
 `Numerical and ownership evidence` in `.github/workflows/numerics.yml` exposes
 named suites; use that workflow's inputs and the relevant measurement protocol.
-A selected `native_runner` runs one host. `native_runner=all` provides the full
-six-host native matrix; for `kernels` and `queued-sockets` it also includes their
-two WebAssembly jobs. Partial runs supplement, never replace, complete evidence.
+Each suite declares its own host matrix. Where it supports `native_runner`, a
+selected host narrows that matrix and `all` uses the suite’s complete matrix.
+Functional probes run on two Linux hosts; analysis runs on Linux and Intel macOS.
+The `kernels` and `queued-sockets` suites also include their declared WebAssembly
+jobs. None of these selections replaces the nine production acceptance jobs.
 
 For `server-entries`, `server_entry_part=all` runs five parts per selected host.
 `checks` runs both functional jobs (entry/codec and REST API); `api` runs the API

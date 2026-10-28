@@ -1,0 +1,55 @@
+{
+  "source": "ca914eec2ede1b5de61ac42f1c8068d8de3942e9",
+  "run": 40719252691,
+  "scope": "Runtime request counts, not time or machine instruction counts. Main stack control exits 101; injected bad tail stack exits 194.",
+  "records": [
+    {
+      "host": "ubuntu-latest",
+      "level": "O0",
+      "sha256": "df59cc10304e99f48f62ba7aef2c4f6e2ebd232b9ad7f52c9f50aa8d1097f2c9",
+      "fileBytes": 503496,
+      "counts": "case variant input allocations bytes applications boxes retains\npipe known 32 0 0 0 0 0\npipe boundary 32 1 16 1 0 0\npartial known 32 0 0 0 0 0\npartial boundary 32 1 16 1 0 0\nborrowed known 32 1 264 0 0 0\nborrowed boundary 32 3 544 128 0 32\ncaptured known 32 0 0 0 0 0\ncaptured boundary 32 1 16 1 0 0\nresult known 32 1 24 0 1 1\nresult boundary 32 2 40 0 2 1\neach-count known 32 34 920 2 33 1\neach-count boundary 32 36 960 34 34 35\nfolded known 32 0 0 0 0 0\nfolded boundary 32 33 784 64 32 32\nstate-loop known 32 2 152 2 1 0\nstate-loop boundary 32 37 720 68 35 36\npipe known 128 0 0 0 0 0\npipe boundary 128 1 16 1 0 0\npartial known 128 0 0 0 0 0\npartial boundary 128 1 16 1 0 0\nborrowed known 128 1 1032 0 0 0\nborrowed boundary 128 3 2080 512 0 128\ncaptured known 128 0 0 0 0 0\ncaptured boundary 128 1 16 1 0 0\nresult known 128 1 24 0 1 1\nresult boundary 128 2 40 0 2 1\neach-count known 128 130 3224 2 129 1\neach-count boundary 128 132 3264 130 130 131\nfolded known 128 0 0 0 0 0\nfolded boundary 128 129 3088 256 128 128\nstate-loop known 128 2 152 2 1 0\nstate-loop boundary 128 133 2256 260 131 132\n",
+      "tail": {
+        "tail-recursion-counted": "allocations 13 bytes 333 live-before 0 live-after 0\nloop 0 visits 400004 stack-range 0\nloop 1 visits 200001 stack-range 0\nloop 2 visits 4 stack-range 0\nloop 3 visits 199993 stack-range 0\n",
+        "weak-tail-recursion-counted": "allocations 23 bytes 1090 live-before 0 live-after 0\nloop 0 visits 3 stack-range 0\nloop 1 visits 400004 stack-range 2496\nloop 2 visits 200002 stack-range 0\n",
+        "mutual-tail-recursion-counted": "allocations 6 bytes 131 live-before 0 live-after 0\nloop 0 visits 2 stack-range 0\nloop 1 visits 2 stack-range 0\nloop 2 visits 0 stack-range 0\nloop 3 visits 266669 stack-range 368\n"
+      }
+    },
+    {
+      "host": "ubuntu-latest",
+      "level": "O2",
+      "sha256": "de8d02e5b4afb8720324834e33b8c81af2ad667a2914de3616f9080b0ea6e854",
+      "fileBytes": 126936,
+      "counts": "case variant input allocations bytes applications boxes retains\npipe known 32 0 0 0 0 0\npipe boundary 32 1 16 1 0 0\npartial known 32 0 0 0 0 0\npartial boundary 32 1 16 1 0 0\nborrowed known 32 1 264 0 0 0\nborrowed boundary 32 3 544 128 0 32\ncaptured known 32 0 0 0 0 0\ncaptured boundary 32 1 16 1 0 0\nresult known 32 1 24 0 1 1\nresult boundary 32 2 40 0 2 1\neach-count known 32 34 920 2 33 1\neach-count boundary 32 36 960 34 34 35\nfolded known 32 0 0 0 0 0\nfolded boundary 32 33 784 64 32 32\nstate-loop known 32 2 152 2 1 0\nstate-loop boundary 32 37 720 68 35 36\npipe known 128 0 0 0 0 0\npipe boundary 128 1 16 1 0 0\npartial known 128 0 0 0 0 0\npartial boundary 128 1 16 1 0 0\nborrowed known 128 1 1032 0 0 0\nborrowed boundary 128 3 2080 512 0 128\ncaptured known 128 0 0 0 0 0\ncaptured boundary 128 1 16 1 0 0\nresult known 128 1 24 0 1 1\nresult boundary 128 2 40 0 2 1\neach-count known 128 130 3224 2 129 1\neach-count boundary 128 132 3264 130 130 131\nfolded known 128 0 0 0 0 0\nfolded boundary 128 129 3088 256 128 128\nstate-loop known 128 2 152 2 1 0\nstate-loop boundary 128 133 2256 260 131 132\n",
+      "tail": {
+        "tail-recursion-counted": "allocations 13 bytes 333 live-before 0 live-after 0\nloop 0 visits 400004 stack-range 0\nloop 1 visits 200001 stack-range 0\nloop 2 visits 4 stack-range 0\nloop 3 visits 199993 stack-range 0\n",
+        "weak-tail-recursion-counted": "allocations 23 bytes 1090 live-before 0 live-after 0\nloop 0 visits 3 stack-range 0\nloop 1 visits 400004 stack-range 2160\nloop 2 visits 200002 stack-range 0\n",
+        "mutual-tail-recursion-counted": "allocations 6 bytes 131 live-before 0 live-after 0\nloop 0 visits 2 stack-range 0\nloop 1 visits 2 stack-range 0\nloop 2 visits 0 stack-range 0\nloop 3 visits 266669 stack-range 48\n"
+      }
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "level": "O0",
+      "sha256": "5066de13de0058f9a4b06754bc1b474c7002bb0620eeae45282f4a044394cc7a",
+      "fileBytes": 527128,
+      "counts": "case variant input allocations bytes applications boxes retains\npipe known 32 0 0 0 0 0\npipe boundary 32 1 16 1 0 0\npartial known 32 0 0 0 0 0\npartial boundary 32 1 16 1 0 0\nborrowed known 32 1 264 0 0 0\nborrowed boundary 32 3 544 128 0 32\ncaptured known 32 0 0 0 0 0\ncaptured boundary 32 1 16 1 0 0\nresult known 32 1 24 0 1 1\nresult boundary 32 2 40 0 2 1\neach-count known 32 34 920 2 33 1\neach-count boundary 32 36 960 34 34 35\nfolded known 32 0 0 0 0 0\nfolded boundary 32 33 784 64 32 32\nstate-loop known 32 2 152 2 1 0\nstate-loop boundary 32 37 720 68 35 36\npipe known 128 0 0 0 0 0\npipe boundary 128 1 16 1 0 0\npartial known 128 0 0 0 0 0\npartial boundary 128 1 16 1 0 0\nborrowed known 128 1 1032 0 0 0\nborrowed boundary 128 3 2080 512 0 128\ncaptured known 128 0 0 0 0 0\ncaptured boundary 128 1 16 1 0 0\nresult known 128 1 24 0 1 1\nresult boundary 128 2 40 0 2 1\neach-count known 128 130 3224 2 129 1\neach-count boundary 128 132 3264 130 130 131\nfolded known 128 0 0 0 0 0\nfolded boundary 128 129 3088 256 128 128\nstate-loop known 128 2 152 2 1 0\nstate-loop boundary 128 133 2256 260 131 132\n",
+      "tail": {
+        "tail-recursion-counted": "allocations 13 bytes 333 live-before 0 live-after 0\nloop 0 visits 400004 stack-range 0\nloop 1 visits 200001 stack-range 0\nloop 2 visits 4 stack-range 0\nloop 3 visits 199993 stack-range 0\n",
+        "weak-tail-recursion-counted": "allocations 23 bytes 1090 live-before 0 live-after 0\nloop 0 visits 3 stack-range 0\nloop 1 visits 400004 stack-range 2112\nloop 2 visits 200002 stack-range 0\n",
+        "mutual-tail-recursion-counted": "allocations 6 bytes 131 live-before 0 live-after 0\nloop 0 visits 2 stack-range 0\nloop 1 visits 2 stack-range 0\nloop 2 visits 0 stack-range 0\nloop 3 visits 266669 stack-range 368\n"
+      }
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "level": "O2",
+      "sha256": "b35c3441ff0b36223aa3e6214870e59647bc83b5b0a55b7550c1eb51968803fa",
+      "fileBytes": 152200,
+      "counts": "case variant input allocations bytes applications boxes retains\npipe known 32 0 0 0 0 0\npipe boundary 32 1 16 1 0 0\npartial known 32 0 0 0 0 0\npartial boundary 32 1 16 1 0 0\nborrowed known 32 1 264 0 0 0\nborrowed boundary 32 3 544 128 0 32\ncaptured known 32 0 0 0 0 0\ncaptured boundary 32 1 16 1 0 0\nresult known 32 1 24 0 1 1\nresult boundary 32 2 40 0 2 1\neach-count known 32 34 920 2 33 1\neach-count boundary 32 36 960 34 34 35\nfolded known 32 0 0 0 0 0\nfolded boundary 32 33 784 64 32 32\nstate-loop known 32 2 152 2 1 0\nstate-loop boundary 32 37 720 68 35 36\npipe known 128 0 0 0 0 0\npipe boundary 128 1 16 1 0 0\npartial known 128 0 0 0 0 0\npartial boundary 128 1 16 1 0 0\nborrowed known 128 1 1032 0 0 0\nborrowed boundary 128 3 2080 512 0 128\ncaptured known 128 0 0 0 0 0\ncaptured boundary 128 1 16 1 0 0\nresult known 128 1 24 0 1 1\nresult boundary 128 2 40 0 2 1\neach-count known 128 130 3224 2 129 1\neach-count boundary 128 132 3264 130 130 131\nfolded known 128 0 0 0 0 0\nfolded boundary 128 129 3088 256 128 128\nstate-loop known 128 2 152 2 1 0\nstate-loop boundary 128 133 2256 260 131 132\n",
+      "tail": {
+        "tail-recursion-counted": "allocations 13 bytes 333 live-before 0 live-after 0\nloop 0 visits 400004 stack-range 0\nloop 1 visits 200001 stack-range 0\nloop 2 visits 4 stack-range 0\nloop 3 visits 199993 stack-range 0\n",
+        "weak-tail-recursion-counted": "allocations 23 bytes 1090 live-before 0 live-after 0\nloop 0 visits 3 stack-range 0\nloop 1 visits 400004 stack-range 1760\nloop 2 visits 200002 stack-range 0\n",
+        "mutual-tail-recursion-counted": "allocations 6 bytes 131 live-before 0 live-after 0\nloop 0 visits 2 stack-range 0\nloop 1 visits 2 stack-range 0\nloop 2 visits 0 stack-range 0\nloop 3 visits 266669 stack-range 32\n"
+      }
+    }
+  ]
+}

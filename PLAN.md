@@ -33,14 +33,13 @@ collector is not the same as removing these costs. The
    selected array-copy, callback, temporary-owner and key-box costs. Preserve
    their [ownership measurements](docs/measurements/README.md), failure controls
    and actual-binary evidence. This does not make all containers count-free.
-2. **A6 is current:** complete the final platform gates for the
-   [parser workspace](docs/parser-workspace.md). Focused native/WASI checks,
-   direct cancellation and four independently audited
-   [measurement sessions](docs/measurements/parser-workspace.md) pass. Repair
-   the latest G2 forms-analysis budget failure before final platform acceptance. The
-   comparison reports faster parsing alongside increased allocated bytes and
-   the remaining C/Rust gap. [The handoff](docs/development-state.md) owns gate
-   status. After verified merge, group F1–F3 into the next substantial PR.
+2. **A6 is verified in #221.** The [parser workspace](docs/parser-workspace.md)
+   passes all nine production jobs, docs, focused native/WASI checks and four
+   audited [measurement sessions](docs/measurements/parser-workspace.md). The G2
+   repair passes both analysis hosts with unchanged limits. Parsing is faster
+   than previous fwp, but allocated bytes rise and the C/Rust gap remains.
+   **F1–F3 are current:** group functional-call evidence, safe weak-handle tail
+   reuse and the measured mutual-recursion decision into one substantial PR.
 3. Preserve **G2**'s [analysis budgets](docs/measurements/ownership-analysis.md)
    and measure the new region-selection work separately. Further precision needs
    a named example and a cost comparison, not more diagnostic scaffolding.
@@ -107,19 +106,21 @@ type controls, actual WASI allocation and native binary checks passed. Preserve
 these controls; broader element types, local transfers and loops need their own
 lifetime proof and measured costs before this representation is extended.
 
-**A6 — Give one workspace a region lifetime.** Follow the concrete
-[parser-workspace contract](docs/parser-workspace.md). Use a recursive parser that builds
-and walks an expression graph inside one invocation. The invocation owns the
-storage; internal links do not own individual nodes. Return a scalar result or
-an explicitly owned copy, never an expired internal link. Add success, parse-error,
-nested invocation and cancellation cases, plus rejection of an escaping link.
-**Done:** repeated fixed-size parses restore the same live-storage baseline;
-internal node links need no reference counts. Report peak retained storage and
-construction/traversal/cleanup time against equivalent C/Rust arenas. Preserve
-alignment and resource cleanup. This establishes one scoped workspace, not a
-universal region system; D2 may extend it to AD after measuring that workload.
+**A6 is verified in #221.** One invocation of the
+[parser workspace](docs/parser-workspace.md) owns aligned blocks; internal
+integer/link nodes need no individual counts. Success, parse failure, nested
+calls, cancellation and escaping-link rejection are covered. Repeated parses
+restore the live-storage baseline. Measurements retain increased allocated bytes,
+unchanged peak storage and the remaining C/Rust gap. Strings/tokens keep their
+ordinary owners. This proves one scoped workspace, not a universal region system;
+D2 may extend the approach to AD after measuring that workload.
 
 ## 3. Functional calls and recursion
+
+The grouped implementation and concrete measurement limits are described in
+[Measuring calls and recursion](docs/functional-costs.md). PR #222 is under review. Linux call/stack controls pass; a noisy timing row
+requires longer batches. None of F1–F3 is accepted until the measurement decision
+and final platform gates pass.
 
 **F1 — Define the acceptance fixtures.** Cover a composed pipe, partial
 application, borrowed callback, captured closure, record/variant result, `each`,

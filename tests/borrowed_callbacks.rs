@@ -322,79 +322,113 @@ int main(void) {
             String::from_utf8_lossy(&out.stderr).contains("null partial-application copy"),
             "counted{opt}: {out:?}"
         );
+        // Observe the arithmetic itself, before C optimizers can discard an
+        // unused NULL+0 result. Sanitizers need not diagnose eliminated code.
+        // The guards and runtime call path are unchanged in the valid probe.
+        let observed = runtime.replace(
+            "typedef uint64_t V;",
+            r#"typedef uint64_t V;
+static V *probe_argument_offset(V *args, size_t offset) {
+    if (!args) { fputs("null callback argument offset\n", stderr); _Exit(210); }
+    return args + offset;
+}
+"#,
+        );
+        let pending = "owned_len ? args + owned_start : NULL";
+        let after = "after ? args + before + transferred : NULL";
+        assert_eq!(observed.matches(pending).count(), 1);
+        assert_eq!(observed.matches(after).count(), 1);
+        let observed = observed
+            .replace(
+                pending,
+                "owned_len ? probe_argument_offset(args, owned_start) : NULL",
+            )
+            .replace(
+                after,
+                "after ? probe_argument_offset(args, before + transferred) : NULL",
+            );
+        for (label, runtime, broken) in [
+            ("valid-offsets", observed.clone(), false),
+            (
+                "null-offset",
+                observed.replace(
+                    "owned_len ? probe_argument_offset(args, owned_start) : NULL",
+                    "probe_argument_offset(args, owned_start)",
+                ),
+                true,
+            ),
+            (
+                "null-tail-offset",
+                observed.replace(
+                    "after ? probe_argument_offset(args, before + transferred) : NULL",
+                    "probe_argument_offset(args, before + transferred)",
+                ),
+                true,
+            ),
+        ] {
+            let code = format!("{runtime}\n{}", cases[0].1);
+            let exe = dir.0.join(format!("counted{opt}-{label}.exe"));
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+            let out = Command::new(&exe).output().unwrap();
+            record_probe::save(
+                "borrowed_callbacks",
+                &format!("counted{opt}-{label}"),
+                &code,
+                &exe,
+                &out,
+            );
+            if broken {
+                assert_eq!(out.status.code(), Some(210), "{label}: {out:?}");
+                assert!(
+                    String::from_utf8_lossy(&out.stderr).contains("null callback argument offset"),
+                    "{label}: {out:?}"
+                );
+            } else {
+                assert!(out.status.success(), "{label}: {out:?}");
+                assert!(out.stderr.is_empty(), "{label}: {out:?}");
+                assert_eq!(out.stdout, b"borrowed owners and typed slices preserved\n");
+            }
+        }
         #[cfg(unix)]
         {
-            let probe = &cases[0].1;
-            for (label, code, broken) in [
-                ("valid", format!("{runtime}\n{probe}"), false),
-                (
-                    "null-offset",
-                    format!(
-                        "{}\n{probe}",
-                        runtime.replace(
-                            "owned_len ? args + owned_start : NULL",
-                            "args + owned_start"
-                        )
-                    ),
-                    true,
-                ),
-                (
-                    "null-tail-offset",
-                    format!(
-                        "{}\n{probe}",
-                        runtime.replace(
-                            "after ? args + before + transferred : NULL",
-                            "args + before + transferred"
-                        )
-                    ),
-                    true,
-                ),
-            ] {
-                let cfile = dir.0.join(format!("counted{opt}-{label}-ubsan.c"));
-                let exe = cfile.with_extension("exe");
-                std::fs::write(&cfile, &code).unwrap();
-                checked(
-                    Command::new("clang")
-                        .args([
-                            opt,
-                            "-std=gnu11",
-                            "-ffp-contract=off",
-                            "-w",
-                            "-fsanitize=pointer-overflow",
-                            "-fno-sanitize-recover=all",
-                        ])
-                        .arg(&cfile)
-                        .arg("-o")
-                        .arg(&exe)
-                        .args(["-lm", "-lpthread"]),
-                );
-                let out = Command::new(&exe)
-                    .env(
-                        "UBSAN_OPTIONS",
-                        "halt_on_error=1:abort_on_error=0:exitcode=1",
-                    )
-                    .output()
-                    .unwrap();
-                record_probe::save(
-                    "borrowed_callbacks",
-                    &format!("counted{opt}-{label}-ubsan"),
-                    &code,
-                    &exe,
-                    &out,
-                );
-                if broken {
-                    assert_eq!(out.status.code(), Some(1), "{label}: {out:?}");
-                    let message = "applying zero offset to null pointer";
-                    assert!(
-                        String::from_utf8_lossy(&out.stderr).contains(message),
-                        "{label}: {out:?}"
-                    );
-                } else {
-                    assert!(out.status.success(), "{label}: {out:?}");
-                    assert!(out.stderr.is_empty(), "{label}: {out:?}");
-                    assert_eq!(out.stdout, b"borrowed owners and typed slices preserved\n");
-                }
-            }
+            // Also execute the original production arithmetic under UBSan.
+            let label = "valid";
+            let code = format!("{runtime}\n{}", cases[0].1);
+            let cfile = dir.0.join(format!("counted{opt}-{label}-ubsan.c"));
+            let exe = cfile.with_extension("exe");
+            std::fs::write(&cfile, &code).unwrap();
+            checked(
+                Command::new("clang")
+                    .args([
+                        opt,
+                        "-std=gnu11",
+                        "-ffp-contract=off",
+                        "-w",
+                        "-fsanitize=pointer-overflow",
+                        "-fno-sanitize-recover=all",
+                    ])
+                    .arg(&cfile)
+                    .arg("-o")
+                    .arg(&exe)
+                    .args(["-lm", "-lpthread"]),
+            );
+            let out = Command::new(&exe)
+                .env(
+                    "UBSAN_OPTIONS",
+                    "halt_on_error=1:abort_on_error=0:exitcode=1",
+                )
+                .output()
+                .unwrap();
+            record_probe::save(
+                "borrowed_callbacks",
+                &format!("counted{opt}-{label}-ubsan"),
+                &code,
+                &exe,
+                &out,
+            );
+            assert!(out.status.success(), "{label}: {out:?}");
+            assert!(out.stderr.is_empty(), "{label}: {out:?}");
+            assert_eq!(out.stdout, b"borrowed owners and typed slices preserved\n");
         }
         for (case, probe, status) in &cases {
             let code = format!("{runtime}\n{probe}");

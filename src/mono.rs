@@ -1747,6 +1747,8 @@ pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
         check(&prog, "specializing");
         crate::fuse::fuse(&mut prog);
         check(&prog, "fusing");
+        crate::tailrec::lower_pairs(&mut prog);
+        check(&prog, "mutual tail pairs");
         crate::tailrec::analyze(&mut prog);
     }
     // In debug builds, check the reference-count insertion also used by native
