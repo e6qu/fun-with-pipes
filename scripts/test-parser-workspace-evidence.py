@@ -28,6 +28,7 @@ class ParserEvidence(unittest.TestCase):
                          peakHeapSlotBytes=8192, allocatedHeapSlotBytes=8192 * count,
                          finalLiveBytes=0, regionBlocks=0, regionRequestedBytes=0,
                          regionRoundedBytes=0, regionUnusedBytes=0, regionPayloadBytes=0, heapAllocations=100 * count)
+            value['process'] = dict(wallNs=total + 1_000_000, userCpuNs=total, systemCpuNs=0, voluntarySwitches=0, involuntarySwitches=1)
             if label.startswith('baseline'):
                 value['releaseNs'] = None
             if label == 'candidate-profile':
@@ -72,6 +73,7 @@ class ParserEvidence(unittest.TestCase):
             candidate = pair['candidate']
             for key in ['totalNs', 'tokenizeNs', 'constructNs', 'walkAndReleaseNs', 'releaseNs']:
                 candidate[key] *= 2
+            candidate['process']['wallNs'] *= 2
         self.row['ratios'] = dict(baseline=1.2, c=4.0, rust=3.0)
         self.assertEqual(READER.check_case('small', self.row, self.settings),
                          ['small: candidate exceeds the frozen timing budget'])
@@ -81,6 +83,7 @@ class ParserEvidence(unittest.TestCase):
         value = row['control'][0]['baseline-copy']
         for key in ['totalNs', 'tokenizeNs', 'constructNs', 'walkAndReleaseNs']:
             value[key] *= 2
+        value['process']['wallNs'] *= 2
         noise = abs(2.04 - 1)
         row.update(controlEnvelope=noise, allowedCandidateRatio=1 + 2 * noise, samples=[])
         del row['ratios']
@@ -108,6 +111,13 @@ class ParserEvidence(unittest.TestCase):
         row['profiles']['candidate-profile'][2]['peakHeapSlotBytes'] += 4096
         with self.assertRaises(AssertionError):
             READER.check_case('small', row, self.settings)
+
+    def test_process_observations_cannot_hide_missing_or_impossible_values(self):
+        for key, replacement in [('wallNs', 1), ('userCpuNs', -1), ('involuntarySwitches', -1)]:
+            row = copy.deepcopy(self.row)
+            row['samples'][0]['candidate']['process'][key] = replacement
+            with self.assertRaises(AssertionError):
+                READER.check_case('small', row, self.settings)
 
     def test_compiler_scale_requires_real_exported_roots(self):
         code = b'/* job0 : String -> I64 */\n/* job1 : String -> I64 */\nfwp_region region = {0};'

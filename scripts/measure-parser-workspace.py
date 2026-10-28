@@ -8,9 +8,11 @@ import os
 from pathlib import Path
 import platform
 import re
+import resource
 import shutil
 import statistics
 import subprocess
+import time
 
 ROOT = Path(__file__).resolve().parent.parent
 BASELINE = '56d5aac63a9963ae6b16574f10d6dc3087a08d8a'
@@ -226,8 +228,18 @@ def main():
         report['cases'][case] = row
 
         def sample(label, count):
-            value = json.loads(run(['taskset', '--cpu-list', args.cpu,
-                                    args.output / f'{label}.exe', input_file, count, expected, nodes]))
+            before = resource.getrusage(resource.RUSAGE_CHILDREN)
+            begin = time.monotonic_ns()
+            raw = run(['taskset', '--cpu-list', args.cpu,
+                       args.output / f'{label}.exe', input_file, count, expected, nodes])
+            wall = time.monotonic_ns() - begin
+            after = resource.getrusage(resource.RUSAGE_CHILDREN)
+            value = json.loads(raw)
+            value['process'] = dict(wallNs=wall,
+                userCpuNs=round((after.ru_utime - before.ru_utime) * 1_000_000_000),
+                systemCpuNs=round((after.ru_stime - before.ru_stime) * 1_000_000_000),
+                voluntarySwitches=after.ru_nvcsw - before.ru_nvcsw,
+                involuntarySwitches=after.ru_nivcsw - before.ru_nivcsw)
             assert value['rounds'] == count and value['result'] == expected and value['nodes'] == nodes
             assert value['totalNs'] > 0
             assert value['tokenizeNs'] + value['constructNs'] + value['walkAndReleaseNs'] == value['totalNs']

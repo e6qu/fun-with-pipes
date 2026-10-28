@@ -1,8 +1,10 @@
 # Current work
 
-**Next:** run the longer small-case measurements, audit all four sessions, publish
-the report, then start the complete final-head production/documentation/G2 gates.
-Keep monitoring on a timer; repair failures before merging.
+**Next:** diagnose AMD64 timing variability using whole-process CPU time and
+context switches in two focused sessions. Keep the fixed wall-time rule and all
+rejected samples. Then publish the comparison and start the complete final-head
+production/documentation/G2 gates. Monitor on a timer and repair failures before
+merging.
 
 [Draft PR #221](https://github.com/e6qu/fun-with-pipes/pull/221) uses
 `/private/tmp/fwp-parser-workspace`, branch `scoped-parser-workspace`, based on
@@ -14,7 +16,7 @@ A6 is implemented, but complete platform acceptance is pending.
 ## Current source and checks
 
 The compiler/runtime source is `ca56023eb362259cf2099c9c9d477b20b3cf6793`.
-The pending change only lengthens the small timing sample and updates tools/docs.
+Current changes only add measurement diagnostics and update tools/docs.
 Do not repeat the passing focused compiler suite for that sampling-only change;
 the final-head full matrix is still required.
 
@@ -26,10 +28,14 @@ the final-head full matrix is still required.
   its identical-binary small-case control at 10.08%, above the fixed 10% limit.
   That candidate timing was correctly absent. Every other runtime/scale row
   passed; all four artifacts were independently audited, including the rejection.
-- Increase only small-case repetitions from 32,768 to 131,072. Keep the 10%
-  control limit, six samples, two warmups and all other inputs unchanged. Do not
-  drop the rejected observation or claim a speed result from it. The writer and
-  auditor now require the explicit small-case setting. Ten evidence controls pass.
+- Longer small samples (131,072 calls) in run `40652914476` at `a51bde95`
+  passed both ARM64 sessions but rejected both AMD64 sessions: medium 10.44%
+  and small 10.47% identical-binary deviations. Their candidate timings are absent.
+  All jobs/logs were inspected. Longer samples alone did not resolve variability.
+- Add whole-process wall/CPU time and context-switch observations around each
+  serial child, without changing inner wall-time acceptance or excluding samples.
+  Eleven evidence controls pass. Diagnose AMD64 first; final evidence still needs
+  two independent sessions on each architecture.
 - Earlier run `40642686229` at `ec36e79f` passed all four measurements with the
   growing-payload policy. Its audit exposed rounding after adding block headers.
   Current whole-block sizing removes that waste; requested and rounded block
@@ -74,7 +80,8 @@ All encountered failures were audited across every job before batching repairs:
   expected root. The old compiler-scale observations are invalid.
 
 Current evidence is in `/private/tmp/fwp-221-ca560-checks` and
-`/private/tmp/fwp-221-ca560-measurements`. Preserve the earlier policy samples in
+`/private/tmp/fwp-221-ca560-measurements`; the longer-sample results are in
+`/private/tmp/fwp-221-a51-measurements`. Preserve the earlier policy samples in
 `/private/tmp/fwp-221-ec36-measurements`, `/private/tmp/fwp-221-ec36-published.json`
 and `/private/tmp/fwp-221-a55-measurements`; distinguish their source and limits.
 No detached merger runs.

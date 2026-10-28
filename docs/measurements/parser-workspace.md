@@ -61,6 +61,12 @@ Phase clocks surround only top-level boundaries, not recursive node visits:
   This is a subset of “walk and release.” Previous fwp frees nodes while walking;
   its separate release time is recorded as `null`, never as zero.
 
+Every subprocess also records whole-process wall time, user/system CPU time and
+voluntary/involuntary context switches. These include startup, input loading,
+checks and output, unlike the inner invocation timer. They diagnose variability;
+they do not replace the declared wall-time acceptance metric. Child CPU/switch
+counts are differences around one serial subprocess, not cumulative totals.
+
 Clock reads affect these small programs. The fwp root can contain inlined walks;
 the harness preserves them. It fails if expected top-level phase boundaries are
 missing or ambiguous. The instrumented generated C and compiler flags remain

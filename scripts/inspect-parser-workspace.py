@@ -43,7 +43,10 @@ def check_case(name, row, settings):
         assert all(type(value[key]) is int and value[key] >= 0 for key in
                    ['totalNs', 'tokenizeNs', 'constructNs', 'walkAndReleaseNs'])
         assert value['tokenizeNs'] + value['constructNs'] + value['walkAndReleaseNs'] == value['totalNs']
-        assert value['totalNs'] > 0
+        process = value['process']
+        assert set(process) == {'wallNs', 'userCpuNs', 'systemCpuNs', 'voluntarySwitches', 'involuntarySwitches'}
+        assert all(type(v) is int and v >= 0 for v in process.values())
+        assert process['wallNs'] >= value['totalNs'] > 0
         if count == row['rounds']:
             assert value['totalNs'] >= 1_000_000
         if label.startswith(('baseline', 'candidate')):
