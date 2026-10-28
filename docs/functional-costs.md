@@ -80,6 +80,8 @@ owners, remaining resource regions and source-debugger frames keep their restric
 ## Mutual-recursion decision
 
 The restricted prototype combines two matching scalar functions into one worker.
+The native fixture includes both self and mutual tail calls, so ordinary inlining
+cannot reduce the whole test to self recursion before the new pass runs.
 An internal integer chooses a body; each direct tail transfer supplies the next
 integer and arguments. The original callable entries select their starting body.
 Non-tail calls retain ordinary frames. Only I64, Bool and unit locals qualify.
@@ -116,3 +118,6 @@ rejecting the optimization. Synthetic controls test all these decision rules.
 The focused runner suite is `functional-calls` in
 [numerics.yml](../.github/workflows/numerics.yml). Full platform acceptance remains
 the nine production jobs and documentation audit on the final PR commit.
+After test-only repairs, `functional-probes` reruns the call/tail targets and
+measurement; it does not repeat unchanged resource tests. Compiler changes use
+the full `functional-calls` selection.

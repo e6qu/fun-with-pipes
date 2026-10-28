@@ -1,12 +1,14 @@
-# The two functions retain separate callable entries and share a scalar loop.
+# Each function sometimes calls itself and sometimes calls its partner.
+# A self step subtracts two; a partner step subtracts one and switches parity.
+# This prevents ordinary inlining from reducing the pair to one self recursion.
 rec parity-even : I64 -> I64
 parity-even = match
     0 -> 0
-    _ -> sub 1 | parity-odd
+    _ -> if (rem 3 | eq 0) (sub 2 | parity-even) (sub 1 | parity-odd)
 rec parity-odd : I64 -> I64
 parity-odd = match
     0 -> 1
-    _ -> sub 1 | parity-even
+    _ -> if (rem 3 | eq 0) (sub 2 | parity-odd) (sub 1 | parity-even)
 
 rec observed-left : I64 -> I64 ! {IO, Error[String]}
 observed-left = match

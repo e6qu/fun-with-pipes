@@ -118,7 +118,8 @@ int main(int argc, char **argv) {
     @STOP@
     if(sum != repeats / 2 || fwp_heap.live != baseline || fwp_cleanups) return 211;
     printf("%llu\n", (unsigned long long)sum);
-    fwp_caf_finish(); fwp_heap_finish();
+    fwp_tasks_finish(); fwp_caf_finish(); fwp_native_tasks_finish();
+    if(fwp_heap.live || fwp_cleanups || fwp_state_owners) return 213;
     return 0;
 }
 '''

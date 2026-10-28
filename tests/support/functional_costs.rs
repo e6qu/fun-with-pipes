@@ -162,7 +162,8 @@ int main(int argc, char **argv) {{
     fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     size_t baseline = fwp_heap.live;
     {calls}
-    fwp_caf_finish(); fwp_heap_finish();
+    fwp_tasks_finish(); fwp_caf_finish(); fwp_native_tasks_finish();
+    if(fwp_heap.live || fwp_cleanups || fwp_state_owners) return 213;
     return 0;
 }}
 "#

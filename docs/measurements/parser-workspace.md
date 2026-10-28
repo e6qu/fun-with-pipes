@@ -1,6 +1,8 @@
 # Measuring one parser's tree lifetime
 
-**Four measurement sessions pass; full platform acceptance remains open in #221.**
+**Four measurement sessions and full #221 platform acceptance pass.**
+[Delivery history](../roadmap-history.md#scoped-parser-storage-and-analysis-work-pr-221)
+records the production, documentation and analysis gates.
 This measures a [parser program written in fwp](../parser-workspace.md), not
 fwp's source parser. For example, fwp arithmetic `2 + 3 * 4` evaluates to `14`.
 The benchmark's separate input format puts operators before operands: the string

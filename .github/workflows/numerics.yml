@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [functional-calls, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, map-order, checked-bounds, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -34,7 +34,7 @@ on:
         type: string
 jobs:
   functional_calls:
-    if: inputs.suite == 'functional-calls'
+    if: inputs.suite == 'functional-calls' || inputs.suite == 'functional-probes'
     strategy:
       fail-fast: false
       matrix:
@@ -52,6 +52,8 @@ jobs:
       FWP_TAIL_ARTIFACTS: functional-evidence/tail
       FWP_ARC_ARTIFACTS: functional-evidence/owners
       FWP_CONTEXT_ARTIFACTS: functional-evidence/calls
+      # Probe-only reruns follow test/measurement repairs; compiler changes need the full selection.
+      FWP_FUNCTIONAL_TESTS: ${{ inputs.suite == 'functional-probes' && '--test tail_recursion --test compiler_call_liveness' || '--test tail_recursion --test compiler_call_liveness --test borrowed_callbacks --test closure_ownership --test state_sequence_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test queued_functions' }}
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -60,7 +62,9 @@ jobs:
       - run: cargo fetch --locked
       - name: Compile all changed call and cleanup tests
         id: compiler
-        run: cargo test --locked --offline --no-run --lib --test tail_recursion --test compiler_call_liveness --test borrowed_callbacks --test closure_ownership --test state_sequence_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test queued_functions
+        run: |
+          read -r -a fwp_tests <<< "$FWP_FUNCTIONAL_TESTS"
+          cargo test --locked --offline --no-run --lib "${fwp_tests[@]}"
       - name: Rust and language formatting
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: |
@@ -74,7 +78,9 @@ jobs:
         run: cargo test --locked --offline --lib -- --nocapture
       - name: Native calls, weak swaps, failures and cancellation at O0 and O2
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
-        run: cargo test --locked --offline --no-fail-fast --test tail_recursion --test compiler_call_liveness --test borrowed_callbacks --test closure_ownership --test state_sequence_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test queued_functions -- --nocapture
+        run: |
+          read -r -a fwp_tests <<< "$FWP_FUNCTIONAL_TESTS"
+          cargo test --locked --offline --no-fail-fast "${fwp_tests[@]}" -- --nocapture
       - name: Emit matched ordinary, grouped and explicit-loop programs
         id: mutual_programs
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
