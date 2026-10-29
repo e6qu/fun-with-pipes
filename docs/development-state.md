@@ -1,7 +1,9 @@
 # Next: diagnose the retained timing failures in PR #227
 
-**Next:** implement the [declared small-matrix sampling repair](measurements/timing-variation.md#small-matrix-sampling-repair-declared-before-implementation), then run
-its two qualified sessions per architecture. Keep the original failed outcomes
+**Next:** publish and run the [declared small-matrix sampling repair](measurements/timing-variation.md#small-matrix-sampling-repair-declared-before-implementation), then run
+its two qualified sessions per architecture. The protocol was published in
+`3870a1bf` before implementation; only the small matrix increases its per-round
+process count (4 to 256). Keep the original failed outcomes
 and 2% limit. The CPU-affinity diagnostic is complete and did not resolve the
 variation. The derivative zero-update failure remains open; the user has been
 asked whether to retain its broader improvement with that failed goal explicit.

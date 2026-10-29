@@ -16,8 +16,22 @@ SPEC.loader.exec_module(MEASURE)
 
 
 class NumericalBaselines(unittest.TestCase):
+    def test_larger_sample_preserves_counts_positions_and_predecessors(self):
+        orders = [BASELINE.execution_order(i, 20261029, 256) for i in range(16)]
+        for order in orders:
+            self.assertEqual(Counter(order), {label: 256 for label in BASELINE.LABELS})
+            self.assertEqual(len(order), 1024)
+        for position in range(1024):
+            self.assertEqual(Counter(order[position] for order in orders),
+                             {label: 4 for label in BASELINE.LABELS})
+        pairs = Counter(pair for order in orders for pair in zip(order, order[1:]))
+        self.assertEqual(pairs, {(a, b): 1023 for a in BASELINE.LABELS for b in BASELINE.LABELS})
+        for count in [0, 1, 5, 128, 512]:
+            with self.subTest(count=count), self.assertRaises(AssertionError):
+                BASELINE.execution_order(0, 20261029, count)
+
     def test_every_label_and_predecessor_occupies_each_position(self):
-        orders = [BASELINE.execution_order(i, 20261029) for i in range(16)]
+        orders = [BASELINE.execution_order(i, 20261029, 4) for i in range(16)]
         for order in orders:
             self.assertEqual(Counter(order), {label: 4 for label in BASELINE.LABELS})
             self.assertEqual(Counter(zip(order, order[1:] + order[:1])),
@@ -30,7 +44,7 @@ class NumericalBaselines(unittest.TestCase):
         pairs = Counter(pair for order in orders for pair in zip(order, order[1:]))
         self.assertEqual(pairs, {(a, b): 15 for a in BASELINE.LABELS for b in BASELINE.LABELS})
         with self.assertRaises(AssertionError):
-            BASELINE.execution_order(-1, 20261029)
+            BASELINE.execution_order(-1, 20261029, 4)
 
     def test_array_integer_oracle_matches_ordered_float_operations(self):
         for n in [0, 1, 7, 18, 19, 20, 38, 131]:

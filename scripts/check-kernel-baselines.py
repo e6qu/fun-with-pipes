@@ -32,11 +32,16 @@ def check_samples(samples, label, expected_hash):
         assert all(type(sample[k]) is int and sample[k] >= 0 for k in ['requests', 'requestedBytes'])
 
 
-def check_report(report, source, architecture, session):
+def check_report(report, source, architecture, session, small_matrix_processes):
     assert report['source'] == source and not report['failures']
     config = report['configuration']
     assert {k: config[k] for k in ['samples', 'warmups', 'processes', 'order_seed', 'timeout', 'session']} == dict(
         samples=16, warmups=2, processes=4, order_seed=20261029, timeout=180, session=session)
+    assert small_matrix_processes in [4, 256]
+    if small_matrix_processes == 256:
+        assert config['small_matrix_processes'] == 256
+    else:
+        assert 'small_matrix_processes' not in config
     assert config['case'] == list(CASES)
     assert config['c_arch'] == ('armv8-a' if architecture == 'arm64' else 'x86-64')
     assert config['rust_cpu'] == ('generic' if architecture == 'arm64' else 'x86-64')
@@ -57,12 +62,13 @@ def check_report(report, source, architecture, session):
         expected_files[name] = dict(bytes=len(raw), sha256=hashlib.sha256(raw).hexdigest())
         assert row['resultHash'] == expected_hash
         assert len(row['observations']) == 18
+        processes = small_matrix_processes if name == 'matrix-65-67-63' else 4
         totals = {label: {metric: [] for metric in METRICS} for label in ORACLE.LABELS}
         for position, record in enumerate(row['observations']):
             phase, index = ('warmup', position) if position < 2 else ('sample', position - 2)
             assert record['complete'] and record['phase'] == phase and record['round'] == index
-            assert record['order'] == ORACLE.execution_order(index, 20261029)
-            assert Counter(record['order']) == Counter({label: 4 for label in ORACLE.LABELS})
+            assert record['order'] == ORACLE.execution_order(index, 20261029, processes)
+            assert Counter(record['order']) == Counter({label: processes for label in ORACLE.LABELS})
             assert [o['label'] for o in record['observations']] == record['order']
             for observation in record['observations']:
                 assert type(observation['processNs']) is int and observation['processNs'] > 0
@@ -97,6 +103,7 @@ def check_archive(path, coverage):
     required = {(architecture, session) for architecture in
                 (['arm64'] if coverage == 'initial-arm' else ['arm64', 'amd64']) for session in [1, 2]}
     assert coverage in ['initial-arm', 'complete']
+    small_matrix_processes = 4 if coverage == 'initial-arm' else 256
     sessions = archive['sessions']
     assert len(sessions) == len(required)
     assert {(s['architecture'], s['session']) for s in sessions} == required
@@ -115,7 +122,7 @@ def check_archive(path, coverage):
         log = gzip.decompress((path.parent / session['log']).read_bytes())
         assert len(log) == session['logBytes'] and hashlib.sha256(log).hexdigest() == session['logSha256']
         report = json.loads(raw)
-        expected_files = check_report(report, session['source'], session['architecture'], session['session'])
+        expected_files = check_report(report, session['source'], session['architecture'], session['session'], small_matrix_processes)
         if source_hashes is None:
             source_hashes = report['sourceHashes']
         assert report['sourceHashes'] == source_hashes
@@ -136,11 +143,12 @@ def check_archive(path, coverage):
                 raw = (json.dumps(record, indent=2) + '\n').encode()
                 name = f"{case}/{record['phase']}-{record['round']}.json"
                 assert files[name] == dict(bytes=len(raw), sha256=hashlib.sha256(raw).hexdigest())
+            processes = small_matrix_processes if case == 'matrix-65-67-63' else 4
             for phase, count in [('warmup', 2), ('sample', 16)]:
                 for index in range(count):
                     assert f'{case}/{phase}-{index}.json' in files
                     assert all(f'{case}/{phase}-{index}-{p}.{stream}' in files
-                               for p in range(16) for stream in ['stdout', 'stderr'])
+                               for p in range(4 * processes) for stream in ['stdout', 'stderr'])
     print(f'{coverage}: {len(sessions)} kernel sessions verified; incomplete coverage is not full N1 acceptance')
 
 

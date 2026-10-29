@@ -8,10 +8,11 @@ import struct
 LABELS = ['c', 'rust', 'fwp', 'fwp-identical']
 
 
-def execution_order(round_index, seed):
-    """Four occurrences per label; sixteen rotations balance every position."""
+def execution_order(round_index, seed, processes):
+    """Repeat balanced cycles; sixteen rotations balance every process position."""
     assert type(round_index) is int and round_index >= 0
     assert type(seed) is int
+    assert type(processes) is int and processes in [4, 256]
     rng = random.Random(seed)
     edges = {label: rng.sample(LABELS, len(LABELS)) for label in LABELS}
     stack, circuit = [LABELS[0]], []
@@ -26,7 +27,7 @@ def execution_order(round_index, seed):
     assert Counter(zip(cycle, cycle[1:] + cycle[:1])) == Counter(
         {(a, b): 1 for a in LABELS for b in LABELS})
     offset = round_index % len(cycle)
-    return cycle[offset:] + cycle[:offset]
+    return (cycle[offset:] + cycle[:offset]) * (processes // 4)
 
 
 def bits(value):

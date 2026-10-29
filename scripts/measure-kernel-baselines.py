@@ -110,7 +110,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ['compiler', 'cc', 'rustc', 'c-arch', 'rust-cpu', 'objdump', 'nm', 'time']:
         parser.add_argument('--' + name, required=True)
-    for name in ['samples', 'warmups', 'processes', 'order-seed', 'timeout', 'session']:
+    for name in ['samples', 'warmups', 'processes', 'small-matrix-processes', 'order-seed', 'timeout', 'session']:
         parser.add_argument('--' + name, type=int, required=True)
     parser.add_argument('--case', action='append', choices=list(CASES), required=True)
     parser.add_argument('--qualification', type=Path, required=True)
@@ -118,6 +118,7 @@ def main():
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
     assert (args.samples, args.warmups, args.processes) == (16, 2, 4)
+    assert args.small_matrix_processes == 256
     assert args.order_seed == 20261029 and args.session in [1, 2] and args.timeout > 0
     assert args.case == list(CASES), 'All four declared cases are required in order'
     qualification = json.loads(args.qualification.read_text())
@@ -239,9 +240,10 @@ def main():
         leaked, _ = run([leak_binary], directory / 'leak-check', 224)
         assert b'unexpected charged storage' in leaked.stderr
         observations, totals = [], {label: {'kernelNs': [], 'allocationInclusiveNs': []} for label in BASELINE.LABELS}
+        processes = args.small_matrix_processes if case == 'matrix-65-67-63' else args.processes
         for phase, count in [('warmup', args.warmups), ('sample', args.samples)]:
             for index in range(count):
-                order = BASELINE.execution_order(index, args.order_seed)
+                order = BASELINE.execution_order(index, args.order_seed, processes)
                 records, complete = [], False
                 try:
                     for position, label in enumerate(order):

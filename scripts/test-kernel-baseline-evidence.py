@@ -20,10 +20,30 @@ REPORT = json.loads(gzip.decompress((ARCHIVE.parent / SESSION['report']).read_by
 
 
 def check(report):
-    CHECK.check_report(report, SESSION['source'], SESSION['architecture'], SESSION['session'])
+    CHECK.check_report(report, SESSION['source'], SESSION['architecture'], SESSION['session'], 4)
 
 
 class Evidence(unittest.TestCase):
+    def test_expanded_protocol_requires_every_extra_process(self):
+        report = copy.deepcopy(REPORT)
+        report['configuration']['small_matrix_processes'] = 256
+        arguments = (SESSION['source'], SESSION['architecture'], SESSION['session'], 256)
+        with self.assertRaises(AssertionError):
+            CHECK.check_report(report, *arguments)
+        row = report['results']['matrix-65-67-63']
+        # Synthetic repetitions test validation only; never archive as measurements.
+        for record in row['observations']:
+            record['order'] *= 64
+            record['observations'] *= 64
+        for label in CHECK.ORACLE.LABELS:
+            for metric in CHECK.METRICS:
+                row['totals'][label][metric] = [v * 64 for v in row['totals'][label][metric]]
+                row['medians'][label][metric] *= 64
+        CHECK.check_report(report, *arguments)
+        row['observations'][2]['observations'].pop()
+        with self.assertRaises(AssertionError):
+            CHECK.check_report(report, *arguments)
+
     def test_failed_recheck_cannot_hide_its_noise_failures(self):
         path = ROOT / 'docs/measurements/kernel-recheck-2026-10-29-amd-2.json.gz'
         report = json.loads(gzip.decompress(path.read_bytes()))
@@ -36,7 +56,7 @@ class Evidence(unittest.TestCase):
             if hide_failures:
                 changed['failures'] = []
             with self.assertRaises(AssertionError):
-                CHECK.check_report(changed, report['source'], 'amd64', 2)
+                CHECK.check_report(changed, report['source'], 'amd64', 2, 4)
 
     def test_initial_sessions_do_not_establish_complete_coverage(self):
         CHECK.check_archive(ARCHIVE, 'initial-arm')

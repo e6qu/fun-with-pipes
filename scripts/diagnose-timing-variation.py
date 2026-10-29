@@ -130,7 +130,7 @@ def main():
                 policies = ['unbound', 'pinned'] if index % 2 == 0 else ['pinned', 'unbound']
                 for policy in policies:
                     os.sched_setaffinity(0, allowed if policy == 'unbound' else {args.cpu})
-                    for position, label in enumerate(SCHEDULE.execution_order(index, args.seed)):
+                    for position, label in enumerate(SCHEDULE.execution_order(index, args.seed, 4)):
                         name = f'{group}-{index}-{policy}-{position}'
                         result, record = run(programs[group, label], name, dict(group=group, round=index, policy=policy, label=roles[group][label]))
                         assert not result.stderr

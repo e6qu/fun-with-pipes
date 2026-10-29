@@ -62,18 +62,27 @@ explicit runner arguments; no previous fwp compiler is needed.
 ## Timing and noise control
 
 Each process reports five samples, each containing the eight calculation rounds.
-Keep two warmup rounds and 16 measured rounds. Each round runs four processes
-per label, sixteen processes total. A fixed Eulerian cycle over all sixteen
-ordered label pairs, including self-pairs, supplies that order; rotate the cycle
-one position per round. Each label occupies each of the sixteen process positions
-four times over the complete run. Retain the order and every duration, including
-outliers. The total remains 64 measured processes and 320 samples per label. Within-round
-ordered predecessor pairs occur fifteen times each across the run. Transitions
-between rounds are retained but are not claimed to have that same balance.
+Keep two warmup rounds and 16 measured rounds. The original protocol used four
+processes per label per round for every case. Its small-matrix comparison proved
+underpowered; the [sampling repair](timing-variation.md#small-matrix-sampling-repair-declared-before-implementation)
+was published in `3870a1bf` before implementation. Current counts are explicit:
 
-For each label and timing scope, sum its twenty samples across the four
-processes in a round. Compare the medians of the sixteen round totals; do not
-pretend within-process samples are independent sessions. The byte-identical pair must differ by no more than 2%
+| Case | Processes per label per round | Measured processes per label | Internal samples per label |
+|---|---:|---:|---:|
+| Small matrix | 256 | 4,096 | 20,480 |
+| Either array or large matrix | 4 | 64 | 320 |
+
+A fixed cycle over all sixteen ordered label pairs, including self-pairs,
+supplies the order. Rotate it one position per round; for the small matrix repeat
+that cycle 64 times within each round. Every label occupies each process position
+four times over the sixteen rounds. Within-round predecessor pairs occur 1,023
+times each for the small matrix and fifteen times for the other cases. Transitions
+between rounds are retained but are not claimed to have the same balance. Retain
+every observation, including outliers. Ordinary scheduling remains unchanged.
+
+For each label and timing scope, sum all its samples in a round (1,280 for the
+small matrix, twenty otherwise). Compare the medians of the sixteen round totals;
+within-process samples are not independent sessions. The byte-identical pair must differ by no more than 2%
 for both timing scopes in each case. This is a predeclared measurement-resolution
 requirement, not a compiler regression budget. If it fails, keep the result as
 inconclusive and repair the measurement method before accepting any candidate.

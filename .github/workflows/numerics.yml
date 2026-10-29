@@ -149,7 +149,7 @@ jobs:
           --rust-cpu "${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'generic' }}"
           --objdump objdump --nm nm --time /usr/bin/time
           --case array-65537 --case array-262145 --case matrix-65-67-63 --case matrix-257-259-255
-          --samples 16 --warmups 2 --processes 4 --order-seed 20261029 --timeout 180
+          --samples 16 --warmups 2 --processes 4 --small-matrix-processes 256 --order-seed 20261029 --timeout 180
           --session "${{ matrix.session }}" --qualification kernel-host.json --output kernel-baselines
       - name: Retain complete measurements and partial failed observations
         if: ${{ always() && hashFiles('kernel-baselines/**') != '' }}
