@@ -99,7 +99,8 @@ def check_report(report, source, architecture, session, small_matrix_processes):
 
 
 def check_archive(path, coverage):
-    archive = json.loads(path.read_text())
+    raw = path.read_bytes()
+    archive = json.loads(gzip.decompress(raw) if path.suffix == '.gz' else raw)
     required = {(architecture, session) for architecture in
                 (['arm64'] if coverage == 'initial-arm' else ['arm64', 'amd64']) for session in [1, 2]}
     assert coverage in ['initial-arm', 'complete']

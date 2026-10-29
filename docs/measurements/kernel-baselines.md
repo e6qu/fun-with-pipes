@@ -192,3 +192,31 @@ These entry/record costs are included in the broader timer, outside the matrix
 kernel timer. Profiles observe no effective retains or nonlast releases, and all
 live-storage ledgers return to zero. The reports retain process RSS, allocator
 charge, requested bytes, virtual reservation, code and stack costs separately.
+
+## Expanded small-matrix recheck
+
+Run `40951090783` at `37da7441` completes both qualified sessions on each CPU.
+The [compressed archive](kernel-expanded-artifacts-2026-10-29.json.gz) retains all
+four reports, full logs and 156,716 file identities. Independent audits checked
+every process, result bit, cleanup observation, binary section and stack report:
+144 ELF images, 96 frame reports and 77,968 commands.
+
+All small-matrix controls now pass: at most 0.098% difference on ARM64 and
+1.38% on AMD64. Both large-matrix controls and all computation-only array controls
+pass. AMD session 2 fails the small array's allocation-inclusive control at
+**1.030786192**, above **1.02**. The complete N1 result remains inconclusive;
+these are not four fully accepted sessions. No failed session was retried.
+
+Computation-only fwp/C ratios across the two sessions are:
+
+| Case | ARM64 | AMD64 |
+|---|---:|---:|
+| Array 65,537 | 0.973–0.980 | 3.306–3.309 |
+| Array 262,145 | 1.026–1.027 | 3.279–3.283 |
+| Matrix 65×67 × 67×63 | 1.047 | 1.983–2.000 |
+| Matrix 257×259 × 259×255 | 1.042–1.044 | 1.674–1.676 |
+
+A ratio of 3.3 means about 230% more time than this C kernel. The native-harness
+and representation differences above still apply. The small array's broader
+timer does not qualify on AMD64. Compiler diagnostics may investigate the
+consistent computation gap; they cannot erase that separate failed control.

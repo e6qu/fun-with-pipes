@@ -118,3 +118,28 @@ promise a pass. Run two independent qualified sessions per architecture after
 implementing this declared count. A further failure stays inconclusive: do not
 increase counts again after seeing those outcomes or discard old results.
 This repair changes measurement precision, not the programs or D2's limits.
+
+## Expanded result and next source investigation
+
+The declared four-session run `40951090783` at `37da7441` is fully audited.
+Small-matrix controls pass in all four sessions. AMD session 2 instead fails
+the 65,537-element array's allocation-inclusive control at 1.030786192. Its
+computation-only control is 1.002754; all other cases pass. The complete
+[expanded archive](kernel-expanded-artifacts-2026-10-29.json.gz) remains
+not accepted. Neither another unchanged run nor a further count increase is
+authorized by this experiment.
+
+The computation-only AMD array gap is consistent at about 3.3 times C, with
+passing controls in both sizes and sessions. Source inspection shows an F64
+accumulator carried through a generic 64-bit loop-state array. That observation
+is a hypothesis about extra register transfers, not a demonstrated cause.
+
+Before selecting an optimization, compile the retained C and fwp timing sources
+for all four cases on the matching GCC ARM64/AMD64 hosts, at their original O2
+settings. Add only GCC's vectorization report and optimized-tree dump options.
+Require the rebuilt executable's hash to match its recorded ordinary binary
+and verify every output hash/live-storage result. Preserve the source, commands,
+compiler reports, binaries and outputs. This is compiler inspection, not another
+timing acceptance run; do not select or discard elapsed-time observations.
+It can explain generated code choices while the separate allocation-inclusive
+noise failure and D2's zero-update requirement remain unresolved.

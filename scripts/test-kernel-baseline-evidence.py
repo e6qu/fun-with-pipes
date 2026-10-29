@@ -24,6 +24,19 @@ def check(report):
 
 
 class Evidence(unittest.TestCase):
+    def test_expanded_array_failure_cannot_be_hidden(self):
+        archive = ROOT / 'docs/measurements/kernel-expanded-artifacts-2026-10-29.json.gz'
+        with self.assertRaises(AssertionError):
+            CHECK.check_archive(archive, 'complete')
+        path = ROOT / 'docs/measurements/kernel-expanded-2026-10-29-amd-2.json.gz'
+        report = json.loads(gzip.decompress(path.read_bytes()))
+        self.assertEqual(report['failures'], [dict(case='array-65537',
+                         metric='allocationInclusiveNs', ratio=1.0307861917626233, limit=1.02)])
+        for failures in [report['failures'], []]:
+            report['failures'] = failures
+            with self.assertRaises(AssertionError):
+                CHECK.check_report(report, report['source'], 'amd64', 2, 256)
+
     def test_expanded_protocol_requires_every_extra_process(self):
         report = copy.deepcopy(REPORT)
         report['configuration']['small_matrix_processes'] = 256

@@ -240,10 +240,13 @@ map/reduce and 65×67 by 67×63 matrix comparison, then add 262,145 elements
 and 257×259 by 259×255 matrices using the same formulas and eight rounds.
 Keep input values, reduction order, precision and output checks identical.
 **Done:** B1-quality time, memory and accuracy baselines for both architectures.
-Initial and repaired ARM sessions pass. Repaired AMD session 2 fails the small
-matrix's identical-code control (3.27–3.49%, limit 2%); no qualified AMD session 1
-completed. All evidence remains archived. Complete the timing diagnostic before
-accepting the baselines or selecting N2; unchanged reruns are not a repair.
+The expanded run at `37da7441` completes both sessions on both CPUs. All matrix
+and computation-only array controls pass. One AMD small-array allocation-inclusive
+control fails at 3.08% (limit 2%); preserve that inconclusive overall result and
+investigate it without an unchanged rerun. Inspect GCC's code-generation reports
+for the independently stable computation gap before selecting a candidate; N1
+and N2 acceptance still require every stated control.
+
 
 **N2 — Optimize the selected kernel.** Change loop layout, data movement or
 workspace in `src/linalg.rs`, code generation and the corresponding C runtime.
