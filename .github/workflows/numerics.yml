@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-checks, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -4234,11 +4234,11 @@ jobs:
           echo 'descent-peers requires all, ubuntu-latest or ubuntu-24.04-arm' >&2
           exit 1
   descent_peers:
-    if: inputs.suite == 'descent-peers' && (inputs.native_runner == 'all' || inputs.native_runner == 'ubuntu-latest' || inputs.native_runner == 'ubuntu-24.04-arm')
+    if: (inputs.suite == 'descent-peers' || inputs.suite == 'descent-checks') && (inputs.native_runner == 'all' || inputs.native_runner == 'ubuntu-latest' || inputs.native_runner == 'ubuntu-24.04-arm')
     strategy:
       fail-fast: false
       matrix:
-        session: [1, 2]
+        session: ${{ fromJSON(inputs.suite == 'descent-checks' && '[1]' || '[1,2]') }}
         runner: ${{ fromJSON(inputs.native_runner == 'all' && '["ubuntu-latest","ubuntu-24.04-arm"]' || format('["{0}"]', inputs.native_runner)) }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
@@ -4254,6 +4254,7 @@ jobs:
           toolchain: 1.99.1
           components: rustfmt
       - name: Qualify the native host before building
+        if: inputs.suite == 'descent-peers'
         env:
           EXPECTED_CPU: ${{ matrix.runner == 'ubuntu-latest' && 'AMD EPYC 7763 64-Core Processor' || 'Neoverse-N2' }}
           EXPECTED_MACHINE: ${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}
@@ -4264,7 +4265,7 @@ jobs:
           --rust-version 'rustc 1.99.1 (58cf8f9c3 2026-10-13)'
           --source "$GITHUB_SHA" --processors 4 --output descent-host.json
       - name: Preserve host qualification, including rejected hosts
-        if: always()
+        if: always() && inputs.suite == 'descent-peers'
         uses: actions/upload-artifact@v7
         with:
           name: descent-host-${{ matrix.runner }}-${{ matrix.session }}
@@ -4278,18 +4279,35 @@ jobs:
         run: |
           cargo fetch --locked
           echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
-      - run: cargo build --locked --release --bin fwp
+      - id: compiler
+        run: cargo build --locked --release --bin fwp
       - name: Type inference and derivative precision regressions
         if: matrix.session == 1
+        shell: bash
         run: |
           mkdir -p derivative-checks
           cargo test --locked --release --no-fail-fast --test golden_check --test autodiff_precision -- --nocapture 2>&1 | tee derivative-checks/precision.log
+      - name: Interpreter regressions
+        if: ${{ !cancelled() && matrix.session == 1 && steps.compiler.outcome == 'success' }}
+        shell: bash
+        run: |
+          mkdir -p derivative-checks
           cargo test --locked --release --test golden_run interpreter_snapshots -- --exact --nocapture 2>&1 | tee derivative-checks/interpreter.log
+      - name: Native nominal selection
+        if: ${{ !cancelled() && matrix.session == 1 && steps.compiler.outcome == 'success' }}
+        shell: bash
+        run: |
+          mkdir -p derivative-checks
+          status=0
           for level in 1 2; do
-            target/release/fwp build -O$level tests/run/nominal_selector.fwp -o derivative-checks/nominal-O$level
-            derivative-checks/nominal-O$level > derivative-checks/nominal-O$level.stdout
-            diff -u tests/run/nominal_selector.out derivative-checks/nominal-O$level.stdout
+            if target/release/fwp build -O$level tests/run/nominal_selector.fwp -o derivative-checks/nominal-O$level; then
+              derivative-checks/nominal-O$level > derivative-checks/nominal-O$level.stdout || status=1
+              diff -u tests/run/nominal_selector.out derivative-checks/nominal-O$level.stdout || status=1
+            else
+              status=1
+            fi
           done
+          exit "$status"
       - name: Preserve derivative regression evidence
         if: ${{ always() && matrix.session == 1 && hashFiles('derivative-checks/**') != '' }}
         uses: actions/upload-artifact@v7
@@ -4308,6 +4326,7 @@ jobs:
       - name: Derivative phase-observer controls
         run: python3 scripts/test-descent-phases.py --cc gcc
       - name: Compare current AD, history, explicit derivatives and C/Rust
+        if: inputs.suite == 'descent-peers'
         run: >-
           python3 scripts/measure-descent-peers.py --compiler target/release/fwp
           --cc gcc --rustc rustc --c-arch "${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'armv8-a' }}"

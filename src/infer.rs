@@ -558,36 +558,39 @@ impl<'a> Infer<'a> {
             let row = table.flatten_row(row);
             row.tail == Some(tail) && !row.fields.iter().any(|(name, _)| name == label)
         }
+        #[derive(Hash, PartialEq, Eq)]
+        enum EffectNode {
+            Named(String),
+            Variable(TV),
+        }
         fn result_without(
             env: &Env,
+            fields: &[FieldReq],
             ty: &Type,
             tail: TV,
             label: &str,
             produced: bool,
-            visiting: &mut HashSet<(String, bool)>,
+            visiting: &mut HashSet<(EffectNode, bool)>,
         ) -> bool {
             match env.table.resolve(ty) {
                 // Inputs reverse direction: an accepted callback's smaller
                 // row does not mean the surrounding function handles an effect.
                 Type::Fun(input, output, row) => {
                     (produced && row_without(&env.table, &row, tail, label))
-                        || result_without(env, &input, tail, label, !produced, visiting)
-                        || result_without(env, &output, tail, label, produced, visiting)
+                        || result_without(env, fields, &input, tail, label, !produced, visiting)
+                        || result_without(env, fields, &output, tail, label, produced, visiting)
                 }
-                Type::Record(row) => env
-                    .table
-                    .flatten_row(&row)
-                    .fields
-                    .iter()
-                    .any(|(_, ty)| result_without(env, ty, tail, label, produced, visiting)),
+                Type::Record(row) => env.table.flatten_row(&row).fields.iter().any(|(_, ty)| {
+                    result_without(env, fields, ty, tail, label, produced, visiting)
+                }),
                 Type::Con(name, args) => {
-                    if !visiting.insert((name.clone(), produced)) {
+                    if !visiting.insert((EffectNode::Named(name.clone()), produced)) {
                         return false;
                     }
                     let found = if let Some(row) = env.table.expand_record(&name, &args) {
-                        row.fields
-                            .iter()
-                            .any(|(_, ty)| result_without(env, ty, tail, label, produced, visiting))
+                        row.fields.iter().any(|(_, ty)| {
+                            result_without(env, fields, ty, tail, label, produced, visiting)
+                        })
                     } else if let Some(TypeDef {
                         params,
                         kind: TypeDefKind::Adt { ctors },
@@ -599,6 +602,7 @@ impl<'a> Infer<'a> {
                             env.ctors[ctor].fields.iter().any(|field| {
                                 result_without(
                                     env,
+                                    fields,
                                     &TypeTable::subst(field, &map),
                                     tail,
                                     label,
@@ -608,13 +612,38 @@ impl<'a> Infer<'a> {
                             })
                         })
                     } else {
-                        args.iter()
-                            .any(|ty| result_without(env, ty, tail, label, produced, visiting))
+                        args.iter().any(|ty| {
+                            result_without(env, fields, ty, tail, label, produced, visiting)
+                        })
                     };
-                    visiting.remove(&(name, produced));
+                    visiting.remove(&(EffectNode::Named(name), produced));
                     found
                 }
-                Type::Var(_) | Type::App(..) | Type::Nat(_) | Type::NatOp(..) => false,
+                Type::Var(v) => {
+                    let key = (EffectNode::Variable(v), produced);
+                    if !visiting.insert(key) {
+                        return false;
+                    }
+                    // A pending selection still exposes its field types. Inspect
+                    // them without committing the containing value to an anonymous
+                    // row: that would discard a later nominal input constraint.
+                    let found = fields.iter().any(|req| {
+                        let input = matches!(env.table.resolve(&req.input), Type::Var(w) if w == v);
+                        let output =
+                            matches!(env.table.resolve(&req.output), Type::Var(w) if w == v);
+                        req.fields.iter().any(|(_, a, b)| {
+                            (input
+                                && result_without(env, fields, a, tail, label, produced, visiting))
+                                || (output
+                                    && result_without(
+                                        env, fields, b, tail, label, produced, visiting,
+                                    ))
+                        })
+                    });
+                    visiting.remove(&(EffectNode::Variable(v), produced));
+                    found
+                }
+                Type::App(..) | Type::Nat(_) | Type::NatOp(..) => false,
             }
         }
         let Type::Fun(_, _, permitted) = self.env.table.resolve(expected) else {
@@ -652,7 +681,15 @@ impl<'a> Infer<'a> {
                     return false;
                 };
                 row_without(&self.env.table, &call, tail, &label)
-                    || result_without(self.env, &result, tail, &label, true, &mut HashSet::new())
+                    || result_without(
+                        self.env,
+                        &self.field_reqs,
+                        &result,
+                        tail,
+                        &label,
+                        true,
+                        &mut HashSet::new(),
+                    )
             }) {
                 continue;
             }
