@@ -1,9 +1,9 @@
 # Startup repairs and CPU algorithm comparisons
 
-**Next:** validate and measure the exact decimal-threshold tree on both qualified
-CPU hosts, retaining the original grouped-division baseline and frozen limits.
-Bundle the result with startup fixes, phase diagnostics and all rejected results
-in one PR; run the nine production gates plus docs after the batch is ready.
+**Next:** publish the longer decimal protocol and collect its first two qualified
+sessions per architecture. Preserve the short tree's inconclusive decisions and
+all original limits. Accept the candidate only if every selected longer session
+passes; then run nine production jobs plus docs for the completed #225 batch.
 
 PR #224 is merged as `52e8da582644a93d996816d344894fdf5435a92f`.
 All nine production jobs `40790143419` and docs `40790141513` passed and were
@@ -13,7 +13,13 @@ subject: `Test scalar boundaries and retain rejected CPU experiments`, empty
 body, no trailers. Duplicate postmerge production `40801397077` was cancelled.
 
 Current worktree: `/private/tmp/fwp-cpu-phases`, branch `cpu-execution-costs`.
-Rebased onto #224's squash with identical tree before new edits; no active PR.
+Rebased onto #224's squash with identical tree before new edits. Draft
+[PR #225](https://github.com/e6qu/fun-with-pipes/pull/225) groups this batch.
+Threshold-tree source `9c89a3761cba2c3bccb02dff93b3fec6754f4583` was tested in
+focused ARM64 comparison `40802931428` and qualified AMD64 `40803171811`
+completed and were audited. Documentation `40802939430` passed and its log is
+audited, including intentional native-runner failure controls.
+The draft-skipped production run is not acceptance.
 Original measured history is remotely retained by immutable tag
 `roadmap/revision-decimal-count-df80c15e`. Do not relabel old measurements with
 rebased source IDs. Startup and phase evidence below remains applicable.
@@ -92,6 +98,30 @@ must catch an intentionally omitted one/two-digit comparison. Source inspection
 checks the full set of 19 thresholds; native execution checks branch wiring.
 The comparison runner keeps the original grouped-division helper, inputs, sample
 counts, compiler flags, output checks and fixed limits. No speedup is claimed.
+
+## Short tree results and longer protocol
+
+Both complete native jobs passed seven integer-output groups plus the benchmark,
+peer controls and memory/leak checks. All logs and artifacts were independently
+audited. ARM64 text median fell 35.24%, but its p95 control is 1.025828 versus
+1.025422; AMD64 text passes at 38.98% less time, but loop's control is 1.032092
+versus 1.018789. Both overall decisions are inconclusive, now retained in
+`decimal-tree-2026-10-29-*.json` with complete artifact identities. No speedup
+is accepted. The unchanged five other instruction sections and all stack frames
+are verified; text instructions grow by 496/560 bytes, with no readonly table.
+
+The prospective `decimal-count-repeat` protocol uses eight loop processes and
+128 text processes per sample, 60 samples, two warmups and two independent jobs
+per qualified architecture. Inputs, images, hosts, compilers, timing scope and
+all numerical limits stay fixed. Select the first two qualified jobs by run/job
+ID, not their results. All selected sessions must pass. This is a longer-sample
+measurement repair, not a retry-until-pass policy; preserve the short results.
+Runtime/compiler/native-test sources are unchanged from 9c89, so focused native
+correctness is not repeated. The full final-head production matrix still is.
+
+Six Python groups and the permanent verifier pass for both historical experiments.
+A local verifier edit initially reused an expected-result variable for a binary
+identity; fixed the variable name before publication. Workflow lint passes.
 
 ## Latest focused checks
 

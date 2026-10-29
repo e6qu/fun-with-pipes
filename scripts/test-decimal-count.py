@@ -56,7 +56,7 @@ class DecimalCount(unittest.TestCase):
         self.assertEqual(bodies[0], bodies[1])
 
     def test_recomputes_fixed_acceptance(self):
-        result = COUNT.check_case('loop', self.row, self.budget, 'threshold-tree')
+        result = COUNT.check_case('loop', self.row, self.budget, 'threshold-tree', COUNT.SHORT_SETTINGS)
         self.assertTrue(result['improvement'] and result['withinRegression'])
         self.assertEqual(result['candidateOverBaseline'], 0.8)
         self.assertIn('algorithm difference', result['peerScope'])
@@ -74,7 +74,20 @@ class DecimalCount(unittest.TestCase):
             elif defect == 'total': observation['seconds'] = 2
             else: process['seconds'] = float('nan')
             with self.subTest(defect=defect), self.assertRaises(AssertionError):
-                COUNT.check_case('loop', row, self.budget, 'threshold-tree')
+                COUNT.check_case('loop', row, self.budget, 'threshold-tree', COUNT.SHORT_SETTINGS)
+
+    def test_longer_batches_keep_the_same_limits_and_require_every_process(self):
+        row = copy.deepcopy(self.row)
+        for observation in row['observations']:
+            observation['processes'] *= COUNT.LONG_SETTINGS['processes']['loop']
+            observation['seconds'] = sum(p['seconds'] for p in observation['processes'])
+        result = COUNT.check_case('loop', row, self.budget, 'threshold-tree', COUNT.LONG_SETTINGS)
+        self.assertTrue(result['improvement'] and result['withinRegression'])
+        row['observations'][0]['processes'].pop()
+        with self.assertRaises(AssertionError):
+            COUNT.check_case('loop', row, self.budget, 'threshold-tree', COUNT.LONG_SETTINGS)
+        with self.assertRaises(AssertionError):
+            COUNT.check_case('loop', self.row, self.budget, 'threshold-tree', COUNT.LONG_SETTINGS)
 
     def test_noisy_or_slow_candidate_cannot_qualify(self):
         for kind in ['candidate', 'identical']:
@@ -82,11 +95,11 @@ class DecimalCount(unittest.TestCase):
             for observation in row['observations']:
                 if observation['kind'] == kind:
                     observation['processes'][0]['seconds'] = observation['seconds'] = 0.02
-            result = COUNT.check_case('loop', row, self.budget, 'threshold-tree')
+            result = COUNT.check_case('loop', row, self.budget, 'threshold-tree', COUNT.SHORT_SETTINGS)
             self.assertFalse(result['improvement'] or result['withinRegression'])
         self.row['binaries']['identical']['sha256'] = 'b' * 64
         with self.assertRaises(AssertionError):
-            COUNT.check_case('loop', self.row, self.budget, 'threshold-tree')
+            COUNT.check_case('loop', self.row, self.budget, 'threshold-tree', COUNT.SHORT_SETTINGS)
 
 
 if __name__ == '__main__':

@@ -168,3 +168,63 @@ images per host, 21 ordinary peer images and 14 storage images were audited.
 [The permanent reader](../../scripts/check-decimal-records.py) reconstructs the
 fixed acceptance decisions from every raw sample and checks source/report/image
 identities. This preserves the result without rerunning the rejected candidate.
+
+## Short threshold-tree results and measurement repair
+
+Source `9c89a3761cba2c3bccb02dff93b3fec6754f4583` passed all seven native
+integer-output groups, benchmark outputs, peer controls and memory/leak checks
+on both qualified GCC hosts. ARM64 completed in
+[40802931428](https://github.com/e6qu/fun-with-pipes/actions/runs/40802931428);
+AMD64 completed in
+[40803171811](https://github.com/e6qu/fun-with-pipes/actions/runs/40803171811).
+Two AMD64 attempts found EPYC 9V45 and stopped before compilation/timing.
+
+| Host / program | C ms | Rust ms | Original helper ms | Tree ms | Identical original ms | Control p95 / limit |
+|---|---:|---:|---:|---:|---:|---:|
+| ARM64 loop | 176.450 | 114.181 | 130.757 | 130.834 | 130.733 | 1.006052 / 1.006855 |
+| ARM64 text-length | 105.427 | 190.092 | 206.034 | 133.426 | 206.966 | 1.025828 / 1.025422 |
+| AMD64 loop | 126.928 | 107.264 | 128.432 | 128.365 | 128.047 | 1.032092 / 1.018789 |
+| AMD64 text-length | 115.278 | 220.532 | 245.207 | 149.635 | 243.511 | 1.046305 / 1.052444 |
+
+These use the same short batches: one loop process or 32 text processes.
+ARM64 text's observed median falls 35.24%, but its noise control narrowly fails;
+AMD64 text passes at 38.98% less time, but its unchanged loop control fails.
+**Neither complete session qualifies.** Keep all samples, without excluding
+outliers: ARM64's baseline text process median is 6.400 ms, p95 7.022 ms and
+maximum 8.090 ms; the identical binary's values are 6.409/7.359/9.623 ms. This
+establishes variation in short process timings, not its operating-system cause.
+
+The tree uses 496 more instruction bytes on ARM64 and 560 more on AMD64 than
+the original text helper. Whole binary sizes, readonly section sizes and the
+main/worker stack frames are unchanged; there is no decimal lookup table.
+All other five programs retain identical instruction sections. Raw
+[ARM64](decimal-tree-2026-10-29-arm.json),
+[AMD64](decimal-tree-2026-10-29-amd.json) and
+[artifact records](decimal-tree-artifacts-2026-10-29.json) preserve the complete
+short sessions. The permanent reader rechecks both inconclusive decisions.
+
+### Longer batches, specified before their measurement
+
+The `decimal-count-repeat` suite increases **only** the number of separate
+processes in each sample: eight for `loop`, 128 for `text-length`. Each process
+still performs the unchanged complete program, including startup and exit.
+This averages more observations per sample; it does not eliminate startup,
+change the algorithm or turn this into an internal calculation timer. Keep 60
+samples, two warmups, rotating five-entry order, all four CPUs without affinity,
+exact host/toolchain/input qualification and every original numerical limit.
+JSON checkpoints use compact formatting outside the timed intervals.
+
+Collect two independent qualified jobs per architecture. Select the first two
+by workflow run/job ID, independent of their results; retain all host rejections
+and any additional scheduled observations. Each job rebuilds and measures both
+the original grouped-division baseline and the unchanged tree. These are fresh
+same-job baseline observations for the longer protocol; old short durations are
+not directly pooled with them. Every selected session must pass both noise and
+regression limits, and text must meet the fixed improvement limit. Do not reset
+the table or rerun an inconclusive selected session until it happens to pass.
+
+Only the harness/protocol/docs change after the verified short source. Do not
+repeat the unchanged integer-output suite during these measurements; its native
+proof applies by source identity. The full final-head production matrix must
+still run after the grouped batch is ready. If the longer controls remain noisy,
+leave the performance decision open and investigate measurement conditions.

@@ -24,7 +24,8 @@ ALGORITHMS = {
 BASELINE = 'c92fed4208a16627f0f420f58ce1f7729bf0f061'
 KINDS = ('c', 'rs', 'baseline', 'candidate', 'identical')
 COUNTING_PROGRAMS = ('strings', 'text-length')
-SETTINGS = dict(samples=60, warmups=2, processes={'loop': 1, 'text-length': 32}, timeout=120, cpuPolicy='all')
+SHORT_SETTINGS = dict(samples=60, warmups=2, processes={'loop': 1, 'text-length': 32}, timeout=120, cpuPolicy='all')
+LONG_SETTINGS = dict(samples=60, warmups=2, processes={'loop': 8, 'text-length': 128}, timeout=120, cpuPolicy='all')
 
 
 def helper(source):
@@ -38,26 +39,27 @@ def digest(path):
 
 
 def write(path, data):
-    path.write_text(json.dumps(data, indent=2, allow_nan=False) + '\n')
+    path.write_text(json.dumps(data, separators=(',', ':'), allow_nan=False) + '\n')
 
 
-def check_case(name, row, budget, algorithm):
+def check_case(name, row, budget, algorithm, settings):
+    assert settings in (SHORT_SETTINGS, LONG_SETTINGS)
     description = ALGORITHMS[algorithm]
     assert row['stdout'] == CPU.EXPECTED[name] and set(row['binaries']) == set(KINDS)
     assert row['binaries']['baseline'] == row['binaries']['identical']
     for binary in row['binaries'].values():
         assert re.fullmatch('[0-9a-f]{64}', binary['sha256']) and binary['bytes'] > 0
     observations = row['observations']
-    assert len(observations) == len(KINDS) * (SETTINGS['samples'] + SETTINGS['warmups'])
+    assert len(observations) == len(KINDS) * (settings['samples'] + settings['warmups'])
     times = {kind: [] for kind in KINDS}
     for index, observation in enumerate(observations):
         round_index, position = divmod(index, len(KINDS))
-        warmup = round_index < SETTINGS['warmups']
-        number = round_index if warmup else round_index - SETTINGS['warmups']
+        warmup = round_index < settings['warmups']
+        number = round_index if warmup else round_index - settings['warmups']
         kind = KINDS[(number + position) % len(KINDS)]
         assert (observation['kind'], observation['phase'], observation['round']) == (kind, 'warmup' if warmup else 'sample', number)
         assert observation['binarySha256'] == row['binaries'][kind]['sha256']
-        assert len(observation['processes']) == SETTINGS['processes'][name]
+        assert len(observation['processes']) == settings['processes'][name]
         for process in observation['processes']:
             assert process['status'] == 0 and not process['stderr'] and process['stdout'] == row['stdout']
             assert math.isfinite(process['seconds']) and process['seconds'] > 0
@@ -67,7 +69,7 @@ def check_case(name, row, budget, algorithm):
     medians = {kind: statistics.median(values) for kind, values in times.items()}
     control = max(medians['baseline'], medians['identical']) / min(medians['baseline'], medians['identical'])
     pairs = sorted(max(a, b) / min(a, b) for a, b in zip(times['baseline'], times['identical'], strict=True))
-    spread = pairs[math.ceil(0.95 * SETTINGS['samples']) - 1]
+    spread = pairs[math.ceil(0.95 * settings['samples']) - 1]
     stable = control <= 1.03 and spread <= budget['maxControlPairRatio']
     ratio = medians['candidate'] / medians['baseline']
     return dict(medianBatchSeconds=medians, controlRatio=control, pairRatio95=spread,
@@ -91,6 +93,8 @@ def sections(path, architecture):
 
 
 def measure(args):
+    settings = {'short': SHORT_SETTINGS, 'long': LONG_SETTINGS}[args.protocol]
+    assert args.session in (1, 2)
     report = CPU.qualification(args)
     assert report == json.loads(args.qualification.read_text())
     budgets = CPU.BOUNDS.qualify(json.loads(args.table.read_text()), report['host'], report['compilers'], report['inputs'])
@@ -107,7 +111,7 @@ def measure(args):
     assert memory['inspectionSha256'] == digest(args.inspection) and memory_images['reportSha256'] == digest(args.memory / 'report.json')
     directory, = (args.input / args.source).iterdir()
     assert digest(directory / 'report.md') == inspection['reportSha256']
-    report.update(algorithm='threshold-tree', baseline=BASELINE, settings=SETTINGS, programs={}, context={}, commands=[],
+    report.update(algorithm='threshold-tree', session=args.session, protocol=args.protocol, baseline=BASELINE, settings=settings, programs={}, context={}, commands=[],
                   oldHelper=old, newHelper=new, evidence=dict(inspection=digest(args.inspection), memory=digest(args.memory / 'report.json'), memoryInspection=digest(args.memory_inspection)),
                   scope='Only the decimal-count helper differs between paired generated-C images. Baseline uses the original helper in the current runtime, with no previous fwp executable dependency. Timings are ordinary process wall time; compilation, profiles and evidence writes are excluded. Candidate C is the actual compiler output. C/Rust peers retain their existing grouped-division algorithm.')
     environment = {k: v for k, v in os.environ.items() if not k.startswith('FWP_') and k not in ('GH_TOKEN', 'GITHUB_TOKEN')}
@@ -172,16 +176,16 @@ def measure(args):
         paths = paths_by_name[name]
         row = dict(stdout=CPU.EXPECTED[name], binaries={kind: dict(sha256=digest(paths[kind]), bytes=paths[kind].stat().st_size) for kind in KINDS}, observations=[])
         report['programs'][name] = row
-        for phase, rounds in [('warmup', SETTINGS['warmups']), ('sample', SETTINGS['samples'])]:
+        for phase, rounds in [('warmup', settings['warmups']), ('sample', settings['samples'])]:
             for number in range(rounds):
                 for position in range(len(KINDS)):
                     kind = KINDS[(number + position) % len(KINDS)]
                     observation = dict(kind=kind, phase=phase, round=number, binarySha256=row['binaries'][kind]['sha256'], processes=[], seconds=0)
                     row['observations'].append(observation)
-                    for process_index in range(SETTINGS['processes'][name]):
+                    for process_index in range(settings['processes'][name]):
                         start = time.perf_counter()
                         try:
-                            result = subprocess.run([str(paths[kind])], env=environment, capture_output=True, text=True, timeout=SETTINGS['timeout'])
+                            result = subprocess.run([str(paths[kind])], env=environment, capture_output=True, text=True, timeout=settings['timeout'])
                         except subprocess.TimeoutExpired:
                             write(args.output / 'report.json', report)
                             raise
@@ -193,7 +197,7 @@ def measure(args):
                             write(args.output / 'report.json', report)
                             raise AssertionError((name, kind, phase, number, process_index, process))
                     write(args.output / 'report.json', report)
-        row['result'] = check_case(name, row, budgets[name], report['algorithm'])
+        row['result'] = check_case(name, row, budgets[name], report['algorithm'], settings)
         write(args.output / 'report.json', report)
         print(name, json.dumps(row['result'], indent=2), flush=True)
     report['qualifies'] = all(r['result']['withinRegression'] for r in report['programs'].values()) and report['programs']['text-length']['result']['improvement']
@@ -204,6 +208,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('input', 'inspection', 'memory', 'memory-inspection', 'qualification', 'table', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
+    parser.add_argument('--protocol', choices=['short', 'long'], required=True)
+    parser.add_argument('--session', type=int, choices=[1, 2], required=True)
     parser.add_argument('--source', required=True)
     parser.add_argument('--architecture', choices=['aarch64', 'x86_64'], required=True)
     parser.add_argument('--cc', required=True)
