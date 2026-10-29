@@ -147,8 +147,9 @@ stack configuration. It releases the attributes after thread creation and report
 setup failure before language code instead of switching to the process stack.
 Alternate-stack and signal-handler registration are also required. Static numerical
 workers check their stack attributes; a partial startup joins every started worker
-before reporting failure. These checks are implemented in the current preparation;
-the startup fault controls still need runner verification.
+before reporting failure. O0/O2 fault controls pass on native Linux and macOS, on ARM64 and AMD64,
+including a deliberately omitted stack-error check that must fail the test.
+The broader final-head matrix remains required before merge.
 
 ## Ownership implementation
 

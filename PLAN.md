@@ -156,8 +156,9 @@ keep owned-token versus borrowed-token differences explicit when selecting a fix
 [proved-bounds experiment](docs/measurements/proved-scalar-bounds.md) rejected both
 range-index and character-sum changes: neither meets the fixed improvement rule.
 Keep its boundary tests and results; do not repeat those candidates as a speedup.
-Next, measure runtime setup, calculation, output and cleanup separately for the
-existing loop/text inputs and C/Rust peers. Keep instrumented diagnostic timings
+Next, run the [execution-phase diagnostic](docs/measurements/cpu-phases.md) for
+runtime setup, calculation, output and cleanup in the existing loop/text inputs
+and C/Rust peers. Keep instrumented diagnostic timings
 separate from the unchanged whole-process baseline. Use the largest demonstrated
 extra cost to choose the next compiler/runtime change. For the persistent gap, separate
 calculation, input/output, allocation and dispatch with explicit paired controls.
