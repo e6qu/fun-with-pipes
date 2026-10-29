@@ -52,15 +52,16 @@ explicit runner arguments; no previous fwp compiler is needed.
 ## Timing and noise control
 
 Each process reports five samples, each containing the eight calculation rounds.
-Keep two warmup rounds and 64 measured process rounds. A round runs each of the
-four labels once. A fixed Eulerian cycle over all sixteen ordered label pairs,
-including self-pairs, supplies the order; rotate that cycle across sixteen rounds
-and repeat four times. Each label occupies each process position equally across
-the complete run. Retain the order and every duration, including outliers.
+Keep two warmup rounds and 16 measured rounds. Each round runs four processes
+per label, sixteen processes total. A fixed Eulerian cycle over all sixteen
+ordered label pairs, including self-pairs, supplies that order; rotate the cycle
+one position per round. Each label occupies each of the sixteen process positions
+four times over the complete run. Retain the order and every duration, including
+outliers. The total remains 64 measured processes and 320 samples per label.
 
-For each label and timing scope, first sum its five samples per process. Compare
-the medians of the 64 process totals; do not pretend within-process samples are
-independent sessions. The byte-identical pair must differ by no more than 2%
+For each label and timing scope, sum its twenty samples across the four
+processes in a round. Compare the medians of the sixteen round totals; do not
+pretend within-process samples are independent sessions. The byte-identical pair must differ by no more than 2%
 for both timing scopes in each case. This is a predeclared measurement-resolution
 requirement, not a compiler regression budget. If it fails, keep the result as
 inconclusive and repair the measurement method before accepting any candidate.
