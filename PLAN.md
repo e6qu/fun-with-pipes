@@ -211,7 +211,8 @@ generated C allocates that record on the heap for each recorded operation, even
 though the runtime only copies its fields. Prove that its argument cannot escape
 in `src/ownership.rs`, then use the existing stack analysis. Do not extend the
 rule to `ad.push-owned`, whose typed weights have separate ownership obligations.
-Before changing the contract, finish D1's fixed comparison limits. Compare exact
+The fixed comparison limits were published at fde368c8 before changing the
+contract. Finish the independent baseline audit before candidate acceptance. Compare exact
 requests/retains, time, instruction bytes and stack frames; preserve tape-full,
 mixed/stale-node, failure/cancellation and nested-gradient checks. The raw tape
 workspace already reuses buffers across updates; growing its cache is not the

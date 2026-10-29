@@ -263,3 +263,77 @@ fn public_tape_tokens_agree_with_raw_interpreter() {
         }
     }
 }
+
+#[test]
+fn scalar_recording_arguments_use_stack_storage_without_retaining_the_record() {
+    let scratch = Scratch::new("scalar-recording");
+    let input = scratch.0.join("recording.fwp");
+    std::fs::write(&input, include_str!("fixtures/ad_scalar_recording.fwp")).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input),
+    );
+    assert_eq!(reference.stdout, b"1\n");
+    assert!(reference.stderr.is_empty());
+
+    for (stack, expected_records) in [("0", 256), ("1", 0)] {
+        let cfile = scratch.0.join(format!("recording-stack{stack}.c"));
+        checked(
+            Command::new(compiler)
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_STACK", stack)
+                .args(["build", "--memory", "dynamic", "-O2", "--emit-c"])
+                .arg(&input)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let mut code = std::fs::read_to_string(&cfile).unwrap();
+        for (needle, replacement) in [
+            (
+                "static V fwp_record(uint32_t n, const V *f) {".to_owned(),
+                "static uint64_t recording_records, recording_calls;\nstatic V fwp_record(uint32_t n, const V *f) {\nif (n == 4) recording_records++;".to_owned(),
+            ),
+            (
+                "static V fwp_p_ad_push(V tup) {".to_owned(),
+                "static V fwp_p_ad_push(V tup) {\nrecording_calls++;".to_owned(),
+            ),
+            (
+                "    /* Ownership observation point: before runtime teardown. */".to_owned(),
+                format!(r#"    /* Ownership observation point: before runtime teardown. */
+    if (recording_calls != 256) exit(211);
+    if (recording_records != {expected_records}) exit(212);
+    if (fwp_heap.live || fwp_heap.rc_wide_len) exit(213);
+    for (int64_t i = 0; i < fwp_ntapes; i++) if (fwp_tapes[i].live) exit(214);
+    fprintf(stderr, "recording: %llu calls, %llu heap records\n",
+        (unsigned long long)recording_calls, (unsigned long long)recording_records);"#),
+            ),
+        ] {
+            assert_eq!(code.matches(&needle).count(), 1, "{needle}");
+            code = code.replace(&needle, &replacement);
+        }
+        for opt in ["-O1", "-O2"] {
+            let executable = scratch.0.join(format!("recording-stack{stack}{opt}.exe"));
+            fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+            for workspace in ["0", "1"] {
+                let output = Command::new(&executable)
+                    .env("FWP_AD_WORKSPACE", workspace)
+                    .output()
+                    .unwrap();
+                let label = format!("recording-stack{stack}{opt}-workspace{workspace}");
+                record_probe::save("ad_tape_ownership", &label, &code, &executable, &output);
+                assert!(output.status.success(), "{label}: {output:?}");
+                assert_eq!(output.stdout, reference.stdout, "{label}");
+                assert_eq!(
+                    String::from_utf8(output.stderr)
+                        .unwrap()
+                        .replace("\r\n", "\n"),
+                    format!("recording: 256 calls, {expected_records} heap records\n"),
+                    "{label}"
+                );
+            }
+        }
+    }
+}

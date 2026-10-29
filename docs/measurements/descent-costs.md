@@ -255,12 +255,12 @@ checkpoints; no observation limit is raised or disabled.
 Use the existing 2% identical-median criterion when judging timing reliability;
 report paired tails as well. Retain every result if this protocol is also noisy.
 Publish per-case timing/noise limits, allocation counts and code/stack bounds
-before changing the `ad.push` contract. No contract is changed during preparation.
+before changing the `ad.push` contract. The limits below were published before the scalar no-escape contract changed.
 
 ## Fixed scalar-recording acceptance rules
 
 These limits are chosen before implementing or measuring the `ad.push` change.
-The repeated-solve baseline must first pass its four matching-host sessions.
+Acceptance also requires all four matching-host repeated-solve baseline sessions.
 For the candidate, run two independent sessions on each of the same native CPU
 models and compiler versions. Keep all six cases and the same 98 rounds, seven
 fresh processes, solve counts, output checks and ordering seed.

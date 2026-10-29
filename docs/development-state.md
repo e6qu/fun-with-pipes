@@ -2,8 +2,9 @@
 
 **Next:** audit repeated-solve run `40829884152` at
 `a31f24c4fdc215383cc61d95f6f6d743e66cb1a3`, replace its rejected AMD session with
-an independently qualified run, and freeze D1's comparison limits. Then implement
-and measure the D2 scalar `ad.push` no-escape contract and finish D3 per-depth costs.
+an independently qualified run, and archive D1's complete baseline. Measure the D2 scalar `ad.push` candidate
+against its same-source reference and apply the already fixed limits. D3
+per-depth evidence passes; final production acceptance remains pending.
 Worktree `/private/tmp/fwp-ad-recording`, branch `ad-recording-costs`; draft PR #226.
 
 ## Current measurements
@@ -65,30 +66,30 @@ checkpoint per derivative level. ZIPs/logs remain at
 `/private/tmp/fwp-depth-{b349,89bb}-{arm,amd}.{log,zip}`. A guarded Clang O2 depth-3
 probe also passed; no complete local suite was run.
 
-## Prepared D2 changes: do not publish the future assertion yet
+## D2 scalar recording candidate
 
-Runtime `ad.push` copies four scalar fields and retains no record address.
-Its argument is the selected stack-allocation candidate; `ad.push-owned` is excluded.
-No ownership contract has changed. The paired measurement and its fixed
-acceptance limits are prepared: 5% less time with updates, at most 2% regression
-without updates, exact recording fixture plus per-node allocation savings,
-unchanged raw storage and bounded code/stack growth. Reference and candidate
-compilers use the same source, differing only in the scalar no-escape fact. Three local files are deliberately uncommitted:
+Fixed acceptance limits were published at `fde368c8` before the ownership change.
+The same-source reference compiler disables only the new scalar `ad.push`
+no-escape fact. Both compilers are built on the runner; no earlier fwp is needed.
+The paired comparison keeps all six cases and unchanged noise/time/storage/code/
+stack limits. Four baseline sessions are still required before acceptance.
 
-- `tests/fixtures/ad_scalar_recording.fwp`: 256 recorded identity operations,
-  differentiating the final node. Raw interpretation returns 1.
-- `tests/fixtures/ad_unwind_probe.c`: overwrite the caller's record, then seed its
-  recorded node; this extends existing failure/cancellation/retirement controls.
-- `tests/ad_tape_ownership.rs`: future O1/O2 test expects 256 heap argument records
-  with stack storage disabled and zero with it enabled. Current code still has
-  256 in both modes. Publish the zero assertion only with the no-escape contract.
+`src/ownership.rs` now admits only argument 0 of scalar `ad.push`; typed
+`ad.push-owned` remains excluded. The runtime copies four scalars before growth,
+retains no record address and returns an immediate node ID. Existing escape and
+record-borrow analyses use this fact; no new runtime mode or syntax is added.
 
-The exact fbed macOS compiler and a guarded Clang O2 probe establish that baseline:
-256 calls, 256 argument records, derivative 1, no live managed storage or tapes.
-Files `/private/tmp/fwp-ad-scalar-{baseline,observed}.c`; observed executable shares
-that stem. The repaired compiler has not run this D2 test. After the contract,
-check primitive inventory, scope/failure/cancellation/nesting, counts, code/stack
-costs and D1 timing limits. Bundle all into one substantial PR.
+`tests/fixtures/ad_scalar_recording.fwp` records 256 identity operations and returns
+derivative 1. Its test requires 256 heap argument records with stack storage off
+and zero with it on, at O1/O2 and both workspace settings. The unwind probe now
+overwrites the caller's record and seeds its recorded node, keeping existing
+failure/cancellation/mixed/stale/wrapping controls. These tests await CI.
+The exact fbed baseline produced 256 records with stack storage on, derivative 1
+and no live managed storage or tapes. Two standalone production ownership-module
+tests pass locally; the frozen primitive inventory is checked before publication.
+
+Run `descent-recording` for the paired comparison and ownership tests. Full final
+native/docs gates and G2 follow the grouped work; no speedup is accepted yet.
 
 ## Roadmap status
 
