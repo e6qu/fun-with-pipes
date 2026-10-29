@@ -1,12 +1,11 @@
 # Eager captures in derivative programs
 
-The comparison was published in `8a495a72` before implementation. A candidate
-is now implemented; verification and measurements are pending. This is not a
-speed claim.
+The comparison was published in `8a495a72` before implementation. All four matching-host measurements pass their frozen limits after independent
+audit. Focused correctness checks pass; final native delivery remains pending.
 [The earlier scalar-recording experiment](descent-costs.md#scalar-recording-results-allocation-reduction-retained-speed-goal-open)
 keeps its allocation reduction and failed timing result. Its limits are unchanged.
 
-## Cost and proposed change
+## Cost and implemented change
 
 A partial application supplies some arguments now and returns a function waiting
 for the rest. For example, `add (calculate ())` must evaluate `calculate ()` when
@@ -21,11 +20,11 @@ partial-application allocations per solve. All 512 complete outputs matched the
 ordinary executable. This is a local Clang O2 operation count, not a timing or GCC
 result, and it does not count every possible dispatch convention.
 
-The proposed change binds complete eager capture computations at their original
+The change binds complete eager capture computations at their original
 point, once, in left-to-right order. It reuses the existing `bind_captures` helper
 in `src/opt.rs`, already used to specialize known callbacks. The resulting known
 partial application can then be substituted without moving its computations.
-This should expose existing direct-call and callback specialization opportunities.
+This exposes existing direct-call and callback specialization opportunities.
 Do not raise inlining limits, add AD-specific wrappers, or change runtime APIs.
 
 Only descend through known unsaturated applications. Do not enter an arbitrary
@@ -104,13 +103,85 @@ Both comparison protocols use the shared budget evaluator with an explicit
 comparison name; their allocation requirements remain distinct. The original
 scalar-recording archive and every rejected timing case still pass their audits.
 
-## Verification so far
+## Results
+
+The comparison uses the Rosenbrock objective, a sum over adjacent coordinates:
+`100 * (y - x*x)^2 + (1 - x)^2`. Inputs alternate -1.2 and 1.0. Each update
+computes its gradient and subtracts `0.001 * gradient` from the coordinates.
+The current-result program keeps the latest vector; the history program retains
+every update. Candidate and reference compute the same derivatives and outputs.
+The reference disables only eager-capture binding; both keep #226's stack
+recording. C/Rust compute explicit derivative formulas using two reusable buffers,
+so their timings do not isolate compiler overhead from general AD work.
+
+Each timed process repeats a complete solve and writes every final vector.
+There are 32,768 / 512 / 32 / 4 / 32 / 8 solves for the six rows below. Each
+round sums seven fresh process durations per implementation; medians use all
+98 rounds after two warmups. Timers include process startup, calculations, output
+and cleanup. Profiled allocation/memory runs and diagnostic phase timers are
+separate. See the [retained reports and artifact index](eager-captures-artifacts-2026-10-29.json)
+for every process observation, compiler flag, output and file identity.
+
+Ratios below are **candidate time / reference time**, covering both forms and
+both independent sessions per architecture. For example, 0.28 means about 72%
+less elapsed time for that workload, not universal language overhead.
+
+| Coordinates / updates | ARM64 ratio range | AMD64 ratio range | Current-result requests, reference → candidate |
+|---|---:|---:|---:|
+| 3 / 0 | 1.002–1.006 | 0.992–1.012 | 65,539 → 65,539 |
+| 3 / 1 | 0.859–0.873 | 0.849–0.869 | 58,372 → 26,116 |
+| 3 / 199 | 0.372–0.384 | 0.416–0.434 | 713,284 → 312,100 |
+| 3 / 1,999 | 0.355–0.372 | 0.399–0.410 | 895,564 → 391,816 |
+| 33 / 199 | 0.286–0.292 | 0.308–0.324 | 7,399,714 → 2,604,610 |
+| 129 / 199 | 0.280–0.299 | 0.336–0.337 | 7,199,170 → 2,485,258 |
+
+Requests count one process, including its repeated solves and cleanup; they are
+not bytes or requests per solve. The largest current-result case uses 65.5% fewer
+requests. Both forms meet the allocation rule. Retains and peak managed charge
+never increase; final managed and raw tape storage is zero. Raw tape profiles
+and every release checkpoint match the reference, with workspace reuse on/off.
+
+The byte-identical timing control varies by at most 1.22% (limit 2%). Zero-update
+ratios remain visible; they pass the separate 1.02 limit. Instruction sections
+shrink by 7,376–16,208 bytes on ARM64 and 5,504–14,864 on AMD64. The largest static
+frame changes by -192 to 0 bytes on ARM64 and -160 to +16 on AMD64, within the
+128-byte growth limit. All frame entries and whole binary sizes are retained.
+
+For 129 coordinates and 199 updates, the current-result process medians divided
+by seven processes and eight solves are 9.59–9.60 ms per solve on ARM64 and
+11.40–11.43 ms on AMD64. This includes each process's amortized startup/output
+cost. The same case still takes 43.9–44.0 times C's time on ARM64 and 55.8–58.3
+times on AMD64. Removing temporary closures improves general AD substantially;
+it does not make automatic recording equivalent to a handwritten derivative.
+
+## Verification and source identities
 
 Focused run `40871650124` at `89d0dfa1` passes 299 tests/18 summaries and lint on
 each of Linux ARM64, Linux AMD64 and ARM macOS. All three full logs are audited.
-The measurement commit `4ffeb0d2` has identical compiler/runtime/test source.
-Run `40876515001` starts the four comparisons. AMD session 1 is assigned EPYC
-9V45 and [rejected before building or timing](eager-captures-host-rejection-2026-10-29.json);
-the other three sessions qualify and continue. The explicit session selector
-allows only that missing session to be replaced without repeating completed work.
-There is no accepted performance result yet.
+The measurement commits have identical compiler/runtime/library/test source.
+
+| Session | Source | Run | Job |
+|---|---|---:|---:|
+| ARM64 1 | `4ffeb0d2` | 40876515001 | 123456633689 |
+| ARM64 2 | `4ffeb0d2` | 40876515001 | 123456633700 |
+| AMD64 1 | `8703104d` | 40878172336 | 123462304392 |
+| AMD64 2 | `4ffeb0d2` | 40876515001 | 123456633658 |
+
+Hosts are four-processor Neoverse-N2 with GCC 13.3.0 and EPYC 7763 with GCC 15.2.0;
+all use Rust 1.99.1. Original AMD session 1 received EPYC 9V45 and was
+[rejected before building or timing](eager-captures-host-rejection-2026-10-29.json).
+Its replacement changes only workflow selection and documentation; compiler,
+measurement scripts, inputs and reference transformation are unchanged.
+
+All four full logs, 368 binaries, 320 stack reports, complete outputs, individual
+process timings and memory/phase controls are audited. Each first session also
+passes 243 Rust tests in five targets; every session passes 22 Python checks.
+The artifact index retains the exact reference patch/compiler and every file hash.
+The documentation gate recomputes schedules, medians and all acceptance limits;
+negative controls reject omitted sessions, relabeled sources/runs, changed
+reference identities, altered samples and changed measured-source hashes.
+
+This satisfies the selected experimental D2 budget. Final delivery still needs
+all nine production jobs, documentation and both G2 hosts on the final commit.
+The earlier scalar-recording experiment remains rejected for speed; this result
+does not change its limits or erase its slower observations.

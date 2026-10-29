@@ -22,8 +22,9 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Numerical applications
 
-- [Nested derivative costs](ad-depth.md): audited F64/F128 depth/size comparisons with explicit fwp formulas, including allocation, code and stack costs; full PR acceptance remains pending.
+- [Nested derivative costs](ad-depth.md): audited F64/F128 depth/size comparisons with explicit fwp formulas, including allocation, code and stack costs; verified in #226.
 
+- [Eager capture bindings](eager-captures.md): four accepted paired sessions, 13–72% less updated-solve time, retained C/Rust gaps and reference/source controls.
 - [Current derivative costs](descent-costs.md): initial and matched-host sessions, phase/memory observations and unresolved short-case timing noise.
 - [Current output versus checksum costs](descent-output-current.md): four audited sessions; short noisy controls and host differences remain visible.
 

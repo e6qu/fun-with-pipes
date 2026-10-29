@@ -45,6 +45,22 @@ functions and tuple positions start at zero. Fixed-precedence infix arithmetic
 and prefix calls coexist. See [parser rules](compiler-pipeline.md) and the
 [reference](reference.md) for layout, patterns and exact precedence.
 
+## Eager computations in partial applications
+
+`add (calculate ())` evaluates `calculate ()` when the partial function is made.
+Calling that function later must not repeat the calculation, move it past an
+effect or delay its failure. For a known partial function used once, the optimizer
+binds computed captures at their original point, then substitutes the remaining
+function value. Existing specialization can then expose a direct call.
+
+Only known unsaturated applications take this path. Unknown calls and fully
+applied functions returning closures keep their binding. Observable resource
+captures reject the transformation; rejection discards every prepared temporary.
+Original resource anchors, evaluation order and inlining limits remain unchanged.
+The [eager-capture experiment](measurements/eager-captures.md) supplies operation
+order tests and measured costs; it is not a promise that all closures allocate
+nothing.
+
 ## Types and effects
 
 Type inference solves constraints from uses, so ordinary expressions need few
