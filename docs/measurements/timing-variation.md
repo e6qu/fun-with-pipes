@@ -155,3 +155,33 @@ for byte. Record the actual host and require the original GCC version, native
 architecture and explicit target flags. The initial AMD inspection rejected Xeon
 8573C before building; retain that rejection. Timing baselines still require
 their originally declared CPUs.
+
+## Compiler reports and typed-state experiment
+
+The [retained reports](kernel-codegen-artifacts-2026-10-29.json) cover all eight
+C/fwp programs on both architectures. ARM job `123732636881` and AMD job
+`123734517885` reproduce every original executable hash and output. Their full
+logs are audited. The initial AMD host rejection is retained separately.
+
+Both compilers keep the fwp array accumulator as an integer between iterations:
+GCC's optimized intermediate representation reads its bits as a `double`, adds
+the next value, then stores the result as integer bits. The C peer keeps a
+`double` accumulator throughout. Neither array loop vectorizes under the declared
+settings. Therefore missing vectorization is not an explanation of this gap.
+The reports establish a representation difference, not its measured cost.
+
+Next, test a compiler representation change: store statically known F32/F64 loop
+fields as C `float`/`double` members, with ordinary value words for other fields.
+Use the existing bit-preserving conversions at generic boundaries. Keep the same
+field evaluation order, current/next state separation, owner transfers and
+cancellation cleanup. Do not reassociate operations or add fused arithmetic.
+Check scalar, flat and nested states, signed zero, subnormals, infinities and NaN
+payloads; retain the existing alias, preparation-failure and cancellation probes.
+Require raw/optimized interpreter agreement where the language exposes bits,
+and native O1/O2 checks with production GCC and Clang.
+
+This first experiment establishes correctness and whether GCC keeps a floating
+accumulator across iterations. It is not a timing acceptance run. The separate
+allocation-inclusive measurement failure must be resolved and N2's timing/code/
+stack budgets published before accepting a speed claim. D2's failed zero-update
+requirement also remains open. A source change alone closes neither goal.

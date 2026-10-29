@@ -1,15 +1,16 @@
 # Continue PR #227: derivative costs and numerical kernels
 
-**Next:** run and audit the [declared compiler-report diagnostic](measurements/timing-variation.md#expanded-result-and-next-source-investigation)
-on the retained four-case kernel sources. Python syntax and workflow lint
-pass under the guard; actual GCC execution belongs on the runners. Require unchanged rebuilt binary hashes,
-correct outputs, native architecture, GCC version and explicit target flags. This investigates the stable computation
-gap; it does not resolve the separate failed timing controls below. No unchanged
-acceptance rerun or further sample-count increase is authorized by the experiment.
+**Next:** implement and check the [typed loop-state experiment](measurements/timing-variation.md#compiler-reports-and-typed-state-experiment).
+Both audited GCC report jobs reproduce all original binaries and outputs. They
+retain an integer accumulator in fwp's array loop versus a floating accumulator
+in C; neither array loop vectorizes. Check representation and correctness first.
+N1's inclusive noise failure and D2's timing failure remain open; no unchanged
+acceptance rerun or further sample-count increase is authorized.
 
 Active worktree `/private/tmp/fwp-ad-captures`, branch `ad-eager-captures`.
 [PR #227](https://github.com/e6qu/fun-with-pipes/pull/227) is draft and groups D2,
-its record-return repair and N1. N2 has not been selected or implemented.
+its record-return repair and N1. The typed-state experiment is not yet implemented
+or accepted as an N2 optimization.
 [PLAN.md](../PLAN.md) owns acceptance; [history](roadmap-history.md) owns completed
 deliveries. User-merged #226 is `cdf881067d`, tree identical to verified `02e4ee21`;
 all nine jobs, documentation and both G2 hosts were audited before proceeding.
@@ -72,10 +73,11 @@ their original archives; no failed session was retried unchanged.
 ## Production CI and publication
 
 Run `40947897224` at `cbd9fd7c` began while the PR was ready. Keep its remaining
-jobs and audit every full log. Already passed and audited: ARM macOS regular
-(625 tests/132 summaries), ARM macOS ownership (363/127), benchmark (2/2).
-Six native jobs remain running without reported failed steps at last inspection.
-Documentation `40951103719` at `37da7441` passes and its complete log is audited.
+jobs and audit every full log. Already passed and audited: both macOS regular
+jobs (625 tests/132 summaries each), both macOS ownership jobs (363/127 each),
+and benchmark (2/2). Four Linux/Windows jobs remain running without reported
+failed steps at last inspection. Documentation `40955533616` at `d2f2553b` passes;
+its complete log is audited, including the intentional test-runner failure control.
 These do not establish final-head coverage for later changes.
 
 Keep the PR draft during focused work. After complete evidence, require all nine
@@ -116,4 +118,4 @@ are in `/private/tmp/fwp-compressed-artifacts.jsonl`. Preserve all retained evid
 
 Documentation runs at `fc037501` and `553fb24f` failed because the handoff rewrite
 omitted this required status table. Both complete logs show that same defect.
-The table is restored; keep the existing audit contract.
+The table is restored and the next audit passes; keep the existing audit contract.
