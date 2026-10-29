@@ -287,6 +287,12 @@ CI compares against the declared baseline rather than silently resetting it.
 directory reports, text-file tools, a numerical pipeline, derivative descent and
 a long-running HTTP/gRPC service. Preserve the listed inputs and add the missing
 allocation-failure and scale cases, with expected results from independent checks.
+The [directory allocation-boundary checks](docs/measurements/directory-failures.md)
+are implemented at `1f364c09`: four failure points, aliases, retries, missing-close/
+missing-builder controls and separate terminal OOM checks at C O1/O2. All six
+native hosts pass ten focused tests each, with full log/artifact audits. The
+first harness failure and all 84 saved probe executions are retained.
+This does not complete the other application families or integrated V2 coverage.
 **Done:** each family has explicit platform/memory-mode coverage, failure and
 cancellation tests, bounded post-operation storage and a B1 budget where timed.
 

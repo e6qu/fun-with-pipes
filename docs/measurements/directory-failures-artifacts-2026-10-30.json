@@ -1,0 +1,1305 @@
+{
+  "source": "1f364c09ae9d4fe43405fdc66c46849cc4aae6d5",
+  "run": 40967686175,
+  "scope": "Focused directory failure and file-application correctness; not timing or full production acceptance",
+  "hosts": {
+    "amd": {
+      "job": {
+        "completedAt": "2026-10-29T22:46:08Z",
+        "conclusion": "success",
+        "databaseId": 123776242681,
+        "name": "file_applications (ubuntu-latest)",
+        "startedAt": "2026-10-29T22:40:51Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-10-29T22:40:53Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-10-29T22:40:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:40:59Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 2,
+            "startedAt": "2026-10-29T22:40:53Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:00Z",
+            "conclusion": "success",
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "number": 3,
+            "startedAt": "2026-10-29T22:40:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:01Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@v6",
+            "number": 4,
+            "startedAt": "2026-10-29T22:41:00Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:01Z",
+            "conclusion": "success",
+            "name": "Fetch locked Rust dependencies",
+            "number": 5,
+            "startedAt": "2026-10-29T22:41:01Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:01Z",
+            "conclusion": "skipped",
+            "name": "Native Windows toolchain",
+            "number": 6,
+            "startedAt": "2026-10-29T22:41:01Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:03Z",
+            "conclusion": "success",
+            "name": "Run cargo fmt --all -- --check",
+            "number": 7,
+            "startedAt": "2026-10-29T22:41:01Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:21Z",
+            "conclusion": "success",
+            "name": "Compiler checks for the file applications",
+            "number": 8,
+            "startedAt": "2026-10-29T22:41:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:21Z",
+            "conclusion": "skipped",
+            "name": "Windows compiler checks for the file applications",
+            "number": 9,
+            "startedAt": "2026-10-29T22:41:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:21Z",
+            "conclusion": "skipped",
+            "name": "Publish compiler failures while independent tests continue",
+            "number": 10,
+            "startedAt": "2026-10-29T22:41:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:45:40Z",
+            "conclusion": "success",
+            "name": "File applications, repeated failures and deliberate leaks",
+            "number": 11,
+            "startedAt": "2026-10-29T22:41:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:45:40Z",
+            "conclusion": "skipped",
+            "name": "Windows file applications, repeated failures and deliberate leaks",
+            "number": 12,
+            "startedAt": "2026-10-29T22:45:40Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:45:40Z",
+            "conclusion": "skipped",
+            "name": "Publish failed test logs before the admission inventory",
+            "number": 13,
+            "startedAt": "2026-10-29T22:45:40Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:46:03Z",
+            "conclusion": "success",
+            "name": "Inventory execution examples admitted without tracing",
+            "number": 14,
+            "startedAt": "2026-10-29T22:45:40Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:46:03Z",
+            "conclusion": "success",
+            "name": "Inspect native binaries and save memory observations",
+            "number": 15,
+            "startedAt": "2026-10-29T22:46:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:46:06Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@v7",
+            "number": 16,
+            "startedAt": "2026-10-29T22:46:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:46:07Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@v6",
+            "number": 31,
+            "startedAt": "2026-10-29T22:46:06Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:46:07Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 32,
+            "startedAt": "2026-10-29T22:46:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:46:07Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 33,
+            "startedAt": "2026-10-29T22:46:07Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/40967686175/job/123776242681"
+      },
+      "artifact": {
+        "id": 12938273764,
+        "node_id": "MDg6QXJ0aWZhY3QxMjkzODI3Mzc2NA==",
+        "name": "file-applications-ubuntu-latest",
+        "size_in_bytes": 22311814,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12938273764",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12938273764/zip",
+        "expired": false,
+        "digest": "sha256:1abf8afa22e461f9ad586cb4c45db78b90745b1b0812f65d20bfd372cb79df04",
+        "created_at": "2026-10-29T22:46:06Z",
+        "updated_at": "2026-10-29T22:46:06Z",
+        "expires_at": "2027-01-27T22:40:49Z",
+        "workflow_run": {
+          "id": 40967686175,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "1f364c09ae9d4fe43405fdc66c46849cc4aae6d5"
+        }
+      },
+      "archiveSha256": "1abf8afa22e461f9ad586cb4c45db78b90745b1b0812f65d20bfd372cb79df04",
+      "report": "directory-failures-2026-10-30-amd.json.gz",
+      "reportSha256": "9df274521998f456c5343fd2d02a663c818a3dac0322890991f3b26d12b33318",
+      "log": "directory-failures-2026-10-30-amd.log.gz",
+      "logSha256": "cc81fe25938d9f5951ddbe5cdcad3e8098d3f3af8d2586c62f253988b403267a"
+    },
+    "arm": {
+      "job": {
+        "completedAt": "2026-10-29T22:48:00Z",
+        "conclusion": "success",
+        "databaseId": 123776242537,
+        "name": "file_applications (ubuntu-24.04-arm)",
+        "startedAt": "2026-10-29T22:40:54Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-10-29T22:40:56Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-10-29T22:40:55Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:02Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 2,
+            "startedAt": "2026-10-29T22:40:56Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:05Z",
+            "conclusion": "success",
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "number": 3,
+            "startedAt": "2026-10-29T22:41:02Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:07Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@v6",
+            "number": 4,
+            "startedAt": "2026-10-29T22:41:05Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:09Z",
+            "conclusion": "success",
+            "name": "Fetch locked Rust dependencies",
+            "number": 5,
+            "startedAt": "2026-10-29T22:41:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:09Z",
+            "conclusion": "skipped",
+            "name": "Native Windows toolchain",
+            "number": 6,
+            "startedAt": "2026-10-29T22:41:09Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:12Z",
+            "conclusion": "success",
+            "name": "Run cargo fmt --all -- --check",
+            "number": 7,
+            "startedAt": "2026-10-29T22:41:09Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:41Z",
+            "conclusion": "success",
+            "name": "Compiler checks for the file applications",
+            "number": 8,
+            "startedAt": "2026-10-29T22:41:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:41Z",
+            "conclusion": "skipped",
+            "name": "Windows compiler checks for the file applications",
+            "number": 9,
+            "startedAt": "2026-10-29T22:41:41Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:41Z",
+            "conclusion": "skipped",
+            "name": "Publish compiler failures while independent tests continue",
+            "number": 10,
+            "startedAt": "2026-10-29T22:41:41Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:47:51Z",
+            "conclusion": "success",
+            "name": "File applications, repeated failures and deliberate leaks",
+            "number": 11,
+            "startedAt": "2026-10-29T22:41:41Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:47:51Z",
+            "conclusion": "skipped",
+            "name": "Windows file applications, repeated failures and deliberate leaks",
+            "number": 12,
+            "startedAt": "2026-10-29T22:47:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:47:51Z",
+            "conclusion": "skipped",
+            "name": "Publish failed test logs before the admission inventory",
+            "number": 13,
+            "startedAt": "2026-10-29T22:47:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:47:51Z",
+            "conclusion": "skipped",
+            "name": "Inventory execution examples admitted without tracing",
+            "number": 14,
+            "startedAt": "2026-10-29T22:47:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:47:53Z",
+            "conclusion": "success",
+            "name": "Inspect native binaries and save memory observations",
+            "number": 15,
+            "startedAt": "2026-10-29T22:47:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:47:57Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@v7",
+            "number": 16,
+            "startedAt": "2026-10-29T22:47:53Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:47:57Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@v6",
+            "number": 31,
+            "startedAt": "2026-10-29T22:47:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:47:57Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 32,
+            "startedAt": "2026-10-29T22:47:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:47:57Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 33,
+            "startedAt": "2026-10-29T22:47:57Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/40967686175/job/123776242537"
+      },
+      "artifact": {
+        "id": 12937524566,
+        "node_id": "MDg6QXJ0aWZhY3QxMjkzNzUyNDU2Ng==",
+        "name": "file-applications-ubuntu-24.04-arm",
+        "size_in_bytes": 20820609,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12937524566",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12937524566/zip",
+        "expired": false,
+        "digest": "sha256:849b7ab6d78aef1bd269ee00f75b5ebf374b988a440cc7cbc5a8369df03ceafd",
+        "created_at": "2026-10-29T22:47:57Z",
+        "updated_at": "2026-10-29T22:47:57Z",
+        "expires_at": "2027-01-27T22:40:49Z",
+        "workflow_run": {
+          "id": 40967686175,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "1f364c09ae9d4fe43405fdc66c46849cc4aae6d5"
+        }
+      },
+      "archiveSha256": "849b7ab6d78aef1bd269ee00f75b5ebf374b988a440cc7cbc5a8369df03ceafd",
+      "report": "directory-failures-2026-10-30-arm.json.gz",
+      "reportSha256": "58692702506c60eb5b3d852394b0e4ec527c3bdc72d809ed5a2c0fd195987c72",
+      "log": "directory-failures-2026-10-30-arm.log.gz",
+      "logSha256": "24f9e2f8745d82fdc0e45b302c09da171a2802832a83b96cbacca4729d5eb511"
+    },
+    "macos-arm": {
+      "job": {
+        "completedAt": "2026-10-29T22:49:16Z",
+        "conclusion": "success",
+        "databaseId": 123776242495,
+        "name": "file_applications (macos-15)",
+        "startedAt": "2026-10-29T22:40:58Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-10-29T22:41:01Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-10-29T22:40:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:10Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 2,
+            "startedAt": "2026-10-29T22:41:01Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:12Z",
+            "conclusion": "success",
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "number": 3,
+            "startedAt": "2026-10-29T22:41:10Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:15Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@v6",
+            "number": 4,
+            "startedAt": "2026-10-29T22:41:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:16Z",
+            "conclusion": "success",
+            "name": "Fetch locked Rust dependencies",
+            "number": 5,
+            "startedAt": "2026-10-29T22:41:15Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:16Z",
+            "conclusion": "skipped",
+            "name": "Native Windows toolchain",
+            "number": 6,
+            "startedAt": "2026-10-29T22:41:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:18Z",
+            "conclusion": "success",
+            "name": "Run cargo fmt --all -- --check",
+            "number": 7,
+            "startedAt": "2026-10-29T22:41:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:47Z",
+            "conclusion": "success",
+            "name": "Compiler checks for the file applications",
+            "number": 8,
+            "startedAt": "2026-10-29T22:41:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:47Z",
+            "conclusion": "skipped",
+            "name": "Windows compiler checks for the file applications",
+            "number": 9,
+            "startedAt": "2026-10-29T22:41:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:47Z",
+            "conclusion": "skipped",
+            "name": "Publish compiler failures while independent tests continue",
+            "number": 10,
+            "startedAt": "2026-10-29T22:41:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:48:50Z",
+            "conclusion": "success",
+            "name": "File applications, repeated failures and deliberate leaks",
+            "number": 11,
+            "startedAt": "2026-10-29T22:41:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:48:50Z",
+            "conclusion": "skipped",
+            "name": "Windows file applications, repeated failures and deliberate leaks",
+            "number": 12,
+            "startedAt": "2026-10-29T22:48:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:48:50Z",
+            "conclusion": "skipped",
+            "name": "Publish failed test logs before the admission inventory",
+            "number": 13,
+            "startedAt": "2026-10-29T22:48:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:48:50Z",
+            "conclusion": "skipped",
+            "name": "Inventory execution examples admitted without tracing",
+            "number": 14,
+            "startedAt": "2026-10-29T22:48:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:48:58Z",
+            "conclusion": "success",
+            "name": "Inspect native binaries and save memory observations",
+            "number": 15,
+            "startedAt": "2026-10-29T22:48:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:49:04Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@v7",
+            "number": 16,
+            "startedAt": "2026-10-29T22:48:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:49:04Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@v6",
+            "number": 31,
+            "startedAt": "2026-10-29T22:49:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:49:05Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 32,
+            "startedAt": "2026-10-29T22:49:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:49:14Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 33,
+            "startedAt": "2026-10-29T22:49:05Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/40967686175/job/123776242495"
+      },
+      "artifact": {
+        "id": 12937879821,
+        "node_id": "MDg6QXJ0aWZhY3QxMjkzNzg3OTgyMQ==",
+        "name": "file-applications-macos-15",
+        "size_in_bytes": 19021682,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12937879821",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12937879821/zip",
+        "expired": false,
+        "digest": "sha256:a9ad93f243cd90efa3203877c93f3d94ed6949f20e8cc28aea5a50c626b3bf9a",
+        "created_at": "2026-10-29T22:49:03Z",
+        "updated_at": "2026-10-29T22:49:03Z",
+        "expires_at": "2027-01-27T22:40:49Z",
+        "workflow_run": {
+          "id": 40967686175,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "1f364c09ae9d4fe43405fdc66c46849cc4aae6d5"
+        }
+      },
+      "archiveSha256": "a9ad93f243cd90efa3203877c93f3d94ed6949f20e8cc28aea5a50c626b3bf9a",
+      "report": "directory-failures-2026-10-30-macos-arm.json.gz",
+      "reportSha256": "c5b39519b60ba8c8d95bdf4826e4e44767c5d9358ba5fc7afbb3766b5569e776",
+      "log": "directory-failures-2026-10-30-macos-arm.log.gz",
+      "logSha256": "65d76d85ed3b36021fe12ad2c094b219c8af292b98ed3ad7835fcc57cb34a450"
+    },
+    "macos-amd": {
+      "job": {
+        "completedAt": "2026-10-29T23:03:01Z",
+        "conclusion": "success",
+        "databaseId": 123776242774,
+        "name": "file_applications (macos-15-intel)",
+        "startedAt": "2026-10-29T22:40:56Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-10-29T22:41:01Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-10-29T22:40:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:26Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 2,
+            "startedAt": "2026-10-29T22:41:01Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:58Z",
+            "conclusion": "success",
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "number": 3,
+            "startedAt": "2026-10-29T22:41:26Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:42:04Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@v6",
+            "number": 4,
+            "startedAt": "2026-10-29T22:41:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:42:04Z",
+            "conclusion": "success",
+            "name": "Fetch locked Rust dependencies",
+            "number": 5,
+            "startedAt": "2026-10-29T22:42:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:42:04Z",
+            "conclusion": "skipped",
+            "name": "Native Windows toolchain",
+            "number": 6,
+            "startedAt": "2026-10-29T22:42:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:42:14Z",
+            "conclusion": "success",
+            "name": "Run cargo fmt --all -- --check",
+            "number": 7,
+            "startedAt": "2026-10-29T22:42:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:43:44Z",
+            "conclusion": "success",
+            "name": "Compiler checks for the file applications",
+            "number": 8,
+            "startedAt": "2026-10-29T22:42:14Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:43:44Z",
+            "conclusion": "skipped",
+            "name": "Windows compiler checks for the file applications",
+            "number": 9,
+            "startedAt": "2026-10-29T22:43:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:43:44Z",
+            "conclusion": "skipped",
+            "name": "Publish compiler failures while independent tests continue",
+            "number": 10,
+            "startedAt": "2026-10-29T22:43:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T23:02:39Z",
+            "conclusion": "success",
+            "name": "File applications, repeated failures and deliberate leaks",
+            "number": 11,
+            "startedAt": "2026-10-29T22:43:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T23:02:39Z",
+            "conclusion": "skipped",
+            "name": "Windows file applications, repeated failures and deliberate leaks",
+            "number": 12,
+            "startedAt": "2026-10-29T23:02:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T23:02:39Z",
+            "conclusion": "skipped",
+            "name": "Publish failed test logs before the admission inventory",
+            "number": 13,
+            "startedAt": "2026-10-29T23:02:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T23:02:39Z",
+            "conclusion": "skipped",
+            "name": "Inventory execution examples admitted without tracing",
+            "number": 14,
+            "startedAt": "2026-10-29T23:02:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T23:02:50Z",
+            "conclusion": "success",
+            "name": "Inspect native binaries and save memory observations",
+            "number": 15,
+            "startedAt": "2026-10-29T23:02:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T23:02:57Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@v7",
+            "number": 16,
+            "startedAt": "2026-10-29T23:02:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T23:02:58Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@v6",
+            "number": 31,
+            "startedAt": "2026-10-29T23:02:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T23:02:59Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 32,
+            "startedAt": "2026-10-29T23:02:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T23:02:59Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 33,
+            "startedAt": "2026-10-29T23:02:59Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/40967686175/job/123776242774"
+      },
+      "artifact": {
+        "id": 12940536055,
+        "node_id": "MDg6QXJ0aWZhY3QxMjk0MDUzNjA1NQ==",
+        "name": "file-applications-macos-15-intel",
+        "size_in_bytes": 20100096,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12940536055",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12940536055/zip",
+        "expired": false,
+        "digest": "sha256:d46596b66fbc941c174076f0ab601bc20b25a7a72b689e6a2039ffb0996c8c16",
+        "created_at": "2026-10-29T23:02:57Z",
+        "updated_at": "2026-10-29T23:02:57Z",
+        "expires_at": "2027-01-27T22:40:49Z",
+        "workflow_run": {
+          "id": 40967686175,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "1f364c09ae9d4fe43405fdc66c46849cc4aae6d5"
+        }
+      },
+      "archiveSha256": "d46596b66fbc941c174076f0ab601bc20b25a7a72b689e6a2039ffb0996c8c16",
+      "report": "directory-failures-2026-10-30-macos-amd.json.gz",
+      "reportSha256": "05726ee6141f672505a8e58511bd22628b95b47d665d85868ff23ff287af2212",
+      "log": "directory-failures-2026-10-30-macos-amd.log.gz",
+      "logSha256": "0edbf41c4a237c66f8b91b9964c70c827efee65004733a3d6c6a35f1872672e6"
+    },
+    "windows-arm": {
+      "job": {
+        "completedAt": "2026-10-29T22:50:57Z",
+        "conclusion": "success",
+        "databaseId": 123776242635,
+        "name": "file_applications (windows-11-arm)",
+        "startedAt": "2026-10-29T22:40:51Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-10-29T22:40:54Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-10-29T22:40:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:10Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 2,
+            "startedAt": "2026-10-29T22:40:54Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:18Z",
+            "conclusion": "success",
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "number": 3,
+            "startedAt": "2026-10-29T22:41:10Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:22Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@v6",
+            "number": 4,
+            "startedAt": "2026-10-29T22:41:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:25Z",
+            "conclusion": "success",
+            "name": "Fetch locked Rust dependencies",
+            "number": 5,
+            "startedAt": "2026-10-29T22:41:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:58Z",
+            "conclusion": "success",
+            "name": "Native Windows toolchain",
+            "number": 6,
+            "startedAt": "2026-10-29T22:41:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:42:03Z",
+            "conclusion": "success",
+            "name": "Run cargo fmt --all -- --check",
+            "number": 7,
+            "startedAt": "2026-10-29T22:41:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:42:03Z",
+            "conclusion": "skipped",
+            "name": "Compiler checks for the file applications",
+            "number": 8,
+            "startedAt": "2026-10-29T22:42:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:42:44Z",
+            "conclusion": "success",
+            "name": "Windows compiler checks for the file applications",
+            "number": 9,
+            "startedAt": "2026-10-29T22:42:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:42:44Z",
+            "conclusion": "skipped",
+            "name": "Publish compiler failures while independent tests continue",
+            "number": 10,
+            "startedAt": "2026-10-29T22:42:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:42:44Z",
+            "conclusion": "skipped",
+            "name": "File applications, repeated failures and deliberate leaks",
+            "number": 11,
+            "startedAt": "2026-10-29T22:42:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:50:37Z",
+            "conclusion": "success",
+            "name": "Windows file applications, repeated failures and deliberate leaks",
+            "number": 12,
+            "startedAt": "2026-10-29T22:42:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:50:37Z",
+            "conclusion": "skipped",
+            "name": "Publish failed test logs before the admission inventory",
+            "number": 13,
+            "startedAt": "2026-10-29T22:50:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:50:37Z",
+            "conclusion": "skipped",
+            "name": "Inventory execution examples admitted without tracing",
+            "number": 14,
+            "startedAt": "2026-10-29T22:50:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:50:45Z",
+            "conclusion": "success",
+            "name": "Inspect native binaries and save memory observations",
+            "number": 15,
+            "startedAt": "2026-10-29T22:50:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:50:49Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@v7",
+            "number": 16,
+            "startedAt": "2026-10-29T22:50:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:50:50Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@v6",
+            "number": 31,
+            "startedAt": "2026-10-29T22:50:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:50:54Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 32,
+            "startedAt": "2026-10-29T22:50:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:50:55Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 33,
+            "startedAt": "2026-10-29T22:50:54Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/40967686175/job/123776242635"
+      },
+      "artifact": {
+        "id": 12938009993,
+        "node_id": "MDg6QXJ0aWZhY3QxMjkzODAwOTk5Mw==",
+        "name": "file-applications-windows-11-arm",
+        "size_in_bytes": 23179676,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12938009993",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12938009993/zip",
+        "expired": false,
+        "digest": "sha256:3c3af1e13aac8b111e82f6516e5932aabfc9675d80138394b06a7deeee5c97d0",
+        "created_at": "2026-10-29T22:50:49Z",
+        "updated_at": "2026-10-29T22:50:49Z",
+        "expires_at": "2027-01-27T22:40:49Z",
+        "workflow_run": {
+          "id": 40967686175,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "1f364c09ae9d4fe43405fdc66c46849cc4aae6d5"
+        }
+      },
+      "archiveSha256": "3c3af1e13aac8b111e82f6516e5932aabfc9675d80138394b06a7deeee5c97d0",
+      "report": "directory-failures-2026-10-30-windows-arm.json.gz",
+      "reportSha256": "c1f95e8d6d892837d9a123555da956551c39175a6ff2bd0ed98307cc563d93e5",
+      "log": "directory-failures-2026-10-30-windows-arm.log.gz",
+      "logSha256": "86882b79efe4f8b51c83444fd210a905e701b4545a72fd1a8b882a84294e6400"
+    },
+    "windows-amd": {
+      "job": {
+        "completedAt": "2026-10-29T22:50:28Z",
+        "conclusion": "success",
+        "databaseId": 123776242633,
+        "name": "file_applications (windows-2025)",
+        "startedAt": "2026-10-29T22:40:51Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-10-29T22:40:53Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-10-29T22:40:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:07Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 2,
+            "startedAt": "2026-10-29T22:40:53Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:20Z",
+            "conclusion": "success",
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "number": 3,
+            "startedAt": "2026-10-29T22:41:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:23Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@v6",
+            "number": 4,
+            "startedAt": "2026-10-29T22:41:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:26Z",
+            "conclusion": "success",
+            "name": "Fetch locked Rust dependencies",
+            "number": 5,
+            "startedAt": "2026-10-29T22:41:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:41:53Z",
+            "conclusion": "success",
+            "name": "Native Windows toolchain",
+            "number": 6,
+            "startedAt": "2026-10-29T22:41:26Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:42:00Z",
+            "conclusion": "success",
+            "name": "Run cargo fmt --all -- --check",
+            "number": 7,
+            "startedAt": "2026-10-29T22:41:53Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:42:00Z",
+            "conclusion": "skipped",
+            "name": "Compiler checks for the file applications",
+            "number": 8,
+            "startedAt": "2026-10-29T22:42:00Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:42:41Z",
+            "conclusion": "success",
+            "name": "Windows compiler checks for the file applications",
+            "number": 9,
+            "startedAt": "2026-10-29T22:42:00Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:42:41Z",
+            "conclusion": "skipped",
+            "name": "Publish compiler failures while independent tests continue",
+            "number": 10,
+            "startedAt": "2026-10-29T22:42:41Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:42:41Z",
+            "conclusion": "skipped",
+            "name": "File applications, repeated failures and deliberate leaks",
+            "number": 11,
+            "startedAt": "2026-10-29T22:42:41Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:50:11Z",
+            "conclusion": "success",
+            "name": "Windows file applications, repeated failures and deliberate leaks",
+            "number": 12,
+            "startedAt": "2026-10-29T22:42:41Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:50:11Z",
+            "conclusion": "skipped",
+            "name": "Publish failed test logs before the admission inventory",
+            "number": 13,
+            "startedAt": "2026-10-29T22:50:11Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:50:11Z",
+            "conclusion": "skipped",
+            "name": "Inventory execution examples admitted without tracing",
+            "number": 14,
+            "startedAt": "2026-10-29T22:50:11Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:50:18Z",
+            "conclusion": "success",
+            "name": "Inspect native binaries and save memory observations",
+            "number": 15,
+            "startedAt": "2026-10-29T22:50:11Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:50:23Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@v7",
+            "number": 16,
+            "startedAt": "2026-10-29T22:50:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:50:23Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@v6",
+            "number": 31,
+            "startedAt": "2026-10-29T22:50:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:50:25Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 32,
+            "startedAt": "2026-10-29T22:50:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-29T22:50:25Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 33,
+            "startedAt": "2026-10-29T22:50:25Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/40967686175/job/123776242633"
+      },
+      "artifact": {
+        "id": 12938309445,
+        "node_id": "MDg6QXJ0aWZhY3QxMjkzODMwOTQ0NQ==",
+        "name": "file-applications-windows-2025",
+        "size_in_bytes": 26184540,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12938309445",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12938309445/zip",
+        "expired": false,
+        "digest": "sha256:b3f27f6354011579b3eaad72f1c152c9cfb71f81533e9edad3228e7180a5a96b",
+        "created_at": "2026-10-29T22:50:22Z",
+        "updated_at": "2026-10-29T22:50:22Z",
+        "expires_at": "2027-01-27T22:40:49Z",
+        "workflow_run": {
+          "id": 40967686175,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "1f364c09ae9d4fe43405fdc66c46849cc4aae6d5"
+        }
+      },
+      "archiveSha256": "b3f27f6354011579b3eaad72f1c152c9cfb71f81533e9edad3228e7180a5a96b",
+      "report": "directory-failures-2026-10-30-windows-amd.json.gz",
+      "reportSha256": "02a4e212d4645ef9d236bea94c69cdad75a681c3c493d74e749b4f09e736d49e",
+      "log": "directory-failures-2026-10-30-windows-amd.log.gz",
+      "logSha256": "dabbfb0210edacf24cedcaffaf9ffa11aad8dc0bcc1bcdbcfc875118aaedd1ae"
+    }
+  },
+  "firstRun": {
+    "source": "55eec5e08c99a99da4dab3116a3773d8b059732f",
+    "run": 40965474997,
+    "failure": "The test searched for a function entry that main compilation could inline/remove; the other nine tests passed on every host.",
+    "artifacts": [
+      {
+        "id": 12938604138,
+        "node_id": "MDg6QXJ0aWZhY3QxMjkzODYwNDEzOA==",
+        "name": "file-applications-macos-15-intel",
+        "size_in_bytes": 15969713,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12938604138",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12938604138/zip",
+        "expired": false,
+        "digest": "sha256:1775fdfd17e3a3f6d5dacfb2fb2ab88579554c2ce5d10b228612c07fdd6334c3",
+        "created_at": "2026-10-29T22:42:52Z",
+        "updated_at": "2026-10-29T22:42:52Z",
+        "expires_at": "2027-01-27T22:23:20Z",
+        "workflow_run": {
+          "id": 40965474997,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "55eec5e08c99a99da4dab3116a3773d8b059732f"
+        }
+      },
+      {
+        "id": 12938027955,
+        "node_id": "MDg6QXJ0aWZhY3QxMjkzODAyNzk1NQ==",
+        "name": "file-applications-macos-15",
+        "size_in_bytes": 14992509,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12938027955",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12938027955/zip",
+        "expired": false,
+        "digest": "sha256:bd15c28bc48c6ad2c83147966a734ffe0337c8e35cce30ec4f82b654dce76a58",
+        "created_at": "2026-10-29T22:30:25Z",
+        "updated_at": "2026-10-29T22:30:25Z",
+        "expires_at": "2027-01-27T22:23:20Z",
+        "workflow_run": {
+          "id": 40965474997,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "55eec5e08c99a99da4dab3116a3773d8b059732f"
+        }
+      },
+      {
+        "id": 12937553150,
+        "node_id": "MDg6QXJ0aWZhY3QxMjkzNzU1MzE1MA==",
+        "name": "file-applications-ubuntu-latest",
+        "size_in_bytes": 17960592,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12937553150",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12937553150/zip",
+        "expired": false,
+        "digest": "sha256:740997c215b7f55dd2ec748004f102803795a5c94be096a2d8af2e6581e11c82",
+        "created_at": "2026-10-29T22:31:21Z",
+        "updated_at": "2026-10-29T22:31:21Z",
+        "expires_at": "2027-01-27T22:23:20Z",
+        "workflow_run": {
+          "id": 40965474997,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "55eec5e08c99a99da4dab3116a3773d8b059732f"
+        }
+      },
+      {
+        "id": 12937488730,
+        "node_id": "MDg6QXJ0aWZhY3QxMjkzNzQ4ODczMA==",
+        "name": "file-applications-windows-2025",
+        "size_in_bytes": 21759725,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12937488730",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12937488730/zip",
+        "expired": false,
+        "digest": "sha256:2a66d0763758172a0a1ca38e8dcb7f6b37bc8031b9cb917c53fb8412d235115a",
+        "created_at": "2026-10-29T22:35:08Z",
+        "updated_at": "2026-10-29T22:35:08Z",
+        "expires_at": "2027-01-27T22:23:20Z",
+        "workflow_run": {
+          "id": 40965474997,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "55eec5e08c99a99da4dab3116a3773d8b059732f"
+        }
+      },
+      {
+        "id": 12937134586,
+        "node_id": "MDg6QXJ0aWZhY3QxMjkzNzEzNDU4Ng==",
+        "name": "file-applications-ubuntu-24.04-arm",
+        "size_in_bytes": 16517179,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12937134586",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12937134586/zip",
+        "expired": false,
+        "digest": "sha256:11f0935660d3634baa5415393ae9e4f64e69273fba37e7f07ad42fdb2c922510",
+        "created_at": "2026-10-29T22:30:07Z",
+        "updated_at": "2026-10-29T22:30:07Z",
+        "expires_at": "2027-01-27T22:23:20Z",
+        "workflow_run": {
+          "id": 40965474997,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "55eec5e08c99a99da4dab3116a3773d8b059732f"
+        }
+      },
+      {
+        "id": 12937113460,
+        "node_id": "MDg6QXJ0aWZhY3QxMjkzNzExMzQ2MA==",
+        "name": "file-applications-windows-11-arm",
+        "size_in_bytes": 18877992,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12937113460",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12937113460/zip",
+        "expired": false,
+        "digest": "sha256:d8b630c1c219cb47bdc87d581a14ebecc04b20ef747f8c0e421f636dd97274c4",
+        "created_at": "2026-10-29T22:33:13Z",
+        "updated_at": "2026-10-29T22:33:13Z",
+        "expires_at": "2027-01-27T22:23:20Z",
+        "workflow_run": {
+          "id": 40965474997,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "55eec5e08c99a99da4dab3116a3773d8b059732f"
+        }
+      }
+    ],
+    "logs": {
+      "amd": {
+        "file": "directory-failures-first-2026-10-30-amd.log.gz",
+        "sha256": "ef50548a4e31e11b657a8ed4fe90d47410b396365cfd124ba318caac9adc80a8"
+      },
+      "arm": {
+        "file": "directory-failures-first-2026-10-30-arm.log.gz",
+        "sha256": "ff60914087bece6c429c737eafeff4112e55fbba2ff6b680b740a9ee9bcceba0"
+      },
+      "macos-arm": {
+        "file": "directory-failures-first-2026-10-30-macos-arm.log.gz",
+        "sha256": "85d63cb8fcc3d9b50847bccc1ea4e86dadc45b9e6377969b80ba829590054596"
+      },
+      "macos-amd": {
+        "file": "directory-failures-first-2026-10-30-macos-amd.log.gz",
+        "sha256": "e28b50facd764908d302c8410faeff4ba0b8d0271b37a8f4eec737fcf25f4e8b"
+      },
+      "windows-arm": {
+        "file": "directory-failures-first-2026-10-30-windows-arm.log.gz",
+        "sha256": "3f72b9b20c6e2627a06134af4738b7053b56fe242a045136158de32bfffc7eb5"
+      },
+      "windows-amd": {
+        "file": "directory-failures-first-2026-10-30-windows-amd.log.gz",
+        "sha256": "d638cf5c9c7e0e466ce1f8ed609422767c9502f38a65be339b7eb8a2f4bab49e"
+      }
+    }
+  },
+  "textContents": {
+    "file": "directory-failures-contents-2026-10-30.json.gz",
+    "sha256": "99dc011bad3eeea9be550afe4214b45514d972646c4ce1a30405f3d955e7b784",
+    "encoding": "UTF-8 text keyed by its SHA-256; host controls, inputs and observations reference these keys"
+  }
+}

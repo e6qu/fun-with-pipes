@@ -9,6 +9,8 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Ownership costs
 
+- [Directory allocation-boundary failures](directory-failures.md): partial-owner cleanup, caller aliases, deliberate leak controls and the separate terminal OOM contract.
+
 - [Parser workspace comparison](parser-workspace.md): four accepted sessions, C/Rust gaps, allocation tradeoffs and retained failed controls.
 
 - [Remaining ARC operations after GC removal](arc-residual-costs.md): per-owner attribution and static-callback reduction.

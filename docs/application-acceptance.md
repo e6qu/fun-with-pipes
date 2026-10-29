@@ -11,7 +11,7 @@ performance and platform requirements in the last column.
 | Program family | Work and current input | Existing evidence | Still required for this suite |
 |---|---|---|---|
 | [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [C/Rust baseline](measurements/wordfreq.md) and [paired/repeated text comparison](measurements/unchanged-text.md) on two Linux hosts | Set time/memory budgets; validate the current runtime and preserve six-platform cleanup evidence |
-| [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and small ownership controls | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | Preserve these observations as ownership changes; allocation-failure coverage remains |
+| [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and small ownership controls | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | [Allocation-boundary failure checks](measurements/directory-failures.md) pass on six native hosts; integrate them into final production coverage |
 | [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scaled counting/filtering/CSV/task-file cleanup passes on six hosts; preserve current delivery coverage and separate input/output costs |
 | Numerical pipeline | Map/reduce 65,537/262,145 elements; multiply 65×67 by 67×63 and 257×259 by 259×255 matrices, eight rounds | [Current four-case protocol and partial results](measurements/kernel-baselines.md) | Complete qualified N1 baselines and resolve the failed timing control before selecting N2 |
 | Derivative application | Rosenbrock descent at 3, 33 and 129 dimensions; 199 updates plus zero/one/1,999-update controls | [Repeated current baselines and fixed limits](measurements/descent-costs.md), [nested accuracy/storage](measurements/ad-depth.md) and [capture costs](measurements/eager-captures.md) | Resolve D2's failed zero-update recheck and preserve six-platform cleanup/accuracy coverage; earlier allocation gains do not close the speed goal |
@@ -231,12 +231,13 @@ disassembly and size records. The explicit baseline source is
 
 ## Repeated directory and file work
 
-Directory allocation-boundary coverage is in preparation. The test injects
+The [directory allocation-boundary checks](measurements/directory-failures.md) inject
 recoverable traps before the first scratch allocation, during name collection,
 at scratch growth and during result-list construction. Each trap must close
 opened handles, release partial owners and permit a successful retry, including
 when the caller retains a path alias. Controls deliberately omit each cleanup
-and must trigger the corresponding observer. Native O1/O2 verification is pending.
+and must trigger the corresponding observer. Native O1/O2 checks pass on all
+six hosts, with the first failed harness and all final results retained.
 
 Managed-heap exhaustion has a different contract: `fwp_heap_oom` prints
 `fwp: out of memory` and exits with status 102. A separate subprocess checks that
