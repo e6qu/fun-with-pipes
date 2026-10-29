@@ -58,15 +58,28 @@ approach are removed, not retained as extra machinery.
 The replacement keeps immediate field constraints and preserves the selector's
 input variable through ordinary unification. A checked nominal constraint refines
 that shared variable. Composition no longer discards variable links when no
-abstract size needs replacement. Two production type-table unit tests pass in a
-small standalone harness under the local guard: aliases keep nominal identity,
-and phantom-parameter recursion is rejected. Full inference remains unverified;
-the focused runner includes library unit tests, all type/interpreter snapshots,
-callback effects, derivative precision and native O1/O2 nominal selection.
+abstract size needs replacement. Focused source `226a2b40` passed 220 library
+unit tests, both precision tests, 14 callback-effect tests, type snapshots and
+native O1/O2 nominal selection on ARM/AMD (run `40828555694`, jobs
+123297180335/123297180439). Both complete logs are audited at
+`/private/tmp/fwp-nominal-226a-{arm,amd}.log`. The only failure was the interpreter
+snapshot for `loop_state`: it now preserves the `Acc` name in display. The expected
+output is corrected; a dedicated raw-interpreter/native O1/O2 test checks its
+output and overflow order.
+
+Source review also found two already-constrained selector variables could lose
+their shared identity. The focused unit test reproduced that failure; merging
+the checked record-variable roots repairs it. All three local type-table tests
+pass. The expanded `both` fixture, complete focused suite and G2 still need the
+new head's verification. No delayed selector or callback-query experiment remains.
 No ownership contract changed. The 256-operation scalar-recording fixture now
 passes raw interpretation (result 1) with the exact fbed compiler. The unwind
 probe now overwrites the argument record and seeds the recorded operation;
 verify it with the D2 native tests before changing the no-escape contract.
+`tests/ad_tape_ownership.rs` has an **uncommitted future D2 test** expecting 256
+heap argument records with stack storage disabled and zero with it enabled. That
+assertion must not be published until the no-escape contract changes; current code
+still allocates all 256. Keep it with the uncommitted unwind probe/fixture.
 
 ## Next ownership proof
 

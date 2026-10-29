@@ -569,7 +569,18 @@ impl TypeTable {
                 self.unify(r1, r2)?;
                 self.unify_row(e1, e2, Kind::Eff)
             }
-            (Type::Record(r1), Type::Record(r2)) => self.unify_row(r1, r2, Kind::Row),
+            (Type::Record(r1), Type::Record(r2)) => {
+                self.unify_row(r1, r2, Kind::Row)?;
+                if let (Some(left), Some(right)) = (
+                    self.record_variable(original_a),
+                    self.record_variable(original_b),
+                ) {
+                    if left != right {
+                        self.replace_record_binding(left, &Type::Var(right))?;
+                    }
+                }
+                Ok(())
+            }
             (Type::Nat(x), Type::Nat(y)) if x == y => Ok(()),
             (Type::NatOp(..), _) | (_, Type::NatOp(..)) => self.unify_size(&a, &b),
             _ => Err(UnifyError::Mismatch(a.clone(), b.clone())),
@@ -664,29 +675,39 @@ impl TypeTable {
         Ok(())
     }
 
+    /// Find the ordinary type variable carrying a structural record constraint.
+    /// Row-tail variables are not value types and must never acquire a name.
+    fn record_variable(&self, original: &Type) -> Option<TV> {
+        let Type::Var(mut v) = original.clone() else {
+            return None;
+        };
+        while let Some(Type::Var(next)) = self.vars[v as usize].bound {
+            v = next;
+        }
+        (self.vars[v as usize].kind == Kind::Star
+            && matches!(self.vars[v as usize].bound, Some(Type::Record(_))))
+        .then_some(v)
+    }
+
     /// A structural requirement learned through a variable must not erase a
-    /// later named-record constraint. Keep every alias of the variable attached
-    /// to that name after checking the fields. Literal row types remain rows.
+    /// later named-record constraint. Keep every alias attached to that name
+    /// after checking the fields. Literal row types remain rows.
     fn refine_record_variable(
         &mut self,
         original: &Type,
         nominal: &Type,
     ) -> Result<(), UnifyError> {
-        let Type::Var(mut v) = original.clone() else {
-            return Ok(());
-        };
-        while let Some(Type::Var(next)) = self.vars[v as usize].bound {
-            v = next;
+        if let Some(v) = self.record_variable(original) {
+            self.replace_record_binding(v, nominal)?;
         }
-        if self.vars[v as usize].kind != Kind::Star
-            || !matches!(self.vars[v as usize].bound, Some(Type::Record(_)))
-        {
-            return Ok(());
-        }
+        Ok(())
+    }
+
+    fn replace_record_binding(&mut self, v: TV, target: &Type) -> Result<(), UnifyError> {
         // Check occurrence and levels against an unbound root, including
         // phantom nominal parameters that do not appear in any record field.
         let structural = self.vars[v as usize].bound.take();
-        if let Err(error) = self.bind_var(v, nominal) {
+        if let Err(error) = self.bind_var(v, target) {
             self.vars[v as usize].bound = structural;
             return Err(error);
         }
@@ -1086,6 +1107,35 @@ mod tests {
         assert_eq!(table.resolve(&record), Type::con("Gauge"));
         assert_eq!(table.resolve(&alias), Type::con("Gauge"));
         assert!(table.unify(&record, &Type::con("Other")).is_err());
+    }
+
+    #[test]
+    fn independently_inferred_field_constraints_share_nominal_identity() {
+        let mut table = TypeTable::default();
+        table.records.insert(
+            "Gauge".into(),
+            RecordTemplate {
+                params: vec![],
+                fields: vec![("value".into(), Type::con("I64"))],
+            },
+        );
+        let left = Type::Var(table.fresh(Kind::Star, 1));
+        let right = Type::Var(table.fresh(Kind::Star, 1));
+        for input in [&left, &right] {
+            let tail = table.fresh(Kind::Row, 1);
+            table
+                .unify(
+                    input,
+                    &Type::Record(Row {
+                        fields: vec![("value".into(), Type::con("I64"))],
+                        tail: Some(tail),
+                    }),
+                )
+                .unwrap();
+        }
+        table.unify(&left, &right).unwrap();
+        table.unify(&left, &Type::con("Gauge")).unwrap();
+        assert_eq!(table.resolve(&right), Type::con("Gauge"));
     }
 
     #[test]

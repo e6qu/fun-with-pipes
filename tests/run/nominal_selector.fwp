@@ -4,6 +4,8 @@ impl Neg[Gauge] =
     neg = update { value = neg }
 positive : Gauge -> Gauge
 positive = if (.value | lt 0) neg id
+twice : Gauge -> (Gauge, Gauge)
+twice = both (if (.value | lt 0) neg id) (if (.value | lt 0) neg id)
 Box = { item: Gauge }
 impl Neg[Box] =
     neg = update { item = neg }
@@ -21,4 +23,5 @@ main = [
     Box { item = Gauge { value = -4 } } | positive-box | .item.value | echo,
     { value = 5, other = 7 } | both .value .other | echo,
     Call { run = read-negative, value = -5 } | positive-call | .value | echo,
+    Gauge { value = -6 } | twice | both (.0 | .value) (.1 | .value) | echo,
 ] | ignore
