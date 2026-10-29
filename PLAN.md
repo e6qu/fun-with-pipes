@@ -47,10 +47,10 @@ collector is not the same as removing these costs. The
 4. **B1/P1's two CPU baselines and their B2 integrity checks are verified
    in #223.** Six audited sessions establish matching
    Neoverse-N2 and EPYC 7763 pairs. [Frozen limits](docs/measurements/cpu-baselines.md)
-   retain all observations and reject silent budget resets. Next, P2/P3 must isolate
-   a redundant cost and compare a candidate against the same-job baseline, while
-   preserving checked arithmetic and recording code/stack tradeoffs. Broader
-   B1/B2 coverage for A/D/N remains open.
+   retain all observations and reject silent budget resets. **P2/P3's selected
+   decimal-counting change is verified in #225**, including arithmetic, timing,
+   code and stack tradeoffs. Proceed to D1–D3; broader B1/B2 coverage for A/D/N
+   remains open.
 
 The original intermittent Intel macOS compiler abort remains an open defect.
 Source lifetime repairs and passing reruns did not establish its cause. Preserve
@@ -165,9 +165,11 @@ sessions per architecture: 33.8–34.8% less text-counting time on ARM64 and
 38.6–39.6% less on AMD64. The corrected measurement schedule balances both position
 and preceding work; every rejected or inconclusive experiment remains recorded.
 It still takes 25.0–26.2% longer than C. Code grows by 496/560 instruction bytes;
-stack, readonly data and whole binary size are unchanged. **Next:** finish the
-nine-job production gate and documentation audit for this batch. After verified
-merge, proceed to D1–D3; the unchanged loop gap remains explicitly unoptimized.
+stack, readonly data and whole binary size are unchanged. **Verified in #225:**
+all nine production jobs and documentation pass; the squash matches the tested
+tree. [Delivery evidence](docs/roadmap-history.md#decimal-counting-and-current-derivative-baselines-pr-225)
+records the checks and startup repairs. **Next:** D1–D3; the unchanged loop gap
+remains explicitly unoptimized.
 Keep signed-min handling, all binary/decimal boundaries and checked evaluation
 order; record instruction, readonly-data, binary and stack costs. Bundle the
 verified startup error-handling fixes and complete rejected measurements. For the persistent gap, separate

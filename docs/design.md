@@ -127,7 +127,8 @@ preserves that name for other uses of the same variable. Thus
 `if (.value | lt 0) neg id` can select the named input's `Neg` implementation.
 Anonymous records still use structural rows. Refinement checks for infinite types,
 including parameters absent from a record's fields; it adds no runtime conversion.
-The focused tests for this change are pending runner verification.
+Focused Linux ARM64/AMD64 tests and both compiler-analysis budget hosts pass at
+`a31f24c4`; final platform acceptance remains part of the current derivative batch.
 
 ## Runtime representation and C safety
 

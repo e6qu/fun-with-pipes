@@ -209,9 +209,9 @@ not describe this nested behavior; generic reverse callers use `ReverseScalar[T]
 Comparisons use primal values, so a piecewise program differentiates the branch
 actually taken. This does not define a smooth derivative at every branch boundary.
 
-### Accuracy checks being added
+### Accuracy checks
 
-The next D3 test batch compares `f(x) = x^4` with its analytic derivative
+The D3 test batch compares `f(x) = x^4` with its analytic derivative
 `4*x^3` at -2, -0.5, 0.5 and 2. It checks both forward and reverse mode in F64
 and F128. A separate central difference computes `(f(x+h) - f(x-h)) / (2*h)`
 without AD. It is an approximation: for this polynomial its exact truncation
@@ -227,8 +227,10 @@ checks and failure, cancellation and tape-release controls.
 For the piecewise function `if x < 0 then -x else x`, checks approach zero from
 both sides and expect -1 or 1. At zero, fwp follows the `else` branch and returns
 1. That is an execution rule: the mathematical function has no derivative there.
-The new batch still needs native verification; it does not extend the supported
-accuracy domains or claim constant costs for nested differentiation.
+The raw interpreter and native GCC O1/O2 checks pass on Linux ARM64/AMD64 at
+`a31f24c4`, with workspace reuse both enabled and disabled. Full platform acceptance
+and per-depth cost measurements remain. This does not claim accuracy outside the
+stated domains or constant costs for nested differentiation.
 
 ### Lifetime and nesting
 

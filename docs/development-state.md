@@ -1,125 +1,102 @@
-# Next: verify derivative accuracy and reliable timing
+# Next: finish derivative recording and accuracy
 
-**Next:** verify nominal type-variable refinement with the focused `descent-checks`
-suite, then repair every remaining inference/precision failure before measuring.
-The preparation is in `/private/tmp/fwp-ad-recording`, branch `ad-recording-costs`.
-One active PR: #225 remains in `/private/tmp/fwp-cpu-phases` at
-`fbed316b9f31bf792702c0e6914fbb77c86ba643`. Do not change `ad.push` until D1's
-comparison limits are recorded.
+**Next:** audit repeated-solve run `40829884152` at
+`a31f24c4fdc215383cc61d95f6f6d743e66cb1a3`, replace its rejected AMD session with
+an independently qualified run, and freeze D1's comparison limits. Then implement
+and measure the D2 scalar `ad.push` no-escape contract and finish D3 per-depth costs.
+Worktree `/private/tmp/fwp-ad-recording`, branch `ad-recording-costs`.
 
-## Current delivery to finish
+## Current measurements
 
-Final production run `40821277777`: documentation `40821277750`, benchmarks
-`123274076330`, regular macOS ARM `123274075968` and ownership macOS ARM
-`123274076322` pass and are fully audited. The macOS jobs have 132 summaries/619
-passed tests and 127/359 respectively. Packaging verified/uploaded 3,297 and
-2,914 evidence files. Intel ownership job `123274076326` also passes: 127 summaries/359 tests audited.
-Regular Intel macOS `123274076241` (132/619) and Windows ARM
-`123274076270` (202/799) also pass with all logs audited. Both Linux and Windows
-AMD64 remain running without reported failures. Both Windows hosts passed the repaired decimal test.
+Run `40829884152`: ARM sessions 1/2 are jobs 123301407687/123301407660; AMD session
+1 is 123301407679. They are measuring. AMD session 2, job 123301407651, rejected an
+EPYC 9V74 before building; the required host is EPYC 7763. Its full log is
+`/private/tmp/fwp-descent-repeated-a31f-amd2-rejected.log`. GitHub refused a job-only
+rerun while the workflow is active; retry that job after completion. Preserve the
+rejection and every timing sample. Never select sessions by favorable timings.
 
-Preserve this final head. Squash only after all nine production jobs plus docs
-pass and are audited; explicit one-line subject <=80 characters and empty body.
-Verify merged/tested trees and message. Original run `40813465621` is fully audited:
-only the repaired Windows CRLF oracle and macOS artifact EILSEQ failures occurred.
-The original EILSEQ cause and older Intel compiler abort remain unexplained.
+The [derivative report](measurements/descent-costs.md) fixes inputs, repeated-solve
+counts, complete-output checks and the 2% identical-code control. No successful
+repeated-solve report exists yet. Earlier grouped-process run `40822958582`, source
+`b1ca235415d4d2caabdb4f568d9300cf50a59400`, passed all four matching-host jobs;
+its audited archive retains 4,628 file identities, 80 images/68 stack reports per
+session, and noisy controls. Grouping alone did not establish comparison budgets.
 
-## New preparation and encountered bug
+## Verified preparation, not final platform acceptance
 
-Published source `b1ca235415d4d2caabdb4f568d9300cf50a59400`, run `40822958582`,
-passed all four matched-host sessions. ARM 1/2 jobs: 123279381257/123279381252;
-AMD 1/2: 123279381308/123279381298. Complete raw artifacts/logs are audited:
-80 images, 68 stack reports and every process observation per session.
-Reports/logs and all 4,628 file identities are retained in the `descent-groups`
-archive. Fresh-process grouping still leaves up to 6.2% identical-code median
-variation; no derivative speedup or timing acceptance. Do not discard these rows.
+Source `a31f24c4` passes focused run `40829434472`: jobs 123299993842 (AMD) and
+123299994082 (ARM). Each passes 221 library units, two F64/F128 precision tests,
+15 callback-effect tests, type/interpreter snapshots, native O1/O2 nominal
+selection, formatting and 14 measurement-control tests. Full logs are audited:
+`/private/tmp/fwp-nominal-a31f-{arm,amd}.log`. Four ignored library tests are not
+counted as passes; G2 explicitly exercises its two budget tests separately.
 
-The next protocol repeats independent complete solves within each process.
-Exact sizes, counts, timing scope and cleanup checks are in
-[the derivative report](measurements/descent-costs.md). No observer limit rises.
-Current D3 tests compare F64/F128 analytic, numerical, nested/checkpointed and
-branch-domain results. A raw-interpreter check exposed a real inference defect:
-a selector in `if (.value | lt 0) neg id` erases a named record's identity.
-Preparation `9d8431299bd0678534da3f8cb50b894197d80fef`, run `40826160826`,
-failed. ARM jobs 123289571101/123289571107 and AMD job 123289571013 all encountered
-the same three standard-library effect mismatches in io:60, websocket:266 and
-rest:1200. Both precision tests, type snapshots and interpreter snapshots failed;
-no repeated-solve measurements completed. AMD session 2 (123289571216) correctly
-rejected an EPYC 9V45 host before building. Retain this outcome; never mix it into
-the EPYC 7763 baseline. Logs: `/private/tmp/fwp-descent-repeat-9d-{arm,amd}-{1,2}.log`.
+G2 run `40829442112` passes Linux job 123300017881 and Intel macOS 123300017458:
+221 units, all-target Clippy and both unchanged budget tests. Audited logs:
+`/private/tmp/fwp-nominal-a31f-g2-{linux,macos}.log`. The 64-worker separate/merged
+medians are 1.526/1.053 ms (Linux) and 3.984/2.923 ms (macOS), below the 1.5 ratio
+limit. Both use nine waves. Forms/entry analysis is 0.279/0.175 s and 0.436/0.305 s,
+below 10 s each. These are compiler-analysis observations, not program speedups.
 
-The follow-up query experiment `6168968833f74f574f03ce6f04a9aa0e7c37f9f4`,
-run `40827556438`, did not repair those three errors on either architecture
-(jobs 123293989080/123293989104). Both precision tests, type/interpreter snapshots
-and native emission failed; no timing results. Logs are retained in
-`/private/tmp/fwp-selector-effects-6168-{arm,amd}.log`. The query and delayed-selector
-approach are removed, not retained as extra machinery.
+The incidental inference repair keeps immediate selector fields and shared type
+variables. Nominal constraints preserve names through aliases; infinite phantom
+types still fail. Three focused production type-table tests also pass locally.
+The earlier delayed-selector attempt (`9d843129`, run `40826160826`) and query
+attempt (`61689688`, run `40827556438`) failed in io/websocket/rest and were removed.
+`226a2b40`, run `40828555694`, passed precision/effects/native selection; only the
+old anonymous `Acc` display snapshot failed. The updated snapshot and dedicated
+native output/overflow test pass at a31f. Logs for each attempt remain in `/private/tmp`.
 
-The replacement keeps immediate field constraints and preserves the selector's
-input variable through ordinary unification. A checked nominal constraint refines
-that shared variable. Composition no longer discards variable links when no
-abstract size needs replacement. Focused source `226a2b40` passed 220 library
-unit tests, both precision tests, 14 callback-effect tests, type snapshots and
-native O1/O2 nominal selection on ARM/AMD (run `40828555694`, jobs
-123297180335/123297180439). Both complete logs are audited at
-`/private/tmp/fwp-nominal-226a-{arm,amd}.log`. The only failure was the interpreter
-snapshot for `loop_state`: it now preserves the `Acc` name in display. The expected
-output is corrected; a dedicated raw-interpreter/native O1/O2 test checks its
-output and overflow order.
+## Prepared D2 changes: do not publish the future assertion yet
 
-Source review also found two already-constrained selector variables could lose
-their shared identity. The focused unit test reproduced that failure; merging
-the checked record-variable roots repairs it. All three local type-table tests
-pass. The expanded `both` fixture, complete focused suite and G2 still need the
-new head's verification. No delayed selector or callback-query experiment remains.
-No ownership contract changed. The 256-operation scalar-recording fixture now
-passes raw interpretation (result 1) with the exact fbed compiler. The unwind
-probe now overwrites the argument record and seeds the recorded operation;
-verify it with the D2 native tests before changing the no-escape contract.
-`tests/ad_tape_ownership.rs` has an **uncommitted future D2 test** expecting 256
-heap argument records with stack storage disabled and zero with it enabled. That
-assertion must not be published until the no-escape contract changes; current code
-still allocates all 256. Keep it with the uncommitted unwind probe/fixture.
+Runtime `ad.push` copies four scalar fields and retains no record address.
+Its argument is the selected stack-allocation candidate; `ad.push-owned` is excluded.
+No ownership contract has changed. Three local files are deliberately uncommitted:
 
-## Next ownership proof
+- `tests/fixtures/ad_scalar_recording.fwp`: 256 recorded identity operations,
+  differentiating the final node. Raw interpretation returns 1.
+- `tests/fixtures/ad_unwind_probe.c`: overwrite the caller's record, then seed its
+  recorded node; this extends existing failure/cancellation/retirement controls.
+- `tests/ad_tape_ownership.rs`: future O1/O2 test expects 256 heap argument records
+  with stack storage disabled and zero with it enabled. Current code still has
+  256 in both modes. Publish the zero assertion only with the no-escape contract.
 
-D2 targets the four-scalar argument to `ad.push`: runtime copies its fields and
-retains no record address. Prove `borrows_without_escape`, then use existing stack
-analysis. Do not extend the rule to typed `ad.push-owned`. Check exact allocations,
-retains, code/stack costs, failure/cancellation, stale/mixed/full nodes and nesting.
-The raw tape already reuses buffers; a larger cache is not the selected change.
-Bundle D2, D3 and the incidental inference repair into the next substantial PR.
+The exact fbed macOS compiler and a guarded Clang O2 probe establish that baseline:
+256 calls, 256 argument records, derivative 1, no live managed storage or tapes.
+Files `/private/tmp/fwp-ad-scalar-{baseline,observed}.c`; observed executable shares
+that stem. The repaired compiler has not run this D2 test. After the contract,
+check primitive inventory, scope/failure/cancellation/nesting, counts, code/stack
+costs and D1 timing limits. Bundle all into one substantial PR.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Verified | Maintain GC-free ownership and cycle checks |
-| 2 | Verified | Maintain A1–A6; no universal ARC-free claim |
-| 3 | Verified | Maintain F1–F3 call/recursion guarantees |
-| 4 | In progress | Finish PR #225 final gates |
-| 5 | In progress | D1 reliable timing limits, D2 recording arguments, D3 accuracy/costs |
-| 6 | Pending | N1–N2 CPU numerical kernels |
-| 7 | In progress | Broader B1/B2 coverage |
-| 8 | Pending | V1–V2 larger applications |
+| 1 | Verified | Maintain GC-free lifetime and cycle checks |
+| 2 | Verified | Maintain A1–A6; sharing still uses ARC |
+| 3 | Verified | Maintain F1–F3's stated call/recursion scope |
+| 4 | Verified | Selected decimal cost delivered; loop gap remains recorded |
+| 5 | In progress | D1 fixed limits, D2 stack arguments, D3 per-depth costs |
+| 6 | Pending | N1–N2 numerical kernels |
+| 7 | In progress | Broader B1/B2 comparisons |
+| 8 | Pending | V1–V2 application validation |
 
-## Checks and recovery
+## Completed delivery and recovery
 
-Focused guard checks pass: schedule/recorder (7), old baseline rejection (6),
-grouped-report rejection (5), original ownership budgets (3); full raw grouped
-artifact audit and archive reader pass. Rust formatting passes. Two-solve AD,
-history and packed fixtures pass the raw interpreter with independent output
-checks. The compiler is the exact fbed package, hash verified, downloaded to
-`/private/tmp/fwp-225-repaired-compiler`; this does not verify the new inference
-code. Updated workflow/docs validation passes; the new golden source is formatted.
-Publish the nominal refinement and run descent-checks before further measurements.
-The native production compilers must verify the inference change; the local
-current-compiler run only reproduced the original defect.
+PR #225 merged as `6735c4e3841ad4991f99c3c413daeb9d432c709c` after all nine
+production jobs `40821277777` and docs `40821277750` passed and every log was
+audited. Test head fbed and squash share tree `f70bc35d25a9e8fb566ed085f8afab65fb2a9f48`;
+message verified one line, empty body, no trailers. Duplicate push CI `40830143795`
+was cancelled. [History](roadmap-history.md#decimal-counting-and-current-derivative-baselines-pr-225)
+owns the counts and outcome. Merge e5c7f75f brings main into this branch without
+changing a31f's tree; measured source identity is preserved.
 
-Temporary auditor: `/private/tmp/fwp-audit-descent-groups.py`; raw evidence/logs:
-`/private/tmp/fwp-descent-groups-{arm,amd}-{1,2}`. The old `fwp-ad-refresh` worktree
-is retained source, not another delivery. Primary checkout is detached at #209;
-preserve its recovery pointer and untracked compiler-abort report. No agents.
-Local work stays serial under scripts/local-guard.py: 64 GiB free, target <2 GiB,
-RSS <1 GiB, 180 seconds. Currently about 67 GiB free and no local target. Full
-builds/tests/benchmarks run on GitHub. Never raise or bypass the limits.
+Read PLAN.md for remaining D/N/B/V work; GC removal and A/F guarantees remain
+verified, not universally allocation-free. The older Intel compiler abort remains
+unexplained. Preserve the primary checkout's untracked compiler-abort report.
+Primary checkout stays detached at #209 with a recovery pointer; cpu-phases is
+completed delivery, ad-refresh is retained evidence. No agents.
+
+All local checks use `scripts/local-guard.py`, serially: 64 GiB free, target <2 GiB,
+RSS <1 GiB, 180 seconds. About 68 GiB free, no local build tree. Full work runs on
+GitHub. Source formatting and the 176-link-set/106-anchor/8-step docs audit pass.
