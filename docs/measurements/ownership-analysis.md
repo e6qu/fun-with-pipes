@@ -63,7 +63,7 @@ both logs, all 13,824 timings, hardware and artifact identities. It remains a
 failed measurement; the earlier passing sample does not override it.
 
 The 64-call groups take roughly 0.2–0.4 seconds each on that Intel run. A group's
-labels therefore observe different intervals. The next repair interleaves one
+labels therefore observe different intervals. The repair at `7af1a518` interleaves one
 fresh proof of each label before moving to the next triplet. It keeps 12 rounds,
 64 proofs per label per round, every individual timing and the same median of
 round totals. There are 768 triplets. Cycling the six declared orders by
@@ -73,8 +73,26 @@ reused. This reduces the distance between compared calls; it does not identify
 a particular source of host interference or guarantee stable hardware.
 
 The 5% identical-copy limit and every original absolute/count/ratio limit stay
-unchanged. Interleaved results are pending. Only the ignored measurement test
-changes; production analysis and admission rules do not.
+unchanged. Run `40866146124` passes both hosts: Linux job `123421318020` and Intel
+macOS job `123421317692`. Each passes 221 unit tests, both timing/count checks,
+all-target lint and both startup fixtures. The
+[interleaved record](ownership-analysis-interleaved-2026-10-29.json) retains all
+13,824 individual durations, both full logs, hardware and 18 artifact identities.
+Independent recomputation confirms every median, count and limit.
+
+| Host | Workers | Merged / Separate / copy, ms per proof | Separate / merged | Copy / merged |
+|---|---:|---|---:|---:|
+| Linux AMD64 | 16 | 0.668 / 0.848 / 0.847 | 1.269 | 1.268 |
+| Linux AMD64 | 32 | 1.013 / 1.387 / 1.386 | 1.369 | 1.368 |
+| Linux AMD64 | 64 | 1.673 / 2.423 / 2.425 | 1.449 | 1.449 |
+| Intel macOS | 16 | 1.088 / 1.318 / 1.310 | 1.211 | 1.204 |
+| Intel macOS | 32 | 1.669 / 2.167 / 2.152 | 1.298 | 1.289 |
+| Intel macOS | 64 | 2.822 / 3.791 / 3.791 | 1.343 | 1.343 |
+
+Identical-copy variation is at most 0.16% on Linux and 0.69% on Intel macOS.
+Only the ignored measurement test changes; production analysis and admission
+rules do not. These results verify the revised measurement at the named source;
+they do not establish an analyzer speedup or replace final-head gates.
 
 ## Current implementation: revisit changed dependencies
 

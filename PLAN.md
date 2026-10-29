@@ -211,14 +211,16 @@ contract. All four paired sessions are audited: allocation, cleanup, code and
 stack limits pass, but the combined timing rule fails. The user chose to retain
 the allocation reduction with D2 open; keep every slower case and unchanged
 limit in the [results](docs/measurements/descent-costs.md#scalar-recording-results-allocation-reduction-retained-speed-goal-open).
-Next, measure the F64 seed/result conversions in `rev._backward-float`.
-Retained generated C already fuses the seed map into array construction but keeps
-its scratch buffer; the result conversion still builds a second list. Count those
-allocations separately and check signed zero, subnormal values and NaNs against
-both engines before claiming a conversion is redundant. Publish the selected
-change's time/storage/code/stack comparison before implementation. These are
-source observations, not a verified optimization or an explanation of all time
-outside recording. Do not repeat the unchanged rejected candidate.
+Next, test eager capture bindings before changing runtime storage again. A
+source-instrumented three-coordinate one-update solve counts 22 temporary partial
+applications; that is an operation count, not a speed result. The
+[declared experiment](https://github.com/e6qu/fun-with-pipes/blob/8a495a7209902480fe4d37d02547173f72ebe6c8/docs/measurements/eager-captures.md)
+fixes its same-source reference and time/storage/code/stack limits before code.
+Preparation is isolated on `ad-eager-captures`; it must preserve eager evaluation,
+first failure and resource lifetimes without raising inlining limits. It is not
+part of this delivery and has no accepted results yet. F64 seed/result conversion
+also allocates, but raw/native NaN payload differences rule out an unqualified
+bitwise-identity claim. Keep that separate; do not repeat the rejected experiment.
 Compare exact requests/retains, time, instruction bytes and stack frames; preserve tape-full,
 mixed/stale-node, failure/cancellation and nested-gradient checks. The raw tape
 workspace already reuses buffers across updates; growing its cache is not the
