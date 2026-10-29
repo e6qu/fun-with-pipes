@@ -2,7 +2,7 @@
 
 Published PR #224 remains active at `b4e004d5788f2b2479b085a7dc6a48c435cce477`
 in `/private/tmp/fwp-scalar-bounds`. Preserve that final head. Production
-`40790143419` is running; its benchmark, both ARM64 macOS jobs and Intel ownership, plus documentation `40790141513` pass
+`40790143419` is running (only both Linux jobs remain); all macOS jobs, both Windows jobs, benchmark and documentation `40790141513` pass
 and are audited. Do not count draft-skipped runs as acceptance.
 
 This worktree `/private/tmp/fwp-cpu-phases`, branch `cpu-execution-costs`, is based
@@ -10,7 +10,7 @@ on b4 and has no PR. Its branch can be published for focused runner validation
 while #224 remains the only active PR. It prepares the next related runtime/cost batch while
 #224's gates run. Focused startup checks and both qualified phase measurements passed and were audited.
 
-**Next:** implement and measure the decimal-length alternative selected by the
+**Next:** publish and measure the implemented decimal-length alternative selected by the
 [phase results](measurements/cpu-phases.md): bit-length estimate plus one exact
 power-of-ten comparison, with complete integer-boundary controls and unchanged
 same-job CPU limits. Bundle it with the verified startup repair. Continue
@@ -67,8 +67,16 @@ states exact inputs, intervals, code/stack/storage costs and all limitations.
 
 ## Current preparation
 
-The next decimal-count candidate is not implemented yet. Preserve the current
-helper as the same-job control and the frozen CPU table. Do not resurrect the
+The decimal-count candidate is implemented in `runtime/fwp_rt_ops.c`, with a
+160-byte readonly table. `integer_output` adds every binary-width boundary and
+O0/O1/O2/O3 emitted-helper checks against snprintf, including an omitted threshold
+correction that must fail. All 64 interval proofs and eight small Clang helper/
+control cases pass locally; this does not verify GCC or actual fwp emission.
+Four Python proof/measurement control groups and guarded Rustfmt/Actionlint pass.
+The [candidate protocol](measurements/decimal-count.md) and `decimal-count`
+workflow group native correctness, seven-peer context, memory checks and the
+fixed-budget comparison. Runner execution is next. Preserve the current helper
+as the same-job control and the frozen CPU table. Do not resurrect the
 rejected range/character-sum changes or loosen limits. Verify any new candidate
 at production optimization settings, then run the complete final matrix once the
 grouped implementation and evidence are ready.

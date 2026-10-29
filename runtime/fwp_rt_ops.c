@@ -406,14 +406,23 @@ static V fwp_show_i64(V v) {
 }
 
 static inline int64_t fwp_u64_chars(uint64_t x) {
-    int64_t n = 1;
-    /* Remove decimal digit groups, largest first. U64 has at most 20 digits. */
-    if (x >= UINT64_C(10000000000000000)) { x /= UINT64_C(10000000000000000); n += 16; }
-    if (x >= UINT64_C(100000000)) { x /= UINT64_C(100000000); n += 8; }
-    if (x >= UINT64_C(10000)) { x /= UINT64_C(10000); n += 4; }
-    if (x >= UINT64_C(100)) { x /= UINT64_C(100); n += 2; }
-    if (x >= UINT64_C(10)) n++;
-    return n;
+    static const uint64_t decimal_powers[20] = {
+        UINT64_C(1), UINT64_C(10), UINT64_C(100), UINT64_C(1000),
+        UINT64_C(10000), UINT64_C(100000), UINT64_C(1000000), UINT64_C(10000000),
+        UINT64_C(100000000), UINT64_C(1000000000), UINT64_C(10000000000),
+        UINT64_C(100000000000), UINT64_C(1000000000000), UINT64_C(10000000000000),
+        UINT64_C(100000000000000), UINT64_C(1000000000000000),
+        UINT64_C(10000000000000000), UINT64_C(100000000000000000),
+        UINT64_C(1000000000000000000), UINT64_C(10000000000000000000)
+    };
+    /* Setting the low bit preserves decimal width, including 0 -> 1, and
+     * makes clz defined. For each bit width 1..64, floor(bits * 1233 / 4096)
+     * is either the decimal digit count or one less. The exact power-of-ten
+     * comparison decides which. integer_output checks all interval endpoints. */
+    x |= UINT64_C(1);
+    unsigned bits = 64 - (unsigned)__builtin_clzll((unsigned long long)x);
+    unsigned estimate = (bits * 1233) >> 12;
+    return (int64_t)(1 + estimate - (x < decimal_powers[estimate]));
 }
 
 static inline int64_t fwp_i64_chars(int64_t x) {
