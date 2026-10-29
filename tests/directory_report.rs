@@ -412,7 +412,24 @@ fn directory_allocation_boundaries_unwind_or_exit_by_their_contract() {
             .arg("-o")
             .arg(&cfile),
     );
+    let ordinary = std::fs::read_to_string(&cfile).unwrap();
+    // Main may inline the report and remove its callable entry. Compile that
+    // entry explicitly for the recovery probe, preserving normal optimization.
+    checked(
+        Command::new(compiler)
+            .args(["build", "--fn", "report-once", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
     let code = std::fs::read_to_string(cfile).unwrap();
+    if let Ok(root) = std::env::var("FWP_ARC_ARTIFACTS") {
+        let inputs = Path::new(&root).join("directory-allocation-input");
+        std::fs::create_dir_all(&inputs).unwrap();
+        std::fs::copy(&source, inputs.join("report.fwp")).unwrap();
+        std::fs::write(inputs.join("main.c"), &ordinary).unwrap();
+        std::fs::write(inputs.join("entry.c"), &code).unwrap();
+    }
     let entry = code
         .split("/* report-once :")
         .nth(1)
@@ -529,7 +546,7 @@ static void probe_directory_allocation(void) {
     let healthy = format!("{observed}\n{probe}");
     for opt in ["-O1", "-O2"] {
         let binary = dir.join(format!("ordinary{opt}.exe"));
-        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        fwp::cgen::compile_c(&ordinary, &binary, opt).unwrap();
         let actual = checked(Command::new(&binary).current_dir(dir.path()));
         assert_eq!((&actual.stdout, &actual.stderr), (&raw.stdout, &raw.stderr));
         for (name, program, status, message) in [

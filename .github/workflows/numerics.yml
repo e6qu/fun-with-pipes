@@ -1983,6 +1983,7 @@ jobs:
           path: file-application-evidence/compiler.log
           if-no-files-found: error
       - name: File applications, repeated failures and deliberate leaks
+        id: file_tests
         if: ${{ !cancelled() && runner.os != 'Windows' }}
         shell: bash
         run: |
@@ -1990,12 +1991,22 @@ jobs:
       # Git Bash's MSYS runtime enables backup/restore privileges, which can
       # bypass the denied-directory ACL. Launch native tests from PowerShell.
       - name: Windows file applications, repeated failures and deliberate leaks
+        id: file_tests_windows
         if: ${{ !cancelled() && runner.os == 'Windows' }}
         shell: pwsh
         run: |
           whoami /priv | Out-File file-application-evidence/privileges.txt
           cargo test --no-fail-fast --test directory_report --test text_file_tools --test text_transform_ownership -- --nocapture 2>&1 | Tee-Object file-application-evidence/tests.log
           exit $LASTEXITCODE
+      - name: Publish failed test logs before the admission inventory
+        if: ${{ !cancelled() && (steps.file_tests.outcome == 'failure' || steps.file_tests_windows.outcome == 'failure') }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: file-test-failures-${{ matrix.runner }}
+          path: |
+            file-application-evidence/tests.log
+            file-application-evidence/failures/
+          if-no-files-found: error
       - name: Inventory execution examples admitted without tracing
         if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
         shell: bash
