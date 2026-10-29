@@ -185,3 +185,56 @@ accumulator across iterations. It is not a timing acceptance run. The separate
 allocation-inclusive measurement failure must be resolved and N2's timing/code/
 stack budgets published before accepting a speed claim. D2's failed zero-update
 requirement also remains open. A source change alone closes neither goal.
+
+### Typed-state results
+
+Source `80edb379` passes focused run `40959086200`: GCC Linux ARM64/AMD64 and
+Clang macOS ARM64 each pass 253 tests in 14 summaries, plus all-target lint.
+Complete logs and [the retained evidence](typed-loop-state-artifacts-2026-10-29.json)
+are audited. These checks cover raw/optimized interpretation, native O1/O2,
+flat/nested/mixed owners, preparation faults, cancellation and a deliberately
+narrowed F64 state that must fail the bit checks. Each host retains all twelve
+new program/bit/precision-loss probe binaries and their results.
+
+Both GCC reports now carry a `double` accumulator between iterations. The input
+array still needs its byte-load interpretation, but the accumulator no longer
+converts to integer bits and back on each iteration. The conversion to the
+ordinary return word occurs once after the loop. Both 65,537- and 262,145-element
+programs match the exact oracle and finish with zero live storage. This verifies
+the intended representation change on those compilers; it is not measured timing
+or full-platform acceptance. Keep the two unresolved timing requirements above.
+
+## Resource-counter diagnostic, declared before implementation
+
+The remaining array failure is allocation-inclusive; its computation-only copy
+control passes. Existing reports contain elapsed time but no per-process page
+fault or scheduling counts. The derivative history control also needs a copy of
+each variant, since a current-result copy does not control a history program.
+
+On a qualified four-processor EPYC 7763 host with the matching recorded toolchain,
+run the exact retained small-array binaries from expanded session 2
+(`40951090783`) and zero-update history binaries from repaired session 1
+(`40912773534`). Verify their hashes first. Ordinary builds still require no
+previous fwp compiler; this experiment reuses recorded programs only for diagnosis.
+
+Use 16 rounds, four fresh processes per label per round, seed 20261029 and the
+existing balanced four-label schedule. For the array, labels are C, Rust, fwp and
+its identical copy. For history they are candidate, reference and one identical
+copy of each. Keep ordinary allowed CPU affinity. Do not rebuild, change inputs,
+change internal sample counts or instrument the program. Retain every observation.
+
+Around each serial child invocation, record the change in Linux child-resource
+usage: user/system CPU seconds, minor/major page faults and voluntary/involuntary
+context switches. Also keep process elapsed time, exact outputs and every array
+sample's kernel/allocation-inclusive times and live-storage result. Record CPU
+model, compiler versions, allowed CPUs, source and executable hashes. Check that
+all resource deltas are nonnegative. Retain all failed qualifications and partial
+results; reject a wrong host before executing the retained programs.
+
+Compare elapsed variation with CPU work, faults and scheduling observations.
+These counters cover the whole child process, including startup; they cannot
+locate a delay inside one kernel or prove a cause from correlation. They may
+justify a later targeted measurement repair, which must be declared before use.
+This diagnostic makes no acceptance decision, adds no acceptance samples and
+changes none of the failed results or limits. Do not rerun an unchanged failed
+acceptance session until it happens to pass.

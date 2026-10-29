@@ -243,13 +243,18 @@ Keep input values, reduction order, precision and output checks identical.
 The expanded run at `37da7441` completes both sessions on both CPUs. All matrix
 and computation-only array controls pass. One AMD small-array allocation-inclusive
 control fails at 3.08% (limit 2%); preserve that inconclusive overall result and
-investigate it without an unchanged rerun. Inspect GCC's code-generation reports
-for the independently stable computation gap before selecting a candidate; N1
+investigate it without an unchanged rerun. Audited GCC reports reproduce the
+original binaries and show an integer loop accumulator in fwp versus a floating accumulator in C. The typed-state experiment
+passes its focused bit/ownership checks and removes those conversions in GCC; N1
 and N2 acceptance still require every stated control.
 
 
-**N2 — Optimize the selected kernel.** Change loop layout, data movement or
-workspace in `src/linalg.rs`, code generation and the corresponding C runtime.
+**N2 — Optimize the selected kernel.** The typed-state experiment passes focused
+GCC ARM64/AMD64 and Clang ARM64 checks, without timing acceptance. It gives F32/F64 loop fields native C types
+and checks exact bits, nested/mixed owners, preparation failures and cancellation.
+The inclusive measurement failure must be resolved and candidate budgets declared
+before accepting a speed claim. Further candidates may change loop layout, data
+movement or workspace in `src/linalg.rs`, code generation and the corresponding C runtime.
 Keep explicit floating-point rules; reassociation/fused operations require an
 agreed numerical contract. Extend `tests/linalg_ownership.rs` and kernel controls.
 **Done:** accuracy, shape-error order, cancellation and the N1 budgets pass.

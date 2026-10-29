@@ -1,16 +1,16 @@
 # Continue PR #227: derivative costs and numerical kernels
 
-**Next:** run and audit focused GCC/Clang checks for the [typed loop-state experiment](measurements/timing-variation.md#compiler-reports-and-typed-state-experiment).
-Both audited GCC report jobs reproduce all original binaries and outputs. They
-retain an integer accumulator in fwp's array loop versus a floating accumulator
-in C; neither array loop vectorizes. Check representation and correctness first.
-N1's inclusive noise failure and D2's timing failure remain open; no unchanged
-acceptance rerun or further sample-count increase is authorized.
+**Next:** implement and run the [declared resource-counter diagnostic](measurements/timing-variation.md#resource-counter-diagnostic-declared-before-implementation)
+for the retained failed array/history programs. Record child CPU time, faults
+and context switches without changing their binaries or acceptance rules. The
+[typed-state experiment](measurements/timing-variation.md#typed-state-results)
+passes focused correctness checks on three hosts and removes the two accumulator
+bit conversions from both GCC reports. No speedup has been measured.
 
 Active worktree `/private/tmp/fwp-ad-captures`, branch `ad-eager-captures`.
 [PR #227](https://github.com/e6qu/fun-with-pipes/pull/227) is draft and groups D2,
-its record-return repair and N1. Typed state is implemented with bit-pattern, mixed-owner and failure probes;
-it is not yet verified or accepted as an N2 optimization.
+its record-return repair and N1. Typed state passes focused bit-pattern, mixed-owner and failure checks;
+full-platform and timing acceptance remain open.
 [PLAN.md](../PLAN.md) owns acceptance; [history](roadmap-history.md) owns completed
 deliveries. User-merged #226 is `cdf881067d`, tree identical to verified `02e4ee21`;
 all nine jobs, documentation and both G2 hosts were audited before proceeding.
@@ -75,15 +75,30 @@ their original archives; no failed session was retried unchanged.
 Run `40947897224` at `cbd9fd7c` began while the PR was ready. Keep its remaining
 jobs and audit every full log. Already passed and audited: both macOS regular
 jobs (625 tests/132 summaries each), both macOS ownership jobs (363/127 each),
-benchmark (2/2) and Windows ARM64 (809/202). Three Linux/Windows jobs remain running without reported
-failed steps at last inspection. Documentation `40955533616` at `d2f2553b` passes;
-its complete log is audited, including the intentional test-runner failure control.
+benchmark (2/2), both Windows jobs (809/202 each) and Linux ARM64 (991/257).
+Linux AMD64 remains running without reported failed steps. Documentation
+`40959037712` at `80edb379` and `40958169641` at `2678a1b0` pass with complete logs
+audited, including the intentional test-runner failure and invalid-selection controls.
 These do not establish final-head coverage for later changes.
 
 Keep the PR draft during focused work. After complete evidence, require all nine
 production jobs, documentation and both G2 hosts for the final commit, with full
 log audits. Then squash-merge using one explicit subject <=80 characters and an
 empty body; no trailers or attribution. Continue the roadmap after verified merge.
+
+## Typed-state focused evidence
+
+Run `40959086200` at `80edb379` passes all three jobs: Linux AMD64
+`123746823560`, ARM64 `123746823951`, macOS ARM64 `123746824079`. Each passes
+253 tests/14 summaries, all-target lint and raw interpreter corpus; full logs
+are audited. All 36 new program/bit/precision-loss probe binaries and outputs
+are independently audited. Both array sizes match exact results and free all
+storage; both GCC reports keep the accumulator as a double across iterations.
+[The archive](measurements/typed-loop-state-artifacts-2026-10-29.json) retains
+957 file identities, sources, compiler reports, probe results and complete logs.
+This is a correctness/representation result, not timing or final-head coverage.
+Auditors: `/private/tmp/fwp-audit-typed-state.py` and
+`/private/tmp/fwp-audit-production-log.py`.
 
 ## Local checks and retained state
 
