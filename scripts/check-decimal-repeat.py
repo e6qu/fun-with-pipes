@@ -107,12 +107,14 @@ def verify(args):
         assert all(row['host'] != record['host'] for row in table['rows'])
     accepted = all(reports[e['reportSha256']]['qualifies'] for e in selected)
     assert archive['accepted'] == accepted
+    assert accepted == (args.expected_decision == 'accepted'), 'observed decision differs from the published claim'
     print('All selected sessions pass:', accepted)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--protocol', choices=['long', 'interleaved', 'balanced'], required=True)
+    parser.add_argument('--expected-decision', choices=['accepted', 'not-accepted'], required=True)
     parser.add_argument('--archive', type=Path, required=True)
     parser.add_argument('--reports', type=Path, nargs='+', required=True)
     parser.add_argument('--table', type=Path, required=True)

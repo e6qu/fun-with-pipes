@@ -160,12 +160,14 @@ The [execution-phase diagnostic](docs/measurements/cpu-phases.md) identifies
 calculation as the larger measured interval, with visible instrumentation effects
 and an inconclusive AMD64 loop control. The [decimal-length report](docs/measurements/decimal-count.md)
 rejects the bit-length/table candidate overall: ARM64 improves, AMD64 does not
-qualify. The exact threshold tree passes native correctness, but its short paired
-sessions are inconclusive due to noise. Larger whole batches pass on ARM64 but remain noisy in the first AMD64 session.
-Position-rotated interleaving passes AMD64 but fails ARM64; recorded order shows
-unequal preceding workloads for the identical-code control. Next, balance both
-before/after pairs and positions, collect two independent sessions per qualified
-host, and keep all numerical limits and earlier observations.
+qualify. The exact threshold tree now meets the frozen timing limits in two independent
+sessions per architecture: 33.8–34.8% less text-counting time on ARM64 and
+38.6–39.6% less on AMD64. The corrected measurement schedule balances both position
+and preceding work; every rejected or inconclusive experiment remains recorded.
+It still takes 25.0–26.2% longer than C. Code grows by 496/560 instruction bytes;
+stack, readonly data and whole binary size are unchanged. **Next:** finish the
+nine-job production gate and documentation audit for this batch. After verified
+merge, proceed to D1–D3; the unchanged loop gap remains explicitly unoptimized.
 Keep signed-min handling, all binary/decimal boundaries and checked evaluation
 order; record instruction, readonly-data, binary and stack costs. Bundle the
 verified startup error-handling fixes and complete rejected measurements. For the persistent gap, separate

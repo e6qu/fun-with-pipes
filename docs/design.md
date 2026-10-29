@@ -263,9 +263,10 @@ string producers, floating-point displays and wider integers keep their storage.
 The private integer-length operation has no source-language declaration.
 The current [decimal-count experiment](measurements/decimal-count.md) uses a
 balanced tree of exact power-of-ten comparisons, with at most five comparisons
-and no lookup table. It remains an unaccepted timing candidate. The preceding
-bit-length/table experiment passed correctness but failed the two-host timing
-acceptance rule; its complete results remain in the report.
+and no lookup table. Two selected sessions per architecture meet the frozen
+timing limits; the final production matrix remains required before merge. The
+preceding bit-length/table experiment passed correctness but failed the two-host
+timing acceptance rule; its complete results remain in the report.
 Signed values use unsigned magnitude and add one for the minus sign, so I64's
 minimum does not require overflowing signed negation. Ordinary inline hints let
 the C compiler combine counting with its caller; they do not force inlining.

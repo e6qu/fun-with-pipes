@@ -50,18 +50,25 @@ jobs:
         run: python3 scripts/check-decimal-records.py
       - name: Preserve longer decimal sessions and their original decisions
         run: |
-          python3 scripts/check-decimal-repeat.py --protocol long \
+          python3 scripts/check-decimal-repeat.py --protocol long --expected-decision not-accepted \
             --archive docs/measurements/decimal-long-artifacts-2026-10-29.json \
             --reports docs/measurements/decimal-long-2026-10-29-arm-1.json docs/measurements/decimal-long-2026-10-29-arm-2.json docs/measurements/decimal-long-2026-10-29-amd-1.json docs/measurements/decimal-long-2026-10-29-amd-2.json \
             --table docs/measurements/cpu-budgets-2026-10-28.json \
             --source 0c904dc859439a8a6e31e7bdf30c87ca69821de7
       - name: Preserve the position-rotated experiment and its schedule limitation
         run: |
-          python3 scripts/check-decimal-repeat.py --protocol interleaved \
+          python3 scripts/check-decimal-repeat.py --protocol interleaved --expected-decision not-accepted \
             --archive docs/measurements/decimal-interleaved-artifacts-2026-10-29.json \
             --reports docs/measurements/decimal-interleaved-2026-10-29-arm-1.json docs/measurements/decimal-interleaved-2026-10-29-arm-2.json docs/measurements/decimal-interleaved-2026-10-29-amd-1.json docs/measurements/decimal-interleaved-2026-10-29-amd-2.json \
             --table docs/measurements/cpu-budgets-2026-10-28.json \
             --source e8a8cb8fefceaa8e955823f3c1d6edb737bf789e
+      - name: Verify accepted balanced decimal comparisons
+        run: |
+          python3 scripts/check-decimal-repeat.py --protocol balanced --expected-decision accepted \
+            --archive docs/measurements/decimal-balanced-artifacts-2026-10-29.json \
+            --reports docs/measurements/decimal-balanced-2026-10-29-arm-1.json docs/measurements/decimal-balanced-2026-10-29-arm-2.json docs/measurements/decimal-balanced-2026-10-29-amd-1.json docs/measurements/decimal-balanced-2026-10-29-amd-2.json \
+            --table docs/measurements/cpu-budgets-2026-10-28.json \
+            --source 0c84afe98baec2b771fd416aced35eb4d6c11a24
       - name: CPU execution-phase evidence controls
         run: python3 scripts/test-cpu-phases.py
       - name: Verify retained CPU execution diagnostics

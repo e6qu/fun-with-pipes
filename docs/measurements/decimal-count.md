@@ -1,11 +1,34 @@
-# Decimal-length algorithm comparisons
+# Counting decimal characters without building a string
 
-This [P2/P3 experiment](../../PLAN.md#4-cpu-performance) changes how native fwp
-counts decimal characters without constructing a string. The original helper
-uses grouped division. The first alternative, bit width plus a power-of-ten
-table, **is rejected overall**: ARM64 improved, but AMD64 did not qualify.
-The next candidate uses a balanced tree of exact decimal comparisons, with no
-lookup table. It is implemented for testing, not accepted as a speedup.
+For example, `-17 | show | string.length` returns `3`: a minus sign and two
+digits. Native fwp can compute that count without allocating a String. This
+[P2/P3 experiment](../../PLAN.md#4-cpu-performance) changes the counting algorithm,
+not the language's result, arithmetic checks or memory ownership.
+
+**Current status:** the exact decimal-threshold tree meets the frozen timing
+limits in both selected sessions on each architecture. Text counting takes
+33.8–34.8% less time on ARM64 and 38.6–39.6% less on AMD64 than previous fwp.
+It still takes 25.0–26.2% longer than the C peer. Focused correctness, memory and
+artifact checks pass; full production CI is still required before merge.
+
+| Comparison | Outcome | Details |
+|---|---|---|
+| Bit width plus a table | Rejected: AMD64 did not qualify | [Results](#results-reject-the-table-candidate) |
+| Threshold tree, short batches | Inconclusive controls on both hosts | [Short measurements](#short-threshold-tree-results-and-measurement-repair) |
+| Threshold tree, longer batches | ARM64 qualified; AMD64 controls failed | [Longer measurements](#complete-longer-batch-outcome) |
+| Threshold tree, position-rotated processes | AMD64 qualified; ARM64 controls failed; preceding workloads were unbalanced | [Order diagnosis](#interleaved-outcome-positions-alone-do-not-balance-preceding-work) |
+| Threshold tree, balanced preceding work and positions | All four sessions qualify; original limits unchanged | [Results](#balanced-results-accepted-measurement) |
+
+An **identical-code control** runs the same old binary under two labels. Their
+timings should agree within the frozen noise limits. If they do not, a lower
+candidate median does not establish a speedup. No earlier samples are discarded
+or combined across different schedules.
+
+The C/Rust peers use grouped division to count digits. Their comparisons include
+that algorithm difference plus process startup, calculation, output and exit;
+they do not isolate compiler overhead. Memory observations are separate from
+timed execution. The sections below retain the exact inputs, flags, controls,
+source IDs, size/stack costs and all outcomes.
 
 ## Rejected candidate: bit width and a table
 
@@ -32,7 +55,7 @@ code/data tradeoff, not an allocation or ARC optimization. Keep the actual table
 bytes, section/address, alignment, instruction-section size, whole binary size
 and stack reports in the measurement evidence.
 
-## Next candidate: exact decimal comparisons
+## Candidate: exact decimal comparisons
 
 Split the 20 possible digit counts at `10^10`, then split each remaining range
 at its middle decimal boundary. For example, values below 10 need one digit;
@@ -59,8 +82,10 @@ not a timing comparison with formatted text.
 
 Both qualified GCC hosts passed the table candidate’s seven integer-output
 groups at O0/O1/O2/O3, including all intentionally broken helper controls.
-The tree needs its own native verification; the final production matrix remains
-required for the complete batch.
+The tree also passed both GCC hosts at `9c89a3761cba2c3bccb02dff93b3fec6754f4583`,
+including all seven integer-output groups. Later timing protocols require an
+exact source-identity check before reusing those results. The final production
+matrix remains required for the complete batch.
 
 ## Paired measurement
 
@@ -360,3 +385,58 @@ Require both complete independent sessions on both architectures to pass.
 This repairs the observed scheduling imbalance. It is not a speedup claim before
 measurement and does not erase the earlier failed control decisions. Native
 correctness is reused only after checking exact compiler/runtime/test identity.
+
+## Balanced results: accepted measurement
+
+Source `0c84afe98baec2b771fd416aced35eb4d6c11a24` retains the same runtime and
+native tests as the two-host correctness checkpoint `9c89a3761cba2c3bccb02dff93b3fec6754f4583`.
+The first two qualified jobs per architecture all pass the fixed improvement,
+regression and identical-code noise limits. Selection was fixed before inspecting
+results. These measurements support adopting the tree for this workload; they do
+not validate every input distribution or close every CPU gap.
+
+Each ratio is candidate elapsed time divided by the named comparison; below one
+means less time. The control p95 column measures variation between executions of
+the identical old binary. Each value is recomputed from all 75 measured rounds,
+with no sample deletion. Timings include process launch, calculation, output and
+exit, but exclude compilation and memory instrumentation.
+
+| Session | Text / old fwp | Text / C | Text / Rust | Text control p95 | Loop / old fwp | Loop control p95 |
+|---|---:|---:|---:|---:|---:|---:|
+| arm-1 | 0.652311 | 1.250426 | 0.691798 | 1.012587 | 0.999647 | 1.001808 |
+| arm-2 | 0.661920 | 1.258689 | 0.702906 | 1.009410 | 1.000032 | 1.001843 |
+| amd-1 | 0.603616 | 1.261598 | 0.668206 | 1.040526 | 1.000191 | 1.012304 |
+| amd-2 | 0.613679 | 1.253633 | 0.676502 | 1.029667 | 0.999646 | 1.015789 |
+
+The loop is unchanged and remains slower than Rust: about 14.5% on ARM64 and
+19.5–19.7% on these AMD64 sessions. Earlier baseline ratios remain recorded at
+their original source and schedule; this is not an accepted loop optimization.
+C/Rust keep grouped division, so the text comparison includes an algorithm
+difference rather than isolating language overhead.
+
+The text instruction section grows by 496 bytes on ARM64 (11,164 to 11,660) and
+560 on AMD64 (11,986 to 12,546). Readonly sections, whole binary file sizes and
+all reported stack frames are unchanged. No lookup table or heap storage is
+added. Both loop and text-length retain zero managed requests and count updates.
+All seven benchmark programs, 21 peer images and 14 storage/control images per
+session were audited. The other five programs retain identical instruction bytes;
+`strings` and `text-length` retain the same fwp calculation. Ordinary peer timings,
+including remaining slow cases, stay in each archive's benchmark report.
+
+Run [40810741109](https://github.com/e6qu/fun-with-pipes/actions/runs/40810741109)
+contains ARM64 jobs `123240190193`/`123240190249` and AMD64 `123240190307`.
+Run [40811270742](https://github.com/e6qu/fun-with-pipes/actions/runs/40811270742)
+contains the second selected AMD64 job `123241898078` (workflow session 1).
+AMD64 jobs `123240190231` and `123241898015` rejected nonmatching hardware before
+building or timing. Their red workflow status does not hide a measured failure:
+the four selected jobs completed successfully and every log was audited.
+
+Raw reports: [ARM64 1](decimal-balanced-2026-10-29-arm-1.json),
+[ARM64 2](decimal-balanced-2026-10-29-arm-2.json),
+[AMD64 1](decimal-balanced-2026-10-29-amd-1.json),
+[AMD64 2](decimal-balanced-2026-10-29-amd-2.json).
+The [archive](decimal-balanced-artifacts-2026-10-29.json) retains full job metadata,
+all artifact hashes, peer/memory reports and both host rejections. Documentation
+CI recomputes every decision and requires the explicit `accepted` result; it also
+preserves the previous protocols' `not-accepted` results. A deliberately false
+acceptance claim for the longer-batch archive was rejected by the local check.
