@@ -56,3 +56,14 @@ layout investigation, but they are not proof by themselves. Choose a measurement
 repair only from the resulting evidence, document its limitations and publish it
 before rerunning the acceptance experiment. N1 and the selected D2 budget remain
 open until their unchanged acceptance requirements are met.
+
+## Running the diagnostic
+
+The `timing-diagnostics` selection in `.github/workflows/numerics.yml` requires
+`evidence_run=40916288542` and `baseline_run=40912773534`. It qualifies the host
+before downloading or running the failed programs; a rejection remains an
+artifact. `scripts/diagnose-timing-variation.py` checks executable identities,
+retains every stdout/stderr stream and duration, and restores the original CPU
+affinity even after failure. `scripts/test-timing-diagnostic.py` checks observation
+placement, changed instrumentation boundaries and rejected corrupt outputs.
+No diagnostic result has been collected yet.

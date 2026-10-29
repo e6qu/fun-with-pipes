@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-recording, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-recording, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -25,18 +25,76 @@ on:
         description: Full source commit for audits, server rechecks or the wordfreq baseline
         type: string
       evidence_run:
-        description: Completed test or measurement run consumed by the selected suite
+        description: Completed test/measurement run; timing-diagnostics requires the failed kernel run
         type: string
       costs_run:
         description: Completed hash-costs run for the hash evidence audit
         type: string
       baseline_run:
-        description: Earlier matching cost run for paired revision comparison
+        description: Earlier matching cost run; timing-diagnostics requires the failed derivative run
         type: string
       application_run:
         description: Exact focused API run supplying native diagnostic executables
         type: string
 jobs:
+  timing_diagnostics:
+    if: inputs.suite == 'timing-diagnostics'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.1
+      - name: Require the declared failed sessions
+        env:
+          KERNEL_RUN: ${{ inputs.evidence_run }}
+          DERIVATIVE_RUN: ${{ inputs.baseline_run }}
+        run: |
+          test "$KERNEL_RUN" = 40916288542
+          test "$DERIVATIVE_RUN" = 40912773534
+      - name: Qualify the diagnostic host before downloading or executing
+        run: >-
+          python3 scripts/descent-baselines.py
+          --cpu 'AMD EPYC 7763 64-Core Processor' --machine x86_64
+          --cc gcc --rustc rustc --c-version 'gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0'
+          --rust-version 'rustc 1.99.1 (58cf8f9c3 2026-10-13)'
+          --source "$GITHUB_SHA" --processors 4 --output timing-host.json
+      - name: Retain host qualification and any rejection
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: timing-host
+          path: timing-host.json
+          if-no-files-found: error
+      - name: Diagnostic observation controls
+        run: python3 scripts/test-timing-diagnostic.py
+      - name: Retrieve the exact failed programs and their reports
+        env:
+          GH_TOKEN: ${{ github.token }}
+          KERNEL_RUN: ${{ inputs.evidence_run }}
+          DERIVATIVE_RUN: ${{ inputs.baseline_run }}
+        run: |
+          gh run download "$KERNEL_RUN" --repo "$GITHUB_REPOSITORY" --name kernel-baselines-ubuntu-latest-2 --dir kernel-input
+          gh run download "$DERIVATIVE_RUN" --repo "$GITHUB_REPOSITORY" --name descent-peers-ubuntu-latest-1 --dir derivative-input
+      - name: Compare scheduling policies and observe matrix storage
+        run: >-
+          python3 scripts/diagnose-timing-variation.py
+          --kernel kernel-input --derivative derivative-input --qualification timing-host.json
+          --kernel-source bf46f77655b08158cd1a8de6ea8ed4f280c724ec
+          --derivative-source 694e31b7aa9bcd5b7f94485416dda423ee398317
+          --cc gcc --cpu 0 --rounds 16 --layout-processes 32 --seed 20261029 --timeout 180
+          --output timing-diagnostics
+      - name: Retain every diagnostic observation including partial failures
+        if: ${{ always() && hashFiles('timing-diagnostics/**') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: timing-diagnostics
+          path: timing-diagnostics/
+          if-no-files-found: error
   kernel_baselines:
     if: inputs.suite == 'kernel-baselines' && contains(fromJSON('["all","ubuntu-latest","ubuntu-24.04-arm"]'), inputs.native_runner) && contains(fromJSON('["both","1","2"]'), inputs.comparison_session)
     strategy:

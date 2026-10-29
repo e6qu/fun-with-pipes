@@ -1,6 +1,6 @@
 # Next: diagnose the retained timing failures in PR #227
 
-**Next:** implement and run the [declared timing diagnostic](measurements/timing-variation.md)
+**Next:** run and audit the [declared timing diagnostic](measurements/timing-variation.md)
 on the exact failed AMD kernel and derivative programs. Preserve the failed
 observations and every unchanged limit. Do not repeat acceptance measurements
 unchanged. After a justified repair and complete evidence, publish one final
@@ -89,9 +89,19 @@ generated C is byte-identical to the initial kernels. AMD session 2 in
 36 binaries, 24 frame reports and complete raw observations were audited by
 `/private/tmp/fwp-audit-kernels-repaired-failure.py amd-2`; both failures remain.
 AMD session 1 never qualified; rejected attempts `40913404142`, `40914553866`
-and `40944861613` are retained. No measurement job remains running. The current
-working tree adds archives and controls for these failed outcomes; publish that
-diagnostic preparation before implementing its runner. N2 has not started.
+and `40944861613` are retained. No measurement job remains running. `cbd9fd7c` publishes all failed-result archives
+and the diagnostic protocol before implementation. The diagnostic runner reuses
+the exact failed binaries, checks their identities and outputs, and compares the
+allowed CPU set with explicit CPU-0 affinity. A separate instrumented run observes
+live storage offsets without reading transferred inputs. Three focused controls
+and workflow lint pass. N2 has not started.
+
+Production run `40947897224` at `cbd9fd7c` started while the PR was ready; keep
+its running jobs and audit them. Its benchmark job passes (two tests/two summaries,
+full log reviewed). Documentation run `40947897241` passes; complete log reviewed,
+including the intended negative runner controls. PR #227 is draft again to avoid
+repeating full builds on diagnostic-only pushes. These runs do not close either
+failed timing requirement or establish a later final head.
 
 ## Local checks and retained state
 
