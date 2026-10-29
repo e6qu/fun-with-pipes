@@ -158,8 +158,8 @@ range-index and character-sum changes: neither meets the fixed improvement rule.
 Keep its boundary tests and results; do not repeat those candidates as a speedup.
 The [execution-phase diagnostic](docs/measurements/cpu-phases.md) identifies
 calculation as the larger measured interval, with visible instrumentation effects
-and an inconclusive AMD64 loop control. Next, compare the current decimal-length
-helper's repeated divisions with a bit-length estimate and exact power-of-ten
+and an inconclusive AMD64 loop control. Next, run the [decimal-length candidate](docs/measurements/decimal-count.md):
+compare repeated divisions with a bit-length estimate and exact power-of-ten
 check. Prove all U64 bit/decimal boundaries (including zero), preserve signed-min
 handling and checked expression order, and record the constant-table, code and
 stack costs. Compare ordinary images against the current helper in the same job

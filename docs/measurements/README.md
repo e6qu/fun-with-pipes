@@ -53,7 +53,8 @@ These reports follow different versions of derivative descent. Read the variant 
 
 ## C and Rust comparisons
 
-- [CPU calculation, startup and output: diagnostic protocol](cpu-phases.md)
+- [CPU calculation, startup and output: measured diagnostics](cpu-phases.md)
+- [Decimal-length candidate: proof and paired comparison](decimal-count.md)
 
 These compare complete implementations, including the differences each report names. Use checked-peers for the signed-overflow-aligned seven-program snapshot; older reports retain their original arithmetic rules.
 
