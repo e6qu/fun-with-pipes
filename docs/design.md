@@ -142,6 +142,15 @@ must not offset it, and partial application must not pass it to `memcpy`, even
 with a zero byte count. Tests must exercise the actual cleanup path at the
 production compiler settings; one compiler's success does not verify another.
 
+POSIX executable startup requires successful thread-attribute initialization and
+stack configuration. It releases the attributes after thread creation and reports
+setup failure before language code instead of switching to the process stack.
+Alternate-stack and signal-handler registration are also required. Static numerical
+workers check their stack attributes; a partial startup joins every started worker
+before reporting failure. O0/O2 fault controls pass on native Linux and macOS, on ARM64 and AMD64,
+including a deliberately omitted stack-error check that must fail the test.
+The broader final-head matrix remains required before merge.
+
 ## Ownership implementation
 
 `src/ownership.rs` defines primitive contracts. `src/rc/borrows.rs` proves eligible
@@ -252,12 +261,17 @@ and traps. A static bound proves that combining the lengths fits I64; the
 generated sum still uses ordinary checked addition. Shared strings, unknown
 string producers, floating-point displays and wider integers keep their storage.
 The private integer-length operation has no source-language declaration.
-Its scalar runtime counts decimal digits in descending groups of 16, 8, 4, 2
-and 1. Signed values use unsigned magnitude and add one for the minus sign, so
-I64's minimum does not require an overflowing signed negation. Ordinary inline
-hints allow the C compiler to combine counting with its caller; they do not force
-inlining. [Controlled comparisons](measurements/integer-counting.md) record the
-algorithm, call/size tradeoffs and current validation.
+The current [decimal-count experiment](measurements/decimal-count.md) uses a
+balanced tree of exact power-of-ten comparisons, with at most five comparisons
+and no lookup table. Two selected sessions per architecture meet the frozen
+timing limits; the final production matrix remains required before merge. The
+preceding bit-length/table experiment passed correctness but failed the two-host
+timing acceptance rule; its complete results remain in the report.
+Signed values use unsigned magnitude and add one for the minus sign, so I64's
+minimum does not require overflowing signed negation. Ordinary inline hints let
+the C compiler combine counting with its caller; they do not force inlining.
+[Earlier controlled comparisons](measurements/integer-counting.md) retain the
+previous grouped-division algorithm and its recorded call/size tradeoffs.
 The [Linux measurements](measurements/integer-text.md) record zero managed leaf
 allocations in the probe, actual machine code and comparison with direct
 character counting in C/Rust.

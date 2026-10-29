@@ -1,6 +1,6 @@
 //! Records, variants and closures that do not escape live on the stack
-//! (`src/escape.rs`; `FWP_STACK=0` when compiling turns it off). That
-//! tests/reuse.rs compares outputs with and without eligible storage reuse.
+//! (`src/escape.rs`; `FWP_STACK=0` when compiling turns it off).
+//! `tests/reuse.rs` compares outputs with and without eligible storage reuse.
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -198,4 +198,97 @@ fn on_heap_and_stack(name: &str, var: &str, expected: &str) {
         heap,
         stack
     );
+}
+
+/// Required stack setup must fail before language code, without changing stacks
+/// or silently disabling overflow reporting. Attribute failures also clean up.
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[test]
+fn runtime_startup_reports_stack_and_handler_failures() {
+    let dir = fwp::cgen::TempDir::new("runtime-startup-failures").unwrap();
+    let source = dir.join("main.fwp");
+    std::fs::write(&source, "main = 42 | echo\n").unwrap();
+    for memory in ["dynamic", "static"] {
+        let cfile = dir.join(format!("{memory}.c"));
+        let mut build = Command::new(fwp());
+        build.args(["build", "--memory", memory, "--emit-c"]);
+        if memory == "static" {
+            build.args([
+                "--heap",
+                "1M",
+                "--pool",
+                "4M",
+                "--stack",
+                "1M",
+                "--tasks",
+                "2",
+                "--task-stack",
+                "64K",
+                "--threads",
+                "2",
+            ]);
+        }
+        let output = build.arg(&source).arg("-o").arg(&cfile).output().unwrap();
+        assert!(output.status.success(), "{memory}: {output:?}");
+        let code = std::fs::read_to_string(cfile).unwrap();
+        let marker = "typedef uint64_t V;";
+        assert_eq!(code.matches(marker).count(), 1);
+        let instrumented = code.replace(
+            marker,
+            &format!(
+                "{marker}\n{}",
+                include_str!("fixtures/runtime_startup_faults.c")
+            ),
+        );
+        for opt in ["-O0", "-O2"] {
+            let binary = dir.join(format!("startup-{memory}{opt}.exe"));
+            fwp::cgen::compile_c(&instrumented, &binary, opt).unwrap();
+            let artifacts = std::env::var_os("FWP_STARTUP_ARTIFACTS").map(PathBuf::from);
+            if let Some(path) = &artifacts {
+                std::fs::create_dir_all(path).unwrap();
+                std::fs::write(path.join(format!("startup-{memory}{opt}.c")), &instrumented)
+                    .unwrap();
+                std::fs::copy(&binary, path.join(format!("startup-{memory}{opt}.exe"))).unwrap();
+            }
+            for (fault, message) in [
+                ("none", ""),
+                ("attributes", "cannot initialize main thread attributes"),
+                ("stack", "cannot configure main runtime stack"),
+                ("create", "cannot create main runtime thread"),
+                ("altstack", "cannot install stack overflow handler"),
+                ("signal-mask", "cannot install stack overflow handler"),
+                ("segv", "cannot install stack overflow handler"),
+                ("bus", "cannot install stack overflow handler"),
+            ] {
+                let actual = Command::new(&binary)
+                    .env("FWP_STARTUP_FAULT", fault)
+                    .env_remove("FWP_ALLOC_STATS")
+                    .env_remove("FWP_MEMORY_REPORT")
+                    .output()
+                    .unwrap();
+                if let Some(path) = &artifacts {
+                    let label = format!("startup-{memory}{opt}-{fault}");
+                    std::fs::write(path.join(format!("{label}.stdout")), &actual.stdout).unwrap();
+                    std::fs::write(path.join(format!("{label}.stderr")), &actual.stderr).unwrap();
+                    std::fs::write(
+                        path.join(format!("{label}.status")),
+                        format!("{}\n", actual.status),
+                    )
+                    .unwrap();
+                }
+                let (status, stdout, stderr) = if fault == "none" {
+                    (0, "42\n", String::new())
+                } else {
+                    (101, "", format!("fwp: trap: {message}\n"))
+                };
+                assert_eq!(
+                    actual.status.code(),
+                    Some(status),
+                    "{memory}/{opt}/{fault}: {actual:?}"
+                );
+                assert_eq!(actual.stdout, stdout.as_bytes(), "{memory}/{opt}/{fault}");
+                assert_eq!(actual.stderr, stderr.as_bytes(), "{memory}/{opt}/{fault}");
+            }
+        }
+    }
 }

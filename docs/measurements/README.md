@@ -18,9 +18,12 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Function calls and recursion
 
-- [Call-cost matrix and mutual-loop decision](../functional-costs.md): exact scopes and budgets, first measured comparisons and remaining verification.
+- [Call-cost matrix and mutual-loop decision](../functional-costs.md): verified scopes and budgets, measured comparisons and remaining costs.
 
 ## Numerical applications
+
+- [Current derivative costs](descent-costs.md): four audited sessions, phase/memory observations and remaining repeated-host budgets.
+- [Current output versus checksum costs](descent-output-current.md): four audited sessions; short noisy controls and host differences remain visible.
 
 These reports follow different versions of derivative descent. Read the variant table and timing boundary before comparing ratios across reports. A protocol describes an experiment, not an outstanding task.
 
@@ -52,6 +55,9 @@ These reports follow different versions of derivative descent. Read the variant 
 - [CI compiler build cost](ci-compiler-profiles.md)
 
 ## C and Rust comparisons
+
+- [CPU calculation, startup and output: measured diagnostics](cpu-phases.md)
+- [Decimal counting: accepted tree measurements and retained failures](decimal-count.md)
 
 These compare complete implementations, including the differences each report names. Use checked-peers for the signed-overflow-aligned seven-program snapshot; older reports retain their original arithmetic rules.
 

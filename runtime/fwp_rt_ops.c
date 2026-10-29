@@ -406,14 +406,43 @@ static V fwp_show_i64(V v) {
 }
 
 static inline int64_t fwp_u64_chars(uint64_t x) {
-    int64_t n = 1;
-    /* Remove decimal digit groups, largest first. U64 has at most 20 digits. */
-    if (x >= UINT64_C(10000000000000000)) { x /= UINT64_C(10000000000000000); n += 16; }
-    if (x >= UINT64_C(100000000)) { x /= UINT64_C(100000000); n += 8; }
-    if (x >= UINT64_C(10000)) { x /= UINT64_C(10000); n += 4; }
-    if (x >= UINT64_C(100)) { x /= UINT64_C(100); n += 2; }
-    if (x >= UINT64_C(10)) n++;
-    return n;
+    /* Split the 20 decimal-width intervals at exact powers of ten.
+     * Zero belongs to the one-digit interval; every path uses at most
+     * five comparisons, with no division or indexed table access. */
+    if (x < UINT64_C(10000000000)) {
+        if (x < UINT64_C(100000)) {
+            if (x < UINT64_C(1000)) {
+                if (x < UINT64_C(100)) {
+                    return x < UINT64_C(10) ? 1 : 2;
+                }
+                return 3;
+            }
+            return x < UINT64_C(10000) ? 4 : 5;
+        }
+        if (x < UINT64_C(100000000)) {
+            if (x < UINT64_C(10000000)) {
+                return x < UINT64_C(1000000) ? 6 : 7;
+            }
+            return 8;
+        }
+        return x < UINT64_C(1000000000) ? 9 : 10;
+    }
+    if (x < UINT64_C(1000000000000000)) {
+        if (x < UINT64_C(10000000000000)) {
+            if (x < UINT64_C(1000000000000)) {
+                return x < UINT64_C(100000000000) ? 11 : 12;
+            }
+            return 13;
+        }
+        return x < UINT64_C(100000000000000) ? 14 : 15;
+    }
+    if (x < UINT64_C(1000000000000000000)) {
+        if (x < UINT64_C(100000000000000000)) {
+            return x < UINT64_C(10000000000000000) ? 16 : 17;
+        }
+        return 18;
+    }
+    return x < UINT64_C(10000000000000000000) ? 19 : 20;
 }
 
 static inline int64_t fwp_i64_chars(int64_t x) {

@@ -156,10 +156,21 @@ keep owned-token versus borrowed-token differences explicit when selecting a fix
 [proved-bounds experiment](docs/measurements/proved-scalar-bounds.md) rejected both
 range-index and character-sum changes: neither meets the fixed improvement rule.
 Keep its boundary tests and results; do not repeat those candidates as a speedup.
-Next, measure runtime setup, calculation, output and cleanup separately for the
-existing loop/text inputs and C/Rust peers. Keep instrumented diagnostic timings
-separate from the unchanged whole-process baseline. Use the largest demonstrated
-extra cost to choose the next compiler/runtime change. For the persistent gap, separate
+The [execution-phase diagnostic](docs/measurements/cpu-phases.md) identifies
+calculation as the larger measured interval, with visible instrumentation effects
+and an inconclusive AMD64 loop control. The [decimal-length report](docs/measurements/decimal-count.md)
+rejects the bit-length/table candidate overall: ARM64 improves, AMD64 does not
+qualify. The exact threshold tree now meets the frozen timing limits in two independent
+sessions per architecture: 33.8–34.8% less text-counting time on ARM64 and
+38.6–39.6% less on AMD64. The corrected measurement schedule balances both position
+and preceding work; every rejected or inconclusive experiment remains recorded.
+It still takes 25.0–26.2% longer than C. Code grows by 496/560 instruction bytes;
+stack, readonly data and whole binary size are unchanged. **Next:** finish the
+nine-job production gate and documentation audit for this batch. After verified
+merge, proceed to D1–D3; the unchanged loop gap remains explicitly unoptimized.
+Keep signed-min handling, all binary/decimal boundaries and checked evaluation
+order; record instruction, readonly-data, binary and stack costs. Bundle the
+verified startup error-handling fixes and complete rejected measurements. For the persistent gap, separate
 calculation, input/output, allocation and dispatch with explicit paired controls.
 Inspect generated C and machine code for the selected program after checking
 source correctness. Change only the proved redundant operation or representation;
@@ -175,7 +186,11 @@ instructions alone do not establish a speedup.
 
 ## 5. Differentiation
 
-**D1 — Refresh and separate descent costs.** Run the existing Rosenbrock cases
+**D1 — Refresh and separate descent costs.** The [current baseline](docs/measurements/descent-costs.md)
+retains four audited sessions and phase/memory observations. AMD64 hosts differ
+and short controls are noisy; fixed repeated-host budgets remain. The
+[output comparison](docs/measurements/descent-output-current.md) also retains four
+audited sessions, their controls and exact result bits. Run the existing Rosenbrock cases
 at 3/33/129 coordinates and 0/1/199/1,999 updates where defined. Compare fwp AD,
 fwp explicit derivatives, and explicit C/Rust implementations. Separate retained
 history, list/array construction, derivative recording, reverse traversal and
@@ -187,6 +202,16 @@ samples, allocation ledgers and bounded-workspace observations.
 entries, buffer growth/reuse or recomputation in the AD runtime; keep pure-step
 requirements for replay. Extend `tests/ad_tape_scopes.rs` and
 `tests/ad_tape_ownership.rs` with failure, cancellation and nested scopes.
+The first concrete candidate is the four-scalar argument to `ad.push`: current
+generated C allocates that record on the heap for each recorded operation, even
+though the runtime only copies its fields. Prove that its argument cannot escape
+in `src/ownership.rs`, then use the existing stack analysis. Do not extend the
+rule to `ad.push-owned`, whose typed weights have separate ownership obligations.
+Before changing the contract, finish D1's fixed comparison limits. Compare exact
+requests/retains, time, instruction bytes and stack frames; preserve tape-full,
+mixed/stale-node, failure/cancellation and nested-gradient checks. The raw tape
+workspace already reuses buffers across updates; growing its cache is not the
+first candidate supported by these observations.
 **Done:** the selected per-size storage/time budget passes without retaining dead
 scopes or changing derivative order. Output storage still scales with output size.
 

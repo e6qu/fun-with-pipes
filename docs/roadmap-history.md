@@ -6,6 +6,27 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Scalar boundary checks and rejected CPU experiments (PR #224)
+
+The [paired scalar experiment](measurements/proved-scalar-bounds.md) rejected
+both proposed removal-of-checks optimizations under the unchanged CPU budgets.
+The merged compiler/runtime remain identical to #223; retained tests cover
+runtime integer boundaries and checked length overflow at O0/O1/O2/O3. All
+observations, including noisy controls and rejected hardware, remain available.
+
+Final head `b4e004d5788f2b2479b085a7dc6a48c435cce477` passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40790143419)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40790141513).
+Every target and diagnostic was audited: 978 passing tests per Linux host, 618
+per regular macOS host, 357 per ownership macOS host, 798 per Windows host and
+two benchmark tests. The Windows TLS unknown-CA message is the tested rejection
+of a rogue client certificate, not a failed test.
+
+Squash `52e8da582644a93d996816d344894fdf5435a92f` matches the tested tree
+`baca4d6d34a96828c49c3200ba942ef3375754e2`; its message is one line with an empty
+body and no trailers. P2/P3 remain open: a rejected experiment is useful evidence,
+not an accepted performance improvement.
+
 ## Fixed CPU baselines (PR #223)
 
 [Six retained sessions](measurements/cpu-baselines.md) establish repeated

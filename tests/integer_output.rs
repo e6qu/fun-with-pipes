@@ -33,6 +33,16 @@ fn integer_text_lengths_preserve_widths_unicode_sharing_and_effect_order() {
             signed.extend([value, -value]);
         }
     }
+    // Every binary-width transition used by the bit-length estimate, with
+    // both signs. These inputs are read at runtime by the native program.
+    for bit in 1..=62 {
+        let power = 1_i64 << bit;
+        for value in [power - 1, power, power + 1] {
+            signed.extend([value, -value]);
+        }
+    }
+    signed.sort_unstable();
+    signed.dedup();
     let signed_input = signed.iter().map(|x| format!("{x}\n")).collect::<String>();
     let signed_output = signed
         .iter()
@@ -43,6 +53,12 @@ fn integer_text_lengths_preserve_widths_unicode_sharing_and_effect_order() {
         let power = 10_u64.pow(exponent);
         unsigned.extend([power - 1, power, power + 1]);
     }
+    for bit in 1..=63 {
+        let power = 1_u64 << bit;
+        unsigned.extend([power - 1, power, power + 1]);
+    }
+    unsigned.sort_unstable();
+    unsigned.dedup();
     let unsigned_input = unsigned
         .iter()
         .map(|x| format!("{x}\n"))
@@ -140,7 +156,7 @@ checked-length = tap echo | add 1 | show | concat "é🙂" | string.length
         );
         let code = std::fs::read_to_string(cfile).unwrap();
         assert!(code.contains("/* string._integer-length :"), "{code}");
-        for opt in ["-O0", "-O2"] {
+        for opt in ["-O0", "-O1", "-O2", "-O3"] {
             let binary = dir.join("length.exe");
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
 
@@ -164,6 +180,78 @@ checked-length = tap echo | add 1 | show | concat "é🙂" | string.length
                 let label = format!("semantics-counted{opt}");
                 std::fs::write(root.join(format!("{label}.c")), &code).unwrap();
                 std::fs::copy(&binary, root.join(format!("{label}.exe"))).unwrap();
+            }
+        }
+    }
+}
+
+/// Exercise the emitted threshold tree, including zero, with an independent
+/// snprintf oracle and a deliberately omitted comparison that must be detected.
+#[test]
+fn decimal_length_thresholds_and_native_helper_are_exact() {
+    let dir = fwp::cgen::TempDir::new("decimal-length-bounds").unwrap();
+    let source = dir.join("main.fwp");
+    std::fs::write(&source, "main = 42 | show | string.length | echo\n").unwrap();
+    let cfile = dir.join("generated.c");
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--emit-c"])
+            .arg(source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let generated = std::fs::read_to_string(cfile).unwrap();
+    let begin = generated
+        .find("static inline int64_t fwp_u64_chars(")
+        .unwrap();
+    let end = generated[begin..]
+        .find("static void fwp_display_top(")
+        .unwrap()
+        + begin;
+    let helper = &generated[begin..end];
+    let body = include_str!("fixtures/decimal_length_bounds.c");
+    for opt in ["-O0", "-O1", "-O2", "-O3"] {
+        for omitted in [false, true] {
+            let helper = if omitted {
+                let correction = "x < UINT64_C(10) ? 1 : 2";
+                assert_eq!(helper.matches(correction).count(), 1);
+                helper.replace(correction, "2")
+            } else {
+                helper.to_owned()
+            };
+            let code = format!(
+                "#include <inttypes.h>\n#include <stdint.h>\n#include <stdio.h>\n{helper}\n{body}"
+            );
+            let executable = dir.join("probe.exe");
+            fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+            let output = Command::new(&executable).output().unwrap();
+            assert_eq!(
+                output.status.code(),
+                Some(if omitted { 247 } else { 0 }),
+                "{opt}/{omitted}: {output:?}"
+            );
+            assert_eq!(
+                output.stdout,
+                if omitted {
+                    b"".as_slice()
+                } else {
+                    b"decimal length boundaries pass"
+                }
+            );
+            assert!(output.stderr.is_empty(), "{opt}/{omitted}: {output:?}");
+            if let Some(root) = std::env::var_os("FWP_INTEGER_LENGTH_ARTIFACTS") {
+                let root = std::path::Path::new(&root);
+                std::fs::create_dir_all(root).unwrap();
+                let label = format!("digit-helper{opt}-omitted-{omitted}");
+                std::fs::write(root.join(format!("{label}.c")), &code).unwrap();
+                std::fs::copy(&executable, root.join(format!("{label}.exe"))).unwrap();
+                std::fs::write(
+                    root.join(format!("{label}.status")),
+                    output.status.to_string(),
+                )
+                .unwrap();
+                std::fs::write(root.join(format!("{label}.stdout")), output.stdout).unwrap();
+                std::fs::write(root.join(format!("{label}.stderr")), output.stderr).unwrap();
             }
         }
     }

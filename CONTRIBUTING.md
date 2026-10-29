@@ -370,3 +370,9 @@ generated programs outside the checkout. The archive includes its
 manifest and requirements: a system C toolchain for native compilation and
 OpenSSL 3 for TLS. `iteration-evidence-*` retains C/disassembly and paired
 measurements; `ownership-evidence-*` retains ARC and workspace controls.
+Linux/macOS ownership evidence is a verified ZIP uploaded directly, alongside a
+JSON manifest containing the source revision and each file's size and SHA-256.
+Packaging checks every archived byte before publication. A read failure names
+the input file in the manifest and fails the job; it does not omit evidence or
+publish a partial archive. Windows retains ownership evidence in its native
+test artifact.

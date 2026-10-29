@@ -176,11 +176,27 @@ jobs:
           name: golden-failures-${{ matrix.runner }}
           path: ${{ runner.temp }}/golden-failures/
 
-      - uses: actions/upload-artifact@v7
+      - name: Package and verify ownership evidence
+        if: always()
+        run: >-
+          python3 scripts/package-evidence.py --input ownership-evidence
+          --output ownership-evidence-regular-${{ runner.os }}-${{ runner.arch }}.zip
+          --manifest ownership-evidence-regular-${{ runner.os }}-${{ runner.arch }}.json
+          --source "${{ github.event.pull_request.head.sha || github.sha }}" --compression 6
+      - name: Upload verified ownership archive
+        uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: ownership-evidence-regular-${{ runner.os }}-${{ runner.arch }}
-          path: ownership-evidence/
+          path: ownership-evidence-regular-${{ runner.os }}-${{ runner.arch }}.zip
+          archive: false
+          if-no-files-found: error
+      - name: Preserve ownership file manifest and read failures
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ownership-evidence-regular-${{ runner.os }}-${{ runner.arch }}-manifest
+          path: ownership-evidence-regular-${{ runner.os }}-${{ runner.arch }}.json
+          if-no-files-found: error
 
       - name: Preserve compiler crash reports
         uses: actions/upload-artifact@v7
@@ -278,11 +294,27 @@ jobs:
           name: native-golden-failures-${{ matrix.runner }}
           path: ${{ runner.temp }}/native-golden-failures/
 
-      - uses: actions/upload-artifact@v7
+      - name: Package and verify ownership evidence
+        if: always()
+        run: >-
+          python3 scripts/package-evidence.py --input ownership-evidence
+          --output ownership-evidence-corpus-${{ runner.os }}-${{ runner.arch }}.zip
+          --manifest ownership-evidence-corpus-${{ runner.os }}-${{ runner.arch }}.json
+          --source "${{ github.event.pull_request.head.sha || github.sha }}" --compression 6
+      - name: Upload verified ownership archive
+        uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: ownership-evidence-corpus-${{ runner.os }}-${{ runner.arch }}
-          path: ownership-evidence/
+          path: ownership-evidence-corpus-${{ runner.os }}-${{ runner.arch }}.zip
+          archive: false
+          if-no-files-found: error
+      - name: Preserve ownership file manifest and read failures
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ownership-evidence-corpus-${{ runner.os }}-${{ runner.arch }}-manifest
+          path: ownership-evidence-corpus-${{ runner.os }}-${{ runner.arch }}.json
+          if-no-files-found: error
 
       - name: Preserve compiler crash reports
         uses: actions/upload-artifact@v7
@@ -487,11 +519,27 @@ jobs:
           name: golden-failures-${{ matrix.runner }}
           path: ${{ runner.temp }}/golden-failures/
 
-      - uses: actions/upload-artifact@v7
+      - name: Package and verify ownership evidence
+        if: always()
+        run: >-
+          python3 scripts/package-evidence.py --input ownership-evidence
+          --output ownership-evidence-linux-${{ runner.os }}-${{ runner.arch }}.zip
+          --manifest ownership-evidence-linux-${{ runner.os }}-${{ runner.arch }}.json
+          --source "${{ github.event.pull_request.head.sha || github.sha }}" --compression 6
+      - name: Upload verified ownership archive
+        uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: ownership-evidence-linux-${{ runner.os }}-${{ runner.arch }}
-          path: ownership-evidence/
+          path: ownership-evidence-linux-${{ runner.os }}-${{ runner.arch }}.zip
+          archive: false
+          if-no-files-found: error
+      - name: Preserve ownership file manifest and read failures
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ownership-evidence-linux-${{ runner.os }}-${{ runner.arch }}-manifest
+          path: ownership-evidence-linux-${{ runner.os }}-${{ runner.arch }}.json
+          if-no-files-found: error
 
   bench:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
