@@ -1,6 +1,9 @@
 //! Record locals can move directly between compatible worker ABIs.
+use fwp::ir::*;
+use fwp::value::{Closure, Value};
 use std::path::PathBuf;
 use std::process::{Command, Output};
+use std::rc::Rc;
 
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
@@ -65,8 +68,6 @@ fn recursive_record_workers_keep_results_unboxed() {
 
 #[test]
 fn transferred_record_fields_preserve_aliases_and_trap_cleanup() {
-    use fwp::ir::*;
-    use fwp::value::Value;
     fn fun(args: &[MT], ret: MT) -> MT {
         args.iter()
             .rev()
@@ -288,9 +289,6 @@ int main(void){
 
 #[test]
 fn forwarded_callback_records_keep_their_box_and_release_aliases_on_failure() {
-    use fwp::ir::*;
-    use fwp::value::{Closure, Value};
-    use std::rc::Rc;
     let string = MT::con("std::String");
     let pair = MT::con("Pair");
     let unit = MT::unit();
@@ -341,7 +339,7 @@ fn forwarded_callback_records_keep_their_box_and_release_aliases_on_failure() {
             name: "failure".into(),
             arity: 1,
             locals: vec![string],
-            ty: callback,
+            ty: callback.clone(),
             body: Body::Prim("prim.trap".into()),
         },
         // Real task support enables recoverable trap cleanup in generated code.
@@ -356,8 +354,42 @@ fn forwarded_callback_records_keep_their_box_and_release_aliases_on_failure() {
             name: "discard_pair".into(),
             arity: 1,
             locals: vec![pair.clone()],
-            ty: MT::Fun(Box::new(pair), Box::new(MT::unit())),
+            ty: MT::Fun(Box::new(pair.clone()), Box::new(MT::unit())),
             body: Body::Expr(Expr::Const(Value::unit())),
+        },
+        // One arm returns a direct local; another gets a boxed record from a
+        // callback. The callback may also trap. Both paths must honor the
+        // worker's separate-field result, including the local's cleanup.
+        Func {
+            name: "choose".into(),
+            arity: 3,
+            locals: vec![
+                callback.clone(),
+                MT::con("std::String"),
+                MT::con("std::I64"),
+                pair.clone(),
+            ],
+            ty: MT::Fun(
+                Box::new(callback),
+                Box::new(MT::Fun(
+                    Box::new(MT::con("std::String")),
+                    Box::new(MT::Fun(Box::new(MT::con("std::I64")), Box::new(pair))),
+                )),
+            ),
+            body: Body::Expr(Expr::Let(
+                3,
+                Box::new(Expr::Record(vec![Expr::Local(1), Expr::Local(1)])),
+                Box::new(Expr::Match(
+                    Box::new(Expr::Local(2)),
+                    vec![
+                        (Pat::Lit(Value::I64(0)), Expr::Local(3)),
+                        (
+                            Pat::Wild,
+                            Expr::Apply(Box::new(Expr::Local(0)), vec![Expr::Local(1)]),
+                        ),
+                    ],
+                )),
+            )),
         },
     ];
     program.main = Some(2);
@@ -366,6 +398,7 @@ fn forwarded_callback_records_keep_their_box_and_release_aliases_on_failure() {
         ("forward".into(), 1),
         ("failure".into(), 3),
         ("discard_pair".into(), 5),
+        ("choose".into(), 6),
     ];
     fwp::ir::check_locals(&program).unwrap();
     let mut interpreter = fwp::interp::Interp::new(&program, Box::new(Vec::new())).unwrap();
@@ -383,6 +416,21 @@ fn forwarded_callback_records_keep_their_box_and_release_aliases_on_failure() {
         Value::Record(vec![Value::Str("hello".into()), Value::Str("hello".into())].into())
     );
     assert!(interpreter.call_root(1, args(3)).is_err());
+    for callback in [0, 3] {
+        for branch in [0, 1] {
+            let mut input = args(callback);
+            input.push(Value::I64(branch));
+            let actual = interpreter.call_root(6, input);
+            if callback == 3 && branch == 1 {
+                assert!(actual.is_err());
+            } else {
+                assert_eq!(
+                    actual.unwrap(),
+                    Value::Record(vec![Value::str("hello"), Value::str("hello")].into())
+                );
+            }
+        }
+    }
     let code = fwp::cgen::generate(&program).unwrap();
     let declaration = "typedef uint64_t V;";
     let allocation = "static inline void *fwp_alloc_init(size_t n) {";
@@ -420,6 +468,21 @@ int main(void){
  if(!setjmp(forward_failure)){(void)f1(PTR(&fc3),forward_input);return 252;}
  fwp_trap_recover=0;fwp_trap_jb=0;
  if(fwp_cleanups||!fwp_rc_last(forward_input)||strcmp(fwp_trap_msg,"hello"))return 253;
+ // Repeated mixed branches must preserve the caller's alias and leave no
+ // temporary record/field owners behind, including a callback failure.
+ size_t live=fwp_heap.live;
+ for(int repeat=0;repeat<8;repeat++)for(int callback=0;callback<2;callback++)for(int branch=0;branch<2;branch++){
+  fwp_rc_dup(forward_input);
+  fwp_trap_recover=forward_recover;fwp_trap_jb=&forward_failure;fwp_trap_cleanup=0;
+  if(!setjmp(forward_failure)){
+   V chosen=f6(callback?PTR(&fc3):PTR(&fc0),forward_input,(V)branch);
+   if(callback&&branch)return 241;
+   if(OBJ(chosen)->f[0]!=forward_input||OBJ(chosen)->f[1]!=forward_input)return 242;
+   (void)f5(chosen);
+  }else if(!callback||!branch||strcmp(fwp_trap_msg,"hello"))return 243;
+  fwp_trap_recover=0;fwp_trap_jb=0;
+  if(fwp_cleanups||fwp_heap.live!=live||!fwp_rc_last(forward_input)||strcmp(STR(forward_input)->d,"hello"))return 244;
+ }
  fwp_rc_free_obj(forward_input);return 0;
 }
 "#;

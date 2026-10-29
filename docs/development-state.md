@@ -1,11 +1,12 @@
-# Next: deliver the verified eager-capture comparison
+# Next: verify mixed record-return repair in PR #227
 
-**Next:** complete all nine production jobs, documentation and both G2 hosts
-on the published final head of this single active PR; audit all completed
-logs, repair any failures together, then squash-merge with a one-line subject
-under 80 characters and empty body. D2's selected budget is measured and accepted;
-final platform delivery is still required. After merge, begin N1's four kernel
-sizes and declare repeated-host budgets before any N2 optimization.
+**Next:** publish the complete repair batch and run the expanded `eager-captures`
+focused suite on GCC ARM64/AMD64 and Clang ARM64. Preserve the earlier full run
+to audit its remaining targets. Recheck the paired measurements after the C
+generator repair; the earlier measurements remain evidence for their own sources.
+Then require all nine production jobs, docs and both G2 hosts on the final head,
+audit every log, and squash-merge with a one-line subject under 80 characters and
+empty body. Keep #227 as the only active PR.
 
 Worktree `/private/tmp/fwp-ad-captures`, branch `ad-eager-captures`. PR #226 is
 merged by the user as `cdf881067dd87610badad56ed15cc5ecfbf66e17`; its tree matches
@@ -14,6 +15,45 @@ final head `02e4ee21`. All nine production jobs (`40876750803`), docs
 audited. No additional failure was found. Duplicate post-merge run `40899114681`
 was cancelled after checking tree equality. [History](roadmap-history.md#derivative-allocation-and-accuracy-pr-226)
 records counts and source IDs; the final G2 samples are now retained.
+
+## Final-head checks and pending repair
+
+Head `56528ffb` runs native `40901634818`, documentation `40901634737` and G2
+`40901630875`. Both G2 jobs pass and their full logs and all 13,824 durations are
+audited; identical-control maxima are 0.09% Linux and 0.37% Intel. Benchmark job
+123545198571 passes with both tests/full log audited. ARM macOS ownership job
+123545198764 also passes (363 tests/127 summaries, full log audited).
+
+Regular ARM macOS job 123545198825 fails `secure_native` and
+`secure_client_round_trip`: an authorized DELETE crashes instead of returning
+204. All other completed target logs and the full job log were checked; no other
+failure was found. Exact compiler `56528ffb` reproduces this with a small
+`delete` function returning `RestReply[()]`: raw and optimized interpreters pass,
+Clang O1 segfaults. Generated C returns a never-assigned boxed local.
+
+Root cause: `expr_fields` can split a returned record into fields before a match,
+but emitted that match as a boxed value when another arm failed or dynamically
+returned a record. The repair emits each arm in the required field context.
+Controls cover both authorization branches, mixed direct/dynamic records,
+alias preservation and repeated exceptional cleanup at O1/O2. REST test cleanup
+now preserves server exit/stderr diagnostics. These Rust changes are not yet
+compiled or verified. Source, emitted C and logs remain under `/private/tmp`
+with prefix `fwp-227-`; no disassembly was used to diagnose this failure.
+
+Docs job 123545196798 fails its collection-count control: the new capture test
+makes `inline_caf_ownership` seven tests, while its evidence table expected six.
+Both the production table and synthetic fixture are repaired locally (53 total).
+Eight controls pass, including rejection of the old six-test log. Audit every
+remaining completed native target/diagnostic before pushing the repair batch.
+The failed full docs log is `/private/tmp/fwp-227-docs-5652.log`; its earlier
+intentional panic/timeout diagnostics belong to 20 passing runner controls.
+
+N1 preparation is separate at `/private/tmp/fwp-kernel-baselines`, branch
+`numerical-kernel-baselines`. Protocol `d0384af0`, corrected schedule `c17fe6e2`,
+exact oracles `7a1d7e1c`, runner/workflow `f053da88`. Six local controls and docs
+pass. Run `40906486080` has two passing ARM sessions and two AMD host rejections
+before building; those logs/results still need independent audit. Preserve them
+and check applicability after the compiler repair. No second PR.
 
 ## Included work and evidence
 
@@ -35,7 +75,7 @@ reference; the latter commit only selects the replacement session explicitly.
 Original AMD 1 received EPYC 9V45 instead of 7763 and was rejected before timing;
 its complete rejection remains. Accepted measurements include 368 binaries,
 320 stack reports, every process observation/output and workspace-on/off cleanup.
-All frozen limits pass; updated solves take 13–72% less time, while the largest
+At those measured sources, all frozen limits pass; updated solves take 13–72% less time, while the largest
 current-result case still takes 44–58 times handwritten C's time. Do not describe
 that ratio as pure language overhead or relabel scalar-recording's failed speed
 result. D3's finite accuracy/depth matrix is verified by #226.

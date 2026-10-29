@@ -100,6 +100,7 @@ jobs:
           resource_frames resource_frame_fields resource_frame_variants resource_match_context
           queued_functions channel_cycle_ownership ad_tape_scopes ad_tape_ownership autodiff_precision
           autodiff_nested autodiff_checkpoint compiler_call_liveness
+          unboxed_worker_locals field_context_ownership record_conversion_ownership rest
           --idle-timeout 600 --logs eager-capture-evidence/targets
       - name: Raw interpreter corpus
         if: ${{ !cancelled() }}

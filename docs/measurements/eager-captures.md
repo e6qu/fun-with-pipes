@@ -1,7 +1,9 @@
 # Eager captures in derivative programs
 
 The comparison was published in `8a495a72` before implementation. All four matching-host measurements pass their frozen limits after independent
-audit. Focused correctness checks pass; final native delivery remains pending.
+audit at the sources listed below. Full CI subsequently exposed a mixed-record
+return defect, described under verification. Its repair needs focused checks and
+renewed measurement evidence before final native delivery.
 [The earlier scalar-recording experiment](descent-costs.md#scalar-recording-results-allocation-reduction-retained-speed-goal-open)
 keeps its allocation reduction and failed timing result. Its limits are unchanged.
 
@@ -155,6 +157,14 @@ times on AMD64. Removing temporary closures improves general AD substantially;
 it does not make automatic recording equivalent to a handwritten derivative.
 
 ## Verification and source identities
+
+Full run `40901634818` at `56528ffb` fails two ARM macOS REST cases. An authorized
+DELETE returning an empty reply crashes natively, though both interpreters return
+204 correctly. A direct record was split into fields before a `match`, then read
+as a boxed local because another branch could fail. The C generator repair keeps
+each branch in the caller's field-return context. Regression cases include
+dynamic record returns, caller aliases and exceptional cleanup. The repair is
+not yet verified; earlier timings below are not measurements of repaired code.
 
 Focused run `40871650124` at `89d0dfa1` passes 299 tests/18 summaries and lint on
 each of Linux ARM64, Linux AMD64 and ARM macOS. All three full logs are audited.

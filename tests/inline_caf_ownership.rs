@@ -11,6 +11,32 @@ fn eager_partial_captures_preserve_effects_and_first_failure() {
     let cases = [
         (
             r#"
+User = { name: String, admin: Bool }
+delete : User -> I64 -> RestReply[()] ! {Error[HttpError]}
+delete = curry (if
+    (.0 | .admin)
+    (const (rest.reply 204 ()))
+    (const "admins only" | http.fail 403))
+main = 3 | attempt (delete User { name = "alice", admin = True }) | echo
+"#,
+            "Ok (RestReply {body = (), headers = [], status = 204})\n",
+            0,
+        ),
+        (
+            r#"
+User = { name: String, admin: Bool }
+delete : User -> I64 -> RestReply[()] ! {Error[HttpError]}
+delete = curry (if
+    (.0 | .admin)
+    (const (rest.reply 204 ()))
+    (const "admins only" | http.fail 403))
+main = 3 | attempt (delete User { name = "alice", admin = False }) | echo
+"#,
+            "Err (HttpError {message = \"admins only\", status = 403})\n",
+            0,
+        ),
+        (
+            r#"
 left : () -> I64 ! {IO}
 left = const 7 | tap (const "left" | echo)
 right : () -> I64 ! {IO}

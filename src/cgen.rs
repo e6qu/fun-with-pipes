@@ -3218,7 +3218,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.count(e, *l);
                 self.expr_fields(b, n)
             }
-            Expr::Match(scrut, arms) if self.unboxed(e) == Some(n) => {
+            // The caller requires fields, even when some arms produce boxed
+            // records (or fail). Earlier lets may already have eliminated the
+            // box of a local returned by another arm. Emit each arm in this
+            // same field context; expr() would read its unassigned boxed local.
+            Expr::Match(scrut, arms) => {
                 let s = self.scrutinee(scrut);
                 let rs: Vec<String> = (0..n).map(|_| self.fresh()).collect();
                 for r in &rs {

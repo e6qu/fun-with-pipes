@@ -258,6 +258,11 @@ matches can expose direct callbacks, but multiple tested fields, whole-value use
 and protected resources retain their required representation. A compiler-generated
 loop is not permission to interleave two trapping eager stages.
 
+When a worker returns record fields separately, every `match` arm must produce
+that same representation. An arm may unpack a dynamically returned record; an
+error arm may not return at all. Neither permits another arm to read the boxed
+local of a record whose box was eliminated earlier.
+
 The F64 matrix path uses blocks of 32 over contiguous arrays and accumulates in
 ascending inner-index order. Multiply and add remain separate. Shape validation
 precedes the specialized work; malformed cast shapes retain their specified
