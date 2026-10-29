@@ -101,3 +101,24 @@ specific redundant work. Record baseline variation and explicit per-case
 regression/improvement thresholds before changing its implementation. Full
 platform validation and failure/cancellation/alias controls remain required for
 any compiler/runtime change. N1 alone does not complete N2 or the roadmap.
+
+## Running the baseline
+
+Dispatch `Numerical and ownership evidence` with `suite=kernel-baselines`,
+`native_runner=all` and `comparison_session=both`. The job qualifies its host
+before building and preserves rejection reports. It compiles the current source;
+it does not need a previously installed fwp. To replace an unmatched host, name
+only its native runner and session and retain the rejected attempt.
+
+`measure-kernel-baselines.py` is the new repeated-baseline protocol. The older
+`measure-numerical-kernels.py` serves its separately documented short comparisons;
+its historical experiments and raw data are not rewritten by this baseline.
+The new runner uses the existing C/Rust/native harness formulas with explicit
+size substitutions, exact-result verification runs, separate memory profiles,
+all process observations, ELF sections and GCC frame reports. Its deliberately
+leaked owner must fail before process exit can hide the retained storage.
+
+Current status: the Python oracle/schedule and altered-evidence controls pass
+locally under the guard. Native generation, compilation, result checks and
+measurements still require the declared GitHub runs; no baseline result or
+optimization acceptance is claimed yet.

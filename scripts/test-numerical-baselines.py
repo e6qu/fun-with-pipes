@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """Check kernel oracles against simple loops and reject unbalanced evidence."""
 from collections import Counter
+import copy
 import importlib.util
+import json
 from pathlib import Path
 import unittest
 
 SPEC = importlib.util.spec_from_file_location('numerical_baselines', Path(__file__).with_name('numerical-baselines.py'))
 BASELINE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(BASELINE)
+SPEC = importlib.util.spec_from_file_location('kernel_measurement', Path(__file__).with_name('measure-kernel-baselines.py'))
+MEASURE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(MEASURE)
 
 
 class NumericalBaselines(unittest.TestCase):
@@ -64,6 +69,26 @@ class NumericalBaselines(unittest.TestCase):
         self.assertNotEqual(BASELINE.result_hash(rounds), BASELINE.result_hash([rounds[0][::-1], rounds[1]]))
         with self.assertRaises(AssertionError):
             BASELINE.result_hash([[-1]])
+
+    def test_missing_samples_wrong_results_and_live_storage_cannot_pass(self):
+        for label, live in [('c', 'livePayloadBytes'), ('fwp', 'liveChargedBytes')]:
+            sample = dict(hash='1234', kernelNs=10, allocationInclusiveNs=20,
+                          requests=8, requestedBytes=64, **{live: 0})
+            good = {'samples': [sample] * 5}
+            self.assertEqual(len(MEASURE.check_samples(json.dumps(good), '1234', label, True)), 5)
+            for field, value in [('hash', 'wrong'), ('kernelNs', 0), ('allocationInclusiveNs', 9),
+                                 ('requests', 0), ('requestedBytes', -1), (live, 8)]:
+                bad = copy.deepcopy(good)
+                bad['samples'][0][field] = value
+                with self.subTest(label=label, field=field), self.assertRaises(AssertionError):
+                    MEASURE.check_samples(json.dumps(bad), '1234', label, True)
+            with self.assertRaises(AssertionError):
+                MEASURE.check_samples(json.dumps({'samples': good['samples'][:-1]}), '1234', label, True)
+
+    def test_changed_or_duplicate_instrumentation_boundary_is_rejected(self):
+        for source in ['beforebefore', 'changed']:
+            with self.assertRaises(AssertionError):
+                MEASURE.replace_once(source, 'before', 'after')
 
 
 if __name__ == '__main__':

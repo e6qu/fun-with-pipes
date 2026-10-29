@@ -1,10 +1,9 @@
 # Next: implement N1's four kernel baseline cases
 
-**Next:** implement the [frozen kernel protocol](measurements/kernel-baselines.md)
-without changing compiler/runtime optimizations. Inspect all callers of the old
-numerical runner before replacing its implicit small-only configuration. Add
-complete-result and cleanup controls; use GitHub for native compilation and
-measurements. No second PR while #227 is active.
+**Next:** review and publish the prepared four-case runner, then dispatch
+`kernel-baselines` with `native_runner=all`, `comparison_session=both`. Audit
+all results/rejections under the [frozen protocol](measurements/kernel-baselines.md).
+Compiler/runtime optimizations are unchanged. No second PR while #227 is active.
 
 Worktree `/private/tmp/fwp-kernel-baselines`, branch `numerical-kernel-baselines`,
 based on #227 final head `56528ffb`. The active delivery is still #227 in
@@ -18,19 +17,28 @@ separate kernel/allocation-inclusive/process timers. Four labels include a
 byte-identical fwp control. Two independent sessions per matching native host,
 all outputs, memory and code/stack evidence are required before choosing N2.
 
-The old runner is called by the solvers, library, performance and iteration
-workflow jobs. Source-rewriting experiments consume its emitted C and reports;
-update affected callers together rather than adding compatibility paths.
+The older numerical runner remains the separately documented short experiment
+used by solvers/library/performance/iteration workflows and emitted-C controls.
+The new N1 runner has its own repeated-host protocol and explicit configuration;
+it reuses the existing C/Rust/native harness formulas without changing those
+older invocations. No compiler compatibility adapter is introduced.
 Historical numerical prose now names all four old labels: C, Rust, tracing fwp
 and ARC fwp. Source a3d8f16e verifies eight four-label batches, forty samples per
 label. The current three-label runner has six batches. No observation changed.
 
 `scripts/numerical-baselines.py` implements the exact integer result oracle and
-balanced process schedule. Four small-input control tests pass through the local
+balanced process schedule. Six small-input and altered-evidence control tests pass through the local
 guard. An initially overstrict test assumed cross-round predecessor counts were
 balanced; only the declared within-round pairs have that guarantee. The corrected
 test checks fifteen occurrences of each within-round pair and the protocol keeps
 the boundary limitation explicit. No measurements or acceptance limits changed.
+
+`measure-kernel-baselines.py` is prepared with four exact shapes, full result-bit
+verification, profile-only counters, a deliberately leaked-owner control, separate
+RSS, ELF sections, frame reports and persistent partial command/round records.
+The workflow requires explicit host/session selection and preserves rejections
+before building. Workflow lint passes. Native generation and runtime assumptions
+remain unverified until GitHub checks; do not call preparation a passing baseline.
 
 No compiler change, native build or new measurement has run for N1. Guard limits
 stay unchanged. Current #227 evidence is already audited as documented there.
