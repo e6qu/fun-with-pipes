@@ -303,6 +303,50 @@ def measure(args):
         print(name, json.dumps(row['result'], indent=2), flush=True)
 
 
+
+def verify(reports, rejected, table, table_digest, artifacts):
+    """Recompute retained diagnostics without rerunning any measured program."""
+    source = 'c92fed4208a16627f0f420f58ce1f7729bf0f061'
+    assert len(reports) == 2 and {r['architecture'] for r in reports} == {'aarch64', 'x86_64'}
+    assert set(artifacts) == {'aarch64', 'x86_64'}
+    for report in reports:
+        assert report['source'] == source and report['tableSha256'] == table_digest
+        budgets = BOUNDS.qualify(table, report['host'], report['compilers'], report['inputs'])
+        archive = artifacts[report['architecture']]
+        assert archive['source'] == source and archive['run'] == report['run']
+        for key in ('inspection', 'memory', 'memoryInspection'):
+            assert hashlib.sha256(archive[key].encode()).hexdigest() == report['evidence'][key]
+        inspection = json.loads(archive['inspection'])
+        memory = json.loads(archive['memory'])
+        images = json.loads(archive['memoryInspection'])
+        assert all(r['source'] == source and r['architecture'] == report['architecture'] for r in (inspection, memory, images))
+        assert hashlib.sha256(archive['benchmark'].encode()).hexdigest() == inspection['reportSha256']
+        assert memory['inspectionSha256'] == report['evidence']['inspection']
+        assert images['reportSha256'] == report['evidence']['memory']
+        assert len(inspection['programs']) == len(memory['programs']) == 7 and len(images['images']) == 14
+        assert set(report['programs']) == set(PROGRAMS)
+        for name, row in report['programs'].items():
+            assert row['result'] == check_case(name, row, report['settings'], budgets[name])
+            ordinary, = [p for p in inspection['programs'] if p['name'] == name]
+            mem, = [p for p in memory['programs'] if p['name'] == name]
+            assert row['ordinaryMemory'] == mem and mem['leakDetected']
+            assert all(all(v == 0 for v in p.values()) for p in mem['managedMemory']['ordinary']['profiles'])
+            assert all(p['requests'] == 1 and p['requestedBytes'] == 16 and p['retains'] == 0
+                       and p['finalChargedBytes'] > 0 for p in mem['managedMemory']['injected-leak']['profiles'])
+            for language in LANGUAGES:
+                assert row['binaries'][language] == dict(sha256=ordinary['files'][language]['binarySha256'], bytes=ordinary['files'][language]['fileBytes'])
+                path = f'cpu-phases/{name}-{language}-phases.exe'
+                assert row['binaries'][language + '-phases'] == archive['artifactFiles'][path]
+                extension = 'rs' if language == 'rs' else 'c'
+                assert row['code'][language + '-phases']['sourceSha256'] == archive['artifactFiles'][path.removesuffix('.exe') + '.' + extension]['sha256']
+            assert len(row['diagnosticStack']) == 2
+            for path, text in row['diagnosticStack'].items():
+                assert hashlib.sha256(text.encode()).hexdigest() == archive['artifactFiles']['cpu-phases/' + path]['sha256']
+    assert rejected['source'] == source and rejected['tableSha256'] == table_digest
+    assert all(row['host'] != rejected['host'] for row in table['rows'])
+    print('Both complete diagnostic sessions and the rejected host retain their raw observations and unchanged limits')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
@@ -318,8 +362,16 @@ def main():
             for path in ('input', 'inspection', 'memory', 'memory-inspection', 'qualification'):
                 command_parser.add_argument('--' + path, type=Path, required=True)
             command_parser.add_argument('--objdump', required=True)
+    verify_parser = commands.add_parser('verify')
+    verify_parser.add_argument('--reports', type=Path, nargs=2, required=True)
+    verify_parser.add_argument('--unqualified', type=Path, required=True)
+    verify_parser.add_argument('--artifacts', type=Path, required=True)
+    verify_parser.add_argument('--table', type=Path, required=True)
     args = parser.parse_args()
-    if args.command == 'qualify':
+    if args.command == 'verify':
+        verify([json.loads(p.read_text()) for p in args.reports], json.loads(args.unqualified.read_text()),
+               json.loads(args.table.read_text()), digest(args.table), json.loads(args.artifacts.read_text()))
+    elif args.command == 'qualify':
         record = qualification(args)
         assert not args.output.exists(), 'preserve original host observations'
         args.output.parent.mkdir(parents=True, exist_ok=True)

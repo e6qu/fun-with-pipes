@@ -18,7 +18,7 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Function calls and recursion
 
-- [Call-cost matrix and mutual-loop decision](../functional-costs.md): exact scopes and budgets, first measured comparisons and remaining verification.
+- [Call-cost matrix and mutual-loop decision](../functional-costs.md): verified scopes and budgets, measured comparisons and remaining costs.
 
 ## Numerical applications
 
