@@ -75,7 +75,7 @@ architectures. Preserve noisy and slower results, even if they reject the change
 
 C/Rust retain their grouped-division algorithm. Their ratios therefore compare
 complete implementations with an algorithm difference; they are not isolated
-language overhead. The older `text` benchmark still builds strings in C/Rust;
+language overhead. The `strings` benchmark still builds strings in C/Rust;
 its optimized fwp calculation must have the same machine-text bytes as
 `text-length`. The other four fwp programs must have identical machine text
 between old/new helpers. Check both variants' outputs and retain all seven current
@@ -86,3 +86,21 @@ actual sections, stack records, samples and fixed limits. Its
 [controls](../../scripts/test-decimal-count.py) reject missing, reordered, failed,
 changed and noisy observations. Full final-head CI follows once this candidate
 has a measured accept/reject decision and the related startup fixes are complete.
+
+
+## Initial validation and reader repair
+
+At `f910ffb866e5800d9f6fb46cc71741f9f730ba8e`, both native GCC jobs in
+[run 40799193551](https://github.com/e6qu/fun-with-pipes/actions/runs/40799193551)
+passed all seven integer-output groups, the seven-program benchmark, peer controls
+and memory/leak audits. Both then stopped **before paired timing** because the
+reader named the string-formatting benchmark `text` instead of its actual name,
+`strings`. This was a reader error, not a numerical failure or a timing rejection.
+
+The repair uses `strings` everywhere and checks the declared cases against the
+actual benchmark directories and matching fwp bodies. Both complete logs and
+all sixteen retained semantic/control images per host were reviewed. The
+[initial records](decimal-count-initial-2026-10-29.json) retain the partial reports,
+passed helper outcomes, seven-peer/memory context and complete artifact hashes.
+The corrected ordinary comparison still needs to run. No completed result was
+discarded and no timing limit changed.
