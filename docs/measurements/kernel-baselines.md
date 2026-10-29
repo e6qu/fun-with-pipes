@@ -57,7 +57,9 @@ per label, sixteen processes total. A fixed Eulerian cycle over all sixteen
 ordered label pairs, including self-pairs, supplies that order; rotate the cycle
 one position per round. Each label occupies each of the sixteen process positions
 four times over the complete run. Retain the order and every duration, including
-outliers. The total remains 64 measured processes and 320 samples per label.
+outliers. The total remains 64 measured processes and 320 samples per label. Within-round
+ordered predecessor pairs occur fifteen times each across the run. Transitions
+between rounds are retained but are not claimed to have that same balance.
 
 For each label and timing scope, sum its twenty samples across the four
 processes in a round. Compare the medians of the sixteen round totals; do not
