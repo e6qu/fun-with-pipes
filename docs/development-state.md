@@ -1,98 +1,98 @@
-# Current work
+# Scalar arithmetic controls and rejected optimization
 
-**Next:** monitor all nine final-head production jobs plus documentation for
-[PR #223](https://github.com/e6qu/fun-with-pipes/pull/223). Audit every target and
-compiler diagnostic, repair failures, then squash-merge only after every gate
-passes. Continue with P2/P3: isolate one proved redundant cost and compare it
-against the frozen same-job baseline. No CPU optimization is claimed in #223.
+Active draft [PR #224](https://github.com/e6qu/fun-with-pipes/pull/224), branch
+`proved-scalar-bounds`, is in `/private/tmp/fwp-scalar-bounds`. The experiment
+used `08039d8698743116c31cc0b8929e705c3562f833`; the final batch removes both
+compiler candidates and retains tests/evidence. No compiler speedup is accepted.
 
-Worktree: `/private/tmp/fwp-parser-workspace`; branch `cpu-baselines-and-budgets`.
-Base: merged #222, `17978b97373f3e9236468ac19c1b8e0d290816d7`.
-Measurement source: `ec03d9cd81c001bf006a73e7dbfb044155884611`.
-Subsequent edits add reader checks, retained evidence and docs; the measured
-compiler and collection routine are unchanged.
+**Next:** monitor #224's final-head production and documentation gates, audit every
+completed target and diagnostic, fix failures together, and merge only after all
+nine production jobs plus documentation pass. The PR checks identify the run IDs.
 
-## Completed batch, acceptance pending
+## Final scope and evidence
 
-B1/P1's `loop` and `text-length` sessions and corresponding B2 integrity checks
-are implemented. [The report](measurements/cpu-baselines.md) owns exact inputs,
-timing scope, toolchains, all observations, costs and frozen decision limits.
-All four jobs of `40765920239` and both extra AMD64 jobs of `40768027818` pass.
-Every log and artifact is audited: each job checks 21 timed images, 14 instrumented
-images, 21 RSS distributions and eleven peer-control images. No compiler warnings
-or failed targets. Documentation `40765901608` passes at the measurement head;
-its draft-skipped production run is not final acceptance.
+The [proved-bounds experiment](measurements/proved-scalar-bounds.md) tested range
+advances and bounded character sums, separately and together. Both candidates are
+removed: stable text timings miss the unchanged improvement limits on ARM64 and
+AMD64. AMD64 loop noise is inconclusive and remains visible. Compiler, runtime,
+library and benchmark sources now match #223's verified merge.
 
-The first AMD64 pair used different CPU models, so freezing correctly failed.
-All six raw records are retained. The first repeated CPU model in run/session
-order selects Neoverse-N2 and EPYC 7763, without selecting for speed or noise.
-Xeon 8370C and EPYC 9V74 remain additional observations. A noisy selected pair
-cannot be replaced by a later stable pair. The frozen table retains hashes of
-all original records; CI recomputes it and rejects edited limits.
+Keep the new runtime endpoint tests for all twelve integer types, empty/descending
+ranges, raw/optimized interpretation and native O0–O3. Callback/fold overflow and
+overflow before integer display must still trap. The experiment's four compilers
+passed all six integer-output groups, seven-peer checks and memory controls on
+both hosts. Actual code, source patches, profiles, raw samples and logs are audited.
+No compiler warning or failed test target remains in the qualified jobs.
 
-Two warmup batches and 32 rotating batches include identical-fwp controls.
-Each loop batch has one process; character counting has 32 fresh processes with
-unchanged input and individual output checks. Limits derive from observed noise
-before any candidate measurement. EPYC character counting needs more than about
-9.5% less time for a speedup claim; smaller gains are inconclusive. Both fwp
-programs have zero managed requests/retains, but this excludes raw runtime storage
-and stack use. Whole-process RSS, timed code sizes and separately instrumented
-stack reports are retained. B1/B2 for A/D/N remains open.
+Qualified jobs: ARM64 `123159395558` in `40786050786`; AMD64 `123161045925` in
+`40786537977`, both at the experiment head. The first run's AMD64 job rejected
+an unqualified Xeon 6973P-C before candidate execution; preserve its empty timing
+record. Documentation `40786054592` passes, including the original six comparison
+controls. Draft-skipped production is not acceptance of the final batch.
 
-Run `40764926704` was cancelled while every job was queued, before the short-sample
-batching repair. No completed evidence was discarded. Preserve all seven original
-peer comparisons; additional repeated timing targets only the two named gaps.
+All observations and original peer/memory records are retained under
+`docs/measurements/scalar-bounds-*.json`. The active reader checks source identity,
+raw timing decisions and archive hashes. The closed build/measurement runner is
+linked at its original source, not maintained as a command for reverted code.
+The two older closed map-order/checked-bounds options and four stale readers are
+also removed; their historical data and original script links remain.
 
-## Verified previous delivery
+## Checks
 
-F1–F3 are verified in #222. Final `b69f111e` and merge `17978b97` share tree
-`5a434a44f164e664b31c70a8d7b1db9e8dc8ab5d`; the squash message meets the one-line
-rule. All nine production jobs `40721714559`, docs `40721714558` and both G2 hosts
-`40721764744` pass. [History](roadmap-history.md#functional-calls-and-recursion-pr-222)
-owns counts and links. Postmerge runs also pass; acceptance uses audited final-head
-runs. G2 preserves exact lifetime facts, 40-byte origins and unchanged budgets.
+Guarded independent audits pass for both full artifacts: source patches/hashes,
+168 timed peer images, 112 instrumented images, memory/stack records and raw
+observations. Complete command logs contain no compiler diagnostics or failed
+targets. The audit normalizes Git's seven-versus-eight-digit display abbreviations
+while still verifying full source hashes; that presentation difference was not
+a source mismatch. No downloaded native image was executed locally.
 
-Long timing `40721041382` at `98a1d8eb` accepts all four original limits after
-increasing batches to 65,536 invocations. Only docs changed before the final head.
-ARM64 O2 remains about 1.9% slower than ordinary calls, despite beating the explicit
-loop. Earlier noisy results remain inconclusive. [The report](functional-costs.md)
-owns all sessions. State `each` still allocates per element.
-
-The historical Intel [compiler abort](measurements/compiler-abort.md) remains
-unexplained; no recurrence or new source evidence appeared. Diagnose a recurrence
-from source and input; do not resume disassembly-led allocator experiments.
+Seven local evidence-control groups now pass, including corrupted archive and
+wrong compiler-source rejection. Rustfmt and final workflow lint pass. The doc check caught a missing
+roadmap-status table during the rewrite; restoring its eight rows fixes it. The
+172-link-set audit and exact CI record-verification command now pass. No
+full local build, suite or benchmark. Preserve 64 GiB free disk, 2 GiB target,
+1 GiB RSS and the guard's 180-second deadline.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | Verified | Maintain collector-free ownership and cycle checks |
-| 2 | Verified | Maintain the named A1–A6 guarantees |
-| 3 | Verified | Maintain the scoped F1–F3 call and recursion guarantees |
-| 4 | In progress | Accept CPU baselines, then isolate and measure a proved repair |
+| 2 | Verified | Maintain named A1–A6 guarantees |
+| 3 | Verified | Maintain scoped F1–F3 call and recursion guarantees |
+| 4 | In progress | Separate execution costs before the next measured repair |
 | 5 | Pending | Derivative storage, timing and precision |
 | 6 | Pending | CPU numerical kernels |
-| 7 | In progress | Accept the CPU integrity controls; broader B1/B2 remains open |
+| 7 | In progress | Extend fixed baselines and integrity controls beyond these CPU cases |
 | 8 | Pending | Larger-program correctness, cleanup and scale |
 
-## Local checks and recovery
+GC removal, named A1–A6 ownership work and scoped F1–F3 call/recursion work remain
+verified. #223 establishes the two fixed CPU baselines and their integrity checks.
+P2/P3 remains open: before another optimization, measure setup, calculation, output
+and cleanup for the existing loop/text inputs and peers; keep instrumented
+observations separate from unchanged whole-process timings. Broader baselines,
+derivatives, CPU kernels and larger applications remain in [PLAN.md](../PLAN.md).
 
-Guarded independent audits of all six CPU sessions pass, including mathematical
-output checks, per-process data, original sources, native binaries and memory
-records. Consolidated checks pass under `python3 scripts/local-guard.py`: eight Python
-control groups (`scripts/test-cpu-baselines.py`), frozen-table `verify`, Actionlint
-on both changed workflows, and `scripts/check-roadmap.py` (171 doc link sets,
-106 immutable pairs and eight roadmap steps). No full local build, suite or benchmark. Keep 64 GiB free,
-2 GiB target, 1 GiB RSS and 180-second guard limits unchanged.
+The historical Intel [compiler abort](measurements/compiler-abort.md) is still
+unexplained. Diagnose recurrence from source/input; do not resume unproductive
+disassembly-led allocator experiments.
 
-Raw CPU artifacts: `/private/tmp/fwp-223-{arm,amd}-{1,2}` and
-`/private/tmp/fwp-223-amd-extra-{1,2}`. Logs: `/private/tmp/fwp-223-baselines.log`
-and `/private/tmp/fwp-223-extra.log`. Audit: `/private/tmp/fwp-audit-cpu-session.py`.
-Original reports and frozen limits live in `docs/measurements/cpu-*.json`.
-Previous delivery evidence remains under `/private/tmp/fwp-222-*` and
-`/private/tmp/fwp-221-*`; preserve it. Primary checkout is detached at #209 with
-a recovery pointer and untracked compiler-abort evidence; preserve both.
+## Recovery and delivery
 
-Publication and squash merge are authorized after all final-head gates pass:
-one line <=80 characters, empty body, no trailers/attribution. Verify merged tree
-and message, then continue [PLAN.md](../PLAN.md) in substantial groups.
+#223 final `a4cceb8d` passes all nine production jobs `40771179934` and docs
+`40771144344`, with every complete log audited. Squash `330a08939ea68a7967aecdc60a2c77ac9b55a1bb`
+has the identical tree `e3774208e2da356915f479688e5839d37d404b79` and compliant
+one-line message. Duplicate same-tree postmerge production `40785172656` was
+cancelled; acceptance uses the audited premerge run. Postmerge docs passed.
+[History](roadmap-history.md#fixed-cpu-baselines-pr-223) owns that record.
+
+Raw current artifacts: `/private/tmp/fwp-224-arm-initial`,
+`/private/tmp/fwp-224-amd-qualified`, `/private/tmp/fwp-224-amd-unqualified-1`.
+Logs: `/private/tmp/fwp-224-*.log`; independent audit:
+`/private/tmp/fwp-audit-scalar-session.py`. Earlier #221/#222/#223 evidence remains.
+The primary checkout is detached at #209 with a recovery pointer and untracked
+compiler-abort evidence; preserve both. #223's worktree is clean and retained.
+
+Keep one published PR active. Publication and squash merge are authorized after
+all final-head gates pass: explicit one-line subject <=80 characters, empty body,
+no trailers/attribution. Verify tree/message and continue the roadmap.

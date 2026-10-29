@@ -1,5 +1,7 @@
 # Test whether checked arithmetic hides useful numeric bounds
 
+**Historical experiment; neither candidate was adopted.**
+
 The current integer-loop machine code keeps its state in registers and makes no
 heap request in the measured scope. Yet it still checks subtraction and
 multiplication on every iteration, although the starting bound makes those
@@ -54,7 +56,15 @@ costs before selecting any candidate. Full language/native tests remain required
 if an implementation change follows. This compares fwp with unchanged fwp;
 it cannot establish parity with C/Rust or isolate universal language overhead.
 
-Run `numerics.yml` with `suite=checked-bounds` and `native_runner=all`.
-The implementation is [measure-checked-bounds.py](../../scripts/measure-checked-bounds.py).
-The [first reviewed result](checked-bounds-results.md) fails the combined
-two-host screen; no arithmetic compiler change is selected.
+## Historical reproduction
+
+This experiment is closed; its runner command is removed from the current
+workflow. The old reader required the retired `memory: arc` report schema.
+Use the [original source and workflow](https://github.com/e6qu/fun-with-pipes/tree/18ac20729402002fdea691ac6a5d5b4aab42678e)
+when reviewing how the recorded experiment ran. Its
+[collector](https://github.com/e6qu/fun-with-pipes/blob/18ac20729402002fdea691ac6a5d5b4aab42678e/scripts/measure-checked-bounds.py)
+and [subsequent review reader](https://github.com/e6qu/fun-with-pipes/blob/2520d136b7036ab878cac0ef48947b581c81b84a/scripts/inspect-checked-bounds.py)
+remain available at their original revisions; they are not maintained current commands.
+The [reviewed result](checked-bounds-results.md) fails the combined two-host
+screen. No arithmetic compiler change was selected. New work uses the
+[frozen CPU limits](cpu-baselines.md), without resetting the old verdict.

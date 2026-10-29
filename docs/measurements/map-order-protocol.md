@@ -1,7 +1,9 @@
 # Measure work skipped by an already ordered sort
 
+**Historical experiment; neither candidate was adopted.**
+
 The map benchmark builds 500,000 key/value pairs, sorts them, and performs two
-million lookups. [Current measurements](checked-peers.md) compare this complete
+million lookups. [Peer measurements from that revision](checked-peers.md) compare this complete
 program with C and Rust. This experiment compares two proposed fwp changes with
 unchanged fwp in the same runner session. Neither candidate is adopted.
 
@@ -54,13 +56,14 @@ code-section sizes and compiler stack reports. A passing screen still requires
 broader type/callback/alias/failure tests and full production acceptance before
 adopting a runtime change. It is not a universal sorting or C/Rust parity claim.
 
-## Reproduce
+## Historical reproduction
 
-Dispatch `numerics.yml` with `suite=map-order` and `native_runner=all`.
-[`measure-map-order.py`](../../scripts/measure-map-order.py) builds the candidates
-and stores sources, binaries, correctness observations and raw samples.
-[`inspect-map-order.py`](../../scripts/inspect-map-order.py) checks exact source
-edits, actual executable architectures, observations and recomputed screens.
-
-[Results](map-order-results.md): both candidates fail the full screen on both
+This experiment is closed; its runner command is removed from the current
+workflow. The old reader required the retired `memory: arc` report schema.
+Use the [original source and workflow](https://github.com/e6qu/fun-with-pipes/tree/cbacdff5e8cb33772dec72bfba7f2c7b027b4229)
+when reviewing how the recorded experiment ran. Its
+[collector](https://github.com/e6qu/fun-with-pipes/blob/cbacdff5e8cb33772dec72bfba7f2c7b027b4229/scripts/measure-map-order.py)
+and [image reader](https://github.com/e6qu/fun-with-pipes/blob/cbacdff5e8cb33772dec72bfba7f2c7b027b4229/scripts/inspect-map-order.py)
+remain available at that revision; they are not maintained current commands.
+[Results](map-order-results.md) retain both candidates' failed screens on both
 native Linux hosts. No sorting shortcut was adopted.

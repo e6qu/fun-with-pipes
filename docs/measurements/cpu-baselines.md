@@ -107,7 +107,9 @@ The [frozen table](cpu-budgets-2026-10-28.json) records all six original file
 hashes. The documentation gate recomputes the table and rejects changed limits.
 All measurements use `ec03d9cd81c001bf006a73e7dbfb044155884611`; subsequent changes
 add evidence, reader checks and docs, without changing the measured compiler or
-collection routine. Final platform acceptance for this PR remains pending.
+collection routine. All nine final-head production jobs and documentation passed;
+[the #223 acceptance record](../roadmap-history.md#fixed-cpu-baselines-pr-223)
+confirms the audited logs and identical squash-merge tree.
 No compiler speedup is claimed.
 
 ## Frozen decision limits
