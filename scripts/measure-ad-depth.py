@@ -92,7 +92,7 @@ def main():
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     environment = {key: value for key, value in os.environ.items() if not key.startswith('FWP_')}
-    environment.update(CC=args.cc, CXX=args.cxx, FWP_STACK='1', FWP_REUSE='1', FWP_AD_WORKSPACE='0', FWP_LTO='0')
+    environment.update(CC=args.cc, CXX=args.cxx, FWP_STACK='1', FWP_AD_WORKSPACE='0', FWP_LTO='0')
     commands = []
 
     def run(command, name, env, expected_status):
@@ -125,7 +125,7 @@ def main():
         assert result.returncode == expected_status, (name, result.returncode, result.stderr.decode(errors='replace'))
         return result, record
 
-    cflags = ['-O2', '-std=gnu11', '-ffp-contract=off', '-fno-fast-math', '-fno-lto',
+    cflags = ['-O2', '-std=gnu11', '-ffp-contract=off', '-fno-fast-math', '-fno-lto', '-UFWP_NO_REUSE',
               '-fstack-usage', f'-march={args.c_arch}', '-w']
     results, controls, exact_float = {}, {}, {}
     for scalar in ['F64', 'F128']:
@@ -170,6 +170,7 @@ def main():
                                     objectSha256=digest(object_path.read_bytes()), flags=float_flags)
                             assert exact_float[extension]['sourceSha256'] == source_hash
                             companions.append(exact_float[extension]['object'])
+                    assert not re.search(r'^\s*#\s*define\s+FWP_NO_REUSE\b', code, re.M)
                     observed = instrument(code)
                     profile_source = out / (name + '-profile.c')
                     profile_source.write_text(observed)

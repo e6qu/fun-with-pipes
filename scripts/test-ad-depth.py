@@ -20,6 +20,15 @@ class DepthEvidence(unittest.TestCase):
     def test_original_complete_report(self):
         CHECK.check_report(REPORT, SESSION['files'], ARCHIVE['source'], 'aarch64')
 
+    def test_reuse_follows_c_configuration_not_an_unused_environment_variable(self):
+        report = copy.deepcopy(REPORT)
+        del report['settings']['FWP_REUSE']
+        report['cflags'].append('-UFWP_NO_REUSE')
+        CHECK.check_report(report, SESSION['files'], ARCHIVE['source'], 'aarch64')
+        report['cflags'].append('-DFWP_NO_REUSE=1')
+        with self.assertRaises(AssertionError):
+            CHECK.check_report(report, SESSION['files'], ARCHIVE['source'], 'aarch64')
+
     def test_omitted_case_and_typed_retirement_are_rejected(self):
         for missing in ['case', 'retirement']:
             report = copy.deepcopy(REPORT)

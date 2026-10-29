@@ -95,6 +95,13 @@ retains all 4,390 file identities. Original reports and full logs:
 | ARM64 | [JSON](ad-depth-recording-2026-10-29-arm.json.gz) | [Log](ad-depth-recording-2026-10-29-arm.log.gz) |
 | AMD64 | [JSON](ad-depth-recording-2026-10-29-amd.json.gz) | [Log](ad-depth-recording-2026-10-29-amd.log.gz) |
 
+The archived environment includes `FWP_REUSE=1`, an unused variable; it did not
+control execution. Reuse is enabled by the absence of the C test macro
+`FWP_NO_REUSE`. The generated sources and actual build flags were audited to
+confirm that macro was absent. The runner now omits the unused variable, rejects
+a source definition of the disabling macro, and passes `-UFWP_NO_REUSE` explicitly.
+This corrects the stated configuration, not the recorded counts or program behavior.
+
 ### Before and after scalar stack recording
 
 The [preceding audited baseline](ad-depth-artifacts-2026-10-29.json) at `89bbec5b`

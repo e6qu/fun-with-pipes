@@ -169,7 +169,7 @@ def main():
     environment.update(CC=args.cc, FWP_LTO='0', FWP_AD_WORKSPACE='1',
                        FWP_PACKED_ARRAYS='1', FWP_STACK='1', FWP_ARRAY_FUSION='1')
     commands = []
-    cflags = ['-O2', '-std=gnu11', '-fno-fast-math', '-ffp-contract=off', '-fstack-usage', '-march=' + args.c_arch]
+    cflags = ['-O2', '-std=gnu11', '-fno-fast-math', '-ffp-contract=off', '-UFWP_NO_REUSE', '-fstack-usage', '-march=' + args.c_arch]
 
     def run(command, env):
         command = list(map(str, command))
@@ -245,6 +245,7 @@ def main():
             build([emitter.resolve(), 'build', '--emit-c', '-O2', fwp_source, '-o', code])
             text = code.read_text()
             assert 'FWP_ARC_ONLY' not in text
+            assert not re.search(r'^\s*#\s*define\s+FWP_NO_REUSE\b', text, re.M)
             binary = directory / label
             build([args.cc, *cflags, '-w', code, '-o', binary, '-lm', '-lpthread', '-ldl'])
             actual = run([binary], environment)
@@ -426,6 +427,7 @@ def main():
             peakProcessRssBytes=resident, fwpProfiles=profiles, binaries=metadata, cCompilerStackUsage=stack,
             phaseObservations=phase_observations, controls=controls)
         (out / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
+        print(f'{name}: outputs, cleanup, binaries and {args.samples} timing rounds recorded', flush=True)
     paths = ['scripts/descent-baselines.py', 'scripts/measure-descent-peers.py', 'scripts/measure-ad-application.py',
              'scripts/ad-storage-profile.py', 'scripts/measure-iteration.py', 'scripts/descent-phases.py',
              'tests/fixtures/descent_phases.c', 'scripts/prepare-recording-reference.py',

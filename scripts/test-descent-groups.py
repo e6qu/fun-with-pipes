@@ -6,6 +6,7 @@ import importlib.util
 import json
 from pathlib import Path
 import statistics
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -17,8 +18,31 @@ REPORT = json.loads(gzip.decompress((ROOT / 'docs/measurements/descent-groups-20
 REPEATED_SOURCE = 'a31f24c4fdc215383cc61d95f6f6d743e66cb1a3'
 REPEATED = json.loads(gzip.decompress((ROOT / 'docs/measurements/descent-repeated-2026-10-29-amd-2.json.gz').read_bytes()))
 
+RECORDING_ARCHIVE = ROOT / 'docs/measurements/descent-recording-artifacts-2026-10-29.json'
+
 
 class Evidence(unittest.TestCase):
+    def test_rejected_recording_retains_all_four_sessions_and_failures(self):
+        CHECK.check_archive(RECORDING_ARCHIVE, 'recording')
+
+    def test_rejected_recording_cannot_be_relabeled_or_hide_failed_limits(self):
+        for change in ['decision', 'failures', 'reference']:
+            archive = json.loads(RECORDING_ARCHIVE.read_text())
+            for session in archive['sessions'].values():
+                for kind in ['report', 'log']:
+                    session[kind] = str(RECORDING_ARCHIVE.parent / session[kind])
+            if change == 'decision':
+                archive['decision'] = 'accepted'
+            elif change == 'failures':
+                archive['sessions']['arm-1']['budgetFailures'] = []
+            else:
+                archive['sessions']['arm-1']['referenceFiles']['fwp']['sha256'] = 'changed'
+            with tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / 'index.json'
+                path.write_text(json.dumps(archive))
+                with self.assertRaises(AssertionError):
+                    CHECK.check_archive(path, 'recording')
+
     def test_all_original_grouped_observations(self):
         CHECK.check_report(REPORT, SOURCE, 'grouped')
 

@@ -3,7 +3,9 @@
 **D1 is complete:** four audited matching-host repeated-solve sessions establish
 the current baseline and meet the predeclared identical-code noise criterion.
 Fixed D2 acceptance limits were published before changing scalar recording.
-The optimization comparison is still running; no derivative speedup is accepted.
+The scalar-recording comparison is complete: allocation savings pass, but the
+combined speed rule fails. The user chose to keep the allocation reduction and
+leave D2 open. No all-case derivative speedup is accepted.
 Earlier [standalone](#initial-single-process-results), grouped and
 [output-diagnostic](descent-output-current.md) results remain evidence of their
 specific sources and timer boundaries.
@@ -346,6 +348,56 @@ Require every case in both sessions on both architectures to meet these rules:
 The checker reports all failed limits after preserving all observations. A failed
 or noisy case rejects acceptance; do not raise a limit after seeing the candidate.
 The main production gate still covers all nine native jobs and documentation.
+
+## Scalar recording results: allocation reduction retained, speed goal open
+
+Four completed sessions at `98b252a8` in run `40837836845` fail the combined
+acceptance rule above. The user explicitly chose to keep the proven allocation
+reduction while leaving D2's speed goal open. This delivery decision does not
+change the recorded result or the original timing limits.
+
+Each cell below is candidate/reference median time for **current result / full
+history**. A ratio of 0.90 means 10% less elapsed time; 1.01 means 1% more.
+The same-source reference disables only the `ad.push` no-escape fact. Both forms
+perform identical complete solves and print their full result. The timed process
+also includes startup, formatting and shutdown. C/Rust peers remain in the raw
+reports; they use explicit derivatives and do not implement general AD.
+
+| Coordinates–updates | ARM 1 | ARM 2 | AMD 1 | AMD 2 |
+|---|---|---|---|---|
+| 3–0 | 0.9948 / 0.9943 | 0.9950 / 0.9947 | 0.9967 / 0.9862 | 0.9931 / 0.9874 |
+| 3–1 | 0.9892 / 0.9847 | 0.9899 / 0.9854 | 1.0142 / 0.9850 | 0.9879 / 0.9694 |
+| 3–199 | 0.9396 / 0.9407 | 0.9401 / 0.9410 | 0.9483 / 0.9544 | 0.9445 / 0.9663 |
+| 3–1999 | 0.9382 / 0.9394 | 0.9387 / 0.9397 | 0.9399 / 0.9631 | 0.9487 / 0.9483 |
+| 33–199 | 0.9206 / 0.9052 | 0.9212 / 0.9054 | 0.9009 / 0.9156 | 0.9026 / 0.9162 |
+| 129–199 | 0.9087 / 0.9081 | 0.9089 / 0.9082 | 0.9050 / 0.8958 | 0.9101 / 0.9073 |
+
+All one-update forms miss 0.95; AMD also misses some three-coordinate history
+cases. The largest identical-copy variation is 1.63%, within the 2% control.
+Every output, managed/raw cleanup check and storage/code/stack limit passes.
+Each recorded operation removes one allocation and 40 requested bytes. In the
+129-coordinate current-result case, requests fall from 8,829,378 to 7,199,170
+per eight-solve process (18.46% fewer). Peak managed storage and raw tape storage
+do not fall. Maximum instruction growth is 112 bytes on ARM and 128 on AMD;
+the largest reported stack frame does not grow.
+
+The small ARM session-1 case takes 20.24 microseconds per solve versus 20.46 in
+the reference. Diagnostic forward/recording intervals are 3.42 versus 3.67
+microseconds; the diagnostic changes whole-process time by about 1.2–1.3%.
+These intervals support a limited conclusion: the recorded forward-pass saving
+is small relative to whole-solve time. They do not attribute all remaining time
+to a particular runtime function. The next D2 candidate needs a source-level
+account of costs outside recording before another full timing matrix. Preserve
+these samples; do not rerun unchanged code seeking a passing timing result.
+
+The [archive index](descent-recording-artifacts-2026-10-29.json) retains all four
+reports and full logs, 5,336 measurement file identities, 16 reference-file
+identities, exact compiler patches and every failed limit. The audit checked all
+92 images and 80 stack reports per session, all process outputs and timing rounds,
+workspace-on/off cleanup and both deliberately broken controls. CI recomputes the
+rejection and rejects omitted failures or relabeled acceptance. The source
+correctness tests pass 247 Rust tests and 17 measurement controls on each Linux
+architecture; full grouped platform acceptance remains required.
 
 ## Separating costs before selecting D2
 

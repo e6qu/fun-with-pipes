@@ -1,29 +1,29 @@
-# Next: finish the scalar derivative comparison
+# Next: verify the grouped derivative PR on every native platform
 
-**Next:** monitor all four `descent-recording` jobs in run `40837836845` at
-`98b252a8`, audit every case and apply the unchanged limits. Then archive the
-results, run final production/docs and G2 gates, and squash-merge PR #226 only
-if all acceptance checks pass. Continue with N1–N2 afterward.
-Worktree `/private/tmp/fwp-ad-recording`, branch `ad-recording-costs`; PR #226 is draft.
+**Next:** audit all nine final-head production jobs, docs and both G2 analysis
+hosts for [PR #226](https://github.com/e6qu/fun-with-pipes/pull/226/checks).
+Use the current PR commit, not an earlier focused or measurement head.
+Fix every failure before squash-merging. Continue D2 afterward: account for costs
+outside scalar node recording before selecting the next candidate. D2 is open.
+Worktree `/private/tmp/fwp-ad-recording`, branch `ad-recording-costs`; PR #226.
 
-## Active comparison
+## Completed comparison and delivery decision
 
-All hosts qualified before measuring: Neoverse-N2 ARM64 and EPYC 7763 AMD64.
+Run `40837836845` at `98b252a8` completed all four qualified sessions:
+ARM jobs 123326735077/123326735019 and AMD jobs 123326735071/123326735037.
+All logs, 368 images, 320 stack reports, outputs, timing rounds, storage ledgers
+and broken controls are audited. The combined performance decision is rejected:
+every one-update form misses the 5% reduction, as do some AMD history cases.
+One AMD one-update result is 1.42% slower; all allocation/code/stack/cleanup
+limits pass, and identical-copy variation stays within 1.63%.
 
-| Session | Job |
-|---|---:|
-| ARM 1 | 123326735077 |
-| ARM 2 | 123326735019 |
-| AMD 1 | 123326735071 |
-| AMD 2 | 123326735037 |
-
-Two compilers use the same source; the reference disables only the scalar
-`ad.push` no-escape fact. Its exact patch and binary hash are retained. The
-[fixed limits](measurements/descent-costs.md#fixed-scalar-recording-acceptance-rules)
-were published at `fde368c8` before implementation: 5% less time with updates,
-at most 2% zero-update regression, a 2% identical-copy control, per-node allocation
-savings, unchanged raw storage and bounded code/stack growth. Do not adjust limits
-after seeing results. Keep all samples, slower cases and failed controls.
+**The user explicitly chose to keep the proven allocation reduction and leave
+D2's speed goal open.** Do not change the frozen limits or relabel this experiment
+as accepted. The [result table](measurements/descent-costs.md#scalar-recording-results-allocation-reduction-retained-speed-goal-open)
+and [archive](measurements/descent-recording-artifacts-2026-10-29.json) preserve
+all four reports/logs, reference patches, failures and 5,352 file identities.
+The archive checker recomputes the failures and tests reject erased failures,
+changed references or a false acceptance label.
 
 ## Verified focused work, not final platform acceptance
 
@@ -71,7 +71,17 @@ archived separately. CI verifies both archives and rejection controls.
 
 ## Repairs and retained failures
 
-- Docs run `40839703501` at 5ba37b25 found a code-fence closing line joined
+- Depth measurement set `FWP_REUSE=1`, an environment variable the runtime does
+  not read. Actual reuse was enabled: all 144 archived ordinary C sources and
+  their flags omit the disabling `FWP_NO_REUSE` macro. New runs explicitly use
+  `-UFWP_NO_REUSE` and reject generated sources defining it. The archived settings
+  remain unaltered and the depth report explains the unused historical field.
+- Scalar comparison progress now prints after each case's evidence is saved,
+  outside the timed processes; long jobs no longer remain silent until all cases
+  finish. This changes no measurement or runtime behavior.
+
+- Docs run `40840306812` at c8ddbc7d passes and its complete log is audited.
+  Earlier docs run `40839703501` at 5ba37b25 found a code-fence closing line joined
   to prose, hiding the acceptance heading. The fence/prose separation is repaired
   and the full local link/anchor check rerun. Timing jobs use unchanged code.
 
@@ -98,7 +108,7 @@ archived separately. CI verifies both archives and rejection controls.
 | 2 | Verified | Maintain A1–A6; sharing still uses ARC |
 | 3 | Verified | Maintain F1–F3's stated call/recursion scope |
 | 4 | Verified | Selected decimal cost delivered; loop gap remains recorded |
-| 5 | In progress | D2 paired acceptance and final grouped native gates |
+| 5 | In progress | Final grouped native gates; D2 whole-program speed goal remains open |
 | 6 | Pending | N1–N2 numerical kernels |
 | 7 | In progress | Broader B1/B2 comparisons |
 | 8 | Pending | V1–V2 application validation |
@@ -118,3 +128,12 @@ Local checks use `scripts/local-guard.py`, serially: 64 GiB free, target <2 GiB,
 RSS <1 GiB, 180 seconds. About 66 GiB free, no local build tree. Guarded ownership
 units, frozen inventory, formatting, workflow lint, archive audits and rejection
 controls pass. Full builds/suites run on GitHub. Preserve artifacts as ZIPs locally.
+
+Latest guarded checks: full four-session recording ZIP/log audit passes;
+`test-descent-groups.py` passes 9 tests, `test-ad-depth.py` passes 5, and
+`test-descent-baselines.py` passes 6. Reports keep
+1334 files per recording session and all four reference artifacts. No native
+code changed after 8e299f9f; final platform gates are still required.
+
+The local documentation audit passes all 177 link sets, 106 immutable preparation
+pairs and 8 roadmap steps; the changed workflow passes actionlint.

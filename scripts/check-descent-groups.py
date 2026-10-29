@@ -16,6 +16,9 @@ SPEC.loader.exec_module(CHECK)
 SPEC = importlib.util.spec_from_file_location('descent_schedule', ROOT / 'scripts/descent-baselines.py')
 SCHEDULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(SCHEDULE)
+SPEC = importlib.util.spec_from_file_location('descent', ROOT / 'scripts/measure-descent-peers.py')
+DESCENT = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(DESCENT)
 LABELS = ['fwp-ad-history', 'fwp-ad', 'fwp-explicit', 'fwp-packed',
           'c-explicit', 'rust-explicit', 'fwp-ad-identical']
 GROUPS = {'3-0': 42, '3-1': 42, '3-199': 21, '3-1999': 7, '33-199': 7, '129-199': 7}
@@ -23,7 +26,9 @@ SOLVES = {'3-0': 32768, '3-1': 512, '3-199': 32, '3-1999': 4, '33-199': 32, '129
 
 
 def check_report(report, source, protocol):
-    assert protocol in {'grouped', 'repeated'}
+    assert protocol in {'grouped', 'repeated', 'recording'}
+    labels = (['fwp-ad-history', 'fwp-ad', 'fwp-ad-history-reference', 'fwp-ad-reference',
+               'c-explicit', 'rust-explicit', 'fwp-ad-identical'] if protocol == 'recording' else LABELS)
     assert report['source'] == source
     config = report['configuration']
     assert (config['samples'], config['warmups'], config['order_seed'],
@@ -47,24 +52,25 @@ def check_report(report, source, protocol):
         processes = GROUPS[name] if protocol == 'grouped' else 7
         solves = 1 if protocol == 'grouped' else SOLVES[name]
         assert row['processesPerLabel'] == processes
-        if protocol == 'repeated':
+        if protocol != 'grouped':
             assert row['solvesPerProcess'] == solves
         else:
             assert 'solvesPerProcess' not in row
-        case = f'{dimensions}:{updates}:{processes}' + (f':{solves}' if protocol == 'repeated' else '')
+        case = f'{dimensions}:{updates}:{processes}' + (f':{solves}' if protocol != 'grouped' else '')
         assert case in config['case'] and len(config['case']) == 6
-        assert row['orders'] == [SCHEDULE.execution_order(LABELS, processes, index, 20261029) for index in range(98)]
-        assert set(row['samplesNs']) == set(row['medianNs']) == set(row['outputSha256']) == set(LABELS)
+        assert row['orders'] == [SCHEDULE.execution_order(labels, processes, index, 20261029) for index in range(98)]
+        assert set(row['samplesNs']) == set(row['medianNs']) == set(row['outputSha256']) == set(labels)
         for label, values in row['samplesNs'].items():
             assert len(values) == 98 and all(type(value) is int and value > 0 for value in values)
             assert row['medianNs'][label] == statistics.median(values)
         for label, ratios in row['ratios'].items():
             for peer, value in ratios.items():
                 assert value == row['medianNs'][label] / row['medianNs'][peer]
-        if protocol == 'repeated':
+        if protocol != 'grouped':
             ratio = row['medianNs']['fwp-ad'] / row['medianNs']['fwp-ad-identical']
             assert max(ratio, 1 / ratio) <= 1.02, (name, ratio)
-        CHECK.check_observations(name, row, updates * solves)
+        CHECK.check_observations(name, row, updates * solves,
+                                 "recording" if protocol == "recording" else "baseline")
 
 
 def check_archive(path, protocol):
@@ -77,7 +83,8 @@ def check_archive(path, protocol):
         assert identity not in identities
         identities.add(identity)
         assert job['run_id'] == archive['run'] and job['head_sha'] == archive['source']
-        assert job['status'] == 'completed' and job['conclusion'] == 'success'
+        assert job['status'] == 'completed'
+        assert job['conclusion'] == ('failure' if protocol == 'recording' else 'success')
         for kind in ['report', 'log']:
             raw = gzip.decompress((path.parent / session[kind]).read_bytes())
             assert len(raw) == session[kind + 'Bytes']
@@ -87,7 +94,19 @@ def check_archive(path, protocol):
         check_report(report, archive['source'], protocol)
         assert report['machine'] == ('aarch64' if label.startswith('arm') else 'x86_64')
         assert report['configuration']['session'] == int(label[-1])
-        assert len(session['files']) == 1157
+        assert len(session['files']) == (1334 if protocol == 'recording' else 1157)
+        if protocol == 'recording':
+            assert archive['decision'] == 'not-accepted'
+            assert report['configuration']['comparison'] == 'scalar-recording'
+            failures = DESCENT.recording_budget_failures(report['results'])
+            assert failures and failures == session['budgetFailures']
+            assert all(f['metric'] == 'candidate/reference time' for f in failures)
+            reference = report['referenceCompiler']
+            assert reference['source'] == archive['source']
+            for file, field in [('fwp', 'compilerSha256'), ('ownership-reference.rs', 'referenceOwnershipSha256'),
+                                ('reference.patch', 'patchSha256')]:
+                assert session['referenceFiles'][file]['sha256'] == reference[field]
+            assert hashlib.sha256(session['referencePatch'].encode()).hexdigest() == reference['patchSha256']
         for name, row in report['results'].items():
             for image, metadata in row['binaries'].items():
                 file = session['files'][name + '/' + image]
@@ -107,6 +126,6 @@ def check_archive(path, protocol):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--archive', type=Path, required=True)
-    parser.add_argument('--protocol', choices=['grouped', 'repeated'], required=True)
+    parser.add_argument('--protocol', choices=['grouped', 'repeated', 'recording'], required=True)
     args = parser.parse_args()
     check_archive(args.archive, args.protocol)

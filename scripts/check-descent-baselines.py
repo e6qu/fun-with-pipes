@@ -15,17 +15,21 @@ PHASES = {'setup', 'forwardWithRecording', 'reverseSetup', 'reverseTraversal',
           'resultArray', 'retirement'}
 
 
-def check_observations(name, row, updates):
+def check_observations(name, row, updates, protocol):
+    assert protocol in {"baseline", "recording"}
+    recording = protocol == "recording"
     dimensions = row['dimensions']
     controls = {'missing-parent-free', 'missing-result-phase'} if name == '3-1' else set()
     assert set(row['controls']) == controls
-    assert len(row['binaries']) == 13 + len(controls)
-    assert len(row['cCompilerStackUsage']) == 11 + len(controls)
+    assert len(row['binaries']) == (15 if recording else 13) + len(controls)
+    assert len(row['cCompilerStackUsage']) == (13 if recording else 11) + len(controls)
     assert row['binaries']['fwp-ad']['sha256'] == row['binaries']['fwp-ad-identical']['sha256']
     for label, control in row['controls'].items():
         assert control['status'] == {'missing-parent-free': 232, 'missing-result-phase': 233}[label]
         assert control['stderr']
-    assert set(row['fwpProfiles']) == {'fwp-ad-history', 'fwp-ad', 'fwp-explicit', 'fwp-packed'}
+    profiles = {'fwp-ad-history', 'fwp-ad'}
+    profiles |= {'fwp-ad-history-reference', 'fwp-ad-reference'} if recording else {'fwp-explicit', 'fwp-packed'}
+    assert set(row['fwpProfiles']) == profiles
     for label, profile in row['fwpProfiles'].items():
         assert profile['managed']['finalChargedBytes'] == 0
         raw = profile['rawDerivativeStorage']
@@ -36,7 +40,7 @@ def check_observations(name, row, updates):
             without = profile['withoutWorkspace']
             assert without['managed'] == profile['managed']
             assert without['rawDerivativeStorage']['finalBytes'] == 0
-    assert set(row['phaseObservations']) == {'fwp-ad-history', 'fwp-ad'}
+    assert set(row['phaseObservations']) == (profiles if recording else {'fwp-ad-history', 'fwp-ad'})
     for label, phase in row['phaseObservations'].items():
         observations = phase['observations']
         assert len(observations) == 28
@@ -82,7 +86,7 @@ def check_report(report, source):
         for label, ratios in row['ratios'].items():
             for peer, value in ratios.items():
                 assert value == row['medianNs'][label] / row['medianNs'][peer]
-        check_observations(name, row, updates)
+        check_observations(name, row, updates, "baseline")
 
 
 def check_archive(path):

@@ -15,7 +15,13 @@ def check_report(report, files, source, machine):
     assert set(report['results']) == expected
     assert len(files) == 2195 and len(report['stack']) == 76
     assert report['configuration']['samples'] == 12 and report['configuration']['warmups'] == 2
-    assert report['settings'] == dict(FWP_STACK='1', FWP_REUSE='1', FWP_AD_WORKSPACE='0', FWP_LTO='0')
+    settings = dict(report['settings'])
+    # The two original archives recorded an unused environment variable. Keep
+    # that observation intact; it is not evidence of a runtime reuse control.
+    if 'FWP_REUSE' in settings:
+        assert settings.pop('FWP_REUSE') == '1'
+    assert settings == dict(FWP_STACK='1', FWP_AD_WORKSPACE='0', FWP_LTO='0')
+    assert not any(flag.startswith('-DFWP_NO_REUSE') for flag in report['cflags'])
     for case, row in report['results'].items():
         assert case == f"{row['scalar']}-depth{row['depth']}-n{row['inputs']}"
         assert set(row['programs']) == {'ad', 'formula'}

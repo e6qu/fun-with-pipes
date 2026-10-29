@@ -207,8 +207,14 @@ record allocation. Native O1/O2 tests on Linux ARM64/AMD64 remove exactly 256
 heap records, preserve the derivative and pass failure/cancellation controls.
 Do not extend the rule to `ad.push-owned`, whose typed weights have separate ownership obligations.
 The fixed comparison limits were published at fde368c8 before changing the
-contract. The independent baseline audit is complete; finish the paired candidate
-measurement before acceptance. Compare exact requests/retains, time, instruction bytes and stack frames; preserve tape-full,
+contract. All four paired sessions are audited: allocation, cleanup, code and
+stack limits pass, but the combined timing rule fails. The user chose to retain
+the allocation reduction with D2 open; keep every slower case and unchanged
+limit in the [results](docs/measurements/descent-costs.md#scalar-recording-results-allocation-reduction-retained-speed-goal-open).
+Next, account for whole-solve costs outside node recording from the source and
+existing phase evidence, select one bounded change, and publish its specific
+comparison before implementation. Do not repeat the unchanged rejected candidate.
+Compare exact requests/retains, time, instruction bytes and stack frames; preserve tape-full,
 mixed/stale-node, failure/cancellation and nested-gradient checks. The raw tape
 workspace already reuses buffers across updates; growing its cache is not the
 first candidate supported by these observations.

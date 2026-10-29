@@ -56,6 +56,8 @@ jobs:
         run: python3 scripts/check-descent-groups.py --archive docs/measurements/descent-groups-artifacts-2026-10-29.json --protocol grouped
       - name: Repeated-solve baselines and fixed noise qualification
         run: python3 scripts/check-descent-groups.py --archive docs/measurements/descent-repeated-artifacts-2026-10-29.json --protocol repeated
+      - name: Preserve rejected scalar recording results
+        run: python3 scripts/check-descent-groups.py --archive docs/measurements/descent-recording-artifacts-2026-10-29.json --protocol recording
       - name: Derivative depth evidence rejection controls
         run: python3 scripts/test-ad-depth.py
       - name: Retained derivative depth costs before and after stack recording
