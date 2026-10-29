@@ -1,34 +1,55 @@
 # Next: verify the grouped derivative PR on every native platform
 
-**Next:** verify the fixed-batch G2 measurement repair on Linux and Intel macOS,
-while auditing the ongoing native matrix `40849857724` at `04efac8a`. Collect
-all further failures before the final grouped push; then require all nine native
-jobs, documentation and G2 at the final PR head before squash-merging.
-[PR #226](https://github.com/e6qu/fun-with-pipes/pull/226/checks), worktree
-`/private/tmp/fwp-ad-recording`, branch `ad-recording-costs`. D2's speed goal remains
-open after this delivery. Source inspection notes for its next candidate are in
-`/private/tmp/fwp-next-d2-notes.md`; they are hypotheses, not accepted improvements.
+**Next:** verify the complete repair head of [PR #226](https://github.com/e6qu/fun-with-pipes/pull/226/checks)
+on all nine native jobs, documentation and both G2 hosts. Fix any failure before
+squash-merging. Worktree `/private/tmp/fwp-ad-recording`, branch
+`ad-recording-costs`. Earlier results below do not replace final-head acceptance.
+D2's speed goal remains open. [PLAN.md](../PLAN.md#5-differentiation) names the
+next source investigation; `/private/tmp/fwp-next-d2-notes.md` keeps its detailed
+hypotheses, not accepted improvements.
 
-## Current gate repair
+## Grouped CI repairs
 
-At `04efac8a`, docs run `40849828831` and benchmark job 123366341074 pass; complete
-logs are audited (`/private/tmp/fwp-226-{docs,bench}-04ef.log`). The native matrix
-is still running; do not count its in-progress targets as passed.
+Original native run `40849857724` at `04efac8a` finds one shared failure: the
+foreign-callback test expects an anonymous State record. The inference repair
+correctly retains `CallbackWords {first = "first", second = "second"}`. The
+expectation now preserves that name and prints actual output on mismatch.
+Its ownership/unwind checks are unchanged.
 
-G2 run `40849863932` passes Linux job 123366369920 (223 tests across three
-summaries, all-target Clippy, 64-worker 1.442× ratio, startup 0.284/0.211 seconds).
-Intel job 123366370270 passes 221 units, Clippy and startup 0.613/0.355 seconds,
-but fails the 32-worker ratio: 1.578× versus 1.5×. All six original sample sets
-and both full logs are [archived](measurements/ownership-analysis-short-2026-10-29.json).
-Within each failing policy, seven samples vary more than sixfold. The host cause
-is unknown; do not erase the failure or treat it as a passed rerun.
+Every original target log is audited, including passing targets and diagnostics:
 
-The repair changes only the ignored measurement test: 12 rounds of 64 fresh
-proofs, a second identical Separate label, all six orders twice. Every individual
-duration remains visible. Both Separate labels retain the original ratio,
-absolute and count budgets; a new predeclared 5% identical-control limit rejects
-unstable timing. [The protocol](measurements/ownership-analysis.md#current-measurement-repair-longer-samples-and-an-identical-control)
-is recorded before runner validation. The production analyzer is unchanged.
+| Jobs | Summaries per job | Passed / failed tests | Result |
+|---|---:|---:|---|
+| Linux ARM64 / AMD64 | 257 | 986 / 1 | Callback expectation only |
+| Regular macOS ARM64 / AMD64 | 132 | 621 / 1 | Callback expectation only |
+| Windows ARM64 / AMD64 | 202 | 804 / 1 | Callback expectation only |
+| macOS ownership ARM64 / AMD64 | 127 | 362 / 0 | Pass |
+| Benchmarks | 2 | 2 / 0 | Pass |
+
+All final SDK, packaging and evidence steps pass. Full completed-job logs are
+`/private/tmp/fwp-226-*-04ef.log`; target ZIPs are
+`/private/tmp/fwp-226-*-tests-04ef.zip` and `*-tls-04ef.zip`. No unexpected compiler
+diagnostic remains. Optional golden-failure uploads now allow absent files when
+an unrelated test fails; mandatory test logs and ownership evidence stay checked.
+
+Guarded reproduction uses the exact macOS ARM64 CI compiler, SHA256
+`f2a5d60eac96e6d8566a6ebc869544b60820125ad63aa9a04c84ea3567a850b9`, under
+`/private/tmp/fwp-226-compiler-04ef/fwp-macos-arm64/fwp`. The complete extracted
+fixture in `/private/tmp/fwp-foreign-nominal-check` agrees between raw execution
+and native Clang O1/O2 (8.44 CPU seconds, 17.08 elapsed). This does not replace
+final CI's ownership ledger and deliberately broken cleanup controls.
+
+G2's failed short-sample run `40849863932` at `04efac8a` is fully retained:
+Intel N=32 ratio 1.578 versus 1.5, with sixfold sample variation; Linux passes.
+The test-only repair at `516a10a5` uses 12 rounds of 64 fresh proofs per label,
+an identical Separate copy and all six orders twice, with unchanged budgets.
+Both hosts pass run `40852937323`: Linux job 123376682693 and Intel 123376682309.
+Each passes 223 tests/3 summaries, Clippy and all limits. Independent audit checks
+all 13,824 timings; identical variation is at most 0.11%/2.47%. The
+[protocol and records](measurements/ownership-analysis.md#current-measurement-repair-longer-samples-and-an-identical-control)
+retain both failures and passing observations without claiming an analyzer speedup.
+Production analysis code is unchanged. Docs `40849828831` at 04efac8a and
+`40852906453` at 516a10a5 pass with full-log audits.
 
 ## Completed comparison and delivery decision
 
@@ -158,5 +179,6 @@ Latest guarded checks: full four-session recording ZIP/log audit passes;
 1334 files per recording session and all four reference artifacts. No native
 code changed after 8e299f9f; final platform gates are still required.
 
-The local documentation audit passes all 177 link sets, 106 immutable preparation
-pairs and 8 roadmap steps; the changed workflow passes actionlint.
+The final local documentation audit passes all 177 link sets, 106 immutable
+preparation pairs and 8 roadmap steps (0.35 CPU seconds, 2.88 elapsed). The changed
+workflow passes actionlint; callback test formatting and `git diff --check` pass.

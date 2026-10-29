@@ -32,7 +32,25 @@ divided by 64. No sample is removed. Both Separate labels must meet the original
 by at most **5%**; otherwise the timing is inconclusive and fails. This stability
 criterion and fixed schedule are declared before running the repaired measurement.
 No compiler admission rule, production analysis algorithm or budget is relaxed.
-The new runner results are pending; passing older runs does not verify this repair.
+Run `40852937323` at `516a10a5` passes both hosts: 221 unit tests, all-target
+lint, both timing/count checks and both raw startup fixtures. All 13,824 individual
+proof timings were independently recomputed and retained in the
+[batched record](ownership-analysis-batched-2026-10-29.json), along with full logs,
+hardware and artifact identities.
+
+| Host | Workers | Merged / Separate / copy, ms per proof | Separate / merged | Copy / merged |
+|---|---:|---|---:|---:|
+| Linux AMD64 | 16 | 0.628 / 0.809 / 0.809 | 1.289 | 1.289 |
+| Linux AMD64 | 32 | 0.942 / 1.314 / 1.313 | 1.396 | 1.395 |
+| Linux AMD64 | 64 | 1.537 / 2.247 / 2.250 | 1.462 | 1.464 |
+| Intel macOS | 16 | 1.253 / 1.507 / 1.525 | 1.202 | 1.217 |
+| Intel macOS | 32 | 2.034 / 2.619 / 2.607 | 1.287 | 1.282 |
+| Intel macOS | 64 | 3.461 / 5.017 / 4.896 | 1.450 | 1.415 |
+
+Identical-control variation is at most 0.11% on Linux and 2.47% on Intel macOS.
+Every size still needs nine waves and 40 bytes per origin. This verifies the
+revised measurement protocol and unchanged limits; it is not evidence of a
+faster analyzer. Full final-head native validation remains required.
 
 ## Current implementation: revisit changed dependencies
 

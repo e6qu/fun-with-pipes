@@ -211,9 +211,14 @@ contract. All four paired sessions are audited: allocation, cleanup, code and
 stack limits pass, but the combined timing rule fails. The user chose to retain
 the allocation reduction with D2 open; keep every slower case and unchanged
 limit in the [results](docs/measurements/descent-costs.md#scalar-recording-results-allocation-reduction-retained-speed-goal-open).
-Next, account for whole-solve costs outside node recording from the source and
-existing phase evidence, select one bounded change, and publish its specific
-comparison before implementation. Do not repeat the unchanged rejected candidate.
+Next, measure the F64 seed/result conversions in `rev._backward-float`.
+Retained generated C already fuses the seed map into array construction but keeps
+its scratch buffer; the result conversion still builds a second list. Count those
+allocations separately and check signed zero, subnormal values and NaNs against
+both engines before claiming a conversion is redundant. Publish the selected
+change's time/storage/code/stack comparison before implementation. These are
+source observations, not a verified optimization or an explanation of all time
+outside recording. Do not repeat the unchanged rejected candidate.
 Compare exact requests/retains, time, instruction bytes and stack frames; preserve tape-full,
 mixed/stale-node, failure/cancellation and nested-gradient checks. The raw tape
 workspace already reuses buffers across updates; growing its cache is not the
