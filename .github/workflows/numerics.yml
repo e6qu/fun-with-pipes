@@ -12,6 +12,10 @@ on:
         type: choice
         options: [all, ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025, windows-11-arm]
         default: all
+      comparison_session:
+        description: Required for derivative timing suites; both sessions or one replacement
+        type: choice
+        options: [both, '1', '2']
       server_entry_part:
         description: Server-entry jobs; queued isolates queue regressions, checks includes API, all adds measurements
         type: choice
@@ -4298,20 +4302,21 @@ jobs:
           name: descent-call-costs-${{ matrix.runner }}
           path: descent-call-evidence/
           if-no-files-found: error
-  descent_host_selection:
-    if: contains(fromJSON('["descent-peers","descent-recording","descent-checks","eager-capture-time"]'), inputs.suite) && inputs.native_runner != 'all' && inputs.native_runner != 'ubuntu-latest' && inputs.native_runner != 'ubuntu-24.04-arm'
+  descent_selection:
+    if: contains(fromJSON('["descent-peers","descent-recording","descent-checks","eager-capture-time"]'), inputs.suite) && ((!contains(fromJSON('["all","ubuntu-latest","ubuntu-24.04-arm"]'), inputs.native_runner)) || (inputs.suite != 'descent-checks' && !contains(fromJSON('["both","1","2"]'), inputs.comparison_session)))
     runs-on: ubuntu-latest
     steps:
-      - name: Reject unsupported derivative baseline host
+      - name: Reject missing or unsupported derivative selections
         run: |
-          echo 'Derivative comparisons and checks require all, ubuntu-latest or ubuntu-24.04-arm' >&2
+          echo 'Derivative comparisons and checks require native_runner=all, ubuntu-latest or ubuntu-24.04-arm' >&2
+          echo 'Timing suites also require comparison_session=both, 1 or 2; no session is selected implicitly' >&2
           exit 1
   descent_peers:
-    if: (inputs.suite == 'descent-peers' || inputs.suite == 'descent-recording' || inputs.suite == 'eager-capture-time' || inputs.suite == 'descent-checks') && (inputs.native_runner == 'all' || inputs.native_runner == 'ubuntu-latest' || inputs.native_runner == 'ubuntu-24.04-arm')
+    if: (inputs.suite == 'descent-peers' || inputs.suite == 'descent-recording' || inputs.suite == 'eager-capture-time' || inputs.suite == 'descent-checks') && (inputs.native_runner == 'all' || inputs.native_runner == 'ubuntu-latest' || inputs.native_runner == 'ubuntu-24.04-arm') && (inputs.suite == 'descent-checks' || contains(fromJSON('["both","1","2"]'), inputs.comparison_session))
     strategy:
       fail-fast: false
       matrix:
-        session: ${{ fromJSON(inputs.suite == 'descent-checks' && '[1]' || '[1,2]') }}
+        session: ${{ fromJSON(inputs.suite == 'descent-checks' && '[1]' || inputs.comparison_session == 'both' && '[1,2]' || format('[{0}]', inputs.comparison_session)) }}
         runner: ${{ fromJSON(inputs.native_runner == 'all' && '["ubuntu-latest","ubuntu-24.04-arm"]' || format('["{0}"]', inputs.native_runner)) }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: ${{ (inputs.suite == 'descent-recording' || inputs.suite == 'eager-capture-time') && 90 || 45 }}

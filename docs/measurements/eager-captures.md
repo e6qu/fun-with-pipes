@@ -89,8 +89,11 @@ documentation and both compiler-analysis hosts on the final commit.
 Dispatch `Numerical and ownership evidence` with `suite=eager-captures` and
 `native_runner=all` for focused GCC checks on Linux ARM64/AMD64 and Clang checks
 on ARM macOS. This does not replace the final native matrix. After those pass,
-use `suite=eager-capture-time` and `native_runner=all` for the four predeclared
-matching-host sessions. Unsupported measurement hosts fail explicitly.
+use `suite=eager-capture-time`, `native_runner=all` and `comparison_session=both`
+for the four predeclared matching-host sessions. A host rejected before timing
+can be replaced with its specific native runner and `comparison_session=1` or
+`2`; keep its original rejection. Missing sessions and unsupported hosts fail
+explicitly. No session is selected implicitly.
 
 `prepare-capture-reference.py` restores the original capture block and helper in
 an isolated checkout of the same source. It verifies that only `src/opt.rs`
@@ -100,3 +103,14 @@ source against preparation `8a495a72` and reject incomplete or changed transform
 Both comparison protocols use the shared budget evaluator with an explicit
 comparison name; their allocation requirements remain distinct. The original
 scalar-recording archive and every rejected timing case still pass their audits.
+
+## Verification so far
+
+Focused run `40871650124` at `89d0dfa1` passes 299 tests/18 summaries and lint on
+each of Linux ARM64, Linux AMD64 and ARM macOS. All three full logs are audited.
+The measurement commit `4ffeb0d2` has identical compiler/runtime/test source.
+Run `40876515001` starts the four comparisons. AMD session 1 is assigned EPYC
+9V45 and [rejected before building or timing](eager-captures-host-rejection-2026-10-29.json);
+the other three sessions qualify and continue. The explicit session selector
+allows only that missing session to be replaced without repeating completed work.
+There is no accepted performance result yet.
