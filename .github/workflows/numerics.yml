@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [kernel-codegen, timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-recording, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [typed-loop-state, kernel-codegen, timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-recording, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -200,7 +200,7 @@ jobs:
           path: kernel-baselines/
           if-no-files-found: error
   eager_captures:
-    if: inputs.suite == 'eager-captures'
+    if: inputs.suite == 'eager-captures' || inputs.suite == 'typed-loop-state'
     strategy:
       fail-fast: false
       matrix:
@@ -255,7 +255,7 @@ jobs:
         if: ${{ !cancelled() }}
         run: cargo test --locked --lib -- --nocapture
       - name: Capture ordering, observable lifetimes and derivatives
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && inputs.suite == 'eager-captures' }}
         run: >-
           python3 scripts/run-native-tests.py --targets
           inline_caf_ownership call_effects borrowed_callbacks closure_ownership
@@ -264,6 +264,21 @@ jobs:
           autodiff_nested autodiff_checkpoint compiler_call_liveness
           unboxed_worker_locals field_context_ownership record_conversion_ownership rest
           --idle-timeout 600 --logs eager-capture-evidence/targets
+      - name: Typed loop state, ownership and numerical regressions
+        if: ${{ !cancelled() && inputs.suite == 'typed-loop-state' }}
+        run: >-
+          python3 scripts/run-native-tests.py --targets
+          loop_ownership loop_preparation_ownership loop_unwind_ownership nested_loop_boxing
+          array_loop_borrows linalg_ownership float_formats numerics numeric_array_fusion
+          unboxed_worker_locals field_context_ownership record_conversion_ownership
+          --idle-timeout 600 --logs eager-capture-evidence/targets
+      - name: Inspect typed accumulation with exact array outputs
+        if: ${{ !cancelled() && inputs.suite == 'typed-loop-state' && runner.os == 'Linux' }}
+        env:
+          C_ARCH: ${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'armv8-a' }}
+        run: >-
+          python3 scripts/inspect-loop-state.py --compiler target/debug/fwp --cc gcc
+          --c-arch "$C_ARCH" --timeout 180 --output eager-capture-evidence/loop-state
       - name: Raw interpreter corpus
         if: ${{ !cancelled() }}
         run: cargo test --locked --test golden_run interpreter_snapshots -- --exact --nocapture

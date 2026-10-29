@@ -4,6 +4,8 @@ use std::process::{Command, Output};
 
 #[path = "support/allocation_report.rs"]
 mod allocation_report;
+#[path = "support/record_probe.rs"]
+mod record_probe;
 
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
@@ -407,6 +409,178 @@ fn loop_goldens_keep_trap_and_evaluation_order() {
                 reference.status.code(),
                 "{name}, {opt} exit"
             );
+        }
+    }
+}
+
+#[test]
+fn floating_loop_states_preserve_bits_and_mixed_owners() {
+    let dir = Scratch::new("floating-state");
+    let src = dir.0.join("floating.fwp");
+    std::fs::write(
+        &src,
+        r#"
+step64 : (I64, F64) -> Step[(I64, F64), F64]
+step64 = if (.0 | eq 0) (.1 | Stop)
+    (make { 0 = .0 | sub 1, 1 = .1 } | Again)
+step32 : (I64, F32) -> Step[(I64, F32), F32]
+step32 = if (.0 | eq 0) (.1 | Stop)
+    (make { 0 = .0 | sub 1, 1 = .1 } | Again)
+nested-floats : (I64, (F64, F32), String) -> Step[(I64, (F64, F32), String), (F64, F32)]
+nested-floats = if (.0 | eq 0) (.1 | Stop)
+    (make { 0 = .0 | sub 1, 1 = both (.1 | .0) (.1 | .1), 2 = .2 | concat "x" } | Again)
+scalar-float : F64 -> Step[F64, F64]
+scalar-float = if (gt 0.0) (const -0.0 | Again) Stop
+arithmetic : (I64, F64) -> Step[(I64, F64), F64]
+arithmetic = if (.0 | eq 0) (.1 | Stop)
+    (make { 0 = .0 | sub 1, 1 = .1 | mul 3.0 | add 1.0 } | Again)
+main = [
+    (3, 1.25) | loop step64 | echo,
+    (3, 1.25f32) | loop step32 | echo,
+    (3, (1.25, 2.5f32), "seed") | loop nested-floats | echo,
+    1.0 | loop scalar-float | echo,
+    (5, 0.25) | loop arithmetic | echo,
+] | ignore
+"#,
+    )
+    .unwrap();
+    let fwp = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(fwp)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&src),
+    );
+    let optimized = checked(Command::new(fwp).args(["run", "--interp"]).arg(&src));
+    assert_eq!(optimized.stdout, reference.stdout);
+    assert_eq!(optimized.stderr, reference.stderr);
+    for stack in ["0", "1"] {
+        let cfile = dir.0.join(format!("floating-{stack}.c"));
+        checked(
+            Command::new(fwp)
+                .env("FWP_STACK", stack)
+                .args(["build", "--emit-c"])
+                .arg(&src)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(&cfile).unwrap();
+        let step_id = |name: &str| {
+            code.split(&format!("/* loop of {name} :"))
+                .nth(1)
+                .unwrap_or_else(|| panic!("missing loop {name}"))
+                .split(" int fs")
+                .nth(1)
+                .unwrap()
+                .split('(')
+                .next()
+                .unwrap()
+        };
+        let f64_id = step_id("step64");
+        let f32_id = step_id("step32");
+        let nested_id = step_id("nested-floats");
+        let scalar_id = step_id("scalar-float");
+        assert!(code.contains(&format!(
+            "typedef struct {{ V v0; double v1; }} fwp_loop_state{f64_id};"
+        )));
+        assert!(code.contains(&format!(
+            "typedef struct {{ V v0; float v1; }} fwp_loop_state{f32_id};"
+        )));
+        assert!(code.contains(&format!(
+            "typedef struct {{ V v0; double v1; float v2; V v3; }} fwp_loop_state{nested_id};"
+        )));
+        assert!(code.contains(&format!(
+            "typedef struct {{ double v0; }} fwp_loop_state{scalar_id};"
+        )));
+        let probe = r#"
+int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
+#endif
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
+    size_t baseline=fwp_heap.live;
+    const V wide[] = {0, UINT64_C(0x8000000000000000), 1, UINT64_C(0x000fffffffffffff),
+        UINT64_C(0x0010000000000000), UINT64_C(0x3ff0000000000001), UINT64_C(0x7fefffffffffffff),
+        UINT64_C(0x7ff0000000000000), UINT64_C(0xfff0000000000000),
+        UINT64_C(0x7ff0000000000001), UINT64_C(0x7ff8123456789abc), UINT64_C(0xfff8123456789abc)};
+    const V narrow[] = {0, 0x80000000, 1, 0x007fffff, 0x00800000, 0x3f800001,
+        0x7f7fffff, 0x7f800000, 0xff800000, 0x7f800001, 0x7fc12345, 0xffc12345};
+    for (int repeat=0;repeat<16;repeat++) for (size_t i=0;i<sizeof(wide)/sizeof(*wide);i++) {
+        for (V iterations=0;iterations<8;iterations++) {
+            V box=fwp_rc_fresh(fwp_record(2,(V[]){iterations,wide[i]}));
+            if (LOOP64(box)!=wide[i]) return 1;
+            if (FIELDS64(iterations,wide[i])!=wide[i]) return 2;
+            box=fwp_rc_fresh(fwp_record(2,(V[]){iterations,narrow[i]}));
+            if (LOOP32(box)!=narrow[i]) return 3;
+            if (FIELDS32(iterations,narrow[i])!=narrow[i]) return 4;
+            V inner=fwp_rc_fresh(fwp_record(2,(V[]){wide[i],narrow[i]}));
+            V text=fwp_rc_fresh(fwp_cstr("owned"));
+            fwp_rc_dup(text);
+            box=fwp_rc_fresh(fwp_record(3,(V[]){iterations,inner,text}));
+            V result=NESTED(box);
+            if (OBJ(result)->f[0]!=wide[i] || OBJ(result)->f[1]!=narrow[i]) return 5;
+            if (*fwp_rc_slot(text)!=1 || STR(text)->len!=5) return 6;
+            if (!fwp_rc_release_last(result)) return 9;
+            fwp_rc_free_obj(result);
+            if (!fwp_rc_release_last(text)) return 10;
+            fwp_rc_free_obj(text);
+            if (fwp_heap.live!=baseline || fwp_cleanups) return 7;
+        }
+    }
+    if (SCALAR(UINT64_C(0x3ff0000000000000))!=UINT64_C(0x8000000000000000)) return 8;
+    puts("floating state bits and shared owners preserved");
+    return 0;
+}
+"#
+        .replace("FIELDS64", &format!("fwp_loop_fields{f64_id}"))
+        .replace("FIELDS32", &format!("fwp_loop_fields{f32_id}"))
+        .replace("LOOP64", &format!("fwp_loop{f64_id}"))
+        .replace("LOOP32", &format!("fwp_loop{f32_id}"))
+        .replace("NESTED", &format!("fwp_loop{nested_id}"))
+        .replace("SCALAR", &format!("fwp_loop{scalar_id}"));
+        let instrumented = code.replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        ) + &probe;
+        // Deliberately narrow F64 state: the bit checks must detect the loss.
+        let broken = instrumented.replace(
+            &format!("typedef struct {{ V v0; double v1; }} fwp_loop_state{f64_id};"),
+            &format!("typedef struct {{ V v0; float v1; }} fwp_loop_state{f64_id};"),
+        );
+        assert_ne!(broken, instrumented);
+        for opt in ["-O1", "-O2"] {
+            for (label, source) in [
+                ("program", &code),
+                ("bits", &instrumented),
+                ("narrowed", &broken),
+            ] {
+                let exe = dir.0.join(format!("{label}-{stack}{opt}.exe"));
+                fwp::cgen::compile_c(source, &exe, opt).unwrap();
+                let result = Command::new(&exe).output().unwrap();
+                record_probe::save(
+                    "loop_ownership",
+                    &format!("floating-{label}-{stack}{opt}"),
+                    source,
+                    &exe,
+                    &result,
+                );
+                if label == "narrowed" {
+                    assert_eq!(
+                        result.status.code(),
+                        Some(1),
+                        "missing precision failure: {result:?}"
+                    );
+                } else {
+                    assert!(result.status.success(), "{label}: {result:?}");
+                    let expected: &[u8] = if label == "program" {
+                        &reference.stdout
+                    } else {
+                        b"floating state bits and shared owners preserved\n"
+                    };
+                    assert_eq!(result.stdout, expected, "{label}, {stack}, {opt}");
+                    assert_eq!(result.stderr, reference.stderr, "{label}, {stack}, {opt}");
+                }
+            }
         }
     }
 }

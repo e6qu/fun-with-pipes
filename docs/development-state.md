@@ -1,6 +1,6 @@
 # Continue PR #227: derivative costs and numerical kernels
 
-**Next:** implement and check the [typed loop-state experiment](measurements/timing-variation.md#compiler-reports-and-typed-state-experiment).
+**Next:** run and audit focused GCC/Clang checks for the [typed loop-state experiment](measurements/timing-variation.md#compiler-reports-and-typed-state-experiment).
 Both audited GCC report jobs reproduce all original binaries and outputs. They
 retain an integer accumulator in fwp's array loop versus a floating accumulator
 in C; neither array loop vectorizes. Check representation and correctness first.
@@ -9,8 +9,8 @@ acceptance rerun or further sample-count increase is authorized.
 
 Active worktree `/private/tmp/fwp-ad-captures`, branch `ad-eager-captures`.
 [PR #227](https://github.com/e6qu/fun-with-pipes/pull/227) is draft and groups D2,
-its record-return repair and N1. The typed-state experiment is not yet implemented
-or accepted as an N2 optimization.
+its record-return repair and N1. Typed state is implemented with bit-pattern, mixed-owner and failure probes;
+it is not yet verified or accepted as an N2 optimization.
 [PLAN.md](../PLAN.md) owns acceptance; [history](roadmap-history.md) owns completed
 deliveries. User-merged #226 is `cdf881067d`, tree identical to verified `02e4ee21`;
 all nine jobs, documentation and both G2 hosts were audited before proceeding.
@@ -75,7 +75,7 @@ their original archives; no failed session was retried unchanged.
 Run `40947897224` at `cbd9fd7c` began while the PR was ready. Keep its remaining
 jobs and audit every full log. Already passed and audited: both macOS regular
 jobs (625 tests/132 summaries each), both macOS ownership jobs (363/127 each),
-and benchmark (2/2). Four Linux/Windows jobs remain running without reported
+benchmark (2/2) and Windows ARM64 (809/202). Three Linux/Windows jobs remain running without reported
 failed steps at last inspection. Documentation `40955533616` at `d2f2553b` passes;
 its complete log is audited, including the intentional test-runner failure control.
 These do not establish final-head coverage for later changes.
@@ -89,7 +89,8 @@ empty body; no trailers or attribution. Continue the roadmap after verified merg
 
 Guarded, serial checks pass: seven scheduling/oracle controls, seven archive
 controls (including the retained array failure), three diagnostic controls,
-workflow lint and roadmap links. No local full build, suite or benchmark ran.
+workflow lint and roadmap links. Typed-state edits are Rust-formatted;
+their Rust compilation and native checks run on GitHub, not locally. No local full build, suite or benchmark ran.
 Full workloads remain on GitHub; guard limits are unchanged.
 
 Incidental cleanup removes stale GC-root/finalization comments and an unused

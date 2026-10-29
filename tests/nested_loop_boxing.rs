@@ -18,12 +18,12 @@ fn nested_loop_fields_retain_exact_owners_when_boxing_unwinds() {
     std::fs::create_dir_all(&dir).unwrap();
     let src = dir.join("probe.fwp");
     let cfile = dir.join("probe.c");
-    let exe = dir.join("probe");
+    let exe = dir.join("probe.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
-    std::fs::write(&src,r#"step : (I64, (String, String, I64), String) -> Step[(I64, (String, String, I64), String), (String, String, I64)]
+    std::fs::write(&src,r#"step : (I64, (String, String, F64), String) -> Step[(I64, (String, String, F64), String), (String, String, F64)]
 step = if (.0 | eq 0) (.1 | Stop)
     (make { 0 = .0 | sub 1, 1 = make { 0 = .1 | .0 | concat "x", 1 = .1 | .1 | concat "y", 2 = .1 | .2 }, 2 = .2 } | Again)
-main = [task.yield (), (1, ("left", "right", 17), "tail") | loop step | echo] | ignore
+main = [task.yield (), (1, ("left", "right", 17.0), "tail") | loop step | echo] | ignore
 "#).unwrap();
     let reference = checked(
         Command::new(fwp)
@@ -50,17 +50,15 @@ main = [task.yield (), (1, ("left", "right", 17), "tail") | loop step | echo] | 
         .unwrap();
     let fs_start = emitted
         .find(&format!(
-            "static inline __attribute__((always_inline)) int fs{id}(V *st, V *nx, V *out) {{"
+            "static inline __attribute__((always_inline)) int fs{id}(fwp_loop_state{id} *st, fwp_loop_state{id} *nx, V *out) {{"
         ))
         .unwrap();
     let fs_end = fs_start + emitted[fs_start..].find("\n}\n").unwrap() + 3;
     let step = &emitted[fs_start..fs_end];
-    let loop_start = emitted
-        .find(&format!("static V fwp_loop{id}(V s) {{"))
-        .unwrap();
-    let loop_end = loop_start + emitted[loop_start..].find("\n}\n").unwrap() + 3;
     assert!(
-        emitted[loop_start..loop_end].contains("V st[5]"),
+        emitted.contains(&format!(
+            "typedef struct {{ V v0; V v1; V v2; double v3; V v4; }} fwp_loop_state{id};"
+        )),
         "nested record must stay as fields"
     );
     assert!(
@@ -130,12 +128,12 @@ int main(void){
 "#.replace("LOOP",&format!("fwp_loop{id}")).replace("STATE_DROP",state_drop).replace("RECORD_DROP",record_drop);
     let injected = step
         .replace(
-            "fwp_rc_dup(st[1]);",
-            "if (fault==1 && current_dup++==0) fwp_trap(\"nested retain\"); fwp_rc_dup(st[1]);",
+            "fwp_rc_dup(st->v1);",
+            "if (fault==1 && current_dup++==0) fwp_trap(\"nested retain\"); fwp_rc_dup(st->v1);",
         )
         .replace(
-            "fwp_rc_dup(st[2]);",
-            "if (fault==2) fwp_trap(\"nested retain\"); fwp_rc_dup(st[2]);",
+            "fwp_rc_dup(st->v2);",
+            "if (fault==2) fwp_trap(\"nested retain\"); fwp_rc_dup(st->v2);",
         );
     let observed = ownership_ledger::instrument_native(&emitted, 4096);
     let runtime=observed.replacen(step,&injected,1).replace("typedef uint64_t V;","typedef uint64_t V;\nstatic int fault,current_dup; static void fwp_trap(const char *msg);")

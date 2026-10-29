@@ -2510,7 +2510,7 @@ fn allocates(e: &Expr, n: usize) -> bool {
     }
 }
 
-/// A loop's step function generated with its state in arrays: its results
+/// A loop's step function generated with typed state fields: its results
 /// (`Again s` and `Stop r` in tail position) write the next state or the
 /// result instead of being allocated.
 struct LoopGen {
@@ -2519,9 +2519,30 @@ struct LoopGen {
     cached_arrays: Vec<usize>,
     tails: std::collections::HashSet<*const Expr>,
     record: bool,
-    /// Per field of a record state: its first slot in the state arrays,
+    /// Per field of a record state: its first slot in the state struct,
     /// and its number of fields when it is a record kept as its fields.
     slots: Vec<(usize, Option<usize>)>,
+    /// Floating fields retain their C type across iterations; other fields use V.
+    scalars: Vec<Option<Scalar>>,
+}
+
+impl LoopGen {
+    /// Read a state member as the generic value expected by expression generation.
+    fn read(&self, slot: usize) -> String {
+        let field = format!("st->v{slot}");
+        match self.scalars[slot] {
+            Some(kind) => kind.put(&field),
+            None => field,
+        }
+    }
+
+    /// Store generic value bits in a member without doing floating arithmetic.
+    fn input(&self, slot: usize, value: &str) -> String {
+        match self.scalars[slot] {
+            Some(kind) => kind.get(value),
+            None => value.into(),
+        }
+    }
 }
 
 /// The signature of a higher-order primitive specialized for a function
@@ -3151,7 +3172,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
             }
         }
         if let Some((off, m)) = self.state_field(e).filter(|(_, m)| *m == n) {
-            return (off..off + m).map(|k| format!("st[{}]", k)).collect();
+            return (off..off + m)
+                .map(|k| self.in_loop.as_ref().unwrap().read(k))
+                .collect();
         }
         match e {
             Expr::BorrowGlobal(local, global, body) => {
@@ -3970,10 +3993,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
                             .iter()
                             .enumerate()
                         {
-                            parts.push((format!("st[{}]", off + i), ft.clone()));
+                            parts.push((lg.read(off + i), ft.clone()));
                         }
                     } else {
-                        parts.push((format!("st[{off}]"), t.clone()));
+                        parts.push((lg.read(*off), t.clone()));
                     }
                 }
                 parts
@@ -4962,10 +4985,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 match w {
                     Some(_) => {
                         for (k, ft) in field_tys(&t).into_iter().enumerate() {
-                            parts.push((format!("st[{}]", off + k), ft));
+                            parts.push((lg.read(off + k), ft));
                         }
                     }
-                    None => parts.push((format!("st[{}]", off), t)),
+                    None => parts.push((lg.read(*off), t)),
                 }
             }
         } else {
@@ -5091,10 +5114,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
                             .iter()
                             .enumerate()
                         {
-                            parts.push((format!("st[{}]", off + k), ft.clone()));
+                            parts.push((lg.read(off + k), ft.clone()));
                         }
                     } else {
-                        parts.push((format!("st[{off}]"), t.clone()));
+                        parts.push((lg.read(*off), t.clone()));
                     }
                 }
                 parts
@@ -5887,16 +5910,15 @@ impl<'g, 'p> FnGen<'g, 'p> {
             match e {
                 Expr::Field(r, k) if virtual_record && self.state_field(r).is_some() => {
                     let (off, _) = self.state_field(r).unwrap();
-                    return format!("st[{}]", off + *k as usize);
+                    return lg.read(off + *k as usize);
                 }
                 Expr::Field(r, i) if virtual_record && matches!(**r, Expr::Local(0)) => {
                     let (off, w) = lg.slots[*i as usize];
                     return match w {
-                        None => format!("st[{}]", off),
+                        None => lg.read(off),
                         // the record itself: built again from its fields
                         Some(m) => {
-                            let fs: Vec<String> =
-                                (off..off + m).map(|k| format!("st[{}]", k)).collect();
+                            let fs: Vec<String> = (off..off + m).map(|k| lg.read(k)).collect();
                             let original = self.begin_call(e as *const Expr);
                             let values = {
                                 let state_fields =
@@ -5944,7 +5966,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         _ => vec![self.expr(&xs[0])],
                     };
                     for (i, p) in parts.iter().enumerate() {
-                        self.line(&format!("nx[{}] = {};", i, p));
+                        let value = self.in_loop.as_ref().unwrap().input(i, p);
+                        self.line(&format!("nx->v{i} = {value};"));
                     }
                     return "(V)0".into();
                 }
@@ -7512,6 +7535,29 @@ impl<'p> Gen<'p> {
             n += w.unwrap_or(1);
         }
         let n = if record.is_some() { n } else { 1 };
+        let slot_types = if record.is_some() {
+            slots
+                .iter()
+                .enumerate()
+                .flat_map(|(j, (off, width))| {
+                    let types = match width {
+                        Some(_) => record_fields(&self.prog.shapes, &field_tys[j])
+                            .unwrap()
+                            .iter()
+                            .map(|(_, ty)| ty.clone())
+                            .collect::<Vec<_>>(),
+                        None => vec![field_tys[j].clone()],
+                    };
+                    types
+                        .into_iter()
+                        .enumerate()
+                        .map(|(k, ty)| (off + k, ty))
+                        .collect::<Vec<_>>()
+                })
+                .collect::<Vec<_>>()
+        } else {
+            vec![(0, f.locals[0].clone())]
+        };
         let mut body_function = f.clone();
         let mut unpacked_parameters = false;
         if record.is_some() && slots.iter().all(|(_, width)| width.is_none()) {
@@ -7552,7 +7598,7 @@ impl<'p> Gen<'p> {
         let data_initializers = cached_arrays
             .iter()
             .map(|i| {
-                format!("    const unsigned char *array_data_{i} = fwp_array_data(st[{i}]);\n")
+                format!("    const unsigned char *array_data_{i} = fwp_array_data(st.v{i});\n")
             })
             .collect::<String>();
         let lg = LoopGen {
@@ -7561,19 +7607,31 @@ impl<'p> Gen<'p> {
             tails: ts.iter().map(|t| *t as *const Expr).collect(),
             record: record.is_some(),
             slots: slots.clone(),
+            scalars: slot_types
+                .iter()
+                .map(|(_, ty)| scalar(ty).filter(|kind| matches!(kind, Scalar::F32 | Scalar::F64)))
+                .collect(),
         };
+        let members = lg
+            .scalars
+            .iter()
+            .enumerate()
+            .map(|(i, kind)| format!("{} v{i};", kind.map_or("V", Scalar::c)))
+            .collect::<Vec<_>>()
+            .join(" ");
         let mut out = format!(
             "/* loop of {} : {}, the state in locals */
-static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_parameters}) {{
+typedef struct {{ {members} }} fwp_loop_state{step};
+static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, fwp_loop_state{step} *nx, V *out{data_parameters}) {{
 ",
             f.name, f.ty, step
         );
         if unpacked_parameters {
             for i in 0..body_function.arity {
-                let _ = writeln!(out, "    V l{i} = st[{i}];");
+                let _ = writeln!(out, "    V l{i} = {};", lg.read(i as usize));
             }
         } else if record.is_none() {
-            out.push_str("    V l0 = st[0];\n");
+            let _ = writeln!(out, "    V l0 = {};", lg.read(0));
         }
         let first_temporary = if unpacked_parameters {
             body_function.arity
@@ -7614,6 +7672,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
         fg.entry_tick(body_function.arity, &[]);
         let r = fg.expr(e);
         out.push_str(&fg.out);
+        let lg = fg.in_loop.take().unwrap();
         let _ = writeln!(
             out,
             "    return (int)({});
@@ -7625,39 +7684,22 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
             let mut ls = Vec::new();
             for (j, (off, w)) in slots.iter().enumerate() {
                 match w {
-                    Some(m) => ls
-                        .extend((0..*m).map(|k| {
-                            format!("st[{}] = OBJ(OBJ(s)->f[{}])->f[{}];", off + k, j, k)
-                        })),
-                    None => ls.push(format!("st[{}] = OBJ(s)->f[{}];", off, j)),
+                    Some(m) => ls.extend((0..*m).map(|k| {
+                        format!(
+                            "st.v{} = {};",
+                            off + k,
+                            lg.input(off + k, &format!("OBJ(OBJ(s)->f[{j}])->f[{k}]"))
+                        )
+                    })),
+                    None => ls.push(format!(
+                        "st.v{off} = {};",
+                        lg.input(*off, &format!("OBJ(s)->f[{j}]"))
+                    )),
                 }
             }
             ls.join(" ")
         } else {
-            "st[0] = s;".into()
-        };
-        let slot_types = if record.is_some() {
-            slots
-                .iter()
-                .enumerate()
-                .flat_map(|(j, (off, width))| {
-                    let types = match width {
-                        Some(_) => record_fields(&self.prog.shapes, &field_tys[j])
-                            .unwrap()
-                            .iter()
-                            .map(|(_, ty)| ty.clone())
-                            .collect::<Vec<_>>(),
-                        None => vec![field_tys[j].clone()],
-                    };
-                    types
-                        .into_iter()
-                        .enumerate()
-                        .map(|(k, ty)| (off + k, ty))
-                        .collect::<Vec<_>>()
-                })
-                .collect::<Vec<_>>()
-        } else {
-            vec![(0, f.locals[0].clone())]
+            format!("st.v0 = {};", lg.input(0, "s"))
         };
         let mut take = String::new();
         if record.is_some() {
@@ -7680,9 +7722,9 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
             take.push_str(&preparing);
             for (j, (slot, ty)) in counted.iter().enumerate() {
                 let dup = self.value_dup(ty);
-                let _ = write!(take, " {dup}(st[{slot}]);");
+                let _ = write!(take, " {dup}(st.v{slot});");
                 if !preparing.is_empty() {
-                    let _ = write!(take, " prepared.v{j} = st[{slot}];");
+                    let _ = write!(take, " prepared.v{j} = st.v{slot};");
                 }
             }
             if !preparing.is_empty() {
@@ -7712,7 +7754,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                     members.push(format!("V v{j};"));
                     let drop = self.value_drop(ty);
                     releases.push(format!("{drop}(c->v{j});"));
-                    let _ = write!(save, "state_owner.v{j} = st[{slot}]; ");
+                    let _ = write!(save, "state_owner.v{j} = st.v{slot}; ");
                     let _ = write!(transfer, "state_owner.v{j} = 0; ");
                 }
                 self.cleanup_defs.push(format!("typedef struct {{ {} }} fwp_owner_ctx{id};\nstatic void fwp_owner_release{id}(void *arg) {{ fwp_owner_ctx{id} *c = arg; {} }}\n", members.join(" "), releases.join(" ")));
@@ -7725,20 +7767,20 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
         let _ = write!(
             out,
             "static V fwp_loop{id}(V s) {{
-    V st[{n}] = {{0}}, nx[{n}] = {{0}}, out = 0;
+    fwp_loop_state{id} st = {{0}}, nx = {{0}};
+    V out = 0;
     {load}{take}
     {protect}
 {data_initializers}    for (;;) {{
         {save}{tick}
         {transfer}
-        int done = fs{id}(st, nx, &out{data_arguments});
+        int done = fs{id}(&st, &nx, &out{data_arguments});
         if (done) {{ {finish} return out; }}
-        for (int i = 0; i < {n}; i++) st[i] = nx[i];
+        st = nx;
     }}
 }}
 ",
             id = step,
-            n = n,
             load = load,
             take = take,
             tick = tick
@@ -7749,10 +7791,10 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                 .collect::<Vec<_>>()
                 .join(", ");
             let initial = (0..n)
-                .map(|i| format!("a{i}"))
+                .map(|i| lg.input(i, &format!("a{i}")))
                 .collect::<Vec<_>>()
                 .join(", ");
-            let _ = write!(out, "static V fwp_loop_fields{step}({parameters}) {{\n    V st[{n}] = {{{initial}}}, nx[{n}] = {{0}}, out = 0;\n    {protect}\n{data_initializers}    for (;;) {{\n        {save}{tick}\n        {transfer}\n        int done = fs{step}(st, nx, &out{data_arguments});\n        if (done) {{ {finish} return out; }}\n        for (int i = 0; i < {n}; i++) st[i] = nx[i];\n    }}\n}}\n");
+            let _ = write!(out, "static V fwp_loop_fields{step}({parameters}) {{\n    fwp_loop_state{step} st = {{{initial}}}, nx = {{0}};\n    V out = 0;\n    {protect}\n{data_initializers}    for (;;) {{\n        {save}{tick}\n        {transfer}\n        int done = fs{step}(&st, &nx, &out{data_arguments});\n        if (done) {{ {finish} return out; }}\n        st = nx;\n    }}\n}}\n");
         }
         out
     }

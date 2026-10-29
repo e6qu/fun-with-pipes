@@ -263,6 +263,14 @@ that same representation. An arm may unpack a dynamically returned record; an
 error arm may not return at all. Neither permits another arm to read the boxed
 local of a record whose box was eliminated earlier.
 
+Specialized loop state uses C struct members. F32/F64 members keep their floating
+types between iterations; other members keep their ordinary value words. Reads
+and writes at generic expression boundaries use bit-preserving conversions, not
+numeric casts. The next state is completed before replacing the current state;
+only counted fields participate in owner cleanup. This representation is under
+[test](measurements/timing-variation.md#compiler-reports-and-typed-state-experiment);
+its performance is not yet accepted.
+
 The F64 matrix path uses blocks of 32 over contiguous arrays and accumulates in
 ascending inner-index order. Multiply and add remain separate. Shape validation
 precedes the specialized work; malformed cast shapes retain their specified

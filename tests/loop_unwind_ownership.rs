@@ -79,15 +79,14 @@ fn loop_scope(emitted: &str, id: &str) -> (String, usize) {
         .find(&format!("static V fwp_loop{id}(V s) {{"))
         .unwrap();
     let body = &emitted[start..];
-    let slots = body
-        .split("V st[")
-        .nth(1)
-        .unwrap()
-        .split(']')
+    let state = emitted
+        .split(&format!("}} fwp_loop_state{id};"))
         .next()
         .unwrap()
-        .parse()
+        .rsplit("typedef struct {")
+        .next()
         .unwrap();
+    let slots = state.matches(';').count();
     let scope = body
         .split("fwp_cleanup_push(&state_cleanup, fwp_owner_release")
         .nth(1)
