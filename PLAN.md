@@ -222,6 +222,10 @@ scopes or changing derivative order. Output storage still scales with output siz
 **D3 — Validate precision and nesting.** Test F64/F128 derivatives against
 analytic examples and independent numerical checks with stated tolerances. Include
 nested gradients, branch boundaries and checkpointed versus uncheckpointed work.
+Measure the first three derivatives of `sum(x^4)` for 1/16/128 inputs in both
+formats against explicit fwp formulas, with separate managed/raw memory, code and
+stack costs. [The depth protocol](docs/measurements/ad-depth.md) defines inputs,
+oracles, compiler settings, cleanup controls and the limits of short timings.
 **Done:** documented domains/tolerances and per-depth costs; no derivative is
 promised at a discontinuity and no constant-memory promise covers arbitrary AD.
 

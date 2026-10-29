@@ -22,6 +22,8 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Numerical applications
 
+- [Nested derivative costs](ad-depth.md): planned F64/F128 depth/size comparisons with explicit fwp formulas; no accepted measurements yet.
+
 - [Current derivative costs](descent-costs.md): initial and matched-host sessions, phase/memory observations and unresolved short-case timing noise.
 - [Current output versus checksum costs](descent-output-current.md): four audited sessions; short noisy controls and host differences remain visible.
 

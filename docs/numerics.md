@@ -229,7 +229,7 @@ both sides and expect -1 or 1. At zero, fwp follows the `else` branch and return
 1. That is an execution rule: the mathematical function has no derivative there.
 The raw interpreter and native GCC O1/O2 checks pass on Linux ARM64/AMD64 at
 `a31f24c4`, with workspace reuse both enabled and disabled. Full platform acceptance
-and per-depth cost measurements remain. This does not claim accuracy outside the
+and the [finite depth/size cost matrix](measurements/ad-depth.md) remain. This does not claim accuracy outside the
 stated domains or constant costs for nested differentiation.
 
 ### Lifetime and nesting

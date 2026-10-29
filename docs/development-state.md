@@ -4,7 +4,7 @@
 `a31f24c4fdc215383cc61d95f6f6d743e66cb1a3`, replace its rejected AMD session with
 an independently qualified run, and freeze D1's comparison limits. Then implement
 and measure the D2 scalar `ad.push` no-escape contract and finish D3 per-depth costs.
-Worktree `/private/tmp/fwp-ad-recording`, branch `ad-recording-costs`.
+Worktree `/private/tmp/fwp-ad-recording`, branch `ad-recording-costs`; draft PR #226.
 
 ## Current measurements
 
@@ -46,6 +46,15 @@ attempt (`61689688`, run `40827556438`) failed in io/websocket/rest and were rem
 `226a2b40`, run `40828555694`, passed precision/effects/native selection; only the
 old anonymous `Acc` display snapshot failed. The updated snapshot and dedicated
 native output/overflow test pass at a31f. Logs for each attempt remain in `/private/tmp`.
+
+## D3 depth preparation
+
+The new `ad-depth` runner covers F64/F128 depths 1/2/3 at 1/16/128 inputs, compared
+with explicit fwp formulas; [the protocol](measurements/ad-depth.md) states scope.
+Two small source/oracle cases pass raw interpretation with fbed. A local Clang
+link check exposed the required exact-float companion objects; the runner now
+builds and records both emitted companions with production flags. No complete
+native depth run has passed yet. Do not claim those costs before auditing it.
 
 ## Prepared D2 changes: do not publish the future assertion yet
 
