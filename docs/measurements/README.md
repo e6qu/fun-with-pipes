@@ -22,6 +22,9 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Numerical applications
 
+- [Current derivative costs](descent-costs.md): four audited sessions, phase/memory observations and remaining repeated-host budgets.
+- [Current output versus checksum costs](descent-output-current.md): four audited sessions; short noisy controls and host differences remain visible.
+
 These reports follow different versions of derivative descent. Read the variant table and timing boundary before comparing ratios across reports. A protocol describes an experiment, not an outstanding task.
 
 - [Gradient descent: keeping weights without keeping their history](ad-application.md)

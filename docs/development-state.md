@@ -1,7 +1,11 @@
-# PR #225: startup repairs and decimal counting
+# PR #225: CPU repairs and derivative baselines
 
-**Next:** finish auditing production run `40813465621` at
-`18ae46cdbf2fa2cc8b33cee78b86ed9b8a2dce4a`, then publish every repair together.
+**Next:** publish this combined batch, then monitor and audit all nine production
+jobs plus documentation at its final head; repair any failure before squash merge.
+Original run `40813465621` at `18ae46cdbf2fa2cc8b33cee78b86ed9b8a2dce4a` has only
+the two Linux jobs still running. Every failed job and every completed job is fully
+audited below. Keep those Linux jobs available for audit when they finish; they
+cannot replace repaired-head gates. All currently known failures are in this batch.
 Two confirmed Windows failures are the standalone decimal oracle's CRLF versus LF
 assertion (`integer_output`, line 233). Local repair emits no line ending on either
 side; eight guarded Clang O0/O1/O2/O3 valid/broken cases pass. Production fwp uses
@@ -18,26 +22,54 @@ uploads the verified ZIP directly (`archive: false`). Read errors name the file
 and fail without publishing an incomplete archive. Do not claim this establishes
 the origin of EILSEQ or native verification before the repaired matrix passes.
 Six guarded packaging controls, 20 native-runner controls and actionlint pass.
+The combined documentation audit passes 176 link sets, 106 immutable preparation
+anchors and all eight roadmap rows; all four changed workflows pass actionlint.
 The two injected-file controls initially missed macOS temp-path aliases; resolving
 the fixture root fixed those tests. No production error was suppressed.
 
 Docs `40813452487`/`123248922710` pass and are audited. Benchmark job `123248963708`
 passes (2 summaries/2 tests). macOS ARM64 ownership `123248963737` passes (127
-summaries/359 tests). Intel macOS ownership `123248963419` also passes (127 summaries/359 tests), fully audited. Other five jobs still run; Windows first-step logs are fully
+summaries/359 tests). Intel macOS ownership `123248963419` also passes (127 summaries/359 tests), fully audited. Windows AMD64 `123248963703` is fully audited: 202 summaries, 798 passing tests,
+exactly the confirmed CRLF failure, no other failed targets or unexpected diagnostics.
+Regular Intel macOS `123248963702` passes/audited (132 summaries/619 tests).
+Windows ARM64 `123248963929` also finishes with exactly the same 202 summaries,
+798 passing tests and one CRLF failure, no other unexpected diagnostics. Only
+Linux AMD64/ARM64 remain running; Windows first-step logs are fully
 available in `/private/tmp/fwp-225-windows-{arm,amd}-early/windows-native.log`.
-Audit their final logs before publishing the batch. Logs of completed jobs are
+Audit the remaining Linux logs when available. Logs of completed jobs are
 `/private/tmp/fwp-225-final-*.log`; the regular ARM upload failure remains a failure.
 After repair require all nine jobs plus docs at the new head before squash merge;
 use one <=80-character subject and empty body, then verify tree/message.
 
-D1 runs independently in `/private/tmp/fwp-ad-refresh`, branch `ad-cost-refresh`,
-source `21a1de329c8e4cec1b9ba7cd284c9be876facf5c`; no second PR. All four jobs in
-`40816041693` pass and their complete logs/artifacts are audited: six cases, 80
-images and 68 stack reports per session, analytic output checks, timing samples,
-workspace on/off, phase clocks and broken controls. Two ARM hosts are Neoverse-N2;
-AMD sessions are EPYC 7763 and Xeon 6973P-C, so they are not a repeated same-host
-baseline. Short-process controls are noisy. Output diagnostic `40818110583` now
-runs at the same source. D1 archival/budgets, D2 and D3 remain unfinished.
+D1 preparation and its archived results are now included in this same PR, applied
+from `ad-cost-refresh` commits 21a1/d02b after local repair commit
+`2b3e960660a584eb2b12653b3c05ebbe41a1ec12`. This batch includes both that preparation and the completed output archive. Continue implementation here; `/private/tmp/fwp-ad-refresh` is a retained
+preparation worktree, not a second delivery. The measured source is remotely
+retained as `roadmap/derivative-baseline-21a1de32`.
+
+D1 run `40816041693` at `21a1de329c8e4cec1b9ba7cd284c9be876facf5c` passes all four
+jobs; full logs/artifacts are audited (six cases, 80 images, 68 stack reports per
+session, analytic outputs, all samples, workspace on/off, clocks and broken
+controls). Exact reports/logs are compressed losslessly with 2,228 artifact file
+identities. Archive verifier and six rejection controls pass. Both ARM hosts are
+Neoverse-N2; AMD sessions are EPYC 7763 and Xeon 6973P-C, so do not pool them as
+repeated same-host evidence. Short controls remain noisy. The refreshed
+[report](measurements/descent-costs.md) explains ratios, allocations and limits.
+
+Output run `40818110583` passes both jobs and is fully audited: 109 measurement
+images and 60 control images per host; every output bit/checksum, cleanup profile,
+48 timing rounds and complete log inspected. ARM 3:1 and AMD 3:0/3:1 checksum
+controls are inconclusive under the unchanged 2% rule. No observations discarded.
+Current collector-name checks pass on actual images; fixed the runner's stale
+`fwp_gc_` prefix to `fwp_heap_`. Second run `40818973752` also passes, and both jobs (`123266691377`/`123266691555`)
+are fully audited. Its ARM controls pass; AMD 3:1 checksum remains inconclusive.
+All four output reports/logs and 5,784 artifact identities are archived. The
+archive verifier and five rejection controls pass, including all 16 separate
+coordinate-buffer controls per host. AMD output hosts are EPYC 7763 and 9V45;
+retain that difference. No runtime change follows from diagnostics alone. D1
+matched repeated-host budgets, D2 and D3 remain unfinished. The plan now names
+the heap-allocated four-scalar `ad.push` argument as the first candidate to prove
+and measure; raw buffers already reuse storage.
 
 Worktree `/private/tmp/fwp-cpu-phases`, branch `cpu-execution-costs`,
 [PR #225](https://github.com/e6qu/fun-with-pipes/pull/225).
@@ -107,7 +139,7 @@ GitHub retry status copies are not independent executions; the reader rejects th
 | 2 | Verified | Maintain named A1–A6 guarantees; no universal ARC-free claim |
 | 3 | Verified | Maintain scoped F1–F3 call/recursion guarantees |
 | 4 | In progress | Verify selected CPU timing and startup repairs |
-| 5 | Pending | D1–D3 derivative storage, timing and precision |
+| 5 | In progress | D1 output and repeated-host budgets, then D2/D3 |
 | 6 | Pending | N1–N2 CPU numerical kernels |
 | 7 | In progress | Broader B1/B2 baselines and integrity checks |
 | 8 | Pending | V1–V2 larger-program correctness, cleanup and scale |

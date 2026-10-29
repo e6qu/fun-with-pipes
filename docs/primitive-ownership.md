@@ -285,8 +285,8 @@ runtime callbacks preserve sharing.
 
 Synchronous callback contracts permit escape analysis for the callback slot,
 without treating every borrowed argument as nonescaping. Generic/direct/captured
-paths keep specialization, callback/evaluation order and conservative roots
-through allocation. Scratch buffers remain scanned until transfer and are
+paths keep specialization, callback/evaluation order and live owners
+through allocation. Scratch buffers remain owned until transfer and are
 released explicitly. Scalar bits never select a reference destructor.
 
 | Merged primitive | Arguments | Owned result and callback transfer |
@@ -297,7 +297,7 @@ released explicitly. Scalar bits never select a reference destructor.
 | fold-right | Borrow callback/list, consume accumulator | Return owned accumulator; transfer callback argument1 |
 | drop-while | Borrow predicate/list | Retained input tail; stop predicate calls at first failure |
 | reverse; flatten; take | Borrow inputs | Copied fresh spine retaining selected elements |
-| sort; unique | Borrow list | Copied spine retaining typed selected elements; release scanned scratch; stable comparisons/first occurrence |
+| sort; unique | Borrow list | Copied spine retaining typed selected elements; release owned scratch; stable comparisons/first occurrence |
 | sort-by | Borrow callback/list | Evaluate each key once in input order; own typed keys and copied result, release scratch; stable ties |
 | scan; iterate | Borrow callbacks/inputs | Retain initial stored state and adopt subsequent owned callback states |
 | loop | Borrow callback, consume state | Transfer callback input; retain selected typed Step payload before releasing wrapper; reclaim typed worker/ABI wrappers |

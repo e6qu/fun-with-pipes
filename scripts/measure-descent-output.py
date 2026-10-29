@@ -344,7 +344,7 @@ def main():
             headers = run([args.objdump, '-h', binary], environment).stdout
             assert b'Disassembly of section' in asm
             if label.startswith('fwp'):
-                assert not re.search(rb'\bfwp_gc_(?:scan|mark_all|sweep)\b', symbols)
+                assert not re.search(rb'\bfwp_heap_(?:scan|mark_all|sweep)\b', symbols)
             if '-sink' in label:
                 assert b'descent_sink_values' in symbols and b'descent_sink_report' in symbols
             (directory / (label + '.asm')).write_bytes(asm)

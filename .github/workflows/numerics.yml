@@ -4230,12 +4230,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
+        session: [1, 2]
+        target:
           - runner: ubuntu-latest
             c_arch: x86-64
           - runner: ubuntu-24.04-arm
             c_arch: armv8-a
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ matrix.target.runner }}
     timeout-minutes: 45
     env:
       CC: gcc
@@ -4256,41 +4257,23 @@ jobs:
         run: |
           target/release/fwp fmt --check tests/fixtures/descent_explicit.fwp tests/fixtures/descent_packed.fwp
           rustfmt --edition 2021 --check tests/fixtures/descent_explicit.rs
-      - name: Download the accepted packed-array baseline
-        env:
-          GH_TOKEN: ${{ github.token }}
-          BASELINE_HOST: ${{ matrix.runner }}
-        run: |
-          python3 - <<'PYBASELINE'
-          import hashlib
-          import json
-          import os
-          from pathlib import Path
-          import subprocess
-
-          report = json.loads(Path('docs/measurements/array-capture-descent-2026-10-22.json').read_text())
-          host, = [row for row in report['hosts'] if row['host'] == os.environ['BASELINE_HOST']]
-          path = Path('packed-baseline.zip')
-          with path.open('wb') as stream:
-              subprocess.run(['gh', 'api', f"repos/e6qu/fun-with-pipes/actions/artifacts/{host['artifact']}/zip"], stdout=stream, check=True)
-          assert hashlib.sha256(path.read_bytes()).hexdigest() == host['archiveSha256']
-          PYBASELINE
       - name: Numerical measurement requirement controls
         run: python3 scripts/test-descent-budgets.py
-      - name: Compare direct-call entries with borrowed-capture baseline and C/Rust
+      - name: Derivative phase-observer controls
+        run: python3 scripts/test-descent-phases.py --cc gcc
+      - name: Compare current AD, history, explicit derivatives and C/Rust
         run: >-
           python3 scripts/measure-descent-peers.py --compiler target/release/fwp
-          --baseline-report docs/measurements/array-capture-descent-2026-10-22.json
-          --baseline-archive packed-baseline.zip
-          --cc gcc --rustc rustc --c-arch "${{ matrix.c_arch }}"
+          --cc gcc --rustc rustc --c-arch "${{ matrix.target.c_arch }}"
           --objdump objdump --nm nm --time /usr/bin/time
           --case 3:0 --case 3:1 --case 3:199 --case 3:1999 --case 33:199 --case 129:199
-          --warmups 2 --samples 56 --order-seed 20261022 --timeout 180
-          --host "${{ matrix.runner }}" --output descent-peers-evidence
+          --warmups 2 --samples 56 --order-seed 20261029 --timeout 180
+          --phase-warmups 2 --phase-samples 12 --session "${{ matrix.session }}"
+          --host "${{ matrix.target.runner }}" --output descent-peers-evidence
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: descent-peers-${{ matrix.runner }}
+          name: descent-peers-${{ matrix.target.runner }}-${{ matrix.session }}
           path: descent-peers-evidence/
           if-no-files-found: error
   ad_application:

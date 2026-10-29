@@ -186,7 +186,11 @@ instructions alone do not establish a speedup.
 
 ## 5. Differentiation
 
-**D1 — Refresh and separate descent costs.** Run the existing Rosenbrock cases
+**D1 — Refresh and separate descent costs.** The [current baseline](docs/measurements/descent-costs.md)
+retains four audited sessions and phase/memory observations. AMD64 hosts differ
+and short controls are noisy; fixed repeated-host budgets remain. The
+[output comparison](docs/measurements/descent-output-current.md) also retains four
+audited sessions, their controls and exact result bits. Run the existing Rosenbrock cases
 at 3/33/129 coordinates and 0/1/199/1,999 updates where defined. Compare fwp AD,
 fwp explicit derivatives, and explicit C/Rust implementations. Separate retained
 history, list/array construction, derivative recording, reverse traversal and
@@ -198,6 +202,16 @@ samples, allocation ledgers and bounded-workspace observations.
 entries, buffer growth/reuse or recomputation in the AD runtime; keep pure-step
 requirements for replay. Extend `tests/ad_tape_scopes.rs` and
 `tests/ad_tape_ownership.rs` with failure, cancellation and nested scopes.
+The first concrete candidate is the four-scalar argument to `ad.push`: current
+generated C allocates that record on the heap for each recorded operation, even
+though the runtime only copies its fields. Prove that its argument cannot escape
+in `src/ownership.rs`, then use the existing stack analysis. Do not extend the
+rule to `ad.push-owned`, whose typed weights have separate ownership obligations.
+Before changing the contract, finish D1's fixed comparison limits. Compare exact
+requests/retains, time, instruction bytes and stack frames; preserve tape-full,
+mixed/stale-node, failure/cancellation and nested-gradient checks. The raw tape
+workspace already reuses buffers across updates; growing its cache is not the
+first candidate supported by these observations.
 **Done:** the selected per-size storage/time budget passes without retaining dead
 scopes or changing derivative order. Output storage still scales with output size.
 
