@@ -304,7 +304,9 @@ Verify the retained protocol:
 ```sh
 python3 scripts/local-guard.py python3 scripts/check-descent-groups.py \
   --protocol repeated --archive docs/measurements/descent-repeated-artifacts-2026-10-29.json
-``` The full audit also checked all actual binaries, stack reports,
+```
+
+The full audit also checked all actual binaries, stack reports,
 output lines, process samples, observers and complete job logs before archiving.
 
 ## Fixed scalar-recording acceptance rules

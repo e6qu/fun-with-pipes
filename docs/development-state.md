@@ -71,6 +71,10 @@ archived separately. CI verifies both archives and rejection controls.
 
 ## Repairs and retained failures
 
+- Docs run `40839703501` at 5ba37b25 found a code-fence closing line joined
+  to prose, hiding the acceptance heading. The fence/prose separation is repaired
+  and the full local link/anchor check rerun. Timing jobs use unchanged code.
+
 - Run `40836575689` at 8e299f9f passed focused tests, then both ARM measurements
   failed after 98 zero-update rounds: report generation still expected the old
   `fwp-explicit` label. `98b252a8` derives rows/columns from actual variants.
