@@ -231,6 +231,18 @@ disassembly and size records. The explicit baseline source is
 
 ## Repeated directory and file work
 
+Directory allocation-boundary coverage is in preparation. The test injects
+recoverable traps before the first scratch allocation, during name collection,
+at scratch growth and during result-list construction. Each trap must close
+opened handles, release partial owners and permit a successful retry, including
+when the caller retains a path alias. Controls deliberately omit each cleanup
+and must trigger the corresponding observer. Native O1/O2 verification is pending.
+
+Managed-heap exhaustion has a different contract: `fwp_heap_oom` prints
+`fwp: out of memory` and exits with status 102. A separate subprocess checks that
+handler at the same boundaries. It does not claim recovery or pre-exit cleanup,
+and it does not exhaust the host's memory.
+
 The `file-applications` workflow suite checks larger inputs with the current
 compiler on all six native hosts. It is a cleanup experiment, **not a timing
 comparison or evidence of C/Rust parity**. The [six-host report](measurements/file-applications.md) records focused acceptance,

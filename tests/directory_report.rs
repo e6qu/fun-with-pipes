@@ -5,6 +5,10 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
+#[path = "support/ownership_ledger.rs"]
+mod directory_failure_ledger;
+#[path = "support/record_probe.rs"]
+mod directory_failure_probe;
 #[path = "support/file_application_memory.rs"]
 mod file_application_memory;
 
@@ -366,4 +370,236 @@ fn scaled_directory_reports_bound_live_storage_and_release_error_paths() {
         }
     }
     drop(denied);
+}
+
+#[test]
+fn directory_allocation_boundaries_unwind_or_exit_by_their_contract() {
+    let dir = fwp::cgen::TempDir::new("directory-allocation-failures").unwrap();
+    populate_tree(&dir.join("tree"), 64);
+    // Force growth in one enumeration, as well as the existing nested tree.
+    for i in 0..32 {
+        std::fs::write(dir.join(format!("tree/root-{i}.txt")), b"root").unwrap();
+    }
+    let source = dir.join("report.fwp");
+    std::fs::write(&source, format!("{}\nexport report-once : String -> I64 ! {{FileIO, Error[IoError]}}\nreport-once = dirstat {{top = 10, all = True, sort = Name}} | map string.length | sum\nmain = \"tree\" | report-once | echo\n", include_str!("../examples/cli/dirstat.fwp"))).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let raw = checked(
+        Command::new(compiler)
+            .current_dir(dir.path())
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    let optimized = checked(
+        Command::new(compiler)
+            .current_dir(dir.path())
+            .env_remove("FWP_NO_OPT")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    assert_eq!(optimized.stdout, raw.stdout);
+    assert_eq!(optimized.stderr, raw.stderr);
+    let expected: u64 = std::str::from_utf8(&raw.stdout)
+        .unwrap()
+        .trim()
+        .parse()
+        .unwrap();
+    let cfile = dir.join("report.c");
+    checked(
+        Command::new(compiler)
+            .args(["build", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    let entry = code
+        .split("/* report-once :")
+        .nth(1)
+        .unwrap()
+        .split("static V f")
+        .nth(1)
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    let entry = format!("f{entry}");
+    let mut observed = directory_failure_ledger::instrument_native(&code, 65536);
+    let mut replace = |before: &str, after: &str, count: usize| {
+        assert_eq!(observed.matches(before).count(), count, "{before}");
+        observed = observed.replace(before, after);
+    };
+    replace(
+        "typedef uint64_t V;",
+        r#"typedef uint64_t V;
+#define PROBE_OMIT_MAP 0
+#define PROBE_OMIT_CLOSE 0
+static int probe_active,probe_stage,probe_phase,probe_fatal,probe_hit;
+static unsigned probe_allocations;
+static uint64_t probe_opened,probe_closed;
+static void fwp_trap(const char *);
+static void fwp_heap_oom(void);
+static void probe_directory_failure(void) {
+    if(probe_opened==probe_closed) _Exit(246);
+    probe_hit=1;
+    if(probe_fatal) fwp_heap_oom();
+    fwp_trap("directory allocation boundary");
+}
+static void probe_directory_allocation(void) {
+    if(probe_active && probe_stage==4 && probe_phase==4 && ++probe_allocations==2)
+        probe_directory_failure();
+}
+"#,
+        1,
+    );
+    replace("static inline void *fwp_heap_alloc(size_t n, int kind) {",
+        "static inline void *fwp_heap_alloc(size_t n, int kind) {\n    if(kind!=0) probe_directory_allocation();",1);
+    replace(
+        "static inline void *fwp_alloc_init(size_t n) {",
+        "static inline void *fwp_alloc_init(size_t n) {\n    probe_directory_allocation();",
+        1,
+    );
+    for (before, after) in [
+        ("DIR *directory=opendir(STR(path)->d);", "DIR *directory=opendir(STR(path)->d); if(directory) probe_opened++;"),
+        ("if (*directory) closedir(*directory);", "if (*directory && (!PROBE_OMIT_CLOSE || !probe_active)) { if(closedir(*directory)) _Exit(245); probe_closed++; }"),
+        ("HANDLE handle = FindFirstFileW(pattern, &entry);", "HANDLE handle = FindFirstFileW(pattern, &entry); if(handle != INVALID_HANDLE_VALUE) probe_opened++;"),
+        ("if (*handle != INVALID_HANDLE_VALUE) FindClose(*handle);", "if (*handle != INVALID_HANDLE_VALUE && (!PROBE_OMIT_CLOSE || !probe_active)) { if(!FindClose(*handle)) _Exit(245); probe_closed++; }"),
+    ] { replace(before,after,1); }
+    // Change only the two platform versions of dir.list, not other map builders.
+    for signature in [
+        "static V fwp_p_dir_list(V path, const fwp_desc *err, void (*drop_list)(V)) {",
+        "static V fwp_p_dir_list(V path, const fwp_desc *error, void (*drop_list)(V)) {",
+    ] {
+        let start = observed.find(signature).unwrap();
+        let end = start + observed[start..].find("\n}\n").unwrap() + 3;
+        let mut body = observed[start..end].to_owned();
+        for marker in [
+            "owner.items=(V *)fwp_mem_alloc(capacity*sizeof(V));",
+            "owner.items[owner.count]=fwp_rc_fresh(",
+        ] {
+            assert_eq!(body.matches(marker).count(), 1);
+            let check = if marker.starts_with("owner.items[") {
+                "if(probe_active && probe_stage==2 && owner.count==3) probe_directory_failure(); "
+            } else {
+                "if(probe_active && probe_stage==1) probe_directory_failure(); "
+            };
+            body = body.replace(marker, &format!("{check}{marker}"));
+        }
+        let grow = if body.contains("owner.items=fwp_mem_realloc(") {
+            "owner.items=fwp_mem_realloc("
+        } else {
+            "owner.items = (V *)fwp_mem_realloc("
+        };
+        assert_eq!(body.matches(grow).count(), 1);
+        body = body.replace(
+            grow,
+            &format!("if(probe_active && probe_stage==3) probe_directory_failure(); {grow}"),
+        );
+        let protect = if body.contains("fwp_map_protect(&owner,&owner_cleanup);") {
+            "fwp_map_protect(&owner,&owner_cleanup);"
+        } else {
+            "fwp_map_protect(&owner,&cleanup);"
+        };
+        assert_eq!(body.matches(protect).count(), 1);
+        body = body.replace(
+            protect,
+            &format!("if(!PROBE_OMIT_MAP || !probe_active) {protect}"),
+        );
+        assert_eq!(
+            body.matches("V result=fwp_map_finish_protected(").count(),
+            1
+        );
+        body = body.replace(
+            "V result=fwp_map_finish_protected(",
+            "probe_phase=4; V result=fwp_map_finish_protected(",
+        );
+        body = body.replace(
+            "\n    fwp_cleanup_pop(",
+            "\n    probe_phase=0; fwp_cleanup_pop(",
+        );
+        observed.replace_range(start..end, &body);
+    }
+    observed = observed.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let probe = include_str!("fixtures/directory_allocation_failures.c")
+        .replace("REPORT", &entry)
+        .replace("EXPECTED", &format!("UINT64_C({expected})"));
+    let healthy = format!("{observed}\n{probe}");
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join(format!("ordinary{opt}.exe"));
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        let actual = checked(Command::new(&binary).current_dir(dir.path()));
+        assert_eq!((&actual.stdout, &actual.stderr), (&raw.stdout, &raw.stderr));
+        for (name, program, status, message) in [
+            (
+                "healthy",
+                healthy.clone(),
+                0,
+                "32 directory allocation-boundary traps and retries preserve owners\n",
+            ),
+            (
+                "missing-close",
+                healthy.replace("#define PROBE_OMIT_CLOSE 0", "#define PROBE_OMIT_CLOSE 1"),
+                241,
+                "directory handles remain open\n",
+            ),
+            (
+                "missing-builder",
+                healthy.replace("#define PROBE_OMIT_MAP 0", "#define PROBE_OMIT_MAP 1"),
+                242,
+                "directory owners remain live\n",
+            ),
+        ] {
+            let binary = dir.join(format!("{name}{opt}.exe"));
+            fwp::cgen::compile_c(&program, &binary, opt).unwrap();
+            let output = Command::new(&binary)
+                .current_dir(dir.path())
+                .output()
+                .unwrap();
+            directory_failure_probe::save(
+                "directory-allocation",
+                &format!("{name}{opt}"),
+                &program,
+                &binary,
+                &output,
+            );
+            assert_eq!(
+                output.status.code(),
+                Some(status),
+                "{name} {opt}: {output:?}"
+            );
+            if status == 0 {
+                assert_eq!(output.stdout, message.as_bytes());
+                assert!(output.stderr.is_empty());
+            } else {
+                assert!(output.stdout.is_empty());
+                assert_eq!(output.stderr, message.as_bytes());
+            }
+            if name == "healthy" {
+                for stage in 1..=4 {
+                    let output = Command::new(&binary)
+                        .current_dir(dir.path())
+                        .arg(stage.to_string())
+                        .output()
+                        .unwrap();
+                    directory_failure_probe::save(
+                        "directory-allocation",
+                        &format!("fatal-{stage}{opt}"),
+                        &program,
+                        &binary,
+                        &output,
+                    );
+                    assert_eq!(
+                        output.status.code(),
+                        Some(102),
+                        "fatal {stage} {opt}: {output:?}"
+                    );
+                    assert!(output.stdout.is_empty());
+                    assert_eq!(output.stderr, b"fwp: out of memory\n");
+                }
+            }
+        }
+    }
 }

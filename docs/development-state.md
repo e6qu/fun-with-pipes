@@ -1,10 +1,23 @@
-# Continue PR #227: derivative costs and numerical kernels
+# Prepare directory-report failure coverage
 
-**Next:** run and audit the complete production matrix and both G2 analysis hosts
-for the final PR head. The implementation batch passes focused checks. Preserve
-that head while gates run; audit every completed target and compiler diagnostic.
-D2's zero-update limit and N1's inclusive noise limit remain unresolved, so do
-not merge or claim their acceptance solely because correctness CI passes.
+**Next:** run the focused file-application suite on all six native hosts and
+repair every failure before publishing the next grouped PR. This preparation is
+based on PR #227 head `8e291876`; it does not replace or restart that head's CI.
+One PR remains active. Do not open a second PR before resolving its acceptance.
+
+Preparation worktree `/private/tmp/fwp-application-failures`, branch
+`application-allocation-failures`. The new directory test checks four allocation
+boundaries, aliases, repeated recovery and successful retries at C O1/O2.
+Deliberately omitted close/builder cleanup must fail the intended observer.
+A separate process invokes the production OOM handler at each boundary and must
+exit 102. Synthetic recoverable traps are not recoverable production heap OOM.
+Native verification is pending; local guarded rustfmt passes. Artifacts include
+the generated C, executable and every observed output/status.
+
+PR #227 remains frozen while its eight platform jobs run. Its documentation,
+benchmark correctness and both G2 analysis hosts pass with complete log audits.
+D2's zero-update limit and N1's inclusive noise limit remain unresolved; passing
+correctness CI alone does not permit claiming performance acceptance.
 
 Active worktree `/private/tmp/fwp-ad-captures`, branch `ad-eager-captures`.
 [PR #227](https://github.com/e6qu/fun-with-pipes/pull/227) groups D2,

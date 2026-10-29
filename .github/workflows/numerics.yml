@@ -1938,6 +1938,7 @@ jobs:
       CARGO_PROFILE_TEST_OPT_LEVEL: '1'
       FWP_LTO: '0'
       FWP_FILE_APPLICATION_ARTIFACTS: file-application-evidence
+      FWP_ARC_ARTIFACTS: file-application-evidence/failures
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
