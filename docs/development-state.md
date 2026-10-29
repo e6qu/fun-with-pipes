@@ -2,16 +2,17 @@
 
 Published PR #224 remains active at `b4e004d5788f2b2479b085a7dc6a48c435cce477`
 in `/private/tmp/fwp-scalar-bounds`. Preserve that final head. Production
-`40790143419` is running; its benchmark job and documentation `40790141513` pass
+`40790143419` is running; its benchmark and both ARM64 macOS jobs, plus documentation `40790141513` pass
 and are audited. Do not count draft-skipped runs as acceptance.
 
 This worktree `/private/tmp/fwp-cpu-phases`, branch `cpu-execution-costs`, is based
 on b4 and has no PR. Its branch can be published for focused runner validation
 while #224 remains the only active PR. It prepares the next related runtime/cost batch while
-#224's gates run. No build, native test or timing has run for this preparation.
+#224's gates run. Focused native startup validation passed; phase measurements have not run.
 
-**Next:** run and audit the grouped `runtime-startup` checks on native GCC/Clang
-runners, repair failures, then implement the planned cost-separation experiment. Continue monitoring #224
+**Next:** publish and run the grouped `cpu-phases` diagnostic on the two qualified
+Linux hosts, audit its complete evidence, and use the result to select the next
+optimization. Continue monitoring #224
 and merge it only after all nine final-head production jobs plus docs pass.
 Carry this work onto that verified squash merge before opening the next PR.
 
@@ -41,7 +42,19 @@ Prepared changes:
 Guarded Rustfmt passes using the repository's **edition 2021** and
 `skip_children=true`. An initial edition-2024 invocation caused unrelated formatting;
 all of that churn was restored before applying the correct settings. Final guarded Actionlint and the 172-link-set documentation audit also pass.
-No compiler build or test execution yet. The phase profiler is not implemented.
+Startup checkpoint `3db10b5a9f1e22d1bc1d93c6faea055f484f90ad` passed focused
+run `40792244152` on native Linux/macOS ARM64/AMD64. All four logs are audited:
+each has two passing targets and 11 tests, with no compiler diagnostics. Each
+artifact has seven native images, 32 main startup outcomes and three partial-worker
+or deliberately omitted-check outcomes, independently verified without local
+execution. This is focused evidence, not the final production matrix.
+
+The phase profiler and workflow are prepared. Six guarded reader/instrumentation
+control groups pass. Guarded Actionlint and the documentation audit pass. Both
+small Rust diagnostic peers compile; retained real generated C accepts every
+declared instrumentation boundary. No local benchmark executed. The [protocol](measurements/cpu-phases.md) specifies inputs,
+clock boundaries, 72 measured rounds, unchanged noise controls and limits on
+attributing overhead. No phase timing or optimization result is claimed yet.
 
 ## Planned measurement
 
