@@ -46,6 +46,8 @@ jobs:
         run: python3 scripts/test-cpu-baselines.py
       - name: Decimal-count proof and timing controls
         run: python3 scripts/test-decimal-count.py
+      - name: Preserve rejected decimal-count measurements
+        run: python3 scripts/check-decimal-records.py
       - name: CPU execution-phase evidence controls
         run: python3 scripts/test-cpu-phases.py
       - name: Verify retained CPU execution diagnostics

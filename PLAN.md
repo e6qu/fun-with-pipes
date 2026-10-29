@@ -158,13 +158,13 @@ range-index and character-sum changes: neither meets the fixed improvement rule.
 Keep its boundary tests and results; do not repeat those candidates as a speedup.
 The [execution-phase diagnostic](docs/measurements/cpu-phases.md) identifies
 calculation as the larger measured interval, with visible instrumentation effects
-and an inconclusive AMD64 loop control. Next, run the [decimal-length candidate](docs/measurements/decimal-count.md):
-compare repeated divisions with a bit-length estimate and exact power-of-ten
-check. Prove all U64 bit/decimal boundaries (including zero), preserve signed-min
-handling and checked expression order, and record the constant-table, code and
-stack costs. Compare ordinary images against the current helper in the same job
-on both qualified hosts using the unchanged frozen limits. Keep the C/Rust
-algorithm differences explicit; this is not a claim of pure compiler overhead. For the persistent gap, separate
+and an inconclusive AMD64 loop control. The [decimal-length report](docs/measurements/decimal-count.md)
+rejects the bit-length/table candidate overall: ARM64 improves, AMD64 does not
+qualify. Next, compare exact balanced decimal-threshold branches with the original
+grouped-division helper, under the same fixed budgets on both qualified hosts.
+Keep signed-min handling, all binary/decimal boundaries and checked evaluation
+order; record instruction, readonly-data, binary and stack costs. Bundle the
+verified startup error-handling fixes and complete rejected measurements. For the persistent gap, separate
 calculation, input/output, allocation and dispatch with explicit paired controls.
 Inspect generated C and machine code for the selected program after checking
 source correctness. Change only the proved redundant operation or representation;

@@ -1,17 +1,18 @@
-# Decimal length from bit length
+# Decimal-length algorithm comparisons
 
-This is the next [P2/P3 candidate](../../PLAN.md#4-cpu-performance), selected after
-[the execution-phase diagnostic](cpu-phases.md). It is implemented for testing;
-no speedup or acceptance is claimed yet. The current helper repeatedly divides
-an unsigned magnitude by powers of ten. The candidate estimates its decimal width
-from its bit width, then makes one exact power-of-ten comparison.
+This [P2/P3 experiment](../../PLAN.md#4-cpu-performance) changes how native fwp
+counts decimal characters without constructing a string. The original helper
+uses grouped division. The first alternative, bit width plus a power-of-ten
+table, **is rejected overall**: ARM64 improved, but AMD64 did not qualify.
+The next candidate uses a balanced tree of exact decimal comparisons, with no
+lookup table. It is implemented for testing, not accepted as a speedup.
+
+## Rejected candidate: bit width and a table
 
 For example, 8 has four bits. The estimate is 1; because 8 is below 10, the answer
 is one digit. 10 also has four bits and the same estimate, but is not below 10,
 so the answer is two. Signed values use an unsigned magnitude and add the minus
 sign separately, preserving the minimum signed integer without signed negation.
-
-## Exact integer proof
 
 Set the low bit: `x |= 1`. For positive even values this adds one without crossing
 a decimal-width boundary: every positive power of ten is even, while its previous
@@ -21,7 +22,7 @@ The resulting value is nonzero, so counting leading zero bits is defined.
 Let `b` be its bit width, from 1 through 64, and `e = (b * 1233) >> 12`.
 The fraction 1233/4096 approximates log10(2), but correctness does not depend on
 floating-point approximation. For **each of the 64 integer intervals**
-`[2^(b-1), 2^b - 1]`, the tests verify that both endpoint digit counts are either
+`[2^(b-1), 2^b - 1]`, the measured revision’s tests verified that both endpoint digit counts are either
 `e` or `e+1`. Decimal width is monotone, so those are the only possible counts
 throughout that interval. Comparing with exactly `10^e` determines which applies:
 `1 + e - (x < 10^e)`. The largest table index is 19; all twenty powers fit U64.
@@ -31,6 +32,20 @@ code/data tradeoff, not an allocation or ARC optimization. Keep the actual table
 bytes, section/address, alignment, instruction-section size, whole binary size
 and stack reports in the measurement evidence.
 
+## Next candidate: exact decimal comparisons
+
+Split the 20 possible digit counts at `10^10`, then split each remaining range
+at its middle decimal boundary. For example, values below 10 need one digit;
+values from 10 through 99 need two. At most five comparisons select one of the
+20 intervals. Zero is in the first interval, and U64's maximum is in the last.
+Every threshold is an exact U64 constant. There is no approximation, division,
+indexed lookup or additional heap storage. Signed magnitude handling is unchanged.
+
+The tree may enlarge instruction bytes or behave poorly with unpredictable
+branches. Those are hypotheses to measure, not reasons to assume it is faster.
+The same fixed limits and baseline apply; do not repeat the old experiment to
+cherry-pick a quieter AMD64 sample.
+
 ## Correctness checks
 
 `integer_output` extends runtime-input tests across every binary and decimal
@@ -38,13 +53,14 @@ width transition, signed extrema, zero, Unicode concatenation, sharing and
 checked-arithmetic effects. Compare raw interpretation with native O0/O1/O2/O3.
 A separate test extracts the actual emitted helpers and compares them with C's
 `snprintf`: all unsigned values through 65,535 and their signed opposites, all
-binary/decimal boundaries and full-width extrema. Removing the exact threshold
-correction must fail at every optimization level. This is a correctness oracle,
+binary/decimal boundaries and full-width extrema. For the table candidate, removing the exact correction must fail. For the tree,
+removing the one-versus-two-digit comparison must fail at every optimization level. This is a correctness oracle,
 not a timing comparison with formatted text.
 
-Local finite proofs and eight small Clang helper/control cases pass. Those checks
-do not verify actual fwp emission, GCC or native Windows; runner validation and
-the final production matrix remain required.
+Both qualified GCC hosts passed the table candidate’s seven integer-output
+groups at O0/O1/O2/O3, including all intentionally broken helper controls.
+The tree needs its own native verification; the final production matrix remains
+required for the complete batch.
 
 ## Paired measurement
 
@@ -81,8 +97,9 @@ its optimized fwp calculation must have the same machine-text bytes as
 between old/new helpers. Check both variants' outputs and retain all seven current
 peer timings, managed-storage/RSS observations and leak controls separately.
 
-[decimal-count.py](../../scripts/decimal-count.py) checks identities, table bytes,
-actual sections, stack records, samples and fixed limits. Its
+[decimal-count.py](../../scripts/decimal-count.py) checks identities,
+actual sections, stack records, samples and fixed limits. The table experiment
+retains its actual 160 bytes and alignment; the tree requires that table to be absent. Its
 [controls](../../scripts/test-decimal-count.py) reject missing, reordered, failed,
 changed and noisy observations. Full final-head CI follows once this candidate
 has a measured accept/reject decision and the related startup fixes are complete.
@@ -102,5 +119,52 @@ actual benchmark directories and matching fwp bodies. Both complete logs and
 all sixteen retained semantic/control images per host were reviewed. The
 [initial records](decimal-count-initial-2026-10-29.json) retain the partial reports,
 passed helper outcomes, seven-peer/memory context and complete artifact hashes.
-The corrected ordinary comparison still needs to run. No completed result was
-discarded and no timing limit changed.
+The corrected comparison completed below. No completed result was discarded
+and no timing limit changed.
+
+
+## Results: reject the table candidate
+
+Measured source: `df80c15ee894c437df0f0216db211abefc27115c`, retained by tag
+`roadmap/revision-decimal-count-df80c15e`. ARM64 completed in
+[40800093045](https://github.com/e6qu/fun-with-pipes/actions/runs/40800093045);
+qualified AMD64 completed in
+[40800624780](https://github.com/e6qu/fun-with-pipes/actions/runs/40800624780).
+Two intervening AMD64 jobs found Xeon 8370C instead of the required EPYC 7763
+and stopped before building or timing. Their host records remain alongside
+[both raw sessions](decimal-count-2026-10-29-arm.json) and the
+[AMD64 session](decimal-count-2026-10-29-amd.json).
+
+Each cell below is median milliseconds per batch: one process for `loop`, 32
+for `text-length`. This includes launch, computation, printing and exit.
+
+| Host / program | C | Rust | Original fwp helper | Table candidate | Identical original |
+|---|---:|---:|---:|---:|---:|
+| ARM64 loop | 176.555 | 114.006 | 130.268 | 130.308 | 130.310 |
+| ARM64 text-length | 101.303 | 184.157 | 197.029 | 159.045 | 197.404 |
+| AMD64 loop | 127.136 | 107.179 | 128.462 | 128.396 | 128.422 |
+| AMD64 text-length | 114.035 | 216.064 | 242.391 | 267.712 | 243.199 |
+
+ARM64 text takes 19.28% less time than the original helper; both noise controls
+pass. It remains 57.0% slower than C and is 13.64% faster than Rust here, with
+different counting algorithms. That does not establish compiler-overhead parity.
+AMD64 text's observed median is 10.45% slower. Its identical-code p95 ratio is
+1.063392 against the frozen 1.052444 limit; loop also exceeds its noise limit
+(1.024430 versus 1.018789). These AMD64 decisions are **inconclusive**, not
+accepted speedups or reliable regression estimates. The two-architecture rule
+therefore rejects this candidate; no budget is relaxed.
+
+For text-length, instruction bytes fell from 11,164 to 10,796 on ARM64 and
+11,986 to 11,490 on AMD64. Both whole binaries grew by 40 bytes, with a
+160-byte readonly table at offsets 48 and 32 within a 64-byte alignment unit.
+Main/worker stack frames stayed 144/272 bytes on ARM64 and 128/256 on AMD64.
+Loop instruction bytes, binary size and stack frames were unchanged. Separate
+profiles report zero named managed-memory counters for both measured programs;
+that does not mean process RSS is zero. All seven peer timings and storage/RSS
+profiles remain in the [artifact archive](decimal-count-artifacts-2026-10-29.json).
+
+All logs and retained generated C, machine sections, stack reports, 16 semantic
+images per host, 21 ordinary peer images and 14 storage images were audited.
+[The permanent reader](../../scripts/check-decimal-records.py) reconstructs the
+fixed acceptance decisions from every raw sample and checks source/report/image
+identities. This preserves the result without rerunning the rejected candidate.

@@ -406,23 +406,43 @@ static V fwp_show_i64(V v) {
 }
 
 static inline int64_t fwp_u64_chars(uint64_t x) {
-    static const uint64_t decimal_powers[20] = {
-        UINT64_C(1), UINT64_C(10), UINT64_C(100), UINT64_C(1000),
-        UINT64_C(10000), UINT64_C(100000), UINT64_C(1000000), UINT64_C(10000000),
-        UINT64_C(100000000), UINT64_C(1000000000), UINT64_C(10000000000),
-        UINT64_C(100000000000), UINT64_C(1000000000000), UINT64_C(10000000000000),
-        UINT64_C(100000000000000), UINT64_C(1000000000000000),
-        UINT64_C(10000000000000000), UINT64_C(100000000000000000),
-        UINT64_C(1000000000000000000), UINT64_C(10000000000000000000)
-    };
-    /* Setting the low bit preserves decimal width, including 0 -> 1, and
-     * makes clz defined. For each bit width 1..64, floor(bits * 1233 / 4096)
-     * is either the decimal digit count or one less. The exact power-of-ten
-     * comparison decides which. integer_output checks all interval endpoints. */
-    x |= UINT64_C(1);
-    unsigned bits = 64 - (unsigned)__builtin_clzll((unsigned long long)x);
-    unsigned estimate = (bits * 1233) >> 12;
-    return (int64_t)(1 + estimate - (x < decimal_powers[estimate]));
+    /* Split the 20 decimal-width intervals at exact powers of ten.
+     * Zero belongs to the one-digit interval; every path uses at most
+     * five comparisons, with no division or indexed table access. */
+    if (x < UINT64_C(10000000000)) {
+        if (x < UINT64_C(100000)) {
+            if (x < UINT64_C(1000)) {
+                if (x < UINT64_C(100)) {
+                    return x < UINT64_C(10) ? 1 : 2;
+                }
+                return 3;
+            }
+            return x < UINT64_C(10000) ? 4 : 5;
+        }
+        if (x < UINT64_C(100000000)) {
+            if (x < UINT64_C(10000000)) {
+                return x < UINT64_C(1000000) ? 6 : 7;
+            }
+            return 8;
+        }
+        return x < UINT64_C(1000000000) ? 9 : 10;
+    }
+    if (x < UINT64_C(1000000000000000)) {
+        if (x < UINT64_C(10000000000000)) {
+            if (x < UINT64_C(1000000000000)) {
+                return x < UINT64_C(100000000000) ? 11 : 12;
+            }
+            return 13;
+        }
+        return x < UINT64_C(100000000000000) ? 14 : 15;
+    }
+    if (x < UINT64_C(1000000000000000000)) {
+        if (x < UINT64_C(100000000000000000)) {
+            return x < UINT64_C(10000000000000000) ? 16 : 17;
+        }
+        return 18;
+    }
+    return x < UINT64_C(10000000000000000000) ? 19 : 20;
 }
 
 static inline int64_t fwp_i64_chars(int64_t x) {

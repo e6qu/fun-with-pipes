@@ -17,6 +17,10 @@ ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('cpu_phases', ROOT / 'scripts/cpu-phases.py')
 CPU = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CPU)
+ALGORITHMS = {
+    'bit-length': 'a bit-length estimate and table',
+    'threshold-tree': 'exact decimal-threshold comparisons',
+}
 BASELINE = 'c92fed4208a16627f0f420f58ce1f7729bf0f061'
 KINDS = ('c', 'rs', 'baseline', 'candidate', 'identical')
 COUNTING_PROGRAMS = ('strings', 'text-length')
@@ -37,7 +41,8 @@ def write(path, data):
     path.write_text(json.dumps(data, indent=2, allow_nan=False) + '\n')
 
 
-def check_case(name, row, budget):
+def check_case(name, row, budget, algorithm):
+    description = ALGORITHMS[algorithm]
     assert row['stdout'] == CPU.EXPECTED[name] and set(row['binaries']) == set(KINDS)
     assert row['binaries']['baseline'] == row['binaries']['identical']
     for binary in row['binaries'].values():
@@ -70,7 +75,7 @@ def check_case(name, row, budget):
                 withinRegression=stable and ratio <= budget['maxCandidateRatio'],
                 improvement=stable and ratio < budget['maxRatioForImprovement'],
                 candidateOverC=medians['candidate'] / medians['c'], candidateOverRust=medians['candidate'] / medians['rs'],
-                peerScope='C/Rust retain grouped decimal division; candidate fwp uses a bit-length estimate and table. These are whole-program comparisons with an algorithm difference, not pure compiler overhead.')
+                peerScope=f'C/Rust retain grouped decimal division; candidate fwp uses {description}. These are whole-program comparisons with an algorithm difference, not pure compiler overhead.')
 
 
 def sections(path, architecture):
@@ -102,7 +107,7 @@ def measure(args):
     assert memory['inspectionSha256'] == digest(args.inspection) and memory_images['reportSha256'] == digest(args.memory / 'report.json')
     directory, = (args.input / args.source).iterdir()
     assert digest(directory / 'report.md') == inspection['reportSha256']
-    report.update(baseline=BASELINE, settings=SETTINGS, programs={}, context={}, commands=[],
+    report.update(algorithm='threshold-tree', baseline=BASELINE, settings=SETTINGS, programs={}, context={}, commands=[],
                   oldHelper=old, newHelper=new, evidence=dict(inspection=digest(args.inspection), memory=digest(args.memory / 'report.json'), memoryInspection=digest(args.memory_inspection)),
                   scope='Only the decimal-count helper differs between paired generated-C images. Baseline uses the original helper in the current runtime, with no previous fwp executable dependency. Timings are ordinary process wall time; compilation, profiles and evidence writes are excluded. Candidate C is the actual compiler output. C/Rust peers retain their existing grouped-division algorithm.')
     environment = {k: v for k, v in os.environ.items() if not k.startswith('FWP_') and k not in ('GH_TOKEN', 'GITHUB_TOKEN')}
@@ -141,20 +146,12 @@ def measure(args):
                 assert actual_sections['.text'][1] == sections(ordinary, args.architecture)['.text'][1], 'same compiler-emitted C changed machine text when requesting a stack report'
             symbols = command([args.objdump, '--section-headers', '--syms', binary], name + '-' + variant + '-symbols').stdout.decode()
             command([args.objdump, '-d', binary], name + '-' + variant + '-assembly')
-            tables = re.findall(r'^([0-9a-f]+)\s+\w+\s+O\s+(\S+)\s+([0-9a-f]+)\s+(decimal_powers\.\d+)$', symbols, re.M)
-            assert len(tables) == int(variant == 'candidate' and name in COUNTING_PROGRAMS), (name, variant, tables)
-            table = None
-            if tables:
-                address, section, size, symbol = tables[0]
-                address, size = int(address, 16), int(size, 16)
-                base, data = actual_sections[section]
-                assert size == 160 and address % 8 == 0
-                assert data[address - base:address - base + size] == struct.pack('<20Q', *(10 ** i for i in range(20)))
-                table = dict(symbol=symbol, section=section, address=address, bytes=size, addressModulo64=address % 64)
+            assert not re.search(r'\bdecimal_powers', symbols), 'threshold tree must not retain the rejected lookup table'
             stack, = args.output.glob(name + '-' + variant + '*.su')
             context['costs'][variant] = dict(binarySha256=digest(binary), binaryBytes=binary.stat().st_size,
                                             generatedSha256=digest(cfile), textBytes=len(actual_sections['.text'][1]),
-                                            textSha256=hashlib.sha256(actual_sections['.text'][1]).hexdigest(), stack=stack.read_text(), table=table)
+                                            textSha256=hashlib.sha256(actual_sections['.text'][1]).hexdigest(), stack=stack.read_text(), table=None,
+                                            rodataBytes=len(actual_sections['.rodata'][1]), rodataSha256=hashlib.sha256(actual_sections['.rodata'][1]).hexdigest())
             paths[variant] = binary
         paths['identical'] = paths['baseline']
         paths_by_name[name] = paths
@@ -196,7 +193,7 @@ def measure(args):
                             write(args.output / 'report.json', report)
                             raise AssertionError((name, kind, phase, number, process_index, process))
                     write(args.output / 'report.json', report)
-        row['result'] = check_case(name, row, budgets[name])
+        row['result'] = check_case(name, row, budgets[name], report['algorithm'])
         write(args.output / 'report.json', report)
         print(name, json.dumps(row['result'], indent=2), flush=True)
     report['qualifies'] = all(r['result']['withinRegression'] for r in report['programs'].values()) and report['programs']['text-length']['result']['improvement']

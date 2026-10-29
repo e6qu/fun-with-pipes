@@ -185,23 +185,10 @@ checked-length = tap echo | add 1 | show | concat "é🙂" | string.length
     }
 }
 
-/// Every U64 bit-width interval needs at most one decimal threshold correction.
-/// Exercise the actual emitted helper, including zero, with an independent
-/// snprintf oracle and a deliberately omitted correction that must be detected.
+/// Exercise the emitted threshold tree, including zero, with an independent
+/// snprintf oracle and a deliberately omitted comparison that must be detected.
 #[test]
-fn decimal_length_bit_intervals_and_native_helper_are_exact() {
-    for bits in 1..=64 {
-        let estimate = (bits * 1233) >> 12;
-        assert!(estimate <= 19);
-        let low = 1_u128 << (bits - 1);
-        let high = (1_u128 << bits) - 1;
-        // Decimal width is monotone within the interval. Checking both ends
-        // proves that its only possible counts are estimate and estimate + 1.
-        for value in [low, high] {
-            let digits = value.to_string().len();
-            assert!((estimate..=estimate + 1).contains(&digits), "bits={bits}");
-        }
-    }
+fn decimal_length_thresholds_and_native_helper_are_exact() {
     let dir = fwp::cgen::TempDir::new("decimal-length-bounds").unwrap();
     let source = dir.join("main.fwp");
     std::fs::write(&source, "main = 42 | show | string.length | echo\n").unwrap();
@@ -226,9 +213,9 @@ fn decimal_length_bit_intervals_and_native_helper_are_exact() {
     for opt in ["-O0", "-O1", "-O2", "-O3"] {
         for omitted in [false, true] {
             let helper = if omitted {
-                let correction = "(x < decimal_powers[estimate])";
+                let correction = "x < UINT64_C(10) ? 1 : 2";
                 assert_eq!(helper.matches(correction).count(), 1);
-                helper.replace(correction, "0")
+                helper.replace(correction, "2")
             } else {
                 helper.to_owned()
             };

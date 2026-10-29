@@ -3,6 +3,7 @@
 import copy
 import importlib.util
 import json
+import re
 from pathlib import Path
 import unittest
 
@@ -29,24 +30,21 @@ class DecimalCount(unittest.TestCase):
         self.row = fixture()
         self.budget = next(r for r in TABLE['rows'] if r['program'] == 'loop' and r['architecture'] == 'aarch64')
 
-    def test_exact_bit_interval_proof_and_low_bit_preserve_decimal_width(self):
-        for bits in range(1, 65):
-            estimate = bits * 1233 >> 12
-            self.assertLessEqual(estimate, 19)
-            for x in [1 << (bits - 1), (1 << bits) - 1]:
-                self.assertIn(len(str(x)), [estimate, estimate + 1])
-        values = [0, (1 << 64) - 1]
-        for exponent in range(20):
-            power = 10 ** exponent
-            values.extend([power - 1, power, power + 1])
-        for bits in range(64):
-            power = 1 << bits
-            values.extend([power - 1, power, power + 1])
-        for value in values:
-            x = value | 1
-            self.assertEqual(len(str(value)), len(str(x)))
-            estimate = x.bit_length() * 1233 >> 12
-            self.assertEqual(1 + estimate - (x < 10 ** estimate), len(str(value)))
+    def test_threshold_tree_covers_every_decimal_interval(self):
+        source = COUNT.helper((COUNT.ROOT / 'runtime/fwp_rt_ops.c').read_text())
+        thresholds = [int(x) for x in re.findall(r'x < UINT64_C\((\d+)\)', source)]
+        self.assertEqual(sorted(thresholds), [10 ** i for i in range(1, 20)])
+        self.assertNotIn('__builtin_clz', source)
+        self.assertNotIn('decimal_powers', source)
+        # The emitted-C oracle checks the actual branch wiring at every edge.
+        # These intervals independently cover U64 without gaps or overlap.
+        low = 0
+        for digits in range(1, 21):
+            high = min(10 ** digits - 1, (1 << 64) - 1)
+            self.assertEqual(len(str(low)), digits)
+            self.assertEqual(len(str(high)), digits)
+            low = high + 1
+        self.assertEqual(low, 1 << 64)
 
     def test_counting_cases_match_real_benchmark_inputs(self):
         programs = {p.name for p in (COUNT.ROOT / 'bench').iterdir() if (p / 'main.fwp').exists()}
@@ -58,7 +56,7 @@ class DecimalCount(unittest.TestCase):
         self.assertEqual(bodies[0], bodies[1])
 
     def test_recomputes_fixed_acceptance(self):
-        result = COUNT.check_case('loop', self.row, self.budget)
+        result = COUNT.check_case('loop', self.row, self.budget, 'threshold-tree')
         self.assertTrue(result['improvement'] and result['withinRegression'])
         self.assertEqual(result['candidateOverBaseline'], 0.8)
         self.assertIn('algorithm difference', result['peerScope'])
@@ -76,7 +74,7 @@ class DecimalCount(unittest.TestCase):
             elif defect == 'total': observation['seconds'] = 2
             else: process['seconds'] = float('nan')
             with self.subTest(defect=defect), self.assertRaises(AssertionError):
-                COUNT.check_case('loop', row, self.budget)
+                COUNT.check_case('loop', row, self.budget, 'threshold-tree')
 
     def test_noisy_or_slow_candidate_cannot_qualify(self):
         for kind in ['candidate', 'identical']:
@@ -84,11 +82,11 @@ class DecimalCount(unittest.TestCase):
             for observation in row['observations']:
                 if observation['kind'] == kind:
                     observation['processes'][0]['seconds'] = observation['seconds'] = 0.02
-            result = COUNT.check_case('loop', row, self.budget)
+            result = COUNT.check_case('loop', row, self.budget, 'threshold-tree')
             self.assertFalse(result['improvement'] or result['withinRegression'])
         self.row['binaries']['identical']['sha256'] = 'b' * 64
         with self.assertRaises(AssertionError):
-            COUNT.check_case('loop', self.row, self.budget)
+            COUNT.check_case('loop', self.row, self.budget, 'threshold-tree')
 
 
 if __name__ == '__main__':

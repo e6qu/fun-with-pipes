@@ -1,21 +1,22 @@
-# Startup and CPU-cost preparation
+# Startup repairs and CPU algorithm comparisons
 
-Published PR #224 remains active at `b4e004d5788f2b2479b085a7dc6a48c435cce477`
-in `/private/tmp/fwp-scalar-bounds`. Preserve that final head. Production
-`40790143419` is running (only Linux AMD64 remains); Linux ARM64, all macOS jobs, both Windows jobs, benchmark and documentation `40790141513` pass
-and are audited. Do not count draft-skipped runs as acceptance.
+**Next:** validate and measure the exact decimal-threshold tree on both qualified
+CPU hosts, retaining the original grouped-division baseline and frozen limits.
+Bundle the result with startup fixes, phase diagnostics and all rejected results
+in one PR; run the nine production gates plus docs after the batch is ready.
 
-This worktree `/private/tmp/fwp-cpu-phases`, branch `cpu-execution-costs`, is based
-on b4 and has no PR. Its branch can be published for focused runner validation
-while #224 remains the only active PR. It prepares the next related runtime/cost batch while
-#224's gates run. Focused startup checks and both qualified phase measurements passed and were audited.
+PR #224 is merged as `52e8da582644a93d996816d344894fdf5435a92f`.
+All nine production jobs `40790143419` and docs `40790141513` passed and were
+audited at `b4e004d5788f2b2479b085a7dc6a48c435cce477`. Merge tree
+`baca4d6d34a96828c49c3200ba942ef3375754e2` equals that tested tree. Verified
+subject: `Test scalar boundaries and retain rejected CPU experiments`, empty
+body, no trailers. Duplicate postmerge production `40801397077` was cancelled.
 
-**Next:** publish and measure the implemented decimal-length alternative selected by the
-[phase results](measurements/cpu-phases.md): bit-length estimate plus one exact
-power-of-ten comparison, with complete integer-boundary controls and unchanged
-same-job CPU limits. Bundle it with the verified startup repair. Continue
-monitoring #224; only merge after all nine production jobs plus docs pass. Move
-this work onto that verified squash tree before opening the next grouped PR.
+Current worktree: `/private/tmp/fwp-cpu-phases`, branch `cpu-execution-costs`.
+Rebased onto #224's squash with identical tree before new edits; no active PR.
+Original measured history is remotely retained by immutable tag
+`roadmap/revision-decimal-count-df80c15e`. Do not relabel old measurements with
+rebased source IDs. Startup and phase evidence below remains applicable.
 
 ## Source findings and current repair
 
@@ -65,27 +66,40 @@ p95 control exceeds the frozen limit; retain it as inconclusive. Both text contr
 pass, AMD64 narrowly. No speedup is accepted from this experiment. The report
 states exact inputs, intervals, code/stack/storage costs and all limitations.
 
-## Current preparation
+## Decimal experiment and current implementation
 
-The decimal-count candidate is implemented in `runtime/fwp_rt_ops.c`, with a
-160-byte readonly table. `integer_output` adds every binary-width boundary and
-O0/O1/O2/O3 emitted-helper checks against snprintf, including an omitted threshold
-correction that must fail. All 64 interval proofs and eight small Clang helper/
-control cases pass locally; this does not verify GCC or actual fwp emission.
-Five Python proof/measurement/input-inventory control groups and guarded Rustfmt/Actionlint pass.
-The [candidate protocol](measurements/decimal-count.md) and `decimal-count`
-workflow group native correctness, seven-peer context, memory checks and the
-fixed-budget comparison. Initial source `f910ffb866e5800d9f6fb46cc71741f9f730ba8e`, run `40799193551`,
-passed both GCC jobs' seven integer-output groups, benchmark and all peer/memory
-controls. Both readers then rejected the same incorrect `text` benchmark name;
-actual name is `strings`. No paired timing ran. All logs and sixteen semantic
-images per host were audited, with the partial attempts retained. The reader and
-all related docs now use the actual name; a new inventory/body control prevents
-recurrence. Re-run the focused comparison after publishing this repair. Preserve the current helper
-as the same-job control and the frozen CPU table. Do not resurrect the
-rejected range/character-sum changes or loosen limits. Verify any new candidate
-at production optimization settings, then run the complete final matrix once the
-grouped implementation and evidence are ready.
+Table candidate `df80c15ee894c437df0f0216db211abefc27115c` is rejected overall.
+ARM64 run `40800093045`, job `123205860349`, qualifies with 19.28% less text time.
+AMD64 run `40800624780`, job `123207612147`, does not: text median is 10.45%
+slower and both noise controls exceed frozen limits. Preserve those as
+inconclusive AMD64 decisions, not a reliable regression estimate or an accepted
+speedup. Earlier AMD64 jobs in `40800093045` and `40800351080` rejected Xeon 8370C
+before building/timing. No timing retry or budget reset is justified.
+
+Both qualified logs pass audit (two targets/eight tests). Independent artifact
+audits verify every sample, seven paired programs, 21 ordinary images, 14 storage
+images, actual table bytes and 16 semantic/control images per host. Complete raw
+reports and artifact identities are in `docs/measurements/decimal-count-*.json`;
+`scripts/check-decimal-records.py` reconstructs the original decisions. Retain
+initial reader failure `40799193551`: it used nonexistent `text`, corrected to
+actual `strings` before paired timing. All partial records remain archived.
+
+The next candidate replaces bit-width estimation and its table with exact
+balanced decimal comparisons. It uses at most five comparisons, no division or
+indexed table, and unchanged unsigned magnitude for signed minima. Tests retain
+all runtime-input boundaries at O0/O1/O2/O3; the emitted-helper snprintf oracle
+must catch an intentionally omitted one/two-digit comparison. Source inspection
+checks the full set of 19 thresholds; native execution checks branch wiring.
+The comparison runner keeps the original grouped-division helper, inputs, sample
+counts, compiler flags, output checks and fixed limits. No speedup is claimed.
+
+## Latest focused checks
+
+Guarded five Python control groups, eight small Clang O0/O1/O2/O3 helper/control
+cases, Rustfmt and Actionlint pass. The retained decimal-record verifier passes.
+An initial documentation audit caught the missing required status table during
+handoff cleanup; restored it before publication. No local fwp build or benchmark.
+GCC/native emission and the full production matrix remain runner work.
 
 ## Roadmap status
 
@@ -94,22 +108,23 @@ grouped implementation and evidence are ready.
 | 1 | Verified | Maintain collector-free ownership and cycle checks |
 | 2 | Verified | Maintain named A1–A6 guarantees |
 | 3 | Verified | Maintain scoped F1–F3 call and recursion guarantees |
-| 4 | In progress | Separate execution costs and repair startup failure handling |
+| 4 | In progress | Verify decimal comparisons and startup repairs |
 | 5 | Pending | Derivative storage, timing and precision |
 | 6 | Pending | CPU numerical kernels |
-| 7 | In progress | Extend fixed baselines and integrity controls beyond CPU cases |
+| 7 | In progress | Extend fixed baselines beyond the CPU cases |
 | 8 | Pending | Larger-program correctness, cleanup and scale |
 
 ## Recovery
 
-#224's retained scalar experiment rejects both candidates; its compiler/runtime/
-library/benchmark sources equal #223's verified tree. Read its own handoff and
-[report](measurements/proved-scalar-bounds.md) for all exact source and job IDs.
-Current final logs are `/private/tmp/fwp-224-final-{bench,docs}.log`;
-`/private/tmp/fwp-audit-production-log.py` checks production summaries/diagnostics.
+G1–G5, named A1–A6 and F1–F3 are verified, not universal zero-cost guarantees.
+P2/P3 remain open; next come D1–D3 differentiation, N1–N2 kernels, broader B1/B2
+baselines and V1–V2 applications. PLAN.md owns the concrete acceptance criteria.
+The historical Intel compiler abort is still unexplained; startup error handling
+is not its diagnosis. Preserve source/input evidence on recurrence.
 
-The primary checkout is detached at #209 with a recovery pointer and untracked
-compiler-abort evidence; preserve both, along with earlier measurement artifacts.
-Keep one published PR active. No local full builds/suites/benchmarks; use the guard
-for serial focused checks with 64 GiB free disk, 2 GiB target, 1 GiB RSS and 180s.
-Publication and compliant squash merge remain authorized after final gates pass.
+Raw artifacts/logs: `/private/tmp/fwp-decimal-{arm,amd}`, two rejected-host
+folders, phase/startup folders and `/private/tmp/fwp-224-final-*.log`.
+The primary checkout stays detached at #209 with a recovery pointer and untracked
+compiler-abort evidence; preserve both. No local full builds/suites/benchmarks.
+Use the guard for serial focused checks with 64 GiB free disk, 2 GiB target,
+1 GiB RSS and 180 seconds. Final-head gates still required before merging.
