@@ -186,7 +186,7 @@ instructions alone do not establish a speedup.
 
 ## 5. Differentiation
 
-**D1 — Refresh and separate descent costs.** Run the existing Rosenbrock cases
+**D1 — Refresh and separate descent costs.** Follow the [current-source protocol](docs/measurements/descent-costs.md). Run the existing Rosenbrock cases
 at 3/33/129 coordinates and 0/1/199/1,999 updates where defined. Compare fwp AD,
 fwp explicit derivatives, and explicit C/Rust implementations. Separate retained
 history, list/array construction, derivative recording, reverse traversal and
