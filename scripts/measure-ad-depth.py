@@ -202,6 +202,7 @@ def main():
                             if variant == 'formula':
                                 assert storage['peakBytes'] == 0 and not storage['afterBackward']
                             else:
+                                assert len(storage['afterBackward']) == depth, (case, storage)
                                 last = storage['afterBackward'][-1]
                                 assert last['otherBytes'] == last['workspaceBytes'] == 0
                                 assert storage['beforeShutdownBytes'] == last['registryBytes']

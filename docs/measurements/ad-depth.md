@@ -44,6 +44,9 @@ estimates. Separate ledgers record managed requests, requested bytes, retains an
 peak/live charge, and raw tape allocation/release. They exclude allocator metadata
 and OS reservations and must not be added to estimate process memory. Both ledgers
 must finish at zero; no extra cleanup is inserted to produce that result.
+Each AD case must record one completed backward pass per derivative level.
+Intermediate checkpoints may retain enclosing tapes; after the last pass only
+the reusable registry may remain until shutdown.
 Deliberately omitted raw-parent and managed-weight frees must be detected.
 
 Ordinary process timings alternate AD/formula order for two warmups and twelve

@@ -8,16 +8,15 @@ Worktree `/private/tmp/fwp-ad-recording`, branch `ad-recording-costs`; draft PR 
 
 ## Current measurements
 
-Run `40829884152`: ARM sessions 1/2 are jobs 123301407687/123301407660; AMD session
-1 is 123301407679. They are measuring. AMD session 2, job 123301407651, rejected an
-EPYC 9V74 before building; the required host is EPYC 7763. Its full log is
-`/private/tmp/fwp-descent-repeated-a31f-amd2-rejected.log`. GitHub refused a job-only
-rerun while the workflow is active; retry that job after completion. Preserve the
-rejection and every timing sample. Never select sessions by favorable timings.
+Run `40829884152` at a31f: ARM sessions 1/2 (123301407687/123301407660) and
+AMD session 1 (123301407679) passed. Their artifacts are downloaded for audit.
+AMD session 2 (123301407651) rejected an EPYC 9V74 before building; the required
+host is EPYC 7763. Its replacement was requested after completion, using the
+same workflow source. Preserve every host rejection and timing observation.
 
 The [derivative report](measurements/descent-costs.md) fixes inputs, repeated-solve
-counts, complete-output checks and the 2% identical-code control. No successful
-repeated-solve report exists yet. Earlier grouped-process run `40822958582`, source
+counts, complete-output checks and the 2% identical-code control. Three successful
+repeated-solve reports await audit and the fourth qualified session. Earlier grouped-process run `40822958582`, source
 `b1ca235415d4d2caabdb4f568d9300cf50a59400`, passed all four matching-host jobs;
 its audited archive retains 4,628 file identities, 80 images/68 stack reports per
 session, and noisy controls. Grouping alone did not establish comparison budgets.
@@ -51,10 +50,15 @@ native output/overflow test pass at a31f. Logs for each attempt remain in `/priv
 
 The new `ad-depth` runner covers F64/F128 depths 1/2/3 at 1/16/128 inputs, compared
 with explicit fwp formulas; [the protocol](measurements/ad-depth.md) states scope.
-Two small source/oracle cases pass raw interpretation with fbed. A local Clang
-link check exposed the required exact-float companion objects; the runner now
-builds and records both emitted companions with production flags. No complete
-native depth run has passed yet. Do not claim those costs before auditing it.
+Run `40833238845` at b349 passes all nine F64 cases on ARM/AMD, then fails
+because the observer samples scalar buffer release but misses typed backward
+release. F128 depth 1 output matches and both final memory ledgers are zero;
+this is an observation gap, not evidence of a leak. The repair samples after
+typed values and raw parents are released and requires exactly one checkpoint
+per derivative level. A guarded Clang O2 check of depth-3 F64 returns -12,
+records three checkpoints and finishes both ledgers at zero. Both failed logs and ZIP artifacts are retained at
+`/private/tmp/fwp-depth-b349-{arm,amd}.{log,zip}`. Audit the full repaired matrix
+before claiming per-depth costs. Exact-float companion compilation is included.
 
 ## Prepared D2 changes: do not publish the future assertion yet
 
