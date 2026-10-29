@@ -25,6 +25,9 @@ SPEC.loader.exec_module(AD)
 PHASE_SPEC = importlib.util.spec_from_file_location('descent_phases', ROOT / 'scripts/descent-phases.py')
 PHASE = importlib.util.module_from_spec(PHASE_SPEC)
 PHASE_SPEC.loader.exec_module(PHASE)
+BASELINE_SPEC = importlib.util.spec_from_file_location('descent_baselines', ROOT / 'scripts/descent-baselines.py')
+BASELINE = importlib.util.module_from_spec(BASELINE_SPEC)
+BASELINE_SPEC.loader.exec_module(BASELINE)
 
 
 def digest(data):
@@ -88,7 +91,7 @@ def main():
     parser.add_argument('--objdump', required=True)
     parser.add_argument('--nm', required=True)
     parser.add_argument('--time', required=True)
-    parser.add_argument('--case', required=True, action='append', help='DIMENSIONS:UPDATES')
+    parser.add_argument('--case', required=True, action='append', help='DIMENSIONS:UPDATES:PROCESSES_PER_LABEL_PER_SAMPLE')
     parser.add_argument('--samples', required=True, type=int)
     parser.add_argument('--warmups', required=True, type=int)
     parser.add_argument('--order-seed', required=True, type=int)
@@ -97,12 +100,19 @@ def main():
     parser.add_argument('--phase-warmups', required=True, type=int)
     parser.add_argument('--session', required=True, type=int, choices=[1, 2])
     parser.add_argument('--host', required=True)
+    parser.add_argument('--qualification', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
-    assert args.samples > 0 and args.samples % 14 == 0 and args.warmups > 0 and args.timeout > 0
+    assert args.samples > 0 and args.samples % 49 == 0 and args.warmups > 0 and args.timeout > 0
     assert args.phase_samples > 0 and args.phase_samples % 2 == 0 and args.phase_warmups > 0
     assert args.c_arch == {'x86_64': 'x86-64', 'aarch64': 'armv8-a'}[platform.machine()]
+    qualification = json.loads(args.qualification.read_text())
+    assert qualification['qualified'] and not qualification['failures']
+    assert qualification['source'] == os.environ['GITHUB_SHA']
+    assert qualification['actual'] == qualification['expected']
+    current_host, _ = BASELINE.host_details(args.cc, args.rustc)
+    assert not BASELINE.host_failures(current_host, qualification['expected'])
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     environment = {key: value for key, value in os.environ.items()
@@ -153,8 +163,9 @@ def main():
 
     results = {}
     for case in args.case:
-        points, updates = map(int, case.split(':'))
+        points, updates, processes = map(int, case.split(':'))
         assert 2 <= points <= 4096 and 0 <= updates <= 4091
+        assert processes > 0 and processes % 7 == 0
         name = f'{points}-{updates}'
         assert name not in results
         directory = out / name
@@ -286,20 +297,19 @@ def main():
         assert metadata['fwp-ad-identical']['sha256'] == metadata['fwp-ad']['sha256']
         labels = list(binaries)
         assert labels == ['fwp-ad-history', 'fwp-ad', 'fwp-explicit', 'fwp-packed', 'c-explicit', 'rust-explicit', 'fwp-ad-identical']
-        for _ in range(args.warmups):
-            for label in labels:
-                actual = run([binaries[label]], environment)
-                assert actual.stdout == outputs[label] and not actual.stderr
         samples = {label: [] for label in labels}
-        orders = measurement_orders(labels, args.samples, args.order_seed)
-        for order in orders:
-            for label in order:
-                start = time.perf_counter_ns()
-                actual = run([binaries[label]], environment)
-                elapsed = time.perf_counter_ns() - start
-                assert actual.stdout == outputs[label] and not actual.stderr
-                samples[label].append(elapsed)
-            (directory / 'samples.json').write_text(json.dumps(dict(orders=orders, samplesNs=samples), indent=2) + '\n')
+        orders = [BASELINE.execution_order(labels, processes, number, args.order_seed)
+                  for number in range(args.samples)]
+        for phase, count in [('warmup', args.warmups), ('sample', args.samples)]:
+            for number in range(count):
+                order = BASELINE.execution_order(labels, processes, number, args.order_seed)
+                totals = BASELINE.measure_round(order, binaries, outputs, environment, run,
+                    directory / f'{phase}-{number:03d}.json')
+                if phase == 'sample':
+                    for label in labels:
+                        samples[label].append(totals[label])
+                    (directory / 'samples.json').write_text(json.dumps(dict(
+                        orders=orders, samplesNs=samples, processesPerLabel=processes), indent=2) + '\n')
         medians = {label: statistics.median(values) for label, values in samples.items()}
         phase_observations = {}
         for label, diagnostic in phase_binaries.items():
@@ -345,7 +355,7 @@ def main():
             assert entries
             stack[stack_file.name] = dict(sha256=digest(stack_file.read_bytes()), entries=entries)
         assert len(stack) == 11 + len(controls), stack.keys()  # Four fwp forms/profiles, two phase images, C.
-        results[name] = dict(dimensions=points, updates=updates, oracle=expected,
+        results[name] = dict(dimensions=points, updates=updates, oracle=expected, processesPerLabel=processes,
             outputSha256={label: digest(value) for label, value in outputs.items()},
             samplesNs=samples, medianNs=medians, orders=orders,
             ratios={label: {peer: medians[label] / medians[peer] for peer in ['fwp-explicit', 'fwp-ad-history', 'fwp-ad-identical', 'c-explicit', 'rust-explicit']}
@@ -353,7 +363,7 @@ def main():
             peakProcessRssBytes=resident, fwpProfiles=profiles, binaries=metadata, cCompilerStackUsage=stack,
             phaseObservations=phase_observations, controls=controls)
         (out / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
-    paths = ['scripts/measure-descent-peers.py', 'scripts/measure-ad-application.py',
+    paths = ['scripts/descent-baselines.py', 'scripts/measure-descent-peers.py', 'scripts/measure-ad-application.py',
              'scripts/ad-storage-profile.py', 'scripts/measure-iteration.py', 'scripts/descent-phases.py',
              'tests/fixtures/descent_phases.c',
              'tests/fixtures/ad_raw_storage_probe.c', 'tests/fixtures/descent_explicit.fwp',
@@ -363,10 +373,11 @@ def main():
              'tests/fixtures/array_capture_reads.fwp', 'tests/fixtures/array_capture_effects.fwp',
              'docs/tutorials/20-autodiff-and-devices/main.fwp']
     report = dict(source=os.environ['GITHUB_SHA'], host=args.host, machine=platform.machine(),
+        qualification=qualification,
         settings={key: value for key, value in environment.items() if key.startswith('FWP_') or key == 'CC'},
         cpu=run(['lscpu'], environment).stdout.decode(), cCompiler=run([args.cc, '--version'], environment).stdout.decode(),
         rustCompiler=run([args.rustc, '-Vv'], environment).stdout.decode(), commands=commands,
-        configuration=vars(args) | {'compiler': str(args.compiler), 'output': str(args.output)},
+        configuration=vars(args) | {'compiler': str(args.compiler), 'output': str(args.output), 'qualification': str(args.qualification)},
         sourceHashes={name: digest((ROOT / name).read_bytes()) for name in paths}, results=results,
         scope='Six current-source implementations and one byte-identical AD-current control. '
         'fwp AD-history retains every vector; AD-current retains current weights. Both record and reverse derivatives. '
@@ -375,8 +386,10 @@ def main():
         'work, allocation and formatting strategies differ. No previous compiler or generated C is required. '
         'Each timed output matches its own checked reference exactly; the independent analytic tolerance is absolute/relative 1e-10. '
         'Times include process launch, construction, computation, complete output and teardown, excluding compilation/observers. '
-        'Zero updates include construction and printing, not pure startup. The seven-entry Williams schedule balances positions '
-        'and adjacent pairs within rows, not cross-row boundaries. All orders and samples remain recorded. '
+        'Zero updates include construction and printing, not pure startup. Each sample sums multiple fresh processes per label. '
+        'The rotated 49-entry cycle balances all cyclic predecessor pairs, including repeats, and positions over 49 samples. '
+        'Actual round boundaries are retained separately; the flattened order is not perfectly balanced. '
+        'All process times, output hashes, statuses and orders remain recorded; file writes and output checks are outside timing. '
         'Managed/raw allocation and peak RSS are separate observations and must not be added. '
         'These are baseline observations, not an accepted optimization or pure compiler-overhead measurement.')
     (out / 'comparison.json').write_text(json.dumps(report, indent=2) + '\n')

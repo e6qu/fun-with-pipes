@@ -4225,18 +4225,22 @@ jobs:
           name: descent-call-costs-${{ matrix.runner }}
           path: descent-call-evidence/
           if-no-files-found: error
+  descent_host_selection:
+    if: inputs.suite == 'descent-peers' && inputs.native_runner != 'all' && inputs.native_runner != 'ubuntu-latest' && inputs.native_runner != 'ubuntu-24.04-arm'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reject unsupported derivative baseline host
+        run: |
+          echo 'descent-peers requires all, ubuntu-latest or ubuntu-24.04-arm' >&2
+          exit 1
   descent_peers:
-    if: inputs.suite == 'descent-peers'
+    if: inputs.suite == 'descent-peers' && (inputs.native_runner == 'all' || inputs.native_runner == 'ubuntu-latest' || inputs.native_runner == 'ubuntu-24.04-arm')
     strategy:
       fail-fast: false
       matrix:
         session: [1, 2]
-        target:
-          - runner: ubuntu-latest
-            c_arch: x86-64
-          - runner: ubuntu-24.04-arm
-            c_arch: armv8-a
-    runs-on: ${{ matrix.target.runner }}
+        runner: ${{ fromJSON(inputs.native_runner == 'all' && '["ubuntu-latest","ubuntu-24.04-arm"]' || format('["{0}"]', inputs.native_runner)) }}
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     env:
       CC: gcc
@@ -4244,6 +4248,26 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.99.1
+          components: rustfmt
+      - name: Qualify the native host before building
+        env:
+          EXPECTED_CPU: ${{ matrix.runner == 'ubuntu-latest' && 'AMD EPYC 7763 64-Core Processor' || 'Neoverse-N2' }}
+          EXPECTED_MACHINE: ${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}
+          EXPECTED_CC: ${{ matrix.runner == 'ubuntu-latest' && 'gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0' || 'gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0' }}
+        run: >-
+          python3 scripts/descent-baselines.py --cpu "$EXPECTED_CPU" --machine "$EXPECTED_MACHINE"
+          --cc gcc --rustc rustc --c-version "$EXPECTED_CC"
+          --rust-version 'rustc 1.99.1 (58cf8f9c3 2026-10-13)'
+          --source "$GITHUB_SHA" --processors 4 --output descent-host.json
+      - name: Preserve host qualification, including rejected hosts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: descent-host-${{ matrix.runner }}-${{ matrix.session }}
+          path: descent-host.json
+          if-no-files-found: error
       - uses: actions/cache@v6
         with:
           path: ~/.cargo/registry
@@ -4257,6 +4281,8 @@ jobs:
         run: |
           target/release/fwp fmt --check tests/fixtures/descent_explicit.fwp tests/fixtures/descent_packed.fwp
           rustfmt --edition 2021 --check tests/fixtures/descent_explicit.rs
+      - name: Process scheduling and host qualification controls
+        run: python3 scripts/test-descent-schedule.py
       - name: Numerical measurement requirement controls
         run: python3 scripts/test-descent-budgets.py
       - name: Derivative phase-observer controls
@@ -4264,16 +4290,16 @@ jobs:
       - name: Compare current AD, history, explicit derivatives and C/Rust
         run: >-
           python3 scripts/measure-descent-peers.py --compiler target/release/fwp
-          --cc gcc --rustc rustc --c-arch "${{ matrix.target.c_arch }}"
+          --cc gcc --rustc rustc --c-arch "${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'armv8-a' }}"
           --objdump objdump --nm nm --time /usr/bin/time
-          --case 3:0 --case 3:1 --case 3:199 --case 3:1999 --case 33:199 --case 129:199
-          --warmups 2 --samples 56 --order-seed 20261029 --timeout 180
+          --case 3:0:42 --case 3:1:42 --case 3:199:21 --case 3:1999:7 --case 33:199:7 --case 129:199:7
+          --warmups 2 --samples 98 --order-seed 20261029 --timeout 180
           --phase-warmups 2 --phase-samples 12 --session "${{ matrix.session }}"
-          --host "${{ matrix.target.runner }}" --output descent-peers-evidence
+          --host "${{ matrix.runner }}" --qualification descent-host.json --output descent-peers-evidence
       - uses: actions/upload-artifact@v7
-        if: always()
+        if: ${{ always() && hashFiles('descent-peers-evidence/**') != '' }}
         with:
-          name: descent-peers-${{ matrix.target.runner }}-${{ matrix.session }}
+          name: descent-peers-${{ matrix.runner }}-${{ matrix.session }}
           path: descent-peers-evidence/
           if-no-files-found: error
   ad_application:

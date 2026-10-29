@@ -44,6 +44,8 @@ jobs:
         run: python3 scripts/test-parser-workspace-evidence.py
       - name: Recursion measurement evidence controls
         run: python3 scripts/test-mutual-recursion.py
+      - name: Derivative process scheduling and host qualification controls
+        run: python3 scripts/test-descent-schedule.py
       - name: Derivative baseline completeness controls
         run: python3 scripts/test-descent-baselines.py
       - name: Retained derivative baseline reports

@@ -51,7 +51,7 @@ arithmetic and temporary collection/value construction; this does not attribute
 that time solely to tape appends. The clocks perturb execution: paired
 instrumented/ordinary timings, including both faster and slower observations,
 are retained. Investigate the temporary values around recording before assuming
-larger raw-buffer caches will help; D2's exact change is not selected yet.
+larger raw-buffer caches will help; D2 first targets the heap record passed to scalar `ad.push`; its lifetime proof and fixed comparison limits remain.
 
 ## Retained evidence
 
@@ -115,7 +115,7 @@ formatting and runtime startup/teardown. The packed fwp formula may recompute an
 edge residual while C/Rust compute it once and add to two coordinates. Explain
 these differences; do not label the entire ratio “compiler overhead.”
 
-## Measurements and controls
+## Original measurements and controls
 
 Build every program from current source in the same native Linux job on ARM64 or
 AMD64. Use GCC O2, no fast math, `-ffp-contract=off`, no LTO, an explicit baseline
@@ -148,6 +148,56 @@ Verify each backward traversal retires its tape, idle workspace is bounded by
 512 KiB, and physical raw storage is zero after shutdown. Compare enabled and
 disabled workspace reuse with explicit settings. Keep leak and omitted-observation
 controls; instrumentation must not be used as ordinary execution timing.
+
+## Matched-host follow-up protocol
+
+The next baseline keeps the same programs, inputs, compiler settings and output
+checks. It changes how timing samples are collected; its results must stay
+separate from the original 56 single-process rounds above.
+
+Before building, require Linux, four available processors and one of these exact
+host/toolchain pairs: Neoverse-N2 with GCC 13.3.0 (Ubuntu
+13.3.0-6ubuntu2~24.04.1), or EPYC 7763 with GCC 15.2.0 (Ubuntu 15.2.0-16ubuntu1).
+Both use Rust 1.99.1, commit `58cf8f9c3`. Save qualification results even when the
+CPU or compiler differs; such a job stops before compiling or timing. Collect
+two independent qualified sessions per architecture and retain every rejected
+host. Select the first two qualified sessions by run/job ID, before reading their
+timings. No result is discarded because it is noisy or slow.
+
+Each measured sample sums several complete fresh-process times per label:
+
+| Coordinates | Updates | Processes per label per sample |
+|---|---:|---:|
+| 3 | 0 or 1 | 42 |
+| 3 | 199 | 21 |
+| 3 | 1,999 | 7 |
+| 33 or 129 | 199 | 7 |
+
+For example, a 3-coordinate/199-update sample runs each of the seven labels 21
+times. Its AD-current total includes 21 launches, solves, complete outputs and
+shutdowns. Divide that total by 21 when reporting time per solve; it does not
+amortize startup inside one process. Grouping reduces the influence of an
+isolated scheduling delay without dropping that observation.
+
+Run two warmup rounds and 98 measured rounds, seed 20261029. A 49-entry cycle
+contains every ordered pair of labels, including a label following itself.
+Repeat it to reach the stated process count, rotating the start by one entry
+per round. Across 49 rounds each label occupies each position equally often.
+Actual round boundaries are also saved; they replace a cyclic edge and are not
+claimed to make the entire flattened order perfectly balanced.
+
+Save each process's time, exit status and checked output hashes, along with its
+round's exact order and per-label totals. Keep the expected stdout files.
+File writes and output checks happen outside process timing. Wrong output saves
+the actual bytes and fails; an interrupted round retains its completed process
+observations and is marked incomplete. No partial round becomes a valid sample.
+The separate 12-round phase diagnostic and allocation/cleanup controls stay as
+specified above.
+
+After these observations, publish per-case timing/noise limits, exact allocation
+counts and code/stack bounds before implementing D2. An inconclusive control
+requires a measurement repair, not a relaxed limit or a speedup claim. The
+current four-scalar `ad.push` argument remains unchanged during this preparation.
 
 ## Separating costs before selecting D2
 
