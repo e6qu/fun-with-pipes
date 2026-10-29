@@ -156,11 +156,15 @@ keep owned-token versus borrowed-token differences explicit when selecting a fix
 [proved-bounds experiment](docs/measurements/proved-scalar-bounds.md) rejected both
 range-index and character-sum changes: neither meets the fixed improvement rule.
 Keep its boundary tests and results; do not repeat those candidates as a speedup.
-Next, run the [execution-phase diagnostic](docs/measurements/cpu-phases.md) for
-runtime setup, calculation, output and cleanup in the existing loop/text inputs
-and C/Rust peers. Keep instrumented diagnostic timings
-separate from the unchanged whole-process baseline. Use the largest demonstrated
-extra cost to choose the next compiler/runtime change. For the persistent gap, separate
+The [execution-phase diagnostic](docs/measurements/cpu-phases.md) identifies
+calculation as the larger measured interval, with visible instrumentation effects
+and an inconclusive AMD64 loop control. Next, compare the current decimal-length
+helper's repeated divisions with a bit-length estimate and exact power-of-ten
+check. Prove all U64 bit/decimal boundaries (including zero), preserve signed-min
+handling and checked expression order, and record the constant-table, code and
+stack costs. Compare ordinary images against the current helper in the same job
+on both qualified hosts using the unchanged frozen limits. Keep the C/Rust
+algorithm differences explicit; this is not a claim of pure compiler overhead. For the persistent gap, separate
 calculation, input/output, allocation and dispatch with explicit paired controls.
 Inspect generated C and machine code for the selected program after checking
 source correctness. Change only the proved redundant operation or representation;

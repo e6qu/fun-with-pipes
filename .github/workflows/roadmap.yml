@@ -46,6 +46,13 @@ jobs:
         run: python3 scripts/test-cpu-baselines.py
       - name: CPU execution-phase evidence controls
         run: python3 scripts/test-cpu-phases.py
+      - name: Verify retained CPU execution diagnostics
+        run: |
+          python3 scripts/cpu-phases.py verify \
+            --reports docs/measurements/cpu-phases-2026-10-29-arm.json docs/measurements/cpu-phases-2026-10-29-amd.json \
+            --unqualified docs/measurements/cpu-phases-2026-10-29-unqualified.json \
+            --artifacts docs/measurements/cpu-phases-artifacts-2026-10-29.json \
+            --table docs/measurements/cpu-budgets-2026-10-28.json
       - name: Scalar candidate comparison controls
         run: python3 scripts/test-scalar-bounds.py
       - name: Verify frozen CPU limits against all original sessions

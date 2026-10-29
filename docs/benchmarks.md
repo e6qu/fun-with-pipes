@@ -10,6 +10,7 @@ A faster new fwp build does not establish parity with another language.
 | Question | Evidence | Interpretation |
 |---|---|---|
 | How long does a complete program take versus C/Rust? | [Seven checked-arithmetic peers](#fwp-compared-with-c-and-rust) | Includes startup, algorithms, storage and output; not isolated compiler overhead |
+| Where do the CPU benchmark gaps occur? | [Calculation, startup and output protocol](measurements/cpu-phases.md) | Diagnostic clocks change code; retain ordinary timings and do not infer a speedup from phase observations |
 | What do numeric kernels cost? | [Array and matrix protocol](measurements/numerical-kernels.md) | Separates calculation from construction/cleanup; excludes process startup |
 | What does differentiation add? | [Four-way descent comparison](measurements/descent-peers.md) | Compare automatic and explicit fwp derivatives first; C/Rust use explicit formulas |
 | Did an ownership change reduce work? | [Ownership measurements](measurements/README.md#ownership-and-storage) | Paired counts/bytes; a retain saved is not a measured speedup |

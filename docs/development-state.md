@@ -2,19 +2,20 @@
 
 Published PR #224 remains active at `b4e004d5788f2b2479b085a7dc6a48c435cce477`
 in `/private/tmp/fwp-scalar-bounds`. Preserve that final head. Production
-`40790143419` is running; its benchmark and both ARM64 macOS jobs, plus documentation `40790141513` pass
+`40790143419` is running; its benchmark, both ARM64 macOS jobs and Intel ownership, plus documentation `40790141513` pass
 and are audited. Do not count draft-skipped runs as acceptance.
 
 This worktree `/private/tmp/fwp-cpu-phases`, branch `cpu-execution-costs`, is based
 on b4 and has no PR. Its branch can be published for focused runner validation
 while #224 remains the only active PR. It prepares the next related runtime/cost batch while
-#224's gates run. Focused native startup validation passed; phase measurements have not run.
+#224's gates run. Focused startup checks and both qualified phase measurements passed and were audited.
 
-**Next:** publish and run the grouped `cpu-phases` diagnostic on the two qualified
-Linux hosts, audit its complete evidence, and use the result to select the next
-optimization. Continue monitoring #224
-and merge it only after all nine final-head production jobs plus docs pass.
-Carry this work onto that verified squash merge before opening the next PR.
+**Next:** implement and measure the decimal-length alternative selected by the
+[phase results](measurements/cpu-phases.md): bit-length estimate plus one exact
+power-of-ten comparison, with complete integer-boundary controls and unchanged
+same-job CPU limits. Bundle it with the verified startup repair. Continue
+monitoring #224; only merge after all nine production jobs plus docs pass. Move
+this work onto that verified squash tree before opening the next grouped PR.
 
 ## Source findings and current repair
 
@@ -49,22 +50,28 @@ artifact has seven native images, 32 main startup outcomes and three partial-wor
 or deliberately omitted-check outcomes, independently verified without local
 execution. This is focused evidence, not the final production matrix.
 
-The phase profiler and workflow are prepared. Six guarded reader/instrumentation
-control groups pass. Guarded Actionlint and the documentation audit pass. Both
-small Rust diagnostic peers compile; retained real generated C accepts every
-declared instrumentation boundary. No local benchmark executed. The [protocol](measurements/cpu-phases.md) specifies inputs,
-clock boundaries, 72 measured rounds, unchanged noise controls and limits on
-attributing overhead. No phase timing or optimization result is claimed yet.
+Diagnostic source `c92fed4208a16627f0f420f58ce1f7729bf0f061` completed ARM64
+job `123191020317` in `40795538429` and AMD64 job `123191404460` in `40795656380`.
+The first run rejected AMD64 EPYC 9V45 before timing; its host record is retained.
+All job logs and artifacts pass independent audits. Every raw sample, original
+peer/memory report and artifact identity is saved in `docs/measurements/cpu-phases-*.json`.
+The permanent verifier reconstructs both results; six reader/instrumentation
+control groups pass. Actionlint and 173 documentation link sets passed before
+publication. Both small Rust diagnostic peers compiled locally without execution.
 
-## Planned measurement
+Calculation dominates the diagnostic intervals, but fwp loop instrumentation
+changes elapsed time by +19.84% ARM64/+12.24% AMD64. AMD64 loop's identical-code
+p95 control exceeds the frozen limit; retain it as inconclusive. Both text controls
+pass, AMD64 narrowly. No speedup is accepted from this experiment. The report
+states exact inputs, intervals, code/stack/storage costs and all limitations.
 
-Use unchanged loop/text inputs and checked C/Rust peers. Measure setup, calculation,
-output and cleanup separately in explicitly instrumented diagnostic programs;
-retain unchanged whole-process timings as a different observation. Check the
-instrumentation's output and phase ordering, retain raw samples and code/stack
-costs, and do not claim a speedup from an instrumented-versus-ordinary comparison.
-Use the largest demonstrated extra cost to select the next optimization. Do not
-resurrect the rejected range/character-sum changes or loosen their fixed limits.
+## Current preparation
+
+The next decimal-count candidate is not implemented yet. Preserve the current
+helper as the same-job control and the frozen CPU table. Do not resurrect the
+rejected range/character-sum changes or loosen limits. Verify any new candidate
+at production optimization settings, then run the complete final matrix once the
+grouped implementation and evidence are ready.
 
 ## Roadmap status
 

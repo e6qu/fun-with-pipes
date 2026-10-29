@@ -1,6 +1,6 @@
 //! Records, variants and closures that do not escape live on the stack
-//! (`src/escape.rs`; `FWP_STACK=0` when compiling turns it off). That
-//! tests/reuse.rs compares outputs with and without eligible storage reuse.
+//! (`src/escape.rs`; `FWP_STACK=0` when compiling turns it off).
+//! `tests/reuse.rs` compares outputs with and without eligible storage reuse.
 
 use std::io::Write;
 use std::path::{Path, PathBuf};

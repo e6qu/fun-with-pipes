@@ -1,7 +1,7 @@
 # Where the CPU benchmark time goes
 
 This experiment prepares the next [P2 change](../../PLAN.md#4-cpu-performance).
-It has no measured result yet. The [previous scalar changes](proved-scalar-bounds.md)
+Both native Linux sessions completed and their artifacts were audited. The [previous scalar changes](proved-scalar-bounds.md)
 did not meet the fixed improvement limits and were removed. Before choosing
 another optimization, separate calculation from runtime setup and output.
 
@@ -105,3 +105,103 @@ The implementation is [cpu-phases.py](../../scripts/cpu-phases.py); its reader a
 instrumentation controls are [test-cpu-phases.py](../../scripts/test-cpu-phases.py).
 Final conclusions must identify the measured source and both host runs, link raw
 records, and state what remains unproved.
+
+
+## Results at the measured source
+
+Source `c92fed4208a16627f0f420f58ce1f7729bf0f061` passed the ARM64 job in
+[run 40795538429](https://github.com/e6qu/fun-with-pipes/actions/runs/40795538429)
+and the qualified AMD64 job in
+[run 40795656380](https://github.com/e6qu/fun-with-pipes/actions/runs/40795656380).
+The first run's AMD64 host was EPYC 9V45; it was rejected before benchmark work.
+Keep its [host record](cpu-phases-2026-10-29-unqualified.json). The retry qualified
+as EPYC 7763; it was selected by hardware identity, not timing results.
+
+[ARM64 raw observations](cpu-phases-2026-10-29-arm.json),
+[AMD64 raw observations](cpu-phases-2026-10-29-amd.json) and the
+[artifact archive](cpu-phases-artifacts-2026-10-29.json) preserve every sample,
+original seven-peer/memory report, command and artifact identity. Each host passed
+benchmark output checks, eleven native peer controls, seven leak controls and
+both omitted-clock-boundary controls. Independent review checked 21 ordinary
+binaries, 14 memory profiles, six diagnostic binaries and two omitted-boundary
+binaries per host without executing downloaded images locally.
+
+### Ordinary and diagnostic elapsed time
+
+Values are **median batch milliseconds**: one process for `loop`, 32 for
+`text-length`. “Same” is another invocation of the identical ordinary binary.
+
+| Host/program | C | C same | C diagnostic | Rust | Rust same | Rust diagnostic | fwp | fwp same | fwp diagnostic |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| ARM64 loop | 176.586 | 176.518 | 172.660 | 114.176 | 114.108 | 114.119 | 130.661 | 130.695 | 156.586 |
+| ARM64 text-length | 103.188 | 103.246 | 103.221 | 186.775 | 186.608 | 186.953 | 202.096 | 202.167 | 202.701 |
+| AMD64 loop | 126.527 | 126.435 | 131.127 | 107.127 | 107.130 | 110.376 | 127.864 | 128.424 | 143.510 |
+| AMD64 text-length | 113.540 | 113.252 | 103.479 | 215.162 | 215.109 | 225.642 | 237.400 | 236.565 | 233.165 |
+
+Both ARM64 fwp controls pass the original limits. AMD64 text passes narrowly:
+its paired p95 ratio is 1.052066 against the fixed 1.052444 limit. AMD64 loop
+is **inconclusive**, at 1.032855 against 1.018789. None of these limits changed.
+The three languages' full control ratios remain in the raw records.
+
+The diagnostic changes fwp loop elapsed time by **+19.84% on ARM64 and +12.24%
+on AMD64**. Its text change is +0.30% and −1.78%. C text changes by −8.86% on
+AMD64 despite computing the same result; Rust text changes by +4.87%. These are
+instrumentation/layout effects, not accepted language optimizations. The current
+AMD64 ordinary fwp loop also differs from the earlier baseline session; without a
+same-job source comparison it is not evidence that the startup repair sped it up.
+
+### Internal intervals
+
+Values below are **median microseconds per diagnostic process**, including all
+72 samples (and all 32 processes per text batch). Individual medians do not add
+to the median process duration.
+
+| Host/program | C calculation | Rust calculation | fwp calculation | fwp thread start | fwp setup | fwp output | fwp entry return | fwp cleanup | fwp join/flush |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| ARM64 loop | 171573.388 | 112931.293 | 155159.220 | 115.353 | 31.352 | 13.212 | 0.064 | 0.608 | 133.593 |
+| ARM64 text-length | 2481.052 | 4918.847 | 5205.069 | 95.515 | 27.880 | 10.488 | 0.048 | 0.280 | 86.380 |
+| AMD64 loop | 130201.424 | 109154.701 | 142247.033 | 99.790 | 27.561 | 12.198 | 0.080 | 0.771 | 68.647 |
+| AMD64 text-length | 2548.286 | 6167.674 | 6251.873 | 91.587 | 33.919 | 7.604 | 0.090 | 0.270 | 42.105 |
+
+Across these diagnostics, C output takes 26–53 µs and Rust output 8–23 µs.
+Unaccounted wall-time medians are 0.65–1.18 ms; they include the launcher and
+unobserved/reporting work, not just runtime overhead. Setup/cleanup is small
+compared with calculation in the diagnostic builds. Because instrumentation
+changes code and timings, these intervals do not precisely partition the ordinary
+programs' performance gap. They support investigating computation next.
+
+### Code, stack and memory
+
+The compiler emits distinct observed clock calls around the calculations and
+output in the retained images. Source and machine-code review establish the
+observed boundaries, not an absence of instrumentation effects.
+
+| Host/program | C `.text` ordinary → diagnostic | Rust `.text` ordinary → diagnostic | fwp `.text` ordinary → diagnostic |
+|---|---:|---:|---:|
+| ARM64 loop | 600 → 1,024 | 218,780 → 223,948 | 10,364 → 10,892 |
+| ARM64 text-length | 600 → 1,088 | 218,876 → 224,044 | 11,164 → 11,692 |
+| AMD64 loop | 489 → 889 | 242,131 → 246,931 | 11,058 → 11,634 |
+| AMD64 text-length | 569 → 969 | 242,195 → 246,995 | 11,986 → 12,594 |
+
+These section sizes include padding. Whole-image bytes and exact sources/binaries
+are recorded separately; Rust includes its linked runtime code. Actual timed C
+main frames are 80/64 bytes for ARM64 loop/text and 32/32 for AMD64. fwp diagnostic
+main frames are 160 bytes on ARM64 and 128 on AMD64; worker frames are 304/272
+and 288/256 respectively. These are per-function reports, not peak call-chain use.
+
+Both ordinary fwp programs still report zero managed requests, bytes, retains and
+peak/final managed charge in separate profiles. Deliberate 16-byte leaks remain
+detectable. That excludes raw runtime allocations and stacks. The raw report also
+retains three RSS observations per language/program and all seven peer comparisons;
+no process-memory or wider benchmark speedup is claimed.
+
+### Decision
+
+Keep the startup error-handling repair for correctness. Do not remove its required
+stack setup or infer an optimization from these clock-instrumented images.
+Investigate the repeated divisions in decimal digit counting next. A bit-length
+estimate followed by an exact power-of-ten comparison is a testable alternative:
+it needs integer-boundary proofs, a visible constant-table cost and an ordinary
+same-job comparison against the current helper on both architectures. Preserve
+all checked arithmetic, evaluation order and existing fixed timing limits. No
+candidate has yet passed that acceptance test; P2/P3 remain open.
