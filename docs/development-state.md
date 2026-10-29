@@ -88,7 +88,22 @@ The exact fbed baseline produced 256 records with stack storage on, derivative 1
 and no live managed storage or tapes. Two standalone production ownership-module
 tests pass locally; the frozen primitive inventory is checked before publication.
 
-Run `descent-recording` for the paired comparison and ownership tests. Full final
+Run `40836575689` at `8e299f9f` passes all seven ownership/scope tests,
+the inventory, 240 focused Rust tests, native nominal selection and 17 measurement
+controls on ARM session 1 (123322646001). Both ARM sessions (also 123322646075)
+then fail after all 98 zero-update timing rounds: ratio generation still names
+the removed `fwp-explicit` variant. All completed targets/logs were audited;
+no other test or compiler failure was found. The repair derives ratio columns
+and rows from the actual variant lists; fixed acceptance limits are unchanged.
+Partial artifacts/logs are `/private/tmp/fwp-recording-8e29-arm{1,2}.{log,zip}`;
+regression artifacts are `fwp-recording-8e29-arm-checks.zip`.
+
+Original AMD jobs 123322646170/123322646106 rejected EPYC 9V45 before building.
+Replacement run `40836866148` uses the same source; session 1 (123323586078)
+qualified and runs focused checks, session 2 (123323586141) rejected EPYC 9V74.
+Retain all rejection logs and avoid drawing timing conclusions from partial cases.
+Post-candidate depth run `40837334009` is also active at 8e299f9f, since stack
+recording affects the earlier F64 depth costs. Full final
 native/docs gates and G2 follow the grouped work; no speedup is accepted yet.
 
 ## Roadmap status
@@ -99,7 +114,7 @@ native/docs gates and G2 follow the grouped work; no speedup is accepted yet.
 | 2 | Verified | Maintain A1–A6; sharing still uses ARC |
 | 3 | Verified | Maintain F1–F3's stated call/recursion scope |
 | 4 | Verified | Selected decimal cost delivered; loop gap remains recorded |
-| 5 | In progress | D1 fixed limits, D2 stack arguments, D3 per-depth costs |
+| 5 | In progress | D1 final baseline audit, D2 paired acceptance, final native gates |
 | 6 | Pending | N1–N2 numerical kernels |
 | 7 | In progress | Broader B1/B2 comparisons |
 | 8 | Pending | V1–V2 application validation |
@@ -121,5 +136,5 @@ Primary checkout stays detached at #209 with a recovery pointer; cpu-phases is
 completed delivery, ad-refresh is retained evidence. No agents.
 
 All local checks use `scripts/local-guard.py`, serially: 64 GiB free, target <2 GiB,
-RSS <1 GiB, 180 seconds. About 68 GiB free, no local build tree. Full work runs on
-GitHub. Source formatting and the 176-link-set/106-anchor/8-step docs audit pass.
+RSS <1 GiB, 180 seconds. About 67 GiB free, no local build tree. Full work runs on
+GitHub. Source formatting and the 177-link-set/106-anchor/8-step docs audit pass.

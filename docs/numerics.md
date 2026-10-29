@@ -228,8 +228,10 @@ For the piecewise function `if x < 0 then -x else x`, checks approach zero from
 both sides and expect -1 or 1. At zero, fwp follows the `else` branch and returns
 1. That is an execution rule: the mathematical function has no derivative there.
 The raw interpreter and native GCC O1/O2 checks pass on Linux ARM64/AMD64 at
-`a31f24c4`, with workspace reuse both enabled and disabled. Full platform acceptance
-and the [finite depth/size cost matrix](measurements/ad-depth.md) remain. This does not claim accuracy outside the
+`a31f24c4`, with workspace reuse both enabled and disabled. The
+[finite depth/size cost matrix](measurements/ad-depth.md) also passes on both
+Linux architectures at `89bbec5b`. Full platform acceptance remains. This does
+not claim accuracy outside the
 stated domains or constant costs for nested differentiation.
 
 ### Lifetime and nesting

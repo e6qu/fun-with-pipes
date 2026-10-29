@@ -416,12 +416,13 @@ def main():
                 entries.append(dict(location=location, bytes=int(size), qualifier=qualifier))
             assert entries
             stack[stack_file.name] = dict(sha256=digest(stack_file.read_bytes()), entries=entries)
-        assert len(stack) == (13 if recording else 11) + len(controls), stack.keys()  # Four fwp forms/profiles, two phase images, C.
+        # Four fwp forms/profiles, two or four phase images, and C.
+        assert len(stack) == (13 if recording else 11) + len(controls), stack.keys()
         results[name] = dict(dimensions=points, updates=updates, oracle=expected, processesPerLabel=processes, solvesPerProcess=solves,
             outputSha256={label: digest(value) for label, value in outputs.items()},
             samplesNs=samples, medianNs=medians, orders=orders,
-            ratios={label: {peer: medians[label] / medians[peer] for peer in ['fwp-explicit', 'fwp-ad-history', 'fwp-ad-identical', 'c-explicit', 'rust-explicit']}
-                    for label in ['fwp-ad-history', 'fwp-ad', 'fwp-explicit', 'fwp-packed']},
+            ratios={label: {peer: medians[label] / medians[peer] for peer in labels}
+                    for label in fwp_labels},
             peakProcessRssBytes=resident, fwpProfiles=profiles, binaries=metadata, cCompilerStackUsage=stack,
             phaseObservations=phase_observations, controls=controls)
         (out / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
