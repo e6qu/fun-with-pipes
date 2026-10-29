@@ -1,6 +1,8 @@
 # Eager captures in derivative programs
 
-This is a declared experiment, not an implemented optimization or a speed claim.
+The comparison was published in `8a495a72` before implementation. A candidate
+is now implemented; verification and measurements are pending. This is not a
+speed claim.
 [The earlier scalar-recording experiment](descent-costs.md#scalar-recording-results-allocation-reduction-retained-speed-goal-open)
 keeps its allocation reduction and failed timing result. Its limits are unchanged.
 
