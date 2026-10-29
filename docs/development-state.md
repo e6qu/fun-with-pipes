@@ -1,6 +1,6 @@
 # Continue PR #227: derivative costs and numerical kernels
 
-**Next:** implement and run the [declared resource-counter diagnostic](measurements/timing-variation.md#resource-counter-diagnostic-declared-before-implementation)
+**Next:** run and audit the [declared resource-counter diagnostic](measurements/timing-variation.md#resource-counter-diagnostic-declared-before-implementation)
 for the retained failed array/history programs. Record child CPU time, faults
 and context switches without changing their binaries or acceptance rules. The
 [typed-state experiment](measurements/timing-variation.md#typed-state-results)
@@ -102,7 +102,7 @@ Auditors: `/private/tmp/fwp-audit-typed-state.py` and
 
 ## Local checks and retained state
 
-Guarded, serial checks pass: seven scheduling/oracle controls, seven archive
+Guarded, serial checks pass: two real-child/resource-counter controls, seven scheduling/oracle controls, seven archive
 controls (including the retained array failure), three diagnostic controls,
 workflow lint and roadmap links. Typed-state edits are Rust-formatted;
 their Rust compilation and native checks run on GitHub, not locally. No local full build, suite or benchmark ran.
