@@ -11576,7 +11576,149 @@
           "bytes": 2986764,
           "sha256": "e30ea5aa6a345263cceec14fe84e52a8d63fed95ff0af3c18a738014db16fdd3"
         }
-      }
+      },
+      "jobMetadata": {
+        "id": 123562554782,
+        "run_id": 40906486080,
+        "workflow_name": "Numerical and ownership evidence",
+        "head_branch": "numerical-kernel-baselines",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/40906486080",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAcxOb1ng",
+        "head_sha": "f053da88cf62c48f29d73a16d50b74107b23dcb7",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/123562554782",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/40906486080/job/123562554782",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T15:55:50Z",
+        "started_at": "2026-10-29T15:59:48Z",
+        "completed_at": "2026-10-29T16:03:53Z",
+        "name": "kernel_baselines (1, ubuntu-24.04-arm)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-29T15:59:49Z",
+            "completed_at": "2026-10-29T15:59:50Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-29T15:59:50Z",
+            "completed_at": "2026-10-29T15:59:57Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@master",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-29T15:59:57Z",
+            "completed_at": "2026-10-29T16:00:02Z"
+          },
+          {
+            "name": "Qualify the kernel host before building",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-29T16:00:02Z",
+            "completed_at": "2026-10-29T16:00:02Z"
+          },
+          {
+            "name": "Retain host qualification and any rejection",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-29T16:00:02Z",
+            "completed_at": "2026-10-29T16:00:03Z"
+          },
+          {
+            "name": "Run actions/cache@v6",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-29T16:00:03Z",
+            "completed_at": "2026-10-29T16:00:04Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-29T16:00:04Z",
+            "completed_at": "2026-10-29T16:00:04Z"
+          },
+          {
+            "name": "Exact result and scheduling controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-29T16:00:04Z",
+            "completed_at": "2026-10-29T16:00:04Z"
+          },
+          {
+            "name": "Build the measurement compiler",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-29T16:00:04Z",
+            "completed_at": "2026-10-29T16:01:12Z"
+          },
+          {
+            "name": "Measure four declared kernel cases against C and Rust",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-10-29T16:01:12Z",
+            "completed_at": "2026-10-29T16:03:44Z"
+          },
+          {
+            "name": "Retain complete measurements and partial failed observations",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-10-29T16:03:44Z",
+            "completed_at": "2026-10-29T16:03:51Z"
+          },
+          {
+            "name": "Post Run actions/cache@v6",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21,
+            "started_at": "2026-10-29T16:03:51Z",
+            "completed_at": "2026-10-29T16:03:51Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22,
+            "started_at": "2026-10-29T16:03:51Z",
+            "completed_at": "2026-10-29T16:03:51Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23,
+            "started_at": "2026-10-29T16:03:51Z",
+            "completed_at": "2026-10-29T16:03:51Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/123562554782",
+        "labels": [
+          "ubuntu-24.04-arm"
+        ],
+        "runner_id": 1000383015,
+        "runner_name": "GitHub Actions 1000383015",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "logBytes": 43990,
+      "logSha256": "181f7138806d7488fb323f242a815ebb83c5c7ee38bdad6925b25e393df26cc0"
     },
     {
       "session": 2,
@@ -23153,7 +23295,149 @@
           "bytes": 2986767,
           "sha256": "d59c13a4c4c72f3613f39e4ede4ef3babf0601b3b01fe18439b3cf822d6c5b77"
         }
-      }
+      },
+      "jobMetadata": {
+        "id": 123562554084,
+        "run_id": 40906486080,
+        "workflow_name": "Numerical and ownership evidence",
+        "head_branch": "numerical-kernel-baselines",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/40906486080",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAcxOby5A",
+        "head_sha": "f053da88cf62c48f29d73a16d50b74107b23dcb7",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/123562554084",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/40906486080/job/123562554084",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T15:55:50Z",
+        "started_at": "2026-10-29T15:58:04Z",
+        "completed_at": "2026-10-29T16:02:28Z",
+        "name": "kernel_baselines (2, ubuntu-24.04-arm)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-29T15:58:05Z",
+            "completed_at": "2026-10-29T15:58:06Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-29T15:58:06Z",
+            "completed_at": "2026-10-29T15:58:11Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@master",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-29T15:58:11Z",
+            "completed_at": "2026-10-29T15:58:17Z"
+          },
+          {
+            "name": "Qualify the kernel host before building",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-29T15:58:17Z",
+            "completed_at": "2026-10-29T15:58:17Z"
+          },
+          {
+            "name": "Retain host qualification and any rejection",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-29T15:58:17Z",
+            "completed_at": "2026-10-29T15:58:18Z"
+          },
+          {
+            "name": "Run actions/cache@v6",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-29T15:58:18Z",
+            "completed_at": "2026-10-29T15:58:20Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-29T15:58:20Z",
+            "completed_at": "2026-10-29T15:58:20Z"
+          },
+          {
+            "name": "Exact result and scheduling controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-29T15:58:20Z",
+            "completed_at": "2026-10-29T15:58:21Z"
+          },
+          {
+            "name": "Build the measurement compiler",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-29T15:58:21Z",
+            "completed_at": "2026-10-29T15:59:41Z"
+          },
+          {
+            "name": "Measure four declared kernel cases against C and Rust",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-10-29T15:59:41Z",
+            "completed_at": "2026-10-29T16:02:17Z"
+          },
+          {
+            "name": "Retain complete measurements and partial failed observations",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-10-29T16:02:17Z",
+            "completed_at": "2026-10-29T16:02:25Z"
+          },
+          {
+            "name": "Post Run actions/cache@v6",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21,
+            "started_at": "2026-10-29T16:02:25Z",
+            "completed_at": "2026-10-29T16:02:25Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22,
+            "started_at": "2026-10-29T16:02:25Z",
+            "completed_at": "2026-10-29T16:02:25Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23,
+            "started_at": "2026-10-29T16:02:25Z",
+            "completed_at": "2026-10-29T16:02:25Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/123562554084",
+        "labels": [
+          "ubuntu-24.04-arm"
+        ],
+        "runner_id": 1000383007,
+        "runner_name": "GitHub Actions 1000383007",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "logBytes": 44068,
+      "logSha256": "35e9847f6253287a6d5cf355d4ea109695ca4a28d9279b3f7735e4b9fbb47289"
     }
   ],
   "rejectedHosts": [

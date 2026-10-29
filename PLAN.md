@@ -212,8 +212,10 @@ compiler with this transformation disabled; the largest current-result case
 still takes 44–58 times the handwritten C derivative's time. Memory, output,
 code and stack limits pass. The first rejected AMD host remains recorded.
 Full CI exposed a mixed record-return C-generator defect; its repair passes 333
-focused tests on each GCC ARM64/AMD64 and Clang ARM64 host. Refresh the comparison
-after this repair, preserving the original results and unchanged limits. Group
+focused tests on each GCC ARM64/AMD64 and Clang ARM64 host. The repaired-source
+recheck has one failure: AMD zero-update history is 2.28% slower than its reference
+(limit 2%). The emitted C is unchanged. Preserve this failure and diagnose the
+[timing variation](docs/measurements/timing-variation.md) before another acceptance run. Group
 N1's prepared baseline work in the same PR. Require all nine final-head production
 jobs, documentation and both G2 hosts before closing the selected D2 budget.
 Preserve failure/cancellation, mixed/stale-node, tape-full and nested-gradient
@@ -238,6 +240,10 @@ map/reduce and 65×67 by 67×63 matrix comparison, then add 262,145 elements
 and 257×259 by 259×255 matrices using the same formulas and eight rounds.
 Keep input values, reduction order, precision and output checks identical.
 **Done:** B1-quality time, memory and accuracy baselines for both architectures.
+Initial and repaired ARM sessions pass. Repaired AMD session 2 fails the small
+matrix's identical-code control (3.27–3.49%, limit 2%); no qualified AMD session 1
+completed. All evidence remains archived. Complete the timing diagnostic before
+accepting the baselines or selecting N2; unchanged reruns are not a repair.
 
 **N2 — Optimize the selected kernel.** Change loop layout, data movement or
 workspace in `src/linalg.rs`, code generation and the corresponding C runtime.

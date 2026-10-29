@@ -74,7 +74,6 @@ def check_report(report, source, protocol):
                                  "recording" if paired else "baseline")
     if protocol == 'eager-captures':
         assert config['comparison'] == protocol
-        assert not DESCENT.paired_budget_failures(report['results'], protocol)
 
 
 def check_archive(path, protocol):
@@ -82,6 +81,7 @@ def check_archive(path, protocol):
     assert set(archive['sessions']) == {'arm-1', 'arm-2', 'amd-1', 'amd-2'}
     identities = set()
     source_hashes = None
+    failed_sessions = 0
     for label, session in archive['sessions'].items():
         source = session['source'] if protocol == 'eager-captures' else archive['source']
         run = session['run'] if protocol == 'eager-captures' else archive['run']
@@ -91,7 +91,8 @@ def check_archive(path, protocol):
         identities.add(identity)
         assert job['run_id'] == run and job['head_sha'] == source
         assert job['status'] == 'completed'
-        assert job['conclusion'] == ('failure' if protocol == 'recording' else 'success')
+        failed = protocol == 'recording' or (protocol == 'eager-captures' and bool(session['budgetFailures']))
+        assert job['conclusion'] == ('failure' if failed else 'success')
         for kind in ['report', 'log']:
             raw = gzip.decompress((path.parent / session[kind]).read_bytes())
             assert len(raw) == session[kind + 'Bytes']
@@ -115,8 +116,9 @@ def check_archive(path, protocol):
                 assert session['referenceFiles'][file]['sha256'] == reference[field]
             assert hashlib.sha256(session['referencePatch'].encode()).hexdigest() == reference['patchSha256']
         if protocol == 'eager-captures':
-            assert archive['decision'] == 'accepted'
-            assert session['budgetFailures'] == []
+            failures = DESCENT.paired_budget_failures(report['results'], protocol)
+            assert session['budgetFailures'] == failures
+            failed_sessions += bool(failures)
             reference = report['referenceCompiler']
             assert reference['source'] == source
             assert reference['disabledTransformation'] == 'once-used eager capture bindings'
@@ -145,7 +147,11 @@ def check_archive(path, protocol):
             ratios = [a / b for a, b in zip(row['samplesNs']['fwp-ad'], row['samplesNs']['fwp-ad-identical'])]
             paired = [max(ratio, 1 / ratio) for ratio in ratios]
             assert derived['identicalPairedP95'] == sorted(paired)[math.ceil(.95 * len(paired)) - 1]
-    print(f'Four {protocol} sessions verified; all identical-code variation remains visible')
+    if protocol == 'eager-captures':
+        assert archive['decision'] == ('not-accepted' if failed_sessions else 'accepted')
+        print(f'Four {protocol} sessions audited; {failed_sessions} failed sessions retained')
+    else:
+        print(f'Four {protocol} sessions audited; all original outcomes retained')
 
 
 if __name__ == '__main__':

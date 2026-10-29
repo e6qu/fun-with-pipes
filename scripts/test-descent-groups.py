@@ -21,9 +21,29 @@ REPEATED = json.loads(gzip.decompress((ROOT / 'docs/measurements/descent-repeate
 
 RECORDING_ARCHIVE = ROOT / 'docs/measurements/descent-recording-artifacts-2026-10-29.json'
 CAPTURE_ARCHIVE = ROOT / 'docs/measurements/eager-captures-artifacts-2026-10-29.json'
+RECHECK_ARCHIVE = ROOT / 'docs/measurements/eager-captures-recheck-artifacts-2026-10-29.json'
 
 
 class Evidence(unittest.TestCase):
+    def test_capture_recheck_retains_its_failed_timing_rule(self):
+        CHECK.check_archive(RECHECK_ARCHIVE, 'eager-captures')
+        for change in ['decision', 'failure']:
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as directory:
+                archive = json.loads(RECHECK_ARCHIVE.read_text())
+                for session in archive['sessions'].values():
+                    for kind in ['report', 'log']:
+                        session[kind] = str(RECHECK_ARCHIVE.parent / session[kind])
+                if change == 'decision':
+                    archive['decision'] = 'accepted'
+                else:
+                    session = archive['sessions']['amd-1']
+                    session['budgetFailures'] = []
+                    session['job']['conclusion'] = 'success'
+                path = Path(directory) / 'index.json'
+                path.write_text(json.dumps(archive))
+                with self.assertRaises(AssertionError):
+                    CHECK.check_archive(path, 'eager-captures')
+
     def test_eager_capture_comparison_preserves_all_four_sessions(self):
         CHECK.check_archive(CAPTURE_ARCHIVE, 'eager-captures')
 

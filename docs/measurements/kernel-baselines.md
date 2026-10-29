@@ -29,6 +29,16 @@ output slice also conveys exclusivity. Generated fwp may convey different alias
 information. Retain these differences, source, build commands and executable
 identities; equal formulas do not imply identical machine instructions.
 
+Each fwp case exports the calculation as a function called by a native C harness.
+That harness fills inputs through fwp's array-storage API; the C and Rust peers
+fill their own native buffers. This measures the compiled kernel and its native
+entry/allocation costs, not an entire fwp application or the speed of an fwp
+input generator. The retained sources show this boundary. These task-free
+programs emit `FWP_TASK_TICKS=0`; their timers contain no scheduler tick checks.
+Matrix byte loads/stores use fixed-size copy intrinsics for C aliasing safety,
+while the peers use typed floating-point buffers. Do not attribute every observed
+difference to ARC or to the language's arithmetic operations.
+
 An independent exact-integer oracle checks every result bit: the chosen inputs
 and arithmetic are binary fractions with bounded integer numerators. Array
 terms use quarters and matrix products use thirty-seconds. Each expected matrix
@@ -118,7 +128,27 @@ size substitutions, exact-result verification runs, separate memory profiles,
 all process observations, ELF sections and GCC frame reports. Its deliberately
 leaked owner must fail before process exit can hide the retained storage.
 
+`check-kernel-baselines.py` recomputes the retained timing summaries and checks
+result oracles, memory observations, runner identities and raw evidence hashes.
+It requires an explicit coverage choice: `initial-arm` checks only the historical
+two-session archive; `complete` requires both sessions on both architectures.
+The documentation controls reject incomplete coverage, changed results, missing
+owners' cleanup, altered timings, copied jobs and mismatched evidence files.
+
 ## Initial ARM observations; N1 remains open
+
+The [repaired-source recheck](kernel-recheck-artifacts-2026-10-29.json) includes
+two passing ARM sessions at `bf46f776` and an inconclusive AMD session 2. Its small
+matrix's byte-identical executables differ by 3.27% in computation and 3.49%
+including allocation, exceeding 2%. Every result, process, binary, frame, memory
+profile and full log is audited; both failed rules remain. No qualified AMD
+session 1 completed. The [timing diagnostic](timing-variation.md) is next;
+[all rejected hosts](kernels-recheck-rejections-2026-10-29.json) remain recorded.
+Do not retry the unchanged measurement to get a passing result.
+
+For all four kernel cases, the repaired compiler emits exactly the same C as
+the initial ARM source. This establishes source applicability for those kernels,
+but it does not erase the AMD noise failure or complete the missing session.
 
 Run `40906486080` at `f053da88` has two independently audited Neoverse-N2 sessions:
 jobs `123562554782` and `123562554084`. Every result bit, process observation,

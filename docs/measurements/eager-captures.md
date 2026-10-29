@@ -1,9 +1,9 @@
 # Eager captures in derivative programs
 
 The comparison was published in `8a495a72` before implementation. All four matching-host measurements pass their frozen limits after independent
-audit at the sources listed below. Full CI subsequently exposed a mixed-record
-return defect, described under verification. Its repair needs focused checks and
-renewed measurement evidence before final native delivery.
+audit at the original sources listed below. Full CI exposed a mixed-record
+return defect; its repair passes focused checks. The repaired-source recheck
+retains one failed zero-update timing rule, so D2 acceptance remains open.
 [The earlier scalar-recording experiment](descent-costs.md#scalar-recording-results-allocation-reduction-retained-speed-goal-open)
 keeps its allocation reduction and failed timing result. Its limits are unchanged.
 
@@ -163,8 +163,21 @@ DELETE returning an empty reply crashes natively, though both interpreters retur
 204 correctly. A direct record was split into fields before a `match`, then read
 as a boxed local because another branch could fail. The C generator repair keeps
 each branch in the caller's field-return context. Regression cases include
-dynamic record returns, caller aliases and exceptional cleanup. The repair is
-not yet verified; earlier timings below are not measurements of repaired code.
+dynamic record returns, caller aliases and exceptional cleanup. The repair at
+`694e31b7` passes focused run `40909968650`: 333 tests/22 summaries, lint and the
+raw interpreter corpus on GCC ARM64/AMD64 and Clang ARM64. Every full log is
+audited. Both original Linux and both regular macOS jobs fail only the same two
+REST cases; both Windows and both ownership jobs, plus benchmarks, pass.
+
+The [repaired-source recheck](eager-captures-recheck-artifacts-2026-10-29.json)
+retains four complete sessions: ARM 1/2 in `40912310643`, AMD 2 in `40912523280`
+and AMD 1 in `40912773534`. The first three pass. AMD 1's zero-update history case
+has candidate/reference ratio **1.022815765**, exceeding **1.02**. Other cases and
+all memory/code/stack requirements pass; all four full logs and artifacts are
+independently audited. The original accepted observations below remain intact,
+but they do not erase this failure. [Timing diagnosis](timing-variation.md)
+describes the next experiment; [host rejections](captures-recheck-rejections-2026-10-29.json)
+retain every unmatched attempt. No limit is relaxed and no sample is removed.
 
 Focused run `40871650124` at `89d0dfa1` passes 299 tests/18 summaries and lint on
 each of Linux ARM64, Linux AMD64 and ARM macOS. All three full logs are audited.

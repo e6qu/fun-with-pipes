@@ -1,8 +1,10 @@
-# Next: complete D2 and N1 evidence in PR #227
+# Next: diagnose the retained timing failures in PR #227
 
-**Next:** finish the repaired-source derivative comparison, verify all four N1
-kernel baselines on matching native hosts, archive and audit every result, then
-publish one final head for the nine production jobs, docs and both G2 hosts.
+**Next:** implement and run the [declared timing diagnostic](measurements/timing-variation.md)
+on the exact failed AMD kernel and derivative programs. Preserve the failed
+observations and every unchanged limit. Do not repeat acceptance measurements
+unchanged. After a justified repair and complete evidence, publish one final
+head for the nine production jobs, docs and both G2 hosts.
 Keep PR #227 draft during focused work. Squash-merge only after every final gate
 passes and all logs are audited, with an explicit one-line subject <=80 characters
 and empty body. This PR groups D2, its compiler repair and N1; N2 is not started.
@@ -27,14 +29,15 @@ The same commit repairs the stale collection-evidence count (seven tests, not si
 Focused run `40909968650` at `694e31b7` passes on Linux ARM64/AMD64 and ARM macOS:
 333 tests/22 summaries per host, lint and raw interpreter corpus. Every full log
 is audited. Documentation `40909967190` passes; its complete log was reviewed.
-The broader old run `40901634818` at `56528ffb` continues for failure audit:
+The broader old run `40901634818` at `56528ffb` is fully audited:
 
 - Both regular macOS jobs fail only the two REST cases; every target and complete
   job log is audited. This is the defect fixed above, not a timing failure.
 - Both macOS ownership jobs pass (363 tests/127 summaries each), fully audited.
 - Benchmark passes. Both old G2 hosts (`40901630875`) pass, with all 13,824 durations
   and complete logs audited. These are not final-head gates after the repair.
-- Linux and Windows jobs still run; inspect all their completed targets/failures.
+- Both Linux jobs fail only the same two REST cases. Both Windows jobs pass
+  (809 tests/202 summaries each); no additional defect was found.
 
 No disassembly was used to diagnose this defect. Source, minimal reproducer,
 exact downloaded compiler and logs remain under `/private/tmp/fwp-227-*`.
@@ -48,13 +51,15 @@ the largest current-result case, still 44–58 times handwritten C's time. All
 outputs, 368 binaries, 320 frame reports, profiles and reference patches are
 audited. These timings do not yet verify repaired `694e31b7`.
 
-Refresh runs at `694e31b7`, with unchanged limits:
-`40912310643` runs ARM sessions 1/2; its two AMD hosts were rejected before builds
-(both EPYC 9V74). `40912523280` has qualified AMD session 2, but rejected session 1.
-`40912773534` requests only missing AMD session 1. Preserve all rejected attempts;
-never replace an accepted measurement to obtain a faster time. The independent
-repaired-source auditor is `/private/tmp/fwp-audit-captures-repaired.py`.
-Archive each source/run separately and retain the earlier accepted observations.
+Refresh at `694e31b7` is complete and fully audited. ARM 1/2 (`40912310643`) and
+AMD 2 (`40912523280`) pass. AMD 1 (`40912773534`) fails zero-update history:
+candidate/reference 1.022815765 > 1.02. All 24 emitted C programs match the earlier
+AMD files; this repair did not change them. The current-result identical control
+passes but does not control history variation. All four reports/logs, every
+artifact identity and three rejected hosts are retained. Independent auditors:
+`/private/tmp/fwp-audit-captures-repaired.py` for the passing sessions and
+`/private/tmp/fwp-audit-captures-repaired-failure.py amd-1` for the failed session.
+The latter requires that exact failed criterion; it does not accept it.
 
 The scalar-recording experiment keeps its user-accepted allocation reduction and
 failed original speed rule. D3's finite accuracy/depth matrix is verified by #226;
@@ -75,6 +80,18 @@ and 5,782 artifact identities are archived. AMD hosts were rejected before build
 Xeon 8573C and EPYC 9V74, instead of EPYC 7763. All rejection logs remain. Verify
 repaired-source applicability and collect all four matching-host baselines before
 selecting N2; the initial ARM data alone does not complete N1.
+
+Grouped head `bf46f776` has identical compiler/runtime/test source to `694e31b7`.
+Repaired ARM sessions in `40913404142` both pass full independent audits. Their
+generated C is byte-identical to the initial kernels. AMD session 2 in
+`40916288542` fails the small matrix's identical-code control: 1.032667131 kernel,
+1.034938957 allocation-inclusive (limit 1.02). Other cases pass. All outputs,
+36 binaries, 24 frame reports and complete raw observations were audited by
+`/private/tmp/fwp-audit-kernels-repaired-failure.py amd-2`; both failures remain.
+AMD session 1 never qualified; rejected attempts `40913404142`, `40914553866`
+and `40944861613` are retained. No measurement job remains running. The current
+working tree adds archives and controls for these failed outcomes; publish that
+diagnostic preparation before implementing its runner. N2 has not started.
 
 ## Local checks and retained state
 
