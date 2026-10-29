@@ -1,11 +1,13 @@
 # Current work
 
-**Next:** finish auditing PR #227’s final production gates and resolve its two
-open performance requirements before merge. The next directory-failure batch
-passes [all six focused native hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/40967686175). Tested source: `1f364c09ae9d4fe43405fdc66c46849cc4aae6d5`,
-branch `application-allocation-failures`, worktree
-`/private/tmp/fwp-application-failures`. This prepares the next grouped PR;
-only PR #227 is active.
+**Next:** implement the [current word-frequency baseline protocol](measurements/wordfreq-current.md),
+then run its four qualified sessions while monitoring PR #227. This prepares
+V1/B1's next budget; it does not resolve D2/N1 or authorize a speed claim.
+
+The directory-failure batch passes [all six focused native hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/40967686175)
+at `1f364c09ae9d4fe43405fdc66c46849cc4aae6d5`; its compact archive and report are
+published in `5556353c`. Worktree `/private/tmp/fwp-application-failures`, branch
+`application-allocation-failures`. Only PR #227 is active.
 
 ## Directory-report failure checks
 

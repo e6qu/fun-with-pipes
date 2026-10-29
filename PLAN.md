@@ -292,6 +292,9 @@ are implemented at `1f364c09`: four failure points, aliases, retries, missing-cl
 missing-builder controls and separate terminal OOM checks at C O1/O2. All six
 native hosts pass ten focused tests each, with full log/artifact audits. The
 first harness failure and all 84 saved probe executions are retained.
+Next, implement the [current word-frequency baseline](docs/measurements/wordfreq-current.md):
+four qualified sessions, an identical-binary control and retained whole-program
+observations before setting its budget. The historical timings lack this control.
 This does not complete the other application families or integrated V2 coverage.
 **Done:** each family has explicit platform/memory-mode coverage, failure and
 cancellation tests, bounded post-operation storage and a B1 budget where timed.
