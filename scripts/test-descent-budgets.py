@@ -36,7 +36,7 @@ class DescentBudgets(unittest.TestCase):
         rows['1']['binaries']['fwp-ad']['instructionBytes'] += 1024
         rows['1']['cCompilerStackUsage']['fwp-ad.su']['entries'][0]['bytes'] += 128
         snapshot = copy.deepcopy(rows)
-        self.assertEqual(DESCENT.recording_budget_failures(rows), [])
+        self.assertEqual(DESCENT.paired_budget_failures(rows, 'scalar-recording'), [])
         self.assertEqual(rows, snapshot)
 
     def test_recording_limits_report_noise_time_memory_code_and_stack_failures(self):
@@ -49,7 +49,7 @@ class DescentBudgets(unittest.TestCase):
         profile['expandedRawSha256'] = 'changed'
         row['binaries']['fwp-ad']['instructionBytes'] += 1025
         row['cCompilerStackUsage']['fwp-ad.su']['entries'][0]['bytes'] += 129
-        failures = DESCENT.recording_budget_failures({'case': row})
+        failures = DESCENT.paired_budget_failures({'case': row}, 'scalar-recording')
         self.assertEqual({failure['metric'] for failure in failures}, {
             'identical median variation', 'candidate/reference time', 'requests',
             'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes',
@@ -60,8 +60,46 @@ class DescentBudgets(unittest.TestCase):
     def test_recording_zero_updates_still_rejects_regression(self):
         row = self.recording_case(0)
         row['medianNs']['fwp-ad-history'] = 103
-        failures = DESCENT.recording_budget_failures({'zero': row})
+        failures = DESCENT.paired_budget_failures({'zero': row}, 'scalar-recording')
         self.assertEqual([failure['metric'] for failure in failures], ['candidate/reference time'])
+
+    def test_eager_capture_limits_accept_only_lower_updated_allocation_counts(self):
+        rows = {str(updates): self.recording_case(updates) for updates in [0, 1]}
+        for row in rows.values():
+            for label in ['fwp-ad', 'fwp-ad-history']:
+                row['fwpProfiles'][label]['managed']['requests'] = 1000 - int(row['updates'] > 0)
+        snapshot = copy.deepcopy(rows)
+        self.assertEqual(DESCENT.paired_budget_failures(rows, 'eager-captures'), [])
+        self.assertEqual(rows, snapshot)
+        for key in ['0', '1']:
+            changed = copy.deepcopy(rows)
+            changed[key]['fwpProfiles']['fwp-ad']['managed']['requests'] += 1
+            failures = DESCENT.paired_budget_failures(changed, 'eager-captures')
+            self.assertEqual([failure['metric'] for failure in failures], ['requests'])
+
+    def test_eager_capture_failures_keep_all_time_storage_and_layout_limits(self):
+        row = self.recording_case(1)
+        row['medianNs']['fwp-ad'] = 103
+        profile = row['fwpProfiles']['fwp-ad']
+        profile['managed']['requests'] = 1000
+        for key in ['retains', 'peakChargedBytes', 'finalChargedBytes']:
+            profile['managed'][key] += 1
+        profile['rawDerivativeStorage']['finalBytes'] = 1
+        profile['expandedRawSha256'] = 'changed'
+        row['binaries']['fwp-ad']['instructionBytes'] += 1025
+        row['cCompilerStackUsage']['fwp-ad.su']['entries'][0]['bytes'] += 129
+        failures = DESCENT.paired_budget_failures({'case': row}, 'eager-captures')
+        self.assertEqual({failure['metric'] for failure in failures}, {
+            'identical median variation', 'candidate/reference time', 'requests',
+            'retains', 'peakChargedBytes', 'finalChargedBytes', 'rawDerivativeStorage',
+            'expandedRawSha256', 'instruction bytes', 'largest static stack frame'})
+        self.assertEqual(len(failures), 10)
+        zero = self.recording_case(0)
+        zero['medianNs']['fwp-ad-history'] = 103
+        failures = DESCENT.paired_budget_failures({'zero': zero}, 'eager-captures')
+        self.assertEqual([failure['metric'] for failure in failures], ['candidate/reference time'])
+        with self.assertRaises(AssertionError):
+            DESCENT.paired_budget_failures({}, 'undeclared')
 
     def test_each_recorded_input_requires_the_declared_count_and_storage_limits(self):
         for host in BASELINE['hosts']:

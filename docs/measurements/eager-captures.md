@@ -83,3 +83,20 @@ must remain failed in the report; do not infer a speedup from fewer closures or
 rewrite the earlier rejected scalar-recording result. This experiment can close
 only its named D2 budget. Final delivery still requires all nine production jobs,
 documentation and both compiler-analysis hosts on the final commit.
+
+## Running the checks
+
+Dispatch `Numerical and ownership evidence` with `suite=eager-captures` and
+`native_runner=all` for focused GCC checks on Linux ARM64/AMD64 and Clang checks
+on ARM macOS. This does not replace the final native matrix. After those pass,
+use `suite=eager-capture-time` and `native_runner=all` for the four predeclared
+matching-host sessions. Unsupported measurement hosts fail explicitly.
+
+`prepare-capture-reference.py` restores the original capture block and helper in
+an isolated checkout of the same source. It verifies that only `src/opt.rs`
+changes and scalar ownership stays identical, then records both source hashes,
+the patch and reference compiler hash. The reference tests check the production
+source against preparation `8a495a72` and reject incomplete or changed transforms.
+Both comparison protocols use the shared budget evaluator with an explicit
+comparison name; their allocation requirements remain distinct. The original
+scalar-recording archive and every rejected timing case still pass their audits.

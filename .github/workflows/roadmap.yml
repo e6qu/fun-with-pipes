@@ -50,6 +50,10 @@ jobs:
         run: python3 scripts/test-descent-baselines.py
       - name: Retained derivative baseline reports
         run: python3 scripts/check-descent-baselines.py --archive docs/measurements/descent-baseline-artifacts-2026-10-29.json
+      - name: Derivative comparison limits and exact capture reference
+        run: |
+          python3 scripts/test-descent-budgets.py
+          python3 scripts/test-capture-reference.py
       - name: Matched-host evidence rejection controls
         run: python3 scripts/test-descent-groups.py
       - name: Matched grouped-process baselines and noisy controls

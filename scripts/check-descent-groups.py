@@ -98,7 +98,7 @@ def check_archive(path, protocol):
         if protocol == 'recording':
             assert archive['decision'] == 'not-accepted'
             assert report['configuration']['comparison'] == 'scalar-recording'
-            failures = DESCENT.recording_budget_failures(report['results'])
+            failures = DESCENT.paired_budget_failures(report['results'], 'scalar-recording')
             assert failures and failures == session['budgetFailures']
             assert all(f['metric'] == 'candidate/reference time' for f in failures)
             reference = report['referenceCompiler']
