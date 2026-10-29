@@ -257,6 +257,44 @@ report paired tails as well. Retain every result if this protocol is also noisy.
 Publish per-case timing/noise limits, allocation counts and code/stack bounds
 before changing the `ad.push` contract. No contract is changed during preparation.
 
+## Fixed scalar-recording acceptance rules
+
+These limits are chosen before implementing or measuring the `ad.push` change.
+The repeated-solve baseline must first pass its four matching-host sessions.
+For the candidate, run two independent sessions on each of the same native CPU
+models and compiler versions. Keep all six cases and the same 98 rounds, seven
+fresh processes, solve counts, output checks and ordering seed.
+
+Build both compilers from the candidate source. In an isolated reference checkout,
+disable only `borrows_without_escape("ad.push", 0)`; retain its exact patch,
+source hashes and compiler hash. Rebuild every program with the same GCC flags.
+No earlier fwp compiler, compatibility mode or public optimization switch is needed.
+The seven interleaved labels are candidate/reference AD-current,
+candidate/reference AD-history, a byte-identical AD-current copy, explicit C and
+explicit Rust. C/Rust remain context: they do not implement general AD.
+
+Require every case in both sessions on both architectures to meet these rules:
+
+- The larger identical-copy median ratio is at most 1.02. Keep paired tails too.
+- For each AD form, candidate/reference time is at most 0.95 with updates and
+  1.02 for zero updates. This requires a 5% reduction where recording occurs;
+  it does not claim faster startup or C/Rust parity.
+- Each recorded operation removes at least one managed allocation request and
+  40 requested bytes (the four-word argument plus its eight-byte header).
+  The independent operation count is `8 * (coordinates - 1) * updates * solves`.
+  Retains and peak managed charge must not increase; final charge remains zero.
+  Raw tape profiles must be identical, including workspace and shutdown release.
+- Ordinary instruction sections may grow by at most 1,024 bytes and the largest
+  compiler-reported static stack frame by at most 128 bytes, per program. Retain
+  all frame entries and binary sizes; these limits are not whole-stack guarantees.
+- The focused recording fixture must remove exactly 256 heap argument records,
+  preserve its derivative and clean up with workspace reuse both enabled and
+  disabled. Failure, cancellation, stale/mixed nodes and nested derivatives pass.
+
+The checker reports all failed limits after preserving all observations. A failed
+or noisy case rejects acceptance; do not raise a limit after seeing the candidate.
+The main production gate still covers all nine native jobs and documentation.
+
 ## Separating costs before selecting D2
 
 1. Compare AD-history and AD-current to quantify retaining old vectors. Compare

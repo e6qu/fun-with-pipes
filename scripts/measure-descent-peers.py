@@ -82,9 +82,48 @@ def ownership_budget_failures(profiles, baseline):
             for label, metric, rule, actual, expected in checks if not compare[rule](actual, expected)]
 
 
+def recording_budget_failures(results):
+    """Apply D2's pre-candidate limits and report every violation together."""
+    failures = []
+
+    def require(case, program, metric, actual, limit):
+        if actual > limit:
+            failures.append(dict(case=case, program=program, metric=metric, actual=actual, limit=limit))
+
+    for case, row in results.items():
+        medians = row['medianNs']
+        ratio = medians['fwp-ad'] / medians['fwp-ad-identical']
+        require(case, 'fwp-ad', 'identical median variation', max(ratio, 1 / ratio), 1.02)
+        nodes = 8 * (row['dimensions'] - 1) * row['updates'] * row['solvesPerProcess']
+        for label in ['fwp-ad', 'fwp-ad-history']:
+            reference = label + '-reference'
+            current, old = (row['fwpProfiles'][name] for name in [label, reference])
+            require(case, label, 'candidate/reference time', medians[label] / medians[reference],
+                    0.95 if row['updates'] else 1.02)
+            for key, saving in [('requests', nodes), ('requestedBytes', 40 * nodes),
+                                ('retains', 0), ('peakChargedBytes', 0), ('finalChargedBytes', 0)]:
+                limit = 0 if key == 'finalChargedBytes' else old['managed'][key] - saving
+                require(case, label, key, current['managed'][key], limit)
+            for key in ['rawDerivativeStorage', 'expandedRawSha256']:
+                if current[key] != old[key]:
+                    failures.append(dict(case=case, program=label, metric=key,
+                                         actual=current[key], expected=old[key]))
+            images = row['binaries']
+            require(case, label, 'instruction bytes', images[label]['instructionBytes'],
+                    images[reference]['instructionBytes'] + 1024)
+            stacks = row['cCompilerStackUsage']
+            def frame(name):
+                return max(entry['bytes'] for entry in stacks[name + '.su']['entries'])
+            require(case, label, 'largest static stack frame', frame(label), frame(reference) + 128)
+    return failures
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
+    parser.add_argument('--comparison', required=True, choices=['current', 'scalar-recording'])
+    parser.add_argument('--reference-compiler', type=Path)
+    parser.add_argument('--reference-manifest', type=Path)
     parser.add_argument('--cc', required=True)
     parser.add_argument('--rustc', required=True)
     parser.add_argument('--c-arch', required=True, choices=['x86-64', 'armv8-a'])
@@ -103,6 +142,16 @@ def main():
     parser.add_argument('--qualification', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
+    recording = args.comparison == 'scalar-recording'
+    assert bool(args.reference_compiler) == bool(args.reference_manifest) == recording
+    reference_manifest = json.loads(args.reference_manifest.read_text()) if recording else None
+    if recording:
+        assert reference_manifest['source'] == os.environ['GITHUB_SHA']
+        assert digest(args.reference_compiler.read_bytes()) == reference_manifest['compilerSha256']
+        assert reference_manifest['candidateOwnershipSha256'] == digest((ROOT / 'src/ownership.rs').read_bytes())
+        assert reference_manifest['disabledFact'] == 'borrows_without_escape(ad.push, 0)'
+    fwp_labels = ['fwp-ad-history', 'fwp-ad', 'fwp-ad-history-reference', 'fwp-ad-reference'] if recording else [
+        'fwp-ad-history', 'fwp-ad', 'fwp-explicit', 'fwp-packed']
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
     assert args.samples > 0 and args.samples % 49 == 0 and args.warmups > 0 and args.timeout > 0
     assert args.phase_samples > 0 and args.phase_samples % 2 == 0 and args.phase_warmups > 0
@@ -178,8 +227,8 @@ def main():
         expected = AD.analytic(points, updates + 1)
         binaries, outputs, metadata, profiles, phase_binaries = {}, {}, {}, {}, {}
         controls = {}
-        for label in ['fwp-ad-history', 'fwp-ad', 'fwp-explicit', 'fwp-packed']:
-            source = packed_program(points, updates) if label.startswith('fwp-packed') else AD.program(points, updates + 1, label == 'fwp-ad-history')
+        for label in fwp_labels:
+            source = packed_program(points, updates) if label.startswith('fwp-packed') else AD.program(points, updates + 1, 'history' in label)
             if label == 'fwp-explicit':
                 assert source.count('(.1 | descend)') == 1
                 source = source.replace('(.1 | descend)', '(.1 | explicit-descend)')
@@ -192,7 +241,8 @@ def main():
             verify(reference.stdout, expected, solves)
             assert not reference.stderr
             code = directory / (label + '.c')
-            build([args.compiler.resolve(), 'build', '--emit-c', '-O2', fwp_source, '-o', code])
+            emitter = args.reference_compiler if label.endswith('-reference') else args.compiler
+            build([emitter.resolve(), 'build', '--emit-c', '-O2', fwp_source, '-o', code])
             text = code.read_text()
             assert 'FWP_ARC_ONLY' not in text
             binary = directory / label
@@ -296,13 +346,19 @@ def main():
             assert b'Disassembly of section' in assembly
             (directory / (binary.name + '.symbols')).write_bytes(symbols)
             (directory / (binary.name + '.asm')).write_bytes(assembly)
+            section_output = run([args.objdump, '-h', binary], environment).stdout
+            if recording:
+                (directory / (binary.name + '.sections')).write_bytes(section_output)
+            text_bytes = sum(int(size, 16) for size in re.findall(
+                rb'^\s*\d+\s+\.text(?:\.[^\s]+)?\s+([0-9a-fA-F]+)', section_output, re.M))
+            assert text_bytes > 0
             source_path = binary.with_suffix('.rs' if binary.name == 'rust-explicit' else '.c')
-            metadata[binary.name] = dict(bytes=len(raw), sha256=digest(raw), sourceSha256=digest(source_path.read_bytes()),
+            metadata[binary.name] = dict(instructionBytes=text_bytes, bytes=len(raw), sha256=digest(raw), sourceSha256=digest(source_path.read_bytes()),
                                         disassemblySha256=digest(assembly))
-        assert len(metadata) == 13 + len(controls)
+        assert len(metadata) == (15 if recording else 13) + len(controls)
         assert metadata['fwp-ad-identical']['sha256'] == metadata['fwp-ad']['sha256']
         labels = list(binaries)
-        assert labels == ['fwp-ad-history', 'fwp-ad', 'fwp-explicit', 'fwp-packed', 'c-explicit', 'rust-explicit', 'fwp-ad-identical']
+        assert labels == fwp_labels + ['c-explicit', 'rust-explicit', 'fwp-ad-identical']
         samples = {label: [] for label in labels}
         orders = [BASELINE.execution_order(labels, processes, number, args.order_seed)
                   for number in range(args.samples)]
@@ -360,7 +416,7 @@ def main():
                 entries.append(dict(location=location, bytes=int(size), qualifier=qualifier))
             assert entries
             stack[stack_file.name] = dict(sha256=digest(stack_file.read_bytes()), entries=entries)
-        assert len(stack) == 11 + len(controls), stack.keys()  # Four fwp forms/profiles, two phase images, C.
+        assert len(stack) == (13 if recording else 11) + len(controls), stack.keys()  # Four fwp forms/profiles, two phase images, C.
         results[name] = dict(dimensions=points, updates=updates, oracle=expected, processesPerLabel=processes, solvesPerProcess=solves,
             outputSha256={label: digest(value) for label, value in outputs.items()},
             samplesNs=samples, medianNs=medians, orders=orders,
@@ -371,10 +427,10 @@ def main():
         (out / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
     paths = ['scripts/descent-baselines.py', 'scripts/measure-descent-peers.py', 'scripts/measure-ad-application.py',
              'scripts/ad-storage-profile.py', 'scripts/measure-iteration.py', 'scripts/descent-phases.py',
-             'tests/fixtures/descent_phases.c',
+             'tests/fixtures/descent_phases.c', 'scripts/prepare-recording-reference.py',
              'tests/fixtures/ad_raw_storage_probe.c', 'tests/fixtures/descent_explicit.fwp',
              'tests/fixtures/descent_explicit.c', 'tests/fixtures/descent_explicit.rs',
-             'tests/fixtures/descent_packed.fwp', 'src/cgen.rs', 'src/rc.rs', 'tests/boxed_projection_ownership.rs',
+             'tests/fixtures/descent_packed.fwp', 'src/ownership.rs', 'src/escape.rs', 'src/cgen.rs', 'src/rc.rs', 'tests/boxed_projection_ownership.rs',
              'tests/fixtures/stack_array_projection.c', 'tests/array_element_ownership.rs',
              'tests/fixtures/array_capture_reads.fwp', 'tests/fixtures/array_capture_effects.fwp',
              'docs/tutorials/20-autodiff-and-devices/main.fwp']
@@ -383,12 +439,18 @@ def main():
         settings={key: value for key, value in environment.items() if key.startswith('FWP_') or key == 'CC'},
         cpu=run(['lscpu'], environment).stdout.decode(), cCompiler=run([args.cc, '--version'], environment).stdout.decode(),
         rustCompiler=run([args.rustc, '-Vv'], environment).stdout.decode(), commands=commands,
-        configuration=vars(args) | {'compiler': str(args.compiler), 'output': str(args.output), 'qualification': str(args.qualification)},
+        configuration={key: str(value) if isinstance(value, Path) else value for key, value in vars(args).items()},
+        referenceCompiler=reference_manifest,
         sourceHashes={name: digest((ROOT / name).read_bytes()) for name in paths}, results=results,
-        scope='Six current-source implementations and one byte-identical AD-current control. '
-        'fwp AD-history retains every vector; AD-current retains current weights. Both record and reverse derivatives. '
-        'fwp explicit list and packed array forms use handwritten derivatives. C/Rust reuse two contiguous buffers. '
-        'Packed fwp can recompute edge residuals that C/Rust compute once. All input/output vectors and update counts match; '
+        scope=('Current-source scalar recording comparison: reference compiler disables only the ad.push no-escape fact; '
+               'candidate and reference both record and reverse the same derivatives, with current-only and retained-history forms. '
+               'A byte-identical candidate copy checks timing noise. C/Rust use handwritten derivatives. '
+               if recording else 'Six current-source implementations and one byte-identical AD-current control. ') +
+        'fwp AD-history retains every vector; AD-current retains current weights. Both record and reverse derivatives. ' +
+        ('C/Rust reuse two contiguous buffers. ' if recording else
+         'fwp explicit list and packed array forms use handwritten derivatives. C/Rust reuse two contiguous buffers. '
+         'Packed fwp can recompute edge residuals that C/Rust compute once. ') +
+        'All input/output vectors and update counts match; '
         'work, allocation and formatting strategies differ. No previous compiler or generated C is required. '
         'Each timed output matches its own checked reference exactly; the independent analytic tolerance is absolute/relative 1e-10. '
         'Times include one process launch, repeated independent solves with complete output, and teardown, excluding compilation/observers. '
@@ -399,9 +461,14 @@ def main():
         'Actual round boundaries are retained separately; the flattened order is not perfectly balanced. '
         'All process times, output hashes, statuses and orders remain recorded; file writes and output checks are outside timing. '
         'Managed/raw allocation and peak RSS are separate observations and must not be added. '
-        'These are baseline observations, not an accepted optimization or pure compiler-overhead measurement.')
+        'Acceptance requires the explicit budget report and two independent sessions per architecture; '
+        'these comparisons do not isolate pure compiler overhead.')
     (out / 'comparison.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({name: row['ratios'] for name, row in results.items()}, indent=2))
+    if recording:
+        failures = recording_budget_failures(results)
+        (out / 'budget-failures.json').write_text(json.dumps(failures, indent=2) + '\n')
+        assert not failures, json.dumps(failures, indent=2)
 
 
 if __name__ == '__main__':
