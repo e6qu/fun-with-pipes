@@ -32,6 +32,8 @@ jobs:
         run: python3 scripts/test-local-guard.py
       - name: Native test coverage and failure propagation
         run: python3 scripts/test-native-test-runner.py
+      - name: Evidence archive integrity and read-failure controls
+        run: python3 scripts/test-package-evidence.py
       - name: Collection evidence completeness and memory controls
         run: python3 scripts/test-collection-evidence.py
       - name: Ownership operation evidence controls

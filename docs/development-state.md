@@ -1,11 +1,43 @@
 # PR #225: startup repairs and decimal counting
 
-**Next:** publish this finished batch, mark #225 ready and monitor all nine
-production jobs plus documentation for the final commit. Audit every completed
-target and diagnostic; batch any repairs before pushing. Once all gates pass,
-squash with an explicit one-line subject (<=80 characters) and empty body, verify
-the merge tree/message, then begin D1–D3. Do not repeat accepted measurements
-unless affected runtime/compiler/input changes require it.
+**Next:** finish auditing production run `40813465621` at
+`18ae46cdbf2fa2cc8b33cee78b86ed9b8a2dce4a`, then publish every repair together.
+Two confirmed Windows failures are the standalone decimal oracle's CRLF versus LF
+assertion (`integer_output`, line 233). Local repair emits no line ending on either
+side; eight guarded Clang O0/O1/O2/O3 valid/broken cases pass. Production fwp uses
+binary streams already; its runtime and accepted timing candidate are unchanged.
+An early Windows log upload prevents waiting for later suites to see this failure.
+
+macOS ARM64 regular job `123248963643` passed all 132 Rust result summaries/619
+tests and SDK/package checks, then ownership-artifact ZIP upload failed with
+`EILSEQ: illegal byte sequence, read`. The upload log names no input file; the
+origin is unresolved. Its crash bundle contains the expected scheduler cleanup
+abort control, not a new compiler crash. A prepared packaging change streams and
+hashes every file, verifies archived bytes, writes a source/file manifest, and
+uploads the verified ZIP directly (`archive: false`). Read errors name the file
+and fail without publishing an incomplete archive. Do not claim this establishes
+the origin of EILSEQ or native verification before the repaired matrix passes.
+Six guarded packaging controls, 20 native-runner controls and actionlint pass.
+The two injected-file controls initially missed macOS temp-path aliases; resolving
+the fixture root fixed those tests. No production error was suppressed.
+
+Docs `40813452487`/`123248922710` pass and are audited. Benchmark job `123248963708`
+passes (2 summaries/2 tests). macOS ARM64 ownership `123248963737` passes (127
+summaries/359 tests). Intel macOS ownership `123248963419` also passes (127 summaries/359 tests), fully audited. Other five jobs still run; Windows first-step logs are fully
+available in `/private/tmp/fwp-225-windows-{arm,amd}-early/windows-native.log`.
+Audit their final logs before publishing the batch. Logs of completed jobs are
+`/private/tmp/fwp-225-final-*.log`; the regular ARM upload failure remains a failure.
+After repair require all nine jobs plus docs at the new head before squash merge;
+use one <=80-character subject and empty body, then verify tree/message.
+
+D1 runs independently in `/private/tmp/fwp-ad-refresh`, branch `ad-cost-refresh`,
+source `21a1de329c8e4cec1b9ba7cd284c9be876facf5c`; no second PR. All four jobs in
+`40816041693` pass and their complete logs/artifacts are audited: six cases, 80
+images and 68 stack reports per session, analytic output checks, timing samples,
+workspace on/off, phase clocks and broken controls. Two ARM hosts are Neoverse-N2;
+AMD sessions are EPYC 7763 and Xeon 6973P-C, so they are not a repeated same-host
+baseline. Short-process controls are noisy. Output diagnostic `40818110583` now
+runs at the same source. D1 archival/budgets, D2 and D3 remain unfinished.
 
 Worktree `/private/tmp/fwp-cpu-phases`, branch `cpu-execution-costs`,
 [PR #225](https://github.com/e6qu/fun-with-pipes/pull/225).
@@ -26,7 +58,7 @@ All four meet unchanged timing limits with stable controls. Text counting takes
 binary, memory profile and full job log was audited. Two nonmatching AMD64 hosts
 stopped before building/timing; their records remain in the archive.
 The [report](measurements/decimal-count.md#balanced-results-accepted-measurement)
-owns raw reports and size/stack costs. Final production has not started;
+owns raw reports and size/stack costs. Final production is running as listed above;
 the earlier draft-skipped matrix is not a gate.
 
 ## Included work

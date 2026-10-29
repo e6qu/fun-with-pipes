@@ -132,7 +132,9 @@ class Coverage(unittest.TestCase):
             environment, steps = body.split("    steps:", 1)
             self.assertIn("FWP_FILE_APPLICATION_ARTIFACTS: ownership-evidence/file-applications",
                           environment, job)
-            self.assertIn("path: ownership-evidence/", steps, job)
+            self.assertIn("scripts/package-evidence.py --input ownership-evidence", steps, job)
+            self.assertIn("archive: false", steps, job)
+            self.assertIn("if-no-files-found: error", steps, job)
         windows = (SHARDS.ROOT / ".github/workflows/windows.yml").read_text()
         environment, steps = windows.split("    steps:", 1)
         self.assertIn("FWP_FILE_APPLICATION_ARTIFACTS: ownership-evidence/file-applications",
@@ -152,7 +154,9 @@ class Coverage(unittest.TestCase):
             environment, steps = body.split("    steps:", 1)
             self.assertIn("FWP_HTTP_APPLICATION_ARTIFACTS: ownership-evidence/http-application",
                           environment, job)
-            self.assertIn("path: ownership-evidence/", steps, job)
+            self.assertIn("scripts/package-evidence.py --input ownership-evidence", steps, job)
+            self.assertIn("archive: false", steps, job)
+            self.assertIn("if-no-files-found: error", steps, job)
         windows = (SHARDS.ROOT / ".github/workflows/windows.yml").read_text()
         environment, steps = windows.split("    steps:", 1)
         self.assertIn("FWP_HTTP_APPLICATION_ARTIFACTS: ownership-evidence/http-application",
@@ -172,7 +176,9 @@ class Coverage(unittest.TestCase):
             environment, steps = body.split("    steps:", 1)
             self.assertIn("FWP_MAP_FAILURE_ARTIFACTS: ownership-evidence/maps",
                           environment, job)
-            self.assertIn("path: ownership-evidence/", steps, job)
+            self.assertIn("scripts/package-evidence.py --input ownership-evidence", steps, job)
+            self.assertIn("archive: false", steps, job)
+            self.assertIn("if-no-files-found: error", steps, job)
         windows = (SHARDS.ROOT / ".github/workflows/windows.yml").read_text()
         environment, steps = windows.split("    steps:", 1)
         self.assertIn("FWP_MAP_FAILURE_ARTIFACTS: ownership-evidence/maps",
@@ -194,7 +200,9 @@ class Coverage(unittest.TestCase):
             if job == "test":
                 self.assertIn("FWP_TASK_CONTEXT_ARTIFACTS: ownership-evidence/task-context",
                               environment, job)
-            self.assertIn("path: ownership-evidence/", steps, job)
+            self.assertIn("scripts/package-evidence.py --input ownership-evidence", steps, job)
+            self.assertIn("archive: false", steps, job)
+            self.assertIn("if-no-files-found: error", steps, job)
 
     def test_repository_targets_are_assigned_exactly_once(self):
         value = json.loads(subprocess.check_output(

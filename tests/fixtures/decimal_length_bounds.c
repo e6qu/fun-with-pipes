@@ -28,6 +28,7 @@ int main(void) {
     }
     if (!check_unsigned(UINT64_MAX) || !check_signed(INT64_MIN) ||
         !check_signed(INT64_MAX)) return 247;
-    puts("decimal length boundaries pass");
+    /* No line ending: this standalone oracle does not install fwp binary I/O. */
+    fputs("decimal length boundaries pass", stdout);
     return 0;
 }

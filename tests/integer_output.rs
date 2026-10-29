@@ -235,7 +235,7 @@ fn decimal_length_thresholds_and_native_helper_are_exact() {
                 if omitted {
                     b"".as_slice()
                 } else {
-                    b"decimal length boundaries pass\n"
+                    b"decimal length boundaries pass"
                 }
             );
             assert!(output.stderr.is_empty(), "{opt}/{omitted}: {output:?}");
