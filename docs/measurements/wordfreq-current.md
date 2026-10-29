@@ -19,7 +19,10 @@ print five results. C/Rust combine the three normalization operations; fwp uses
 its ordinary strings, lists and maps. Inputs are ASCII. This does not compare
 arbitrary Unicode or all language features. Time the complete fresh process:
 startup, input reads, normalization, counting, ranking, printing and cleanup.
-Exclude input generation, compilation and evidence writes from that interval.
+Exclude input generation, compilation, the parent opening the input file and
+evidence writes from that interval. Warmups reuse the same input files; no OS
+cache flush is performed. This measures repeated launches over warmed inputs,
+not cold-storage performance.
 
 ## Hosts, settings and repetitions
 
@@ -37,7 +40,8 @@ storage and unique reuse explicitly for fwp. Record all commands, settings,
 compiler versions and source identities. Ordinary builds need no previous fwp.
 
 Each session has four labels: C, Rust, fwp and a byte-identical copy of fwp.
-Require matching hashes for that copy before running it. For each input use two
+Use equal-length executable paths for all four labels and require matching
+hashes for the fwp copy before running it. For each input use two
 warmup rounds followed by **16 measured rounds**, with **64 fresh processes per
 label per round**: 1,024 measured processes per label. These counts are fixed
 before seeing the new results; they exceed the old 24-process observations.
@@ -69,3 +73,19 @@ measurement rather than accepting a noisy candidate. No universal percentage is
 imported from another workload, and no D2/N1 limit changes. The final evidence
 must make it clear whether it is a baseline, an inconclusive comparison or an
 accepted optimization.
+
+## Running and auditing
+
+The `wordfreq-current` workflow selection requires `native_runner=all` and
+`comparison_session=both` for the complete experiment. It builds the current
+compiler only. Select one host/session only to replace a host rejected before
+execution, retaining that rejection. Failed measured sessions are not retries.
+
+`scripts/measure-current-wordfreq.py` stores each child's command, input path,
+status, duration and complete stdout/stderr in `commands.jsonl`. Byte streams use
+base64 so invalid output remains lossless. Failed launches have no invented exit
+status; timed-out process groups are killed and reaped before their partial
+output is recorded. Generated C, peer sources, input files, expected output,
+profiles, stack reports, section sizes and native images remain in the artifact.
+Three real-child tests check failed launch, nonzero exit and timeout retention;
+the shared schedule tests verify counts, positions and predecessor balance.

@@ -50,6 +50,8 @@ jobs:
         run: python3 scripts/test-timing-diagnostic.py
       - name: Child CPU and scheduling observation controls
         run: python3 scripts/test-timing-resources.py
+      - name: Word-frequency failure-output controls
+        run: python3 scripts/test-current-wordfreq.py
       - name: Kernel baseline archive and altered-evidence controls
         run: python3 scripts/test-kernel-baseline-evidence.py
       - name: Derivative process scheduling and host qualification controls

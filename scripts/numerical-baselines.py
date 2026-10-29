@@ -12,7 +12,7 @@ def execution_order(round_index, seed, processes):
     """Repeat balanced cycles; sixteen rotations balance every process position."""
     assert type(round_index) is int and round_index >= 0
     assert type(seed) is int
-    assert type(processes) is int and processes in [4, 256]
+    assert type(processes) is int and processes in [4, 64, 256]
     rng = random.Random(seed)
     edges = {label: rng.sample(LABELS, len(LABELS)) for label in LABELS}
     stack, circuit = [LABELS[0]], []

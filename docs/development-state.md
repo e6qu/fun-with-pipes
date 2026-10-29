@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** implement the [current word-frequency baseline protocol](measurements/wordfreq-current.md),
-then run its four qualified sessions while monitoring PR #227. This prepares
+**Next:** run and audit all four sessions of the [current word-frequency baseline](measurements/wordfreq-current.md),
+implemented after declaration `6d4df06b`. This prepares
 V1/B1's next budget; it does not resolve D2/N1 or authorize a speed claim.
 
 The directory-failure batch passes [all six focused native hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/40967686175)
@@ -48,9 +48,9 @@ Artifacts retain generated C, native probes and each output/status under
 `8e29187617eaa84fd29a2f6a55d954d28d385266` on `ad-eager-captures`, worktree
 `/private/tmp/fwp-ad-captures`. Preserve its head while gates run.
 
-- Production `40962967746`: benchmark correctness and both macOS ARM64 jobs
-  pass with full audits (626 regular tests/132 summaries, 363 ownership tests/127
-  summaries). Six platform jobs are running without reported failed steps.
+- Production `40962967746`: all nine jobs pass with complete log audits. Linux
+  has 992 tests/257 summaries per host; regular macOS 626/132; ownership macOS
+  363/127; Windows 810/202; benchmark 2/2.
 - Documentation `40962940196` passes; its complete log is audited.
 - Both G2 jobs in `40962971405` pass with full audits: 226 tests/3 summaries each.
 - Typed-state focused run `40959086200` passes on GCC ARM64/AMD64 and Clang
@@ -62,8 +62,9 @@ Artifacts retain generated C, native probes and each output/status under
 Two performance requirements remain open. D2's zero-update recheck is
 **1.022815765 > 1.02** in `40912773534`; N1's small-array inclusive copy control is
 **1.030786192 > 1.02** in `40951090783`. Preserve all observations and limits.
-The pending question about retaining the derivative improvement with its failed
-goal open has no answer. Do not merge solely because correctness CI passes.
+The delivery choice was presented again after all CI passed: retain the new
+closure improvements with D2/N1 timing goals open, or keep the PR open until
+the original timing requirements are resolved. No answer has arrived. Do not merge solely because correctness CI passes.
 
 The [timing report](measurements/timing-variation.md) links the retained reports,
 source identities, rejected hosts and diagnostics. Resource-counter run
