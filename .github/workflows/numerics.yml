@@ -96,7 +96,7 @@ jobs:
           path: timing-diagnostics/
           if-no-files-found: error
   kernel_codegen:
-    if: inputs.suite == 'kernel-codegen'
+    if: inputs.suite == 'kernel-codegen' && contains(fromJSON('["all","ubuntu-latest","ubuntu-24.04-arm"]'), inputs.native_runner)
     strategy:
       fail-fast: false
       matrix:
@@ -108,9 +108,6 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: 1.99.1
       - name: Require the declared input run and session
         env:
           EVIDENCE_RUN: ${{ inputs.evidence_run }}
@@ -118,23 +115,6 @@ jobs:
         run: |
           test "$EVIDENCE_RUN" = 40951090783
           test "$SESSION" = 2
-      - name: Qualify the compiler-report host before downloading or building
-        env:
-          EXPECTED_CPU: ${{ matrix.runner == 'ubuntu-latest' && 'AMD EPYC 7763 64-Core Processor' || 'Neoverse-N2' }}
-          EXPECTED_MACHINE: ${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}
-          EXPECTED_CC: ${{ matrix.runner == 'ubuntu-latest' && 'gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0' || 'gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0' }}
-        run: >-
-          python3 scripts/descent-baselines.py --cpu "$EXPECTED_CPU" --machine "$EXPECTED_MACHINE"
-          --cc gcc --rustc rustc --c-version "$EXPECTED_CC"
-          --rust-version 'rustc 1.99.1 (58cf8f9c3 2026-10-13)'
-          --source "$GITHUB_SHA" --processors 4 --output codegen-host.json
-      - name: Retain qualification and any rejection
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: codegen-host-${{ matrix.runner }}
-          path: codegen-host.json
-          if-no-files-found: error
       - name: Retrieve retained kernel sources and binaries
         env:
           GH_TOKEN: ${{ github.token }}
@@ -146,7 +126,7 @@ jobs:
         env:
           C_ARCH: ${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'armv8-a' }}
         run: >-
-          python3 scripts/report-kernel-codegen.py --evidence kernel-input --qualification codegen-host.json
+          python3 scripts/report-kernel-codegen.py --evidence kernel-input
           --source 37da74419046eb568d30cc8a96ab11208db7ca91 --cc gcc --c-arch "$C_ARCH"
           --timeout 180 --output kernel-codegen
       - name: Retain complete or partial compiler reports

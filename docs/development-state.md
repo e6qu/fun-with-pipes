@@ -1,9 +1,9 @@
 # Continue PR #227: derivative costs and numerical kernels
 
 **Next:** run and audit the [declared compiler-report diagnostic](measurements/timing-variation.md#expanded-result-and-next-source-investigation)
-on the retained four-case kernel sources. The script compiles and workflow lint
-passes under the guard; actual GCC execution belongs on the runners. Require unchanged rebuilt binary hashes,
-correct outputs and matching GCC hosts. This investigates the stable computation
+on the retained four-case kernel sources. Python syntax and workflow lint
+pass under the guard; actual GCC execution belongs on the runners. Require unchanged rebuilt binary hashes,
+correct outputs, native architecture, GCC version and explicit target flags. This investigates the stable computation
 gap; it does not resolve the separate failed timing controls below. No unchanged
 acceptance rerun or further sample-count increase is authorized by the experiment.
 
@@ -100,3 +100,20 @@ Intel compiler abort is unexplained. The older ARM crash artifact was an
 intentional negative control, not a recurrence. Obsolete-worktree handoff backups
 are in `/private/tmp/fwp-obsolete-checkout-handoffs`; lossless compression hashes
 are in `/private/tmp/fwp-compressed-artifacts.jsonl`. Preserve all retained evidence.
+
+## Roadmap status
+
+| Step | Status | Remaining work |
+|---|---|---|
+| 1 | Verified | Maintain GC-free lifetime and cycle checks |
+| 2 | Verified | Maintain A1–A6; sharing still uses ARC |
+| 3 | Verified | Maintain F1–F3's stated call and recursion scope |
+| 4 | Verified | Preserve delivered decimal cost reduction and recorded loop gap |
+| 5 | In progress | Resolve D2's zero-update timing requirement |
+| 6 | In progress | Resolve N1's inclusive array control; investigate computation cost |
+| 7 | In progress | Broader B1/B2 comparisons |
+| 8 | Pending | V1–V2 integrated application validation |
+
+Documentation runs at `fc037501` and `553fb24f` failed because the handoff rewrite
+omitted this required status table. Both complete logs show that same defect.
+The table is restored; keep the existing audit contract.

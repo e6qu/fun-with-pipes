@@ -20,7 +20,7 @@ def digest(data):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ['evidence', 'qualification', 'output']:
+    for name in ['evidence', 'output']:
         parser.add_argument('--' + name, type=Path, required=True)
     for name in ['source', 'cc', 'c-arch']:
         parser.add_argument('--' + name, required=True)
@@ -29,19 +29,19 @@ def main():
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
     assert args.timeout == 180
     report = json.loads((args.evidence / 'comparison.json').read_text())
-    host = json.loads(args.qualification.read_text())
     assert report['source'] == args.source
-    assert host['source'] == os.environ['GITHUB_SHA']
-    assert host['qualified'] and not host['failures']
-    assert host['actual'] == host['expected'] == report['qualification']['actual']
-    assert platform.machine() == host['actual']['machine']
+    expected = report['qualification']['actual']
+    assert platform.machine() == expected['machine']
     assert args.c_arch == report['configuration']['c_arch']
-    assert subprocess.check_output([args.cc, '--version'], text=True).splitlines()[0] == host['actual']['cVersion']
+    version = subprocess.check_output([args.cc, '--version'], text=True).splitlines()[0]
+    assert version == expected['cVersion']
+    host = dict(system=platform.system(), machine=platform.machine(), cVersion=version,
+                cpuInfo=json.loads(subprocess.check_output(['lscpu', '--json'], text=True)))
     assert list(report['results']) == list(MEASURE.CASES)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     configuration = dict(diagnosticSource=os.environ['GITHUB_SHA'], inputSource=args.source,
-                         qualification=host, inputFailures=report['failures'], decision='diagnostic-only',
+                         host=host, inputFailures=report['failures'], decision='diagnostic-only',
                          arguments={k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()})
     (output / 'configuration.json').write_text(json.dumps(configuration, indent=2) + '\n')
     results = {}

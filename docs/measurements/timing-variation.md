@@ -135,8 +135,8 @@ accumulator carried through a generic 64-bit loop-state array. That observation
 is a hypothesis about extra register transfers, not a demonstrated cause.
 
 Before selecting an optimization, compile the retained C and fwp timing sources
-for all four cases on the matching GCC ARM64/AMD64 hosts, at their original O2
-settings. Add only GCC's vectorization report and optimized-tree dump options.
+for all four cases on native ARM64/AMD64 with the matching GCC version and
+explicit original architecture/O2 settings. Add only GCC's vectorization report and optimized-tree dump options.
 Require the rebuilt executable's hash to match its recorded ordinary binary
 and verify every output hash/live-storage result. Preserve the source, commands,
 compiler reports, binaries and outputs. This is compiler inspection, not another
@@ -148,3 +148,10 @@ Run this inspection with `suite=kernel-codegen`, `native_runner=all`,
 `comparison_session=2`, and `evidence_run=40951090783` in `numerics.yml`.
 `scripts/report-kernel-codegen.py` retains partial output after a failure and
 never labels its printed kernel durations as new acceptance measurements.
+
+This inspection does not require the benchmark CPU model: it measures no time
+and accepts a compiler report only if its executable matches the original byte
+for byte. Record the actual host and require the original GCC version, native
+architecture and explicit target flags. The initial AMD inspection rejected Xeon
+8573C before building; retain that rejection. Timing baselines still require
+their originally declared CPUs.
