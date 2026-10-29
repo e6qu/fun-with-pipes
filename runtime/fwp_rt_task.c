@@ -2551,13 +2551,13 @@ static void fwp_stack_guard_init(size_t size) {
     ss.ss_sp = alt;
     ss.ss_size = sizeof alt;
     ss.ss_flags = 0;
-    if (sigaltstack(&ss, 0) != 0) return;
+    if (sigaltstack(&ss, 0) != 0) fwp_trap("cannot install stack overflow handler");
     struct sigaction sa;
     memset(&sa, 0, sizeof sa);
     sa.sa_sigaction = fwp_segv;
     sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGSEGV, &sa, 0);
-    sigaction(SIGBUS, &sa, 0);
+    if (sigemptyset(&sa.sa_mask) != 0 ||
+        sigaction(SIGSEGV, &sa, 0) != 0 || sigaction(SIGBUS, &sa, 0) != 0)
+        fwp_trap("cannot install stack overflow handler");
 }
 #endif /* FWP_FIBERS */

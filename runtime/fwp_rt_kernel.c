@@ -727,10 +727,11 @@ static void fwp_kernel_parallel(const fwp_kernel *k, int sum, size_t n, size_t u
     for (; started < t; started++) {
 #ifdef FWP_STATIC_MEMORY
         pthread_attr_t a;
-        pthread_attr_init(&a);
-        pthread_attr_setstack(&a, fwp_static.thread_stack[started - 1], FWP_STATIC_THREAD_STACK);
-        int status = pthread_create(&tids[started], &a, fwp_kjob_thread, &jobs[started]);
-        pthread_attr_destroy(&a);
+        int status = pthread_attr_init(&a);
+        if (status) break;
+        status = pthread_attr_setstack(&a, fwp_static.thread_stack[started - 1], FWP_STATIC_THREAD_STACK);
+        if (!status) status = pthread_create(&tids[started], &a, fwp_kjob_thread, &jobs[started]);
+        if (pthread_attr_destroy(&a)) abort();
 #else
         int status = pthread_create(&tids[started], 0, fwp_kjob_thread, &jobs[started]);
 #endif

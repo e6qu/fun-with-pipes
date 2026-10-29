@@ -48,3 +48,21 @@ static int kernel_join(pthread_t thread, void **result) {
     return status;
 }
 #endif
+#if defined(FWP_STATIC_MEMORY) && !defined(_WIN32)
+static int kernel_attr_attempts, kernel_attr_failure, kernel_attr_live, kernel_attr_destroyed;
+static int kernel_attr_init(pthread_attr_t *attribute) {
+    if (++kernel_attr_attempts == 2 && kernel_attr_failure == 1) return ENOMEM;
+    int status = pthread_attr_init(attribute);
+    if (!status) kernel_attr_live++;
+    return status;
+}
+static int kernel_attr_setstack(pthread_attr_t *attribute, void *address, size_t size) {
+    if (kernel_attr_attempts == 2 && kernel_attr_failure == 2) return EINVAL;
+    return pthread_attr_setstack(attribute, address, size);
+}
+static int kernel_attr_destroy(pthread_attr_t *attribute) {
+    int status = pthread_attr_destroy(attribute);
+    if (!status) { kernel_attr_live--; kernel_attr_destroyed++; }
+    return status;
+}
+#endif
