@@ -1,9 +1,85 @@
 # Current costs of automatic derivatives
 
-This is the D1 measurement plan, not a performance result. It refreshes the
-[older descent comparisons](descent-peers.md) with the current compiler, before
-D2 chooses a representation change. No earlier fwp executable or generated-C
-archive is required.
+Four current-source sessions now measure derivative costs. These are baselines,
+not an optimization result. They refresh the [older comparisons](descent-peers.md)
+without requiring an earlier fwp executable or generated-C archive. D1 is still
+incomplete: output separation, matched repeated AMD64 hosts and fixed budgets
+remain before D2 chooses a representation change.
+
+## Results so far
+
+For the largest case, 129 coordinates and 199 updates, each process prints its
+final vector. These are median milliseconds for the complete process; smaller is
+better. All six inputs and all timing samples remain in the linked reports.
+
+| Host/session | AD history | AD current | Explicit list | Packed fwp | C | Rust |
+|---|---:|---:|---:|---:|---:|---:|
+| Neoverse-N2 1 | 39.709 | 38.807 | 5.829 | 1.874 | 1.051 | 1.199 |
+| Neoverse-N2 2 | 39.417 | 38.612 | 5.596 | 1.683 | 0.869 | 1.017 |
+| EPYC 7763 | 41.863 | 40.827 | 7.128 | 3.015 | 1.144 | 1.383 |
+| Xeon 6973P-C | 28.834 | 27.873 | 4.713 | 1.488 | 0.707 | 0.826 |
+
+AD-current takes 35.7–44.4 times C's time here; packed fwp takes 1.78–2.64 times
+C's time. These ratios compare different amounts of work: C and packed fwp use
+explicit derivative formulas, while AD records and reverses operations. They
+are not isolated compiler overhead. The two AMD64 sessions use different CPU
+models and cannot establish a repeated same-host budget. Short-case controls
+also vary: on Xeon, identical AD-current images differ by about 9.8% at 3
+coordinates/199 updates. Keep those observations; no speedup is accepted here.
+
+Memory observations agree across all four hosts for this largest case:
+
+| fwp form | Managed allocation requests | Retains | Peak managed charge |
+|---|---:|---:|---:|
+| AD history | 1,104,186 | 868,638 | 845,424 bytes |
+| AD current | 1,103,785 | 868,237 | 26,288 bytes |
+| Explicit list | 206,891 | 51,342 | 21,824 bytes |
+| Explicit packed | 200 | 0 | 4,352 bytes |
+
+Keeping only current weights greatly reduces live storage, but leaves most
+allocation/counting work. AD-current requests 31,360,398 managed bytes over the
+whole run. Its separate raw derivative buffers peak at 33,904 bytes; parent and
+weight buffers grow five times, then are reused across updates. All observed
+managed/raw storage is released at shutdown. Raw and managed observations are
+different counters; neither is whole-process resident memory, which is recorded
+separately. The existing workspace already avoids per-update raw buffer allocation.
+
+The diagnostic clocks put about 34.56 ms in forward-with-recording on Neoverse-N2
+session 1, versus 0.40 ms in reverse traversal. Forward includes objective
+arithmetic and temporary collection/value construction; this does not attribute
+that time solely to tape appends. The clocks perturb execution: paired
+instrumented/ordinary timings, including both faster and slower observations,
+are retained. Investigate the temporary values around recording before assuming
+larger raw-buffer caches will help; D2's exact change is not selected yet.
+
+## Retained evidence
+
+Source `21a1de329c8e4cec1b9ba7cd284c9be876facf5c`,
+[run 40816041693](https://github.com/e6qu/fun-with-pipes/actions/runs/40816041693).
+All four full job logs and artifacts were audited: 80 native images and 68 GCC
+stack reports per session, all outputs/samples, workspace-on/off profiles,
+phase sequences and both broken controls. These focused jobs are not the full
+production gate for a future implementation.
+
+The [archive index](descent-baseline-artifacts-2026-10-29.json) retains complete
+job identities, every artifact file hash, instruction-section sizes and controls.
+Exact JSON reports and complete logs are losslessly compressed:
+
+| Session | Report | Job log |
+|---|---|---|
+| ARM 1 | [JSON](descent-baseline-2026-10-29-arm-1.json.gz) | [Log](descent-baseline-2026-10-29-arm-1.log.gz) |
+| ARM 2 | [JSON](descent-baseline-2026-10-29-arm-2.json.gz) | [Log](descent-baseline-2026-10-29-arm-2.log.gz) |
+| AMD 1 | [JSON](descent-baseline-2026-10-29-amd-1.json.gz) | [Log](descent-baseline-2026-10-29-amd-1.log.gz) |
+| AMD 2 | [JSON](descent-baseline-2026-10-29-amd-2.json.gz) | [Log](descent-baseline-2026-10-29-amd-2.log.gz) |
+
+For example, `gzip -dc docs/measurements/descent-baseline-2026-10-29-arm-1.json.gz`
+prints the original report. The archive verifier checks original byte hashes,
+samples, ratios, cleanup, phase completeness and distinct job executions:
+
+```sh
+python3 scripts/local-guard.py python3 scripts/check-descent-baselines.py \
+  --archive docs/measurements/descent-baseline-artifacts-2026-10-29.json
+```
 
 ## What the programs compute
 
@@ -97,5 +173,4 @@ controls; instrumentation must not be used as ordinary execution timing.
    are promised.
 
 The [implementation plan](../../PLAN.md#5-differentiation) owns acceptance and
-[the handoff](../development-state.md) owns the current action. No D1 result has
-been collected for this refresh yet.
+[the handoff](../development-state.md) owns the current action. D1 remains open until its remaining measurements and fixed budgets are complete.

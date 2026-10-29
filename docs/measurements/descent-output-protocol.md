@@ -81,7 +81,7 @@ produce a different checksum.
 
 Separate instrumented programs observe storage after every solve. fwp must have
 zero managed and raw derivative storage at each checkpoint, zero retains and
-zero tracing collections. C/Rust must release both numerical buffers at each
+no collector entry points in the actual image. C/Rust must release both numerical buffers at each
 checkpoint. Controls deliberately retain a value or omit a buffer release; the
 observer must fail at the first checkpoint, even if final cleanup would hide it.
 
