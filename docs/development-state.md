@@ -1,7 +1,8 @@
 # Continue PR #227: derivative costs and numerical kernels
 
-**Next:** implement and run the [declared compiler-report diagnostic](measurements/timing-variation.md#expanded-result-and-next-source-investigation)
-on the retained four-case kernel sources. Require unchanged rebuilt binary hashes,
+**Next:** run and audit the [declared compiler-report diagnostic](measurements/timing-variation.md#expanded-result-and-next-source-investigation)
+on the retained four-case kernel sources. The script compiles and workflow lint
+passes under the guard; actual GCC execution belongs on the runners. Require unchanged rebuilt binary hashes,
 correct outputs and matching GCC hosts. This investigates the stable computation
 gap; it does not resolve the separate failed timing controls below. No unchanged
 acceptance rerun or further sample-count increase is authorized by the experiment.

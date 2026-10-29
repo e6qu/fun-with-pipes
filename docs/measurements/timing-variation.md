@@ -143,3 +143,8 @@ compiler reports, binaries and outputs. This is compiler inspection, not another
 timing acceptance run; do not select or discard elapsed-time observations.
 It can explain generated code choices while the separate allocation-inclusive
 noise failure and D2's zero-update requirement remain unresolved.
+
+Run this inspection with `suite=kernel-codegen`, `native_runner=all`,
+`comparison_session=2`, and `evidence_run=40951090783` in `numerics.yml`.
+`scripts/report-kernel-codegen.py` retains partial output after a failure and
+never labels its printed kernel durations as new acceptance measurements.
