@@ -4286,7 +4286,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p derivative-checks
-          cargo test --locked --release --no-fail-fast --test golden_check --test autodiff_precision -- --nocapture 2>&1 | tee derivative-checks/precision.log
+          cargo test --locked --release --no-fail-fast --lib --test golden_check --test autodiff_precision --test call_effects -- --nocapture 2>&1 | tee derivative-checks/precision.log
       - name: Interpreter regressions
         if: ${{ !cancelled() && matrix.session == 1 && steps.compiler.outcome == 'success' }}
         shell: bash

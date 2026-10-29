@@ -1,6 +1,6 @@
 # Next: verify derivative accuracy and reliable timing
 
-**Next:** verify the pending-field effect query with the focused `descent-checks`
+**Next:** verify nominal type-variable refinement with the focused `descent-checks`
 suite, then repair every remaining inference/precision failure before measuring.
 The preparation is in `/private/tmp/fwp-ad-recording`, branch `ad-recording-costs`.
 One active PR: #225 remains in `/private/tmp/fwp-cpu-phases` at
@@ -14,8 +14,9 @@ Final production run `40821277777`: documentation `40821277750`, benchmarks
 `123274076322` pass and are fully audited. The macOS jobs have 132 summaries/619
 passed tests and 127/359 respectively. Packaging verified/uploaded 3,297 and
 2,914 evidence files. Intel ownership job `123274076326` also passes: 127 summaries/359 tests audited.
-Remaining Linux, regular Intel macOS and Windows jobs are running
-without reported failures. Both Windows hosts passed the repaired decimal test.
+Regular Intel macOS `123274076241` (132/619) and Windows ARM
+`123274076270` (202/799) also pass with all logs audited. Both Linux and Windows
+AMD64 remain running without reported failures. Both Windows hosts passed the repaired decimal test.
 
 Preserve this final head. Squash only after all nine production jobs plus docs
 pass and are audited; explicit one-line subject <=80 characters and empty body.
@@ -47,15 +48,25 @@ no repeated-solve measurements completed. AMD session 2 (123289571216) correctly
 rejected an EPYC 9V45 host before building. Retain this outcome; never mix it into
 the EPYC 7763 baseline. Logs: `/private/tmp/fwp-descent-repeat-9d-{arm,amd}-{1,2}.log`.
 
-The delayed selector constraint hid callback fields from effect relationship
-queries. The proposed repair exposes pending field types to that query without
-forcing an anonymous row. It is **not yet verified**. The focused workflow now
-uses explicit Bash pipefail, runs independent checks after failures, and offers
-`descent-checks` without lengthy measurement or host-model restrictions. Verify
-all snapshots, native O1/O2 and both precision tests, then both G2 analysis hosts.
-No ownership contract changed. An untracked scalar-recording fixture prepares D2;
-it has only been formatted, not executed. The obsolete collector-symbol prefix
-in `scripts/measure-descent-batches.py` was repaired in 9d.
+The follow-up query experiment `6168968833f74f574f03ce6f04a9aa0e7c37f9f4`,
+run `40827556438`, did not repair those three errors on either architecture
+(jobs 123293989080/123293989104). Both precision tests, type/interpreter snapshots
+and native emission failed; no timing results. Logs are retained in
+`/private/tmp/fwp-selector-effects-6168-{arm,amd}.log`. The query and delayed-selector
+approach are removed, not retained as extra machinery.
+
+The replacement keeps immediate field constraints and preserves the selector's
+input variable through ordinary unification. A checked nominal constraint refines
+that shared variable. Composition no longer discards variable links when no
+abstract size needs replacement. Two production type-table unit tests pass in a
+small standalone harness under the local guard: aliases keep nominal identity,
+and phantom-parameter recursion is rejected. Full inference remains unverified;
+the focused runner includes library unit tests, all type/interpreter snapshots,
+callback effects, derivative precision and native O1/O2 nominal selection.
+No ownership contract changed. The 256-operation scalar-recording fixture now
+passes raw interpretation (result 1) with the exact fbed compiler. The unwind
+probe now overwrites the argument record and seeds the recorded operation;
+verify it with the D2 native tests before changing the no-escape contract.
 
 ## Next ownership proof
 
@@ -88,7 +99,7 @@ history and packed fixtures pass the raw interpreter with independent output
 checks. The compiler is the exact fbed package, hash verified, downloaded to
 `/private/tmp/fwp-225-repaired-compiler`; this does not verify the new inference
 code. Updated workflow/docs validation passes; the new golden source is formatted.
-Publish the pending-field query and run descent-checks before further measurements.
+Publish the nominal refinement and run descent-checks before further measurements.
 The native production compilers must verify the inference change; the local
 current-compiler run only reproduced the original defect.
 

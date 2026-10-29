@@ -9,8 +9,16 @@ impl Neg[Box] =
     neg = update { item = neg }
 positive-box : Box -> Box
 positive-box = if (.item.value | lt 0) neg id
+Call = { run: () -> I64 ! {IO}, value: I64 }
+impl Neg[Call] =
+    neg = update { value = neg }
+positive-call : Call -> Call ! {IO}
+positive-call = if (.run | apply () | lt 0) neg id
+read-negative : () -> I64 ! {IO}
+read-negative = tap (const "called" | print) | const -1
 main = [
     Gauge { value = -3 } | positive | .value | echo,
     Box { item = Gauge { value = -4 } } | positive-box | .item.value | echo,
     { value = 5, other = 7 } | both .value .other | echo,
+    Call { run = read-negative, value = -5 } | positive-call | .value | echo,
 ] | ignore
