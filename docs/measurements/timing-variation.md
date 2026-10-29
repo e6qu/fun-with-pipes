@@ -66,4 +66,55 @@ artifact. `scripts/diagnose-timing-variation.py` checks executable identities,
 retains every stdout/stderr stream and duration, and restores the original CPU
 affinity even after failure. `scripts/test-timing-diagnostic.py` checks observation
 placement, changed instrumentation boundaries and rejected corrupt outputs.
-No diagnostic result has been collected yet.
+Run `40949475361`, job `123713471516`, completed on EPYC 7763 at `535031b3`.
+The [archive](timing-diagnostic-artifacts-2026-10-29.json) retains all 1,089 process
+records, 1,088 observations, complete logs, instrumented source and artifact
+identities. Independent audit checked every raw stream/hash, schedule, output,
+live-storage result and CPU/layout observation. The prior run `40949274713`
+rejected EPYC 9V45 before downloading or executing; its qualification/log remain.
+
+## What the diagnostic establishes
+
+Fixed-CPU execution does not repair the matrix control. The fwp/identical ratio
+is 1.0389 with normal scheduling and 0.9633 when pinned (reciprocal 1.0381).
+Every one of 2,560 recorded matrix calls has input/output offsets `(8, 8, 8)`
+modulo 64 KiB. Only two unbound calls change CPU; none pinned do. Pinned fwp
+processes still range from 5.38 to 10.25 ms for their five calculation samples.
+These observations reject CPU affinity and these low address bits as sufficient
+explanations. They do not identify a runtime defect or prove other placement or
+host-load effects absent. The matrix source preserves shape bounds, live inputs,
+a fresh output and alias-safe byte copies; no unsafe access was identified.
+
+Zero-update history remains near the limit: candidate/reference 1.0204 unbound
+and 1.0200 pinned. The candidate/copy differs by about 2.95% in the smaller pinned
+sample, so this diagnostic cannot accept or reject the production timing rule.
+Retained profiles have equal allocations/retains, and the inspected zero-update
+entry and loop body have the same C operations (the string cleanup identifier
+changes, its implementation does not). No added source-level work has been found;
+this is not proof of equal machine cost. The original 1.0228 failure stays open.
+
+## Small-matrix sampling repair, declared before implementation
+
+The original comparison has only 64 fresh processes per label. In the diagnostic,
+the standard deviation divided by the mean is 24.2% unbound and 25.4% pinned for
+fwp and its copy, pooled within each policy. The five samples within a process
+share its placement and execution conditions; they are not five independent
+placements. The present sample size cannot reliably resolve the 2% control.
+
+For **both architectures**, increase the small matrix from four to **256 fresh
+processes per label per round**. Keep 16 measured rounds and two warmup rounds:
+4,096 measured processes per label. Repeat the existing 16-entry balanced cycle
+64 times within each round; keep the same seed and rotations. This retains
+position and within-round predecessor balance. Keep ordinary scheduling, five
+samples per process, eight calculations per sample, both timing boundaries,
+the median of complete round totals, all observations and the **1.02** limit.
+Keep the other three cases at four processes per label per round.
+
+As a planning estimate only, independent sample means at the observed variation
+would have about 1.4% two-sided 99% difference uncertainty at 4,096 processes,
+versus about 11% at 64. The actual statistic uses round medians and host conditions
+may be correlated; this estimate does not replace the unchanged control or
+promise a pass. Run two independent qualified sessions per architecture after
+implementing this declared count. A further failure stays inconclusive: do not
+increase counts again after seeing those outcomes or discard old results.
+This repair changes measurement precision, not the programs or D2's limits.

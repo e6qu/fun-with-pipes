@@ -1,10 +1,12 @@
 # Next: diagnose the retained timing failures in PR #227
 
-**Next:** run and audit the [declared timing diagnostic](measurements/timing-variation.md)
-on the exact failed AMD kernel and derivative programs. Preserve the failed
-observations and every unchanged limit. Do not repeat acceptance measurements
-unchanged. After a justified repair and complete evidence, publish one final
-head for the nine production jobs, docs and both G2 hosts.
+**Next:** implement the [declared small-matrix sampling repair](measurements/timing-variation.md#small-matrix-sampling-repair-declared-before-implementation), then run
+its two qualified sessions per architecture. Keep the original failed outcomes
+and 2% limit. The CPU-affinity diagnostic is complete and did not resolve the
+variation. The derivative zero-update failure remains open; the user has been
+asked whether to retain its broader improvement with that failed goal explicit.
+No answer has arrived; preserve the original requirement in the meantime.
+After complete evidence, publish one final head for all required gates.
 Keep PR #227 draft during focused work. Squash-merge only after every final gate
 passes and all logs are audited, with an explicit one-line subject <=80 characters
 and empty body. This PR groups D2, its compiler repair and N1; N2 is not started.
@@ -94,7 +96,11 @@ and the diagnostic protocol before implementation. The diagnostic runner reuses
 the exact failed binaries, checks their identities and outputs, and compares the
 allowed CPU set with explicit CPU-0 affinity. A separate instrumented run observes
 live storage offsets without reading transferred inputs. Three focused controls
-and workflow lint pass. N2 has not started.
+and workflow lint pass. Diagnostic `40949475361` at `535031b3` passes its execution
+checks, with all 1,089 processes independently audited; its archived timings do
+not pass acceptance or identify the cause. EPYC 9V45 rejection `40949274713` is
+retained. Fixed-CPU execution leaves matrix variation and identical offsets.
+Documentation `40949276882` passes and its full log is audited. N2 has not started.
 
 Production run `40947897224` at `cbd9fd7c` started while the PR was ready; keep
 its running jobs and audit them. Its benchmark job passes (two tests/two summaries,
