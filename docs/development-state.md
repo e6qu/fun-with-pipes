@@ -1,12 +1,24 @@
 # Next: verify the grouped derivative PR on every native platform
 
-**Next:** verify the complete repair head of [PR #226](https://github.com/e6qu/fun-with-pipes/pull/226/checks)
-on all nine native jobs, documentation and both G2 hosts. Fix any failure before
-squash-merging. Worktree `/private/tmp/fwp-ad-recording`, branch
-`ad-recording-costs`. Earlier results below do not replace final-head acceptance.
-D2's speed goal remains open. [PLAN.md](../PLAN.md#5-differentiation) names the
-next source investigation; `/private/tmp/fwp-next-d2-notes.md` keeps its detailed
-hypotheses, not accepted improvements.
+**Next:** finish auditing native run `40863393272` at `80da3971` while checking
+the interleaved G2 measurement repair on both hosts. Keep those native jobs
+running. Batch any discovered fixes and completed evidence before the final
+nine-job, documentation and G2 gates; squash-merge only when all pass.
+[PR #226](https://github.com/e6qu/fun-with-pipes/pull/226/checks) is draft again to
+avoid full matrices for intermediate measurement repairs. Worktree
+`/private/tmp/fwp-ad-recording`, branch `ad-recording-costs`.
+
+G2 run `40863396927` at 80da3971 passes every original limit, but Intel N=64's
+identical-copy variation is 6.89%, above 5%. All 13,824 timings are independently
+audited and archived. The repair keeps the same samples and limits but interleaves
+individual proofs instead of contiguous 64-call label groups. Results are pending;
+no compiler or runtime implementation changes. Docs `40863354394` at 80da3971 pass.
+
+D2's speed goal remains open. [PLAN.md](../PLAN.md#5-differentiation) names the next
+source investigation; `/private/tmp/fwp-next-d2-notes.md` keeps detailed hypotheses.
+A guarded F64 conversion probe shows finite/zero/infinity identity but different
+raw/native NaN payload behavior. Do not claim all-engine bitwise identity. No next
+optimization has been implemented. Preserve the scalar allocation reduction.
 
 ## Grouped CI repairs
 

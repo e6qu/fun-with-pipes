@@ -52,6 +52,30 @@ Every size still needs nine waves and 40 bytes per origin. This verifies the
 revised measurement protocol and unchanged limits; it is not evidence of a
 faster analyzer. Full final-head native validation remains required.
 
+### Inconclusive repeated control and interleaved repair
+
+Final-head run `40863396927` at `80da3971` passes all original analysis limits on
+both hosts, but Intel N=64 fails the identical-copy control: 4.496 versus 4.206 ms
+per proof, a 6.89% difference against 5%. Linux's largest difference is 1.02%.
+All units, lint and startup checks pass. The complete
+[inconclusive record](ownership-analysis-batched-control-2026-10-29.json) retains
+both logs, all 13,824 timings, hardware and artifact identities. It remains a
+failed measurement; the earlier passing sample does not override it.
+
+The 64-call groups take roughly 0.2–0.4 seconds each on that Intel run. A group's
+labels therefore observe different intervals. The next repair interleaves one
+fresh proof of each label before moving to the next triplet. It keeps 12 rounds,
+64 proofs per label per round, every individual timing and the same median of
+round totals. There are 768 triplets. Cycling the six declared orders by
+`(round * 64 + proof) % 6` uses each order exactly 128 times, balancing positions
+and predecessors within triplets across the complete run. No proof state is
+reused. This reduces the distance between compared calls; it does not identify
+a particular source of host interference or guarantee stable hardware.
+
+The 5% identical-copy limit and every original absolute/count/ratio limit stay
+unchanged. Interleaved results are pending. Only the ignored measurement test
+changes; production analysis and admission rules do not.
+
 ## Current implementation: revisit changed dependencies
 
 PR #221 run `40674942219`, source `45f9e81013fdf3b9e07aa0d4222c87bcde289e2d`,

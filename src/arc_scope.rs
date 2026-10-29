@@ -2052,15 +2052,17 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                     [0, 2, 1],
                 ];
                 let mut samples: [Vec<Vec<u128>>; 3] = std::array::from_fn(|_| Vec::new());
-                // Each round measures 64 fresh proofs per label, never a reused
-                // proof. Two cycles of every order balance positions and in-round
-                // predecessors. Retain every individual duration; compare batch
-                // medians per proof, with the original absolute and ratio limits.
-                // The duplicate Separate label detects measurement instability.
-                for repeat in 0..12 {
-                    for index in ORDERS[repeat % ORDERS.len()] {
-                        let mut batch = Vec::with_capacity(PROOFS);
-                        for _ in 0..PROOFS {
+                // Interleave individual fresh proofs rather than measuring all
+                // 64 calls of a label together. Nearby comparisons reduce drift
+                // between labels without dropping samples or changing limits.
+                // Across 768 triplets, every order occurs exactly 128 times.
+                // Retain each duration and compare medians of 12 batch totals.
+                for round in 0..12 {
+                    for label in &mut samples {
+                        label.push(Vec::with_capacity(PROOFS));
+                    }
+                    for proof in 0..PROOFS {
+                        for index in ORDERS[(round * PROOFS + proof) % ORDERS.len()] {
                             let start = Instant::now();
                             let actual = super::check(
                                 &program,
@@ -2069,10 +2071,9 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                                 policies[index],
                             )
                             .unwrap();
-                            batch.push(start.elapsed().as_nanos());
+                            samples[index][round].push(start.elapsed().as_nanos());
                             assert_eq!(actual, expected[index]);
                         }
-                        samples[index].push(batch);
                     }
                 }
                 let medians = samples.each_ref().map(|rounds| {
@@ -2115,7 +2116,7 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                             time_limits_ms[size_index]
                         ));
                     }
-                    println!("ownership-analysis sites={label} n={n} source_bytes={} functions={} ir_nodes={node_count} proofs_per_batch={PROOFS} median_batch_ns={} median_ns={median} samples_ns={:?} origin_bytes={} rounds={} visits={} summary_updates={} contexts={} closures={} facts={}", source.len(), program.funcs.len(), medians[index], samples[index], std::mem::size_of::<Origin>(), stats.rounds, stats.visits, stats.summary_updates, stats.contexts, stats.closures, stats.facts);
+                    println!("ownership-analysis sites={label} n={n} schedule=interleaved source_bytes={} functions={} ir_nodes={node_count} proofs_per_batch={PROOFS} median_batch_ns={} median_ns={median} samples_ns={:?} origin_bytes={} rounds={} visits={} summary_updates={} contexts={} closures={} facts={}", source.len(), program.funcs.len(), medians[index], samples[index], std::mem::size_of::<Origin>(), stats.rounds, stats.visits, stats.summary_updates, stats.contexts, stats.closures, stats.facts);
                 }
                 for index in [1, 2] {
                     if medians[index] * 2 > medians[0] * 3 {
