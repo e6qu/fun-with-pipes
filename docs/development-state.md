@@ -1,120 +1,94 @@
-# Next: verify mixed record-return repair in PR #227
+# Next: complete D2 and N1 evidence in PR #227
 
-**Next:** publish the complete repair batch and run the expanded `eager-captures`
-focused suite on GCC ARM64/AMD64 and Clang ARM64. Preserve the earlier full run
-to audit its remaining targets. Recheck the paired measurements after the C
-generator repair; the earlier measurements remain evidence for their own sources.
-Then require all nine production jobs, docs and both G2 hosts on the final head,
-audit every log, and squash-merge with a one-line subject under 80 characters and
-empty body. Keep #227 as the only active PR.
+**Next:** finish the repaired-source derivative comparison, verify all four N1
+kernel baselines on matching native hosts, archive and audit every result, then
+publish one final head for the nine production jobs, docs and both G2 hosts.
+Keep PR #227 draft during focused work. Squash-merge only after every final gate
+passes and all logs are audited, with an explicit one-line subject <=80 characters
+and empty body. This PR groups D2, its compiler repair and N1; N2 is not started.
 
-Worktree `/private/tmp/fwp-ad-captures`, branch `ad-eager-captures`. PR #226 is
-merged by the user as `cdf881067dd87610badad56ed15cc5ecfbf66e17`; its tree matches
-final head `02e4ee21`. All nine production jobs (`40876750803`), docs
-(`40876747233`) and both G2 hosts (`40876750730`) pass and their full logs are
-audited. No additional failure was found. Duplicate post-merge run `40899114681`
-was cancelled after checking tree equality. [History](roadmap-history.md#derivative-allocation-and-accuracy-pr-226)
-records counts and source IDs; the final G2 samples are now retained.
+Worktree `/private/tmp/fwp-ad-captures`, branch `ad-eager-captures`.
+[PLAN.md](../PLAN.md) owns acceptance, [history](roadmap-history.md) owns completed
+deliveries. User-merged #226 is `cdf881067d`, tree identical to final tested
+`02e4ee21`; all nine production jobs, docs and both G2 hosts are fully audited.
+Duplicate post-merge run `40899114681` was cancelled after checking tree equality.
 
-## Final-head checks and pending repair
+## Compiler repair and actual checks
 
-Head `56528ffb` runs native `40901634818`, documentation `40901634737` and G2
-`40901630875`. Both G2 jobs pass and their full logs and all 13,824 durations are
-audited; identical-control maxima are 0.09% Linux and 0.37% Intel. Benchmark job
-123545198571 passes with both tests/full log audited. ARM macOS ownership job
-123545198764 also passes (363 tests/127 summaries, full log audited).
+`694e31b7` repairs a C-generator defect exposed by eager captures. An authorized
+REST DELETE returning `RestReply[()]` crashed natively: a record was split into
+fields before a match, then read as an unassigned boxed local because another
+branch could fail. Both interpreters passed; exact production Clang O1 reproduced
+the segfault. The repair emits every arm in the caller's field context. Tests
+cover both authorization outcomes, mixed direct/dynamic records, aliases and
+repeated exceptional cleanup. REST tests now retain server exit/stderr diagnostics.
+The same commit repairs the stale collection-evidence count (seven tests, not six).
 
-Regular ARM macOS job 123545198825 fails `secure_native` and
-`secure_client_round_trip`: an authorized DELETE crashes instead of returning
-204. All other completed target logs and the full job log were checked; no other
-failure was found. Exact compiler `56528ffb` reproduces this with a small
-`delete` function returning `RestReply[()]`: raw and optimized interpreters pass,
-Clang O1 segfaults. Generated C returns a never-assigned boxed local.
+Focused run `40909968650` at `694e31b7` passes on Linux ARM64/AMD64 and ARM macOS:
+333 tests/22 summaries per host, lint and raw interpreter corpus. Every full log
+is audited. Documentation `40909967190` passes; its complete log was reviewed.
+The broader old run `40901634818` at `56528ffb` continues for failure audit:
 
-Root cause: `expr_fields` can split a returned record into fields before a match,
-but emitted that match as a boxed value when another arm failed or dynamically
-returned a record. The repair emits each arm in the required field context.
-Controls cover both authorization branches, mixed direct/dynamic records,
-alias preservation and repeated exceptional cleanup at O1/O2. REST test cleanup
-now preserves server exit/stderr diagnostics. These Rust changes are not yet
-compiled or verified. Source, emitted C and logs remain under `/private/tmp`
-with prefix `fwp-227-`; no disassembly was used to diagnose this failure.
+- Both regular macOS jobs fail only the two REST cases; every target and complete
+  job log is audited. This is the defect fixed above, not a timing failure.
+- Both macOS ownership jobs pass (363 tests/127 summaries each), fully audited.
+- Benchmark passes. Both old G2 hosts (`40901630875`) pass, with all 13,824 durations
+  and complete logs audited. These are not final-head gates after the repair.
+- Linux and Windows jobs still run; inspect all their completed targets/failures.
 
-Docs job 123545196798 fails its collection-count control: the new capture test
-makes `inline_caf_ownership` seven tests, while its evidence table expected six.
-Both the production table and synthetic fixture are repaired locally (53 total).
-Eight controls pass, including rejection of the old six-test log. Audit every
-remaining completed native target/diagnostic before pushing the repair batch.
-The failed full docs log is `/private/tmp/fwp-227-docs-5652.log`; its earlier
-intentional panic/timeout diagnostics belong to 20 passing runner controls.
+No disassembly was used to diagnose this defect. Source, minimal reproducer,
+exact downloaded compiler and logs remain under `/private/tmp/fwp-227-*`.
 
-N1 preparation is separate at `/private/tmp/fwp-kernel-baselines`, branch
-`numerical-kernel-baselines`. Protocol `d0384af0`, corrected schedule `c17fe6e2`,
-exact oracles `7a1d7e1c`, runner/workflow `f053da88`. Six local controls and docs
-pass. Run `40906486080` has two passing ARM sessions and two AMD host rejections
-before building; those logs/results still need independent audit. Preserve them
-and check applicability after the compiler repair. No second PR.
+## Derivative measurements
 
-## Included work and evidence
+[The capture report](measurements/eager-captures.md) retains the four original
+passing comparisons at `4ffeb0d2`/`8703104d`, frozen protocol `8a495a72` and original
+AMD rejection. They measured 13–72% less elapsed time and 65.5% fewer requests in
+the largest current-result case, still 44–58 times handwritten C's time. All
+outputs, 368 binaries, 320 frame reports, profiles and reference patches are
+audited. These timings do not yet verify repaired `694e31b7`.
 
-The compiler binds computed arguments once, in their original order, for known
-partial functions used once. Existing specialization removes temporary closures.
-Unknown/saturated producers keep their bindings; observable captures reject the
-whole transformation and discard prepared locals. Inlining limits and runtime
-APIs are unchanged. [The experiment](measurements/eager-captures.md) explains this
-with examples, the exact reference and measured remaining costs.
+Refresh runs at `694e31b7`, with unchanged limits:
+`40912310643` runs ARM sessions 1/2; its two AMD hosts were rejected before builds
+(both EPYC 9V74). `40912523280` has qualified AMD session 2, but rejected session 1.
+`40912773534` requests only missing AMD session 1. Preserve all rejected attempts;
+never replace an accepted measurement to obtain a faster time. The independent
+repaired-source auditor is `/private/tmp/fwp-audit-captures-repaired.py`.
+Archive each source/run separately and retain the earlier accepted observations.
 
-Preparation `8a495a72` fixes the comparison before implementation `89d0dfa1`.
-Focused run `40871650124` passes 299 tests/18 summaries, lint and the interpreter
-corpus on Linux ARM64/AMD64 and ARM macOS; all three full logs are audited.
-Production compiler/runtime/library/tests remain identical after merging #226.
+The scalar-recording experiment keeps its user-accepted allocation reduction and
+failed original speed rule. D3's finite accuracy/depth matrix is verified by #226;
+no general constant-memory or handwritten-derivative parity claim follows.
 
-All four paired sessions are audited: `40876515001` at `4ffeb0d2` (ARM 1/2,
-AMD 2) and `40878172336` at `8703104d` (AMD 1). Same measured code, scripts and
-reference; the latter commit only selects the replacement session explicitly.
-Original AMD 1 received EPYC 9V45 instead of 7763 and was rejected before timing;
-its complete rejection remains. Accepted measurements include 368 binaries,
-320 stack reports, every process observation/output and workspace-on/off cleanup.
-At those measured sources, all frozen limits pass; updated solves take 13–72% less time, while the largest
-current-result case still takes 44–58 times handwritten C's time. Do not describe
-that ratio as pure language overhead or relabel scalar-recording's failed speed
-result. D3's finite accuracy/depth matrix is verified by #226.
+## Kernel baselines grouped into this PR
 
-The comparison archive and rejection controls retain actual per-session sources
-and runners. Missing sessions, altered samples, relabeled source/run identities,
-changed reference or measured-source hashes fail. The earlier four rejected
-scalar-recording sessions still retain every timing failure. Workflow selection
-requires an explicit session and rejects unsupported hosts instead of skipping
-all checks. There is no default timing session.
+Preparation branch `numerical-kernel-baselines` at `8b1132ca` is now included here;
+its separate worktree `/private/tmp/fwp-kernel-baselines` is no longer the active
+delivery. Protocol `d0384af0`/`c17fe6e2`, runner `f053da88` and six passing Python
+controls precede measurement. [The report](measurements/kernel-baselines.md)
+defines exact inputs, every result bit, four labels, two timing scopes and noise
+limits. It corrects the historical four-label description without changing data.
 
-## Local validation and resource state
+Initial run `40906486080` has two independently audited ARM sessions: 72 ELF
+images, 48 frame reports, all observations/outputs/cleanup and full logs. Reports
+and 5,782 artifact identities are archived. AMD hosts were rejected before builds:
+Xeon 8573C and EPYC 9V74, instead of EPYC 7763. All rejection logs remain. Verify
+repaired-source applicability and collect all four matching-host baselines before
+selecting N2; the initial ARM data alone does not complete N1.
 
-No local Rust build or full suite was run. Every check uses
-`python3 scripts/local-guard.py COMMAND...`, serially with fixed limits:
+## Local checks and retained state
 
-- `/private/tmp/fwp-audit-production-log.py` audits all eight final #226 native
-  logs; benchmark/docs/G2 logs were already audited. All pass.
-- `/private/tmp/fwp-audit-captures.py arm-1|arm-2|amd-1|amd-2` independently
-  checks outputs, all rounds, binaries/stack, memory, reference and full logs;
-  each session passes in under two seconds.
-- `python3 scripts/test-descent-groups.py`: 11 tests pass, including the four
-  accepted sessions, original rejected sessions and changed-evidence controls.
-- `actionlint .github/workflows/numerics.yml .github/workflows/roadmap.yml` and
-  `rustfmt --check src/opt.rs tests/inline_caf_ownership.rs` pass.
-- `python3 scripts/check-roadmap.py`: 178 document link sets, 106 preparation
-  pairs/tags, eight roadmap steps and commit messages pass. Prior guarded
-  reference/budget controls also pass; their implementation is unchanged.
+All focused local checks use `python3 scripts/local-guard.py COMMAND...`, serially
+with unchanged limits. Formatting, workflow lint, eight collection-evidence
+controls, six kernel controls, roadmap links and independent evidence audits pass.
+No local Rust build, full suite or benchmark was run. Full workloads use GitHub.
 
-The guard previously refused below 64 GiB free. Thirteen obsolete worktrees were
-removed, preserving branches, all evidence and both modified handoffs under
-`/private/tmp/fwp-obsolete-checkout-handoffs`. This recovered about 4 GiB; audits
-then resumed under unchanged limits. Active worktrees and the primary checkout's
-untracked `docs/measurements/compiler-abort.md` were preserved.
-
-No compiler-abort recurrence is known. Its original cause remains unexplained;
-diagnose any recurrence from source/input, not allocator/disassembly speculation.
-F64 conversion elimination is excluded: raw/native NaN payload differences do
-not justify an all-engine bitwise identity.
+The guard earlier refused below 64 GiB free. Thirteen obsolete worktrees were
+removed while retaining branches, all evidence and both modified handoffs under
+`/private/tmp/fwp-obsolete-checkout-handoffs`. Active worktrees and the primary
+checkout's untracked `docs/measurements/compiler-abort.md` are preserved. The old
+intermittent Intel compiler abort remains unexplained; the ARM crash artifact in
+this PR belongs to an intentional unit negative control, not a recurrence.
 
 ## Roadmap status
 
@@ -124,7 +98,7 @@ not justify an all-engine bitwise identity.
 | 2 | Verified | Maintain A1–A6; sharing still uses ARC |
 | 3 | Verified | Maintain F1–F3's stated call/recursion scope |
 | 4 | Verified | Selected decimal cost delivered; loop gap remains recorded |
-| 5 | In progress | D1/D3 verified; deliver D2's accepted eager-capture change |
-| 6 | Pending | N1–N2 numerical kernels |
+| 5 | In progress | D1/D3 verified; deliver repaired D2 improvement |
+| 6 | In progress | Complete N1 baselines, then select N2 optimization |
 | 7 | In progress | Broader B1/B2 comparisons |
 | 8 | Pending | V1–V2 application validation |

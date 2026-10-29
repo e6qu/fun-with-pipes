@@ -211,8 +211,11 @@ remove temporary closures. Updated solves take 13–72% less time than the same
 compiler with this transformation disabled; the largest current-result case
 still takes 44–58 times the handwritten C derivative's time. Memory, output,
 code and stack limits pass. The first rejected AMD host remains recorded.
-**Next:** publish this grouped change and require all nine final-head production
-jobs, documentation and both G2 hosts. Only then close the selected D2 budget.
+Full CI exposed a mixed record-return C-generator defect; its repair passes 333
+focused tests on each GCC ARM64/AMD64 and Clang ARM64 host. Refresh the comparison
+after this repair, preserving the original results and unchanged limits. Group
+N1's prepared baseline work in the same PR. Require all nine final-head production
+jobs, documentation and both G2 hosts before closing the selected D2 budget.
 Preserve failure/cancellation, mixed/stale-node, tape-full and nested-gradient
 controls. Do not fold F64 conversion elimination into this change: raw/native NaN
 payload differences prevent a bitwise-identity claim. Arbitrary AD is not promised
@@ -229,7 +232,8 @@ stated domains/tolerances; no derivative is promised at a discontinuity.
 
 ## 6. CPU numerical kernels
 
-**N1 — Establish kernel-specific budgets.** Use the existing 65,537-element
+**N1 — Establish kernel-specific budgets.** Follow the
+[frozen kernel protocol](docs/measurements/kernel-baselines.md). Use the existing 65,537-element
 map/reduce and 65×67 by 67×63 matrix comparison, then add 262,145 elements
 and 257×259 by 259×255 matrices using the same formulas and eight rounds.
 Keep input values, reduction order, precision and output checks identical.
