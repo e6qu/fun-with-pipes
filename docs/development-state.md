@@ -1,11 +1,34 @@
 # Next: verify the grouped derivative PR on every native platform
 
-**Next:** audit all nine final-head production jobs, docs and both G2 analysis
-hosts for [PR #226](https://github.com/e6qu/fun-with-pipes/pull/226/checks).
-Use the current PR commit, not an earlier focused or measurement head.
-Fix every failure before squash-merging. Continue D2 afterward: account for costs
-outside scalar node recording before selecting the next candidate. D2 is open.
-Worktree `/private/tmp/fwp-ad-recording`, branch `ad-recording-costs`; PR #226.
+**Next:** verify the fixed-batch G2 measurement repair on Linux and Intel macOS,
+while auditing the ongoing native matrix `40849857724` at `04efac8a`. Collect
+all further failures before the final grouped push; then require all nine native
+jobs, documentation and G2 at the final PR head before squash-merging.
+[PR #226](https://github.com/e6qu/fun-with-pipes/pull/226/checks), worktree
+`/private/tmp/fwp-ad-recording`, branch `ad-recording-costs`. D2's speed goal remains
+open after this delivery. Source inspection notes for its next candidate are in
+`/private/tmp/fwp-next-d2-notes.md`; they are hypotheses, not accepted improvements.
+
+## Current gate repair
+
+At `04efac8a`, docs run `40849828831` and benchmark job 123366341074 pass; complete
+logs are audited (`/private/tmp/fwp-226-{docs,bench}-04ef.log`). The native matrix
+is still running; do not count its in-progress targets as passed.
+
+G2 run `40849863932` passes Linux job 123366369920 (223 tests across three
+summaries, all-target Clippy, 64-worker 1.442× ratio, startup 0.284/0.211 seconds).
+Intel job 123366370270 passes 221 units, Clippy and startup 0.613/0.355 seconds,
+but fails the 32-worker ratio: 1.578× versus 1.5×. All six original sample sets
+and both full logs are [archived](measurements/ownership-analysis-short-2026-10-29.json).
+Within each failing policy, seven samples vary more than sixfold. The host cause
+is unknown; do not erase the failure or treat it as a passed rerun.
+
+The repair changes only the ignored measurement test: 12 rounds of 64 fresh
+proofs, a second identical Separate label, all six orders twice. Every individual
+duration remains visible. Both Separate labels retain the original ratio,
+absolute and count budgets; a new predeclared 5% identical-control limit rejects
+unstable timing. [The protocol](measurements/ownership-analysis.md#current-measurement-repair-longer-samples-and-an-identical-control)
+is recorded before runner validation. The production analyzer is unchanged.
 
 ## Completed comparison and delivery decision
 

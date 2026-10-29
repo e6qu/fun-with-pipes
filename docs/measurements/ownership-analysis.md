@@ -5,6 +5,35 @@ Each measurement below identifies its source and host. Earlier samples remain
 part of the evidence, not a claim about current compiler speed. The finite proof
 does not promise linear running time.
 
+## Current measurement repair: longer samples and an identical control
+
+Run `40849863932` at `04efac8a` passes Linux but fails Intel macOS at 32 workers:
+Separate takes a 9.881 ms median versus Merged's 6.262 ms (1.578×, limit 1.5×).
+All 221 units, all-target lint, fact/count limits and both startup checks pass.
+The [original record](ownership-analysis-short-2026-10-29.json) preserves both
+full logs, all 84 timings, hardware and 18 artifact-file identities.
+
+At that size, Merged's seven individual timings range from 1.777 to 11.078 ms,
+and Separate's from 2.285 to 13.763 ms. The larger 64-worker input is steadier
+and passes at 1.391×. These observations show instability in the short samples;
+they do not identify a specific host process or establish a compiler regression.
+The failed result remains rejected.
+
+The revised test uses 12 fixed rounds, each with **64 fresh proofs per label**.
+Its three labels are Merged, Separate and a second invocation of the identical
+Separate implementation. Two cycles through all six label orders balance each
+position and each predecessor within a round. Every proof gets a fresh analysis;
+no proof state is reused. One warmup per label remains outside measurement.
+
+Each individual call retains its duration and checks its result outside timing.
+A round sums 64 call durations. The reported cost is the median of 12 round totals
+divided by 64. No sample is removed. Both Separate labels must meet the original
+1.5× ratio and all original absolute/count limits. Their medians must also differ
+by at most **5%**; otherwise the timing is inconclusive and fails. This stability
+criterion and fixed schedule are declared before running the repaired measurement.
+No compiler admission rule, production analysis algorithm or budget is relaxed.
+The new runner results are pending; passing older runs does not verify this repair.
+
 ## Current implementation: revisit changed dependencies
 
 PR #221 run `40674942219`, source `45f9e81013fdf3b9e07aa0d4222c87bcde289e2d`,
@@ -81,9 +110,10 @@ The limits remain 1.5 for the ratio, 16 small-fixture waves and 10 seconds per
 REST fixture. Forms/entry visits are 14,454/12,791 versus 591,732/379,958 in the
 original full scan. Final stored facts agree exactly; this is a reduction in
 repeated proof work, not a change in admission rules. Timings are host-specific
-samples, not a controlled cross-revision speedup ratio. The full final-head
-platform matrix remains required for acceptance: the user merged #221 before
-that gate completed. The handoff tracks postmerge verification and repairs.
+samples, not a controlled cross-revision speedup ratio. PR #221's subsequent
+full native matrix and documentation passed on the merged tree; the
+[delivery record](../roadmap-history.md#scoped-parser-storage-and-analysis-work-pr-221)
+contains the audited jobs. New changes still require their own final-head gates.
 
 ## Why this measurement is needed
 
@@ -132,10 +162,11 @@ number IR positions; the ratio does not measure the added numbering work or the
 change from the older origin-value layout. Absolute repaired-proof timings
 include those costs.
 
-After one warmup per policy, the test constructs seven fresh proofs per policy.
-Execution order alternates Merged/Separate and Separate/Merged. It prints every
-elapsed sample in execution order and the median for each policy. The timer
-includes proof setup, iteration, final validation and destruction; it excludes parsing, type inference,
+Historical runs below use one warmup and seven fresh proofs per policy, with
+alternating Merged/Separate and Separate/Merged order. The current repair uses
+[fixed batches and an identical control](#current-measurement-repair-longer-samples-and-an-identical-control).
+Both protocols retain every elapsed sample. The timer includes proof setup,
+iteration, final validation and destruction; it excludes parsing, type inference,
 specialization, optimization, C generation, C compilation and program execution.
 Timing includes the test-only counters and their final count collection; it is
 not an uninstrumented production timing. This compares two analysis rules across
