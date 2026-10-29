@@ -510,12 +510,27 @@ impl TypeTable {
     }
 
     pub fn unify(&mut self, a: &Type, b: &Type) -> Result<(), UnifyError> {
+        let (original_a, original_b) = (a, b);
         let a = self.resolve(a);
         let b = self.resolve(b);
         match (&a, &b) {
             (Type::Var(x), Type::Var(y)) if x == y => Ok(()),
-            (Type::Var(x), _) if !self.is_rigid(*x) => self.bind_var(*x, &b),
-            (_, Type::Var(y)) if !self.is_rigid(*y) => self.bind_var(*y, &a),
+            (Type::Var(x), _) if !self.is_rigid(*x) => {
+                let target = if matches!((&b, original_b), (Type::Record(_), Type::Var(_))) {
+                    original_b
+                } else {
+                    &b
+                };
+                self.bind_var(*x, target)
+            }
+            (_, Type::Var(y)) if !self.is_rigid(*y) => {
+                let target = if matches!((&a, original_a), (Type::Record(_), Type::Var(_))) {
+                    original_a
+                } else {
+                    &a
+                };
+                self.bind_var(*y, target)
+            }
             (Type::Con(n, xs), Type::Con(m, ys)) if n == m && xs.len() == ys.len() => {
                 for (x, y) in xs.iter().zip(ys) {
                     self.unify(x, y)?;
@@ -526,7 +541,10 @@ impl TypeTable {
                 if self.records.contains_key(n) =>
             {
                 let row = self.expand_record(n, xs).unwrap();
-                self.unify_row(&row, r, Kind::Row)
+                self.unify_row(&row, r, Kind::Row)?;
+                let nominal = Type::Con(n.clone(), xs.clone());
+                self.refine_record_variable(original_a, &nominal)?;
+                self.refine_record_variable(original_b, &nominal)
             }
             (Type::Con(n, xs), Type::App(h, ys)) | (Type::App(h, ys), Type::Con(n, xs)) => {
                 if ys.len() > xs.len() {
@@ -551,7 +569,18 @@ impl TypeTable {
                 self.unify(r1, r2)?;
                 self.unify_row(e1, e2, Kind::Eff)
             }
-            (Type::Record(r1), Type::Record(r2)) => self.unify_row(r1, r2, Kind::Row),
+            (Type::Record(r1), Type::Record(r2)) => {
+                self.unify_row(r1, r2, Kind::Row)?;
+                if let (Some(left), Some(right)) = (
+                    self.record_variable(original_a),
+                    self.record_variable(original_b),
+                ) {
+                    if left != right {
+                        self.replace_record_binding(left, &Type::Var(right))?;
+                    }
+                }
+                Ok(())
+            }
             (Type::Nat(x), Type::Nat(y)) if x == y => Ok(()),
             (Type::NatOp(..), _) | (_, Type::NatOp(..)) => self.unify_size(&a, &b),
             _ => Err(UnifyError::Mismatch(a.clone(), b.clone())),
@@ -643,6 +672,45 @@ impl TypeTable {
             }
         }
         self.deferred.push((a.clone(), b.clone()));
+        Ok(())
+    }
+
+    /// Find the ordinary type variable carrying a structural record constraint.
+    /// Row-tail variables are not value types and must never acquire a name.
+    fn record_variable(&self, original: &Type) -> Option<TV> {
+        let Type::Var(mut v) = original.clone() else {
+            return None;
+        };
+        while let Some(Type::Var(next)) = self.vars[v as usize].bound {
+            v = next;
+        }
+        (self.vars[v as usize].kind == Kind::Star
+            && matches!(self.vars[v as usize].bound, Some(Type::Record(_))))
+        .then_some(v)
+    }
+
+    /// A structural requirement learned through a variable must not erase a
+    /// later named-record constraint. Keep every alias attached to that name
+    /// after checking the fields. Literal row types remain rows.
+    fn refine_record_variable(
+        &mut self,
+        original: &Type,
+        nominal: &Type,
+    ) -> Result<(), UnifyError> {
+        if let Some(v) = self.record_variable(original) {
+            self.replace_record_binding(v, nominal)?;
+        }
+        Ok(())
+    }
+
+    fn replace_record_binding(&mut self, v: TV, target: &Type) -> Result<(), UnifyError> {
+        // Check occurrence and levels against an unbound root, including
+        // phantom nominal parameters that do not appear in any record field.
+        let structural = self.vars[v as usize].bound.take();
+        if let Err(error) = self.bind_var(v, target) {
+            self.vars[v as usize].bound = structural;
+            return Err(error);
+        }
         Ok(())
     }
 
@@ -1005,3 +1073,88 @@ pub fn display_name(n: &str) -> String {
 
 /// Set of variables, used for generalization bookkeeping.
 pub type VarSet = HashSet<TV>;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn nominal_constraints_preserve_structural_variable_aliases() {
+        let mut table = TypeTable::default();
+        for name in ["Gauge", "Other"] {
+            table.records.insert(
+                name.into(),
+                RecordTemplate {
+                    params: vec![],
+                    fields: vec![("value".into(), Type::con("I64"))],
+                },
+            );
+        }
+        let record = Type::Var(table.fresh(Kind::Star, 1));
+        let alias = Type::Var(table.fresh(Kind::Star, 1));
+        let tail = table.fresh(Kind::Row, 1);
+        table
+            .unify(
+                &record,
+                &Type::Record(Row {
+                    fields: vec![("value".into(), Type::con("I64"))],
+                    tail: Some(tail),
+                }),
+            )
+            .unwrap();
+        table.unify(&alias, &record).unwrap();
+        table.unify(&alias, &Type::con("Gauge")).unwrap();
+        assert_eq!(table.resolve(&record), Type::con("Gauge"));
+        assert_eq!(table.resolve(&alias), Type::con("Gauge"));
+        assert!(table.unify(&record, &Type::con("Other")).is_err());
+    }
+
+    #[test]
+    fn independently_inferred_field_constraints_share_nominal_identity() {
+        let mut table = TypeTable::default();
+        table.records.insert(
+            "Gauge".into(),
+            RecordTemplate {
+                params: vec![],
+                fields: vec![("value".into(), Type::con("I64"))],
+            },
+        );
+        let left = Type::Var(table.fresh(Kind::Star, 1));
+        let right = Type::Var(table.fresh(Kind::Star, 1));
+        for input in [&left, &right] {
+            let tail = table.fresh(Kind::Row, 1);
+            table
+                .unify(
+                    input,
+                    &Type::Record(Row {
+                        fields: vec![("value".into(), Type::con("I64"))],
+                        tail: Some(tail),
+                    }),
+                )
+                .unwrap();
+        }
+        table.unify(&left, &right).unwrap();
+        table.unify(&left, &Type::con("Gauge")).unwrap();
+        assert_eq!(table.resolve(&right), Type::con("Gauge"));
+    }
+
+    #[test]
+    fn nominal_refinement_rejects_phantom_occurrence() {
+        let mut table = TypeTable::default();
+        let parameter = table.fresh(Kind::Star, 1);
+        table.records.insert(
+            "Phantom".into(),
+            RecordTemplate {
+                params: vec![parameter],
+                fields: vec![],
+            },
+        );
+        let record = Type::Var(table.fresh(Kind::Star, 1));
+        table.unify(&record, &Type::unit()).unwrap();
+        assert!(matches!(
+            table.unify(&record, &Type::Con("Phantom".into(), vec![record.clone()])),
+            Err(UnifyError::Occurs(_, _))
+        ));
+        assert_eq!(table.resolve(&record), Type::unit());
+    }
+}

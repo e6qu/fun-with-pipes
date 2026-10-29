@@ -151,7 +151,13 @@ impl Contract {
 /// display copies numeric text into a fresh string without retaining its input. Synchronous
 /// callbacks may return captured children, but never the callback object itself.
 /// Array reads return a scalar or separately owned element, never the outer array.
+/// Scalar AD recording copies two node indices and two F64 weights before any
+/// buffer growth. It stores no record pointer and returns an immediate node ID.
+/// Typed `ad.push-owned` has separate ownership obligations and is excluded.
 pub fn borrows_without_escape(symbol: &str, index: usize) -> bool {
+    if symbol == "ad.push" && index == 0 {
+        return true;
+    }
     if (matches!(symbol, "hash" | "array._show-list" | "array.length") && index == 0)
         || (symbol == "array.get" && index == 1)
     {
@@ -761,6 +767,13 @@ mod tests {
         assert!(!borrows_without_escape("hash", 1));
         assert!(borrows_without_escape("array._show-list", 0));
         assert!(!borrows_without_escape("array._show-list", 1));
+        assert!(borrows_without_escape("ad.push", 0));
+        assert!(!borrows_without_escape("ad.push", 1));
+        assert!(!borrows_without_escape("ad.push-owned", 0));
+        let recording = primitive("ad.push").unwrap();
+        assert_eq!(recording.arguments, &[Argument::Borrow]);
+        assert_eq!(recording.result, ResultOwnership::Shared);
+        assert!(recording.callback.is_none() && recording.aliases.is_empty());
         let display = primitive("array._show-list").unwrap();
         assert_eq!(display.arguments, &[Argument::Borrow]);
         assert_eq!(display.result, ResultOwnership::FreshLeaf);

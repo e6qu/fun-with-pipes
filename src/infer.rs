@@ -1427,10 +1427,19 @@ impl<'a> Infer<'a> {
                 for seg in path {
                     let a = self.fresh();
                     let r = self.env.table.fresh(Kind::Row, self.level);
-                    let rec = Type::Record(Row {
-                        fields: vec![(seg.clone(), a.clone())],
-                        tail: Some(r),
-                    });
+                    // Keep the input variable as the shared identity. Its row
+                    // constraint is available immediately, and a later nominal
+                    // signature can refine that variable without losing fields.
+                    let rec = self.fresh();
+                    self.unify(
+                        e.span,
+                        &rec,
+                        &Type::Record(Row {
+                            fields: vec![(seg.clone(), a.clone())],
+                            tail: Some(r),
+                        }),
+                        "selector input",
+                    )?;
                     result = Some(match result {
                         None => Type::fun(rec, a, eff.clone()),
                         Some(Type::Fun(x, y, _)) => {
@@ -1820,7 +1829,6 @@ impl<'a> Infer<'a> {
     /// calls chose (rigid sizes made since `start`) are chosen again by
     /// each call of the function: they become markers.
     fn reabstract(&mut self, start: usize, t: Type) -> Type {
-        let t = self.env.table.zonk(&t);
         let mut fv = Vec::new();
         self.env.table.free_vars(&t, &mut fv);
         let mut map = HashMap::new();
@@ -1837,7 +1845,7 @@ impl<'a> Infer<'a> {
         if map.is_empty() {
             t
         } else {
-            TypeTable::subst(&t, &map)
+            TypeTable::subst(&self.env.table.zonk(&t), &map)
         }
     }
 

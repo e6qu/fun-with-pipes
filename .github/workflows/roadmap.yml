@@ -44,10 +44,26 @@ jobs:
         run: python3 scripts/test-parser-workspace-evidence.py
       - name: Recursion measurement evidence controls
         run: python3 scripts/test-mutual-recursion.py
+      - name: Derivative process scheduling and host qualification controls
+        run: python3 scripts/test-descent-schedule.py
       - name: Derivative baseline completeness controls
         run: python3 scripts/test-descent-baselines.py
       - name: Retained derivative baseline reports
         run: python3 scripts/check-descent-baselines.py --archive docs/measurements/descent-baseline-artifacts-2026-10-29.json
+      - name: Matched-host evidence rejection controls
+        run: python3 scripts/test-descent-groups.py
+      - name: Matched grouped-process baselines and noisy controls
+        run: python3 scripts/check-descent-groups.py --archive docs/measurements/descent-groups-artifacts-2026-10-29.json --protocol grouped
+      - name: Repeated-solve baselines and fixed noise qualification
+        run: python3 scripts/check-descent-groups.py --archive docs/measurements/descent-repeated-artifacts-2026-10-29.json --protocol repeated
+      - name: Preserve rejected scalar recording results
+        run: python3 scripts/check-descent-groups.py --archive docs/measurements/descent-recording-artifacts-2026-10-29.json --protocol recording
+      - name: Derivative depth evidence rejection controls
+        run: python3 scripts/test-ad-depth.py
+      - name: Retained derivative depth costs before and after stack recording
+        run: |
+          python3 scripts/check-ad-depth.py --archive docs/measurements/ad-depth-artifacts-2026-10-29.json
+          python3 scripts/check-ad-depth.py --archive docs/measurements/ad-depth-recording-artifacts-2026-10-29.json
       - name: Derivative output comparison controls
         run: python3 scripts/test-descent-output-baselines.py
       - name: Retained output comparisons and inconclusive decisions

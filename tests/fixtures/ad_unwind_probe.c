@@ -50,9 +50,12 @@ int main(void) {
         if (t->len!=2 || !t->live) return 33;
         /* Record a real operation so unwind still owns all metadata buffers. */
         struct { uint32_t tag,n; V fields[4]; } value={0,4,{selected_base,fwp_from_f64(1),(V)(int64_t)-1,0}};
-        fwp_p_ad_push(PTR(&value));
+        V recorded=fwp_p_ad_push(PTR(&value));
+        /* The tape must own copied scalars, never the caller's record. Seed
+         * the recorded node after overwriting every input field. */
+        memset(&value,0,sizeof(value));
         outputs=fwp_rc_fresh(fwp_arr_new(2));seeds=fwp_rc_fresh(fwp_arr_new(2));
-        ARR(outputs)->d[0]=selected_base;ARR(outputs)->d[1]=selected_base+1;
+        ARR(outputs)->d[0]=recorded;ARR(outputs)->d[1]=selected_base+1;
         ARR(seeds)->d[0]=fwp_from_f64(2);ARR(seeds)->d[1]=fwp_from_f64(3);
         if (probe_mode==1) ARR(outputs)->d[0]=other_base;
         if (probe_mode==2) ARR(outputs)->d[0]=selected_base+3;

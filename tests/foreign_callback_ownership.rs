@@ -141,9 +141,12 @@ main = [
             .arg(&host)
             .arg(&source),
     );
-    assert!(String::from_utf8_lossy(&reference.stdout).ends_with(
-        "1690\n(26, \"XXXXXXXXXXXXX\")\n(11, {first = \"first\", second = \"second\"})\n26\nErr \"callback text owned callback error\"\n26\nNone\n"
-    ));
+    // The State signature preserves the named record through the callback's
+    // field selectors. Display must retain that identity as well as the text.
+    let reference_text = String::from_utf8_lossy(&reference.stdout);
+    assert!(reference_text.ends_with(
+        "1690\n(26, \"XXXXXXXXXXXXX\")\n(11, CallbackWords {first = \"first\", second = \"second\"})\n26\nErr \"callback text owned callback error\"\n26\nNone\n"
+    ), "unexpected callback output:\n{reference_text}");
 
     let cfile = dir.join("counted.c");
     checked(

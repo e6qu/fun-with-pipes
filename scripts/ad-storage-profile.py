@@ -33,6 +33,12 @@ def instrument(source):
     source = replace_once(source, '} else fwp_tape_buffers_dispose(b);\n}',
                           '} else fwp_tape_buffers_dispose(b);\n'
                           '    ad_raw_sample((size_t)fwp_tapes_cap * sizeof(fwp_tape), fwp_tape_cached_bytes);\n}')
+    # Typed/nested backward passes dispose their parent buffers directly. Sample
+    # after both typed values and raw buffers are released, while enclosing tapes
+    # may still be live. Do not add cleanup or count the final shutdown as a pass.
+    owned_release = '    fwp_cleanup_pop(&tape_cleanup); fwp_tape_buffers_dispose(&buffers);\n'
+    source = replace_once(source, owned_release, owned_release +
+                          '    ad_raw_sample((size_t)fwp_tapes_cap * sizeof(fwp_tape), fwp_tape_cached_bytes);\n')
     # The observer runs after the real atexit tape cleanup. Register it first;
     # atexit executes in reverse order. No extra cleanup is introduced here.
     source = replace_once(source, 'iteration_active=1;\n',

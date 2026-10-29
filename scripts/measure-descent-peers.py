@@ -25,6 +25,9 @@ SPEC.loader.exec_module(AD)
 PHASE_SPEC = importlib.util.spec_from_file_location('descent_phases', ROOT / 'scripts/descent-phases.py')
 PHASE = importlib.util.module_from_spec(PHASE_SPEC)
 PHASE_SPEC.loader.exec_module(PHASE)
+BASELINE_SPEC = importlib.util.spec_from_file_location('descent_baselines', ROOT / 'scripts/descent-baselines.py')
+BASELINE = importlib.util.module_from_spec(BASELINE_SPEC)
+BASELINE_SPEC.loader.exec_module(BASELINE)
 
 
 def digest(data):
@@ -79,16 +82,55 @@ def ownership_budget_failures(profiles, baseline):
             for label, metric, rule, actual, expected in checks if not compare[rule](actual, expected)]
 
 
+def recording_budget_failures(results):
+    """Apply D2's pre-candidate limits and report every violation together."""
+    failures = []
+
+    def require(case, program, metric, actual, limit):
+        if actual > limit:
+            failures.append(dict(case=case, program=program, metric=metric, actual=actual, limit=limit))
+
+    for case, row in results.items():
+        medians = row['medianNs']
+        ratio = medians['fwp-ad'] / medians['fwp-ad-identical']
+        require(case, 'fwp-ad', 'identical median variation', max(ratio, 1 / ratio), 1.02)
+        nodes = 8 * (row['dimensions'] - 1) * row['updates'] * row['solvesPerProcess']
+        for label in ['fwp-ad', 'fwp-ad-history']:
+            reference = label + '-reference'
+            current, old = (row['fwpProfiles'][name] for name in [label, reference])
+            require(case, label, 'candidate/reference time', medians[label] / medians[reference],
+                    0.95 if row['updates'] else 1.02)
+            for key, saving in [('requests', nodes), ('requestedBytes', 40 * nodes),
+                                ('retains', 0), ('peakChargedBytes', 0), ('finalChargedBytes', 0)]:
+                limit = 0 if key == 'finalChargedBytes' else old['managed'][key] - saving
+                require(case, label, key, current['managed'][key], limit)
+            for key in ['rawDerivativeStorage', 'expandedRawSha256']:
+                if current[key] != old[key]:
+                    failures.append(dict(case=case, program=label, metric=key,
+                                         actual=current[key], expected=old[key]))
+            images = row['binaries']
+            require(case, label, 'instruction bytes', images[label]['instructionBytes'],
+                    images[reference]['instructionBytes'] + 1024)
+            stacks = row['cCompilerStackUsage']
+            def frame(name):
+                return max(entry['bytes'] for entry in stacks[name + '.su']['entries'])
+            require(case, label, 'largest static stack frame', frame(label), frame(reference) + 128)
+    return failures
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
+    parser.add_argument('--comparison', required=True, choices=['current', 'scalar-recording'])
+    parser.add_argument('--reference-compiler', type=Path)
+    parser.add_argument('--reference-manifest', type=Path)
     parser.add_argument('--cc', required=True)
     parser.add_argument('--rustc', required=True)
     parser.add_argument('--c-arch', required=True, choices=['x86-64', 'armv8-a'])
     parser.add_argument('--objdump', required=True)
     parser.add_argument('--nm', required=True)
     parser.add_argument('--time', required=True)
-    parser.add_argument('--case', required=True, action='append', help='DIMENSIONS:UPDATES')
+    parser.add_argument('--case', required=True, action='append', help='DIMENSIONS:UPDATES:PROCESSES_PER_LABEL_PER_SAMPLE:SOLVES_PER_PROCESS')
     parser.add_argument('--samples', required=True, type=int)
     parser.add_argument('--warmups', required=True, type=int)
     parser.add_argument('--order-seed', required=True, type=int)
@@ -97,12 +139,29 @@ def main():
     parser.add_argument('--phase-warmups', required=True, type=int)
     parser.add_argument('--session', required=True, type=int, choices=[1, 2])
     parser.add_argument('--host', required=True)
+    parser.add_argument('--qualification', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
+    recording = args.comparison == 'scalar-recording'
+    assert bool(args.reference_compiler) == bool(args.reference_manifest) == recording
+    reference_manifest = json.loads(args.reference_manifest.read_text()) if recording else None
+    if recording:
+        assert reference_manifest['source'] == os.environ['GITHUB_SHA']
+        assert digest(args.reference_compiler.read_bytes()) == reference_manifest['compilerSha256']
+        assert reference_manifest['candidateOwnershipSha256'] == digest((ROOT / 'src/ownership.rs').read_bytes())
+        assert reference_manifest['disabledFact'] == 'borrows_without_escape(ad.push, 0)'
+    fwp_labels = ['fwp-ad-history', 'fwp-ad', 'fwp-ad-history-reference', 'fwp-ad-reference'] if recording else [
+        'fwp-ad-history', 'fwp-ad', 'fwp-explicit', 'fwp-packed']
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
-    assert args.samples > 0 and args.samples % 14 == 0 and args.warmups > 0 and args.timeout > 0
+    assert args.samples > 0 and args.samples % 49 == 0 and args.warmups > 0 and args.timeout > 0
     assert args.phase_samples > 0 and args.phase_samples % 2 == 0 and args.phase_warmups > 0
     assert args.c_arch == {'x86_64': 'x86-64', 'aarch64': 'armv8-a'}[platform.machine()]
+    qualification = json.loads(args.qualification.read_text())
+    assert qualification['qualified'] and not qualification['failures']
+    assert qualification['source'] == os.environ['GITHUB_SHA']
+    assert qualification['actual'] == qualification['expected']
+    current_host, _ = BASELINE.host_details(args.cc, args.rustc)
+    assert not BASELINE.host_failures(current_host, qualification['expected'])
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     environment = {key: value for key, value in os.environ.items()
@@ -110,7 +169,7 @@ def main():
     environment.update(CC=args.cc, FWP_LTO='0', FWP_AD_WORKSPACE='1',
                        FWP_PACKED_ARRAYS='1', FWP_STACK='1', FWP_ARRAY_FUSION='1')
     commands = []
-    cflags = ['-O2', '-std=gnu11', '-fno-fast-math', '-ffp-contract=off', '-fstack-usage', '-march=' + args.c_arch]
+    cflags = ['-O2', '-std=gnu11', '-fno-fast-math', '-ffp-contract=off', '-UFWP_NO_REUSE', '-fstack-usage', '-march=' + args.c_arch]
 
     def run(command, env):
         command = list(map(str, command))
@@ -145,16 +204,22 @@ def main():
         (out / 'build-commands.json').write_text(json.dumps(commands, indent=2) + '\n')
         return result
 
-    def verify(raw, expected):
-        values = json.loads(raw)
-        assert len(values) == len(expected)
-        assert all(math.isfinite(a) and math.isclose(a, b, abs_tol=1e-10, rel_tol=1e-10)
-                   for a, b in zip(values, expected)), (values, expected)
+    def verify(raw, expected, solves):
+        lines = raw.splitlines()
+        assert len(lines) == solves
+        for line in lines:
+            values = json.loads(line)
+            assert len(values) == len(expected)
+            assert all(math.isfinite(a) and math.isclose(a, b, abs_tol=1e-10, rel_tol=1e-10)
+                       for a, b in zip(values, expected)), (values, expected)
+        assert all(line == lines[0] for line in lines), 'repeated solve changed its output'
 
     results = {}
     for case in args.case:
-        points, updates = map(int, case.split(':'))
+        points, updates, processes, solves = map(int, case.split(':'))
         assert 2 <= points <= 4096 and 0 <= updates <= 4091
+        assert processes > 0 and processes % 7 == 0
+        assert solves > 0 and updates * solves <= 8192
         name = f'{points}-{updates}'
         assert name not in results
         directory = out / name
@@ -162,22 +227,25 @@ def main():
         expected = AD.analytic(points, updates + 1)
         binaries, outputs, metadata, profiles, phase_binaries = {}, {}, {}, {}, {}
         controls = {}
-        for label in ['fwp-ad-history', 'fwp-ad', 'fwp-explicit', 'fwp-packed']:
-            source = packed_program(points, updates) if label.startswith('fwp-packed') else AD.program(points, updates + 1, label == 'fwp-ad-history')
+        for label in fwp_labels:
+            source = packed_program(points, updates) if label.startswith('fwp-packed') else AD.program(points, updates + 1, 'history' in label)
             if label == 'fwp-explicit':
                 assert source.count('(.1 | descend)') == 1
                 source = source.replace('(.1 | descend)', '(.1 | explicit-descend)')
                 source = (ROOT / 'tests/fixtures/descent_explicit.fwp').read_text() + '\n' + source
+            source = BASELINE.repeat_source(source, 'fwp', solves)
             fwp_source = directory / (label + '.fwp')
             fwp_source.write_text(source)
             reference = run([args.compiler.resolve(), 'run', '--interp', fwp_source],
                             dict(environment, FWP_NO_OPT='1'))
-            verify(reference.stdout, expected)
+            verify(reference.stdout, expected, solves)
             assert not reference.stderr
             code = directory / (label + '.c')
-            build([args.compiler.resolve(), 'build', '--emit-c', '-O2', fwp_source, '-o', code])
+            emitter = args.reference_compiler if label.endswith('-reference') else args.compiler
+            build([emitter.resolve(), 'build', '--emit-c', '-O2', fwp_source, '-o', code])
             text = code.read_text()
             assert 'FWP_ARC_ONLY' not in text
+            assert not re.search(r'^\s*#\s*define\s+FWP_NO_REUSE\b', text, re.M)
             binary = directory / label
             build([args.cc, *cflags, '-w', code, '-o', binary, '-lm', '-lpthread', '-ldl'])
             actual = run([binary], environment)
@@ -194,7 +262,7 @@ def main():
             assert managed['finalChargedBytes'] == 0
             assert set(managed) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
             raw = raw['rawDerivativeStorage']
-            AD.RAW.check_profile(raw, updates if label.startswith('fwp-ad') else 0, True)
+            AD.RAW.check_profile(raw, updates * solves if label.startswith('fwp-ad') else 0, True)
             raw_hash = digest(json.dumps(raw, sort_keys=True).encode())
             checkpoints = raw.pop('afterBackward')
             assert not checkpoints or all(value == checkpoints[0] for value in checkpoints)
@@ -211,7 +279,7 @@ def main():
                 (directory / (label + '-no-workspace.stderr')).write_bytes(without.stderr)
                 no_managed, no_raw = [json.loads(line) for line in without.stderr.splitlines()]
                 assert no_managed['finalChargedBytes'] == 0
-                AD.RAW.check_profile(no_raw['rawDerivativeStorage'], updates, False)
+                AD.RAW.check_profile(no_raw['rawDerivativeStorage'], updates * solves, False)
                 profiles[label]['withoutWorkspace'] = dict(managed=no_managed, **no_raw)
                 assert no_managed == managed, 'workspace selection changed managed ownership'
                 if label == 'fwp-ad' and updates == 1:
@@ -238,16 +306,16 @@ def main():
             binaries[label] = binary
             outputs[label] = actual.stdout
         csource = directory / 'c-explicit.c'
-        csource.write_text(f'#define DIMENSIONS {points}\n#define UPDATES {updates}\n' +
-                           (ROOT / 'tests/fixtures/descent_explicit.c').read_text())
+        csource.write_text(BASELINE.repeat_source(f'#define DIMENSIONS {points}\n#define UPDATES {updates}\n' +
+                           (ROOT / 'tests/fixtures/descent_explicit.c').read_text(), 'c', solves))
         cbin = directory / 'c-explicit'
         build([args.cc, *cflags, '-Wall', '-Wextra', '-Werror', csource, '-o', cbin, '-lm'])
         rust_source = directory / 'rust-explicit.rs'
         rust_template = (ROOT / 'tests/fixtures/descent_explicit.rs').read_text()
         parameter_marker = '// Measurement parameters are inserted here.'
         assert rust_template.count(parameter_marker) == 1
-        rust_source.write_text(rust_template.replace(parameter_marker,
-            f'const DIMENSIONS: usize = {points};\nconst UPDATES: usize = {updates};'))
+        rust_source.write_text(BASELINE.repeat_source(rust_template.replace(parameter_marker,
+            f'const DIMENSIONS: usize = {points};\nconst UPDATES: usize = {updates};'), 'rust', solves))
         rustbin = directory / 'rust-explicit'
         build([args.rustc, '--crate-name', 'descent_explicit', '--edition=2021', '-D', 'warnings', '-C', 'opt-level=2', '-C',
                'overflow-checks=yes', '-C', 'codegen-units=1', '-C', 'target-cpu=generic', '-C',
@@ -262,7 +330,7 @@ def main():
         binaries['fwp-ad-identical'] = control
         for label, binary in binaries.items():
             actual = run([binary], environment)
-            verify(actual.stdout, expected)
+            verify(actual.stdout, expected, solves)
             assert not actual.stderr
             outputs[label] = actual.stdout
             (directory / (label + '.stdout')).write_bytes(actual.stdout)
@@ -279,27 +347,32 @@ def main():
             assert b'Disassembly of section' in assembly
             (directory / (binary.name + '.symbols')).write_bytes(symbols)
             (directory / (binary.name + '.asm')).write_bytes(assembly)
+            section_output = run([args.objdump, '-h', binary], environment).stdout
+            if recording:
+                (directory / (binary.name + '.sections')).write_bytes(section_output)
+            text_bytes = sum(int(size, 16) for size in re.findall(
+                rb'^\s*\d+\s+\.text(?:\.[^\s]+)?\s+([0-9a-fA-F]+)', section_output, re.M))
+            assert text_bytes > 0
             source_path = binary.with_suffix('.rs' if binary.name == 'rust-explicit' else '.c')
-            metadata[binary.name] = dict(bytes=len(raw), sha256=digest(raw), sourceSha256=digest(source_path.read_bytes()),
+            metadata[binary.name] = dict(instructionBytes=text_bytes, bytes=len(raw), sha256=digest(raw), sourceSha256=digest(source_path.read_bytes()),
                                         disassemblySha256=digest(assembly))
-        assert len(metadata) == 13 + len(controls)
+        assert len(metadata) == (15 if recording else 13) + len(controls)
         assert metadata['fwp-ad-identical']['sha256'] == metadata['fwp-ad']['sha256']
         labels = list(binaries)
-        assert labels == ['fwp-ad-history', 'fwp-ad', 'fwp-explicit', 'fwp-packed', 'c-explicit', 'rust-explicit', 'fwp-ad-identical']
-        for _ in range(args.warmups):
-            for label in labels:
-                actual = run([binaries[label]], environment)
-                assert actual.stdout == outputs[label] and not actual.stderr
+        assert labels == fwp_labels + ['c-explicit', 'rust-explicit', 'fwp-ad-identical']
         samples = {label: [] for label in labels}
-        orders = measurement_orders(labels, args.samples, args.order_seed)
-        for order in orders:
-            for label in order:
-                start = time.perf_counter_ns()
-                actual = run([binaries[label]], environment)
-                elapsed = time.perf_counter_ns() - start
-                assert actual.stdout == outputs[label] and not actual.stderr
-                samples[label].append(elapsed)
-            (directory / 'samples.json').write_text(json.dumps(dict(orders=orders, samplesNs=samples), indent=2) + '\n')
+        orders = [BASELINE.execution_order(labels, processes, number, args.order_seed)
+                  for number in range(args.samples)]
+        for phase, count in [('warmup', args.warmups), ('sample', args.samples)]:
+            for number in range(count):
+                order = BASELINE.execution_order(labels, processes, number, args.order_seed)
+                totals = BASELINE.measure_round(order, binaries, outputs, environment, run,
+                    directory / f'{phase}-{number:03d}.json')
+                if phase == 'sample':
+                    for label in labels:
+                        samples[label].append(totals[label])
+                    (directory / 'samples.json').write_text(json.dumps(dict(
+                        orders=orders, samplesNs=samples, processesPerLabel=processes), indent=2) + '\n')
         medians = {label: statistics.median(values) for label, values in samples.items()}
         phase_observations = {}
         for label, diagnostic in phase_binaries.items():
@@ -315,7 +388,7 @@ def main():
                         assert observed.stdout == outputs[label]
                         if variant == 'diagnostic':
                             profile = json.loads(observed.stderr)
-                            PHASE.check(profile, points, updates)
+                            PHASE.check(profile, points, updates * solves)
                         else:
                             assert not observed.stderr
                             profile = None
@@ -344,43 +417,61 @@ def main():
                 entries.append(dict(location=location, bytes=int(size), qualifier=qualifier))
             assert entries
             stack[stack_file.name] = dict(sha256=digest(stack_file.read_bytes()), entries=entries)
-        assert len(stack) == 11 + len(controls), stack.keys()  # Four fwp forms/profiles, two phase images, C.
-        results[name] = dict(dimensions=points, updates=updates, oracle=expected,
+        # Four fwp forms/profiles, two or four phase images, and C.
+        assert len(stack) == (13 if recording else 11) + len(controls), stack.keys()
+        results[name] = dict(dimensions=points, updates=updates, oracle=expected, processesPerLabel=processes, solvesPerProcess=solves,
             outputSha256={label: digest(value) for label, value in outputs.items()},
             samplesNs=samples, medianNs=medians, orders=orders,
-            ratios={label: {peer: medians[label] / medians[peer] for peer in ['fwp-explicit', 'fwp-ad-history', 'fwp-ad-identical', 'c-explicit', 'rust-explicit']}
-                    for label in ['fwp-ad-history', 'fwp-ad', 'fwp-explicit', 'fwp-packed']},
+            ratios={label: {peer: medians[label] / medians[peer] for peer in labels}
+                    for label in fwp_labels},
             peakProcessRssBytes=resident, fwpProfiles=profiles, binaries=metadata, cCompilerStackUsage=stack,
             phaseObservations=phase_observations, controls=controls)
         (out / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
-    paths = ['scripts/measure-descent-peers.py', 'scripts/measure-ad-application.py',
+        print(f'{name}: outputs, cleanup, binaries and {args.samples} timing rounds recorded', flush=True)
+    paths = ['scripts/descent-baselines.py', 'scripts/measure-descent-peers.py', 'scripts/measure-ad-application.py',
              'scripts/ad-storage-profile.py', 'scripts/measure-iteration.py', 'scripts/descent-phases.py',
-             'tests/fixtures/descent_phases.c',
+             'tests/fixtures/descent_phases.c', 'scripts/prepare-recording-reference.py',
              'tests/fixtures/ad_raw_storage_probe.c', 'tests/fixtures/descent_explicit.fwp',
              'tests/fixtures/descent_explicit.c', 'tests/fixtures/descent_explicit.rs',
-             'tests/fixtures/descent_packed.fwp', 'src/cgen.rs', 'src/rc.rs', 'tests/boxed_projection_ownership.rs',
+             'tests/fixtures/descent_packed.fwp', 'src/ownership.rs', 'src/escape.rs', 'src/cgen.rs', 'src/rc.rs', 'tests/boxed_projection_ownership.rs',
              'tests/fixtures/stack_array_projection.c', 'tests/array_element_ownership.rs',
              'tests/fixtures/array_capture_reads.fwp', 'tests/fixtures/array_capture_effects.fwp',
              'docs/tutorials/20-autodiff-and-devices/main.fwp']
     report = dict(source=os.environ['GITHUB_SHA'], host=args.host, machine=platform.machine(),
+        qualification=qualification,
         settings={key: value for key, value in environment.items() if key.startswith('FWP_') or key == 'CC'},
         cpu=run(['lscpu'], environment).stdout.decode(), cCompiler=run([args.cc, '--version'], environment).stdout.decode(),
         rustCompiler=run([args.rustc, '-Vv'], environment).stdout.decode(), commands=commands,
-        configuration=vars(args) | {'compiler': str(args.compiler), 'output': str(args.output)},
+        configuration={key: str(value) if isinstance(value, Path) else value for key, value in vars(args).items()},
+        referenceCompiler=reference_manifest,
         sourceHashes={name: digest((ROOT / name).read_bytes()) for name in paths}, results=results,
-        scope='Six current-source implementations and one byte-identical AD-current control. '
-        'fwp AD-history retains every vector; AD-current retains current weights. Both record and reverse derivatives. '
-        'fwp explicit list and packed array forms use handwritten derivatives. C/Rust reuse two contiguous buffers. '
-        'Packed fwp can recompute edge residuals that C/Rust compute once. All input/output vectors and update counts match; '
+        scope=('Current-source scalar recording comparison: reference compiler disables only the ad.push no-escape fact; '
+               'candidate and reference both record and reverse the same derivatives, with current-only and retained-history forms. '
+               'A byte-identical candidate copy checks timing noise. C/Rust use handwritten derivatives. '
+               if recording else 'Six current-source implementations and one byte-identical AD-current control. ') +
+        'fwp AD-history retains every vector; AD-current retains current weights. Both record and reverse derivatives. ' +
+        ('C/Rust reuse two contiguous buffers. ' if recording else
+         'fwp explicit list and packed array forms use handwritten derivatives. C/Rust reuse two contiguous buffers. '
+         'Packed fwp can recompute edge residuals that C/Rust compute once. ') +
+        'All input/output vectors and update counts match; '
         'work, allocation and formatting strategies differ. No previous compiler or generated C is required. '
         'Each timed output matches its own checked reference exactly; the independent analytic tolerance is absolute/relative 1e-10. '
-        'Times include process launch, construction, computation, complete output and teardown, excluding compilation/observers. '
-        'Zero updates include construction and printing, not pure startup. The seven-entry Williams schedule balances positions '
-        'and adjacent pairs within rows, not cross-row boundaries. All orders and samples remain recorded. '
+        'Times include one process launch, repeated independent solves with complete output, and teardown, excluding compilation/observers. '
+        'Each solve starts from the original input. fwp repeats its source pipeline; C/Rust repeat input/gradient allocation and release. '
+        'Runtime/constant initialization occurs once; per-solve time is amortized and does not describe standalone startup. '
+        'Zero updates include construction and printing, not pure startup. Each sample sums multiple fresh processes per label. '
+        'The rotated 49-entry cycle balances all cyclic predecessor pairs, including repeats, and positions over 49 samples. '
+        'Actual round boundaries are retained separately; the flattened order is not perfectly balanced. '
+        'All process times, output hashes, statuses and orders remain recorded; file writes and output checks are outside timing. '
         'Managed/raw allocation and peak RSS are separate observations and must not be added. '
-        'These are baseline observations, not an accepted optimization or pure compiler-overhead measurement.')
+        'Acceptance requires the explicit budget report and two independent sessions per architecture; '
+        'these comparisons do not isolate pure compiler overhead.')
     (out / 'comparison.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({name: row['ratios'] for name, row in results.items()}, indent=2))
+    if recording:
+        failures = recording_budget_failures(results)
+        (out / 'budget-failures.json').write_text(json.dumps(failures, indent=2) + '\n')
+        assert not failures, json.dumps(failures, indent=2)
 
 
 if __name__ == '__main__':

@@ -120,6 +120,16 @@ Recursion that would require infinitely many type specializations is rejected.
 Effect variables can be generalized without an explicit signature because effects
 are checked and erased before code generation.
 
+A selector immediately constrains its input's fields, so callback effects remain
+available during inference. Its input stays linked through a type variable. When
+a signature or call supplies a named record, unification checks the fields and
+preserves that name for other uses of the same variable. Thus
+`if (.value | lt 0) neg id` can select the named input's `Neg` implementation.
+Anonymous records still use structural rows. Refinement checks for infinite types,
+including parameters absent from a record's fields; it adds no runtime conversion.
+Focused Linux ARM64/AMD64 tests and both compiler-analysis budget hosts pass at
+`a31f24c4`; final platform acceptance remains part of the current derivative batch.
+
 ## Runtime representation and C safety
 
 Generic entries pass 64-bit `V` words holding immediate values, tags or addresses.

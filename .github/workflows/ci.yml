@@ -175,6 +175,8 @@ jobs:
         with:
           name: golden-failures-${{ matrix.runner }}
           path: ${{ runner.temp }}/golden-failures/
+          # Other failing test targets do not create golden-program artifacts.
+          if-no-files-found: ignore
 
       - name: Package and verify ownership evidence
         if: always()
@@ -518,6 +520,8 @@ jobs:
         with:
           name: golden-failures-${{ matrix.runner }}
           path: ${{ runner.temp }}/golden-failures/
+          # Other failing test targets do not create golden-program artifacts.
+          if-no-files-found: ignore
 
       - name: Package and verify ownership evidence
         if: always()

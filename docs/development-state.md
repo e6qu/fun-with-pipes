@@ -1,165 +1,121 @@
-# PR #225: CPU repairs and derivative baselines
+# Next: finish the grouped derivative PR's native validation
 
-**Next:** publish this combined batch, then monitor and audit all nine production
-jobs plus documentation at its final head; repair any failure before squash merge.
-Original run `40813465621` at `18ae46cdbf2fa2cc8b33cee78b86ed9b8a2dce4a` has only
-the two Linux jobs still running. Every failed job and every completed job is fully
-audited below. Keep those Linux jobs available for audit when they finish; they
-cannot replace repaired-head gates. All currently known failures are in this batch.
-Two confirmed Windows failures are the standalone decimal oracle's CRLF versus LF
-assertion (`integer_output`, line 233). Local repair emits no line ending on either
-side; eight guarded Clang O0/O1/O2/O3 valid/broken cases pass. Production fwp uses
-binary streams already; its runtime and accepted timing candidate are unchanged.
-An early Windows log upload prevents waiting for later suites to see this failure.
+**Next:** verify all nine production jobs, documentation and both G2 hosts on
+this branch’s final evidence commit, then audit every completed target and
+compiler diagnostic before squash-merging [PR #226](https://github.com/e6qu/fun-with-pipes/pull/226).
+Use one subject line of at most 80 characters and an empty body. The prior native
+repair and focused analysis runs are fully audited; they do not replace the final
+commit’s gates. Worktree `/private/tmp/fwp-ad-recording`, branch `ad-recording-costs`.
+Keep this delivery’s production code unchanged while its checks run.
 
-macOS ARM64 regular job `123248963643` passed all 132 Rust result summaries/619
-tests and SDK/package checks, then ownership-artifact ZIP upload failed with
-`EILSEQ: illegal byte sequence, read`. The upload log names no input file; the
-origin is unresolved. Its crash bundle contains the expected scheduler cleanup
-abort control, not a new compiler crash. A prepared packaging change streams and
-hashes every file, verifies archived bytes, writes a source/file manifest, and
-uploads the verified ZIP directly (`archive: false`). Read errors name the file
-and fail without publishing an incomplete archive. Do not claim this establishes
-the origin of EILSEQ or native verification before the repaired matrix passes.
-Six guarded packaging controls, 20 native-runner controls and actionlint pass.
-The combined documentation audit passes 176 link sets, 106 immutable preparation
-anchors and all eight roadmap rows; all four changed workflows pass actionlint.
-The two injected-file controls initially missed macOS temp-path aliases; resolving
-the fixture root fixed those tests. No production error was suppressed.
+## Current checks
 
-Docs `40813452487`/`123248922710` pass and are audited. Benchmark job `123248963708`
-passes (2 summaries/2 tests). macOS ARM64 ownership `123248963737` passes (127
-summaries/359 tests). Intel macOS ownership `123248963419` also passes (127 summaries/359 tests), fully audited. Windows AMD64 `123248963703` is fully audited: 202 summaries, 798 passing tests,
-exactly the confirmed CRLF failure, no other failed targets or unexpected diagnostics.
-Regular Intel macOS `123248963702` passes/audited (132 summaries/619 tests).
-Windows ARM64 `123248963929` also finishes with exactly the same 202 summaries,
-798 passing tests and one CRLF failure, no other unexpected diagnostics. Only
-Linux AMD64/ARM64 remain running; Windows first-step logs are fully
-available in `/private/tmp/fwp-225-windows-{arm,amd}-early/windows-native.log`.
-Audit the remaining Linux logs when available. Logs of completed jobs are
-`/private/tmp/fwp-225-final-*.log`; the regular ARM upload failure remains a failure.
-After repair require all nine jobs plus docs at the new head before squash merge;
-use one <=80-character subject and empty body, then verify tree/message.
+| Source / run | Status and evidence |
+|---|---|
+| `80da3971` / `40863393272` | All nine production jobs pass. Every test target and compiler diagnostic is audited; no unresolved failure remains in this run. |
+| `7af1a518` / `40866146124` | Both G2 hosts pass: Linux job 123421318020, Intel job 123421317692. Each passes 223 tests in three summaries and all-target lint. All 13,824 durations, medians and limits independently audited. |
+| `7af1a518` / `40866128330` | Documentation passes; full log audited, including the intentionally failing test-runner controls. |
 
-D1 preparation and its archived results are now included in this same PR, applied
-from `ad-cost-refresh` commits 21a1/d02b after local repair commit
-`2b3e960660a584eb2b12653b3c05ebbe41a1ec12`. This batch includes both that preparation and the completed output archive. Continue implementation here; `/private/tmp/fwp-ad-refresh` is a retained
-preparation worktree, not a second delivery. The measured source is remotely
-retained as `roadmap/derivative-baseline-21a1de32`.
+G2's ignored measurement test now interleaves fresh proofs. Production analysis
+and every original limit remain unchanged. Identical-copy variation is at most
+0.16% on Linux and 0.69% on Intel. The [analysis report](measurements/ownership-analysis.md)
+retains the original noisy failure, the later 6.89% failed control and the passing
+repair. Earlier passing samples do not erase either failed observation.
 
-D1 run `40816041693` at `21a1de329c8e4cec1b9ba7cd284c9be876facf5c` passes all four
-jobs; full logs/artifacts are audited (six cases, 80 images, 68 stack reports per
-session, analytic outputs, all samples, workspace on/off, clocks and broken
-controls). Exact reports/logs are compressed losslessly with 2,228 artifact file
-identities. Archive verifier and six rejection controls pass. Both ARM hosts are
-Neoverse-N2; AMD sessions are EPYC 7763 and Xeon 6973P-C, so do not pool them as
-repeated same-host evidence. Short controls remain noisy. The refreshed
-[report](measurements/descent-costs.md) explains ratios, allocations and limits.
+The native repair corrects the foreign-callback test's expected record name to
+`CallbackWords`. The inference fix preserves nominal record identity; ownership
+and unwind checks are unchanged. The original run `40849857724` at `04efac8a`
+was fully audited: this was the only failure on six native platforms; both macOS
+ownership jobs and benchmarks passed. The exact CI compiler also reproduces the
+correct name in raw execution and native Clang O1/O2. At 80da3971, regular ARM
+macOS passes all callback lifetime and deliberately broken cleanup controls.
+Optional golden-failure uploads allow absent files when another target fails;
+mandatory test logs and evidence remain checked.
 
-Output run `40818110583` passes both jobs and is fully audited: 109 measurement
-images and 60 control images per host; every output bit/checksum, cleanup profile,
-48 timing rounds and complete log inspected. ARM 3:1 and AMD 3:0/3:1 checksum
-controls are inconclusive under the unchanged 2% rule. No observations discarded.
-Current collector-name checks pass on actual images; fixed the runner's stale
-`fwp_gc_` prefix to `fwp_heap_`. Second run `40818973752` also passes, and both jobs (`123266691377`/`123266691555`)
-are fully audited. Its ARM controls pass; AMD 3:1 checksum remains inconclusive.
-All four output reports/logs and 5,784 artifact identities are archived. The
-archive verifier and five rejection controls pass, including all 16 separate
-coordinate-buffer controls per host. AMD output hosts are EPYC 7763 and 9V45;
-retain that difference. No runtime change follows from diagnostics alone. D1
-matched repeated-host budgets, D2 and D3 remain unfinished. The plan now names
-the heap-allocated four-scalar `ad.push` argument as the first candidate to prove
-and measure; raw buffers already reuse storage.
+Full local job logs are `/private/tmp/fwp-226-*-80da.log` and `*-7af1.log`.
+Each regular macOS job has 132 summaries/622 passing tests; each ownership job
+has 127/362; each Linux job has 257/987; each Windows job has 202/805; benchmarks
+have 2/2. Final-head acceptance remains outstanding.
 
-Worktree `/private/tmp/fwp-cpu-phases`, branch `cpu-execution-costs`,
-[PR #225](https://github.com/e6qu/fun-with-pipes/pull/225).
-Balanced measurement source: `0c84afe98baec2b771fd416aced35eb4d6c11a24`.
-Runtime/compiler/native tests match correctness-tested
-`9c89a3761cba2c3bccb02dff93b3fec6754f4583`.
+## What this PR delivers
 
-| Run | Job | Session | Audited result |
-|---|---|---|---|
-| 40810741109 | 123240190193 | ARM64 1 | Qualifies |
-| 40810741109 | 123240190249 | ARM64 2 | Qualifies |
-| 40810741109 | 123240190307 | AMD64 1 | Qualifies |
-| 40811270742 | 123241898078 | AMD64 2 | Qualifies |
+**Keep the allocation reduction; D2 remains open.** This is the user's explicit
+decision, not a change to the frozen timing rule. Source `8e299f9f` proves that
+scalar `ad.push` copies its four fields without retaining the argument pointer.
+Existing stack analysis removes that temporary heap record; typed
+`ad.push-owned` is excluded. The 256-operation fixture removes exactly 256 heap
+records at O1/O2 with workspace reuse on/off. Derivative and failure/cancellation,
+mixed/stale-node, caller-record overwrite and nested-scope checks pass.
 
-All four meet unchanged timing limits with stable controls. Text counting takes
-33.8–34.8% less time on ARM64 and 38.6–39.6% less on AMD64; it remains
-25.0–26.2% slower than C. Loop is unchanged. Each raw sample, generated program,
-binary, memory profile and full job log was audited. Two nonmatching AMD64 hosts
-stopped before building/timing; their records remain in the archive.
-The [report](measurements/decimal-count.md#balanced-results-accepted-measurement)
-owns raw reports and size/stack costs. Final production is running as listed above;
-the earlier draft-skipped matrix is not a gate.
+Four sessions at `98b252a8`, run `40837836845`, are fully audited: 368 images,
+320 stack reports, every output/timing/storage ledger and deliberately broken
+control. Allocation, cleanup, code and stack limits pass. The combined timing
+rule fails: all one-update cases and some AMD history cases miss 5%; one AMD case
+is 1.42% slower. The [results](measurements/descent-costs.md#scalar-recording-results-allocation-reduction-retained-speed-goal-open)
+retain the frozen limits, all failures, raw reports/logs and 5,352 file identities.
+CI rejects erased failures or a false acceptance label.
 
-## Included work
+The named-record inference repair preserves shared selector constraints and
+record-specific arithmetic. Infinite-type, alias, callback and overflow tests
+pass focused Linux checks. The intended named `Acc` and `CallbackWords` output
+expectations replace anonymous-record snapshots.
 
-- Check main-thread attributes, stack setup, creation/join and stack-overflow
-  handler registration. Static numerical-worker setup joins already-started
-  workers and releases valid attributes on failure. No silent process-stack path.
-- Startup checkpoint `3db10b5a9f1e22d1bc1d93c6faea055f484f90ad`, run
-  `40792244152`, passed native Linux/macOS ARM64/AMD64. Every log/artifact audited:
-  11 tests, seven images, 32 main-startup and three worker/control outcomes per host.
-  This repairs source error handling; it does **not** diagnose the old Intel abort.
-- [Phase diagnostics](measurements/cpu-phases.md) at `c92fed4208a16627f0f420f58ce1f7729bf0f061`
-  retain calculation/setup/output intervals, their perturbation and all raw results.
-  Both qualified sessions and all artifacts are audited; no speedup follows alone.
-- Exact decimal-threshold tree: at most five comparisons, no lookup table,
-  unchanged signed magnitude and checked expression order. Both GCC hosts at 9c89
-  pass seven integer-output groups at O0/O1/O2/O3, output, peer and memory checks.
-  Full production coverage still required. Code/stack tradeoffs are in the report.
+**D1:** four repeated-solve baseline sessions at `a31f24c4`, run `40829884152`,
+are audited and [archived](measurements/descent-costs.md#repeated-solve-results).
+**D3:** the [18-case depth comparison](measurements/ad-depth.md) at `8e299f9f`,
+run `40837334009`, passes both Linux hosts. F64/F128 accuracy, first three
+derivatives, finite differences, branches, checkpoints and cleanup are covered.
+All managed/raw ledgers end at zero. F64 allocation counts fall; F128 counts and
+peak storage do not. Short depth timings are diagnostic, not speed acceptance.
 
-## Retained experiments and checks
+## Next optimization after delivery
 
-The [decimal report](measurements/decimal-count.md) preserves the rejected table,
-inconclusive short/long/interleaved protocols, every raw observation and all host
-rejections. Do not pool protocols or choose sessions by timing. The balanced
-schedule fixes unequal preceding workloads; it does not prove a CPU mechanism.
-GitHub retry status copies are not independent executions; the reader rejects them.
-
-- Four balanced jobs qualify; logs and artifacts audited: 7 paired programs,
-  21 peer images and 14 storage/control images per session.
-- Guarded final archive verification passes with `--expected-decision accepted`.
-  Long/interleaved archives retain `not-accepted`. A deliberately false acceptance
-  claim for the long archive exits 1 at the intended assertion.
-- Nine Python measurement-control groups, actionlint and Rustfmt passed before
-  final reporting. The earlier docs run `40810737278`/`123240169983` passed and its
-  full log was audited. Final guarded documentation audit passes (174 link sets,
-  106 immutable preparation pairs/tags), actionlint passes, all three repeat
-  archives verify their explicit decisions, and `git diff --check` is clean.
-- All checks are serial through `scripts/local-guard.py`; no full local build.
-  Full nine-job production and documentation gates remain required after publication.
+Follow [D2](../PLAN.md#5-differentiation); do not repeat the rejected comparison
+unchanged. `/private/tmp/fwp-next-d2-notes.md` records source investigations.
+F64 result conversion builds another list, but raw/native NaN payloads differ;
+no general bitwise-identity claim is justified. An instrumented saved C program
+also counts 22 partial-application allocations per three-coordinate one-update
+solve. It preserves all 512 outputs; it is not a timing result. Investigate eager
+capture bindings before changing inlining limits or adding runtime machinery.
+The next candidate is isolated on `ad-eager-captures` in
+`/private/tmp/fwp-ad-captures`, with no second PR. Its comparison was published
+at `8a495a72` before implementation `89d0dfa1`; focused run `40871650124` passes
+299 tests/18 summaries and lint on Linux ARM/AMD and ARM macOS. All three logs
+are audited. Compiler/runtime/test source is unchanged at `4ffeb0d2`, whose four
+predeclared comparison sessions are queued in run `40876515001`. Follow that worktree’s handoff separately.
+Do not mix its unverified code into this delivery.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Verified | Maintain collector-free ownership and cycle checks |
-| 2 | Verified | Maintain named A1–A6 guarantees; no universal ARC-free claim |
-| 3 | Verified | Maintain scoped F1–F3 call/recursion guarantees |
-| 4 | In progress | Verify selected CPU timing and startup repairs |
-| 5 | In progress | D1 output and repeated-host budgets, then D2/D3 |
-| 6 | Pending | N1–N2 CPU numerical kernels |
-| 7 | In progress | Broader B1/B2 baselines and integrity checks |
-| 8 | Pending | V1–V2 larger-program correctness, cleanup and scale |
+| 1 | Verified | Maintain GC-free lifetime and cycle checks |
+| 2 | Verified | Maintain A1–A6; sharing still uses ARC |
+| 3 | Verified | Maintain F1–F3's stated call/recursion scope |
+| 4 | Verified | Selected decimal cost delivered; loop gap remains recorded |
+| 5 | In progress | Final grouped native gates; D2 whole-program speed goal remains open |
+| 6 | Pending | N1–N2 numerical kernels |
+| 7 | In progress | Broader B1/B2 comparisons |
+| 8 | Pending | V1–V2 application validation |
 
-## Recovery
+## Resume safely
 
-#224 merged as `52e8da582644a93d996816d344894fdf5435a92f` after all nine jobs
-`40790143419` and docs `40790141513` passed and were audited. Its merge tree equals
-tested b4e004d5 and its one-line message/body were verified; duplicate postmerge
-production `40801397077` was cancelled. [History](roadmap-history.md) owns details.
-Older measured ancestry is remotely retained by `roadmap/revision-decimal-count-df80c15e`.
+PR #225 merged as `6735c4e3` after every gate passed; its tree matches tested
+head `fbed316b`. [History](roadmap-history.md#decimal-counting-and-current-derivative-baselines-pr-225)
+owns that delivery. Do not restart in the primary checkout: it remains detached
+at #209 with a recovery pointer and an untracked compiler-abort report to preserve.
+The original intermittent Intel abort is still unexplained; investigate source
+and input if it recurs. Other worktrees retain evidence. No agents are running.
 
-Raw files: `/private/tmp/fwp-{balanced,long,tree,decimal}-{arm,amd}*`, corresponding `.log`
-files, phase/startup folders and `/private/tmp/fwp-224-final-*.log`. Audit helpers:
-`fwp-audit-production-log.py`, `fwp-audit-{balanced,long,interleaved}-artifacts.py`,
-`fwp-read-tree-result.py`, `fwp-archive-decimal-repeat.py`, all in `/private/tmp`.
-The archive helper takes an explicit manifest, prefix, source and protocol.
+Use `scripts/local-guard.py` serially; full builds/suites stay on GitHub. About
+64.7 GiB disk is free; do not bypass the 64 GiB, 1 GiB RSS or 180-second limits.
+Latest focused checks pass: both G2 log/sample audits, completed native log audits,
+and documentation (177 link sets, 106 immutable preparation pairs, eight steps;
+0.31 CPU seconds, 2.59 elapsed). `git diff --check` passes. No production compiler
+or runtime code changed after `8e299f9f`; later commits repair tests and evidence.
 
-The primary checkout is detached at #209: preserve its recovery pointer and
-untracked `docs/measurements/compiler-abort.md`. The historical Intel compiler
-abort remains unexplained. No local full builds/suites/benchmarks. Use the guard
-serially with 64 GiB free disk, 2 GiB target, 1 GiB RSS and 180 seconds; current
-disk is about 73 GiB free. Final matrix and compliant merge remain authorized.
+Local disk recovery compressed 676 retained assembly text artifacts from the four
+`/private/tmp/fwp-descent-output-{1,2}-{arm,amd}` directories. Every decompressed
+byte count and SHA-256 was verified before removing its uncompressed copy; no
+evidence was discarded. About 721 MiB reclaimed. Paths/hashes are retained in
+`/private/tmp/fwp-compressed-artifacts.jsonl`; use `.asm.gz` for those local files.

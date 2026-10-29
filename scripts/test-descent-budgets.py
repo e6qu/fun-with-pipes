@@ -14,6 +14,55 @@ BASELINE = json.loads((ROOT / 'docs/measurements/array-capture-descent-2026-10-2
 
 
 class DescentBudgets(unittest.TestCase):
+    def recording_case(self, updates):
+        row = dict(dimensions=3, updates=updates, solvesPerProcess=1,
+                   medianNs={'fwp-ad-identical': 95 if updates else 100},
+                   fwpProfiles={}, binaries={}, cCompilerStackUsage={})
+        for label in ['fwp-ad', 'fwp-ad-history']:
+            for reference in [False, True]:
+                name = label + ('-reference' if reference else '')
+                removed = 0 if reference else 16 * updates
+                row['medianNs'][name] = 100 if reference or not updates else 95
+                row['fwpProfiles'][name] = dict(
+                    managed=dict(requests=1000 - removed, requestedBytes=40000 - 40 * removed,
+                                 retains=100, peakChargedBytes=80, finalChargedBytes=0),
+                    rawDerivativeStorage={'finalBytes': 0}, expandedRawSha256='unchanged')
+                row['binaries'][name] = dict(instructionBytes=10000)
+                row['cCompilerStackUsage'][name + '.su'] = dict(entries=[dict(bytes=64)])
+        return row
+
+    def test_recording_limits_accept_boundaries_without_changing_observations(self):
+        rows = {str(updates): self.recording_case(updates) for updates in [0, 1]}
+        rows['1']['binaries']['fwp-ad']['instructionBytes'] += 1024
+        rows['1']['cCompilerStackUsage']['fwp-ad.su']['entries'][0]['bytes'] += 128
+        snapshot = copy.deepcopy(rows)
+        self.assertEqual(DESCENT.recording_budget_failures(rows), [])
+        self.assertEqual(rows, snapshot)
+
+    def test_recording_limits_report_noise_time_memory_code_and_stack_failures(self):
+        row = self.recording_case(1)
+        row['medianNs']['fwp-ad'] = 103
+        profile = row['fwpProfiles']['fwp-ad']
+        for key in profile['managed']:
+            profile['managed'][key] += 1
+        profile['rawDerivativeStorage']['finalBytes'] = 1
+        profile['expandedRawSha256'] = 'changed'
+        row['binaries']['fwp-ad']['instructionBytes'] += 1025
+        row['cCompilerStackUsage']['fwp-ad.su']['entries'][0]['bytes'] += 129
+        failures = DESCENT.recording_budget_failures({'case': row})
+        self.assertEqual({failure['metric'] for failure in failures}, {
+            'identical median variation', 'candidate/reference time', 'requests',
+            'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes',
+            'rawDerivativeStorage', 'expandedRawSha256', 'instruction bytes',
+            'largest static stack frame'})
+        self.assertEqual(len(failures), 11)
+
+    def test_recording_zero_updates_still_rejects_regression(self):
+        row = self.recording_case(0)
+        row['medianNs']['fwp-ad-history'] = 103
+        failures = DESCENT.recording_budget_failures({'zero': row})
+        self.assertEqual([failure['metric'] for failure in failures], ['candidate/reference time'])
+
     def test_each_recorded_input_requires_the_declared_count_and_storage_limits(self):
         for host in BASELINE['hosts']:
             for case, row in host['report']['results'].items():

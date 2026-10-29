@@ -2032,30 +2032,58 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                         _ => 0,
                     })
                     .sum();
-                let policies = [ClosureSites::Merged, ClosureSites::Separate];
+                let policies = [
+                    ClosureSites::Merged,
+                    ClosureSites::Separate,
+                    ClosureSites::Separate,
+                ];
+                let labels = ["Merged", "Separate", "SeparateCopy"];
                 let expected = policies.map(|sites| {
                     super::check(&program, &entries, EntryChannels::Unknown, sites).unwrap()
                 });
-                let mut samples = [Vec::new(), Vec::new()];
-                // Warmups above are outside timing. Alternate the paired order;
-                // each timed check constructs and destroys a fresh proof.
-                for repeat in 0..7 {
-                    for index in if repeat % 2 == 0 { [0, 1] } else { [1, 0] } {
-                        let start = Instant::now();
-                        let actual = super::check(
-                            &program,
-                            &entries,
-                            EntryChannels::Unknown,
-                            policies[index],
-                        )
-                        .unwrap();
-                        samples[index].push(start.elapsed().as_nanos());
-                        assert_eq!(actual, expected[index]);
+                assert_eq!(expected[1], expected[2]);
+                const PROOFS: usize = 64;
+                const ORDERS: [[usize; 3]; 6] = [
+                    [0, 1, 2],
+                    [1, 2, 0],
+                    [2, 0, 1],
+                    [2, 1, 0],
+                    [1, 0, 2],
+                    [0, 2, 1],
+                ];
+                let mut samples: [Vec<Vec<u128>>; 3] = std::array::from_fn(|_| Vec::new());
+                // Interleave individual fresh proofs rather than measuring all
+                // 64 calls of a label together. Nearby comparisons reduce drift
+                // between labels without dropping samples or changing limits.
+                // Across 768 triplets, every order occurs exactly 128 times.
+                // Retain each duration and compare medians of 12 batch totals.
+                for round in 0..12 {
+                    for label in &mut samples {
+                        label.push(Vec::with_capacity(PROOFS));
+                    }
+                    for proof in 0..PROOFS {
+                        for index in ORDERS[(round * PROOFS + proof) % ORDERS.len()] {
+                            let start = Instant::now();
+                            let actual = super::check(
+                                &program,
+                                &entries,
+                                EntryChannels::Unknown,
+                                policies[index],
+                            )
+                            .unwrap();
+                            samples[index][round].push(start.elapsed().as_nanos());
+                            assert_eq!(actual, expected[index]);
+                        }
                     }
                 }
+                let medians = samples.each_ref().map(|rounds| {
+                    let mut totals: Vec<u128> = rounds.iter().map(|r| r.iter().sum()).collect();
+                    totals.sort_unstable();
+                    (totals[5] + totals[6]) / 2
+                });
                 for (index, sites) in policies.into_iter().enumerate() {
-                    let mut sorted = samples[index].clone();
-                    sorted.sort_unstable();
+                    let label = labels[index];
+                    let median = medians[index] / PROOFS as u128;
                     let stats = &expected[index];
                     let (closures, facts) = match sites {
                         ClosureSites::Merged => (13, 57),
@@ -2082,19 +2110,25 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                             "{sites:?} N={n}: analysis-size budget exceeded: {stats:?}"
                         ));
                     }
-                    if sorted[3] > time_limits_ms[size_index] * 1_000_000 {
+                    if medians[index] > time_limits_ms[size_index] * 1_000_000 * PROOFS as u128 {
                         failures.push(format!(
-                            "{sites:?} N={n}: median {} ns exceeds {} ms",
-                            sorted[3], time_limits_ms[size_index]
+                            "{label} N={n}: median {median} ns exceeds {} ms",
+                            time_limits_ms[size_index]
                         ));
                     }
-                    println!("ownership-analysis sites={sites:?} n={n} source_bytes={} functions={} ir_nodes={node_count} median_ns={} samples_ns={:?} origin_bytes={} rounds={} visits={} summary_updates={} contexts={} closures={} facts={}", source.len(), program.funcs.len(), sorted[3], samples[index], std::mem::size_of::<Origin>(), stats.rounds, stats.visits, stats.summary_updates, stats.contexts, stats.closures, stats.facts);
+                    println!("ownership-analysis sites={label} n={n} schedule=interleaved source_bytes={} functions={} ir_nodes={node_count} proofs_per_batch={PROOFS} median_batch_ns={} median_ns={median} samples_ns={:?} origin_bytes={} rounds={} visits={} summary_updates={} contexts={} closures={} facts={}", source.len(), program.funcs.len(), medians[index], samples[index], std::mem::size_of::<Origin>(), stats.rounds, stats.visits, stats.summary_updates, stats.contexts, stats.closures, stats.facts);
                 }
-                samples[0].sort_unstable();
-                samples[1].sort_unstable();
-                if samples[1][3] * 2 > samples[0][3] * 3 {
+                for index in [1, 2] {
+                    if medians[index] * 2 > medians[0] * 3 {
+                        failures.push(format!(
+                            "{} N={n}: separate-site median exceeds 1.5 times the merged control",
+                            labels[index]
+                        ));
+                    }
+                }
+                if medians[1].max(medians[2]) * 100 > medians[1].min(medians[2]) * 105 {
                     failures.push(format!(
-                        "N={n}: separate-site median exceeds 1.5 times the merged control"
+                        "N={n}: identical Separate measurements differ by more than 5%; timing is inconclusive"
                     ));
                 }
             }

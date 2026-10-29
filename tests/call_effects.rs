@@ -7,6 +7,56 @@ use std::path::Path;
 use std::process::Command;
 use std::rc::Rc;
 
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
+#[test]
+fn nominal_loop_state_display_and_overflow_match_native_execution() {
+    let directory = fwp::cgen::TempDir::new("nominal-loop-state").unwrap();
+    let source = directory.join("main.fwp");
+    std::fs::write(&source, include_str!("run/loop_state.fwp")).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = Command::new(compiler)
+        .env("FWP_NO_OPT", "1")
+        .args(["run", "--interp"])
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert_eq!(reference.status.code(), Some(101));
+    let rendered = format!(
+        "{}--- stderr\n{}--- exit 101\n",
+        String::from_utf8_lossy(&reference.stdout),
+        String::from_utf8_lossy(&reference.stderr)
+    );
+    assert_eq!(rendered, include_str!("run/loop_state.out"));
+    let cfile = directory.join("main.c");
+    let emitted = Command::new(compiler)
+        .env_remove("FWP_NO_OPT")
+        .args(["build", "--memory", "dynamic", "-O2", "--emit-c"])
+        .arg(&source)
+        .arg("-o")
+        .arg(&cfile)
+        .output()
+        .unwrap();
+    assert!(emitted.status.success(), "{emitted:?}");
+    let code = std::fs::read_to_string(cfile).unwrap();
+    for opt in ["-O1", "-O2"] {
+        let executable = directory.join(format!("main{opt}.exe"));
+        fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+        let output = Command::new(&executable).output().unwrap();
+        record_probe::save(
+            "call_effects",
+            &format!("nominal-loop{opt}"),
+            &code,
+            &executable,
+            &output,
+        );
+        assert_eq!(output.status.code(), reference.status.code());
+        assert_eq!(output.stdout, reference.stdout);
+        assert_eq!(output.stderr, reference.stderr);
+    }
+}
+
 const SOURCE: &str = r#"
 has-text : (String -> String) -> Bool
 has-text = apply "!" | string.length | gt 1

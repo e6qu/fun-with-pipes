@@ -442,3 +442,20 @@ connection, stream and decoder-capture ownership needed for remote calls.
 accepted checked ARC for supported gRPC clients and services on all six native
 hosts. The [ownership guide](ownership.md#native-executables-and-services)
 states the remaining restrictions, including cycles through channel payloads.
+
+## Scalar derivative recording
+
+`ad.push` receives a record containing two node indices and two F64 weights.
+It copies all four scalars before growing a tape buffer, stores no pointer to the
+record, invokes no callback and returns an integer node ID. The compiler therefore
+allows this argument record to live on the caller's stack. Its lifetime ends after
+the call; the tape owns the copied numbers. This uses the existing escape analysis
+and adds no language syntax or runtime mode.
+
+`ad.push-owned`, used for F128 and nested derivative values, is excluded: its
+weights have separate typed ownership obligations. The 256-operation regression
+compares stack storage on/off, native O1/O2 and workspace reuse on/off. The runtime
+unwind probe also overwrites the caller's record before differentiating its node.
+The [measurement protocol](measurements/descent-costs.md#fixed-scalar-recording-acceptance-rules)
+requires actual allocation, time, code and stack evidence before accepting the
+optimization; the contract alone does not establish a speedup.

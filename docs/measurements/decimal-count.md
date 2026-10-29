@@ -9,7 +9,9 @@ not the language's result, arithmetic checks or memory ownership.
 limits in both selected sessions on each architecture. Text counting takes
 33.8–34.8% less time on ARM64 and 38.6–39.6% less on AMD64 than previous fwp.
 It still takes 25.0–26.2% longer than the C peer. Focused correctness, memory and
-artifact checks pass; full production CI is still required before merge.
+artifact checks pass. PR #225 also passed all nine production jobs and docs;
+[the verified delivery](../roadmap-history.md#decimal-counting-and-current-derivative-baselines-pr-225)
+records its exact source and matching squash tree.
 
 | Comparison | Outcome | Details |
 |---|---|---|
@@ -84,8 +86,8 @@ Both qualified GCC hosts passed the table candidate’s seven integer-output
 groups at O0/O1/O2/O3, including all intentionally broken helper controls.
 The tree also passed both GCC hosts at `9c89a3761cba2c3bccb02dff93b3fec6754f4583`,
 including all seven integer-output groups. Later timing protocols require an
-exact source-identity check before reusing those results. The final production
-matrix remains required for the complete batch.
+exact source-identity check before reusing those results. The final complete
+production matrix passed in #225.
 
 ## Paired measurement
 
@@ -250,9 +252,9 @@ the table or rerun an inconclusive selected session until it happens to pass.
 
 Only the harness/protocol/docs change after the verified short source. Do not
 repeat the unchanged integer-output suite during these measurements; its native
-proof applies by source identity. The full final-head production matrix must
-still run after the grouped batch is ready. If the longer controls remain noisy,
-leave the performance decision open and investigate measurement conditions.
+proof applies by source identity. This protocol also required the full final-head
+production matrix after the grouped batch. Noisy controls leave the performance
+decision open; investigate measurement conditions rather than resetting limits.
 
 ### Why whole batches still need a closer comparison
 

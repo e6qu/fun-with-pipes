@@ -47,10 +47,10 @@ collector is not the same as removing these costs. The
 4. **B1/P1's two CPU baselines and their B2 integrity checks are verified
    in #223.** Six audited sessions establish matching
    Neoverse-N2 and EPYC 7763 pairs. [Frozen limits](docs/measurements/cpu-baselines.md)
-   retain all observations and reject silent budget resets. Next, P2/P3 must isolate
-   a redundant cost and compare a candidate against the same-job baseline, while
-   preserving checked arithmetic and recording code/stack tradeoffs. Broader
-   B1/B2 coverage for A/D/N remains open.
+   retain all observations and reject silent budget resets. **P2/P3's selected
+   decimal-counting change is verified in #225**, including arithmetic, timing,
+   code and stack tradeoffs. Proceed to D1–D3; broader B1/B2 coverage for A/D/N
+   remains open.
 
 The original intermittent Intel macOS compiler abort remains an open defect.
 Source lifetime repairs and passing reruns did not establish its cause. Preserve
@@ -165,9 +165,11 @@ sessions per architecture: 33.8–34.8% less text-counting time on ARM64 and
 38.6–39.6% less on AMD64. The corrected measurement schedule balances both position
 and preceding work; every rejected or inconclusive experiment remains recorded.
 It still takes 25.0–26.2% longer than C. Code grows by 496/560 instruction bytes;
-stack, readonly data and whole binary size are unchanged. **Next:** finish the
-nine-job production gate and documentation audit for this batch. After verified
-merge, proceed to D1–D3; the unchanged loop gap remains explicitly unoptimized.
+stack, readonly data and whole binary size are unchanged. **Verified in #225:**
+all nine production jobs and documentation pass; the squash matches the tested
+tree. [Delivery evidence](docs/roadmap-history.md#decimal-counting-and-current-derivative-baselines-pr-225)
+records the checks and startup repairs. **Next:** D1–D3; the unchanged loop gap
+remains explicitly unoptimized.
 Keep signed-min handling, all binary/decimal boundaries and checked evaluation
 order; record instruction, readonly-data, binary and stack costs. Bundle the
 verified startup error-handling fixes and complete rejected measurements. For the persistent gap, separate
@@ -186,38 +188,53 @@ instructions alone do not establish a speedup.
 
 ## 5. Differentiation
 
-**D1 — Refresh and separate descent costs.** The [current baseline](docs/measurements/descent-costs.md)
-retains four audited sessions and phase/memory observations. AMD64 hosts differ
-and short controls are noisy; fixed repeated-host budgets remain. The
-[output comparison](docs/measurements/descent-output-current.md) also retains four
-audited sessions, their controls and exact result bits. Run the existing Rosenbrock cases
-at 3/33/129 coordinates and 0/1/199/1,999 updates where defined. Compare fwp AD,
-fwp explicit derivatives, and explicit C/Rust implementations. Separate retained
-history, list/array construction, derivative recording, reverse traversal and
-printing; the C/Rust programs do not perform general AD.
-**Done:** each ratio names equivalent work and its differences, with repeated
-samples, allocation ledgers and bounded-workspace observations.
+**D1 — Verified repeated baseline and fixed limits.** Four audited matching-host
+sessions at `a31f24c4` cover all six Rosenbrock cases, complete outputs, per-process
+samples, managed/raw storage, phase controls, actual binaries and stack reports.
+Repeated solves keep identical-copy median variation below 1.66%, within the
+predeclared 2% limit. The [report](docs/measurements/descent-costs.md) keeps earlier
+noisy and rejected observations, equivalent-work differences and the large
+remaining gap to explicit C/Rust derivatives. D2's limits were published before
+its candidate. Preserve all observations and do not reset the limits.
 
 **D2 — Optimize the measured recording/workspace cost.** Use D1 to choose tape
 entries, buffer growth/reuse or recomputation in the AD runtime; keep pure-step
 requirements for replay. Extend `tests/ad_tape_scopes.rs` and
 `tests/ad_tape_ownership.rs` with failure, cancellation and nested scopes.
-The first concrete candidate is the four-scalar argument to `ad.push`: current
-generated C allocates that record on the heap for each recorded operation, even
-though the runtime only copies its fields. Prove that its argument cannot escape
-in `src/ownership.rs`, then use the existing stack analysis. Do not extend the
-rule to `ad.push-owned`, whose typed weights have separate ownership obligations.
-Before changing the contract, finish D1's fixed comparison limits. Compare exact
-requests/retains, time, instruction bytes and stack frames; preserve tape-full,
+The scalar `ad.push` no-escape proof is implemented at `8e299f9f`: the runtime
+copies four fields, and the existing stack analysis now removes the argument
+record allocation. Native O1/O2 tests on Linux ARM64/AMD64 remove exactly 256
+heap records, preserve the derivative and pass failure/cancellation controls.
+Do not extend the rule to `ad.push-owned`, whose typed weights have separate ownership obligations.
+The fixed comparison limits were published at fde368c8 before changing the
+contract. All four paired sessions are audited: allocation, cleanup, code and
+stack limits pass, but the combined timing rule fails. The user chose to retain
+the allocation reduction with D2 open; keep every slower case and unchanged
+limit in the [results](docs/measurements/descent-costs.md#scalar-recording-results-allocation-reduction-retained-speed-goal-open).
+Next, test eager capture bindings before changing runtime storage again. A
+source-instrumented three-coordinate one-update solve counts 22 temporary partial
+applications; that is an operation count, not a speed result. The
+[declared experiment](https://github.com/e6qu/fun-with-pipes/blob/8a495a7209902480fe4d37d02547173f72ebe6c8/docs/measurements/eager-captures.md)
+fixes its same-source reference and time/storage/code/stack limits before code.
+Preparation is isolated on `ad-eager-captures`; it must preserve eager evaluation,
+first failure and resource lifetimes without raising inlining limits. It is not
+part of this delivery and has no accepted results yet. F64 seed/result conversion
+also allocates, but raw/native NaN payload differences rule out an unqualified
+bitwise-identity claim. Keep that separate; do not repeat the rejected experiment.
+Compare exact requests/retains, time, instruction bytes and stack frames; preserve tape-full,
 mixed/stale-node, failure/cancellation and nested-gradient checks. The raw tape
 workspace already reuses buffers across updates; growing its cache is not the
 first candidate supported by these observations.
 **Done:** the selected per-size storage/time budget passes without retaining dead
 scopes or changing derivative order. Output storage still scales with output size.
 
-**D3 — Validate precision and nesting.** Test F64/F128 derivatives against
-analytic examples and independent numerical checks with stated tolerances. Include
-nested gradients, branch boundaries and checkpointed versus uncheckpointed work.
+**D3 — Precision and per-depth costs pass focused native checks.** F64/F128
+analytic, numerical, branch-boundary and checkpoint tests pass. The post-candidate
+18-case Linux ARM64/AMD64 matrices at `8e299f9f` are fully audited; full PR platform
+acceptance remains. Preserve the first three derivatives of `sum(x^4)` for
+1/16/128 inputs in both formats against explicit fwp formulas, with separate managed/raw memory, code and
+stack costs. [The depth protocol](docs/measurements/ad-depth.md) defines inputs,
+oracles, compiler settings, cleanup controls and the limits of short timings.
 **Done:** documented domains/tolerances and per-depth costs; no derivative is
 promised at a discontinuity and no constant-memory promise covers arbitrary AD.
 

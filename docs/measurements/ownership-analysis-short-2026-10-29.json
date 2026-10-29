@@ -1,0 +1,272 @@
+{
+  "source": "04efac8a2bdfce843c3bcffbf66a5bb3f93b0ac0",
+  "run": 40849863932,
+  "decision": "not-accepted",
+  "reason": "Intel macOS N=32 exceeds the unchanged 1.5 ratio. Seven short samples vary more than sixfold in each policy; no cause of host interference is established. All counts, unit tests, lint and startup checks pass.",
+  "hosts": {
+    "linux": {
+      "job": 123366369920,
+      "conclusion": "success",
+      "log": "ownership-analysis-short-2026-10-29-linux.log.gz",
+      "logBytes": 77541,
+      "logSha256": "53e16113d3ddf1824a8f7956fb07507f91d6f8191f622ec70f0dcc4040f09449",
+      "files": {
+        "Cargo.lock": {
+          "bytes": 4534,
+          "sha256": "c0736acf5130b78bfcbf203eb274c6780e3809794652038e0e4b9e1a9eb3382d"
+        },
+        "analysis-scaling.log": {
+          "bytes": 2730,
+          "sha256": "6214f4261ce2c61c6b61657575a46b157bd742e80665e8b0092cb2248fa7b482"
+        },
+        "arc_scope.rs": {
+          "bytes": 151806,
+          "sha256": "b0f1abfb6cf8dd33ae8d62ee6dd128401c29927f2deb0f6c9e14f86ad5ac091b"
+        },
+        "build.log": {
+          "bytes": 19102,
+          "sha256": "19bbacb1a5e8365e56c04e8bb30ac7ee03f0e12045c35979534876cecca237b9"
+        },
+        "clippy.log": {
+          "bytes": 638,
+          "sha256": "a100ca9484ac9cf936be44b51fd3a4266381f5d4c9dc5cf44b3925da052ecc00"
+        },
+        "hardware.txt": {
+          "bytes": 3189,
+          "sha256": "d893a2e1fe38c883e9c6304826742490a3e71cb4324cac80c4809870147219b4"
+        },
+        "rest-startup.log": {
+          "bytes": 1178,
+          "sha256": "75ecc961e85ea85d5890b5cb2b18cddfbc12ad93ed2f454dbf88da3dbdd854f2"
+        },
+        "rust.txt": {
+          "bytes": 196,
+          "sha256": "f22d5e4e9ced367e774ce5bc140d9e6b1235c1882fec80d011044851f3ae6369"
+        },
+        "source.txt": {
+          "bytes": 41,
+          "sha256": "cba7f2b31749ab4103e1a6977ab1786ab486086ea579de478a9c7bb484aa9fd7"
+        }
+      },
+      "hardware": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.86\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "observations": [
+        {
+          "policy": "Merged",
+          "workers": 16,
+          "medianNs": 664401,
+          "samplesNs": [
+            672877,
+            683777,
+            662277,
+            660534,
+            664401,
+            659582,
+            677756
+          ]
+        },
+        {
+          "policy": "Separate",
+          "workers": 16,
+          "medianNs": 835488,
+          "samplesNs": [
+            870012,
+            840598,
+            878859,
+            824588,
+            835488,
+            821873,
+            831791
+          ]
+        },
+        {
+          "policy": "Merged",
+          "workers": 32,
+          "medianNs": 1029809,
+          "samplesNs": [
+            1003600,
+            1268270,
+            1844569,
+            1430892,
+            1029809,
+            997208,
+            990135
+          ]
+        },
+        {
+          "policy": "Separate",
+          "workers": 32,
+          "medianNs": 1379717,
+          "samplesNs": [
+            1364258,
+            1371252,
+            2519059,
+            2504041,
+            1379717,
+            1413870,
+            1363206
+          ]
+        },
+        {
+          "policy": "Merged",
+          "workers": 64,
+          "medianNs": 1668532,
+          "samplesNs": [
+            1668532,
+            1643746,
+            1656800,
+            1744073,
+            1699600,
+            1727592,
+            1663563
+          ]
+        },
+        {
+          "policy": "Separate",
+          "workers": 64,
+          "medianNs": 2406620,
+          "samplesNs": [
+            2397654,
+            2383808,
+            2389198,
+            2406620,
+            2430034,
+            2458807,
+            2494854
+          ]
+        }
+      ]
+    },
+    "macos": {
+      "job": 123366370270,
+      "conclusion": "failure",
+      "log": "ownership-analysis-short-2026-10-29-macos.log.gz",
+      "logBytes": 87760,
+      "logSha256": "1fe4c9d9a2fb151645aca96a43b7825ae6c76cfd42f800f5a5c73bea17bdb809",
+      "files": {
+        "Cargo.lock": {
+          "bytes": 4534,
+          "sha256": "c0736acf5130b78bfcbf203eb274c6780e3809794652038e0e4b9e1a9eb3382d"
+        },
+        "analysis-scaling.log": {
+          "bytes": 3098,
+          "sha256": "c1af7928cc15924f53e8a5eacbdfce8c325512aff802ee62cf940bd641370d29"
+        },
+        "arc_scope.rs": {
+          "bytes": 151806,
+          "sha256": "b0f1abfb6cf8dd33ae8d62ee6dd128401c29927f2deb0f6c9e14f86ad5ac091b"
+        },
+        "build.log": {
+          "bytes": 19440,
+          "sha256": "7c18175ad3f641dc52b32982e8b6eea6da9506a21c36cbab8ae904f260335912"
+        },
+        "clippy.log": {
+          "bytes": 807,
+          "sha256": "7d48895fa1a501d2c7ad1a195084181ec61c9221c7cb211b9f42cddd9249d754"
+        },
+        "hardware.txt": {
+          "bytes": 112,
+          "sha256": "53e7e29c36d61f1b076d68f7f96095f512053faafa30d3e4a1998382f6f4bf1b"
+        },
+        "rest-startup.log": {
+          "bytes": 1178,
+          "sha256": "cf55d9a3420d2a8901564cb336d5175fb34eec193178e1ac8a089ba2807d3aa5"
+        },
+        "rust.txt": {
+          "bytes": 191,
+          "sha256": "bf1658636877f9403ad0a32419fc3b0da3d3164f3585a184108063f8499d7434"
+        },
+        "source.txt": {
+          "bytes": 41,
+          "sha256": "cba7f2b31749ab4103e1a6977ab1786ab486086ea579de478a9c7bb484aa9fd7"
+        }
+      },
+      "hardware": "hw.model: Macmini6,2\nhw.memsize: 15032385536\nmachdep.cpu.brand_string: Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\n",
+      "observations": [
+        {
+          "policy": "Merged",
+          "workers": 16,
+          "medianNs": 1259283,
+          "samplesNs": [
+            1263716,
+            1220494,
+            1224223,
+            1218143,
+            1307817,
+            1259283,
+            1509080
+          ]
+        },
+        {
+          "policy": "Separate",
+          "workers": 16,
+          "medianNs": 1603725,
+          "samplesNs": [
+            1444417,
+            1713887,
+            1603725,
+            1881956,
+            1877511,
+            1523253,
+            1542263
+          ]
+        },
+        {
+          "policy": "Merged",
+          "workers": 32,
+          "medianNs": 6261666,
+          "samplesNs": [
+            8719348,
+            11078357,
+            7736507,
+            6261666,
+            4932606,
+            2064877,
+            1776630
+          ]
+        },
+        {
+          "policy": "Separate",
+          "workers": 32,
+          "medianNs": 9880584,
+          "samplesNs": [
+            6544481,
+            13763015,
+            11089514,
+            9880584,
+            7659997,
+            13036894,
+            2284586
+          ]
+        },
+        {
+          "policy": "Merged",
+          "workers": 64,
+          "medianNs": 3320257,
+          "samplesNs": [
+            3700550,
+            4467914,
+            4186414,
+            3260928,
+            3320257,
+            3209419,
+            3189188
+          ]
+        },
+        {
+          "policy": "Separate",
+          "workers": 64,
+          "medianNs": 4619807,
+          "samplesNs": [
+            4698367,
+            5150550,
+            4683609,
+            4615625,
+            4619807,
+            4230667,
+            4014354
+          ]
+        }
+      ]
+    }
+  }
+}

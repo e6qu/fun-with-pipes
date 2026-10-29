@@ -6,6 +6,30 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Decimal counting and current derivative baselines (PR #225)
+
+The [exact decimal-threshold tree](measurements/decimal-count.md) reduces the
+measured character-counting time by 33.8–34.8% on ARM64 and 38.6–39.6% on AMD64
+against previous fwp, while still taking 25.0–26.2% longer than C. The accepted
+sessions retain code/stack costs, unchanged arithmetic and all rejected controls.
+Startup checks now handle thread/signal-stack failures. Evidence upload verifies
+its ZIP before publication; the Windows decimal oracle uses a newline-free marker.
+[Derivative baselines](measurements/descent-costs.md) and
+[output comparisons](measurements/descent-output-current.md) identify remaining
+costs, differing work and unreliable short timings; they claim no AD speedup.
+
+Final source `fbed316b9f31bf792702c0e6914fbb77c86ba643` passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40821277777)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40821277750).
+Complete logs are audited: 981 tests per Linux host, 619 per regular macOS host,
+359 per ownership macOS host, 799 per Windows host and two benchmark tests.
+The original artifact-stream error and older Intel compiler abort remain unexplained.
+
+Squash `6735c4e3841ad4991f99c3c413daeb9d432c709c` matches tested tree
+`f70bc35d25a9e8fb566ed085f8afab65fb2a9f48`. Its verified message has one line,
+no body and no trailers. Only duplicate post-merge CI `40830143795` was cancelled.
+Next is D1–D3: reliable derivative budgets, stack recording arguments and accuracy.
+
 ## Scalar boundary checks and rejected CPU experiments (PR #224)
 
 The [paired scalar experiment](measurements/proved-scalar-bounds.md) rejected

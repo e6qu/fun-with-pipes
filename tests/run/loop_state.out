@@ -1,6 +1,6 @@
 5000050000
 1001
-{log = "xxx", n = 3}
+Acc {log = "xxx", n = 3}
 1
 Err "three"
 Ok 3
