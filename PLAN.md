@@ -188,43 +188,38 @@ instructions alone do not establish a speedup.
 
 ## 5. Differentiation
 
-**D1 — Refresh and separate descent costs.** The [current baseline](docs/measurements/descent-costs.md)
-retains initial phase/memory observations and four additional
-[matched-host grouped sessions](docs/measurements/descent-costs.md#matched-host-grouped-processes).
-Short-case controls remain noisy. Repeat complete solves within each process to
-separate sustained execution from standalone startup before fixing the budgets. The
-[output comparison](docs/measurements/descent-output-current.md) also retains four
-audited sessions, their controls and exact result bits. Run the existing Rosenbrock cases
-at 3/33/129 coordinates and 0/1/199/1,999 updates where defined. Compare fwp AD,
-fwp explicit derivatives, and explicit C/Rust implementations. Separate retained
-history, list/array construction, derivative recording, reverse traversal and
-printing; the C/Rust programs do not perform general AD.
-**Done:** each ratio names equivalent work and its differences, with repeated
-samples, allocation ledgers and bounded-workspace observations.
+**D1 — Verified repeated baseline and fixed limits.** Four audited matching-host
+sessions at `a31f24c4` cover all six Rosenbrock cases, complete outputs, per-process
+samples, managed/raw storage, phase controls, actual binaries and stack reports.
+Repeated solves keep identical-copy median variation below 1.66%, within the
+predeclared 2% limit. The [report](docs/measurements/descent-costs.md) keeps earlier
+noisy and rejected observations, equivalent-work differences and the large
+remaining gap to explicit C/Rust derivatives. D2's limits were published before
+its candidate. Preserve all observations and do not reset the limits.
 
 **D2 — Optimize the measured recording/workspace cost.** Use D1 to choose tape
 entries, buffer growth/reuse or recomputation in the AD runtime; keep pure-step
 requirements for replay. Extend `tests/ad_tape_scopes.rs` and
 `tests/ad_tape_ownership.rs` with failure, cancellation and nested scopes.
-The first concrete candidate is the four-scalar argument to `ad.push`: current
-generated C allocates that record on the heap for each recorded operation, even
-though the runtime only copies its fields. Prove that its argument cannot escape
-in `src/ownership.rs`, then use the existing stack analysis. Do not extend the
-rule to `ad.push-owned`, whose typed weights have separate ownership obligations.
+The scalar `ad.push` no-escape proof is implemented at `8e299f9f`: the runtime
+copies four fields, and the existing stack analysis now removes the argument
+record allocation. Native O1/O2 tests on Linux ARM64/AMD64 remove exactly 256
+heap records, preserve the derivative and pass failure/cancellation controls.
+Do not extend the rule to `ad.push-owned`, whose typed weights have separate ownership obligations.
 The fixed comparison limits were published at fde368c8 before changing the
-contract. Finish the independent baseline audit before candidate acceptance. Compare exact
-requests/retains, time, instruction bytes and stack frames; preserve tape-full,
+contract. The independent baseline audit is complete; finish the paired candidate
+measurement before acceptance. Compare exact requests/retains, time, instruction bytes and stack frames; preserve tape-full,
 mixed/stale-node, failure/cancellation and nested-gradient checks. The raw tape
 workspace already reuses buffers across updates; growing its cache is not the
 first candidate supported by these observations.
 **Done:** the selected per-size storage/time budget passes without retaining dead
 scopes or changing derivative order. Output storage still scales with output size.
 
-**D3 — Validate precision and nesting.** Test F64/F128 derivatives against
-analytic examples and independent numerical checks with stated tolerances. Include
-nested gradients, branch boundaries and checkpointed versus uncheckpointed work.
-Measure the first three derivatives of `sum(x^4)` for 1/16/128 inputs in both
-formats against explicit fwp formulas, with separate managed/raw memory, code and
+**D3 — Precision and per-depth costs pass focused native checks.** F64/F128
+analytic, numerical, branch-boundary and checkpoint tests pass. The post-candidate
+18-case Linux ARM64/AMD64 matrices at `8e299f9f` are fully audited; full PR platform
+acceptance remains. Preserve the first three derivatives of `sum(x^4)` for
+1/16/128 inputs in both formats against explicit fwp formulas, with separate managed/raw memory, code and
 stack costs. [The depth protocol](docs/measurements/ad-depth.md) defines inputs,
 oracles, compiler settings, cleanup controls and the limits of short timings.
 **Done:** documented domains/tolerances and per-depth costs; no derivative is

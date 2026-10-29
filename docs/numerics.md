@@ -230,7 +230,7 @@ both sides and expect -1 or 1. At zero, fwp follows the `else` branch and return
 The raw interpreter and native GCC O1/O2 checks pass on Linux ARM64/AMD64 at
 `a31f24c4`, with workspace reuse both enabled and disabled. The
 [finite depth/size cost matrix](measurements/ad-depth.md) also passes on both
-Linux architectures at `89bbec5b`. Full platform acceptance remains. This does
+Linux architectures after scalar stack recording at `8e299f9f`. Full platform acceptance remains. This does
 not claim accuracy outside the
 stated domains or constant costs for nested differentiation.
 

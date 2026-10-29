@@ -61,6 +61,9 @@ def check_report(report, source, protocol):
         for label, ratios in row['ratios'].items():
             for peer, value in ratios.items():
                 assert value == row['medianNs'][label] / row['medianNs'][peer]
+        if protocol == 'repeated':
+            ratio = row['medianNs']['fwp-ad'] / row['medianNs']['fwp-ad-identical']
+            assert max(ratio, 1 / ratio) <= 1.02, (name, ratio)
         CHECK.check_observations(name, row, updates * solves)
 
 

@@ -5,6 +5,7 @@ import gzip
 import importlib.util
 import json
 from pathlib import Path
+import statistics
 import unittest
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -13,11 +14,28 @@ CHECK = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CHECK)
 SOURCE = 'b1ca235415d4d2caabdb4f568d9300cf50a59400'
 REPORT = json.loads(gzip.decompress((ROOT / 'docs/measurements/descent-groups-2026-10-29-arm-1.json.gz').read_bytes()))
+REPEATED_SOURCE = 'a31f24c4fdc215383cc61d95f6f6d743e66cb1a3'
+REPEATED = json.loads(gzip.decompress((ROOT / 'docs/measurements/descent-repeated-2026-10-29-amd-2.json.gz').read_bytes()))
 
 
 class Evidence(unittest.TestCase):
     def test_all_original_grouped_observations(self):
         CHECK.check_report(REPORT, SOURCE, 'grouped')
+
+    def test_repeated_solve_baseline_meets_fixed_noise_limit(self):
+        CHECK.check_report(REPEATED, REPEATED_SOURCE, 'repeated')
+
+    def test_rejects_noisy_repeated_solve_control_even_with_consistent_medians(self):
+        report = copy.deepcopy(REPEATED)
+        row = report['results']['3-1']
+        label = 'fwp-ad-identical'
+        row['samplesNs'][label] = [value * 2 for value in row['samplesNs'][label]]
+        row['medianNs'][label] = statistics.median(row['samplesNs'][label])
+        for program, ratios in row['ratios'].items():
+            for peer in ratios:
+                ratios[peer] = row['medianNs'][program] / row['medianNs'][peer]
+        with self.assertRaises(AssertionError):
+            CHECK.check_report(report, REPEATED_SOURCE, 'repeated')
 
     def test_rejects_changed_cpu_even_if_expected_was_changed_too(self):
         report = copy.deepcopy(REPORT)

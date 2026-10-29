@@ -1,12 +1,12 @@
 # Current costs of automatic derivatives
 
-Current-source sessions measure derivative costs and timing reliability. These
-are baselines, not an optimization result. They refresh the [older comparisons](descent-peers.md)
-without requiring an earlier fwp executable or generated-C archive. D1 is still
-incomplete: repeated-process groups now use matching hosts, but short-case noise
-and fixed comparison budgets remain. The
-[output diagnostic](descent-output-current.md) is also refreshed; the plan names
-a scalar recording-argument candidate to prove and measure after those limits.
+**D1 is complete:** four audited matching-host repeated-solve sessions establish
+the current baseline and meet the predeclared identical-code noise criterion.
+Fixed D2 acceptance limits were published before changing scalar recording.
+The optimization comparison is still running; no derivative speedup is accepted.
+Earlier [standalone](#initial-single-process-results), grouped and
+[output-diagnostic](descent-output-current.md) results remain evidence of their
+specific sources and timer boundaries.
 
 ## Initial single-process results
 
@@ -219,11 +219,12 @@ ratio and its reciprocal; it describes variation, not a confidence interval.
 The largest AD-current case takes 38.96–39.03 ms on ARM64 and 41.67–41.80 ms on
 AMD64 per complete process. All four still request 1,103,785 managed allocations
 and perform 868,237 retains. No derivative optimization is accepted from these
-measurements. The timing limits remain unset; the noisier cases are not omitted.
+measurements. Those grouped observations did not establish timing limits; the
+noisier cases remain visible.
 
 ## Repeating solves within one process
 
-The next experiment removes repeated startup from each solve. It retains the
+Repeating solves amortizes process startup across them. It retains the
 same six implementations, seven timing labels, host qualification, compiler
 settings, analytic output checks and all original standalone measurements.
 Each independent solve starts from the original vector, performs the stated
@@ -254,13 +255,62 @@ checkpoints; no observation limit is raised or disabled.
 
 Use the existing 2% identical-median criterion when judging timing reliability;
 report paired tails as well. Retain every result if this protocol is also noisy.
-Publish per-case timing/noise limits, allocation counts and code/stack bounds
-before changing the `ad.push` contract. The limits below were published before the scalar no-escape contract changed.
+The limits below were published before the scalar no-escape contract changed.
+
+### Repeated-solve results
+
+Source `a31f24c4fdc215383cc61d95f6f6d743e66cb1a3`,
+[run 40829884152](https://github.com/e6qu/fun-with-pipes/actions/runs/40829884152).
+Two independent Neoverse-N2 sessions use GCC 13.3; two EPYC 7763 sessions use
+GCC 15.2. The first AMD session-2 assignment was an EPYC 9V74 and was rejected
+before building or timing; its replacement used the required CPU. Selection was
+based on host identity, never on observed performance.
+
+These are ranges across the two sessions, after dividing each label's median
+by seven processes and its solve count. Ratios use the original medians.
+
+| Coordinates:updates | ARM AD microseconds/solve | AMD AD microseconds/solve | ARM AD/C | AMD AD/C |
+|---|---:|---:|---:|---:|
+| 3:0 | 1.257–1.260 | 1.447–1.456 | 1.83 | 2.39–2.40 |
+| 3:1 | 20.06–20.20 | 23.88–24.47 | 8.49–8.71 | 9.67–10.39 |
+| 3:199 | 876.2–876.7 | 990.8–1,009.5 | 29.04–29.17 | 24.22–29.18 |
+| 3:1,999 | 8,578.9–8,589.9 | 9,520.0–9,700.8 | 32.26–32.73 | 28.45–31.16 |
+| 33:199 | 9,637.4–9,639.0 | 9,548.1–9,611.3 | 177.55–178.48 | 180.08–191.33 |
+| 129:199 | 37,674.7–37,678.2 | 37,420.7–37,447.7 | 172.00–174.93 | 177.43–195.37 |
+
+The largest case is about 170–173 times Rust on ARM and 168–181 times Rust on
+AMD. These large gaps include general derivative recording/reversal and fwp's
+collection/value construction versus hand-derived formulas in reusable C/Rust
+buffers. They are not isolated compiler overhead. Removing per-solve process
+startup makes the remaining work difference much more visible than the earlier
+standalone ratios. Every implementation still prints each complete result.
+
+Across all 24 host/case observations, the larger identical-copy median ratio is
+at most 1.0166, within 1.02. This qualifies the timing method; it does not say
+C/Rust timings or whole-program costs are identical across hosts. Raw retirement,
+workspace-off, shutdown-release and broken-observer checks all pass.
+The [archive](descent-repeated-artifacts-2026-10-29.json) retains all 4,628 artifact
+identities, full reports/logs, original job executions and the rejected host.
+
+| Session | Report | Log |
+|---|---|---|
+| ARM 1 | [JSON](descent-repeated-2026-10-29-arm-1.json.gz) | [Log](descent-repeated-2026-10-29-arm-1.log.gz) |
+| ARM 2 | [JSON](descent-repeated-2026-10-29-arm-2.json.gz) | [Log](descent-repeated-2026-10-29-arm-2.log.gz) |
+| AMD 1 | [JSON](descent-repeated-2026-10-29-amd-1.json.gz) | [Log](descent-repeated-2026-10-29-amd-1.log.gz) |
+| AMD 2 | [JSON](descent-repeated-2026-10-29-amd-2.json.gz) | [Log](descent-repeated-2026-10-29-amd-2.log.gz) |
+
+Verify the retained protocol:
+
+```sh
+python3 scripts/local-guard.py python3 scripts/check-descent-groups.py \
+  --protocol repeated --archive docs/measurements/descent-repeated-artifacts-2026-10-29.json
+``` The full audit also checked all actual binaries, stack reports,
+output lines, process samples, observers and complete job logs before archiving.
 
 ## Fixed scalar-recording acceptance rules
 
-These limits are chosen before implementing or measuring the `ad.push` change.
-Acceptance also requires all four matching-host repeated-solve baseline sessions.
+These limits were published at `fde368c8` before implementing or measuring the
+`ad.push` change. All four required matching-host baseline sessions now pass.
 For the candidate, run two independent sessions on each of the same native CPU
 models and compiler versions. Keep all six cases and the same 98 rounds, seven
 fresh processes, solve counts, output checks and ordering seed.
@@ -321,4 +371,5 @@ The main production gate still covers all nine native jobs and documentation.
    are promised.
 
 The [implementation plan](../../PLAN.md#5-differentiation) owns acceptance and
-[the handoff](../development-state.md) owns the current action. D1 remains open until its remaining measurements and fixed budgets are complete.
+[the handoff](../development-state.md) owns the current action. D1's repeated baseline
+and fixed limits are complete; D2 acceptance and the final production gates remain.
