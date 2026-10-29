@@ -211,14 +211,15 @@ contract. All four paired sessions are audited: allocation, cleanup, code and
 stack limits pass, but the combined timing rule fails. The user chose to retain
 the allocation reduction with D2 open; keep every slower case and unchanged
 limit in the [results](docs/measurements/descent-costs.md#scalar-recording-results-allocation-reduction-retained-speed-goal-open).
-Next, measure the F64 seed/result conversions in `rev._backward-float`.
-Retained generated C already fuses the seed map into array construction but keeps
-its scratch buffer; the result conversion still builds a second list. Count those
-allocations separately and check signed zero, subnormal values and NaNs against
-both engines before claiming a conversion is redundant. Publish the selected
-change's time/storage/code/stack comparison before implementation. These are
-source observations, not a verified optimization or an explanation of all time
-outside recording. Do not repeat the unchanged rejected candidate.
+Next, test [eager capture bindings](docs/measurements/eager-captures.md). The
+retained three-coordinate one-update program allocates 22 temporary partial
+applications per solve in a source-instrumented diagnostic. Preserve every eager
+computation and resource lifetime while exposing known calls; do not raise
+inlining limits. The declared experiment fixes its reference, time/storage/code/
+stack limits and negative controls before implementation. This is a hypothesis,
+not a speed result. F64 seed/result conversions also allocate, but raw/native NaN
+payload behavior prevents claiming an all-engine bitwise identity. Keep that
+separate from this candidate. Do not repeat the unchanged rejected experiment.
 Compare exact requests/retains, time, instruction bytes and stack frames; preserve tape-full,
 mixed/stale-node, failure/cancellation and nested-gradient checks. The raw tape
 workspace already reuses buffers across updates; growing its cache is not the

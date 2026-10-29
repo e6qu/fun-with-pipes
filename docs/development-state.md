@@ -1,24 +1,15 @@
-# Next: verify the grouped derivative PR on every native platform
+# Next: prepare the eager-capture optimization
 
-**Next:** finish auditing native run `40863393272` at `80da3971` while checking
-the interleaved G2 measurement repair on both hosts. Keep those native jobs
-running. Batch any discovered fixes and completed evidence before the final
-nine-job, documentation and G2 gates; squash-merge only when all pass.
-[PR #226](https://github.com/e6qu/fun-with-pipes/pull/226/checks) is draft again to
-avoid full matrices for intermediate measurement repairs. Worktree
-`/private/tmp/fwp-ad-recording`, branch `ad-recording-costs`.
+**Next:** implement the [declared comparison and safety rules](measurements/eager-captures.md)
+for once-used known closures. This branch is `ad-eager-captures` in
+`/private/tmp/fwp-ad-captures`. It has no PR; #226 remains the only active PR and
+continues native validation from `/private/tmp/fwp-ad-recording`. Do not change
+that branch’s production code or open another PR before its verified merge.
 
-G2 run `40863396927` at 80da3971 passes every original limit, but Intel N=64's
-identical-copy variation is 6.89%, above 5%. All 13,824 timings are independently
-audited and archived. The repair keeps the same samples and limits but interleaves
-individual proofs instead of contiguous 64-call label groups. Results are pending;
-no compiler or runtime implementation changes. Docs `40863354394` at 80da3971 pass.
-
-D2's speed goal remains open. [PLAN.md](../PLAN.md#5-differentiation) names the next
-source investigation; `/private/tmp/fwp-next-d2-notes.md` keeps detailed hypotheses.
-A guarded F64 conversion probe shows finite/zero/infinity identity but different
-raw/native NaN payload behavior. Do not claim all-engine bitwise identity. No next
-optimization has been implemented. Preserve the scalar allocation reduction.
+The preparation commit must precede implementation. No candidate code or results
+exist yet. Local full builds remain prohibited; focused regression compilation
+and execution belong on GitHub. Preserve the published scalar-recording result:
+its allocation saving stays, and D2’s combined speed goal remains open.
 
 ## Grouped CI repairs
 
