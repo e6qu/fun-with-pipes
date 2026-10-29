@@ -118,7 +118,38 @@ size substitutions, exact-result verification runs, separate memory profiles,
 all process observations, ELF sections and GCC frame reports. Its deliberately
 leaked owner must fail before process exit can hide the retained storage.
 
-Current status: the Python oracle/schedule and altered-evidence controls pass
-locally under the guard. Native generation, compilation, result checks and
-measurements still require the declared GitHub runs; no baseline result or
-optimization acceptance is claimed yet.
+## Initial ARM observations; N1 remains open
+
+Run `40906486080` at `f053da88` has two independently audited Neoverse-N2 sessions:
+jobs `123562554782` and `123562554084`. Every result bit, process observation,
+median, cleanup profile, emitted source identity, executable section and frame
+report was checked. Both complete logs pass. The byte-identical control differs
+by at most 0.16%, below the 2% limit. The [archive index](kernel-baselines-artifacts-2026-10-29.json)
+links both full reports/logs and 5,782 artifact identities.
+
+These are initial observations, not completed N1 acceptance. PR #227's later
+record-return repair changes the compiler; applicability to that source needs
+verification. Both AMD jobs were rejected before building: session 1 received
+Intel Xeon 8573C, session 2 EPYC 9V74, instead of EPYC 7763. Their reports and full
+logs remain in the index. No N2 optimization or acceptance limit is selected.
+
+The ranges below cover the two ARM sessions. Each ratio is **fwp time / peer
+time**; 1.30 means 30% extra time. Kernel time excludes input allocation/filling;
+the allocation-inclusive scope includes them. These are named-workload costs,
+not a universal language overhead.
+
+| Case | Kernel vs C | Kernel vs Rust | Including allocation vs C | Including allocation vs Rust |
+|---|---:|---:|---:|---:|
+| Array 65,537 | 0.973–0.975 | 1.007–1.009 | 1.295–1.296 | 1.697–1.704 |
+| Array 262,145 | 1.026–1.028 | 1.011–1.012 | 1.286–1.289 | 1.658–1.663 |
+| Matrix 65×67 × 67×63 | 1.046–1.047 | 1.409–1.413 | 1.094–1.096 | 1.469–1.471 |
+| Matrix 257×259 × 259×255 | 1.042–1.043 | 1.335–1.341 | 1.000–1.006 | 1.311–1.320 |
+
+Each eight-round array sample allocates eight buffers in all implementations.
+The fwp buffer needs eight metadata bytes beyond the peer's payload. Matrix
+samples request 40 allocations in fwp versus 24 in C/Rust: the native harness
+passes two record-wrapped input matrices per round, in addition to three buffers.
+These entry/record costs are included in the broader timer, outside the matrix
+kernel timer. Profiles observe no effective retains or nonlast releases, and all
+live-storage ledgers return to zero. The reports retain process RSS, allocator
+charge, requested bytes, virtual reservation, code and stack costs separately.

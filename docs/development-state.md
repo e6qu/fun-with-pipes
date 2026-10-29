@@ -1,14 +1,17 @@
 # Next: implement N1's four kernel baseline cases
 
-**Next:** review and publish the prepared four-case runner, then dispatch
-`kernel-baselines` with `native_runner=all`, `comparison_session=both`. Audit
-all results/rejections under the [frozen protocol](measurements/kernel-baselines.md).
-Compiler/runtime optimizations are unchanged. No second PR while #227 is active.
+**Next:** finish #227's compiler repair before completing N1. Both initial ARM
+sessions at `f053da88` are independently audited and archived; both AMD hosts
+were rejected before building. Merge the verified #227 source here, check the
+baseline's source applicability, then collect the missing matching-host evidence
+under the [frozen protocol](measurements/kernel-baselines.md). No second PR.
 
 Worktree `/private/tmp/fwp-kernel-baselines`, branch `numerical-kernel-baselines`,
-based on #227 final head `56528ffb`. The active delivery is still #227 in
-`/private/tmp/fwp-ad-captures`; monitor native `40901634818`, docs `40901634737`
-and G2 `40901630875`. Merge only after all gates pass and full logs are audited.
+based on #227 head `56528ffb`. The active delivery is still #227 in
+`/private/tmp/fwp-ad-captures`: `694e31b7` repairs a mixed record-return C-generator
+defect exposed by two REST tests. Focused GCC/Clang run `40909968650` continues;
+docs `40909967190` pass. The earlier full matrix remains for failure audit.
+Merge only after all final-head gates pass and full logs are audited.
 Its handoff owns final D2 delivery. Merge main here after that verified merge.
 
 N1 protocol adds 262,145 array elements and 257×259 by 259×255 matrices to the
@@ -37,11 +40,17 @@ the boundary limitation explicit. No measurements or acceptance limits changed.
 verification, profile-only counters, a deliberately leaked-owner control, separate
 RSS, ELF sections, frame reports and persistent partial command/round records.
 The workflow requires explicit host/session selection and preserves rejections
-before building. Workflow lint passes. Native generation and runtime assumptions
-remain unverified until GitHub checks; do not call preparation a passing baseline.
+before building. Workflow lint passes. Both initial ARM sessions verify native
+generation and runtime controls; AMD and repaired-source coverage remain open.
 
-No compiler change, native build or new measurement has run for N1. Guard limits
-stay unchanged. Current #227 evidence is already audited as documented there.
+No compiler/runtime change or local native build has run for N1. Run `40906486080`
+has audited ARM jobs 123562554782/123562554084: each has 2,891 files, 1,348 recorded
+commands, 36 ELF images, 24 frame reports and all outputs/rounds/memory checks.
+`/private/tmp/fwp-audit-kernels.py 1|2` passes serially through the guard. Source,
+all raw reports/logs and 5,782 artifact identities are archived. AMD job
+123562554656 received Xeon 8573C; 123562554576 received EPYC 9V74. Both are retained
+host rejections, not numerical failures or accepted baselines. Initial ARM costs
+are explicit in the protocol report. No N2 threshold has been selected.
 No subagents. Local work remains serial; full builds/suites/benchmarks on CI.
 
 ## Roadmap status
