@@ -247,6 +247,40 @@ This identifies a weakness in comparing separated batches, without establishing
 a scheduler, CPU-frequency or virtualization cause. Keep the second already-
 started AMD64 session as evidence; it cannot erase this first decision.
 
+### Complete longer-batch outcome
+
+All four longer jobs passed functional/evidence checks; neither AMD64 session
+meets the timing acceptance rule. Job `123225063471`, attempt 4 of run
+`40805067812`, is the second independent AMD64 observation. It has loop/text
+control p95 ratios 1.029109/1.119031, both above their limits. No selected session
+was replaced with a faster or quieter observation.
+
+Values below are median batch milliseconds: eight complete loop processes or
+128 complete text processes. C/Rust retain grouped division; their ratios still
+include that algorithm difference and complete process costs.
+
+| Host/session/program | C | Rust | Original helper | Tree | Identical original |
+|---|---:|---:|---:|---:|---:|
+| ARM64 1 loop | 1412.749 | 913.514 | 1046.388 | 1046.589 | 1046.570 |
+| ARM64 1 text | 410.873 | 745.099 | 812.661 | 519.307 | 814.804 |
+| ARM64 2 loop | 1412.539 | 913.613 | 1046.340 | 1046.434 | 1046.166 |
+| ARM64 2 text | 418.898 | 757.416 | 826.836 | 535.219 | 828.746 |
+| AMD64 1 loop | 1023.259 | 857.524 | 1026.845 | 1028.689 | 1027.683 |
+| AMD64 1 text | 457.179 | 881.029 | 974.074 | 618.135 | 975.070 |
+| AMD64 2 loop | 1019.300 | 856.692 | 1023.946 | 1025.324 | 1025.799 |
+| AMD64 2 text | 453.506 | 861.294 | 965.039 | 602.712 | 962.342 |
+
+Raw sessions [ARM64 1](decimal-long-2026-10-29-arm-1.json),
+[ARM64 2](decimal-long-2026-10-29-arm-2.json),
+[AMD64 1](decimal-long-2026-10-29-amd-1.json),
+[AMD64 2](decimal-long-2026-10-29-amd-2.json) and the
+[archive](decimal-long-artifacts-2026-10-29.json) retain every observation,
+seven actual host rejections, exact job metadata and artifact identities.
+Instruction/data sections, whole images and stack frames match the corresponding
+short-session images; every reported memory counter and leak control was checked.
+GitHub copies unchanged sibling status into a retry with a new job ID. Identical
+runner/timestamps identify those copies; they are not independent executions.
+
 ### Process-by-process comparison, specified before measurement
 
 The new `decimal-count-interleaved` suite runs one process from each of the five
@@ -271,3 +305,58 @@ implementations. It is not evidence that the candidate works until the new
 sessions complete and pass. The [repeat reader](../../scripts/check-decimal-repeat.py)
 reconstructs every decision and session selection with explicit protocol/source
 arguments; deliberately reordered observations and missing/duplicate jobs must fail.
+
+### Interleaved outcome: positions alone do not balance preceding work
+
+All four jobs at `e8a8cb8fefceaa8e955823f3c1d6edb737bf789e` passed functional
+and artifact checks. Both AMD64 sessions qualify, but both ARM64 text controls
+fail. The overall decision remains **not accepted**; passing results from
+different protocols are not combined.
+
+| Host/session/program | Original helper ms | Tree ms | Identical original ms | Control p95 | Candidate / original |
+|---|---:|---:|---:|---:|---:|
+| ARM64 1 loop | 1305.820 | 1306.083 | 1305.810 | 1.001310 | 1.000201 |
+| ARM64 1 text | 1009.166 | 652.485 | 1034.557 | 1.071585 | 0.646559 |
+| ARM64 2 loop | 1308.526 | 1308.626 | 1308.526 | 1.001876 | 1.000076 |
+| ARM64 2 text | 1023.018 | 666.443 | 1051.069 | 1.069806 | 0.651448 |
+| AMD64 1 loop | 1284.035 | 1282.164 | 1282.077 | 1.010957 | 0.998543 |
+| AMD64 1 text | 1219.598 | 731.385 | 1211.512 | 1.030315 | 0.599693 |
+| AMD64 2 loop | 1280.194 | 1282.154 | 1280.026 | 1.010456 | 1.001531 |
+| AMD64 2 text | 1213.410 | 725.702 | 1218.618 | 1.045014 | 0.598069 |
+
+These are ten-process loop or 160-process text batches. Complete C/Rust peer
+medians, outputs, memory profiles and code/stack costs remain in raw sessions
+[ARM64 1](decimal-interleaved-2026-10-29-arm-1.json),
+[ARM64 2](decimal-interleaved-2026-10-29-arm-2.json),
+[AMD64 1](decimal-interleaved-2026-10-29-amd-1.json),
+[AMD64 2](decimal-interleaved-2026-10-29-amd-2.json), and the
+[archive](decimal-interleaved-artifacts-2026-10-29.json).
+
+The recorded execution order exposes a schedule defect. In each ARM64 text
+session, the original helper follows Rust 7,680 times, C 1,908 times and its
+identical control 12 times. The identical control instead follows the candidate
+7,680 times, the original helper 1,908 times and Rust 12 times. Rotating positions
+did **not** give the two identical binaries comparable preceding workloads.
+This proves an imbalance in the harness; it does not prove a particular hardware
+mechanism for the observed timing difference.
+
+### Balance before/after pairs, specified before measurement
+
+The new `decimal-count-balanced` protocol constructs a 25-execution cycle in
+which each possible preceding/current implementation pair appears once, including
+same-implementation pairs. Each implementation appears five times per cycle.
+Repeat it twice for loop samples and 32 times for text: still ten and 160 complete
+processes per implementation/sample. Rotate the cycle's start over 75 measured
+samples, covering all 25 positions three times. Every implementation then occupies
+every execution slot equally across samples. Keep two warmup samples.
+
+At a sample boundary the rotated cycle can change one before/after transition;
+that process is retained, not dropped. Tests verify every cycle pair, all counts,
+slot balance and this one-transition bound. Every execution sequence remains
+checked against the declared schedule. The original numerical limits, hosts,
+compilers, inputs, process timing and first-two-job selection rule do not change.
+Require both complete independent sessions on both architectures to pass.
+
+This repairs the observed scheduling imbalance. It is not a speedup claim before
+measurement and does not erase the earlier failed control decisions. Native
+correctness is reused only after checking exact compiler/runtime/test identity.

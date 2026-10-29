@@ -18,6 +18,12 @@ def select_sessions(entries):
     assert len(identities) == len(set(identities)), 'duplicate job'
     assert all(isinstance(run, int) and run > 0 and isinstance(job, int) and job > 0 for run, job in identities)
     assert {e['architecture'] for e in entries} == {'aarch64', 'x86_64'}, 'wrong architectures'
+    executions = []
+    for entry in entries:
+        job = entry['jobMetadata']
+        assert job['id'] == entry['job'] and job['run_id'] == entry['run']
+        executions.append((job['runner_id'], job['started_at'], job['completed_at']))
+    assert len(set(executions)) == len(executions), 'copied retry status is not an independent execution'
     selected = []
     for architecture in ('aarch64', 'x86_64'):
         matches = sorted((e for e in entries if e['architecture'] == architecture), key=lambda e: (e['run'], e['job']))
@@ -29,7 +35,7 @@ def select_sessions(entries):
 def verify(args):
     assert re.fullmatch('[0-9a-f]{40}', args.source)
     assert not subprocess.check_output(['git', 'diff', '9c89a3761cba2c3bccb02dff93b3fec6754f4583', args.source, '--', 'src', 'runtime', 'tests', 'lib', 'bench', 'vendor', 'Cargo.toml', 'Cargo.lock', 'build.rs'], cwd=COUNT.ROOT), 'native correctness source changed'
-    settings = {'long': COUNT.LONG_SETTINGS, 'interleaved': COUNT.INTERLEAVED_SETTINGS}[args.protocol]
+    settings = {'long': COUNT.LONG_SETTINGS, 'interleaved': COUNT.INTERLEAVED_SETTINGS, 'balanced': COUNT.BALANCED_SETTINGS}[args.protocol]
     archive = json.loads(args.archive.read_text())
     table = json.loads(args.table.read_text())
     old = subprocess.check_output(['git', 'show', COUNT.BASELINE + ':runtime/fwp_rt_ops.c'], cwd=COUNT.ROOT, text=True)
@@ -39,6 +45,9 @@ def verify(args):
     assert set(reports) == {e['reportSha256'] for e in archive['sessions']}
     entries = archive['sessions']
     selected = select_sessions(entries)  # Select before reading any timing decision.
+    for entry in entries:
+        job = entry['jobMetadata']
+        assert job['head_sha'] == args.source and job['status'] == 'completed' and job['conclusion'] == 'success'
     for entry in entries:
         report = reports[entry['reportSha256']]
         assert report['source'] == args.source and report['baseline'] == COUNT.BASELINE
@@ -98,12 +107,12 @@ def verify(args):
         assert all(row['host'] != record['host'] for row in table['rows'])
     accepted = all(reports[e['reportSha256']]['qualifies'] for e in selected)
     assert archive['accepted'] == accepted
-    print('All first-selected longer sessions pass:', accepted)
+    print('All selected sessions pass:', accepted)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--protocol', choices=['long', 'interleaved'], required=True)
+    parser.add_argument('--protocol', choices=['long', 'interleaved', 'balanced'], required=True)
     parser.add_argument('--archive', type=Path, required=True)
     parser.add_argument('--reports', type=Path, nargs='+', required=True)
     parser.add_argument('--table', type=Path, required=True)

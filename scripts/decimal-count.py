@@ -27,6 +27,34 @@ COUNTING_PROGRAMS = ('strings', 'text-length')
 SHORT_SETTINGS = dict(samples=60, warmups=2, processes={'loop': 1, 'text-length': 32}, timeout=120, cpuPolicy='all')
 LONG_SETTINGS = dict(samples=60, warmups=2, processes={'loop': 8, 'text-length': 128}, timeout=120, cpuPolicy='all')
 INTERLEAVED_SETTINGS = dict(samples=60, warmups=2, processes={'loop': 10, 'text-length': 160}, timeout=120, cpuPolicy='all', order='interleaved')
+BALANCED_SETTINGS = dict(samples=75, warmups=2, processes={'loop': 10, 'text-length': 160}, timeout=120, cpuPolicy='all', order='balanced-cycle')
+
+
+def balanced_cycle():
+    """An Euler circuit: each ordered predecessor/current pair appears once."""
+    edges = {kind: list(KINDS) for kind in KINDS}
+    stack, circuit = [KINDS[0]], []
+    while stack:
+        if edges[stack[-1]]:
+            stack.append(edges[stack[-1]].pop())
+        else:
+            circuit.append(stack.pop())
+    circuit.reverse()
+    assert circuit[0] == circuit[-1]
+    return circuit[:-1]
+
+
+def execution_order(settings, name, number):
+    count = settings['processes'][name]
+    if settings == BALANCED_SETTINGS:
+        cycle = balanced_cycle()
+        assert count % len(KINDS) == 0
+        offset = number % len(cycle)
+        return (cycle[offset:] + cycle[:offset]) * (count // len(KINDS))
+    if settings == INTERLEAVED_SETTINGS:
+        return [KINDS[(number + i + position) % len(KINDS)] for i in range(count) for position in range(len(KINDS))]
+    assert settings in (SHORT_SETTINGS, LONG_SETTINGS)
+    return [KINDS[(number + position) % len(KINDS)] for position in range(len(KINDS)) for _ in range(count)]
 
 
 def helper(source):
@@ -44,7 +72,7 @@ def write(path, data):
 
 
 def check_case(name, row, budget, algorithm, settings):
-    assert settings in (SHORT_SETTINGS, LONG_SETTINGS, INTERLEAVED_SETTINGS)
+    assert settings in (SHORT_SETTINGS, LONG_SETTINGS, INTERLEAVED_SETTINGS, BALANCED_SETTINGS)
     description = ALGORITHMS[algorithm]
     assert row['stdout'] == CPU.EXPECTED[name] and set(row['binaries']) == set(KINDS)
     assert row['binaries']['baseline'] == row['binaries']['identical']
@@ -61,9 +89,11 @@ def check_case(name, row, budget, algorithm, settings):
         assert (observation['kind'], observation['phase'], observation['round']) == (kind, 'warmup' if warmup else 'sample', number)
         assert observation['binarySha256'] == row['binaries'][kind]['sha256']
         assert len(observation['processes']) == settings['processes'][name]
+        order = execution_order(settings, name, number)
+        positions = [i for i, item in enumerate(order) if item == kind]
         for process_index, process in enumerate(observation['processes']):
-            if settings == INTERLEAVED_SETTINGS:
-                expected = (round_index * settings['processes'][name] + process_index) * len(KINDS) + (KINDS.index(kind) - number - process_index) % len(KINDS)
+            if settings in (INTERLEAVED_SETTINGS, BALANCED_SETTINGS):
+                expected = round_index * len(order) + positions[process_index]
                 assert process['sequence'] == expected, 'process order changed'
             assert process['status'] == 0 and not process['stderr'] and process['stdout'] == row['stdout']
             assert math.isfinite(process['seconds']) and process['seconds'] > 0
@@ -97,7 +127,7 @@ def sections(path, architecture):
 
 
 def measure(args):
-    settings = {'short': SHORT_SETTINGS, 'long': LONG_SETTINGS, 'interleaved': INTERLEAVED_SETTINGS}[args.protocol]
+    settings = {'short': SHORT_SETTINGS, 'long': LONG_SETTINGS, 'interleaved': INTERLEAVED_SETTINGS, 'balanced': BALANCED_SETTINGS}[args.protocol]
     assert args.session in (1, 2)
     report = CPU.qualification(args)
     assert report == json.loads(args.qualification.read_text())
@@ -189,12 +219,7 @@ def measure(args):
                     observation = dict(kind=kind, phase=phase, round=number, binarySha256=row['binaries'][kind]['sha256'], processes=[], seconds=0)
                     row['observations'].append(observation)
                     observations[kind] = observation
-                if settings == INTERLEAVED_SETTINGS:
-                    schedule = [KINDS[(number + process_index + position) % len(KINDS)]
-                                for process_index in range(settings['processes'][name])
-                                for position in range(len(KINDS))]
-                else:
-                    schedule = [kind for kind in ordered for _ in range(settings['processes'][name])]
+                schedule = execution_order(settings, name, number)
                 try:
                     for kind in schedule:
                         observation = observations[kind]
@@ -202,7 +227,7 @@ def measure(args):
                         result = subprocess.run([str(paths[kind])], env=environment, capture_output=True, text=True, timeout=settings['timeout'])
                         seconds = time.perf_counter() - start
                         process = dict(seconds=seconds, status=result.returncode, stdout=result.stdout, stderr=result.stderr)
-                        if settings == INTERLEAVED_SETTINGS:
+                        if settings in (INTERLEAVED_SETTINGS, BALANCED_SETTINGS):
                             process['sequence'] = sequence
                         sequence += 1
                         observation['processes'].append(process)
@@ -224,7 +249,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('input', 'inspection', 'memory', 'memory-inspection', 'qualification', 'table', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
-    parser.add_argument('--protocol', choices=['short', 'long', 'interleaved'], required=True)
+    parser.add_argument('--protocol', choices=['short', 'long', 'interleaved', 'balanced'], required=True)
     parser.add_argument('--session', type=int, choices=[1, 2], required=True)
     parser.add_argument('--source', required=True)
     parser.add_argument('--architecture', choices=['aarch64', 'x86_64'], required=True)

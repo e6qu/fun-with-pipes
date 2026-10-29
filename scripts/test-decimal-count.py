@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Check decimal algorithm proofs and reject incomplete or noisy comparisons."""
+from collections import Counter
 import copy
 import importlib.util
 import json
@@ -108,14 +109,38 @@ class DecimalCount(unittest.TestCase):
         with self.assertRaises(AssertionError):
             COUNT.check_case('loop', row, self.budget, 'threshold-tree', COUNT.INTERLEAVED_SETTINGS)
 
+    def test_balanced_cycle_covers_every_pair_and_rotates_every_position(self):
+        cycle = COUNT.balanced_cycle()
+        self.assertEqual(Counter(cycle), Counter({kind: 5 for kind in COUNT.KINDS}))
+        pairs = Counter(zip(cycle, cycle[1:] + cycle[:1]))
+        self.assertEqual(pairs, Counter({(a, b): 1 for a in COUNT.KINDS for b in COUNT.KINDS}))
+        for name in COUNT.CPU.PROGRAMS:
+            count = COUNT.BALANCED_SETTINGS['processes'][name]
+            positions = [Counter() for _ in range(count * len(COUNT.KINDS))]
+            previous = COUNT.KINDS[0]
+            for number in range(COUNT.BALANCED_SETTINGS['samples']):
+                order = COUNT.execution_order(COUNT.BALANCED_SETTINGS, name, number)
+                self.assertEqual(Counter(order), Counter({kind: count for kind in COUNT.KINDS}))
+                actual_pairs = Counter(zip([previous] + order[:-1], order))
+                ideal_pairs = Counter({(a, b): count // len(COUNT.KINDS) for a in COUNT.KINDS for b in COUNT.KINDS})
+                self.assertLessEqual(sum(abs(actual_pairs[p] - ideal_pairs[p]) for p in ideal_pairs), 2)
+                previous = order[-1]
+                for position, kind in zip(positions, order):
+                    position[kind] += 1
+            self.assertTrue(all(p == Counter({kind: 15 for kind in COUNT.KINDS}) for p in positions))
+
     def test_session_selection_keeps_early_failures_and_rejects_missing_jobs(self):
         entries = [dict(run=10, job=i, architecture=arch, qualifies=i > 2)
                    for arch, numbers in [('aarch64', [1, 3, 5]), ('x86_64', [2, 4, 6])]
                    for i in numbers]
+        for entry in entries:
+            entry['jobMetadata'] = dict(id=entry['job'], run_id=entry['run'], runner_id=entry['job'], started_at='2026-10-29T00:00:00Z', completed_at='2026-10-29T00:01:00Z')
         selected = REPEAT.select_sessions(list(reversed(entries)))
         self.assertEqual([e['job'] for e in selected], [1, 3, 2, 4])
         self.assertFalse(all(e['qualifies'] for e in selected))
-        for invalid in [entries + [entries[0]], entries[:3], [dict(entries[0], job=-1)] + entries[1:]]:
+        copied = copy.deepcopy(entries)
+        copied[1]['jobMetadata']['runner_id'] = copied[0]['jobMetadata']['runner_id']
+        for invalid in [entries + [entries[0]], entries[:3], [dict(entries[0], job=-1)] + entries[1:], copied]:
             with self.assertRaises(AssertionError):
                 REPEAT.select_sessions(invalid)
 

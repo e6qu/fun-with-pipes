@@ -48,6 +48,20 @@ jobs:
         run: python3 scripts/test-decimal-count.py
       - name: Preserve rejected decimal-count measurements
         run: python3 scripts/check-decimal-records.py
+      - name: Preserve longer decimal sessions and their original decisions
+        run: |
+          python3 scripts/check-decimal-repeat.py --protocol long \
+            --archive docs/measurements/decimal-long-artifacts-2026-10-29.json \
+            --reports docs/measurements/decimal-long-2026-10-29-arm-1.json docs/measurements/decimal-long-2026-10-29-arm-2.json docs/measurements/decimal-long-2026-10-29-amd-1.json docs/measurements/decimal-long-2026-10-29-amd-2.json \
+            --table docs/measurements/cpu-budgets-2026-10-28.json \
+            --source 0c904dc859439a8a6e31e7bdf30c87ca69821de7
+      - name: Preserve the position-rotated experiment and its schedule limitation
+        run: |
+          python3 scripts/check-decimal-repeat.py --protocol interleaved \
+            --archive docs/measurements/decimal-interleaved-artifacts-2026-10-29.json \
+            --reports docs/measurements/decimal-interleaved-2026-10-29-arm-1.json docs/measurements/decimal-interleaved-2026-10-29-arm-2.json docs/measurements/decimal-interleaved-2026-10-29-amd-1.json docs/measurements/decimal-interleaved-2026-10-29-amd-2.json \
+            --table docs/measurements/cpu-budgets-2026-10-28.json \
+            --source e8a8cb8fefceaa8e955823f3c1d6edb737bf789e
       - name: CPU execution-phase evidence controls
         run: python3 scripts/test-cpu-phases.py
       - name: Verify retained CPU execution diagnostics
