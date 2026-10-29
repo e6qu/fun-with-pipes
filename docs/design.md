@@ -120,6 +120,13 @@ Recursion that would require infinitely many type specializations is rejected.
 Effect variables can be generalized without an explicit signature because effects
 are checked and erased before code generation.
 
+Record selectors wait for call and signature constraints before imposing an
+anonymous row type. This preserves named-record protocol implementations when a
+predicate reads a field of a value also passed to another branch. For example,
+`if (.value | lt 0) neg id` must use the named input's `Neg` implementation.
+The existing deferred record-constraint pass handles selectors and updates;
+there is no new runtime conversion or extra inference pass.
+
 ## Runtime representation and C safety
 
 Generic entries pass 64-bit `V` words holding immediate values, tags or addresses.

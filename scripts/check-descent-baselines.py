@@ -15,6 +15,55 @@ PHASES = {'setup', 'forwardWithRecording', 'reverseSetup', 'reverseTraversal',
           'resultArray', 'retirement'}
 
 
+def check_observations(name, row, updates):
+    dimensions = row['dimensions']
+    controls = {'missing-parent-free', 'missing-result-phase'} if name == '3-1' else set()
+    assert set(row['controls']) == controls
+    assert len(row['binaries']) == 13 + len(controls)
+    assert len(row['cCompilerStackUsage']) == 11 + len(controls)
+    assert row['binaries']['fwp-ad']['sha256'] == row['binaries']['fwp-ad-identical']['sha256']
+    for label, control in row['controls'].items():
+        assert control['status'] == {'missing-parent-free': 232, 'missing-result-phase': 233}[label]
+        assert control['stderr']
+    assert set(row['fwpProfiles']) == {'fwp-ad-history', 'fwp-ad', 'fwp-explicit', 'fwp-packed'}
+    for label, profile in row['fwpProfiles'].items():
+        assert profile['managed']['finalChargedBytes'] == 0
+        raw = profile['rawDerivativeStorage']
+        assert raw['finalBytes'] == 0
+        checkpoints = raw['afterBackwardRepeated']
+        assert checkpoints['count'] == (updates if label.startswith('fwp-ad') else 0)
+        if label.startswith('fwp-ad'):
+            without = profile['withoutWorkspace']
+            assert without['managed'] == profile['managed']
+            assert without['rawDerivativeStorage']['finalBytes'] == 0
+    assert set(row['phaseObservations']) == {'fwp-ad-history', 'fwp-ad'}
+    for label, phase in row['phaseObservations'].items():
+        observations = phase['observations']
+        assert len(observations) == 28
+        for kind, count in [('warmup', 2), ('sample', 12)]:
+            for index in range(count):
+                pair = [o for o in observations if o['phase'] == kind and o['round'] == index]
+                assert [o['variant'] for o in pair] == (['ordinary', 'diagnostic'] if index % 2 == 0 else ['diagnostic', 'ordinary'])
+        for observation in observations:
+            assert observation['status'] == 0 and observation['elapsedNs'] > 0
+            assert observation['stdoutSha256'] == row['outputSha256'][label]
+            if observation['variant'] == 'ordinary':
+                assert observation['profile'] is None and not observation['stderr']
+            else:
+                assert json.loads(observation['stderr']) == observation['profile']
+                p = observation['profile']['derivativePhases']
+                assert (p['updates'], p['inputs']) == (updates, dimensions * updates)
+                assert set(p['nanoseconds']) == PHASES
+                assert all(type(n) is int and n >= 0 for n in p['nanoseconds'].values())
+                if not updates:
+                    assert not any(p['nanoseconds'].values())
+        medians = {v: statistics.median(o['elapsedNs'] for o in observations
+                   if o['phase'] == 'sample' and o['variant'] == v)
+                   for v in ['ordinary', 'diagnostic']}
+        assert phase['medianNs'] == medians
+        assert phase['diagnosticOverOrdinary'] == medians['diagnostic'] / medians['ordinary']
+
+
 def check_report(report, source):
     assert report['source'] == source
     config = report['configuration']
@@ -33,51 +82,7 @@ def check_report(report, source):
         for label, ratios in row['ratios'].items():
             for peer, value in ratios.items():
                 assert value == row['medianNs'][label] / row['medianNs'][peer]
-        controls = {'missing-parent-free', 'missing-result-phase'} if name == '3-1' else set()
-        assert set(row['controls']) == controls
-        assert len(row['binaries']) == 13 + len(controls)
-        assert len(row['cCompilerStackUsage']) == 11 + len(controls)
-        assert row['binaries']['fwp-ad']['sha256'] == row['binaries']['fwp-ad-identical']['sha256']
-        for label, control in row['controls'].items():
-            assert control['status'] == {'missing-parent-free': 232, 'missing-result-phase': 233}[label]
-            assert control['stderr']
-        assert set(row['fwpProfiles']) == {'fwp-ad-history', 'fwp-ad', 'fwp-explicit', 'fwp-packed'}
-        for label, profile in row['fwpProfiles'].items():
-            assert profile['managed']['finalChargedBytes'] == 0
-            raw = profile['rawDerivativeStorage']
-            assert raw['finalBytes'] == 0
-            checkpoints = raw['afterBackwardRepeated']
-            assert checkpoints['count'] == (updates if label.startswith('fwp-ad') else 0)
-            if label.startswith('fwp-ad'):
-                without = profile['withoutWorkspace']
-                assert without['managed'] == profile['managed']
-                assert without['rawDerivativeStorage']['finalBytes'] == 0
-        assert set(row['phaseObservations']) == {'fwp-ad-history', 'fwp-ad'}
-        for label, phase in row['phaseObservations'].items():
-            observations = phase['observations']
-            assert len(observations) == 28
-            for kind, count in [('warmup', 2), ('sample', 12)]:
-                for index in range(count):
-                    pair = [o for o in observations if o['phase'] == kind and o['round'] == index]
-                    assert [o['variant'] for o in pair] == (['ordinary', 'diagnostic'] if index % 2 == 0 else ['diagnostic', 'ordinary'])
-            for observation in observations:
-                assert observation['status'] == 0 and observation['elapsedNs'] > 0
-                assert observation['stdoutSha256'] == row['outputSha256'][label]
-                if observation['variant'] == 'ordinary':
-                    assert observation['profile'] is None and not observation['stderr']
-                else:
-                    assert json.loads(observation['stderr']) == observation['profile']
-                    p = observation['profile']['derivativePhases']
-                    assert (p['updates'], p['inputs']) == (updates, dimensions * updates)
-                    assert set(p['nanoseconds']) == PHASES
-                    assert all(type(n) is int and n >= 0 for n in p['nanoseconds'].values())
-                    if not updates:
-                        assert not any(p['nanoseconds'].values())
-            medians = {v: statistics.median(o['elapsedNs'] for o in observations
-                       if o['phase'] == 'sample' and o['variant'] == v)
-                       for v in ['ordinary', 'diagnostic']}
-            assert phase['medianNs'] == medians
-            assert phase['diagnosticOverOrdinary'] == medians['diagnostic'] / medians['ordinary']
+        check_observations(name, row, updates)
 
 
 def check_archive(path):

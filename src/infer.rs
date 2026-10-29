@@ -38,8 +38,9 @@ pub struct Typed {
     pub reflected: HashMap<NodeId, Type>,
 }
 
-/// A record operation (`with`, `update`) whose input type is not known yet:
-/// a nominal record input keeps its type; anything else becomes a row.
+/// A record operation (selector, `with`, `update`) whose input is not known yet.
+/// Wait for calls/signatures before choosing a structural row: an eager row
+/// would erase nominal identity from a shared input such as an `if` predicate.
 struct FieldReq {
     span: Span,
     input: Type,
@@ -1426,10 +1427,12 @@ impl<'a> Infer<'a> {
                 let eff = self.fresh_eff();
                 for seg in path {
                     let a = self.fresh();
-                    let r = self.env.table.fresh(Kind::Row, self.level);
-                    let rec = Type::Record(Row {
-                        fields: vec![(seg.clone(), a.clone())],
-                        tail: Some(r),
+                    let rec = self.fresh();
+                    self.field_reqs.push(FieldReq {
+                        span: e.span,
+                        input: rec.clone(),
+                        output: rec.clone(),
+                        fields: vec![(seg.clone(), a.clone(), a.clone())],
                     });
                     result = Some(match result {
                         None => Type::fun(rec, a, eff.clone()),

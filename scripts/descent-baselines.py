@@ -33,6 +33,26 @@ def execution_order(labels, processes, round_index, seed):
     return (cycle[offset:] + cycle[:offset]) * (processes // len(labels))
 
 
+def repeat_source(source, language, solves):
+    """Repeat complete solves, including input construction and full output."""
+    assert solves > 0
+    if language == 'fwp':
+        assert source.count('main = ') == 1
+        definitions, body = source.split('main = ')
+        assert body.strip().startswith('[')
+        return definitions + f'main = range 0 {solves} | each (const ' + body.strip() + ')\n'
+    if language == 'c':
+        assert source.count('int main(void) {') == 1
+        return source.replace('int main(void) {', 'static int workload(void) {') + (
+            f'\nint main(void) {{ for (size_t solve = 0; solve < {solves}; ++solve) {{ '
+            'int status = workload(); if (status) return status; } return 0; }\n')
+    if language == 'rust':
+        assert source.count('fn main() -> io::Result<()> {') == 1
+        return source.replace('fn main() -> io::Result<()> {', 'fn workload() -> io::Result<()> {') + (
+            f'\nfn main() -> io::Result<()> {{ for _ in 0..{solves} {{ workload()?; }} Ok(()) }}\n')
+    raise ValueError(language)
+
+
 def measure_round(order, binaries, outputs, environment, run, destination):
     """Keep complete process observations, including an interrupted round."""
     observations, totals = [], {label: 0 for label in binaries}

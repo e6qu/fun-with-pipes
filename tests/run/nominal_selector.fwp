@@ -1,0 +1,16 @@
+# A field predicate must preserve the named record used by the other branches.
+Gauge = { value: I64 }
+impl Neg[Gauge] =
+    neg = update { value = neg }
+positive : Gauge -> Gauge
+positive = if (.value | lt 0) neg id
+Box = { item: Gauge }
+impl Neg[Box] =
+    neg = update { item = neg }
+positive-box : Box -> Box
+positive-box = if (.item.value | lt 0) neg id
+main = [
+    Gauge { value = -3 } | positive | .value | echo,
+    Box { item = Gauge { value = -4 } } | positive-box | .item.value | echo,
+    { value = 5, other = 7 } | both .value .other | echo,
+] | ignore

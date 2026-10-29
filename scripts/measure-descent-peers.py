@@ -91,7 +91,7 @@ def main():
     parser.add_argument('--objdump', required=True)
     parser.add_argument('--nm', required=True)
     parser.add_argument('--time', required=True)
-    parser.add_argument('--case', required=True, action='append', help='DIMENSIONS:UPDATES:PROCESSES_PER_LABEL_PER_SAMPLE')
+    parser.add_argument('--case', required=True, action='append', help='DIMENSIONS:UPDATES:PROCESSES_PER_LABEL_PER_SAMPLE:SOLVES_PER_PROCESS')
     parser.add_argument('--samples', required=True, type=int)
     parser.add_argument('--warmups', required=True, type=int)
     parser.add_argument('--order-seed', required=True, type=int)
@@ -155,17 +155,22 @@ def main():
         (out / 'build-commands.json').write_text(json.dumps(commands, indent=2) + '\n')
         return result
 
-    def verify(raw, expected):
-        values = json.loads(raw)
-        assert len(values) == len(expected)
-        assert all(math.isfinite(a) and math.isclose(a, b, abs_tol=1e-10, rel_tol=1e-10)
-                   for a, b in zip(values, expected)), (values, expected)
+    def verify(raw, expected, solves):
+        lines = raw.splitlines()
+        assert len(lines) == solves
+        for line in lines:
+            values = json.loads(line)
+            assert len(values) == len(expected)
+            assert all(math.isfinite(a) and math.isclose(a, b, abs_tol=1e-10, rel_tol=1e-10)
+                       for a, b in zip(values, expected)), (values, expected)
+        assert all(line == lines[0] for line in lines), 'repeated solve changed its output'
 
     results = {}
     for case in args.case:
-        points, updates, processes = map(int, case.split(':'))
+        points, updates, processes, solves = map(int, case.split(':'))
         assert 2 <= points <= 4096 and 0 <= updates <= 4091
         assert processes > 0 and processes % 7 == 0
+        assert solves > 0 and updates * solves <= 8192
         name = f'{points}-{updates}'
         assert name not in results
         directory = out / name
@@ -179,11 +184,12 @@ def main():
                 assert source.count('(.1 | descend)') == 1
                 source = source.replace('(.1 | descend)', '(.1 | explicit-descend)')
                 source = (ROOT / 'tests/fixtures/descent_explicit.fwp').read_text() + '\n' + source
+            source = BASELINE.repeat_source(source, 'fwp', solves)
             fwp_source = directory / (label + '.fwp')
             fwp_source.write_text(source)
             reference = run([args.compiler.resolve(), 'run', '--interp', fwp_source],
                             dict(environment, FWP_NO_OPT='1'))
-            verify(reference.stdout, expected)
+            verify(reference.stdout, expected, solves)
             assert not reference.stderr
             code = directory / (label + '.c')
             build([args.compiler.resolve(), 'build', '--emit-c', '-O2', fwp_source, '-o', code])
@@ -205,7 +211,7 @@ def main():
             assert managed['finalChargedBytes'] == 0
             assert set(managed) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
             raw = raw['rawDerivativeStorage']
-            AD.RAW.check_profile(raw, updates if label.startswith('fwp-ad') else 0, True)
+            AD.RAW.check_profile(raw, updates * solves if label.startswith('fwp-ad') else 0, True)
             raw_hash = digest(json.dumps(raw, sort_keys=True).encode())
             checkpoints = raw.pop('afterBackward')
             assert not checkpoints or all(value == checkpoints[0] for value in checkpoints)
@@ -222,7 +228,7 @@ def main():
                 (directory / (label + '-no-workspace.stderr')).write_bytes(without.stderr)
                 no_managed, no_raw = [json.loads(line) for line in without.stderr.splitlines()]
                 assert no_managed['finalChargedBytes'] == 0
-                AD.RAW.check_profile(no_raw['rawDerivativeStorage'], updates, False)
+                AD.RAW.check_profile(no_raw['rawDerivativeStorage'], updates * solves, False)
                 profiles[label]['withoutWorkspace'] = dict(managed=no_managed, **no_raw)
                 assert no_managed == managed, 'workspace selection changed managed ownership'
                 if label == 'fwp-ad' and updates == 1:
@@ -249,16 +255,16 @@ def main():
             binaries[label] = binary
             outputs[label] = actual.stdout
         csource = directory / 'c-explicit.c'
-        csource.write_text(f'#define DIMENSIONS {points}\n#define UPDATES {updates}\n' +
-                           (ROOT / 'tests/fixtures/descent_explicit.c').read_text())
+        csource.write_text(BASELINE.repeat_source(f'#define DIMENSIONS {points}\n#define UPDATES {updates}\n' +
+                           (ROOT / 'tests/fixtures/descent_explicit.c').read_text(), 'c', solves))
         cbin = directory / 'c-explicit'
         build([args.cc, *cflags, '-Wall', '-Wextra', '-Werror', csource, '-o', cbin, '-lm'])
         rust_source = directory / 'rust-explicit.rs'
         rust_template = (ROOT / 'tests/fixtures/descent_explicit.rs').read_text()
         parameter_marker = '// Measurement parameters are inserted here.'
         assert rust_template.count(parameter_marker) == 1
-        rust_source.write_text(rust_template.replace(parameter_marker,
-            f'const DIMENSIONS: usize = {points};\nconst UPDATES: usize = {updates};'))
+        rust_source.write_text(BASELINE.repeat_source(rust_template.replace(parameter_marker,
+            f'const DIMENSIONS: usize = {points};\nconst UPDATES: usize = {updates};'), 'rust', solves))
         rustbin = directory / 'rust-explicit'
         build([args.rustc, '--crate-name', 'descent_explicit', '--edition=2021', '-D', 'warnings', '-C', 'opt-level=2', '-C',
                'overflow-checks=yes', '-C', 'codegen-units=1', '-C', 'target-cpu=generic', '-C',
@@ -273,7 +279,7 @@ def main():
         binaries['fwp-ad-identical'] = control
         for label, binary in binaries.items():
             actual = run([binary], environment)
-            verify(actual.stdout, expected)
+            verify(actual.stdout, expected, solves)
             assert not actual.stderr
             outputs[label] = actual.stdout
             (directory / (label + '.stdout')).write_bytes(actual.stdout)
@@ -325,7 +331,7 @@ def main():
                         assert observed.stdout == outputs[label]
                         if variant == 'diagnostic':
                             profile = json.loads(observed.stderr)
-                            PHASE.check(profile, points, updates)
+                            PHASE.check(profile, points, updates * solves)
                         else:
                             assert not observed.stderr
                             profile = None
@@ -355,7 +361,7 @@ def main():
             assert entries
             stack[stack_file.name] = dict(sha256=digest(stack_file.read_bytes()), entries=entries)
         assert len(stack) == 11 + len(controls), stack.keys()  # Four fwp forms/profiles, two phase images, C.
-        results[name] = dict(dimensions=points, updates=updates, oracle=expected, processesPerLabel=processes,
+        results[name] = dict(dimensions=points, updates=updates, oracle=expected, processesPerLabel=processes, solvesPerProcess=solves,
             outputSha256={label: digest(value) for label, value in outputs.items()},
             samplesNs=samples, medianNs=medians, orders=orders,
             ratios={label: {peer: medians[label] / medians[peer] for peer in ['fwp-explicit', 'fwp-ad-history', 'fwp-ad-identical', 'c-explicit', 'rust-explicit']}
@@ -385,7 +391,9 @@ def main():
         'Packed fwp can recompute edge residuals that C/Rust compute once. All input/output vectors and update counts match; '
         'work, allocation and formatting strategies differ. No previous compiler or generated C is required. '
         'Each timed output matches its own checked reference exactly; the independent analytic tolerance is absolute/relative 1e-10. '
-        'Times include process launch, construction, computation, complete output and teardown, excluding compilation/observers. '
+        'Times include one process launch, repeated independent solves with complete output, and teardown, excluding compilation/observers. '
+        'Each solve starts from the original input. fwp repeats its source pipeline; C/Rust repeat input/gradient allocation and release. '
+        'Runtime/constant initialization occurs once; per-solve time is amortized and does not describe standalone startup. '
         'Zero updates include construction and printing, not pure startup. Each sample sums multiple fresh processes per label. '
         'The rotated 49-entry cycle balances all cyclic predecessor pairs, including repeats, and positions over 49 samples. '
         'Actual round boundaries are retained separately; the flattened order is not perfectly balanced. '

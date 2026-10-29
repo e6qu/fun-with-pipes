@@ -1,13 +1,14 @@
 # Current costs of automatic derivatives
 
-Four current-source sessions now measure derivative costs. These are baselines,
-not an optimization result. They refresh the [older comparisons](descent-peers.md)
+Current-source sessions measure derivative costs and timing reliability. These
+are baselines, not an optimization result. They refresh the [older comparisons](descent-peers.md)
 without requiring an earlier fwp executable or generated-C archive. D1 is still
-incomplete: matched repeated AMD64 hosts and fixed budgets remain. The
+incomplete: repeated-process groups now use matching hosts, but short-case noise
+and fixed comparison budgets remain. The
 [output diagnostic](descent-output-current.md) is also refreshed; the plan names
 a scalar recording-argument candidate to prove and measure after those limits.
 
-## Results so far
+## Initial single-process results
 
 For the largest case, 129 coordinates and 199 updates, each process prints its
 final vector. These are median milliseconds for the complete process; smaller is
@@ -149,10 +150,10 @@ Verify each backward traversal retires its tape, idle workspace is bounded by
 disabled workspace reuse with explicit settings. Keep leak and omitted-observation
 controls; instrumentation must not be used as ordinary execution timing.
 
-## Matched-host follow-up protocol
+## Matched-host grouped processes
 
-The next baseline keeps the same programs, inputs, compiler settings and output
-checks. It changes how timing samples are collected; its results must stay
+A second experiment kept the same programs, inputs, compiler settings and output
+checks, but grouped complete processes into each sample. Its results stay
 separate from the original 56 single-process rounds above.
 
 Before building, require Linux, four available processors and one of these exact
@@ -194,10 +195,67 @@ observations and is marked incomplete. No partial round becomes a valid sample.
 The separate 12-round phase diagnostic and allocation/cleanup controls stay as
 specified above.
 
-After these observations, publish per-case timing/noise limits, exact allocation
-counts and code/stack bounds before implementing D2. An inconclusive control
-requires a measurement repair, not a relaxed limit or a speedup claim. The
-current four-scalar `ad.push` argument remains unchanged during this preparation.
+Source `b1ca235415d4d2caabdb4f568d9300cf50a59400`,
+[run 40822958582](https://github.com/e6qu/fun-with-pipes/actions/runs/40822958582),
+completed all four matching-host sessions. All 80 images, 68 stack reports and
+every process observation were audited per session. The
+[archive index](descent-groups-artifacts-2026-10-29.json) identifies all 4,628
+original artifact files and links losslessly compressed reports and job logs.
+
+Grouping fresh processes did **not** resolve the short-case noise. The table
+retains the range across all four sessions. A ratio of 1 means identical-code
+medians agree. Paired P95 is the 95th percentile of the larger of a round's
+ratio and its reciprocal; it describes variation, not a confidence interval.
+
+| Coordinates:updates | Identical median ratio range | Largest paired P95 |
+|---|---:|---:|
+| 3:0 | 0.972486–0.991166 | 1.238130 |
+| 3:1 | 0.970672–1.010967 | 1.249295 |
+| 3:199 | 1.026767–1.061122 | 1.250575 |
+| 3:1,999 | 1.000080–1.011026 | 1.159583 |
+| 33:199 | 1.003150–1.037663 | 1.162780 |
+| 129:199 | 0.993619–1.000104 | 1.065271 |
+
+The largest AD-current case takes 38.96–39.03 ms on ARM64 and 41.67–41.80 ms on
+AMD64 per complete process. All four still request 1,103,785 managed allocations
+and perform 868,237 retains. No derivative optimization is accepted from these
+measurements. The timing limits remain unset; the noisier cases are not omitted.
+
+## Repeating solves within one process
+
+The next experiment removes repeated startup from each solve. It retains the
+same six implementations, seven timing labels, host qualification, compiler
+settings, analytic output checks and all original standalone measurements.
+Each independent solve starts from the original vector, performs the stated
+updates, prints the complete vector and releases its temporary values.
+
+| Coordinates:updates | Solves per process |
+|---|---:|
+| 3:0 | 32,768 |
+| 3:1 | 512 |
+| 3:199 | 32 |
+| 3:1,999 | 4 |
+| 33:199 | 32 |
+| 129:199 | 8 |
+
+fwp repeats its source pipeline with `range | each`; C/Rust repeat their complete
+workload functions, including input/gradient allocation and release. Runtime and
+constant initialization happen once. Dividing time by the solve count gives an
+amortized cost, not standalone startup or pure arithmetic time. Loop/dispatch,
+formatting and language-specific collection costs remain included.
+
+Use seven fresh processes per label per sample, two warmup rounds and 98 measured
+rounds, with the same 49-entry balanced cycle and seed. Every output line must
+match the implementation's checked reference; all coordinates also pass the
+analytic tolerance. Keep observer timings separate. Check managed cleanup,
+every derivative retirement, bounded idle raw workspace and physical release at
+shutdown. The largest update count stays within the observer's existing 8,192
+checkpoints; no observation limit is raised or disabled.
+
+Use the existing 2% identical-median criterion when judging timing reliability;
+report paired tails as well. Retain every result if this protocol is also noisy.
+Publish per-case timing/noise limits, allocation counts and code/stack bounds
+before changing the `ad.push` contract. No contract is changed during preparation.
 
 ## Separating costs before selecting D2
 

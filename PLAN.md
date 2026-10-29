@@ -187,10 +187,10 @@ instructions alone do not establish a speedup.
 ## 5. Differentiation
 
 **D1 — Refresh and separate descent costs.** The [current baseline](docs/measurements/descent-costs.md)
-retains four audited sessions and phase/memory observations. AMD64 hosts differ
-and short controls are noisy; the [matched-host follow-up](docs/measurements/descent-costs.md#matched-host-follow-up-protocol)
-uses longer grouped samples and rejects a changed CPU/toolchain before building.
-Fixed repeated-host budgets remain. The
+retains initial phase/memory observations and four additional
+[matched-host grouped sessions](docs/measurements/descent-costs.md#matched-host-grouped-processes).
+Short-case controls remain noisy. Repeat complete solves within each process to
+separate sustained execution from standalone startup before fixing the budgets. The
 [output comparison](docs/measurements/descent-output-current.md) also retains four
 audited sessions, their controls and exact result bits. Run the existing Rosenbrock cases
 at 3/33/129 coordinates and 0/1/199/1,999 updates where defined. Compare fwp AD,

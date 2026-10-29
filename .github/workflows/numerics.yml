@@ -4245,6 +4245,8 @@ jobs:
     env:
       CC: gcc
       CARGO_BUILD_JOBS: 2
+      FWP_AD_PRECISION_ARTIFACTS: derivative-checks/precision
+      FWP_ARC_ARTIFACTS: derivative-checks/owners
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -4277,6 +4279,24 @@ jobs:
           cargo fetch --locked
           echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
       - run: cargo build --locked --release --bin fwp
+      - name: Type inference and derivative precision regressions
+        if: matrix.session == 1
+        run: |
+          mkdir -p derivative-checks
+          cargo test --locked --release --no-fail-fast --test golden_check --test autodiff_precision -- --nocapture 2>&1 | tee derivative-checks/precision.log
+          cargo test --locked --release --test golden_run interpreter_snapshots -- --exact --nocapture 2>&1 | tee derivative-checks/interpreter.log
+          for level in 1 2; do
+            target/release/fwp build -O$level tests/run/nominal_selector.fwp -o derivative-checks/nominal-O$level
+            derivative-checks/nominal-O$level > derivative-checks/nominal-O$level.stdout
+            diff -u tests/run/nominal_selector.out derivative-checks/nominal-O$level.stdout
+          done
+      - name: Preserve derivative regression evidence
+        if: ${{ always() && matrix.session == 1 && hashFiles('derivative-checks/**') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: derivative-checks-${{ matrix.runner }}
+          path: derivative-checks/
+          if-no-files-found: error
       - name: Check explicit derivative source formatting
         run: |
           target/release/fwp fmt --check tests/fixtures/descent_explicit.fwp tests/fixtures/descent_packed.fwp
@@ -4292,7 +4312,7 @@ jobs:
           python3 scripts/measure-descent-peers.py --compiler target/release/fwp
           --cc gcc --rustc rustc --c-arch "${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'armv8-a' }}"
           --objdump objdump --nm nm --time /usr/bin/time
-          --case 3:0:42 --case 3:1:42 --case 3:199:21 --case 3:1999:7 --case 33:199:7 --case 129:199:7
+          --case 3:0:7:32768 --case 3:1:7:512 --case 3:199:7:32 --case 3:1999:7:4 --case 33:199:7:32 --case 129:199:7:8
           --warmups 2 --samples 98 --order-seed 20261029 --timeout 180
           --phase-warmups 2 --phase-samples 12 --session "${{ matrix.session }}"
           --host "${{ matrix.runner }}" --qualification descent-host.json --output descent-peers-evidence

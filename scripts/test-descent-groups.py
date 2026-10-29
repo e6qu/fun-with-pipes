@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+"""Reject relabeled hosts, changed timings and omitted derivative evidence."""
+import copy
+import gzip
+import importlib.util
+import json
+from pathlib import Path
+import unittest
+
+ROOT = Path(__file__).resolve().parent.parent
+SPEC = importlib.util.spec_from_file_location('groups', ROOT / 'scripts/check-descent-groups.py')
+CHECK = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(CHECK)
+SOURCE = 'b1ca235415d4d2caabdb4f568d9300cf50a59400'
+REPORT = json.loads(gzip.decompress((ROOT / 'docs/measurements/descent-groups-2026-10-29-arm-1.json.gz').read_bytes()))
+
+
+class Evidence(unittest.TestCase):
+    def test_all_original_grouped_observations(self):
+        CHECK.check_report(REPORT, SOURCE, 'grouped')
+
+    def test_rejects_changed_cpu_even_if_expected_was_changed_too(self):
+        report = copy.deepcopy(REPORT)
+        for field in ['actual', 'expected']:
+            report['qualification'][field]['cpu'] = 'Different CPU'
+        with self.assertRaises(AssertionError):
+            CHECK.check_report(report, SOURCE, 'grouped')
+
+    def test_rejects_relabeling_process_groups_as_repeated_solves(self):
+        with self.assertRaises(AssertionError):
+            CHECK.check_report(REPORT, SOURCE, 'repeated')
+
+    def test_rejects_omitted_noisy_round_and_changed_median(self):
+        for field in ['orders', 'samplesNs']:
+            report = copy.deepcopy(REPORT)
+            row = report['results']['3-199']
+            if field == 'orders':
+                row[field].pop()
+            else:
+                row[field]['fwp-ad'].pop()
+            with self.assertRaises(AssertionError):
+                CHECK.check_report(report, SOURCE, 'grouped')
+        report = copy.deepcopy(REPORT)
+        report['results']['3-199']['medianNs']['fwp-ad'] = 1
+        with self.assertRaises(AssertionError):
+            CHECK.check_report(report, SOURCE, 'grouped')
+
+    def test_rejects_missing_retirement_or_live_storage(self):
+        for change in ['retirement', 'storage']:
+            report = copy.deepcopy(REPORT)
+            row = report['results']['129-199']
+            if change == 'retirement':
+                row['phaseObservations']['fwp-ad']['observations'].pop()
+            else:
+                row['fwpProfiles']['fwp-ad']['rawDerivativeStorage']['finalBytes'] = 8
+            with self.assertRaises(AssertionError):
+                CHECK.check_report(report, SOURCE, 'grouped')
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -247,7 +247,7 @@ def main():
                 headers = run([args.objdump, '-h', binary]).stdout
                 symbols = run([args.nm, binary]).stdout
                 if binary.name not in ['c-explicit', 'rust-explicit']:
-                    assert not re.search(rb'\bfwp_gc_(?:scan|mark_all|sweep)\b', symbols)
+                    assert not re.search(rb'\bfwp_heap_(?:scan|mark_all|sweep)\b', symbols)
                 sizes = re.findall(rb'^\s*\d+\s+\.text\s+([0-9a-fA-F]+)\s', headers, re.M)
                 assert sizes and b'Disassembly of section' in assembly
                 (directory / (binary.name + '.asm')).write_bytes(assembly)
