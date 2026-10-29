@@ -1,9 +1,10 @@
 # Startup repairs and CPU algorithm comparisons
 
-**Next:** publish the longer decimal protocol and collect its first two qualified
-sessions per architecture. Preserve the short tree's inconclusive decisions and
-all original limits. Accept the candidate only if every selected longer session
-passes; then run nine production jobs plus docs for the completed #225 batch.
+**Next:** publish and run the process-interleaved decimal protocol on two qualified
+jobs per architecture. Keep the first longer AMD64 session's inconclusive result;
+larger whole batches alone did not fix temporal variation. Continue auditing the
+second already-running AMD64 job. Require unchanged limits on every selected
+interleaved session before accepting the candidate and starting the full matrix.
 
 PR #224 is merged as `52e8da582644a93d996816d344894fdf5435a92f`.
 All nine production jobs `40790143419` and docs `40790141513` passed and were
@@ -16,8 +17,8 @@ Current worktree: `/private/tmp/fwp-cpu-phases`, branch `cpu-execution-costs`.
 Rebased onto #224's squash with identical tree before new edits. Draft
 [PR #225](https://github.com/e6qu/fun-with-pipes/pull/225) groups this batch.
 Threshold-tree source `9c89a3761cba2c3bccb02dff93b3fec6754f4583` was tested in
-focused ARM64 comparison `40802931428` and qualified AMD64 `40803171811`
-completed and were audited. Documentation `40802939430` passed and its log is
+focused ARM64 comparison `40802931428` and qualified AMD64 `40803171811`;
+both completed and were audited. Documentation `40802939430` passed and its log is
 audited, including intentional native-runner failure controls.
 The draft-skipped production run is not acceptance.
 Original measured history is remotely retained by immutable tag
@@ -122,6 +123,39 @@ correctness is not repeated. The full final-head production matrix still is.
 Six Python groups and the permanent verifier pass for both historical experiments.
 A local verifier edit initially reused an expected-result variable for a binary
 identity; fixed the variable name before publication. Workflow lint passes.
+
+Longer source `0c904dc859439a8a6e31e7bdf30c87ca69821de7`: both ARM64 jobs in
+`40804467873` (`123219977189`, `123219977239`) pass and are fully audited.
+They qualify with text ratios 0.639021/0.647309 and stable loop/text controls.
+First qualified AMD64 `123220596772` in `40804655433` also passes all functional/
+artifact checks, but **does not qualify**: text control 1.094294 exceeds 1.052444.
+Loop control passes. Its text median ratio 0.634587 is not accepted. Raw process
+inspection shows multi-process slow intervals, not just one outlier; longer
+separated batches did not fix that. All records remain in
+`/private/tmp/fwp-long-{arm-1,arm-2,amd-1}` with corresponding logs.
+
+Second qualified AMD64 job `123225063471` is running in attempt 4 of
+`40805067812`. Preserve it even though it cannot erase the first failure.
+Actual earlier rejected jobs: `123219977109`, `123219977141`, `123220596835`,
+`123221939263`, `123221939290`, `123222699052`, `123224047213`.
+Their records are under `/private/tmp/fwp-long-unqualified-{first,second,third,fourth,fifth}`.
+GitHub copied the unchanged session-2 status to new IDs on retries; those copies
+have the original timestamps/runner and are **not new executions**. Do not count
+`123222700642` or `123224049769` as additional independent jobs. Earlier commentary
+misread that behavior; exact API timestamps established the correction.
+
+Long-source docs `40804447593` passed and its full log is audited. Guarded eight
+Python groups, the two archived-experiment verifiers and Actionlint pass locally.
+The new `check-decimal-repeat.py` verifies exact source, all observations, memory/
+image identities and first-two selection; wire it into CI once the full archive
+exists. Runtime/compiler/native tests are unchanged since 9c89.
+
+The prospective `decimal-count-interleaved` suite rotates implementations after
+each process, with ten loop or 160 text processes per implementation per sample,
+60 samples and two warmups. Record/check every process sequence. Complete-round
+checkpoints and exception snapshots are outside timing. Two first-qualified jobs
+per host must pass the unchanged limits; preserve every earlier observation.
+The protocol repair addresses comparison timing, not the unexplained Intel abort.
 
 ## Latest focused checks
 

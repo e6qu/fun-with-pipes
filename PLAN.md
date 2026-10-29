@@ -161,9 +161,10 @@ calculation as the larger measured interval, with visible instrumentation effect
 and an inconclusive AMD64 loop control. The [decimal-length report](docs/measurements/decimal-count.md)
 rejects the bit-length/table candidate overall: ARM64 improves, AMD64 does not
 qualify. The exact threshold tree passes native correctness, but its short paired
-sessions are inconclusive due to noise. Next, collect two longer-batch sessions
-per qualified host against the original grouped-division helper, with unchanged
-numerical limits and the selection rule fixed before collection.
+sessions are inconclusive due to noise. Larger whole batches pass on ARM64 but remain noisy in the first AMD64 session.
+Next, alternate implementations process by process and collect two independent
+sessions per qualified host, with unchanged numerical limits and session
+selection fixed before collection. Retain all earlier observations.
 Keep signed-min handling, all binary/decimal boundaries and checked evaluation
 order; record instruction, readonly-data, binary and stack costs. Bundle the
 verified startup error-handling fixes and complete rejected measurements. For the persistent gap, separate

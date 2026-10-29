@@ -228,3 +228,46 @@ repeat the unchanged integer-output suite during these measurements; its native
 proof applies by source identity. The full final-head production matrix must
 still run after the grouped batch is ready. If the longer controls remain noisy,
 leave the performance decision open and investigate measurement conditions.
+
+### Why whole batches still need a closer comparison
+
+Both longer ARM64 sessions in run `40804467873` meet the original limits:
+text candidate/baseline ratios are 0.639021 and 0.647309; loop ratios are
+1.000192 and 1.000090. Their text controls are 1.015877 and 1.016180, below
+1.025422. Their logs and complete artifacts are independently audited.
+
+The first qualified longer AMD64 session, job `123220596772` in `40804655433`,
+passes correctness and artifact checks but is inconclusive. Loop's control passes
+at 1.015622; text's control fails at 1.094294 against 1.052444. The text median
+ratio is 0.634587, not an accepted speedup. In round 24, the original helper takes
+1.171 seconds and the identical binary measured later takes 0.944 seconds.
+Their process medians are 9.316 and 6.979 milliseconds. Multiple consecutive
+processes shift together; a single extreme observation does not explain the gap.
+This identifies a weakness in comparing separated batches, without establishing
+a scheduler, CPU-frequency or virtualization cause. Keep the second already-
+started AMD64 session as evidence; it cannot erase this first decision.
+
+### Process-by-process comparison, specified before measurement
+
+The new `decimal-count-interleaved` suite runs one process from each of the five
+implementations before moving to the next repetition. It rotates the first
+implementation every repetition and sample. A sample contains ten loop processes
+or 160 text processes **per implementation**, so each occupies every position
+an equal number of times within that sample. Nearby executions now contribute
+to the baseline/candidate/control totals instead of separate runs of 128
+consecutive copies. It still measures complete processes, not an internal timer.
+
+Keep 60 samples, two warmups, the same host/toolchain/input requirements and all
+original numerical limits. Record every process's execution sequence and reject
+missing, duplicate or reordered positions. Save complete rounds outside timing;
+on an exception, timeout or interrupt, save the partial round before rethrowing.
+No slow samples are removed. JSON formatting is compact. Collect the first two
+qualified jobs per architecture by run/job ID, regardless of results, and require
+all four to pass. Do not combine short, whole-batch and interleaved observations
+into one statistic. The compiler/runtime/tests remain the already verified source.
+
+This changes the measurement schedule to address time variation between
+implementations. It is not evidence that the candidate works until the new
+sessions complete and pass. The [repeat reader](../../scripts/check-decimal-repeat.py)
+reconstructs every decision and session selection with explicit protocol/source
+arguments; deliberately reordered observations and missing/duplicate jobs must fail.

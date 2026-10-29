@@ -26,6 +26,7 @@ KINDS = ('c', 'rs', 'baseline', 'candidate', 'identical')
 COUNTING_PROGRAMS = ('strings', 'text-length')
 SHORT_SETTINGS = dict(samples=60, warmups=2, processes={'loop': 1, 'text-length': 32}, timeout=120, cpuPolicy='all')
 LONG_SETTINGS = dict(samples=60, warmups=2, processes={'loop': 8, 'text-length': 128}, timeout=120, cpuPolicy='all')
+INTERLEAVED_SETTINGS = dict(samples=60, warmups=2, processes={'loop': 10, 'text-length': 160}, timeout=120, cpuPolicy='all', order='interleaved')
 
 
 def helper(source):
@@ -43,7 +44,7 @@ def write(path, data):
 
 
 def check_case(name, row, budget, algorithm, settings):
-    assert settings in (SHORT_SETTINGS, LONG_SETTINGS)
+    assert settings in (SHORT_SETTINGS, LONG_SETTINGS, INTERLEAVED_SETTINGS)
     description = ALGORITHMS[algorithm]
     assert row['stdout'] == CPU.EXPECTED[name] and set(row['binaries']) == set(KINDS)
     assert row['binaries']['baseline'] == row['binaries']['identical']
@@ -60,7 +61,10 @@ def check_case(name, row, budget, algorithm, settings):
         assert (observation['kind'], observation['phase'], observation['round']) == (kind, 'warmup' if warmup else 'sample', number)
         assert observation['binarySha256'] == row['binaries'][kind]['sha256']
         assert len(observation['processes']) == settings['processes'][name]
-        for process in observation['processes']:
+        for process_index, process in enumerate(observation['processes']):
+            if settings == INTERLEAVED_SETTINGS:
+                expected = (round_index * settings['processes'][name] + process_index) * len(KINDS) + (KINDS.index(kind) - number - process_index) % len(KINDS)
+                assert process['sequence'] == expected, 'process order changed'
             assert process['status'] == 0 and not process['stderr'] and process['stdout'] == row['stdout']
             assert math.isfinite(process['seconds']) and process['seconds'] > 0
         assert observation['seconds'] == sum(p['seconds'] for p in observation['processes'])
@@ -93,7 +97,7 @@ def sections(path, architecture):
 
 
 def measure(args):
-    settings = {'short': SHORT_SETTINGS, 'long': LONG_SETTINGS}[args.protocol]
+    settings = {'short': SHORT_SETTINGS, 'long': LONG_SETTINGS, 'interleaved': INTERLEAVED_SETTINGS}[args.protocol]
     assert args.session in (1, 2)
     report = CPU.qualification(args)
     assert report == json.loads(args.qualification.read_text())
@@ -176,27 +180,39 @@ def measure(args):
         paths = paths_by_name[name]
         row = dict(stdout=CPU.EXPECTED[name], binaries={kind: dict(sha256=digest(paths[kind]), bytes=paths[kind].stat().st_size) for kind in KINDS}, observations=[])
         report['programs'][name] = row
+        sequence = 0
         for phase, rounds in [('warmup', settings['warmups']), ('sample', settings['samples'])]:
             for number in range(rounds):
-                for position in range(len(KINDS)):
-                    kind = KINDS[(number + position) % len(KINDS)]
+                ordered = [KINDS[(number + position) % len(KINDS)] for position in range(len(KINDS))]
+                observations = {}
+                for kind in ordered:
                     observation = dict(kind=kind, phase=phase, round=number, binarySha256=row['binaries'][kind]['sha256'], processes=[], seconds=0)
                     row['observations'].append(observation)
-                    for process_index in range(settings['processes'][name]):
+                    observations[kind] = observation
+                if settings == INTERLEAVED_SETTINGS:
+                    schedule = [KINDS[(number + process_index + position) % len(KINDS)]
+                                for process_index in range(settings['processes'][name])
+                                for position in range(len(KINDS))]
+                else:
+                    schedule = [kind for kind in ordered for _ in range(settings['processes'][name])]
+                try:
+                    for kind in schedule:
+                        observation = observations[kind]
                         start = time.perf_counter()
-                        try:
-                            result = subprocess.run([str(paths[kind])], env=environment, capture_output=True, text=True, timeout=settings['timeout'])
-                        except subprocess.TimeoutExpired:
-                            write(args.output / 'report.json', report)
-                            raise
+                        result = subprocess.run([str(paths[kind])], env=environment, capture_output=True, text=True, timeout=settings['timeout'])
                         seconds = time.perf_counter() - start
                         process = dict(seconds=seconds, status=result.returncode, stdout=result.stdout, stderr=result.stderr)
+                        if settings == INTERLEAVED_SETTINGS:
+                            process['sequence'] = sequence
+                        sequence += 1
                         observation['processes'].append(process)
                         observation['seconds'] += seconds
-                        if result.returncode or result.stderr or result.stdout != row['stdout']:
-                            write(args.output / 'report.json', report)
-                            raise AssertionError((name, kind, phase, number, process_index, process))
+                        assert result.returncode == 0 and not result.stderr and result.stdout == row['stdout'], (name, kind, phase, number, process)
+                except BaseException:
+                    # Preserve the partial round on timeout, failure or interrupt.
                     write(args.output / 'report.json', report)
+                    raise
+                write(args.output / 'report.json', report)
         row['result'] = check_case(name, row, budgets[name], report['algorithm'], settings)
         write(args.output / 'report.json', report)
         print(name, json.dumps(row['result'], indent=2), flush=True)
@@ -208,7 +224,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('input', 'inspection', 'memory', 'memory-inspection', 'qualification', 'table', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
-    parser.add_argument('--protocol', choices=['short', 'long'], required=True)
+    parser.add_argument('--protocol', choices=['short', 'long', 'interleaved'], required=True)
     parser.add_argument('--session', type=int, choices=[1, 2], required=True)
     parser.add_argument('--source', required=True)
     parser.add_argument('--architecture', choices=['aarch64', 'x86_64'], required=True)
