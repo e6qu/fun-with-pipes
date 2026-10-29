@@ -261,12 +261,15 @@ and traps. A static bound proves that combining the lengths fits I64; the
 generated sum still uses ordinary checked addition. Shared strings, unknown
 string producers, floating-point displays and wider integers keep their storage.
 The private integer-length operation has no source-language declaration.
-Its scalar runtime counts decimal digits in descending groups of 16, 8, 4, 2
-and 1. Signed values use unsigned magnitude and add one for the minus sign, so
-I64's minimum does not require an overflowing signed negation. Ordinary inline
-hints allow the C compiler to combine counting with its caller; they do not force
-inlining. [Controlled comparisons](measurements/integer-counting.md) record the
-algorithm, call/size tradeoffs and current validation.
+The current [decimal-count candidate](measurements/decimal-count.md) uses an
+integer bit-length estimate and an exact power-of-ten comparison. Its 160-byte
+readonly table needs no heap storage. Finite interval checks establish the digit
+count; native validation and fixed timing acceptance are still in progress.
+Signed values use unsigned magnitude and add one for the minus sign, so I64's
+minimum does not require overflowing signed negation. Ordinary inline hints let
+the C compiler combine counting with its caller; they do not force inlining.
+[Earlier controlled comparisons](measurements/integer-counting.md) retain the
+previous grouped-division algorithm and its recorded call/size tradeoffs.
 The [Linux measurements](measurements/integer-text.md) record zero managed leaf
 allocations in the probe, actual machine code and comparison with direct
 character counting in C/Rust.

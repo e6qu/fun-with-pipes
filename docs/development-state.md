@@ -2,7 +2,7 @@
 
 Published PR #224 remains active at `b4e004d5788f2b2479b085a7dc6a48c435cce477`
 in `/private/tmp/fwp-scalar-bounds`. Preserve that final head. Production
-`40790143419` is running (only both Linux jobs remain); all macOS jobs, both Windows jobs, benchmark and documentation `40790141513` pass
+`40790143419` is running (only Linux AMD64 remains); Linux ARM64, all macOS jobs, both Windows jobs, benchmark and documentation `40790141513` pass
 and are audited. Do not count draft-skipped runs as acceptance.
 
 This worktree `/private/tmp/fwp-cpu-phases`, branch `cpu-execution-costs`, is based
@@ -72,10 +72,16 @@ The decimal-count candidate is implemented in `runtime/fwp_rt_ops.c`, with a
 O0/O1/O2/O3 emitted-helper checks against snprintf, including an omitted threshold
 correction that must fail. All 64 interval proofs and eight small Clang helper/
 control cases pass locally; this does not verify GCC or actual fwp emission.
-Four Python proof/measurement control groups and guarded Rustfmt/Actionlint pass.
+Five Python proof/measurement/input-inventory control groups and guarded Rustfmt/Actionlint pass.
 The [candidate protocol](measurements/decimal-count.md) and `decimal-count`
 workflow group native correctness, seven-peer context, memory checks and the
-fixed-budget comparison. Runner execution is next. Preserve the current helper
+fixed-budget comparison. Initial source `f910ffb866e5800d9f6fb46cc71741f9f730ba8e`, run `40799193551`,
+passed both GCC jobs' seven integer-output groups, benchmark and all peer/memory
+controls. Both readers then rejected the same incorrect `text` benchmark name;
+actual name is `strings`. No paired timing ran. All logs and sixteen semantic
+images per host were audited, with the partial attempts retained. The reader and
+all related docs now use the actual name; a new inventory/body control prevents
+recurrence. Re-run the focused comparison after publishing this repair. Preserve the current helper
 as the same-job control and the frozen CPU table. Do not resurrect the
 rejected range/character-sum changes or loosen limits. Verify any new candidate
 at production optimization settings, then run the complete final matrix once the

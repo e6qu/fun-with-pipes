@@ -48,6 +48,15 @@ class DecimalCount(unittest.TestCase):
             estimate = x.bit_length() * 1233 >> 12
             self.assertEqual(1 + estimate - (x < 10 ** estimate), len(str(value)))
 
+    def test_counting_cases_match_real_benchmark_inputs(self):
+        programs = {p.name for p in (COUNT.ROOT / 'bench').iterdir() if (p / 'main.fwp').exists()}
+        self.assertEqual(programs, {'fib', 'loop', 'map', 'pipeline', 'range-set', *COUNT.COUNTING_PROGRAMS})
+        bodies = []
+        for name in COUNT.COUNTING_PROGRAMS:
+            text = (COUNT.ROOT / 'bench' / name / 'main.fwp').read_text()
+            bodies.append('\n'.join(line for line in text.splitlines() if line.strip() and not line.startswith('#')))
+        self.assertEqual(bodies[0], bodies[1])
+
     def test_recomputes_fixed_acceptance(self):
         result = COUNT.check_case('loop', self.row, self.budget)
         self.assertTrue(result['improvement'] and result['withinRegression'])

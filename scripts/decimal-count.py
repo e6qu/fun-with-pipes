@@ -19,6 +19,7 @@ CPU = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CPU)
 BASELINE = 'c92fed4208a16627f0f420f58ce1f7729bf0f061'
 KINDS = ('c', 'rs', 'baseline', 'candidate', 'identical')
+COUNTING_PROGRAMS = ('strings', 'text-length')
 SETTINGS = dict(samples=60, warmups=2, processes={'loop': 1, 'text-length': 32}, timeout=120, cpuPolicy='all')
 
 
@@ -132,7 +133,7 @@ def measure(args):
             cfile = args.output / (name + '-' + variant + '.c')
             binary = cfile.with_suffix('.exe')
             cfile.write_text(source)
-            command([args.cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-fstack-usage', '-w', cfile, '-o', binary, '-lm', '-lpthread', '-ldl'], name + '-' + variant + '-compile')
+            command([args.cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-fstack-usage', '-w', cfile, '-o', binary, '-lm', '-lpthread'], name + '-' + variant + '-compile')
             actual_sections = sections(binary, args.architecture)
             if variant == 'candidate':
                 ordinary = directory / (name + '-fwp')
@@ -141,7 +142,7 @@ def measure(args):
             symbols = command([args.objdump, '--section-headers', '--syms', binary], name + '-' + variant + '-symbols').stdout.decode()
             command([args.objdump, '-d', binary], name + '-' + variant + '-assembly')
             tables = re.findall(r'^([0-9a-f]+)\s+\w+\s+O\s+(\S+)\s+([0-9a-f]+)\s+(decimal_powers\.\d+)$', symbols, re.M)
-            assert len(tables) == int(variant == 'candidate' and name in {'text', 'text-length'}), (name, variant, tables)
+            assert len(tables) == int(variant == 'candidate' and name in COUNTING_PROGRAMS), (name, variant, tables)
             table = None
             if tables:
                 address, section, size, symbol = tables[0]
@@ -158,18 +159,18 @@ def measure(args):
         paths['identical'] = paths['baseline']
         paths_by_name[name] = paths
         # Preserve the other five programs as regression context. Except for
-        # text, their helper is unused: require identical machine text.
+        # strings, their helper is unused: require identical machine text.
         if name not in CPU.PROGRAMS:
-            if name != 'text':
+            if name != 'strings':
                 assert context['costs']['baseline']['textSha256'] == context['costs']['candidate']['textSha256'], name
             for variant in ('baseline', 'candidate'):
                 result = command([paths[variant]], name + '-' + variant + '-output')
                 assert result.stdout.decode() == original['stdout'] and not result.stderr
-    # The older text benchmark has the same optimized fwp calculation, while
+    # The strings benchmark has the same optimized fwp calculation, while
     # its C/Rust peers still build strings. Prove both fwp images share the
     # measured instruction section instead of mislabelling those peer costs.
     for variant in ('baseline', 'candidate'):
-        assert report['context']['text']['costs'][variant]['textSha256'] == report['context']['text-length']['costs'][variant]['textSha256']
+        assert report['context']['strings']['costs'][variant]['textSha256'] == report['context']['text-length']['costs'][variant]['textSha256']
     for name in CPU.PROGRAMS:
         paths = paths_by_name[name]
         row = dict(stdout=CPU.EXPECTED[name], binaries={kind: dict(sha256=digest(paths[kind]), bytes=paths[kind].stat().st_size) for kind in KINDS}, observations=[])
