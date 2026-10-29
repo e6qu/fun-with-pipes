@@ -142,6 +142,14 @@ must not offset it, and partial application must not pass it to `memcpy`, even
 with a zero byte count. Tests must exercise the actual cleanup path at the
 production compiler settings; one compiler's success does not verify another.
 
+POSIX executable startup requires successful thread-attribute initialization and
+stack configuration. It releases the attributes after thread creation and reports
+setup failure before language code instead of switching to the process stack.
+Alternate-stack and signal-handler registration are also required. Static numerical
+workers check their stack attributes; a partial startup joins every started worker
+before reporting failure. These checks are implemented in the current preparation;
+the startup fault controls still need runner verification.
+
 ## Ownership implementation
 
 `src/ownership.rs` defines primitive contracts. `src/rc/borrows.rs` proves eligible

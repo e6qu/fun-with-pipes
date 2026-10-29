@@ -99,7 +99,10 @@ fn probe_code(code: String) -> String {
         .replace("CreateThread(", "kernel_create(")
         .replace("WaitForSingleObject(", "kernel_join(")
         .replace("pthread_create(", "kernel_create(")
-        .replace("pthread_join(", "kernel_join(");
+        .replace("pthread_join(", "kernel_join(")
+        .replace("pthread_attr_init(", "kernel_attr_init(")
+        .replace("pthread_attr_setstack(", "kernel_attr_setstack(")
+        .replace("pthread_attr_destroy(", "kernel_attr_destroy(");
     code.replace_range(
         start..end,
         &format!("{}\n{kernel}", include_str!("fixtures/cpu_kernel_ledger.c")),
@@ -214,5 +217,84 @@ fn compare_kernel_allocations_with_the_immutable_runtime_baseline() {
                 .arg(&binary),
         );
         std::fs::write(path.join("kernel-baseline.asm"), assembly.stdout).unwrap();
+    }
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[test]
+fn static_kernel_attribute_failures_join_started_workers() {
+    let dir = fwp::cgen::TempDir::new("static-kernel-startup").unwrap();
+    let source = dir.join("main.fwp");
+    let cfile = dir.join("main.c");
+    std::fs::write(&source, "main = ()\n").unwrap();
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args([
+                "build",
+                "--memory",
+                "static",
+                "--heap",
+                "1M",
+                "--pool",
+                "8M",
+                "--stack",
+                "1M",
+                "--tasks",
+                "2",
+                "--task-stack",
+                "64K",
+                "--threads",
+                "3",
+                "--emit-c",
+            ])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = probe_code(std::fs::read_to_string(cfile).unwrap());
+    let code = code[..code.find("int main(").unwrap()].to_string()
+        + include_str!("fixtures/cpu_kernel_startup.c");
+    let guarded =
+        "if (!status) status = kernel_create(&tids[started], &a, fwp_kjob_thread, &jobs[started]);";
+    assert_eq!(code.matches(guarded).count(), 1);
+    // Removing only this check uses an initialized attribute with its default
+    // stack, so the detector exercises a missing error check without using an
+    // invalid pthread object. The failed setup must never become a successful job.
+    let missing = code.replace(guarded, guarded.strip_prefix("if (!status) ").unwrap());
+    for (candidate, opt, expected) in [
+        (code.as_str(), "-O0", 0),
+        (code.as_str(), "-O2", 0),
+        (missing.as_str(), "-O2", 247),
+    ] {
+        let binary = dir.join("kernel-startup.exe");
+        fwp::cgen::compile_c(candidate, &binary, opt).unwrap();
+        let actual = Command::new(&binary).output().unwrap();
+        if let Some(path) = std::env::var_os("FWP_STARTUP_ARTIFACTS") {
+            let path = std::path::PathBuf::from(path);
+            std::fs::create_dir_all(&path).unwrap();
+            let variant = if expected == 0 {
+                "valid"
+            } else {
+                "missing-stack-check"
+            };
+            let label = format!("kernel-startup-{variant}{opt}");
+            std::fs::write(path.join(format!("{label}.c")), candidate).unwrap();
+            std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
+            std::fs::write(path.join(format!("{label}.stdout")), &actual.stdout).unwrap();
+            std::fs::write(path.join(format!("{label}.stderr")), &actual.stderr).unwrap();
+            std::fs::write(
+                path.join(format!("{label}.status")),
+                format!("{}\n", actual.status),
+            )
+            .unwrap();
+        }
+        assert_eq!(actual.status.code(), Some(expected), "{opt}: {actual:?}");
+        assert!(actual.stderr.is_empty(), "{opt}: {actual:?}");
+        if expected == 0 {
+            assert_eq!(
+                actual.stdout,
+                b"static worker setup failures release attributes and join started workers\n"
+            );
+        }
     }
 }

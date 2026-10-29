@@ -11022,24 +11022,23 @@ int main(int argc, char **argv) {{
 #else
     signal(SIGPIPE, SIG_IGN);
     pthread_attr_t attr;
-    pthread_attr_init(&attr);
+    if (pthread_attr_init(&attr)) fwp_trap("cannot initialize main thread attributes");
 #ifdef FWP_STATIC_MEMORY
     fwp_static_init();
     fwp_main_stack = FWP_STATIC_STACK;
-    pthread_attr_setstack(&attr, fwp_static.main_stack, fwp_main_stack);
+    int stack_status = pthread_attr_setstack(&attr, fwp_static.main_stack, fwp_main_stack);
 #else
-    pthread_attr_setstacksize(&attr, fwp_main_stack);
+    int stack_status = pthread_attr_setstacksize(&attr, fwp_main_stack);
 #endif
-    pthread_t t;
-    if (pthread_create(&t, &attr, fwp_main_thread, 0) != 0) {{
-        /* on the process stack instead */
-        struct rlimit rl;
-        fwp_main_stack = getrlimit(RLIMIT_STACK, &rl) == 0 && rl.rlim_cur != RLIM_INFINITY
-                             ? (size_t)rl.rlim_cur
-                             : (size_t)8 << 20;
-        fwp_main_thread(0);
+    if (stack_status) {{
+        if (pthread_attr_destroy(&attr)) abort();
+        fwp_trap("cannot configure main runtime stack");
     }}
-    else pthread_join(t, 0);
+    pthread_t t;
+    int create_status = pthread_create(&t, &attr, fwp_main_thread, 0);
+    if (pthread_attr_destroy(&attr)) abort();
+    if (create_status) fwp_trap("cannot create main runtime thread");
+    if (pthread_join(t, 0)) abort();
 #endif
     fflush(stdout);
     return fwp_exit_code;
