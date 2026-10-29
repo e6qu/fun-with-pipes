@@ -1,14 +1,13 @@
 # Continue PR #227: derivative costs and numerical kernels
 
-**Next:** run and audit the [declared resource-counter diagnostic](measurements/timing-variation.md#resource-counter-diagnostic-declared-before-implementation)
-for the retained failed array/history programs. Record child CPU time, faults
-and context switches without changing their binaries or acceptance rules. The
-[typed-state experiment](measurements/timing-variation.md#typed-state-results)
-passes focused correctness checks on three hosts and removes the two accumulator
-bit conversions from both GCC reports. No speedup has been measured.
+**Next:** run and audit the complete production matrix and both G2 analysis hosts
+for the final PR head. The implementation batch passes focused checks. Preserve
+that head while gates run; audit every completed target and compiler diagnostic.
+D2's zero-update limit and N1's inclusive noise limit remain unresolved, so do
+not merge or claim their acceptance solely because correctness CI passes.
 
 Active worktree `/private/tmp/fwp-ad-captures`, branch `ad-eager-captures`.
-[PR #227](https://github.com/e6qu/fun-with-pipes/pull/227) is draft and groups D2,
+[PR #227](https://github.com/e6qu/fun-with-pipes/pull/227) groups D2,
 its record-return repair and N1. Typed state passes focused bit-pattern, mixed-owner and failure checks;
 full-platform and timing acceptance remain open.
 [PLAN.md](../PLAN.md) owns acceptance; [history](roadmap-history.md) owns completed
@@ -70,6 +69,14 @@ the latter requires the exact failed metric rather than accepting it. No
 measurement job remains running. Initial/repaired/sampling failures remain in
 their original archives; no failed session was retried unchanged.
 
+The resource-counter diagnostic `40961695545` at `77c88449` is fully audited:
+512 processes, eight native image hashes and every output/counter/schedule. The
+array copy is stable in this diagnostic; it does not replace its failed baseline.
+History reference/copy CPU time differs by about 2.1%, so scheduling delay alone
+cannot explain the variation. No added source operation or definitive cause is
+established. [Results and both host rejections](measurements/timing-variation.md#resource-counter-results)
+remain diagnostic only. Auditor: `/private/tmp/fwp-audit-resources.py`.
+
 ## Production CI and publication
 
 Run `40947897224` at `cbd9fd7c` began while the PR was ready. Keep its remaining
@@ -81,9 +88,9 @@ Linux AMD64 remains running without reported failed steps. Documentation
 audited, including the intentional test-runner failure and invalid-selection controls.
 These do not establish final-head coverage for later changes.
 
-Keep the PR draft during focused work. After complete evidence, require all nine
-production jobs, documentation and both G2 hosts for the final commit, with full
-log audits. Then squash-merge using one explicit subject <=80 characters and an
+Mark the PR ready to start the consolidated correctness matrix. Require all
+nine production jobs, documentation and both G2 hosts for the final commit, with
+full log audits. Resolve the performance acceptance decision as well. Then squash-merge using one explicit subject <=80 characters and an
 empty body; no trailers or attribution. Continue the roadmap after verified merge.
 
 ## Typed-state focused evidence

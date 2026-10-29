@@ -238,3 +238,37 @@ justify a later targeted measurement repair, which must be declared before use.
 This diagnostic makes no acceptance decision, adds no acceptance samples and
 changes none of the failed results or limits. Do not rerun an unchanged failed
 acceptance session until it happens to pass.
+
+### Resource-counter results
+
+Protocol `c32c8302`, runner `77c88449`, run `40961695545`, job `123755839057`:
+all 512 process records, outputs, resource deltas, schedules and eight native
+binary identities are independently audited. The [archive](timing-resources-artifacts-2026-10-29.json)
+includes complete logs and the EPYC 9V45/9V74 hosts rejected before execution.
+These numbers compare medians of the sixteen complete round totals:
+
+| Diagnostic comparison | Elapsed-time ratio | CPU-time ratio |
+|---|---:|---:|
+| Array fwp / identical copy, whole child process | 1.00316 | 0.99956 |
+| History candidate / reference | 1.02185 | 1.02273 |
+| History candidate / candidate copy | 1.00270 | 1.00207 |
+| History reference / reference copy | 0.98070 | 0.97937 |
+
+Array kernel/inclusive copy ratios are 1.00099/0.99525. This stable diagnostic
+control does not replace the earlier failed acceptance session. History's
+reference and its byte-identical copy differ by about 2.1% in CPU time. Page-fault
+counts are nearly equal; no major faults occur. Waiting to run therefore does
+not explain all observed variation. Nor does this prove that the candidate adds
+source-level work: the identical reference programs also differ. The cause is
+still unresolved; do not attribute it to instruction layout, heap placement or
+host load without an experiment that distinguishes those effects.
+
+[Curtsinger and Berger's performance-evaluation study](https://people.cs.umass.edu/~emery/pubs/stabilizer-asplos13.pdf)
+explains how code, stack and heap layout can bias timing comparisons. That is a
+reason to avoid treating repeated elapsed times as independent proof of compiler
+cost, not a diagnosis of these programs. No runtime randomizer or JIT is proposed.
+
+The typed-state implementation is ready for the complete correctness matrix.
+That matrix cannot turn these diagnostic timings into performance acceptance.
+Both failed requirements remain open; any next measurement method needs its own
+stated purpose and predeclared protocol before execution.
