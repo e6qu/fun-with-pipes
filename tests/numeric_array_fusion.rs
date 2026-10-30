@@ -11,6 +11,79 @@ fn checked(command: &mut Command) -> Output {
     );
     out
 }
+
+#[test]
+fn generated_numeric_fold_removes_the_array_allocation() {
+    let directory = fwp::cgen::TempDir::new("fwp-generated-fold").unwrap();
+    let input = directory.join("generated.fwp");
+    std::fs::write(&input, include_str!("fixtures/generated_array_folds.fwp")).unwrap();
+    for packing in ["0", "1"] {
+        for mode in ["0", "1"] {
+            let cfile = directory.join(format!("generated-{packing}-{mode}.c"));
+            checked(
+                Command::new(env!("CARGO_BIN_EXE_fwp"))
+                    .env_remove("FWP_NO_OPT")
+                    .env("FWP_PACKED_ARRAYS", packing)
+                    .env("FWP_ARRAY_FUSION", mode)
+                    .args(["build", "--fn", "generated-sum", "--emit-c"])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&cfile),
+            );
+            let source = std::fs::read_to_string(&cfile).unwrap();
+            let start = source.find("/* generated-sum :").unwrap();
+            let id = source[start..]
+                .split("static V f")
+                .nth(1)
+                .unwrap()
+                .split('(')
+                .next()
+                .unwrap();
+            let probe = include_str!("fixtures/generated_array_fold_probe.c")
+                .replace("fGENERATED", &format!("f{id}"))
+                .replace("FUSED", mode);
+            let mut code = source.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic uint64_t measured_calls,measured_bytes,measured_retains;")
+                .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)");
+            for (old,new) in [
+                ("static inline void *fwp_heap_alloc(size_t n, int kind) {", "static inline void *fwp_heap_alloc(size_t n, int kind) {\nif(kind!=0){measured_calls++;measured_bytes+=n;}"),
+                ("static inline void *fwp_alloc_init(size_t n) {", "static inline void *fwp_alloc_init(size_t n) {\nmeasured_calls++;measured_bytes+=n;"),
+                ("static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {", "static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {\nmeasured_retains++;"),
+            ] {
+                assert_eq!(code.matches(old).count(),1);
+                code=code.replace(old,new);
+            }
+            for opt in ["-O1", "-O2"] {
+                let binary = directory.join(format!("generated-{packing}-{mode}{opt}.bin"));
+                let measured = format!("{code}\n{probe}");
+                fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
+                let result = checked(&mut Command::new(&binary));
+                assert_eq!(String::from_utf8_lossy(&result.stdout).lines().count(), 6);
+                if let Some(destination) = std::env::var_os("FWP_ARRAY_FUSION_ARTIFACTS") {
+                    let destination = std::path::PathBuf::from(destination);
+                    std::fs::create_dir_all(&destination).unwrap();
+                    let prefix = destination.join(format!("generated-{packing}-{mode}{opt}"));
+                    std::fs::write(prefix.with_extension("original.c"), &source).unwrap();
+                    std::fs::write(prefix.with_extension("measured.c"), &measured).unwrap();
+                    std::fs::write(prefix.with_extension("jsonl"), result.stdout).unwrap();
+                    std::fs::copy(&binary, prefix.with_extension("bin")).unwrap();
+                }
+                if mode == "1" {
+                    // A deliberately retained allocation must invalidate the
+                    // zero-allocation claim even when the numeric result agrees.
+                    let negative = probe.replace(
+                        "        V result=",
+                        "        (void)fwp_rc_fresh(fwp_arr_new(1));\n        V result=",
+                    );
+                    assert_ne!(negative, probe);
+                    let binary =
+                        directory.join(format!("unexpected-allocation-{packing}{opt}.bin"));
+                    fwp::cgen::compile_c(&format!("{code}\n{negative}"), &binary, opt).unwrap();
+                    assert_eq!(Command::new(&binary).status().unwrap().code(), Some(171));
+                }
+            }
+        }
+    }
+}
 #[test]
 fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
     let directory =
@@ -20,6 +93,13 @@ fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
     let basic = include_str!("fixtures/numeric_array_fusion.fwp");
     let cases=[
       ("numeric",basic,0),
+      ("generated",include_str!("fixtures/generated_array_folds.fwp"),0),
+      ("generated-effect-order","main = array.generate 3 (tap echo) | array.fold add 9223372036854775807 | echo\n",101),
+      ("generated-distinct-traps","main = array.generate 3 (add 9223372036854775806) | array.fold div 0 | echo\n",101),
+      ("generated-size","main = array.generate 2305843009213693952 id | array.fold add 0 | echo\n",101),
+      ("generated-eager-arguments","main = array.generate (() | const 0 | tap (const \"count\" | echo)) (add (() | const 1 | tap (const \"capture\" | echo))) | array.fold add (() | const 0 | tap (const \"seed\" | echo)) | echo\n",0),
+      ("generated-reused","main = array.generate 4 id | both array.to-list (array.fold add 0) | echo\n",0),
+      ("generated-unknown","unknown : (I64 -> I64 -> I64) -> Array[I64] -> I64\nunknown = flip array.fold 0\nmain = array.generate 4 id | unknown (() | read-line | if (eq None) (const sub) (const add)) | echo\n",0),
       ("effect-order","main = [1i8, 2i8] | array.from-list | array.map (tap echo) | array.fold add 127i8 | echo\n",101),
       ("distinct-traps","main = [0, 9223372036854775807] | array.from-list | array.map (add 1) | array.fold div 0 | echo\n",101),
       ("length-overflow","main = [127i8] | array.from-list | array.map (add 1i8) | array.length | echo\n",101),
@@ -44,11 +124,40 @@ fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
         if label == "effect-order" {
             assert_eq!(reference.stdout, b"1\n2\n");
         }
-        if label == "distinct-traps" {
+        if label == "generated-effect-order" {
+            assert_eq!(reference.stdout, b"0\n1\n2\n");
+        }
+        if label == "generated" {
+            assert_eq!(reference.stdout, b"0\n0\n6\n10\n6\n");
+        }
+        if label == "generated-size" {
+            assert!(String::from_utf8_lossy(&reference.stderr).contains("array too large"));
+        }
+        if matches!(label, "distinct-traps" | "generated-distinct-traps") {
             assert!(
                 String::from_utf8_lossy(&reference.stderr).contains("arithmetic overflow in I64")
             );
         }
+        let optimized = Command::new(fwp)
+            .env_remove("FWP_NO_OPT")
+            .env("FWP_ARRAY_FUSION", "1")
+            .args(["run", "--interp"])
+            .arg(&input)
+            .output()
+            .unwrap();
+        assert_eq!(
+            (
+                optimized.status.code(),
+                &optimized.stdout,
+                &optimized.stderr
+            ),
+            (
+                reference.status.code(),
+                &reference.stdout,
+                &reference.stderr
+            ),
+            "{label}: optimized interpreter"
+        );
         for mode in ["0", "1"] {
             for opt in ["-O1", "-O2"] {
                 let binary = directory.join(format!("{label}-{mode}{}", &opt[1..]));

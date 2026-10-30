@@ -2,6 +2,14 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+fn checked_count_source(source: &str) -> &str {
+    let start = source
+        .find("static size_t fwp_array_checked_count(size_t n) {")
+        .unwrap();
+    let end = start + source[start..].find("\n}").unwrap() + 2;
+    &source[start..end]
+}
+
 #[test]
 fn packed_array_constructor_preserves_the_checked_count_boundary() {
     let directory = std::env::temp_dir().join(format!("fwp-packed-size-{}", std::process::id()));
@@ -11,7 +19,7 @@ fn packed_array_constructor_preserves_the_checked_count_boundary() {
         .find("static V fwp_array_new_packed(size_t n, const fwp_desc *elem) {")
         .unwrap();
     let end = start + source[start..].find("\n}").unwrap() + 2;
-    let constructor = &source[start..end];
+    let constructor = format!("{}\n{}", checked_count_source(source), &source[start..end]);
     let condition = "n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)";
     let wide_condition = "n > (SIZE_MAX - sizeof(fwp_arr)) / fwp_array_stride(elem)";
     assert_eq!(constructor.matches(condition).count(), 1);
@@ -187,7 +195,7 @@ fn generic_array_constructor_checks_before_multiplication() {
     let source = include_str!("../runtime/fwp_rt.c");
     let start = source.find("static V fwp_arr_new(size_t n) {").unwrap();
     let end = start + source[start..].find("\n}").unwrap() + 2;
-    let constructor = &source[start..end];
+    let constructor = format!("{}\n{}", checked_count_source(source), &source[start..end]);
     let condition = "n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)";
     assert_eq!(constructor.matches(condition).count(), 1);
     for opt in ["-O1", "-O2"] {

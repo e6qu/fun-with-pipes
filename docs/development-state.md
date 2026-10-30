@@ -11,8 +11,11 @@ has no PR. The active PR remains [#231](https://github.com/e6qu/fun-with-pipes/p
 whose remote head stays `377cf9ce`; do not push to `ownership-peer-baselines`.
 Its live handoff is saved in local-only commit `23839191` on that branch.
 Documentation and the benchmark gate pass with complete audits. The repaired
-wait tests pass on both macOS and Windows architectures; eight full native jobs
-are still running without reported failed steps.
+wait tests pass on both macOS and Windows architectures. macOS ARM ownership
+job `124312094852` also passes: all 127 summaries / 366 tests were audited, with
+only the existing OpenSSL installation notice. Seven native jobs are still
+running without reported failed steps. The docs/benchmark audits are
+`/private/tmp/fwp-docs-231-377c.audit.json` and `/private/tmp/fwp-231-bench-377c.audit.json`.
 
 Prepared here: [all four current buffer sessions](measurements/buffer-current.md),
 their complete source/artifact/hash index and the [next allocation proof and
@@ -23,8 +26,26 @@ rerun. Four wrong-CPU attempts were rejected before any build or timing.
 Declaration `97c8eac6` is published before implementation. The reference compiler
 is frozen at `377cf9ce25c65afba595b6413e5bb1d50721ea7a`. Implement the restricted
 producer-to-fold proof, shared size validation and focused semantics/storage/
-cleanup controls while monitoring #231. No compiler changes are verified yet.
-Keep full builds and validation on GitHub; use guarded local focused checks.
+cleanup controls while monitoring #231. The first implementation is in the
+working tree: a generated producer in `src/fuse.rs`, an internal checked-count
+operation sharing constructor validation, raw/optimized/native semantic cases
+and O1/O2, packing on/off allocation controls. Native Windows now selects the
+existing numeric-fusion test target too. No compiler change is verified yet.
+
+Next implementation check: dispatch `scalar-fold-checks` on this branch after
+publishing the coherent first batch. It now covers numeric fusion and array
+size limits as well as the existing scalar/cleanup targets, retaining artifacts.
+Finish dedicated generated-loop failure/cancellation evidence, update the
+materialized-scan storage observers and comparison reference/budgets, run G2
+checks and the final production gate before calling this task complete.
+The old scan/storage scripts assume an allocated scan array; do not run them
+against the new candidate until their explicit expectations are updated.
+
+Guarded local checks: rustfmt 0.37s; primitive inventory 1.41s (394 declarations,
+384 symbols, 40 aliases, no review symbols); workflow lint 6.28s. Inventory
+records the working source hashes at `/private/tmp/fwp-generated-array-inventory.json`.
+No local compiler build or full test suite ran. Keep builds and validation on
+GitHub; use guarded local focused checks only.
 
 ## Evidence and limits
 

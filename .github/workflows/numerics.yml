@@ -267,11 +267,13 @@ jobs:
           mkdir buffer-checks
           set -o pipefail
           cargo build --locked --release --bin fwp 2>&1 | tee buffer-checks/build.log
-      - name: Scalar fold semantics and failure cleanup
+      - name: Scalar folds, generated arrays and failure cleanup
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        env:
+          FWP_ARRAY_FUSION_ARTIFACTS: buffer-checks/fusion
         run: |
           set -o pipefail
-          cargo test --locked --release --no-fail-fast --test array_loop_borrows --test array_unwind_ownership --test fold_unwind_ownership 2>&1 | tee buffer-checks/scalar-fold-tests.log
+          cargo test --locked --release --no-fail-fast --test array_loop_borrows --test array_unwind_ownership --test fold_unwind_ownership --test numeric_array_fusion --test array_size_limits 2>&1 | tee buffer-checks/scalar-fold-tests.log
       - name: Peer results, argument errors and schedule
         if: ${{ !cancelled() && inputs.suite == 'buffer-peer-checks' && steps.compiler.outcome == 'success' }}
         run: |

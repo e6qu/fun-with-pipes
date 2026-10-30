@@ -319,6 +319,8 @@ enum Stage {
 enum Producer {
     /// `range a b` at integer type `t`.
     Range(Expr, Expr, MT),
+    /// Checked array count; its numeric generator is the innermost map stage.
+    Generated(Expr),
     List(Expr),
     Array(Expr),
 }
@@ -1480,8 +1482,6 @@ impl Fuser<'_> {
             "array-length" => "length",
             other => other,
         };
-        let accumulator = if array { 2 } else { 1 };
-        let capture_start = if array { 3 } else { 2 };
         let funcs = self.funcs;
         let list = args.last()?;
         let mut stages = Vec::new();
@@ -1502,6 +1502,15 @@ impl Fuser<'_> {
             cur = &a[1];
         }
         let producer = match cur {
+            Expr::Call(id, a)
+                if array
+                    && kind == "fold"
+                    && a.len() == 2
+                    && prim_sym(funcs, *id) == Some("array.generate") =>
+            {
+                stages.push(Stage::Map(a[1].clone()));
+                Producer::Generated(a[0].clone())
+            }
             e if array && !stages.is_empty() => Producer::Array(e.clone()),
             _ if array => return None,
             Expr::Call(id, a) if a.len() == 2 && prim_sym(funcs, *id) == Some("range") => {
@@ -1517,6 +1526,9 @@ impl Fuser<'_> {
             e if !stages.is_empty() => Producer::List(e.clone()),
             _ => return None,
         };
+        let array_source = matches!(&producer, Producer::Array(_));
+        let accumulator = if array_source { 2 } else { 1 };
+        let capture_start = if array_source { 3 } else { 2 };
         // the consumer's and stages' functions, and what they can do together
         let cv = match kind {
             "fold" => Some(fn_value(funcs, &args[0], 2)?),
@@ -1537,10 +1549,24 @@ impl Fuser<'_> {
         if traps.len() > usize::from(kind != "find") {
             return None;
         }
+        if matches!(&producer, Producer::Generated(_)) {
+            // Eliminating this array must not extend a captured resource's
+            // lifetime across the fold. Keep this proof entirely scalar.
+            for (id, captures) in fns.iter().chain(cv.iter()) {
+                let (params, _) = funcs[*id].ty.params(funcs[*id].arity as usize);
+                if !params[..captures.len()]
+                    .iter()
+                    .all(|ty| unboxed_numeric(ty))
+                {
+                    return None;
+                }
+            }
+        }
         // the producer's list: its own type, or the list of what the
         // innermost stage takes
         let prod_ty = match &producer {
             Producer::Range(_, _, t) => t.clone(),
+            Producer::Generated(_) => MT::Con("std::Array".into(), vec![MT::con("std::I64")]),
             Producer::List(e) | Producer::Array(e) => match self.ty_in(&self.locals, e) {
                 Some(t) => t,
                 None => {
@@ -1592,6 +1618,16 @@ impl Fuser<'_> {
         let z = bind(self, &z, &acc_ty);
         let (start, end) = match &producer {
             Producer::Range(a, b, t) => (bind(self, a, t), Some(bind(self, b, t))),
+            Producer::Generated(count) => {
+                let index = MT::con("std::I64");
+                let checked = self.prim(
+                    "array._checked-count",
+                    MT::Fun(Box::new(index.clone()), Box::new(index.clone())),
+                    1,
+                );
+                let count = Expr::Call(checked, vec![count.clone()]);
+                (Expr::Const(Value::I64(0)), Some(bind(self, &count, &index)))
+            }
             Producer::List(e) => (bind(self, e, &prod_ty), None),
             Producer::Array(e) => (
                 Expr::Record(vec![Expr::Const(Value::I64(0)), bind(self, e, &prod_ty)]),
@@ -1646,13 +1682,24 @@ impl Fuser<'_> {
                 let add = self.prim("prim.add", fun2(t, t, t), 2);
                 (st(0), Expr::Call(add, vec![one, st(0)]), None)
             }
+            Producer::Generated(_) => {
+                let index = MT::con("std::I64");
+                let add = self.prim("wrapping.add", fun2(&index, &index, &index), 2);
+                // The checked count is below I64::MAX; this increment cannot
+                // overflow. Generator and fold arithmetic remain checked.
+                (
+                    st(0),
+                    Expr::Call(add, vec![Expr::Const(Value::I64(1)), st(0)]),
+                    None,
+                )
+            }
             Producer::List(_) | Producer::Array(_) => {
                 let (h, t) = (next(&mut nl), next(&mut nl));
                 (Expr::Local(h), Expr::Local(t), Some((h, t)))
             }
         };
         let again = |pos: &Expr, acc: Expr, n: usize| {
-            let mut fs = if array {
+            let mut fs = if array_source {
                 vec![pos.clone(), st(1), acc]
             } else {
                 vec![pos.clone(), acc]
@@ -1740,6 +1787,14 @@ impl Fuser<'_> {
                     vec![(Pat::Construct(1, vec![]), body), (Pat::Wild, stop)],
                 )
             }
+            Producer::Generated(_) => {
+                let index = MT::con("std::I64");
+                let lt = self.prim("lt", fun2(&index, &index, &MT::con("std::Bool")), 2);
+                Expr::Match(
+                    Box::new(Expr::Call(lt, vec![end.clone()?, st(0)])),
+                    vec![(Pat::Construct(1, vec![]), body), (Pat::Wild, stop)],
+                )
+            }
             Producer::Array(_) => {
                 let (h, t) = cell?;
                 let index_ty = MT::con("std::I64");
@@ -1779,9 +1834,9 @@ impl Fuser<'_> {
         let pos_ty = match &producer {
             Producer::Range(_, _, t) => t.clone(),
             Producer::List(_) => prod_ty.clone(),
-            Producer::Array(_) => MT::con("std::I64"),
+            Producer::Array(_) | Producer::Generated(_) => MT::con("std::I64"),
         };
-        let mut fields = if array {
+        let mut fields = if array_source {
             vec![
                 ("0".into(), pos_ty.clone()),
                 ("1".into(), prod_ty.clone()),
@@ -1844,7 +1899,7 @@ impl Fuser<'_> {
             ),
             2,
         );
-        let mut init = if array {
+        let mut init = if array_source {
             let Expr::Record(mut positions) = start else {
                 return None;
             };
