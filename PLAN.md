@@ -312,7 +312,9 @@ uses standard byte search for one-byte patterns and qualifies all four sessions
 at `afbafef8` under the unchanged limits: 16.4–19.2% less large-input time,
 26,216 fewer managed requests, unchanged retains/peak, and explicit code/stack
 costs. Final-head platform validation remains required before delivery.
-This does not complete the other application families or integrated V2 coverage.
+The [file-read boundary controls](docs/measurements/file-read-failures.md) add
+text/byte allocation-failure probes to this same batch; execution and complete
+platform coverage are pending. This does not complete the other application families or integrated V2 coverage.
 **Done:** each family has explicit platform/memory-mode coverage, failure and
 cancellation tests, bounded post-operation storage and a B1 budget where timed.
 

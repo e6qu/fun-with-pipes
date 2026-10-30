@@ -2,6 +2,11 @@
 use std::io::Write;
 use std::process::{Command, Output, Stdio};
 
+#[path = "support/ownership_ledger.rs"]
+mod read_failure_ledger;
+#[path = "support/record_probe.rs"]
+mod read_failure_probe;
+
 #[path = "support/file_application_memory.rs"]
 mod file_application_memory;
 
@@ -482,6 +487,137 @@ fn scaled_text_tools_release_partial_results_and_file_handles() {
                         }
                         file_application_memory::check_observations(&actual.stderr);
                     }
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn file_read_allocation_boundaries_release_scratch_handles_and_prior_results() {
+    let dir = fwp::cgen::TempDir::new("file-read-allocation-failures").unwrap();
+    std::fs::write(dir.join("input"), vec![b'x'; 150000]).unwrap();
+    for (kind, body) in [
+        ("text", "both file.read file.read | uncurry concat | string.length"),
+        ("bytes", "both file.read-bytes file.read-bytes | both (.0 | bytes.length) (.1 | bytes.length) | uncurry add"),
+    ] {
+        let source = dir.join(format!("{kind}.fwp"));
+        std::fs::write(&source, format!("export read-pair : String -> I64 ! {{FileIO, Error[IoError]}}\nread-pair = {body}\nmain = \"input\" | read-pair | echo\n")).unwrap();
+        let compiler = env!("CARGO_BIN_EXE_fwp");
+        for optimized in [false, true] {
+            let mut command = Command::new(compiler);
+            command.current_dir(dir.path()).args(["run", "--interp"]).arg(&source);
+            if optimized { command.env_remove("FWP_NO_OPT"); } else { command.env("FWP_NO_OPT", "1"); }
+            let result = checked(&mut command);
+            assert_eq!(result.stdout, b"300000\n");
+            assert!(result.stderr.is_empty());
+        }
+        let cfile = dir.join(format!("{kind}.c"));
+        checked(Command::new(compiler).args(["build", "--fn", "read-pair", "--emit-c"])
+            .arg(&source).arg("-o").arg(&cfile));
+        let code = std::fs::read_to_string(&cfile).unwrap();
+        if let Some(root) = std::env::var_os("FWP_ARC_ARTIFACTS") {
+            let inputs = std::path::Path::new(&root).join("file-read-allocation-input");
+            std::fs::create_dir_all(&inputs).unwrap();
+            std::fs::copy(&source, inputs.join(format!("{kind}.fwp"))).unwrap();
+            std::fs::write(inputs.join(format!("{kind}-entry.c")), &code).unwrap();
+        }
+
+        let entry = format!("f{}", code.split("/* read-pair :").nth(1).unwrap()
+            .split("static V f").nth(1).unwrap().split('(').next().unwrap());
+        let mut observed = read_failure_ledger::instrument_native(&code, 65536);
+        let declarations = r#"typedef uint64_t V;
+#define READ_OMIT_CLOSE 0
+#define READ_OMIT_RAW 0
+#define READ_OMIT_OWNER 0
+static int read_active,read_stage,read_target,read_number,read_fatal,read_hit;
+static size_t read_opened,read_closed,read_raw;
+static void fwp_trap(const char *);
+static void fwp_heap_oom(void);
+static void read_boundary(int stage) {
+    if (!read_active || read_number!=read_target || stage!=read_stage) return;
+    if ((stage<3 && read_opened!=read_closed+1) ||
+        (stage==3 && read_opened!=read_closed) ||
+        (stage==1 && read_raw) || (stage>1 && !read_raw)) _Exit(246);
+    read_hit=1;
+    if(read_fatal) fwp_heap_oom();
+    fwp_trap("file read allocation boundary");
+}
+"#;
+        assert_eq!(observed.matches("typedef uint64_t V;").count(), 1);
+        observed = observed.replacen("typedef uint64_t V;", declarations, 1);
+        let buffer = "typedef struct { char *d; size_t len, cap; } fwp_buf;";
+        assert_eq!(observed.matches(buffer).count(), 1);
+        observed = observed.replacen(buffer, &format!("{buffer}\nstatic fwp_buf *read_buffer;"), 1);
+        let mut replace = |before: &str, after: &str| {
+            assert_eq!(observed.matches(before).count(), 1, "{before}");
+            observed = observed.replacen(before, after, 1);
+        };
+        replace("        char *data = (char *)realloc(b->d, cap);", "        if(b==read_buffer) read_boundary(b->cap ? 2 : 1);\n        char *data = (char *)realloc(b->d, cap);");
+        replace("        b->d = data;\n        b->cap = cap;", "        if(b==read_buffer) read_raw += cap-b->cap;\n        b->d = data;\n        b->cap = cap;");
+        replace("static void fwp_mem_free(void *p) {\n", "static void fwp_mem_free(void *p) {\n    if(READ_OMIT_OWNER && read_active) return;\n");
+        // Only file.read/read-bytes use this tracked buffer. Other buffers and
+        // allocator pages are outside its raw-storage ledger.
+        for signature in ["static V buf_to_str(", "static void fwp_file_buffer_cleanup("] {
+            let start = observed.find(signature).unwrap();
+            let end = start + observed[start..].find("\n}").unwrap() + 2;
+            let body = &observed[start..end];
+            assert_eq!(body.matches("    free(b->d);").count(), 1);
+            let mut body = body.replace("    free(b->d);", "    if(b==read_buffer) { if(!READ_OMIT_RAW || !read_active || read_number!=read_target) { free(b->d); read_raw-=b->cap; } read_buffer=NULL; } else free(b->d);");
+            if signature.starts_with("static V buf_to_str") {
+                let marker="    V r = fwp_str_new(b->d ? b->d : \"\", b->len);";
+                assert_eq!(body.matches(marker).count(), 1);
+                body=body.replace(marker,&format!("    if(b==read_buffer) read_boundary(3);\n{marker}"));
+            }
+            observed.replace_range(start..end, &body);
+        }
+        let signature = "static V fwp_p_file_read_impl(";
+        let start = observed.find(signature).unwrap();
+        let end = start + observed[start..].find("\n}").unwrap() + 2;
+        let mut body = observed[start..end].to_owned();
+        for (before, after) in [
+            ("    if (!f) return fwp_io_error_path(\"read\", STR(path)->d, err);", "    if (!f) return fwp_io_error_path(\"read\", STR(path)->d, err);\n    read_number++; read_opened++;"),
+            ("    fwp_buf b = {0};", "    fwp_buf b = {0};\n    read_buffer=&b;"),
+            ("    fclose(f);", "    if(fclose(f)) _Exit(247); read_closed++;"),
+        ] {
+            assert_eq!(body.matches(before).count(), 1, "{before}");
+            body=body.replace(before,after);
+        }
+        observed.replace_range(start..end,&body);
+        // Count only the unwind close for this read; normal closes above remain
+        // healthy even when the deliberate fault omits its cleanup callback.
+        let signature="static void fwp_close_scoped_file(";
+        let start=observed.find(signature).unwrap();
+        let end=start+observed[start..].find("\n}").unwrap()+2;
+        let body=&observed[start..end];
+        assert_eq!(body.matches("fclose(file->stream);").count(),1);
+        let body=body.replace("fclose(file->stream);", "if(!READ_OMIT_CLOSE || !read_active) { if(fclose(file->stream)) _Exit(247); read_closed++; }");
+        observed.replace_range(start..end,&body);
+        observed=observed.replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
+        let probe=include_str!("fixtures/file_allocation_failures.c").replace("READ_PAIR",&entry);
+        let healthy=format!("{observed}\n{probe}");
+        for opt in ["-O1","-O2"] {
+            for (name, program, status, message) in [
+                ("healthy", healthy.clone(), 0, "48 file read allocation-boundary traps and retries preserve owners\n"),
+                ("missing-close", healthy.replace("#define READ_OMIT_CLOSE 0","#define READ_OMIT_CLOSE 1"), 241, "file read handles remain open\n"),
+                ("missing-scratch", healthy.replace("#define READ_OMIT_RAW 0","#define READ_OMIT_RAW 1"), 242, "file read scratch remains live\n"),
+                ("missing-owner", healthy.replace("#define READ_OMIT_OWNER 0","#define READ_OMIT_OWNER 1"), 243, "file read owners remain live\n"),
+            ] {
+                let binary=dir.join(format!("{kind}-{name}{opt}.exe"));
+                fwp::cgen::compile_c(&program,&binary,opt).unwrap();
+                let output=Command::new(&binary).current_dir(dir.path()).output().unwrap();
+                read_failure_probe::save("file-read-allocation",&format!("{kind}-{name}{opt}"),&program,&binary,&output);
+                assert_eq!(output.status.code(),Some(status),"{kind} {name} {opt}: {output:?}");
+                if status==0 { assert_eq!(output.stdout,message.as_bytes()); assert!(output.stderr.is_empty()); }
+                else { assert!(output.stdout.is_empty()); assert_eq!(output.stderr,message.as_bytes()); }
+                if name=="healthy" {
+                    for stage in 1..=3 { for target in 1..=2 {
+                        let output=Command::new(&binary).current_dir(dir.path()).args([stage.to_string(),target.to_string()]).output().unwrap();
+                        read_failure_probe::save("file-read-allocation",&format!("{kind}-fatal-{stage}-{target}{opt}"),&program,&binary,&output);
+                        assert_eq!(output.status.code(),Some(102),"{kind} {stage} {target} {opt}: {output:?}");
+                        assert!(output.stdout.is_empty());
+                        assert_eq!(output.stderr,b"fwp: out of memory\n");
+                    } }
                 }
             }
         }

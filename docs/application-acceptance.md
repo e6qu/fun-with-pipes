@@ -243,8 +243,9 @@ Focused measurements explicitly disable link-time optimization; production
 artifacts retain production compiler settings. The earlier four-program report
 retains its original 30 binaries and sixteen series; it does not verify this
 extension. Machine headers verify the runner's actual architecture. The original scale cases do not cover forced allocation failure. The separate
-directory-boundary probes above add that coverage for directory traversal; other
-file operations still need their own allocation-failure evidence.
+directory-boundary probes above add that coverage for directory traversal; the [file-read boundary controls](measurements/file-read-failures.md) add probes
+for text/byte reads but remain unverified. Other operations still need their own
+allocation-failure evidence.
 
 The observer reads Linux `/proc`, macOS `ps`, and Windows
 `K32GetProcessMemoryInfo` working-set counters. Windows sampling opens and closes
