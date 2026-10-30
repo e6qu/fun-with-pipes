@@ -1,8 +1,15 @@
 # Current work
 
-**Next:** audit the final generated-array timing session and all nine production
-jobs plus documentation for this delivery. Open the PR with this completed
-implementation batch; platform verification can run while the timing host queues.
+**Next:** publish the batched test-inventory repair and final timing record for
+[PR #232](https://github.com/e6qu/fun-with-pipes/pull/232), then audit every final
+gate. Initial head `76ee7a80e68e6e9b6859d3696351a42cc47b900c` uses production
+run `41142900417` and docs `41142900328`. Documentation found a stale expected
+count: `numeric_array_fusion` now has three tests, not two. Both the collection
+report inventory and its synthetic complete log/total are repaired (54 tests).
+Its callers in collection/map/hash reports retain the completeness check;
+historical measurement counts remain untouched. Squash-merge only after
+all nine production jobs and documentation pass and their full logs are audited;
+use an explicit one-line subject of at most 80 characters and an empty body.
 Keep failed timing controls visible; never retry a collected result or loosen
 its limit. Allocation removal and timing acceptance are separate.
 
@@ -67,15 +74,19 @@ reference selection. Both original ARM jobs completed; their 2,736 process
 records per session were independently reconstructed. Both fail the 2% copy
 control and must not be rerun. AMD session two also fails its old and new copy
 controls. All allocation/code/frame checks pass. The
-[timing index](measurements/generated-array-timings-2026-10-31.json) records these
-three completed sessions; session one on AMD64 is still required. Do not present
-this index as a complete four-session result.
+[timing index](measurements/generated-array-timings-2026-10-31.json) records all
+four sessions. AMD session one passes its copy and elapsed limits at ratio
+0.664728; CI reconstructed all 2,736 observations. Its full log was reviewed:
+six native tests and all damaged-evidence controls pass without diagnostics.
+The original archive is retained on GitHub; a second local reconstruction is
+paused by the disk guard. The other three sessions retain their local audits.
 
 AMD attempts received incorrect EPYC 9V74/9V45 hosts and stopped before any
 build or timing. Their qualification artifacts are retained; only these
 unmeasured jobs were replaced. Session two's third attempt qualified on EPYC
-7763, completed and was independently audited. Session one's sixth attempt,
-job `124359521846`, is queued after five wrong-host rejections. Original ZIPs and
+7763, completed and was independently audited. Session one's seventh attempt,
+job `124361211274`, completed on the qualified host. Six earlier attempts
+rejected wrong CPUs before measuring. Original rejection ZIPs and
 logs for all rejections remain retained. Query direct
 job endpoints because aggregate Actions listings can be stale.
 
@@ -92,7 +103,9 @@ source IDs, hashes, raw observations and deliberate failures. No full local
 compiler build, suite or benchmark ran. Run the roadmap audit again after these
 documentation edits. The roadmap audit passed after the history/plan rewrite
 (188 link sets, 106 immutable pairs, eight steps); later edits need the CI audit.
-No further local checks may run while free space is below the guard floor.
+The focused collection-inventory repair check was explicitly refused by the
+guard (less than 64 GiB free); its validation must run in CI. No further local
+checks may run while free space is below the guard floor.
 
 Preserve the primary checkout at `/Users/zardoz/projects/fun-with-pipes`: detached
 #209, dirty recovery handoff and untracked compiler-abort report. Automatic

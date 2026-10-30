@@ -145,7 +145,9 @@ ownership analysis with ordinary optimization disabled; it does not isolate
 the compile-time cost of this fusion transformation.
 
 The full production matrix remains required. The [timing index](generated-array-timings-2026-10-31.json)
-contains three completed sessions; AMD64 session one remains pending. Each
+records all four completed sessions. Three also have local archive audits;
+AMD64 session one was reconstructed on CI and its full log reviewed, while
+local archive validation is paused below the 64 GiB disk floor. Each
 session times 256 scans per process, including process startup, output and
 cleanup, with 2,736 complete process records. Ratios below compare candidate
 fwp with the frozen previous fwp, not C/Rust. A ratio below one means less time.
@@ -154,10 +156,11 @@ fwp with the frozen previous fwp, not C/Rust. A ratio below one means less time.
 |---|---|---|---|---|
 | ARM64 / 1 | 1.00852 | 1.02054 | 0.36231 | Inconclusive |
 | ARM64 / 2 | 1.00679 | 1.02164 | 0.39265 | Inconclusive |
+| AMD64 / 1 | ≤1.02 (CI check) | ≤1.02 (CI check) | 0.66473 | Passes this session |
 | AMD64 / 2 | 1.02917 | 1.02258 | 0.66828 | Inconclusive |
 
-Each row exceeds the 1.02 identical-copy limit in at least one family. Lower
-elapsed times therefore do not qualify as accepted speedups. No collected
+Three rows exceed the 1.02 identical-copy limit in at least one family. The
+experiment therefore does not qualify for timing acceptance. No collected
 session was retried. Wrong CPU models are rejected before build/timing and their
 qualification artifacts remain retained; replacing them collects no second
 measurement of an already observed session.

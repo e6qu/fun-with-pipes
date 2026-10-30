@@ -3,6 +3,52 @@
   "referenceCompiler": "377cf9ce25c65afba595b6413e5bb1d50721ea7a",
   "referenceArtifactSource": "3ca66b543bb8764527fe2a5142119831df15cfb7",
   "status": "Timing acceptance remains open; every measured observation is retained.",
+  "ciReviewedSessions": [
+    {
+      "machine": "x86_64",
+      "session": 1,
+      "attempt": 7,
+      "run": 41139714279,
+      "job": 124361211274,
+      "artifact": 13019582730,
+      "artifactApiSha256": "76ba5629b3d8ee316a6c6f78556f754528ad9efc1981364e31a78a25e3cab787",
+      "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+      "cpu": "AMD EPYC 7763 64-Core Processor",
+      "ordinaryProcesses": 2736,
+      "copyControlLimit": 1.02,
+      "copyControlPassed": true,
+      "candidateReferenceRatio": 0.6647275710265547,
+      "elapsedRatioLimit": 0.9,
+      "elapsedPassed": true,
+      "ciReconstructionPassed": true,
+      "ciReconstruction": "Verified all files, exact builds, copies and 2,736 ordered observations.",
+      "localArchiveAudit": "Not run: local guard stopped validation below 64 GiB free disk. Full CI log reviewed; original archive remains on GitHub."
+    }
+  ],
+  "additionalRejectedHosts": [
+    {
+      "session": 1,
+      "attempt": 5,
+      "run": 41139714279,
+      "job": 124358074982,
+      "artifact": 13019255901,
+      "artifactApiSha256": "2f9b0b52120113ba580d2981016a77e19b93986774bc27030d998521d61465b7",
+      "cpu": "AMD EPYC 9V45 96-Core Processor",
+      "buildStarted": false,
+      "timingStarted": false
+    },
+    {
+      "session": 1,
+      "attempt": 6,
+      "run": 41139714279,
+      "job": 124359521846,
+      "artifact": 13019856492,
+      "artifactApiSha256": "4adb78faa09364b9504b977131b660c399344c8d383d15e5c014a7db13e9048f",
+      "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+      "buildStarted": false,
+      "timingStarted": false
+    }
+  ],
   "sessions": [
     {
       "run": 41139714279,
