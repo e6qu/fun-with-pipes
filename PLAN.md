@@ -297,9 +297,9 @@ The [current word-frequency baseline](docs/measurements/wordfreq-current.md) now
 retains four audited sessions at `dc963bb5`, all 37,080 child observations and
 workload-specific time/memory limits declared before a candidate. Its short-input
 identical-copy difference reaches 3.90%; the report limits the claims this allows.
-Next, integrate the directory controls and word-frequency evidence checks into
-the final six-platform application delivery. No word-frequency candidate is
-implemented or accepted by these measurements. The next
+The directory controls and word-frequency evidence checks are verified in #228
+across the complete production matrix. The baseline alone accepts no candidate.
+The ongoing
 [direct string-result experiment](docs/measurements/direct-string-results.md)
 removes temporary raw buffers from replacement/repetition at `089465bb`.
 All six native focused suites and both WASI hosts pass, including alias, size,

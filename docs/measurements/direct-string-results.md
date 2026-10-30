@@ -252,8 +252,10 @@ evidence-rejection tests per session. The 9V74 (`41035137961`) and 9V45
 ## Third candidate: use byte search for one-byte patterns
 
 Protocol `7f58e4d9` was published before implementation. The one-byte search and
-new high-bit/source-alias controls are now implemented; focused GCC and new timing
-checks are pending. Keep both earlier rejected experiments,
+new high-bit/source-alias controls are implemented at `afbafef8`. Focused GCC
+run `41038341027` passes 18 integration tests, 224 library tests and 20 runner
+controls with a complete log audit. Four measurements in `41039113227` are
+pending on frozen branch `byte-search-measurements`. Keep both earlier rejected experiments,
 the original reference bodies, inputs, CPUs/toolchains, four-session schedule and
 all existing timing, allocation and representation limits. Do not change the
 required 5% gain or treat either earlier allocation saving as timing acceptance.

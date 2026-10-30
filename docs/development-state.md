@@ -1,38 +1,28 @@
 # Current work
 
-**Next:** run focused production GCC checks for the implemented one-byte replacement search in
-[the third string candidate](measurements/direct-string-results.md#third-candidate-use-byte-search-for-one-byte-patterns).
-Both earlier candidates are rejected by their timing requirements; retain their
-complete results. PR #228's final source stays `f3eb5072`: its Intel Mac retry has
-passed the test/SDK stages and is building the package. Audit the complete log and
-uploads before merge, then integrate main without rewriting measured ancestry.
-Open no second active PR.
+**Next:** audit four byte-search measurements in `41039113227` at
+`afbafef8d06f2b892e9cc93b4d6a3f52d153b3fa`, frozen branch
+`byte-search-measurements`. Focused GCC run `41038341027` passes 18 integration
+tests, 224 library tests and 20 native-runner controls with a complete log audit.
+Both earlier candidates miss timing requirements; keep their complete results.
+Publish the prepared branch as a draft PR, then run one full final-head matrix
+when the measured candidate qualifies and this batch is ready.
 
-## Active delivery: application checks, PR #228
+## Latest delivery: PR #228
 
-[PR #228](https://github.com/e6qu/fun-with-pipes/pull/228) contains directory
-allocation-failure coverage, current word-frequency baselines and their evidence
-checks. It does not change the compiler/runtime from #227.
+[PR #228](https://github.com/e6qu/fun-with-pipes/pull/228) is squash-merged as
+`667e71f0`, with exactly the verified tree from `f3eb5072`. All nine production
+jobs, documentation and both G2 hosts pass with complete log audits. The Intel
+Mac retry repaired the upload failure without a source change. The
+[delivery record](roadmap-history.md#directory-cleanup-and-current-application-costs-pr-228)
+owns identities, counts and evidence; the squash message is one line with no body.
+The duplicate post-merge production run `41038555626` was cancelled after checking
+tree equality and no failures. Post-merge documentation `41038555557` passes.
 
-All production test results at `f3eb5072` are fully audited: Linux 993 tests/257
-summaries each, regular Mac 626/132, ownership Mac 364/127, Windows 811/202 and
-benchmarks 2/2. Documentation `41018509711` and both G2 hosts `41018512169`
-pass; G2 has 226 tests/three summaries per host.
-
-Regular Intel Mac passed all tests, build and packaging, then two artifact
-uploads failed with DNS ENOTFOUND after verifying 3,357 evidence files. Its saved
-diagnostic is the intentional cleanup-abort test, not a compiler-abort recurrence.
-Production `41018509811` reruns only that job as `123979346074`, on the same
-source. Require its full log audit and successful upload before merge.
-
-The [directory report](measurements/directory-failures.md) owns the four allocation
-boundaries, aliases/retries, missing-close/builder controls and separate terminal
-OOM checks. All six native hosts pass ten focused tests each; all 84 saved probes
-and complete logs are retained. The initial harness failure and explicit-entry
-repair remain documented. The [word-frequency baseline](measurements/wordfreq-current.md)
-owns four audited sessions, 37,080 observations and budgets published before any
-candidate. Large-input fwp/C is 2.49 on ARM64 and 3.03–3.04 on AMD64; no parity
-claim follows from an improvement over earlier fwp.
+Integration `91641947` joins main into the preparation without changing its tree,
+preserving all measured ancestors. The next PR bundles string implementation,
+correctness controls, rejected experiments and reproducible measurements. Keep
+it draft until the candidate and final validation batch are ready.
 
 ## Preparation: reduce replacement/repetition allocations
 
