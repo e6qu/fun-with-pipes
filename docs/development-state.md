@@ -3,8 +3,8 @@
 **Next:** finish [draft PR #231](https://github.com/e6qu/fun-with-pipes/pull/231),
 the [B1 buffer comparison](measurements/unique-buffer-peers.md)
 on branch `ownership-peer-baselines`, worktree
-`/private/tmp/fwp-ownership-peer-baselines`. Implement the ordinary-binary runner,
-static stack reports and complete evidence verifier, verify Linux memory checkpoints,
+`/private/tmp/fwp-ownership-peer-baselines`. Verify the ordinary-binary runner,
+compiler stack reports, complete evidence verifier and Linux memory checkpoints,
 then collect the four predeclared sessions. No timings have run. Keep one active PR;
 mark it ready only after the grouped implementation and evidence are complete.
 
@@ -147,8 +147,20 @@ Outputs are `/private/tmp/fwp-buffer-{process-memory,phase,storage}-checks-2`.
 The latter two now include the largest timed input, 262,144. Actual Linux memory
 and instruction-equality results still require native CI.
 
-Next verify this grouped repair on both native GCC hosts while implementing the
-ordinary-binary process runner and complete retained-evidence verifier. Then
-collect the four sessions. No baseline timings or optimization acceptance exist.
+Repair source `2acbfb41` is published. Native run `41100000646` is pending
+(AMD `124215519721`, ARM `124215519969`); docs `41100006533` is queued.
+GitHub reports the ARM runner assigned but no executed steps yet.
+
+The next local batch adds the ordinary-binary runner, independent retained-evidence
+verifier and explicit session workflow. Five real-process/file-damage controls, including cancellation cleanup,
+pass under the guard (0.74s), all changed workflows pass actionlint (5.13s), and
+30 actual Rust 1.99.1 stack remarks parse successfully. The native focused job
+will test a full synthetic archive and ten deliberately damaged cases before
+any timing. Synthetic origin cannot pass observed-results verification. The
+2% identical-copy limit, all-four-CPU policy, 45-second child deadline and exact
+child environment are declared in the report before collection.
+
+Next publish this grouped runner/verifier work and verify the complete focused
+path on both architectures, then collect the four sessions. No baseline timings or optimization acceptance exist.
 PR body: `/private/tmp/fwp-buffer-peers-pr.md`; keep #231 draft until the batch
 is complete, then require every final production gate before merging.

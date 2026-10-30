@@ -50,6 +50,7 @@ jobs:
         run: |
           python3 scripts/test-unique-buffer-baselines.py
           python3 scripts/test-buffer-program-records.py
+          python3 scripts/test-buffer-processes.py
       - name: Kernel result oracle and scheduling controls
         run: python3 scripts/test-numerical-baselines.py
       - name: Timing diagnostic observation and output controls

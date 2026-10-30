@@ -46,7 +46,7 @@ class BufferEvidence(unittest.TestCase):
                 for position, label in enumerate(BASELINE.execution_order(index, BASELINE.SEED, BASELINE.PROCESSES)):
                     duration = {'c': 100, 'rust': 125, 'fwp': 200}[label.removesuffix('-identical')]
                     rows.append(dict(entry='scan', length=16, calls=65536, warmup=warmup,
-                        round=index, position=position, label=label, status=0, timedOut=False,
+                        round=index, position=position, label=label, status=0, timedOut=False, interrupted=False,
                         spawnError=None, elapsedNs=duration * (100 if warmup else 1), userNs=duration,
                         systemNs=0, stdoutBase64=base64.b64encode(output).decode(), stderrBase64='',
                         stdoutSha256=hashlib.sha256(output).hexdigest(), stderrSha256=hashlib.sha256(b'').hexdigest()))
@@ -60,12 +60,23 @@ class BufferEvidence(unittest.TestCase):
         self.assertEqual(len(result['roundElapsedNs']['fwp']), 36)
         self.assertIn('no optimization accepted', result['decision'])
 
+    def test_unstable_copy_is_reported_without_discarding_samples(self):
+        rows = self.observations()
+        for row in rows:
+            if row['label'] == 'fwp-identical':
+                row['elapsedNs'] *= 2
+        result = BASELINE.summarize_case(rows, 'scan', 16, 65536)
+        self.assertFalse(result['copyControlPassed'])
+        self.assertEqual(result['copyControlLimit'], 1.02)
+        self.assertEqual(result['identicalElapsedRatios']['fwp'], 2)
+        self.assertEqual(len(result['roundElapsedNs']['fwp-identical']), 36)
+
     def test_missing_duplicate_reordered_or_failed_observations_are_rejected(self):
         original = self.observations()
         changed = [original[1:], original + [original[-1]], [original[1], original[0], *original[2:]]]
         for field, value in [('entry', 'unique'), ('length', 4096), ('calls', 1), ('warmup', 1),
                              ('round', 1), ('position', 1), ('label', 'other'), ('status', 1), ('status', False),
-                             ('timedOut', True), ('spawnError', 'cannot start'), ('elapsedNs', 0),
+                             ('timedOut', True), ('interrupted', True), ('spawnError', 'cannot start'), ('elapsedNs', 0),
                              ('userNs', -1), ('systemNs', 0.5), ('stdoutBase64', 'MAo='),
                              ('stderrBase64', 'eAo='), ('stdoutSha256', '0' * 64), ('stderrSha256', '0' * 64)]:
             rows = copy.deepcopy(original)

@@ -82,8 +82,8 @@ buffer operation. Their overhead belongs in the eventual timing scope.
 
 The peer programs and repeated-call harness pass the focused checks above.
 Phase and allocation observers also pass the focused checks below.
-The next action is native GCC verification, process-memory checkpoints, and the
-runner plus independent evidence verifier before collecting the four sessions. This preparation does not authorize an unchanged numerical rerun,
+The next action is native GCC verification of the repaired memory/stack observers
+and the complete evidence controls before collecting the four sessions. This preparation does not authorize an unchanged numerical rerun,
 change D2/N1 limits, or complete the other B1 comparisons.
 
 ## Baseline schedule
@@ -113,9 +113,9 @@ measurements cannot replace the ordinary binaries' timings.
 These are descriptive baselines. Derive and publish workload-specific future
 change budgets from the repeated observations before selecting an optimization.
 An unstable copy control stays explicit and cannot establish a speed improvement.
-D2/N1's existing failures and limits are unchanged. Collection still requires
-the remaining process-memory observations, runner, evidence verifier and native GCC
-checks; no baseline session has run.
+D2/N1's existing failures and limits are unchanged. The runner and retained-evidence verifier are implemented. Collection still requires
+their complete native controls and repaired process-memory/stack observations;
+no baseline session has run.
 
 
 ## Diagnostic checks implemented
@@ -236,3 +236,46 @@ duplicates and overflow. Local checks pass 38 parser controls and compile all
 native CI. Phase and storage checks now include the largest declared length,
 262,144: locally 90 phase executions, 270 events, 180 damaged-record rejections,
 and 90 storage executions including 18 intentional leak failures pass.
+
+## Ordinary-program collection and audit
+
+`measure-buffer-baselines.py` runs the cases in table order: unique read, callback,
+scan; within each, lengths 0, 16, 4,096 and 262,144. Each process has a 45-second
+limit. The parent runs one child at a time and allows all four qualified CPUs;
+it does not pin a worker or change priority. Children receive exactly `PATH=/usr/bin:/bin`,
+`LANG=C`, `LC_ALL=C` and `TZ=UTC`, without inherited runtime tuning variables.
+
+The elapsed clock starts immediately before spawning the child and stops after
+capturing its output and exit status. It includes process-launch and capture costs.
+Child user/system CPU comes from the difference between serial child-usage readings;
+it excludes the Python parent. The runner saves every attempt before checking its
+result. Timeout, cancellation, spawn failure or wrong output stops collection and leaves partial
+evidence. It never retries an observation or silently completes a shortened round.
+
+Across all twelve cases, each session retains 32,832 processes (31,104 measured,
+1,728 warmups). A separate 72-process pass uses GNU `time` to record maximum
+resident KiB for every case/language/copy. Those timings do not enter the baseline.
+Peak resident memory includes libraries and process startup, is sampled/accounted
+by the OS, and does not identify allocator headers or simultaneously live payload.
+A zero reported peak remains zero, not an invented payload estimate.
+
+Before collecting any samples, the copy-control limit is **1.02 in either direction**:
+`max(copy/original, original/copy) <= 1.02` for each language's median round totals.
+A failure remains in the report with every sample and prevents a stability claim;
+it does not trigger a retry or discard the descriptive results. These new B1
+controls do not change D2/N1's limits or reopen their unchanged experiments.
+
+`check-buffer-baselines.py` verifies every file's size/hash, exact build commands,
+compiler versions, binary/copy hashes, stack reports and complete sample ordering.
+It reconstructs round totals, ratios and memory summaries from raw records and
+rejects disagreement with the saved report. `check-buffer-pipeline.py` supplies
+synthetic observations around real compiled programs and then changes checksums,
+commands, settings, counts, outputs and summaries. It recomputes file hashes after
+each change: the audit must detect false evidence even when its manifest agrees.
+Synthetic records have an explicit origin and cannot pass the observed-results check.
+
+The [baseline workflow](../../.github/workflows/buffer-baselines.yml) qualifies
+both hosts and checks complete evidence before measuring. Dispatch session 1 and
+session 2 once each on the same published source after focused checks pass.
+Retain complete or partial artifacts for all four jobs. This workflow is prepared,
+not yet run; no comparative performance result is claimed.

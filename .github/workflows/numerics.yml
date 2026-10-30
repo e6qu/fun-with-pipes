@@ -95,6 +95,7 @@ jobs:
           --native-checks buffer-checks/native --output buffer-checks/process-memory
           --cc gcc --rustc rustc
       - name: Ordinary programs and compiler stack reports
+        id: programs
         if: ${{ !cancelled() && steps.native.outcome == 'success' }}
         run: >-
           python3 scripts/prepare-buffer-baselines.py --native-checks buffer-checks/native
@@ -102,6 +103,11 @@ jobs:
           --c-arch "${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'armv8-a' }}"
           --rust-cpu "${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'generic' }}"
           --size size --objcopy objcopy
+      - name: Complete evidence and deliberate damage controls
+        if: ${{ !cancelled() && steps.programs.outcome == 'success' }}
+        run: |
+          python3 scripts/test-buffer-processes.py
+          python3 scripts/check-buffer-pipeline.py --programs buffer-checks/programs --output buffer-checks/synthetic-control
       - name: Retain sources, binaries and every command result
         if: ${{ always() && hashFiles('buffer-checks/**') != '' }}
         uses: actions/upload-artifact@v7
