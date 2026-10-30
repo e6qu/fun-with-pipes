@@ -105,3 +105,15 @@ unexplained; preserve [its evidence](measurements/compiler-abort.md).
 | 6 | In progress | Resolve N1's array control before N2 timing acceptance |
 | 7 | In progress | Complete the named B1/B2 comparison gaps |
 | 8 | In progress | Deliver file-boundary coverage and finish V1/V2 |
+
+## Draft repair checks
+
+The explicit-compiler repair was first published at `2b408101`. Its draft
+production run `41070103948` was skipped, providing no acceptance evidence.
+Documentation `41070103743` was still queued when cancelled to also make the
+omitted-check fixture initialize its timestamp for every input. All 40 Clang
+executions pass after that correction. Record the replacement GCC/docs run after
+publishing; mark #230 ready only after it passes, then require all nine final-head
+jobs. Keep auditing older production `41068200453`: its complete docs/benchmark
+logs pass, with only two unset-CC preflights reported so far. The empty-compiler
+CLI control exits 2 as expected.

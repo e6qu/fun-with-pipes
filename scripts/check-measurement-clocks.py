@@ -58,7 +58,8 @@ def main():
             broken = guard.sub(r'\1;', original)
             for opt in ['-O1', '-O2']:
                 for variant, body in [('checked', original), ('omitted-check', broken)]:
-                    code = PREFIX + body + '\n#undef clock_gettime\n' + (
+                    prefix = PREFIX if variant == 'checked' else PREFIX.replace('if (probe_mode != 2) ', '')
+                    code = prefix + body + '\n#undef clock_gettime\n' + (
                         'int main(int argc, char **argv) {\n'
                         ' if (argc != 2) return 91;\n probe_mode = atoi(argv[1]);\n'
                         ' if (probe_mode < 0 || probe_mode > 2) return 92;\n'
@@ -71,7 +72,7 @@ def main():
                     assert built.returncode == 0, (source_path, opt, variant, built.stderr)
                     assert not built.stdout and not built.stderr, (source_path, built)
                     # The broken control receives an initialized timestamp even
-                    # when the clock fails; it never relies on undefined reads.
+                    # for every input, including failure; no path reads unset data.
                     modes = [0, 1, 2] if variant == 'checked' else [1]
                     for mode in modes:
                         out = subprocess.run([str(executable), str(mode)], capture_output=True, timeout=10)
