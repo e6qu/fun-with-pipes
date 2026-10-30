@@ -126,8 +126,11 @@ int main(void) {
         text_direct_active=1;
         V output=TEXT_REPLACE(pattern,replacement,source);
         text_direct_active=0;
+        int reused=c->changed && !shared && c->to_n<=c->from_n;
+        uint64_t allocations=c->changed && !reused;
         if(STR(output)->len!=c->expected_n || memcmp(STR(output)->d,c->expected,c->expected_n) ||
-           STR(output)->d[c->expected_n] || text_allocations-before!=(uint64_t)c->changed)return 240;
+           STR(output)->d[c->expected_n] || text_allocations-before!=allocations ||
+           text_count(output)!=(shared && !c->changed?2:1) || (reused && output!=source))return 240;
         if(shared && (STR(source)->len!=c->source_n || memcmp(STR(source)->d,c->source,c->source_n)))return 240;
         if(text_raw_requests || text_raw_bytes || text_raw_live || text_raw_peak)return 240;
         TEXT_DROP(output);
@@ -135,15 +138,20 @@ int main(void) {
         TEXT_DROP(pattern);TEXT_DROP(replacement);
     }
     // Borrowed arguments can point at the consumed source without owning it again.
-    for(int alias=0;alias<2;alias++) {
+    for(int alias=0;alias<2;alias++)for(int shared=0;shared<2;shared++) {
         V source=text_new("abc"),other=text_new(alias?"a":"x");
-        fwp_rc_dup(source);
+        if(shared)fwp_rc_dup(source);
+        uint64_t before=text_allocations;
         text_direct_active=1;
         V output=alias?TEXT_REPLACE(other,source,source):TEXT_REPLACE(source,other,source);
         text_direct_active=0;
-        if(!text_equal(output,alias?"abcbc":"x") || !text_equal(source,"abc") ||
-           text_count(source)!=1 || text_raw_requests)return 240;
-        TEXT_DROP(output);TEXT_DROP(source);TEXT_DROP(other);
+        if(!text_equal(output,alias?"abcbc":"x") || text_count(output)!=1 ||
+           text_allocations-before!=(uint64_t)(alias || shared) || text_raw_requests)return 240;
+        if(shared && (!text_equal(source,"abc") || text_count(source)!=1))return 240;
+        if(!alias && !shared && output!=source)return 240;
+        TEXT_DROP(output);
+        if(shared)TEXT_DROP(source);
+        TEXT_DROP(other);
     }
     const char repeated_bytes[]="λ\0x";
     const V repeat_counts[]={0,1,2,3,31,1025};

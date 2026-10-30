@@ -119,8 +119,9 @@ source, output, status and complete job log. All 162 inspected probe images have
 the expected native architecture headers and recorded hashes. Those headers and
 identities are retained locally; full images remain in the named GitHub artifacts.
 An expired artifact would limit later inspection of those original binaries.
-This is correctness evidence, not a performance decision. WASI `41023744074` and
-the paired measurements at `8da8f4cf` (run `41024798466`) remain outstanding.
+This is correctness evidence, not a performance decision. Both WASI hosts in
+`41023744074` pass 32 tests/four summaries with complete log audits. The paired
+measurements at `8da8f4cf` reject the first candidate, as detailed below.
 
 The runner is [measure-direct-string-results.py](../../scripts/measure-direct-string-results.py).
 [The source/count/acceptance checks](../../scripts/direct-string-evidence.py)
@@ -145,10 +146,11 @@ at most **0.95** is required in every session. A value above 1 means slower.
 | ARM64 2 | 0.992313087 | Only 0.77% faster; misses the required 5% |
 | AMD64 2 | 1.013587760 | 1.36% slower; also exceeds the 1% regression limit |
 
-The AMD64 first session has not measured yet. Two assignments were rejected
-before building/timing: EPYC 9V45 in `41024798466`, then EPYC 9V74 in
-`41028913571`. Replacement `41031097803` retains the same source through branch
-`direct-string-measurements`. These rejections are retained, not discarded samples.
+The AMD64 first session has not measured yet. Three assignments were rejected
+before building/timing: EPYC 9V45 in `41024798466`, EPYC 9V74 in
+`41028913571` and Xeon 8573C in `41031097803`. All three complete logs and
+qualification records are audited. Replacement `41033950200` retains the same
+source through branch `direct-string-measurements`. These rejections are retained, not discarded samples.
 The completed failures already rule out overall acceptance; the remaining
 session completes the declared observation set and cannot erase them.
 
@@ -161,7 +163,9 @@ The second match scan is additional work; these timings do not isolate its cost.
 
 ## Second candidate: reuse non-growing unique strings
 
-This specification precedes implementation. Keep the original reference bodies,
+Protocol `ebd8f46d` was published before this implementation. The source and
+controls are now implemented; new native/WASI and timing results are pending.
+Keep the original reference bodies,
 input files, qualified CPUs, settings, two sessions per architecture, timing
 schedule and all existing acceptance limits. Do not retry the first candidate
 unchanged, relax the 5% gain or 1% regression rules, or claim its rejected results

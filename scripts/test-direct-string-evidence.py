@@ -108,6 +108,8 @@ typedef struct { size_t len; char d[]; } fwp_str;
 #define STR(v) ((fwp_str *)(uintptr_t)(v))
 #define PTR(v) ((V)(uintptr_t)(v))
 static int iteration_active;
+/* The probe owns each heap string once and has no surviving source alias. */
+static int fwp_rc_unique(V value) { (void)value; return 1; }
 static void fwp_trap(const char *message) { fputs(message, stderr); exit(125); }
 static void *fwp_alloc_leaf(size_t n) { void *p=malloc(n); assert(p); return p; }
 static V fwp_str_new(const char *s, size_t n) {
@@ -132,7 +134,7 @@ int main(void) {
     assert(STR(repeated)->len==130 && STR(repeated)->d[129]=='a');
     V replaced=fwp_p_replace(from,to,s);
     assert(STR(replaced)->len==1 && STR(replaced)->d[0]=='b');
-    free(STR(repeated)); free(STR(replaced));
+    free(STR(repeated)); if(replaced!=s)free(STR(replaced));
     iteration_active=0;
     fwp_buf unrelated={0}; buf_puts(&unrelated,"unmeasured");
     V value=buf_to_str(&unrelated); free(STR(value));

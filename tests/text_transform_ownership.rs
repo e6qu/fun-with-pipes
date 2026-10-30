@@ -31,6 +31,7 @@ fn text_transformations_preserve_aliases_and_consumed_owners() {
         "abc abc",
         "\tMiXeD\r\n",
         "aaaaa ababa .,... A",
+        "a",
     ];
     let references: Vec<_> = inputs
         .iter()
@@ -143,6 +144,9 @@ fn text_transformations_preserve_aliases_and_consumed_owners() {
     let output_guard = "fwp_value_protect(&owner, &cleanup); V result = fwp_p_replace(l0, l1, l2);";
     assert_eq!(probe.matches(output_guard).count(), 1);
     let missing_output_owner = probe.replace(output_guard, "if(!text_fail_result)fwp_value_protect(&owner, &cleanup); V result = fwp_p_replace(l0, l1, l2);");
+    let unique = "to_len <= from_len && fwp_rc_unique(s) == 1";
+    assert_eq!(probe.matches(unique).count(), 1);
+    let missing_unique = probe.replace(unique, "to_len <= from_len");
     for opt in ["-O0", "-O1", "-O2"] {
         let binary = dir.join("text.exe");
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
@@ -160,6 +164,7 @@ fn text_transformations_preserve_aliases_and_consumed_owners() {
             ("missing-cancel-owner", &unprotected_cancel, 235),
             ("missing-raw-release", &missing_raw, 238),
             ("missing-output-owner", &missing_output_owner, 239),
+            ("missing-unique", &missing_unique, 233),
         ] {
             fwp::cgen::compile_c(measured, &binary, opt).unwrap();
             let actual = Command::new(&binary).output().unwrap();

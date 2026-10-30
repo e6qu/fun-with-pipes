@@ -1,6 +1,6 @@
 # Current work
 
-**Next:** implement the declared unique, non-growing replacement path in
+**Next:** run focused native/WASI checks for the implemented unique, non-growing replacement path in
 [the second string candidate](measurements/direct-string-results.md#second-candidate-reuse-non-growing-unique-strings).
 Keep monitoring PR #228's targeted Intel Mac retry and the remaining measurements.
 Its final head is still `f3eb5072`; open no second PR before verified merge.
@@ -11,6 +11,16 @@ non-overlapping matches and fills its final String; `string.repeat` fills its
 checked final size. Both avoid temporary libc buffers. They preserve input aliases,
 managed allocation/ownership contracts and the distinct terminal OOM versus
 String-size failure rules. No application speed claim is accepted.
+
+Protocol `ebd8f46d` precedes the new unique-reuse implementation. Replacement
+writes forward with overlap-safe copies only when its replacement does not grow
+and the runtime proves one owner. Shared/static/growing inputs allocate separately.
+Controls check borrowed source aliases, literals, exact allocation counts and a
+removed uniqueness check. The new `string-reuse` measurement selection also
+requires the declared 12,513/199,721 managed-request budgets. Previous candidate
+checks do not validate this changed code. Clang's 144 size/control exits and seven
+small allocation/evidence tests pass; native GCC, full-runtime and WASI execution
+remain runner work.
 
 ## Checks and measurements in progress
 
@@ -34,7 +44,7 @@ Artifacts are in `/private/tmp/fwp-direct-focused-089465bb`; the audit is
 `/private/tmp/fwp-direct-focused-audit.json`. The checked-in
 [native archive](measurements/direct-strings-native-2026-10-30.json) retains all
 text evidence and native headers/hashes; full images remain in GitHub artifacts. WASI run `41023744074` passes on Linux ARM64 with 32 tests/four summaries,
-fully audited with required-toolchain flags enabled. Linux AMD64 is still running.
+fully audited with required-toolchain flags enabled. Linux AMD64 also passes 32 tests/four summaries with a complete log audit.
 
 The paired runner restores exactly two frozen runtime bodies in generated C,
 without an older compiler. It records separate candidate/reference and C/Rust
@@ -46,8 +56,9 @@ large-input ratios are 0.990359573, 0.992313087 and 1.013587760. The first two
 miss the 5% gain; AMD also exceeds 1% regression. All 55,530 observations and
 seven integrity/rejection tests per session pass independent audits. Counts are
 exactly unchanged except the confirmed removal of 1,640/26,216 raw allocations.
-AMD session 1 has not measured: 9V45 and 9V74 assignments were rejected before
-building. Replacement `41031097803` uses frozen branch `direct-string-measurements`
+AMD session 1 has not measured: 9V45, 9V74 and Xeon 8573C assignments were
+rejected before building; every complete log and qualification record is audited.
+Replacement `41033950200` uses frozen branch `direct-string-measurements`
 at the same `8da8f4cf`. Retain all attempts. The next candidate must change code
 and meet the unchanged timing and new declared managed-allocation requirements. Keep the existing
 limits and retain failed/inconclusive sessions; never retry unchanged timings.

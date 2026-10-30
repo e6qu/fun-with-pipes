@@ -1499,40 +1499,49 @@ static V fwp_p_replace(V from, V to, V s) {
     const char *d = STR(s)->d, *end = d + STR(s)->len;
     const char *first = fwp_memmem(d, (size_t)(end - d), STR(from)->d, from_len);
     if (!first) return s;
-    size_t count = 0;
+    fwp_str *result;
+    if (to_len <= from_len && fwp_rc_unique(s) == 1) {
+        result = STR(s);
+    } else {
+        size_t count = 0;
+        const char *p = first;
+        do {
+            count++;
+            const char *next = p + from_len;
+            p = fwp_memmem(next, (size_t)(end - next), STR(from)->d, from_len);
+        } while (p);
+        size_t length = STR(s)->len;
+        if (to_len > from_len) {
+            size_t extra = to_len - from_len;
+            /* Preserve buffer-size failure before the String size check. */
+            if (length == SIZE_MAX || count > (SIZE_MAX - length - 1) / extra) {
+                fprintf(stderr, "fwp: out of memory\n");
+                fflush(NULL); _Exit(102);
+            }
+            length += count * extra;
+        } else {
+            /* Non-overlapping matches guarantee count * from_len <= input length. */
+            length -= count * (from_len - to_len);
+        }
+        if (length > SIZE_MAX - sizeof(fwp_str) - 1) fwp_trap("string too large");
+        result = (fwp_str *)fwp_alloc_leaf(sizeof(fwp_str) + length + 1);
+    }
+    char *out = result->d;
     const char *p = first;
     do {
-        count++;
-        const char *next = p + from_len;
-        p = fwp_memmem(next, (size_t)(end - next), STR(from)->d, from_len);
-    } while (p);
-    size_t length = STR(s)->len;
-    if (to_len > from_len) {
-        size_t extra = to_len - from_len;
-        /* Preserve the former buffer-size failure before the String size check. */
-        if (length == SIZE_MAX || count > (SIZE_MAX - length - 1) / extra) {
-            fprintf(stderr, "fwp: out of memory\n");
-            fflush(NULL); _Exit(102);
-        }
-        length += count * extra;
-    } else {
-        /* Non-overlapping matches guarantee count * from_len <= input length. */
-        length -= count * (from_len - to_len);
-    }
-    if (length > SIZE_MAX - sizeof(fwp_str) - 1) fwp_trap("string too large");
-    fwp_str *result = (fwp_str *)fwp_alloc_leaf(sizeof(fwp_str) + length + 1);
-    result->len = length;
-    char *out = result->d;
-    p = first;
-    do {
         size_t prefix = (size_t)(p - d);
-        memcpy(out, d, prefix); out += prefix;
+        /* With unique reuse, writes end before the next unread source byte.
+         * A source-aliasing pattern matches the whole input once. A replacement
+         * alias is either growing or handled by the unchanged-text shortcut. */
+        memmove(out, d, prefix); out += prefix;
         memcpy(out, STR(to)->d, to_len); out += to_len;
         d = p + from_len;
         p = fwp_memmem(d, (size_t)(end - d), STR(from)->d, from_len);
     } while (p);
-    memcpy(out, d, (size_t)(end - d));
-    result->d[length] = 0;
+    size_t tail = (size_t)(end - d);
+    memmove(out, d, tail); out += tail;
+    result->len = (size_t)(out - result->d);
+    *out = 0;
     return PTR(result);
 }
 

@@ -17,6 +17,8 @@ check-text = make {
     overlapping = replace "aa" "x",
     expanding = replace "A" "longer",
     shrinking = replace "AbC" "x",
+    static-source = fork apply (const "aaaaa") (flip replace "x"),
+    static-original = const "aaaaa",
     chain = lower | lower | trim | trim | replace "missing" "!",
     nul = concat "\0taIL" | lower | replace "\0" "|",
 } | echo

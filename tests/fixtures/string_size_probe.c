@@ -13,6 +13,8 @@ static _Noreturn void fwp_trap(const char *message) {
     exit(125);
 }
 static void *fwp_alloc_leaf(size_t size) { (void)size; exit(126); }
+/* These synthetic size inputs do not have managed ownership metadata. */
+static int fwp_rc_unique(V value) { (void)value; return 0; }
 static size_t fwp_count_arg(V n) {
     uint64_t count = (int64_t)n < 0 ? 0 : n;
     return count > SIZE_MAX ? SIZE_MAX : (size_t)count;
