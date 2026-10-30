@@ -252,8 +252,11 @@ if __name__ == '__main__':
     parser.add_argument('--source', required=True)
     parser.add_argument('--machine', choices=['aarch64', 'x86_64'], required=True)
     parser.add_argument('--session', type=int, choices=[1, 2], required=True)
+    parser.add_argument('--decision', choices=['recorded', 'passing'], required=True)
     args = parser.parse_args()
     files = (read_retained(args.retained_index, args.machine, args.session) if args.retained_index
              else BASE.read_files(args.archive, args.directory))
     result = audit(files, args.source, args.machine, args.session)
     print(json.dumps(result, indent=2))
+    if args.decision == 'passing':
+        assert not result['failures'], result['failures']

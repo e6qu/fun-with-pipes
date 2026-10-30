@@ -9,7 +9,7 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Ownership costs
 
-- [Direct string results](direct-string-results.md): two verified allocation reductions that miss their speed targets, retained native/WASI checks and the next byte-search candidate.
+- [Direct string results](direct-string-results.md): two rejected experiments and a byte-search candidate with four qualified sessions, explicit C/Rust gaps, allocation savings and code/stack costs.
 
 - [Directory allocation-boundary failures](directory-failures.md): partial-owner cleanup, caller aliases, deliberate leak controls and the separate terminal OOM contract.
 

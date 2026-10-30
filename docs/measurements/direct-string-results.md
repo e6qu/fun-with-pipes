@@ -6,7 +6,64 @@ It extends [the current word-frequency baseline](wordfreq-current.md); it change
 no existing derivative or numerical-kernel timing limit. The first candidate is
 rejected by all four timing sessions. The second candidate reuses unique storage
 under a protocol published before implementation; it also misses timing acceptance
-in all four sessions. A third, byte-search change is specified below. The sections below distinguish these two experiments.
+in all four sessions. The third, byte-search candidate passes all four measurement sessions; final
+production validation remains required before delivery. The sections below distinguish these two experiments.
+
+## Current result: byte search with unique storage
+
+Source `afbafef8` passes the predeclared timing, storage and representation limits
+in four qualified sessions. This is measured qualification, not final platform
+acceptance. [The complete archive](byte-search-artifacts-2026-10-30.json) retains
+all 74,040 subprocess observations, source/native-image bytes, profiles and logs.
+
+| Session | Large-input candidate/reference | Time reduction | Candidate/C | Candidate/Rust |
+|---|---:|---:|---:|---:|
+| ARM64 1 | 0.835228 | 16.48% | 2.0791 | 1.5944 |
+| ARM64 2 | 0.836369 | 16.36% | 2.0831 | 1.6011 |
+| AMD64 1 | 0.811292 | 18.87% | 2.4197 | 1.5962 |
+| AMD64 2 | 0.808484 | 19.15% | 2.4366 | 1.6000 |
+
+Each time covers process launch, reading, calculation, printing and cleanup.
+The paired reference changes only the two frozen runtime function bodies; the
+separate C/Rust comparison uses the same inputs and expected output. A ratio of
+2.08 to C means about 108% extra elapsed time. These are complete application
+comparisons with the [documented representation differences](../application-acceptance.md#word-frequency-comparison),
+not isolated compiler overhead or parity with C/Rust.
+
+Small-input candidate/reference is 0.9042/0.9216 on ARM64 and 0.8813/0.8534 on
+AMD64. The ARM samples do not meet the protocol's 10% short-input speed-claim
+threshold. One AMD identical-copy ratio reaches 1.049393 against a 1.05 limit;
+retain that near-limit variation rather than making a general small-input claim.
+All large-input copy controls stay within their 1% limit.
+
+| Per process | 4,096 words/64 distinct | 65,536 words/1,024 distinct |
+|---|---:|---:|
+| Managed requests, reference → candidate | 14,153 → 12,513 | 225,937 → 199,721 |
+| Managed requested bytes | 463,856 → 431,876 | 7,420,304 → 6,909,092 |
+| Temporary raw allocation requests | 1,640 → 0 | 26,216 → 0 |
+| Temporary raw requested bytes | 104,960 → 0 | 1,677,824 → 0 |
+| Effective retains, unchanged | 4,362 | 69,642 |
+| Peak managed charge, unchanged | 341,617 | 5,465,713 |
+| Final managed charge | 0 | 0 |
+
+Instrumented runs establish these counts separately from timings; they are not
+C/Rust allocation comparisons. Both temporary raw peak/final bytes are zero in
+the candidate. Fewer requests do not imply fewer retains or smaller peak memory.
+Repetition has direct-construction correctness/storage checks, but this program
+never calls it and supplies no repetition speed claim.
+
+Instruction sections grow by 560 bytes on ARM64 and 512 on AMD64; readonly data
+is unchanged. The replacement stack frame changes 144 → 160 bytes on ARM64 and
+160 → 144 on AMD64. The largest frame stays 65,744/65,776 bytes respectively.
+These are actual native section and compiler stack reports, not inferred register
+counts or a claim that code size fell.
+
+Runs `41039113227` and `41040046127` contain the four passing sessions. Two AMD
+assignments received EPYC 9V74 and were rejected before building/timing; their
+records remain archived. No measured session was retried. Full log audits and
+28 evidence-rejection tests pass. Documentation CI both reconstructs the results
+and explicitly requires passing timing and the stricter allocation budgets for
+this archive; earlier rejected archives remain valid records of failed acceptance.
 
 ## First candidate: direct result construction
 
@@ -254,8 +311,10 @@ evidence-rejection tests per session. The 9V74 (`41035137961`) and 9V45
 Protocol `7f58e4d9` was published before implementation. The one-byte search and
 new high-bit/source-alias controls are implemented at `afbafef8`. Focused GCC
 run `41038341027` passes 18 integration tests, 224 library tests and 20 runner
-controls with a complete log audit. Four measurements in `41039113227` are
-pending on frozen branch `byte-search-measurements`. Keep both earlier rejected experiments,
+controls with a complete log audit. All 162 saved probes and 30 native image
+headers/hashes pass independent inspection. Four measurements in `41039113227`
+and `41040046127` qualify the frozen branch `byte-search-measurements`; the
+complete final-head platform matrix remains required. Keep both earlier rejected experiments,
 the original reference bodies, inputs, CPUs/toolchains, four-session schedule and
 all existing timing, allocation and representation limits. Do not change the
 required 5% gain or treat either earlier allocation saving as timing acceptance.

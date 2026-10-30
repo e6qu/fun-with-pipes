@@ -10,8 +10,8 @@ performance and platform requirements in the last column.
 
 | Program family | Work and current input | Existing evidence | Still required for this suite |
 |---|---|---|---|
-| [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [Four current C/Rust sessions and fixed budgets](measurements/wordfreq-current.md), plus historical [text comparison](measurements/unchanged-text.md) | Preserve the new evidence controls and integrate current six-platform cleanup coverage |
-| [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and small ownership controls | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | [Allocation-boundary failure checks](measurements/directory-failures.md) pass on six native hosts; integrate them into final production coverage |
+| [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [Four current C/Rust sessions and fixed budgets](measurements/wordfreq-current.md), plus historical [text comparison](measurements/unchanged-text.md) | Baseline/evidence checks verified in #228; string candidate qualifies four timing sessions, with final-head platform coverage pending |
+| [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and small ownership controls | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | [Allocation-boundary failure checks](measurements/directory-failures.md) verified in #228; maintain them as ownership changes |
 | [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scaled counting/filtering/CSV/task-file cleanup passes on six hosts; preserve current delivery coverage and separate input/output costs |
 | Numerical pipeline | Map/reduce 65,537/262,145 elements; multiply 65×67 by 67×63 and 257×259 by 259×255 matrices, eight rounds | [Current four-case protocol and partial results](measurements/kernel-baselines.md) | Complete qualified N1 baselines and resolve the failed timing control before selecting N2 |
 | Derivative application | Rosenbrock descent at 3, 33 and 129 dimensions; 199 updates plus zero/one/1,999-update controls | [Repeated current baselines and fixed limits](measurements/descent-costs.md), [nested accuracy/storage](measurements/ad-depth.md) and [capture costs](measurements/eager-captures.md) | Resolve D2's failed zero-update recheck and preserve six-platform cleanup/accuracy coverage; earlier allocation gains do not close the speed goal |
@@ -131,9 +131,10 @@ Do not replace that failed control with an earlier passing run. See
 ## Testing unchanged string ownership
 
 ASCII case conversion, trimming and replacement consume the source owner. If
-bytes stay unchanged, the result receives that owner. Otherwise, a new string
-is built before the old owner is released. Other aliases keep their original
-bytes. Failure and cancellation must release consumed owners; deliberately
+bytes stay unchanged, the result receives that owner. ASCII case conversion can
+reuse uniquely owned input; changed trimmed results use a new string. The current
+replacement candidate also reuses unique storage when the result cannot grow.
+Shared inputs receive a separate changed result, preserving the original bytes. Failure and cancellation must release consumed owners; deliberately
 omitted cleanup must fail its observer. `string.repeat` borrows its source and
 returns a separate result, including when the count is one.
 
@@ -142,9 +143,13 @@ historical source, count reductions and timing schedule. Its old acceptance
 rules are not the current candidate's rules.
 
 The [direct-result experiment](measurements/direct-string-results.md) removes
-temporary libc buffers from replacement and repetition. Its six-host native
-checks pass at O0/O1/O2; WASI and application measurements remain outstanding.
-Removing raw buffers does not by itself reduce managed allocations or ARC.
+temporary libc buffers from replacement and repetition. Its first candidate
+passes native/WASI checks but fails the timing requirement. Unique replacement
+storage then confirms fewer managed allocations, with all six native hosts and
+both WASI hosts passing, but still misses the required speed gain. The latest
+one-byte search candidate passes focused GCC checks and four timing sessions;
+complete final-head production acceptance remains required. Retains and peak managed
+charge remain unchanged; raw-buffer removal alone is not an ARC reduction.
 Compare exact old/new function bodies, preserve the current word-frequency
 budgets, and retain separate raw-buffer, managed-storage, timing, code and stack
 observations. The word-frequency application does not use `string.repeat`, so

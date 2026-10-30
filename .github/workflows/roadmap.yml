@@ -80,6 +80,26 @@ jobs:
                 --retained-index docs/measurements/string-reuse-artifacts-2026-10-30.json \
                 --source d7c609890da12a5eb71319cb42593fe514be2015 \
                 --machine "$machine" --session "$session"
+              python3 scripts/check-string-reuse-counts.py \
+                --retained-index docs/measurements/string-reuse-artifacts-2026-10-30.json "$machine" "$session" \
+                --source d7c609890da12a5eb71319cb42593fe514be2015
+            done
+          done
+      - name: Qualified byte-search measurements and allocation budgets
+        run: |
+          for machine in aarch64 x86_64; do
+            for session in 1 2; do
+              python3 scripts/test-direct-string-results.py \
+                --retained-index docs/measurements/byte-search-artifacts-2026-10-30.json \
+                --source afbafef8d06f2b892e9cc93b4d6a3f52d153b3fa \
+                --machine "$machine" --session "$session"
+              python3 scripts/check-direct-string-results.py \
+                --retained-index docs/measurements/byte-search-artifacts-2026-10-30.json \
+                --source afbafef8d06f2b892e9cc93b4d6a3f52d153b3fa \
+                --machine "$machine" --session "$session" --decision passing
+              python3 scripts/check-string-reuse-counts.py \
+                --retained-index docs/measurements/byte-search-artifacts-2026-10-30.json "$machine" "$session" \
+                --source afbafef8d06f2b892e9cc93b4d6a3f52d153b3fa
             done
           done
       - name: Kernel baseline archive and altered-evidence controls

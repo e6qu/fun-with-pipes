@@ -308,8 +308,10 @@ claim despite removing raw allocations; retain those failures. The second
 candidate reuses uniquely owned, non-growing replacements under protocol
 `ebd8f46d`. All native checks and allocation targets pass, but all four timing
 sessions still miss 5%; retain those rejected results. The third declared change
-uses standard byte search for one-byte patterns with the same acceptance limits.
-No speedup is accepted.
+uses standard byte search for one-byte patterns and qualifies all four sessions
+at `afbafef8` under the unchanged limits: 16.4–19.2% less large-input time,
+26,216 fewer managed requests, unchanged retains/peak, and explicit code/stack
+costs. Final-head platform validation remains required before delivery.
 This does not complete the other application families or integrated V2 coverage.
 **Done:** each family has explicit platform/memory-mode coverage, failure and
 cancellation tests, bounded post-operation storage and a B1 budget where timed.
