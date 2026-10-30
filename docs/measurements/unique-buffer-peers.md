@@ -1,307 +1,268 @@
-# Unique buffer compared with C and Rust
+# Buffer costs compared with C and Rust
 
-This is the next B1 comparison, in preparation. No timings have been collected
-and no speed or memory-parity claim is accepted by this document. The existing
-[A5 result](unique-array-storage.md) establishes removed count operations, not
-execution time relative to another language.
+Four native sessions at `fadebf713e0854d6d132fc6e3666f275b214fc17` retain
+131,328 ordinary process observations and 288 separate peak-memory observations.
+All outputs, files and reconstructed summaries pass their audits. **Only 13 of 48
+case/session combinations meet the declared 2% identical-copy control.** The other
+35 are descriptive observations, not evidence of a stable speed advantage.
 
-## Work that must match
+The 4,096-element scan passes all four sessions' controls. fwp takes **10.1–14.4×
+C's elapsed time** and **8.0–9.8× Rust's** for this workload. This is a concrete
+remaining gap after GC removal; it does not identify the responsible instructions.
+No optimization is accepted by this baseline report. D2/N1's failures are unchanged.
 
-Use the existing [buffer fixture](../../tests/fixtures/unique_buffer_costs.fwp).
-`unique(n)` constructs the integers from zero through `n - 1`, passes the array
-to a borrowing helper, reads its length again, and releases it. The helper adds
-the length to the first element, or zero for an empty array. For nonnegative `n`, the result is `2*n`. Negative lengths produce an
-empty array and result zero, matching `array.generate`.
-`callback(n)` uses the known `read` callback and returns `max(n, 0)`. Both inputs are
-runtime lengths; neither entry may return or retain the array. A third entry,
-`scan(n)`, constructs the same array and adds every element with checked arithmetic.
-Its result is `m*(m-1)/2`, where `m = max(n, 0)`. The harness appends this entry
-to a copy of the original fixture, preserving the frozen A5 fixture. Current fwp
-emission gives this full-read control ordinary counted storage. It is not evidence
-that A5 already supports arbitrary folds.
+## What the programs do
 
-Write C and Rust versions with the same sequence: allocate one integer buffer,
-initialize every element, borrow it for those reads, then release it. Use checked
-integer arithmetic. Empty Rust buffers may need no allocation; fwp still needs
-its array representation. Report that difference. Let each production compiler
-optimize its source normally. If a compiler eliminates the buffer or a read,
-report that result rather than adding a hidden barrier to force allocation.
+Each function receives one signed length. Negative lengths produce an empty array.
+For a positive length `n`, it constructs the integers `0` through `n - 1`, uses
+them as below, and releases the array. Integer calculations remain checked.
+A **borrow** lets a function read a value without creating another owner.
 
-Keep the shared-array and unknown-callback ownership tests as correctness
-controls. They must continue to reject the unique representation; they are not
-silently substituted for the known-callback timing workload.
+| Entry | Work after construction | Result for length 4 |
+|---|---|---|
+| `unique` | Borrow the array to read its length and first element, then read the length again | `8` |
+| `callback` | Pass the array to a known borrowing function that reads length and first element | `4` |
+| `scan` | Add every element using a left fold, starting at zero | `6` (`0 + 1 + 2 + 3`) |
 
-The three C/Rust peers pass 420 Clang/Rust O1/O2 checks through
-`scripts/check-unique-buffer-peers.py`: exact outputs,
-negative/empty lengths, repeated calls, oversized allocation rejection and invalid
-arguments. These are local peer checks, not GCC validation.
-The fwp harness also passes 42 raw/optimized interpreter comparisons and 84 native
-Clang O1/O2 executions at the same seven lengths, including the two negative
-cases. It replaces only the CLI call and preserves production startup/cleanup.
-The first harness check incorrectly counted proof markers in all exported
-functions; the repaired check inspects the selected entry: one marker for the
-restricted examples, none for the counted scan. Each executable selects its entry
-at compilation (`BUFFER_ENTRY` for C, `buffer_entry` for Rust); no extra runtime
-mode branch is added to the peers.
+The first element is zero; both borrowed reads handle an empty array explicitly.
+A fold repeatedly combines the current total with the next element. fwp's scan is
+`flip array.generate id | array.fold add 0`: `flip` swaps the first two arguments so `id` can be bound as the
+generator before the pipe supplies the length. `id` returns each index unchanged;
+the second pipe then sums the generated array. The scan is appended to a copy of the frozen
+[unique-buffer fixture](../../tests/fixtures/unique_buffer_costs.fwp).
 
-These checks use the verified macOS ARM64 package from source `570b777a`, artifact
-`12986056870`; compiler SHA-256
-`f5aa27bedfc8701a17b1c40722bc218a1a376f2fe28679bbe9393244e5951282`.
-Compiler/runtime/library/build inputs match this preparation branch exactly.
-This avoids a local compiler build; it is not a dependency on an older fwp API.
-The harness makes each call's input and result opaque to the compiler, using C
-inline assembly and Rust `black_box`; neither prevents optimization inside the
-buffer operation. Their overhead belongs in the eventual timing scope.
+The [C peer](../../tests/fixtures/unique_buffer_peer.c) and
+[Rust peer](../../tests/fixtures/unique_buffer_peer.rs) perform the same checked
+work. Each entry is selected at compilation. At runtime every call checks its
+result and contributes to a checked checksum, printed once before exit. C inline
+assembly and Rust `black_box` make each call's argument/result opaque; they do not
+force allocation or prevent optimization inside the operation. Compiler-eliminated
+work must not be counted as executed work.
 
-## Implementation tasks before measurement
+## Hosts, builds and collection
 
-1. Add C/Rust peers and compare results at lengths 0, 16, 4,096 and 262,144.
-   Verify raw/optimized fwp and native O1/O2 results. Check negative lengths, malformed arguments and
-   allocation failure separately from timing; preserve the existing recovery,
-   cancellation and physical-free controls. Save all sources and build commands.
-2. Add explicit repeated-call harnesses for each language. Pass length and repeat
-   count at runtime, validate every result and return an aggregate checksum.
-   Keep compiler-visible work comparable; explain any barrier needed to prevent
-   the harness itself from dropping calls. Use ordinary binaries for timing.
-3. In separate diagnostic binaries, attribute construction, borrowed reads and
-   destruction, and count payload allocations, allocator metadata and ownership
-   operations. Require zero live payload after every call and after shutdown.
-   Deliberately omitted frees/count operations must fail the appropriate check.
-   Instrumented timings cannot stand in for production timings.
-4. Record whole-process elapsed/CPU time, maximum resident memory, executable/code
-   sizes, and compiler stack reports. At declared checkpoints record process
-   virtual and resident storage separately from requested payload and allocator
-   metadata. Do not relabel virtual size or requested bytes as committed memory.
-   Identify any memory or Rust stack field the available tools cannot establish.
-5. Publish the complete execution schedule, repeat counts, host/toolchain rules,
-   identical-copy controls, statistic and treatment of unstable observations
-   before starting the four sessions: two each on Linux ARM64 and AMD64.
-   Every measured language needs its own identical-copy control. Keep all raw
-   outputs, durations and failed observations, and independently reconstruct the
-   report. Set later optimization budgets from these baseline results.
+| Host | CPU / available CPUs | C compiler | Rust |
+|---|---|---|---|
+| Linux ARM64 | Neoverse-N2 / 4 | GCC 13.3.0, Ubuntu `6ubuntu2~24.04.1` | 1.99.1 (`58cf8f9c3`) |
+| Linux AMD64 | AMD EPYC 7763 / 4 | GCC 15.2.0, Ubuntu `16ubuntu1` | Same |
 
-The peer programs and repeated-call harness pass the focused checks above.
-Phase and allocation observers also pass the focused checks below.
-The next action is native GCC verification of the repaired memory/stack observers
-and the complete evidence controls before collecting the four sessions. This preparation does not authorize an unchanged numerical rerun,
-change D2/N1 limits, or complete the other B1 comparisons.
+C uses GNU C11, O2, no fast math, no floating-point contraction, no link-time
+optimization and compiler stack reports. Rust uses optimization level 2, checked
+overflow, 16 code-generation units, no crate debug information, unwinding panics
+and no link-time optimization. Targets are `armv8-a`/Rust `generic`, and `x86-64`
+for both AMD64 compilers. Exact commands, versions, generated C and executables
+are retained. Each language's control is a byte-identical executable with the
+same filename length. No earlier fwp compiler is needed to build the language.
 
-## Baseline schedule
+| Length | Calls per fresh process | Elements constructed if retained by optimization |
+|---|---|---|
+| 0 | 65,536 | 0 |
+| 16 | 65,536 | 1,048,576 |
+| 4,096 | 256 | 1,048,576 |
+| 262,144 | 4 | 1,048,576 |
 
-Use two independent sessions on each of the existing qualified Linux ARM64 and
-AMD64 hosts. Each of the three entries has four length/call-count cases: 0/65,536,
-16/65,536, 4,096/256 and 262,144/4. Each nonempty case therefore initializes
-1,048,576 elements per process if construction remains in the optimized program.
-Do not hide compiler-eliminated construction or count it as executed work.
+Order is unique, callback, scan; lengths follow the table. Six labels (three
+languages and their copies) use seed 20261030, two warmup rounds and 36 measured
+rounds, with twelve fresh processes per label/round. Every label occupies every
+position equally. Each ordered preceding/following pair occurs 71 times within
+rounds; transitions between rounds are retained but not claimed balanced. Each
+case/session has 432 measured processes per label. No count was increased after
+observing results, and no numerical failure was retried.
 
-Every language has a byte-identical executable copy: six labels in all. Use seed
-20261030, two unmeasured warmup rounds, then 36 measured rounds with twelve fresh
-processes per label per round. `unique-buffer-baselines.py` fixes the ordering.
-Each label occupies every process position equally; every ordered predecessor
-pair, including a label following itself, occurs 71 times within rounds. Record
-between-round transitions too; those are not claimed to be balanced. This gives
-432 measured processes per label per case per session, with every observation
-retained. Do not increase counts after seeing a result.
+Elapsed time starts before spawning and ends after collecting output and exit
+status: it includes launch/capture costs, startup, argument parsing, checked work,
+output and cleanup. Compilation and artifact writes are outside the timer. Child
+user/system CPU uses serial `RUSAGE_CHILDREN` differences and excludes the Python
+parent. One child runs at a time, unpinned across the four qualified CPUs, with a
+45-second deadline and exactly `PATH=/usr/bin:/bin`, `LANG=C`, `LC_ALL=C`, `TZ=UTC`.
+Timeout, cancellation, spawn failure or changed output stops collection and keeps
+the attempted record. Separate GNU `time` runs measure maximum resident KiB.
 
-Report median complete round totals, all three identical-copy ratios and both
-fwp/peer ratios for each case and session. Whole-child timings include startup,
-argument parsing, repeated calls, checksum checks, output and process cleanup.
-Compilation and artifact writes are outside that timer. Separate diagnostic
-programs own the construction/read/release and storage observations. Their
-measurements cannot replace the ordinary binaries' timings.
+The statistic is the median of the 36 complete round totals. The tables divide
+that median by twelve to express milliseconds per process. Ranges below span the
+two session medians; they are **not confidence intervals**. A copy control passes
+only when `max(copy/original, original/copy) <= 1.02` for all three languages.
+A passing collection/verifier does not override a failed timing control.
 
-These are descriptive baselines. Derive and publish workload-specific future
-change budgets from the repeated observations before selecting an optimization.
-An unstable copy control stays explicit and cannot establish a speed improvement.
-D2/N1's existing failures and limits are unchanged. The runner and retained-evidence verifier are implemented. Collection still requires
-their complete native controls and repaired process-memory/stack observations;
-no baseline session has run.
+## Elapsed results
 
+Each row keeps both sessions, including failed controls. `fwp/C` and `fwp/Rust`
+are elapsed-time ratios: 2 means fwp takes twice as long. “Controls” lists passing
+sessions; a dash means neither. Only `scan / 4,096` passes on both architectures
+in both sessions. Full per-session ratios and CPU medians are in the
+[artifact index](buffer-baseline-artifacts-2026-10-30.json).
 
-## Diagnostic checks implemented
+### ARM64
 
-Separate phase programs put clocks around construction, reads, release and any
-remaining arithmetic. fwp's last addition can occur after freeing the array;
-`tailNs` records it rather than incorrectly charging it to the read phase. Clock
-calls and observer output change execution costs. These programs explain statement
-boundaries; they cannot establish an ordinary-program speedup. Clang/Rust O1/O2
-checks pass 72 executions with 216 phase records and reject 144 damaged results.
-The C clock joins the existing success/failure checks: all six helpers pass 48
-executions, including failed reads with untouched timestamps and omitted guards.
+| Entry / length | C ms | Rust ms | fwp ms | fwp/C | fwp/Rust | Controls |
+|---|---|---|---|---|---|---|
+| unique / 0 | 0.920–0.938 | 1.131–1.182 | 1.769–1.888 | 1.92–2.01 | 1.56–1.60 | — |
+| unique / 16 | 1.824–1.949 | 3.003–3.106 | 2.109–2.293 | 1.16–1.18 | 0.70–0.74 | — |
+| unique / 4096 | 1.072–1.074 | 1.574–1.622 | 1.501–1.556 | 1.40–1.45 | 0.95–0.96 | — |
+| unique / 262144 | 2.479–2.582 | 3.074–3.102 | 2.160–2.357 | 0.87–0.91 | 0.70–0.76 | — |
+| callback / 0 | 0.868–0.975 | 1.075–1.204 | 1.646–1.788 | 1.83–1.90 | 1.49–1.53 | 2 |
+| callback / 16 | 1.768–1.893 | 2.988–3.062 | 2.097–2.264 | 1.19–1.20 | 0.70–0.74 | 1 |
+| callback / 4096 | 1.072–1.268 | 1.589–1.865 | 1.449–1.732 | 1.35–1.37 | 0.91–0.93 | — |
+| callback / 262144 | 2.403–2.733 | 2.963–3.262 | 2.175–2.457 | 0.90–0.91 | 0.73–0.75 | — |
+| scan / 0 | 0.852–0.955 | 1.138–1.313 | 2.475–2.602 | 2.73–2.91 | 1.98–2.18 | — |
+| scan / 16 | 2.118–2.196 | 3.144–3.229 | 17.069–17.153 | 7.81–8.06 | 5.31–5.43 | 1, 2 |
+| scan / 4096 | 1.460–1.553 | 1.869–1.974 | 15.537–15.692 | 10.10–10.64 | 7.95–8.31 | 1, 2 |
+| scan / 262144 | 2.879–3.041 | 3.262–3.419 | 16.472–16.694 | 5.49–5.72 | 4.88–5.05 | 1, 2 |
 
-Separate storage programs observe C allocation/free calls and Rust's system
-allocator requests only while the buffer operation is active. fwp reuses the
-existing managed-allocation, ownership-site and count-metadata observers. Each
-call must restore its starting live-buffer charge. All 72 focused executions
-pass, including 18 deliberately omitted releases that exit 225. The C/Rust
-observers report requested bytes; fwp additionally reports size-class charges
-and cached count bytes. None of these fields proves that libc or the OS returned
-pages after a free. OS resident/virtual checkpoints and ordinary-program memory
-observations remain to be implemented.
+### AMD64
 
-The current local checks use Clang on macOS ARM64. `buffer-peer-checks` in the
-numerical evidence workflow builds the current compiler and runs the same
-controls with GCC on both Linux architectures. It retains original/generated
-sources, diagnostic executables and every captured command result, including
-partial failures. This focused workflow does not run baseline timings or replace
-final-head production validation.
+| Entry / length | C ms | Rust ms | fwp ms | fwp/C | fwp/Rust | Controls |
+|---|---|---|---|---|---|---|
+| unique / 0 | 1.082–1.106 | 1.631–1.727 | 1.934–1.956 | 1.77–1.79 | 1.12–1.20 | — |
+| unique / 16 | 1.365–1.429 | 2.886–2.892 | 2.056–2.419 | 1.51–1.69 | 0.71–0.84 | — |
+| unique / 4096 | 0.970–1.058 | 1.742–1.808 | 1.773–1.787 | 1.69–1.83 | 0.99–1.02 | — |
+| unique / 262144 | 2.796–2.948 | 3.848–4.047 | 2.624–2.652 | 0.89–0.95 | 0.65–0.69 | — |
+| callback / 0 | 1.062–1.118 | 1.678–1.689 | 1.979–2.023 | 1.77–1.91 | 1.17–1.21 | — |
+| callback / 16 | 1.369–1.426 | 2.926–3.009 | 2.023–2.051 | 1.44–1.48 | 0.68–0.69 | — |
+| callback / 4096 | 1.063–1.074 | 1.743–1.775 | 1.693–1.709 | 1.59–1.59 | 0.96–0.97 | — |
+| callback / 262144 | 2.851–2.919 | 3.847–3.906 | 2.652–2.988 | 0.93–1.02 | 0.68–0.78 | — |
+| scan / 0 | 1.097–1.205 | 1.749–1.805 | 2.473–2.515 | 2.05–2.29 | 1.37–1.44 | 2 |
+| scan / 16 | 1.786–1.884 | 2.864–2.977 | 22.504–22.593 | 11.99–12.60 | 7.59–7.86 | 1 |
+| scan / 4096 | 1.355–1.470 | 1.997–2.109 | 19.547–19.822 | 13.48–14.42 | 9.40–9.79 | 1, 2 |
+| scan / 262144 | 3.109–3.305 | 3.825–4.038 | 21.109–21.443 | 6.49–6.79 | 5.31–5.52 | 2 |
 
+The worst copy discrepancy is about 15.2%, despite byte-identical programs.
+The source of the instability in the short cases is not established. Do not
+attribute it to allocation, instruction layout or scheduling without a controlled
+experiment. Those rows cannot set a speed budget until their measurement is repaired.
+The stable scan case takes 15.537–15.692 ms in fwp on ARM64 and 19.547–19.822 ms on
+AMD64; C takes 1.460–1.553 and 1.355–1.470 ms, respectively.
 
-## Focused GCC evidence
+## Allocation and ownership observations
 
-Run `41090130137` passes on both native Linux architectures at
-`44e7724d2114f4f4799348cf98684f55b6a4b635`. ARM job `124181555909`
-retains artifact `12992943369`; AMD job `124181555372` retains `12993378149`.
-Both complete logs have no errors or warnings. Each archive has 107 files and
-60 native executables; headers match the host architecture. Audits checked all
-136 native, 90 phase and 108 storage command records, including all 18 expected
-leak failures. Peer argument checks retain their summary in this first run;
-the checker now requires an explicit output directory and retains all 432 build/
-execution records, both input sources and twelve executables for subsequent runs.
+These are **separate instrumented programs**, not ordinary timing executables.
+For each nonempty call, C/Rust request `8 × length` payload bytes; fwp requests
+those bytes plus an eight-byte array header. At length 4,096, all three request one
+allocation per call: 32,768 bytes for C/Rust, 32,776 for fwp. Peak live requested
+bytes equal those amounts. Every call ends with zero live payload. These are
+requested sizes, not malloc header size or OS memory returned by `free`.
 
-For three 4,096-element calls, the fwp allocation observer records three requests
-and 98,328 requested bytes for each entry, with zero final live charge. The unique
-and known-callback entries have no ownership-helper entries or count metadata.
-The scan has 12,288 ineffective retain entries and 12,288 ineffective release
-entries, plus the three array owners' effective operations. Its one count byte
-remains cached for reuse. These are instrumented operations; ordinary compilation
-may eliminate no-op checks. They do not establish a timing penalty.
+Unique/callback fwp performs no counted-owner operations and requests no count
+slots in these diagnostics. Across three scan calls, fwp records:
 
-## Process memory preparation
+- Three effective owner creations and three effective final releases.
+- 12,288 retain-helper entries and 12,288 release-helper entries that change no count.
+- One requested count byte still cached after the calls; zero live array payload.
 
-The next diagnostic uses one call per process. It records entry to `main`, completed
-construction, release, return from the operation and the point before process exit.
-For fwp, the last checkpoint follows joining its runtime thread. It is not an
-observation after the OS destroys the process, and allocator reservations may
-still exist. Rust releases the CLI argument vector before that last checkpoint.
+These observations point to work worth investigating. Instrumentation can prevent
+ordinary optimization, so they do not prove that all these helper calls survive
+in the measured program or explain its timing gap. Per-site records are retained.
+The 40-byte chunk-header layout and eight-byte count pointer are recorded separately;
+they are not charged once per element or claimed to be the full allocator cost.
+General libc/Rust allocator bookkeeping is not isolated by these observers.
 
-Virtual size comes from `status`; resident, proportional, anonymous, swapped and
-HugeTLB storage come from `smaps_rollup`. The two reads are sequential, not one
-atomic snapshot. The observer's 8 KiB stack buffer, code and I/O affect these
-diagnostic snapshots. Ordinary-program peak resident storage is a separate
-measurement. RSS/PSS exclude the separately reported HugeTLB fields, as described
-in the [Linux process-memory documentation](https://www.kernel.org/doc/html/v6.15/filesystems/proc.html).
-The local parser/compile check is not Linux execution evidence. Actual checkpoint
-runs, ordinary peak memory, static stack reports and complete baseline collection
-remain required.
+## Process memory and virtual reservations
 
+GNU `time` runs of the ordinary 4,096-element scan report these peak resident ranges
+across two sessions and both identical copies. Each process performs 256 calls.
 
-## Compiler settings and stack reports
+| Host | C KiB | Rust KiB | fwp KiB |
+|---|---|---|---|
+| ARM64 | 1,372–1,384 | 1,796–1,872 | 1,396–1,664 |
+| AMD64 | 1,704–1,844 | 2,172–2,232 | 2,072–2,332 |
 
-Ordinary programs use GCC O2 and Rust optimization level 2, with link-time
-optimization disabled. C uses checked integer operations, `-fno-fast-math` and
-`-ffp-contract=off`. Rust explicitly selects checked overflow, 16 code-generation
-units, no debug information and unwinding panics. Its maintained checks use the
-same settings. These selections are recorded rather than relying on changing
-[compiler defaults](https://doc.rust-lang.org/rustc/codegen-options/index.html).
-ARM64 uses `armv8-a`/Rust `generic`; AMD64 uses `x86-64` for both compilers.
-The baseline hosts remain Neoverse-N2 and AMD EPYC 7763 with the existing exact
-GCC/Rust qualification requirements.
+Resident memory includes startup and mapped libraries; it is not the same as live
+payload. In separate one-call diagnostic processes, `/proc/self/status` supplies
+virtual size and `/proc/self/smaps_rollup` supplies resident, proportional,
+anonymous, swap and HugeTLB KiB at entry, construction, release, return and exit.
+The two kernel files are not an atomic snapshot. Observer code, its 8 KiB stack
+buffer and I/O affect the process. [Kernel documentation](https://www.kernel.org/doc/html/v6.15/filesystems/proc.html)
+explains why HugeTLB fields are separate from ordinary resident/proportional totals.
 
-C emits per-function `.su` stack reports. Rust 1.99.1 emits final frame sizes
-through `-C remark=prolog-epilog`, using the production settings in a separate
-build. Its instruction bytes must match the ordinary binary before using the
-report. These are [LLVM's compiler-generated frame sizes](https://llvm.org/docs/doxygen/PrologEpilogInserter_8cpp_source.html),
-not estimates from disassembly. The parser retains the expected missing-source-location
-warning caused by `debuginfo=0` and rejects all other warnings or unknown records.
-Reported frames exclude prebuilt libraries and do not establish total active-call
-stack usage or all target-specific storage outside the adjusted frame. Dynamic C
-frames remain labelled dynamic.
+At construction, fwp reports about **65.1 GiB of virtual address space**, but about
+1.5–1.9 MiB resident in the 4,096-element scan. The source reserves a 64 GiB heap
+address range plus metadata ([heap initialization](../../runtime/fwp_rt_heap.c));
+the generated native entry also requests a 1 GiB worker-stack reservation
+([C emission](../../src/cgen.rs)). These are not 65 GiB of physically occupied RAM.
+Returning an array's storage need not return pages immediately to the OS. The large
+virtual reservation remains a separate cost; GC removal does not remove it.
 
-The first builder used `-stack-size-section`, but Rust's explicit target setting
-disables that section unless its unstable option is enabled. Both GCC-host runs
-therefore returned empty reports, which the checker correctly rejected. The repair
-uses stable compiler remarks; it does not change compilers or enable unstable features.
+## Code and stack costs
 
-All source files, commands, ordinary/copy binaries, section sizes and raw stack
-reports are retained. Each language's copy must be byte-identical. Rust normally
-links much of its standard library into its executable; C and fwp use external
-libc code. Executable bytes and whole-process memory therefore describe different
-boundaries, and the report must state that distinction. The new builder/parser
-controls are implemented; native stack-report verification is pending. No timing
-session starts before the complete evidence path is verified.
+These are ordinary scan executables from session 1; session 2 reports the same
+sizes. Files are unstripped. Rust links prebuilt standard-library code and retains
+about 4.1 MB of debug sections from those libraries even with crate `debuginfo=0`;
+C/fwp use external libc. Whole-file sizes therefore compare different linking and
+metadata boundaries and are not an intrinsic language-size ranking.
 
-## Focused repair before baseline collection
+| Host / language | Whole file bytes | `.text` bytes | Largest reported frame bytes |
+|---|---|---|---|
+| ARM64 / c | 70,864 | 1,064 | 80 (static) |
+| ARM64 / rust | 4,628,144 | 224,540 | 224 (compiler remark) |
+| ARM64 / fwp | 76,144 | 16,780 | 592 (static) |
+| AMD64 / c | 16,432 | 1,020 | 80 (static) |
+| AMD64 / rust | 4,552,184 | 247,971 | 200 (compiler remark) |
+| AMD64 / fwp | 46,176 | 18,162 | 576 (dynamic) |
 
-Run `41097911057` at `230b1e54` failed the memory and stack-report steps on both
-architectures. The complete logs and partial artifacts (`12995829431` AMD64,
-`12997202090` ARM64) were audited: peer, native, phase, storage and clock checks
-passed; both failures are confined to the two new observers. Docs run `41097913940`
-passed and its full log was audited. No timing session ran.
+C's `.su` records and Rust 1.99.1's `prolog-epilog` remarks describe frames from
+compiled sources, excluding prebuilt libraries. Rust's separate reporting build
+must have the same `.text` bytes as its ordinary executable. Dynamic C frame
+entries remain dynamic: their reported number is not a total stack upper bound.
+None of these maxima measures simultaneously active calls or all target-specific
+space outside the adjusted frame. No stack-saving claim follows from them alone.
 
-Linux's `VmSize` uses a tab after the colon. The parser now accepts spaces and
-tabs before the decimal value, while rejecting signed values, wrong units,
-duplicates and overflow. Local checks pass 38 parser controls and compile all
-18 diagnostic programs with production Rust 1.99.1; Linux execution still needs
-native CI. Phase and storage checks now include the largest declared length,
-262,144: locally 90 phase executions, 270 events, 180 damaged-record rejections,
-and 90 storage executions including 18 intentional leak failures pass.
+## Verification, failures and reproduction
 
-## Ordinary-program collection and audit
+Focused source `6eca1176`, run `41102080961`, passes on both architectures with
+complete log/artifact audits. Each host verifies 420 C/Rust argument/result cases,
+42 raw/optimized interpreter comparisons, 84 native O1/O2 executions, 90 phase
+cases with 180 damaged-result controls, 90 storage cases including 18 intentional
+leaks, 38 memory-parser controls, 72 Linux memory executions, compiler frames and
+nine numerical-consumer result sets. Six timer helpers pass 48 failure/success
+controls. Real subprocess tests cover timeout, cancellation and spawn failure.
+Eleven rehashed damaged-evidence controls reject incomplete or false records;
+synthetic observations cannot validate as observed measurements.
 
-`measure-buffer-baselines.py` runs the cases in table order: unique read, callback,
-scan; within each, lengths 0, 16, 4,096 and 262,144. Each process has a 45-second
-limit. The parent runs one child at a time and allows all four qualified CPUs;
-it does not pin a worker or change priority. Children receive exactly `PATH=/usr/bin:/bin`,
-`LANG=C`, `LC_ALL=C` and `TZ=UTC`, without inherited runtime tuning variables.
+Earlier runs remain failed and retained:
 
-The elapsed clock starts immediately before spawning the child and stops after
-capturing its output and exit status. It includes process-launch and capture costs.
-Child user/system CPU comes from the difference between serial child-usage readings;
-it excludes the Python parent. The runner saves every attempt before checking its
-result. Timeout, cancellation, spawn failure or wrong output stops collection and leaves partial
-evidence. It never retries an observation or silently completes a shortened round.
+| Run / source | Failure | Repair |
+|---|---|---|
+| `41097911057` / `230b1e54` | Linux values contain tabs; Rust's LLVM section option emits no stack records | Accept horizontal whitespace before strict decimal values; use stable compiler remarks |
+| `41100000646` / `2acbfb41` | objcopy rewrites its input without an output; a late C object leaves an ARM64 stack-guard dependency unresolved | Supply an explicit inspection output and verify inputs unchanged; link C through native static archives before system libraries |
 
-Across all twelve cases, each session retains 32,832 processes (31,104 measured,
-1,728 warmups). A separate 72-process pass uses GNU `time` to record maximum
-resident KiB for every case/language/copy. Those timings do not enter the baseline.
-Peak resident memory includes libraries and process startup, is sampled/accounted
-by the OS, and does not identify allocator headers or simultaneously live payload.
-A zero reported peak remains zero, not an invented payload estimate.
+The late-object fix covers both numerical-output callers too, with untimed result
+and cleanup checks. Stack protection remains enabled. No old numerical benchmark
+was rerun. [Objcopy's file rules](https://sourceware.org/binutils/docs/binutils/objcopy.html)
+and [Rust's native library option](https://doc.rust-lang.org/rustc/command-line-arguments.html#-l-link-the-generated-crate-to-a-native-library)
+explain the command-level repairs. All earlier passing and failing evidence is kept.
 
-Before collecting any samples, the copy-control limit is **1.02 in either direction**:
-`max(copy/original, original/copy) <= 1.02` for each language's median round totals.
-A failure remains in the report with every sample and prevents a stability claim;
-it does not trigger a retry or discard the descriptive results. These new B1
-controls do not change D2/N1's limits or reopen their unchanged experiments.
+The [artifact index](buffer-baseline-artifacts-2026-10-30.json) records run/job/artifact
+IDs, archive hashes, exact hosts and every per-session result. In each downloaded
+artifact, `observed/` contains a manifest, all raw observations, binaries, generated
+sources and compiler reports. Reconstruct it with the matching source's
+`check-buffer-baselines.py --input observed --source REVISION --machine ARCH
+--session NUMBER --origin observed`. The verifier checks every file and exact build
+settings, then recomputes summaries from the complete ordered records.
 
-`check-buffer-baselines.py` verifies every file's size/hash, exact build commands,
-compiler versions, binary/copy hashes, stack reports and complete sample ordering.
-It reconstructs round totals, ratios and memory summaries from raw records and
-rejects disagreement with the saved report. `check-buffer-pipeline.py` supplies
-synthetic observations around real compiled programs and then changes checksums,
-commands, settings, counts, outputs and summaries. It recomputes file hashes after
-each change: the audit must detect false evidence even when its manifest agrees.
-Synthetic records have an explicit origin and cannot pass the observed-results check.
+## Next accepted workload and budget
 
-The [baseline workflow](../../.github/workflows/numerics.yml) qualifies
-both hosts and checks complete evidence before measuring. Dispatch `suite=buffer-baselines`, `native_runner=all` and explicit
-`comparison_session=1`, then `comparison_session=2`, once each on the same published source after focused checks pass.
-Retain complete or partial artifacts for all four jobs. This workflow is prepared,
-not yet run; no comparative performance result is claimed.
+Only the **4,096-element scan, 256 calls/process** currently has passing controls
+in all four sessions. Before selecting an optimization, freeze this budget:
 
-## Link and inspection repair
+| Requirement | Candidate acceptance |
+|---|---|
+| Correctness | Preserve checked arithmetic, callback/trap order, aliasing, cancellation and cleanup; raw interpreter, optimized interpreter and native O1/O2 agree |
+| Elapsed time | At least 10% less than unchanged fwp in every paired session; no C/Rust parity claim follows |
+| Copy controls | Maximum/minimum median within each identical-code family at most 1.02; a failure is inconclusive, never a retry |
+| Payload and counts | At most one payload request and 32,776 requested/peak live bytes per call; zero final payload; no increase above one cached count byte |
+| Code | At most 5% `.text` growth versus matched unchanged fwp on each architecture |
+| Stack | No larger compiler-reported fixed frame component or new dynamic stack requirement; preserve scope/cleanup proofs, without inventing a whole-stack bound |
 
-The next focused run, `41100000646` at `2acbfb41`, verified all 72 memory
-executions on AMD64 and all nine ordinary programs/stack reports on ARM64. It
-exposed two further harness errors; both complete logs and partial artifacts
-(`12998556454` AMD64, `12997637733` ARM64) are retained and audited.
+The 10% target is over six times the largest copy discrepancy (about 1.62%) in
+this accepted case, and tests a meaningful reduction in its large remaining gap.
+It is a workload-specific target, not a universal performance rule.
 
-GNU objcopy rewrites its input when no output executable is supplied, even when
-asked to dump a section. The AMD64 identity check caught that change. Inspection
-now supplies a separate output and verifies both input executables remain unchanged;
-see [objcopy's file arguments](https://sourceware.org/binutils/docs/binutils/objcopy.html).
-The ordinary timing program must remain exactly the compiler's output.
-
-The ARM64 C memory observer uses a compiler-inserted stack protector. Passing its
-object through Rust's trailing `link-arg` places it after the system libraries,
-so the linker cannot resolve the guard dependency in that order. The helper now
-uses Rust's explicit [native static library option](https://doc.rust-lang.org/rustc/command-line-arguments.html#-l-link-the-generated-crate-to-a-native-library).
-Stack protection remains enabled. The same command pattern in the two numerical
-output scripts is repaired with untimed linkage/cleanup controls. No earlier
-numerical result is rerun or relabelled as passing.
-
-The complete evidence verifier passed locally against the retained ARM64 compiler
-reports with synthetic process observations and ten rehashed damage/origin controls.
-The newer explicit-output command adds another damaged-command control. Native
-verification remains pending; synthetic evidence is never a performance result.
+A candidate comparison keeps two independent sessions per architecture, length
+4,096, 256 calls/process, two warmup rounds, 36 measured rounds, twelve processes
+per label and seed 20261030. Its six equal-length executable labels are three
+byte-identical unchanged copies and three byte-identical candidate copies. Use
+the same balanced position/predecessor schedule. Compare medians of each round's
+family totals; retain all individual copies and require their control limit.
+Compiler flags, host qualification, environment and ordinary/diagnostic separation
+stay fixed. This comparison has not run and no implementation candidate is yet
+accepted. The 35 failed baseline combinations remain open measurement work.
