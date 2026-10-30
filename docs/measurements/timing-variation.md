@@ -268,7 +268,54 @@ explains how code, stack and heap layout can bias timing comparisons. That is a
 reason to avoid treating repeated elapsed times as independent proof of compiler
 cost, not a diagnosis of these programs. No runtime randomizer or JIT is proposed.
 
-The typed-state implementation is ready for the complete correctness matrix.
-That matrix cannot turn these diagnostic timings into performance acceptance.
+The typed-state implementation passed the complete correctness matrix in #227.
+That matrix does not turn these diagnostic timings into performance acceptance.
 Both failed requirements remain open; any next measurement method needs its own
 stated purpose and predeclared protocol before execution.
+
+## Executable-name diagnostic, declared before implementation
+
+The production derivative comparison has one identical-code control, for the
+current-result program. It does not control either history variant. The resource
+diagnostic supplies those missing copies, but gives all four roles filenames of
+different lengths. Kernel timing also names fwp and its copy differently. These
+are uncontrolled invocation differences, not evidence of unsafe language code or
+an established explanation of the failed measurements.
+
+Use the same retained small-array and zero-update history programs as the
+resource diagnostic: kernel source `37da7441`, derivative source `694e31b7`,
+qualified Linux EPYC 7763 with four allowed processors and the recorded GCC/Rust
+versions. Verify every binary and source identity before execution. Do not rebuild,
+change runtime code, disable address randomization or inspect disassembly.
+
+Compare two explicit naming policies. `named` uses the resource diagnostic's
+role-based basenames. `equal` uses four eight-character basenames, `slot0exe`
+through `slot3exe`, inside each group's directory. Create the equal names as hard
+links to the named files and verify device/inode equality: both policies execute
+the same file, not independently compiled or copied programs. All paths are
+absolute. Each invocation passes its executable path as argument zero; C/Rust
+array peers retain their explicit `array` argument. Keep the same environment,
+working directory, allowed CPU set and all remaining arguments for both policies.
+This changes the executable name and argument-zero text together; it cannot
+separate their individual effects or identify a stack/cache mechanism.
+
+For each group, run sixteen rounds with four processes per role per policy,
+seed 20261029 and the existing balanced four-label schedule. Alternate which
+policy runs first each round. Retain all **1,024 process observations**, including
+failures and outliers; no timing is an acceptance sample. Record elapsed time,
+child CPU time, faults, context switches, exact commands and stdout/stderr hashes.
+Check every result, all five array samples and zero final live storage. Preserve
+all original binary bytes, the source/report identities, environment identity,
+file-link identities and complete job logs. Reject a different host before
+running any program. A host rejected before execution may be replaced; a measured
+result must not be rerun because its ratios are inconvenient.
+
+For each policy report candidate/reference and both history copy controls,
+plus array kernel, allocation-inclusive and whole-child copy controls. Compare
+median complete round totals, with individual observations retained. The prior
+2% failures remain failures; this diagnostic neither changes those limits nor
+closes D2/N1. A difference between policies is evidence about this invocation
+change on this host, not proof of a general compiler cost or a future passing
+baseline. If normalizing names does not explain the discrepancy, say so. Any
+later acceptance repair needs its own published protocol and must control every
+candidate/reference program it measures.

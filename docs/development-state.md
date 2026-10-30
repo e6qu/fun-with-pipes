@@ -1,6 +1,10 @@
 # Current work
 
-**Next:** run and audit the complete final-head production, documentation and G2
+**Next:** implement the [executable-name diagnostic](measurements/timing-variation.md#executable-name-diagnostic-declared-before-implementation)
+on branch `numerical-measurement-controls`, while monitoring PR #229.
+This preparation is separate from its frozen final head `3ddd989c`.
+
+For the active delivery, run and audit the complete final-head production, documentation and G2
 checks for [PR #229](https://github.com/e6qu/fun-with-pipes/pull/229), then
 squash-merge only after every required gate passes. The byte-search candidate now
 qualifies all four measurement sessions; final platform coverage is the remaining
@@ -26,7 +30,9 @@ mark ready to start the complete matrix.
 
 ## Current branch
 
-Worktree `/private/tmp/fwp-direct-string-results`, branch `direct-string-results`.
+Preparation worktree `/private/tmp/fwp-numerical-controls`, branch
+`numerical-measurement-controls`. Active PR #229 remains in
+`/private/tmp/fwp-direct-string-results`, branch `direct-string-results`.
 The [string report](measurements/direct-string-results.md) owns all three
 protocols, fixed acceptance limits, source reasoning and retained measurements.
 
