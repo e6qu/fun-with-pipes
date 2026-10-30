@@ -7,8 +7,9 @@ import os
 from pathlib import Path
 import platform
 import statistics
-import subprocess
 import time
+
+from process_wait import run_capture
 
 
 def digest(path):
@@ -46,8 +47,9 @@ def main():
     def run(command, input_path):
         command = list(map(str, command))
         with input_path.open('rb') as stream:
-            result = subprocess.run(command, stdin=stream, capture_output=True, env=env,
-                                    timeout=args.timeout)
+            result = run_capture(command, timeout=args.timeout,
+                         env=env, cwd=None, input_data=None, input_stream=stream,
+                         text=False, encoding='utf-8', check=False)
         assert result.returncode == 0, (command, result)
         return result
 

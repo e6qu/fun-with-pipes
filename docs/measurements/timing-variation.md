@@ -22,6 +22,23 @@ These facts do not establish the cause. Possible effects of process scheduling
 and memory placement need direct observations; instruction listings alone cannot
 identify them. Inspect the source and validate all outputs throughout diagnosis.
 
+## Current repair: remove parent-process polling sleeps
+
+The [scalar-fold comparison](unique-buffer-peers.md#waiting-repair-declared-before-new-measurements)
+exposed a concrete harness cost: a timed POSIX process wait may sleep after the
+child closes its output. A deterministic test reproduces that delay. The shared
+captured-wait helper now uses a blocking wait with an explicit alarm deadline;
+tests preserve timeout, cancellation, captured output and signal restoration.
+Affected captured measurement callers use the same repair. It changes the
+measurement source, not previously retained observations or acceptance limits.
+
+Validate this method first with the declared scalar-fold sessions. D2 and N1
+remain open: neither the synthetic proof nor an improved scalar-fold control
+establishes the cause of their earlier failures. Before remeasuring either, name
+its exact programs and unchanged protocol and distinguish whole-process timing
+from timers inside the numerical calculation. Parent waiting cannot explain
+variation measured entirely inside the child.
+
 ## Diagnostic experiment, declared before implementation
 
 Use a qualified four-processor Linux EPYC 7763 host with GCC 15.2.0, matching

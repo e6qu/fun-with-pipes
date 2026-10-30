@@ -13,9 +13,10 @@ import random
 import re
 import shutil
 import statistics
-import subprocess
 import time
 import zipfile
+
+from process_wait import run_capture
 
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('descent_peers', ROOT / 'scripts/measure-descent-peers.py')
@@ -123,8 +124,9 @@ def main():
     commands = []
 
     def run(command):
-        actual = subprocess.run([str(part) for part in command], env=environment,
-                                capture_output=True, timeout=args.timeout)
+        actual = run_capture([str(part) for part in command], timeout=args.timeout,
+                     env=environment, cwd=None, input_data=None, input_stream=None,
+                     text=False, encoding='utf-8', check=False)
         if actual.returncode:
             raise RuntimeError(f'{command}: {actual.returncode}: {actual.stderr.decode(errors="replace")}')
         return actual
@@ -196,7 +198,9 @@ def main():
                         source.write_text(observe_solves(edit_source(original, 'fwp', args.repetitions), control))
                         binary = directory / label
                         build([args.cc, *flags, '-w', source, '-o', binary, '-lm', '-lpthread', '-ldl'])
-                        actual = subprocess.run([str(binary)], env=environment, capture_output=True, timeout=args.timeout)
+                        actual = run_capture([str(binary)], timeout=args.timeout,
+                                     env=environment, cwd=None, input_data=None, input_stream=None,
+                                     text=False, encoding='utf-8', check=False)
                         (directory / (label + '.stdout')).write_bytes(actual.stdout)
                         (directory / (label + '.stderr')).write_bytes(actual.stderr)
                         (directory / (label + '.status')).write_text(str(actual.returncode) + '\n')

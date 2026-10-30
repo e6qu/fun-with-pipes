@@ -16,6 +16,8 @@ import struct
 import subprocess
 import time
 
+from process_wait import communicate
+
 ROOT = Path(__file__).resolve().parent.parent
 WORD_SPEC = importlib.util.spec_from_file_location('word_frequency', ROOT / 'scripts/measure-wordfreq.py')
 WORD = importlib.util.module_from_spec(WORD_SPEC)
@@ -34,6 +36,7 @@ def observe(command, input_path, environment, timeout, log, metadata):
     command = list(map(str, command))
     timed_out = False
     spawn_error = None
+    interruption = None
     with input_path.open('rb') as source:
         started = time.perf_counter_ns()
         try:
@@ -46,11 +49,14 @@ def observe(command, input_path, environment, timeout, log, metadata):
         else:
             with child:
                 try:
-                    stdout, stderr = child.communicate(timeout=timeout)
-                except subprocess.TimeoutExpired:
-                    timed_out = True
+                    stdout, stderr = communicate(child, timeout, None)
+                except BaseException as error:
+                    timed_out = isinstance(error, subprocess.TimeoutExpired)
+                    if not timed_out:
+                        interruption = error
                     try:
-                        os.killpg(child.pid, signal.SIGKILL)
+                        if child.returncode is None:
+                            os.killpg(child.pid, signal.SIGKILL)
                     except ProcessLookupError:
                         pass  # The process group may have exited at the deadline.
                     stdout, stderr = child.communicate()
@@ -58,17 +64,20 @@ def observe(command, input_path, environment, timeout, log, metadata):
         elapsed = time.perf_counter_ns() - started
     row = dict(metadata, command=command, input=str(input_path), status=status,
                timedOut=timed_out, spawnError=spawn_error, elapsedNs=elapsed,
+               interruption=type(interruption).__name__ if interruption else None,
                stdoutBase64=base64.b64encode(stdout).decode('ascii'),
                stderrBase64=base64.b64encode(stderr).decode('ascii'),
                stdoutSha256=digest(stdout), stderrSha256=digest(stderr))
     with log.open('a', encoding='utf-8') as stream:
         stream.write(json.dumps(row) + '\n')
+    if interruption is not None:
+        raise interruption
     return row, stdout, stderr
 
 
 def verify_result(result, expected):
     row, stdout, stderr = result
-    assert row['status'] == 0 and not row['timedOut'], row
+    assert row['status'] == 0 and not row['timedOut'] and row['interruption'] is None, row
     assert stdout == expected and stderr == b'', (row, stdout, stderr)
 
 

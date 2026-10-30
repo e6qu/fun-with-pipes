@@ -19,6 +19,8 @@ import struct
 import subprocess
 import time
 
+from process_wait import communicate, run_capture
+
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('coordinate', ROOT / 'scripts/measure-coordinate-work.py')
 COORDINATE = importlib.util.module_from_spec(SPEC)
@@ -41,7 +43,7 @@ def build(command, environment, timeout, commands, directory):
         with subprocess.Popen(command, env=environment, stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE, start_new_session=True) as process:
             try:
-                stdout, stderr = process.communicate(timeout=timeout)
+                stdout, stderr = communicate(process, timeout, None)
                 if process.returncode:
                     raise subprocess.CalledProcessError(process.returncode, command, stdout, stderr)
             except BaseException:
@@ -207,7 +209,9 @@ def main():
     commands = []
 
     def run(command, env):
-        result = subprocess.run([str(p) for p in command], env=env, capture_output=True, timeout=args.timeout)
+        result = run_capture([str(p) for p in command], timeout=args.timeout,
+                     env=env, cwd=None, input_data=None, input_stream=None,
+                     text=False, encoding='utf-8', check=False)
         assert result.returncode == 0, (command, result.returncode, result.stderr.decode(errors='replace'))
         return result
 
@@ -271,7 +275,9 @@ def main():
                            path, *objects, '-o', binary, '-lm', '-lpthread', '-ldl']
             build(command, environment, args.build_timeout, commands, out)
             binaries[label] = binary
-            actual = subprocess.run([str(binary)], env=environment, capture_output=True, timeout=args.timeout)
+            actual = run_capture([str(binary)], timeout=args.timeout,
+                         env=environment, cwd=None, input_data=None, input_stream=None,
+                         text=False, encoding='utf-8', check=False)
             assert actual.returncode == status, (label, actual.returncode, actual.stderr.decode(errors='replace'))
             (directory / (label + '.stdout')).write_bytes(actual.stdout)
             (directory / (label + '.stderr')).write_bytes(actual.stderr)

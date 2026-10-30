@@ -28,10 +28,15 @@ def check_manifest(folder):
         assert metadata == dict(bytes=len(data), sha256=hashlib.sha256(data).hexdigest()), name
 
 
-def check_evidence(folder, source, machine, session, origin):
+def check_evidence(folder, source, machine, session, origin, wait_policy):
     check_manifest(folder)
     config = json.loads((folder / 'configuration.json').read_text())
     assert origin in ['observed', 'synthetic'] and config['origin'] == origin
+    assert wait_policy in ['timed-polling', 'posix-alarm']
+    if wait_policy == 'timed-polling':
+        assert 'waitPolicy' not in config, 'the original frozen records have no wait-policy field'
+    else:
+        assert config['waitPolicy'] == wait_policy
     assert config['source'] == source and config['session'] == session
     assert config['cpuPolicy'] == 'all' and config['timeout'] == 45
     assert config['environment'] == dict(PATH='/usr/bin:/bin', LANG='C', LC_ALL='C', TZ='UTC')
@@ -151,11 +156,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input', type=Path, required=True)
     parser.add_argument('--source', required=True)
+    parser.add_argument('--wait-policy', choices=['timed-polling', 'posix-alarm'], required=True)
     parser.add_argument('--origin', choices=['observed', 'synthetic'], required=True)
     parser.add_argument('--machine', choices=['aarch64', 'x86_64'], required=True)
     parser.add_argument('--session', type=int, choices=[1, 2], required=True)
     args = parser.parse_args()
-    check_evidence(args.input, args.source, args.machine, args.session, args.origin)
+    check_evidence(args.input, args.source, args.machine, args.session, args.origin, args.wait_policy)
     print('Verified all files, 32,832 process records, 72 memory observations and reconstructed summaries')
 
 

@@ -8,10 +8,11 @@ import os
 from pathlib import Path
 import platform
 import statistics
-import subprocess
 import time
 
 from fwp_tools.disassembler import Disassembler
+
+from process_wait import run_capture
 
 ROOT = Path(__file__).resolve().parent.parent
 spec = importlib.util.spec_from_file_location("iteration", ROOT / "scripts/measure-iteration.py")
@@ -50,8 +51,9 @@ def main():
 
     def run(command):
         commands.append(list(map(str, command)))
-        completed = subprocess.run(list(map(str, command)), env=env, capture_output=True,
-                                   text=True, encoding="utf-8", timeout=args.timeout)
+        completed = run_capture(list(map(str, command)), timeout=args.timeout,
+                        env=env, cwd=None, input_data=None, input_stream=None,
+                        text=True, encoding="utf-8", check=False)
         if completed.returncode:
             raise RuntimeError(f"{command!r}: {completed.stdout}\n{completed.stderr}")
         return completed

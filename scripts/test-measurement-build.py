@@ -108,7 +108,7 @@ class BuildChecks(unittest.TestCase):
                      '--samples', '8', '--warmups', '1', '--order-seed', '1',
                      '--timeout', '5', '--build-timeout', '5',
                      '--control-max-difference', '0.02', '--case', '33:199:1']
-        real_run = subprocess.run
+        real_run = OUTPUT.run_capture
 
         def run(command, **kwargs):
             replies = {'lscpu': b'fixture CPU\n', 'fixture-cc': b'fixture C compiler\n',
@@ -120,7 +120,7 @@ class BuildChecks(unittest.TestCase):
         with patch.object(sys, 'argv', arguments), \
                 patch.object(OUTPUT.platform, 'system', return_value='Linux'), \
                 patch.object(OUTPUT.platform, 'machine', return_value='aarch64'), \
-                patch.object(OUTPUT.subprocess, 'run', side_effect=run):
+                patch.object(OUTPUT, 'run_capture', side_effect=run):
             with self.assertRaises(subprocess.CalledProcessError) as caught:
                 OUTPUT.main()
         self.assertEqual(caught.exception.returncode, 7)

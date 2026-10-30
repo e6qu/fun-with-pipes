@@ -34,9 +34,13 @@ collector is not the same as removing these costs. The
 2. Use the [B1 buffer results and frozen scan budget](docs/measurements/unique-buffer-peers.md):
    four audited sessions retain all results; 35/48 case controls fail and cannot
    support stable speed claims. The 4,096-element scan passes all four sessions but
-   takes 10.1–14.4× C's time. Inspect its source and ownership operations, then test
-   a candidate against the published time/storage/code/stack budget. Repair the
-   short-case measurement before using its unstable rows; never rerun unchanged.
+   takes 10.1–14.4× C's time. The scalar-fold candidate removes per-element dispatch
+   and ineffective count calls, with smaller code and reported frames. The user
+   accepted these reductions while leaving timing acceptance open: both ARM
+   sessions pass, but AMD's identical-copy control fails at 3.88% (limit 2%).
+   Finish the proven parent-process polling-delay repair and its lifecycle checks,
+   then collect two repaired sessions per architecture under the unchanged budget.
+   Keep all original failures; do not retry unchanged measurements.
 3. Resolve D2/N1's failed measurements before claiming numerical speed acceptance.
    Fixed CPU affinity and equal executable names did not resolve the controls.
    Do not rerun unchanged experiments or increase sample counts again.

@@ -15,6 +15,8 @@ import statistics
 import subprocess
 import time
 
+from process_wait import communicate
+
 ROOT = Path(__file__).resolve().parent.parent
 PROFILE_SPEC = importlib.util.spec_from_file_location('iteration_profile', ROOT / 'scripts/measure-iteration.py')
 PROFILE = importlib.util.module_from_spec(PROFILE_SPEC)
@@ -101,11 +103,12 @@ def main():
         with subprocess.Popen(list(map(str, command)), env=env, stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE, start_new_session=True) as process:
             try:
-                stdout, stderr = process.communicate(timeout=args.timeout)
+                stdout, stderr = communicate(process, args.timeout, None)
             except BaseException as error:
                 interrupted = error
                 try:
-                    os.killpg(process.pid, signal.SIGKILL)
+                    if process.returncode is None:
+                        os.killpg(process.pid, signal.SIGKILL)
                 except ProcessLookupError:
                     pass
                 stdout, stderr = process.communicate()

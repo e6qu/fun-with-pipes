@@ -10,7 +10,8 @@ import platform
 import re
 import shutil
 import statistics
-import subprocess
+
+from process_wait import run_capture
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -70,7 +71,9 @@ def main():
     def run(command):
         command = list(map(str, command))
         commands.append(command)
-        output = subprocess.run(command, capture_output=True, env=environment, timeout=args.timeout)
+        output = run_capture(command, timeout=args.timeout,
+                     env=environment, cwd=None, input_data=None, input_stream=None,
+                     text=False, encoding='utf-8', check=False)
         assert output.returncode == 0, (command, output.returncode, output.stderr.decode(errors='replace'))
         assert not output.stderr, (command, output.stderr)
         return output.stdout

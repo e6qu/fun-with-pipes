@@ -29,7 +29,7 @@ def main():
     actual = dict(system='Linux', machine=machine, processors=4,
         cpu='Neoverse-N2' if machine == 'aarch64' else 'AMD EPYC 7763 64-Core Processor',
         cVersion=programs['versions']['cc'].splitlines()[0], rustVersion=programs['versions']['rustc'].strip())
-    config = dict(source=source, reference=SCAN.REFERENCE, session=1, origin='synthetic', directory=str(out),
+    config = dict(source=source, reference=SCAN.REFERENCE, session=1, origin='synthetic', waitPolicy='posix-alarm', directory=str(out),
         environment=SCAN.ENVIRONMENT, timeout=45, cpuPolicy='all', affinity=[0, 1, 2, 3], labels=list(SCAN.LABELS),
         length=4096, calls=256, rounds=36, warmups=2, processes=12, seed=20261030, run='1', attempt='1',
         qualification=dict(source=source, actual=actual, expected=actual, qualified=True, failures=[]))
@@ -63,7 +63,7 @@ def main():
     assert report['timing']['familyMedianRoundElapsedNs'] == dict(old=3600, new=2880)
     (out / 'report.json').write_text(json.dumps(report))
     SCAN.manifest(out)
-    SCAN.check_evidence(out, source, machine, 1, 'synthetic')
+    SCAN.check_evidence(out, source, machine, 1, 'synthetic', 'posix-alarm')
     # A bad identical-copy control or a slower candidate remains visible, not
     # discarded. Neither may turn into a passing numerical result.
     for mode in ['unstable', 'slow']:
@@ -74,7 +74,8 @@ def main():
                 row['elapsedNs'] *= 2
         summary = SCAN.summarize(changed)
         assert not summary['copyControlPassed'] if mode == 'unstable' else not summary['elapsedPassed']
-    damages = []
+    wrong_wait = dict(config, waitPolicy='timed-polling')
+    damages = [('configuration.json', json.dumps(wrong_wait).encode())]
     wrong_report = copy.deepcopy(report)
     wrong_report['timing']['candidateReferenceRatio'] = 0.1
     damages.append(('report.json', json.dumps(wrong_report).encode()))
@@ -96,7 +97,7 @@ def main():
         path.write_bytes(damaged)
         SCAN.manifest(out)
         try:
-            SCAN.check_evidence(out, source, machine, 1, 'synthetic')
+            SCAN.check_evidence(out, source, machine, 1, 'synthetic', 'posix-alarm')
         except (AssertionError, KeyError, ValueError):
             pass
         else:
@@ -105,12 +106,12 @@ def main():
             path.write_bytes(original)
     SCAN.manifest(out)
     try:
-        SCAN.check_evidence(out, source, machine, 1, 'observed')
+        SCAN.check_evidence(out, source, machine, 1, 'observed', 'posix-alarm')
     except AssertionError:
         pass
     else:
         raise AssertionError('synthetic evidence accepted as observed')
-    SCAN.check_evidence(out, source, machine, 1, 'synthetic')
+    SCAN.check_evidence(out, source, machine, 1, 'synthetic', 'posix-alarm')
     print(f'Paired scan: balanced schedule, slow/unstable results and {len(damages) + 1} damaged-evidence rejections pass')
 
 

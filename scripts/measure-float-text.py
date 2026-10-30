@@ -14,6 +14,8 @@ import statistics
 import subprocess
 import time
 
+from process_wait import run_capture
+
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('output', ROOT / 'scripts/measure-descent-output.py')
 OUTPUT = importlib.util.module_from_spec(SPEC)
@@ -66,7 +68,9 @@ def main():
     commands, results = [], {}
 
     def run(command, env):
-        result = subprocess.run([str(p) for p in command], env=env, capture_output=True, timeout=args.timeout)
+        result = run_capture([str(p) for p in command], timeout=args.timeout,
+                     env=env, cwd=None, input_data=None, input_stream=None,
+                     text=False, encoding='utf-8', check=False)
         assert result.returncode == 0, (command, result.returncode, result.stderr.decode(errors='replace'))
         return result
 

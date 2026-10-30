@@ -14,6 +14,8 @@ import struct
 import subprocess
 import time
 
+from process_wait import run_capture
+
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('scalar_bounds', ROOT / 'scripts/scalar-bounds.py')
 BOUNDS = importlib.util.module_from_spec(SPEC)
@@ -207,7 +209,9 @@ def measure(args):
 
     def command(argv, label):
         argv = list(map(str, argv))
-        actual = subprocess.run(argv, env=environment, capture_output=True, timeout=120)
+        actual = run_capture(argv, timeout=120,
+                     env=environment, cwd=None, input_data=None, input_stream=None,
+                     text=False, encoding='utf-8', check=False)
         (args.output / (label + '.stdout')).write_bytes(actual.stdout)
         (args.output / (label + '.stderr')).write_bytes(actual.stderr)
         report['commands'].append(dict(argv=argv, status=actual.returncode, stdout=label + '.stdout', stderr=label + '.stderr'))
@@ -260,7 +264,9 @@ def measure(args):
         missing_binary = args.output / (name + '-missing-mark.exe')
         missing_source.write_text(missing)
         command([args.cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w', missing_source, '-o', missing_binary, '-lm', '-lpthread', '-ldl'], name + '-missing-compile')
-        broken = subprocess.run([str(missing_binary)], env=environment, capture_output=True, text=True, timeout=120)
+        broken = run_capture([str(missing_binary)], timeout=120,
+                     env=environment, cwd=None, input_data=None, input_stream=None,
+                     text=True, encoding='utf-8', check=False)
         write_json(args.output / (name + '-missing-mark.json'), dict(status=broken.returncode, stdout=broken.stdout, stderr=broken.stderr,
                    sourceSha256=digest(missing_source), binarySha256=digest(missing_binary)))
         assert broken.returncode == 246 and broken.stdout == EXPECTED[name] and not broken.stderr
@@ -278,7 +284,9 @@ def measure(args):
                     for process_index in range(SETTINGS['processes'][name]):
                         start = time.perf_counter()
                         try:
-                            result = subprocess.run([str(paths[kind])], env=environment, capture_output=True, text=True, timeout=SETTINGS['timeout'])
+                            result = run_capture([str(paths[kind])], timeout=SETTINGS['timeout'],
+                                         env=environment, cwd=None, input_data=None, input_stream=None,
+                                         text=True, encoding='utf-8', check=False)
                         except subprocess.TimeoutExpired as error:
                             write_json(args.output / 'report.json', report)
                             write_json(args.output / 'timeout.json', dict(name=name, kind=kind, phase=phase, round=index, process=process_index,

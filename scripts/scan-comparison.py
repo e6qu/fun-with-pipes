@@ -12,6 +12,8 @@ import signal
 import statistics
 import subprocess
 
+from process_wait import WAIT_POLICY
+
 SPEC = importlib.util.spec_from_file_location('buffer_check', Path(__file__).with_name('check-buffer-baselines.py'))
 CHECK = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CHECK)
@@ -82,10 +84,15 @@ def manifest(folder):
     (folder / 'manifest.json').write_text(json.dumps(values, indent=2) + '\n')
 
 
-def check_evidence(folder, source, machine, session, origin):
+def check_evidence(folder, source, machine, session, origin, wait_policy):
     CHECK.check_manifest(folder)
     config = json.loads((folder / 'configuration.json').read_text())
     assert origin in ['observed', 'synthetic'] and config['origin'] == origin
+    assert wait_policy in ['timed-polling', 'posix-alarm']
+    if wait_policy == 'timed-polling':
+        assert 'waitPolicy' not in config
+    else:
+        assert config['waitPolicy'] == wait_policy
     assert config['source'] == source and config['reference'] == REFERENCE and config['session'] == session
     assert config['environment'] == ENVIRONMENT and config['timeout'] == 45 and config['cpuPolicy'] == 'all'
     assert config['labels'] == list(LABELS) and config['length'] == LENGTH and config['calls'] == CALLS
@@ -124,7 +131,7 @@ def collect(args):
     for family, path in [('old', args.reference), ('new', args.candidate)]:
         shutil.copytree(path, out / family)
     programs = check_inputs(out, source, machine, qualification)
-    config = dict(source=source, reference=REFERENCE, origin='observed', session=args.session,
+    config = dict(source=source, reference=REFERENCE, origin='observed', waitPolicy=WAIT_POLICY, session=args.session,
         directory=str(out), environment=ENVIRONMENT, timeout=args.timeout, cpuPolicy=args.cpu_policy,
         affinity=sorted(os.sched_getaffinity(0)), labels=list(LABELS), length=LENGTH, calls=CALLS,
         rounds=BASELINE.ROUNDS, warmups=BASELINE.WARMUPS, processes=BASELINE.PROCESSES, seed=BASELINE.SEED,
@@ -151,7 +158,7 @@ def collect(args):
         decision='Timing/code evidence only; semantic and storage gates are required separately.')
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     manifest(out)
-    check_evidence(out, source, machine, args.session, 'observed')
+    check_evidence(out, source, machine, args.session, 'observed', WAIT_POLICY)
     print('Retained and verified all 2,736 ordinary processes; no failed control is retried.')
     print(json.dumps({key: value for key, value in report['timing'].items() if not isinstance(value, dict)}))
 
@@ -169,6 +176,7 @@ def main():
     check_parser.add_argument('--input', type=Path, required=True)
     check_parser.add_argument('--source', required=True)
     check_parser.add_argument('--machine', choices=['aarch64', 'x86_64'], required=True)
+    check_parser.add_argument('--wait-policy', choices=['timed-polling', 'posix-alarm'], required=True)
     check_parser.add_argument('--origin', choices=['observed', 'synthetic'], required=True)
     for sub in [collect_parser, check_parser]:
         sub.add_argument('--session', type=int, choices=[1, 2], required=True)
@@ -176,7 +184,7 @@ def main():
     if args.mode == 'collect':
         collect(args)
     else:
-        check_evidence(args.input, args.source, args.machine, args.session, args.origin)
+        check_evidence(args.input, args.source, args.machine, args.session, args.origin, args.wait_policy)
         print('Verified all files, exact builds, copies and 2,736 ordered observations.')
 
 

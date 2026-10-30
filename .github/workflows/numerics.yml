@@ -99,7 +99,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh run download 41103040883 --name "buffer-baseline-$MACHINE-1" --dir scan/reference
-          python3 scripts/check-buffer-baselines.py --input scan/reference/observed --source fadebf713e0854d6d132fc6e3666f275b214fc17 --machine "$MACHINE" --session 1 --origin observed
+          python3 scripts/check-buffer-baselines.py --input scan/reference/observed --source fadebf713e0854d6d132fc6e3666f275b214fc17 --machine "$MACHINE" --session 1 --origin observed --wait-policy timed-polling
       - name: Build the current compiler and verify scalar folds
         run: |
           set -o pipefail
@@ -122,6 +122,8 @@ jobs:
       - name: Reject damaged paired evidence before collecting observations
         run: |
           set -o pipefail
+          python3 scripts/test-process-wait.py
+          python3 scripts/check-buffer-pipeline.py --programs scan/reference/observed/programs --output scan/baseline-control
           python3 scripts/test-buffer-processes.py
           python3 scripts/test-unique-buffer-baselines.py
           python3 scripts/check-scan-pipeline.py --reference scan/reference/observed/programs --candidate scan/programs --output scan/synthetic-control 2>&1 | tee scan/pipeline.log
@@ -134,7 +136,7 @@ jobs:
         if: ${{ !cancelled() && hashFiles('scan/observed/manifest.json') != '' }}
         run: >-
           python3 scripts/scan-comparison.py check --input scan/observed --source "$GITHUB_SHA"
-          --machine "$MACHINE" --session "$SESSION" --origin observed
+          --machine "$MACHINE" --session "$SESSION" --origin observed --wait-policy posix-alarm
       - name: Retain complete or partial paired evidence and diagnostics
         if: ${{ always() && hashFiles('scan/**') != '' }}
         uses: actions/upload-artifact@v7
@@ -217,6 +219,7 @@ jobs:
           --c-arch "$C_ARCH" --rust-cpu "$RUST_CPU" --size size --objcopy objcopy
       - name: Verify complete evidence and deliberate damage controls
         run: |
+          python3 scripts/test-process-wait.py
           python3 scripts/test-buffer-processes.py
           python3 scripts/test-unique-buffer-baselines.py
           python3 scripts/check-buffer-pipeline.py --programs buffer-baseline/programs --output buffer-baseline/synthetic-control
@@ -229,7 +232,7 @@ jobs:
         if: ${{ !cancelled() && hashFiles('buffer-baseline/observed/manifest.json') != '' }}
         run: >-
           python3 scripts/check-buffer-baselines.py --input buffer-baseline/observed
-          --source "$GITHUB_SHA" --machine "$MACHINE" --session "$SESSION" --origin observed
+          --source "$GITHUB_SHA" --machine "$MACHINE" --session "$SESSION" --origin observed --wait-policy posix-alarm
       - name: Retain complete or partial evidence
         if: ${{ always() && hashFiles('buffer-baseline/**') != '' }}
         uses: actions/upload-artifact@v7
@@ -318,6 +321,7 @@ jobs:
       - name: Complete evidence and deliberate damage controls
         if: ${{ !cancelled() && steps.programs.outcome == 'success' }}
         run: |
+          python3 scripts/test-process-wait.py
           python3 scripts/test-buffer-processes.py
           python3 scripts/check-buffer-pipeline.py --programs buffer-checks/programs --output buffer-checks/synthetic-control
       - name: Retain sources, binaries and every command result

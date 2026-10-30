@@ -29,7 +29,7 @@ def main():
     actual = dict(system='Linux', machine=machine, processors=4,
         cpu='Neoverse-N2' if machine == 'aarch64' else 'AMD EPYC 7763 64-Core Processor',
         cVersion=programs['versions']['cc'].splitlines()[0], rustVersion=programs['versions']['rustc'].strip())
-    configuration = dict(source=source, origin='synthetic', directory=str(out), session=1, cpuPolicy='all', timeout=45,
+    configuration = dict(source=source, origin='synthetic', waitPolicy='posix-alarm', directory=str(out), session=1, cpuPolicy='all', timeout=45,
         environment=dict(PATH='/usr/bin:/bin', LANG='C', LC_ALL='C', TZ='UTC'), affinity=[0, 1, 2, 3],
         qualification=dict(source=source, actual=actual, expected=actual, qualified=True, failures=[]),
         run='1', attempt='1', time='/usr/bin/time', timeVersion='GNU Time synthetic control',
@@ -72,11 +72,13 @@ def main():
         (out / 'manifest.json').write_text(json.dumps(values))
 
     manifest()
-    CHECK.check_evidence(out, source, machine, 1, 'synthetic')
+    CHECK.check_evidence(out, source, machine, 1, 'synthetic', 'posix-alarm')
     rejections = 0
     # Recompute hashes after each change: checks must reject false evidence, not
     # merely notice that a checksum is stale. Restore each original immediately.
     damages = []
+    wrong_wait = dict(configuration, waitPolicy='timed-polling')
+    damages.append(('configuration.json', json.dumps(wrong_wait).encode()))
     changed_report = copy.deepcopy(report)
     changed_report['cases']['unique-0']['fwpPeerElapsedRatios']['c'] = 0.1
     damages.append(('report.json', json.dumps(changed_report).encode()))
@@ -103,7 +105,7 @@ def main():
         path.write_bytes(data)
         manifest()
         try:
-            CHECK.check_evidence(out, source, machine, 1, 'synthetic')
+            CHECK.check_evidence(out, source, machine, 1, 'synthetic', 'posix-alarm')
         except AssertionError:
             rejections += 1
         else:
@@ -111,9 +113,9 @@ def main():
         finally:
             path.write_bytes(saved)
     manifest()
-    CHECK.check_evidence(out, source, machine, 1, 'synthetic')
+    CHECK.check_evidence(out, source, machine, 1, 'synthetic', 'posix-alarm')
     try:
-        CHECK.check_evidence(out, source, machine, 1, 'observed')
+        CHECK.check_evidence(out, source, machine, 1, 'observed', 'posix-alarm')
     except AssertionError:
         rejections += 1
     else:

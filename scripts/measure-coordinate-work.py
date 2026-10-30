@@ -12,9 +12,10 @@ import platform
 import re
 import shutil
 import statistics
-import subprocess
 import time
 import zipfile
+
+from process_wait import run_capture
 
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('descent_batches', ROOT / 'scripts/measure-descent-batches.py')
@@ -113,8 +114,9 @@ def main():
     commands = []
 
     def run(command):
-        result = subprocess.run([str(p) for p in command], env=environment,
-                                capture_output=True, timeout=args.timeout)
+        result = run_capture([str(p) for p in command], timeout=args.timeout,
+                     env=environment, cwd=None, input_data=None, input_stream=None,
+                     text=False, encoding='utf-8', check=False)
         if result.returncode:
             raise RuntimeError(f'{command}: {result.returncode}: {result.stderr.decode(errors="replace")}')
         return result
@@ -212,7 +214,9 @@ def main():
                             build([args.rustc, '--crate-name', 'descent_' + arrangement, '--edition=2021', '-D', 'warnings',
                                    '-C', 'opt-level=2', '-C', 'overflow-checks=yes', '-C', 'codegen-units=1',
                                    '-C', 'target-cpu=generic', '-C', 'lto=off', source, '-o', binary])
-                        actual = subprocess.run([str(binary)], env=environment, capture_output=True, timeout=args.timeout)
+                        actual = run_capture([str(binary)], timeout=args.timeout,
+                                     env=environment, cwd=None, input_data=None, input_stream=None,
+                                     text=False, encoding='utf-8', check=False)
                         (directory / (observed + '.stdout')).write_bytes(actual.stdout)
                         (directory / (observed + '.stderr')).write_bytes(actual.stderr)
                         (directory / (observed + '.status')).write_text(str(actual.returncode) + '\n')
@@ -237,7 +241,9 @@ def main():
                     source.write_text(BATCHES.observe_solves(BATCHES.edit_source(original, 'fwp', args.repetitions), mode))
                     binary = directory / label
                     build([args.cc, *cflags, '-w', source, '-o', binary, '-lm', '-lpthread', '-ldl'])
-                    actual = subprocess.run([str(binary)], env=environment, capture_output=True, timeout=args.timeout)
+                    actual = run_capture([str(binary)], timeout=args.timeout,
+                                 env=environment, cwd=None, input_data=None, input_stream=None,
+                                 text=False, encoding='utf-8', check=False)
                     (directory / (label + '.stdout')).write_bytes(actual.stdout)
                     (directory / (label + '.stderr')).write_bytes(actual.stderr)
                     (directory / (label + '.status')).write_text(str(actual.returncode) + '\n')

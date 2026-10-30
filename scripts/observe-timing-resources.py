@@ -11,6 +11,8 @@ import resource
 import subprocess
 import time
 
+from process_wait import run_capture
+
 SPEC = importlib.util.spec_from_file_location('timing_diagnostic', Path(__file__).with_name('diagnose-timing-variation.py'))
 DIAGNOSTIC = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(DIAGNOSTIC)
@@ -116,7 +118,9 @@ def main():
                     started = time.perf_counter_ns()
                     timed_out = False
                     try:
-                        result = subprocess.run(command, env=environment, capture_output=True, timeout=args.timeout)
+                        result = run_capture(command, timeout=args.timeout,
+                                     env=environment, cwd=None, input_data=None, input_stream=None,
+                                     text=False, encoding='utf-8', check=False)
                     except subprocess.TimeoutExpired as error:
                         result = subprocess.CompletedProcess(command, 124, error.stdout or b'', error.stderr or b'')
                         timed_out = True

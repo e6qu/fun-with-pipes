@@ -14,6 +14,8 @@ import signal
 import subprocess
 import time
 
+from process_wait import WAIT_POLICY, communicate
+
 SPEC = importlib.util.spec_from_file_location('buffer_baselines', Path(__file__).with_name('unique-buffer-baselines.py'))
 BASELINE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(BASELINE)
@@ -33,18 +35,20 @@ def measure_process(command, environment, timeout):
         spawn_error = str(error)
     else:
         try:
-            stdout, stderr = child.communicate(timeout=timeout)
+            stdout, stderr = communicate(child, timeout, None)
         except (subprocess.TimeoutExpired, KeyboardInterrupt) as error:
             timed_out = isinstance(error, subprocess.TimeoutExpired)
             interrupted = isinstance(error, KeyboardInterrupt)
             try:
-                os.killpg(child.pid, signal.SIGKILL)
+                if child.returncode is None:
+                    os.killpg(child.pid, signal.SIGKILL)
             except ProcessLookupError:
                 pass  # Child exited after the deadline and before the kill.
             stdout, stderr = child.communicate()
         except BaseException:
             try:
-                os.killpg(child.pid, signal.SIGKILL)
+                if child.returncode is None:
+                    os.killpg(child.pid, signal.SIGKILL)
             except ProcessLookupError:
                 pass
             child.communicate()
@@ -85,7 +89,7 @@ def main():
     shutil.copytree(args.programs, out / 'programs')
     programs = BASELINE.check_programs(out / 'programs', source, platform.machine())
     environment = dict(PATH='/usr/bin:/bin', LANG='C', LC_ALL='C', TZ='UTC')
-    configuration = dict(source=source, origin='observed', directory=str(out), session=args.session, cpuPolicy=args.cpu_policy,
+    configuration = dict(source=source, origin='observed', waitPolicy=WAIT_POLICY, directory=str(out), session=args.session, cpuPolicy=args.cpu_policy,
         timeout=args.timeout, environment=environment, affinity=sorted(os.sched_getaffinity(0)),
         qualification=qualification, run=os.environ['GITHUB_RUN_ID'], attempt=os.environ['GITHUB_RUN_ATTEMPT'],
         time=args.time, timeVersion=subprocess.check_output([args.time, '--version'], text=True),

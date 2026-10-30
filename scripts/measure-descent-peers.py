@@ -18,6 +18,8 @@ import statistics
 import subprocess
 import time
 
+from process_wait import communicate, run_capture
+
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('ad_application', ROOT / 'scripts/measure-ad-application.py')
 AD = importlib.util.module_from_spec(SPEC)
@@ -184,7 +186,7 @@ def main():
         with subprocess.Popen(command, cwd=ROOT, env=env, stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE, start_new_session=True) as process:
             try:
-                stdout, stderr = process.communicate(timeout=args.timeout)
+                stdout, stderr = communicate(process, args.timeout, None)
             except BaseException:
                 try:
                     os.killpg(process.pid, signal.SIGKILL)
@@ -304,8 +306,9 @@ def main():
                         control_code.write_text(broken)
                         control_binary = directory / control_name
                         build([args.cc, *cflags, '-w', control_code, '-o', control_binary, '-lm', '-lpthread', '-ldl'])
-                        failed = subprocess.run([str(control_binary)], env=environment,
-                                                capture_output=True, timeout=args.timeout)
+                        failed = run_capture([str(control_binary)], timeout=args.timeout,
+                                     env=environment, cwd=None, input_data=None, input_stream=None,
+                                     text=False, encoding='utf-8', check=False)
                         (directory / (control_name + '.stdout')).write_bytes(failed.stdout)
                         (directory / (control_name + '.stderr')).write_bytes(failed.stderr)
                         assert failed.returncode == status and message in failed.stderr, failed

@@ -236,7 +236,8 @@ IDs, archive hashes, exact hosts and every per-session result. In each downloade
 artifact, `observed/` contains a manifest, all raw observations, binaries, generated
 sources and compiler reports. Reconstruct it with the matching source's
 `check-buffer-baselines.py --input observed --source REVISION --machine ARCH
---session NUMBER --origin observed`. The verifier checks every file and exact build
+--session NUMBER --origin observed --wait-policy timed-polling` (current verifier).
+The verifier checks every file and exact build
 settings, then recomputes summaries from the complete ordered records.
 
 ## Next accepted workload and budget
@@ -264,10 +265,10 @@ byte-identical unchanged copies and three byte-identical candidate copies. Use
 the same balanced position/predecessor schedule. Compare medians of each round's
 family totals; retain all individual copies and require their control limit.
 Compiler flags, host qualification, environment and ordinary/diagnostic separation
-stay fixed. This comparison has not run and no implementation candidate is yet
-accepted. The 35 failed baseline combinations remain open measurement work.
+stay fixed. The original comparison results follow. The 35 failed baseline
+combinations remain open measurement work.
 
-## Known scalar-fold candidate: verification in progress
+## Scalar folds: cost reductions retained, timing acceptance open
 
 The scan calls `array.fold add 0`. Previously, each element went through the
 runtime's general function-call dispatcher even though `add` and both numeric
@@ -280,7 +281,9 @@ The first native checks at `89fda951` pass buffer results, overflow order and
 failure cleanup. Both hosts expose one faulty test assumption: a callback called
 “unknown” was statically known and its function was inlined away. The repaired
 fixture selects its callback through input and checks the generic dispatch body.
-No candidate speed claim is accepted yet.
+The repaired tests pass on both native GCC hosts. Additional view, mixed-element
+and cancellation controls pass at `4b5c49ce`; raw/optimized interpretation and
+native O1/O2 agree. Final production-platform gates remain required.
 
 For three 4,096-element calls, diagnostics remove 12,288 ineffective duplicate
 and release entries each. Payload remains three requests, 98,328 requested bytes,
@@ -293,5 +296,53 @@ The paired experiment uses `scan-comparison.py collect` and its independent
 `check` command. It verifies the reference binaries from session 1 by hash and
 rechecks both build records and all 2,736 ordered process observations. Three
 identical copies per implementation share the existing six-label schedule.
-Synthetic evidence tests check balance, retain slow/noisy results and reject
-fifteen damaged inputs. These controls do not establish candidate performance.
+Synthetic evidence tests check balance and retain slow/noisy results; the repaired
+protocol also rejects a changed waiting method. These controls do not establish
+candidate performance.
+
+Three sessions at `8c8c6363` completed with all 2,736 attempts and independently
+audited native, storage, build and timing records:
+
+| Host / session | New/old elapsed ratio | Old-copy spread | New-copy spread | Timing decision |
+|---|---:|---:|---:|---|
+| ARM64 / 1 | 0.242776 | 0.165% | 0.670% | Pass |
+| ARM64 / 2 | 0.239186 | 0.144% | 1.319% | Pass |
+| AMD64 / 1 | 0.150563 | 0.921% | 3.881% | Inconclusive: exceeds 2% |
+
+Spread is `(largest copy median / smallest copy median - 1) × 100`. The elapsed
+ratio compares median round totals for the three-copy families; it is not a
+C/Rust comparison. Both AMD session-2 attempts received EPYC 9V45 instead of
+the required EPYC 7763 and stopped before building or timing. They supply no
+performance observations. The [paired artifact index](scalar-fold-artifacts-2026-10-30.json)
+retains all three measured sessions and both host rejections.
+
+The user accepted the verified dispatch/count-call and code-size reductions,
+leaving timing acceptance open. Neither the failed control nor the missing fourth
+session becomes a pass. The compiler/runtime are unchanged by the waiting repair
+below, and all published limits remain in force.
+
+## Waiting repair, declared before new measurements
+
+The original Python harness calls `communicate(timeout=...)`. On POSIX, once
+output closes, CPython's timed process wait can poll with increasing sleeps.
+Those sleeps fall inside our whole-process timer. A deterministic synthetic
+child that closes output before exiting reproduces 1 ms and 2 ms sleeps with
+the original method. [CPython 3.14.4's implementation](https://github.com/python/cpython/blob/v3.14.4/Lib/subprocess.py#L1879-L1916)
+matches the version recorded in these sessions. This proves avoidable harness
+delay; it does not prove that it explains every failed timing control.
+
+`scripts/process_wait.py` uses a blocking captured wait with a POSIX alarm
+deadline. It requires serial execution in the main thread and an unused,
+unblocked alarm; it restores the prior handler and signal mask. Windows retains
+its kernel-backed timeout. Timeout and cancellation still kill/reap the child,
+and failed compiler builds stop their descendants. Lifecycle tests include an
+old-method negative control that must observe polling.
+
+Run two new independent sessions per architecture with **only this waiting
+method changed**: the same reference and candidate compiler behavior, native
+toolchains, inputs, counts, balanced order, environment, timing boundary and
+acceptance limits. Whole-process timing still includes spawn and cleanup. New
+configuration records name `waitPolicy=posix-alarm`; the verifier requires explicit
+`--wait-policy posix-alarm`. Original archives stay unchanged and are checked with
+`--wait-policy timed-polling`. Do not combine samples across these protocols or
+repeat a measured failed control. A new failure remains inconclusive.

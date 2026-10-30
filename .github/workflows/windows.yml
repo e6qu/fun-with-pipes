@@ -93,6 +93,8 @@ jobs:
           name: windows-native-execution-${{ matrix.runner }}
           path: windows-native.log
           if-no-files-found: error
+      - name: Captured process deadlines
+        run: python scripts/test-process-wait.py
       - name: Python SDK and native disassembly
         if: ${{ !cancelled() && steps.native_compiler.outcome == 'success' }}
         env:
