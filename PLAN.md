@@ -36,11 +36,14 @@ collector is not the same as removing these costs. The
    support stable speed claims. The 4,096-element scan passes all four sessions but
    takes 10.1–14.4× C's time. The scalar-fold candidate removes per-element dispatch
    and ineffective count calls, with smaller code and reported frames. The user
-   accepted these reductions while leaving timing acceptance open: both ARM
-   sessions pass, but AMD's identical-copy control fails at 3.88% (limit 2%).
-   Finish the proven parent-process polling-delay repair and its lifecycle checks,
-   then collect two repaired sessions per architecture under the unchanged budget.
-   Keep all original failures; do not retry unchanged measurements.
+   accepted these reductions while leaving timing acceptance open. The parent
+   polling-delay repair is tested; four new sessions are audited. Three qualify,
+   but AMD session 2 has 2.040% candidate-copy variation (limit 2%). Keep that
+   failure and the original 3.88% failure; do not retry unchanged measurements.
+   Complete the final production gate, then apply the repaired waiting method to
+   the full buffer comparison: the same three entries, four sizes, counts and
+   limits, two sessions per architecture. Declare its source before collecting;
+   retain every case, including unstable short cases, before selecting more code changes.
 3. Resolve D2/N1's failed measurements before claiming numerical speed acceptance.
    Fixed CPU affinity and equal executable names did not resolve the controls.
    Do not rerun unchanged experiments or increase sample counts again.

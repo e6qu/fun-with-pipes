@@ -338,7 +338,7 @@ its kernel-backed timeout. Timeout and cancellation still kill/reap the child,
 and failed compiler builds stop their descendants. Lifecycle tests include an
 old-method negative control that must observe polling.
 
-Run two new independent sessions per architecture with **only this waiting
+The declared repair runs two new independent sessions per architecture with **only this waiting
 method changed**: the same reference and candidate compiler behavior, native
 toolchains, inputs, counts, balanced order, environment, timing boundary and
 acceptance limits. Whole-process timing still includes spawn and cleanup. New
@@ -346,3 +346,26 @@ configuration records name `waitPolicy=posix-alarm`; the verifier requires expli
 `--wait-policy posix-alarm`. Original archives stay unchanged and are checked with
 `--wait-policy timed-polling`. Do not combine samples across these protocols or
 repeat a measured failed control. A new failure remains inconclusive.
+
+### Repaired comparison results
+
+All four sessions at `df23cbcb` are complete and independently audited. Each
+archive retains 212 files, 2,736 ordinary attempts, all native/build records,
+and the separate storage controls. Both O1/O2 storage observations and all code/
+reported-frame budgets pass. The candidate compiler/runtime and benchmark inputs
+are unchanged from the original paired source.
+
+| Host / session | New/old elapsed ratio | Old-copy spread | New-copy spread | Timing decision |
+|---|---:|---:|---:|---|
+| ARM64 / 1 | 0.220954 | 0.184% | 0.266% | Pass |
+| ARM64 / 2 | 0.232689 | 0.018% | 0.310% | Pass |
+| AMD64 / 1 | 0.151352 | 1.122% | 1.770% | Pass |
+| AMD64 / 2 | 0.150930 | 0.873% | 2.040% | Inconclusive: exceeds 2% |
+
+The failed ratio is **1.0203993797184912**, above **1.02**; rounding does not make
+it a pass. The [repaired artifact index](scalar-fold-wait-repair-artifacts-2026-10-30.json)
+retains every session. The polling defect is repaired, but this experiment does
+not resolve all variation. **Timing acceptance remains open**, with verified
+cost reductions retained as agreed. Do not rerun this unchanged experiment,
+increase counts or loosen the limit. D2/N1 and the other buffer cases retain
+their separate incomplete measurements; this result does not accept them.

@@ -1,93 +1,88 @@
 # Current work
 
-**Next:** finish the waiting-method repair, publish it with the retained scalar-fold
-results, then run two repaired comparison sessions per architecture and all nine
-final-head production jobs plus docs. Squash merge only after the delivery gates
-pass. The user accepts the verified cost reductions with timing acceptance open.
+**Next:** watch PR #231's final-head nine production jobs and documentation gate,
+audit every completed target/diagnostic, repair failures, then squash merge with
+one subject of at most 80 characters and an empty body. The user accepts the
+verified cost reductions with timing acceptance open. After merge, follow PLAN's
+full buffer comparison using the repaired waiting method; no unchanged reruns.
 
-[Draft PR #231](https://github.com/e6qu/fun-with-pipes/pull/231), branch
+[PR #231](https://github.com/e6qu/fun-with-pipes/pull/231), branch
 `ownership-peer-baselines`, worktree `/private/tmp/fwp-ownership-peer-baselines`.
-Published head: `4b5c49ce567a97900b669fcd494c77a89a130b8e`.
-Original comparison source: `8c8c6363a2c1a17374ab3e40e7c87395da98f9e6`.
-Compiler candidate: `89fda9513e255fe9227a5abe657a8c5ed75de66e`.
-The uncommitted batch changes measurement helpers, controls and docs; it does
-not change compiler/runtime behavior or benchmark inputs. Keep one active PR.
+The final documentation commit follows tested measurement source
+`df23cbcb341db53bb372337649ffc14702977078`; compiler/runtime and benchmark inputs
+are unchanged. Read the branch head and PR checks for final delivery IDs. Keep
+one active PR. GitHub status responses have lagged completed execution: inspect
+available job logs as well as status; do not call queued/running jobs passes.
 
-## Scalar-fold results and decision
+## Results retained in this PR
 
-The [budget](measurements/unique-buffer-peers.md#next-accepted-workload-and-budget)
-was published at `1bcf261d` before implementation. Each session retains all
-2,736 attempts: 4,096 elements, 256 calls/process, two warmup and 36 measured
-rounds, twelve processes per label, seed 20261030. Three identical copies per
-family control variation. Reference source: `fadebf713e0854d6d132fc6e3666f275b214fc17`.
+Known numeric `array.fold` callbacks call the existing numeric entry directly.
+Unknown/captured callbacks and other types retain existing ownership rules.
+Three 4,096-element calls remove 12,288 ineffective duplicate/release entries each.
+Requests remain 3, requested bytes 98,328, peak bytes 32,776, final payload 0 and
+one cached count byte. ARM/AMD instruction bytes shrink 16,780/18,162 to
+10,588/11,090; largest reported frame components shrink 592/576 to 368/320 bytes.
+These are not total-stack bounds or claims of parity with C/Rust.
 
-| Session | Run | Job | Artifact | Result |
-|---|---|---|---|---|
-| ARM 1 | `41110921616` | `124252833485` | `13004727528` | All original limits pass; new/old time 0.242776 |
-| ARM 2 | `41110926781` | `124252852332` | `13003824503` | All original limits pass; new/old time 0.239186 |
-| AMD 1 | `41110921616` | `124252833022` | `13005661197` | Copy ratio 1.038806 exceeds 1.02; timing inconclusive |
-| AMD 2, attempt 1 | `41110926781` | `124252851994` | `13005685897` | Wrong CPU; no build or timing |
-| AMD 2, attempt 2 | `41110926781` | `124267725441` | `13007082510` | Wrong CPU again; no build or timing |
+The [report and artifact indexes](measurements/unique-buffer-peers.md) retain:
 
-Both rejected hosts were EPYC 9V45 instead of required EPYC 7763. Do not retry
-AMD 1 or reinterpret the missing fourth session as a pass. The user explicitly
-accepted dispatch/count-call and code-size reductions while leaving timing open.
-[The report and artifact index](measurements/unique-buffer-peers.md#scalar-folds-cost-reductions-retained-timing-acceptance-open)
-retain complete audited results. Local archives/logs/audits:
-`/private/tmp/fwp-scan-{arm,amd}-{1,2}-8c8c.{zip,log,audit.json}` (three measured
-sessions only); rejected-host ZIPs and replacement log are separately named.
+- Four original C/Rust/fwp buffer sessions at `fadebf71`: 35/48 copy controls fail.
+- Three original paired scan sessions at `8c8c6363`: both ARM sessions pass;
+  AMD session 1 fails its copy control at 3.881%. Both AMD session-2 attempts
+  reject the wrong CPU before building/timing; no observations were discarded.
+- Four repaired paired sessions at `df23cbcb`: the same sample counts, inputs,
+  flags and limits, with parent polling sleeps removed. Three pass; AMD session 2
+  remains inconclusive at **1.0203993797184912 > 1.02**. Timing acceptance stays open.
 
-Known numeric `array.fold` callbacks now call the existing numeric entry directly.
-Unknown/captured callbacks and other types keep their existing ownership rules.
-Three 4,096-element calls remove 12,288 ineffective duplicate/release entries each;
-requests remain 3, requested bytes 98,328, peak bytes 32,776, final bytes 0 and one
-cached count byte. ARM/AMD instruction bytes shrink 16,780/18,162 to 10,588/11,090;
-largest reported frame components shrink 592/576 to 368/320 bytes. These do not
-establish total stack bounds or parity with C/Rust.
+| Repaired session | Run | Job | Artifact |
+|---|---|---|---|
+| ARM 1 | `41120582008` | `124285888639` | `13009486099` |
+| AMD 1 | `41120582008` | `124285888984` | `13007908554` |
+| ARM 2 | `41120594482` | `124285926747` | `13009241146` |
+| AMD 2 | `41120594482` | `124285926490` | `13009610442` |
 
-## Checks and repaired measurement
+Each archive has 212 files, 2,736 ordinary attempts, 136 native commands and
+126 storage commands (18 intentional omitted-release failures). Complete logs
+and archives are independently audited: all code, reported-frame and O1/O2
+storage budgets pass. Local files: `/private/tmp/fwp-scan-{arm,amd}-{1,2}-df23.{zip,audit.json}`,
+`/private/tmp/fwp-scan-repaired-JOB.log`, `/private/tmp/fwp-scan-repaired-logs.audit.json`.
+Original observations remain separately named with `8c8c` or `fade`.
 
-Run `41113640046` at `4b5c49ce` passes all six tests in the three affected native
-release targets on both GCC hosts: AMD `124262140087`, ARM `124262140241`.
-The tests cover real array views, mixed F32-element/I64-accumulator descriptors,
-checked overflow/effect order, aliases and cancellation after two scalar steps.
-Omitted cancellation cleanup must fail. The earlier statically known callback
-fixture defect is repaired and verified. Full logs were audited:
-`/private/tmp/fwp-scalar-controls-{amd,arm}-4b5c.log`.
-Docs `41113641549` / `124262133583` pass with full audit at
-`/private/tmp/fwp-229-docs-231-4b5c.log`. No full production run for #231 yet.
+## Verification and incidental repairs
 
-A deterministic child reproduces timed POSIX wait polling sleeps inside the
-original elapsed timer. `process_wait.py` uses blocking capture with an explicit
-alarm deadline, restores signal state, and preserves kill/reap on failure.
-It requires serial main-thread execution and an unused alarm. Windows uses its
-kernel wait. A shared captured runner applies the repair to affected measurement
-callers. The [declared comparison](measurements/unique-buffer-peers.md#waiting-repair-declared-before-new-measurements)
-keeps every count, input and limit unchanged and records `waitPolicy=posix-alarm`.
-Old evidence requires explicit `timed-polling`; never mix protocols.
+At `df23cbcb`, every comparison job passes six Rust tests in the three affected
+release targets, raw/optimized/native results, storage observers, ten wait tests,
+five process controls, six schedule controls, twelve damaged-baseline controls
+and sixteen damaged-paired-evidence controls. Tests cover real array views,
+mixed F32-element/I64-accumulator descriptors, overflow/effect order, aliasing
+and cancellation after two steps. Omitted cancellation cleanup must fail.
 
-Guarded local checks: ten wait-lifecycle tests pass (1.92s); five buffer-process
-controls pass (0.62s); four word-frequency failure/cancellation controls pass
-(1.13s). Six build controls pass (1.42s) after catching and fixing an intermediate
-regression that failed to kill a failed compiler's surviving descendants.
-Python script parsing and diff whitespace checks pass. Final workflow lint (5.64s) and roadmap audit (2.89s) pass. Native macOS and
-Windows jobs also run the wait controls; Linux runs them in docs and comparisons. Updated real-binary synthetic evidence controls move to CI because
-free disk is close to the 64 GiB floor; do not expand old archives locally.
-No full local compiler build, suite or benchmark ran.
+The shared captured wait uses a POSIX alarm deadline with a blocking wait;
+Windows uses its kernel timeout. It preserves raw partial output and kill/reap,
+requires serial main-thread execution and an unused alarm, and restores signal
+state. A deterministic old-method control reproduces polling sleeps. The first
+local build test caught an intermediate descendant-cleanup regression; all six
+build controls pass after restoring process-group cleanup on compiler failure.
+Native macOS and Windows final jobs also run the wait controls.
 
-## Included baseline work
+Docs `41120563490` / `124285834359` pass: 46 Python suites / 318 cases, no unexpected
+warnings or workflow errors, one intentional Rust failure control. Full audit:
+`/private/tmp/fwp-docs-231-df23.{log,audit.json}`. The final documentation head still
+requires its own gate plus all nine production jobs before merge.
 
-Four full baseline sessions at `fadebf71` are audited: `41103040883` and
-`41103049899`, both architectures. **35/48 case controls fail**; only the selected
-scan passes all four. The [report](measurements/unique-buffer-peers.md) retains
-all results, inputs, storage/code/stack observations and failed controls.
+Guarded local checks: wait tests 1.92s, word-frequency cancellation/output tests
+1.13s, build controls 1.42s, workflow lint 5.64s, roadmap audit 2.89s. Each complete
+comparison archive audit took under one second. One premature audit correctly
+rejected an incomplete download; the completed archive passed. Updated large
+synthetic evidence controls ran on GitHub. No full local compiler build, suite or
+benchmark ran.
 
-Pre-candidate `6eca1176`, run `41102080961`, passes both native buffer suites and
-numerical-output consumer checks. Earlier failures `41097911057` and `41100000646`
-remain retained. Repairs cover Linux tabs, stable Rust frame reports, preserving
-objcopy inputs, native library ordering in both numerical consumers and complete
-attempt retention. The native runner interleaves its existing queues and starts
-the long WebAssembly ownership target earlier, preserving coverage/concurrency.
+Other included repairs: Linux memory-field tabs, stable Rust frame reports,
+non-destructive objcopy inspection, native static-library link order in both
+numerical consumers, and complete attempt retention. The native runner
+interleaves existing queues and starts the long WebAssembly ownership target
+earlier, preserving coverage and concurrency. Earlier failing runs
+`41097911057`, `41100000646` and `41108169261` remain retained in the report.
 
 ## Recovery and resource limits
 
