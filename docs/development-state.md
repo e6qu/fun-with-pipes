@@ -1,7 +1,6 @@
 # Current work
 
-**Next:** complete the quick GCC/documentation check on the draft repair, then
-mark ready and verify the consolidated final head of [PR #230](https://github.com/e6qu/fun-with-pipes/pull/230)
+**Next:** complete the final-head gates and delivery of of [PR #230](https://github.com/e6qu/fun-with-pipes/pull/230)
 on `file-boundary-portability`. Run one complete final-head matrix, audit every job
 and fix any failure before squash-merging. Use one subject of at most 80
 characters and an empty body. Then continue the numerical and comparison work
@@ -49,16 +48,21 @@ Production Linux/GCC and regular macOS/Clang now run the same checks. Guarded
 `test-timing-diagnostic.py` passes three controls and
 `test-kernel-baseline-evidence.py` passes seven retained-evidence controls.
 
-Initial #230 production `41066578148` and documentation `41066578177` were still
-queued with no failures when cancelled to include this repair in one final batch.
-Final head `570b777abf0ce927d0355b863d70401d68e18f71`: production
-`41068200453`, documentation `41068200448`; documentation and benchmarks pass; both Linux clock preflights fail because
-the new step passed an unset `$CC`. Other completed steps have no reported failure. This local live-status
-update follows the frozen published head; carry it into the next delivery record. The prepared repair names GCC/Clang explicitly, rejects an empty compiler argument
-and uploads a failed clock log before long tests. The docs gate runs GCC early.
-The PR is temporarily draft so this quick check can finish before a fresh full
-matrix. Draft/skipped production jobs are not acceptance. Audit every
-completed target and warning before any repair push; keep one active PR.
+Current candidate `e2fad32c2b2fd05658a8229fe90708d5756f329b` passes
+GCC/documentation `41071247882`, including all 40 clock controls and the complete
+log audit. PR #230 is ready; final production `41075128588` has all nine jobs
+queued. Earlier draft production `41071247986` was skipped, not validated.
+
+Earlier production `41068200453` at `570b777a` continues for complete-log audit.
+Documentation `41068200448`, benchmarks (2 tests/2 summaries) and ARM macOS
+ownership (364/127) and regular macOS (627/132, plus 12 SDK/terminal tests)
+pass with complete audits. Regular macOS also passes all 40 clock controls. Both Linux clock preflights failed:
+the workflow supplied an unset `$CC`. The current repair names GCC/Clang explicitly,
+rejects an empty compiler argument and uploads a failed clock log immediately.
+Other jobs have no reported failures yet; audit every completed target and warning.
+Initial queued runs `41066578148`/`41066578177` and intermediate draft docs
+`41070103743` were cancelled before execution to consolidate the repairs.
+Intermediate draft production `41070103948` was skipped, not verified.
 
 ## Latest verified delivery
 
@@ -106,14 +110,24 @@ unexplained; preserve [its evidence](measurements/compiler-abort.md).
 | 7 | In progress | Complete the named B1/B2 comparison gaps |
 | 8 | In progress | Deliver file-boundary coverage and finish V1/V2 |
 
-## Draft repair checks
+## Local evidence storage
 
-The explicit-compiler repair was first published at `2b408101`. Its draft
-production run `41070103948` was skipped, providing no acceptance evidence.
-Documentation `41070103743` was still queued when cancelled to also make the
-omitted-check fixture initialize its timestamp for every input. All 40 Clang
-executions pass after that correction. Record the replacement GCC/docs run after
-publishing; mark #230 ready only after it passes, then require all nine final-head
-jobs. Keep auditing older production `41068200453`: its complete docs/benchmark
-logs pass, with only two unset-CC preflights reported so far. The empty-compiler
-CLI control exits 2 as expected.
+Four old expanded `/private/tmp/fwp-descent-output-{1,2}-{amd,arm}` downloads
+were compressed serially under the guard. Each `.tar.gz` has a matching
+`.archive-audit.json`: all 1,446 files per archive were checked byte-for-byte by
+SHA-256, along with sizes and permissions, before removing the expanded copy.
+All 5,784 files remain recoverable; source worktrees were untouched. The three
+checks whose completion logs were recovered exited 0 in 6.88–7.62 seconds; the
+first completed archive/report and removed expansion were independently confirmed.
+Free space is about 67 GiB. Preserve the guard's 64 GiB minimum.
+
+## Independent next-batch preparation
+
+Worktree `/private/tmp/fwp-ownership-peer-baselines`, branch
+`ownership-peer-baselines`, starts at the current e2 candidate. No second PR is
+open. Its [comparison preparation](measurements/unique-buffer-peers.md) names the B1
+implementation tasks and pending protocol choices. C/Rust peers pass 192 guarded Clang/Rust O1/O2 result/error checks
+(`python3 scripts/local-guard.py python3 scripts/check-unique-buffer-peers.py
+--cc clang --rustc rustc`, exit 0, 2.31 seconds). No timing experiment has been
+run or declared accepted. After #230, add the fwp harness and cross-checks,
+separate storage/phase observations, then freeze the complete timing protocol. Preserve this work and finish #230 first.
