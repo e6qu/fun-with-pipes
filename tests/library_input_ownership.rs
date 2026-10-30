@@ -5,6 +5,8 @@ use std::process::Command;
 
 #[path = "support/ownership_ledger.rs"]
 mod ownership_ledger;
+#[path = "support/record_probe.rs"]
+mod record_probe;
 
 fn program() -> Program {
     let int = MT::con("std::I64");
@@ -186,10 +188,15 @@ fn library_input_copies_transfer_or_release_exactly_once() {
         .is_err());
     let (source, _) = fwp::cgen::generate_library(&p, "inputs", &[]).unwrap();
     let source = ownership_ledger::instrument_native(&source, 65536);
+    // Direct repetition builds its final string without fwp_str_new. Observe
+    // that allocation too; do not mistake an earlier string for its result.
+    let repeat_end = "    result->d[total] = 0;\n    return PTR(result);";
+    assert_eq!(source.matches(repeat_end).count(), 1);
     let observed = source
         .replace("static V fwp_data(uint32_t", "static V strings[32], data[32]; static unsigned drops[32]; static int ns, nd, fail_record;\nstatic V fwp_data(uint32_t")
         .replacen("return PTR(o);", "if(nd<32) data[nd++]=PTR(o); return PTR(o);", 1)
         .replacen("return PTR(r);", "if(ns<32) strings[ns++]=PTR(r); return PTR(r);", 1)
+        .replace(repeat_end, "    result->d[total] = 0;\n    if(ns<32) strings[ns++]=PTR(result); return PTR(result);")
         .replace("static V fwp_record(uint32_t n, const V *f) {", "static void fwp_trap(const char *);\nstatic V fwp_record(uint32_t n, const V *f) { if(fail_record){fail_record=0;fwp_trap(\"injected record allocation failure\");}")
         .replace("/* ---- program ---- */", "static void observe_drop(V v) { for(int i=0;i<ns;i++)if(strings[i]==v)drops[i]++; }\n/* ---- program ---- */")
         .replace("if (!fwp_rc_release_last(v)) return;", "observe_drop(v); if (!fwp_rc_release_last(v)) return;");
@@ -220,6 +227,18 @@ int main(void){
  if(*fwp_rc_slot(bits)!=1)_Exit(5);
  reset(); const char *second_host=second("first","second");
  if(strcmp(second_host,"second")||ns!=2||!dead_string(strings[0])||drops[0]!=1||*fwp_rc_slot(strings[1])!=1)_Exit(7);
+ // Exercise both empty construction through fwp_str_new and direct results.
+ for(int i=0;i<4;i++) {
+  const int64_t counts[]={0,1,3,3};
+  const char *sources[]={"hi","hi","hi",""};
+  const char *expected[]={"","hi","hihihi",""};
+  reset(); const char *result=repeat(counts[i],sources[i]);
+  if(strcmp(result,expected[i])||ns!=2||!dead_string(strings[0])||drops[0]!=1||
+     *fwp_rc_slot(strings[1])!=1)_Exit(8);
+  V owner=PTR(result)-offsetof(fwp_str,d);
+  fwp_release_repeat(result);
+  if(!dead_string(owner))_Exit(8);
+ }
  reset(); const char *grown=repeat(2,"hi");
  if(strcmp(grown,"hihi")||ns!=2||!dead_string(strings[0])||drops[0]!=1)_Exit(8);
  reset(); if(prepare("prior",input)!=42||ns!=3||nd!=2||!data_released())_Exit(9);
@@ -263,6 +282,13 @@ int main(void){
         fwp::cgen::compile_c(&format!("{observed}\n{probe}"), &exe, opt).unwrap();
 
         let out = Command::new(&exe).output().unwrap();
+        record_probe::save(
+            "library-input-ownership",
+            &format!("healthy{opt}"),
+            &format!("{observed}\n{probe}"),
+            &exe,
+            &out,
+        );
         assert!(
             out.status.success(),
             "{opt}: {:?}: {}",
@@ -296,16 +322,28 @@ int main(void){
             "int move1 = fwp_rc_last(l1);",
             "int move1 = 0; /* force field copies instead of a unique transfer */",
         );
-        for (broken, expected) in [
+        let missing_observation = observed.replace("if(ns<32) strings[ns++]=PTR(result); ", "");
+        for (index, (broken, expected)) in [
+            (missing_observation, 8),
             (missing_release, 1),
             (missing_transfer, 203),
             (missing_argument, 11),
             (missing_field, 12),
             (redundant_copies, 9),
-        ] {
+        ]
+        .into_iter()
+        .enumerate()
+        {
             assert_ne!(broken, observed, "negative control must change code");
             fwp::cgen::compile_c(&format!("{broken}\n{probe}"), &exe, opt).unwrap();
             let out = Command::new(&exe).output().unwrap();
+            record_probe::save(
+                "library-input-ownership",
+                &format!("control-{index}-{expected}{opt}"),
+                &format!("{broken}\n{probe}"),
+                &exe,
+                &out,
+            );
             assert_eq!(
                 out.status.code(),
                 Some(expected),

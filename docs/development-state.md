@@ -1,11 +1,34 @@
 # Current work
 
-**Next:** run and audit the complete final-head production, documentation and G2
-checks for [PR #229](https://github.com/e6qu/fun-with-pipes/pull/229), then
-squash-merge only after every required gate passes. The byte-search candidate now
-qualifies all four measurement sessions; final platform coverage is the remaining
-delivery gate. Preserve that final head while gates run and audit all failures
-before any repair push. Continue PLAN.md after the verified merge.
+**Next:** run focused C-library checks for the observer repair, audit the remaining
+jobs of `41042531398`, then publish all known fixes together and run the complete
+final-head gates for [PR #229](https://github.com/e6qu/fun-with-pipes/pull/229).
+Do not merge its failed head `3ddd989c`. The measured runtime is unchanged by
+this test repair; all four byte-search sessions remain qualified.
+
+## Production failure and repair
+
+Run `41042531398`, ARM macOS regular job `124018564229`, completed all 132 Rust
+summaries: 624 tests pass, two fail; all 12 SDK tests pass. Full log audit finds
+only `library_input_ownership` (exit 8) and `library_result_ownership` (exit 4).
+Both observe strings through `fwp_str_new` and miss repetition's direct result
+allocation. The repair records that allocation too, preserves every healthy and
+negative probe, and adds controls that omit the new observation. Input coverage
+also checks zero/one/three repetitions and empty input without weakening owner
+counts or release requirements. No production runtime code changes.
+
+The separate ARM Mac ownership job `124018564253` passes 364 tests/127 summaries
+with a complete log audit. Documentation `41042479406`, benchmarks and both G2
+hosts `41042548622` also pass and are audited. Other original platform jobs still
+run; collect all their failures before publishing the final repair. Local guarded
+Rust formatting and workflow lint pass; executable checks belong on GitHub.
+
+Independent preparation in `/private/tmp/fwp-numerical-controls` preserves the
+published executable-name diagnostic (`9a08edb6`, source `0c61ca76`): all 1,024
+observations and full logs pass independent audit, but equal names still leave a
+2.19% history-copy difference. It does not close D2/N1. That worktree also has
+unfinished file-read allocation controls; preserve them while repairing #229.
+No second PR is open.
 
 ## Latest delivery: PR #228
 

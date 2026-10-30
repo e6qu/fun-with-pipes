@@ -3313,6 +3313,7 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
       FWP_LIBRARY_RESULT_ARTIFACTS: library-result-evidence
+      FWP_ARC_ARTIFACTS: library-result-evidence/ownership
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
