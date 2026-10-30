@@ -1,109 +1,98 @@
 # Current work
 
-**Next:** finish [PR #230](https://github.com/e6qu/fun-with-pipes/pull/230).
-Keep head `e2fad32c2b2fd05658a8229fe90708d5756f329b` fixed while production
-`41075128588` runs. Audit every completed log and failed step, fix any failure,
-then squash-merge with one subject of at most 80 characters and an empty body.
-Verify the merge tree/message before continuing. One active PR only.
+**Next:** finish the [B1 buffer comparison](measurements/unique-buffer-peers.md)
+on branch `ownership-peer-baselines`, worktree
+`/private/tmp/fwp-ownership-peer-baselines`. Implement the ordinary-binary runner,
+static stack reports and complete evidence verifier, verify Linux memory checkpoints,
+then collect the four predeclared sessions. No timings have run. Keep one active PR;
+mark it ready only after the grouped implementation and evidence are complete.
 
-## Active delivery
+## Last verified delivery
 
-Worktree `/private/tmp/fwp-file-boundary-portability`, branch
-`file-boundary-portability`. The [file-boundary report](measurements/file-boundary-portability.md)
-records native Windows errors, borrowed handles and flush visibility, seven C
-recovery-probe repairs, focused checks and all 22 saved executions per host.
-Five kernel/map/pipe-test clocks now reject failed reads before using timestamps.
-The plan and benchmark guide remove obsolete directions and name remaining gaps.
-Compiler, runtime, library and build inputs are unchanged from verified #229.
-PR description: `/private/tmp/fwp-file-portability-pr.md`.
+[PR #230](https://github.com/e6qu/fun-with-pipes/pull/230) is merged. Squash
+`3639f4fad3da318346340f92a89d8ba127f04e73` has the tested `e2fad32c` tree
+`d3645c3ba7c3277d64d61b4d5aee1926e3d6c9db`. Its 55-character subject is
+one line with no body/trailers. All nine production jobs `41075128588` and docs
+`41071247882` pass; every completed log and warning is audited. The
+[delivery record](roadmap-history.md#file-cleanup-portability-and-measurement-clocks-pr-230)
+owns job IDs, counts and the repaired Linux preflight failure. Duplicate post-merge
+runs `41094194847` and `41094194934` were cancelled after tree/message verification.
 
-Final-head checks:
+The preparation branch records the verified merge ancestry only after proving
+that its ancestor `e2fad32c` and the squash have identical trees. The old #230
+worktree retains its local handoff; do not publish a status-only change there.
 
-| Gate | Status and audited coverage |
+## B1 implementation and verified controls
+
+Published focused source: `44e7724d2114f4f4799348cf98684f55b6a4b635`.
+Run `41090130137` passes native GCC ARM64 (`124181555909`) and AMD64
+(`124181555372`). Both full logs are clean. Artifacts `12992943369` (ARM)
+and `12993378149` (AMD) each retain 107 files and 60 native executables. Audits
+check 136 native, 90 phase and 108 storage command records, including 18 expected
+leak failures. Local archives/logs/audits:
+`/private/tmp/fwp-buffer-peer-{arm,amd}-44e7.{zip,log,audit.json}`.
+
+The three entries are restricted unique reads, a known borrowing callback and a
+full-array scan. The scan retains ordinary counted storage. Preserve the frozen
+A5 fixture; the harness appends the scan to a copy. Each peer selects its entry
+at compilation. All arithmetic and per-call checksums remain checked.
+
+Focused checks pass on Clang/Rust locally and both GCC runners:
+
+| Check | Result |
 |---|---|
-| GCC/docs `41071247882`, job `124115723586` | Passed; complete log and all 40 clock controls audited |
-| Benchmarks `124129161888` | Passed; 2 tests/2 summaries audited |
-| macOS ARM regular `124129161379` | Passed; 627/132, 12 SDK/terminal tests and 40 clock controls audited |
-| macOS ARM ownership `124129161812` | Passed; 364/127 audited |
-| macOS Intel regular `124129161824` | Passed; 627/132, 12 SDK tests and 40 clock controls audited |
-| macOS Intel ownership `124129162126` | Running, no reported failures |
-| Linux AMD `124129161927`, ARM `124129162084` | Running; repaired preflight and required compiler checks pass |
-| Windows ARM `124129161880` | Passed; 817/205, 10 SDK passes and two explicit POSIX skips audited |
-| Windows AMD `124129161796` | Running, no reported failures |
+| Peer results/arguments | 420 O1/O2 executions |
+| fwp harness | 42 raw/optimized interpreter comparisons, 84 native executions |
+| Phase observers | 72 executions, 216 records, 144 damaged-result rejections |
+| Allocation observers | 72 executions, including 18 omitted releases detected |
+| Measurement clocks | Six helpers, 48 success/failure/omitted-guard executions |
 
-Full logs are `/private/tmp/fwp-230-*-e2fa.log`; docs uses
-`/private/tmp/fwp-229-docs-230-e2fa.log`. Check the live run before acting on this table.
-Skipped earlier draft checks provide no acceptance evidence.
+Local native/phase/storage results are `/private/tmp/fwp-buffer-native-checks-3`,
+`/private/tmp/fwp-buffer-phase-checks-1` and `/private/tmp/fwp-buffer-storage-checks-1`.
+The native harness initially counted proof markers across all exports; it now
+checks the selected entry. Retain earlier `fwp-buffer-native-checks-{1,2}` too.
+The local compiler package is `/private/tmp/fwp-230-compiler-arm-570b/fwp-macos-arm64/fwp`,
+artifact `12986056870`. Its manifest/hash/native architecture were verified;
+compiler/runtime/library/build inputs match the preparation source. No local
+compiler build ran. The comparison report records the full compiler hash.
 
-## Complete audit of the preceding failed head
+## Follow-up in this batch
 
-Production `41068200453` at `570b777a` is fully audited. Both Linux clock steps
-passed an unset `$CC` and failed before GCC launched. They then skipped library
-docs, inventory, formatting and Clippy, including WASM Clippy. Each completed
-993 tests/256 summaries and all 12 SDK/terminal tests. The only other diagnostic
-is the missing artifact from the skipped inventory. Those missing gates are not
-passes; the explicit compiler repair is now running them on e2.
+Peer checks now require `--output` and retain all 432 command records, twelve
+executables and both input-source hashes. `/private/tmp/fwp-buffer-peer-records-1`
+passes the 420 checks and record audit (5.01s elapsed/1.12s CPU).
 
-All other old jobs pass: benchmarks 2/2; regular macOS 627/132 plus 12 SDK tests
-per host; ownership macOS 364/127 per host; Windows 817/205 per host, including
-all three new file targets. Windows passes 10 SDK tests and explicitly skips the
-two POSIX terminal tests. No additional failed target or compiler warning remains.
-Original logs are `/private/tmp/fwp-230-*-570b.log`. The strict failed-Linux
-helper is `/private/tmp/fwp-audit-linux-230-preflight.py`; it retains the known
-failure, skipped coverage and warning. Other jobs use
-`/private/tmp/fwp-audit-production-log.py`. Both run through the local guard.
+The fixed schedule has three entries, four sizes, two warmup rounds, 36 measured
+rounds and twelve processes per language/copy per round. Five controls verify
+ordering, checked results, complete-round statistics and rejection of 20 damaged
+or missing observation sets. D2/N1 limits and sample counts are unchanged.
 
-## Next batch already in preparation
+Linux process-memory checkpoints are implemented but not yet executed on Linux.
+The local `--mode parser` check passes 24 parsing controls and compiles 18 programs
+in 3.50s/1.27s CPU. Output: `/private/tmp/fwp-buffer-process-memory-checks-1`.
+Separate HugeTLB fields were then added and compiled cleanly with Clang O2.
+The numerical workflow now includes actual Linux execution of these checkpoints;
+the already completed `44e7724d` run predates this addition. The report states
+snapshot/observer limitations. Ordinary memory and stack evidence remain required.
 
-Branch `ownership-peer-baselines`, worktree `/private/tmp/fwp-ownership-peer-baselines`,
-is published through `e9b37ed9` (following `4e83447a` and `93be9909`). No second PR is open.
-The [unique-buffer comparison](measurements/unique-buffer-peers.md) defines
-C/Rust equivalents of the existing fwp fixture and the concrete remaining work.
-Do not treat this as a measured speedup or completed B1 comparison.
+The next branch interleaves the existing explicit native test queues and puts
+`wasm_arc` first in its existing regular shard. Every target and two-worker
+concurrency are preserved. Previous Linux durations were 1,108–1,429 seconds for
+that target, creating a long tail. Actual new cycle time is unmeasured. An initial
+edit assumed the wrong shard and stopped at its assertion; the corrected change
+preserves the regular assignment. All 21 runner controls pass (8.13s/0.31s CPU),
+including unequal queues and failure propagation. Workflow lint and the
+186-document/106-anchor/eight-step roadmap audit pass.
 
-Guarded checks pass: `check-unique-buffer-peers.py --cc clang --rustc rustc`
-(420 O1/O2 result/error cases), and `check-unique-buffer-native.py` (42 raw/optimized
-interpreter comparisons and 84 native O1/O2 executions). The latter checks lengths
-−2^63, −1, 0, 1, 16, 4,096 and 262,144, each with one/three native calls. Its
-first attempt counted markers in all exported functions; the fix checks only the
-selected entry. Retain `/private/tmp/fwp-buffer-native-checks-{1,2,3}`. The latest three-entry
-check exits 0 in 8.87 seconds, 3.95 CPU seconds. The peers exit 0 in 5.46 seconds,
-0.93 CPU seconds. The new full-read scan retains ordinary counted storage; it
-does not expand the existing unique proof. All entries are selected at compilation.
-
-The compiler package is `/private/tmp/fwp-230-compiler-arm-570b/fwp-macos-arm64/fwp`,
-artifact `12986056870`. Its manifest/hash and native architecture were verified;
-compiler/runtime/library/build inputs match the preparation branch exactly.
-No local compiler build ran. The comparison report records the full SHA-256.
-
-`unique-buffer-baselines.py` and its two schedule controls pass. Six labels give each language an identical-copy control;
-36 measured rounds rotate positions and within-round predecessors. The report
-fixes sizes, call counts and sample counts before execution. No baseline session
-has run. Phase checks now pass 72 executions/216 events and reject 144 damaged records;
-all six clocks pass 48 success/failure/omitted-guard executions. Storage checks
-pass 72 executions including 18 omitted-release failures, with zero final buffer
-charge. Guarded elapsed/CPU seconds: phases 6.39/1.14, clocks 4.14/0.21, storage
-12.79/2.94. Sources/results are `/private/tmp/fwp-buffer-phase-checks-1` and
-`/private/tmp/fwp-buffer-storage-checks-1`. No diagnostic result is a timing claim.
-The new `buffer-peer-checks` workflow runs these on both native GCC hosts. Workflow
-lint and all 20 runner controls pass. Next collect that focused verification,
-implement process-memory checkpoints and the runner/evidence verifier, then run
-the four declared sessions.
-Keep D2/N1's existing failed experiments unchanged.
+Local checks run serially through `python3 scripts/local-guard.py`; full builds,
+suites and baselines run on GitHub. No resource limit has been raised.
 
 ## Evidence and recovery
 
-[#229](roadmap-history.md#string-costs-and-application-cleanup-pr-229) is the last
-verified delivery: squash `bae1a858126794845552c98108237002fb114f37` has the tested
-`8d908e0e` tree. Its history record owns all nine production, docs and G2 audits.
-Local checks stay serial under `python3 scripts/local-guard.py`; full builds,
-suites and benchmarks run on GitHub. Preparation docs passed the 186-document,
-106-anchor, eight-step audit. Resource limits are unchanged.
-
-Four old expanded `/private/tmp/fwp-descent-output-{1,2}-{amd,arm}` downloads
-were archived under the guard. Each `.tar.gz` has an `.archive-audit.json` with
-all 1,446 file hashes/sizes; every file was verified before removing its expanded
-copy. All 5,784 files remain recoverable. Free disk is about 66 GiB; preserve 64.
+Keep at least 64 GiB free disk. Four old expanded
+`/private/tmp/fwp-descent-output-{1,2}-{amd,arm}` downloads were archived under
+the guard; each `.tar.gz` has an `.archive-audit.json`. All 5,784 original files
+were verified before removing expanded copies and remain recoverable.
 
 The primary checkout remains detached at #209 with a dirty recovery handoff and
 untracked compiler-abort report. Preserve both. Automatic approval review rejected
@@ -117,15 +106,20 @@ or relaxed limit. CPU affinity and equal executable names were insufficient.
 The [original Intel compiler abort](measurements/compiler-abort.md) is unexplained;
 preserve its evidence and inspect the source/input if it recurs.
 
+GC removal, A1–A6 and F1–F3 are verified at their stated scopes. The remaining
+work is D2/N1 timing acceptance, B1/B2 comparisons and the V1/V2 application
+matrix. Completed PRs do not close those outstanding criteria in [PLAN.md](../PLAN.md).
+
+
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Verified | Maintain GC-free lifetime and cycle guarantees |
-| 2 | Verified | Maintain A1–A6; sharing still uses ARC |
-| 3 | Verified | Maintain the stated F1–F3 call and recursion scope |
+| 1 | Verified | Preserve GC-free lifetime and cycle guarantees |
+| 2 | Verified | Preserve A1–A6; broader ARC costs remain in B1 |
+| 3 | Verified | Preserve the stated F1–F3 call/recursion scope |
 | 4 | Verified | Preserve decimal savings and the unoptimized loop gap |
-| 5 | In progress | Resolve D2's zero-update requirement |
-| 6 | In progress | Resolve N1's array control before N2 timing acceptance |
-| 7 | In progress | Complete the named B1/B2 comparison gaps |
-| 8 | In progress | Deliver file-boundary coverage and finish V1/V2 |
+| 5 | In progress | Resolve D2's remaining timing requirement |
+| 6 | In progress | Resolve N1's control before N2 timing acceptance |
+| 7 | In progress | Finish buffer comparisons, then the other B1/B2 gaps |
+| 8 | In progress | Finish numerical and integrated V1/V2 acceptance |

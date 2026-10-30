@@ -29,15 +29,17 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. Preserve [#229's verified string/file-read delivery](docs/roadmap-history.md#string-costs-and-application-cleanup-pr-229).
+1. Preserve [#230's verified file and clock delivery](docs/roadmap-history.md#file-cleanup-portability-and-measurement-clocks-pr-230).
    The [handoff](docs/development-state.md) names the current source and checks.
-2. Deliver [file-boundary portability](docs/measurements/file-boundary-portability.md)
-   and the related C recovery-test repairs together. Both repaired Windows
-   focused runs pass; complete platform and WebAssembly checks remain required.
+2. Finish the [B1 buffer comparison](docs/measurements/unique-buffer-peers.md):
+   equivalent C/Rust/fwp results and phase/allocation controls pass on both GCC
+   architectures. Finish process-memory and static-stack observations, the runner
+   and evidence verifier, then collect two fixed-protocol sessions per architecture.
+   Publish budgets before selecting an optimization; no timings exist yet.
 3. Resolve D2/N1's failed measurements before claiming numerical speed acceptance.
    Fixed CPU affinity and equal executable names did not resolve the controls.
    Do not rerun unchanged experiments or increase sample counts again.
-4. Complete B1/B2 comparisons and the finite V1/V2 application matrix below.
+4. Complete the remaining B1/B2 comparisons and finite V1/V2 application matrix.
 
 The original intermittent Intel macOS compiler abort remains an open defect.
 Preserve [its evidence](docs/measurements/compiler-abort.md); diagnose a recurrence
@@ -234,11 +236,11 @@ with unchanged retains/peak and explicit code/stack costs. Complete delivery
 gates and the bundled [file-read failure controls](docs/measurements/file-read-failures.md)
 pass in #229; preserve their alias, recovery, cancellation and physical-free checks.
 
-The next [file-boundary batch](docs/measurements/file-boundary-portability.md)
-adds native Windows error/borrowed-handle coverage and fixes recovery-test C
-contexts. Both repaired Windows focused runs pass. Require the complete matrix,
-including the resource-frame and actual WebAssembly recovery cases, before delivery.
-Neither batch completes the numerical or integrated acceptance requirements.
+[File-boundary portability](docs/measurements/file-boundary-portability.md) is
+verified in #230: both repaired Windows focused runs and the full production
+matrix pass, including resource-frame and actual WebAssembly recovery cases.
+The [delivery record](docs/roadmap-history.md#file-cleanup-portability-and-measurement-clocks-pr-230)
+owns the source and audits. Numerical and integrated application acceptance remain open.
 **Acceptance:** each family has explicit platform/memory-mode coverage, failure and
 cancellation tests, bounded post-operation storage and a B1 budget where timed.
 

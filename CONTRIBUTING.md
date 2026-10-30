@@ -94,6 +94,13 @@ known fixes. Preserve a passing final head while its remaining gates run.
 
 ### Focused runner checks
 
+The full native test run interleaves the two explicit queues in
+`scripts/macos-test-shards.json`. The regular queue starts with `wasm_arc`,
+so its long Linux execution overlaps other targets instead of extending the
+end of the run. Two workers and complete target coverage are unchanged. Queue
+order affects scheduling, not which tests run; missing or duplicate targets fail
+before execution. Recheck actual durations before claiming a cycle-time saving.
+
 [The `ownership-analysis` suite](.github/workflows/numerics.yml) runs
 only the paired compiler-analysis experiment on Linux and Intel macOS. Use it
 when updating [G2 evidence](docs/measurements/ownership-analysis.md); it does not

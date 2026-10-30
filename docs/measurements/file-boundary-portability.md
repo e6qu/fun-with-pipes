@@ -1,6 +1,6 @@
 # File errors and borrowed handles on every native target
 
-**Focused checks pass; complete delivery gates remain pending.** This extends
+**Verified in PR #230, including every final-head production gate.** This extends
 the application cleanup checks after PR #229. It changes tests and CI assignments,
 not file semantics or runtime code.
 
@@ -33,9 +33,8 @@ A source audit also found seven test probes assigning `setjmp` to a local
 initializer. C does not permit that context; they now branch directly on
 `setjmp`, keeping failure flags assigned only after returning from the jump.
 The same repair covers the resource-frame and WASI resource-count probes.
-The repaired file probes pass both native Windows architectures. The complete
-next matrix must also execute the resource-frame and WASI changes; this is not a
-diagnosed runtime failure.
+The complete production matrix verifies the file, resource-frame and actual WASI
+recovery checks. These test repairs do not diagnose the older compiler abort.
 
 The ignored-write-error control now removes only the error-reporting branch,
 keeping the same open/write/close path on every platform.
@@ -47,9 +46,8 @@ control, not an execution mode offered to programs. Every probe saves generated
 C, native image, stdout, stderr and exit status under `FWP_ARC_ARTIFACTS`.
 
 The `file-applications` focused suite includes all three targets. Linux/macOS
-already assign them; Windows now explicitly assigns them too. Require focused
-production Clang/GCC checks, both native Windows architectures and the complete
-final-head matrix before claiming support. These are correctness/cleanup checks,
+already assign them; Windows now explicitly assigns them too. Focused production
+Clang/GCC checks and the complete final-head matrix pass. These are correctness/cleanup checks,
 not timing measurements or comparisons with C/Rust performance.
 
 ## First focused results
@@ -83,7 +81,11 @@ PE architecture headers.
 | Windows AMD64 | `41055449823` / `124061719633` | `12977885309` |
 | Windows ARM64 | `41055457917` / `124061748283` | `12977067487` |
 
-The earlier Linux/macOS results precede the `setjmp` repair. Require the next
-complete final-head matrix before delivery, including the resource-frame and
-actual WASI resource-count tests. Passing focused Windows probes does not replace
-those gates.
+## Verified delivery
+
+PR #230 is merged with the identical tested tree. All nine production jobs and
+the documentation/GCC gate pass at `e2fad32c`; every full log is audited, including
+actual WebAssembly recovery checks and all three file targets on both Windows
+architectures. [The delivery record](../roadmap-history.md#file-cleanup-portability-and-measurement-clocks-pr-230)
+records complete source IDs, job IDs, counts, the repaired preflight failure and
+squash verification. No broader numerical or compiler-abort claim follows.

@@ -232,6 +232,19 @@ class Coverage(unittest.TestCase):
         with self.assertRaises(ValueError):
             SHARDS.command(metadata(["a", "b", "z", "new"]), "all", schedule)
 
+    def test_full_run_interleaves_explicit_queues_without_truncation(self):
+        value = metadata(["a", "b", "c", "d", "e"])
+        for schedule, expected in [
+            ({"regular": ["d", "b", "a", "e"], "ownership": ["c"]}, ["d", "c", "b", "a", "e"]),
+            ({"regular": ["c"], "ownership": ["d", "b", "a", "e"]}, ["c", "d", "b", "a", "e"]),
+        ]:
+            _, available, selected = SHARDS.command(value, "all", schedule)
+            self.assertEqual(selected, expected)
+            self.assertEqual(set(selected), set(available))
+            self.assertEqual(len(selected), len(available))
+        schedule = SHARDS.assignment(SHARDS.SCHEDULE)
+        self.assertEqual(schedule["regular"][0], "wasm_arc")
+
     def test_new_targets_do_not_move_existing_work(self):
         before = {"regular": ["a", "z"], "ownership": ["b"]}
         after = {"regular": ["a", "z"], "ownership": ["b", "new"]}

@@ -32,7 +32,7 @@ controls. They must continue to reject the unique representation; they are not
 silently substituted for the known-callback timing workload.
 
 The three C/Rust peers pass 420 Clang/Rust O1/O2 checks through
-`scripts/check-unique-buffer-peers.py --cc clang --rustc rustc`: exact outputs,
+`scripts/check-unique-buffer-peers.py`: exact outputs,
 negative/empty lengths, repeated calls, oversized allocation rejection and invalid
 arguments. These are local peer checks, not GCC validation.
 The fwp harness also passes 42 raw/optimized interpreter comparisons and 84 native
@@ -145,3 +145,42 @@ controls with GCC on both Linux architectures. It retains original/generated
 sources, diagnostic executables and every captured command result, including
 partial failures. This focused workflow does not run baseline timings or replace
 final-head production validation.
+
+
+## Focused GCC evidence
+
+Run `41090130137` passes on both native Linux architectures at
+`44e7724d2114f4f4799348cf98684f55b6a4b635`. ARM job `124181555909`
+retains artifact `12992943369`; AMD job `124181555372` retains `12993378149`.
+Both complete logs have no errors or warnings. Each archive has 107 files and
+60 native executables; headers match the host architecture. Audits checked all
+136 native, 90 phase and 108 storage command records, including all 18 expected
+leak failures. Peer argument checks retain their summary in this first run;
+the checker now requires an explicit output directory and retains all 432 build/
+execution records, both input sources and twelve executables for subsequent runs.
+
+For three 4,096-element calls, the fwp allocation observer records three requests
+and 98,328 requested bytes for each entry, with zero final live charge. The unique
+and known-callback entries have no ownership-helper entries or count metadata.
+The scan has 12,288 ineffective retain entries and 12,288 ineffective release
+entries, plus the three array owners' effective operations. Its one count byte
+remains cached for reuse. These are instrumented operations; ordinary compilation
+may eliminate no-op checks. They do not establish a timing penalty.
+
+## Process memory preparation
+
+The next diagnostic uses one call per process. It records entry to `main`, completed
+construction, release, return from the operation and the point before process exit.
+For fwp, the last checkpoint follows joining its runtime thread. It is not an
+observation after the OS destroys the process, and allocator reservations may
+still exist. Rust releases the CLI argument vector before that last checkpoint.
+
+Virtual size comes from `status`; resident, proportional, anonymous, swapped and
+HugeTLB storage come from `smaps_rollup`. The two reads are sequential, not one
+atomic snapshot. The observer's 8 KiB stack buffer, code and I/O affect these
+diagnostic snapshots. Ordinary-program peak resident storage is a separate
+measurement. RSS/PSS exclude the separately reported HugeTLB fields, as described
+in the [Linux process-memory documentation](https://www.kernel.org/doc/html/v6.15/filesystems/proc.html).
+The local parser/compile check is not Linux execution evidence. Actual checkpoint
+runs, ordinary peak memory, static stack reports and complete baseline collection
+remain required.

@@ -68,7 +68,7 @@ jobs:
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: |
           set -o pipefail
-          python3 scripts/check-unique-buffer-peers.py --cc gcc --rustc rustc 2>&1 | tee buffer-checks/peers.log
+          python3 scripts/check-unique-buffer-peers.py --cc gcc --rustc rustc --output buffer-checks/peers 2>&1 | tee buffer-checks/peers.log
           python3 scripts/test-unique-buffer-baselines.py 2>&1 | tee buffer-checks/schedule.log
           python3 scripts/check-measurement-clocks.py --cc gcc 2>&1 | tee buffer-checks/clocks.log
       - name: Raw, optimized and native fwp results
@@ -88,6 +88,12 @@ jobs:
         run: >-
           python3 scripts/check-unique-buffer-storage.py --native-checks buffer-checks/native
           --output buffer-checks/storage --cc gcc --rustc rustc
+      - name: Linux process memory checkpoints
+        if: ${{ !cancelled() && steps.native.outcome == 'success' }}
+        run: >-
+          python3 scripts/check-unique-buffer-process-memory.py --mode linux
+          --native-checks buffer-checks/native --output buffer-checks/process-memory
+          --cc gcc --rustc rustc
       - name: Retain sources, binaries and every command result
         if: ${{ always() && hashFiles('buffer-checks/**') != '' }}
         uses: actions/upload-artifact@v7

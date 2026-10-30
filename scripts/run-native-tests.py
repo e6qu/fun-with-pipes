@@ -3,6 +3,7 @@
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor
+from itertools import zip_longest
 import json
 import os
 from pathlib import Path
@@ -59,7 +60,12 @@ def command(metadata, shard, schedule):
     if missing or obsolete:
         raise ValueError(f"update scripts/macos-test-shards.json: "
                          f"unassigned={sorted(missing)}, obsolete={sorted(obsolete)}")
-    selected = sorted(names) if shard == "all" else list(schedule[shard])
+    # The full run uses both explicit queues. Interleaving starts each shard's
+    # expensive early work promptly without adding workers or dropping targets.
+    selected = ([name for pair in zip_longest(schedule["regular"], schedule["ownership"],
+                                              fillvalue=None)
+                 for name in pair if name is not None]
+                if shard == "all" else list(schedule[shard]))
     if not selected:
         raise ValueError(f"empty integration test shard: {shard}")
     args = ["cargo", "test", "--no-fail-fast"]

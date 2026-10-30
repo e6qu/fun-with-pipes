@@ -1228,3 +1228,44 @@ mapping used by the documentation audit. The detailed pre-overhaul narrative is
 available in [the merged source](https://github.com/e6qu/fun-with-pipes/blob/380fa8412327e52db420b96918d20e2528bbfc7c/docs/roadmap-history.md).
 It is historical evidence, not instructions for current work. Numerical samples
 and acceptance records remain in the repository with their original identities.
+
+
+## File cleanup portability and measurement clocks (PR #230)
+
+[PR #230](https://github.com/e6qu/fun-with-pipes/pull/230) verifies file-error,
+borrowed-stream and flush-visibility controls on native Windows. It also repairs
+seven invalid C recovery contexts and five unchecked measurement clocks, and
+removes obsolete roadmap directions. Compiler/runtime/library/build inputs are
+unchanged from #229. The [file-boundary report](measurements/file-boundary-portability.md)
+owns the test contracts, 22 saved executions per focused host and Windows header repair.
+
+All nine production jobs in `41075128588` and documentation/GCC controls in
+`41071247882` pass at `e2fad32c2b2fd05658a8229fe90708d5756f329b`.
+Every full log was audited, including warnings. Counts are tests/summaries:
+
+| Gate | Job | Audited result |
+|---|---|---|
+| Linux AMD64 | `124129161927` | 994/257; 12 SDK tests |
+| Linux ARM64 | `124129162084` | 994/257; 12 SDK tests |
+| macOS ARM64 regular | `124129161379` | 627/132; 12 SDK tests |
+| macOS AMD64 regular | `124129161824` | 627/132; 12 SDK tests |
+| macOS ARM64 ownership | `124129161812` | 364/127 |
+| macOS AMD64 ownership | `124129162126` | 364/127 |
+| Windows AMD64 | `124129161796` | 817/205; 10 SDK passes, two POSIX terminal skips |
+| Windows ARM64 | `124129161880` | 817/205; 10 SDK passes, two POSIX terminal skips |
+| C/Rust benchmarks | `124129161888` | 2/2 |
+| Documentation/GCC | `124115723586` | Complete audit, including 40 clock controls |
+
+Earlier Linux jobs at `570b777a` failed because the clock preflight passed an
+unset compiler argument. Both completed 993/256 while skipping required docs,
+inventory and lint checks. Every old job was audited; the missing-inventory
+warning and skipped coverage remain recorded. Explicit GCC/Clang selection fixes
+the cause; the final jobs run all required checks. The negative clock fixture
+initializes timestamps even when its deliberately omitted guard receives failure.
+
+Squash `3639f4fad3da318346340f92a89d8ba127f04e73`, merged 2026-10-30,
+has the tested tree `d3645c3ba7c3277d64d61b4d5aee1926e3d6c9db`.
+Its 55-character subject has no body or trailers. Duplicate post-merge runs
+`41094194847` and `41094194934` were cancelled after tree/message verification.
+This delivery does not resolve the original intermittent compiler abort, D2/N1's
+failed timing controls or the remaining application/comparison matrix.
