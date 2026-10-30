@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import platform
 import re
 import subprocess
 
@@ -86,6 +87,9 @@ def main():
     report = dict(source=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                   compilerSha256=hashlib.sha256(compiler.read_bytes()).hexdigest(),
                   cc=run([args.cc, '--version'], environment).decode(), cases=args.case,
+                  host=platform.uname()._asdict(),
+                  fixtureSha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+                  peerSha256=hashlib.sha256(peer.encode()).hexdigest(),
                   scope='Correctness only. No performance samples collected.', entries={})
     for entry in ['unique', 'callback', 'scan']:
         original = output / f'{entry}-original.c'

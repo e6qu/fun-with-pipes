@@ -46,6 +46,8 @@ jobs:
         run: python3 scripts/test-mutual-recursion.py
       - name: Measurement clock success and failure controls
         run: python3 scripts/check-measurement-clocks.py --cc gcc
+      - name: Buffer comparison schedule controls
+        run: python3 scripts/test-unique-buffer-baselines.py
       - name: Kernel result oracle and scheduling controls
         run: python3 scripts/test-numerical-baselines.py
       - name: Timing diagnostic observation and output controls

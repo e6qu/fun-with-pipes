@@ -81,7 +81,9 @@ buffer operation. Their overhead belongs in the eventual timing scope.
    report. Set later optimization budgets from these baseline results.
 
 The peer programs and repeated-call harness pass the focused checks above.
-The next action is separate phase/storage instrumentation and its failure controls. This preparation does not authorize an unchanged numerical rerun,
+Phase and allocation observers also pass the focused checks below.
+The next action is native GCC verification, process-memory checkpoints, and the
+runner plus independent evidence verifier before collecting the four sessions. This preparation does not authorize an unchanged numerical rerun,
 change D2/N1 limits, or complete the other B1 comparisons.
 
 ## Baseline schedule
@@ -112,5 +114,34 @@ These are descriptive baselines. Derive and publish workload-specific future
 change budgets from the repeated observations before selecting an optimization.
 An unstable copy control stays explicit and cannot establish a speed improvement.
 D2/N1's existing failures and limits are unchanged. Collection still requires
-the remaining phase/storage instrumentation, evidence verifier and native GCC
+the remaining process-memory observations, runner, evidence verifier and native GCC
 checks; no baseline session has run.
+
+
+## Diagnostic checks implemented
+
+Separate phase programs put clocks around construction, reads, release and any
+remaining arithmetic. fwp's last addition can occur after freeing the array;
+`tailNs` records it rather than incorrectly charging it to the read phase. Clock
+calls and observer output change execution costs. These programs explain statement
+boundaries; they cannot establish an ordinary-program speedup. Clang/Rust O1/O2
+checks pass 72 executions with 216 phase records and reject 144 damaged results.
+The C clock joins the existing success/failure checks: all six helpers pass 48
+executions, including failed reads with untouched timestamps and omitted guards.
+
+Separate storage programs observe C allocation/free calls and Rust's system
+allocator requests only while the buffer operation is active. fwp reuses the
+existing managed-allocation, ownership-site and count-metadata observers. Each
+call must restore its starting live-buffer charge. All 72 focused executions
+pass, including 18 deliberately omitted releases that exit 225. The C/Rust
+observers report requested bytes; fwp additionally reports size-class charges
+and cached count bytes. None of these fields proves that libc or the OS returned
+pages after a free. OS resident/virtual checkpoints and ordinary-program memory
+observations remain to be implemented.
+
+The current local checks use Clang on macOS ARM64. `buffer-peer-checks` in the
+numerical evidence workflow builds the current compiler and runs the same
+controls with GCC on both Linux architectures. It retains original/generated
+sources, diagnostic executables and every captured command result, including
+partial failures. This focused workflow does not run baseline timings or replace
+final-head production validation.

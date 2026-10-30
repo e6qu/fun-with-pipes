@@ -13,6 +13,7 @@ HELPERS = [
     ('scripts/measure-map-phases.py', 'map_probe_now'),
     ('scripts/measure-map-storage-phases.py', 'map_work_now'),
     ('tests/pipe_ownership.rs', 'fwp_now_ns'),
+    ('scripts/unique-buffer-phases.py', 'buffer_phase_now'),
 ]
 PREFIX = r'''
 #define _POSIX_C_SOURCE 200809L
@@ -53,7 +54,7 @@ def main():
         folder = Path(scratch)
         for source_path, name in HELPERS:
             original = function((ROOT / source_path).read_text(), name)
-            guard = re.compile(r'if \((clock_gettime\(CLOCK_MONOTONIC, &[a-z]+\)) != 0\) \{ fputs\("clock_gettime failed\\n", stderr\); exit\(1\); \}')
+            guard = re.compile(r'if \((clock_gettime\(CLOCK_MONOTONIC, &[a-z]+\)) != 0\) \{\s*fputs\("clock_gettime failed\\n", stderr\);\s*exit\(1\);\s*\}')
             assert len(guard.findall(original)) == 1, source_path
             broken = guard.sub(r'\1;', original)
             for opt in ['-O1', '-O2']:
@@ -81,8 +82,8 @@ def main():
                         assert (out.returncode, out.stdout, out.stderr) == expected, (
                             source_path, opt, variant, mode, out, expected)
                         executions += 1
-    assert executions == 40
-    print('Five timer helpers: 40 O1/O2 success, failed-clock and omitted-check executions pass')
+    assert executions == 8 * len(HELPERS)
+    print(f'{len(HELPERS)} timer helpers: {executions} O1/O2 success, failed-clock and omitted-check executions pass')
 
 
 if __name__ == '__main__':

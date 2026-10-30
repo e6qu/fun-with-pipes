@@ -25,10 +25,11 @@ Final-head checks:
 | Benchmarks `124129161888` | Passed; 2 tests/2 summaries audited |
 | macOS ARM regular `124129161379` | Passed; 627/132, 12 SDK/terminal tests and 40 clock controls audited |
 | macOS ARM ownership `124129161812` | Passed; 364/127 audited |
-| macOS Intel regular `124129161824` | Running, no reported failures |
+| macOS Intel regular `124129161824` | Passed; 627/132, 12 SDK tests and 40 clock controls audited |
 | macOS Intel ownership `124129162126` | Running, no reported failures |
 | Linux AMD `124129161927`, ARM `124129162084` | Running; repaired preflight and required compiler checks pass |
-| Windows AMD `124129161796`, ARM `124129161880` | Running, no reported failures |
+| Windows ARM `124129161880` | Passed; 817/205, 10 SDK passes and two explicit POSIX skips audited |
+| Windows AMD `124129161796` | Running, no reported failures |
 
 Full logs are `/private/tmp/fwp-230-*-e2fa.log`; docs uses
 `/private/tmp/fwp-229-docs-230-e2fa.log`. Check the live run before acting on this table.
@@ -55,7 +56,7 @@ failure, skipped coverage and warning. Other jobs use
 ## Next batch already in preparation
 
 Branch `ownership-peer-baselines`, worktree `/private/tmp/fwp-ownership-peer-baselines`,
-is published through `4e83447a` (following `93be9909`). No second PR is open.
+is published through `e9b37ed9` (following `4e83447a` and `93be9909`). No second PR is open.
 The [unique-buffer comparison](measurements/unique-buffer-peers.md) defines
 C/Rust equivalents of the existing fwp fixture and the concrete remaining work.
 Do not treat this as a measured speedup or completed B1 comparison.
@@ -75,12 +76,19 @@ artifact `12986056870`. Its manifest/hash and native architecture were verified;
 compiler/runtime/library/build inputs match the preparation branch exactly.
 No local compiler build ran. The comparison report records the full SHA-256.
 
-Uncommitted follow-up adds `unique-buffer-baselines.py` and its two passing
-schedule controls. Six labels give each language an identical-copy control;
+`unique-buffer-baselines.py` and its two schedule controls pass. Six labels give each language an identical-copy control;
 36 measured rounds rotate positions and within-round predecessors. The report
 fixes sizes, call counts and sample counts before execution. No baseline session
-has run. Next implement separate phase/storage observations and the evidence
-verifier, validate with native GCC, then collect the four declared sessions.
+has run. Phase checks now pass 72 executions/216 events and reject 144 damaged records;
+all six clocks pass 48 success/failure/omitted-guard executions. Storage checks
+pass 72 executions including 18 omitted-release failures, with zero final buffer
+charge. Guarded elapsed/CPU seconds: phases 6.39/1.14, clocks 4.14/0.21, storage
+12.79/2.94. Sources/results are `/private/tmp/fwp-buffer-phase-checks-1` and
+`/private/tmp/fwp-buffer-storage-checks-1`. No diagnostic result is a timing claim.
+The new `buffer-peer-checks` workflow runs these on both native GCC hosts. Workflow
+lint and all 20 runner controls pass. Next collect that focused verification,
+implement process-memory checkpoints and the runner/evidence verifier, then run
+the four declared sessions.
 Keep D2/N1's existing failed experiments unchanged.
 
 ## Evidence and recovery
