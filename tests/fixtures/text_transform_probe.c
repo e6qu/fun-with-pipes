@@ -106,6 +106,8 @@ int main(void) {
         REPLACE_CASE("abc","","x","abc",0),
         REPLACE_CASE("abc","a","a","abc",0),
         REPLACE_CASE("abc","z","x","abc",0),
+        REPLACE_CASE("\377X\377","\377","","X",1),
+        REPLACE_CASE("xxxxx","x","y","yyyyy",1),
         REPLACE_CASE("abc","a","long","longbc",1),
         REPLACE_CASE("abc","bc","","a",1),
         REPLACE_CASE("abc","abc","","",1),
@@ -152,6 +154,21 @@ int main(void) {
         TEXT_DROP(output);
         if(shared)TEXT_DROP(source);
         TEXT_DROP(other);
+    }
+    for(int shared=0;shared<2;shared++) {
+        V source=text_new("a"),replacement=text_new("x");
+        if(shared)fwp_rc_dup(source);
+        uint64_t before=text_allocations;
+        text_direct_active=1;
+        V output=TEXT_REPLACE(source,replacement,source);
+        text_direct_active=0;
+        if(!text_equal(output,"x") || text_count(output)!=1 ||
+           text_allocations-before!=(uint64_t)shared || text_raw_requests)return 240;
+        if(shared && (!text_equal(source,"a") || text_count(source)!=1))return 240;
+        if(!shared && output!=source)return 240;
+        TEXT_DROP(output);
+        if(shared)TEXT_DROP(source);
+        TEXT_DROP(replacement);
     }
     const char repeated_bytes[]="λ\0x";
     const V repeat_counts[]={0,1,2,3,31,1025};

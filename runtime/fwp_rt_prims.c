@@ -1496,8 +1496,10 @@ static V fwp_p_replace(V from, V to, V s) {
     size_t from_len = STR(from)->len, to_len = STR(to)->len;
     if (!from_len) return s;
     if (from_len == to_len && !memcmp(STR(from)->d, STR(to)->d, from_len)) return s;
+    unsigned char from_byte = (unsigned char)STR(from)->d[0];
     const char *d = STR(s)->d, *end = d + STR(s)->len;
-    const char *first = fwp_memmem(d, (size_t)(end - d), STR(from)->d, from_len);
+    const char *first = from_len == 1 ? memchr(d, from_byte, (size_t)(end - d))
+                                    : fwp_memmem(d, (size_t)(end - d), STR(from)->d, from_len);
     if (!first) return s;
     fwp_str *result;
     if (to_len <= from_len && fwp_rc_unique(s) == 1) {
@@ -1508,7 +1510,8 @@ static V fwp_p_replace(V from, V to, V s) {
         do {
             count++;
             const char *next = p + from_len;
-            p = fwp_memmem(next, (size_t)(end - next), STR(from)->d, from_len);
+            p = from_len == 1 ? memchr(next, from_byte, (size_t)(end - next))
+                              : fwp_memmem(next, (size_t)(end - next), STR(from)->d, from_len);
         } while (p);
         size_t length = STR(s)->len;
         if (to_len > from_len) {
@@ -1536,7 +1539,8 @@ static V fwp_p_replace(V from, V to, V s) {
         memmove(out, d, prefix); out += prefix;
         memcpy(out, STR(to)->d, to_len); out += to_len;
         d = p + from_len;
-        p = fwp_memmem(d, (size_t)(end - d), STR(from)->d, from_len);
+        p = from_len == 1 ? memchr(d, from_byte, (size_t)(end - d))
+                          : fwp_memmem(d, (size_t)(end - d), STR(from)->d, from_len);
     } while (p);
     size_t tail = (size_t)(end - d);
     memmove(out, d, tail); out += tail;

@@ -228,8 +228,8 @@ The tests cover both shared and unique inputs; removing the uniqueness condition
 fails the alias observer with exit 233. Tests also compare interpreted and native
 results for literal inputs, embedded zero bytes and UTF-8.
 
-WASI AMD64 passes 32 tests/four summaries with a complete log audit in
-`41034222459`; ARM64 is still running. All four paired sessions at
+Both WASI hosts pass 32 tests/four summaries each with complete log audits in
+`41034222459`. All four paired sessions at
 `d7c60989` are complete: runs `41035137961` and `41036473750`. The
 [second measurement archive](string-reuse-artifacts-2026-10-30.json) retains every
 observation, source/native-image byte, profile and complete log.
@@ -251,7 +251,9 @@ evidence-rejection tests per session. The 9V74 (`41035137961`) and 9V45
 
 ## Third candidate: use byte search for one-byte patterns
 
-This protocol precedes implementation. Keep both earlier rejected experiments,
+Protocol `7f58e4d9` was published before implementation. The one-byte search and
+new high-bit/source-alias controls are now implemented; focused GCC and new timing
+checks are pending. Keep both earlier rejected experiments,
 the original reference bodies, inputs, CPUs/toolchains, four-session schedule and
 all existing timing, allocation and representation limits. Do not change the
 required 5% gain or treat either earlier allocation saving as timing acceptance.

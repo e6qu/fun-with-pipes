@@ -1,6 +1,6 @@
 # Current work
 
-**Next:** implement the declared one-byte replacement search in
+**Next:** run focused production GCC checks for the implemented one-byte replacement search in
 [the third string candidate](measurements/direct-string-results.md#third-candidate-use-byte-search-for-one-byte-patterns).
 Both earlier candidates are rejected by their timing requirements; retain their
 complete results. PR #228's final source stays `f3eb5072`: its Intel Mac retry has
@@ -74,7 +74,7 @@ are not claimed to fall. WASI does not select native unique reuse.
 | Run | Purpose | Status |
 |---|---|---|
 | `41034212790` | Six native hosts, aliases/failure/reuse | All pass; complete logs and 972 probes/180 native headers audited |
-| `41034222459` | Both WASI hosts and physical reclamation | AMD64 passes 32 tests/four summaries with full log audit; ARM64 running |
+| `41034222459` | Both WASI hosts and physical reclamation | Both pass 32 tests/four summaries each with full log audits |
 | `41035137961`, `41036473750` | Four paired measurements | All rejected: large-input ratios 0.969173008/0.966967292 ARM, 0.982461514/0.979854379 AMD |
 
 All four sessions confirm exactly 12,513/199,721 managed requests and
@@ -84,7 +84,8 @@ do not satisfy the required 5% gain. The [complete archive](measurements/string-
 retains 74,040 observations, every source/native-image byte, all profiles and logs.
 Two unmeasured CPU rejections (9V74, 9V45) remain archived. No timings were retried.
 
-The third protocol selects standard C `memchr` only for one-byte patterns inside
+Published protocol `7f58e4d9` precedes the third implementation, which selects
+standard C `memchr` only for one-byte patterns inside
 `fwp_p_replace`, preserving the existing substring algorithm otherwise. The frozen
 inputs imply 75,360/1,205,856 byte comparisons in first searches alone; this is
 source-level work, not a measured CPU-time attribution. Keep all existing budgets,
