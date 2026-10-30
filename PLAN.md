@@ -29,8 +29,8 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. Finish the string/file-read batch's complete delivery gates; the
-   [handoff](docs/development-state.md) names the exact head and running checks.
+1. Preserve [#229's verified string/file-read delivery](docs/roadmap-history.md#string-costs-and-application-cleanup-pr-229).
+   The [handoff](docs/development-state.md) names the current source and checks.
 2. Deliver [file-boundary portability](docs/measurements/file-boundary-portability.md)
    and the related C recovery-test repairs together. Both repaired Windows
    focused runs pass; complete platform and WebAssembly checks remain required.
@@ -230,9 +230,9 @@ Directory allocation-boundary controls and the current word-frequency baseline
 are verified in #228. The [string-result report](docs/measurements/direct-string-results.md)
 retains two rejected candidates and a qualifying byte-search candidate: four
 sessions show 16.4–19.2% less large-input time and 26,216 fewer managed requests,
-with unchanged retains/peak and explicit code/stack costs. Its complete delivery
+with unchanged retains/peak and explicit code/stack costs. Complete delivery
 gates and the bundled [file-read failure controls](docs/measurements/file-read-failures.md)
-are still running; focused Clang/GCC checks pass.
+pass in #229; preserve their alias, recovery, cancellation and physical-free checks.
 
 The next [file-boundary batch](docs/measurements/file-boundary-portability.md)
 adds native Windows error/borrowed-handle coverage and fixes recovery-test C

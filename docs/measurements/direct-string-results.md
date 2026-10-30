@@ -6,14 +6,15 @@ It extends [the current word-frequency baseline](wordfreq-current.md); it change
 no existing derivative or numerical-kernel timing limit. The first candidate is
 rejected by all four timing sessions. The second candidate reuses unique storage
 under a protocol published before implementation; it also misses timing acceptance
-in all four sessions. The third, byte-search candidate passes all four measurement sessions; final
-production validation remains required before delivery. The sections below distinguish all three experiments.
+in all four sessions. The third, byte-search candidate passes all four measurement
+sessions and complete platform delivery in [#229](../roadmap-history.md#string-costs-and-application-cleanup-pr-229).
+The sections below distinguish all three experiments.
 
 ## Current result: byte search with unique storage
 
 Source `afbafef8` passes the predeclared timing, storage and representation limits
-in four qualified sessions. This is measured qualification, not final platform
-acceptance. [The complete archive](byte-search-artifacts-2026-10-30.json) retains
+in four qualified sessions. Complete platform acceptance is separately verified
+in #229 at `8d908e0e`; its compiler/runtime/library/build inputs are unchanged. [The complete archive](byte-search-artifacts-2026-10-30.json) retains
 all 74,040 subprocess observations, source/native-image bytes, profiles and logs.
 
 | Session | Large-input candidate/reference | Time reduction | Candidate/C | Candidate/Rust |
@@ -327,7 +328,7 @@ run `41038341027` passes 18 integration tests, 224 library tests and 20 runner
 controls with a complete log audit. All 162 saved probes and 30 native image
 headers/hashes pass independent inspection. Four measurements in `41039113227`
 and `41040046127` qualify the frozen branch `byte-search-measurements`; the
-complete final-head platform matrix remains required. Keep both earlier rejected experiments,
+complete final-head platform matrix passes in #229. Keep both earlier rejected experiments,
 the original reference bodies, inputs, CPUs/toolchains, four-session schedule and
 all existing timing, allocation and representation limits. Do not change the
 required 5% gain or treat either earlier allocation saving as timing acceptance.
@@ -352,6 +353,6 @@ source-alias controls. Retain the unique/shared/growing storage rules, allocatio
 failure and cancellation tests and all size-boundary exits. `memchr` must never
 read beyond the valid remaining input, including the empty suffix after a match.
 
-Final-head native/WASI coverage is required for the combined change. Fewer
+The combined delivery passes its final-head native/WASI checks in #229. Fewer
 source-loop comparisons alone are not success: all four timings must meet the
 same published budgets, with code/stack and actual memory costs retained.

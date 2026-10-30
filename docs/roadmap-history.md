@@ -6,6 +6,42 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## String costs and application cleanup (PR #229)
+
+Uniquely owned, non-growing string replacements reuse their storage; one-byte
+patterns use bounded byte search. Other replacements and repetitions construct
+their final result directly. Shared aliases preserve their original contents.
+[Four qualified sessions](measurements/direct-string-results.md) show 16.4–19.2%
+less large-input word-counting time and 26,216 fewer managed requests. Retains and
+peak managed charge do not fall. fwp still takes 2.08 times C on ARM64 and
+2.42–2.44 on AMD64. Both rejected candidates and all 222,120 observations remain.
+
+[File-read probes](measurements/file-read-failures.md) cover allocation failures,
+cleanup, retries, aliases and separate terminal OOM exits. Two C-library test
+observers now recognize directly constructed strings; deliberately missing
+observations reproduce their earlier failures. The
+[executable-name experiment](measurements/timing-variation.md#executable-name-results)
+retains 1,024 observations and does not resolve D2/N1's failed timing requirements.
+
+Squash `bae1a858126794845552c98108237002fb114f37` exactly matches tested
+`8d908e0e0d5db3a2d836e2fc978c70fa99ad04a8`, tree
+`bdccb27c1278a9291e0e64718e71659d37b32c9a`. Its message is one line, under
+80 characters, without a body or trailers. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41051447921),
+[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41051447945)
+and [both G2 hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/41051466208)
+pass with complete log audits. Linux passes 994 tests per host, regular Mac 627,
+ownership Mac 364, Windows 812, benchmarks two and G2 226 per host. Linux/Mac
+pass twelve SDK/terminal checks each; Windows passes ten and explicitly skips
+two POSIX terminal harness checks. No unexamined diagnostics remain.
+
+The production code and build inputs match measured source `afbafef8`. The
+original full matrix had only the two repaired observers; both Mac crash artifacts
+were the intentional cleanup-panic control. Duplicate post-merge production
+`41065907093` and documentation `41065907207` were cancelled after tree equality
+was verified, with no failed job to discard. The original compiler abort remains
+unexplained. Numerical and broader application acceptance remain open.
+
 ## Directory cleanup and current application costs (PR #228)
 
 Directory-report probes now check four allocation boundaries, preserved caller
