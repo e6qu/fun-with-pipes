@@ -80,6 +80,9 @@ jobs:
         run: |
           set -o pipefail
           python3 scripts/check-measurement-clocks.py --cc clang 2>&1 | tee "$RUNNER_TEMP/fwp-clock-controls.log"
+      - name: Captured process deadlines and polling controls
+        timeout-minutes: 2
+        run: python3 scripts/test-process-wait.py -v
       - name: Publish failed clock controls before long tests
         if: ${{ !cancelled() && steps.clock_controls.outcome == 'failure' }}
         uses: actions/upload-artifact@v7
@@ -143,8 +146,6 @@ jobs:
         id: sdk_compiler
         if: ${{ !cancelled() }}
         run: cargo build --locked --bin fwp
-      - name: Captured process deadlines and polling controls
-        run: python3 scripts/test-process-wait.py
       - name: Python SDK and native disassembly
         if: ${{ !cancelled() && steps.sdk_compiler.outcome == 'success' }}
         env:

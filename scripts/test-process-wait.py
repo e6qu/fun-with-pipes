@@ -6,7 +6,6 @@ import signal
 import subprocess
 import sys
 import tempfile
-import time
 import unittest
 from unittest.mock import patch
 
@@ -122,7 +121,7 @@ class ProcessWait(unittest.TestCase):
 
             def blocking(child, timeout=None):
                 observed.append(timeout)
-                self.assertIsNone(timeout, 'timed waitpid introduces polling into the measurement')
+                self.assertIsNone(timeout, 'measurement must use the blocking wait')
                 release.write_text('exit')
                 return wait(child, timeout=timeout)
 
@@ -130,23 +129,25 @@ class ProcessWait(unittest.TestCase):
                 result = self.run_child(source, 5)
             self.assertEqual(result.returncode, 0)
             self.assertTrue(observed)
-            # Deliberately restore the old timed-wait behavior. The child holds
-            # its exit until that behavior actually sleeps, making this control
-            # deterministic instead of testing a wall-clock threshold.
+            # Restore the unwanted timed communicate call and prove the check
+            # rejects it. Do not require a particular stdlib sleep: Python 3.15
+            # can wait through kqueue/pidfd instead of polling. Use run_capture
+            # so a failing control kills and reaps the child before context exit.
             release.unlink()
-            sleeps = []
-            sleep = time.sleep
+            observed.clear()
+            children = []
 
-            def polling(delay):
-                sleeps.append(delay)
-                release.write_text('exit')
-                sleep(delay)
+            def timed_communicate(child, timeout, input_data):
+                children.append(child)
+                return child.communicate(input=input_data, timeout=timeout)
 
-            with subprocess.Popen([sys.executable, '-c', source], stdout=subprocess.PIPE, stderr=subprocess.PIPE) as child:
-                with patch.object(subprocess.time, 'sleep', polling):
-                    child.communicate(timeout=5)
-            self.assertTrue(sleeps)
-            self.assertEqual(sleeps[0], 0.001)
+            with patch('process_wait.communicate', timed_communicate), patch.object(subprocess.Popen, 'wait', blocking):
+                with self.assertRaisesRegex(AssertionError, 'measurement must use the blocking wait'):
+                    self.run_child(source, 5)
+            self.assertTrue(any(timeout is not None for timeout in observed))
+            self.assertIsNotNone(children[0].returncode)
+            with self.assertRaises(ChildProcessError):
+                os.waitpid(children[0].pid, os.WNOHANG)
 
     def test_invalid_deadline_and_conflicting_input_are_rejected(self):
         for deadline in [0, -1, float('inf'), float('nan')]:
@@ -159,4 +160,5 @@ class ProcessWait(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    print(f'Process wait controls: {sys.version}', flush=True)
     unittest.main()

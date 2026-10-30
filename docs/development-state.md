@@ -1,18 +1,57 @@
 # Current work
 
-**Next:** watch PR #231's final-head nine production jobs and documentation gate,
-audit every completed target/diagnostic, repair failures, then squash merge with
-one subject of at most 80 characters and an empty body. The user accepts the
-verified cost reductions with timing acceptance open. After merge, follow PLAN's
-full buffer comparison using the repaired waiting method; no unchanged reruns.
+**Next:** publish the bounded process-wait test repair in PR #231, then watch
+all nine production jobs and documentation on that exact head. Audit every
+completed target/diagnostic before squash merge with one subject of at most
+80 characters and an empty body. The user accepts verified cost reductions
+with timing acceptance open; do not retry failed unchanged measurements.
 
 [PR #231](https://github.com/e6qu/fun-with-pipes/pull/231), branch
 `ownership-peer-baselines`, worktree `/private/tmp/fwp-ownership-peer-baselines`.
-The final documentation commit follows tested measurement source
-`df23cbcb341db53bb372337649ffc14702977078`; compiler/runtime and benchmark inputs
-are unchanged. Read the branch head and PR checks for final delivery IDs. Keep
-one active PR. GitHub status responses have lagged completed execution: inspect
-available job logs as well as status; do not call queued/running jobs passes.
+The prior head `3ca66b543bb8764527fe2a5142119831df15cfb7` needs the test repair.
+Production run `41122642095` was cancelled after macOS ARM job `124292656451`
+hung in the negative wait control. Its child waited for a stdlib polling sleep;
+Python 3.15 can use kernel waits, so timeout cleanup entered an unbounded wait.
+The repair detects an injected timed-wait call directly and proves the child is
+killed/reaped. Standalone CI checks now have a two-minute bound, report Python's
+version and run before long native suites. Local Python 3.14.6 passes all ten
+checks in 1.90 seconds; workflow lint passes in 6.42 seconds. Native final-head
+verification remains required; no compiler/runtime or measurement inputs change.
+
+At the prior head, documentation `41122636893` / `124292637000` passes 46 suites /
+318 cases; benchmark `124292656793` and macOS ARM ownership `124292656769` pass.
+Interrupted targets are not passing jobs. Logs and audits are retained under
+`/private/tmp/fwp-231-*-3ca6.*`; all eight available job logs pass their completed-target audit. Notices are
+limited to existing OpenSSL, cancellation and artifacts from unrun steps.
+Linux AMD job `124292657022` was cancelled server-side after five minutes: its
+log endpoint returns 404 and the run archive omits it. Its partial API status
+is not verification; the new complete Linux AMD job remains required. Archive
+and audit: `/private/tmp/fwp-231-production-3ca6-logs.{zip,audit.json}`. The draft push run `41122636453` skipped jobs and is not evidence.
+
+The next full-buffer comparison is collected on frozen `3ca66b54`: runs
+`41122911946` (session 1) and `41122921365` (session 2), unchanged three operations,
+four sizes, counts and limits, using the repaired wait. All four qualified
+archives and every raw record pass independent audits:
+
+| Session | Job | Artifact |
+|---|---|---|
+| ARM 1 | `124293748917` | `13010485230` |
+| AMD 1 | `124297327035` | `13009398337` |
+| ARM 2 | `124293787531` | `13009508140` |
+| AMD 2 | `124303733627` | `13010507965` |
+
+Files: `/private/tmp/fwp-buffer-baseline-{arm,amd}-{1,2}-3ca6.{zip,log,audit.json}`.
+**25/48 case controls fail.** Scan-4096 passes three sessions, but AMD session 2
+fails C's copy control (1.0269); do not claim stable four-session peer timing.
+Four rejected AMD hosts produced no timings: session 1 job `124293749858`
+(EPYC 9V74); session 2 jobs `124293787162`, `124298022812` (9V74) and
+`124301180658` (9V45). Their logs/archives remain separately retained. Publish
+all observations and select the next source change in the following roadmap
+batch; no failed measured session was rerun. Kernel-wait test repair does not
+change these Linux Python 3.14 measurements.
+
+GitHub status responses can lag execution: inspect available logs as well as
+status; queued/running/cancelled jobs are not passes. Keep one active PR.
 
 ## Results retained in this PR
 
@@ -60,7 +99,7 @@ and cancellation after two steps. Omitted cancellation cleanup must fail.
 The shared captured wait uses a POSIX alarm deadline with a blocking wait;
 Windows uses its kernel timeout. It preserves raw partial output and kill/reap,
 requires serial main-thread execution and an unused alarm, and restores signal
-state. A deterministic old-method control reproduces polling sleeps. The first
+state. The negative control rejects an injected timed wait and checks child cleanup. The first
 local build test caught an intermediate descendant-cleanup regression; all six
 build controls pass after restoring process-group cleanup on compiler failure.
 Native macOS and Windows final jobs also run the wait controls.
