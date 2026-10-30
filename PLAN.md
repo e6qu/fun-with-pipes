@@ -31,19 +31,14 @@ collector is not the same as removing these costs. The
 
 1. Preserve [#230's verified file and clock delivery](docs/roadmap-history.md#file-cleanup-portability-and-measurement-clocks-pr-230).
    The [handoff](docs/development-state.md) names the current source and checks.
-2. Use the [B1 buffer results and frozen scan budget](docs/measurements/unique-buffer-peers.md):
-   four audited sessions retain all results; 35/48 case controls fail and cannot
-   support stable speed claims. The 4,096-element scan passes all four sessions but
-   takes 10.1–14.4× C's time. The scalar-fold candidate removes per-element dispatch
-   and ineffective count calls, with smaller code and reported frames. The user
-   accepted these reductions while leaving timing acceptance open. The parent
-   polling-delay repair is tested; four new sessions are audited. Three qualify,
-   but AMD session 2 has 2.040% candidate-copy variation (limit 2%). Keep that
-   failure and the original 3.88% failure; do not retry unchanged measurements.
-   Complete the final production gate, then apply the repaired waiting method to
-   the full buffer comparison: the same three entries, four sizes, counts and
-   limits, two sessions per architecture. Declare its source before collecting;
-   retain every case, including unstable short cases, before selecting more code changes.
+2. Complete PR #231's final production gate, retaining its verified scalar-fold
+   cost reductions with timing acceptance open. The [four repaired full-buffer
+   sessions](docs/measurements/buffer-current.md) are audited: 25/48 copy controls
+   fail, and no workload passes all four. Do not retry unchanged measurements.
+   Next, implement the [generated-array allocation proof and fixed acceptance
+   requirements](docs/measurements/generated-array-folds.md). Preserve oversized
+   count checks, argument/effect/failure order and outer-owner cleanup. Verify
+   allocation removal separately from the still-open timing requirements.
 3. Resolve D2/N1's failed measurements before claiming numerical speed acceptance.
    Fixed CPU affinity and equal executable names did not resolve the controls.
    Do not rerun unchanged experiments or increase sample counts again.

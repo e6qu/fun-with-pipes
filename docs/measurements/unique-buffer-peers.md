@@ -1,5 +1,9 @@
 # Buffer costs compared with C and Rust
 
+This report retains the original baseline and scalar-fold experiment. The
+[current full-buffer comparison](buffer-current.md) uses the repaired waiting
+method and the newer compiler; its failed controls also remain explicit.
+
 Four native sessions at `fadebf713e0854d6d132fc6e3666f275b214fc17` retain
 131,328 ordinary process observations and 288 separate peak-memory observations.
 All outputs, files and reconstructed summaries pass their audits. **Only 13 of 48
