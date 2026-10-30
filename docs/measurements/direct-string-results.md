@@ -179,10 +179,6 @@ frame change. Introduce no recursion or dynamic stack allocation; no existing
 reported frame may grow by more than 256 bytes, and the largest frame must not
 grow. These are representation tradeoff limits, not runtime speed evidence.
 
-Publish the complete focused evidence, then group the change with its tests and
-documentation in the next PR after application validation. Run the full final-head
-matrix once the group is ready. Preserve PR #228's running head meanwhile.
-
 ## Implementation and checks
 
 `089465bb` implements direct construction without changing primitive contracts.
@@ -243,8 +239,8 @@ The second match scan is additional work; these timings do not isolate its cost.
 
 ## Second candidate: reuse non-growing unique strings
 
-Protocol `ebd8f46d` was published before this implementation. The source and
-controls are now implemented; new native/WASI and timing results are pending.
+Protocol `ebd8f46d` was published before this implementation. Native/WASI checks
+pass, but all four timing sessions below reject its speed claim.
 Keep the original reference bodies,
 input files, qualified CPUs, settings, two sessions per architecture, timing
 schedule and all existing acceptance limits. Do not retry the first candidate
@@ -336,7 +332,7 @@ the original reference bodies, inputs, CPUs/toolchains, four-session schedule an
 all existing timing, allocation and representation limits. Do not change the
 required 5% gain or treat either earlier allocation saving as timing acceptance.
 
-`replace` currently calls a general substring loop even for one-byte patterns.
+Before this candidate, `replace` called a general substring loop even for one-byte patterns.
 The word-frequency application removes commas and periods: 8,192/131,072 calls
 for the two inputs, confirmed by its raw operation counters. Counting only each
 call's first search over the retained inputs gives 75,360/1,205,856 byte comparisons
@@ -356,9 +352,6 @@ source-alias controls. Retain the unique/shared/growing storage rules, allocatio
 failure and cancellation tests and all size-boundary exits. `memchr` must never
 read beyond the valid remaining input, including the empty suffix after a match.
 
-Run a focused production GCC native suite before measuring. Defer repetition of
-the other platform suites to the complete final matrix after this implementation
-batch; retain the ongoing WASI result with its actual source identity. Require
-new final-head native/WASI coverage before accepting the combined change. Fewer
+Final-head native/WASI coverage is required for the combined change. Fewer
 source-loop comparisons alone are not success: all four timings must meet the
 same published budgets, with code/stack and actual memory costs retained.

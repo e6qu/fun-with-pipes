@@ -15,13 +15,14 @@ C-library allocation observers and the
 
 | Gate | Run | Audited status |
 |---|---|---|
-| Production | `41051447921` | Benchmarks, four Mac jobs and Windows ARM pass; Linux/Windows AMD running |
+| Production | `41051447921` | Eight jobs pass; Linux AMD still running |
 | Documentation | `41051447945` | Pass |
 | G2 compiler-analysis budgets | `41051466208` | Both hosts pass, 226 tests each |
 
 Each regular Mac job passes 627 tests/132 summaries; each ownership job passes
-364/127. Windows ARM passes 812 tests/202 summaries and ten SDK checks; two POSIX terminal
-checks are explicitly skipped. Complete logs are audited. The original matrix `41042531398` is fully
+364/127. Both Windows hosts pass 812 tests/202 summaries and ten SDK checks each; two
+POSIX terminal checks are explicitly skipped on each. Linux ARM passes 994/257
+and all twelve SDK/terminal checks. Complete logs are audited. The original matrix `41042531398` is fully
 audited: only the two observer failures, repaired by `d0ccb80f`, occurred. Its
 Mac crash artifacts are the intentional cleanup-panic control. No final-head
 failure has been observed; audit newly completed targets before merging.
