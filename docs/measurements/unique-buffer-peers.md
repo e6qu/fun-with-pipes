@@ -266,3 +266,32 @@ family totals; retain all individual copies and require their control limit.
 Compiler flags, host qualification, environment and ordinary/diagnostic separation
 stay fixed. This comparison has not run and no implementation candidate is yet
 accepted. The 35 failed baseline combinations remain open measurement work.
+
+## Known scalar-fold candidate: verification in progress
+
+The scan calls `array.fold add 0`. Previously, each element went through the
+runtime's general function-call dispatcher even though `add` and both numeric
+argument types were known. The candidate emits a loop calling that existing
+numeric entry directly. It preserves the initial-value/input evaluation order,
+left-to-right folding and the caller's array cleanup. Captured or unknown
+callbacks, nonnumeric values and F128 retain their existing implementation.
+
+The first native checks at `89fda951` pass buffer results, overflow order and
+failure cleanup. Both hosts expose one faulty test assumption: a callback called
+“unknown” was statically known and its function was inlined away. The repaired
+fixture selects its callback through input and checks the generic dispatch body.
+No candidate speed claim is accepted yet.
+
+For three 4,096-element calls, diagnostics remove 12,288 ineffective duplicate
+and release entries each. Payload remains three requests, 98,328 requested bytes,
+32,776 peak bytes and zero final bytes; one cached count byte remains. `.text`
+shrinks from 16,780 to 10,588 bytes on ARM and 18,162 to 11,090 on AMD. Largest
+reported frame components shrink from 592/576 to 368/320 bytes. The existing AMD
+bounded dynamic reporting frame remains; there is no new dynamic frame.
+
+The paired experiment uses `scan-comparison.py collect` and its independent
+`check` command. It verifies the reference binaries from session 1 by hash and
+rechecks both build records and all 2,736 ordered process observations. Three
+identical copies per implementation share the existing six-label schedule.
+Synthetic evidence tests check balance, retain slow/noisy results and reject
+fifteen damaged inputs. These controls do not establish candidate performance.

@@ -46,7 +46,7 @@ def main():
                 stdoutSha256=hashlib.sha256(expected).hexdigest(), stderrSha256=hashlib.sha256(b'').hexdigest())
             for warmup, rounds in [(True, BASELINE.WARMUPS), (False, BASELINE.ROUNDS)]:
                 for index in range(rounds):
-                    for position, label in enumerate(BASELINE.execution_order(index, BASELINE.SEED, BASELINE.PROCESSES)):
+                    for position, label in enumerate(BASELINE.execution_order(index, BASELINE.SEED, BASELINE.PROCESSES, BASELINE.LABELS)):
                         binary = out / 'programs' / programs['entries'][entry][label]['binary']
                         rows.append(dict(common, label=label, warmup=warmup, round=index, position=position,
                                          command=[str(binary), entry, str(length), str(calls)]))

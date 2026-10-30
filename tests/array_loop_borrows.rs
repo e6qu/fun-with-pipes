@@ -95,14 +95,14 @@ fn known_scalar_array_folds_preserve_order_views_and_failure() {
         let code = std::fs::read_to_string(cfile).unwrap();
         assert!(code.contains("direct known scalar array fold; input stays borrowed"));
         let unknown = code
-            .split("/* unknown :")
+            .split("/* array.fold : (I64 -> I64 -> I64)")
             .nth(1)
-            .unwrap()
+            .expect("runtime-selected callback retains the generic fold")
             .split("/* ")
             .next()
             .unwrap();
         assert!(
-            !unknown.contains("fwp_hof"),
+            unknown.contains("fwp_p_array_fold_typed") && !unknown.contains("fwp_hof"),
             "unknown callback was specialized"
         );
         for level in ["-O1", "-O2"] {
@@ -140,6 +140,15 @@ main = [9223372036854775807, 1, 2] | array.from-list | checked-fold | echo
     assert!(!reference.status.success());
     assert_eq!(reference.stdout, b"9223372036854775807\n1\n");
     assert!(String::from_utf8_lossy(&reference.stderr).contains("overflow"));
+    let optimized = Command::new(compiler)
+        .env_remove("FWP_NO_OPT")
+        .args(["run", "--interp"])
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert!(!optimized.status.success());
+    assert_eq!(optimized.stdout, reference.stdout);
+    assert_eq!(optimized.stderr, reference.stderr);
     let cfile = dir.join("overflow.c");
     checked(
         Command::new(compiler)

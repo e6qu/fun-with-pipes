@@ -101,7 +101,7 @@ def main():
             with (out / (name + '.jsonl')).open('x', buffering=1) as log:
                 for warmup, rounds in [(True, BASELINE.WARMUPS), (False, BASELINE.ROUNDS)]:
                     for index in range(rounds):
-                        for position, label in enumerate(BASELINE.execution_order(index, BASELINE.SEED, BASELINE.PROCESSES)):
+                        for position, label in enumerate(BASELINE.execution_order(index, BASELINE.SEED, BASELINE.PROCESSES, BASELINE.LABELS)):
                             binary = out / 'programs' / programs['entries'][entry][label]['binary']
                             row = measure_process([binary, entry, length, calls], environment, args.timeout)
                             row.update(entry=entry, length=length, calls=calls, warmup=warmup,

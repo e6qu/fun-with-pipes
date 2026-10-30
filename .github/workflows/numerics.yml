@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [buffer-baselines, buffer-peer-checks, timing-names, timing-resources, typed-loop-state, kernel-codegen, timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-recording, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, wordfreq-current, direct-strings, string-reuse, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [scan-comparison, buffer-baselines, buffer-peer-checks, timing-names, timing-resources, typed-loop-state, kernel-codegen, timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-recording, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, wordfreq-current, direct-strings, string-reuse, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -37,6 +37,116 @@ on:
         description: Exact focused API run supplying native diagnostic executables
         type: string
 jobs:
+  scan_comparison:
+    if: inputs.suite == 'scan-comparison'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            machine: x86_64
+            cpu: AMD EPYC 7763 64-Core Processor
+            c_version: gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0
+            c_arch: x86-64
+            rust_cpu: x86-64
+          - runner: ubuntu-24.04-arm
+            machine: aarch64
+            cpu: Neoverse-N2
+            c_version: gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+            c_arch: armv8-a
+            rust_cpu: generic
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      contents: read
+    env:
+      CC: gcc
+      CARGO_BUILD_JOBS: 2
+      CARGO_INCREMENTAL: '0'
+      SESSION: ${{ inputs.comparison_session }}
+      MACHINE: ${{ matrix.machine }}
+      CPU: ${{ matrix.cpu }}
+      C_VERSION: ${{ matrix.c_version }}
+      C_ARCH: ${{ matrix.c_arch }}
+      RUST_CPU: ${{ matrix.rust_cpu }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.1
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Require one declared session on both architectures
+        env:
+          SELECTED_RUNNER: ${{ inputs.native_runner }}
+        run: |
+          test "$SELECTED_RUNNER" = all
+          case "$SESSION" in
+            1|2) ;;
+            *) echo 'Scan comparison requires comparison_session=1 or 2' >&2; exit 1 ;;
+          esac
+      - name: Qualify the native host
+        run: >-
+          python3 scripts/descent-baselines.py --cpu "$CPU" --machine "$MACHINE"
+          --cc gcc --rustc rustc --c-version "$C_VERSION"
+          --rust-version 'rustc 1.99.1 (58cf8f9c3 2026-10-13)'
+          --processors 4 --source "$GITHUB_SHA" --output scan/qualification.json
+      - name: Verify the frozen standalone reference programs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download 41103040883 --name "buffer-baseline-$MACHINE-1" --dir scan/reference
+          python3 scripts/check-buffer-baselines.py --input scan/reference/observed --source fadebf713e0854d6d132fc6e3666f275b214fc17 --machine "$MACHINE" --session 1 --origin observed
+      - name: Build the current compiler and verify scalar folds
+        run: |
+          set -o pipefail
+          cargo build --locked --release --bin fwp 2>&1 | tee scan/build.log
+          cargo test --locked --release --no-fail-fast --test array_loop_borrows --test array_unwind_ownership --test fold_unwind_ownership 2>&1 | tee scan/scalar-fold-tests.log
+      - name: Verify raw, optimized and native results
+        run: >-
+          python3 scripts/check-unique-buffer-native.py --compiler target/release/fwp --cc gcc
+          --output scan/native --case -9223372036854775808 --case -1 --case 0
+          --case 1 --case 16 --case 4096 --case 262144 --timeout 45
+      - name: Verify allocation and release diagnostics
+        run: >-
+          python3 scripts/check-unique-buffer-storage.py --native-checks scan/native
+          --output scan/storage --cc gcc --rustc rustc
+      - name: Prepare ordinary programs and compiler reports
+        run: >-
+          python3 scripts/prepare-buffer-baselines.py --native-checks scan/native
+          --output scan/programs --cc gcc --rustc rustc
+          --c-arch "$C_ARCH" --rust-cpu "$RUST_CPU" --size size --objcopy objcopy
+      - name: Reject damaged paired evidence before collecting observations
+        run: |
+          set -o pipefail
+          python3 scripts/test-buffer-processes.py
+          python3 scripts/test-unique-buffer-baselines.py
+          python3 scripts/check-scan-pipeline.py --reference scan/reference/observed/programs --candidate scan/programs --output scan/synthetic-control 2>&1 | tee scan/pipeline.log
+      - name: Collect exactly the declared paired session
+        run: >-
+          python3 scripts/scan-comparison.py collect --reference scan/reference/observed/programs
+          --candidate scan/programs --qualification scan/qualification.json --output scan/observed
+          --session "$SESSION" --cpu-policy all --timeout 45
+      - name: Independently reconstruct the complete comparison
+        if: ${{ !cancelled() && hashFiles('scan/observed/manifest.json') != '' }}
+        run: >-
+          python3 scripts/scan-comparison.py check --input scan/observed --source "$GITHUB_SHA"
+          --machine "$MACHINE" --session "$SESSION" --origin observed
+      - name: Retain complete or partial paired evidence and diagnostics
+        if: ${{ always() && hashFiles('scan/**') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: scan-comparison-${{ matrix.machine }}-${{ inputs.comparison_session }}
+          path: |
+            scan/observed/
+            scan/native/
+            scan/storage/
+            scan/*.json
+            scan/*.log
+          if-no-files-found: error
   buffer_baselines:
     if: inputs.suite == 'buffer-baselines'
     strategy:

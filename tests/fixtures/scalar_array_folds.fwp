@@ -17,12 +17,19 @@ logged-step = curry (tap (.1 | echo) | if (.1 | eq 3)
     (uncurry add))
 export failed : I64 -> I64 ! {IO, Error[String]}
 failed = flip array.generate id | array.fold logged-step 0
+seed : () -> I64 ! {IO}
+seed = const 0 | tap (const "seed" | echo)
+input : () -> Array[I64] ! {IO}
+input = const [1, 2] | tap (const "input" | echo) | array.from-list
 main = [
+    array.fold add (() | seed) (() | input) | echo,
     [] | array.from-list | sum | echo,
     [1, 2, 3] | array.from-list | both id sum | echo,
     [1, 2, 3, 4] | array.from-list | array.slice 1 2 | sum | echo,
     [1, 2, 3] | array.from-list | digits | echo,
     [1.5f32, 2.25f32] | array.from-list | float-sum | echo,
-    [10, 3, 1] | array.from-list | unknown sub | echo,
+    # EOF selects subtraction at runtime, so this callback cannot be specialized.
+    [10, 3, 1] | array.from-list | unknown
+        (() | read-line | if (eq None) (const sub) (const add)) | echo,
     4 | attempt failed | echo,
 ] | ignore

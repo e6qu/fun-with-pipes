@@ -15,7 +15,7 @@ SPEC.loader.exec_module(BASELINE)
 
 class BufferSchedule(unittest.TestCase):
     def test_each_language_and_its_copy_get_equal_positions_and_predecessors(self):
-        orders = [BASELINE.execution_order(i, BASELINE.SEED, BASELINE.PROCESSES)
+        orders = [BASELINE.execution_order(i, BASELINE.SEED, BASELINE.PROCESSES, BASELINE.LABELS)
                   for i in range(BASELINE.ROUNDS)]
         for order in orders:
             self.assertEqual(len(order), 72)
@@ -31,10 +31,10 @@ class BufferSchedule(unittest.TestCase):
     def test_changed_counts_and_incomplete_rotation_range_are_rejected(self):
         for count in [0, 1, 6, 18, 24]:
             with self.subTest(count=count), self.assertRaises(AssertionError):
-                BASELINE.execution_order(0, BASELINE.SEED, count)
+                BASELINE.execution_order(0, BASELINE.SEED, count, BASELINE.LABELS)
         for index in [-1, 36, 72]:
             with self.subTest(index=index), self.assertRaises(AssertionError):
-                BASELINE.execution_order(index, BASELINE.SEED, BASELINE.PROCESSES)
+                BASELINE.execution_order(index, BASELINE.SEED, BASELINE.PROCESSES, BASELINE.LABELS)
 
 
 class BufferEvidence(unittest.TestCase):
@@ -43,7 +43,7 @@ class BufferEvidence(unittest.TestCase):
         rows = []
         for warmup, rounds in [(True, BASELINE.WARMUPS), (False, BASELINE.ROUNDS)]:
             for index in range(rounds):
-                for position, label in enumerate(BASELINE.execution_order(index, BASELINE.SEED, BASELINE.PROCESSES)):
+                for position, label in enumerate(BASELINE.execution_order(index, BASELINE.SEED, BASELINE.PROCESSES, BASELINE.LABELS)):
                     duration = {'c': 100, 'rust': 125, 'fwp': 200}[label.removesuffix('-identical')]
                     rows.append(dict(entry='scan', length=16, calls=65536, warmup=warmup,
                         round=index, position=position, label=label, status=0, timedOut=False, interrupted=False,

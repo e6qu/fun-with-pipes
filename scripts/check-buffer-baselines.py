@@ -41,12 +41,46 @@ def check_evidence(folder, source, machine, session, origin):
     assert str(config['run']).isdecimal() and str(config['attempt']).isdecimal()
     assert 'GNU Time' in config['timeVersion']
     BASELINE.check_host(config['qualification'], source, machine)
-    programs = BASELINE.check_programs(folder / 'programs', source, machine)
-    assert programs['versions']['cc'].splitlines()[0] == config['qualification']['actual']['cVersion']
-    assert programs['versions']['rustc'].strip() == config['qualification']['actual']['rustVersion']
+    programs = check_build(folder / 'programs', source, machine, config['qualification'])
+    root = Path(config['directory'])
+    assert root.is_absolute()
+    summaries = {}
+    for entry in BASELINE.ENTRIES:
+        for length, calls in BASELINE.CASES:
+            name = f'{entry}-{length}'
+            rows = [json.loads(line) for line in (folder / (name + '.jsonl')).read_text().splitlines()]
+            summaries[name] = BASELINE.summarize_case(rows, entry, length, calls)
+            for row in rows:
+                binary = programs['entries'][entry][row['label']]['binary']
+                assert row['command'] == [str(root / 'programs' / binary), entry, str(length), str(calls)]
+    memory_rows = [json.loads(line) for line in (folder / 'memory.jsonl').read_text().splitlines()]
+    expected = [(entry, length, calls, label) for entry in BASELINE.ENTRIES
+                for length, calls in BASELINE.CASES for label in BASELINE.LABELS]
+    assert len(memory_rows) == len(expected) == 72
+    memory = []
+    for row, (entry, length, calls, label) in zip(memory_rows, expected):
+        assert (row['entry'], row['length'], row['calls'], row['label']) == (entry, length, calls, label)
+        BASELINE.check_result(row, entry, length, calls)
+        name = f'{entry}-{length}-{label}.rss'
+        assert row['file'] == name
+        binary = root / 'programs' / programs['entries'][entry][label]['binary']
+        assert row['command'] == [config['time'], '-f', '%M', '-o', str(root / name), str(binary), entry, str(length), str(calls)]
+        raw = (folder / name).read_text()
+        assert raw.endswith('\n') and raw[:-1].isdecimal(), raw
+        memory.append(dict(entry=entry, length=length, label=label, maximumResidentKiB=int(raw)))
+    expected_report = dict(source=source, session=session, complete=True, cases=summaries,
+                           memory=memory, decision='Descriptive baseline only; no optimization accepted.')
+    assert json.loads((folder / 'report.json').read_text()) == expected_report, 'summary disagrees with raw observations'
+    return expected_report
+
+
+def check_build(folder, source, machine, qualification):
+    programs = BASELINE.check_programs(folder, source, machine)
+    assert programs['versions']['cc'].splitlines()[0] == qualification['actual']['cVersion']
+    assert programs['versions']['rustc'].strip() == qualification['actual']['rustVersion']
     for entry in BASELINE.ENTRIES:
         for language in ['c', 'rust', 'fwp']:
-            directory = folder / 'programs' / entry
+            directory = folder / entry
             metadata = programs['entries'][entry][language]
             assert metadata['sections'] == PROGRAMS.sections((directory / (language + '-sections.txt')).read_text())
             if language == 'rust':
@@ -57,7 +91,7 @@ def check_evidence(folder, source, machine, session, origin):
                 usage, = directory.glob(Path(metadata['binary']).name + '*.su')
                 frames = PROGRAMS.c_frames(usage.read_text())
             assert metadata['frames'] == frames
-    build_rows = [json.loads(line) for line in (folder / 'programs/commands.jsonl').read_text().splitlines()]
+    build_rows = [json.loads(line) for line in (folder / 'commands.jsonl').read_text().splitlines()]
     assert len(build_rows) == 31, 'incomplete build/inspection command log'
     for row in build_rows:
         assert type(row['status']) is int and row['status'] == 0 and row['timedOut'] is False
@@ -97,49 +131,20 @@ def check_evidence(folder, source, machine, session, origin):
             assert command == expected_command and base64.b64decode(row['stdout']) == b''
             size_row = build_rows[cursor + 1]
             assert size_row['command'] == [tools['size'], '-A', '-d', str(binary)]
-            assert base64.b64decode(size_row['stdout']).decode() == (folder / 'programs' / entry / (language + '-sections.txt')).read_text()
+            assert base64.b64decode(size_row['stdout']).decode() == (folder / entry / (language + '-sections.txt')).read_text()
             cursor += 2
             if language == 'rust':
                 stack_binary = binary.parent / 'rust-stack'
                 stack_row = build_rows[cursor]
                 assert stack_row['command'] == command[:-1] + [str(stack_binary), '-C', 'remark=prolog-epilog', '--error-format=json']
                 assert base64.b64decode(stack_row['stdout']) == b''
-                assert base64.b64decode(stack_row['stderr']).decode() == (folder / 'programs' / entry / 'rust-stack.jsonl').read_text()
+                assert base64.b64decode(stack_row['stderr']).decode() == (folder / entry / 'rust-stack.jsonl').read_text()
                 for row, executable, name in zip(build_rows[cursor + 1:cursor + 3], [binary, stack_binary], ['rust-text.bin', 'rust-stack-text.bin']):
                     assert row['command'] == [tools['objcopy'], '--dump-section', f'.text={binary.parent / name}', str(executable), str(binary.parent / (executable.name + '-inspection'))]
                     assert base64.b64decode(row['stdout']) == b''
                 cursor += 3
     assert cursor == len(build_rows)
-    root = Path(config['directory'])
-    assert root.is_absolute()
-    summaries = {}
-    for entry in BASELINE.ENTRIES:
-        for length, calls in BASELINE.CASES:
-            name = f'{entry}-{length}'
-            rows = [json.loads(line) for line in (folder / (name + '.jsonl')).read_text().splitlines()]
-            summaries[name] = BASELINE.summarize_case(rows, entry, length, calls)
-            for row in rows:
-                binary = programs['entries'][entry][row['label']]['binary']
-                assert row['command'] == [str(root / 'programs' / binary), entry, str(length), str(calls)]
-    memory_rows = [json.loads(line) for line in (folder / 'memory.jsonl').read_text().splitlines()]
-    expected = [(entry, length, calls, label) for entry in BASELINE.ENTRIES
-                for length, calls in BASELINE.CASES for label in BASELINE.LABELS]
-    assert len(memory_rows) == len(expected) == 72
-    memory = []
-    for row, (entry, length, calls, label) in zip(memory_rows, expected):
-        assert (row['entry'], row['length'], row['calls'], row['label']) == (entry, length, calls, label)
-        BASELINE.check_result(row, entry, length, calls)
-        name = f'{entry}-{length}-{label}.rss'
-        assert row['file'] == name
-        binary = root / 'programs' / programs['entries'][entry][label]['binary']
-        assert row['command'] == [config['time'], '-f', '%M', '-o', str(root / name), str(binary), entry, str(length), str(calls)]
-        raw = (folder / name).read_text()
-        assert raw.endswith('\n') and raw[:-1].isdecimal(), raw
-        memory.append(dict(entry=entry, length=length, label=label, maximumResidentKiB=int(raw)))
-    expected_report = dict(source=source, session=session, complete=True, cases=summaries,
-                           memory=memory, decision='Descriptive baseline only; no optimization accepted.')
-    assert json.loads((folder / 'report.json').read_text()) == expected_report, 'summary disagrees with raw observations'
-    return expected_report
+    return programs
 
 
 def main():

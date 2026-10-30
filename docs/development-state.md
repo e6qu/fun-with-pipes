@@ -1,11 +1,10 @@
 # Current work
 
-**Next:** verify the known-scalar `array.fold` candidate against the budget published
-at `1bcf261d`, then implement/run the frozen paired comparison before acceptance.
-The source routes even known numeric folds through generic callback dispatch;
-the candidate uses the existing direct-entry machinery for exactly two numeric
-parameters, a numeric result and no captures. Other folds retain their ordinary
-calling convention. No candidate timing has run.
+**Next:** run the fixed scalar-fold comparison on both native architectures in two
+sessions, after its repaired runtime-callback fixture passes. Then audit every
+observation and the published budget before final delivery gates. No candidate
+speed result exists yet. The implementation calls known plain-numeric callbacks
+directly; unknown callbacks keep their ordinary dispatch and ownership rules.
 [Draft PR #231](https://github.com/e6qu/fun-with-pipes/pull/231), branch
 `ownership-peer-baselines`, worktree `/private/tmp/fwp-ownership-peer-baselines`.
 Keep one active PR. Once the grouped report and fixes are complete, require all
@@ -18,8 +17,8 @@ architectures through `numerics.yml`, `suite=buffer-baselines`, `native_runner=a
 and explicit `comparison_session=1` or `2`. Session 1 jobs: AMD `124224640229`,
 ARM `124224640595`; session 2: AMD `124224672478`, ARM `124224673013`.
 All raw records and files are verified; collection success does not override failed copy controls.
-The current source differs from the passing focused source only in workflow
-placement and tracking docs; compiler, runtime, fixtures and scripts are identical.
+These baseline sessions precede the scalar-fold candidate. Their noisy cases remain
+failed controls; they are not rerun by the candidate comparison.
 
 Each session fixes three entries, four sizes, two warmup and 36 measured rounds,
 twelve processes per label/round, seed 20261030: 32,832 ordinary attempts and 72
@@ -126,7 +125,8 @@ only into a temporary directory after checking disk headroom, then removes that
 verified temporary copy. Original archives remain. Free disk is only about
 64.2 GiB; do not download or generate large files without checking the limit.
 The report and new artifact index replace obsolete preparation-only text.
-No candidate implementation or paired candidate timing has run yet.
+The candidate has focused native correctness/storage evidence below; paired timing
+has not run yet.
 
 ## Current candidate checks
 
@@ -139,4 +139,32 @@ and a recoverable scalar callback failure with zero leaked payload. Existing F12
 failure controls remain in the same test target. The focused workflow runs the
 three affected Rust integration targets with the release compiler on both hosts.
 Local fixture interpretation passes with the verified compiler package; no local
-compiler build ran. Formatting passes. Native candidate checks remain pending.
+compiler build ran. Formatting passes. Run `41108169261` at `89fda951` is fully audited: both hosts pass all buffer,
+consumer and cleanup controls, with one test-fixture failure in
+`array_loop_borrows`. Its supposedly unknown callback was statically known and
+inlined; the assertion tried to find a removed function. The repair selects the
+callback through `read-line` and checks the retained generic fold. It also covers
+initial-value/input effect order and optimized-interpreter overflow order.
+Archives/logs/audits: `/private/tmp/fwp-buffer-candidate-{arm,amd}-89fd.{zip,log,audit.json}`.
+ARM job/artifact `124243375996` / `13001672994`; AMD `124243375828` / `13001633556`.
+
+The scan candidate removes all 12,288 ineffective duplicate/release entries in
+three 4,096-element calls. Payload remains three requests, 98,328 requested bytes,
+32,776 peak, zero final payload and one cached count byte. Ordinary `.text` falls
+from 16,780 to 10,588 bytes on ARM and 18,162 to 11,090 on AMD. Maximum reported
+frames fall from 592/576 to 368/320 bytes; no new dynamic frame appears. These
+results are not yet a timing or final-platform acceptance.
+
+`scan-comparison.py` retains exactly 2,736 attempts/session and checks both full
+program build records, frozen reference hashes and every ordered result. Fifteen
+synthetic damage controls pass locally (6.07s), as do the six schedule controls
+(0.24s) and refactored baseline's eleven damage controls (5.71s). The first local
+baseline control used an obsolete pre-repair program archive and correctly rejected
+its missing objcopy output; the current program archive passes. No timing was run
+locally. The synthetic archive was compacted with all 135 files verified at
+`/private/tmp/fwp-scan-synthetic-control-1.zip`; original CI archives remain intact.
+
+Final local preparation: raw/optimized fixture checks pass (0.26/0.25s), Rust
+formatting passes (0.14s), full workflow lint passes (5.73s), and the roadmap
+audit passes (3.05s). The next CI suite is `scan-comparison`, explicit session 1
+and 2 with `native_runner=all`; it gates timing on the affected native tests.
