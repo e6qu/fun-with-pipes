@@ -88,8 +88,8 @@ int main(int argc,char **argv){
   rewind(h->f);fault=mode;
   fwp_handler handler;handler.prev=fwp_handlers;handler.state_depth=fwp_state_len;
   handler.cleanup=fwp_cleanups;fwp_handlers=&handler;
-  int failed=setjmp(handler.jb);
-  if(!failed){if(mode==3)fwp_p_file_read_all_owned(handle,0);else fwp_p_file_write_owned(more,handle,0);}
+  int failed=0;
+  if(setjmp(handler.jb))failed=1;else{if(mode==3)fwp_p_file_read_all_owned(handle,0);else fwp_p_file_write_owned(more,handle,0);}
   fwp_handlers=handler.prev;fault=0;
   if(!failed||h->refs!=1||closes||fwp_cleanups||!stream_is_open())return 7;
   if(strcmp(STR(OBJ(handler.value)->f[0])->d,mode==3?"read":"write"))return 8;
@@ -100,7 +100,7 @@ int main(int argc,char **argv){
  for(volatile int mode=4;mode<6;mode++){
   rewind(h->f);fault=mode;watched_text=0;watched_text_frees=0;double before=fwp_heap.freed;
   fwp_trap_recover=recover;fwp_trap_jb=&recovery;fwp_trap_cleanup=0;
-  int failed=setjmp(recovery);if(!failed)fwp_p_file_read_all_owned(handle,0);
+  int failed=0;if(setjmp(recovery))failed=1;else fwp_p_file_read_all_owned(handle,0);
   fwp_trap_recover=0;fwp_trap_jb=0;fault=0;
   if(!failed||h->refs!=1||closes||fwp_cleanups||!stream_is_open())return 9;
   if(mode==5){
@@ -113,7 +113,7 @@ int main(int argc,char **argv){
  }
  /* Overflow traps before touching the stream or registering a cleanup. */
  h->refs=UINT64_MAX;fwp_trap_recover=recover;fwp_trap_jb=&recovery;fwp_trap_cleanup=0;
- int overflow=setjmp(recovery);if(!overflow)fwp_file_dup(handle);
+ int overflow=0;if(setjmp(recovery))overflow=1;else fwp_file_dup(handle);
  fwp_trap_recover=0;fwp_trap_jb=0;
  if(!overflow||h->refs!=UINT64_MAX||closes||fwp_cleanups)return 11;
  h->refs=1;fwp_file_drop(handle);if(closes!=1)return 12;

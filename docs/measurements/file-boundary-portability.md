@@ -28,6 +28,12 @@ Unix descriptor queries. Observers compare and clear the stream pointer before
 path hooks observe UTF-16 opening; source examples use explicit relative paths
 and working directories rather than embedding platform path separators.
 
+A source audit also found seven test probes assigning `setjmp` to a local
+initializer. C does not permit that context; they now branch directly on
+`setjmp`, keeping failure flags assigned only after returning from the jump.
+The same repair covers the resource-frame and WASI resource-count probes.
+These tests need fresh execution; this is not a diagnosed runtime failure.
+
 The ignored-write-error control now removes only the error-reporting branch,
 keeping the same open/write/close path on every platform.
 
@@ -42,3 +48,22 @@ already assign them; Windows now explicitly assigns them too. Require focused
 production Clang/GCC checks, both native Windows architectures and the complete
 final-head matrix before claiming support. These are correctness/cleanup checks,
 not timing measurements or comparisons with C/Rust performance.
+
+## First focused results
+
+Source `3cbc6b63`: Linux GCC run `41053039581`, job `124053572242`, passes all
+16 tests in six targets. Its complete log and all 22 saved boundary executions
+pass independent audit, including exact error/flush omission controls and native
+AMD64 headers. Artifact `12975797627` retains the evidence.
+
+Windows ARM run `41053015126`, job `124053490719`, completes all six targets:
+13 tests pass and three C probes fail compilation. Their prefixes include C
+headers before declaring the Windows 10 API target; those headers select an older
+target, which the production runtime correctly rejects. The repair declares the
+required target before every include, including the shared stream observer and
+the independent flush probe. The full log has no other failures or warnings.
+Windows AMD run `41053005173`, job `124053458381`, has exactly the same three
+failures among 13 passes; its full log is audited. ARM Mac run `41053051853`, job
+`124053615503`, passes 16 tests in six targets. Its full log and all 22 saved
+executions/native headers are audited; artifact `12976686469` retains the evidence.
+The target-prefix and `setjmp` repairs require fresh execution before delivery.

@@ -282,7 +282,7 @@ static int recover(void){return 1;}
 int main(void){
  fwp_heap_start();fwp_fns=fwp_fn_table;fwp_prog_out=stdout;fwp_init_consts();
  jmp_buf recovery;fwp_trap_jb=&recovery;fwp_trap_recover=recover;fwp_trap_cleanup=0;
- int failed=setjmp(recovery);if(!failed){f0();return 1;}
+ if(!setjmp(recovery)){f0();return 1;}
  fwp_trap_jb=0;fwp_trap_recover=0;
  struct stat status;if(fwp_cleanups||closes!=1||fstat(fd,&status)!=-1||errno!=EBADF)return 2;
  uint8_t *slot=fwp_rc_slot(watched_text);

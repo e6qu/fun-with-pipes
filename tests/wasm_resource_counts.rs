@@ -101,8 +101,8 @@ int main(int argc,char **argv) {
  fwp_wasm_rc *entry=*fwp_wasm_count_link(v);
  fwp_wasm_set_count(entry,UINT64_MAX);
  jmp_buf recovery;fwp_trap_jb=&recovery;fwp_trap_recover=recover;
- int failed=setjmp(recovery);
- if(!failed)fwp_rc_dup(v);
+ int failed=0;
+ if(setjmp(recovery))failed=1;else fwp_rc_dup(v);
  fwp_trap_jb=0;fwp_trap_recover=0;
  if(!failed||fwp_wasm_count(entry)!=UINT64_MAX)return 7;
  fwp_wasm_set_count(entry,1);fwp_rc_free_obj(v);

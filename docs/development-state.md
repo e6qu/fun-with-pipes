@@ -2,8 +2,8 @@
 
 **Next:** finish PR #229's gates at `8d908e0e` and squash-merge only after all
 nine production jobs, documentation and both G2 hosts pass. Production is
-`41051447921`, docs `41051447945`, analysis `41051466208`. The old Linux jobs in
-`41042531398` also need their completed logs audited. Do not open a second PR.
+`41051447921`, docs `41051447945`, analysis `41051466208`. The old matrix
+`41042531398` is completely audited: no failures beyond the two repaired observers. Do not open a second PR.
 
 ## Preparation for the next grouped PR
 
@@ -118,3 +118,16 @@ compiler-abort report. Preserve both. All local checks remain serial under
 | 6 | In progress | Resolve N1's array control before N2 timing acceptance |
 | 7 | In progress | Complete broader B1/B2 comparisons |
 | 8 | In progress | Deliver this application batch and finish V1/V2 |
+
+## Focused checks and pending repair
+
+Preparation source `3cbc6b63`: Linux `41053039581` / `124053572242` passes
+16 tests/6 summaries and all 22 saved probes pass independent audit. Windows ARM
+`41053015126` / `124053490719` has 13 passes and three C compile failures: the
+Windows target must be defined before any header. This is repaired locally.
+The source sweep also repairs seven invalid `setjmp` initializers in file,
+resource-frame and WASI count probes. Windows AMD `41053005173` has the same three failures among 13 passes; its full
+log is audited. Mac ARM `41053051853` passes all 16 tests and the 22-probe audit.
+Publish the target-prefix and seven `setjmp` fixes together, then verify repaired
+Windows probes. The next complete matrix also covers resource-frame and WASI
+recovery changes. Formatting passes; repaired-source execution remains required.

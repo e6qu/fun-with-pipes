@@ -69,6 +69,11 @@ fn flush_failures_are_write_errors_and_preserve_the_borrowed_handle() {
         "int original_main(int argc, char **argv)",
     );
     let hooks = r#"
+#ifdef _WIN32
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0a00
+#endif
+#endif
 #include <stdio.h>
 static FILE *watched;
 static int mode,writes,flushes,closes;
@@ -95,8 +100,8 @@ int main(void){
   watched=fopen("probe-data","w+b");if(!watched)return 30;
   handle=fwp_file_value(watched,"probe");writes=flushes=closes=0;
   fwp_handler h;h.prev=fwp_handlers;h.state_depth=fwp_state_len;h.cleanup=fwp_cleanups;fwp_handlers=&h;
-  int failed=setjmp(h.jb);
-  if(!failed){if(fwp_p_file_write(fwp_cstr("data"),handle,0)!=handle)return 1;}
+  int failed=0;
+  if(setjmp(h.jb))failed=1;else{if(fwp_p_file_write(fwp_cstr("data"),handle,0)!=handle)return 1;}
   fwp_handlers=h.prev;
   if(!!failed!=!!mode)return 2;
   if(writes!=1||flushes!=(mode==1?0:1)||closes||fwp_cleanups||((fwp_file *)(uintptr_t)handle)->f!=watched)return 3;

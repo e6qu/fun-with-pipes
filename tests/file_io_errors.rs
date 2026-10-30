@@ -136,7 +136,7 @@ int main(int argc,char **argv){
  for(volatile int mode=0;mode<3;mode++){
   fault=0;closes=0;V path=fwp_cstr(argv[1]);V text=fwp_cstr("written");fault=mode?mode+3:0;
   fwp_handler h;h.prev=fwp_handlers;h.state_depth=fwp_state_len;h.cleanup=fwp_cleanups;fwp_handlers=&h;
-  int failed=setjmp(h.jb);if(!failed)fwp_p_file_write_new(path,text,0);fwp_handlers=h.prev;
+  int failed=0;if(setjmp(h.jb))failed=1;else fwp_p_file_write_new(path,text,0);fwp_handlers=h.prev;
   if(!!failed!=!!mode||closes!=1||fwp_cleanups||stream_is_open())return 8;
   if(failed){char expected[1024];snprintf(expected,sizeof expected,"%s: %s",argv[1],strerror(mode==1?ENOSPC:EIO));
    if(strcmp(STR(OBJ(h.value)->f[0])->d,"write")||strcmp(STR(OBJ(h.value)->f[1])->d,expected))return 9;
