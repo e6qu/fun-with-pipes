@@ -248,7 +248,10 @@ for text/byte reads. Focused ARM64 macOS and AMD64 GCC checks pass; complete
 platform coverage remains pending. Other operations still need their own
 allocation-failure evidence. The prepared
 [file-boundary portability checks](measurements/file-boundary-portability.md)
-extend error, flush and borrowed-handle probes to Windows; execution is pending.
+extend error, flush and borrowed-handle probes to Windows. Both repaired native
+Windows focused runs pass, with all 22 saved executions per host audited. Complete
+final-head coverage, including related resource-frame and WASI repairs, remains
+required.
 
 The observer reads Linux `/proc`, macOS `ps`, and Windows
 `K32GetProcessMemoryInfo` working-set counters. Windows sampling opens and closes

@@ -1,31 +1,34 @@
 # Current work
 
-**Next:** finish PR #229's gates at `8d908e0e` and squash-merge only after all
-nine production jobs, documentation and both G2 hosts pass. Production is
-`41051447921`, docs `41051447945`, analysis `41051466208`. The old matrix
-`41042531398` is completely audited: no failures beyond the two repaired observers. Do not open a second PR.
+**Next:** monitor and audit all gates at PR #229 head
+`8d908e0e0d5db3a2d836e2fc978c70fa99ad04a8`: production `41051447921`,
+documentation `41051447945`, and G2 `41051466208`. The older full matrix has finished and every log is audited. Merge only after all nine
+production jobs, documentation and both G2 hosts pass. Use one squash subject of
+at most 80 characters and an empty body, then continue PLAN.md.
 
-## Preparation for the next grouped PR
+## Final-head gates
 
-Worktree `/private/tmp/fwp-file-boundary-portability`, branch
-`file-boundary-portability`, starts at tested candidate `8d908e0e`. It prepares
-[file-boundary portability](measurements/file-boundary-portability.md): three
-existing targets cover native Windows error paths and borrowed stream owners,
-fix the close observer, and retain healthy/negative probes. Runtime code and
-performance protocols are unchanged. Execution is pending; do not claim native
-coverage from formatting or source review.
+Documentation, benchmarks, both G2 hosts and all four macOS jobs pass and their
+complete logs are audited. Regular Mac jobs each pass 627 tests/132 summaries;
+ownership jobs each pass 364/127. Linux and Windows remain in progress, with no
+final-head failure observed. Audit each completed job before merging.
 
-Guarded checks pass: rustfmt for the three changed Rust files, actionlint for both
-changed workflows, the 20 native-runner controls, and roadmap/whitespace checks.
-Focused checks will use production GCC on Linux, Clang on Mac and native Clang on
-both Windows architectures. Complete final gates belong after the next batch is
-ready. All original string/failure/numerical records below remain relevant.
+The next preparation is `/private/tmp/fwp-file-boundary-portability`, source
+`c69b9b91`. Both repaired Windows focused runs pass 16 tests/6 targets and all
+22 saved native probes per host pass audit. The earlier Linux/macOS focused runs
+also pass. Next full gates must cover the seven `setjmp` probe repairs, including
+resource-frame and WASI checks. Keep one active PR; open that batch after #229.
 
-The active PR worktree `/private/tmp/fwp-direct-string-results` has only a local
-live-status handoff change after its published source; preserve it. The primary
-checkout's older recovery handoff is protected and remains untouched. Its verbatim
-backup is `/private/tmp/fwp-primary-recovery-before-file-checks.md`. Current work
-is recorded in these temporary worktrees and PR #229's description.
+## Active PR and source
+
+[PR #229](https://github.com/e6qu/fun-with-pipes/pull/229) contains the combined
+string implementation, observer repair, file-read controls and numerical diagnostic.
+Worktree `/private/tmp/fwp-direct-string-results`, branch `direct-string-results`.
+This handoff has local live-status updates after the tested commit; carry them
+into the next delivery record without restarting a passing matrix for status text.
+The next branch `file-boundary-portability` is prepared at `c69b9b91`. Its report
+records initial Windows failures and both repaired passing runs. Do not open
+another PR until #229 merges. No runtime/compiler code changes are in this batch.
 
 Latest verified delivery: [#228](roadmap-history.md#directory-cleanup-and-current-application-costs-pr-228),
 squash `667e71f0`, identical tested tree from `f3eb5072`. Directory-boundary
@@ -34,7 +37,9 @@ post-merge production run was cancelled only after tree equality was checked.
 
 ## Original full matrix and repaired observers
 
-Production `41042531398`, source `3ddd989c`, still has both Linux suites running.
+Production `41042531398`, source `3ddd989c`, is complete and fully audited.
+Both Linux jobs (`124018564521`, `124018564324`) finish with 991 passes and exactly
+the two known observer failures in 257 summaries each; no additional diagnostics.
 Both regular Mac jobs finish with 624 passing tests, two observer failures in
 132 summaries and 12 passing SDK tests. Both Windows jobs finish with 809 passes
 and the same two failures in 202 summaries. All four complete logs are audited;
@@ -51,8 +56,7 @@ controls reproduce the old failures without another code change.
 
 Both Mac ownership jobs pass 364 tests/127 summaries each. Original documentation
 `41042479406`, benchmarks and both G2 hosts `41042548622` pass. Their complete logs
-are audited. Audit both original Linux jobs when they finish and fix any further
-issues. Their continuation does not require delaying the prepared final matrix. Both Mac crash artifacts are the verified intentional cleanup-panic
+are audited. No additional repairs were needed after the original jobs finished. Both Mac crash artifacts are the verified intentional cleanup-panic
 abort test, not new compiler aborts. Record final new run IDs in the PR while its
 tested source is frozen.
 
@@ -119,15 +123,13 @@ compiler-abort report. Preserve both. All local checks remain serial under
 | 7 | In progress | Complete broader B1/B2 comparisons |
 | 8 | In progress | Deliver this application batch and finish V1/V2 |
 
-## Focused checks and pending repair
+## Next preparation while this head runs
 
-Preparation source `3cbc6b63`: Linux `41053039581` / `124053572242` passes
-16 tests/6 summaries and all 22 saved probes pass independent audit. Windows ARM
-`41053015126` / `124053490719` has 13 passes and three C compile failures: the
-Windows target must be defined before any header. This is repaired locally.
-The source sweep also repairs seven invalid `setjmp` initializers in file,
-resource-frame and WASI count probes. Windows AMD `41053005173` has the same three failures among 13 passes; its full
-log is audited. Mac ARM `41053051853` passes all 16 tests and the 22-probe audit.
-Publish the target-prefix and seven `setjmp` fixes together, then verify repaired
-Windows probes. The next complete matrix also covers resource-frame and WASI
-recovery changes. Formatting passes; repaired-source execution remains required.
+`/private/tmp/fwp-file-boundary-portability`, branch `file-boundary-portability`,
+source `3cbc6b63`, prepares portable file error/borrowed-handle probes and fixes
+the close observer. It does not change #229's tested source. Focused file checks:
+Windows AMD `41053005173`, Windows ARM `41053015126`, Linux GCC `41053039581`,
+Mac ARM Clang `41053051853`. Execution is pending; no next PR is open.
+
+Final-head docs `41051447945` pass with complete log audit. Benchmarks pass
+(2 tests/2 summaries), and both G2 hosts pass (226 tests/3 summaries each), all fully audited.

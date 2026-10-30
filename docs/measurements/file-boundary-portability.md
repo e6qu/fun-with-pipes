@@ -1,7 +1,8 @@
 # File errors and borrowed handles on every native target
 
-**Prepared, not yet executed.** This extends the application cleanup checks after
-PR #229. It changes tests and CI assignments, not file semantics or runtime code.
+**Focused checks pass; complete delivery gates remain pending.** This extends
+the application cleanup checks after PR #229. It changes tests and CI assignments,
+not file semantics or runtime code.
 
 A borrowed file handle belongs to its caller. A write or read may return another
 owner for the same stream. If that operation fails, its temporary owner must be
@@ -32,7 +33,9 @@ A source audit also found seven test probes assigning `setjmp` to a local
 initializer. C does not permit that context; they now branch directly on
 `setjmp`, keeping failure flags assigned only after returning from the jump.
 The same repair covers the resource-frame and WASI resource-count probes.
-These tests need fresh execution; this is not a diagnosed runtime failure.
+The repaired file probes pass both native Windows architectures. The complete
+next matrix must also execute the resource-frame and WASI changes; this is not a
+diagnosed runtime failure.
 
 The ignored-write-error control now removes only the error-reporting branch,
 keeping the same open/write/close path on every platform.
@@ -66,4 +69,21 @@ Windows AMD run `41053005173`, job `124053458381`, has exactly the same three
 failures among 13 passes; its full log is audited. ARM Mac run `41053051853`, job
 `124053615503`, passes 16 tests in six targets. Its full log and all 22 saved
 executions/native headers are audited; artifact `12976686469` retains the evidence.
-The target-prefix and `setjmp` repairs require fresh execution before delivery.
+
+## Repaired Windows results
+
+At source `c69b9b918c77e1050299e85fd6489123285be2aa`, both native Windows
+runs pass all 16 tests in six targets. Their complete logs have no failed targets
+or warnings. All 22 saved executions per host pass independent audit: exact
+write-error and missing-flush controls, outputs, statuses, sources and native
+PE architecture headers.
+
+| Host | Run / job | Saved evidence artifact |
+|---|---|---|
+| Windows AMD64 | `41055449823` / `124061719633` | `12977885309` |
+| Windows ARM64 | `41055457917` / `124061748283` | `12977067487` |
+
+The earlier Linux/macOS results precede the `setjmp` repair. Require the next
+complete final-head matrix before delivery, including the resource-frame and
+actual WASI resource-count tests. Passing focused Windows probes does not replace
+those gates.
