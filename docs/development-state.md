@@ -15,7 +15,12 @@ wait tests pass on both macOS and Windows architectures. macOS ARM ownership
 job `124312094852` passes with 127 summaries / 366 tests audited. Regular ARM
 job `124312094382` also passes: 132 summaries / 627 Rust tests, ten wait controls
 on Python 3.15.2 and twelve SDK checks. Both logs have only the existing OpenSSL
-installation notice. Six native jobs still run without reported failed steps. The docs/benchmark audits are
+installation notice. Intel macOS regular job `124312094945` now also passes: its 131-target archive
+contains 626 passing tests and no diagnostics. The full job adds the package
+check (132 summaries / 627 tests), audited with only the OpenSSL notice. Five
+production jobs remain. Direct job endpoints are fresher than aggregate run lists.
+Both Windows core/resource archives have no failures or diagnostics; their later
+TLS/executable steps are still required. The docs/benchmark audits are
 `/private/tmp/fwp-docs-231-377c.audit.json` and `/private/tmp/fwp-231-bench-377c.audit.json`.
 
 Prepared here: [all four current buffer sessions](measurements/buffer-current.md),
@@ -32,21 +37,30 @@ operation sharing constructor validation, raw/optimized/native semantic cases
 and O1/O2, packing on/off allocation controls. Native Windows now selects the
 existing numeric-fusion test target too. No compiler change is verified yet.
 
-Initial candidate `a2e539b9` was published. Its focused run `41132906311` was
-cancelled while both jobs were queued, so dedicated two-step trap/cancellation
-and omitted-cleanup controls could join the same verification batch. No result
-from that cancelled run is a pass. Consolidated head `826e447f3f66ae6240f065071ad89c57769c1ad2`
-was superseded before either focused job started. Run `41134018778` was
-cancelled while queued; it establishes no verification. Combined head `048c92c5`
-is published with explicit storage expectations, real fused-computation clocks,
-process-memory snapshots and frozen reference artifacts. Run `41135554961`
-(`buffer-peer-checks`) queues jobs `124337015027` and `124337015493` on both GCC
-architectures. It includes the same five native targets and observer checks.
-Local follow-ups correct executable suffixes for Windows and add F32/F64
-rounding-order and I8 overflow controls; combine these with any failures from
-this run before the next push. No compiler/runtime implementation change follows `826e447f`.
-Audit every target and fix all reported failures together. It now covers numeric fusion and array
-size limits as well as the existing scalar/cleanup targets, retaining artifacts.
+Initial queued runs `41132906311` and `41134018778` were cancelled before
+execution to consolidate coverage. Combined run `41135554961` at `048c92c5`
+completed on AMD64 job `124337015027` and ARM64 job `124337015493`. Both pass
+12 tests and fail only the new generated-loop interruption fixture: its global
+marker expected one loop, but C contains four (other exports and boxed-state
+entry points). All other native semantics, size/cleanup tests and independent
+observer steps pass; neither overall job passes.
+
+The repair follows the selected worker's `fwp_loop_fields` call and requires
+exactly one step boundary inside that definition. The retained C passes six
+focused macOS Clang checks (O1/O2 normal, omitted trap cleanup and omitted cancel
+cleanup) in 4.30s through the guard. Local follow-ups also fix executable suffixes
+and add F32/F64 rounding order in both packing modes plus I8 overflow. Batch all
+these repairs in the next push and rerun the affected five-target focused suite;
+the unchanged independent observers need not be rebuilt again before timing.
+
+Retained failed-source logs: `/private/tmp/fwp-generated-checks-{arm,amd}-048c.log`.
+ARM artifact `13016638162` (SHA-256 `0926217b74d756665010c6103fe57449ee7ae568031dc02d0bd5c65d447c4c33`)
+is retained locally as the matching ZIP. AMD artifact `13015659406` (SHA-256
+`9efdab2b841678cb0705366b83f5ad04052cc0b18d1af60dc9cc74b9b968527c`) remains on GitHub.
+The ARM storage report verifies zero allocations/count calls/count storage/peak
+payload for scan lengths 0, 16, 4096 and 262144 at O1/O2; inserted allocations are
+rejected. Cleanup acceptance still awaits the repaired native test on both GCCs.
+No compiler/runtime implementation change follows `826e447f`.
 Audit generated-loop failure/cancellation and observer evidence, then run both
 G2 hosts and the final production gate before calling this task complete. The
 paired comparison now explicitly selects `generated-array`, reusing the actual

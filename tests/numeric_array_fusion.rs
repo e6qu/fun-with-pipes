@@ -79,16 +79,39 @@ fn generated_numeric_fold_removes_the_array_allocation() {
                         directory.join(format!("unexpected-allocation-{packing}{opt}.exe"));
                     fwp::cgen::compile_c(&format!("{code}\n{negative}"), &binary, opt).unwrap();
                     assert_eq!(Command::new(&binary).status().unwrap().code(), Some(171));
+                    // Other exports and boxed-state entry points also emit
+                    // loops. Interrupt only the direct loop called by this
+                    // selected worker, not every loop in the translation unit.
+                    let worker = &source[start..start + source[start..].find("\n}").unwrap() + 2];
+                    assert_eq!(worker.matches("fwp_loop_fields").count(), 1);
+                    let step = worker
+                        .split("fwp_loop_fields")
+                        .nth(1)
+                        .unwrap()
+                        .split('(')
+                        .next()
+                        .unwrap();
+                    assert!(!step.is_empty() && step.bytes().all(|c| c.is_ascii_digit()));
+                    let signature = format!("static V fwp_loop_fields{step}(");
+                    let definitions: Vec<_> = source
+                        .lines()
+                        .filter(|line| line.starts_with(&signature) && line.ends_with(" {"))
+                        .collect();
+                    assert_eq!(definitions.len(), 1);
+                    let loop_start = source.find(definitions[0]).unwrap();
+                    let loop_end = loop_start + source[loop_start..].find("\n}").unwrap() + 2;
+                    let loop_body = &source[loop_start..loop_end];
                     let loop_step = "        int done = fs";
-                    assert_eq!(source.matches(loop_step).count(), 1);
+                    assert_eq!(loop_body.matches(loop_step).count(), 1);
+                    let interrupted = loop_body.replace(
+                        loop_step,
+                        "        generated_interrupt_step();\n        int done = fs",
+                    );
                     let unwind = source
+                        .replacen(loop_body, &interrupted, 1)
                         .replace(
                             "typedef uint64_t V;",
                             "typedef uint64_t V;\nstatic void generated_interrupt_step(void);",
-                        )
-                        .replace(
-                            loop_step,
-                            "        generated_interrupt_step();\n        int done = fs",
                         )
                         .replace(
                             "int main(int argc, char **argv)",
