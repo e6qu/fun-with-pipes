@@ -319,3 +319,10 @@ change on this host, not proof of a general compiler cost or a future passing
 baseline. If normalizing names does not explain the discrepancy, say so. Any
 later acceptance repair needs its own published protocol and must control every
 candidate/reference program it measures.
+
+Run this protocol with `suite=timing-names`, `evidence_run=40951090783` and
+`baseline_run=40912773534`. `observe-timing-resources.py --naming paired`
+requires both policies explicitly. `check-timing-names.py` reconstructs all
+observations, complete round totals and ratios; `test-timing-names.py` rejects
+eight kinds of damaged evidence. Kernel totals include all five internal samples
+per child. The diagnostic cannot label any timing ratio accepted.

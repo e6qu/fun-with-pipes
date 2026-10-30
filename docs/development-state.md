@@ -1,8 +1,16 @@
 # Current work
 
-**Next:** implement the [executable-name diagnostic](measurements/timing-variation.md#executable-name-diagnostic-declared-before-implementation)
+**Next:** run and audit the [executable-name diagnostic](measurements/timing-variation.md#executable-name-diagnostic-declared-before-implementation)
 on branch `numerical-measurement-controls`, while monitoring PR #229.
 This preparation is separate from its frozen final head `3ddd989c`.
+Protocol `9a08edb6` was published before implementation. Guarded checks pass:
+four child-resource/link/scheduling tests and workflow lint. The diagnostic adds
+same-file naming policies, retained sources/reports, independent observation
+auditing and eight damaged-evidence controls. Full execution belongs on GitHub.
+
+PR #229 final-head documentation `41042479406`, benchmarks and both G2 jobs
+`41042548622` pass with complete log audits. Production `41042531398` has eight
+platform jobs still running, with no failed steps observed. Do not change its head.
 
 For the active delivery, run and audit the complete final-head production, documentation and G2
 checks for [PR #229](https://github.com/e6qu/fun-with-pipes/pull/229), then
