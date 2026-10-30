@@ -1,15 +1,17 @@
 # Current work
 
-**Next:** publish the integrated application/evidence PR, then audit every final-head
-production and documentation job and both G2 hosts. Fix all failures together;
-squash-merge after passing checks, using one subject of at most 80 characters and
-an empty body. Continue to the remaining application and numerical work.
+**Next:** implement the predeclared [direct string-result experiment](measurements/direct-string-results.md)
+while monitoring PR #228's final gates. Preserve its verified/running head and
+open no second PR. Publish the protocol before editing runtime code or measuring
+a candidate. Keep its raw-allocation costs separate from managed counts.
 
-Worktree `/private/tmp/fwp-application-failures`, branch
-`application-allocation-failures`. The preparation was published in `74c49e95`;
-merge `fbcd7fca` incorporates current main without changing its files. No second
-active PR exists. The user merged #227; no performance-choice reply is pending.
-D2/N1 remain open under their unchanged limits.
+This preparation uses `/private/tmp/fwp-direct-string-results`, branch
+`direct-string-results`, based on `f3eb5072`. PR #228 remains on
+`application-allocation-failures` in `/private/tmp/fwp-application-failures`.
+Its final production run is `41018509811`, documentation `41018509711`, and G2
+`41018512169`. Documentation passes with a complete log audit; native and analysis
+jobs are running. Merge only after all exact-head gates pass and their logs are
+audited, with one subject of at most 80 characters and an empty body.
 
 ## Directory-report failure checks
 

@@ -299,7 +299,11 @@ workload-specific time/memory limits declared before a candidate. Its short-inpu
 identical-copy difference reaches 3.90%; the report limits the claims this allows.
 Next, integrate the directory controls and word-frequency evidence checks into
 the final six-platform application delivery. No word-frequency candidate is
-implemented or accepted by these measurements.
+implemented or accepted by these measurements. The next
+[direct string-result experiment](docs/measurements/direct-string-results.md)
+will remove temporary raw buffers from replacement/repetition, with separate
+raw/managed counts, alias and size-boundary checks, and a paired application
+comparison. Its protocol must precede implementation; no speedup is promised.
 This does not complete the other application families or integrated V2 coverage.
 **Done:** each family has explicit platform/memory-mode coverage, failure and
 cancellation tests, bounded post-operation storage and a B1 budget where timed.
