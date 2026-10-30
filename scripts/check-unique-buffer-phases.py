@@ -16,12 +16,12 @@ ENTRIES = ('unique', 'callback', 'scan')
 FIELDS = {'constructionNs', 'readsNs', 'releaseNs', 'tailNs'}
 
 
-def validate(result, expected, calls):
+def validate(result, expected, calls, fields):
     assert result.returncode == 0 and result.stdout == f'{expected * calls}\n'.encode(), result
     events = [json.loads(line) for line in result.stderr.splitlines()]
     assert len(events) == calls, events
     for event in events:
-        assert set(event) == FIELDS, event
+        assert set(event) == fields, event
         assert all(type(value) is int and 0 <= value < 2**63 for value in event.values()), event
     return events
 
@@ -32,6 +32,7 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--cc', required=True)
     parser.add_argument('--rustc', required=True)
+    parser.add_argument('--scan-storage', choices=['materialized', 'elided'], required=True)
     args = parser.parse_args()
     assert args.cc and args.rustc
     args.output.mkdir(parents=True, exist_ok=False)
@@ -63,8 +64,9 @@ def main():
         sources['fwp'] = (args.native_checks / f'{entry}-harness.c').read_text()
         transformed = {'c': PHASES.c_peer(sources['c']),
                        'rust': PHASES.rust_peer(sources['rust']),
-                       'fwp': PHASES.fwp(sources['fwp'], entry)}
+                       'fwp': PHASES.fwp(sources['fwp'], entry, args.scan_storage)}
         for language, code in transformed.items():
+            fields = {'computationNs'} if (entry, language, args.scan_storage) == ('scan', 'fwp', 'elided') else FIELDS
             inputs[f'{entry}-{language}'] = hashlib.sha256(sources[language].encode()).hexdigest()
             source = args.output / f'{entry}-{language}.{"rs" if language == "rust" else "c"}'
             source.write_text(code)
@@ -84,12 +86,12 @@ def main():
                     size = max(0, length)
                     expected = size * (size - 1) // 2 if entry == 'scan' else size * (2 if entry == 'unique' else 1)
                     result = run([executable, entry, length, 3])
-                    validate(result, expected, 3)
+                    validate(result, expected, 3, fields)
                     # A missing event or changed result must invalidate observations.
                     for stdout, stderr in [(b'999\n', result.stderr),
                                            (result.stdout, b'\n'.join(result.stderr.splitlines()[1:]))]:
                         try:
-                            validate(subprocess.CompletedProcess([], 0, stdout, stderr), expected, 3)
+                            validate(subprocess.CompletedProcess([], 0, stdout, stderr), expected, 3, fields)
                         except AssertionError:
                             pass
                         else:
@@ -97,6 +99,7 @@ def main():
                     checks += 1
     (args.output / 'report.json').write_text(json.dumps(dict(
         scope='Observer correctness only; these clocks are not production performance evidence.',
+        scanStorage=args.scan_storage,
         nativeReportSha256=hashlib.sha256(original_report.read_bytes()).hexdigest(),
         inputHashes=inputs, executions=checks, events=checks * 3, rejectedDamagedResults=checks * 2), indent=2) + '\n')
     print(f'Phase observers: {checks} executions, {checks * 3} events and {checks * 2} damaged-result rejections pass')

@@ -44,16 +44,27 @@ def c_peer(code):
     return code[:start] + C_CLOCK + body + code[end:]
 
 
-def fwp(code, entry):
+def fwp(code, entry, scan_storage):
     assert entry in ('unique', 'callback', 'scan')
     start = code.index(f'/* {entry} : I64 -> I64 */\nstatic int64_t w')
     end = code.index('\n}', start) + 2
     body = code[start:end]
+    returned, = re.findall(r'return \(int64_t\)\([^\n]+;', body)
+    if entry == 'scan' and scan_storage == 'elided':
+        # Construction and reading are one loop; no release phase exists.
+        opening = body.index('{\n') + 2
+        body = body[:opening] + '    uint64_t phase_started = buffer_phase_now();\n' + body[opening:]
+        body = replace_once(body, returned,
+            'int64_t phase_result = ' + returned.removeprefix('return ') + r'''
+    uint64_t phase_finished = buffer_phase_now();
+    fprintf(stderr, "{\"computationNs\":%llu}\n",
+        (unsigned long long)(phase_finished - phase_started));
+    return phase_result;''')
+        return code[:start] + C_CLOCK + body + code[end:]
     # The current three fixtures finish construction by binding the array to l1.
     # Reject changed emission instead of silently timing a different region.
     constructed = 'l1 = t2;'
     release = 'fwp_drop0(l1);' if entry == 'scan' else 'fwp_mem_free((void *)(uintptr_t)l1);'
-    returned, = re.findall(r'return \(int64_t\)\([^\n]+;', body)
     body = c_body(body, constructed, release, returned)
     return code[:start] + C_CLOCK + body + code[end:]
 

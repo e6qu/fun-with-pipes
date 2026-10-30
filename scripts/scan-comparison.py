@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Collect or independently verify the frozen known-scalar fold comparison."""
+"""Collect or independently verify the declared scalar-fold comparisons."""
 import argparse
 import hashlib
 import importlib.util
@@ -21,10 +21,23 @@ SPEC = importlib.util.spec_from_file_location('buffer_measure', Path(__file__).w
 MEASURE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MEASURE)
 BASELINE = CHECK.BASELINE
-REFERENCE = 'fadebf713e0854d6d132fc6e3666f275b214fc17'
-REFERENCE_IMAGES = {
-    'aarch64': '8a8c997541855eca80ed6e26ad23ed073c2dd5bf6afd7602a4eb7d26b644c20a',
-    'x86_64': '107ed04e00cd440c56fb64b9e20396e4aca2bc7128b6f582c97ab6fe1ecee6e3',
+REFERENCES = {
+    'scalar-dispatch': {
+        'source': 'fadebf713e0854d6d132fc6e3666f275b214fc17',
+        'images': {
+            'aarch64': '8a8c997541855eca80ed6e26ad23ed073c2dd5bf6afd7602a4eb7d26b644c20a',
+            'x86_64': '107ed04e00cd440c56fb64b9e20396e4aca2bc7128b6f582c97ab6fe1ecee6e3',
+        },
+    },
+    'generated-array': {
+        # Existing ordinary artifacts; compiler/runtime inputs are identical
+        # to the declared 377cf9ce reference. Keep their actual build source.
+        'source': '3ca66b543bb8764527fe2a5142119831df15cfb7',
+        'images': {
+            'aarch64': 'ca6ade423f576bf02549fe760a76e38eb7dfe517c5aa0381fbd0a071d6e77377',
+            'x86_64': 'cde3a363d93b0558eb027f99836c5fe6bdc597ee1bfba70430f08ffe6b1cffd6',
+        },
+    },
 }
 LABELS = ('old0', 'old1', 'old2', 'new0', 'new1', 'new2')
 FAMILIES = ('old', 'new')
@@ -51,12 +64,13 @@ def summarize(rows):
         candidateReferenceRatio=ratio, elapsedRatioLimit=0.90, elapsedPassed=ratio <= 0.90)
 
 
-def check_inputs(folder, source, machine, qualification):
+def check_inputs(folder, source, machine, qualification, experiment):
+    reference = REFERENCES[experiment]
     programs = {}
-    for family, revision in [('old', REFERENCE), ('new', source)]:
+    for family, revision in [('old', reference['source']), ('new', source)]:
         record = CHECK.check_build(folder / family, revision, machine, qualification)
         programs[family] = record['entries']['scan']['fwp']
-    assert programs['old']['sha256'] == REFERENCE_IMAGES[machine], 'reference differs from the frozen session'
+    assert programs['old']['sha256'] == reference['images'][machine], 'reference differs from the frozen session'
     assert programs['new']['sha256'] != programs['old']['sha256'], 'candidate is unchanged'
     return programs
 
@@ -84,7 +98,8 @@ def manifest(folder):
     (folder / 'manifest.json').write_text(json.dumps(values, indent=2) + '\n')
 
 
-def check_evidence(folder, source, machine, session, origin, wait_policy):
+def check_evidence(folder, source, machine, session, origin, wait_policy, experiment):
+    reference = REFERENCES[experiment]['source']
     CHECK.check_manifest(folder)
     config = json.loads((folder / 'configuration.json').read_text())
     assert origin in ['observed', 'synthetic'] and config['origin'] == origin
@@ -93,7 +108,7 @@ def check_evidence(folder, source, machine, session, origin, wait_policy):
         assert 'waitPolicy' not in config
     else:
         assert config['waitPolicy'] == wait_policy
-    assert config['source'] == source and config['reference'] == REFERENCE and config['session'] == session
+    assert config['source'] == source and config['reference'] == reference and config['session'] == session
     assert config['environment'] == ENVIRONMENT and config['timeout'] == 45 and config['cpuPolicy'] == 'all'
     assert config['labels'] == list(LABELS) and config['length'] == LENGTH and config['calls'] == CALLS
     assert config['rounds'] == 36 and config['warmups'] == 2 and config['processes'] == 12 and config['seed'] == 20261030
@@ -102,7 +117,7 @@ def check_evidence(folder, source, machine, session, origin, wait_policy):
     assert all(type(cpu) is int and cpu >= 0 for cpu in affinity)
     assert str(config['run']).isdecimal() and str(config['attempt']).isdecimal()
     BASELINE.check_host(config['qualification'], source, machine)
-    programs = check_inputs(folder, source, machine, config['qualification'])
+    programs = check_inputs(folder, source, machine, config['qualification'], experiment)
     for label in LABELS:
         assert hashlib.sha256((folder / (label + '.exe')).read_bytes()).hexdigest() == programs[label[:3]]['sha256']
     root = Path(config['directory'])
@@ -110,7 +125,7 @@ def check_evidence(folder, source, machine, session, origin, wait_policy):
     rows = [json.loads(line) for line in (folder / 'observations.jsonl').read_text().splitlines()]
     for row in rows:
         assert row['command'] == [str(root / (row['label'] + '.exe')), 'scan', str(LENGTH), str(CALLS)]
-    expected = dict(source=source, reference=REFERENCE, session=session, origin=origin,
+    expected = dict(source=source, reference=reference, session=session, origin=origin,
         timing=summarize(rows), code=code_budget(programs),
         decision='Timing/code evidence only; semantic and storage gates are required separately.')
     assert json.loads((folder / 'report.json').read_text()) == expected, 'summary disagrees with retained observations'
@@ -118,6 +133,7 @@ def check_evidence(folder, source, machine, session, origin, wait_policy):
 
 
 def collect(args):
+    reference = REFERENCES[args.experiment]['source']
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
     assert args.timeout == 45
     source = os.environ['GITHUB_SHA']
@@ -130,8 +146,8 @@ def collect(args):
     out.mkdir(parents=True, exist_ok=False)
     for family, path in [('old', args.reference), ('new', args.candidate)]:
         shutil.copytree(path, out / family)
-    programs = check_inputs(out, source, machine, qualification)
-    config = dict(source=source, reference=REFERENCE, origin='observed', waitPolicy=WAIT_POLICY, session=args.session,
+    programs = check_inputs(out, source, machine, qualification, args.experiment)
+    config = dict(source=source, reference=reference, origin='observed', waitPolicy=WAIT_POLICY, session=args.session,
         directory=str(out), environment=ENVIRONMENT, timeout=args.timeout, cpuPolicy=args.cpu_policy,
         affinity=sorted(os.sched_getaffinity(0)), labels=list(LABELS), length=LENGTH, calls=CALLS,
         rounds=BASELINE.ROUNDS, warmups=BASELINE.WARMUPS, processes=BASELINE.PROCESSES, seed=BASELINE.SEED,
@@ -153,12 +169,12 @@ def collect(args):
                     log.write(json.dumps(row) + '\n')
                     rows.append(row)
                     BASELINE.check_result(row, 'scan', LENGTH, CALLS)
-    report = dict(source=source, reference=REFERENCE, session=args.session, origin='observed',
+    report = dict(source=source, reference=reference, session=args.session, origin='observed',
         timing=summarize(rows), code=code_budget(programs),
         decision='Timing/code evidence only; semantic and storage gates are required separately.')
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     manifest(out)
-    check_evidence(out, source, machine, args.session, 'observed', WAIT_POLICY)
+    check_evidence(out, source, machine, args.session, 'observed', WAIT_POLICY, args.experiment)
     print('Retained and verified all 2,736 ordinary processes; no failed control is retried.')
     print(json.dumps({key: value for key, value in report['timing'].items() if not isinstance(value, dict)}))
 
@@ -179,12 +195,13 @@ def main():
     check_parser.add_argument('--wait-policy', choices=['timed-polling', 'posix-alarm'], required=True)
     check_parser.add_argument('--origin', choices=['observed', 'synthetic'], required=True)
     for sub in [collect_parser, check_parser]:
+        sub.add_argument('--experiment', choices=list(REFERENCES), required=True)
         sub.add_argument('--session', type=int, choices=[1, 2], required=True)
     args = parser.parse_args()
     if args.mode == 'collect':
         collect(args)
     else:
-        check_evidence(args.input, args.source, args.machine, args.session, args.origin, args.wait_policy)
+        check_evidence(args.input, args.source, args.machine, args.session, args.origin, args.wait_policy, args.experiment)
         print('Verified all files, exact builds, copies and 2,736 ordered observations.')
 
 

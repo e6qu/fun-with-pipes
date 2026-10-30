@@ -1,6 +1,6 @@
 # Remove an immediately consumed numeric array
 
-**Proposed next implementation; not delivered.** The [current buffer results](buffer-current.md)
+**Implemented on the next branch; verification pending.** The [current buffer results](buffer-current.md)
 retain all four sessions, including their failed timing controls. This work
 targets a remaining allocation, without claiming that the measurements already
 establish a stable speed comparison.
@@ -16,7 +16,7 @@ minus one. `id` returns that index. `flip` lets this definition bind `id` before
 the pipe supplies the length. `array.fold add 0` adds the elements from left to
 right, starting at zero. Thus `sum-generated 4` returns `6`.
 
-The current native code allocates and fills the array, then reads it in a second
+The reference native code allocates and fills the array, then reads it in a second
 loop. When nobody else uses that array, one loop could generate each number and
 immediately add it. Stored arrays still need the direct fold delivered in #231;
 this proposal concerns only a producer consumed at this call site.
@@ -74,3 +74,36 @@ elapsed time in every qualified session. A failed control or speed budget keeps
 timing acceptance open; retain every observation and do not retry an unchanged
 experiment. Verified allocation removal and timing acceptance are separate
 results. Neither establishes parity with C/Rust or a bound on total stack usage.
+
+## Reference files and observers
+
+The paired comparison reuses the ordinary, uninstrumented programs from run
+`41122911946`, session one on both hosts, built at `3ca66b543bb8764527fe2a5142119831df15cfb7`.
+That source and the declared `377cf9ce` reference have identical compiler,
+runtime, library, vendor, build and buffer-program inputs. Their differences
+repair wait-test cleanup and change workflow ordering/documentation. The retained
+program records keep the actual build source; they are not relabeled as `377cf9ce`.
+`scan-comparison.py --experiment generated-array` verifies the frozen image hashes:
+
+| Host | Reference executable SHA-256 |
+|---|---|
+| ARM64 | `ca6ade423f576bf02549fe760a76e38eb7dfe517c5aa0381fbd0a071d6e77377` |
+| AMD64 | `cde3a363d93b0558eb027f99836c5fe6bdc597ee1bfba70430f08ffe6b1cffd6` |
+
+The original dispatch experiment remains separately verifiable with
+`--experiment scalar-dispatch`; its source and hashes are unchanged. These are
+separate declared comparisons, not interchangeable reference choices.
+
+Storage checks require an explicit `--scan-storage materialized` or `elided`.
+For an elided scan, inserting an allocation that is immediately freed must fail
+the zero-allocation check. There is no removed array owner whose release could
+be omitted. The generated-loop native test instead checks failure and cancellation
+with an outer registered owner and a surviving alias; removing either unwind
+cleanup must fail. Numeric-only captures remain the admission rule.
+
+Phase diagnostics report `computationNs` for the fused scan, because generation
+and reduction now share one loop. They do not invent construction or release
+intervals. Process-memory snapshots use `before-work` and `after-work`; these
+are not a measure of peak memory inside the loop. C/Rust peers and the other fwp
+entries retain their real construction/release boundaries. All such observers
+run in separate diagnostic binaries and are excluded from ordinary timing.

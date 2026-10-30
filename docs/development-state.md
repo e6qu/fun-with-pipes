@@ -25,10 +25,9 @@ controls fail; no case passes all four sessions. No failed measured session was
 rerun. Four wrong-CPU attempts were rejected before any build or timing.
 
 Declaration `97c8eac6` is published before implementation. The reference compiler
-is frozen at `377cf9ce25c65afba595b6413e5bb1d50721ea7a`. Implement the restricted
+is frozen at `377cf9ce25c65afba595b6413e5bb1d50721ea7a`. The branch implements the restricted
 producer-to-fold proof, shared size validation and focused semantics/storage/
-cleanup controls while monitoring #231. The first implementation is in the
-working tree: a generated producer in `src/fuse.rs`, an internal checked-count
+cleanup controls: a generated producer in `src/fuse.rs`, an internal checked-count
 operation sharing constructor validation, raw/optimized/native semantic cases
 and O1/O2, packing on/off allocation controls. Native Windows now selects the
 existing numeric-fusion test target too. No compiler change is verified yet.
@@ -36,19 +35,27 @@ existing numeric-fusion test target too. No compiler change is verified yet.
 Initial candidate `a2e539b9` was published. Its focused run `41132906311` was
 cancelled while both jobs were queued, so dedicated two-step trap/cancellation
 and omitted-cleanup controls could join the same verification batch. No result
-from that cancelled run is a pass. Next: publish these added controls and
-dispatch `scalar-fold-checks` on this branch. It now covers numeric fusion and array
+from that cancelled run is a pass. Consolidated head `826e447f3f66ae6240f065071ad89c57769c1ad2`
+is pushed; focused run `41134018778` is queued on both GCC architectures.
+The next push adds explicit materialized/elided storage expectations, actual
+fused-computation phase clocks and before/after-work memory snapshots. Batch
+these observer checks with the same five native targets using `buffer-peer-checks`;
+if the earlier run is still queued, cancel it before dispatching the combined batch.
+Audit every target and fix all reported failures together. It now covers numeric fusion and array
 size limits as well as the existing scalar/cleanup targets, retaining artifacts.
-Audit generated-loop failure/cancellation evidence, update the
-materialized-scan storage observers and comparison reference/budgets, run G2
-checks and the final production gate before calling this task complete.
-The old scan/storage scripts assume an allocated scan array; do not run them
-against the new candidate until their explicit expectations are updated.
+Audit generated-loop failure/cancellation and observer evidence, then run both
+G2 hosts and the final production gate before calling this task complete. The
+paired comparison now explicitly selects `generated-array`, reusing the actual
+`3ca66b54` ordinary binaries (compiler inputs match declared reference `377cf9ce`).
+Exact artifact IDs avoid duplicate names from rejected-host attempts. The old
+scalar-dispatch comparison remains verifiable; timing and code budgets are unchanged.
+No candidate timings have run.
 
 Guarded local checks: rustfmt 0.37s; primitive inventory 1.41s (394 declarations,
 384 symbols, 40 aliases, no review symbols); workflow lint 6.28s. Inventory
 records the working source hashes at `/private/tmp/fwp-generated-array-inventory.json`.
-No local compiler build or full test suite ran. Keep builds and validation on
+Observer rejection controls: two tests pass in 0.13s; eight edited Python scripts
+parse; workflow lint passes. No local compiler build or full test suite ran. Keep builds and validation on
 GitHub; use guarded local focused checks only.
 
 ## Evidence and limits
