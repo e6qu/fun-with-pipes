@@ -64,7 +64,7 @@ class BufferEvidence(unittest.TestCase):
         original = self.observations()
         changed = [original[1:], original + [original[-1]], [original[1], original[0], *original[2:]]]
         for field, value in [('entry', 'unique'), ('length', 4096), ('calls', 1), ('warmup', 1),
-                             ('round', 1), ('position', 1), ('label', 'other'), ('status', 1),
+                             ('round', 1), ('position', 1), ('label', 'other'), ('status', 1), ('status', False),
                              ('timedOut', True), ('spawnError', 'cannot start'), ('elapsedNs', 0),
                              ('userNs', -1), ('systemNs', 0.5), ('stdoutBase64', 'MAo='),
                              ('stderrBase64', 'eAo='), ('stdoutSha256', '0' * 64), ('stderrSha256', '0' * 64)]:

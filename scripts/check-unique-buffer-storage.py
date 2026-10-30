@@ -67,7 +67,7 @@ def main():
                     executable = args.output / f'{entry}-{language}-{variant}-O{level}'
                     if language == 'rust':
                         command = [args.rustc, '--edition=2021', '-C', f'opt-level={level}',
-                                   '-C', 'overflow-checks=yes', '-C', 'lto=off', '-D', 'warnings',
+                                   '-C', 'overflow-checks=yes', '-C', 'lto=off', '-C', 'codegen-units=16', '-C', 'debuginfo=0', '-C', 'panic=unwind', '-D', 'warnings',
                                    '--cfg', f'buffer_entry="{entry}"', source, '-o', executable]
                     else:
                         flags = ['-w', '-lm', '-lpthread', '-ldl'] if language == 'fwp' else ['-Wall', '-Wextra', '-Werror']

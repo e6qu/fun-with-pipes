@@ -59,7 +59,7 @@ def main():
                                f'-DBUFFER_ENTRY={entry_index}', str(source), '-o', str(executable)]
                 else:
                     command = [args.rustc, '--edition=2021', '-C', f'opt-level={level}',
-                               '-C', 'overflow-checks=yes', '-C', 'lto=off', '-D', 'warnings',
+                               '-C', 'overflow-checks=yes', '-C', 'lto=off', '-C', 'codegen-units=16', '-C', 'debuginfo=0', '-C', 'panic=unwind', '-D', 'warnings',
                                '--cfg', f'buffer_entry="{entry}"', str(source), '-o', str(executable)]
                 built = run(command, 45)
                 assert built.returncode == 0 and not built.stdout and not built.stderr, (command, built)

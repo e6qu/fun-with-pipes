@@ -58,6 +58,10 @@ jobs:
         with:
           path: ~/.cargo/registry
           key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Install the stack metadata reader
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y llvm
       - name: Build the current production compiler
         id: compiler
         run: |
@@ -94,6 +98,14 @@ jobs:
           python3 scripts/check-unique-buffer-process-memory.py --mode linux
           --native-checks buffer-checks/native --output buffer-checks/process-memory
           --cc gcc --rustc rustc
+      - name: Ordinary programs and compiler stack reports
+        if: ${{ !cancelled() && steps.native.outcome == 'success' }}
+        run: >-
+          python3 scripts/prepare-buffer-baselines.py --native-checks buffer-checks/native
+          --output buffer-checks/programs --cc gcc --rustc rustc
+          --c-arch "${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'armv8-a' }}"
+          --rust-cpu "${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'generic' }}"
+          --size size --objcopy objcopy --readobj llvm-readobj
       - name: Retain sources, binaries and every command result
         if: ${{ always() && hashFiles('buffer-checks/**') != '' }}
         uses: actions/upload-artifact@v7

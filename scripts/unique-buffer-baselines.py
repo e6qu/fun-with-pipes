@@ -65,7 +65,7 @@ def summarize_case(rows, entry, length, calls):
                 for key, value in dict(entry=entry, length=length, calls=calls, warmup=warmup,
                                        round=round_index, position=position, label=label).items():
                     assert type(row[key]) is type(value) and row[key] == value, (key, row)
-                assert row['status'] == 0 and row['timedOut'] is False and row['spawnError'] is None, row
+                assert type(row['status']) is int and row['status'] == 0 and row['timedOut'] is False and row['spawnError'] is None, row
                 assert base64.b64decode(row['stdoutBase64'], validate=True) == expected, row
                 assert base64.b64decode(row['stderrBase64'], validate=True) == b'', row
                 assert row['stdoutSha256'] == expected_hash and row['stderrSha256'] == empty_hash, row

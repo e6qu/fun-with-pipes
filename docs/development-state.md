@@ -1,6 +1,7 @@
 # Current work
 
-**Next:** finish the [B1 buffer comparison](measurements/unique-buffer-peers.md)
+**Next:** finish [draft PR #231](https://github.com/e6qu/fun-with-pipes/pull/231),
+the [B1 buffer comparison](measurements/unique-buffer-peers.md)
 on branch `ownership-peer-baselines`, worktree
 `/private/tmp/fwp-ownership-peer-baselines`. Implement the ordinary-binary runner,
 static stack reports and complete evidence verifier, verify Linux memory checkpoints,
@@ -65,7 +66,7 @@ passes the 420 checks and record audit (5.01s elapsed/1.12s CPU).
 The fixed schedule has three entries, four sizes, two warmup rounds, 36 measured
 rounds and twelve processes per language/copy per round. Five controls verify
 ordering, checked results, complete-round statistics and rejection of 20 damaged
-or missing observation sets. D2/N1 limits and sample counts are unchanged.
+or missing observation sets. A boolean exit status is rejected too (21 damaged sets). D2/N1 limits and sample counts are unchanged.
 
 Linux process-memory checkpoints are implemented but not yet executed on Linux.
 The local `--mode parser` check passes 24 parsing controls and compiles 18 programs
@@ -123,3 +124,20 @@ matrix. Completed PRs do not close those outstanding criteria in [PLAN.md](../PL
 | 6 | In progress | Resolve N1's control before N2 timing acceptance |
 | 7 | In progress | Finish buffer comparisons, then the other B1/B2 gaps |
 | 8 | In progress | Finish numerical and integrated V1/V2 acceptance |
+
+
+## Pending grouped verification
+
+`prepare-buffer-baselines.py` now builds ordinary/copy programs and collects C
+stack reports plus Rust metadata from a separately compiled image whose instruction
+bytes must match. Three parser tests pass; five schedule/evidence tests pass.
+The focused workflow adds this builder and Linux memory checkpoints. Those additions
+have not run on native GCC yet. Rust code-generation units, debug info and panic
+policy are now explicit across the peer/diagnostic builders (16, 0, unwind).
+
+Draft #231 at `4afb420eb272534078fd7602766901276f67423f` passes docs run
+`41094952882`, job `124198193040`, with a complete log audit. Its draft production
+run `41094953000` is skipped, not validation. PR body:
+`/private/tmp/fwp-buffer-peers-pr.md`. No full production run has been requested
+for this unfinished batch. The ordinary-binary process runner and complete
+baseline evidence verifier remain to implement before the four sessions.

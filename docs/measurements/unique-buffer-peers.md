@@ -184,3 +184,31 @@ in the [Linux process-memory documentation](https://www.kernel.org/doc/html/v6.1
 The local parser/compile check is not Linux execution evidence. Actual checkpoint
 runs, ordinary peak memory, static stack reports and complete baseline collection
 remain required.
+
+
+## Compiler settings and stack reports
+
+Ordinary programs use GCC O2 and Rust optimization level 2, with link-time
+optimization disabled. C uses checked integer operations, `-fno-fast-math` and
+`-ffp-contract=off`. Rust explicitly selects checked overflow, 16 code-generation
+units, no debug information and unwinding panics. Its maintained checks use the
+same settings. These selections are recorded rather than relying on changing
+[compiler defaults](https://doc.rust-lang.org/rustc/codegen-options/index.html).
+ARM64 uses `armv8-a`/Rust `generic`; AMD64 uses `x86-64` for both compilers.
+The baseline hosts remain Neoverse-N2 and AMD EPYC 7763 with the existing exact
+GCC/Rust qualification requirements.
+
+C emits per-function `.su` stack reports. For Rust, a separate build emits LLVM
+stack-size metadata. Its instruction bytes must match the ordinary binary before
+using that report. [LLVM's reader](https://www.llvm.org/docs/CommandGuide/llvm-readobj.html)
+extracts the function/frame pairs. This describes reported frames from the compiled
+source; it excludes prebuilt libraries and does not establish the total space used
+by simultaneously active calls. Dynamic C frames remain labelled dynamic.
+
+All source files, commands, ordinary/copy binaries, section sizes and raw stack
+reports are retained. Each language's copy must be byte-identical. Rust normally
+links much of its standard library into its executable; C and fwp use external
+libc code. Executable bytes and whole-process memory therefore describe different
+boundaries, and the report must state that distinction. The new builder/parser
+controls are implemented; native stack-report verification is pending. No timing
+session starts before the complete evidence path is verified.
