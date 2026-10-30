@@ -1,106 +1,134 @@
 # Current work
 
-**Next:** run the fixed scalar-fold comparison on both native architectures in two
-sessions, after its repaired runtime-callback fixture passes. Then audit every
-observation and the published budget before final delivery gates. No candidate
-speed result exists yet. The implementation calls known plain-numeric callbacks
-directly; unknown callbacks keep their ordinary dispatch and ownership rules.
+**Next:** audit the two submitted scalar-fold comparison sessions, verify the
+additional view/cancellation controls and publish the verdict and require all nine final-head
+production jobs plus docs before squash merge. No candidate speed result exists.
+
 [Draft PR #231](https://github.com/e6qu/fun-with-pipes/pull/231), branch
 `ownership-peer-baselines`, worktree `/private/tmp/fwp-ownership-peer-baselines`.
-Keep one active PR. Once the grouped report and fixes are complete, require all
-nine final-commit production jobs plus docs before the authorized squash merge.
+Comparison source: `8c8c6363a2c1a17374ab3e40e7c87395da98f9e6`.
+The next test-only commit leaves its compiler and measured programs unchanged.
+Keep one active PR.
 
-## Active measurements
+## Submitted comparison
 
-Session 1: `41103040883`; session 2: `41103049899`. Each requests both native
-architectures through `numerics.yml`, `suite=buffer-baselines`, `native_runner=all`,
-and explicit `comparison_session=1` or `2`. Session 1 jobs: AMD `124224640229`,
-ARM `124224640595`; session 2: AMD `124224672478`, ARM `124224673013`.
-All raw records and files are verified; collection success does not override failed copy controls.
-These baseline sessions precede the scalar-fold candidate. Their noisy cases remain
-failed controls; they are not rerun by the candidate comparison.
+The [budget and protocol](measurements/unique-buffer-peers.md#next-accepted-workload-and-budget)
+were published at `1bcf261d` before the candidate. Each session uses length 4,096,
+256 calls/process, two warmup and 36 measured rounds, twelve processes per label,
+seed 20261030: **2,736 attempts**, with three identical copies per implementation.
+The reference binaries are frozen at `fadebf713e0854d6d132fc6e3666f275b214fc17`.
+Do not retry an unchanged experiment or relax its limits.
 
-Each session fixes three entries, four sizes, two warmup and 36 measured rounds,
-twelve processes per label/round, seed 20261030: 32,832 ordinary attempts and 72
-separate maximum-resident observations. Every language has an identical copy.
-The copy-control limit is 1.02 in either direction. Keep all observations, failed
-controls and partial artifacts; never increase samples or retry a numerical failure.
-Derive future optimization budgets before selecting an implementation change.
+| Session | Run | AMD job | ARM job |
+|---|---|---|---|
+| 1 | `41110921616` | `124252833022` | `124252833485` |
+| 2 | `41110926781` | `124252851994` | `124252852332` |
 
-## Verified focused checks
+Both runs use `numerics.yml`, `suite=scan-comparison`, `native_runner=all`, explicit
+session 1 or 2. Jobs verify the frozen reference, current scalar-fold tests,
+interpreter/native agreement, storage and damaged-evidence controls before timing.
+At 19:10 UTC on October 30 all four jobs and docs `41110902702` / `124252757094`
+remain queued; execution logs return 404. Earlier status responses have lagged
+completed logs, so check both. GitHub reports a mitigated Actions delay incident
+[under monitoring](https://www.githubstatus.com/incidents/pwxsjgnvrk6b); its role in
+these particular queues is not confirmed. No full production matrix has run for #231.
 
-Source `6eca1176422afab433229a43afaec763917d3449`, run `41102080961`:
-ARM job `124220853949`, artifact `12999368591`; AMD job `124220854136`, artifact
-`13000720175`. Both full logs and archives are audited. Each archive has 829 files,
-136 native commands, 432 peer commands, 108 phase commands, 126 storage commands,
-142 memory commands and 31 ordinary-program build/inspection commands.
+## Candidate and repaired test
 
-Both architectures pass 420 peer cases, 42 interpreter comparisons/84 native
-executions, 90 phase cases/270 events/180 damaged-result controls, 90 allocation
-cases including 18 intentional leaks, 38 memory parsing controls/72 Linux memory
-executions, nine ordinary programs plus copies, compiler stack reports, nine
-numerical-consumer result sets, and eleven synthetic-evidence damage controls.
-All six clock helpers pass 48 checks. Synthetic records cannot validate as observed
-measurements. No ordinary timings are present in these focused artifacts.
+`array.fold add 0` previously used general callback dispatch for every element.
+The candidate at `89fda951` calls the existing numeric entry directly when both
+parameters and the result are plain numeric values and the callback has no
+captures. Unknown callbacks, F128 and other types keep their existing rules.
+Initial-value/input order, folding order and caller-owned array cleanup remain.
+This does not extend the restricted count-free array proof.
 
-Archives/logs/audits: `/private/tmp/fwp-buffer-peer-{arm,amd}-6eca.{zip,log,audit.json}`.
-Archive SHA-256: ARM `0e25625b97c2e6c48b758d8764e1011f7941683efbcff190a65fb2cb1e1afe46`;
-AMD `ff073da9332fb3a3d8e1e08ecf654e29a25bc94ece87fbbcc5974471e1c81a4d`.
-Local audit script: `/private/tmp/fwp-audit-buffer-6eca.py`.
+Run `41108169261` is fully audited on both architectures. Buffer, overflow,
+consumer and failure-cleanup checks pass. Both hosts expose one fixture error:
+a supposedly unknown callback was statically known, so its function was inlined
+away and the assertion could not find it. The published repair selects it through
+input and checks general dispatch. It also tests initial/input effect order and
+optimized-interpreter overflow order. The submitted comparison jobs verify this repair.
 
-Docs at `bd4b4343` pass run `41101370978`, job `124219006941`; full log audited:
-`/private/tmp/fwp-229-docs-231-bd4b.log`. Final docs run `41102321920`, job
-`124221503714`, also passes with a complete audit:
-`/private/tmp/fwp-229-docs-231-fade.log`. GitHub status responses have lagged behind completed
-logs: check actual logs rather than assuming a queued response means no execution.
+For three 4,096-element calls, diagnostics remove 12,288 ineffective duplicate and
+release entries each. Payload remains three requests, 98,328 requested bytes,
+32,776 peak bytes, zero final bytes and one cached count byte. Ordinary `.text`
+falls from 16,780 to 10,588 bytes on ARM and 18,162 to 11,090 on AMD. Largest
+reported frame components fall from 592/576 to 368/320 bytes; no new dynamic frame
+appears. These are not timing or final-platform acceptance claims.
 
-## Repairs included in this PR
+Candidate jobs/artifacts: ARM `124243375996` / `13001672994`; AMD `124243375828` /
+`13001633556`. Complete archives, logs and audits are
+`/private/tmp/fwp-buffer-candidate-{arm,amd}-89fd.{zip,log,audit.json}`.
+Both archives have 830 files. Docs `41108173620` / `124243377087` pass with full
+log audit: `/private/tmp/fwp-229-docs-231-89fd.log`.
 
-- Accept horizontal tabs in Linux memory values; retain strict number/unit checks.
-- Use stable Rust 1.99.1 compiler frame remarks; require unchanged instruction bytes.
-- Give objcopy an explicit output, preserving both inspected input executables.
-- Link C observers into Rust through explicit native static libraries, before
-  system libraries. Repair both existing descent-output callers too; their untimed
-  result/cleanup checks pass. No D2/N1 benchmark was rerun.
-- Retain all peer commands and benchmark attempts, including cancellation/timeout.
-  Reconstruct summaries independently and reject missing, altered or synthetic data.
-- Start the long WebAssembly ownership target earlier and interleave the existing
-  two-worker queues, preserving every assignment. All 21 runner controls pass.
+## Additional controls awaiting native checks
 
-Earlier failed runs `41097911057` and `41100000646` and their complete artifacts
-remain in `/private/tmp/fwp-buffer-peer-{arm,amd}-{230b,2acb}.{zip,log}`. The
-[report](measurements/unique-buffer-peers.md) records causes and fixes. Superseded
-run `41101368377` had cancellation requested before use; it contains no baseline observations.
+The original two-element slice was copied, not a view. New fixture cases exceed
+the view threshold, produce 248 and 1008.0, and run with packing on/off. A mixed
+F32-element/I64-accumulator case checks the element descriptor independently of
+the result type. The cleanup probe cancels after two scalar steps and requires
+zero remaining payload/cleanup frames; deliberately omitted cancellation cleanup
+must fail. Compiler/runtime and measurement inputs are unchanged by these tests.
+Native execution of these additions remains required. `suite=scalar-fold-checks`
+reuses the focused build/test job for just the three affected release targets;
+it does not repeat the buffer baselines or unrelated diagnostics.
 
-## Local checks and recovery
+Local checks use `scripts/local-guard.py`: raw/optimized fixture checks pass
+(about 0.25s each); the task/error fixture produces four expected errors (0.25s).
+Rust formatting, full workflow lint (5.73s) and roadmap audit (3.05s) pass before
+these last test additions; formatting passes again (0.25s).
+The six schedule controls pass (0.24s), paired evidence rejects fifteen damaged
+inputs (6.07s), and the refactored baseline rejects eleven (5.71s).
+An obsolete pre-repair program archive correctly failed the missing-objcopy-output
+check; the current archive passes. No full local build, suite or timing ran.
 
-Use `python3 scripts/local-guard.py` serially. Latest local results: five process/
-file controls (0.74s), six schedule/result controls (0.24s), six build-failure
-controls (1.48s), 38 memory parser controls/18 links (3.45s), workflow lint (5.82s),
-and the roadmap audit (2.62s) pass. The complete older synthetic archive passed ten
-damage controls (4.86s); the new eleventh passes native CI. No full local build,
-benchmark or suite ran. Preserve at least 64 GiB free disk and the other guard limits.
+## Baselines and included repairs
 
-The primary checkout is detached at #209 with a dirty recovery handoff and untracked
-compiler-abort report. Preserve both. Automatic approval review rejected replacing
-that handoff; do not retry or work around it. Backup:
+Four baseline sessions at `fadebf71` are fully audited: `41103040883` (session 1)
+and `41103049899` (session 2), both architectures. **35/48 case controls fail**;
+the 4,096-element scan passes all four and takes 10.1–14.4 times C's elapsed time.
+The [report](measurements/unique-buffer-peers.md) and its artifact index retain all
+results, inputs, source IDs, storage/code/stack observations and failed controls.
+Archives/logs/audits: `/private/tmp/fwp-buffer-baseline-{arm,amd}-{1,2}-fade.{zip,log,audit.json}`.
+
+Pre-candidate focused source `6eca1176`, run `41102080961`, passes both complete
+native buffer suites and numerical-output consumer checks. Earlier failures
+`41097911057` and `41100000646` remain in the report and retained archives.
+Repairs cover Linux tabs, stable Rust frame reports, preserving objcopy inputs,
+native library ordering in both numerical consumers, and complete attempt/evidence
+retention. The native runner interleaves its existing queues and starts the long
+WebAssembly ownership target earlier, preserving coverage and concurrency.
+
+## Recovery and resource limits
+
+Preserve the primary checkout: detached #209, dirty recovery handoff, untracked
+compiler-abort report. Automatic approval review rejected replacing its handoff;
+do not retry or work around that rejection. Backup:
 `/private/tmp/fwp-primary-recovery-before-file-checks.md`. Former #229/#230 worktrees
-also retain local handoffs; do not publish status-only changes there. Four older
-expanded descent archives were compacted with all 5,784 files verified; their
-`.tar.gz` and `.archive-audit.json` files remain under `/private/tmp`.
+also retain local handoffs; do not publish changes there.
 
-## Prior delivery and remaining failures
+Preserve 64 GiB free disk and all guard limits. A temporary dip below that limit
+stopped local validation; only disposable synthetic outputs were removed. Original
+CI archives remain. Two #224 evidence directories are now `.tar.gz` archives with
+all 2,142 files checked; matching `.archive-audit.json` files retain hashes:
+`/private/tmp/fwp-224-{arm-initial,amd-qualified}`. Four older descent-output
+archives retain all 5,784 files. The paired synthetic control is preserved with
+all 135 files verified at `/private/tmp/fwp-scan-synthetic-control-1.zip`.
+Last free-space reading after compaction was about 64.9 GiB; recheck before downloads.
+
+## Prior delivery and open measurements
 
 [PR #230](https://github.com/e6qu/fun-with-pipes/pull/230) is verified and merged:
 squash `3639f4fad3da318346340f92a89d8ba127f04e73` has the tested `e2fad32c` tree,
 a one-line 55-character message and no trailers. All nine jobs `41075128588` and
 docs `41071247882` pass with full log audits. [History](roadmap-history.md#file-cleanup-portability-and-measurement-clocks-pr-230)
-owns the delivery details; it is not a backlog.
+owns its details.
 
 D2 remains **1.022815765 > 1.02** in `40912773534`; N1 remains
 **1.030786192 > 1.02** in `40951090783`. No unchanged rerun or relaxed limit.
 The [Intel compiler abort](measurements/compiler-abort.md) remains unexplained;
-preserve evidence and diagnose its source/input if it recurs, not disassembly.
+preserve evidence and diagnose source/input if it recurs, not disassembly.
 
 ## Roadmap status
 
@@ -114,57 +142,3 @@ preserve evidence and diagnose its source/input if it recurs, not disassembly.
 | 6 | In progress | Resolve N1's control before N2 timing acceptance |
 | 7 | In progress | Finish buffer comparisons, then the other B1/B2 gaps |
 | 8 | In progress | Finish numerical and integrated V1/V2 acceptance |
-
-## Baseline audit files
-
-All four logs/archives/audits are `/private/tmp/fwp-buffer-baseline-{arm,amd}-{1,2}-fade.{log,zip,audit.json}`.
-Session 1 artifacts: ARM `13000780683`, AMD `12998559197`; session 2: ARM
-`12999084366`, AMD `13000896652`. `/private/tmp/fwp-audit-buffer-baseline.py`
-reconstructs complete evidence under the guard (1.08–1.33s per archive), extracts
-only into a temporary directory after checking disk headroom, then removes that
-verified temporary copy. Original archives remain. Free disk is only about
-64.2 GiB; do not download or generate large files without checking the limit.
-The report and new artifact index replace obsolete preparation-only text.
-The candidate has focused native correctness/storage evidence below; paired timing
-has not run yet.
-
-## Current candidate checks
-
-The code change is confined to C emission. It uses the existing higher-order loop
-registry, binds the initial value before the array input, and calls the existing
-owned entry directly for each scalar element. The input remains borrowed; the
-caller retains its existing failure cleanup. Tests cover packing on/off, array
-views, aliases, fold order, unknown callbacks, F32 values, checked-overflow order
-and a recoverable scalar callback failure with zero leaked payload. Existing F128
-failure controls remain in the same test target. The focused workflow runs the
-three affected Rust integration targets with the release compiler on both hosts.
-Local fixture interpretation passes with the verified compiler package; no local
-compiler build ran. Formatting passes. Run `41108169261` at `89fda951` is fully audited: both hosts pass all buffer,
-consumer and cleanup controls, with one test-fixture failure in
-`array_loop_borrows`. Its supposedly unknown callback was statically known and
-inlined; the assertion tried to find a removed function. The repair selects the
-callback through `read-line` and checks the retained generic fold. It also covers
-initial-value/input effect order and optimized-interpreter overflow order.
-Archives/logs/audits: `/private/tmp/fwp-buffer-candidate-{arm,amd}-89fd.{zip,log,audit.json}`.
-ARM job/artifact `124243375996` / `13001672994`; AMD `124243375828` / `13001633556`.
-
-The scan candidate removes all 12,288 ineffective duplicate/release entries in
-three 4,096-element calls. Payload remains three requests, 98,328 requested bytes,
-32,776 peak, zero final payload and one cached count byte. Ordinary `.text` falls
-from 16,780 to 10,588 bytes on ARM and 18,162 to 11,090 on AMD. Maximum reported
-frames fall from 592/576 to 368/320 bytes; no new dynamic frame appears. These
-results are not yet a timing or final-platform acceptance.
-
-`scan-comparison.py` retains exactly 2,736 attempts/session and checks both full
-program build records, frozen reference hashes and every ordered result. Fifteen
-synthetic damage controls pass locally (6.07s), as do the six schedule controls
-(0.24s) and refactored baseline's eleven damage controls (5.71s). The first local
-baseline control used an obsolete pre-repair program archive and correctly rejected
-its missing objcopy output; the current program archive passes. No timing was run
-locally. The synthetic archive was compacted with all 135 files verified at
-`/private/tmp/fwp-scan-synthetic-control-1.zip`; original CI archives remain intact.
-
-Final local preparation: raw/optimized fixture checks pass (0.26/0.25s), Rust
-formatting passes (0.14s), full workflow lint passes (5.73s), and the roadmap
-audit passes (3.05s). The next CI suite is `scan-comparison`, explicit session 1
-and 2 with `native_runner=all`; it gates timing on the affected native tests.
