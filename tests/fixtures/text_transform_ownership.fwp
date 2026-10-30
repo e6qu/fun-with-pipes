@@ -13,6 +13,10 @@ check-text = make {
     pattern-is-source = fork (flip replace "!") id id,
     replacement-is-source = fork (replace "AbC") id id,
     removed = replace "," "",
+    repeated = string.repeat 3,
+    overlapping = replace "aa" "x",
+    expanding = replace "A" "longer",
+    shrinking = replace "AbC" "x",
     chain = lower | lower | trim | trim | replace "missing" "!",
     nul = concat "\0taIL" | lower | replace "\0" "|",
 } | echo

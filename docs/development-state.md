@@ -1,17 +1,36 @@
 # Current work
 
-**Next:** implement the predeclared [direct string-result experiment](measurements/direct-string-results.md)
-while monitoring PR #228's final gates. Preserve its verified/running head and
-open no second PR. Publish the protocol before editing runtime code or measuring
-a candidate. Keep its raw-allocation costs separate from managed counts.
+**Next:** run the focused native string checks for the implemented
+[direct string-result experiment](measurements/direct-string-results.md), then
+implement its paired measurement runner while monitoring PR #228's final gates. Preserve its verified/running head and
+open no second PR. Protocol `e0fb1a09` was published before the runtime changes. Keep raw-buffer
+allocation costs separate from managed counts; no speed claim is accepted.
 
 This preparation uses `/private/tmp/fwp-direct-string-results`, branch
 `direct-string-results`, based on `f3eb5072`. PR #228 remains on
 `application-allocation-failures` in `/private/tmp/fwp-application-failures`.
 Its final production run is `41018509811`, documentation `41018509711`, and G2
-`41018512169`. Documentation passes with a complete log audit; native and analysis
-jobs are running. Merge only after all exact-head gates pass and their logs are
+`41018512169`. Documentation, benchmark and both analysis hosts pass with complete log audits;
+eight native production jobs are running. G2 has 226 tests/three summaries per host. Merge only after all exact-head gates pass and their logs are
 audited, with one subject of at most 80 characters and an empty body.
+
+## Direct string-result preparation
+
+`replace` now counts non-overlapping matches, then writes once into its final
+String. `string.repeat` calculates the checked size and fills its final allocation.
+Neither uses a temporary raw buffer or mutates input strings. The existing ownership
+contracts and primitive inventory are unchanged. No benchmark has run yet.
+
+Existing text tests now include raw-buffer calibration, a broken raw-free control,
+shared/source-pattern/source-replacement aliases, binary/UTF-8 bytes, direct output
+allocation traps and a deliberately missing consumed-owner guard. O0/O1/O2 probes
+retain outputs/status before assertions. Size tests preserve terminal overflow
+versus String-size traps and observe a deleted empty shortcut before division.
+
+Guarded local Clang checks pass 144 boundary/control subprocesses at O0/O1/O2:
+`python3 /private/tmp/fwp-check-direct-string-sizes.py`. This does not establish
+GCC, full-runtime, native-platform or WASI correctness. Rust formatting passes.
+Full compiler builds, focused ownership checks and measurement run on GitHub.
 
 ## Directory-report failure checks
 

@@ -1493,29 +1493,70 @@ static V fwp_p_ends_with(V p, V s) {
 }
 
 static V fwp_p_replace(V from, V to, V s) {
-    if (STR(from)->len == 0) return s;
-    if (STR(from)->len == STR(to)->len &&
-        !memcmp(STR(from)->d, STR(to)->d, STR(from)->len)) return s;
+    size_t from_len = STR(from)->len, to_len = STR(to)->len;
+    if (!from_len) return s;
+    if (from_len == to_len && !memcmp(STR(from)->d, STR(to)->d, from_len)) return s;
     const char *d = STR(s)->d, *end = d + STR(s)->len;
-    const char *p = fwp_memmem(d, (size_t)(end - d), STR(from)->d, STR(from)->len);
-    if (!p) return s;
-    fwp_buf b = {0};
+    const char *first = fwp_memmem(d, (size_t)(end - d), STR(from)->d, from_len);
+    if (!first) return s;
+    size_t count = 0;
+    const char *p = first;
     do {
-        buf_put(&b, d, (size_t)(p - d));
-        buf_put(&b, STR(to)->d, STR(to)->len);
-        d = p + STR(from)->len;
-        p = fwp_memmem(d, (size_t)(end - d), STR(from)->d, STR(from)->len);
+        count++;
+        const char *next = p + from_len;
+        p = fwp_memmem(next, (size_t)(end - next), STR(from)->d, from_len);
     } while (p);
-    buf_put(&b, d, (size_t)(end - d));
-    return buf_to_str(&b);
+    size_t length = STR(s)->len;
+    if (to_len > from_len) {
+        size_t extra = to_len - from_len;
+        /* Preserve the former buffer-size failure before the String size check. */
+        if (length == SIZE_MAX || count > (SIZE_MAX - length - 1) / extra) {
+            fprintf(stderr, "fwp: out of memory\n");
+            fflush(NULL); _Exit(102);
+        }
+        length += count * extra;
+    } else {
+        /* Non-overlapping matches guarantee count * from_len <= input length. */
+        length -= count * (from_len - to_len);
+    }
+    if (length > SIZE_MAX - sizeof(fwp_str) - 1) fwp_trap("string too large");
+    fwp_str *result = (fwp_str *)fwp_alloc_leaf(sizeof(fwp_str) + length + 1);
+    result->len = length;
+    char *out = result->d;
+    p = first;
+    do {
+        size_t prefix = (size_t)(p - d);
+        memcpy(out, d, prefix); out += prefix;
+        memcpy(out, STR(to)->d, to_len); out += to_len;
+        d = p + from_len;
+        p = fwp_memmem(d, (size_t)(end - d), STR(from)->d, from_len);
+    } while (p);
+    memcpy(out, d, (size_t)(end - d));
+    result->d[length] = 0;
+    return PTR(result);
 }
 
 static V fwp_p_str_repeat(V n, V s) {
     size_t k = fwp_count_arg(n);
     if (!k || !STR(s)->len) return fwp_str_new("", 0);
-    fwp_buf b = {0};
-    for (size_t i = 0; i < k; i++) buf_put(&b, STR(s)->d, STR(s)->len);
-    return buf_to_str(&b);
+    size_t length = STR(s)->len;
+    if (k > (SIZE_MAX - 1) / length) {
+        fprintf(stderr, "fwp: out of memory\n");
+        fflush(NULL); _Exit(102);
+    }
+    size_t total = k * length;
+    if (total > SIZE_MAX - sizeof(fwp_str) - 1) fwp_trap("string too large");
+    fwp_str *result = (fwp_str *)fwp_alloc_leaf(sizeof(fwp_str) + total + 1);
+    result->len = total;
+    memcpy(result->d, STR(s)->d, length);
+    /* Each destination starts after the initialized prefix; memcpy never overlaps. */
+    for (size_t filled = length; filled < total;) {
+        size_t next = filled < total - filled ? filled : total - filled;
+        memcpy(result->d + filled, result->d, next);
+        filled += next;
+    }
+    result->d[total] = 0;
+    return PTR(result);
 }
 
 static V fwp_p_str_reverse(V s) {
