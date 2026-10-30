@@ -5,6 +5,19 @@ use std::hint::black_box;
 use std::mem::size_of;
 use std::process;
 
+#[cfg(buffer_entry = "unique")]
+const ENTRY: &str = "unique";
+#[cfg(buffer_entry = "callback")]
+const ENTRY: &str = "callback";
+#[cfg(buffer_entry = "scan")]
+const ENTRY: &str = "scan";
+#[cfg(not(any(
+    buffer_entry = "unique",
+    buffer_entry = "callback",
+    buffer_entry = "scan"
+)))]
+compile_error!("Select an explicit buffer_entry: unique, callback or scan");
+
 fn fail(message: &str, status: i32) -> ! {
     eprintln!("{message}");
     process::exit(status);
@@ -27,7 +40,7 @@ fn read_buffer(values: &[i64]) -> i64 {
     add(values.len() as i64, values.first().copied().unwrap_or(0))
 }
 
-fn work(input: i64, callback: bool) -> i64 {
+fn work(input: i64) -> i64 {
     let length = input.max(0) as usize;
     if length > isize::MAX as usize / size_of::<i64>() {
         fail("array too large", 3);
@@ -39,11 +52,19 @@ fn work(input: i64, callback: bool) -> i64 {
     for index in 0..length {
         values.push(index as i64);
     }
-    let result = read_buffer(&values);
-    let result = if callback {
-        result
+    let result = if ENTRY == "scan" {
+        let mut total = 0;
+        for &value in &values {
+            total = add(total, value);
+        }
+        total
     } else {
-        add(result, values.len() as i64)
+        let result = read_buffer(&values);
+        if ENTRY == "unique" {
+            add(result, values.len() as i64)
+        } else {
+            result
+        }
     };
     drop(values);
     result
@@ -52,23 +73,30 @@ fn work(input: i64, callback: bool) -> i64 {
 fn main() {
     let args: Vec<_> = env::args().collect();
     if args.len() != 4 {
-        fail("expected unique|callback length repeats", 2);
+        fail("expected entry length repeats", 2);
     }
-    let callback = match args[1].as_str() {
-        "unique" => false,
-        "callback" => true,
-        _ => fail("invalid entry", 2),
-    };
+    if args[1] != ENTRY {
+        fail("invalid entry", 2);
+    }
     let length = number(&args[2]);
     let repeats = number(&args[3]);
     if repeats <= 0 {
         fail("repeats must be positive", 2);
     }
-    let expected = length.max(0) as u64 * if callback { 1 } else { 2 };
+    let size = length.max(0) as u128;
+    let expected = if ENTRY == "scan" {
+        if size == 0 {
+            0
+        } else {
+            size * (size - 1) / 2
+        }
+    } else {
+        size * if ENTRY == "unique" { 2 } else { 1 }
+    };
     let mut checksum = 0;
     for _ in 0..repeats {
-        let result = black_box(work(black_box(length), callback));
-        if result < 0 || result as u64 != expected {
+        let result = black_box(work(black_box(length)));
+        if result < 0 || result as u128 != expected {
             fail("incorrect result", 4);
         }
         checksum = add(checksum, result);

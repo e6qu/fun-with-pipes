@@ -13,7 +13,12 @@ to a borrowing helper, reads its length again, and releases it. The helper adds
 the length to the first element, or zero for an empty array. For nonnegative `n`, the result is `2*n`. Negative lengths produce an
 empty array and result zero, matching `array.generate`.
 `callback(n)` uses the known `read` callback and returns `max(n, 0)`. Both inputs are
-runtime lengths; neither entry may return or retain the array.
+runtime lengths; neither entry may return or retain the array. A third entry,
+`scan(n)`, constructs the same array and adds every element with checked arithmetic.
+Its result is `m*(m-1)/2`, where `m = max(n, 0)`. The harness appends this entry
+to a copy of the original fixture, preserving the frozen A5 fixture. Current fwp
+emission gives this full-read control ordinary counted storage. It is not evidence
+that A5 already supports arbitrary folds.
 
 Write C and Rust versions with the same sequence: allocate one integer buffer,
 initialize every element, borrow it for those reads, then release it. Use checked
@@ -26,15 +31,18 @@ Keep the shared-array and unknown-callback ownership tests as correctness
 controls. They must continue to reject the unique representation; they are not
 silently substituted for the known-callback timing workload.
 
-The initial C/Rust peers pass 192 Clang/Rust O1/O2 checks through
+The three C/Rust peers pass 420 Clang/Rust O1/O2 checks through
 `scripts/check-unique-buffer-peers.py --cc clang --rustc rustc`: exact outputs,
 negative/empty lengths, repeated calls, oversized allocation rejection and invalid
 arguments. These are local peer checks, not GCC validation.
-The fwp harness also passes 28 raw/optimized interpreter comparisons and 56 native
+The fwp harness also passes 42 raw/optimized interpreter comparisons and 84 native
 Clang O1/O2 executions at the same seven lengths, including the two negative
 cases. It replaces only the CLI call and preserves production startup/cleanup.
 The first harness check incorrectly counted proof markers in all exported
-functions; the repaired check requires one marker in the selected entry.
+functions; the repaired check inspects the selected entry: one marker for the
+restricted examples, none for the counted scan. Each executable selects its entry
+at compilation (`BUFFER_ENTRY` for C, `buffer_entry` for Rust); no extra runtime
+mode branch is added to the peers.
 
 These checks use the verified macOS ARM64 package from source `570b777a`, artifact
 `12986056870`; compiler SHA-256
@@ -72,6 +80,37 @@ buffer operation. Their overhead belongs in the eventual timing scope.
    outputs, durations and failed observations, and independently reconstruct the
    report. Set later optimization budgets from these baseline results.
 
-The next action is to implement and verify the peer programs and harness work
-boundaries. This preparation does not authorize an unchanged numerical rerun,
+The peer programs and repeated-call harness pass the focused checks above.
+The next action is separate phase/storage instrumentation and its failure controls. This preparation does not authorize an unchanged numerical rerun,
 change D2/N1 limits, or complete the other B1 comparisons.
+
+## Baseline schedule
+
+Use two independent sessions on each of the existing qualified Linux ARM64 and
+AMD64 hosts. Each of the three entries has four length/call-count cases: 0/65,536,
+16/65,536, 4,096/256 and 262,144/4. Each nonempty case therefore initializes
+1,048,576 elements per process if construction remains in the optimized program.
+Do not hide compiler-eliminated construction or count it as executed work.
+
+Every language has a byte-identical executable copy: six labels in all. Use seed
+20261030, two unmeasured warmup rounds, then 36 measured rounds with twelve fresh
+processes per label per round. `unique-buffer-baselines.py` fixes the ordering.
+Each label occupies every process position equally; every ordered predecessor
+pair, including a label following itself, occurs 71 times within rounds. Record
+between-round transitions too; those are not claimed to be balanced. This gives
+432 measured processes per label per case per session, with every observation
+retained. Do not increase counts after seeing a result.
+
+Report median complete round totals, all three identical-copy ratios and both
+fwp/peer ratios for each case and session. Whole-child timings include startup,
+argument parsing, repeated calls, checksum checks, output and process cleanup.
+Compilation and artifact writes are outside that timer. Separate diagnostic
+programs own the construction/read/release and storage observations. Their
+measurements cannot replace the ordinary binaries' timings.
+
+These are descriptive baselines. Derive and publish workload-specific future
+change budgets from the repeated observations before selecting an optimization.
+An unstable copy control stays explicit and cannot establish a speed improvement.
+D2/N1's existing failures and limits are unchanged. Collection still requires
+the remaining phase/storage instrumentation, evidence verifier and native GCC
+checks; no baseline session has run.

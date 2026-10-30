@@ -14,12 +14,12 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def harness(code, entry, peer):
     """Change only the executable's CLI call, preserving runtime startup/cleanup."""
-    assert entry in ('unique', 'callback')
+    assert entry in ('unique', 'callback', 'scan')
     match, = re.findall(r'/\* ' + entry + r' : I64 -> I64 \*/\nstatic (?:int64_t w|V f)(\d+)\(', code)
     assert re.search(r'static V f' + match + r'\(V l0\) \{', code)
     start = code.index(f'/* {entry} : I64 -> I64 */')
     end = code.index('\n}', start) + 2
-    assert code[start:end].count('/* proved unique I64 array: no reference-count metadata */') == 1
+    assert code[start:end].count('/* proved unique I64 array: no reference-count metadata */') == (0 if entry == 'scan' else 1)
     # Use the same CLI parsing, barriers, checks and checksum loop as the C peer.
     # Remove its buffer implementation; call the actual generated fwp entry.
     start = peer.index('static int64_t read_buffer(')
@@ -27,12 +27,9 @@ def harness(code, entry, peer):
     helper = peer[:start] + peer[end:]
     helper = helper.replace('int main(int argc, char **argv) {',
         'static void buffer_benchmark(void) {\n    int argc=fwp_argc; char **argv=fwp_argv;')
-    call = 'int64_t result = work(input, callback);'
+    call = 'int64_t result = work(input);'
     assert helper.count(call) == 1
     helper = helper.replace(call, f'int64_t result = (int64_t)f{match}((V)input);')
-    selection = '    int callback = strcmp(argv[1], "callback") == 0;'
-    assert helper.count(selection) == 1
-    helper = helper.replace(selection, f'    if (strcmp(argv[1], "{entry}")) fail("invalid entry", 2);\n' + selection)
     assert helper.count('    return 0;') == 1
     helper = helper.replace('    return 0;', '    return;')
     original = '    fwp_exit_code = fwp_exec(&exec_spec0, fwp_argc, fwp_argv);'
@@ -61,7 +58,7 @@ def main():
                    if not key.startswith('FWP_') and key not in ('GH_TOKEN', 'GITHUB_TOKEN')}
     environment.update(CC=args.cc, FWP_LTO='0', FWP_STACK='1', LC_ALL='C')
     source = output / 'buffer.fwp'
-    source.write_bytes((ROOT / 'tests/fixtures/unique_buffer_costs.fwp').read_bytes())
+    source.write_text((ROOT / 'tests/fixtures/unique_buffer_costs.fwp').read_text() + '\nexport scan : I64 -> I64\nscan = flip array.generate id | array.fold add 0\n')
     peer = (ROOT / 'tests/fixtures/unique_buffer_peer.c').read_text()
     sequence = 0
 
@@ -90,7 +87,7 @@ def main():
                   compilerSha256=hashlib.sha256(compiler.read_bytes()).hexdigest(),
                   cc=run([args.cc, '--version'], environment).decode(), cases=args.case,
                   scope='Correctness only. No performance samples collected.', entries={})
-    for entry in ['unique', 'callback']:
+    for entry in ['unique', 'callback', 'scan']:
         original = output / f'{entry}-original.c'
         assert run([compiler, 'build', '--fn', entry, '--memory', 'dynamic', '--emit-c', '-O2',
                     source, '-o', original], environment) == b''
@@ -99,7 +96,8 @@ def main():
         generated.write_text(code)
         expected = {}
         for length in args.case:
-            value = max(length, 0) * (2 if entry == 'unique' else 1)
+            size = max(length, 0)
+            value = size * (size - 1) // 2 if entry == 'scan' else size * (2 if entry == 'unique' else 1)
             reference = f'{value}\n'.encode()
             command = [compiler, 'exec', '--interp', source, entry, str(length)]
             assert run(command, dict(environment, FWP_NO_OPT='1')) == reference
@@ -109,7 +107,7 @@ def main():
         for level in [1, 2]:
             executable = output / f'{entry}-O{level}'
             assert run([args.cc, '-std=gnu11', f'-O{level}', '-ffp-contract=off', '-fno-fast-math',
-                        '-fno-lto', '-w', generated, '-o', executable, '-lm', '-lpthread', '-ldl'], environment) == b''
+                        '-fno-lto', '-w', f'-DBUFFER_ENTRY={dict(unique=0, callback=1, scan=2)[entry]}', generated, '-o', executable, '-lm', '-lpthread', '-ldl'], environment) == b''
             for length, value in expected.items():
                 for repeats in [1, 3]:
                     actual = run([executable, entry, str(length), str(repeats)], environment)
@@ -118,7 +116,7 @@ def main():
         report['entries'][entry] = results
     report['commands'] = sequence
     (output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
-    print(f'Both entries: raw/optimized interpretation and {sum(map(len, report["entries"].values()))} native O1/O2 executions agree')
+    print(f'Three entries: raw/optimized interpretation and {sum(map(len, report["entries"].values()))} native O1/O2 executions agree')
 
 
 if __name__ == '__main__':
