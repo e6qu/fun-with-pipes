@@ -326,3 +326,31 @@ requires both policies explicitly. `check-timing-names.py` reconstructs all
 observations, complete round totals and ratios; `test-timing-names.py` rejects
 eight kinds of damaged evidence. Kernel totals include all five internal samples
 per child. The diagnostic cannot label any timing ratio accepted.
+
+### Executable-name results
+
+Protocol `9a08edb6`, implementation `0c61ca76`, run `41045294362`, job
+`124027797546`: all 1,024 observations, complete outputs, resource counters,
+source/binary bytes and full logs pass independent audit. The
+[retained archive](timing-names-artifacts-2026-10-30.json) reconstructs all 2,076
+artifact files. Eight damaged-evidence controls pass. The preceding run
+`41045000047` rejected EPYC 9V74 before downloading or executing; that rejection
+is retained too.
+
+Equal-length names **do not resolve the variation**. The history candidate and
+its identical copy still differ by 2.19% in elapsed time and 2.13% in CPU time.
+These are diagnostic ratios, not new accepted baselines:
+
+| Comparison | Named elapsed / CPU ratio | Equal-name elapsed / CPU ratio |
+|---|---:|---:|
+| History candidate / reference | 1.018566 / 1.018995 | 1.016478 / 1.014570 |
+| History candidate / candidate copy | 1.007469 / 1.007601 | 1.021858 / 1.021308 |
+| History reference / reference copy | 1.003306 / 1.003439 | 1.004679 / 1.008064 |
+| Array fwp / identical copy, whole process | 0.997704 / 0.995859 | 0.983856 / 0.983295 |
+
+Array computation/inclusive copy ratios are 0.999581/0.991365 under named paths
+and 1.001697/0.984670 under equal names. That does not replace the failed N1
+session. Every output and final-storage check passes. Naming alone is therefore
+insufficient as a measurement repair; do not rerun this experiment or declare
+D2/N1 complete. The comparison still needs controls for every history variant;
+a control for the current-result program cannot establish history stability.

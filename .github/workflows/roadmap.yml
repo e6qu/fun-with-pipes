@@ -50,6 +50,11 @@ jobs:
         run: python3 scripts/test-timing-diagnostic.py
       - name: Child CPU and scheduling observation controls
         run: python3 scripts/test-timing-resources.py
+      - name: Retained executable-name diagnostic and damaged-evidence controls
+        run: >-
+          python3 scripts/test-timing-names.py
+          --retained-index docs/measurements/timing-names-artifacts-2026-10-30.json
+          --source 0c61ca76f043cb5a48cf9c65611f785eee27879a
       - name: Word-frequency failure-output controls
         run: python3 scripts/test-current-wordfreq.py
       - name: Retained word-frequency observations and rejection controls

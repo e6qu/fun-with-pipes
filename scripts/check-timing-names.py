@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """Audit every executable-name observation; report diagnostic ratios, never acceptance."""
 import argparse
+import base64
 import gzip
 import hashlib
 import importlib.util
 import json
 import math
+import re
 from pathlib import Path
 import statistics
+import tempfile
 
 SPEC = importlib.util.spec_from_file_location('numerical_schedule', Path(__file__).with_name('numerical-baselines.py'))
 SCHEDULE = importlib.util.module_from_spec(SPEC)
@@ -138,13 +141,65 @@ def audit(directory, source):
     return dict(source=source, decision='diagnostic-only', observations=cursor, ratios=ratios, medians=medians, roundTotals=totals)
 
 
+def restore(index_path, destination, source):
+    index = json.loads(index_path.read_text())
+    assert index['source'] == source and index['decision'] == 'diagnostic-only'
+    assert index['protocol'] == '9a08edb6' and index['run'] == 41045294362
+    job = index['job']
+    assert job['id'] == 124027797546 and job['run_id'] == index['run']
+    assert job['head_sha'] == source and job['status'] == 'completed' and job['conclusion'] == 'success'
+    assert all(step['conclusion'] in ['success', 'skipped'] for step in job['steps'])
+
+    def retained(entry):
+        raw = gzip.decompress((index_path.parent / entry['file']).read_bytes())
+        assert digest(raw) == entry['sha256'] and len(raw) == entry['bytes']
+        return raw
+
+    log = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', retained(index['log']).decode())
+    assert not re.search(r'##\[(?:error|warning)\]|\b(?:warning|error):|\bFAILED\b|Traceback', log)
+    assert [int(value) for value in re.findall(r'Ran (\d+) tests in', log)] == [3, 4, 2]
+    assert len(re.findall(r'Z OK\s*$', log, re.M)) == 3
+    assert '1024 unchanged-program resource observations retained; no acceptance decision' in log
+    assert len(index['rejections']) == 1
+    for entry in index['rejections']:
+        assert entry['run'] == 41045000047 and entry['job']['id'] == 124026811433
+        assert entry['job']['head_sha'] == source and entry['job']['conclusion'] == 'failure'
+        failed = [step['name'] for step in entry['job']['steps'] if step['conclusion'] == 'failure']
+        assert failed == ['Qualify the diagnostic host before downloading or executing']
+        qualification = entry['qualification']
+        assert qualification['source'] == source and not qualification['qualified']
+        assert len(qualification['failures']) == 1 and qualification['failures'][0].startswith('cpu:')
+        assert [key for key in qualification['actual'] if qualification['actual'][key] != qualification['expected'][key]] == ['cpu']
+        rejected_log = retained(entry['log']).decode()
+        assert rejected_log.count('##[error]') == 1 and 'Host rejected before building/timing:' in rejected_log
+        assert not re.search(r'##\[warning\]|warning:|error:|test result:|Run cargo build|Run python3 scripts/observe-timing|Run gh run download', rejected_log)
+    blobs = json.loads(retained(index['contents']))
+    assert set(blobs) == {entry['sha256'] for entry in index['files'].values()}
+    for name, entry in index['files'].items():
+        relative = Path(name)
+        assert not relative.is_absolute() and '..' not in relative.parts
+        raw = base64.b64decode(blobs[entry['sha256']], validate=True)
+        assert digest(raw) == entry['sha256'] and len(raw) == entry['bytes']
+        path = destination / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(raw)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--directory', type=Path, required=True)
+    inputs = parser.add_mutually_exclusive_group(required=True)
+    inputs.add_argument('--directory', type=Path)
+    inputs.add_argument('--retained-index', type=Path)
     parser.add_argument('--source', required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
-    result = audit(args.directory, args.source)
+    if args.retained_index:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            restore(args.retained_index, directory, args.source)
+            result = audit(directory, args.source)
+    else:
+        result = audit(args.directory, args.source)
     args.output.write_text(json.dumps(result, indent=2) + '\n')
     print(json.dumps({key: result[key] for key in ['decision', 'observations', 'ratios']}, indent=2))
 

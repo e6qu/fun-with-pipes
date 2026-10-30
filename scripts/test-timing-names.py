@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Reject damaged executable-name observations using the complete measured artifact."""
 import argparse
+from contextlib import ExitStack
 import gzip
 import importlib.util
 import json
@@ -69,9 +70,17 @@ class NamingEvidence(unittest.TestCase):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--directory', required=True, type=Path)
+    inputs = parser.add_mutually_exclusive_group(required=True)
+    inputs.add_argument('--directory', type=Path)
+    inputs.add_argument('--retained-index', type=Path)
     parser.add_argument('--source', required=True)
     args = parser.parse_args()
-    NamingEvidence.directory = args.directory
-    NamingEvidence.source = args.source
-    unittest.main(argv=['test-timing-names'])
+    with ExitStack() as stack:
+        if args.retained_index:
+            directory = Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            CHECK.restore(args.retained_index, directory, args.source)
+        else:
+            directory = args.directory
+        NamingEvidence.directory = directory
+        NamingEvidence.source = args.source
+        unittest.main(argv=['test-timing-names'])

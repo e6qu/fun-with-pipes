@@ -1,23 +1,34 @@
 # Current work
 
-**Next:** run and audit the [executable-name diagnostic](measurements/timing-variation.md#executable-name-diagnostic-declared-before-implementation)
-on branch `numerical-measurement-controls`, while monitoring PR #229.
-This preparation is separate from its frozen final head `3ddd989c`.
-Protocol `9a08edb6` was published before implementation. Guarded checks pass:
-four child-resource/link/scheduling tests and workflow lint. The diagnostic adds
-same-file naming policies, retained sources/reports, independent observation
-auditing and eight damaged-evidence controls. Full execution belongs on GitHub.
+**Next:** bundle this preparation with the C-library observer repair in active
+PR #229, then run focused file-read checks before its consolidated final matrix. Its original final head `3ddd989c` has two stale
+observer failures on ARM macOS. Repair `d0ccb80f` is published separately on
+`library-string-observers`; focused run `41047507000` passes 17 tests and 26 audited saved probes.
+Other original production jobs are still finishing. Then batch known fixes, run final gates
+and merge only after they pass. The primary checkout's recovery handoff tracks
+live job IDs without changing the tested sources.
 
-PR #229 final-head documentation `41042479406`, benchmarks and both G2 jobs
-`41042548622` pass with complete log audits. Production `41042531398` has eight
-platform jobs still running, with no failed steps observed. Do not change its head.
+## Independent preparation
 
-For the active delivery, run and audit the complete final-head production, documentation and G2
-checks for [PR #229](https://github.com/e6qu/fun-with-pipes/pull/229), then
-squash-merge only after every required gate passes. The byte-search candidate now
-qualifies all four measurement sessions; final platform coverage is the remaining
-delivery gate. Preserve that final head while gates run and audit all failures
-before any repair push. Continue PLAN.md after the verified merge.
+Worktree `/private/tmp/fwp-numerical-controls`, branch
+`numerical-measurement-controls`. Protocol `9a08edb6` preceded source `0c61ca76`.
+The [executable-name diagnostic](measurements/timing-variation.md#executable-name-results)
+is fully audited: run `41045294362`, job `124027797546`, artifact `12971728925`.
+All 1,024 observations and 2,076 files are retained, with complete logs and eight
+damaged-evidence controls. Equal names still leave a 2.19% elapsed / 2.13% CPU
+history-copy difference; naming alone does not resolve D2/N1. Host rejection
+`41045000047` is retained. Do not repeat unchanged measurements.
+
+The [file-read controls](measurements/file-read-failures.md) add allocation-boundary probes to
+`text_file_tools`: first buffer allocation, growth and result construction during
+either of two reads, aliases, retries, deliberately omitted cleanup and terminal
+OOM. It covers text and byte reads. **Unverified:** only Rust formatting has run;
+these new probes have not been compiled or executed. Preserve them while the
+active PR repair is verified; do not claim file-failure coverage yet.
+
+Guarded checks for the diagnostic pass: four resource/link/scheduling controls,
+Python syntax, workflow lint, roadmap links, full artifact reconstruction and
+eight damage cases. Full builds and file probes belong on GitHub.
 
 ## Latest delivery: PR #228
 
