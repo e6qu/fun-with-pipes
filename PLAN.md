@@ -29,33 +29,20 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. **A1–A5 are verified.** Deliveries #212, #218, #219 and #220 removed the
-   selected array-copy, callback, temporary-owner and key-box costs. Preserve
-   their [ownership measurements](docs/measurements/README.md), failure controls
-   and actual-binary evidence. This does not make all containers count-free.
-2. **A6 is verified in #221.** The [parser workspace](docs/parser-workspace.md)
-   passes all nine production jobs, docs, focused native/WASI checks and four
-   audited [measurement sessions](docs/measurements/parser-workspace.md). The G2
-   repair passes both analysis hosts with unchanged limits. Parsing is faster
-   than previous fwp, but allocated bytes rise and the C/Rust gap remains.
-   **F1–F3 are verified in #222:** preserve the measured call costs, weak-handle
-   frame rules and restricted scalar mutual loops. Remaining State `each`
-   allocations are explicit in the report; functional syntax is not universally free.
-3. Preserve **G2**'s [analysis budgets](docs/measurements/ownership-analysis.md)
-   and measure the new region-selection work separately. Further precision needs
-   a named example and a cost comparison, not more diagnostic scaffolding.
-4. **B1/P1's two CPU baselines and their B2 integrity checks are verified
-   in #223.** Six audited sessions establish matching
-   Neoverse-N2 and EPYC 7763 pairs. [Frozen limits](docs/measurements/cpu-baselines.md)
-   retain all observations and reject silent budget resets. **P2/P3's selected
-   decimal-counting change is verified in #225**, including arithmetic, timing,
-   code and stack tradeoffs. Proceed to D1–D3; broader B1/B2 coverage for A/D/N
-   remains open.
+1. Finish the string/file-read batch's complete delivery gates; the
+   [handoff](docs/development-state.md) names the exact head and running checks.
+2. Deliver [file-boundary portability](docs/measurements/file-boundary-portability.md)
+   and the related C recovery-test repairs together. Both repaired Windows
+   focused runs pass; complete platform and WebAssembly checks remain required.
+3. Resolve D2/N1's failed measurements before claiming numerical speed acceptance.
+   Fixed CPU affinity and equal executable names did not resolve the controls.
+   Do not rerun unchanged experiments or increase sample counts again.
+4. Complete B1/B2 comparisons and the finite V1/V2 application matrix below.
 
 The original intermittent Intel macOS compiler abort remains an open defect.
-Source lifetime repairs and passing reruns did not establish its cause. Preserve
-[the evidence](docs/measurements/compiler-abort.md); diagnose any recurrence from
-its source path and input. Do not resume disassembly-led allocator experiments.
+Preserve [its evidence](docs/measurements/compiler-abort.md); diagnose a recurrence
+from its source path and input. Passing reruns did not establish its cause.
+Do not resume disassembly-led allocator experiments.
 
 ## Milestones
 
@@ -86,105 +73,57 @@ IDs, repairs and passing gates. These are maintained guarantees, not open tasks.
 
 ## 2. Minimize ARC in named unshared paths
 
-**A1 is verified in #212.** [List-to-array moves and array-sort reuse](docs/measurements/array-sort-ownership.md)
-remove the measured copying/count costs while preserving aliases and cleanup.
-**A2 is verified in #218.** [The residual-cost report](docs/measurements/arc-residual-costs.md)
-accounts for effective retains/releases in channels, cached maps, word frequency,
-packed descent and local/shared arrays. Use its named owners to select changes;
-preserve source IDs and distinguish code/stack costs from execution speed.
+**A1–A6 are verified at the scopes below.** Preserve alias, failure, cancellation
+and physical-free controls as ownership changes. These results do not make all
+containers count-free or close the broader comparison work in B1/B2.
 
-**A3 is verified in #218/#220.** Known scalar array callbacks avoid no-op count
-attempts. Scalar record reads and known sort callbacks remove two temporary owners
-per distinct word in the [word-frequency cases](docs/measurements/sort-key-ownership.md).
-Required shared owners, evaluation order and exceptional cleanup remain tested.
+| Task | Delivered change | Evidence and remaining cost |
+|---|---|---|
+| A1, #212 | Move lists into arrays; reuse uniquely owned arrays for sorting | [Array ownership](docs/measurements/array-sort-ownership.md); shared values retain owners |
+| A2, #218 | Attribute remaining counts to named owners | [Residual costs](docs/measurements/arc-residual-costs.md); channels, maps and numerical arrays still share storage |
+| A3, #218/#220 | Avoid no-op scalar counts and temporary scalar-read/sort-callback owners | [Sort-key owners](docs/measurements/sort-key-ownership.md); required sharing and cleanup remain |
+| A4, #220 | Store integer/string sort keys contiguously | [Inline keys](docs/measurements/inline-sort-keys.md); isolated sort/cleanup savings are not whole-program C/Rust parity |
+| A5, #219 | Give restricted local arrays one owner without count slots | [Unique storage](docs/measurements/unique-array-storage.md); broader types/transfers need a new lifetime proof and measurements |
+| A6, #221 | Use one aligned workspace for bounded parsing | [Parser workspace](docs/measurements/parser-workspace.md); faster parsing but more allocated bytes, unchanged peak and a remaining C/Rust gap |
 
-**A4 is verified in #220.** [Contiguous integer/string sort keys](docs/measurements/inline-sort-keys.md)
-remove one box and another temporary owner per distinct word. Exact budgets,
-alignment, alias/failure/cancellation controls, binary/stack observations and two
-independent timing runs passed. Isolated sorting and cleanup took 49–56% of the
-previous fwp path's time on the measured hosts; this is not whole-program or
-C/Rust parity. All nine final-head production jobs, docs and G2 passed.
-
-**A5 is verified in #219.** The [restricted local-array path](docs/measurements/unique-array-storage.md)
-proves one owner for the whole lifetime, allocates no count slots and frees storage
-directly. Failure/cancellation, alias/capture/unknown-call rejection, weak-channel
-type controls, actual WASI allocation and native binary checks passed. Preserve
-these controls; broader element types, local transfers and loops need their own
-lifetime proof and measured costs before this representation is extended.
-
-**A6 is verified in #221.** One invocation of the
-[parser workspace](docs/parser-workspace.md) owns aligned blocks; internal
-integer/link nodes need no individual counts. Success, parse failure, nested
-calls, cancellation and escaping-link rejection are covered. Repeated parses
-restore the live-storage baseline. Measurements retain increased allocated bytes,
-unchanged peak storage and the remaining C/Rust gap. Strings/tokens keep their
-ordinary owners. This proves one scoped workspace, not a universal region system;
-D2 may extend the approach to AD after measuring that workload.
+Strings and tokens keep ordinary owners in A6. It proves one scoped workspace,
+not a universal region system. Preserve [G2's analysis budgets](docs/measurements/ownership-analysis.md);
+further proof precision needs a named example and measured compiler cost.
 
 ## 3. Functional calls and recursion
 
 **F1–F3 are verified in #222.** [Calls and recursion](docs/functional-costs.md)
-owns the eight paired call fixtures, lifetime rules, actual allocation/stack
-observations and accepted mutual-loop decision. All nine final-head production
-jobs, docs and both G2 hosts pass; the merged tree matches that tested head.
+records eight paired fixtures, exact allocation expectations, lifetime rules,
+stack observations and the accepted restricted scalar mutual-loop transformation.
 
-F1 keeps exact known-call cost expectations alongside necessary unknown-call
-controls. Some constructs still allocate: State `each` remains per-element.
-F2 admits weak metadata and proved plain captures without discarding observable
-cleanup. Strong resources, tasks and unknown captures keep their restrictions.
-F3 accepts only matching scalar pairs; the longer O0/O2 measurements meet the
-frozen limits, including visible slower results versus ordinary calls. Arbitrary
-resource frames, foreign calls and all recursion are not constant-stack promises.
+Known calls avoid selected closure/dispatch costs; unknown calls retain required
+owners. State `each` still allocates per element. Weak metadata and proved plain
+captures may survive the loop transformation; strong resources, tasks and unknown
+captures retain their restrictions. Arbitrary recursion, resource frames and
+foreign calls are not promised constant stack space.
 
 ## 4. CPU performance
 
-**P1 — Repeated CPU gaps are verified in #223.** The
-[frozen CPU baseline](docs/measurements/cpu-baselines.md) covers checked `loop`
-and `text-length` peers in six audited sessions. On the selected hosts, the loop
-is about 14.4–14.5% slower than Rust on ARM64 and 39–40% slower on AMD64.
-Character counting is about 92–95% slower than C on ARM64 and 106–107% slower
-on AMD64. These complete-program timings include startup and cleanup; both fwp
-programs report zero managed allocation requests and retains. The cause of the
-remaining gaps is not established. All alternative-host results stay visible.
-Also preserve the [parser comparison](docs/measurements/parser-workspace.md):
-31/511/8,191-node balanced trees and a 127-node left-nested tree against its
-explicit C/Rust peers. Tokenization and construction remain measurable costs;
-keep owned-token versus borrowed-token differences explicit when selecting a fix.
-**Done:** repeated comparable baselines distinguish a persistent gap from noise.
+**P1 baselines are verified in #223.** [Six sessions](docs/measurements/cpu-baselines.md)
+compare checked loops and text counting on Neoverse-N2 and EPYC 7763 hosts. The
+unchanged loop is 14.4–14.5% slower than Rust on ARM64 and 39–40% slower on AMD64.
+Its cause remains unproved; it is explicitly unoptimized. These whole-program
+timings include startup and cleanup, with zero managed requests and retains.
 
-**P2 — Repair one measured cost at a time.** The
-[proved-bounds experiment](docs/measurements/proved-scalar-bounds.md) rejected both
-range-index and character-sum changes: neither meets the fixed improvement rule.
-Keep its boundary tests and results; do not repeat those candidates as a speedup.
-The [execution-phase diagnostic](docs/measurements/cpu-phases.md) identifies
-calculation as the larger measured interval, with visible instrumentation effects
-and an inconclusive AMD64 loop control. The [decimal-length report](docs/measurements/decimal-count.md)
-rejects the bit-length/table candidate overall: ARM64 improves, AMD64 does not
-qualify. The exact threshold tree now meets the frozen timing limits in two independent
-sessions per architecture: 33.8–34.8% less text-counting time on ARM64 and
-38.6–39.6% less on AMD64. The corrected measurement schedule balances both position
-and preceding work; every rejected or inconclusive experiment remains recorded.
-It still takes 25.0–26.2% longer than C. Code grows by 496/560 instruction bytes;
-stack, readonly data and whole binary size are unchanged. **Verified in #225:**
-all nine production jobs and documentation pass; the squash matches the tested
-tree. [Delivery evidence](docs/roadmap-history.md#decimal-counting-and-current-derivative-baselines-pr-225)
-records the checks and startup repairs. **Next:** D1–D3; the unchanged loop gap
-remains explicitly unoptimized.
-Keep signed-min handling, all binary/decimal boundaries and checked evaluation
-order; record instruction, readonly-data, binary and stack costs. Bundle the
-verified startup error-handling fixes and complete rejected measurements. For the persistent gap, separate
-calculation, input/output, allocation and dispatch with explicit paired controls.
-Inspect generated C and machine code for the selected program after checking
-source correctness. Change only the proved redundant operation or representation;
-do not resurrect rejected checked-arithmetic/inlining shortcuts without new proof.
-**Done:** the B1 budget passes on both architectures, checked overflow and failure
-order pass boundary tests, and regressions elsewhere remain reported.
+**The selected P2/P3 decimal-counting change is verified in #225.** Its
+[threshold tree](docs/measurements/decimal-count.md) takes 33.8–34.8% less time on
+ARM64 and 38.6–39.6% less on AMD64 than previous fwp, while still taking 25.0–26.2%
+longer than C. Instruction bytes grow by 496/560; stack, readonly data and whole
+binary size stay unchanged. Earlier rejected range/inlining and bit-length/table
+experiments remain in their reports; do not revive them as accepted speedups.
 
-**P3 — Check layout tradeoffs.** For each selected representation change, measure
-size/alignment, cache-sensitive traversal, register spills, code bytes and stack
-frames on ARM64/AMD64. Spilling is a normal allocation decision, not a fallback.
-**Done:** the named workload meets its budget; smaller structures or fewer
-instructions alone do not establish a speedup.
+For further CPU work, separate calculation, I/O, allocation and dispatch before
+selecting a candidate. Check source correctness before inspecting generated C
+or machine code. Preserve checked arithmetic, signed-min boundaries and trap
+order. P3 requires size/alignment, cache-sensitive traversal, code bytes and stack
+costs on both architectures; fewer instructions alone do not establish speed.
+Register spills are ordinary allocation decisions. The selected workload must
+meet its predeclared B1 budget, with slower results retained.
 
 ## 5. Differentiation
 
@@ -236,11 +175,10 @@ stated domains/tolerances; no derivative is promised at a discontinuity.
 ## 6. CPU numerical kernels
 
 **N1 — Establish kernel-specific budgets.** Follow the
-[frozen kernel protocol](docs/measurements/kernel-baselines.md). Use the existing 65,537-element
-map/reduce and 65×67 by 67×63 matrix comparison, then add 262,145 elements
-and 257×259 by 259×255 matrices using the same formulas and eight rounds.
+[frozen kernel protocol](docs/measurements/kernel-baselines.md). The four implemented cases are map/reduce over 65,537 and 262,145 elements,
+and 65×67 by 67×63 and 257×259 by 259×255 matrix products, each with eight rounds.
 Keep input values, reduction order, precision and output checks identical.
-**Done:** B1-quality time, memory and accuracy baselines for both architectures.
+**Acceptance:** qualified time, memory and accuracy baselines for both architectures.
 The expanded run at `37da7441` completes both sessions on both CPUs. All matrix
 and computation-only array controls pass. One AMD small-array allocation-inclusive
 control fails at 3.08% (limit 2%); preserve that inconclusive overall result and
@@ -258,7 +196,7 @@ before accepting a speed claim. Further candidates may change loop layout, data
 movement or workspace in `src/linalg.rs`, code generation and the corresponding C runtime.
 Keep explicit floating-point rules; reassociation/fused operations require an
 agreed numerical contract. Extend `tests/linalg_ownership.rs` and kernel controls.
-**Done:** accuracy, shape-error order, cancellation and the N1 budgets pass.
+**Acceptance:** accuracy, shape-error order, cancellation and the N1 budgets pass.
 GPU execution and runtime compilation are outside this CPU roadmap.
 
 ## 7. Reproducible comparisons
@@ -271,14 +209,14 @@ record an absolute/relative regression threshold from those results before the
 candidate measurement. If the control is unstable, repair the measurement first.
 For ownership work use the [four planned comparisons](docs/benchmarks.md#planned-ownership-comparisons)
 and measure compiler analysis separately from generated-program execution.
-**Done:** a checked-in table states workload, revision, host, budget, statistic
+**Acceptance:** a checked-in table states workload, revision, host, budget, statistic
 and treatment of inconclusive results. No invented universal percentage.
 
 **B2 — Enforce the table.** Extend benchmark review scripts to require the named
 variants, samples, outputs, toolchains, binary hashes and memory observations;
 retain deliberately invalid artifacts as rejection tests. Keep runtime timing,
 compilation, startup, process memory and managed counts distinct.
-**Done:** missing/changed evidence fails, all slower rows remain visible, and
+**Acceptance:** missing/changed evidence fails, all slower rows remain visible, and
 CI compares against the declared baseline rather than silently resetting it.
 
 ## 8. Larger programs
@@ -288,44 +226,26 @@ CI compares against the declared baseline rather than silently resetting it.
 directory reports, text-file tools, a numerical pipeline, derivative descent and
 a long-running HTTP/gRPC service. Preserve the listed inputs and add the missing
 allocation-failure and scale cases, with expected results from independent checks.
-The [directory allocation-boundary checks](docs/measurements/directory-failures.md)
-are implemented at `1f364c09`: four failure points, aliases, retries, missing-close/
-missing-builder controls and separate terminal OOM checks at C O1/O2. All six
-native hosts pass ten focused tests each, with full log/artifact audits. The
-first harness failure and all 84 saved probe executions are retained.
-The [current word-frequency baseline](docs/measurements/wordfreq-current.md) now
-retains four audited sessions at `dc963bb5`, all 37,080 child observations and
-workload-specific time/memory limits declared before a candidate. Its short-input
-identical-copy difference reaches 3.90%; the report limits the claims this allows.
-The directory controls and word-frequency evidence checks are verified in #228
-across the complete production matrix. The baseline alone accepts no candidate.
-The ongoing
-[direct string-result experiment](docs/measurements/direct-string-results.md)
-removes temporary raw buffers from replacement/repetition at `089465bb`.
-All six native focused suites and both WASI hosts pass, including alias, size,
-cleanup and failure controls. All four timing sessions reject the speed
-claim despite removing raw allocations; retain those failures. The second
-candidate reuses uniquely owned, non-growing replacements under protocol
-`ebd8f46d`. All native checks and allocation targets pass, but all four timing
-sessions still miss 5%; retain those rejected results. The third declared change
-uses standard byte search for one-byte patterns and qualifies all four sessions
-at `afbafef8` under the unchanged limits: 16.4–19.2% less large-input time,
-26,216 fewer managed requests, unchanged retains/peak, and explicit code/stack
-costs. Final-head platform validation remains required before delivery.
-The [file-read boundary controls](docs/measurements/file-read-failures.md) add
-text/byte allocation-failure probes to this same batch. The focused ARM64 macOS
-and AMD64 GCC runs each pass 11 tests and all 40 saved boundary executions pass
-independent audit; complete platform coverage remains pending. This does not complete the other application families or integrated V2 coverage.
-Next, verify [file-boundary portability](docs/measurements/file-boundary-portability.md):
-remove Unix-only probe assumptions, retain error/owner controls, and run them on
-both Windows architectures as well as existing Linux/macOS assignments.
-**Done:** each family has explicit platform/memory-mode coverage, failure and
+Directory allocation-boundary controls and the current word-frequency baseline
+are verified in #228. The [string-result report](docs/measurements/direct-string-results.md)
+retains two rejected candidates and a qualifying byte-search candidate: four
+sessions show 16.4–19.2% less large-input time and 26,216 fewer managed requests,
+with unchanged retains/peak and explicit code/stack costs. Its complete delivery
+gates and the bundled [file-read failure controls](docs/measurements/file-read-failures.md)
+are still running; focused Clang/GCC checks pass.
+
+The next [file-boundary batch](docs/measurements/file-boundary-portability.md)
+adds native Windows error/borrowed-handle coverage and fixes recovery-test C
+contexts. Both repaired Windows focused runs pass. Require the complete matrix,
+including the resource-frame and actual WebAssembly recovery cases, before delivery.
+Neither batch completes the numerical or integrated acceptance requirements.
+**Acceptance:** each family has explicit platform/memory-mode coverage, failure and
 cancellation tests, bounded post-operation storage and a B1 budget where timed.
 
 **V2 — Run and publish the integrated suite.** Validate all six native targets;
 run the separately declared WebAssembly subset on its actual hosts. Record skipped
 capabilities as gaps. Fix implementation or usability failures in the same work.
-**Done:** every V1 row meets its criteria on the integrated source, and tutorials
+**Acceptance:** every V1 row meets its criteria on the integrated source, and tutorials
 explain the concepts needed to reproduce the supported program.
 
 ## Memory direction

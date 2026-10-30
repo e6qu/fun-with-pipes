@@ -1,114 +1,87 @@
 # Current work
 
-**Next:** monitor and audit all gates at PR #229 head
-`8d908e0e0d5db3a2d836e2fc978c70fa99ad04a8`: production `41051447921`,
-documentation `41051447945`, and G2 `41051466208`. The older full matrix has finished and every log is audited. Merge only after all nine
-production jobs, documentation and both G2 hosts pass. Use one squash subject of
-at most 80 characters and an empty body, then continue PLAN.md.
+**Next:** audit PR #229's remaining Linux/Windows jobs and squash-merge only after
+all nine production jobs, documentation and both G2 hosts pass at
+`8d908e0e0d5db3a2d836e2fc978c70fa99ad04a8`. Then deliver the prepared file-boundary
+batch below as the next single PR. Preserve the passing head while checks run.
 
-## Final-head gates
+## Active delivery
 
-Documentation, benchmarks, both G2 hosts and all four macOS jobs pass and their
-complete logs are audited. Regular Mac jobs each pass 627 tests/132 summaries;
-ownership jobs each pass 364/127. Linux and Windows remain in progress, with no
-final-head failure observed. Audit each completed job before merging.
+[PR #229](https://github.com/e6qu/fun-with-pipes/pull/229) combines
+[direct string results](measurements/direct-string-results.md),
+[file-read failure controls](measurements/file-read-failures.md), two repaired
+C-library allocation observers and the
+[executable-name diagnostic](measurements/timing-variation.md#executable-name-results).
 
-The next preparation is `/private/tmp/fwp-file-boundary-portability`, source
-`c69b9b91`. Both repaired Windows focused runs pass 16 tests/6 targets and all
-22 saved native probes per host pass audit. The earlier Linux/macOS focused runs
-also pass. Next full gates must cover the seven `setjmp` probe repairs, including
-resource-frame and WASI checks. Keep one active PR; open that batch after #229.
+| Gate | Run | Audited status |
+|---|---|---|
+| Production | `41051447921` | Benchmarks, four Mac jobs and Windows ARM pass; Linux/Windows AMD running |
+| Documentation | `41051447945` | Pass |
+| G2 compiler-analysis budgets | `41051466208` | Both hosts pass, 226 tests each |
 
-## Active PR and source
+Each regular Mac job passes 627 tests/132 summaries; each ownership job passes
+364/127. Windows ARM passes 812 tests/202 summaries and ten SDK checks; two POSIX terminal
+checks are explicitly skipped. Complete logs are audited. The original matrix `41042531398` is fully
+audited: only the two observer failures, repaired by `d0ccb80f`, occurred. Its
+Mac crash artifacts are the intentional cleanup-panic control. No final-head
+failure has been observed; audit newly completed targets before merging.
 
-[PR #229](https://github.com/e6qu/fun-with-pipes/pull/229) contains the combined
-string implementation, observer repair, file-read controls and numerical diagnostic.
-Worktree `/private/tmp/fwp-direct-string-results`, branch `direct-string-results`.
-This handoff has local live-status updates after the tested commit; carry them
-into the next delivery record without restarting a passing matrix for status text.
-The next branch `file-boundary-portability` is prepared at `c69b9b91`. Its report
-records initial Windows failures and both repaired passing runs. Do not open
-another PR until #229 merges. No runtime/compiler code changes are in this batch.
+The string candidate qualifies four sessions at `afbafef8`: large word counting
+takes 16.4–19.2% less time, with 26,216 fewer managed requests but unchanged
+retains/peak charge. It still takes 2.08 times C on ARM64 and 2.42–2.44 on AMD64.
+All 222,120 observations and two rejected candidates remain in the report.
+The name diagnostic retains 1,024 observations and does not close D2/N1.
+File-read controls pass focused GCC/Clang checks at `f0357526`, including all
+40 saved executions per host. Full delivery remains pending.
 
-Latest verified delivery: [#228](roadmap-history.md#directory-cleanup-and-current-application-costs-pr-228),
-squash `667e71f0`, identical tested tree from `f3eb5072`. Directory-boundary
-coverage and the current word-frequency baseline are delivered. The duplicate
-post-merge production run was cancelled only after tree equality was checked.
+## Next grouped batch
 
-## Original full matrix and repaired observers
+Worktree `/private/tmp/fwp-file-boundary-portability`, branch
+`file-boundary-portability`. Code source `c69b9b91`; later commits only update docs.
+[File-boundary portability](measurements/file-boundary-portability.md) records
+three existing targets now covering Windows file errors, borrowed stream owners
+and flush visibility. Observers stop comparing stream pointers after close.
+Seven test probes now use a C-permitted `setjmp` context, including related
+resource-frame and WASI count checks. Runtime/compiler code is unchanged.
 
-Production `41042531398`, source `3ddd989c`, is complete and fully audited.
-Both Linux jobs (`124018564521`, `124018564324`) finish with 991 passes and exactly
-the two known observer failures in 257 summaries each; no additional diagnostics.
-Both regular Mac jobs finish with 624 passing tests, two observer failures in
-132 summaries and 12 passing SDK tests. Both Windows jobs finish with 809 passes
-and the same two failures in 202 summaries. All four complete logs are audited;
-no additional failures or compiler warnings were found.
+Initial Linux/macOS focused runs each pass 16 tests/6 targets and all 22 saved
+probes. Both initial Windows runs expose the same three header-order compile
+errors; all logs were audited before the combined repair push.
+Repaired AMD run `41055449823` / job `124061719633` and ARM run `41055457917` /
+job `124061748283` pass 16/6 each. All 22 saved executions per host, exact negative
+controls and native headers pass independent audit. Artifacts are `12977885309`
+and `12977067487`. Require the next full matrix, including resource-frame and
+actual WASI checks, before delivery; focused Windows success does not replace it.
 
-`library_input_ownership` exits 8 and `library_result_ownership` exits 4 because
-their observers record `fwp_str_new` but miss repetition's direct allocation.
-Repair `d0ccb80f` adds that observation, empty/nonempty result checks, deliberate
-observation-omission controls and complete saved probes. Production runtime code
-is unchanged. Focused ARM Mac run `41047507000`, job `124035107898`, passes all
-17 tests/6 summaries. Its full log and all 26 saved executions/native headers are
-independently audited. Artifact `12973930046` retains those probes. Both omission
-controls reproduce the old failures without another code change.
+The next PR description is `/private/tmp/fwp-file-portability-pr.md`; open it
+after #229 merges. Integrate the verified merge, update its delivery record and
+run one complete final-head matrix. The shortened plan preserves every acceptance
+limit and links completed work to its evidence instead of repeating old next steps.
 
-Both Mac ownership jobs pass 364 tests/127 summaries each. Original documentation
-`41042479406`, benchmarks and both G2 hosts `41042548622` pass. Their complete logs
-are audited. No additional repairs were needed after the original jobs finished. Both Mac crash artifacts are the verified intentional cleanup-panic
-abort test, not new compiler aborts. Record final new run IDs in the PR while its
-tested source is frozen.
+## Checks and recovery
 
-## Work bundled before the final rerun
+All local checks run serially through `python3 scripts/local-guard.py`:
+Rust formatting for the five changed targets, actionlint for both workflows,
+`python3 scripts/test-native-test-runner.py` (20 controls), and
+`python3 scripts/check-roadmap.py` (185 documents, 106 immutable preparation
+pairs, eight steps). `git diff --check` passes. Full builds/suites run on GitHub.
+Independent saved-probe and complete-log auditors also ran under the guard.
 
-- [Direct string results](measurements/direct-string-results.md): byte search and
-  unique non-growing replacement qualify four sessions at `afbafef8`. Large
-  word counting takes 16.4–19.2% less time; still 2.08 times C on ARM64 and
-  2.42–2.44 on AMD64. Managed requests fall by 26,216; retains and peak charge do
-  not fall. Code/stack costs and the two rejected earlier candidates remain
-  explicit. All 222,120 observations across the three experiments are retained.
-- [Executable-name diagnostic](measurements/timing-variation.md#executable-name-results):
-  protocol `9a08edb6`, source `0c61ca76`, run `41045294362`, job `124027797546`.
-  All 1,024 observations and 2,076 artifact files pass independent audit, with
-  full logs and eight damaged-evidence controls. Equal names still leave a
-  2.19% elapsed / 2.13% CPU history-copy difference. Naming alone does not repair
-  D2/N1. The earlier EPYC 9V74 host rejection `41045000047` is retained.
-- [File-read allocation controls](measurements/file-read-failures.md): first
-  scratch allocation, growth and result construction during either of two reads;
-  aliases, retries, omitted cleanup and terminal OOM. Text and byte probes are
-  implemented in `text_file_tools`. At combined source `f0357526`, ARM Mac focused
-  run `41049305186` / job `124041117692` passes 11 tests in three summaries.
-  All 40 saved boundary executions, exact omission controls and native headers
-  are independently audited. Artifact `12973813560` retains the evidence.
-  GCC run `41049886906` / job `124043037136` also passes all 11 tests and the
-  independent 40-execution audit; artifact `12973978657` retains its evidence.
-  Its admission inventory accepts 82 programs with three expected rejections.
-  Complete final-head platform validation remains required.
+Active worktree `/private/tmp/fwp-direct-string-results` keeps a local live-status
+handoff after its frozen head; preserve it until the next delivery record.
+The primary checkout is detached at #209 with an older recovery handoff and
+untracked compiler-abort report. Preserve both. Automatic approval review rejected
+replacing that dirty handoff; the backup is
+`/private/tmp/fwp-primary-recovery-before-file-checks.md`.
 
-Guarded local checks pass: Rust formatting, Python syntax, workflow lint, roadmap
-checks, all retained diagnostic observations and eight damage cases. The original
-string batch also passed seven small Clang tests, 144 O0/O1/O2 size/control exits,
-84 retained-evidence rejection tests, eight stricter allocation audits and four
-explicit passing-timing audits. No local full build or benchmark ran.
+Latest verified delivery is [#228](roadmap-history.md#directory-cleanup-and-current-application-costs-pr-228),
+squash `667e71f0`, identical to tested tree `f3eb5072`. Its duplicate post-merge
+production run was cancelled only after tree equality was verified.
 
-## Remaining roadmap and recovery
-
-D2's zero-update result remains **1.022815765 > 1.02** in `40912773534`; N1's
-small-array inclusive copy control remains **1.030786192 > 1.02** in `40951090783`.
-Retain every failed result. Do not repeat unchanged timings, increase sample
-counts again or relax limits after observing these outcomes. A merge does not
-complete these goals or the other V1/V2 application requirements.
-
-GC removal, A1–A6, F1–F3 and the selected decimal-counting optimization are
-verified at their documented scopes. Sharing still uses ARC. D2, N1/N2, broader
-B1/B2 comparisons and integrated V1/V2 acceptance remain open in [PLAN.md](../PLAN.md).
-
-The original intermittent Intel compiler abort remains unexplained; preserve
-[its evidence](measurements/compiler-abort.md) and diagnose recurrence from source.
-The primary checkout is detached at #209 with a recovery handoff and untracked
-compiler-abort report. Preserve both. All local checks remain serial under
-`scripts/local-guard.py`; full builds, suites and measurements run on GitHub.
+D2 remains **1.022815765 > 1.02** in `40912773534`; N1's small-array inclusive
+control remains **1.030786192 > 1.02** in `40951090783`. No unchanged rerun, further
+sample-count increase or relaxed limit. The original intermittent Intel compiler
+abort remains unexplained; preserve [its evidence](measurements/compiler-abort.md).
 
 ## Roadmap status
 
@@ -121,15 +94,4 @@ compiler-abort report. Preserve both. All local checks remain serial under
 | 5 | In progress | Resolve D2's zero-update requirement |
 | 6 | In progress | Resolve N1's array control before N2 timing acceptance |
 | 7 | In progress | Complete broader B1/B2 comparisons |
-| 8 | In progress | Deliver this application batch and finish V1/V2 |
-
-## Next preparation while this head runs
-
-`/private/tmp/fwp-file-boundary-portability`, branch `file-boundary-portability`,
-source `3cbc6b63`, prepares portable file error/borrowed-handle probes and fixes
-the close observer. It does not change #229's tested source. Focused file checks:
-Windows AMD `41053005173`, Windows ARM `41053015126`, Linux GCC `41053039581`,
-Mac ARM Clang `41053051853`. Execution is pending; no next PR is open.
-
-Final-head docs `41051447945` pass with complete log audit. Benchmarks pass
-(2 tests/2 summaries), and both G2 hosts pass (226 tests/3 summaries each), all fully audited.
+| 8 | In progress | Deliver the application batches and finish V1/V2 |
