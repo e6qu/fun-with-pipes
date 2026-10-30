@@ -36,11 +36,15 @@ Initial candidate `a2e539b9` was published. Its focused run `41132906311` was
 cancelled while both jobs were queued, so dedicated two-step trap/cancellation
 and omitted-cleanup controls could join the same verification batch. No result
 from that cancelled run is a pass. Consolidated head `826e447f3f66ae6240f065071ad89c57769c1ad2`
-is pushed; focused run `41134018778` is queued on both GCC architectures.
-The next push adds explicit materialized/elided storage expectations, actual
-fused-computation phase clocks and before/after-work memory snapshots. Batch
-these observer checks with the same five native targets using `buffer-peer-checks`;
-if the earlier run is still queued, cancel it before dispatching the combined batch.
+was superseded before either focused job started. Run `41134018778` was
+cancelled while queued; it establishes no verification. Combined head `048c92c5`
+is published with explicit storage expectations, real fused-computation clocks,
+process-memory snapshots and frozen reference artifacts. Run `41135554961`
+(`buffer-peer-checks`) queues jobs `124337015027` and `124337015493` on both GCC
+architectures. It includes the same five native targets and observer checks.
+Local follow-ups correct executable suffixes for Windows and add F32/F64
+rounding-order and I8 overflow controls; combine these with any failures from
+this run before the next push. No compiler/runtime implementation change follows `826e447f`.
 Audit every target and fix all reported failures together. It now covers numeric fusion and array
 size limits as well as the existing scalar/cleanup targets, retaining artifacts.
 Audit generated-loop failure/cancellation and observer evidence, then run both

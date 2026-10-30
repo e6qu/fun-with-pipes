@@ -14,4 +14,8 @@ main = [
     4 | generated-sum | echo,
     4 | generated-mapped | echo,
     4 | generated-mixed | echo,
+    # Each addition rounds in the declared format. Reassociation would change
+    # both results: adding four first would produce 16777220 / 10000000000000004.
+    array.generate 4 (const 1.0f32) | array.fold add 16777216.0f32 | echo,
+    array.generate 4 (const 1.0) | array.fold add 10000000000000000.0 | echo,
 ] | ignore

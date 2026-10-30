@@ -3,6 +3,10 @@
 //! position, the accumulator and the values the stages capture, so no
 //! intermediate list is built. The C backend runs that loop with its state
 //! in locals (`loop_shape` in src/cgen.rs).
+//! Numeric array maps/folds use the same analysis. An immediately consumed
+//! `array.generate` can supply indices directly to the loop when elements,
+//! accumulator and captures are inline numbers. Its original count bound is
+//! checked before entering the loop even though no array is allocated.
 //!
 //! Fusing interleaves the stages: unfused, `map f` runs on every element
 //! before `filter p` sees the first; fused, each element goes through every

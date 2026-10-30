@@ -261,6 +261,18 @@ matches can expose direct callbacks, but multiple tested fields, whole-value use
 and protected resources retain their required representation. A compiler-generated
 loop is not permission to interleave two trapping eager stages.
 
+The generated-array transformation, currently awaiting native verification,
+extends this rule to `flip array.generate id | array.fold add 0`. With input
+`4`, the generator produces indices `0, 1, 2, 3`, and the fold adds them to get
+`6`. The reference builds an array first; the transformation generates and adds
+each index in one loop. It requires known, terminating callbacks without effects,
+inline numeric elements/accumulator/captures, and at most one possible trap
+message across the stages. It preserves the original count check and argument
+evaluation even for empty arrays. Reused arrays, resources, F128 values and
+unknown callbacks do not qualify. The [allocation acceptance requirements](measurements/generated-array-folds.md)
+separate correctness, cleanup, allocation, code/stack costs and timing; the
+implementation alone establishes none of those results.
+
 When a worker returns record fields separately, every `match` arm must produce
 that same representation. An arm may unpack a dynamically returned record; an
 error arm may not return at all. Neither permits another arm to read the boxed
