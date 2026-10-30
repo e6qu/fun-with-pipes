@@ -29,7 +29,18 @@ silently substituted for the known-callback timing workload.
 The initial C/Rust peers pass 192 Clang/Rust O1/O2 checks through
 `scripts/check-unique-buffer-peers.py --cc clang --rustc rustc`: exact outputs,
 negative/empty lengths, repeated calls, oversized allocation rejection and invalid
-arguments. This is local peer correctness, not GCC or fwp cross-validation.
+arguments. These are local peer checks, not GCC validation.
+The fwp harness also passes 28 raw/optimized interpreter comparisons and 56 native
+Clang O1/O2 executions at the same seven lengths, including the two negative
+cases. It replaces only the CLI call and preserves production startup/cleanup.
+The first harness check incorrectly counted proof markers in all exported
+functions; the repaired check requires one marker in the selected entry.
+
+These checks use the verified macOS ARM64 package from source `570b777a`, artifact
+`12986056870`; compiler SHA-256
+`f5aa27bedfc8701a17b1c40722bc218a1a376f2fe28679bbe9393244e5951282`.
+Compiler/runtime/library/build inputs match this preparation branch exactly.
+This avoids a local compiler build; it is not a dependency on an older fwp API.
 The harness makes each call's input and result opaque to the compiler, using C
 inline assembly and Rust `black_box`; neither prevents optimization inside the
 buffer operation. Their overhead belongs in the eventual timing scope.

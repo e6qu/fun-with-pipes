@@ -50,13 +50,13 @@ Production Linux/GCC and regular macOS/Clang now run the same checks. Guarded
 
 Current candidate `e2fad32c2b2fd05658a8229fe90708d5756f329b` passes
 GCC/documentation `41071247882`, including all 40 clock controls and the complete
-log audit. PR #230 is ready; final production `41075128588` has all nine jobs
-queued. Earlier draft production `41071247986` was skipped, not validated.
+log audit. PR #230 is ready; final production `41075128588` has begun assigning runners; all nine jobs remain required. Earlier draft production `41071247986` was skipped, not validated.
 
 Earlier production `41068200453` at `570b777a` continues for complete-log audit.
 Documentation `41068200448`, benchmarks (2 tests/2 summaries) and ARM macOS
-ownership (364/127) and regular macOS (627/132, plus 12 SDK/terminal tests)
-pass with complete audits. Regular macOS also passes all 40 clock controls. Both Linux clock preflights failed:
+ownership and regular jobs on both macOS architectures pass with complete
+audits: 364/127 per ownership host and 627/132 plus 12 SDK/terminal tests per
+regular host. Regular macOS also passes all 40 clock controls. Both Linux clock preflights failed:
 the workflow supplied an unset `$CC`. The current repair names GCC/Clang explicitly,
 rejects an empty compiler argument and uploads a failed clock log immediately.
 Other jobs have no reported failures yet; audit every completed target and warning.
@@ -131,3 +131,19 @@ implementation tasks and pending protocol choices. C/Rust peers pass 192 guarded
 --cc clang --rustc rustc`, exit 0, 2.31 seconds). No timing experiment has been
 run or declared accepted. After #230, add the fwp harness and cross-checks,
 separate storage/phase observations, then freeze the complete timing protocol. Preserve this work and finish #230 first.
+
+## Buffer harness follow-up
+
+Preparation commit `93be9909baf2f453cbba58bea909491b1445e1ee` saves the C/Rust
+peers and checked task list. The new `check-unique-buffer-native.py` uses the
+verified ARM package at `/private/tmp/fwp-230-compiler-arm-570b/fwp-macos-arm64/fwp`.
+Its compiler/runtime/library/build inputs equal this branch; no local compiler
+build ran. The package manifest/hash were checked before execution.
+
+The first local check (`/private/tmp/fwp-buffer-native-checks-1`) exposed a
+harness-only mistake: it counted unique markers in every export. Restricting the
+check to the selected function fixes it. The repaired check retained all commands
+and generated sources in `/private/tmp/fwp-buffer-native-checks-2`; 28 interpreter
+comparisons and 56 native O1/O2 executions agree. Guard exit 0, 5.95 seconds,
+2.61 CPU seconds. No performance observations collected. GCC and the remaining
+phase/storage instrumentation are still required.
