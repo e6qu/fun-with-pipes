@@ -1,4 +1,4 @@
-static uint64_t bench_clock(void){struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);return (uint64_t)t.tv_sec*1000000000+(uint64_t)t.tv_nsec;}
+static uint64_t bench_clock(void){struct timespec t;if (clock_gettime(CLOCK_MONOTONIC, &t) != 0) { fputs("clock_gettime failed\n", stderr); exit(1); }return (uint64_t)t.tv_sec*1000000000+(uint64_t)t.tv_nsec;}
 static size_t bench_initial_charge;
 static size_t bench_peak_charge;
 static void bench_sample_live(void){

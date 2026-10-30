@@ -229,6 +229,14 @@ printing with a checksum. They are distinct experiments, not successive universa
 overhead figures. The [report guide](measurements/README.md#numerical-applications)
 keeps those differences and all rejected results explicit.
 
+Benchmark timer failures must stop the program before a timestamp is used.
+The kernel and map timers now check `clock_gettime`; the related pipe test helper
+uses the same rule. [Executable controls](../scripts/check-measurement-clocks.py)
+compile the five actual helpers at O1/O2 and inject valid timestamps, failure with
+and without a stored timestamp, and a deliberately missing error check. This
+repairs an error path; it does not explain or accept the recorded timing variation.
+Historical binaries and observations remain unchanged.
+
 ## Understanding memory measurements
 
 The more focused reports also count memory operations. These quantities answer

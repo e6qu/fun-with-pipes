@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** publish and verify the grouped file-boundary/documentation PR from
-`file-boundary-portability`. Run one complete final-head matrix, audit every job
+**Next:** verify the consolidated final head of [PR #230](https://github.com/e6qu/fun-with-pipes/pull/230)
+on `file-boundary-portability`. Run one complete final-head matrix, audit every job
 and fix any failure before squash-merging. Use one subject of at most 80
 characters and an empty body. Then continue the numerical and comparison work
 in [PLAN.md](../PLAN.md). Keep one active PR.
@@ -9,9 +9,9 @@ in [PLAN.md](../PLAN.md). Keep one active PR.
 ## Current batch
 
 Worktree `/private/tmp/fwp-file-boundary-portability`, branch
-`file-boundary-portability`. Code source `c69b9b91`; later commits update docs and
-integrate the verified #229 squash. No compiler/runtime/library/build input changes
-are in this batch. The PR description is `/private/tmp/fwp-file-portability-pr.md`.
+`file-boundary-portability`. File-boundary source `c69b9b91` passes the focused checks below. The batch also
+repairs five unchecked clock reads in measurement/pipe-test helpers and integrates
+the verified #229 squash. No compiler/runtime/library/build input changes are in this batch. The PR description is `/private/tmp/fwp-file-portability-pr.md`.
 
 [File-boundary portability](measurements/file-boundary-portability.md) records
 three existing targets now covering Windows file errors, borrowed stream owners
@@ -34,6 +34,22 @@ all eight milestone anchors and acceptance limits. The benchmark guide identifie
 specific missing ownership comparisons, links current numerical measurements and
 distinguishes descriptive timings from fixed performance gates. Historical samples
 remain unchanged. The #229 delivery record replaces its old pending directions.
+
+## Clock-helper repair and consolidated gates
+
+Source review found unchecked `clock_gettime` results in both kernel timer
+fixtures, both map timing scripts and the pipe ownership probe. All five now
+report failure and exit before reading the timestamp. The production runtime
+already checks clock failures. This does not diagnose the earlier numerical noise.
+`scripts/check-measurement-clocks.py --cc clang` passes 40 executable O1/O2
+checks locally: success, failure with/without a stored timestamp and deliberate
+error-check omission. The broken control always receives initialized data.
+Production Linux/GCC and regular macOS/Clang now run the same checks.
+
+Initial #230 production `41066578148` and documentation `41066578177` were still
+queued with no failures when cancelled to include this repair in one final batch.
+Record replacement run IDs after publishing the consolidated head. Audit every
+completed target and warning before any repair push; keep one active PR.
 
 ## Latest verified delivery
 

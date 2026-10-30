@@ -31,7 +31,7 @@ fn pipe_transports_release_fds_and_complete_mappings() {
 #include <dirent.h>
 static const int fwp_static_memory = 0;
 static int64_t fwp_now_ns(void) {
-    struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t);
+    struct timespec t; if (clock_gettime(CLOCK_MONOTONIC, &t) != 0) { fputs("clock_gettime failed\n", stderr); exit(1); }
     return (int64_t)t.tv_sec * 1000000000 + t.tv_nsec;
 }
 "#;
