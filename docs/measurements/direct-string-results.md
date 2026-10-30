@@ -6,14 +6,15 @@ It extends [the current word-frequency baseline](wordfreq-current.md); it change
 no existing derivative or numerical-kernel timing limit. The first candidate is
 rejected by all four timing sessions. The second candidate reuses unique storage
 under a protocol published before implementation; it also misses timing acceptance
-in all four sessions. The third, byte-search candidate passes all four measurement sessions; final
-production validation remains required before delivery. The sections below distinguish all three experiments.
+in all four sessions. The third, byte-search candidate passes all four measurement
+sessions and complete platform delivery in [#229](../roadmap-history.md#string-costs-and-application-cleanup-pr-229).
+The sections below distinguish all three experiments.
 
 ## Current result: byte search with unique storage
 
 Source `afbafef8` passes the predeclared timing, storage and representation limits
-in four qualified sessions. This is measured qualification, not final platform
-acceptance. [The complete archive](byte-search-artifacts-2026-10-30.json) retains
+in four qualified sessions. Complete platform acceptance is separately verified
+in #229 at `8d908e0e`; its compiler/runtime/library/build inputs are unchanged. [The complete archive](byte-search-artifacts-2026-10-30.json) retains
 all 74,040 subprocess observations, source/native-image bytes, profiles and logs.
 
 | Session | Large-input candidate/reference | Time reduction | Candidate/C | Candidate/Rust |
@@ -179,10 +180,6 @@ frame change. Introduce no recursion or dynamic stack allocation; no existing
 reported frame may grow by more than 256 bytes, and the largest frame must not
 grow. These are representation tradeoff limits, not runtime speed evidence.
 
-Publish the complete focused evidence, then group the change with its tests and
-documentation in the next PR after application validation. Run the full final-head
-matrix once the group is ready. Preserve PR #228's running head meanwhile.
-
 ## Implementation and checks
 
 `089465bb` implements direct construction without changing primitive contracts.
@@ -243,8 +240,8 @@ The second match scan is additional work; these timings do not isolate its cost.
 
 ## Second candidate: reuse non-growing unique strings
 
-Protocol `ebd8f46d` was published before this implementation. The source and
-controls are now implemented; new native/WASI and timing results are pending.
+Protocol `ebd8f46d` was published before this implementation. Native/WASI checks
+pass, but all four timing sessions below reject its speed claim.
 Keep the original reference bodies,
 input files, qualified CPUs, settings, two sessions per architecture, timing
 schedule and all existing acceptance limits. Do not retry the first candidate
@@ -331,12 +328,12 @@ run `41038341027` passes 18 integration tests, 224 library tests and 20 runner
 controls with a complete log audit. All 162 saved probes and 30 native image
 headers/hashes pass independent inspection. Four measurements in `41039113227`
 and `41040046127` qualify the frozen branch `byte-search-measurements`; the
-complete final-head platform matrix remains required. Keep both earlier rejected experiments,
+complete final-head platform matrix passes in #229. Keep both earlier rejected experiments,
 the original reference bodies, inputs, CPUs/toolchains, four-session schedule and
 all existing timing, allocation and representation limits. Do not change the
 required 5% gain or treat either earlier allocation saving as timing acceptance.
 
-`replace` currently calls a general substring loop even for one-byte patterns.
+Before this candidate, `replace` called a general substring loop even for one-byte patterns.
 The word-frequency application removes commas and periods: 8,192/131,072 calls
 for the two inputs, confirmed by its raw operation counters. Counting only each
 call's first search over the retained inputs gives 75,360/1,205,856 byte comparisons
@@ -356,9 +353,6 @@ source-alias controls. Retain the unique/shared/growing storage rules, allocatio
 failure and cancellation tests and all size-boundary exits. `memchr` must never
 read beyond the valid remaining input, including the empty suffix after a match.
 
-Run a focused production GCC native suite before measuring. Defer repetition of
-the other platform suites to the complete final matrix after this implementation
-batch; retain the ongoing WASI result with its actual source identity. Require
-new final-head native/WASI coverage before accepting the combined change. Fewer
+The combined delivery passes its final-head native/WASI checks in #229. Fewer
 source-loop comparisons alone are not success: all four timings must meet the
 same published budgets, with code/stack and actual memory costs retained.

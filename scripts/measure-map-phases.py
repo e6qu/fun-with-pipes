@@ -14,7 +14,7 @@ def instrument(code):
     declaration = 'typedef uint64_t V;'
     assert code.count(declaration) == 1
     code = code.replace(declaration, declaration + r'''
-static uint64_t map_probe_now(void) { struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts); return (uint64_t)ts.tv_sec*1000000000ULL+(uint64_t)ts.tv_nsec; }
+static uint64_t map_probe_now(void) { struct timespec ts; if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) { fputs("clock_gettime failed\n", stderr); exit(1); } return (uint64_t)ts.tv_sec*1000000000ULL+(uint64_t)ts.tv_nsec; }
 static uint64_t map_probe_stamp(const char *stage, uint64_t before, size_t n, const void *a, const void *b) {
  uint64_t after=map_probe_now();
  fprintf(stderr,"{\"stage\":\"%s\",\"ns\":%llu,\"n\":%zu,\"a\":%llu,\"b\":%llu}\n",stage,(unsigned long long)(after-before),n,(unsigned long long)(uintptr_t)a,(unsigned long long)(uintptr_t)b);

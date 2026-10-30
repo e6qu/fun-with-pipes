@@ -1,6 +1,6 @@
 # File-read allocation failures
 
-**Focused ARM64 macOS and AMD64 Linux checks pass; complete platform verification is pending.** These controls extend the
+**Verified across the complete native production matrix in #229.** These controls extend the
 [application suite](../application-acceptance.md) beyond directory allocation
 failures. They are cleanup tests, not timing measurements or C/Rust comparisons.
 
@@ -54,5 +54,7 @@ also passes 11 tests/three targets at the same source. Its full log and all 40
 saved boundary executions pass the same independent audit, including native
 AMD64 headers and exact omitted-cleanup controls. Artifact `12973978657` retains
 the evidence. The admission inventory accepts 82 programs and records its three
-expected compile-time failures. Complete final-head platform coverage remains
-required before delivery.
+expected compile-time failures. Complete final-head platform coverage then passes
+at `8d908e0e` in [#229](../roadmap-history.md#string-costs-and-application-cleanup-pr-229),
+including all six native hosts. The delivery record identifies the tested and
+merged trees, audited logs and all required gates.

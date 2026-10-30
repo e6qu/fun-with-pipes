@@ -18,7 +18,7 @@ def instrument_queries(code):
     code = code.replace(declaration, declaration + r'''
 static uint64_t map_work_build_ns;
 static unsigned map_work_build_count;
-static uint64_t map_work_now(void) { struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts); return (uint64_t)ts.tv_sec*1000000000ULL+(uint64_t)ts.tv_nsec; }
+static uint64_t map_work_now(void) { struct timespec ts; if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) { fputs("clock_gettime failed\n", stderr); exit(1); } return (uint64_t)ts.tv_sec*1000000000ULL+(uint64_t)ts.tv_nsec; }
 ''')
     table = re.findall(r'/\* table : Map\[I64, I64\] \*/\nstatic V (f\d+)\(void\)', code)
     assert len(table) == 1, 'expected the maintained benchmark table'

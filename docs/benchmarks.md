@@ -11,8 +11,8 @@ A faster new fwp build does not establish parity with another language.
 |---|---|---|
 | How long does a complete program take versus C/Rust? | [Seven checked-arithmetic peers](#fwp-compared-with-c-and-rust) | Includes startup, algorithms, storage and output; not isolated compiler overhead |
 | Where do the CPU benchmark gaps occur? | [Calculation, startup and output protocol](measurements/cpu-phases.md) | Diagnostic clocks change code; retain ordinary timings and do not infer a speedup from phase observations |
-| What do numeric kernels cost? | [Array and matrix protocol](measurements/numerical-kernels.md) | Separates calculation from construction/cleanup; excludes process startup |
-| What does differentiation add? | [Four-way descent comparison](measurements/descent-peers.md) | Compare automatic and explicit fwp derivatives first; C/Rust use explicit formulas |
+| What do numeric kernels cost? | [Current array and matrix protocol](measurements/kernel-baselines.md) | Separates calculation from construction/cleanup; excludes process startup |
+| What does differentiation add? | [Current descent comparison](measurements/descent-costs.md) | Compare automatic and explicit fwp derivatives first; C/Rust use explicit formulas |
 | Did an ownership change reduce work? | [Ownership measurements](measurements/README.md#ownership-and-storage) | Paired counts/bytes; a retain saved is not a measured speedup |
 | Does a service release completed work? | [API memory](measurements/http-application-memory.md) | Samples between request groups; final process cleanup alone is insufficient |
 | Which experiments failed? | [Rejected or inconclusive experiments](measurements/README.md#rejected-or-inconclusive-experiments) | Slower results and noise controls remain part of the evidence |
@@ -40,23 +40,25 @@ that still needs a new measurement run.
 
 ## Planned ownership comparisons
 
-These four comparisons belong to plan A/B; no new measurements are claimed here.
-The [ownership direction](gc-removal-design.md) explains why each matters.
+These comparisons belong to plan B1/B2. Compiler improvements and their ownership
+checks already exist; the table identifies which peer comparisons still need
+work. The [ownership direction](gc-removal-design.md) explains the lifetime rules.
 
-| Workload | Equivalent C/Rust work | Question |
+| Workload | Existing evidence | Remaining comparison work |
 |---|---|---|
-| Unique numeric buffer | One owned buffer, borrowed by helpers, released on every exit | Can fwp eliminate the count field, count updates and uniqueness checks? |
-| Returned partial application | Callable value with the same captured values and lifetime | What storage, dispatch and ownership cost survives specialization? |
-| Subscription with weak back-link | Same registration, expiration, active-call and cancellation rules | What do weak metadata, acquisition and teardown cost? |
-| Recursive parser workspace | Arena builds/walks the same expression graph and releases it per invocation | What does grouped ownership save, and how much dead storage stays until scope exit? |
+| Unique numeric buffer | [A5](measurements/unique-array-storage.md) removes selected count slots and checks local/shared/callback paths at lengths 0, 16 and 4,096; these are operation counts, not timing | Add C/Rust peers with one owned buffer borrowed by helpers and released on every exit. Compare construction, reads and release; include a larger declared size and distinguish payload from allocator metadata. |
+| Returned partial application | [F1](functional-costs.md#function-call-pairs) counts known calls versus exported callable values at inputs 32/128 | Add C/Rust callable peers with the same captures, escaped lifetime and number of calls. Measure construction, invocation and destruction; distinguish direct calls from required indirect dispatch. |
+| Subscription with weak back-link | [Weak-link semantics](gc-removal-design.md) and lifetime tests cover registration, expiration and cleanup | Add explicit C/Rust registrations with the same active-call and cancellation rules. Measure weak metadata allocation, live/expired acquisition, callback work and teardown separately. |
+| Recursive parser workspace | [A6](measurements/parser-workspace.md) already compares all three languages at 31/511/8,191 balanced nodes and 127 left-nested nodes, with phase timings and storage observations | Preserve those results. Complete the broader memory accounting (reserved/committed storage and peer transient peaks) and Rust stack observations before claiming every B1 field; current reported capacities are not process memory. |
 
 Measure construction, useful work and cleanup separately and together at small,
 cache-sized and larger inputs. Match checked arithmetic and lifetime behavior;
 report representation differences, compiler/flags/host, repeated elapsed times,
 allocations, count/weak operations, peak live bytes, committed/reserved memory,
 binary size and stack use. Count-instrumented timings are not production timings.
-Existing reports do not provide all these observations; add them before claiming
-the corresponding comparison complete.
+The missing fields above keep these broader comparisons open. Declare each
+measurement protocol before execution; retain existing results at their original
+revisions instead of presenting them as current-code measurements.
 
 Measure the ownership-analysis pass separately from specialization, C generation
 and C compilation on N/2N/4N queues, captures, recursive calls and pipelines.
@@ -183,7 +185,7 @@ EPYC 9V45 (AMD64) and Neoverse-N2 (ARM64), with GCC 13.3.0 and Rust 1.99.1.
 It retains all seven programs, raw samples, code sizes, compilation times and
 separate memory observations. It is not a measurement of today's checkout.
 
-Two remaining gaps illustrate why each baseline matters:
+These historical rows illustrate why each baseline matters:
 
 | Work | Host | Extra time vs C | Extra time vs Rust |
 |---|---|---:|---:|
@@ -191,6 +193,10 @@ Two remaining gaps illustrate why each baseline matters:
 | Same loop | ARM64 | −25.7% | +14.7% |
 | Direct decimal character counting (`text-length`) | AMD64 | +58.4% | −7.9% |
 | Same counting work | ARM64 | +93.9% | +6.4% |
+
+For later measured revisions, use the [repeated CPU baseline](measurements/cpu-baselines.md)
+and [accepted decimal-counting results](measurements/decimal-count.md). Their
+ratios belong to their named hosts and cannot be spliced into the older table.
 
 The `strings` comparison has a large fwp advantage because fwp eliminates
 formatting while those C/Rust peers still construct text. `text-length` supplies
@@ -201,18 +207,35 @@ sessions does not isolate an ARC or compiler speedup.
 
 ## Numerical workloads compared with C and Rust
 
-The [array/matrix report](measurements/numerical-kernels.md) gives exact shapes,
-input formulas, reduction order and both kernel-only and allocation-inclusive
-timers. Near-C arithmetic time can coexist with much slower construction and
-cleanup. It is not a comparison with optimized BLAS or a vendor math library.
+The [current kernel protocol](measurements/kernel-baselines.md) covers map/reduce
+at 65,537/262,145 elements and two matrix products, 65×67 by 67×63 and
+257×259 by 259×255. It records exact input formulas, ordered calculations and
+separate computation and allocation-inclusive timers. One AMD small-array
+identical-copy control differs by 3.08%, above its 2% limit. The overall baseline
+is therefore incomplete. Typed loop-state improvements have correctness evidence,
+but no accepted numerical speed claim. These peers are not optimized BLAS.
 
-The descent reports distinguish four forms: general reverse-mode AD in fwp,
-a programmer-written fwp derivative, and explicit C and Rust derivatives.
-Only the first records and traverses a derivative tape. Later reports change
-list/array storage, borrow captures, repeat complete solves or replace printing
-with a shared checksum consumer. Those are different experiments, not successive
-universal overhead figures. See [the ordered report guide](measurements/README.md#numerical-applications)
-for the differences, rejected shortcuts and inconclusive measurements.
+The [current derivative comparison](measurements/descent-costs.md) uses Rosenbrock
+descent with 3, 33 and 129 coordinates. Automatic differentiation records arithmetic
+and walks the record backwards; an explicit derivative calculates a formula
+written by the programmer. Compare those two fwp forms before comparing them
+with handwritten C/Rust. Inputs, complete outputs, update counts and memory
+observations are retained. [Capture binding](measurements/eager-captures.md)
+improves updated solves in its initial sessions, but a repaired-source zero-update
+recheck exceeds its 2% regression limit. D2 remains open.
+
+Older reports change list/array storage, borrow captures, repeat solves or replace
+printing with a checksum. They are distinct experiments, not successive universal
+overhead figures. The [report guide](measurements/README.md#numerical-applications)
+keeps those differences and all rejected results explicit.
+
+Benchmark timer failures must stop the program before a timestamp is used.
+The kernel and map timers now check `clock_gettime`; the related pipe test helper
+uses the same rule. [Executable controls](../scripts/check-measurement-clocks.py)
+compile the five actual helpers at O1/O2 and inject valid timestamps, failure with
+and without a stored timestamp, and a deliberately missing error check. This
+repairs an error path; it does not explain or accept the recorded timing variation.
+Historical binaries and observations remain unchanged.
 
 ## Understanding memory measurements
 
@@ -229,9 +252,11 @@ different questions:
 - **Managed storage:** language objects tracked by the runtime. Some reports
   count numerical tape buffers separately. Separate peak values may occur at
   different times and must not be added as a measured simultaneous peak.
-- **Retains/releases:** updates to owning references. **Collections:** runs of
-  the tracing garbage collector. Zero collections in one tested program is not
-  proof that every program can avoid collection.
+- **Retains/releases:** updates to owning references. The final release can
+  destroy an object; other releases only remove an owner.
+- **Historical collection counts:** runs of the former tracing collector. Current
+  fwp has no tracing collector or collection counter; old zeros did not prove
+  its absence.
 
 A *control* is a deliberately changed implementation used for comparison. For
 example, disabling one optimization in the current compiler isolates that
@@ -312,8 +337,10 @@ A reproducible result needs this record:
 For a new claim, state both implementations, inputs, algorithms, compiler settings,
 hardware, timing boundary and memory-counter scope. Keep raw samples and inspect
 whether the generated program really does the work being claimed. Report slower
-cases and extra storage too. Correct output is required; noisy shared-runner
-elapsed times are not pass/fail thresholds. [Delivery history](roadmap-history.md)
+cases and extra storage too. Correct output is required. The descriptive seven-program snapshot sets no
+speed acceptance threshold. Dedicated optimization experiments freeze their
+limits before measuring a candidate; a failed identical-code control makes the
+result inconclusive rather than waiving those limits. [Delivery history](roadmap-history.md)
 records which source versions completed the required tests.
 
 ## Historical measurements

@@ -160,7 +160,10 @@ GCC/Clang `__may_alias__` annotation; ordinary strict alias analysis stays enabl
 elsewhere. Byte reinterpretation and packed loads use `memcpy`. Matching offsets
 alone do not make casts between unrelated C structure types safe.
 
-Native errors use `setjmp`/`longjmp` after releasing pending owners. Changed
+Native errors use `setjmp`/`longjmp` after releasing pending owners. Use `setjmp`
+directly as the `if` condition (or compare it with zero); initializing a variable
+from its return value is not a permitted C context. See
+[C §7.13.1.1](https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf). Changed
 non-volatile automatic objects have indeterminate values after such a jump, so
 error/type fields and changing task-scope child metadata are volatile where needed.
 Unchanged links need not be. An empty callback argument slice may be null; cleanup

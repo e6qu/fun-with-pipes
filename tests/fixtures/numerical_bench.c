@@ -7,7 +7,7 @@
 #define PROFILE 0
 #endif
 static uint64_t requested,calls,live_bytes,peak_bytes;
-static uint64_t now_ns(void){struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);return (uint64_t)t.tv_sec*1000000000+(uint64_t)t.tv_nsec;}
+static uint64_t now_ns(void){struct timespec t;if (clock_gettime(CLOCK_MONOTONIC, &t) != 0) { fputs("clock_gettime failed\n", stderr); exit(1); }return (uint64_t)t.tv_sec*1000000000+(uint64_t)t.tv_nsec;}
 static void *allocate(size_t n){void *p=malloc(n);if(!p)abort();if(PROFILE){calls++;requested+=n;live_bytes+=n;if(live_bytes>peak_bytes)peak_bytes=live_bytes;}return p;}
 static void release(void *p,size_t n){if(PROFILE)live_bytes-=n;free(p);}
 static uint64_t bits(double x){uint64_t b;memcpy(&b,&x,8);return b;}

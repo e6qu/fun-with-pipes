@@ -75,6 +75,18 @@ jobs:
           brew install openssl@3
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - name: Measurement clock success and failure controls
+        id: clock_controls
+        run: |
+          set -o pipefail
+          python3 scripts/check-measurement-clocks.py --cc clang 2>&1 | tee "$RUNNER_TEMP/fwp-clock-controls.log"
+      - name: Publish failed clock controls before long tests
+        if: ${{ !cancelled() && steps.clock_controls.outcome == 'failure' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: clock-controls-${{ runner.os }}-${{ runner.arch }}
+          path: ${{ runner.temp }}/fwp-clock-controls.log
+          if-no-files-found: error
       - name: Generated standard-library docs preflight
         run: |
           CARGO_MANIFEST_DIR="$PWD" rustc --test tests/stdlib_doc.rs -o "$RUNNER_TEMP/fwp-stdlib-doc-check"
@@ -387,6 +399,18 @@ jobs:
         run: sudo env DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o DPkg::Lock::Timeout=60 install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user musl-tools
       - name: binaryen's wasm-opt (`--wasm-async=asyncify`; tests skip without it)
         run: npm install -g binaryen
+      - name: Measurement clock success and failure controls
+        id: clock_controls
+        run: |
+          set -o pipefail
+          python3 scripts/check-measurement-clocks.py --cc gcc 2>&1 | tee "$RUNNER_TEMP/fwp-clock-controls.log"
+      - name: Publish failed clock controls before long tests
+        if: ${{ !cancelled() && steps.clock_controls.outcome == 'failure' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: clock-controls-${{ runner.os }}-${{ runner.arch }}
+          path: ${{ runner.temp }}/fwp-clock-controls.log
+          if-no-files-found: error
       - name: Generated standard-library docs preflight
         run: |
           CARGO_MANIFEST_DIR="$PWD" rustc --test tests/stdlib_doc.rs -o "$RUNNER_TEMP/fwp-stdlib-doc-check"
