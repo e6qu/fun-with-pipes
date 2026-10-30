@@ -112,7 +112,7 @@ def main():
     args.output.write_text(json.dumps(report, indent=2) + '\n')
     if failures:
         raise SystemExit('Host rejected before building/timing:\n' + '\n'.join(failures))
-    print('Qualified native derivative host:', actual)
+    print('Qualified native measurement host:', actual)
 
 
 if __name__ == '__main__':

@@ -10,8 +10,9 @@ from pathlib import Path
 import platform
 import re
 import statistics
-import subprocess
 import time
+
+from process_wait import run_capture
 
 ROOT = Path(__file__).resolve().parent.parent
 PROFILE_SPEC = importlib.util.spec_from_file_location(
@@ -97,8 +98,9 @@ def main():
     def run(command, input_path, env):
         command = list(map(str, command))
         with input_path.open('rb') as source:
-            result = subprocess.run(command, stdin=source, capture_output=True,
-                                    env=env, cwd=ROOT, timeout=args.timeout)
+            result = run_capture(command, timeout=args.timeout,
+                         env=env, cwd=ROOT, input_data=None, input_stream=source,
+                         text=False, encoding='utf-8', check=False)
         if result.returncode:
             raise RuntimeError(f'{command}: {result.returncode}: '
                                + result.stderr.decode(errors='replace'))

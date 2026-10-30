@@ -11,6 +11,8 @@ import statistics
 import subprocess
 import time
 
+from process_wait import run_capture
+
 
 def assess(case, budgets):
     """Recompute the decision from raw samples; failed controls are inconclusive."""
@@ -68,8 +70,9 @@ def main():
     def run(command):
         started = time.perf_counter()
         try:
-            out = subprocess.run(list(map(str, command)), env=environment,
-                                 capture_output=True, text=True, timeout=args.timeout)
+            out = run_capture(list(map(str, command)), timeout=args.timeout,
+                      env=environment, cwd=None, input_data=None, input_stream=None,
+                      text=True, encoding='utf-8', check=False)
         except subprocess.TimeoutExpired as error:
             commands.append({"command": list(map(str, command)), "timeout": args.timeout,
                              "seconds": time.perf_counter() - started})

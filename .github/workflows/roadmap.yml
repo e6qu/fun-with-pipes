@@ -28,6 +28,9 @@ jobs:
         run: |
           CARGO_MANIFEST_DIR="$PWD" CARGO_BIN_EXE_fwp="$PWD/target/debug/fwp" rustc --edition=2021 --test tests/examples.rs -o "$RUNNER_TEMP/fwp-tutorial-doc-check"
           "$RUNNER_TEMP/fwp-tutorial-doc-check" --exact tutorial_readmes_match_their_programs
+      - name: Measured child deadlines and polling control
+        timeout-minutes: 2
+        run: python3 scripts/test-process-wait.py -v
       - name: Local guard sampling integration checks
         run: python3 scripts/test-local-guard.py
       - name: Native test coverage and failure propagation
@@ -46,6 +49,11 @@ jobs:
         run: python3 scripts/test-mutual-recursion.py
       - name: Measurement clock success and failure controls
         run: python3 scripts/check-measurement-clocks.py --cc gcc
+      - name: Buffer comparison schedule and compiler-report controls
+        run: |
+          python3 scripts/test-unique-buffer-baselines.py
+          python3 scripts/test-buffer-program-records.py
+          python3 scripts/test-buffer-processes.py
       - name: Kernel result oracle and scheduling controls
         run: python3 scripts/test-numerical-baselines.py
       - name: Timing diagnostic observation and output controls

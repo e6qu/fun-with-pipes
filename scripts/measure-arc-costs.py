@@ -9,7 +9,8 @@ import os
 from pathlib import Path
 import platform
 import re
-import subprocess
+
+from process_wait import run_capture
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -261,8 +262,9 @@ def main():
         command = list(map(str, command))
         commands.append(command)
         env = dict(environment, FWP_NO_OPT='1') if raw else environment
-        actual = subprocess.run(command, input=data, capture_output=True, env=env,
-                                cwd=ROOT, timeout=args.timeout)
+        actual = run_capture(command, timeout=args.timeout,
+                     env=env, cwd=ROOT, input_data=data, input_stream=None,
+                     text=False, encoding='utf-8', check=False)
         if actual.returncode:
             raise RuntimeError(f'{command}: {actual.returncode}\n{actual.stderr.decode(errors="replace")}')
         return actual

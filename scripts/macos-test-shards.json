@@ -1,5 +1,6 @@
 {
   "regular": [
+    "wasm_arc",
     "rest",
     "golden_run",
     "arc_corpus",
@@ -111,7 +112,6 @@
     "file_construction_disposal",
     "file_construction_ownership",
     "stack_match_ownership",
-    "wasm_arc",
     "channel_cycle_ownership",
     "lsp",
     "lint",

@@ -11,6 +11,8 @@ import statistics
 import subprocess
 import time
 
+from process_wait import run_capture
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -56,7 +58,9 @@ def main():
                        str(path / 'program.fwp'), '-o', str(path / 'program.c')]
             report['commands'].append(command)
             start = time.perf_counter()
-            result = subprocess.run(command, capture_output=True, env=environment, timeout=args.timeout)
+            result = run_capture(command, timeout=args.timeout,
+                         env=environment, cwd=None, input_data=None, input_stream=None,
+                         text=False, encoding='utf-8', check=False)
             elapsed = time.perf_counter() - start
             assert result.returncode == 0 and not result.stdout and not result.stderr, result
             code = (path / 'program.c').read_text()

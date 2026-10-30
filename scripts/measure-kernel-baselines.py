@@ -13,6 +13,8 @@ import statistics
 import subprocess
 import time
 
+from process_wait import run_capture
+
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('numerical_baselines', ROOT / 'scripts/numerical-baselines.py')
 BASELINE = importlib.util.module_from_spec(SPEC)
@@ -140,7 +142,9 @@ def main():
         started = time.perf_counter_ns()
         timeout = None
         try:
-            result = subprocess.run(list(map(str, command)), env=environment, capture_output=True, timeout=args.timeout)
+            result = run_capture(list(map(str, command)), timeout=args.timeout,
+                         env=environment, cwd=None, input_data=None, input_stream=None,
+                         text=False, encoding='utf-8', check=False)
         except subprocess.TimeoutExpired as error:
             timeout = error
             result = subprocess.CompletedProcess(command, 124, error.stdout or b'', error.stderr or b'')

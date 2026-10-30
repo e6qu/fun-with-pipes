@@ -8,7 +8,8 @@ import os
 from pathlib import Path
 import platform
 import re
-import subprocess
+
+from process_wait import run_capture
 
 ROOT = Path(__file__).resolve().parent.parent
 profile_spec = importlib.util.spec_from_file_location(
@@ -41,8 +42,9 @@ environment.update(FWP_LTO='0', LC_ALL='C')
 
 
 def run(command):
-    result = subprocess.run(list(map(str, command)), env=environment,
-                            capture_output=True, timeout=120)
+    result = run_capture(list(map(str, command)), timeout=120,
+                 env=environment, cwd=None, input_data=None, input_stream=None,
+                 text=False, encoding='utf-8', check=False)
     assert result.returncode == 0, (command, result.returncode, result.stderr)
     return result
 

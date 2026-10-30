@@ -1,0 +1,3266 @@
+{
+  "source": "fadebf713e0854d6d132fc6e3666f275b214fc17",
+  "scope": "Descriptive ordinary-program baselines; failed copy controls remain failed.",
+  "sessions": [
+    {
+      "machine": "aarch64",
+      "session": 1,
+      "run": 41103040883,
+      "job": 124224640595,
+      "artifact": 13000780683,
+      "archiveSha256": "8d2beec5e016c60db7e0795051c1086d469f948572123341a1b6ed55c35418f7",
+      "files": 150,
+      "observations": 32832,
+      "maximumResidentObservations": 72,
+      "host": {
+        "system": "Linux",
+        "machine": "aarch64",
+        "cpu": "Neoverse-N2",
+        "processors": 4,
+        "cVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+        "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+      },
+      "cases": {
+        "unique-0": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 11044399.5,
+            "c-identical": 10778474.5,
+            "rust": 13568273.0,
+            "rust-identical": 14039722.0,
+            "fwp": 21230424.0,
+            "fwp-identical": 21600632.5
+          },
+          "medianRoundCpuNs": {
+            "c": 8199500.0,
+            "c-identical": 8247500.0,
+            "rust": 10781500.0,
+            "rust-identical": 10716000.0,
+            "fwp": 17655000.0,
+            "fwp-identical": 17810000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 0.9759221857195586,
+            "rust": 1.034746426461201,
+            "fwp": 1.0174376404352545
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.9222796133008409,
+            "rust": 1.5647108515578954
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "unique-16": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 21891829.5,
+            "c-identical": 21763167.5,
+            "rust": 36032940.0,
+            "rust-identical": 35679128.0,
+            "fwp": 25309821.5,
+            "fwp-identical": 26216142.5
+          },
+          "medianRoundCpuNs": {
+            "c": 20087000.0,
+            "c-identical": 20092000.0,
+            "rust": 32901000.0,
+            "rust-identical": 32877500.0,
+            "fwp": 22953500.0,
+            "fwp-identical": 22974000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 0.9941228301636462,
+            "rust": 0.9901808733897373,
+            "fwp": 1.0358090632918924
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.1561309437386218,
+            "rust": 0.702407893999213
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "unique-4096": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 12869337.0,
+            "c-identical": 13052689.5,
+            "rust": 18882859.0,
+            "rust-identical": 18756182.5,
+            "fwp": 18014634.5,
+            "fwp-identical": 17349482.5
+          },
+          "medianRoundCpuNs": {
+            "c": 10483500.0,
+            "c-identical": 10435000.0,
+            "rust": 16218000.0,
+            "rust-identical": 16140500.0,
+            "fwp": 13825500.0,
+            "fwp-identical": 13854500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0142472374450993,
+            "rust": 0.9932914554941071,
+            "fwp": 0.963077130429707
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.3998106118442621,
+            "rust": 0.9540204955192432
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "unique-262144": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 29748181.0,
+            "c-identical": 29710428.5,
+            "rust": 36890401.0,
+            "rust-identical": 34779429.5,
+            "fwp": 25917495.5,
+            "fwp-identical": 26117008.0
+          },
+          "medianRoundCpuNs": {
+            "c": 26446500.0,
+            "c-identical": 26458500.0,
+            "rust": 32215000.0,
+            "rust-identical": 32203500.0,
+            "fwp": 22633500.0,
+            "fwp-identical": 22533000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 0.9987309308088451,
+            "rust": 0.942777214593032,
+            "fwp": 1.0076979853242378
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 0.8712295887940174,
+            "rust": 0.7025539109753781
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "callback-0": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 10413522.5,
+            "c-identical": 10407407.5,
+            "rust": 12898353.5,
+            "rust-identical": 13423544.0,
+            "fwp": 19757314.0,
+            "fwp-identical": 19974121.5
+          },
+          "medianRoundCpuNs": {
+            "c": 7890000.0,
+            "c-identical": 7837000.0,
+            "rust": 10379500.0,
+            "rust-identical": 10401500.0,
+            "fwp": 16037500.0,
+            "fwp-identical": 16032000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 0.9994127827543465,
+            "rust": 1.0407176388831334,
+            "fwp": 1.0109735311186532
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.8972748174308933,
+            "rust": 1.5317702371856996
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "callback-16": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": true,
+          "medianRoundElapsedNs": {
+            "c": 21217417.5,
+            "c-identical": 21109692.0,
+            "rust": 35861893.5,
+            "rust-identical": 36128683.0,
+            "fwp": 25164723.0,
+            "fwp-identical": 24842095.5
+          },
+          "medianRoundCpuNs": {
+            "c": 19481000.0,
+            "c-identical": 19530000.0,
+            "rust": 33115500.0,
+            "rust-identical": 33140000.0,
+            "fwp": 21692000.0,
+            "fwp-identical": 21857000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 0.994922779834068,
+            "rust": 1.0074393589953636,
+            "fwp": 0.9871793740785464
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.1860408082180596,
+            "rust": 0.7017120554440328
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "callback-4096": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 12862473.0,
+            "c-identical": 13444101.5,
+            "rust": 19062230.5,
+            "rust-identical": 19274177.5,
+            "fwp": 17383733.5,
+            "fwp-identical": 17572552.0
+          },
+          "medianRoundCpuNs": {
+            "c": 10445500.0,
+            "c-identical": 10531500.0,
+            "rust": 16201500.0,
+            "rust-identical": 16202000.0,
+            "fwp": 13646500.0,
+            "fwp-identical": 13692500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.045219025921376,
+            "rust": 1.0111186883402759,
+            "fwp": 1.0108617921460887
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.3515078709980577,
+            "rust": 0.9119464534855981
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "callback-262144": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 28836297.5,
+            "c-identical": 29590420.0,
+            "rust": 35553257.5,
+            "rust-identical": 34719181.0,
+            "fwp": 26104367.5,
+            "fwp-identical": 25851716.0
+          },
+          "medianRoundCpuNs": {
+            "c": 26243500.0,
+            "c-identical": 26320000.0,
+            "rust": 32175500.0,
+            "rust-identical": 32273500.0,
+            "fwp": 22670000.0,
+            "fwp-identical": 22595500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0261518490714698,
+            "rust": 0.9765400821570288,
+            "fwp": 0.9903214854755626
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 0.9052607221852944,
+            "rust": 0.7342327914678423
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "scan-0": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 10223626.5,
+            "c-identical": 10464102.5,
+            "rust": 13653385.0,
+            "rust-identical": 13579401.5,
+            "fwp": 29701835.5,
+            "fwp-identical": 30085148.5
+          },
+          "medianRoundCpuNs": {
+            "c": 8014000.0,
+            "c-identical": 8000500.0,
+            "rust": 11056000.0,
+            "rust-identical": 11084000.0,
+            "fwp": 26076500.0,
+            "fwp-identical": 26079000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0235215948078698,
+            "rust": 0.9945813071264012,
+            "fwp": 1.0129053640472825
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 2.9052152384479224,
+            "rust": 2.1754191726081116
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "scan-16": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": true,
+          "medianRoundElapsedNs": {
+            "c": 25419548.5,
+            "c-identical": 25623101.5,
+            "rust": 37733518.0,
+            "rust-identical": 37632797.0,
+            "fwp": 204824314.0,
+            "fwp-identical": 204524864.5
+          },
+          "medianRoundCpuNs": {
+            "c": 23809500.0,
+            "c-identical": 23941500.0,
+            "rust": 35889500.0,
+            "rust-identical": 35862000.0,
+            "fwp": 202286000.0,
+            "fwp-identical": 201987000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0080077346771128,
+            "rust": 0.9973307286110985,
+            "fwp": 0.9985380178058353
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 8.057747917906568,
+            "rust": 5.428179635940651
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "scan-4096": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": true,
+          "medianRoundElapsedNs": {
+            "c": 17516969.0,
+            "c-identical": 17653311.5,
+            "rust": 22430961.5,
+            "rust-identical": 22219274.5,
+            "fwp": 186440340.5,
+            "fwp-identical": 186373193.0
+          },
+          "medianRoundCpuNs": {
+            "c": 15926500.0,
+            "c-identical": 16006500.0,
+            "rust": 20727000.0,
+            "rust-identical": 20546000.0,
+            "fwp": 184095500.0,
+            "fwp-identical": 183990500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0077834527194744,
+            "rust": 0.9905627317848145,
+            "fwp": 0.999639844575375
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 10.643413281144701,
+            "rust": 8.31174091667894
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "scan-262144": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": true,
+          "medianRoundElapsedNs": {
+            "c": 34549737.5,
+            "c-identical": 34874741.5,
+            "rust": 39149779.0,
+            "rust-identical": 39107462.5,
+            "fwp": 197668850.0,
+            "fwp-identical": 198296858.0
+          },
+          "medianRoundCpuNs": {
+            "c": 32176000.0,
+            "c-identical": 32460500.0,
+            "rust": 37148000.0,
+            "rust-identical": 36999000.0,
+            "fwp": 194560500.0,
+            "fwp-identical": 194758000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0094068442632886,
+            "rust": 0.9989191126723858,
+            "fwp": 1.0031770711470218
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 5.7212837000570556,
+            "rust": 5.049041273004376
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        }
+      },
+      "memory": [
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "c",
+          "maximumResidentKiB": 1372
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "c-identical",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "rust",
+          "maximumResidentKiB": 1680
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "rust-identical",
+          "maximumResidentKiB": 1680
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "fwp",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1400
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "c",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "c-identical",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "rust",
+          "maximumResidentKiB": 1744
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "rust-identical",
+          "maximumResidentKiB": 1680
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "fwp",
+          "maximumResidentKiB": 1400
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1400
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "c",
+          "maximumResidentKiB": 1380
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "c-identical",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "rust",
+          "maximumResidentKiB": 1800
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "rust-identical",
+          "maximumResidentKiB": 1872
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "fwp",
+          "maximumResidentKiB": 1396
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1400
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "c",
+          "maximumResidentKiB": 3452
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "c-identical",
+          "maximumResidentKiB": 3516
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "rust",
+          "maximumResidentKiB": 3900
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "rust-identical",
+          "maximumResidentKiB": 3896
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "fwp",
+          "maximumResidentKiB": 3448
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 3448
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "c",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "c-identical",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "rust",
+          "maximumResidentKiB": 1672
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "rust-identical",
+          "maximumResidentKiB": 1680
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "fwp",
+          "maximumResidentKiB": 1400
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "c",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "c-identical",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "rust",
+          "maximumResidentKiB": 1744
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "rust-identical",
+          "maximumResidentKiB": 1744
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "fwp",
+          "maximumResidentKiB": 1400
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1400
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "c",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "c-identical",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "rust",
+          "maximumResidentKiB": 1808
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "rust-identical",
+          "maximumResidentKiB": 1872
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "fwp",
+          "maximumResidentKiB": 1400
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1400
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "c",
+          "maximumResidentKiB": 3516
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "c-identical",
+          "maximumResidentKiB": 3512
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "rust",
+          "maximumResidentKiB": 3828
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "rust-identical",
+          "maximumResidentKiB": 3828
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "fwp",
+          "maximumResidentKiB": 3448
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 3432
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "c",
+          "maximumResidentKiB": 1380
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "c-identical",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "rust",
+          "maximumResidentKiB": 1744
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "rust-identical",
+          "maximumResidentKiB": 1744
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "fwp",
+          "maximumResidentKiB": 1536
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1408
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "c",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "c-identical",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "rust",
+          "maximumResidentKiB": 1664
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "rust-identical",
+          "maximumResidentKiB": 1664
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "fwp",
+          "maximumResidentKiB": 1664
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1664
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "c",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "c-identical",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "rust",
+          "maximumResidentKiB": 1872
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "rust-identical",
+          "maximumResidentKiB": 1796
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "fwp",
+          "maximumResidentKiB": 1664
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1664
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "c",
+          "maximumResidentKiB": 3512
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "c-identical",
+          "maximumResidentKiB": 3512
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "rust",
+          "maximumResidentKiB": 3836
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "rust-identical",
+          "maximumResidentKiB": 3896
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "fwp",
+          "maximumResidentKiB": 3712
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 3704
+        }
+      ]
+    },
+    {
+      "machine": "aarch64",
+      "session": 2,
+      "run": 41103049899,
+      "job": 124224673013,
+      "artifact": 12999084366,
+      "archiveSha256": "130b6babc24c80b4281c534a1ed565d98ce4414c3567bec32445fc21fac86690",
+      "files": 150,
+      "observations": 32832,
+      "maximumResidentObservations": 72,
+      "host": {
+        "system": "Linux",
+        "machine": "aarch64",
+        "cpu": "Neoverse-N2",
+        "processors": 4,
+        "cVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+        "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+      },
+      "cases": {
+        "unique-0": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 11250260.0,
+            "c-identical": 11259411.0,
+            "rust": 14184500.5,
+            "rust-identical": 14617410.0,
+            "fwp": 22656453.5,
+            "fwp-identical": 22989721.0
+          },
+          "medianRoundCpuNs": {
+            "c": 8541000.0,
+            "c-identical": 8557000.0,
+            "rust": 11023000.0,
+            "rust-identical": 11100000.0,
+            "fwp": 18147000.0,
+            "fwp-identical": 18181500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0008134034235654,
+            "rust": 1.0305198974049175,
+            "fwp": 1.0147096058083407
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 2.013860435225497,
+            "rust": 1.5972683352508605
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "unique-16": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 23385392.0,
+            "c-identical": 23375911.0,
+            "rust": 37268110.0,
+            "rust-identical": 37218071.5,
+            "fwp": 27517858.0,
+            "fwp-identical": 28570832.0
+          },
+          "medianRoundCpuNs": {
+            "c": 21109000.0,
+            "c-identical": 21290000.0,
+            "rust": 34370000.0,
+            "rust-identical": 34261500.0,
+            "fwp": 24358000.0,
+            "fwp-identical": 24522500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 0.9995945759643456,
+            "rust": 0.9986573373321052,
+            "fwp": 1.0382651149664337
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.1767114273731225,
+            "rust": 0.7383754636336536
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "unique-4096": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 12889338.5,
+            "c-identical": 14249512.5,
+            "rust": 19468094.5,
+            "rust-identical": 19145438.5,
+            "fwp": 18673900.0,
+            "fwp-identical": 18165511.5
+          },
+          "medianRoundCpuNs": {
+            "c": 10804500.0,
+            "c-identical": 10853000.0,
+            "rust": 16580500.0,
+            "rust-identical": 16595500.0,
+            "fwp": 14394500.0,
+            "fwp-identical": 14380500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.1055270602133693,
+            "rust": 0.9834264211117323,
+            "fwp": 0.9727754512983362
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.4487865300457428,
+            "rust": 0.9592053295200513
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "unique-262144": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 30988087.0,
+            "c-identical": 31203131.0,
+            "rust": 37227743.0,
+            "rust-identical": 36224219.0,
+            "fwp": 28279186.5,
+            "fwp-identical": 28051128.0
+          },
+          "medianRoundCpuNs": {
+            "c": 27851000.0,
+            "c-identical": 27854000.0,
+            "rust": 34026000.0,
+            "rust-identical": 34066000.0,
+            "fwp": 24335000.0,
+            "fwp-identical": 24648500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.006939570035414,
+            "rust": 0.973043651880803,
+            "fwp": 0.9919354646216574
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 0.9125825192113344,
+            "rust": 0.7596266714315719
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "callback-0": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": true,
+          "medianRoundElapsedNs": {
+            "c": 11701829.5,
+            "c-identical": 11742852.5,
+            "rust": 14443938.0,
+            "rust-identical": 14568620.5,
+            "fwp": 21461715.5,
+            "fwp-identical": 21101364.0
+          },
+          "medianRoundCpuNs": {
+            "c": 8805500.0,
+            "c-identical": 8907000.0,
+            "rust": 11638000.0,
+            "rust-identical": 11591500.0,
+            "fwp": 17367000.0,
+            "fwp-identical": 17380000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.003505691140005,
+            "rust": 1.0086321680417072,
+            "fwp": 0.9832095668214407
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.8340478725997502,
+            "rust": 1.485863169725597
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "callback-16": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 22716960.5,
+            "c-identical": 22578868.5,
+            "rust": 36748154.5,
+            "rust-identical": 37576081.0,
+            "fwp": 27165954.5,
+            "fwp-identical": 26160574.5
+          },
+          "medianRoundCpuNs": {
+            "c": 20434000.0,
+            "c-identical": 20425500.0,
+            "rust": 34319000.0,
+            "rust-identical": 34306000.0,
+            "fwp": 23088000.0,
+            "fwp-identical": 23145000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 0.9939211938146391,
+            "rust": 1.0225297436365137,
+            "fwp": 0.9629911770631877
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.195844598136269,
+            "rust": 0.7392467695214463
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "callback-4096": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 15214112.5,
+            "c-identical": 15154016.5,
+            "rust": 22380044.0,
+            "rust-identical": 21467004.5,
+            "fwp": 20789614.5,
+            "fwp-identical": 19581440.5
+          },
+          "medianRoundCpuNs": {
+            "c": 12009000.0,
+            "c-identical": 12066500.0,
+            "rust": 18143500.0,
+            "rust-identical": 18084500.0,
+            "fwp": 15647000.0,
+            "fwp-identical": 15578500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 0.9960499831981655,
+            "rust": 0.9592029622461868,
+            "fwp": 0.9418856948982869
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.3664690924298082,
+            "rust": 0.9289353720662926
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "callback-262144": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 32800426.0,
+            "c-identical": 32422192.5,
+            "rust": 39143122.5,
+            "rust-identical": 37516407.0,
+            "fwp": 29479949.5,
+            "fwp-identical": 28896095.0
+          },
+          "medianRoundCpuNs": {
+            "c": 28870000.0,
+            "c-identical": 28972000.0,
+            "rust": 35102500.0,
+            "rust-identical": 35280500.0,
+            "fwp": 25288500.0,
+            "fwp-identical": 25085000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 0.9884686406207042,
+            "rust": 0.958441856548363,
+            "fwp": 0.9801948609172482
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 0.8987672751567312,
+            "rust": 0.7531322903531776
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "scan-0": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 11457013.0,
+            "c-identical": 11259472.5,
+            "rust": 15751544.0,
+            "rust-identical": 14702546.5,
+            "fwp": 31225576.0,
+            "fwp-identical": 30821369.5
+          },
+          "medianRoundCpuNs": {
+            "c": 8651500.0,
+            "c-identical": 8645500.0,
+            "rust": 12005000.0,
+            "rust-identical": 11917000.0,
+            "fwp": 26954500.0,
+            "fwp-identical": 27075000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 0.9827581150514536,
+            "rust": 0.933403512696914,
+            "fwp": 0.9870552748170281
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 2.725455229910274,
+            "rust": 1.9823819176075692
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "scan-16": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": true,
+          "medianRoundElapsedNs": {
+            "c": 26353613.5,
+            "c-identical": 26516023.0,
+            "rust": 38750730.0,
+            "rust-identical": 38673856.0,
+            "fwp": 205833777.5,
+            "fwp-identical": 205787121.5
+          },
+          "medianRoundCpuNs": {
+            "c": 24443500.0,
+            "c-identical": 24597500.0,
+            "rust": 36714000.0,
+            "rust-identical": 36674500.0,
+            "fwp": 203185500.0,
+            "fwp-identical": 203073500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.00616270326648,
+            "rust": 0.9980161922110886,
+            "fwp": 0.9997733316632155
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 7.810457472938198,
+            "rust": 5.311739353039284
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "scan-4096": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": true,
+          "medianRoundElapsedNs": {
+            "c": 18641410.0,
+            "c-identical": 18675231.5,
+            "rust": 23685224.0,
+            "rust-identical": 23583864.0,
+            "fwp": 188307554.0,
+            "fwp-identical": 187825372.0
+          },
+          "medianRoundCpuNs": {
+            "c": 16747500.0,
+            "c-identical": 16809500.0,
+            "rust": 21718500.0,
+            "rust-identical": 21564500.0,
+            "fwp": 185333000.0,
+            "fwp-identical": 185114000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0018143209124202,
+            "rust": 0.9957205386784604,
+            "fwp": 0.9974393910931475
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 10.101572466889575,
+            "rust": 7.950423183669279
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "scan-262144": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": true,
+          "medianRoundElapsedNs": {
+            "c": 36495117.0,
+            "c-identical": 36150371.0,
+            "rust": 41023724.0,
+            "rust-identical": 40893129.5,
+            "fwp": 200329521.5,
+            "fwp-identical": 199299283.5
+          },
+          "medianRoundCpuNs": {
+            "c": 33646000.0,
+            "c-identical": 33935500.0,
+            "rust": 38885500.0,
+            "rust-identical": 38645000.0,
+            "fwp": 196839000.0,
+            "fwp-identical": 196593500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 0.9905536403678333,
+            "rust": 0.9968166103106583,
+            "fwp": 0.994857283178805
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 5.48921439270903,
+            "rust": 4.883260269106724
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        }
+      },
+      "memory": [
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "c",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "c-identical",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "rust",
+          "maximumResidentKiB": 1744
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "rust-identical",
+          "maximumResidentKiB": 1672
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "fwp",
+          "maximumResidentKiB": 1400
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "c",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "c-identical",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "rust",
+          "maximumResidentKiB": 1680
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "rust-identical",
+          "maximumResidentKiB": 1680
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "fwp",
+          "maximumResidentKiB": 1388
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1388
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "c",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "c-identical",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "rust",
+          "maximumResidentKiB": 1808
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "rust-identical",
+          "maximumResidentKiB": 1808
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "fwp",
+          "maximumResidentKiB": 1400
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1392
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "c",
+          "maximumResidentKiB": 3504
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "c-identical",
+          "maximumResidentKiB": 3512
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "rust",
+          "maximumResidentKiB": 3832
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "rust-identical",
+          "maximumResidentKiB": 3900
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "fwp",
+          "maximumResidentKiB": 3448
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 3448
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "c",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "c-identical",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "rust",
+          "maximumResidentKiB": 1680
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "rust-identical",
+          "maximumResidentKiB": 1680
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "fwp",
+          "maximumResidentKiB": 1388
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1400
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "c",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "c-identical",
+          "maximumResidentKiB": 1368
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "rust",
+          "maximumResidentKiB": 1744
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "rust-identical",
+          "maximumResidentKiB": 1680
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "fwp",
+          "maximumResidentKiB": 1400
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1400
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "c",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "c-identical",
+          "maximumResidentKiB": 1372
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "rust",
+          "maximumResidentKiB": 1808
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "rust-identical",
+          "maximumResidentKiB": 1808
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "fwp",
+          "maximumResidentKiB": 1392
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1400
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "c",
+          "maximumResidentKiB": 3512
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "c-identical",
+          "maximumResidentKiB": 3512
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "rust",
+          "maximumResidentKiB": 3832
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "rust-identical",
+          "maximumResidentKiB": 3836
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "fwp",
+          "maximumResidentKiB": 3440
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 3448
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "c",
+          "maximumResidentKiB": 1372
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "c-identical",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "rust",
+          "maximumResidentKiB": 1744
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "rust-identical",
+          "maximumResidentKiB": 1680
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "fwp",
+          "maximumResidentKiB": 1396
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1408
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "c",
+          "maximumResidentKiB": 1372
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "c-identical",
+          "maximumResidentKiB": 1384
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "rust",
+          "maximumResidentKiB": 1744
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "rust-identical",
+          "maximumResidentKiB": 1680
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "fwp",
+          "maximumResidentKiB": 1664
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1664
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "c",
+          "maximumResidentKiB": 1372
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "c-identical",
+          "maximumResidentKiB": 1376
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "rust",
+          "maximumResidentKiB": 1800
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "rust-identical",
+          "maximumResidentKiB": 1808
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "fwp",
+          "maximumResidentKiB": 1396
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1664
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "c",
+          "maximumResidentKiB": 3516
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "c-identical",
+          "maximumResidentKiB": 3508
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "rust",
+          "maximumResidentKiB": 3900
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "rust-identical",
+          "maximumResidentKiB": 3896
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "fwp",
+          "maximumResidentKiB": 3712
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 3712
+        }
+      ]
+    },
+    {
+      "machine": "x86_64",
+      "session": 1,
+      "run": 41103040883,
+      "job": 124224640229,
+      "artifact": 12998559197,
+      "archiveSha256": "c04e79cfd7048fdbe514616b200b7d0baad13b52961bdf7450a327ef1b419989",
+      "files": 150,
+      "observations": 32832,
+      "maximumResidentObservations": 72,
+      "host": {
+        "system": "Linux",
+        "machine": "x86_64",
+        "cpu": "AMD EPYC 7763 64-Core Processor",
+        "processors": 4,
+        "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+        "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+      },
+      "cases": {
+        "unique-0": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 12984061.0,
+            "c-identical": 13196111.5,
+            "rust": 20720638.5,
+            "rust-identical": 20703414.5,
+            "fwp": 23205966.0,
+            "fwp-identical": 23817376.0
+          },
+          "medianRoundCpuNs": {
+            "c": 10590000.0,
+            "c-identical": 10661000.0,
+            "rust": 18329500.0,
+            "rust-identical": 18279000.0,
+            "fwp": 19537500.0,
+            "fwp-identical": 19610000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0163316007218388,
+            "rust": 0.9991687514841785,
+            "fwp": 1.0263471040162688
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.7872656328401415,
+            "rust": 1.1199445422495065
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "unique-16": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 17142595.5,
+            "c-identical": 18083332.5,
+            "rust": 34702468.5,
+            "rust-identical": 33454825.0,
+            "fwp": 29026482.5,
+            "fwp-identical": 28847113.0
+          },
+          "medianRoundCpuNs": {
+            "c": 15552500.0,
+            "c-identical": 15933500.0,
+            "rust": 31901000.0,
+            "rust-identical": 31866000.0,
+            "fwp": 23780500.0,
+            "fwp-identical": 23566000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0548771625626936,
+            "rust": 0.9640474135146899,
+            "fwp": 0.9938204878941154
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.6932373222012969,
+            "rust": 0.8364385519145418
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "unique-4096": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 12699763.0,
+            "c-identical": 13058489.5,
+            "rust": 21690637.0,
+            "rust-identical": 21049457.0,
+            "fwp": 21448796.5,
+            "fwp-identical": 20909711.5
+          },
+          "medianRoundCpuNs": {
+            "c": 10552000.0,
+            "c-identical": 10580500.0,
+            "rust": 19711000.0,
+            "rust-identical": 19265000.0,
+            "fwp": 14889000.0,
+            "fwp-identical": 14603000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0282467082259723,
+            "rust": 0.9704397800765372,
+            "fwp": 0.974866421992488
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.6889131316860007,
+            "rust": 0.9888504657562616
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "unique-262144": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 35371066.5,
+            "c-identical": 37457773.0,
+            "rust": 48560923.0,
+            "rust-identical": 45639083.5,
+            "fwp": 31486719.0,
+            "fwp-identical": 30468969.0
+          },
+          "medianRoundCpuNs": {
+            "c": 33310500.0,
+            "c-identical": 34677000.0,
+            "rust": 44452500.0,
+            "rust-identical": 43766500.0,
+            "fwp": 28190500.0,
+            "fwp-identical": 27652500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0589947294916877,
+            "rust": 0.9398314669595551,
+            "fwp": 0.9676768481339704
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 0.8901829126356707,
+            "rust": 0.6483962217933955
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "callback-0": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 12743783.0,
+            "c-identical": 12838861.0,
+            "rust": 20137355.0,
+            "rust-identical": 19559130.5,
+            "fwp": 24278769.5,
+            "fwp-identical": 24669295.0
+          },
+          "medianRoundCpuNs": {
+            "c": 10311000.0,
+            "c-identical": 10271500.0,
+            "rust": 17853000.0,
+            "rust-identical": 17746500.0,
+            "fwp": 19107500.0,
+            "fwp-identical": 18899000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0074607359525818,
+            "rust": 0.9712859757401109,
+            "fwp": 1.0160850614772714
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.9051461799059197,
+            "rust": 1.2056583151064277
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "callback-16": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 17117005.5,
+            "c-identical": 19719303.5,
+            "rust": 36106654.0,
+            "rust-identical": 34752595.0,
+            "fwp": 24612482.5,
+            "fwp-identical": 23726451.0
+          },
+          "medianRoundCpuNs": {
+            "c": 15435500.0,
+            "c-identical": 16246000.0,
+            "rust": 32522500.0,
+            "rust-identical": 32354500.0,
+            "fwp": 21369000.0,
+            "fwp-identical": 20910500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.1520299797765445,
+            "rust": 0.9624983527966895,
+            "fwp": 0.9640007260543507
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.437896511746754,
+            "rust": 0.6816605742531556
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "callback-4096": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 12891485.0,
+            "c-identical": 13824609.5,
+            "rust": 21295415.5,
+            "rust-identical": 21450823.5,
+            "fwp": 20506157.0,
+            "fwp-identical": 20131242.5
+          },
+          "medianRoundCpuNs": {
+            "c": 10291500.0,
+            "c-identical": 10555500.0,
+            "rust": 19279000.0,
+            "rust-identical": 19393000.0,
+            "fwp": 14672500.0,
+            "fwp-identical": 14453000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.072383010956457,
+            "rust": 1.0072977209578278,
+            "fwp": 0.9817169789541746
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.5906745421493333,
+            "rust": 0.9629376332196946
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "callback-262144": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 35033140.0,
+            "c-identical": 36428106.0,
+            "rust": 46168337.0,
+            "rust-identical": 45169977.0,
+            "fwp": 35856224.5,
+            "fwp-identical": 37516986.5
+          },
+          "medianRoundCpuNs": {
+            "c": 33303000.0,
+            "c-identical": 34253000.0,
+            "rust": 43794500.0,
+            "rust-identical": 43207500.0,
+            "fwp": 29361000.0,
+            "fwp-identical": 29009000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0398184690267558,
+            "rust": 0.9783756560259036,
+            "fwp": 1.046317257970091
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.02349445410831,
+            "rust": 0.7766410234789267
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "scan-0": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 14457833.5,
+            "c-identical": 14021470.5,
+            "rust": 21664069.0,
+            "rust-identical": 22929858.0,
+            "fwp": 29680823.0,
+            "fwp-identical": 30548076.5
+          },
+          "medianRoundCpuNs": {
+            "c": 11036000.0,
+            "c-identical": 10963500.0,
+            "rust": 18869000.0,
+            "rust-identical": 19047000.0,
+            "fwp": 26192000.0,
+            "fwp-identical": 26873000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 0.9698182303731745,
+            "rust": 1.0584280358412816,
+            "fwp": 1.0292193211758314
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 2.0529232820394565,
+            "rust": 1.370048396725472
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "scan-16": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": true,
+          "medianRoundElapsedNs": {
+            "c": 22602188.0,
+            "c-identical": 22591838.0,
+            "rust": 35729459.0,
+            "rust-identical": 35846679.0,
+            "fwp": 271111525.5,
+            "fwp-identical": 271405364.0
+          },
+          "medianRoundCpuNs": {
+            "c": 21012500.0,
+            "c-identical": 21033500.0,
+            "rust": 33967000.0,
+            "rust-identical": 33920500.0,
+            "fwp": 268461000.0,
+            "fwp-identical": 268062500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 0.999542079731396,
+            "rust": 1.0032807661599354,
+            "fwp": 1.0010838288761723
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 11.994923920639895,
+            "rust": 7.587898979942573
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "scan-4096": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": true,
+          "medianRoundElapsedNs": {
+            "c": 17641205.0,
+            "c-identical": 17737830.0,
+            "rust": 25309473.5,
+            "rust-identical": 25227418.5,
+            "fwp": 237869685.5,
+            "fwp-identical": 234088815.0
+          },
+          "medianRoundCpuNs": {
+            "c": 16077500.0,
+            "c-identical": 16082500.0,
+            "rust": 23656000.0,
+            "rust-identical": 23633500.0,
+            "fwp": 235890000.0,
+            "fwp-identical": 232252500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0054772335563245,
+            "rust": 0.9967579333485542,
+            "fwp": 0.9841052865057074
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 13.483754964584335,
+            "rust": 9.398444637736143
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "scan-262144": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 39663551.0,
+            "c-identical": 39937687.5,
+            "rust": 48450256.0,
+            "rust-identical": 48619891.0,
+            "fwp": 257319569.5,
+            "fwp-identical": 263847800.0
+          },
+          "medianRoundCpuNs": {
+            "c": 37829000.0,
+            "c-identical": 38215000.0,
+            "rust": 46448000.0,
+            "rust-identical": 46554500.0,
+            "fwp": 254237000.0,
+            "fwp-identical": 260763000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0069115470775676,
+            "rust": 1.0035012198903552,
+            "fwp": 1.0253701283298626
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 6.487557543700512,
+            "rust": 5.311005363934506
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        }
+      },
+      "memory": [
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "c",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "c-identical",
+          "maximumResidentKiB": 1712
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "rust",
+          "maximumResidentKiB": 2076
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "rust-identical",
+          "maximumResidentKiB": 2080
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "fwp",
+          "maximumResidentKiB": 1856
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1728
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "c",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "c-identical",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "rust",
+          "maximumResidentKiB": 2108
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "rust-identical",
+          "maximumResidentKiB": 2080
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "fwp",
+          "maximumResidentKiB": 1728
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1728
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "c",
+          "maximumResidentKiB": 1844
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "c-identical",
+          "maximumResidentKiB": 1844
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "rust",
+          "maximumResidentKiB": 2228
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "rust-identical",
+          "maximumResidentKiB": 2184
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "fwp",
+          "maximumResidentKiB": 1728
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1728
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "c",
+          "maximumResidentKiB": 3852
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "c-identical",
+          "maximumResidentKiB": 3860
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "rust",
+          "maximumResidentKiB": 4248
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "rust-identical",
+          "maximumResidentKiB": 4236
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "fwp",
+          "maximumResidentKiB": 3776
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 3776
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "c",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "c-identical",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "rust",
+          "maximumResidentKiB": 2044
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "rust-identical",
+          "maximumResidentKiB": 2116
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "fwp",
+          "maximumResidentKiB": 1728
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1728
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "c",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "c-identical",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "rust",
+          "maximumResidentKiB": 2044
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "rust-identical",
+          "maximumResidentKiB": 2068
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "fwp",
+          "maximumResidentKiB": 1728
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1728
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "c",
+          "maximumResidentKiB": 1844
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "c-identical",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "rust",
+          "maximumResidentKiB": 2192
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "rust-identical",
+          "maximumResidentKiB": 2212
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "fwp",
+          "maximumResidentKiB": 1728
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1728
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "c",
+          "maximumResidentKiB": 3860
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "c-identical",
+          "maximumResidentKiB": 3856
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "rust",
+          "maximumResidentKiB": 4288
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "rust-identical",
+          "maximumResidentKiB": 4260
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "fwp",
+          "maximumResidentKiB": 3776
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 3776
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "c",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "c-identical",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "rust",
+          "maximumResidentKiB": 2124
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "rust-identical",
+          "maximumResidentKiB": 2068
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "fwp",
+          "maximumResidentKiB": 1736
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1736
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "c",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "c-identical",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "rust",
+          "maximumResidentKiB": 2076
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "rust-identical",
+          "maximumResidentKiB": 2116
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "fwp",
+          "maximumResidentKiB": 2332
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 2076
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "c",
+          "maximumResidentKiB": 1844
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "c-identical",
+          "maximumResidentKiB": 1844
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "rust",
+          "maximumResidentKiB": 2180
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "rust-identical",
+          "maximumResidentKiB": 2232
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "fwp",
+          "maximumResidentKiB": 2332
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 2072
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "c",
+          "maximumResidentKiB": 3856
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "c-identical",
+          "maximumResidentKiB": 3852
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "rust",
+          "maximumResidentKiB": 4264
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "rust-identical",
+          "maximumResidentKiB": 4236
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "fwp",
+          "maximumResidentKiB": 4124
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 4124
+        }
+      ]
+    },
+    {
+      "machine": "x86_64",
+      "session": 2,
+      "run": 41103049899,
+      "job": 124224672478,
+      "artifact": 13000896652,
+      "archiveSha256": "01c8a6e0cd7650ad194b5a3f99b310cca5966804e9d2f90a7aee93d981806580",
+      "files": 150,
+      "observations": 32832,
+      "maximumResidentObservations": 72,
+      "host": {
+        "system": "Linux",
+        "machine": "x86_64",
+        "cpu": "AMD EPYC 7763 64-Core Processor",
+        "processors": 4,
+        "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+        "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+      },
+      "cases": {
+        "unique-0": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 13276759.0,
+            "c-identical": 12598680.0,
+            "rust": 19566740.0,
+            "rust-identical": 20195837.5,
+            "fwp": 23474762.0,
+            "fwp-identical": 23039975.0
+          },
+          "medianRoundCpuNs": {
+            "c": 10234000.0,
+            "c-identical": 10258000.0,
+            "rust": 17761000.0,
+            "rust-identical": 17662500.0,
+            "fwp": 19631000.0,
+            "fwp-identical": 19148500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 0.9489273700004647,
+            "rust": 1.032151370131151,
+            "fwp": 0.981478534265864
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.768109370667947,
+            "rust": 1.1997278034051662
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "unique-16": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 16383267.5,
+            "c-identical": 17904704.5,
+            "rust": 34632957.0,
+            "rust-identical": 33207372.0,
+            "fwp": 24668857.5,
+            "fwp-identical": 24707613.5
+          },
+          "medianRoundCpuNs": {
+            "c": 15038000.0,
+            "c-identical": 15677000.0,
+            "rust": 31769500.0,
+            "rust-identical": 31417500.0,
+            "fwp": 21626500.0,
+            "fwp-identical": 21515000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.092865296864621,
+            "rust": 0.9588373294258414,
+            "fwp": 1.0015710496523806
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.5057348907963568,
+            "rust": 0.712294289511577
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "unique-4096": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 11645262.0,
+            "c-identical": 12604888.0,
+            "rust": 20907944.0,
+            "rust-identical": 20498459.0,
+            "fwp": 21279343.0,
+            "fwp-identical": 20433784.5
+          },
+          "medianRoundCpuNs": {
+            "c": 9923500.0,
+            "c-identical": 10202500.0,
+            "rust": 19088000.0,
+            "rust-identical": 18498000.0,
+            "fwp": 14397000.0,
+            "fwp-identical": 14205000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0824048441331762,
+            "rust": 0.9804148604951305,
+            "fwp": 0.9602638812673868
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.827296199948099,
+            "rust": 1.0177635352380894
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "unique-262144": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 33553712.5,
+            "c-identical": 35414637.5,
+            "rust": 46181464.0,
+            "rust-identical": 43763795.5,
+            "fwp": 31819202.5,
+            "fwp-identical": 29834318.5
+          },
+          "medianRoundCpuNs": {
+            "c": 32022000.0,
+            "c-identical": 33067500.0,
+            "rust": 42211500.0,
+            "rust-identical": 41620000.0,
+            "fwp": 27569500.0,
+            "fwp-identical": 26606500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0554610760284722,
+            "rust": 0.9476485089342339,
+            "fwp": 0.9376199324920227
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 0.9483064653426949,
+            "rust": 0.6890037635013043
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "callback-0": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 13412143.0,
+            "c-identical": 12930399.0,
+            "rust": 20263246.0,
+            "rust-identical": 20384777.0,
+            "fwp": 23744946.0,
+            "fwp-identical": 23829803.0
+          },
+          "medianRoundCpuNs": {
+            "c": 10172000.0,
+            "c-identical": 10064500.0,
+            "rust": 17748500.0,
+            "rust-identical": 17826500.0,
+            "fwp": 18737500.0,
+            "fwp-identical": 18742000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 0.9640815043501997,
+            "rust": 1.005997607688324,
+            "fwp": 1.0035736867963396
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.7704065636639872,
+            "rust": 1.1718234087470487
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "callback-16": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 16424062.0,
+            "c-identical": 18584033.0,
+            "rust": 35113476.0,
+            "rust-identical": 33222423.0,
+            "fwp": 24270172.0,
+            "fwp-identical": 24185348.5
+          },
+          "medianRoundCpuNs": {
+            "c": 14753000.0,
+            "c-identical": 15540000.0,
+            "rust": 31793000.0,
+            "rust-identical": 31421000.0,
+            "fwp": 21024000.0,
+            "fwp-identical": 20990500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.1315125941438848,
+            "rust": 0.9461445229745982,
+            "fwp": 0.9965050309491008
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.477720432375377,
+            "rust": 0.6911925210708276
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "callback-4096": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 12750806.0,
+            "c-identical": 12421604.0,
+            "rust": 20915720.5,
+            "rust-identical": 21158600.0,
+            "fwp": 20315443.5,
+            "fwp-identical": 19872251.0
+          },
+          "medianRoundCpuNs": {
+            "c": 10194500.0,
+            "c-identical": 10149500.0,
+            "rust": 18897500.0,
+            "rust-identical": 18815500.0,
+            "fwp": 14447000.0,
+            "fwp-identical": 14138000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 0.9741818674050879,
+            "rust": 1.0116122942071253,
+            "fwp": 0.9781844536153002
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 1.5932673981550656,
+            "rust": 0.9713001997707896
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "callback-262144": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 34211173.5,
+            "c-identical": 35758042.5,
+            "rust": 46868568.0,
+            "rust-identical": 44447323.5,
+            "fwp": 31824403.0,
+            "fwp-identical": 30433383.0
+          },
+          "medianRoundCpuNs": {
+            "c": 32633500.0,
+            "c-identical": 33396500.0,
+            "rust": 43122500.0,
+            "rust-identical": 42421500.0,
+            "fwp": 27793000.0,
+            "fwp-identical": 27265000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0452153153998065,
+            "rust": 0.9483396953796412,
+            "fwp": 0.956290774724038
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 0.9302341821159686,
+            "rust": 0.6790137688866449
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "scan-0": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": true,
+          "medianRoundElapsedNs": {
+            "c": 13163137.0,
+            "c-identical": 12930552.5,
+            "rust": 20988562.0,
+            "rust-identical": 20912182.0,
+            "fwp": 30184557.5,
+            "fwp-identical": 30665843.0
+          },
+          "medianRoundCpuNs": {
+            "c": 10348500.0,
+            "c-identical": 10247500.0,
+            "rust": 18009000.0,
+            "rust-identical": 18243500.0,
+            "fwp": 26530500.0,
+            "fwp-identical": 26466500.0
+          },
+          "identicalElapsedRatios": {
+            "c": 0.9823306176939434,
+            "rust": 0.9963608750327917,
+            "fwp": 1.0159447591703141
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 2.2931127663565305,
+            "rust": 1.438143189609655
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "scan-16": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "medianRoundElapsedNs": {
+            "c": 21436817.5,
+            "c-identical": 21574384.5,
+            "rust": 34362846.0,
+            "rust-identical": 34206333.5,
+            "fwp": 270050405.5,
+            "fwp-identical": 276088514.5
+          },
+          "medianRoundCpuNs": {
+            "c": 20062500.0,
+            "c-identical": 20226000.0,
+            "rust": 32864500.0,
+            "rust-identical": 32764000.0,
+            "fwp": 268066000.0,
+            "fwp-identical": 273672000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0064173238401641,
+            "rust": 0.995445298681023,
+            "fwp": 1.022359192495269
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 12.597504526966281,
+            "rust": 7.8587904360424625
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "scan-4096": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": true,
+          "medianRoundElapsedNs": {
+            "c": 16265615.0,
+            "c-identical": 16242263.0,
+            "rust": 23961863.5,
+            "rust-identical": 23847637.5,
+            "fwp": 234560901.0,
+            "fwp-identical": 233969023.5
+          },
+          "medianRoundCpuNs": {
+            "c": 14989500.0,
+            "c-identical": 14918500.0,
+            "rust": 22572000.0,
+            "rust-identical": 22499000.0,
+            "fwp": 232923500.0,
+            "fwp-identical": 232440000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 0.9985643334113097,
+            "rust": 0.9952330084845029,
+            "fwp": 0.9974766574587808
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 14.420659839790872,
+            "rust": 9.788925681844402
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        },
+        "scan-262144": {
+          "copyControlLimit": 1.02,
+          "copyControlPassed": true,
+          "medianRoundElapsedNs": {
+            "c": 37311338.0,
+            "c-identical": 37409012.5,
+            "rust": 45899227.0,
+            "rust-identical": 45914545.0,
+            "fwp": 253313343.0,
+            "fwp-identical": 254531404.0
+          },
+          "medianRoundCpuNs": {
+            "c": 35909500.0,
+            "c-identical": 35930000.0,
+            "rust": 44439000.0,
+            "rust-identical": 44411500.0,
+            "fwp": 251417500.0,
+            "fwp-identical": 252866000.0
+          },
+          "identicalElapsedRatios": {
+            "c": 1.0026178235688037,
+            "rust": 1.0003337311105478,
+            "fwp": 1.0048085149624353
+          },
+          "fwpPeerElapsedRatios": {
+            "c": 6.789178747757585,
+            "rust": 5.5189021592890875
+          },
+          "decision": "descriptive-baseline; no optimization accepted"
+        }
+      },
+      "memory": [
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "c",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "c-identical",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "rust",
+          "maximumResidentKiB": 2104
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "rust-identical",
+          "maximumResidentKiB": 2080
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "fwp",
+          "maximumResidentKiB": 1728
+        },
+        {
+          "entry": "unique",
+          "length": 0,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1724
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "c",
+          "maximumResidentKiB": 1712
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "c-identical",
+          "maximumResidentKiB": 1712
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "rust",
+          "maximumResidentKiB": 2108
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "rust-identical",
+          "maximumResidentKiB": 2044
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "fwp",
+          "maximumResidentKiB": 1984
+        },
+        {
+          "entry": "unique",
+          "length": 16,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1724
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "c",
+          "maximumResidentKiB": 1844
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "c-identical",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "rust",
+          "maximumResidentKiB": 2232
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "rust-identical",
+          "maximumResidentKiB": 2236
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "fwp",
+          "maximumResidentKiB": 1728
+        },
+        {
+          "entry": "unique",
+          "length": 4096,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1728
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "c",
+          "maximumResidentKiB": 3860
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "c-identical",
+          "maximumResidentKiB": 3852
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "rust",
+          "maximumResidentKiB": 4288
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "rust-identical",
+          "maximumResidentKiB": 4268
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "fwp",
+          "maximumResidentKiB": 4032
+        },
+        {
+          "entry": "unique",
+          "length": 262144,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 3760
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "c",
+          "maximumResidentKiB": 1700
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "c-identical",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "rust",
+          "maximumResidentKiB": 2108
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "rust-identical",
+          "maximumResidentKiB": 2044
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "fwp",
+          "maximumResidentKiB": 1724
+        },
+        {
+          "entry": "callback",
+          "length": 0,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1728
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "c",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "c-identical",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "rust",
+          "maximumResidentKiB": 2100
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "rust-identical",
+          "maximumResidentKiB": 2044
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "fwp",
+          "maximumResidentKiB": 1728
+        },
+        {
+          "entry": "callback",
+          "length": 16,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1728
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "c",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "c-identical",
+          "maximumResidentKiB": 1844
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "rust",
+          "maximumResidentKiB": 2240
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "rust-identical",
+          "maximumResidentKiB": 2144
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "fwp",
+          "maximumResidentKiB": 1728
+        },
+        {
+          "entry": "callback",
+          "length": 4096,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1724
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "c",
+          "maximumResidentKiB": 3856
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "c-identical",
+          "maximumResidentKiB": 3856
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "rust",
+          "maximumResidentKiB": 4240
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "rust-identical",
+          "maximumResidentKiB": 4284
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "fwp",
+          "maximumResidentKiB": 3776
+        },
+        {
+          "entry": "callback",
+          "length": 262144,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 3772
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "c",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "c-identical",
+          "maximumResidentKiB": 1716
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "rust",
+          "maximumResidentKiB": 2068
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "rust-identical",
+          "maximumResidentKiB": 2124
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "fwp",
+          "maximumResidentKiB": 1736
+        },
+        {
+          "entry": "scan",
+          "length": 0,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 1736
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "c",
+          "maximumResidentKiB": 1712
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "c-identical",
+          "maximumResidentKiB": 1712
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "rust",
+          "maximumResidentKiB": 2112
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "rust-identical",
+          "maximumResidentKiB": 2076
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "fwp",
+          "maximumResidentKiB": 2072
+        },
+        {
+          "entry": "scan",
+          "length": 16,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 2076
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "c",
+          "maximumResidentKiB": 1844
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "c-identical",
+          "maximumResidentKiB": 1704
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "rust",
+          "maximumResidentKiB": 2196
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "rust-identical",
+          "maximumResidentKiB": 2172
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "fwp",
+          "maximumResidentKiB": 2332
+        },
+        {
+          "entry": "scan",
+          "length": 4096,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 2076
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "c",
+          "maximumResidentKiB": 3856
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "c-identical",
+          "maximumResidentKiB": 3860
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "rust",
+          "maximumResidentKiB": 4272
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "rust-identical",
+          "maximumResidentKiB": 4236
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "fwp",
+          "maximumResidentKiB": 4124
+        },
+        {
+          "entry": "scan",
+          "length": 262144,
+          "label": "fwp-identical",
+          "maximumResidentKiB": 4124
+        }
+      ]
+    }
+  ]
+}

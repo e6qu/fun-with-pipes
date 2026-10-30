@@ -10,8 +10,9 @@ from pathlib import Path
 import platform
 import re
 import statistics
-import subprocess
 import time
+
+from process_wait import run_capture
 
 ROOT = Path(__file__).resolve().parent.parent
 PROFILE_SPEC = importlib.util.spec_from_file_location(
@@ -82,8 +83,9 @@ def main():
     commands = []
 
     def run(command, env):
-        result = subprocess.run(list(map(str, command)), cwd=ROOT, env=env,
-                                capture_output=True, timeout=args.timeout)
+        result = run_capture(list(map(str, command)), timeout=args.timeout,
+                     env=env, cwd=ROOT, input_data=None, input_stream=None,
+                     text=False, encoding='utf-8', check=False)
         if result.returncode:
             raise RuntimeError(f'{command}: {result.returncode}: '
                                + result.stderr.decode(errors='replace'))
@@ -184,8 +186,9 @@ def main():
                 control = directory / 'missing-retirement'
                 build([args.cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w', broken,
                        '-o', control, '-lm', '-lpthread', '-ldl'])
-                failed = subprocess.run([str(control)], env=environment, capture_output=True,
-                                        timeout=args.timeout)
+                failed = run_capture([str(control)], timeout=args.timeout,
+                             env=environment, cwd=None, input_data=None, input_stream=None,
+                             text=False, encoding='utf-8', check=False)
                 assert failed.returncode == 231, failed
                 (directory / 'missing-retirement.stderr').write_bytes(failed.stderr)
                 # An orphaned allocation is absent from the runtime's tape
@@ -200,8 +203,9 @@ def main():
                     control = directory / control_name
                     build([args.cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w', broken,
                            '-o', control, '-lm', '-lpthread', '-ldl'])
-                    failed = subprocess.run([str(control)], env=environment, capture_output=True,
-                                            timeout=args.timeout)
+                    failed = run_capture([str(control)], timeout=args.timeout,
+                                 env=environment, cwd=None, input_data=None, input_stream=None,
+                                 text=False, encoding='utf-8', check=False)
                     assert failed.returncode == 232, failed
                     assert b'unreleased raw derivative storage' in failed.stderr, failed
                     (directory / (control_name + '.stderr')).write_bytes(failed.stderr)

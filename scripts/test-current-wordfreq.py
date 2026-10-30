@@ -8,6 +8,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 SPEC = importlib.util.spec_from_file_location('current_wordfreq', Path(__file__).with_name('measure-current-wordfreq.py'))
 MEASURE = importlib.util.module_from_spec(SPEC)
@@ -45,6 +46,23 @@ class WordFrequencyObservations(unittest.TestCase):
             self.assertTrue(row['spawnError'])
             with self.assertRaises(AssertionError):
                 MEASURE.verify_result(result, b'')
+
+    def test_cancellation_is_recorded_before_propagation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            stdin = root / 'input'
+            stdin.write_bytes(b'')
+            log = root / 'commands.jsonl'
+            with patch.object(MEASURE, 'communicate', side_effect=KeyboardInterrupt), self.assertRaises(KeyboardInterrupt):
+                MEASURE.observe([sys.executable, '-c', 'import time; time.sleep(60)'],
+                    stdin, dict(os.environ), 5, log, dict(phase='control', sequence=0))
+            row = json.loads(log.read_text())
+            self.assertEqual(row['interruption'], 'KeyboardInterrupt')
+            self.assertLess(row['status'], 0)
+            self.assertFalse(row['timedOut'])
+            row['status'] = 0
+            with self.assertRaises(AssertionError):
+                MEASURE.verify_result((row, b'', b''), b'')
 
     def test_timeout_keeps_partial_output_and_reaps_the_child(self):
         with tempfile.TemporaryDirectory() as directory:

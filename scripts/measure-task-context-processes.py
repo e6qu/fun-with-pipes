@@ -12,6 +12,8 @@ import struct
 import subprocess
 import time
 
+from process_wait import run_capture
+
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -50,8 +52,9 @@ def main():
             order = ['heap', 'stack'] if repetition % 2 == 0 else ['stack', 'heap']
             for layout in order:
                 started = time.perf_counter_ns()
-                result = subprocess.run([str(paths[layout])], cwd=ROOT,
-                    capture_output=True, text=True, timeout=args.timeout, check=True)
+                result = run_capture([str(paths[layout])], timeout=args.timeout,
+                             env=dict(os.environ), cwd=ROOT, input_data=None, input_stream=None,
+                             text=True, encoding='utf-8', check=True)
                 elapsed = time.perf_counter_ns() - started
                 assert result.stdout == '528\n', result.stdout
                 rows = {key: list(map(int, fields.split('\t'))) for key, fields in

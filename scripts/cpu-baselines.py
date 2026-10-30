@@ -12,6 +12,8 @@ import statistics
 import subprocess
 import time
 
+from process_wait import run_capture
+
 
 PROGRAMS = ('loop', 'text-length')
 KINDS = ('c', 'rs', 'fwp', 'identical')
@@ -211,8 +213,9 @@ def measure(args):
                     for process_index in range(report['settings']['processes'][name]):
                         start = time.perf_counter()
                         try:
-                            result = subprocess.run([str(paths[kind].resolve())], env=environment,
-                                                    capture_output=True, text=True, timeout=args.timeout)
+                            result = run_capture([str(paths[kind].resolve())], timeout=args.timeout,
+                                         env=environment, cwd=None, input_data=None, input_stream=None,
+                                         text=True, encoding='utf-8', check=False)
                         except subprocess.TimeoutExpired as error:
                             write_json(args.output / 'report.json', report)
                             write_json(args.output / 'timeout.json', dict(program=name, kind=kind, phase=phase,

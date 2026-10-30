@@ -19,6 +19,8 @@ import struct
 import subprocess
 import time
 
+from process_wait import communicate, run_capture
+
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('coordinate', ROOT / 'scripts/measure-coordinate-work.py')
 COORDINATE = importlib.util.module_from_spec(SPEC)
@@ -41,7 +43,7 @@ def build(command, environment, timeout, commands, directory):
         with subprocess.Popen(command, env=environment, stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE, start_new_session=True) as process:
             try:
-                stdout, stderr = process.communicate(timeout=timeout)
+                stdout, stderr = communicate(process, timeout, None)
                 if process.returncode:
                     raise subprocess.CalledProcessError(process.returncode, command, stdout, stderr)
             except BaseException:
@@ -184,7 +186,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ['compiler', 'output']:
         parser.add_argument('--' + name, required=True, type=Path)
-    for name in ['host', 'cc', 'rustc', 'c-arch', 'objdump', 'nm', 'time']:
+    for name in ['host', 'cc', 'rustc', 'ar', 'c-arch', 'objdump', 'nm', 'time']:
         parser.add_argument('--' + name, required=True)
     for name in ['samples', 'warmups', 'order-seed', 'timeout', 'build-timeout']:
         parser.add_argument('--' + name, required=True, type=int)
@@ -207,7 +209,9 @@ def main():
     commands = []
 
     def run(command, env):
-        result = subprocess.run([str(p) for p in command], env=env, capture_output=True, timeout=args.timeout)
+        result = run_capture([str(p) for p in command], timeout=args.timeout,
+                     env=env, cwd=None, input_data=None, input_stream=None,
+                     text=False, encoding='utf-8', check=False)
         assert result.returncode == 0, (command, result.returncode, result.stderr.decode(errors='replace'))
         return result
 
@@ -250,6 +254,8 @@ def main():
             build([args.cc, *flags, '-Wall', '-Wextra', '-Werror', '-DDESCENT_SINK_DUMP=' + str(dump),
                    '-DDESCENT_SINK_OMIT_LAST=' + str(omit), '-c', ROOT / 'tests/fixtures/descent_output_sink.c', '-o', obj],
                   environment, args.build_timeout, commands, out)
+            build([args.ar, 'rcs', directory / f'libsink_{mode}.a', obj],
+                  environment, args.build_timeout, commands, out)
             sink_objects[mode] = obj
         binaries, outputs, metadata, profiles, controls, peer_profiles, statuses = {}, {}, {}, {}, {}, {}, {}
 
@@ -262,14 +268,16 @@ def main():
                 command = [args.rustc, '--crate-name', 'descent_output', '--edition=2021', '-D', 'warnings',
                            '-C', 'opt-level=2', '-C', 'overflow-checks=yes', '-C', 'codegen-units=1',
                            '-C', 'target-cpu=generic', '-C', 'lto=off', path, '-o', binary]
-                for obj in objects:
-                    command += ['-C', 'link-arg=' + str(obj)]
+                if mode:
+                    command += ['-L', 'native=' + str(directory), '-l', 'static=sink_' + mode]
             else:
                 command = [args.cc, *flags, *(['-w'] if language == 'fwp' else ['-Wall', '-Wextra', '-Werror']),
                            path, *objects, '-o', binary, '-lm', '-lpthread', '-ldl']
             build(command, environment, args.build_timeout, commands, out)
             binaries[label] = binary
-            actual = subprocess.run([str(binary)], env=environment, capture_output=True, timeout=args.timeout)
+            actual = run_capture([str(binary)], timeout=args.timeout,
+                         env=environment, cwd=None, input_data=None, input_stream=None,
+                         text=False, encoding='utf-8', check=False)
             assert actual.returncode == status, (label, actual.returncode, actual.stderr.decode(errors='replace'))
             (directory / (label + '.stdout')).write_bytes(actual.stdout)
             (directory / (label + '.stderr')).write_bytes(actual.stderr)

@@ -1,0 +1,43 @@
+# A known numeric callback can be called directly. An unknown callback keeps
+# the ordinary dispatch path. A fold visits elements from left to right.
+export sum : Array[I64] -> I64
+sum = array.fold add 0
+step : I64 -> I64 -> I64
+step = curry (both (.0 | mul 10) .1 | uncurry add)
+export digits : Array[I64] -> I64
+digits = array.fold step 0
+export float-sum : Array[F32] -> F32
+float-sum = array.fold add 0.0f32
+mixed-step : I64 -> F32 -> I64
+mixed-step = curry (both .0 (.1 | float.to-int | option.unwrap-or 0) | uncurry add)
+export mixed-sum : Array[F32] -> I64
+mixed-sum = array.fold mixed-step 0
+export unknown : (I64 -> I64 -> I64) -> Array[I64] -> I64
+unknown = flip array.fold 0
+# tap prints the next element while preserving the pair passed to the step.
+logged-step : I64 -> I64 -> I64 ! {IO, Error[String]}
+logged-step = curry (tap (.1 | echo) | if (.1 | eq 3)
+    (const "expected" | fail)
+    (uncurry add))
+export failed : I64 -> I64 ! {IO, Error[String]}
+failed = flip array.generate id | array.fold logged-step 0
+seed : () -> I64 ! {IO}
+seed = const 0 | tap (const "seed" | echo)
+input : () -> Array[I64] ! {IO}
+input = const [1, 2] | tap (const "input" | echo) | array.from-list
+main = [
+    array.fold add (() | seed) (() | input) | echo,
+    [] | array.from-list | sum | echo,
+    [1, 2, 3] | array.from-list | both id sum | echo,
+    [1, 2, 3, 4] | array.from-list | array.slice 1 2 | sum | echo,
+    # With packing enabled, these slices exceed the tiny-copy threshold and share storage.
+    32 | flip array.generate id | array.slice 8 16 | sum | echo,
+    64 | flip array.generate int.to-float | array.slice 16 32 | float-sum | echo,
+    [1, 2, 3] | array.from-list | digits | echo,
+    [1.5f32, 2.25f32] | array.from-list | float-sum | echo,
+    [1.0f32, 2.0f32, 3.0f32] | array.from-list | mixed-sum | echo,
+    # EOF selects subtraction at runtime, so this callback cannot be specialized.
+    [10, 3, 1] | array.from-list | unknown
+        (() | read-line | if (eq None) (const sub) (const add)) | echo,
+    4 | attempt failed | echo,
+] | ignore

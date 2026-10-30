@@ -13,6 +13,8 @@ import struct
 import subprocess
 import time
 
+from process_wait import run_capture
+
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('cpu_phases', ROOT / 'scripts/cpu-phases.py')
 CPU = importlib.util.module_from_spec(SPEC)
@@ -153,7 +155,9 @@ def measure(args):
 
     def command(argv, label):
         argv = list(map(str, argv))
-        result = subprocess.run(argv, env=environment, capture_output=True, timeout=120)
+        result = run_capture(argv, timeout=120,
+                     env=environment, cwd=None, input_data=None, input_stream=None,
+                     text=False, encoding='utf-8', check=False)
         (args.output / (label + '.stdout')).write_bytes(result.stdout)
         (args.output / (label + '.stderr')).write_bytes(result.stderr)
         report['commands'].append(dict(argv=argv, status=result.returncode, stdout=label + '.stdout', stderr=label + '.stderr'))
@@ -224,7 +228,9 @@ def measure(args):
                     for kind in schedule:
                         observation = observations[kind]
                         start = time.perf_counter()
-                        result = subprocess.run([str(paths[kind])], env=environment, capture_output=True, text=True, timeout=settings['timeout'])
+                        result = run_capture([str(paths[kind])], timeout=settings['timeout'],
+                                     env=environment, cwd=None, input_data=None, input_stream=None,
+                                     text=True, encoding='utf-8', check=False)
                         seconds = time.perf_counter() - start
                         process = dict(seconds=seconds, status=result.returncode, stdout=result.stdout, stderr=result.stderr)
                         if settings in (INTERLEAVED_SETTINGS, BALANCED_SETTINGS):

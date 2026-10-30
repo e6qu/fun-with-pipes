@@ -26,7 +26,11 @@ export generated : I64 -> Array[F128] ! {Error[String]}
 generated = flip array.generate (to-quad | transform)
 export folded : I64 -> F128 ! {Error[String]}
 folded = flip array.generate to-quad | array.fold sum-step 0.0f128
-main = [4 | attempt mapped | echo, 4 | attempt generated | echo, 4 | attempt folded | echo] | ignore
+scalar-step : I64 -> I64 -> I64 ! {Error[String]}
+scalar-step = curry (if (.1 | gt 2) (const "expected" | fail) (uncurry add))
+export scalar-folded : I64 -> I64 ! {Error[String]}
+scalar-folded = flip array.generate id | array.fold scalar-step 0
+main = [task.yield (), 4 | attempt scalar-folded | echo, 4 | attempt mapped | echo, 4 | attempt generated | echo, 4 | attempt folded | echo] | ignore
 "#,
     )
     .unwrap();
@@ -48,7 +52,7 @@ main = [4 | attempt mapped | echo, 4 | attempt generated | echo, 4 | attempt fol
     );
     let code = std::fs::read_to_string(cfile).unwrap();
     let mut functions = Vec::new();
-    for name in ["mapped", "generated", "folded"] {
+    for name in ["mapped", "generated", "folded", "scalar-folded"] {
         let start = code.find(&format!("/* {name} :")).unwrap();
         let id = code[start..]
             .split("static V f")
@@ -59,15 +63,23 @@ main = [4 | attempt mapped | echo, 4 | attempt generated | echo, 4 | attempt fol
             .unwrap();
         functions.push(format!("f{id}"));
     }
+    assert!(code.contains("direct known scalar array fold; input stays borrowed"));
+    let cancellation_point = "        V args[] = {z, fwp_array_load(xs, index,";
+    assert_eq!(code.matches(cancellation_point).count(), 1);
+    let code = code
+        .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int scalar_cancel_mode;")
+        .replace(cancellation_point, &format!("        if (scalar_cancel_mode && index == 2) {{ fwp_cur->cancelled = 1; fwp_check_cancel(); }}\n{cancellation_point}"));
     let probe = format!(
         r#"
 static int retained;
+static fwp_task scalar_cancel;
+static jmp_buf scalar_cancel_base;
 static void fail_retain(V value) {{ if(retained++ == 3) fwp_fail(0,NULL); fwp_rc_dup(value); }}
 static void drop_leaf(V value) {{ if(fwp_rc_release_last(value)) fwp_rc_free_obj(value); }}
 int main(void) {{
     fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
     V (*const functions[])(V)={{{}}};
-    for(volatile int i=0;i<3;i++) {{
+    for(volatile int i=0;i<4;i++) {{
         size_t live_bytes=fwp_heap.live;
         fwp_handler h; h.prev=fwp_handlers; h.state_depth=fwp_state_len; h.cleanup=fwp_cleanups;
         fwp_handlers=&h;
@@ -76,6 +88,15 @@ int main(void) {{
         if(fwp_cleanups != h.cleanup) return 191;
         if(fwp_heap.live > live_bytes) return 193;
     }}
+    /* Cancel after two completed scalar steps; the generated caller owns the array. */
+    size_t before_cancel=fwp_heap.live;
+    fwp_task *previous=fwp_cur;
+    memset(&scalar_cancel,0,sizeof scalar_cancel);
+    scalar_cancel.base=&scalar_cancel_base;
+    fwp_cur=&scalar_cancel; fwp_budget=1000000; scalar_cancel_mode=1;
+    if(!setjmp(scalar_cancel_base)) {{ functions[3](4); return 197; }}
+    scalar_cancel_mode=0; fwp_cur=previous; scalar_cancel.base=NULL;
+    if(!scalar_cancel.unwinding || fwp_cleanups || fwp_heap.live!=before_cancel) return 198;
     V leaf=fwp_rc_fresh(fwp_cstr("retained input"));
     size_t live_bytes=fwp_heap.live;
     const fwp_desc element={{.kind=K_STR,.dup=fail_retain,.drop=drop_leaf}};
@@ -101,8 +122,18 @@ int main(void) {{
             "int main(int argc, char **argv)",
             "int original_main(int argc, char **argv)",
         ) + &probe;
+        let cancellation_cleanup = "t->unwinding = 1;\n    fwp_cleanup_unwind(0);";
+        assert_eq!(measured.matches(cancellation_cleanup).count(), 1);
         for (label, code, expected) in [
             ("owned", measured.clone(), 0),
+            (
+                "omitted-cancel-cleanup",
+                measured.replace(
+                    cancellation_cleanup,
+                    "t->unwinding = 1; /* omitted cleanup */",
+                ),
+                198,
+            ),
             (
                 "omitted-release",
                 measured.replace(

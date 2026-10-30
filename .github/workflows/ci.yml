@@ -80,6 +80,9 @@ jobs:
         run: |
           set -o pipefail
           python3 scripts/check-measurement-clocks.py --cc clang 2>&1 | tee "$RUNNER_TEMP/fwp-clock-controls.log"
+      - name: Captured process deadlines and polling controls
+        timeout-minutes: 2
+        run: python3 scripts/test-process-wait.py -v
       - name: Publish failed clock controls before long tests
         if: ${{ !cancelled() && steps.clock_controls.outcome == 'failure' }}
         uses: actions/upload-artifact@v7
@@ -501,7 +504,7 @@ jobs:
             ARM64) output_arch=armv8-a ;;
             *) echo "Unsupported numerical control architecture: $RUNNER_ARCH" >&2; exit 1 ;;
           esac
-          python3 scripts/test-descent-output.py --compiler target/release/fwp \
+          python3 scripts/test-descent-output.py --ar ar --compiler target/release/fwp \
             --cc gcc --rustc rustc --c-arch "$output_arch" --objdump objdump --nm nm \
             --output "$RUNNER_TEMP/descent-output-controls"
           python3 scripts/test-coordinate-work.py --cc gcc --rustc rustc \

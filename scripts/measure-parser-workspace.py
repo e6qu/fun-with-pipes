@@ -11,8 +11,9 @@ import re
 import resource
 import shutil
 import statistics
-import subprocess
 import time
+
+from process_wait import run_capture
 
 ROOT = Path(__file__).resolve().parent.parent
 BASELINE = '56d5aac63a9963ae6b16574f10d6dc3087a08d8a'
@@ -142,7 +143,9 @@ def main():
     def run(command):
         command = list(map(str, command))
         commands.append(command)
-        result = subprocess.run(command, capture_output=True, env=environment, timeout=args.timeout)
+        result = run_capture(command, timeout=args.timeout,
+                     env=environment, cwd=None, input_data=None, input_stream=None,
+                     text=False, encoding='utf-8', check=False)
         assert result.returncode == 0, (command, result.returncode, result.stderr.decode(errors='replace'))
         assert not result.stderr, (command, result.stderr)
         return result.stdout
@@ -203,7 +206,9 @@ def main():
         for label in ['c', 'rust']:
             command = [str(args.output / f'{label}.exe'), str(control), '1', str(expected or 0), str(nodes)]
             commands.append(command)
-            result = subprocess.run(command, capture_output=True, env=environment, timeout=args.timeout)
+            result = run_capture(command, timeout=args.timeout,
+                         env=environment, cwd=None, input_data=None, input_stream=None,
+                         text=False, encoding='utf-8', check=False)
             results[label] = dict(status=result.returncode, stdout=result.stdout.decode(), stderr=result.stderr.decode())
             if expected is None:
                 assert result.returncode != 0, (name, label)

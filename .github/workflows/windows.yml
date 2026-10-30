@@ -39,6 +39,9 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Captured process deadlines
+        timeout-minutes: 2
+        run: python scripts/test-process-wait.py -v
       - uses: dtolnay/rust-toolchain@stable
       - name: Cache locked Rust dependencies
         uses: actions/cache@v6

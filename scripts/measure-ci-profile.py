@@ -10,6 +10,8 @@ import resource
 import subprocess
 import time
 
+from process_wait import run_capture
+
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--source", type=Path, required=True)
 parser.add_argument("--output", type=Path, required=True)
@@ -32,7 +34,9 @@ def save():
 def measured(command, env, label):
     before = resource.getrusage(resource.RUSAGE_CHILDREN)
     start = time.monotonic()
-    result = subprocess.run(command, cwd=source, env=env, capture_output=True, timeout=1800)
+    result = run_capture(command, timeout=1800,
+                 env=env, cwd=source, input_data=None, input_stream=None,
+                 text=False, encoding='utf-8', check=False)
     after = resource.getrusage(resource.RUSAGE_CHILDREN)
     row = {"command": command, "wallSeconds": time.monotonic()-start,
            "childCpuSeconds": after.ru_utime+after.ru_stime-before.ru_utime-before.ru_stime,
