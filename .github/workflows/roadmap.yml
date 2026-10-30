@@ -62,6 +62,16 @@ jobs:
                 --machine "$machine" --session "$session"
             done
           done
+      - name: Rejected direct-string observations and evidence controls
+        run: |
+          for machine in aarch64 x86_64; do
+            for session in 1 2; do
+              python3 scripts/test-direct-string-results.py \
+                --retained-index docs/measurements/direct-strings-first-artifacts-2026-10-30.json \
+                --source 8da8f4cf98421b5171b158d3734298cc01fd6865 \
+                --machine "$machine" --session "$session"
+            done
+          done
       - name: Kernel baseline archive and altered-evidence controls
         run: python3 scripts/test-kernel-baseline-evidence.py
       - name: Derivative process scheduling and host qualification controls

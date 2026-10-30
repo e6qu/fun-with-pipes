@@ -92,11 +92,13 @@ def main():
     inputs = parser.add_mutually_exclusive_group(required=True)
     inputs.add_argument('--archive', type=Path)
     inputs.add_argument('--directory', type=Path)
+    inputs.add_argument('--retained-index', type=Path)
     parser.add_argument('--source', required=True)
     parser.add_argument('--machine', choices=['aarch64', 'x86_64'], required=True)
     parser.add_argument('--session', type=int, choices=[1, 2], required=True)
     args = parser.parse_args()
-    EvidenceRejections.files = CHECK.BASE.read_files(args.archive, args.directory)
+    EvidenceRejections.files = (CHECK.read_retained(args.retained_index, args.machine, args.session)
+        if args.retained_index else CHECK.BASE.read_files(args.archive, args.directory))
     EvidenceRejections.source = args.source
     EvidenceRejections.machine = args.machine
     EvidenceRejections.session = args.session

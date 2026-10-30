@@ -1,161 +1,111 @@
 # Current work
 
-**Next:** run focused native/WASI checks for the implemented unique, non-growing replacement path in
-[the second string candidate](measurements/direct-string-results.md#second-candidate-reuse-non-growing-unique-strings).
-Keep monitoring PR #228's targeted Intel Mac retry and the remaining measurements.
-Its final head is still `f3eb5072`; open no second PR before verified merge.
+**Next:** audit the unique-string candidate's focused checks and four measurements
+at `d7c609890da12a5eb71319cb42593fe514be2015`. Keep PR #228's final source
+`f3eb5072` unchanged while its Intel Mac upload-recovery job finishes. Merge that
+PR only after its complete retry log and uploads pass, then integrate main into
+this preparation without rewriting measured ancestry. Open no second active PR.
 
-Preparation is on `direct-string-results` in `/private/tmp/fwp-direct-string-results`.
-Protocol `e0fb1a09` precedes runtime/test source `089465bb`. `replace` counts
-non-overlapping matches and fills its final String; `string.repeat` fills its
-checked final size. Both avoid temporary libc buffers. They preserve input aliases,
-managed allocation/ownership contracts and the distinct terminal OOM versus
-String-size failure rules. No application speed claim is accepted.
+## Active delivery: application checks, PR #228
 
-Protocol `ebd8f46d` precedes the new unique-reuse implementation. Replacement
-writes forward with overlap-safe copies only when its replacement does not grow
-and the runtime proves one owner. Shared/static/growing inputs allocate separately.
-Controls check borrowed source aliases, literals, exact allocation counts and a
-removed uniqueness check. The new `string-reuse` measurement selection also
-requires the declared 12,513/199,721 managed-request budgets. Previous candidate
-checks do not validate this changed code. Clang's 144 size/control exits and seven
-small allocation/evidence tests pass; native GCC, full-runtime and WASI execution
-remain runner work.
-
-## Checks and measurements in progress
+[PR #228](https://github.com/e6qu/fun-with-pipes/pull/228) contains directory
+allocation-failure coverage, current word-frequency baselines and their evidence
+checks. It does not change the compiler/runtime from #227.
 
 All production test results at `f3eb5072` are fully audited: Linux 993 tests/257
-summaries each, regular Mac 626/132, ownership Mac 364/127, Windows 811/202,
+summaries each, regular Mac 626/132, ownership Mac 364/127, Windows 811/202 and
 benchmarks 2/2. Documentation `41018509711` and both G2 hosts `41018512169`
 pass; G2 has 226 tests/three summaries per host.
 
-The regular Intel Mac job passed its tests, then failed two uploads with DNS
-ENOTFOUND after verifying its 3,357-file archive. Its diagnostic belongs to the
-intentional cleanup-abort test. Production `41018509811` now reruns only that job
-as `123979346074`, on the same source. Its complete result and upload must pass
-and receive a full log audit before merge. All other results remain verified.
+Regular Intel Mac passed all tests, build and packaging, then two artifact
+uploads failed with DNS ENOTFOUND after verifying 3,357 evidence files. Its saved
+diagnostic is the intentional cleanup-abort test, not a compiler-abort recurrence.
+Production `41018509811` reruns only that job as `123979346074`, on the same
+source. Require its full log audit and successful upload before merge.
 
-Focused string run `41021988225` passes all six native hosts at `089465bb`.
-Every host passes 18 integration tests/seven summaries; GCC AMD64 additionally
-passes 224 library tests and 20 native-runner controls. Complete logs are audited,
-including intentional missing-compiler/runner failures. Independent audit checks
-all 954 saved subprocess outputs/statuses and 162 native image headers/hashes.
-Artifacts are in `/private/tmp/fwp-direct-focused-089465bb`; the audit is
-`/private/tmp/fwp-direct-focused-audit.json`. The checked-in
-[native archive](measurements/direct-strings-native-2026-10-30.json) retains all
-text evidence and native headers/hashes; full images remain in GitHub artifacts. WASI run `41023744074` passes on Linux ARM64 with 32 tests/four summaries,
-fully audited with required-toolchain flags enabled. Linux AMD64 also passes 32 tests/four summaries with a complete log audit.
+The [directory report](measurements/directory-failures.md) owns the four allocation
+boundaries, aliases/retries, missing-close/builder controls and separate terminal
+OOM checks. All six native hosts pass ten focused tests each; all 84 saved probes
+and complete logs are retained. The initial harness failure and explicit-entry
+repair remain documented. The [word-frequency baseline](measurements/wordfreq-current.md)
+owns four audited sessions, 37,080 observations and budgets published before any
+candidate. Large-input fwp/C is 2.49 on ARM64 and 3.03–3.04 on AMD64; no parity
+claim follows from an improvement over earlier fwp.
 
-The paired runner restores exactly two frozen runtime bodies in generated C,
-without an older compiler. It records separate candidate/reference and C/Rust
-comparisons, independent raw/managed profiles, all subprocess streams, native
-images, sections and stack reports. Its checker recomputes all 18,510 observations
-per complete session, including failed timing decisions; corrupted-evidence tests
-must also pass. Both ARM sessions and AMD session 2 in `41024798466` are complete and rejected:
-large-input ratios are 0.990359573, 0.992313087 and 1.013587760. The first two
-miss the 5% gain; AMD also exceeds 1% regression. All 55,530 observations and
-seven integrity/rejection tests per session pass independent audits. Counts are
-exactly unchanged except the confirmed removal of 1,640/26,216 raw allocations.
-AMD session 1 has not measured: 9V45, 9V74 and Xeon 8573C assignments were
-rejected before building; every complete log and qualification record is audited.
-Replacement `41033950200` uses frozen branch `direct-string-measurements`
-at the same `8da8f4cf`. Retain all attempts. The next candidate must change code
-and meet the unchanged timing and new declared managed-allocation requirements. Keep the existing
-limits and retain failed/inconclusive sessions; never retry unchanged timings.
+## Preparation: reduce replacement/repetition allocations
 
-Guarded checks: seven allocation/acceptance tests pass with small Clang O2 probes;
-144 size/control exits pass at Clang O0/O1/O2; Rust formatting, Python syntax and
-workflow lint pass. These local checks do not establish GCC or WASI coverage.
-Full builds, measurements and final production checks remain on GitHub.
+Worktree `/private/tmp/fwp-direct-string-results`, branch `direct-string-results`.
+The [string report](measurements/direct-string-results.md) owns both protocols,
+fixed acceptance limits, source reasoning, measurements and retained evidence.
 
-## Directory-report failure checks
+**First candidate is rejected.** Protocol `e0fb1a09` precedes runtime/tests
+`089465bb`; paired measurements use `8da8f4cf`. Direct construction removes
+1,640/26,216 raw allocations for the small/large word-frequency inputs, but managed
+counts stay unchanged. All four sessions miss the required 5% large-input gain;
+both AMD results also exceed 1% regression. AMD session 1's small-input copy
+control is 1.071605080 > 1.05. Preserve all results; do not retry unchanged code,
+reset limits or describe an allocation reduction as a measured speedup.
 
-The new test adds four allocation boundaries: initial scratch storage, a
-partially collected name list, scratch growth and result-list construction.
-At C O1/O2, recoverable traps must release owners and directory handles, preserve
-a caller's path alias and permit a successful retry. Deliberately omitted close
-and builder cleanup must fail their respective observers.
+Runs `41024798466` and `41033950200` contain all 74,040 observations. Complete
+logs and seven evidence tests per session are audited. Three earlier mismatched
+CPU assignments were rejected before building; their logs/qualification records
+are retained too. The [archive](measurements/direct-strings-first-artifacts-2026-10-30.json)
+reconstructs every text and native-image byte. The frozen branch
+`direct-string-measurements` remains at `8da8f4cf`.
 
-A separate subprocess invokes the real managed-heap OOM handler at each boundary:
-its contract is diagnostic plus exit 102, not recovery or pre-exit cleanup.
-The tests do not exhaust host memory. See [application acceptance](application-acceptance.md#repeated-directory-and-file-work).
-All six hosts pass ten focused tests each; complete logs and all 84 saved
-probe executions are independently audited. The [report](measurements/directory-failures.md)
-links the retained archive. Full production coverage is still required when
-this preparation is integrated. Local guarded checks pass; no local full build
-or benchmark ran.
+First-candidate correctness passes all six native hosts in `41021988225`:
+18 integration tests/seven summaries each, plus 224 library tests and 20 runner
+controls on GCC AMD64. All 954 saved executions and 162 native headers/hashes
+are audited in the [native archive](measurements/direct-strings-native-2026-10-30.json).
+Both WASI hosts pass 32 tests/four summaries in `41023744074`. Complete logs are
+audited. These results do not verify the second candidate's changed code.
 
-The first run, `40965474997` at `55eec5e0`, is fully audited on all six native
-hosts. Each failed only the new test: the harness searched for a function entry
-after ordinary main compilation could inline/remove it. All nine other tests
-pass per host; there are no unrelated diagnostics.
+**Second candidate is implemented, not accepted.** Published protocol `ebd8f46d`
+precedes runtime/test source `d7c60989`. Non-growing replacement reuses a string
+only after the existing query proves one owner; overlap-safe copies move forward
+through unread input. Shared/static/growing inputs receive a separate result.
+Checks cover borrowed aliases, literals, allocation counts and an intentionally
+removed uniqueness check. The added ownership query has a cost; retain counts
+are not claimed to fall. WASI does not select native unique reuse.
 
-Repair `1f364c09` compiles the probe entry explicitly with `--fn report-once`,
-keeps a separate ordinary build for result comparison and retains both emitted
-sources. Failed-test logs now upload before the admission inventory. Formatting,
-workflow lint, roadmap and whitespace checks pass under the local guard.
-The repaired native run passes on all six hosts; the archive retains both runs.
+| Run | Purpose | Status |
+|---|---|---|
+| `41034212790` | Six native hosts, aliases/failure/reuse | Running; GCC AMD64 string test step passes, remaining audits required |
+| `41034222459` | Both WASI hosts and physical reclamation | Queued/running |
+| `41035137961` | Four paired measurements with C/Rust context | Queued; exact source `d7c60989` |
 
-Artifacts retain generated C, native probes and each output/status under
-`failures/record-ownership/directory-allocation`. Independent auditors:
-`/private/tmp/fwp-audit-directory-failure-logs.py` checks the exact old failure;
-`/private/tmp/fwp-audit-directory-failures.py` checks the new artifacts.
+The new `string-reuse` selection requires at most 12,513/199,721 managed requests
+and 431,876/6,909,092 requested bytes, alongside unchanged timing/raw/retain/live
+limits. All four sessions and new correctness checks are required before accepting
+this candidate. Host mismatches may replace unmeasured assignments; failed timings
+must remain visible.
 
-## Current word-frequency baseline
+Guarded local checks pass: seven allocation/evidence tests with Clang O2 probes,
+144 exact size/control exits at Clang O0/O1/O2, Rust formatting, Python syntax,
+workflow lint, roadmap and whitespace checks. The new count gate rejects all four
+budget violations in the first candidate's actual measured report. Retained
+archive checks pass 28 evidence tests. No local full build or benchmark ran.
 
-Protocol `6d4df06b` precedes measured source
-`dc963bb500748dabe393dfaed20f92a333f5996e`. All four sessions are complete and
-audited: ARM jobs `123799636907`/`123799637188` in `40974666332`; AMD job
-`123801495592` in `40975221824` and `123804111260` in `40976014339`.
-The [report](measurements/wordfreq-current.md) records all 37,080 child
-observations, complete logs, native headers/hashes, code/stack costs and memory.
-Three earlier AMD host rejections occurred before building/timing and remain
-in the archive. No measured session was retried.
+## Previous delivery and remaining gaps
 
-Large-input fwp/C is 2.49 on ARM64 and 3.03–3.04 on AMD64. All sessions report
-225,937 managed allocations, 69,642 retains and zero final managed charge for
-65,536 words. Identical-copy variation reaches 3.90% on the short input and
-0.38% on the large input. The report declares separate future-candidate limits;
-no candidate is implemented or accepted, and D2/N1 limits remain unchanged.
-
-`check-current-wordfreq.py` independently checks all outputs, the fixed schedule,
-statistics, files and native identities. Seven evidence tests reject damaged
-observations, including internally consistent changed hashes. They run in the
-measurement workflow after recording and in documentation CI against the saved
-archive. Guarded `test-current-wordfreq-evidence.py --retained-index` passes all
-four sessions (28 tests). `actionlint` passes both modified workflows;
-`check-roadmap.py` passes 182 link sets, 106 preparation pairs and eight steps;
-`git diff --check` passes. No local full
-build or benchmark ran. The compressed evidence reconstructs every retained
-text and binary byte exactly; ordinary documentation CI rechecks all four sessions.
-
-## Previous delivery and unresolved timing
-
-The user merged [PR #227](https://github.com/e6qu/fun-with-pipes/pull/227) as
-`0e114aa5`, with the exact tested tree from `8e291876`. All nine production jobs,
-documentation and both G2 hosts passed and were fully audited; the compact
+The user merged [#227](https://github.com/e6qu/fun-with-pipes/pull/227) as
+`0e114aa5`, matching tested tree `830e41b3` from `8e291876`. All nine production
+jobs, documentation and both G2 hosts passed and were audited. The
 [delivery record](roadmap-history.md#eager-captures-and-typed-numerical-loops-pr-227)
-owns the identities and counts. Its message satisfies the one-line rule.
+owns the identities and checks.
 
-D2's zero-update recheck is **1.022815765 > 1.02** in `40912773534`; N1's
-small-array inclusive copy control is **1.030786192 > 1.02** in `40951090783`.
-The [timing report](measurements/timing-variation.md) retains these observations
-and all diagnostics. The cause remains unresolved. The user merge settles the
-delivery choice, not these performance requirements. Do not discard failures,
-relax their limits or repeat unchanged measurements until they pass.
-
-## Resume and delivery rules
-
-[PLAN.md](../PLAN.md) owns acceptance; [history](roadmap-history.md) owns completed
-deliveries. User-merged #227 is `0e114aa5`, matching verified tree `830e41b3`.
-The original Intel compiler abort remains unexplained; retain its
+D2's zero-update ratio remains **1.022815765 > 1.02** in `40912773534`; N1's
+small-array inclusive copy control remains **1.030786192 > 1.02** in `40951090783`.
+The [timing report](measurements/timing-variation.md) preserves every observation.
+Their causes are unresolved; a user merge does not waive performance requirements.
+The original Intel compiler abort also remains unexplained. Preserve its
 [report](measurements/compiler-abort.md) and diagnose any recurrence from source.
 
-The primary checkout stays detached at #209 with a recovery handoff and an
-untracked compiler-abort report; preserve both. Full builds/suites/measurements
-belong on GitHub. Local checks remain serial and resource-guarded. All nine
-exact-head production jobs, documentation and G2 require full audits before
-merge. Use one squash subject of at most 80 characters and an empty body.
+The primary checkout is detached at #209 with a recovery handoff and untracked
+compiler-abort report; preserve both. Full builds/suites/measurements belong on
+GitHub. Local checks stay serial and guarded. Require nine exact-head production
+jobs, documentation and G2 before merge, with complete log audits. Squash with
+one subject of at most 80 characters, an empty body and no attribution/trailers.
 
 ## Roadmap status
 
@@ -168,4 +118,4 @@ merge. Use one squash subject of at most 80 characters and an empty body.
 | 5 | In progress | Resolve D2's zero-update timing requirement |
 | 6 | In progress | Resolve N1's inclusive array control; investigate computation cost |
 | 7 | In progress | Broader B1/B2 comparisons |
-| 8 | In progress | Integrate directory failure coverage and current word-frequency budgets; finish remaining V1/V2 rows |
+| 8 | In progress | Deliver directory coverage and qualified word-frequency changes; finish remaining V1/V2 rows |

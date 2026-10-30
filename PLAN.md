@@ -303,7 +303,7 @@ implemented or accepted by these measurements. The next
 [direct string-result experiment](docs/measurements/direct-string-results.md)
 removes temporary raw buffers from replacement/repetition at `089465bb`.
 All six native focused suites and both WASI hosts pass, including alias, size,
-cleanup and failure controls. Its first three timing sessions reject the speed
+cleanup and failure controls. All four timing sessions reject the speed
 claim despite removing raw allocations; retain those failures. The second
 candidate reuses uniquely owned, non-growing replacements, following published
 protocol `ebd8f46d`. Its new tests and measurements must meet the unchanged

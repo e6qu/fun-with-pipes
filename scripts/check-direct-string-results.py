@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Recompute a complete session, including rejected timing decisions, from raw evidence."""
 import argparse
+import ast
 import base64
+import gzip
 import importlib.util
 import json
 from pathlib import Path, PurePosixPath
@@ -184,14 +186,74 @@ def audit(files, source, machine, session):
                 failures=failures, decision=report['decision'], results=results)
 
 
+def read_retained(index_path, machine, session):
+    index = json.loads(index_path.read_text())
+    assert set(index['sessions']) == {'arm-1', 'arm-2', 'amd-1', 'amd-2'}
+    label = {'aarch64': 'arm', 'x86_64': 'amd'}[machine] + '-' + str(session)
+    entry = index['sessions'][label]
+
+    def unpack(identity):
+        data = gzip.decompress(index_path.with_name(identity['file']).read_bytes())
+        assert len(data) == identity['bytes'] and BASE.sha(data) == identity['sha256']
+        return data
+
+    report = json.loads(unpack(entry['report']))
+    texts = json.loads(unpack(index['textContents']))
+    images = json.loads(unpack(index['binaryContents']))
+    files = {name: texts[key].encode() for name, key in report['textFiles'].items()}
+    for name, key in report['textFiles'].items():
+        assert BASE.sha(files[name]) == key
+    for name, identity in report['binaryHeaders'].items():
+        data = base64.b64decode(images[identity['sha256']], validate=True)
+        assert len(data) == identity['bytes'] and BASE.sha(data) == identity['sha256']
+        assert data[:64].hex() == identity['elfHeaderHex'] and name not in files
+        files[name] = data
+    assert index['source'] == report['audit']['source'] == json.loads(files['configuration.json'])['source']
+    assert (report['audit']['machine'], report['audit']['session']) == (machine, session)
+    assert report['audit']['results'] == json.loads(files['results.json'])
+    failures = json.loads(files['comparison.json'])['failures']
+    assert report['audit']['failures'] == failures
+    log = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', unpack(entry['log']).decode('utf-8-sig'))
+    assert list(map(int, re.findall(r'Ran (\d+) tests in', log))) == entry['pythonTestCounts']
+    assert entry['pythonTestCounts'] in [[7, 3, 6, 7], [7, 3, 7, 7]]
+    assert len(re.findall(r'Z OK\s*$', log, re.M)) == 4
+    assert 'Finished `release` profile [optimized]' in log
+    assert 'Qualified native derivative host:' in log
+    assertions = re.findall(r'Z AssertionError: (.*)', log)
+    assert len(assertions) == bool(failures)
+    if failures:
+        assert ast.literal_eval(assertions[0]) == failures
+    diagnostics = [line for line in log.splitlines() if re.search(
+        r'(?:^|\s)(?:warning|error)(?:\[[^]]+\])?:|##\[(?:warning|error)\]', line, re.I)
+        or re.search(r'\bFAILED\b', line)]
+    assert len(diagnostics) == bool(failures), diagnostics
+    if failures:
+        assert diagnostics[0].endswith('##[error]Process completed with exit code 1.')
+    assert log.count('Traceback (most recent call last):') == bool(failures)
+    for rejection in index['rejections']:
+        q = rejection['qualification']
+        assert q['source'] == index['source'] and q['qualified'] is False
+        assert len(q['failures']) == 1 and q['failures'][0].startswith('cpu:')
+        assert [key for key in q['actual'] if q['actual'][key] != q['expected'][key]] == ['cpu']
+        rejected = unpack(rejection['log']).decode('utf-8-sig')
+        assert 'Host rejected before building/timing:' in rejected
+        assert rejected.count('##[error]') == 1
+        assert 'Run cargo build' not in rejected and 'Run python3 scripts/measure-direct-string-results.py' not in rejected
+        assert not re.search(r'##\[warning\]|warning:|error:|test result:', rejected)
+    return files
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--directory', type=Path)
     group.add_argument('--archive', type=Path)
+    group.add_argument('--retained-index', type=Path)
     parser.add_argument('--source', required=True)
     parser.add_argument('--machine', choices=['aarch64', 'x86_64'], required=True)
     parser.add_argument('--session', type=int, choices=[1, 2], required=True)
     args = parser.parse_args()
-    result = audit(BASE.read_files(args.archive, args.directory), args.source, args.machine, args.session)
+    files = (read_retained(args.retained_index, args.machine, args.session) if args.retained_index
+             else BASE.read_files(args.archive, args.directory))
+    result = audit(files, args.source, args.machine, args.session)
     print(json.dumps(result, indent=2))

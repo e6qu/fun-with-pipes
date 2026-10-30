@@ -4,10 +4,11 @@ Protocol `e0fb1a09` preceded implementation `089465bb`. The reference is
 `f3eb507280e5a71083190ec1e26bbbdbe555dae8`, the application-validation PR head.
 It extends [the current word-frequency baseline](wordfreq-current.md); it changes
 no existing derivative or numerical-kernel timing limit. The first candidate is
-rejected by the timing rules below. A second candidate is specified at the end
-of this report before its implementation. Neither has timing acceptance.
+rejected by all four timing sessions. The second candidate reuses unique storage
+under a protocol published before implementation; its checks are running. Neither
+has timing acceptance. The sections below distinguish these two experiments.
 
-## Source finding and proposed change
+## First candidate: direct result construction
 
 The reference `replace` appends unmatched bytes and replacement text to a growing
 `fwp_buf`, then copies that buffer into the result String and frees it.
@@ -135,8 +136,12 @@ or memory limit into an accepted optimization.
 
 ## First candidate: rejected measurements
 
-Run `41024798466` measures source `8da8f4cf`. Three completed sessions have full
-output/profile/size/stack records and pass all seven evidence-rejection tests.
+Runs `41024798466` and `41033950200` measure source `8da8f4cf`. All four sessions
+have full output/profile/size/stack records and pass seven evidence-rejection tests
+each. Complete logs contain no unaccounted compiler/test failures; every failed
+job corresponds to its declared timing limits. The [retained archive](direct-strings-first-artifacts-2026-10-30.json)
+reconstructs all 74,040 subprocess observations, source and native-image bytes,
+profiles and full logs. Documentation CI rechecks the same rejected decisions.
 The large-input ratios below compare the candidate with the original runtime;
 at most **0.95** is required in every session. A value above 1 means slower.
 
@@ -144,17 +149,18 @@ at most **0.95** is required in every session. A value above 1 means slower.
 |---|---:|---|
 | ARM64 1 | 0.990359573 | Only 0.96% faster; misses the required 5% |
 | ARM64 2 | 0.992313087 | Only 0.77% faster; misses the required 5% |
+| AMD64 1 | 1.011793828 | 1.18% slower; also exceeds the 1% regression limit |
 | AMD64 2 | 1.013587760 | 1.36% slower; also exceeds the 1% regression limit |
 
-The AMD64 first session has not measured yet. Three assignments were rejected
-before building/timing: EPYC 9V45 in `41024798466`, EPYC 9V74 in
-`41028913571` and Xeon 8573C in `41031097803`. All three complete logs and
-qualification records are audited. Replacement `41033950200` retains the same
-source through branch `direct-string-measurements`. These rejections are retained, not discarded samples.
-The completed failures already rule out overall acceptance; the remaining
-session completes the declared observation set and cannot erase them.
+AMD64 session 1 also fails the small-input contextual identical-copy control:
+1.071605080 exceeds 1.05. Its comparison cannot establish a small-input speed
+claim. No failed session was retried. Three earlier CPU assignments were rejected
+before building/timing: EPYC 9V45 in `41024798466`, EPYC 9V74 in `41028913571`
+and Xeon 8573C in `41031097803`. All qualification records and logs are retained.
+`41033950200` completed the missing session on the specified EPYC 7763 using
+frozen branch `direct-string-measurements`; it does not replace a measured result.
 
-The allocation prediction is confirmed in these three sessions: replacement
+The allocation prediction is confirmed in all four sessions: replacement
 loses 1,640/26,216 temporary raw allocations, while all five managed counters
 remain exactly unchanged. Raw requested bytes fall by 104,960/1,677,824;
 this is cumulative allocation traffic, not peak or resident memory. Shared-input
