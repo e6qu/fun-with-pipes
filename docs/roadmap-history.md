@@ -1269,3 +1269,50 @@ Its 55-character subject has no body or trailers. Duplicate post-merge runs
 `41094194847` and `41094194934` were cancelled after tree/message verification.
 This delivery does not resolve the original intermittent compiler abort, D2/N1's
 failed timing controls or the remaining application/comparison matrix.
+
+## Direct scalar folds and process timing (PR #231)
+
+[PR #231](https://github.com/e6qu/fun-with-pipes/pull/231) gives known scalar
+folds a direct numeric call instead of per-element generic dispatch. Three
+4,096-element scans remove 12,288 ineffective duplicate calls and 12,288 release
+calls. The arrays still allocate. Instruction bytes fall from 16,780 to 10,588
+on ARM64 and 18,162 to 11,090 on AMD64; the largest reported frame component
+falls from 592 to 368 and 576 to 320 bytes respectively. These are scoped cost
+reductions, not total-stack bounds or C/Rust parity.
+
+The process timer now uses explicit blocking waits with a POSIX alarm deadline,
+avoiding Python's timed-wait polling delay; Windows uses its kernel wait. Bounded
+negative controls verify timeout cleanup, including Python 3.15. The
+[scalar-fold report](measurements/unique-buffer-peers.md#scalar-folds-cost-reductions-retained-timing-acceptance-open)
+retains all timing results. One repaired AMD64 session still fails its 2% copy
+control (2.04% observed). The user accepted the verified reductions with timing
+acceptance open; the failed result was not retried or relabeled as passing.
+
+All nine production jobs in `41128213017` and documentation `41128213024`
+pass at `377cf9ce25c65afba595b6413e5bb1d50721ea7a`. Every full log was audited.
+Counts below are passed Rust tests / summaries; Python controls are additional.
+
+| Gate | Job | Audited result |
+|---|---|---|
+| Linux ARM64 | `124312094665` | 996 / 257 |
+| Linux AMD64 | `124312094775` | 996 / 257 |
+| macOS ARM64 regular | `124312094382` | 627 / 132 |
+| macOS AMD64 regular | `124312094945` | 627 / 132 |
+| macOS ARM64 ownership | `124312094852` | 366 / 127 |
+| macOS AMD64 ownership | `124312094834` | 366 / 127 |
+| Windows ARM64 | `124312094988` | 819 / 205 |
+| Windows AMD64 | `124312094733` | 819 / 205 |
+| C/Rust benchmarks | `124312094873` | 2 / 2 |
+| Documentation | `124312093982` | 46 Python suites, 318 cases |
+
+The SDK passes twelve tests on Linux/macOS and ten on Windows, with two
+POSIX-terminal skips. Windows wait controls pass seven tests with three
+POSIX-only skips. These skips do not establish POSIX capability on Windows.
+The only diagnostics were expected OpenSSL installation notices and intentional
+TLS failure controls.
+
+Squash `97b2c29ae15ebec84f2534c523b8f1260fd2fb67`, merged 2026-10-30,
+has the tested tree `86715a392ec4e67674b8a47861d5596199257a53`.
+Its subject, `Reduce numeric fold overhead and repair process timing`, is
+54 characters with no body or trailers. Duplicate post-merge runs `41140834224`
+and `41140834097` were cancelled after verifying the tree and commit message.

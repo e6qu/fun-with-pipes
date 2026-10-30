@@ -244,10 +244,11 @@ sources and compiler reports. Reconstruct it with the matching source's
 The verifier checks every file and exact build
 settings, then recomputes summaries from the complete ordered records.
 
-## Next accepted workload and budget
+## Scalar-fold budget declared before implementation
 
-Only the **4,096-element scan, 256 calls/process** currently has passing controls
-in all four sessions. Before selecting an optimization, freeze this budget:
+Only the **4,096-element scan, 256 calls/process** passed the original controls
+in all four sessions. The scalar-fold experiment used this predeclared budget;
+the later repaired measurements and their failures remain below:
 
 | Requirement | Candidate acceptance |
 |---|---|

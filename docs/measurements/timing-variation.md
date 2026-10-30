@@ -32,9 +32,11 @@ tests preserve timeout, cancellation, captured output and signal restoration.
 Affected captured measurement callers use the same repair. It changes the
 measurement source, not previously retained observations or acceptance limits.
 
-Validate this method first with the declared scalar-fold sessions. D2 and N1
-remain open: neither the synthetic proof nor an improved scalar-fold control
-establishes the cause of their earlier failures. Before remeasuring either, name
+The four repaired scalar-fold sessions are complete: three qualify, but the
+second AMD64 session still fails its copy control at 1.020399 (limit 1.02).
+The polling defect is fixed; residual timing variation remains unresolved.
+D2 and N1 remain open: neither the synthetic proof nor the scalar-fold results
+establish the cause of their earlier failures. Before remeasuring either, name
 its exact programs and unchanged protocol and distinguish whole-process timing
 from timers inside the numerical calculation. Parent waiting cannot explain
 variation measured entirely inside the child.

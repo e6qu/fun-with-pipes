@@ -261,7 +261,7 @@ matches can expose direct callbacks, but multiple tested fields, whole-value use
 and protected resources retain their required representation. A compiler-generated
 loop is not permission to interleave two trapping eager stages.
 
-The generated-array transformation, currently awaiting native verification,
+The generated-array transformation, currently awaiting full production verification,
 extends this rule to `flip array.generate id | array.fold add 0`. With input
 `4`, the generator produces indices `0, 1, 2, 3`, and the fold adds them to get
 `6`. The reference builds an array first; the transformation generates and adds

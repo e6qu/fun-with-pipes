@@ -1,0 +1,4181 @@
+{
+  "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+  "referenceCompiler": "377cf9ce25c65afba595b6413e5bb1d50721ea7a",
+  "referenceArtifactSource": "3ca66b543bb8764527fe2a5142119831df15cfb7",
+  "status": "Timing acceptance remains open; every measured observation is retained.",
+  "sessions": [
+    {
+      "run": 41139714279,
+      "job": 124350741903,
+      "artifact": 13017643125,
+      "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+      "machine": "aarch64",
+      "session": 1,
+      "archiveSha256": "9b911457a28457192dff2e31c98a85cfa90d94e251944371bb8eb511368ea823",
+      "files": 212,
+      "ordinaryProcesses": 2736,
+      "nativeCommands": 136,
+      "storageCommands": 126,
+      "configuration": {
+        "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+        "reference": "3ca66b543bb8764527fe2a5142119831df15cfb7",
+        "origin": "observed",
+        "waitPolicy": "posix-alarm",
+        "session": 1,
+        "directory": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/observed",
+        "environment": {
+          "PATH": "/usr/bin:/bin",
+          "LANG": "C",
+          "LC_ALL": "C",
+          "TZ": "UTC"
+        },
+        "timeout": 45,
+        "cpuPolicy": "all",
+        "affinity": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "labels": [
+          "old0",
+          "old1",
+          "old2",
+          "new0",
+          "new1",
+          "new2"
+        ],
+        "length": 4096,
+        "calls": 256,
+        "rounds": 36,
+        "warmups": 2,
+        "processes": 12,
+        "seed": 20261030,
+        "qualification": {
+          "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+          "actual": {
+            "system": "Linux",
+            "machine": "aarch64",
+            "cpu": "Neoverse-N2",
+            "processors": 4,
+            "cVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+          },
+          "expected": {
+            "system": "Linux",
+            "machine": "aarch64",
+            "cpu": "Neoverse-N2",
+            "processors": 4,
+            "cVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+          },
+          "lscpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+          "failures": [],
+          "qualified": true
+        },
+        "run": "41139714279",
+        "attempt": "1",
+        "platform": "Linux-7.0.0-1017-azure-aarch64-with-glibc2.39",
+        "python": "3.12.3",
+        "scope": "Serial whole child including spawn, startup, checked work, output and cleanup; excludes artifact writes."
+      },
+      "report": {
+        "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+        "reference": "3ca66b543bb8764527fe2a5142119831df15cfb7",
+        "session": 1,
+        "origin": "observed",
+        "timing": {
+          "roundElapsedNs": {
+            "old0": [
+              40650802,
+              42690587,
+              40629518,
+              41337367,
+              40366726,
+              41740696,
+              40082715,
+              40745234,
+              40136775,
+              41948405,
+              40429033,
+              39836844,
+              40243451,
+              40206118,
+              40545078,
+              40290919,
+              40700478,
+              40254602,
+              40079643,
+              40611703,
+              41403377,
+              40456444,
+              40851136,
+              40720928,
+              41069123,
+              39902479,
+              40518374,
+              41685103,
+              41323233,
+              40819514,
+              40542199,
+              41582137,
+              40465676,
+              42021214,
+              41462284,
+              41233545
+            ],
+            "old1": [
+              40095161,
+              41067698,
+              40704135,
+              41511786,
+              41553187,
+              42227739,
+              40782262,
+              40352480,
+              42938929,
+              40527968,
+              40737673,
+              41706963,
+              40557142,
+              40823538,
+              42086373,
+              40622656,
+              40061729,
+              39987887,
+              41271559,
+              41595297,
+              40510458,
+              41062091,
+              40881788,
+              40607673,
+              40376453,
+              41489322,
+              40436984,
+              41703996,
+              41253432,
+              41148857,
+              41172865,
+              41830192,
+              41016590,
+              40802477,
+              41721155,
+              40397284
+            ],
+            "old2": [
+              42075487,
+              40562836,
+              41461029,
+              41318619,
+              41110838,
+              42100260,
+              39981047,
+              40523985,
+              40235653,
+              40529697,
+              40424394,
+              40509640,
+              41745048,
+              40271983,
+              40056253,
+              40933088,
+              39840398,
+              40585674,
+              40735291,
+              40565677,
+              40744763,
+              40618613,
+              41517693,
+              41230907,
+              40288376,
+              40941440,
+              40773967,
+              41343431,
+              42355587,
+              39907211,
+              40588168,
+              41483340,
+              40533599,
+              40763287,
+              40164470,
+              40537389
+            ],
+            "new0": [
+              16212606,
+              14729919,
+              14938956,
+              14121627,
+              13604144,
+              15442252,
+              14082791,
+              15127914,
+              15599451,
+              14601573,
+              14322552,
+              14456291,
+              14724150,
+              13652572,
+              14870129,
+              15092716,
+              13460812,
+              13388572,
+              15547767,
+              14224617,
+              14994742,
+              14760533,
+              13924703,
+              14491095,
+              14559941,
+              14450253,
+              16110584,
+              14290126,
+              14850165,
+              13858703,
+              15350332,
+              15644044,
+              13963593,
+              14713603,
+              13541725,
+              15849132
+            ],
+            "new1": [
+              15303102,
+              14615171,
+              15876271,
+              14921896,
+              14678264,
+              16049286,
+              16882605,
+              13690615,
+              15776250,
+              15189467,
+              15291280,
+              14277664,
+              14823302,
+              14087415,
+              14910574,
+              15815054,
+              13893034,
+              13799201,
+              14547130,
+              14130676,
+              14935900,
+              14105014,
+              14343709,
+              14643486,
+              13421137,
+              15291050,
+              15242096,
+              16639739,
+              13430853,
+              15807636,
+              18108108,
+              13832607,
+              13541668,
+              15003646,
+              13603829,
+              16183322
+            ],
+            "new2": [
+              18721199,
+              14438950,
+              18292673,
+              14415887,
+              15244117,
+              14987785,
+              15082818,
+              14406078,
+              14583672,
+              15848651,
+              14843221,
+              15646102,
+              14876857,
+              13606269,
+              14267462,
+              14802856,
+              18509126,
+              14404978,
+              14929530,
+              14653870,
+              14029148,
+              16594648,
+              15609058,
+              14841843,
+              13860821,
+              15097596,
+              14996165,
+              15495067,
+              15848569,
+              14221313,
+              15965750,
+              14447923,
+              14512653,
+              15252125,
+              15534024,
+              15486902
+            ]
+          },
+          "roundCpuNs": {
+            "old0": [
+              38775000,
+              38828000,
+              38921000,
+              38296000,
+              38776000,
+              38589000,
+              38571000,
+              38823000,
+              38490000,
+              38962000,
+              38726000,
+              37921000,
+              38616000,
+              38334000,
+              38852000,
+              38548000,
+              38583000,
+              38281000,
+              38384000,
+              38684000,
+              38747000,
+              38580000,
+              38746000,
+              38463000,
+              38527000,
+              38053000,
+              38698000,
+              38657000,
+              39208000,
+              38549000,
+              38904000,
+              38419000,
+              38263000,
+              38764000,
+              38789000,
+              38923000
+            ],
+            "old1": [
+              38478000,
+              38967000,
+              38900000,
+              38997000,
+              38824000,
+              38495000,
+              38207000,
+              38453000,
+              38925000,
+              38711000,
+              38569000,
+              38944000,
+              38447000,
+              38973000,
+              38863000,
+              38554000,
+              38370000,
+              38221000,
+              38415000,
+              38664000,
+              38901000,
+              39255000,
+              38645000,
+              38021000,
+              38487000,
+              38779000,
+              38814000,
+              38750000,
+              38996000,
+              38917000,
+              38905000,
+              38869000,
+              38838000,
+              38780000,
+              38670000,
+              38744000
+            ],
+            "old2": [
+              39013000,
+              38891000,
+              38838000,
+              38719000,
+              39039000,
+              38483000,
+              38507000,
+              38876000,
+              38658000,
+              38715000,
+              38735000,
+              38483000,
+              38748000,
+              38660000,
+              38528000,
+              38461000,
+              38125000,
+              38334000,
+              38238000,
+              38825000,
+              38968000,
+              38647000,
+              38851000,
+              38542000,
+              38509000,
+              38808000,
+              38308000,
+              39096000,
+              38541000,
+              38413000,
+              38982000,
+              38415000,
+              38593000,
+              38532000,
+              38538000,
+              38784000
+            ],
+            "new0": [
+              12383000,
+              12138000,
+              12148000,
+              11899000,
+              12134000,
+              12244000,
+              12074000,
+              12458000,
+              12157000,
+              12310000,
+              12038000,
+              11740000,
+              12100000,
+              12152000,
+              12020000,
+              12166000,
+              11572000,
+              11600000,
+              11978000,
+              11708000,
+              12319000,
+              12250000,
+              12256000,
+              11944000,
+              11913000,
+              12025000,
+              12114000,
+              12154000,
+              12096000,
+              12137000,
+              11995000,
+              11729000,
+              11908000,
+              12133000,
+              11992000,
+              11984000
+            ],
+            "new1": [
+              12124000,
+              12176000,
+              12242000,
+              12116000,
+              12159000,
+              12400000,
+              12075000,
+              11934000,
+              12319000,
+              12020000,
+              11992000,
+              11949000,
+              11802000,
+              12051000,
+              12250000,
+              12063000,
+              11492000,
+              11401000,
+              12048000,
+              11695000,
+              12095000,
+              11768000,
+              12412000,
+              11916000,
+              12042000,
+              11929000,
+              11904000,
+              12568000,
+              11960000,
+              12144000,
+              12460000,
+              11820000,
+              11972000,
+              12088000,
+              11951000,
+              12284000
+            ],
+            "new2": [
+              12294000,
+              12065000,
+              12354000,
+              12265000,
+              12229000,
+              11996000,
+              12045000,
+              12223000,
+              12007000,
+              12272000,
+              12126000,
+              12166000,
+              11918000,
+              12005000,
+              12065000,
+              12024000,
+              12102000,
+              11890000,
+              11675000,
+              11901000,
+              12029000,
+              12454000,
+              12362000,
+              11728000,
+              11828000,
+              11859000,
+              11897000,
+              12315000,
+              12168000,
+              11985000,
+              12619000,
+              12100000,
+              12022000,
+              11874000,
+              12011000,
+              12076000
+            ]
+          },
+          "medianRoundElapsedNs": {
+            "old0": 40640160.0,
+            "old1": 40949189.0,
+            "old2": 40603390.5,
+            "new0": 14657588.0,
+            "new1": 14866938.0,
+            "new2": 14958657.5
+          },
+          "familyRoundElapsedNs": {
+            "old": [
+              122821450,
+              124321121,
+              122794682,
+              124167772,
+              123030751,
+              126068695,
+              120846024,
+              121621699,
+              123311357,
+              123006070,
+              121591100,
+              122053447,
+              122545641,
+              121301639,
+              122687704,
+              121846663,
+              120602605,
+              120828163,
+              122086493,
+              122772677,
+              122658598,
+              122137148,
+              123250617,
+              122559508,
+              121733952,
+              122333241,
+              121729325,
+              124732530,
+              124932252,
+              121875582,
+              122303232,
+              124895669,
+              122015865,
+              123586978,
+              123347909,
+              122168218
+            ],
+            "new": [
+              50236907,
+              43784040,
+              49107900,
+              43459410,
+              43526525,
+              46479323,
+              46048214,
+              43224607,
+              45959373,
+              45639691,
+              44457053,
+              44380057,
+              44424309,
+              41346256,
+              44048165,
+              45710626,
+              45862972,
+              41592751,
+              45024427,
+              43009163,
+              43959790,
+              45460195,
+              43877470,
+              43976424,
+              41841899,
+              44838899,
+              46348845,
+              46424932,
+              44129587,
+              43887652,
+              49424190,
+              43924574,
+              42017914,
+              44969374,
+              42679578,
+              47519356
+            ]
+          },
+          "familyMedianRoundElapsedNs": {
+            "old": 122552574.5,
+            "new": 44402183.0
+          },
+          "copyRatios": {
+            "old": 1.008516493222407,
+            "new": 1.0205401802806846
+          },
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "candidateReferenceRatio": 0.3623113033826964,
+          "elapsedRatioLimit": 0.9,
+          "elapsedPassed": true
+        },
+        "code": {
+          "textRatio": 1.0317340385341895,
+          "textRatioLimit": 1.05,
+          "textPassed": true,
+          "maximumReportedFrameBytes": {
+            "old": 368,
+            "new": 368
+          },
+          "dynamicFrames": {
+            "old": [],
+            "new": []
+          },
+          "stackPassed": true
+        },
+        "decision": "Timing/code evidence only; semantic and storage gates are required separately."
+      },
+      "programs": {
+        "old": {
+          "source": "scan/peer-fwp.c",
+          "sourceSha256": "c4ef290f39a15ea094afca560b6ce61b01f95f1c39d41d32c250ee0dd73e9300",
+          "sha256": "ca6ade423f576bf02549fe760a76e38eb7dfe517c5aa0381fbd0a071d6e77377",
+          "bytes": 75352,
+          "sections": {
+            ".interp": 27,
+            ".note.gnu.build-id": 36,
+            ".note.ABI-tag": 32,
+            ".gnu.hash": 28,
+            ".dynsym": 1296,
+            ".dynstr": 603,
+            ".gnu.version": 108,
+            ".gnu.version_r": 80,
+            ".rela.dyn": 288,
+            ".rela.plt": 1104,
+            ".init": 24,
+            ".plt": 768,
+            ".text": 10588,
+            ".fini": 20,
+            ".rodata": 1035,
+            ".eh_frame_hdr": 404,
+            ".eh_frame": 2180,
+            ".init_array": 8,
+            ".fini_array": 8,
+            ".data.rel.ro": 112,
+            ".dynamic": 512,
+            ".got": 464,
+            ".data": 20,
+            ".bss": 78088,
+            ".comment": 45
+          },
+          "frames": [
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16774:13:fwp_args5",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16783:10:fwp_owned_entry8",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:477:13:fwp_flush",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:962:13:fwp_heap_oom",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:10523:13:fwp_segv",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1135:15:fwp_heap_chunks",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:17173:13:fail",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:17178:16:number",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:504:13:fwp_trap",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:6678:16:fwp_now_ns",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:977:13:fwp_rc_forget_slot",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:993:13:fwp_rc_prepare_chunk",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1193:40:fwp_heap_refill",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1283:13:fwp_mem_free",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16800:13:fwp_args10",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1518:13:fwp_heap_report",
+              "bytes": 368,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:529:45:fwp_trap_overflow.constprop",
+              "bytes": 144,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16796:10:fwp_owned_entry10",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1055:13:fwp_heap_init",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16787:13:fwp_args8",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:8553:13:fwp_wake_io",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1026:13:fwp_rc_wide_drop",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:8589:13:fwp_cancel_tree.part.0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:8707:13:fwp_poll_events",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1167:40:fwp_heap_alloc_big",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1212:40:fwp_heap_alloc_slow",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1227:21:fwp_heap_alloc",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1375:13:fwp_rc_share",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16764:10:e10",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16763:10:e8",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16778:13:fwp_caps8",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16765:13:fwp_caps5",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16791:13:fwp_caps10",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:8597:13:fwp_task_dispose",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:8629:13:fwp_free_zombie",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:5415:13:fwp_array_builder_release",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16669:13:fwp_drop0",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:17047:16:w5",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:17221:14:fwp_main_thread",
+              "bytes": 272,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16770:10:fwp_owned_entry5",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16762:10:e5",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16701:13:fwp_owner_release7",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:17257:5:main",
+              "bytes": 128,
+              "kind": "static"
+            }
+          ],
+          "stackScope": "Compiler-reported frames for this compiled source; excludes prebuilt libraries and is not total call-stack usage.",
+          "binary": "scan/slot4exe"
+        },
+        "new": {
+          "source": "scan/peer-fwp.c",
+          "sourceSha256": "e37c604a1df904b9e1b97cf1af30ab04110e092e9e54728187f76b343a556191",
+          "sha256": "48b3bfa5a552092b85cd82cfe67469f5a460951a75a9ca464959a34bd8866ec9",
+          "bytes": 75272,
+          "sections": {
+            ".interp": 27,
+            ".note.gnu.build-id": 36,
+            ".note.ABI-tag": 32,
+            ".gnu.hash": 28,
+            ".dynsym": 1320,
+            ".dynstr": 610,
+            ".gnu.version": 110,
+            ".gnu.version_r": 80,
+            ".rela.dyn": 264,
+            ".rela.plt": 1128,
+            ".init": 24,
+            ".plt": 784,
+            ".text": 10924,
+            ".fini": 20,
+            ".rodata": 1067,
+            ".eh_frame_hdr": 412,
+            ".eh_frame": 2124,
+            ".init_array": 8,
+            ".fini_array": 8,
+            ".dynamic": 512,
+            ".got": 472,
+            ".data": 20,
+            ".bss": 78088,
+            ".comment": 45
+          },
+          "frames": [
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16843:13:fwp_args5",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16852:10:fwp_owned_entry8",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:482:13:fwp_flush",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:967:13:fwp_heap_oom",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:10528:13:fwp_segv",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1140:15:fwp_heap_chunks",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:17356:13:fail",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:17361:16:number",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:509:13:fwp_trap",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:6683:16:fwp_now_ns",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16856:13:fwp_args8",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1523:13:fwp_heap_report",
+              "bytes": 368,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1060:13:fwp_heap_init",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:534:45:fwp_trap_overflow.constprop",
+              "bytes": 144,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:8558:13:fwp_wake_io",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16839:10:fwp_owned_entry5",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:8594:13:fwp_cancel_tree.part.0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:8712:13:fwp_poll_events",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1013:13:fwp_rc_wide_dup",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:982:13:fwp_rc_forget_slot",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:998:13:fwp_rc_prepare_chunk",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1198:40:fwp_heap_refill",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1288:13:fwp_mem_free",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1172:40:fwp_heap_alloc_big",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1217:40:fwp_heap_alloc_slow",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1380:13:fwp_rc_share",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16832:10:e8",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16831:10:e5",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16847:13:fwp_caps8",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16834:13:fwp_caps5",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:8602:13:fwp_task_dispose",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:138:10:fwp_data.part.0",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16688:13:fwp_drop1",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16860:13:fwp_arg_drop33",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16739:13:fwp_owner_release7",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16742:13:fwp_owner_release8",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16863:13:fwp_caps33",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16873:13:fwp_args33",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:17230:10:f33",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16869:10:fwp_owned_entry33",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16833:10:e33",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:8634:13:fwp_free_zombie",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:17404:14:fwp_main_thread",
+              "bytes": 256,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:17440:5:main",
+              "bytes": 128,
+              "kind": "static"
+            }
+          ],
+          "stackScope": "Compiler-reported frames for this compiled source; excludes prebuilt libraries and is not total call-stack usage.",
+          "binary": "scan/slot4exe"
+        }
+      },
+      "storage": [
+        {
+          "entry": "scan",
+          "language": "fwp",
+          "level": 1,
+          "variant": "observed",
+          "length": 4096,
+          "counts": {
+            "metadata": {
+              "allocationRequests": 0,
+              "requestedCountBytes": 0,
+              "releasedCountBytes": 0,
+              "initialCountBytes": 0,
+              "finalCountBytes": 0,
+              "peakCountBytes": 0,
+              "chunkHeaderBytes": 40,
+              "countPointerBytes": 8
+            },
+            "managed": {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            },
+            "operations": {
+              "fresh": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "dup": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "drop": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "release_last": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "unique": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "unique_mut": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "last": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "free_obj": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "free_arr": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              }
+            },
+            "sites": []
+          }
+        },
+        {
+          "entry": "scan",
+          "language": "fwp",
+          "level": 2,
+          "variant": "observed",
+          "length": 4096,
+          "counts": {
+            "metadata": {
+              "allocationRequests": 0,
+              "requestedCountBytes": 0,
+              "releasedCountBytes": 0,
+              "initialCountBytes": 0,
+              "finalCountBytes": 0,
+              "peakCountBytes": 0,
+              "chunkHeaderBytes": 40,
+              "countPointerBytes": 8
+            },
+            "managed": {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            },
+            "operations": {
+              "fresh": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "dup": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "drop": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "release_last": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "unique": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "unique_mut": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "last": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "free_obj": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "free_arr": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              }
+            },
+            "sites": []
+          }
+        }
+      ]
+    },
+    {
+      "run": 41139722605,
+      "job": 124350770970,
+      "artifact": 13018327688,
+      "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+      "machine": "aarch64",
+      "session": 2,
+      "archiveSha256": "7403ac7a39c5ea3da2d5e93ee94daaf223878604d3fff29092dde34ce02074d7",
+      "files": 212,
+      "ordinaryProcesses": 2736,
+      "nativeCommands": 136,
+      "storageCommands": 126,
+      "configuration": {
+        "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+        "reference": "3ca66b543bb8764527fe2a5142119831df15cfb7",
+        "origin": "observed",
+        "waitPolicy": "posix-alarm",
+        "session": 2,
+        "directory": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/observed",
+        "environment": {
+          "PATH": "/usr/bin:/bin",
+          "LANG": "C",
+          "LC_ALL": "C",
+          "TZ": "UTC"
+        },
+        "timeout": 45,
+        "cpuPolicy": "all",
+        "affinity": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "labels": [
+          "old0",
+          "old1",
+          "old2",
+          "new0",
+          "new1",
+          "new2"
+        ],
+        "length": 4096,
+        "calls": 256,
+        "rounds": 36,
+        "warmups": 2,
+        "processes": 12,
+        "seed": 20261030,
+        "qualification": {
+          "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+          "actual": {
+            "system": "Linux",
+            "machine": "aarch64",
+            "cpu": "Neoverse-N2",
+            "processors": 4,
+            "cVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+          },
+          "expected": {
+            "system": "Linux",
+            "machine": "aarch64",
+            "cpu": "Neoverse-N2",
+            "processors": 4,
+            "cVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+          },
+          "lscpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+          "failures": [],
+          "qualified": true
+        },
+        "run": "41139722605",
+        "attempt": "1",
+        "platform": "Linux-7.0.0-1017-azure-aarch64-with-glibc2.39",
+        "python": "3.12.3",
+        "scope": "Serial whole child including spawn, startup, checked work, output and cleanup; excludes artifact writes."
+      },
+      "report": {
+        "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+        "reference": "3ca66b543bb8764527fe2a5142119831df15cfb7",
+        "session": 2,
+        "origin": "observed",
+        "timing": {
+          "roundElapsedNs": {
+            "old0": [
+              44282667,
+              46810929,
+              45934280,
+              42440099,
+              43422358,
+              43078577,
+              42473498,
+              43058281,
+              42899574,
+              42549534,
+              42598776,
+              42511990,
+              43038393,
+              41999304,
+              42553194,
+              42894243,
+              42692518,
+              42703942,
+              44992092,
+              42290640,
+              42538767,
+              42776618,
+              42073840,
+              43004624,
+              42821544,
+              43939903,
+              42537210,
+              44067067,
+              43388356,
+              43505992,
+              42975045,
+              43319808,
+              43455183,
+              42818475,
+              43469783,
+              43112849
+            ],
+            "old1": [
+              42511525,
+              42470299,
+              42674132,
+              43972019,
+              42947236,
+              43151436,
+              43019160,
+              43142293,
+              42133854,
+              42702706,
+              42301907,
+              43730708,
+              42754583,
+              42993879,
+              44698473,
+              43550570,
+              42779831,
+              42789713,
+              42390924,
+              42416652,
+              43372657,
+              43310025,
+              42952468,
+              42265440,
+              43127413,
+              42515483,
+              46027911,
+              43565212,
+              44293061,
+              42892109,
+              44499033,
+              43059834,
+              42580625,
+              43599410,
+              42610499,
+              43875736
+            ],
+            "old2": [
+              43067359,
+              43798661,
+              42434545,
+              42650385,
+              42022936,
+              42088692,
+              42189744,
+              42206562,
+              44672879,
+              42852433,
+              42195217,
+              42140503,
+              43700520,
+              42172742,
+              42244934,
+              43535651,
+              42456638,
+              43069823,
+              43773633,
+              42725574,
+              42497967,
+              43634598,
+              42141035,
+              42426036,
+              42868189,
+              42483318,
+              42056528,
+              43513569,
+              43102898,
+              43366676,
+              43594294,
+              43906446,
+              42716022,
+              43264144,
+              41877811,
+              42530972
+            ],
+            "new0": [
+              17451063,
+              19273858,
+              18123642,
+              15553246,
+              17818205,
+              16021976,
+              17219983,
+              17751722,
+              16013247,
+              17248352,
+              15414826,
+              15455344,
+              15764884,
+              17123279,
+              17654775,
+              16996488,
+              16139509,
+              17621639,
+              16536297,
+              15260920,
+              19539225,
+              16980562,
+              15513568,
+              17114332,
+              16500661,
+              17237949,
+              16763571,
+              16204149,
+              16970300,
+              17339352,
+              16361652,
+              18926365,
+              18542399,
+              16433824,
+              18196693,
+              17991101
+            ],
+            "new1": [
+              17131059,
+              17252672,
+              19866237,
+              15910598,
+              18029174,
+              16244192,
+              15631472,
+              16873065,
+              17941899,
+              17081865,
+              15631520,
+              17527110,
+              15504897,
+              16395897,
+              15849851,
+              15425062,
+              15433315,
+              17598785,
+              16031530,
+              17053942,
+              17827230,
+              16352643,
+              14972375,
+              15507560,
+              17150217,
+              16521972,
+              17208539,
+              17968797,
+              17440317,
+              16113148,
+              17212203,
+              17486218,
+              18693810,
+              16997194,
+              16533164,
+              17464412
+            ],
+            "new2": [
+              19482301,
+              18489192,
+              15618507,
+              18624020,
+              15520798,
+              16891733,
+              17537332,
+              17404429,
+              14800186,
+              17552457,
+              15460915,
+              16614616,
+              17803627,
+              15975062,
+              17167113,
+              15719092,
+              15593385,
+              15994944,
+              17245490,
+              17498863,
+              16365644,
+              16413296,
+              16224153,
+              16400125,
+              17517124,
+              16873569,
+              16773645,
+              16399470,
+              18426740,
+              18395873,
+              17768811,
+              16333203,
+              16313131,
+              16145639,
+              19116387,
+              16032802
+            ]
+          },
+          "roundCpuNs": {
+            "old0": [
+              40735000,
+              40620000,
+              40491000,
+              40157000,
+              40746000,
+              40753000,
+              40229000,
+              40325000,
+              39807000,
+              40264000,
+              40526000,
+              40146000,
+              40020000,
+              39722000,
+              40431000,
+              40232000,
+              40534000,
+              40494000,
+              40313000,
+              39902000,
+              40536000,
+              40353000,
+              39846000,
+              40407000,
+              40520000,
+              40710000,
+              40342000,
+              40575000,
+              40877000,
+              40407000,
+              40838000,
+              40894000,
+              40675000,
+              40736000,
+              40480000,
+              39884000
+            ],
+            "old1": [
+              40258000,
+              39943000,
+              40421000,
+              40527000,
+              40462000,
+              40241000,
+              40127000,
+              40234000,
+              39976000,
+              40353000,
+              40050000,
+              40459000,
+              40207000,
+              40438000,
+              40851000,
+              40357000,
+              40443000,
+              40165000,
+              40334000,
+              39854000,
+              40177000,
+              40381000,
+              40215000,
+              40351000,
+              40509000,
+              40194000,
+              40516000,
+              40572000,
+              40577000,
+              40729000,
+              40609000,
+              40407000,
+              40473000,
+              40596000,
+              40034000,
+              40624000
+            ],
+            "old2": [
+              40596000,
+              40036000,
+              40366000,
+              40556000,
+              40106000,
+              40247000,
+              40254000,
+              39901000,
+              40158000,
+              40618000,
+              39848000,
+              40166000,
+              40196000,
+              39893000,
+              39951000,
+              40245000,
+              40325000,
+              40386000,
+              40084000,
+              40097000,
+              40285000,
+              40543000,
+              40141000,
+              40322000,
+              40400000,
+              40389000,
+              39989000,
+              40520000,
+              40739000,
+              40463000,
+              40575000,
+              40271000,
+              40535000,
+              40254000,
+              39951000,
+              39918000
+            ],
+            "new0": [
+              13599000,
+              13351000,
+              13417000,
+              13326000,
+              13807000,
+              13299000,
+              13552000,
+              13429000,
+              12969000,
+              13210000,
+              13300000,
+              13497000,
+              13570000,
+              13431000,
+              13569000,
+              13697000,
+              13496000,
+              13698000,
+              13534000,
+              12883000,
+              13795000,
+              13609000,
+              13344000,
+              13544000,
+              13658000,
+              13579000,
+              13400000,
+              13671000,
+              13716000,
+              13398000,
+              13624000,
+              13626000,
+              13845000,
+              13810000,
+              13642000,
+              13425000
+            ],
+            "new1": [
+              13680000,
+              13308000,
+              13737000,
+              13695000,
+              13779000,
+              13553000,
+              13299000,
+              13464000,
+              13168000,
+              13461000,
+              13354000,
+              13749000,
+              13601000,
+              13489000,
+              13790000,
+              13374000,
+              13282000,
+              13638000,
+              13514000,
+              13430000,
+              13472000,
+              13433000,
+              12957000,
+              13617000,
+              13626000,
+              13356000,
+              13705000,
+              13833000,
+              13651000,
+              13615000,
+              13909000,
+              13471000,
+              13610000,
+              13434000,
+              13315000,
+              13726000
+            ],
+            "new2": [
+              13703000,
+              13506000,
+              13558000,
+              13582000,
+              13370000,
+              13475000,
+              13552000,
+              13525000,
+              13075000,
+              13955000,
+              13276000,
+              13624000,
+              13639000,
+              13391000,
+              13544000,
+              13189000,
+              13705000,
+              13206000,
+              13444000,
+              13786000,
+              13187000,
+              13762000,
+              13253000,
+              13344000,
+              13819000,
+              13550000,
+              13703000,
+              13964000,
+              14013000,
+              13940000,
+              14150000,
+              13685000,
+              13851000,
+              13573000,
+              13626000,
+              13108000
+            ]
+          },
+          "medianRoundElapsedNs": {
+            "old0": 42937309.5,
+            "old1": 42973173.5,
+            "old2": 42683203.5,
+            "new0": 17055410.0,
+            "new1": 17025568.0,
+            "new2": 16694130.5
+          },
+          "familyRoundElapsedNs": {
+            "old": [
+              129861551,
+              133079889,
+              131042957,
+              129062503,
+              128392530,
+              128318705,
+              127682402,
+              128407136,
+              129706307,
+              128104673,
+              127095900,
+              128383201,
+              129493496,
+              127165925,
+              129496601,
+              129980464,
+              127928987,
+              128563478,
+              131156649,
+              127432866,
+              128409391,
+              129721241,
+              127167343,
+              127696100,
+              128817146,
+              128938704,
+              130621649,
+              131145848,
+              130784315,
+              129764777,
+              131068372,
+              130286088,
+              128751830,
+              129682029,
+              127958093,
+              129519557
+            ],
+            "new": [
+              54064423,
+              55015722,
+              53608386,
+              50087864,
+              51368177,
+              49157901,
+              50388787,
+              52029216,
+              48755332,
+              51882674,
+              46507261,
+              49597070,
+              49073408,
+              49494238,
+              50671739,
+              48140642,
+              47166209,
+              51215368,
+              49813317,
+              49813725,
+              53732099,
+              49746501,
+              46710096,
+              49022017,
+              51168002,
+              50633490,
+              50745755,
+              50572416,
+              52837357,
+              51848373,
+              51342666,
+              52745786,
+              53549340,
+              49576657,
+              53846244,
+              51488315
+            ]
+          },
+          "familyMedianRoundElapsedNs": {
+            "old": 129000603.5,
+            "new": 50652614.5
+          },
+          "copyRatios": {
+            "old": 1.0067935388214242,
+            "new": 1.0216411091311404
+          },
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "candidateReferenceRatio": 0.3926540894050934,
+          "elapsedRatioLimit": 0.9,
+          "elapsedPassed": true
+        },
+        "code": {
+          "textRatio": 1.0317340385341895,
+          "textRatioLimit": 1.05,
+          "textPassed": true,
+          "maximumReportedFrameBytes": {
+            "old": 368,
+            "new": 368
+          },
+          "dynamicFrames": {
+            "old": [],
+            "new": []
+          },
+          "stackPassed": true
+        },
+        "decision": "Timing/code evidence only; semantic and storage gates are required separately."
+      },
+      "programs": {
+        "old": {
+          "source": "scan/peer-fwp.c",
+          "sourceSha256": "c4ef290f39a15ea094afca560b6ce61b01f95f1c39d41d32c250ee0dd73e9300",
+          "sha256": "ca6ade423f576bf02549fe760a76e38eb7dfe517c5aa0381fbd0a071d6e77377",
+          "bytes": 75352,
+          "sections": {
+            ".interp": 27,
+            ".note.gnu.build-id": 36,
+            ".note.ABI-tag": 32,
+            ".gnu.hash": 28,
+            ".dynsym": 1296,
+            ".dynstr": 603,
+            ".gnu.version": 108,
+            ".gnu.version_r": 80,
+            ".rela.dyn": 288,
+            ".rela.plt": 1104,
+            ".init": 24,
+            ".plt": 768,
+            ".text": 10588,
+            ".fini": 20,
+            ".rodata": 1035,
+            ".eh_frame_hdr": 404,
+            ".eh_frame": 2180,
+            ".init_array": 8,
+            ".fini_array": 8,
+            ".data.rel.ro": 112,
+            ".dynamic": 512,
+            ".got": 464,
+            ".data": 20,
+            ".bss": 78088,
+            ".comment": 45
+          },
+          "frames": [
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16774:13:fwp_args5",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16783:10:fwp_owned_entry8",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:477:13:fwp_flush",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:962:13:fwp_heap_oom",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:10523:13:fwp_segv",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1135:15:fwp_heap_chunks",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:17173:13:fail",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:17178:16:number",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:504:13:fwp_trap",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:6678:16:fwp_now_ns",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:977:13:fwp_rc_forget_slot",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:993:13:fwp_rc_prepare_chunk",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1193:40:fwp_heap_refill",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1283:13:fwp_mem_free",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16800:13:fwp_args10",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1518:13:fwp_heap_report",
+              "bytes": 368,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:529:45:fwp_trap_overflow.constprop",
+              "bytes": 144,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16796:10:fwp_owned_entry10",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1055:13:fwp_heap_init",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16787:13:fwp_args8",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:8553:13:fwp_wake_io",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1026:13:fwp_rc_wide_drop",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:8589:13:fwp_cancel_tree.part.0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:8707:13:fwp_poll_events",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1167:40:fwp_heap_alloc_big",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1212:40:fwp_heap_alloc_slow",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1227:21:fwp_heap_alloc",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1375:13:fwp_rc_share",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16764:10:e10",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16763:10:e8",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16778:13:fwp_caps8",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16765:13:fwp_caps5",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16791:13:fwp_caps10",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:8597:13:fwp_task_dispose",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:8629:13:fwp_free_zombie",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:5415:13:fwp_array_builder_release",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16669:13:fwp_drop0",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:17047:16:w5",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:17221:14:fwp_main_thread",
+              "bytes": 272,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16770:10:fwp_owned_entry5",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16762:10:e5",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16701:13:fwp_owner_release7",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:17257:5:main",
+              "bytes": 128,
+              "kind": "static"
+            }
+          ],
+          "stackScope": "Compiler-reported frames for this compiled source; excludes prebuilt libraries and is not total call-stack usage.",
+          "binary": "scan/slot4exe"
+        },
+        "new": {
+          "source": "scan/peer-fwp.c",
+          "sourceSha256": "e37c604a1df904b9e1b97cf1af30ab04110e092e9e54728187f76b343a556191",
+          "sha256": "48b3bfa5a552092b85cd82cfe67469f5a460951a75a9ca464959a34bd8866ec9",
+          "bytes": 75272,
+          "sections": {
+            ".interp": 27,
+            ".note.gnu.build-id": 36,
+            ".note.ABI-tag": 32,
+            ".gnu.hash": 28,
+            ".dynsym": 1320,
+            ".dynstr": 610,
+            ".gnu.version": 110,
+            ".gnu.version_r": 80,
+            ".rela.dyn": 264,
+            ".rela.plt": 1128,
+            ".init": 24,
+            ".plt": 784,
+            ".text": 10924,
+            ".fini": 20,
+            ".rodata": 1067,
+            ".eh_frame_hdr": 412,
+            ".eh_frame": 2124,
+            ".init_array": 8,
+            ".fini_array": 8,
+            ".dynamic": 512,
+            ".got": 472,
+            ".data": 20,
+            ".bss": 78088,
+            ".comment": 45
+          },
+          "frames": [
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16843:13:fwp_args5",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16852:10:fwp_owned_entry8",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:482:13:fwp_flush",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:967:13:fwp_heap_oom",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:10528:13:fwp_segv",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1140:15:fwp_heap_chunks",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:17356:13:fail",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:17361:16:number",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:509:13:fwp_trap",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:6683:16:fwp_now_ns",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16856:13:fwp_args8",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1523:13:fwp_heap_report",
+              "bytes": 368,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1060:13:fwp_heap_init",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:534:45:fwp_trap_overflow.constprop",
+              "bytes": 144,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:8558:13:fwp_wake_io",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16839:10:fwp_owned_entry5",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:8594:13:fwp_cancel_tree.part.0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:8712:13:fwp_poll_events",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1013:13:fwp_rc_wide_dup",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:982:13:fwp_rc_forget_slot",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:998:13:fwp_rc_prepare_chunk",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1198:40:fwp_heap_refill",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1288:13:fwp_mem_free",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1172:40:fwp_heap_alloc_big",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1217:40:fwp_heap_alloc_slow",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1380:13:fwp_rc_share",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16832:10:e8",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16831:10:e5",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16847:13:fwp_caps8",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16834:13:fwp_caps5",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:8602:13:fwp_task_dispose",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:138:10:fwp_data.part.0",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16688:13:fwp_drop1",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16860:13:fwp_arg_drop33",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16739:13:fwp_owner_release7",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16742:13:fwp_owner_release8",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16863:13:fwp_caps33",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16873:13:fwp_args33",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:17230:10:f33",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16869:10:fwp_owned_entry33",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16833:10:e33",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:8634:13:fwp_free_zombie",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:17404:14:fwp_main_thread",
+              "bytes": 256,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:17440:5:main",
+              "bytes": 128,
+              "kind": "static"
+            }
+          ],
+          "stackScope": "Compiler-reported frames for this compiled source; excludes prebuilt libraries and is not total call-stack usage.",
+          "binary": "scan/slot4exe"
+        }
+      },
+      "storage": [
+        {
+          "entry": "scan",
+          "language": "fwp",
+          "level": 1,
+          "variant": "observed",
+          "length": 4096,
+          "counts": {
+            "metadata": {
+              "allocationRequests": 0,
+              "requestedCountBytes": 0,
+              "releasedCountBytes": 0,
+              "initialCountBytes": 0,
+              "finalCountBytes": 0,
+              "peakCountBytes": 0,
+              "chunkHeaderBytes": 40,
+              "countPointerBytes": 8
+            },
+            "managed": {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            },
+            "operations": {
+              "fresh": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "dup": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "drop": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "release_last": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "unique": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "unique_mut": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "last": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "free_obj": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "free_arr": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              }
+            },
+            "sites": []
+          }
+        },
+        {
+          "entry": "scan",
+          "language": "fwp",
+          "level": 2,
+          "variant": "observed",
+          "length": 4096,
+          "counts": {
+            "metadata": {
+              "allocationRequests": 0,
+              "requestedCountBytes": 0,
+              "releasedCountBytes": 0,
+              "initialCountBytes": 0,
+              "finalCountBytes": 0,
+              "peakCountBytes": 0,
+              "chunkHeaderBytes": 40,
+              "countPointerBytes": 8
+            },
+            "managed": {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            },
+            "operations": {
+              "fresh": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "dup": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "drop": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "release_last": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "unique": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "unique_mut": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "last": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "free_obj": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "free_arr": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              }
+            },
+            "sites": []
+          }
+        }
+      ]
+    },
+    {
+      "run": 41139722605,
+      "job": 124356883584,
+      "artifact": 13020050094,
+      "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+      "machine": "x86_64",
+      "session": 2,
+      "archiveSha256": "580b8c1a67bfbe34ebd7c4c3a6b97a01a08ce79db6b88aa93ae0c251bbb69a61",
+      "files": 212,
+      "ordinaryProcesses": 2736,
+      "nativeCommands": 136,
+      "storageCommands": 126,
+      "configuration": {
+        "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+        "reference": "3ca66b543bb8764527fe2a5142119831df15cfb7",
+        "origin": "observed",
+        "waitPolicy": "posix-alarm",
+        "session": 2,
+        "directory": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/observed",
+        "environment": {
+          "PATH": "/usr/bin:/bin",
+          "LANG": "C",
+          "LC_ALL": "C",
+          "TZ": "UTC"
+        },
+        "timeout": 45,
+        "cpuPolicy": "all",
+        "affinity": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "labels": [
+          "old0",
+          "old1",
+          "old2",
+          "new0",
+          "new1",
+          "new2"
+        ],
+        "length": 4096,
+        "calls": 256,
+        "rounds": 36,
+        "warmups": 2,
+        "processes": 12,
+        "seed": 20261030,
+        "qualification": {
+          "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+          "actual": {
+            "system": "Linux",
+            "machine": "x86_64",
+            "cpu": "AMD EPYC 7763 64-Core Processor",
+            "processors": 4,
+            "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+            "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+          },
+          "expected": {
+            "system": "Linux",
+            "machine": "x86_64",
+            "cpu": "AMD EPYC 7763 64-Core Processor",
+            "processors": 4,
+            "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+            "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+          },
+          "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.85\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+          "failures": [],
+          "qualified": true
+        },
+        "run": "41139722605",
+        "attempt": "3",
+        "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.43",
+        "python": "3.14.4",
+        "scope": "Serial whole child including spawn, startup, checked work, output and cleanup; excludes artifact writes."
+      },
+      "report": {
+        "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+        "reference": "3ca66b543bb8764527fe2a5142119831df15cfb7",
+        "session": 2,
+        "origin": "observed",
+        "timing": {
+          "roundElapsedNs": {
+            "old0": [
+              33576585,
+              36323687,
+              38307133,
+              36894893,
+              39934917,
+              36744384,
+              35869223,
+              34565935,
+              35576207,
+              35870581,
+              36679374,
+              36209156,
+              36652827,
+              38767377,
+              34315248,
+              36467555,
+              34703010,
+              32704995,
+              32995004,
+              37933053,
+              36775510,
+              35077040,
+              33555613,
+              37477904,
+              34803823,
+              33547410,
+              34240810,
+              36857140,
+              35582678,
+              34371503,
+              32043359,
+              38512098,
+              37713042,
+              33934432,
+              38239938,
+              34791491
+            ],
+            "old1": [
+              34082336,
+              31955791,
+              32307512,
+              35745812,
+              34107145,
+              35129340,
+              36118691,
+              37089215,
+              36712170,
+              34167014,
+              36525505,
+              34121015,
+              36888486,
+              35910404,
+              36254036,
+              34836300,
+              34559952,
+              33044592,
+              33027648,
+              37030832,
+              33038114,
+              35336506,
+              33269481,
+              35696176,
+              34257564,
+              32813076,
+              35713516,
+              36322777,
+              33133731,
+              35526935,
+              34802761,
+              35854870,
+              37405218,
+              34573152,
+              34572242,
+              35550635
+            ],
+            "old2": [
+              34841169,
+              38153967,
+              33338564,
+              36633114,
+              35627195,
+              36675745,
+              38593727,
+              37828316,
+              34865072,
+              37344282,
+              35029141,
+              34098864,
+              37359098,
+              31669602,
+              37007312,
+              36016120,
+              31532748,
+              34427270,
+              32400697,
+              34943456,
+              31149440,
+              36824271,
+              37209343,
+              36545758,
+              34287291,
+              32077392,
+              33673752,
+              34606803,
+              36094345,
+              34353305,
+              34478094,
+              33781318,
+              33630449,
+              31736298,
+              34189810,
+              37811408
+            ],
+            "new0": [
+              24899349,
+              24454400,
+              24873061,
+              23368312,
+              22848581,
+              21935984,
+              23202783,
+              22578072,
+              24105551,
+              23339679,
+              22997519,
+              21874105,
+              21365560,
+              21776101,
+              22934537,
+              23625236,
+              25969378,
+              22035470,
+              23682191,
+              23756340,
+              23368662,
+              21347337,
+              24399596,
+              24113010,
+              26835328,
+              24584500,
+              21251871,
+              21684567,
+              21039657,
+              22556916,
+              24716708,
+              24306724,
+              24212462,
+              24109807,
+              25752614,
+              22808342
+            ],
+            "new1": [
+              25254342,
+              21855846,
+              23693622,
+              25627636,
+              25879364,
+              23270054,
+              25195824,
+              23054617,
+              23978836,
+              22816246,
+              23031047,
+              23991354,
+              24701669,
+              23901916,
+              22956136,
+              24522523,
+              23646745,
+              22589440,
+              23577865,
+              25271692,
+              24721412,
+              22476313,
+              22149946,
+              24022475,
+              22703506,
+              24637863,
+              22693241,
+              26899668,
+              23476162,
+              20851910,
+              24381699,
+              23109984,
+              23585908,
+              24233789,
+              23319084,
+              25410123
+            ],
+            "new2": [
+              25813808,
+              22762013,
+              23870892,
+              23782308,
+              23683637,
+              23492528,
+              22487502,
+              20568700,
+              25244730,
+              23674267,
+              22381104,
+              24146883,
+              25380580,
+              23988123,
+              24240098,
+              25027986,
+              25090574,
+              22360497,
+              25529841,
+              23980614,
+              22895442,
+              23729752,
+              24279585,
+              24291787,
+              23921471,
+              22704231,
+              25313198,
+              26438479,
+              23179347,
+              23236288,
+              22569050,
+              21922401,
+              27454106,
+              23736945,
+              24921227,
+              25541459
+            ]
+          },
+          "roundCpuNs": {
+            "old0": [
+              31360000,
+              34100000,
+              35790000,
+              31993000,
+              34900000,
+              32403000,
+              34110000,
+              31654000,
+              31298000,
+              33919000,
+              32265000,
+              31508000,
+              33639000,
+              32330000,
+              32291000,
+              32299000,
+              31819000,
+              30885000,
+              30603000,
+              34873000,
+              32831000,
+              31285000,
+              31972000,
+              32296000,
+              32671000,
+              31813000,
+              32505000,
+              33852000,
+              33767000,
+              31671000,
+              29163000,
+              34087000,
+              34259000,
+              32394000,
+              34765000,
+              31103000
+            ],
+            "old1": [
+              31040000,
+              28853000,
+              30232000,
+              33034000,
+              31739000,
+              32622000,
+              34362000,
+              33846000,
+              32728000,
+              31687000,
+              33534000,
+              32392000,
+              33598000,
+              32596000,
+              32064000,
+              32072000,
+              31582000,
+              30725000,
+              31052000,
+              34040000,
+              30165000,
+              32795000,
+              31557000,
+              31288000,
+              31954000,
+              30705000,
+              33360000,
+              34119000,
+              30206000,
+              33049000,
+              32213000,
+              32856000,
+              35615000,
+              32517000,
+              31264000,
+              32126000
+            ],
+            "old2": [
+              32147000,
+              34435000,
+              30268000,
+              34668000,
+              33469000,
+              33547000,
+              34714000,
+              35225000,
+              32633000,
+              35676000,
+              32547000,
+              31340000,
+              35122000,
+              30095000,
+              32667000,
+              33919000,
+              28704000,
+              30517000,
+              30850000,
+              32340000,
+              28842000,
+              34263000,
+              33876000,
+              34045000,
+              32475000,
+              30291000,
+              31802000,
+              30936000,
+              32527000,
+              32222000,
+              32427000,
+              30462000,
+              31905000,
+              30212000,
+              30630000,
+              33012000
+            ],
+            "new0": [
+              21508000,
+              20273000,
+              21053000,
+              20500000,
+              19851000,
+              19188000,
+              20811000,
+              19614000,
+              19888000,
+              19224000,
+              20426000,
+              19371000,
+              19014000,
+              20114000,
+              20297000,
+              20984000,
+              20974000,
+              19831000,
+              20233000,
+              20723000,
+              20556000,
+              19437000,
+              21355000,
+              20251000,
+              21513000,
+              20703000,
+              19462000,
+              19421000,
+              19342000,
+              19574000,
+              21436000,
+              20630000,
+              20899000,
+              21049000,
+              22453000,
+              20412000
+            ],
+            "new1": [
+              19802000,
+              19099000,
+              20387000,
+              21605000,
+              20226000,
+              20436000,
+              20724000,
+              19751000,
+              20686000,
+              20310000,
+              20037000,
+              21784000,
+              21593000,
+              20570000,
+              20764000,
+              21230000,
+              20369000,
+              20402000,
+              21458000,
+              21382000,
+              20505000,
+              20752000,
+              20438000,
+              20453000,
+              20786000,
+              21590000,
+              20745000,
+              22115000,
+              20539000,
+              19054000,
+              19632000,
+              20993000,
+              20324000,
+              20463000,
+              20984000,
+              21860000
+            ],
+            "new2": [
+              19978000,
+              20914000,
+              20027000,
+              19639000,
+              20393000,
+              20326000,
+              20459000,
+              18818000,
+              21297000,
+              21078000,
+              19995000,
+              20258000,
+              21151000,
+              20239000,
+              21406000,
+              20811000,
+              21598000,
+              19694000,
+              22858000,
+              20785000,
+              20183000,
+              20646000,
+              21415000,
+              20374000,
+              19999000,
+              19208000,
+              19945000,
+              21112000,
+              19515000,
+              20104000,
+              19280000,
+              19468000,
+              22456000,
+              20642000,
+              19889000,
+              20889000
+            ]
+          },
+          "medianRoundElapsedNs": {
+            "old0": 35869902.0,
+            "old1": 34982820.0,
+            "old2": 34853120.5,
+            "new0": 23368487.0,
+            "new1": 23670183.5,
+            "new2": 23896181.5
+          },
+          "familyRoundElapsedNs": {
+            "old": [
+              102500090,
+              106433445,
+              103953209,
+              109273819,
+              109669257,
+              108549469,
+              110581641,
+              109483466,
+              107153449,
+              107381877,
+              108234020,
+              104429035,
+              110900411,
+              106347383,
+              107576596,
+              107319975,
+              100795710,
+              100176857,
+              98423349,
+              109907341,
+              100963064,
+              107237817,
+              104034437,
+              109719838,
+              103348678,
+              98437878,
+              103628078,
+              107786720,
+              104810754,
+              104251743,
+              101324214,
+              108148286,
+              108748709,
+              100243882,
+              107001990,
+              108153534
+            ],
+            "new": [
+              75967499,
+              69072259,
+              72437575,
+              72778256,
+              72411582,
+              68698566,
+              70886109,
+              66201389,
+              73329117,
+              69830192,
+              68409670,
+              70012342,
+              71447809,
+              69666140,
+              70130771,
+              73175745,
+              74706697,
+              66985407,
+              72789897,
+              73008646,
+              70985516,
+              67553402,
+              70829127,
+              72427272,
+              73460305,
+              71926594,
+              69258310,
+              75022714,
+              67695166,
+              66645114,
+              71667457,
+              69339109,
+              75252476,
+              72080541,
+              73992925,
+              73759924
+            ]
+          },
+          "familyMedianRoundElapsedNs": {
+            "old": 107077719.5,
+            "new": 71557633.0
+          },
+          "copyRatios": {
+            "old": 1.0291733275360524,
+            "new": 1.0225814576698953
+          },
+          "copyControlLimit": 1.02,
+          "copyControlPassed": false,
+          "candidateReferenceRatio": 0.6682775215435924,
+          "elapsedRatioLimit": 0.9,
+          "elapsedPassed": true
+        },
+        "code": {
+          "textRatio": 1.030297565374211,
+          "textRatioLimit": 1.05,
+          "textPassed": true,
+          "maximumReportedFrameBytes": {
+            "old": 320,
+            "new": 320
+          },
+          "dynamicFrames": {
+            "old": [
+              {
+                "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1518:13:fwp_heap_report",
+                "bytes": 320,
+                "kind": "dynamic,bounded"
+              }
+            ],
+            "new": [
+              {
+                "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1523:13:fwp_heap_report",
+                "bytes": 320,
+                "kind": "dynamic,bounded"
+              }
+            ]
+          },
+          "stackPassed": true
+        },
+        "decision": "Timing/code evidence only; semantic and storage gates are required separately."
+      },
+      "programs": {
+        "old": {
+          "source": "scan/peer-fwp.c",
+          "sourceSha256": "c4ef290f39a15ea094afca560b6ce61b01f95f1c39d41d32c250ee0dd73e9300",
+          "sha256": "cde3a363d93b0558eb027f99836c5fe6bdc597ee1bfba70430f08ffe6b1cffd6",
+          "bytes": 41336,
+          "sections": {
+            ".note.gnu.build-id": 36,
+            ".interp": 28,
+            ".gnu.hash": 48,
+            ".dynsym": 1224,
+            ".dynstr": 597,
+            ".gnu.version": 102,
+            ".gnu.version_r": 96,
+            ".rela.dyn": 264,
+            ".rela.plt": 1032,
+            ".init": 27,
+            ".plt": 704,
+            ".plt.got": 16,
+            ".plt.sec": 688,
+            ".text": 11090,
+            ".fini": 13,
+            ".rodata": 1008,
+            ".eh_frame_hdr": 420,
+            ".eh_frame": 1840,
+            ".note.gnu.property": 48,
+            ".note.ABI-tag": 32,
+            ".init_array": 8,
+            ".fini_array": 8,
+            ".data.rel.ro": 112,
+            ".dynamic": 496,
+            ".got": 408,
+            ".data": 20,
+            ".bss": 74552,
+            ".comment": 38
+          },
+          "frames": [
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16774:13:fwp_args5",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16783:10:fwp_owned_entry8",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:477:13:fwp_flush",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:962:13:fwp_heap_oom",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:10523:13:fwp_segv",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1135:15:fwp_heap_chunks",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:17173:13:fail",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:17178:16:number",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:504:13:fwp_trap",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:6678:16:fwp_now_ns",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16800:13:fwp_args10",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1518:13:fwp_heap_report",
+              "bytes": 320,
+              "kind": "dynamic,bounded"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:529:45:fwp_trap_overflow.constprop",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16796:10:fwp_owned_entry10",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1055:13:fwp_heap_init",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16787:13:fwp_args8",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:8553:13:fwp_wake_io",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:977:13:fwp_rc_forget_slot",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:993:13:fwp_rc_prepare_chunk",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1193:40:fwp_heap_refill",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1283:13:fwp_mem_free",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:8589:13:fwp_cancel_tree.part.0",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:8707:13:fwp_poll_events",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1167:40:fwp_heap_alloc_big",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1212:40:fwp_heap_alloc_slow",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1227:21:fwp_heap_alloc",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:1375:13:fwp_rc_share",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16764:10:e10",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16763:10:e8",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16765:13:fwp_caps5",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16778:13:fwp_caps8",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16791:13:fwp_caps10",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:8597:13:fwp_task_dispose",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:8629:13:fwp_free_zombie",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:5415:13:fwp_array_builder_release",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16669:13:fwp_drop0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:17047:16:w5",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:17221:14:fwp_main_thread",
+              "bytes": 272,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16770:10:fwp_owned_entry5",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16762:10:e5",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:16701:13:fwp_owner_release7",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/buffer-baseline/programs/scan/peer-fwp.c:17257:5:main",
+              "bytes": 128,
+              "kind": "static"
+            }
+          ],
+          "stackScope": "Compiler-reported frames for this compiled source; excludes prebuilt libraries and is not total call-stack usage.",
+          "binary": "scan/slot4exe"
+        },
+        "new": {
+          "source": "scan/peer-fwp.c",
+          "sourceSha256": "e37c604a1df904b9e1b97cf1af30ab04110e092e9e54728187f76b343a556191",
+          "sha256": "e54d4208d3876b563f3c4617a3fd81f7e28b379cff36d04923a73e83e5b8094a",
+          "bytes": 41392,
+          "sections": {
+            ".note.gnu.build-id": 36,
+            ".interp": 28,
+            ".gnu.hash": 48,
+            ".dynsym": 1248,
+            ".dynstr": 604,
+            ".gnu.version": 104,
+            ".gnu.version_r": 96,
+            ".rela.dyn": 240,
+            ".rela.plt": 1056,
+            ".init": 27,
+            ".plt": 720,
+            ".plt.got": 16,
+            ".plt.sec": 704,
+            ".text": 11426,
+            ".fini": 13,
+            ".rodata": 1040,
+            ".eh_frame_hdr": 444,
+            ".eh_frame": 1776,
+            ".note.gnu.property": 48,
+            ".note.ABI-tag": 32,
+            ".init_array": 8,
+            ".fini_array": 8,
+            ".dynamic": 496,
+            ".got": 416,
+            ".data": 20,
+            ".bss": 74552,
+            ".comment": 38
+          },
+          "frames": [
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16843:13:fwp_args5",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16852:10:fwp_owned_entry8",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:482:13:fwp_flush",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:967:13:fwp_heap_oom",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:10528:13:fwp_segv",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1140:15:fwp_heap_chunks",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:17356:13:fail",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:17361:16:number",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:509:13:fwp_trap",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:6683:16:fwp_now_ns",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16856:13:fwp_args8",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1523:13:fwp_heap_report",
+              "bytes": 320,
+              "kind": "dynamic,bounded"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1060:13:fwp_heap_init",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:534:45:fwp_trap_overflow.constprop",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:8558:13:fwp_wake_io",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16839:10:fwp_owned_entry5",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:8594:13:fwp_cancel_tree.part.0",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:8712:13:fwp_poll_events",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1013:13:fwp_rc_wide_dup",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:982:13:fwp_rc_forget_slot",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:998:13:fwp_rc_prepare_chunk",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1198:40:fwp_heap_refill",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1288:13:fwp_mem_free",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1172:40:fwp_heap_alloc_big",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1217:40:fwp_heap_alloc_slow",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:1380:13:fwp_rc_share",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16832:10:e8",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16831:10:e5",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16834:13:fwp_caps5",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16847:13:fwp_caps8",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:8602:13:fwp_task_dispose",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:138:10:fwp_data.part.0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16688:13:fwp_drop1",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16860:13:fwp_arg_drop33",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16739:13:fwp_owner_release7",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16742:13:fwp_owner_release8",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16863:13:fwp_caps33",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16873:13:fwp_args33",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:17230:10:f33",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16869:10:fwp_owned_entry33",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:16833:10:e33",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:8634:13:fwp_free_zombie",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:17404:14:fwp_main_thread",
+              "bytes": 240,
+              "kind": "static"
+            },
+            {
+              "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/scan/programs/scan/peer-fwp.c:17440:5:main",
+              "bytes": 128,
+              "kind": "static"
+            }
+          ],
+          "stackScope": "Compiler-reported frames for this compiled source; excludes prebuilt libraries and is not total call-stack usage.",
+          "binary": "scan/slot4exe"
+        }
+      },
+      "storage": [
+        {
+          "entry": "scan",
+          "language": "fwp",
+          "level": 1,
+          "variant": "observed",
+          "length": 4096,
+          "counts": {
+            "metadata": {
+              "allocationRequests": 0,
+              "requestedCountBytes": 0,
+              "releasedCountBytes": 0,
+              "initialCountBytes": 0,
+              "finalCountBytes": 0,
+              "peakCountBytes": 0,
+              "chunkHeaderBytes": 40,
+              "countPointerBytes": 8
+            },
+            "managed": {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            },
+            "operations": {
+              "fresh": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "dup": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "drop": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "release_last": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "unique": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "unique_mut": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "last": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "free_obj": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "free_arr": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              }
+            },
+            "sites": []
+          }
+        },
+        {
+          "entry": "scan",
+          "language": "fwp",
+          "level": 2,
+          "variant": "observed",
+          "length": 4096,
+          "counts": {
+            "metadata": {
+              "allocationRequests": 0,
+              "requestedCountBytes": 0,
+              "releasedCountBytes": 0,
+              "initialCountBytes": 0,
+              "finalCountBytes": 0,
+              "peakCountBytes": 0,
+              "chunkHeaderBytes": 40,
+              "countPointerBytes": 8
+            },
+            "managed": {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            },
+            "operations": {
+              "fresh": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "dup": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "drop": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "release_last": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "unique": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "unique_mut": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "last": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "free_obj": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              },
+              "free_arr": {
+                "calls": 0,
+                "effective": 0,
+                "last": 0
+              }
+            },
+            "sites": []
+          }
+        }
+      ]
+    }
+  ],
+  "rejectedHosts": [
+    {
+      "run": 41139714279,
+      "job": 124350741749,
+      "session": 1,
+      "attempt": 1,
+      "artifact": 13018272265,
+      "archiveSha256": "4b8c9666568939098dd8ec947d686fd2fc3852502366f86d7a6fb2918f83057a",
+      "qualification": {
+        "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 9V74 80-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.26\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [
+          "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'AMD EPYC 9V74 80-Core Processor'"
+        ],
+        "qualified": false
+      },
+      "buildStarted": false,
+      "timingStarted": false
+    },
+    {
+      "run": 41139714279,
+      "job": 124352813686,
+      "session": 1,
+      "attempt": 2,
+      "artifact": 13018023431,
+      "archiveSha256": "b6957efa00a18d3493832662f9c231194e0acc62fc47be2ec900250d0754ccb6",
+      "qualification": {
+        "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 9V74 80-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.29\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [
+          "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'AMD EPYC 9V74 80-Core Processor'"
+        ],
+        "qualified": false
+      },
+      "buildStarted": false,
+      "timingStarted": false
+    },
+    {
+      "run": 41139714279,
+      "job": 124356876103,
+      "session": 1,
+      "attempt": 3,
+      "artifact": 13018980416,
+      "archiveSha256": "c3133beeeac45ff55f6f8a793ebd2b21caba23a80e9713426d1dbf91a9683c91",
+      "qualification": {
+        "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 9V74 80-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.26\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [
+          "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'AMD EPYC 9V74 80-Core Processor'"
+        ],
+        "qualified": false
+      },
+      "buildStarted": false,
+      "timingStarted": false
+    },
+    {
+      "run": 41139714279,
+      "job": 124357362405,
+      "session": 1,
+      "attempt": 4,
+      "artifact": 13018514799,
+      "archiveSha256": "bd3a1a092f0be49a805e0dabf3075b181aea76a5643e916c989d282fee4b26f5",
+      "qualification": {
+        "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 9V45 96-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V45 96-Core Processor\nCPU family:                              26\nModel:                                   2\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.24\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [
+          "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'AMD EPYC 9V45 96-Core Processor'"
+        ],
+        "qualified": false
+      },
+      "buildStarted": false,
+      "timingStarted": false
+    },
+    {
+      "run": 41139722605,
+      "job": 124350770493,
+      "session": 2,
+      "attempt": 1,
+      "artifact": 13017678035,
+      "archiveSha256": "18b40d06abd461a3850bfa905b0feb6c5a070117e38f4012e833e35491d6c64c",
+      "qualification": {
+        "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 9V45 96-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V45 96-Core Processor\nCPU family:                              26\nModel:                                   2\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.24\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [
+          "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'AMD EPYC 9V45 96-Core Processor'"
+        ],
+        "qualified": false
+      },
+      "buildStarted": false,
+      "timingStarted": false
+    },
+    {
+      "run": 41139722605,
+      "job": 124352892788,
+      "session": 2,
+      "attempt": 2,
+      "artifact": 13017554225,
+      "archiveSha256": "f47a3e0f5d4b2a0c3f2be784a3bbb38e6074e650800ac9010f84ff4a9e5e0a71",
+      "qualification": {
+        "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 9V45 96-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V45 96-Core Processor\nCPU family:                              26\nModel:                                   2\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.24\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [
+          "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'AMD EPYC 9V45 96-Core Processor'"
+        ],
+        "qualified": false
+      },
+      "buildStarted": false,
+      "timingStarted": false
+    }
+  ]
+}

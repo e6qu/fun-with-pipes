@@ -1,0 +1,1536 @@
+{
+  "source": "899ad012c19a9f49abce941070cdbfef610725d5",
+  "status": "Focused native and compiler-budget checks pass; timing and final production gates remain open.",
+  "referenceCompiler": "377cf9ce25c65afba595b6413e5bb1d50721ea7a",
+  "referenceArtifactSource": "3ca66b543bb8764527fe2a5142119831df15cfb7",
+  "native": [
+    {
+      "machine": "aarch64",
+      "run": 41138032240,
+      "job": 124345218388,
+      "artifact": 13017766345,
+      "archiveSha256": "6e8772ce52b4996f7b1611b5901dc81898366602c791befec26c8377574dc53c",
+      "testsPassed": 13,
+      "allocationCases": [
+        {
+          "packing": 0,
+          "fusion": 0,
+          "level": 1,
+          "observations": [
+            {
+              "length": -3,
+              "requests": 1,
+              "bytes": 8,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 4096
+            },
+            {
+              "length": 0,
+              "requests": 1,
+              "bytes": 8,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 1,
+              "requests": 1,
+              "bytes": 16,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 16,
+              "requests": 1,
+              "bytes": 136,
+              "retains": 0,
+              "peakLiveBytes": 144,
+              "finalLiveBytes": 0,
+              "countBytes": 455
+            },
+            {
+              "length": 4096,
+              "requests": 1,
+              "bytes": 32776,
+              "retains": 0,
+              "peakLiveBytes": 32776,
+              "finalLiveBytes": 0,
+              "countBytes": 1
+            },
+            {
+              "length": 262144,
+              "requests": 1,
+              "bytes": 2097160,
+              "retains": 0,
+              "peakLiveBytes": 2097160,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            }
+          ]
+        },
+        {
+          "packing": 0,
+          "fusion": 0,
+          "level": 2,
+          "observations": [
+            {
+              "length": -3,
+              "requests": 1,
+              "bytes": 8,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 4096
+            },
+            {
+              "length": 0,
+              "requests": 1,
+              "bytes": 8,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 1,
+              "requests": 1,
+              "bytes": 16,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 16,
+              "requests": 1,
+              "bytes": 136,
+              "retains": 0,
+              "peakLiveBytes": 144,
+              "finalLiveBytes": 0,
+              "countBytes": 455
+            },
+            {
+              "length": 4096,
+              "requests": 1,
+              "bytes": 32776,
+              "retains": 0,
+              "peakLiveBytes": 32776,
+              "finalLiveBytes": 0,
+              "countBytes": 1
+            },
+            {
+              "length": 262144,
+              "requests": 1,
+              "bytes": 2097160,
+              "retains": 0,
+              "peakLiveBytes": 2097160,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            }
+          ]
+        },
+        {
+          "packing": 0,
+          "fusion": 1,
+          "level": 1,
+          "observations": [
+            {
+              "length": -3,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 0,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 1,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 16,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 4096,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 262144,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            }
+          ]
+        },
+        {
+          "packing": 0,
+          "fusion": 1,
+          "level": 2,
+          "observations": [
+            {
+              "length": -3,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 0,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 1,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 16,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 4096,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 262144,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            }
+          ]
+        },
+        {
+          "packing": 1,
+          "fusion": 0,
+          "level": 1,
+          "observations": [
+            {
+              "length": -3,
+              "requests": 1,
+              "bytes": 8,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 4096
+            },
+            {
+              "length": 0,
+              "requests": 1,
+              "bytes": 8,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 1,
+              "requests": 1,
+              "bytes": 16,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 16,
+              "requests": 1,
+              "bytes": 136,
+              "retains": 0,
+              "peakLiveBytes": 144,
+              "finalLiveBytes": 0,
+              "countBytes": 455
+            },
+            {
+              "length": 4096,
+              "requests": 1,
+              "bytes": 32776,
+              "retains": 0,
+              "peakLiveBytes": 32776,
+              "finalLiveBytes": 0,
+              "countBytes": 1
+            },
+            {
+              "length": 262144,
+              "requests": 1,
+              "bytes": 2097160,
+              "retains": 0,
+              "peakLiveBytes": 2097160,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            }
+          ]
+        },
+        {
+          "packing": 1,
+          "fusion": 0,
+          "level": 2,
+          "observations": [
+            {
+              "length": -3,
+              "requests": 1,
+              "bytes": 8,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 4096
+            },
+            {
+              "length": 0,
+              "requests": 1,
+              "bytes": 8,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 1,
+              "requests": 1,
+              "bytes": 16,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 16,
+              "requests": 1,
+              "bytes": 136,
+              "retains": 0,
+              "peakLiveBytes": 144,
+              "finalLiveBytes": 0,
+              "countBytes": 455
+            },
+            {
+              "length": 4096,
+              "requests": 1,
+              "bytes": 32776,
+              "retains": 0,
+              "peakLiveBytes": 32776,
+              "finalLiveBytes": 0,
+              "countBytes": 1
+            },
+            {
+              "length": 262144,
+              "requests": 1,
+              "bytes": 2097160,
+              "retains": 0,
+              "peakLiveBytes": 2097160,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            }
+          ]
+        },
+        {
+          "packing": 1,
+          "fusion": 1,
+          "level": 1,
+          "observations": [
+            {
+              "length": -3,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 0,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 1,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 16,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 4096,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 262144,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            }
+          ]
+        },
+        {
+          "packing": 1,
+          "fusion": 1,
+          "level": 2,
+          "observations": [
+            {
+              "length": -3,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 0,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 1,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 16,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 4096,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 262144,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            }
+          ]
+        }
+      ],
+      "cleanupControls": [
+        {
+          "packing": 0,
+          "level": 1,
+          "variant": "omitted-cancel-cleanup",
+          "status": 186
+        },
+        {
+          "packing": 0,
+          "level": 1,
+          "variant": "omitted-trap-cleanup",
+          "status": 185
+        },
+        {
+          "packing": 0,
+          "level": 1,
+          "variant": "owned",
+          "status": 0
+        },
+        {
+          "packing": 0,
+          "level": 2,
+          "variant": "omitted-cancel-cleanup",
+          "status": 186
+        },
+        {
+          "packing": 0,
+          "level": 2,
+          "variant": "omitted-trap-cleanup",
+          "status": 185
+        },
+        {
+          "packing": 0,
+          "level": 2,
+          "variant": "owned",
+          "status": 0
+        },
+        {
+          "packing": 1,
+          "level": 1,
+          "variant": "omitted-cancel-cleanup",
+          "status": 186
+        },
+        {
+          "packing": 1,
+          "level": 1,
+          "variant": "omitted-trap-cleanup",
+          "status": 185
+        },
+        {
+          "packing": 1,
+          "level": 1,
+          "variant": "owned",
+          "status": 0
+        },
+        {
+          "packing": 1,
+          "level": 2,
+          "variant": "omitted-cancel-cleanup",
+          "status": 186
+        },
+        {
+          "packing": 1,
+          "level": 2,
+          "variant": "omitted-trap-cleanup",
+          "status": 185
+        },
+        {
+          "packing": 1,
+          "level": 2,
+          "variant": "owned",
+          "status": 0
+        }
+      ],
+      "binaryHashes": {
+        "fusion/generated-0-0-O1.exe": {
+          "bytes": 150240,
+          "sha256": "b49eaa5706590df157aa5acc39830de87a8f9c9be1c60ac1f6e211348e9752df"
+        },
+        "fusion/generated-0-0-O2.exe": {
+          "bytes": 149456,
+          "sha256": "95c46c6c366536bbfd7df1a5ebd6bd7c14a413d4babfbd35f6359763895063da"
+        },
+        "fusion/generated-0-1-O1.exe": {
+          "bytes": 150448,
+          "sha256": "3b4912cde1638ddccf7e7cfffa6c7e37aeea9bf73d15fd6fd0f68292b3a32c5a"
+        },
+        "fusion/generated-0-1-O2.exe": {
+          "bytes": 149688,
+          "sha256": "43b4fb42801b1569a4917d008586d39b64cf355b91854843f021a63651623df6"
+        },
+        "fusion/generated-0-O1-omitted-cancel-cleanup.exe": {
+          "bytes": 150984,
+          "sha256": "70434c7ded900a2c9c5d38151517eca37697221ec6903a7bb7556a1cbb303f98"
+        },
+        "fusion/generated-0-O1-omitted-trap-cleanup.exe": {
+          "bytes": 150912,
+          "sha256": "da207f296b41429fad4ebd508c03c6c956d337c86e406ce5bcefb8766ade38c1"
+        },
+        "fusion/generated-0-O1-owned.exe": {
+          "bytes": 150984,
+          "sha256": "d2b20af6a2b01c919f5bde7633c46ba7c71ff6e2484b75d39cf11665bbe6925b"
+        },
+        "fusion/generated-0-O2-omitted-cancel-cleanup.exe": {
+          "bytes": 150152,
+          "sha256": "b561693e926430879fb1f40056c75a36636940e9c9bbfbd65b443d2f8b94a317"
+        },
+        "fusion/generated-0-O2-omitted-trap-cleanup.exe": {
+          "bytes": 150136,
+          "sha256": "46e3c1ca8f3113ba6180d9b0dc3f142f3f80629eadbd3d1d51b8eb0ead1d874d"
+        },
+        "fusion/generated-0-O2-owned.exe": {
+          "bytes": 150136,
+          "sha256": "7f590defb6ebde752661978d177fca4f46f27e04f3795652dd243eb4a9547716"
+        },
+        "fusion/generated-1-0-O1.exe": {
+          "bytes": 150240,
+          "sha256": "5fe664471ae052047d7ac7739ab6c33a75643b9143a0275c3fffedc33a9bbbb8"
+        },
+        "fusion/generated-1-0-O2.exe": {
+          "bytes": 149456,
+          "sha256": "73af6476f80a522b9129f6ba2dc93863a67fc583a4b99a8a6ea4babdda66db67"
+        },
+        "fusion/generated-1-1-O1.exe": {
+          "bytes": 150448,
+          "sha256": "1cd0a0e6f019d9f3dc166dcc7143cf6606d7bec645c95bbdb25d3e1d3304ee7c"
+        },
+        "fusion/generated-1-1-O2.exe": {
+          "bytes": 149640,
+          "sha256": "dcb15609cc0121bd018b3dc9cba65dfc9c980dbdfbbae180c676ab6b5ce084ab"
+        },
+        "fusion/generated-1-O1-omitted-cancel-cleanup.exe": {
+          "bytes": 150960,
+          "sha256": "714e2d6cbf0dcc4c3928162a80e60551b8f5d14a408af4cb5fdf8e652ba9d982"
+        },
+        "fusion/generated-1-O1-omitted-trap-cleanup.exe": {
+          "bytes": 150912,
+          "sha256": "5f013fd20eb6e21b2051834eb06deb7363ad49dc79c33bcc8da29541bf1d512f"
+        },
+        "fusion/generated-1-O1-owned.exe": {
+          "bytes": 150984,
+          "sha256": "1a94bd3e52b87dff7414f4331f3be6ec7573ad39ab6bfc84771011357b53c69d"
+        },
+        "fusion/generated-1-O2-omitted-cancel-cleanup.exe": {
+          "bytes": 150104,
+          "sha256": "e71c24c76d367432fe6cb944919c8237716ebe5c19fff7a42a77b9237ec1d0f1"
+        },
+        "fusion/generated-1-O2-omitted-trap-cleanup.exe": {
+          "bytes": 150064,
+          "sha256": "a39203138cf35e211dd621c9fbd8d130b55be08e96d384cf62a7508e8b8bcadf"
+        },
+        "fusion/generated-1-O2-owned.exe": {
+          "bytes": 150088,
+          "sha256": "5cf2b96b6d8822d7400981824703b1709dc25f8435eab79a062a835ca6a390fe"
+        }
+      },
+      "observerSource": "048c92c5bbb296803874c499fb8ae2e271ecaf82",
+      "observerRun": 41135554961,
+      "observerArtifact": 13016638162,
+      "observerArchiveSha256": "0926217b74d756665010c6103fe57449ee7ae568031dc02d0bd5c65d447c4c33",
+      "scanManagedFields": {
+        "requests": 0,
+        "requestedBytes": 0,
+        "retains": 0,
+        "peakChargedBytes": 0,
+        "finalChargedBytes": 0
+      },
+      "scanCountStorageBytes": 0,
+      "scanCountCalls": 0,
+      "lengths": [
+        0,
+        16,
+        4096,
+        262144
+      ],
+      "optimizationLevels": [
+        "O1",
+        "O2"
+      ],
+      "instructionBytes": {
+        "reference": 10588,
+        "candidate": 10924
+      },
+      "maximumReportedFrameBytes": {
+        "reference": 368,
+        "candidate": 368
+      }
+    },
+    {
+      "machine": "x86_64",
+      "run": 41138032240,
+      "job": 124345218402,
+      "artifact": 13018075939,
+      "archiveSha256": "6a727d83ce0e5b256f5bc62ac3edcfbf01fa564d6de7e6d4919bb45782b8e6a7",
+      "testsPassed": 13,
+      "allocationCases": [
+        {
+          "packing": 0,
+          "fusion": 0,
+          "level": 1,
+          "observations": [
+            {
+              "length": -3,
+              "requests": 1,
+              "bytes": 8,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 4096
+            },
+            {
+              "length": 0,
+              "requests": 1,
+              "bytes": 8,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 1,
+              "requests": 1,
+              "bytes": 16,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 16,
+              "requests": 1,
+              "bytes": 136,
+              "retains": 0,
+              "peakLiveBytes": 144,
+              "finalLiveBytes": 0,
+              "countBytes": 455
+            },
+            {
+              "length": 4096,
+              "requests": 1,
+              "bytes": 32776,
+              "retains": 0,
+              "peakLiveBytes": 32776,
+              "finalLiveBytes": 0,
+              "countBytes": 1
+            },
+            {
+              "length": 262144,
+              "requests": 1,
+              "bytes": 2097160,
+              "retains": 0,
+              "peakLiveBytes": 2097160,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            }
+          ]
+        },
+        {
+          "packing": 0,
+          "fusion": 0,
+          "level": 2,
+          "observations": [
+            {
+              "length": -3,
+              "requests": 1,
+              "bytes": 8,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 4096
+            },
+            {
+              "length": 0,
+              "requests": 1,
+              "bytes": 8,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 1,
+              "requests": 1,
+              "bytes": 16,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 16,
+              "requests": 1,
+              "bytes": 136,
+              "retains": 0,
+              "peakLiveBytes": 144,
+              "finalLiveBytes": 0,
+              "countBytes": 455
+            },
+            {
+              "length": 4096,
+              "requests": 1,
+              "bytes": 32776,
+              "retains": 0,
+              "peakLiveBytes": 32776,
+              "finalLiveBytes": 0,
+              "countBytes": 1
+            },
+            {
+              "length": 262144,
+              "requests": 1,
+              "bytes": 2097160,
+              "retains": 0,
+              "peakLiveBytes": 2097160,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            }
+          ]
+        },
+        {
+          "packing": 0,
+          "fusion": 1,
+          "level": 1,
+          "observations": [
+            {
+              "length": -3,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 0,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 1,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 16,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 4096,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 262144,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            }
+          ]
+        },
+        {
+          "packing": 0,
+          "fusion": 1,
+          "level": 2,
+          "observations": [
+            {
+              "length": -3,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 0,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 1,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 16,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 4096,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 262144,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            }
+          ]
+        },
+        {
+          "packing": 1,
+          "fusion": 0,
+          "level": 1,
+          "observations": [
+            {
+              "length": -3,
+              "requests": 1,
+              "bytes": 8,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 4096
+            },
+            {
+              "length": 0,
+              "requests": 1,
+              "bytes": 8,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 1,
+              "requests": 1,
+              "bytes": 16,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 16,
+              "requests": 1,
+              "bytes": 136,
+              "retains": 0,
+              "peakLiveBytes": 144,
+              "finalLiveBytes": 0,
+              "countBytes": 455
+            },
+            {
+              "length": 4096,
+              "requests": 1,
+              "bytes": 32776,
+              "retains": 0,
+              "peakLiveBytes": 32776,
+              "finalLiveBytes": 0,
+              "countBytes": 1
+            },
+            {
+              "length": 262144,
+              "requests": 1,
+              "bytes": 2097160,
+              "retains": 0,
+              "peakLiveBytes": 2097160,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            }
+          ]
+        },
+        {
+          "packing": 1,
+          "fusion": 0,
+          "level": 2,
+          "observations": [
+            {
+              "length": -3,
+              "requests": 1,
+              "bytes": 8,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 4096
+            },
+            {
+              "length": 0,
+              "requests": 1,
+              "bytes": 8,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 1,
+              "requests": 1,
+              "bytes": 16,
+              "retains": 0,
+              "peakLiveBytes": 16,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 16,
+              "requests": 1,
+              "bytes": 136,
+              "retains": 0,
+              "peakLiveBytes": 144,
+              "finalLiveBytes": 0,
+              "countBytes": 455
+            },
+            {
+              "length": 4096,
+              "requests": 1,
+              "bytes": 32776,
+              "retains": 0,
+              "peakLiveBytes": 32776,
+              "finalLiveBytes": 0,
+              "countBytes": 1
+            },
+            {
+              "length": 262144,
+              "requests": 1,
+              "bytes": 2097160,
+              "retains": 0,
+              "peakLiveBytes": 2097160,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            }
+          ]
+        },
+        {
+          "packing": 1,
+          "fusion": 1,
+          "level": 1,
+          "observations": [
+            {
+              "length": -3,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 0,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 1,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 16,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 4096,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 262144,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            }
+          ]
+        },
+        {
+          "packing": 1,
+          "fusion": 1,
+          "level": 2,
+          "observations": [
+            {
+              "length": -3,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 0,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 1,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 16,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 4096,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            },
+            {
+              "length": 262144,
+              "requests": 0,
+              "bytes": 0,
+              "retains": 0,
+              "peakLiveBytes": 0,
+              "finalLiveBytes": 0,
+              "countBytes": 0
+            }
+          ]
+        }
+      ],
+      "cleanupControls": [
+        {
+          "packing": 0,
+          "level": 1,
+          "variant": "omitted-cancel-cleanup",
+          "status": 186
+        },
+        {
+          "packing": 0,
+          "level": 1,
+          "variant": "omitted-trap-cleanup",
+          "status": 185
+        },
+        {
+          "packing": 0,
+          "level": 1,
+          "variant": "owned",
+          "status": 0
+        },
+        {
+          "packing": 0,
+          "level": 2,
+          "variant": "omitted-cancel-cleanup",
+          "status": 186
+        },
+        {
+          "packing": 0,
+          "level": 2,
+          "variant": "omitted-trap-cleanup",
+          "status": 185
+        },
+        {
+          "packing": 0,
+          "level": 2,
+          "variant": "owned",
+          "status": 0
+        },
+        {
+          "packing": 1,
+          "level": 1,
+          "variant": "omitted-cancel-cleanup",
+          "status": 186
+        },
+        {
+          "packing": 1,
+          "level": 1,
+          "variant": "omitted-trap-cleanup",
+          "status": 185
+        },
+        {
+          "packing": 1,
+          "level": 1,
+          "variant": "owned",
+          "status": 0
+        },
+        {
+          "packing": 1,
+          "level": 2,
+          "variant": "omitted-cancel-cleanup",
+          "status": 186
+        },
+        {
+          "packing": 1,
+          "level": 2,
+          "variant": "omitted-trap-cleanup",
+          "status": 185
+        },
+        {
+          "packing": 1,
+          "level": 2,
+          "variant": "owned",
+          "status": 0
+        }
+      ],
+      "binaryHashes": {
+        "fusion/generated-0-0-O1.exe": {
+          "bytes": 110520,
+          "sha256": "53f9878121cacdcb5671b6cbd17de11bd5d9c25aa1124eb65cca7a398423ad4d"
+        },
+        "fusion/generated-0-0-O2.exe": {
+          "bytes": 118408,
+          "sha256": "8a8ec33efde598fbafb65a1359d0d08354e47aeefa9cd8db3ffc4eb3ef901c34"
+        },
+        "fusion/generated-0-1-O1.exe": {
+          "bytes": 110728,
+          "sha256": "27c752e11838017a125d87c3656dd134f5116b7e156f65401ca9f228c70c9972"
+        },
+        "fusion/generated-0-1-O2.exe": {
+          "bytes": 122832,
+          "sha256": "4c22a319621d02d0f4135bb6772210c4042eac5ce4e6713f41e1ffa5fa043f9e"
+        },
+        "fusion/generated-0-O1-omitted-cancel-cleanup.exe": {
+          "bytes": 115336,
+          "sha256": "4be087d8cc717e503675a648e0a489ffeae7773300131e88891fe296f0fdf125"
+        },
+        "fusion/generated-0-O1-omitted-trap-cleanup.exe": {
+          "bytes": 115288,
+          "sha256": "4a6a04cb5377175866b62c703e8a0e37f05ae8a523f2af4a1777156cc902a5c6"
+        },
+        "fusion/generated-0-O1-owned.exe": {
+          "bytes": 115360,
+          "sha256": "b7bc36acb20f2b03aa9ed67393e5d5e70b36dd66e3accd3536075b8deb96a30f"
+        },
+        "fusion/generated-0-O2-omitted-cancel-cleanup.exe": {
+          "bytes": 123272,
+          "sha256": "c2908adda6ecc1a2e99bf26a900e4b5cb2c2af5ee35a2e7b9bbafb57088f781b"
+        },
+        "fusion/generated-0-O2-omitted-trap-cleanup.exe": {
+          "bytes": 123192,
+          "sha256": "805cfb675f39ae5c50abac51db0683d65a11e64d088914d6c88f5c82e3bc2c59"
+        },
+        "fusion/generated-0-O2-owned.exe": {
+          "bytes": 123256,
+          "sha256": "d7bf3fd18bbe1d4c333f4dc66164e9e5a61662695c127110d52ae8514a2af6fa"
+        },
+        "fusion/generated-1-0-O1.exe": {
+          "bytes": 114616,
+          "sha256": "d8343d16a9193b53f954053f80ee31f59c287912b9f2bc3d6221719957ad9beb"
+        },
+        "fusion/generated-1-0-O2.exe": {
+          "bytes": 122504,
+          "sha256": "e792bd1baca471899b8baf7a9124a92832b276bc0a75c63f75e1b3394582eeba"
+        },
+        "fusion/generated-1-1-O1.exe": {
+          "bytes": 114824,
+          "sha256": "624615a74edcf1880b177e4fad16a16068551350a3c2b60c7e9aa153795c355a"
+        },
+        "fusion/generated-1-1-O2.exe": {
+          "bytes": 122800,
+          "sha256": "b82007de4a6dc15d685dc1cae7b2220275ac35a1e2294af475be1803c595c72d"
+        },
+        "fusion/generated-1-O1-omitted-cancel-cleanup.exe": {
+          "bytes": 115336,
+          "sha256": "3756ecde1465165b89a04476d20e933d0c8bf1fda96fe59f2fadfd3c53dfad04"
+        },
+        "fusion/generated-1-O1-omitted-trap-cleanup.exe": {
+          "bytes": 115288,
+          "sha256": "c55198429caa6d3340068b65bf1fc0b83e6657ad2e9e65e1cfe5954f52c74422"
+        },
+        "fusion/generated-1-O1-owned.exe": {
+          "bytes": 115360,
+          "sha256": "a162f3245a53ca543e9ed3980c28499ee90fbabe66a9da86bd07cf0a2da3e763"
+        },
+        "fusion/generated-1-O2-omitted-cancel-cleanup.exe": {
+          "bytes": 123240,
+          "sha256": "ebdac21d85e5d3ed1b578861958d603600d6783c19a4d05e0cc569df1bbc54d3"
+        },
+        "fusion/generated-1-O2-omitted-trap-cleanup.exe": {
+          "bytes": 123160,
+          "sha256": "175be09353dc73f6f90d6429d4d60dda276430d3cab23f9967d3010963918359"
+        },
+        "fusion/generated-1-O2-owned.exe": {
+          "bytes": 123224,
+          "sha256": "1551104d42bca3605d087d0b4d2cefa13d3c1f24aea1e2e0c15fa05dd892b17b"
+        }
+      },
+      "observerSource": "048c92c5bbb296803874c499fb8ae2e271ecaf82",
+      "observerRun": 41135554961,
+      "observerArtifact": 13015659406,
+      "observerArchiveSha256": "9efdab2b841678cb0705366b83f5ad04052cc0b18d1af60dc9cc74b9b968527c",
+      "scanManagedFields": {
+        "requests": 0,
+        "requestedBytes": 0,
+        "retains": 0,
+        "peakChargedBytes": 0,
+        "finalChargedBytes": 0
+      },
+      "scanCountStorageBytes": 0,
+      "scanCountCalls": 0,
+      "lengths": [
+        0,
+        16,
+        4096,
+        262144
+      ],
+      "optimizationLevels": [
+        "O1",
+        "O2"
+      ],
+      "instructionBytes": {
+        "reference": 11090,
+        "candidate": 11426
+      },
+      "maximumReportedFrameBytes": {
+        "reference": 320,
+        "candidate": 320
+      }
+    }
+  ],
+  "analysis": [
+    {
+      "host": "linux",
+      "run": 41138040099,
+      "job": 124345244380,
+      "artifact": 13018031384,
+      "archiveSha256": "3e919c1df38a39b9f84cd32f7bd6c75e26db70a3fadb6f8ab934bf331c333161",
+      "hardware": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.85\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "unitTestsPassed": 224,
+      "allTargetLintPassed": true,
+      "proofTimings": 6912,
+      "rows": [
+        {
+          "workers": 16,
+          "variant": "Merged",
+          "medianBatchNs": 42658253,
+          "proofsPerBatch": 64,
+          "rounds": 12
+        },
+        {
+          "workers": 16,
+          "variant": "Separate",
+          "medianBatchNs": 54307000,
+          "proofsPerBatch": 64,
+          "rounds": 12
+        },
+        {
+          "workers": 16,
+          "variant": "SeparateCopy",
+          "medianBatchNs": 54170116,
+          "proofsPerBatch": 64,
+          "rounds": 12
+        },
+        {
+          "workers": 32,
+          "variant": "Merged",
+          "medianBatchNs": 65172232,
+          "proofsPerBatch": 64,
+          "rounds": 12
+        },
+        {
+          "workers": 32,
+          "variant": "Separate",
+          "medianBatchNs": 89236354,
+          "proofsPerBatch": 64,
+          "rounds": 12
+        },
+        {
+          "workers": 32,
+          "variant": "SeparateCopy",
+          "medianBatchNs": 89263623,
+          "proofsPerBatch": 64,
+          "rounds": 12
+        },
+        {
+          "workers": 64,
+          "variant": "Merged",
+          "medianBatchNs": 107695014,
+          "proofsPerBatch": 64,
+          "rounds": 12
+        },
+        {
+          "workers": 64,
+          "variant": "Separate",
+          "medianBatchNs": 156489084,
+          "proofsPerBatch": 64,
+          "rounds": 12
+        },
+        {
+          "workers": 64,
+          "variant": "SeparateCopy",
+          "medianBatchNs": 156121989,
+          "proofsPerBatch": 64,
+          "rounds": 12
+        }
+      ],
+      "startupLog": "\u001b[1m\u001b[92m    Finished\u001b[0m `test` profile [optimized + debuginfo] target(s) in 0.01s\n\u001b[1m\u001b[92m     Running\u001b[0m unittests src/lib.rs (target/debug/deps/fwp-8084ac74a6cde664)\n\nrunning 1 test\ntest arc_scope::tests::ownership_rest_startup_budget ... rest-startup fixture=tests/rest/forms.fwp raw=true functions=3935 compile_seconds=1.507979 analysis_seconds=0.318004 analysis_limit_seconds=10 stats=AnalysisStats { rounds: 111, visits: 12882, summary_updates: 2819, contexts: 3891, closures: 2559, facts: 25861, cached_types: 517, cached_expressions: 18328 }\nrest-worklist fixture=tests/rest/forms.fwp full_scan_facts=equal validation_added_facts=false\nrest-startup fixture=tests/fixtures/server_entries.fwp raw=true functions=3211 compile_seconds=1.221150 analysis_seconds=0.228506 analysis_limit_seconds=10 stats=AnalysisStats { rounds: 87, visits: 11081, summary_updates: 2337, contexts: 3177, closures: 2154, facts: 21445, cached_types: 376, cached_expressions: 14689 }\nrest-worklist fixture=tests/fixtures/server_entries.fwp full_scan_facts=equal validation_added_facts=false\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 227 filtered out; finished in 11.74s\n\n"
+    },
+    {
+      "host": "intel",
+      "run": 41138040099,
+      "job": 124345244038,
+      "artifact": 13017556733,
+      "archiveSha256": "83d03db37c98ebb83fec7b18efd1b6f90cacf1587009da023d531ac748fa344f",
+      "hardware": "hw.model: Macmini6,2\nhw.memsize: 15032385536\nmachdep.cpu.brand_string: Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\n",
+      "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "unitTestsPassed": 224,
+      "allTargetLintPassed": true,
+      "proofTimings": 6912,
+      "rows": [
+        {
+          "workers": 16,
+          "variant": "Merged",
+          "medianBatchNs": 84898960,
+          "proofsPerBatch": 64,
+          "rounds": 12
+        },
+        {
+          "workers": 16,
+          "variant": "Separate",
+          "medianBatchNs": 105861994,
+          "proofsPerBatch": 64,
+          "rounds": 12
+        },
+        {
+          "workers": 16,
+          "variant": "SeparateCopy",
+          "medianBatchNs": 104959426,
+          "proofsPerBatch": 64,
+          "rounds": 12
+        },
+        {
+          "workers": 32,
+          "variant": "Merged",
+          "medianBatchNs": 131084202,
+          "proofsPerBatch": 64,
+          "rounds": 12
+        },
+        {
+          "workers": 32,
+          "variant": "Separate",
+          "medianBatchNs": 172416964,
+          "proofsPerBatch": 64,
+          "rounds": 12
+        },
+        {
+          "workers": 32,
+          "variant": "SeparateCopy",
+          "medianBatchNs": 172392936,
+          "proofsPerBatch": 64,
+          "rounds": 12
+        },
+        {
+          "workers": 64,
+          "variant": "Merged",
+          "medianBatchNs": 230432824,
+          "proofsPerBatch": 64,
+          "rounds": 12
+        },
+        {
+          "workers": 64,
+          "variant": "Separate",
+          "medianBatchNs": 313604712,
+          "proofsPerBatch": 64,
+          "rounds": 12
+        },
+        {
+          "workers": 64,
+          "variant": "SeparateCopy",
+          "medianBatchNs": 311554661,
+          "proofsPerBatch": 64,
+          "rounds": 12
+        }
+      ],
+      "startupLog": "\u001b[1m\u001b[92m    Finished\u001b[0m `test` profile [optimized + debuginfo] target(s) in 0.03s\n\u001b[1m\u001b[92m     Running\u001b[0m unittests src/lib.rs (target/debug/deps/fwp-9058781d44c7ff0a)\n\nrunning 1 test\ntest arc_scope::tests::ownership_rest_startup_budget ... rest-startup fixture=tests/rest/forms.fwp raw=true functions=3935 compile_seconds=2.470725 analysis_seconds=0.480313 analysis_limit_seconds=10 stats=AnalysisStats { rounds: 111, visits: 12882, summary_updates: 2819, contexts: 3891, closures: 2559, facts: 25861, cached_types: 517, cached_expressions: 18328 }\nrest-worklist fixture=tests/rest/forms.fwp full_scan_facts=equal validation_added_facts=false\nrest-startup fixture=tests/fixtures/server_entries.fwp raw=true functions=3211 compile_seconds=2.114991 analysis_seconds=0.406221 analysis_limit_seconds=10 stats=AnalysisStats { rounds: 87, visits: 11081, summary_updates: 2337, contexts: 3177, closures: 2154, facts: 21445, cached_types: 376, cached_expressions: 14689 }\nrest-worklist fixture=tests/fixtures/server_entries.fwp full_scan_facts=equal validation_added_facts=false\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 227 filtered out; finished in 16.84s\n\n"
+    }
+  ]
+}

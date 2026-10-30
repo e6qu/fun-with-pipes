@@ -31,6 +31,11 @@ class ObserverControls(unittest.TestCase):
                     with self.assertRaises(AssertionError):
                         STORAGE.check_counts(changed, 'scan', 'elided')
         changed = copy.deepcopy(counts)
+        for key in ['initialCountBytes', 'finalCountBytes', 'peakCountBytes']:
+            changed['metadata'][key] = 1
+        with self.assertRaises(AssertionError):
+            STORAGE.check_counts(changed, 'scan', 'elided')
+        changed = copy.deepcopy(counts)
         changed['operations']['dup']['calls'] = 1
         with self.assertRaises(AssertionError):
             STORAGE.check_counts(changed, 'scan', 'elided')

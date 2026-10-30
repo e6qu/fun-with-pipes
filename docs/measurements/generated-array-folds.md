@@ -1,6 +1,6 @@
 # Remove an immediately consumed numeric array
 
-**Implemented on the next branch; verification pending.** The [current buffer results](buffer-current.md)
+**Focused native and compiler-budget checks pass; full production verification is pending.** The [current buffer results](buffer-current.md)
 retain all four sessions, including their failed timing controls. This work
 targets a remaining allocation, without claiming that the measurements already
 establish a stable speed comparison.
@@ -19,7 +19,7 @@ right, starting at zero. Thus `sum-generated 4` returns `6`.
 The reference native code allocates and fills the array, then reads it in a second
 loop. When nobody else uses that array, one loop could generate each number and
 immediately add it. Stored arrays still need the direct fold delivered in #231;
-this proposal concerns only a producer consumed at this call site.
+this transformation concerns only a producer consumed at this call site.
 
 ## Required proof
 
@@ -37,18 +37,16 @@ this proposal concerns only a producer consumed at this call site.
 - Only the immediately consumed result disappears. Arrays reused elsewhere,
   unknown callbacks and rejected proofs keep their existing implementation.
 
-The implementation should extend `src/fuse.rs` and its existing loop lowering.
-If the size check needs an internal operation, share the real constructor's
-count rule with that operation. Do not duplicate a host-size constant or silently
-omit validation because allocation was removed.
+The implementation extends `src/fuse.rs` and its existing loop lowering.
+An internal checked-count operation shares the real constructor's count rule;
+removing storage does not remove size validation.
 
 ## Acceptance declared before implementation
 
 Use the same scan entry and lengths 0, 16, 4,096 and 262,144. The frozen reference
-is `377cf9ce25c65afba595b6413e5bb1d50721ea7a`, the #231 head under final
-production validation. Its compiler/runtime match the measured `3ca66b54`; only
-wait tests, workflow ordering and documentation changed. #231 must pass before
-this next delivery merges. If a compiler repair changes the reference, declare
+is `377cf9ce25c65afba595b6413e5bb1d50721ea7a`, the verified #231 head.
+Its compiler/runtime match the measured `3ca66b54`; only
+wait tests, workflow ordering and documentation changed. If a compiler repair changes the reference, declare
 that source before candidate runs. Do not change the C/Rust programs, arithmetic,
 production flags or sample counts.
 
@@ -107,3 +105,59 @@ intervals. Process-memory snapshots use `before-work` and `after-work`; these
 are not a measure of peak memory inside the loop. C/Rust peers and the other fwp
 entries retain their real construction/release boundaries. All such observers
 run in separate diagnostic binaries and are excluded from ordinary timing.
+
+## Verified costs and remaining gates
+
+At `899ad012c19a9f49abce941070cdbfef610725d5`, the five focused native targets
+pass thirteen tests on each Linux architecture. Both packing settings and O1/O2
+verify negative/empty counts, rounding order, narrow-integer overflow, argument
+order, size limits and preserved materialization for rejected proofs. Failure
+and cancellation after two completed loop steps preserve an outer string alias;
+deliberately omitting either cleanup is detected.
+
+The [check index](generated-array-checks-2026-10-31.json) records artifacts,
+hashes, allocation cases, native images, cleanup controls and compiler budgets.
+Independent observers at `048c92c5` use the same compiler implementation; later
+changes repair the test's loop selection and extend its cases. All eight scan
+observations per host (four lengths at O1/O2) have zero managed requests,
+count calls, count storage and peak/final payload. An inserted allocate/free pair
+is rejected even though it leaks nothing.
+Review also tightened the diagnostic checker: equal nonzero starting, peak and
+final count storage must fail, not just unequal values. A correlated-error test
+now covers that case. Retained observations pass the stronger rule; no timed
+program or measurement was changed.
+
+| Cost | ARM64 reference → candidate | AMD64 reference → candidate |
+|---|---|---|
+| Managed requests, three 4,096-element scans | 3 → 0 | 3 → 0 |
+| Requested payload bytes | 98,328 → 0 | 98,328 → 0 |
+| Peak live payload bytes | 32,776 → 0 | 32,776 → 0 |
+| Instruction bytes (`.text`) | 10,588 → 10,924 (+3.17%) | 11,090 → 11,426 (+3.03%) |
+| Largest reported frame component | 368 → 368 bytes | 320 → 320 bytes |
+
+Code grows within the 5% limit; no new dynamic frame requirement appears.
+The existing AMD64 reporting frame remains dynamic but bounded. Frame reports
+do not establish a bound on the whole call stack.
+
+Both G2 compiler-analysis hosts pass: Linux AMD64 and Intel macOS each pass
+224 unit tests, all-target lint and 6,912 recorded proof timings. G2 measures
+ownership analysis with ordinary optimization disabled; it does not isolate
+the compile-time cost of this fusion transformation.
+
+The full production matrix remains required. The [timing index](generated-array-timings-2026-10-31.json)
+contains three completed sessions; AMD64 session one remains pending. Each
+session times 256 scans per process, including process startup, output and
+cleanup, with 2,736 complete process records. Ratios below compare candidate
+fwp with the frozen previous fwp, not C/Rust. A ratio below one means less time.
+
+| Host/session | Old identical-copy ratio | New identical-copy ratio | Candidate/reference time | Timing acceptance |
+|---|---|---|---|---|
+| ARM64 / 1 | 1.00852 | 1.02054 | 0.36231 | Inconclusive |
+| ARM64 / 2 | 1.00679 | 1.02164 | 0.39265 | Inconclusive |
+| AMD64 / 2 | 1.02917 | 1.02258 | 0.66828 | Inconclusive |
+
+Each row exceeds the 1.02 identical-copy limit in at least one family. Lower
+elapsed times therefore do not qualify as accepted speedups. No collected
+session was retried. Wrong CPU models are rejected before build/timing and their
+qualification artifacts remain retained; replacing them collects no second
+measurement of an already observed session.

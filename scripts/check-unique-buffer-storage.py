@@ -21,7 +21,7 @@ def check_counts(counts, entry, scan_storage):
         assert all(operation['calls'] == 0 for operation in counts['operations'].values()), counts
         metadata = counts['metadata']
         assert metadata['allocationRequests'] == metadata['requestedCountBytes'] == 0, counts
-        assert metadata['initialCountBytes'] == metadata['finalCountBytes'] == metadata['peakCountBytes'], counts
+        assert metadata['initialCountBytes'] == metadata['finalCountBytes'] == metadata['peakCountBytes'] == 0, counts
     else:
         assert counts['managed']['requests'] >= 3, counts
         if entry != 'scan':

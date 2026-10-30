@@ -29,16 +29,17 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. Preserve [#230's verified file and clock delivery](docs/roadmap-history.md#file-cleanup-portability-and-measurement-clocks-pr-230).
+1. Preserve [#231's verified scalar-fold delivery](docs/roadmap-history.md#direct-scalar-folds-and-process-timing-pr-231).
+   All production gates pass; its timing acceptance remains open.
    The [handoff](docs/development-state.md) names the current source and checks.
-2. Complete PR #231's final production gate, retaining its verified scalar-fold
-   cost reductions with timing acceptance open. The [four repaired full-buffer
+2. Finish verification of [generated-array elimination](docs/measurements/generated-array-folds.md).
+   Both focused native GCC suites and compiler-analysis budgets pass. Audit the
+   declared timing sessions, then run the complete production matrix once the
+   batch is ready. Preserve oversized-count checks, argument/effect/failure order
+   and outer-owner cleanup. Allocation removal and timing acceptance are separate.
+   The [four repaired full-buffer
    sessions](docs/measurements/buffer-current.md) are audited: 25/48 copy controls
    fail, and no workload passes all four. Do not retry unchanged measurements.
-   Next, implement the [generated-array allocation proof and fixed acceptance
-   requirements](docs/measurements/generated-array-folds.md). Preserve oversized
-   count checks, argument/effect/failure order and outer-owner cleanup. Verify
-   allocation removal separately from the still-open timing requirements.
 3. Resolve D2/N1's failed measurements before claiming numerical speed acceptance.
    Fixed CPU affinity and equal executable names did not resolve the controls.
    Do not rerun unchanged experiments or increase sample counts again.
