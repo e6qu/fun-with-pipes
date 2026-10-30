@@ -1,6 +1,9 @@
 # Current work
 
-**Next:** publish and run the paired [direct string-result comparison](measurements/direct-string-results.md), while watching PR #228's final gates. Keep one active PR. Its final head remains `f3eb5072`; do not push preparation work to it.
+**Next:** implement the declared unique, non-growing replacement path in
+[the second string candidate](measurements/direct-string-results.md#second-candidate-reuse-non-growing-unique-strings).
+Keep monitoring PR #228's targeted Intel Mac retry and the remaining measurements.
+Its final head is still `f3eb5072`; open no second PR before verified merge.
 
 Preparation is on `direct-string-results` in `/private/tmp/fwp-direct-string-results`.
 Protocol `e0fb1a09` precedes runtime/test source `089465bb`. `replace` counts
@@ -11,10 +14,16 @@ String-size failure rules. No application speed claim is accepted.
 
 ## Checks and measurements in progress
 
-PR #228 production `41018509811`: benchmarks, macOS ARM regular (626 tests/132
-summaries), ARM ownership (364/127) and Intel ownership (364/127), plus Windows AMD64 (811/202), pass with full audits. Four native jobs
-remain running without reported failed steps. Documentation `41018509711` and
-both G2 hosts `41018512169` pass; G2 has 226 tests/three summaries each.
+All production test results at `f3eb5072` are fully audited: Linux 993 tests/257
+summaries each, regular Mac 626/132, ownership Mac 364/127, Windows 811/202,
+benchmarks 2/2. Documentation `41018509711` and both G2 hosts `41018512169`
+pass; G2 has 226 tests/three summaries per host.
+
+The regular Intel Mac job passed its tests, then failed two uploads with DNS
+ENOTFOUND after verifying its 3,357-file archive. Its diagnostic belongs to the
+intentional cleanup-abort test. Production `41018509811` now reruns only that job
+as `123979346074`, on the same source. Its complete result and upload must pass
+and receive a full log audit before merge. All other results remain verified.
 
 Focused string run `41021988225` passes all six native hosts at `089465bb`.
 Every host passes 18 integration tests/seven summaries; GCC AMD64 additionally
@@ -24,18 +33,26 @@ all 954 saved subprocess outputs/statuses and 162 native image headers/hashes.
 Artifacts are in `/private/tmp/fwp-direct-focused-089465bb`; the audit is
 `/private/tmp/fwp-direct-focused-audit.json`. The checked-in
 [native archive](measurements/direct-strings-native-2026-10-30.json) retains all
-text evidence and native headers/hashes; full images remain in GitHub artifacts. WASI run `41023744074` is queued on
-both Linux architectures and remains required.
+text evidence and native headers/hashes; full images remain in GitHub artifacts. WASI run `41023744074` passes on Linux ARM64 with 32 tests/four summaries,
+fully audited with required-toolchain flags enabled. Linux AMD64 is still running.
 
 The paired runner restores exactly two frozen runtime bodies in generated C,
 without an older compiler. It records separate candidate/reference and C/Rust
 comparisons, independent raw/managed profiles, all subprocess streams, native
 images, sections and stack reports. Its checker recomputes all 18,510 observations
 per complete session, including failed timing decisions; corrupted-evidence tests
-must also pass. Four qualified host sessions are queued in `41024798466` at `8da8f4cf`. Keep the existing
+must also pass. Both ARM sessions and AMD session 2 in `41024798466` are complete and rejected:
+large-input ratios are 0.990359573, 0.992313087 and 1.013587760. The first two
+miss the 5% gain; AMD also exceeds 1% regression. All 55,530 observations and
+seven integrity/rejection tests per session pass independent audits. Counts are
+exactly unchanged except the confirmed removal of 1,640/26,216 raw allocations.
+AMD session 1 has not measured: 9V45 and 9V74 assignments were rejected before
+building. Replacement `41031097803` uses frozen branch `direct-string-measurements`
+at the same `8da8f4cf`. Retain all attempts. The next candidate must change code
+and meet the unchanged timing and new declared managed-allocation requirements. Keep the existing
 limits and retain failed/inconclusive sessions; never retry unchanged timings.
 
-Guarded checks: six allocation/acceptance tests pass with small Clang O2 probes;
+Guarded checks: seven allocation/acceptance tests pass with small Clang O2 probes;
 144 size/control exits pass at Clang O0/O1/O2; Rust formatting, Python syntax and
 workflow lint pass. These local checks do not establish GCC or WASI coverage.
 Full builds, measurements and final production checks remain on GitHub.

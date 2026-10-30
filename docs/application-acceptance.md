@@ -258,12 +258,12 @@ Timeouts, crashes and obsolete memory selectors in emitted C fail the inventory.
 Investigate every rejection before claiming support; execution snapshots and
 runtime ownership tests remain necessary.
 
-The [recorded 85-program inventory](measurements/file-applications.md#which-execution-examples-pass-arcs-checks)
-accepts 81 examples in both modes, including manual pointers with explicit caller
-obligations. Three intentionally invalid examples fail ordinary compilation; the
-expired inter-task derivative remains rejected by ARC. Existing `arc_corpus`
-tests execute admitted programs and check their final managed storage; extend
-that coverage as admissions change.
+The [85-program inventory from before GC removal](measurements/file-applications.md#which-execution-examples-pass-arcs-checks)
+records 81 accepted examples, three intentionally invalid programs, and an
+expired inter-task derivative rejected by ownership checking. Its tracing-mode
+comparison is historical: tracing is no longer available. Current `arc_corpus`
+tests execute admitted programs and check final managed storage; use current
+inventory artifacts when claiming today's compiler admission.
 
 ## Separating derivative and representation costs
 

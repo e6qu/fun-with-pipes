@@ -5,7 +5,6 @@ import copy
 import importlib.util
 import json
 from pathlib import Path
-import re
 import subprocess
 import tempfile
 import unittest
@@ -82,6 +81,20 @@ class Evidence(unittest.TestCase):
             stack, 'a.c:1:1:f\t273\tstatic\na.c:2:1:g\t513\tstatic\na.c:3:1:h\t16\tdynamic\n')
         self.assertEqual(len(result['failures']), 5)
         self.assertEqual(len(result['frameChanges']), 3)
+
+    def test_malformed_size_reports_are_rejected(self):
+        section = '.text 1000 0\n.rodata 100 0\n'
+        stack = 'a.c:1:1:f\t16\tstatic\n'
+        self.assertEqual(CHECK.representation_decision(
+            section + '.note.gnu.build-id 36 652\n',
+            section + '.note.gnu.build-id 36 652\n', stack, stack)['failures'], [])
+        for invalid in ['a.c:1:1:f\t-1\tstatic\n', 'a.c:1:1:f\t16\tunknown\n',
+                        'a.c:f\t16\tstatic\n', stack + stack]:
+            with self.subTest(stack=invalid), self.assertRaises(AssertionError):
+                CHECK.representation_decision(section, section, stack, invalid)
+        for invalid in ['.text 1000 0\n.rodata -1 0\n', section + '.text 1 0\n']:
+            with self.subTest(section=invalid), self.assertRaises(AssertionError):
+                CHECK.representation_decision(section, invalid, stack, stack)
 
     def test_compiled_raw_observer_detects_growth_free_and_scope(self):
         header = r'''

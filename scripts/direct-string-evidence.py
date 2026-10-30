@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Exact reference construction and independent string-cost acceptance rules."""
 import hashlib
-import json
 from pathlib import Path
 import re
 import statistics
@@ -145,6 +144,8 @@ def stack_frames(text):
     frames = {}
     for line in text.splitlines():
         source, size, kind = line.split('\t')
+        assert re.fullmatch(r'.+:\d+:\d+:.+', source), source
+        assert size.isdecimal() and kind in ('static', 'dynamic', 'dynamic,bounded'), line
         name = source.rsplit(':', 1)[1]
         assert name not in frames, name
         frames[name] = dict(bytes=int(size), kind=kind)
@@ -154,8 +155,13 @@ def stack_frames(text):
 
 def representation_decision(reference_sections, candidate_sections, reference_stack, candidate_stack):
     def sections(text):
-        return {match[1]: int(match[2]) for match in
-                re.finditer(r'^(\.[\w.]+)\s+(\d+)\s+\d+\s*$', text, re.M)}
+        result = {}
+        for line in text.splitlines():
+            if line.startswith('.'):
+                match = re.fullmatch(r'(\.\S+)\s+(\d+)\s+\d+\s*', line)
+                assert match is not None and match[1] not in result, line
+                result[match[1]] = int(match[2])
+        return result
     r, c = sections(reference_sections), sections(candidate_sections)
     assert '.text' in r and '.text' in c
     costs = {prefix: sum(v for k, v in c.items() if k == prefix or k.startswith(prefix + '.'))

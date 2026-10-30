@@ -77,9 +77,9 @@ original thirty binaries and sixteen series per host.
 
 ## Which execution examples pass ARC's checks
 
-The [current compiler admission inventory](arc-admission-2026-10-24.json) checks
-C emission for 85 top-level execution examples on Linux AMD64, with fwp O1,
-dynamic storage and stack optimization enabled. “Admission” here means the
+The [2026-10-24 compiler inventory](arc-admission-2026-10-24.json), recorded before
+GC removal, checked C emission for 85 top-level execution examples on Linux AMD64.
+It used fwp O1, dynamic storage and stack optimization enabled. “Admission” here means the
 compiler accepts the ownership proof, not that this inventory executes the program.
 
 - 81 emit C in both tracing and checked ARC modes, including the manual-pointer
@@ -88,7 +88,8 @@ compiler accepts the ownership proof, not that this inventory executes the progr
 - The inter-task derivative example deliberately uses an expired derivative
   value. ARC rejects it; tracing/interpreter tests require its runtime safety trap.
 
-This inventory does not prove native execution, physical reclamation or support
-for every service/library boundary. The [ownership contracts](../ownership.md)
+Tracing was subsequently removed; these are historical results, not selectable
+current execution modes. This inventory does not prove native execution, physical
+reclamation or support for every service/library boundary. The [ownership contracts](../ownership.md)
 still apply. The [older inventory](arc-admission-2026-10-22.json) predates
 [manual-pointer support](manual-pointers.md); its old rejection is superseded.

@@ -3,8 +3,9 @@
 Protocol `e0fb1a09` preceded implementation `089465bb`. The reference is
 `f3eb507280e5a71083190ec1e26bbbdbe555dae8`, the application-validation PR head.
 It extends [the current word-frequency baseline](wordfreq-current.md); it changes
-no existing derivative or numerical-kernel timing limit. This is a proposed
-experiment, not an accepted optimization.
+no existing derivative or numerical-kernel timing limit. The first candidate is
+rejected by the timing rules below. A second candidate is specified at the end
+of this report before its implementation. Neither has timing acceptance.
 
 ## Source finding and proposed change
 
@@ -130,3 +131,72 @@ commands, outputs, order, code identities and recomputed decisions. Timing failu
 still produce a full report and receive integrity checks. A passing integrity
 audit means the result is faithfully recorded; it does not turn a failed timing
 or memory limit into an accepted optimization.
+
+## First candidate: rejected measurements
+
+Run `41024798466` measures source `8da8f4cf`. Three completed sessions have full
+output/profile/size/stack records and pass all seven evidence-rejection tests.
+The large-input ratios below compare the candidate with the original runtime;
+at most **0.95** is required in every session. A value above 1 means slower.
+
+| Session | Large-input candidate/reference | Decision |
+|---|---:|---|
+| ARM64 1 | 0.990359573 | Only 0.96% faster; misses the required 5% |
+| ARM64 2 | 0.992313087 | Only 0.77% faster; misses the required 5% |
+| AMD64 2 | 1.013587760 | 1.36% slower; also exceeds the 1% regression limit |
+
+The AMD64 first session has not measured yet. Two assignments were rejected
+before building/timing: EPYC 9V45 in `41024798466`, then EPYC 9V74 in
+`41028913571`. Replacement `41031097803` retains the same source through branch
+`direct-string-measurements`. These rejections are retained, not discarded samples.
+The completed failures already rule out overall acceptance; the remaining
+session completes the declared observation set and cannot erase them.
+
+The allocation prediction is confirmed in these three sessions: replacement
+loses 1,640/26,216 temporary raw allocations, while all five managed counters
+remain exactly unchanged. Raw requested bytes fall by 104,960/1,677,824;
+this is cumulative allocation traffic, not peak or resident memory. Shared-input
+semantics, cleanup, representation limits and the large-input copy controls pass.
+The second match scan is additional work; these timings do not isolate its cost.
+
+## Second candidate: reuse non-growing unique strings
+
+This specification precedes implementation. Keep the original reference bodies,
+input files, qualified CPUs, settings, two sessions per architecture, timing
+schedule and all existing acceptance limits. Do not retry the first candidate
+unchanged, relax the 5% gain or 1% regression rules, or claim its rejected results
+as acceptance for the next code.
+
+After finding a real match, a replacement whose byte length does not exceed the
+pattern's may reuse the source allocation only if the existing ownership query
+proves exactly one owner. Copy unmatched spans with `memmove`, write replacement
+bytes and continue forward through the unread suffix. The destination never
+passes that suffix, so the loop needs no sizing scan or temporary allocation.
+Set the final length and terminator and transfer the existing owner to the result.
+Shared/static inputs and growing replacements keep a separately allocated result.
+This extends the rule already used by ASCII case conversion; it adds no syntax,
+conversion, wrapper or claim that ownership queries are free.
+
+Borrowed patterns/replacements can equal the consumed source. A pattern equal to
+the source matches its entire contents at most once. A replacement equal to the
+source is either growing or is caught by the unchanged-text shortcut. Test these
+cases explicitly, with and without another owner, before relying on that reasoning.
+Keep the cached pattern length during the copy and never alter unread source bytes.
+No surviving alias may observe a mutation. Reject a deliberately removed uniqueness
+condition through an alias check, not an incidental crash.
+
+Require no result allocation for a changed, non-growing, uniquely owned input;
+require the existing result allocation for shared/static/growing cases. Preserve
+all earlier raw-buffer, byte/NUL/UTF-8, overflow, allocation-failure, cancellation
+and missing-owner controls. WASI currently does not select native unique reuse;
+it must retain correct results and physical reclamation without claiming this
+native allocation saving.
+
+For word frequency, source analysis predicts another 1,640/26,216 **managed**
+allocations removed, giving at most 12,513/199,721 requests and
+431,876/6,909,092 requested bytes. Verify these separate predictions. Retains,
+peak charge and final charge keep their existing limits; final charge remains
+zero. Keep raw requests at zero inside both operations. Report the added
+uniqueness decision and all code/frame changes. Repetition receives no new
+application timing claim. Full native/WASI checks and all four timing sessions
+are still required before accepting the combined change.
