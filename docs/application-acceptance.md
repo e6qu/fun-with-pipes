@@ -10,8 +10,8 @@ performance and platform requirements in the last column.
 
 | Program family | Work and current input | Existing evidence | Still required for this suite |
 |---|---|---|---|
-| [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [Four current C/Rust sessions and fixed budgets](measurements/wordfreq-current.md), plus historical [text comparison](measurements/unchanged-text.md) | Preserve the new evidence controls and integrate current six-platform cleanup coverage |
-| [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and small ownership controls | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | [Allocation-boundary failure checks](measurements/directory-failures.md) pass on six native hosts; integrate them into final production coverage |
+| [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [Four current C/Rust sessions and fixed budgets](measurements/wordfreq-current.md), plus historical [text comparison](measurements/unchanged-text.md) | Baseline/evidence checks verified in #228; string candidate qualifies four timing sessions, with final-head platform coverage pending |
+| [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and small ownership controls | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | [Allocation-boundary failure checks](measurements/directory-failures.md) verified in #228; maintain them as ownership changes |
 | [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scaled counting/filtering/CSV/task-file cleanup passes on six hosts; preserve current delivery coverage and separate input/output costs |
 | Numerical pipeline | Map/reduce 65,537/262,145 elements; multiply 65×67 by 67×63 and 257×259 by 259×255 matrices, eight rounds | [Current four-case protocol and partial results](measurements/kernel-baselines.md) | Complete qualified N1 baselines and resolve the failed timing control before selecting N2 |
 | Derivative application | Rosenbrock descent at 3, 33 and 129 dimensions; 199 updates plus zero/one/1,999-update controls | [Repeated current baselines and fixed limits](measurements/descent-costs.md), [nested accuracy/storage](measurements/ad-depth.md) and [capture costs](measurements/eager-captures.md) | Resolve D2's failed zero-update recheck and preserve six-platform cleanup/accuracy coverage; earlier allocation gains do not close the speed goal |
@@ -96,114 +96,64 @@ when reproducing it.
 
 ## Descent with and without a saved history
 
-The `ad-application` suite uses the objective and reverse-mode gradient from
-[tutorial 20](tutorials/20-autodiff-and-devices/README.md). An objective assigns
-one number to a candidate vector; a gradient says how each component changes
-that number. Each update subtracts 0.001 times the gradient.
+The program minimizes the Rosenbrock function: an objective assigns one number
+to a vector, and its gradient says how that number changes with each component.
+Starting coordinates alternate −1.2 and 1.0. Each update subtracts 0.001 times the
+gradient. [Tutorial 20](tutorials/20-autodiff-and-devices/README.md) introduces this
+calculation; [the current protocol](measurements/descent-costs.md) defines the six
+input/update cases, peers, complete outputs, repeated sessions and fixed limits.
 
-The starting vector alternates −1.2 and 1.0. The original cases have 3, 33 or
-129 dimensions. The raw-storage extension adds zero-update and 1,999-update
-three-dimensional controls; all variants of each case perform identical work.
-The former tutorial expression `iterate 200 descend | last` retains 200 vectors, including the
-initial one, so it performs **199 updates**. The comparison loop performs the
-same updates while retaining only its current vector. Both return the complete
-final vector; neither returns the discarded history. The tutorial now uses this loop. This is a change in program
-structure, not an implemented compiler optimization.
+The earlier `iterate 200 descend | last` computes **199 updates** and retains
+200 vectors, including the initial one. A loop can perform the same updates while
+keeping only its current vector. Both must return the same complete final vector.
+This is an explicit program choice, not a universal compiler optimization.
 
-Both raw interpreter forms must agree bit-for-bit with each other and with the
-native outputs. An independent handwritten derivative also checks each component
-with relative and absolute tolerance 1e-10; different floating-point operation
-orders can round differently. That Python calculation is a correctness oracle,
-not a timed C/Rust baseline.
+Raw and optimized fwp results must agree with native execution. An independent
+handwritten derivative checks components with the stated absolute/relative
+accuracy bounds. Zero-update cases print the initial vector; they include
+initialization and output and therefore do not isolate process startup.
 
-Linux ARM64/AMD64 measurements use explicit GCC O2, counted ownership, disabled LTO and
-enabled bounded derivative-workspace reuse. Two warmups precede sixteen timed
-fresh processes per variant, with rotated and reversed order. Timing includes
-startup, calculation, printing and teardown. Separate instrumented runs record
-fwp allocation requests, bytes, retains and peak/final managed charge. Raw tape storage has its own allocator ledger: parent indices, local derivatives,
-backward-pass adjoints and the tape registry. It observes successful allocation
-and free calls, so losing a runtime pointer cannot hide a leak. Each backward
-pass records the registry, retained workspace and other raw bytes. The selected
-workloads require constant idle storage across updates and zero raw bytes after
-real shutdown. Separate controls omit a parent-buffer free or the registry free;
-both must fail. An extra untimed profile disables workspace reuse.
+Require zero managed and raw derivative storage after each completed solve,
+not only at process exit. Track tape buffers and registry storage separately
+from managed values; deliberately delayed or omitted frees must fail the
+[per-solve observers](measurements/descent-observers.md). Workspace reuse may
+retain documented storage between updates, but shutdown must release it.
+Neither these finite runs nor a clean exit prove bounded memory for arbitrary
+nesting or indefinitely repeated work.
 
-Process peak resident memory comes from a separate uninstrumented run under
-GNU time. Managed charge, raw requested storage and resident memory measure
-different things. Do not add their peaks: they may occur at different times and
-resident memory already includes both allocators. Raw observations exclude
-allocator metadata and temporary copies inside realloc. Typed nested weights
-are managed values; this numeric descent experiment does not isolate them.
-
-Generated C, native binaries, disassembly and hashes are retained. The final
-observer requires no live tapes or managed charge; a control that omits tape
-retirement must fail. This does not establish constant memory for arbitrary AD,
-or bounded long-running retention from a clean exit alone. The [first measured results](measurements/ad-application.md) show much lower
-managed peak storage with mixed, modest timing changes. The same report records
-accepted raw-storage and process-memory measurements. The
-[explicit-derivative comparison](measurements/descent-peers.md) supplies C/Rust
-baselines. The [packed-array version](measurements/packed-descent.md) reduces
-allocation requests, and [array-owner moves](measurements/array-owner-moves.md)
-halve its retains with unchanged managed peak. That historical array-owner run
-measured about 3.05× C time on AMD64 and 3.01× on ARM64 for the largest case.
-[Capture borrowing](measurements/array-capture-descent.md) subsequently removes
-the remaining retains; [callback locals](measurements/callback-locals.md) reduce
-generated code further. Neither establishes a dependable timing improvement.
-C and Rust reuse two buffers and compute each edge's residual once; fwp allocates
-a new immutable array per update and may recompute a residual for each adjacent
-coordinate. These ratios compare complete implementations, not language overhead.
-
-The [repeated-solve protocol](measurements/descent-batches.md) balances positions
-and immediate predecessor pairs and includes byte-identical controls. It runs
-512 complete solves per process; the largest adapter-only fwp case takes roughly
-10–12× C time. Some identical-copy controls still fail their 2% bound, so timing
-budgets remain open. [Per-solve observations](measurements/descent-observers.md)
-require zero managed/raw live storage after every solve and catch a deliberately
-delayed release that final-only checks miss. These finite counts stay below
-tape-generation exhaustion and do not prove a memory bound for arbitrary nesting
-or indefinitely long runs. [D1–D3](../PLAN.md#5-differentiation) specify the next
-cost and correctness checks.
-
-The [matched-formula comparison](measurements/coordinate-work.md) uses the expanded
-callback-local compiler and adds C/Rust versions of fwp's coordinate formula.
-The largest case still takes 10.40–13.69× C time and 11.86–14.07× Rust time.
-Eleven of twelve identical-copy controls pass; AMD64's 3-coordinate/1,999-update
-case fails the 2% limit. Numerical buffer probes require cleanup after every
-C/Rust solve and catch deliberately omitted releases. Their buffer-only counts
-are not comparable to all fwp managed values or process memory. Output, checked
-access and buffer reuse remain separate costs to investigate.
-
-The descent runner saves every count/storage violation in `budget-failures.json`
-and in the final comparison report. It checks all requested input sizes before
-exiting with failure, so one remaining retain cannot hide another size's larger
-peak or changed allocation count. Output mismatches, cleanup violations, invalid raw-memory traces and tool
-failures still stop that run immediately. Measurements from a run with failed requirements are
-investigation evidence, not accepted performance results. The production benchmark
-job and numerical workflow check the requirement collector against retained data
-and deliberately corrupted profiles.
+D1's repeated baseline and D3's accuracy/depth checks are verified. D2 remains
+open: the repaired-source zero-update recheck exceeds its unchanged 2% limit.
+[Capture costs](measurements/eager-captures.md) and
+[timing variation](measurements/timing-variation.md) retain all observations.
+Do not replace that failed control with an earlier passing run. See
+[D1–D3](../PLAN.md#5-differentiation) for the remaining acceptance work.
 
 ## Testing unchanged string ownership
 
-The implemented text transformation consumes the source owner for ASCII case conversion,
-trimming and replacement. If bytes do not change, the result receives that owner;
-if bytes change, a new string is created before the old owner is released.
-Other aliases retain their original bytes. Failure and cancellation must release
-the consumed owner; deliberately omitting either cleanup must fail the probe.
+ASCII case conversion, trimming and replacement consume the source owner. If
+bytes stay unchanged, the result receives that owner. ASCII case conversion can
+reuse uniquely owned input; changed trimmed results use a new string. The current
+replacement candidate also reuses unique storage when the result cannot grow.
+Shared inputs receive a separate changed result, preserving the original bytes. Failure and cancellation must release consumed owners; deliberately
+omitted cleanup must fail its observer. `string.repeat` borrows its source and
+returns a separate result, including when the count is one.
 
-For the two word-frequency inputs above, acceptance requires fewer allocation
-requests and requested bytes than the frozen baseline, no additional retains or
-higher managed peak charge, and zero final charge. These count requirements are
-set before measuring the candidate. All timing results, including regressions,
-remain reportable; a timing regression requires investigation before adoption.
+The [earlier ownership experiment](measurements/unchanged-text.md) owns its
+historical source, count reductions and timing schedule. Its old acceptance
+rules are not the current candidate's rules.
 
-The paired runner recompiles the accepted baseline's generated C and the candidate
-with the same GCC flags. It also runs the same C/Rust peers. Six variants rotate
-and reverse order over 24 samples after two warmups. Baseline input hashes and
-managed counts must reproduce exactly. Downloaded baseline binaries are checked
-against their original report; the newly executed binaries have their own hashes,
-disassembly and size records. The explicit baseline source is
-`74263bccf8e2e67865e1863e2c04a296a97877bb`, run `39690307737`.
-
+The [direct-result experiment](measurements/direct-string-results.md) removes
+temporary libc buffers from replacement and repetition. Its first candidate
+passes native/WASI checks but fails the timing requirement. Unique replacement
+storage then confirms fewer managed allocations, with all six native hosts and
+both WASI hosts passing, but still misses the required speed gain. The latest
+one-byte search candidate passes focused GCC checks and four timing sessions;
+complete final-head production acceptance remains required. Retains and peak managed
+charge remain unchanged; raw-buffer removal alone is not an ARC reduction.
+Compare exact old/new function bodies, preserve the current word-frequency
+budgets, and retain separate raw-buffer, managed-storage, timing, code and stack
+observations. The word-frequency application does not use `string.repeat`, so
+its timing cannot establish a speedup for repetition.
 
 ## Repeated directory and file work
 
@@ -292,9 +242,11 @@ coverage check follows the actual test assignments and rejects missing exports.
 Focused measurements explicitly disable link-time optimization; production
 artifacts retain production compiler settings. The earlier four-program report
 retains its original 30 binaries and sixteen series; it does not verify this
-extension. Machine headers verify the runner's actual architecture. These cases do not yet
-cover forced allocation failure or every file operation and do not complete the
-application suite.
+extension. Machine headers verify the runner's actual architecture. The original scale cases do not cover forced allocation failure. The separate
+directory-boundary probes above add that coverage for directory traversal; the [file-read boundary controls](measurements/file-read-failures.md) add probes
+for text/byte reads. Focused ARM64 macOS and AMD64 GCC checks pass; complete
+platform coverage remains pending. Other operations still need their own
+allocation-failure evidence.
 
 The observer reads Linux `/proc`, macOS `ps`, and Windows
 `K32GetProcessMemoryInfo` working-set counters. Windows sampling opens and closes
@@ -313,71 +265,28 @@ Timeouts, crashes and obsolete memory selectors in emitted C fail the inventory.
 Investigate every rejection before claiming support; execution snapshots and
 runtime ownership tests remain necessary.
 
-The [recorded 85-program inventory](measurements/file-applications.md#which-execution-examples-pass-arcs-checks)
-accepts 81 examples in both modes, including manual pointers with explicit caller
-obligations. Three intentionally invalid examples fail ordinary compilation; the
-expired inter-task derivative remains rejected by ARC. Existing `arc_corpus`
-tests execute admitted programs and check their final managed storage; extend
-that coverage as admissions change.
+The [85-program inventory from before GC removal](measurements/file-applications.md#which-execution-examples-pass-arcs-checks)
+records 81 accepted examples, three intentionally invalid programs, and an
+expired inter-task derivative rejected by ownership checking. Its tracing-mode
+comparison is historical: tracing is no longer available. Current `arc_corpus`
+tests execute admitted programs and check final managed storage; use current
+inventory artifacts when claiming today's compiler admission.
 
 ## Separating derivative and representation costs
 
-The first `descent-peers` baseline compares four implementations of the same Rosenbrock
-descent: fwp with reverse automatic differentiation (AD), fwp with an explicit
-derivative, and explicit derivatives in C and Rust. An explicit derivative is a
-formula written by the programmer; reverse AD computes it by recording arithmetic
-and walking that record backwards. Comparing the two fwp forms helps expose that
-extra work. Comparing the explicit forms measures complete implementations with
-different storage: fwp uses immutable lists and intermediate pairs/lists, while
-C and Rust reuse two contiguous buffers. This is not identical instruction-level
-work or a promise that all of the difference is compiler overhead.
+Reverse automatic differentiation records arithmetic and walks that record
+backwards. An explicit derivative is a formula written by the programmer.
+Comparing these two fwp forms exposes recording work; comparing explicit fwp,
+C and Rust programs also includes differences in arrays, allocation, formatting
+and checked access. The ratio is not pure compiler overhead.
 
-Each starts from alternating −1.2/1.0 coordinates, subtracts 0.001 times the
-gradient per update, and prints the complete final vector. Selected cases have
-3 coordinates with 0, 1, 199 or 1,999 updates, and 33/129 coordinates with 199
-updates. For example, the zero-update case prints the initial vector. A separate
-Python formula checks every component with absolute and relative tolerance
-1e-10; reverse AD can round differently. Each fwp native form must exactly match
-its own unoptimized interpreter output.
-
-On each Linux architecture, GCC and Rust compile at O2 without link-time
-optimization; C disables fused multiply-add and fast-math, and Rust enables
-overflow checks. Explicit formulas preserve multiplication order. Inputs and
-update counts are compile-time constants in all variants. Formatting algorithms,
-allocation strategies and intermediate representations still differ.
-
-Two warmups precede 24 fresh-process samples per variant, rotating and reversing
-execution order. Timing includes startup, initialization, computation, complete
-output and teardown. The zero-update control includes initialization and output,
-so it does not isolate startup alone. Compilation times, machine code and binary
-hashes are recorded separately. Untimed fwp profiles measure managed storage
-and raw derivative buffers; separate runs measure resident process memory for
-all four variants. Those peaks must not be added.
-
-The [first baseline](measurements/descent-peers.md) passes both Linux hosts with
-72 independently inspected images. Workload budgets and repeated-host timing
-acceptance remain open. Preserve these samples and slower results before
-choosing the next optimization under [D1–D3](../PLAN.md#5-differentiation).
-
-The [packed comparison](measurements/packed-descent.md) adds a fifth implementation: explicit fwp derivatives with
-packed `Array[F64]` storage. Each update reads the previous immutable array at
-checked indices and generates one result array. It uses existing language/library
-features; this is a program-representation comparison, not a compiler change.
-For cases with at least 199 updates, require fewer managed allocation requests
-and no higher managed peak than the explicit-list form, plus zero final managed
-and raw charge. These requirements precede measurement. Retains and all timings,
-including any regressions and extra short-case setup, remain visible.
-
-The five-way run uses 40 samples after two warmups, rotating and reversing all
-five positions equally. It recompiles and measures every peer on the same runner;
-it does not compare times from different CPU models. The two original fwp forms
-must reproduce their recorded managed/raw profiles exactly. The original four-way data
-remains unchanged. Both Linux jobs and 96 image inspections pass; the report
-records the allocation savings, unchanged retains, slower zero-update control
-and remaining C/Rust gaps. The [array-owner move](measurements/array-owner-moves.md)
-then halves retains without increasing allocation requests or managed peak. Its
-timing controls expose variation and preserve slower results. Subsequent
-[capture borrowing](measurements/array-capture-descent.md) removes the remaining
-retains with unchanged request/peak budgets. [Callback locals](measurements/callback-locals.md)
-also remove eligible function records and unused generic entries; their report
-separates code/frame savings from inconclusive timing.
+Use the [current derivative baseline](measurements/descent-costs.md) for new
+experiments. Earlier reports remain evidence at their recorded revisions:
+[initial explicit peers](measurements/descent-peers.md),
+[packed arrays](measurements/packed-descent.md),
+[array-owner moves](measurements/array-owner-moves.md),
+[capture borrowing](measurements/array-capture-descent.md),
+[callback locals](measurements/callback-locals.md), and
+[matched coordinate formulas](measurements/coordinate-work.md).
+Their lower allocation/count costs and rejected timing controls remain visible;
+they neither reset current budgets nor establish general C/Rust parity.

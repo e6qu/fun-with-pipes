@@ -5,6 +5,8 @@ use std::process::Command;
 
 #[path = "support/ownership_ledger.rs"]
 mod ownership_ledger;
+#[path = "support/record_probe.rs"]
+mod record_probe;
 
 fn program() -> Program {
     let int = MT::con("std::I64");
@@ -143,10 +145,15 @@ fn exported_boxes_are_reclaimed_and_host_strings_survive() {
     );
     let (source, _) = fwp::cgen::generate_library(&program, "ownership", &[]).unwrap();
     let source = ownership_ledger::instrument_native(&source, 65536);
+    // Direct repetition builds its final string without fwp_str_new. Observe
+    // that allocation too; do not mistake an earlier string for its result.
+    let repeat_end = "    result->d[total] = 0;\n    return PTR(result);";
+    assert_eq!(source.matches(repeat_end).count(), 1);
     let observed = source
         .replace("static V fwp_data(uint32_t", "static V observed_data, observed_string; static size_t data_calls;\nstatic V fwp_data(uint32_t")
         .replacen("return PTR(o);", "data_calls++; observed_data = PTR(o); return PTR(o);", 1)
-        .replacen("return PTR(r);", "observed_string = PTR(r); return PTR(r);", 1);
+        .replacen("return PTR(r);", "observed_string = PTR(r); return PTR(r);", 1)
+        .replace(repeat_end, "    result->d[total] = 0;\n    observed_string = PTR(result); return PTR(result);");
     // A failing assertion exits before atexit: library teardown must not
     // replace the specific fault with its later final-leak diagnostic.
     let probe = r#"
@@ -197,6 +204,13 @@ int main(void) {
         fwp::cgen::compile_c(&format!("{observed}\n{probe}"), &exe, opt).unwrap();
 
         let out = Command::new(&exe).output().unwrap();
+        record_probe::save(
+            "library-result-ownership",
+            &format!("healthy{opt}"),
+            &format!("{observed}\n{probe}"),
+            &exe,
+            &out,
+        );
         assert!(
             out.status.success(),
             "{opt}: {:?}: {}",
@@ -221,18 +235,30 @@ int main(void) {
                 .unwrap();
         let end = guard + observed[guard..].find(';').unwrap() + 1;
         missing_guard.replace_range(guard..end, "");
-        for (broken, expected) in [
+        let missing_observation = observed.replace("observed_string = PTR(result); ", "");
+        for (index, (broken, expected)) in [
+            (missing_observation, 4),
             (missing_drop, 3),
             (premature_release, 6),
             (missing_guard, 4),
             (extra_evaluation, 11),
-        ] {
+        ]
+        .into_iter()
+        .enumerate()
+        {
             assert_ne!(
                 broken, observed,
                 "negative control must change generated code"
             );
             fwp::cgen::compile_c(&format!("{broken}\n{probe}"), &exe, opt).unwrap();
             let out = Command::new(&exe).output().unwrap();
+            record_probe::save(
+                "library-result-ownership",
+                &format!("control-{index}-{expected}{opt}"),
+                &format!("{broken}\n{probe}"),
+                &exe,
+                &out,
+            );
             assert_eq!(
                 out.status.code(),
                 Some(expected),

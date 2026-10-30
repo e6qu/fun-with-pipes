@@ -1,114 +1,110 @@
 # Current work
 
-**Next:** publish the integrated application/evidence PR, then audit every final-head
-production and documentation job and both G2 hosts. Fix all failures together;
-squash-merge after passing checks, using one subject of at most 80 characters and
-an empty body. Continue to the remaining application and numerical work.
+**Next:** publish the combined PR #229 repair and run its complete final-head
+gates. Keep the two older Linux jobs running and audit their results as they
+finish; the workflow does not cancel them on a PR update. All currently known
+failures are repaired and focused checks pass. Merge only after nine production
+jobs, documentation and both G2 hosts pass, using one squash subject of at most
+80 characters and an empty body. Continue PLAN.md after the verified merge.
 
-Worktree `/private/tmp/fwp-application-failures`, branch
-`application-allocation-failures`. The preparation was published in `74c49e95`;
-merge `fbcd7fca` incorporates current main without changing its files. No second
-active PR exists. The user merged #227; no performance-choice reply is pending.
-D2/N1 remain open under their unchanged limits.
+## Active PR and source
 
-## Directory-report failure checks
+[PR #229](https://github.com/e6qu/fun-with-pipes/pull/229) still points to failed
+head `3ddd989c`. Worktree `/private/tmp/fwp-direct-string-results`, branch
+`direct-string-results`, contains the combined repair, file-read controls and
+retained numerical diagnostic at `f0357526`, published on preparation branch
+`numerical-measurement-controls` while the PR preserves the old matrix. The separate preparation worktree
+`/private/tmp/fwp-numerical-controls` is clean at `b46e8c04`; its work is now
+included in this branch. Do not open another PR.
 
-The new test adds four allocation boundaries: initial scratch storage, a
-partially collected name list, scratch growth and result-list construction.
-At C O1/O2, recoverable traps must release owners and directory handles, preserve
-a caller's path alias and permit a successful retry. Deliberately omitted close
-and builder cleanup must fail their respective observers.
+Latest verified delivery: [#228](roadmap-history.md#directory-cleanup-and-current-application-costs-pr-228),
+squash `667e71f0`, identical tested tree from `f3eb5072`. Directory-boundary
+coverage and the current word-frequency baseline are delivered. The duplicate
+post-merge production run was cancelled only after tree equality was checked.
 
-A separate subprocess invokes the real managed-heap OOM handler at each boundary:
-its contract is diagnostic plus exit 102, not recovery or pre-exit cleanup.
-The tests do not exhaust host memory. See [application acceptance](application-acceptance.md#repeated-directory-and-file-work).
-All six hosts pass ten focused tests each; complete logs and all 84 saved
-probe executions are independently audited. The [report](measurements/directory-failures.md)
-links the retained archive. Full production coverage is still required when
-this preparation is integrated. Local guarded checks pass; no local full build
-or benchmark ran.
+## Original full matrix and repaired observers
 
-The first run, `40965474997` at `55eec5e0`, is fully audited on all six native
-hosts. Each failed only the new test: the harness searched for a function entry
-after ordinary main compilation could inline/remove it. All nine other tests
-pass per host; there are no unrelated diagnostics.
+Production `41042531398`, source `3ddd989c`, still has both Linux suites running.
+Both regular Mac jobs finish with 624 passing tests, two observer failures in
+132 summaries and 12 passing SDK tests. Both Windows jobs finish with 809 passes
+and the same two failures in 202 summaries. All four complete logs are audited;
+no additional failures or compiler warnings were found.
 
-Repair `1f364c09` compiles the probe entry explicitly with `--fn report-once`,
-keeps a separate ordinary build for result comparison and retains both emitted
-sources. Failed-test logs now upload before the admission inventory. Formatting,
-workflow lint, roadmap and whitespace checks pass under the local guard.
-The repaired native run passes on all six hosts; the archive retains both runs.
+`library_input_ownership` exits 8 and `library_result_ownership` exits 4 because
+their observers record `fwp_str_new` but miss repetition's direct allocation.
+Repair `d0ccb80f` adds that observation, empty/nonempty result checks, deliberate
+observation-omission controls and complete saved probes. Production runtime code
+is unchanged. Focused ARM Mac run `41047507000`, job `124035107898`, passes all
+17 tests/6 summaries. Its full log and all 26 saved executions/native headers are
+independently audited. Artifact `12973930046` retains those probes. Both omission
+controls reproduce the old failures without another code change.
 
-Artifacts retain generated C, native probes and each output/status under
-`failures/record-ownership/directory-allocation`. Independent auditors:
-`/private/tmp/fwp-audit-directory-failure-logs.py` checks the exact old failure;
-`/private/tmp/fwp-audit-directory-failures.py` checks the new artifacts.
+Both Mac ownership jobs pass 364 tests/127 summaries each. Original documentation
+`41042479406`, benchmarks and both G2 hosts `41042548622` pass. Their complete logs
+are audited. Audit both original Linux jobs when they finish and fix any further
+issues. Their continuation does not require delaying the prepared final matrix. Both Mac crash artifacts are the verified intentional cleanup-panic
+abort test, not new compiler aborts. Record final new run IDs in the PR while its
+tested source is frozen.
 
-## Current word-frequency baseline
+## Work bundled before the final rerun
 
-Protocol `6d4df06b` precedes measured source
-`dc963bb500748dabe393dfaed20f92a333f5996e`. All four sessions are complete and
-audited: ARM jobs `123799636907`/`123799637188` in `40974666332`; AMD job
-`123801495592` in `40975221824` and `123804111260` in `40976014339`.
-The [report](measurements/wordfreq-current.md) records all 37,080 child
-observations, complete logs, native headers/hashes, code/stack costs and memory.
-Three earlier AMD host rejections occurred before building/timing and remain
-in the archive. No measured session was retried.
+- [Direct string results](measurements/direct-string-results.md): byte search and
+  unique non-growing replacement qualify four sessions at `afbafef8`. Large
+  word counting takes 16.4–19.2% less time; still 2.08 times C on ARM64 and
+  2.42–2.44 on AMD64. Managed requests fall by 26,216; retains and peak charge do
+  not fall. Code/stack costs and the two rejected earlier candidates remain
+  explicit. All 222,120 observations across the three experiments are retained.
+- [Executable-name diagnostic](measurements/timing-variation.md#executable-name-results):
+  protocol `9a08edb6`, source `0c61ca76`, run `41045294362`, job `124027797546`.
+  All 1,024 observations and 2,076 artifact files pass independent audit, with
+  full logs and eight damaged-evidence controls. Equal names still leave a
+  2.19% elapsed / 2.13% CPU history-copy difference. Naming alone does not repair
+  D2/N1. The earlier EPYC 9V74 host rejection `41045000047` is retained.
+- [File-read allocation controls](measurements/file-read-failures.md): first
+  scratch allocation, growth and result construction during either of two reads;
+  aliases, retries, omitted cleanup and terminal OOM. Text and byte probes are
+  implemented in `text_file_tools`. At combined source `f0357526`, ARM Mac focused
+  run `41049305186` / job `124041117692` passes 11 tests in three summaries.
+  All 40 saved boundary executions, exact omission controls and native headers
+  are independently audited. Artifact `12973813560` retains the evidence.
+  GCC run `41049886906` / job `124043037136` also passes all 11 tests and the
+  independent 40-execution audit; artifact `12973978657` retains its evidence.
+  Its admission inventory accepts 82 programs with three expected rejections.
+  Complete final-head platform validation remains required.
 
-Large-input fwp/C is 2.49 on ARM64 and 3.03–3.04 on AMD64. All sessions report
-225,937 managed allocations, 69,642 retains and zero final managed charge for
-65,536 words. Identical-copy variation reaches 3.90% on the short input and
-0.38% on the large input. The report declares separate future-candidate limits;
-no candidate is implemented or accepted, and D2/N1 limits remain unchanged.
+Guarded local checks pass: Rust formatting, Python syntax, workflow lint, roadmap
+checks, all retained diagnostic observations and eight damage cases. The original
+string batch also passed seven small Clang tests, 144 O0/O1/O2 size/control exits,
+84 retained-evidence rejection tests, eight stricter allocation audits and four
+explicit passing-timing audits. No local full build or benchmark ran.
 
-`check-current-wordfreq.py` independently checks all outputs, the fixed schedule,
-statistics, files and native identities. Seven evidence tests reject damaged
-observations, including internally consistent changed hashes. They run in the
-measurement workflow after recording and in documentation CI against the saved
-archive. Guarded `test-current-wordfreq-evidence.py --retained-index` passes all
-four sessions (28 tests). `actionlint` passes both modified workflows;
-`check-roadmap.py` passes 182 link sets, 106 preparation pairs and eight steps;
-`git diff --check` passes. No local full
-build or benchmark ran. The compressed evidence reconstructs every retained
-text and binary byte exactly; ordinary documentation CI rechecks all four sessions.
+## Remaining roadmap and recovery
 
-## Previous delivery and unresolved timing
+D2's zero-update result remains **1.022815765 > 1.02** in `40912773534`; N1's
+small-array inclusive copy control remains **1.030786192 > 1.02** in `40951090783`.
+Retain every failed result. Do not repeat unchanged timings, increase sample
+counts again or relax limits after observing these outcomes. A merge does not
+complete these goals or the other V1/V2 application requirements.
 
-The user merged [PR #227](https://github.com/e6qu/fun-with-pipes/pull/227) as
-`0e114aa5`, with the exact tested tree from `8e291876`. All nine production jobs,
-documentation and both G2 hosts passed and were fully audited; the compact
-[delivery record](roadmap-history.md#eager-captures-and-typed-numerical-loops-pr-227)
-owns the identities and counts. Its message satisfies the one-line rule.
+GC removal, A1–A6, F1–F3 and the selected decimal-counting optimization are
+verified at their documented scopes. Sharing still uses ARC. D2, N1/N2, broader
+B1/B2 comparisons and integrated V1/V2 acceptance remain open in [PLAN.md](../PLAN.md).
 
-D2's zero-update recheck is **1.022815765 > 1.02** in `40912773534`; N1's
-small-array inclusive copy control is **1.030786192 > 1.02** in `40951090783`.
-The [timing report](measurements/timing-variation.md) retains these observations
-and all diagnostics. The cause remains unresolved. The user merge settles the
-delivery choice, not these performance requirements. Do not discard failures,
-relax their limits or repeat unchanged measurements until they pass.
-
-## Resume and delivery rules
-
-[PLAN.md](../PLAN.md) owns acceptance; [history](roadmap-history.md) owns completed
-deliveries. User-merged #227 is `0e114aa5`, matching verified tree `830e41b3`.
-The original Intel compiler abort remains unexplained; retain its
-[report](measurements/compiler-abort.md) and diagnose any recurrence from source.
-
-The primary checkout stays detached at #209 with a recovery handoff and an
-untracked compiler-abort report; preserve both. Full builds/suites/measurements
-belong on GitHub. Local checks remain serial and resource-guarded. All nine
-exact-head production jobs, documentation and G2 require full audits before
-merge. Use one squash subject of at most 80 characters and an empty body.
+The original intermittent Intel compiler abort remains unexplained; preserve
+[its evidence](measurements/compiler-abort.md) and diagnose recurrence from source.
+The primary checkout is detached at #209 with a recovery handoff and untracked
+compiler-abort report. Preserve both. All local checks remain serial under
+`scripts/local-guard.py`; full builds, suites and measurements run on GitHub.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Verified | Maintain GC-free lifetime and cycle checks |
+| 1 | Verified | Maintain GC-free lifetime and cycle guarantees |
 | 2 | Verified | Maintain A1–A6; sharing still uses ARC |
-| 3 | Verified | Maintain F1–F3's stated call and recursion scope |
-| 4 | Verified | Preserve delivered decimal cost reduction and recorded loop gap |
-| 5 | In progress | Resolve D2's zero-update timing requirement |
-| 6 | In progress | Resolve N1's inclusive array control; investigate computation cost |
-| 7 | In progress | Broader B1/B2 comparisons |
-| 8 | In progress | Integrate directory failure coverage and current word-frequency budgets; finish remaining V1/V2 rows |
+| 3 | Verified | Maintain the stated F1–F3 call and recursion scope |
+| 4 | Verified | Preserve decimal savings and the unoptimized loop gap |
+| 5 | In progress | Resolve D2's zero-update requirement |
+| 6 | In progress | Resolve N1's array control before N2 timing acceptance |
+| 7 | In progress | Complete broader B1/B2 comparisons |
+| 8 | In progress | Deliver this application batch and finish V1/V2 |

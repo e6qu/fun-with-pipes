@@ -8,9 +8,8 @@ fn checked(command: &mut Command) -> Output {
 }
 
 fn wrapper(code: &str, call: &str) -> String {
-    let call = format!("V result = {call};");
-    assert_eq!(code.matches(&call).count(), 1, "{call}");
-    let at = code.find(&call).unwrap();
+    assert_eq!(code.matches(call).count(), 1, "{call}");
+    let at = code.find(call).unwrap();
     let start = code[..at].rfind("static V f").unwrap() + "static V ".len();
     code[start..].split('(').next().unwrap().to_string()
 }
@@ -25,7 +24,15 @@ fn text_transformations_preserve_aliases_and_consumed_owners() {
     )
     .unwrap();
     let compiler = env!("CARGO_BIN_EXE_fwp");
-    let inputs = ["", "123 λ", " AbC, λ. ", "abc abc", "\tMiXeD\r\n"];
+    let inputs = [
+        "",
+        "123 λ",
+        " AbC, λ. ",
+        "abc abc",
+        "\tMiXeD\r\n",
+        "aaaaa ababa .,... A",
+        "a",
+    ];
     let references: Vec<_> = inputs
         .iter()
         .map(|input| {
@@ -69,6 +76,7 @@ fn text_transformations_preserve_aliases_and_consumed_owners() {
         ("TEXT_START", "fwp_p_trim_impl(l0, 1, 0)"),
         ("TEXT_END", "fwp_p_trim_impl(l0, 0, 1)"),
         ("TEXT_REPLACE", "fwp_p_replace(l0, l1, l2)"),
+        ("TEXT_REPEAT", "fwp_p_str_repeat(l0, l1)"),
     ];
     let mut definitions = String::new();
     for (name, call) in calls {
@@ -88,7 +96,7 @@ fn text_transformations_preserve_aliases_and_consumed_owners() {
     definitions.push_str(&format!("#define TEXT_DROP {drop}\n"));
     let mut probe = code.replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1")
             .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)")
-            .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int text_force_trap;\nstatic uint64_t text_allocations;\nstatic void fwp_check_cancel(void);");
+            .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int text_force_trap;\nstatic uint64_t text_allocations, text_raw_requests, text_raw_bytes, text_raw_live, text_raw_peak;\nstatic int text_direct_active, text_fail_result;\n#define TEXT_OMIT_RAW_RELEASE 0\nstatic void fwp_check_cancel(void);");
     for signature in [
         "static V fwp_p_case(V s, int upper) {",
         "static V fwp_p_trim_impl(V s, int start, int end) {",
@@ -106,6 +114,15 @@ fn text_transformations_preserve_aliases_and_consumed_owners() {
         allocation,
         &format!("{allocation}\n    if(kind!=0)text_allocations++;"),
     );
+    let raw_allocate = "char *data = (char *)realloc(b->d, cap);";
+    assert_eq!(probe.matches(raw_allocate).count(), 1);
+    probe = probe.replace(raw_allocate, &format!("if(text_direct_active) {{ text_raw_requests++; text_raw_bytes+=cap; text_raw_live+=cap-b->cap; if(text_raw_live>text_raw_peak)text_raw_peak=text_raw_live; }} {raw_allocate}"));
+    let raw_free = "    free(b->d);\n    return r;";
+    assert_eq!(probe.matches(raw_free).count(), 1);
+    probe = probe.replace(raw_free, "    if(!TEXT_OMIT_RAW_RELEASE || !text_direct_active) { free(b->d); if(text_direct_active)text_raw_live-=b->cap; }\n    return r;");
+    let leaf_allocate = "static inline void *fwp_alloc_leaf(size_t n) {";
+    assert_eq!(probe.matches(leaf_allocate).count(), 1);
+    probe = probe.replace(leaf_allocate, &format!("{leaf_allocate} if(text_direct_active && text_fail_result)fwp_trap(\"string output allocation\");"));
     probe += &format!(
         "\n{definitions}\n{}",
         include_str!("fixtures/text_transform_probe.c")
@@ -120,7 +137,17 @@ fn text_transformations_preserve_aliases_and_consumed_owners() {
         guard,
         "if(text_force_trap!=2)fwp_value_protect(&owner, &cleanup); V result = fwp_p_case(l0, 0);",
     );
-    for opt in ["-O0", "-O2"] {
+    let missing_raw = probe.replace(
+        "#define TEXT_OMIT_RAW_RELEASE 0",
+        "#define TEXT_OMIT_RAW_RELEASE 1",
+    );
+    let output_guard = "fwp_value_protect(&owner, &cleanup); V result = fwp_p_replace(l0, l1, l2);";
+    assert_eq!(probe.matches(output_guard).count(), 1);
+    let missing_output_owner = probe.replace(output_guard, "if(!text_fail_result)fwp_value_protect(&owner, &cleanup); V result = fwp_p_replace(l0, l1, l2);");
+    let unique = "to_len <= from_len && fwp_rc_unique(s) == 1";
+    assert_eq!(probe.matches(unique).count(), 1);
+    let missing_unique = probe.replace(unique, "to_len <= from_len");
+    for opt in ["-O0", "-O1", "-O2"] {
         let binary = dir.join("text.exe");
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
         for (input, reference) in inputs.iter().zip(&references) {
@@ -135,9 +162,30 @@ fn text_transformations_preserve_aliases_and_consumed_owners() {
             ("protected", &probe, 0),
             ("missing-owner", &unprotected, 235),
             ("missing-cancel-owner", &unprotected_cancel, 235),
+            ("missing-raw-release", &missing_raw, 238),
+            ("missing-output-owner", &missing_output_owner, 239),
+            ("missing-unique", &missing_unique, 233),
         ] {
             fwp::cgen::compile_c(measured, &binary, opt).unwrap();
             let actual = Command::new(&binary).output().unwrap();
+            if let Some(destination) = std::env::var_os("FWP_TEXT_TRANSFORM_ARTIFACTS") {
+                let destination = std::path::PathBuf::from(destination);
+                std::fs::create_dir_all(&destination).unwrap();
+                let stem = format!("counted-{}-{label}", &opt[1..]);
+                std::fs::write(destination.join(format!("{stem}.c")), measured).unwrap();
+                std::fs::copy(&binary, destination.join(format!("{stem}.bin"))).unwrap();
+                std::fs::write(destination.join(format!("{stem}.stdout")), &actual.stdout).unwrap();
+                std::fs::write(destination.join(format!("{stem}.stderr")), &actual.stderr).unwrap();
+                std::fs::write(
+                    destination.join(format!("{stem}.status")),
+                    format!(
+                        "code={:?}\nstatus={:?}\n",
+                        actual.status.code(),
+                        actual.status
+                    ),
+                )
+                .unwrap();
+            }
             assert_eq!(
                 actual.status.code(),
                 Some(status),
@@ -152,14 +200,6 @@ fn text_transformations_preserve_aliases_and_consumed_owners() {
                         .collect::<Vec<_>>(),
                     ["text owners transfer, preserve aliases and release on failure"]
                 );
-            }
-            if let Some(destination) = std::env::var_os("FWP_TEXT_TRANSFORM_ARTIFACTS") {
-                let destination = std::path::PathBuf::from(destination);
-                std::fs::create_dir_all(&destination).unwrap();
-                let stem = format!("counted-{}-{label}", &opt[1..]);
-                std::fs::write(destination.join(format!("{stem}.c")), measured).unwrap();
-                std::fs::copy(&binary, destination.join(format!("{stem}.bin"))).unwrap();
-                std::fs::write(destination.join(format!("{stem}.stdout")), actual.stdout).unwrap();
             }
         }
     }
@@ -199,7 +239,7 @@ fn large_counts_keep_small_results_without_wrapping_or_empty_repeat_work() {
             .arg(&cfile),
     );
     let code = std::fs::read_to_string(cfile).unwrap();
-    for opt in ["-O0", "-O2"] {
+    for opt in ["-O0", "-O1", "-O2"] {
         let binary = dir.join("counts.exe");
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
 
@@ -233,26 +273,61 @@ fn string_size_checks_precede_allocation_and_empty_repeat_does_no_work() {
             ),
         )
         .replace(
+            "/* FIND */",
+            &function(
+                include_str!("../runtime/fwp_rt_prims.c"),
+                "static const char *fwp_memmem(",
+            ),
+        )
+        .replace(
+            "/* REPLACE */",
+            &function(
+                include_str!("../runtime/fwp_rt_prims.c"),
+                "static V fwp_p_replace(",
+            )
+            .replace(
+                "size_t length = STR(s)->len;",
+                "size_t length = STR(s)->len; if(replace_forced_count)count=replace_forced_count;",
+            ),
+        )
+        .replace(
             "/* REPEAT */",
             &function(
                 include_str!("../runtime/fwp_rt_prims.c"),
                 "static V fwp_p_str_repeat(",
             ),
         );
+    let empty_guard = "if (!k || !STR(s)->len) return fwp_str_new(\"\", 0);";
+    assert_eq!(code.matches(empty_guard).count(), 1);
+    // Observe a removed shortcut before its invalid zero-length arithmetic.
+    let code = code.replace(
+        empty_guard,
+        &format!("{empty_guard}\n    if (!STR(s)->len) exit(127);"),
+    );
     let missing_sizes = code
         .replace("len > SIZE_MAX - sizeof(fwp_str) - 1", "0")
         .replace(
             "STR(s)->len > limit || STR(t)->len > limit - STR(s)->len",
             "0",
-        );
+        )
+        .replace("length > SIZE_MAX - sizeof(fwp_str) - 1", "0")
+        .replace("total > SIZE_MAX - sizeof(fwp_str) - 1", "0");
+    let missing_growth = code
+        .replace(
+            "length == SIZE_MAX || count > (SIZE_MAX - length - 1) / extra",
+            "0",
+        )
+        .replace("k > (SIZE_MAX - 1) / length", "0");
+    assert_ne!(missing_growth, code);
     let missing_empty = code.replace("if (!k || !STR(s)->len) return fwp_str_new(\"\", 0);", "");
     assert_ne!(missing_sizes, code);
     assert_ne!(missing_empty, code);
-    for opt in ["-O0", "-O2"] {
+    for opt in ["-O0", "-O1", "-O2"] {
         for (label, measured) in [
             ("checked", &code),
             ("missing-size", &missing_sizes),
             ("missing-empty", &missing_empty),
+            ("missing-growth", &missing_growth),
         ] {
             let source = dir.join("sizes.c");
             let binary = dir.join("sizes.exe");
@@ -271,24 +346,46 @@ fn string_size_checks_precede_allocation_and_empty_repeat_does_no_work() {
                 std::fs::write(path.join(format!("{stem}.c")), measured).unwrap();
                 std::fs::copy(&binary, path.join(format!("{stem}.bin"))).unwrap();
             }
-            for case in 0..6 {
-                let expected = if case < 3 && label != "missing-size" {
-                    125
-                } else if case == 5 && label == "missing-empty" {
-                    127
-                } else {
-                    126
+            for case in 0..12 {
+                let expected = match case {
+                    8 | 9 if label != "missing-growth" => 102,
+                    0..=2 | 6 | 7 | 10 if label != "missing-size" => 125,
+                    5 if label == "missing-empty" => 127,
+                    _ => 126,
                 };
                 let output = Command::new(&binary)
                     .arg(case.to_string())
                     .output()
                     .unwrap();
+                if let Some(path) = std::env::var_os("FWP_TEXT_TRANSFORM_ARTIFACTS") {
+                    let path = std::path::PathBuf::from(path);
+                    let stem = format!("string-size-{label}{opt}-case{case}");
+                    std::fs::write(path.join(format!("{stem}.stdout")), &output.stdout).unwrap();
+                    std::fs::write(path.join(format!("{stem}.stderr")), &output.stderr).unwrap();
+                    std::fs::write(
+                        path.join(format!("{stem}.status")),
+                        format!(
+                            "code={:?}\nstatus={:?}\n",
+                            output.status.code(),
+                            output.status
+                        ),
+                    )
+                    .unwrap();
+                }
                 assert_eq!(
                     output.status.code(),
                     Some(expected),
                     "{label} {opt} {case}: {output:?}"
                 );
-                assert!(output.stdout.is_empty() && output.stderr.is_empty());
+                assert!(output.stdout.is_empty());
+                if expected == 102 {
+                    assert_eq!(
+                        String::from_utf8_lossy(&output.stderr).replace("\r\n", "\n"),
+                        "fwp: out of memory\n"
+                    );
+                } else {
+                    assert!(output.stderr.is_empty());
+                }
             }
         }
     }

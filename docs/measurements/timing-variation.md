@@ -268,7 +268,89 @@ explains how code, stack and heap layout can bias timing comparisons. That is a
 reason to avoid treating repeated elapsed times as independent proof of compiler
 cost, not a diagnosis of these programs. No runtime randomizer or JIT is proposed.
 
-The typed-state implementation is ready for the complete correctness matrix.
-That matrix cannot turn these diagnostic timings into performance acceptance.
+The typed-state implementation passed the complete correctness matrix in #227.
+That matrix does not turn these diagnostic timings into performance acceptance.
 Both failed requirements remain open; any next measurement method needs its own
 stated purpose and predeclared protocol before execution.
+
+## Executable-name diagnostic, declared before implementation
+
+The production derivative comparison has one identical-code control, for the
+current-result program. It does not control either history variant. The resource
+diagnostic supplies those missing copies, but gives all four roles filenames of
+different lengths. Kernel timing also names fwp and its copy differently. These
+are uncontrolled invocation differences, not evidence of unsafe language code or
+an established explanation of the failed measurements.
+
+Use the same retained small-array and zero-update history programs as the
+resource diagnostic: kernel source `37da7441`, derivative source `694e31b7`,
+qualified Linux EPYC 7763 with four allowed processors and the recorded GCC/Rust
+versions. Verify every binary and source identity before execution. Do not rebuild,
+change runtime code, disable address randomization or inspect disassembly.
+
+Compare two explicit naming policies. `named` uses the resource diagnostic's
+role-based basenames. `equal` uses four eight-character basenames, `slot0exe`
+through `slot3exe`, inside each group's directory. Create the equal names as hard
+links to the named files and verify device/inode equality: both policies execute
+the same file, not independently compiled or copied programs. All paths are
+absolute. Each invocation passes its executable path as argument zero; C/Rust
+array peers retain their explicit `array` argument. Keep the same environment,
+working directory, allowed CPU set and all remaining arguments for both policies.
+This changes the executable name and argument-zero text together; it cannot
+separate their individual effects or identify a stack/cache mechanism.
+
+For each group, run sixteen rounds with four processes per role per policy,
+seed 20261029 and the existing balanced four-label schedule. Alternate which
+policy runs first each round. Retain all **1,024 process observations**, including
+failures and outliers; no timing is an acceptance sample. Record elapsed time,
+child CPU time, faults, context switches, exact commands and stdout/stderr hashes.
+Check every result, all five array samples and zero final live storage. Preserve
+all original binary bytes, the source/report identities, environment identity,
+file-link identities and complete job logs. Reject a different host before
+running any program. A host rejected before execution may be replaced; a measured
+result must not be rerun because its ratios are inconvenient.
+
+For each policy report candidate/reference and both history copy controls,
+plus array kernel, allocation-inclusive and whole-child copy controls. Compare
+median complete round totals, with individual observations retained. The prior
+2% failures remain failures; this diagnostic neither changes those limits nor
+closes D2/N1. A difference between policies is evidence about this invocation
+change on this host, not proof of a general compiler cost or a future passing
+baseline. If normalizing names does not explain the discrepancy, say so. Any
+later acceptance repair needs its own published protocol and must control every
+candidate/reference program it measures.
+
+Run this protocol with `suite=timing-names`, `evidence_run=40951090783` and
+`baseline_run=40912773534`. `observe-timing-resources.py --naming paired`
+requires both policies explicitly. `check-timing-names.py` reconstructs all
+observations, complete round totals and ratios; `test-timing-names.py` rejects
+eight kinds of damaged evidence. Kernel totals include all five internal samples
+per child. The diagnostic cannot label any timing ratio accepted.
+
+### Executable-name results
+
+Protocol `9a08edb6`, implementation `0c61ca76`, run `41045294362`, job
+`124027797546`: all 1,024 observations, complete outputs, resource counters,
+source/binary bytes and full logs pass independent audit. The
+[retained archive](timing-names-artifacts-2026-10-30.json) reconstructs all 2,076
+artifact files. Eight damaged-evidence controls pass. The preceding run
+`41045000047` rejected EPYC 9V74 before downloading or executing; that rejection
+is retained too.
+
+Equal-length names **do not resolve the variation**. The history candidate and
+its identical copy still differ by 2.19% in elapsed time and 2.13% in CPU time.
+These are diagnostic ratios, not new accepted baselines:
+
+| Comparison | Named elapsed / CPU ratio | Equal-name elapsed / CPU ratio |
+|---|---:|---:|
+| History candidate / reference | 1.018566 / 1.018995 | 1.016478 / 1.014570 |
+| History candidate / candidate copy | 1.007469 / 1.007601 | 1.021858 / 1.021308 |
+| History reference / reference copy | 1.003306 / 1.003439 | 1.004679 / 1.008064 |
+| Array fwp / identical copy, whole process | 0.997704 / 0.995859 | 0.983856 / 0.983295 |
+
+Array computation/inclusive copy ratios are 0.999581/0.991365 under named paths
+and 1.001697/0.984670 under equal names. That does not replace the failed N1
+session. Every output and final-storage check passes. Naming alone is therefore
+insufficient as a measurement repair; do not rerun this experiment or declare
+D2/N1 complete. The comparison still needs controls for every history variant;
+a control for the current-result program cannot establish history stability.

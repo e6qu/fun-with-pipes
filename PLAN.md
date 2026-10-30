@@ -297,10 +297,25 @@ The [current word-frequency baseline](docs/measurements/wordfreq-current.md) now
 retains four audited sessions at `dc963bb5`, all 37,080 child observations and
 workload-specific time/memory limits declared before a candidate. Its short-input
 identical-copy difference reaches 3.90%; the report limits the claims this allows.
-Next, integrate the directory controls and word-frequency evidence checks into
-the final six-platform application delivery. No word-frequency candidate is
-implemented or accepted by these measurements.
-This does not complete the other application families or integrated V2 coverage.
+The directory controls and word-frequency evidence checks are verified in #228
+across the complete production matrix. The baseline alone accepts no candidate.
+The ongoing
+[direct string-result experiment](docs/measurements/direct-string-results.md)
+removes temporary raw buffers from replacement/repetition at `089465bb`.
+All six native focused suites and both WASI hosts pass, including alias, size,
+cleanup and failure controls. All four timing sessions reject the speed
+claim despite removing raw allocations; retain those failures. The second
+candidate reuses uniquely owned, non-growing replacements under protocol
+`ebd8f46d`. All native checks and allocation targets pass, but all four timing
+sessions still miss 5%; retain those rejected results. The third declared change
+uses standard byte search for one-byte patterns and qualifies all four sessions
+at `afbafef8` under the unchanged limits: 16.4–19.2% less large-input time,
+26,216 fewer managed requests, unchanged retains/peak, and explicit code/stack
+costs. Final-head platform validation remains required before delivery.
+The [file-read boundary controls](docs/measurements/file-read-failures.md) add
+text/byte allocation-failure probes to this same batch. The focused ARM64 macOS
+and AMD64 GCC runs each pass 11 tests and all 40 saved boundary executions pass
+independent audit; complete platform coverage remains pending. This does not complete the other application families or integrated V2 coverage.
 **Done:** each family has explicit platform/memory-mode coverage, failure and
 cancellation tests, bounded post-operation storage and a B1 budget where timed.
 

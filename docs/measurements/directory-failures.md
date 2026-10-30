@@ -6,8 +6,9 @@ or memory parity with C/Rust. Source `1f364c09` passes ten focused tests on each
 of the six native hosts, with complete log and artifact audits. The
 [archive](directory-failures-artifacts-2026-10-30.json) retains all 84 probe
 executions, emitted sources, file identities, memory observations and full logs,
-including the failed first run. Full production acceptance for this preparation
-is still pending.
+including the failed first run. Full production acceptance is verified in #228;
+[the delivery record](../roadmap-history.md#directory-cleanup-and-current-application-costs-pr-228)
+links the exact tested/merged trees and audited gates.
 
 | Host | Passing job |
 |---|---|

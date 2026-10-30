@@ -6,6 +6,29 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Directory cleanup and current application costs (PR #228)
+
+Directory-report probes now check four allocation boundaries, preserved caller
+aliases, recovery/retry and deliberately missing cleanup. Terminal OOM remains a
+separate diagnostic/exit-102 contract. The [directory report](measurements/directory-failures.md)
+retains all six native hosts and 84 saved probes. The [word-frequency baseline](measurements/wordfreq-current.md)
+retains four qualified sessions, 37,080 observations, native images and independent
+evidence checks. Large-input fwp/C remains 2.49 on ARM64 and 3.03–3.04 on AMD64;
+this delivery sets candidate limits and makes no speedup claim.
+
+Squash `667e71f0a0f6b0bbb8e0aa4f90c547bd16481fab` exactly matches tested
+`f3eb507280e5a71083190ec1e26bbbdbe555dae8`, tree `2027294be3d55f8b29f19be05d029d2287f551fe`.
+All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41018509811),
+[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41018509711) and
+[both G2 hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/41018512169)
+pass with complete log audits. The Intel Mac job initially passed its tests but
+failed two DNS-dependent uploads. Its same-source retry `123979346074` passes
+626 tests/132 summaries, 12 terminal/SDK tests, packaging and the 3,357-file
+archive upload. Linux passes 993/257 per host, ownership Mac 364/127, Windows
+811/202, benchmarks 2/2 and G2 226/3 per host. The duplicate post-merge production
+run was cancelled only after exact tree equality and absence of failures were
+verified. D2/N1 timing requirements and the original compiler abort remain open.
+
 ## Eager captures and typed numerical loops (PR #227)
 
 Known partial applications now bind computed arguments once, in their original
