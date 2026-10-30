@@ -1,21 +1,31 @@
 # Current work
 
-**Next:** publish the combined PR #229 repair and run its complete final-head
-gates. Keep the two older Linux jobs running and audit their results as they
-finish; the workflow does not cancel them on a PR update. All currently known
-failures are repaired and focused checks pass. Merge only after nine production
-jobs, documentation and both G2 hosts pass, using one squash subject of at most
-80 characters and an empty body. Continue PLAN.md after the verified merge.
+**Next:** finish PR #229's gates at `8d908e0e` and squash-merge only after all
+nine production jobs, documentation and both G2 hosts pass. Production is
+`41051447921`, docs `41051447945`, analysis `41051466208`. The old Linux jobs in
+`41042531398` also need their completed logs audited. Do not open a second PR.
 
-## Active PR and source
+## Preparation for the next grouped PR
 
-[PR #229](https://github.com/e6qu/fun-with-pipes/pull/229) still points to failed
-head `3ddd989c`. Worktree `/private/tmp/fwp-direct-string-results`, branch
-`direct-string-results`, contains the combined repair, file-read controls and
-retained numerical diagnostic at `f0357526`, published on preparation branch
-`numerical-measurement-controls` while the PR preserves the old matrix. The separate preparation worktree
-`/private/tmp/fwp-numerical-controls` is clean at `b46e8c04`; its work is now
-included in this branch. Do not open another PR.
+Worktree `/private/tmp/fwp-file-boundary-portability`, branch
+`file-boundary-portability`, starts at tested candidate `8d908e0e`. It prepares
+[file-boundary portability](measurements/file-boundary-portability.md): three
+existing targets cover native Windows error paths and borrowed stream owners,
+fix the close observer, and retain healthy/negative probes. Runtime code and
+performance protocols are unchanged. Execution is pending; do not claim native
+coverage from formatting or source review.
+
+Guarded checks pass: rustfmt for the three changed Rust files, actionlint for both
+changed workflows, the 20 native-runner controls, and roadmap/whitespace checks.
+Focused checks will use production GCC on Linux, Clang on Mac and native Clang on
+both Windows architectures. Complete final gates belong after the next batch is
+ready. All original string/failure/numerical records below remain relevant.
+
+The active PR worktree `/private/tmp/fwp-direct-string-results` has only a local
+live-status handoff change after its published source; preserve it. The primary
+checkout's older recovery handoff is protected and remains untouched. Its verbatim
+backup is `/private/tmp/fwp-primary-recovery-before-file-checks.md`. Current work
+is recorded in these temporary worktrees and PR #229's description.
 
 Latest verified delivery: [#228](roadmap-history.md#directory-cleanup-and-current-application-costs-pr-228),
 squash `667e71f0`, identical tested tree from `f3eb5072`. Directory-boundary

@@ -2117,14 +2117,14 @@ jobs:
         shell: bash
         run: |
           mkdir -p file-application-evidence
-          cargo clippy --test directory_report --test text_file_tools --test text_transform_ownership -- -D warnings 2>&1 | tee file-application-evidence/compiler.log
+          cargo clippy --test directory_report --test text_file_tools --test text_transform_ownership --test file_io_errors --test file_runtime_ownership --test file_write_visibility -- -D warnings 2>&1 | tee file-application-evidence/compiler.log
       - name: Windows compiler checks for the file applications
         id: file_compiler_windows
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force file-application-evidence | Out-Null
-          cargo clippy --test directory_report --test text_file_tools --test text_transform_ownership -- -D warnings 2>&1 | Tee-Object file-application-evidence/compiler.log
+          cargo clippy --test directory_report --test text_file_tools --test text_transform_ownership --test file_io_errors --test file_runtime_ownership --test file_write_visibility -- -D warnings 2>&1 | Tee-Object file-application-evidence/compiler.log
           exit $LASTEXITCODE
       - name: Publish compiler failures while independent tests continue
         if: ${{ !cancelled() && (steps.file_compiler.outcome == 'failure' || steps.file_compiler_windows.outcome == 'failure') }}
@@ -2138,7 +2138,7 @@ jobs:
         if: ${{ !cancelled() && runner.os != 'Windows' }}
         shell: bash
         run: |
-          cargo test --no-fail-fast --test directory_report --test text_file_tools --test text_transform_ownership -- --nocapture 2>&1 | tee file-application-evidence/tests.log
+          cargo test --no-fail-fast --test directory_report --test text_file_tools --test text_transform_ownership --test file_io_errors --test file_runtime_ownership --test file_write_visibility -- --nocapture 2>&1 | tee file-application-evidence/tests.log
       # Git Bash's MSYS runtime enables backup/restore privileges, which can
       # bypass the denied-directory ACL. Launch native tests from PowerShell.
       - name: Windows file applications, repeated failures and deliberate leaks
@@ -2147,7 +2147,7 @@ jobs:
         shell: pwsh
         run: |
           whoami /priv | Out-File file-application-evidence/privileges.txt
-          cargo test --no-fail-fast --test directory_report --test text_file_tools --test text_transform_ownership -- --nocapture 2>&1 | Tee-Object file-application-evidence/tests.log
+          cargo test --no-fail-fast --test directory_report --test text_file_tools --test text_transform_ownership --test file_io_errors --test file_runtime_ownership --test file_write_visibility -- --nocapture 2>&1 | Tee-Object file-application-evidence/tests.log
           exit $LASTEXITCODE
       - name: Publish failed test logs before the admission inventory
         if: ${{ !cancelled() && (steps.file_tests.outcome == 'failure' || steps.file_tests_windows.outcome == 'failure') }}

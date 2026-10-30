@@ -316,6 +316,9 @@ The [file-read boundary controls](docs/measurements/file-read-failures.md) add
 text/byte allocation-failure probes to this same batch. The focused ARM64 macOS
 and AMD64 GCC runs each pass 11 tests and all 40 saved boundary executions pass
 independent audit; complete platform coverage remains pending. This does not complete the other application families or integrated V2 coverage.
+Next, verify [file-boundary portability](docs/measurements/file-boundary-portability.md):
+remove Unix-only probe assumptions, retain error/owner controls, and run them on
+both Windows architectures as well as existing Linux/macOS assignments.
 **Done:** each family has explicit platform/memory-mode coverage, failure and
 cancellation tests, bounded post-operation storage and a B1 budget where timed.
 

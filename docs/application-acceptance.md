@@ -246,7 +246,9 @@ extension. Machine headers verify the runner's actual architecture. The original
 directory-boundary probes above add that coverage for directory traversal; the [file-read boundary controls](measurements/file-read-failures.md) add probes
 for text/byte reads. Focused ARM64 macOS and AMD64 GCC checks pass; complete
 platform coverage remains pending. Other operations still need their own
-allocation-failure evidence.
+allocation-failure evidence. The prepared
+[file-boundary portability checks](measurements/file-boundary-portability.md)
+extend error, flush and borrowed-handle probes to Windows; execution is pending.
 
 The observer reads Linux `/proc`, macOS `ps`, and Windows
 `K32GetProcessMemoryInfo` working-set counters. Windows sampling opens and closes

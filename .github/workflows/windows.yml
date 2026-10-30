@@ -138,6 +138,7 @@ jobs:
             'cached_map_borrows', 'caf_ownership', 'inline_caf_ownership', 'selection_unwind_ownership', 'zip_unwind_ownership',
             'windows_runtime', 'windows_static_memory', 'loop_unwind_ownership', 'path_validation', 'io_error_ownership',
             'system_snapshots', 'file_values', 'text_file_tools', 'text_transform_ownership', 'file_construction_ownership',
+            'file_io_errors', 'file_runtime_ownership', 'file_write_visibility',
             'file_inline_path', 'file_storage_disposal', 'record_update_ownership', 'general_record_update_ownership',
             'constructor_unwind_ownership', 'stack_ownership', 'wide_counts', 'parser_workspace'
           )

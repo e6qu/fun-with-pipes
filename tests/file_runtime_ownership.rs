@@ -1,7 +1,9 @@
 //! File aliases own streams through successful I/O, failure and final release.
-#![cfg(any(target_os = "linux", target_os = "macos"))]
 use fwp::ir::*;
 use std::process::Command;
+
+#[path = "support/record_probe.rs"]
+mod record_probe;
 
 #[test]
 fn file_aliases_and_borrowed_io_unwind_preserve_stream_owners() {
@@ -18,20 +20,23 @@ fn file_aliases_and_borrowed_io_unwind_preserve_stream_owners() {
         ..Program::default()
     };
     let (generated, _) = fwp::cgen::generate_library(&p, "file_owners", &[]).unwrap();
+    let stream_observer = include_str!("fixtures/file_stream_observer.c");
     let hooks = r#"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 static uintptr_t watched_text;
 static unsigned watched_text_frees;
-static int fault, watched_fd, closes;
-static FILE *watched_stream;
-static FILE *observe_open(const char *,const char *);
+static int fault, closes;
 static int observe_close(FILE *);
 static size_t observe_write(const void *,size_t,size_t,FILE *);
 static int observe_flush(FILE *);
 static int observe_error(FILE *);
+#ifdef _WIN32
+#define _wfopen observe_wopen
+#else
 #define fopen observe_open
+#endif
 #define fclose observe_close
 #define fwrite observe_write
 #define fflush observe_flush
@@ -39,16 +44,14 @@ static int observe_error(FILE *);
 "#;
     let fixture = r#"
 #undef fopen
+#undef _wfopen
 #undef fclose
 #undef fwrite
 #undef fflush
 #undef ferror
 #include <fcntl.h>
 static volatile V handle;
-static FILE *observe_open(const char *p,const char *m){
- FILE *f=fopen(p,m);if(f){watched_stream=f;watched_fd=fileno(f);}return f;
-}
-static int observe_close(FILE *f){if(f==watched_stream)closes++;return fclose(f);}
+static int observe_close(FILE *f){if(f==watched_stream){watched_stream=NULL;closes++;}return fclose(f);}
 static size_t observe_write(const void *p,size_t size,size_t n,FILE *f){
  if(f==watched_stream&&fault==1){errno=ENOSPC;return 0;}return fwrite(p,size,n,f);
 }
@@ -65,8 +68,8 @@ int main(int argc,char **argv){
  for(int i=0;i<300;i++)fwp_file_dup(handle);
  if(h->refs!=301)return 2;
  for(int i=0;i<300;i++)fwp_file_drop(handle);
- if(h->refs!=1||closes||fcntl(watched_fd,F_GETFD)==-1)return 3;
- fwp_file_drop(handle);if(closes!=1||fcntl(watched_fd,F_GETFD)!=-1||errno!=EBADF)return 4;
+ if(h->refs!=1||closes||!stream_is_open())return 3;
+ fwp_file_drop(handle);if(closes!=1||stream_is_open())return 4;
  handle=fwp_p_file_open(path,1,0);h=(fwp_file *)(uintptr_t)handle;closes=0;
  fwp_file_dup(handle);fwp_p_file_close(handle);
  if(h->refs!=2||closes!=1)return 5;
@@ -88,7 +91,7 @@ int main(int argc,char **argv){
   int failed=setjmp(handler.jb);
   if(!failed){if(mode==3)fwp_p_file_read_all_owned(handle,0);else fwp_p_file_write_owned(more,handle,0);}
   fwp_handlers=handler.prev;fault=0;
-  if(!failed||h->refs!=1||closes||fwp_cleanups||fcntl(watched_fd,F_GETFD)==-1)return 7;
+  if(!failed||h->refs!=1||closes||fwp_cleanups||!stream_is_open())return 7;
   if(strcmp(STR(OBJ(handler.value)->f[0])->d,mode==3?"read":"write"))return 8;
   if(strcmp(STR(OBJ(handler.value)->f[1])->d,strerror(mode==1?ENOSPC:EIO)))return 8;
   fwp_rc_free_obj(OBJ(handler.value)->f[0]);fwp_rc_free_obj(OBJ(handler.value)->f[1]);fwp_rc_free_obj(handler.value);
@@ -99,7 +102,7 @@ int main(int argc,char **argv){
   fwp_trap_recover=recover;fwp_trap_jb=&recovery;fwp_trap_cleanup=0;
   int failed=setjmp(recovery);if(!failed)fwp_p_file_read_all_owned(handle,0);
   fwp_trap_recover=0;fwp_trap_jb=0;fault=0;
-  if(!failed||h->refs!=1||closes||fwp_cleanups||fcntl(watched_fd,F_GETFD)==-1)return 9;
+  if(!failed||h->refs!=1||closes||fwp_cleanups||!stream_is_open())return 9;
   if(mode==5){
 #ifndef FWP_RESOURCE_NO_FREE
    if(!watched_text||watched_text_frees!=1||fwp_heap.freed<=before)return 10;
@@ -165,16 +168,27 @@ int main(int argc,char **argv){
     let exe = dir.join("probe.exe");
     let data = dir.join("data");
     for opt in ["-O1", "-O2"] {
-        for (code, expected) in [
+        for (index, (code, expected)) in [
             (&no_alias, 6),
             (&no_owner, 7),
             (&no_text, 10),
             (&runtime, 0),
-        ] {
-            fwp::cgen::compile_c(&format!("{hooks}\n{code}\n{fixture}"), &exe, opt).unwrap();
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let program = format!("{stream_observer}\n{hooks}\n{code}\n{fixture}");
+            fwp::cgen::compile_c(&program, &exe, opt).unwrap();
 
             std::fs::write(&data, "contents").unwrap();
             let out = Command::new(&exe).arg(&data).output().unwrap();
+            record_probe::save(
+                "file_runtime_ownership",
+                &format!("control-{index}-{expected}{opt}"),
+                &program,
+                &exe,
+                &out,
+            );
             assert_eq!(
                 out.status.code(),
                 Some(expected),
@@ -182,15 +196,20 @@ int main(int argc,char **argv){
                 String::from_utf8_lossy(&out.stderr)
             );
         }
-        fwp::cgen::compile_c(
-            &format!("{hooks}\n#define FWP_RESOURCE_NO_FREE 1\n{runtime}\n{fixture}"),
-            &exe,
-            opt,
-        )
-        .unwrap();
+        let program = format!(
+            "{stream_observer}\n{hooks}\n#define FWP_RESOURCE_NO_FREE 1\n{runtime}\n{fixture}"
+        );
+        fwp::cgen::compile_c(&program, &exe, opt).unwrap();
 
         std::fs::write(&data, "contents").unwrap();
         let out = Command::new(&exe).arg(&data).output().unwrap();
+        record_probe::save(
+            "file_runtime_ownership",
+            &format!("suppressed-free{opt}"),
+            &program,
+            &exe,
+            &out,
+        );
         assert_eq!(
             out.status.code(),
             Some(0),
