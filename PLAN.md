@@ -301,9 +301,10 @@ Next, integrate the directory controls and word-frequency evidence checks into
 the final six-platform application delivery. No word-frequency candidate is
 implemented or accepted by these measurements. The next
 [direct string-result experiment](docs/measurements/direct-string-results.md)
-will remove temporary raw buffers from replacement/repetition, with separate
-raw/managed counts, alias and size-boundary checks, and a paired application
-comparison. Its protocol must precede implementation; no speedup is promised.
+removes temporary raw buffers from replacement/repetition at `089465bb`.
+All six native focused suites pass, including alias, size, cleanup and failure
+controls. The protocol preceded implementation. WASI and paired application
+measurements remain required; no speedup is accepted.
 This does not complete the other application families or integrated V2 coverage.
 **Done:** each family has explicit platform/memory-mode coverage, failure and
 cancellation tests, bounded post-operation storage and a B1 budget where timed.

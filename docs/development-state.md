@@ -1,36 +1,42 @@
 # Current work
 
-**Next:** run the focused native string checks for the implemented
-[direct string-result experiment](measurements/direct-string-results.md), then
-implement its paired measurement runner while monitoring PR #228's final gates. Preserve its verified/running head and
-open no second PR. Protocol `e0fb1a09` was published before the runtime changes. Keep raw-buffer
-allocation costs separate from managed counts; no speed claim is accepted.
+**Next:** publish and run the paired [direct string-result comparison](measurements/direct-string-results.md), while watching PR #228's final gates. Keep one active PR. Its final head remains `f3eb5072`; do not push preparation work to it.
 
-This preparation uses `/private/tmp/fwp-direct-string-results`, branch
-`direct-string-results`, based on `f3eb5072`. PR #228 remains on
-`application-allocation-failures` in `/private/tmp/fwp-application-failures`.
-Its final production run is `41018509811`, documentation `41018509711`, and G2
-`41018512169`. Documentation, benchmark and both analysis hosts pass with complete log audits;
-eight native production jobs are running. G2 has 226 tests/three summaries per host. Merge only after all exact-head gates pass and their logs are
-audited, with one subject of at most 80 characters and an empty body.
+Preparation is on `direct-string-results` in `/private/tmp/fwp-direct-string-results`.
+Protocol `e0fb1a09` precedes runtime/test source `089465bb`. `replace` counts
+non-overlapping matches and fills its final String; `string.repeat` fills its
+checked final size. Both avoid temporary libc buffers. They preserve input aliases,
+managed allocation/ownership contracts and the distinct terminal OOM versus
+String-size failure rules. No application speed claim is accepted.
 
-## Direct string-result preparation
+## Checks and measurements in progress
 
-`replace` now counts non-overlapping matches, then writes once into its final
-String. `string.repeat` calculates the checked size and fills its final allocation.
-Neither uses a temporary raw buffer or mutates input strings. The existing ownership
-contracts and primitive inventory are unchanged. No benchmark has run yet.
+PR #228 production `41018509811`: benchmarks, macOS ARM regular (626 tests/132
+summaries) and ARM ownership (364/127) pass with full audits. Six native jobs
+remain running without reported failed steps. Documentation `41018509711` and
+both G2 hosts `41018512169` pass; G2 has 226 tests/three summaries each.
 
-Existing text tests now include raw-buffer calibration, a broken raw-free control,
-shared/source-pattern/source-replacement aliases, binary/UTF-8 bytes, direct output
-allocation traps and a deliberately missing consumed-owner guard. O0/O1/O2 probes
-retain outputs/status before assertions. Size tests preserve terminal overflow
-versus String-size traps and observe a deleted empty shortcut before division.
+Focused string run `41021988225` passes all six native hosts at `089465bb`.
+Every host passes 18 integration tests/seven summaries; GCC AMD64 additionally
+passes 224 library tests and 20 native-runner controls. Complete logs are audited,
+including intentional missing-compiler/runner failures. Independent audit checks
+all 954 saved subprocess outputs/statuses and 162 native image headers/hashes.
+Artifacts are in `/private/tmp/fwp-direct-focused-089465bb`; the audit is
+`/private/tmp/fwp-direct-focused-audit.json`. WASI run `41023744074` is queued on
+both Linux architectures and remains required.
 
-Guarded local Clang checks pass 144 boundary/control subprocesses at O0/O1/O2:
-`python3 /private/tmp/fwp-check-direct-string-sizes.py`. This does not establish
-GCC, full-runtime, native-platform or WASI correctness. Rust formatting passes.
-Full compiler builds, focused ownership checks and measurement run on GitHub.
+The paired runner restores exactly two frozen runtime bodies in generated C,
+without an older compiler. It records separate candidate/reference and C/Rust
+comparisons, independent raw/managed profiles, all subprocess streams, native
+images, sections and stack reports. Its checker recomputes all 18,510 observations
+per complete session, including failed timing decisions; corrupted-evidence tests
+must also pass. Four qualified host sessions remain required. Keep the existing
+limits and retain failed/inconclusive sessions; never retry unchanged timings.
+
+Guarded checks: six allocation/acceptance tests pass with small Clang O2 probes;
+144 size/control exits pass at Clang O0/O1/O2; Rust formatting, Python syntax and
+workflow lint pass. These local checks do not establish GCC or WASI coverage.
+Full builds, measurements and final production checks remain on GitHub.
 
 ## Directory-report failure checks
 

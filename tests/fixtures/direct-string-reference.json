@@ -1,0 +1,8 @@
+{
+  "source": "f3eb507280e5a71083190ec1e26bbbdbe555dae8",
+  "runtimeSha256": "1a49f64576110d163e25693a8484ddd511873a5c1a9c2cf626cd568bf48b015e",
+  "functions": {
+    "fwp_p_replace": "static V fwp_p_replace(V from, V to, V s) {\n    if (STR(from)->len == 0) return s;\n    if (STR(from)->len == STR(to)->len &&\n        !memcmp(STR(from)->d, STR(to)->d, STR(from)->len)) return s;\n    const char *d = STR(s)->d, *end = d + STR(s)->len;\n    const char *p = fwp_memmem(d, (size_t)(end - d), STR(from)->d, STR(from)->len);\n    if (!p) return s;\n    fwp_buf b = {0};\n    do {\n        buf_put(&b, d, (size_t)(p - d));\n        buf_put(&b, STR(to)->d, STR(to)->len);\n        d = p + STR(from)->len;\n        p = fwp_memmem(d, (size_t)(end - d), STR(from)->d, STR(from)->len);\n    } while (p);\n    buf_put(&b, d, (size_t)(end - d));\n    return buf_to_str(&b);\n}",
+    "fwp_p_str_repeat": "static V fwp_p_str_repeat(V n, V s) {\n    size_t k = fwp_count_arg(n);\n    if (!k || !STR(s)->len) return fwp_str_new(\"\", 0);\n    fwp_buf b = {0};\n    for (size_t i = 0; i < k; i++) buf_put(&b, STR(s)->d, STR(s)->len);\n    return buf_to_str(&b);\n}"
+  }
+}

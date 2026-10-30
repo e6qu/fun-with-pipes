@@ -1,6 +1,6 @@
 # Direct construction of replacement and repeated strings
 
-This protocol precedes implementation. The reference is
+Protocol `e0fb1a09` preceded implementation `089465bb`. The reference is
 `f3eb507280e5a71083190ec1e26bbbdbe555dae8`, the application-validation PR head.
 It extends [the current word-frequency baseline](wordfreq-current.md); it changes
 no existing derivative or numerical-kernel timing limit. This is a proposed
@@ -8,7 +8,7 @@ experiment, not an accepted optimization.
 
 ## Source finding and proposed change
 
-`replace` currently appends unmatched bytes and replacement text to a growing
+The reference `replace` appends unmatched bytes and replacement text to a growing
 `fwp_buf`, then copies that buffer into the result String and frees it.
 `string.repeat` likewise appends the same source repeatedly before copying.
 The buffer uses libc `realloc`/`free`; the result uses fwp's managed allocator.
@@ -106,3 +106,23 @@ grow. These are representation tradeoff limits, not runtime speed evidence.
 Publish the complete focused evidence, then group the change with its tests and
 documentation in the next PR after application validation. Run the full final-head
 matrix once the group is ready. Preserve PR #228's running head meanwhile.
+
+## Implementation and checks
+
+`089465bb` implements direct construction without changing primitive contracts.
+Focused run `41021988225` passes all six native targets at O0/O1/O2: 18 integration
+tests per host, plus 224 library tests and 20 runner controls on GCC AMD64. Full
+logs and 954 saved boundary/cleanup executions are audited. All 162 retained
+probe images have the expected native architecture headers and recorded hashes.
+This is correctness evidence, not a performance decision. WASI `41023744074` and
+the paired measurements remain outstanding.
+
+The runner is [measure-direct-string-results.py](../../scripts/measure-direct-string-results.py).
+[The source/count/acceptance checks](../../scripts/direct-string-evidence.py)
+restore only the two frozen bodies and keep managed and raw profiles separate.
+[The independent observation audit](../../scripts/check-direct-string-results.py)
+checks all 18,510 subprocess records per completed session, including exact
+commands, outputs, order, code identities and recomputed decisions. Timing failures
+still produce a full report and receive integrity checks. A passing integrity
+audit means the result is faithfully recorded; it does not turn a failed timing
+or memory limit into an accepted optimization.
