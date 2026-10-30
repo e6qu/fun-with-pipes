@@ -2550,7 +2550,7 @@ impl LoopGen {
 fn hof_sig(i: usize, sym: &str, k: usize) -> String {
     let mut parameters: Vec<String> = (0..k).map(|j| format!("V c{}", j)).collect();
     let rest = match sym {
-        "fold" | "fold-right" => "V z, V xs",
+        "fold" | "fold-right" | "array.fold" => "V z, V xs",
         "zip-with" => "V ys, V xs",
         "loop" => "V s",
         "array.generate" => "V count",
@@ -2570,6 +2570,12 @@ fn hof_def(
     fold_drop: Option<&str>,
     borrowed_step: bool,
 ) -> String {
+    if sym == "array.fold" {
+        // The selected callback has exactly two plain numeric parameters and
+        // a plain numeric result. Neither argument needs ownership preparation.
+        let element = result_ops.expect("known scalar array fold element");
+        return format!("{} {{\n    /* direct known scalar array fold; input stays borrowed */\n    for (size_t index = 0; index < fwp_array_len(xs); index++) {{\n        V args[] = {{z, fwp_array_load(xs, index, {element})}};\n        z = fwp_owned_entry{g}(args);\n    }}\n    return z;\n}}\n", hof_sig(i, sym, *k));
+    }
     if sym == "array.generate" {
         let element = result_ops.expect("typed generated array element");
         let args = (0..*k)
@@ -5349,6 +5355,34 @@ impl<'g, 'p> FnGen<'g, 'p> {
     fn owned_hof(&mut self, id: FuncId, args: &[Expr]) -> Option<String> {
         if let Some(call) = self.inline_sort_keys(id, args) {
             return Some(call);
+        }
+        if matches!(&self.g.prog.funcs[id].body, Body::Prim(s) if s == "array.fold") {
+            let [Expr::Func(callback), initial, input] = args else {
+                return None;
+            };
+            let function = &self.g.prog.funcs[*callback];
+            if function.arity != 2 {
+                return None;
+            }
+            let (parameters, result) = function.ty.params(2);
+            if parameters.iter().any(|ty| scalar(ty).is_none()) || scalar(result).is_none() {
+                return None;
+            }
+            let key = ("array.fold".to_string(), *callback, 0);
+            let index = match self.g.hofs.iter().position(|hof| *hof == key) {
+                Some(index) => index,
+                None => {
+                    self.g.hofs.push(key);
+                    self.g.hofs.len() - 1
+                }
+            };
+            // Preserve initial-before-input evaluation even when expressions
+            // remain nested; C argument evaluation order is not sufficient.
+            let initial = self.expr(initial);
+            let initial = self.bind(initial);
+            let input = self.expr(input);
+            let input = self.bind(input);
+            return Some(format!("fwp_hof{index}({initial}, {input})"));
         }
         if matches!(&self.g.prog.funcs[id].body, Body::Prim(s) if s == "array.generate") {
             let [count, callback] = args else { return None };
@@ -10032,8 +10066,10 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     while i < g.hofs.len() {
         let hof = g.hofs[i].clone();
         let borrowed_step = g.borrowed_hof_step(i, &hof);
-        if matches!(hof.0.as_str(), "array.generate" | "fold" | "fold-right")
-            && borrowed_step.is_none()
+        if matches!(
+            hof.0.as_str(),
+            "array.generate" | "array.fold" | "fold" | "fold-right"
+        ) && borrowed_step.is_none()
         {
             // The ordinary loop calls the owned entry. A borrowed loop calls
             // its specialized body directly and needs no generic adapter.
@@ -10055,6 +10091,9 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         let result_ops = if hof.0 == "array.generate" {
             let ty = prog.funcs[hof.1].ty.params(hof.2 + 1).1.clone();
             Some(g.desc(&ty))
+        } else if hof.0 == "array.fold" {
+            let element = prog.funcs[hof.1].ty.params(2).0[1].clone();
+            Some(g.desc(&element))
         } else if matches!(hof.0.as_str(), "map" | "filter" | "take-while" | "zip-with") {
             let (params, result) = prog.funcs[hof.1]
                 .ty

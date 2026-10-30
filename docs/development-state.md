@@ -1,10 +1,11 @@
 # Current work
 
-**Next:** publish the audited B1 buffer report and frozen 4,096-element scan budget,
-then inspect the scan's source/ownership costs before selecting a candidate. All
-four baseline sessions at `fadebf713e0854d6d132fc6e3666f275b214fc17` are audited;
-35/48 case controls fail. Only scan/4,096 passes on both architectures in both
-sessions. Keep those failures explicit; no unchanged numerical rerun.
+**Next:** verify the known-scalar `array.fold` candidate against the budget published
+at `1bcf261d`, then implement/run the frozen paired comparison before acceptance.
+The source routes even known numeric folds through generic callback dispatch;
+the candidate uses the existing direct-entry machinery for exactly two numeric
+parameters, a numeric result and no captures. Other folds retain their ordinary
+calling convention. No candidate timing has run.
 [Draft PR #231](https://github.com/e6qu/fun-with-pipes/pull/231), branch
 `ownership-peer-baselines`, worktree `/private/tmp/fwp-ownership-peer-baselines`.
 Keep one active PR. Once the grouped report and fixes are complete, require all
@@ -126,3 +127,16 @@ verified temporary copy. Original archives remain. Free disk is only about
 64.2 GiB; do not download or generate large files without checking the limit.
 The report and new artifact index replace obsolete preparation-only text.
 No candidate implementation or paired candidate timing has run yet.
+
+## Current candidate checks
+
+The code change is confined to C emission. It uses the existing higher-order loop
+registry, binds the initial value before the array input, and calls the existing
+owned entry directly for each scalar element. The input remains borrowed; the
+caller retains its existing failure cleanup. Tests cover packing on/off, array
+views, aliases, fold order, unknown callbacks, F32 values, checked-overflow order
+and a recoverable scalar callback failure with zero leaked payload. Existing F128
+failure controls remain in the same test target. The focused workflow runs the
+three affected Rust integration targets with the release compiler on both hosts.
+Local fixture interpretation passes with the verified compiler package; no local
+compiler build ran. Formatting passes. Native candidate checks remain pending.

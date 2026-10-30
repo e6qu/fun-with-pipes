@@ -26,7 +26,11 @@ export generated : I64 -> Array[F128] ! {Error[String]}
 generated = flip array.generate (to-quad | transform)
 export folded : I64 -> F128 ! {Error[String]}
 folded = flip array.generate to-quad | array.fold sum-step 0.0f128
-main = [4 | attempt mapped | echo, 4 | attempt generated | echo, 4 | attempt folded | echo] | ignore
+scalar-step : I64 -> I64 -> I64 ! {Error[String]}
+scalar-step = curry (if (.1 | gt 2) (const "expected" | fail) (uncurry add))
+export scalar-folded : I64 -> I64 ! {Error[String]}
+scalar-folded = flip array.generate id | array.fold scalar-step 0
+main = [4 | attempt scalar-folded | echo, 4 | attempt mapped | echo, 4 | attempt generated | echo, 4 | attempt folded | echo] | ignore
 "#,
     )
     .unwrap();
@@ -48,7 +52,7 @@ main = [4 | attempt mapped | echo, 4 | attempt generated | echo, 4 | attempt fol
     );
     let code = std::fs::read_to_string(cfile).unwrap();
     let mut functions = Vec::new();
-    for name in ["mapped", "generated", "folded"] {
+    for name in ["mapped", "generated", "folded", "scalar-folded"] {
         let start = code.find(&format!("/* {name} :")).unwrap();
         let id = code[start..]
             .split("static V f")
@@ -67,7 +71,7 @@ static void drop_leaf(V value) {{ if(fwp_rc_release_last(value)) fwp_rc_free_obj
 int main(void) {{
     fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
     V (*const functions[])(V)={{{}}};
-    for(volatile int i=0;i<3;i++) {{
+    for(volatile int i=0;i<4;i++) {{
         size_t live_bytes=fwp_heap.live;
         fwp_handler h; h.prev=fwp_handlers; h.state_depth=fwp_state_len; h.cleanup=fwp_cleanups;
         fwp_handlers=&h;

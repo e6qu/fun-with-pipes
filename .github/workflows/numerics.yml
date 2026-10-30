@@ -154,6 +154,11 @@ jobs:
           mkdir buffer-checks
           set -o pipefail
           cargo build --locked --release --bin fwp 2>&1 | tee buffer-checks/build.log
+      - name: Scalar fold semantics and failure cleanup
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: |
+          set -o pipefail
+          cargo test --locked --release --no-fail-fast --test array_loop_borrows --test array_unwind_ownership --test fold_unwind_ownership 2>&1 | tee buffer-checks/scalar-fold-tests.log
       - name: Peer results, argument errors and schedule
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: |
