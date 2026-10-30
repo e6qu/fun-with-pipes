@@ -40,23 +40,25 @@ that still needs a new measurement run.
 
 ## Planned ownership comparisons
 
-These four comparisons belong to plan A/B; no new measurements are claimed here.
-The [ownership direction](gc-removal-design.md) explains why each matters.
+These comparisons belong to plan B1/B2. Compiler improvements and their ownership
+checks already exist; the table identifies which peer comparisons still need
+work. The [ownership direction](gc-removal-design.md) explains the lifetime rules.
 
-| Workload | Equivalent C/Rust work | Question |
+| Workload | Existing evidence | Remaining comparison work |
 |---|---|---|
-| Unique numeric buffer | One owned buffer, borrowed by helpers, released on every exit | Can fwp eliminate the count field, count updates and uniqueness checks? |
-| Returned partial application | Callable value with the same captured values and lifetime | What storage, dispatch and ownership cost survives specialization? |
-| Subscription with weak back-link | Same registration, expiration, active-call and cancellation rules | What do weak metadata, acquisition and teardown cost? |
-| Recursive parser workspace | Arena builds/walks the same expression graph and releases it per invocation | What does grouped ownership save, and how much dead storage stays until scope exit? |
+| Unique numeric buffer | [A5](measurements/unique-array-storage.md) removes selected count slots and checks local/shared/callback paths at lengths 0, 16 and 4,096; these are operation counts, not timing | Add C/Rust peers with one owned buffer borrowed by helpers and released on every exit. Compare construction, reads and release; include a larger declared size and distinguish payload from allocator metadata. |
+| Returned partial application | [F1](functional-costs.md#function-call-pairs) counts known calls versus exported callable values at inputs 32/128 | Add C/Rust callable peers with the same captures, escaped lifetime and number of calls. Measure construction, invocation and destruction; distinguish direct calls from required indirect dispatch. |
+| Subscription with weak back-link | [Weak-link semantics](gc-removal-design.md) and lifetime tests cover registration, expiration and cleanup | Add explicit C/Rust registrations with the same active-call and cancellation rules. Measure weak metadata allocation, live/expired acquisition, callback work and teardown separately. |
+| Recursive parser workspace | [A6](measurements/parser-workspace.md) already compares all three languages at 31/511/8,191 balanced nodes and 127 left-nested nodes, with phase timings and storage observations | Preserve those results. Complete the broader memory accounting (reserved/committed storage and peer transient peaks) and Rust stack observations before claiming every B1 field; current reported capacities are not process memory. |
 
 Measure construction, useful work and cleanup separately and together at small,
 cache-sized and larger inputs. Match checked arithmetic and lifetime behavior;
 report representation differences, compiler/flags/host, repeated elapsed times,
 allocations, count/weak operations, peak live bytes, committed/reserved memory,
 binary size and stack use. Count-instrumented timings are not production timings.
-Existing reports do not provide all these observations; add them before claiming
-the corresponding comparison complete.
+The missing fields above keep these broader comparisons open. Declare each
+measurement protocol before execution; retain existing results at their original
+revisions instead of presenting them as current-code measurements.
 
 Measure the ownership-analysis pass separately from specialization, C generation
 and C compilation on N/2N/4N queues, captures, recursive calls and pipelines.
