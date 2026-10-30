@@ -100,7 +100,7 @@ class BuildChecks(unittest.TestCase):
             f'print({json.dumps(values)!r})\n')
         compiler.chmod(0o700)
         destination = self.directory / 'measurement'
-        arguments = ['measure-descent-output.py', '--compiler', str(compiler),
+        arguments = ['measure-descent-output.py', '--ar', 'ar', '--compiler', str(compiler),
                      '--output', str(destination), '--host', 'fixture-host',
                      '--cc', 'fixture-cc', '--rustc', 'fixture-rustc',
                      '--c-arch', 'armv8-a', '--objdump', 'unused-objdump',

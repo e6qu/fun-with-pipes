@@ -184,7 +184,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ['compiler', 'output']:
         parser.add_argument('--' + name, required=True, type=Path)
-    for name in ['host', 'cc', 'rustc', 'c-arch', 'objdump', 'nm', 'time']:
+    for name in ['host', 'cc', 'rustc', 'ar', 'c-arch', 'objdump', 'nm', 'time']:
         parser.add_argument('--' + name, required=True)
     for name in ['samples', 'warmups', 'order-seed', 'timeout', 'build-timeout']:
         parser.add_argument('--' + name, required=True, type=int)
@@ -250,6 +250,8 @@ def main():
             build([args.cc, *flags, '-Wall', '-Wextra', '-Werror', '-DDESCENT_SINK_DUMP=' + str(dump),
                    '-DDESCENT_SINK_OMIT_LAST=' + str(omit), '-c', ROOT / 'tests/fixtures/descent_output_sink.c', '-o', obj],
                   environment, args.build_timeout, commands, out)
+            build([args.ar, 'rcs', directory / f'libsink_{mode}.a', obj],
+                  environment, args.build_timeout, commands, out)
             sink_objects[mode] = obj
         binaries, outputs, metadata, profiles, controls, peer_profiles, statuses = {}, {}, {}, {}, {}, {}, {}
 
@@ -262,8 +264,8 @@ def main():
                 command = [args.rustc, '--crate-name', 'descent_output', '--edition=2021', '-D', 'warnings',
                            '-C', 'opt-level=2', '-C', 'overflow-checks=yes', '-C', 'codegen-units=1',
                            '-C', 'target-cpu=generic', '-C', 'lto=off', path, '-o', binary]
-                for obj in objects:
-                    command += ['-C', 'link-arg=' + str(obj)]
+                if mode:
+                    command += ['-L', 'native=' + str(directory), '-l', 'static=sink_' + mode]
             else:
                 command = [args.cc, *flags, *(['-w'] if language == 'fwp' else ['-Wall', '-Wextra', '-Werror']),
                            path, *objects, '-o', binary, '-lm', '-lpthread', '-ldl']

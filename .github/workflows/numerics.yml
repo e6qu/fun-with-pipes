@@ -91,7 +91,7 @@ jobs:
       - name: Linux process memory checkpoints
         if: ${{ !cancelled() && steps.native.outcome == 'success' }}
         run: >-
-          python3 scripts/check-unique-buffer-process-memory.py --mode linux
+          python3 scripts/check-unique-buffer-process-memory.py --ar ar --mode linux
           --native-checks buffer-checks/native --output buffer-checks/process-memory
           --cc gcc --rustc rustc
       - name: Ordinary programs and compiler stack reports
@@ -103,6 +103,13 @@ jobs:
           --c-arch "${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'armv8-a' }}"
           --rust-cpu "${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'generic' }}"
           --size size --objcopy objcopy
+      - name: Shared C and Rust consumer linkage and cleanup
+        if: ${{ !cancelled() && steps.native.outcome == 'success' }}
+        run: >-
+          python3 scripts/test-descent-output.py --compiler target/release/fwp
+          --cc gcc --rustc rustc --ar ar
+          --c-arch "${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'armv8-a' }}"
+          --objdump objdump --nm nm --output buffer-checks/consumer-controls
       - name: Complete evidence and deliberate damage controls
         if: ${{ !cancelled() && steps.programs.outcome == 'success' }}
         run: |
@@ -1499,7 +1506,7 @@ jobs:
       - run: cargo build --locked --release --bin fwp
       - name: Verify existing output and ownership observers
         run: >-
-          python3 scripts/test-descent-output.py
+          python3 scripts/test-descent-output.py --ar ar
           --compiler target/release/fwp --cc gcc --rustc rustc
           --c-arch "${{ matrix.c_arch }}" --objdump objdump --nm nm
           --output float-text-controls
@@ -1550,7 +1557,7 @@ jobs:
         run: cargo build --locked --release --bin fwp
       - name: Verify complete outputs, checksum consumption and repeated cleanup
         run: >-
-          python3 scripts/test-descent-output.py
+          python3 scripts/test-descent-output.py --ar ar
           --compiler target/release/fwp --cc gcc --rustc rustc
           --c-arch "${{ matrix.c_arch }}" --objdump objdump --nm nm
           --output descent-output-controls
@@ -1562,7 +1569,7 @@ jobs:
         run: python3 scripts/test-measurement-build.py
       - name: Compare full output with a shared result consumer
         run: >-
-          python3 scripts/measure-descent-output.py
+          python3 scripts/measure-descent-output.py --ar ar
           --compiler target/release/fwp --cc gcc --rustc rustc
           --c-arch "${{ matrix.c_arch }}" --objdump objdump --nm nm --time /usr/bin/time
           --case 3:0:32768 --case 3:1:32768 --case 3:199:4096

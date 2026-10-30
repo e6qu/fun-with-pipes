@@ -279,3 +279,29 @@ both hosts and checks complete evidence before measuring. Dispatch session 1 and
 session 2 once each on the same published source after focused checks pass.
 Retain complete or partial artifacts for all four jobs. This workflow is prepared,
 not yet run; no comparative performance result is claimed.
+
+## Link and inspection repair
+
+The next focused run, `41100000646` at `2acbfb41`, verified all 72 memory
+executions on AMD64 and all nine ordinary programs/stack reports on ARM64. It
+exposed two further harness errors; both complete logs and partial artifacts
+(`12998556454` AMD64, `12997637733` ARM64) are retained and audited.
+
+GNU objcopy rewrites its input when no output executable is supplied, even when
+asked to dump a section. The AMD64 identity check caught that change. Inspection
+now supplies a separate output and verifies both input executables remain unchanged;
+see [objcopy's file arguments](https://sourceware.org/binutils/docs/binutils/objcopy.html).
+The ordinary timing program must remain exactly the compiler's output.
+
+The ARM64 C memory observer uses a compiler-inserted stack protector. Passing its
+object through Rust's trailing `link-arg` places it after the system libraries,
+so the linker cannot resolve the guard dependency in that order. The helper now
+uses Rust's explicit [native static library option](https://doc.rust-lang.org/rustc/command-line-arguments.html#-l-link-the-generated-crate-to-a-native-library).
+Stack protection remains enabled. The same command pattern in the two numerical
+output scripts is repaired with untimed linkage/cleanup controls. No earlier
+numerical result is rerun or relabelled as passing.
+
+The complete evidence verifier passed locally against the retained ARM64 compiler
+reports with synthetic process observations and ten rehashed damage/origin controls.
+The newer explicit-output command adds another damaged-command control. Native
+verification remains pending; synthetic evidence is never a performance result.

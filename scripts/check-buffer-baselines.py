@@ -106,7 +106,7 @@ def check_evidence(folder, source, machine, session, origin):
                 assert base64.b64decode(stack_row['stdout']) == b''
                 assert base64.b64decode(stack_row['stderr']).decode() == (folder / 'programs' / entry / 'rust-stack.jsonl').read_text()
                 for row, executable, name in zip(build_rows[cursor + 1:cursor + 3], [binary, stack_binary], ['rust-text.bin', 'rust-stack-text.bin']):
-                    assert row['command'] == [tools['objcopy'], '--dump-section', f'.text={binary.parent / name}', str(executable)]
+                    assert row['command'] == [tools['objcopy'], '--dump-section', f'.text={binary.parent / name}', str(executable), str(binary.parent / (executable.name + '-inspection'))]
                     assert base64.b64decode(row['stdout']) == b''
                 cursor += 3
     assert cursor == len(build_rows)

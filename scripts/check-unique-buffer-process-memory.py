@@ -19,11 +19,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--mode', choices=['parser', 'linux'], required=True)
     parser.add_argument('--cc', required=True)
+    parser.add_argument('--ar', required=True)
     parser.add_argument('--rustc', required=True)
     parser.add_argument('--native-checks', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
-    assert args.cc and args.rustc
+    assert args.cc and args.rustc and args.ar
     if args.mode == 'linux':
         assert platform.system() == 'Linux'
     args.output.mkdir(parents=True, exist_ok=False)
@@ -89,6 +90,9 @@ int main(int argc, char **argv) {
         for level in [1, 2]:
             obj = args.output / f'memory-{entry}-O{level}.o'
             build([args.cc, '-std=gnu11', f'-O{level}', '-fPIC', '-Wall', '-Wextra', '-Werror', '-c', helper_path, '-o', obj])
+            library_name = f'memory_{entry}_O{level}'
+            library = args.output / f'lib{library_name}.a'
+            build([args.ar, 'rcs', library, obj])
             for language, code in sources.items():
                 source = args.output / f'{entry}-{language}.{"rs" if language == "rust" else "c"}'
                 source.write_text(code)
@@ -96,7 +100,7 @@ int main(int argc, char **argv) {
                 if language == 'rust':
                     command = [args.rustc, '--edition=2021', '-C', f'opt-level={level}', '-C', 'overflow-checks=yes',
                                '-C', 'lto=off', '-C', 'codegen-units=16', '-C', 'debuginfo=0', '-C', 'panic=unwind', '-D', 'warnings', '--cfg', f'buffer_entry="{entry}"',
-                               '-C', f'link-arg={obj.resolve()}', source, '-o', executable]
+                               '-L', f'native={args.output.resolve()}', '-l', f'static={library_name}', source, '-o', executable]
                 else:
                     flags = ['-w', '-lm', '-lpthread', '-ldl'] if language == 'fwp' else ['-Wall', '-Wextra', '-Werror']
                     command = [args.cc, '-std=gnu11', f'-O{level}', '-ffp-contract=off', '-fno-fast-math', '-fno-lto',

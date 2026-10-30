@@ -137,7 +137,10 @@ def main():
                 # The stack-only build must preserve the ordinary instruction bytes.
                 text_paths = [folder / 'rust-text.bin', folder / 'rust-stack-text.bin']
                 for executable, text_path in zip([binary, stack_binary], text_paths):
-                    assert run([args.objcopy, '--dump-section', f'.text={text_path}', executable], stack_remarks=False).stdout == b''
+                    before = executable.read_bytes()
+                    inspected = folder / (executable.name + '-inspection')
+                    assert run([args.objcopy, '--dump-section', f'.text={text_path}', executable, inspected], stack_remarks=False).stdout == b''
+                    assert executable.read_bytes() == before, 'section inspection modified its input'
                 assert text_paths[0].read_bytes() == text_paths[1].read_bytes(), 'stack report changed Rust instructions'
                 stack_text = stack_result.stderr.decode()
                 (folder / 'rust-stack.jsonl').write_text(stack_text)

@@ -147,20 +147,35 @@ Outputs are `/private/tmp/fwp-buffer-{process-memory,phase,storage}-checks-2`.
 The latter two now include the largest timed input, 262,144. Actual Linux memory
 and instruction-equality results still require native CI.
 
-Repair source `2acbfb41` is published. Native run `41100000646` is pending
-(AMD `124215519721`, ARM `124215519969`); docs `41100006533` is queued.
-GitHub reports the ARM runner assigned but no executed steps yet.
+Repair source `2acbfb41` completed in `41100000646`. Both full logs and all
+partial command records are audited. AMD job `124215519721` passes 72 Linux
+memory executions but fails ordinary-image identity: objcopy without an output
+rewrites its input. ARM job `124215519969` passes all nine program builds and
+stack reports but fails Rust/C memory linking: the object follows libc and its
+stack-protector dependency is unresolved. Artifacts `12998556454`/`12997637733`
+and logs are `/private/tmp/fwp-buffer-peer-{amd,arm}-2acb.{zip,log}`.
 
-The next local batch adds the ordinary-binary runner, independent retained-evidence
-verifier and explicit session workflow. Five real-process/file-damage controls, including cancellation cleanup,
-pass under the guard (0.74s), all changed workflows pass actionlint (5.13s), and
-30 actual Rust 1.99.1 stack remarks parse successfully. The native focused job
-will test a full synthetic archive and ten deliberately damaged cases before
-any timing. Synthetic origin cannot pass observed-results verification. The
-2% identical-copy limit, all-four-CPU policy, 45-second child deadline and exact
-child environment are declared in the report before collection.
+The next repair uses an explicit objcopy output and checks that each input stays
+identical. C observers link into Rust as explicit native static libraries, before
+system libraries. The same late-object pattern in the two descent-output scripts
+is repaired too; all four workflow callers and the build-failure controls now
+supply `--ar`. Local checks: 38 parser controls/18 program links pass (3.45s),
+six build-failure controls pass (1.48s), and all four workflows pass actionlint
+(5.82s). No numerical benchmark is rerun.
 
-Next publish this grouped runner/verifier work and verify the complete focused
-path on both architectures, then collect the four sessions. No baseline timings or optimization acceptance exist.
+Runner/verifier source `bd4b4343` is published; focused `41101368377` and docs
+`41101370978` remain queued and predate the latest link/inspection repair. Its
+five process/file controls, six schedule/result controls and syntax checks pass
+locally. A complete synthetic archive built around retained ARM64 programs passes
+all ten rehashed damage/origin controls (4.86s/2.44s CPU), under the guard:
+`/private/tmp/fwp-buffer-synthetic-control-1`. It is explicitly synthetic and
+cannot validate as observed timings. The new non-mutating inspection command adds
+an eleventh damage control; native verification of that updated command is pending.
+
+Next publish the grouped link/inspection repair, validate the complete focused
+path on both architectures, then dispatch baseline sessions 1 and 2 once each.
+The 2% copy-control limit, four-CPU policy, 45-second deadline and exact child
+environment are frozen before collecting data. No baseline timings or optimization
+acceptance exist. Full production gates follow the finished measurements/report.
 PR body: `/private/tmp/fwp-buffer-peers-pr.md`; keep #231 draft until the batch
 is complete, then require every final production gate before merging.

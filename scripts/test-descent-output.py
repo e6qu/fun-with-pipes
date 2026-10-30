@@ -21,7 +21,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ['compiler', 'output']:
         parser.add_argument('--' + name, required=True, type=Path)
-    for name in ['cc', 'rustc', 'c-arch', 'objdump', 'nm']:
+    for name in ['cc', 'rustc', 'ar', 'c-arch', 'objdump', 'nm']:
         parser.add_argument('--' + name, required=True)
     args = parser.parse_args()
     out = args.output.resolve()
@@ -93,6 +93,7 @@ def main():
             obj = directory / ('sink-' + mode + '.o')
             run([args.cc, *flags, '-Wall', '-Wextra', '-Werror', '-DDESCENT_SINK_DUMP='+str(dump),
                  '-DDESCENT_SINK_OMIT_LAST='+str(omit), '-c', str(ROOT / 'tests/fixtures/descent_output_sink.c'), '-o', str(obj)])
+            run([args.ar, 'rcs', str(directory / f'libsink_{mode}.a'), str(obj)])
             objects[mode] = obj
         for language, original in originals.items():
             outputs = {}
@@ -119,7 +120,7 @@ def main():
                                '-C', 'opt-level=2', '-C', 'overflow-checks=yes', '-C', 'codegen-units=1',
                                '-C', 'target-cpu=generic', '-C', 'lto=off', str(path), '-o', str(binary)]
                     if sink:
-                        command += ['-C', 'link-arg=' + str(objects[object_mode])]
+                        command += ['-L', 'native=' + str(directory), '-l', 'static=sink_' + object_mode]
                 else:
                     command = [args.cc, *flags, *(['-w'] if language == 'fwp' else ['-Wall', '-Wextra', '-Werror']), str(path),
                                *([str(objects[object_mode])] if sink else []), '-o', str(binary), '-lm', '-lpthread']

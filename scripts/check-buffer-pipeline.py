@@ -87,6 +87,9 @@ def main():
     bad_build = (out / 'programs/commands.jsonl').read_text().splitlines()
     damages.append(('programs/commands.jsonl', ('\n'.join(bad_build[1:]) + '\n').encode()))
     damages.append(('programs/commands.jsonl', (out / 'programs/commands.jsonl').read_bytes().replace(b'opt-level=2', b'opt-level=1')))
+    altered_build = [json.loads(line) for line in bad_build]
+    altered_build[9]['command'].pop()
+    damages.append(('programs/commands.jsonl', ''.join(json.dumps(row) + '\n' for row in altered_build).encode()))
     damages.append(('unique-0-c.rss', b'-1\n'))
     damages.append(('memory.jsonl', ('\n'.join((out / 'memory.jsonl').read_text().splitlines()[1:]) + '\n').encode()))
     bad_config = copy.deepcopy(configuration); bad_config['qualification']['actual']['processors'] = 8
