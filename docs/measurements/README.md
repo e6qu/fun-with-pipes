@@ -73,6 +73,7 @@ These compare complete implementations, including the differences each report na
 
 - [Checked arithmetic in the benchmark peers](checked-peers.md)
 - [Checked ARC compared with C and Rust](arc-comparison.md)
+- [Current word-frequency costs and fixed limits](wordfreq-current.md): four audited sessions, complete C/Rust comparisons and explicit short-input variation.
 - [Word-frequency application: first C/Rust comparison](wordfreq.md)
 - [Avoiding copies when text stays unchanged](unchanged-text.md)
 - [Moving strings through a list map](string-map-ownership.md)

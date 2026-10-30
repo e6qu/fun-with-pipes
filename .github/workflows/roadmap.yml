@@ -52,6 +52,16 @@ jobs:
         run: python3 scripts/test-timing-resources.py
       - name: Word-frequency failure-output controls
         run: python3 scripts/test-current-wordfreq.py
+      - name: Retained word-frequency observations and rejection controls
+        run: |
+          for machine in aarch64 x86_64; do
+            for session in 1 2; do
+              python3 scripts/test-current-wordfreq-evidence.py \
+                --retained-index docs/measurements/wordfreq-current-artifacts-2026-10-30.json \
+                --source dc963bb500748dabe393dfaed20f92a333f5996e \
+                --machine "$machine" --session "$session"
+            done
+          done
       - name: Kernel baseline archive and altered-evidence controls
         run: python3 scripts/test-kernel-baseline-evidence.py
       - name: Derivative process scheduling and host qualification controls

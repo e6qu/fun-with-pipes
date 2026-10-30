@@ -292,9 +292,13 @@ are implemented at `1f364c09`: four failure points, aliases, retries, missing-cl
 missing-builder controls and separate terminal OOM checks at C O1/O2. All six
 native hosts pass ten focused tests each, with full log/artifact audits. The
 first harness failure and all 84 saved probe executions are retained.
-Next, implement the [current word-frequency baseline](docs/measurements/wordfreq-current.md):
-four qualified sessions, an identical-binary control and retained whole-program
-observations before setting its budget. The historical timings lack this control.
+The [current word-frequency baseline](docs/measurements/wordfreq-current.md) now
+retains four audited sessions at `dc963bb5`, all 37,080 child observations and
+workload-specific time/memory limits declared before a candidate. Its short-input
+identical-copy difference reaches 3.90%; the report limits the claims this allows.
+Next, integrate the directory controls and word-frequency evidence checks into
+the final six-platform application delivery. No word-frequency candidate is
+implemented or accepted by these measurements.
 This does not complete the other application families or integrated V2 coverage.
 **Done:** each family has explicit platform/memory-mode coverage, failure and
 cancellation tests, bounded post-operation storage and a B1 budget where timed.

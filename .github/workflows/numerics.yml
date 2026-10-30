@@ -272,6 +272,11 @@ jobs:
           --size size --time /usr/bin/time --case 4096:64 --case 65536:1024
           --rounds 16 --warmups 2 --processes 64 --seed 20261030 --timeout 180
           --session "${{ matrix.session }}" --qualification wordfreq-current-host.json --output wordfreq-current
+      - name: Audit every observation and reject corrupted evidence
+        run: >-
+          python3 scripts/test-current-wordfreq-evidence.py --directory wordfreq-current
+          --source "$GITHUB_SHA" --machine "${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}"
+          --session "${{ matrix.session }}"
       - name: Retain complete measurements and partial failed observations
         if: ${{ always() && hashFiles('wordfreq-current/**') != '' }}
         uses: actions/upload-artifact@v7

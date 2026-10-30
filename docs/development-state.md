@@ -1,8 +1,10 @@
 # Current work
 
-**Next:** run and audit all four sessions of the [current word-frequency baseline](measurements/wordfreq-current.md),
-implemented after declaration `6d4df06b`. This prepares
-V1/B1's next budget; it does not resolve D2/N1 or authorize a speed claim.
+**Next:** integrate this prepared application/evidence batch after resolving
+PR #227's pending performance delivery choice. Do not open a second PR or rerun
+the completed measurements. Full final-head production/docs/G2 gates belong to
+the integrated delivery; its focused directory checks and all four word-frequency
+sessions already pass their complete audits.
 
 The directory-failure batch passes [all six focused native hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/40967686175)
 at `1f364c09ae9d4fe43405fdc66c46849cc4aae6d5`; its compact archive and report are
@@ -42,11 +44,39 @@ Artifacts retain generated C, native probes and each output/status under
 `/private/tmp/fwp-audit-directory-failure-logs.py` checks the exact old failure;
 `/private/tmp/fwp-audit-directory-failures.py` checks the new artifacts.
 
+## Current word-frequency baseline
+
+Protocol `6d4df06b` precedes measured source
+`dc963bb500748dabe393dfaed20f92a333f5996e`. All four sessions are complete and
+audited: ARM jobs `123799636907`/`123799637188` in `40974666332`; AMD job
+`123801495592` in `40975221824` and `123804111260` in `40976014339`.
+The [report](measurements/wordfreq-current.md) records all 37,080 child
+observations, complete logs, native headers/hashes, code/stack costs and memory.
+Three earlier AMD host rejections occurred before building/timing and remain
+in the archive. No measured session was retried.
+
+Large-input fwp/C is 2.49 on ARM64 and 3.03–3.04 on AMD64. All sessions report
+225,937 managed allocations, 69,642 retains and zero final managed charge for
+65,536 words. Identical-copy variation reaches 3.90% on the short input and
+0.38% on the large input. The report declares separate future-candidate limits;
+no candidate is implemented or accepted, and D2/N1 limits remain unchanged.
+
+`check-current-wordfreq.py` independently checks all outputs, the fixed schedule,
+statistics, files and native identities. Seven evidence tests reject damaged
+observations, including internally consistent changed hashes. They run in the
+measurement workflow after recording and in documentation CI against the saved
+archive. Guarded `test-current-wordfreq-evidence.py --retained-index` passes all
+four sessions (28 tests). `actionlint` passes both modified workflows;
+`check-roadmap.py` passes 182 link sets, 106 preparation pairs and eight steps;
+`git diff --check` passes. No local full
+build or benchmark ran. The compressed evidence reconstructs every retained
+text and binary byte exactly; ordinary documentation CI rechecks all four sessions.
+
 ## Active delivery: PR #227
 
 [PR #227](https://github.com/e6qu/fun-with-pipes/pull/227) stays frozen at
 `8e29187617eaa84fd29a2f6a55d954d28d385266` on `ad-eager-captures`, worktree
-`/private/tmp/fwp-ad-captures`. Preserve its head while gates run.
+`/private/tmp/fwp-ad-captures`. All gates pass; preserve this verified head while the performance choice is pending.
 
 - Production `40962967746`: all nine jobs pass with complete log audits. Linux
   has 992 tests/257 summaries per host; regular macOS 626/132; ownership macOS
@@ -97,4 +127,4 @@ merge. Use one squash subject of at most 80 characters and an empty body.
 | 5 | In progress | Resolve D2's zero-update timing requirement |
 | 6 | In progress | Resolve N1's inclusive array control; investigate computation cost |
 | 7 | In progress | Broader B1/B2 comparisons |
-| 8 | Pending | V1–V2 integrated application validation |
+| 8 | In progress | Integrate directory failure coverage and current word-frequency budgets; finish remaining V1/V2 rows |
