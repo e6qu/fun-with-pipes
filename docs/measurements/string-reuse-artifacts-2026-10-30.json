@@ -1,0 +1,289 @@
+{
+  "source": "d7c609890da12a5eb71319cb42593fe514be2015",
+  "protocol": "ebd8f46d",
+  "scope": "Rejected unique string reuse; complete measurements retained without a speed claim",
+  "sessions": {
+    "arm-1": {
+      "run": 41035137961,
+      "job": 123994014707,
+      "artifact": {
+        "id": 12968052649,
+        "node_id": "MDg6QXJ0aWZhY3QxMjk2ODA1MjY0OQ==",
+        "name": "direct-strings-ubuntu-24.04-arm-1",
+        "size_in_bytes": 2308388,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12968052649",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12968052649/zip",
+        "expired": false,
+        "digest": "sha256:b21a81d44926902b760bd30658227c56c1a6038c9daab47ea9f14fc939624813",
+        "created_at": "2026-10-30T09:50:20Z",
+        "updated_at": "2026-10-30T09:50:20Z",
+        "expires_at": "2027-01-28T09:40:25Z",
+        "workflow_run": {
+          "id": 41035137961,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "direct-string-results",
+          "head_sha": "d7c609890da12a5eb71319cb42593fe514be2015"
+        }
+      },
+      "archiveSha256": "b21a81d44926902b760bd30658227c56c1a6038c9daab47ea9f14fc939624813",
+      "pythonTestCounts": [
+        7,
+        3,
+        7,
+        7
+      ],
+      "report": {
+        "file": "string-reuse-2026-10-30-arm-1.json.gz",
+        "sha256": "41debebd0ecae8fbae0f579dc41e0f6a6fdffc3e20053b620d4c62bca5645fc8",
+        "bytes": 18532
+      },
+      "log": {
+        "file": "string-reuse-2026-10-30-arm-1.log.gz",
+        "sha256": "8db0598e0f89c24057dfecacd635218af8ffaeaf30535fe5d1e2419c00697112",
+        "bytes": 49452
+      }
+    },
+    "arm-2": {
+      "run": 41035137961,
+      "job": 123994015051,
+      "artifact": {
+        "id": 12967772905,
+        "node_id": "MDg6QXJ0aWZhY3QxMjk2Nzc3MjkwNQ==",
+        "name": "direct-strings-ubuntu-24.04-arm-2",
+        "size_in_bytes": 2308441,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12967772905",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12967772905/zip",
+        "expired": false,
+        "digest": "sha256:7c6d709f8548152b4a3fddd60ce78778a4637b59f79b3dc0bdff74dd25237df0",
+        "created_at": "2026-10-30T09:52:22Z",
+        "updated_at": "2026-10-30T09:52:22Z",
+        "expires_at": "2027-01-28T09:40:25Z",
+        "workflow_run": {
+          "id": 41035137961,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "direct-string-results",
+          "head_sha": "d7c609890da12a5eb71319cb42593fe514be2015"
+        }
+      },
+      "archiveSha256": "7c6d709f8548152b4a3fddd60ce78778a4637b59f79b3dc0bdff74dd25237df0",
+      "pythonTestCounts": [
+        7,
+        3,
+        7,
+        7
+      ],
+      "report": {
+        "file": "string-reuse-2026-10-30-arm-2.json.gz",
+        "sha256": "1e0f56b84710eeaf96aa82138e7e3d23ec5b2b518c90cdd2c90a280d15b0a69c",
+        "bytes": 18522
+      },
+      "log": {
+        "file": "string-reuse-2026-10-30-arm-2.log.gz",
+        "sha256": "5652ef7384b8f7d552ffef6263b83ca2af2b955ee2f677dcd25d183a8f1fb512",
+        "bytes": 49458
+      }
+    },
+    "amd-1": {
+      "run": 41035137961,
+      "job": 123994014981,
+      "artifact": {
+        "id": 12968487250,
+        "node_id": "MDg6QXJ0aWZhY3QxMjk2ODQ4NzI1MA==",
+        "name": "direct-strings-ubuntu-latest-1",
+        "size_in_bytes": 2512931,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12968487250",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12968487250/zip",
+        "expired": false,
+        "digest": "sha256:540bd122045087c57ceeff093c58ce8f4f79271c5af5c0d7d1c18a3418747b66",
+        "created_at": "2026-10-30T09:53:20Z",
+        "updated_at": "2026-10-30T09:53:20Z",
+        "expires_at": "2027-01-28T09:40:25Z",
+        "workflow_run": {
+          "id": 41035137961,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "direct-string-results",
+          "head_sha": "d7c609890da12a5eb71319cb42593fe514be2015"
+        }
+      },
+      "archiveSha256": "540bd122045087c57ceeff093c58ce8f4f79271c5af5c0d7d1c18a3418747b66",
+      "pythonTestCounts": [
+        7,
+        3,
+        7,
+        7
+      ],
+      "report": {
+        "file": "string-reuse-2026-10-30-amd-1.json.gz",
+        "sha256": "cf0e1e8f7ad268647eb76035a991c5072f85da0cb16cb005bbd57cf8bb486307",
+        "bytes": 18551
+      },
+      "log": {
+        "file": "string-reuse-2026-10-30-amd-1.log.gz",
+        "sha256": "3ae1010a47d5aaa1c0b3394235a1473bf94a6a247d3343453a6f2d12cf5c65a2",
+        "bytes": 49524
+      }
+    },
+    "amd-2": {
+      "run": 41036473750,
+      "job": 123998434530,
+      "artifact": {
+        "id": 12968572634,
+        "node_id": "MDg6QXJ0aWZhY3QxMjk2ODU3MjYzNA==",
+        "name": "direct-strings-ubuntu-latest-2",
+        "size_in_bytes": 2512313,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12968572634",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12968572634/zip",
+        "expired": false,
+        "digest": "sha256:95aa72d2c6fdc3652ab5ac6dc7ada8803aadd1ffbb8fea83d4e3822bf7a61ab6",
+        "created_at": "2026-10-30T09:57:52Z",
+        "updated_at": "2026-10-30T09:57:52Z",
+        "expires_at": "2027-01-28T09:51:29Z",
+        "workflow_run": {
+          "id": 41036473750,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "unique-string-measurements",
+          "head_sha": "d7c609890da12a5eb71319cb42593fe514be2015"
+        }
+      },
+      "archiveSha256": "95aa72d2c6fdc3652ab5ac6dc7ada8803aadd1ffbb8fea83d4e3822bf7a61ab6",
+      "pythonTestCounts": [
+        7,
+        3,
+        7,
+        7
+      ],
+      "report": {
+        "file": "string-reuse-2026-10-30-amd-2.json.gz",
+        "sha256": "ec87f91a2325d8d565b0e374783edc7ffb2cc6ce3cca103805fd04ab56167fd9",
+        "bytes": 18553
+      },
+      "log": {
+        "file": "string-reuse-2026-10-30-amd-2.log.gz",
+        "sha256": "8d19a4ecbe5f365cca855e0c7c9657255e090c32bc01f0680434557fb40afd70",
+        "bytes": 49499
+      }
+    }
+  },
+  "rejections": [
+    {
+      "run": 41035137961,
+      "job": 123994015160,
+      "artifact": {
+        "id": 12968481288,
+        "node_id": "MDg6QXJ0aWZhY3QxMjk2ODQ4MTI4OA==",
+        "name": "direct-strings-host-ubuntu-latest-2",
+        "size_in_bytes": 1549,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12968481288",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12968481288/zip",
+        "expired": false,
+        "digest": "sha256:216cdc6c77950fd24c85b86ed4a03159479dae8c2ec60f166b69f663df9b302b",
+        "created_at": "2026-10-30T09:47:43Z",
+        "updated_at": "2026-10-30T09:47:43Z",
+        "expires_at": "2027-01-28T09:40:25Z",
+        "workflow_run": {
+          "id": 41035137961,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "direct-string-results",
+          "head_sha": "d7c609890da12a5eb71319cb42593fe514be2015"
+        }
+      },
+      "qualification": {
+        "source": "d7c609890da12a5eb71319cb42593fe514be2015",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 9V74 80-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.25\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [
+          "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'AMD EPYC 9V74 80-Core Processor'"
+        ],
+        "qualified": false
+      },
+      "log": {
+        "file": "string-reuse-rejected-41035137961.log.gz",
+        "sha256": "256c26853c966a9a280609126df35aee166584c08708459dd0f8666b13b29dfa",
+        "bytes": 34514
+      }
+    },
+    {
+      "run": 41036206051,
+      "job": 123997544953,
+      "artifact": {
+        "id": 12968322294,
+        "node_id": "MDg6QXJ0aWZhY3QxMjk2ODMyMjI5NA==",
+        "name": "direct-strings-host-ubuntu-latest-2",
+        "size_in_bytes": 1624,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12968322294",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12968322294/zip",
+        "expired": false,
+        "digest": "sha256:5b8a00a6062b1976d0a2fb7a89d868ac15364ab40c6ea01b4fba23b6fb71d441",
+        "created_at": "2026-10-30T09:49:48Z",
+        "updated_at": "2026-10-30T09:49:48Z",
+        "expires_at": "2027-01-28T09:49:15Z",
+        "workflow_run": {
+          "id": 41036206051,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "unique-string-measurements",
+          "head_sha": "d7c609890da12a5eb71319cb42593fe514be2015"
+        }
+      },
+      "qualification": {
+        "source": "d7c609890da12a5eb71319cb42593fe514be2015",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 9V45 96-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V45 96-Core Processor\nCPU family:                              26\nModel:                                   2\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.24\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [
+          "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'AMD EPYC 9V45 96-Core Processor'"
+        ],
+        "qualified": false
+      },
+      "log": {
+        "file": "string-reuse-rejected-41036206051.log.gz",
+        "sha256": "3c771bcd868f285739a8ea35a787eed05f771f0ec74b99af1ba4c82e1549bf75",
+        "bytes": 34556
+      }
+    }
+  ],
+  "binaryContents": {
+    "file": "string-reuse-binaries-2026-10-30.json.gz",
+    "sha256": "5fac9a0e9ebac0209de08b0242a6ed539cb539bc84a59ce9cefb99fa2759fba7",
+    "bytes": 13282841
+  },
+  "textContents": {
+    "file": "string-reuse-contents-2026-10-30.json.gz",
+    "sha256": "d1a08a621136700f9ccafc5f286a3e0c95bb4a84c6c6beef40030635291ba01f",
+    "bytes": 59724381
+  }
+}

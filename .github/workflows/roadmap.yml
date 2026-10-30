@@ -72,6 +72,16 @@ jobs:
                 --machine "$machine" --session "$session"
             done
           done
+      - name: Rejected unique-string observations and evidence controls
+        run: |
+          for machine in aarch64 x86_64; do
+            for session in 1 2; do
+              python3 scripts/test-direct-string-results.py \
+                --retained-index docs/measurements/string-reuse-artifacts-2026-10-30.json \
+                --source d7c609890da12a5eb71319cb42593fe514be2015 \
+                --machine "$machine" --session "$session"
+            done
+          done
       - name: Kernel baseline archive and altered-evidence controls
         run: python3 scripts/test-kernel-baseline-evidence.py
       - name: Derivative process scheduling and host qualification controls

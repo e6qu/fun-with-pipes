@@ -1,10 +1,12 @@
 # Current work
 
-**Next:** audit the unique-string candidate's focused checks and four measurements
-at `d7c609890da12a5eb71319cb42593fe514be2015`. Keep PR #228's final source
-`f3eb5072` unchanged while its Intel Mac upload-recovery job finishes. Merge that
-PR only after its complete retry log and uploads pass, then integrate main into
-this preparation without rewriting measured ancestry. Open no second active PR.
+**Next:** implement the declared one-byte replacement search in
+[the third string candidate](measurements/direct-string-results.md#third-candidate-use-byte-search-for-one-byte-patterns).
+Both earlier candidates are rejected by their timing requirements; retain their
+complete results. PR #228's final source stays `f3eb5072`: its Intel Mac retry has
+passed the test/SDK stages and is building the package. Audit the complete log and
+uploads before merge, then integrate main without rewriting measured ancestry.
+Open no second active PR.
 
 ## Active delivery: application checks, PR #228
 
@@ -35,6 +37,7 @@ claim follows from an improvement over earlier fwp.
 ## Preparation: reduce replacement/repetition allocations
 
 Worktree `/private/tmp/fwp-direct-string-results`, branch `direct-string-results`.
+Frozen measurement branch `unique-string-measurements` stays at `d7c60989`.
 The [string report](measurements/direct-string-results.md) owns both protocols,
 fixed acceptance limits, source reasoning, measurements and retained evidence.
 
@@ -60,7 +63,7 @@ are audited in the [native archive](measurements/direct-strings-native-2026-10-3
 Both WASI hosts pass 32 tests/four summaries in `41023744074`. Complete logs are
 audited. These results do not verify the second candidate's changed code.
 
-**Second candidate is implemented, not accepted.** Published protocol `ebd8f46d`
+**Second candidate is rejected by timing.** Published protocol `ebd8f46d`
 precedes runtime/test source `d7c60989`. Non-growing replacement reuses a string
 only after the existing query proves one owner; overlap-safe copies move forward
 through unread input. Shared/static/growing inputs receive a separate result.
@@ -70,15 +73,24 @@ are not claimed to fall. WASI does not select native unique reuse.
 
 | Run | Purpose | Status |
 |---|---|---|
-| `41034212790` | Six native hosts, aliases/failure/reuse | Running; GCC AMD64 string test step passes, remaining audits required |
-| `41034222459` | Both WASI hosts and physical reclamation | Queued/running |
-| `41035137961` | Four paired measurements with C/Rust context | Queued; exact source `d7c60989` |
+| `41034212790` | Six native hosts, aliases/failure/reuse | All pass; complete logs and 972 probes/180 native headers audited |
+| `41034222459` | Both WASI hosts and physical reclamation | AMD64 passes 32 tests/four summaries with full log audit; ARM64 running |
+| `41035137961`, `41036473750` | Four paired measurements | All rejected: large-input ratios 0.969173008/0.966967292 ARM, 0.982461514/0.979854379 AMD |
 
-The new `string-reuse` selection requires at most 12,513/199,721 managed requests
-and 431,876/6,909,092 requested bytes, alongside unchanged timing/raw/retain/live
-limits. All four sessions and new correctness checks are required before accepting
-this candidate. Host mismatches may replace unmeasured assignments; failed timings
-must remain visible.
+All four sessions confirm exactly 12,513/199,721 managed requests and
+431,876/6,909,092 requested bytes, zero raw requests, unchanged retains/peak and
+zero final charge. Every other timing/representation control passes. These facts
+do not satisfy the required 5% gain. The [complete archive](measurements/string-reuse-artifacts-2026-10-30.json)
+retains 74,040 observations, every source/native-image byte, all profiles and logs.
+Two unmeasured CPU rejections (9V74, 9V45) remain archived. No timings were retried.
+
+The third protocol selects standard C `memchr` only for one-byte patterns inside
+`fwp_p_replace`, preserving the existing substring algorithm otherwise. The frozen
+inputs imply 75,360/1,205,856 byte comparisons in first searches alone; this is
+source-level work, not a measured CPU-time attribution. Keep all existing budgets,
+cache the unsigned pattern byte, and extend high-bit/source-alias controls. Run
+focused GCC checks before four new measurements; repeat the other platforms in the
+complete final matrix after the batch, not after each intermediate edit.
 
 Guarded local checks pass: seven allocation/evidence tests with Clang O2 probes,
 144 exact size/control exits at Clang O0/O1/O2, Rust formatting, Python syntax,

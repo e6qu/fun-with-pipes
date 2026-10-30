@@ -305,9 +305,11 @@ removes temporary raw buffers from replacement/repetition at `089465bb`.
 All six native focused suites and both WASI hosts pass, including alias, size,
 cleanup and failure controls. All four timing sessions reject the speed
 claim despite removing raw allocations; retain those failures. The second
-candidate reuses uniquely owned, non-growing replacements, following published
-protocol `ebd8f46d`. Its new tests and measurements must meet the unchanged
-timing limits and explicit managed-allocation budgets. No speedup is accepted.
+candidate reuses uniquely owned, non-growing replacements under protocol
+`ebd8f46d`. All native checks and allocation targets pass, but all four timing
+sessions still miss 5%; retain those rejected results. The third declared change
+uses standard byte search for one-byte patterns with the same acceptance limits.
+No speedup is accepted.
 This does not complete the other application families or integrated V2 coverage.
 **Done:** each family has explicit platform/memory-mode coverage, failure and
 cancellation tests, bounded post-operation storage and a B1 budget where timed.

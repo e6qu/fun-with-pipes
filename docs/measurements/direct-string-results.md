@@ -5,8 +5,8 @@ Protocol `e0fb1a09` preceded implementation `089465bb`. The reference is
 It extends [the current word-frequency baseline](wordfreq-current.md); it changes
 no existing derivative or numerical-kernel timing limit. The first candidate is
 rejected by all four timing sessions. The second candidate reuses unique storage
-under a protocol published before implementation; its checks are running. Neither
-has timing acceptance. The sections below distinguish these two experiments.
+under a protocol published before implementation; it also misses timing acceptance
+in all four sessions. A third, byte-search change is specified below. The sections below distinguish these two experiments.
 
 ## First candidate: direct result construction
 
@@ -210,3 +210,75 @@ zero. Keep raw requests at zero inside both operations. Report the added
 uniqueness decision and all code/frame changes. Repetition receives no new
 application timing claim. Full native/WASI checks and all four timing sessions
 are still required before accepting the combined change.
+
+
+### Second-candidate checks
+
+Source `d7c60989` passes all six native hosts in `41034212790`: 18 integration
+tests/seven summaries per host, plus 224 library tests and 20 runner controls on
+GCC AMD64. Complete logs are audited. All 972 saved probe exits/outputs and 180
+native-image headers/hashes pass independent inspection in the
+[retained native archive](string-reuse-native-2026-10-30.json). It stores every
+source, output, status and full log; original executable images remain in the
+named GitHub artifacts. Their expiry would limit later inspection of those images.
+
+For example, `replace "," ""` removes commas: piping `"a,b,c"` through it produces
+`"abc"`. If another value still owns `"a,b,c"`, that original must stay unchanged.
+The tests cover both shared and unique inputs; removing the uniqueness condition
+fails the alias observer with exit 233. Tests also compare interpreted and native
+results for literal inputs, embedded zero bytes and UTF-8.
+
+WASI AMD64 passes 32 tests/four summaries with a complete log audit in
+`41034222459`; ARM64 is still running. All four paired sessions at
+`d7c60989` are complete: runs `41035137961` and `41036473750`. The
+[second measurement archive](string-reuse-artifacts-2026-10-30.json) retains every
+observation, source/native-image byte, profile and complete log.
+
+| Session | Large-input candidate/reference | Decision |
+|---|---:|---|
+| ARM64 1 | 0.969173008 | 3.08% faster; misses 5% |
+| ARM64 2 | 0.966967292 | 3.30% faster; misses 5% |
+| AMD64 1 | 0.982461514 | 1.75% faster; misses 5% |
+| AMD64 2 | 0.979854379 | 2.01% faster; misses 5% |
+
+All other timing controls and code/frame limits pass. Managed requests are exactly
+12,513/199,721 and requested bytes 431,876/6,909,092; raw allocation requests are
+zero. Retains and peak charge stay at their original values; final charge is zero.
+These savings are confirmed, but the combined acceptance rule rejects the candidate.
+Complete logs and all 74,040 observations pass integrity audits, including seven
+evidence-rejection tests per session. The 9V74 (`41035137961`) and 9V45
+(`41036206051`) assignments were rejected before timing; both remain archived.
+
+## Third candidate: use byte search for one-byte patterns
+
+This protocol precedes implementation. Keep both earlier rejected experiments,
+the original reference bodies, inputs, CPUs/toolchains, four-session schedule and
+all existing timing, allocation and representation limits. Do not change the
+required 5% gain or treat either earlier allocation saving as timing acceptance.
+
+`replace` currently calls a general substring loop even for one-byte patterns.
+The word-frequency application removes commas and periods: 8,192/131,072 calls
+for the two inputs, confirmed by its raw operation counters. Counting only each
+call's first search over the retained inputs gives 75,360/1,205,856 byte comparisons
+in that source loop. This is a source-level count, not an instruction count,
+profiled CPU time or proof that searching causes the whole performance gap.
+
+When the pattern is exactly one byte, use standard C `memchr` for the first,
+sizing and subsequent-match searches inside `fwp_p_replace`. Cache the pattern as
+an unsigned byte after the empty-pattern return. Longer patterns keep the current
+substring algorithm. This needs no public primitive, wrapper, setting or syntax.
+The reference restores the old replacement body, so the changed search is part
+of the paired candidate comparison; leave the general substring helper unchanged.
+
+Preserve byte-based matching, non-overlapping replacement, embedded zero bytes,
+and source/pattern/replacement aliases. Add high-bit byte and one-byte borrowed
+source-alias controls. Retain the unique/shared/growing storage rules, allocation
+failure and cancellation tests and all size-boundary exits. `memchr` must never
+read beyond the valid remaining input, including the empty suffix after a match.
+
+Run a focused production GCC native suite before measuring. Defer repetition of
+the other platform suites to the complete final matrix after this implementation
+batch; retain the ongoing WASI result with its actual source identity. Require
+new final-head native/WASI coverage before accepting the combined change. Fewer
+source-loop comparisons alone are not success: all four timings must meet the
+same published budgets, with code/stack and actual memory costs retained.
