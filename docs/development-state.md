@@ -1,6 +1,7 @@
 # Current work
 
-**Next:** verify the consolidated final head of [PR #230](https://github.com/e6qu/fun-with-pipes/pull/230)
+**Next:** complete the quick GCC/documentation check on the draft repair, then
+mark ready and verify the consolidated final head of [PR #230](https://github.com/e6qu/fun-with-pipes/pull/230)
 on `file-boundary-portability`. Run one complete final-head matrix, audit every job
 and fix any failure before squash-merging. Use one subject of at most 80
 characters and an empty body. Then continue the numerical and comparison work
@@ -44,11 +45,19 @@ already checks clock failures. This does not diagnose the earlier numerical nois
 `scripts/check-measurement-clocks.py --cc clang` passes 40 executable O1/O2
 checks locally: success, failure with/without a stored timestamp and deliberate
 error-check omission. The broken control always receives initialized data.
-Production Linux/GCC and regular macOS/Clang now run the same checks.
+Production Linux/GCC and regular macOS/Clang now run the same checks. Guarded
+`test-timing-diagnostic.py` passes three controls and
+`test-kernel-baseline-evidence.py` passes seven retained-evidence controls.
 
 Initial #230 production `41066578148` and documentation `41066578177` were still
 queued with no failures when cancelled to include this repair in one final batch.
-Record replacement run IDs after publishing the consolidated head. Audit every
+Final head `570b777abf0ce927d0355b863d70401d68e18f71`: production
+`41068200453`, documentation `41068200448`; documentation and benchmarks pass; both Linux clock preflights fail because
+the new step passed an unset `$CC`. Other completed steps have no reported failure. This local live-status
+update follows the frozen published head; carry it into the next delivery record. The prepared repair names GCC/Clang explicitly, rejects an empty compiler argument
+and uploads a failed clock log before long tests. The docs gate runs GCC early.
+The PR is temporarily draft so this quick check can finish before a fresh full
+matrix. Draft/skipped production jobs are not acceptance. Audit every
 completed target and warning before any repair push; keep one active PR.
 
 ## Latest verified delivery

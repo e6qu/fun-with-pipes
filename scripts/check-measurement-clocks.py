@@ -46,6 +46,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cc', required=True)
     args = parser.parse_args()
+    if not args.cc:
+        parser.error("--cc must name an explicit C compiler")
     executions = 0
     with tempfile.TemporaryDirectory(prefix='fwp-clock-controls-') as scratch:
         folder = Path(scratch)
