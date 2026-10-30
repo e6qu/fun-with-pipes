@@ -1,0 +1,171 @@
+{
+  "decision": "diagnostic-only",
+  "source": "535031b3458cfb2258126d5b9bcea47ed2193627",
+  "run": 40949475361,
+  "job": 123713471516,
+  "artifact": 12929784679,
+  "artifactBytes": 2365018,
+  "artifactSha256": "324f02c504bb1fd04c40b7497e0a04c6f7d98fb6812eb7fc68b6d1253dc7360f",
+  "jobMetadata": {
+    "id": 123713471516,
+    "run_id": 40949475361,
+    "workflow_name": "Numerical and ownership evidence",
+    "head_branch": "ad-eager-captures",
+    "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/40949475361",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOU33zxM8AAAAczeXEHA",
+    "head_sha": "535031b3458cfb2258126d5b9bcea47ed2193627",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/123713471516",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/40949475361/job/123713471516",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-10-29T20:29:24Z",
+    "started_at": "2026-10-29T20:29:26Z",
+    "completed_at": "2026-10-29T20:30:28Z",
+    "name": "timing_diagnostics",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-10-29T20:29:27Z",
+        "completed_at": "2026-10-29T20:29:28Z"
+      },
+      {
+        "name": "Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-10-29T20:29:28Z",
+        "completed_at": "2026-10-29T20:29:33Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@master",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-10-29T20:29:33Z",
+        "completed_at": "2026-10-29T20:29:42Z"
+      },
+      {
+        "name": "Require the declared failed sessions",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-10-29T20:29:42Z",
+        "completed_at": "2026-10-29T20:29:42Z"
+      },
+      {
+        "name": "Qualify the diagnostic host before downloading or executing",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-10-29T20:29:42Z",
+        "completed_at": "2026-10-29T20:29:42Z"
+      },
+      {
+        "name": "Retain host qualification and any rejection",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-10-29T20:29:42Z",
+        "completed_at": "2026-10-29T20:29:43Z"
+      },
+      {
+        "name": "Diagnostic observation controls",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-10-29T20:29:43Z",
+        "completed_at": "2026-10-29T20:29:43Z"
+      },
+      {
+        "name": "Retrieve the exact failed programs and their reports",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8,
+        "started_at": "2026-10-29T20:29:43Z",
+        "completed_at": "2026-10-29T20:29:47Z"
+      },
+      {
+        "name": "Compare scheduling policies and observe matrix storage",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9,
+        "started_at": "2026-10-29T20:29:47Z",
+        "completed_at": "2026-10-29T20:30:23Z"
+      },
+      {
+        "name": "Retain every diagnostic observation including partial failures",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 10,
+        "started_at": "2026-10-29T20:30:23Z",
+        "completed_at": "2026-10-29T20:30:27Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 20,
+        "started_at": "2026-10-29T20:30:27Z",
+        "completed_at": "2026-10-29T20:30:27Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 21,
+        "started_at": "2026-10-29T20:30:27Z",
+        "completed_at": "2026-10-29T20:30:27Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/123713471516",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "runner_id": 1000383563,
+    "runner_name": "GitHub Actions 1000383563",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "report": "timing-diagnostic-2026-10-29.json.gz",
+  "reportBytes": 3773569,
+  "reportSha256": "b687d2f79ec18408a8f36ab7ab3f9874b7449d52012cb320606daa8fe29d4f39",
+  "log": "timing-diagnostic-2026-10-29.log.gz",
+  "logBytes": 37428,
+  "logSha256": "6df7981c2ca72862c32fc114527178197994853a2396c66142c71b9e9f3ac837",
+  "rejection": {
+    "run": 40949274713,
+    "job": 123712765428,
+    "artifact": 12931150536,
+    "qualification": {
+      "source": "535031b3458cfb2258126d5b9bcea47ed2193627",
+      "actual": {
+        "system": "Linux",
+        "machine": "x86_64",
+        "cpu": "AMD EPYC 9V45 96-Core Processor",
+        "processors": 4,
+        "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+        "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+      },
+      "expected": {
+        "system": "Linux",
+        "machine": "x86_64",
+        "cpu": "AMD EPYC 7763 64-Core Processor",
+        "processors": 4,
+        "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+        "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+      },
+      "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V45 96-Core Processor\nCPU family:                              26\nModel:                                   2\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.24\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "failures": [
+        "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'AMD EPYC 9V45 96-Core Processor'"
+      ],
+      "qualified": false
+    },
+    "log": "timing-diagnostic-2026-10-29-rejected.log.gz",
+    "logBytes": 32775,
+    "logSha256": "bda9af78a519ee7b8338f09ff24052cd50a5b045c5684657419fcf833555d814"
+  }
+}

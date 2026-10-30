@@ -197,57 +197,64 @@ noisy and rejected observations, equivalent-work differences and the large
 remaining gap to explicit C/Rust derivatives. D2's limits were published before
 its candidate. Preserve all observations and do not reset the limits.
 
-**D2 — Optimize the measured recording/workspace cost.** Use D1 to choose tape
-entries, buffer growth/reuse or recomputation in the AD runtime; keep pure-step
-requirements for replay. Extend `tests/ad_tape_scopes.rs` and
-`tests/ad_tape_ownership.rs` with failure, cancellation and nested scopes.
-The scalar `ad.push` no-escape proof is implemented at `8e299f9f`: the runtime
-copies four fields, and the existing stack analysis now removes the argument
-record allocation. Native O1/O2 tests on Linux ARM64/AMD64 remove exactly 256
-heap records, preserve the derivative and pass failure/cancellation controls.
-Do not extend the rule to `ad.push-owned`, whose typed weights have separate ownership obligations.
-The fixed comparison limits were published at fde368c8 before changing the
-contract. All four paired sessions are audited: allocation, cleanup, code and
-stack limits pass, but the combined timing rule fails. The user chose to retain
-the allocation reduction with D2 open; keep every slower case and unchanged
-limit in the [results](docs/measurements/descent-costs.md#scalar-recording-results-allocation-reduction-retained-speed-goal-open).
-Next, test eager capture bindings before changing runtime storage again. A
-source-instrumented three-coordinate one-update solve counts 22 temporary partial
-applications; that is an operation count, not a speed result. The
-[declared experiment](https://github.com/e6qu/fun-with-pipes/blob/8a495a7209902480fe4d37d02547173f72ebe6c8/docs/measurements/eager-captures.md)
-fixes its same-source reference and time/storage/code/stack limits before code.
-Preparation is isolated on `ad-eager-captures`; it must preserve eager evaluation,
-first failure and resource lifetimes without raising inlining limits. It is not
-part of this delivery and has no accepted results yet. F64 seed/result conversion
-also allocates, but raw/native NaN payload differences rule out an unqualified
-bitwise-identity claim. Keep that separate; do not repeat the rejected experiment.
-Compare exact requests/retains, time, instruction bytes and stack frames; preserve tape-full,
-mixed/stale-node, failure/cancellation and nested-gradient checks. The raw tape
-workspace already reuses buffers across updates; growing its cache is not the
-first candidate supported by these observations.
-**Done:** the selected per-size storage/time budget passes without retaining dead
-scopes or changing derivative order. Output storage still scales with output size.
+**D2 — Deliver the measured eager-capture improvement.** PR #226 retains the
+scalar `ad.push` no-escape proof: it removes one 40-byte argument allocation per
+recorded operation. Its four paired sessions fail the original whole-solve speed
+rule; that failure and every unchanged limit remain in the
+[scalar-recording results](docs/measurements/descent-costs.md#scalar-recording-results-allocation-reduction-retained-speed-goal-open).
+The user accepted the allocation reduction while leaving D2's speed goal open.
 
-**D3 — Precision and per-depth costs pass focused native checks.** F64/F128
-analytic, numerical, branch-boundary and checkpoint tests pass. The post-candidate
-18-case Linux ARM64/AMD64 matrices at `8e299f9f` are fully audited; full PR platform
-acceptance remains. Preserve the first three derivatives of `sum(x^4)` for
-1/16/128 inputs in both formats against explicit fwp formulas, with separate managed/raw memory, code and
-stack costs. [The depth protocol](docs/measurements/ad-depth.md) defines inputs,
-oracles, compiler settings, cleanup controls and the limits of short timings.
-**Done:** documented domains/tolerances and per-depth costs; no derivative is
-promised at a discontinuity and no constant-memory promise covers arbitrary AD.
+The next [eager-capture change](docs/measurements/eager-captures.md) meets its
+separately declared budget in four audited matching-host sessions. It binds
+computed arguments once, in their original order, so existing specialization can
+remove temporary closures. Updated solves take 13–72% less time than the same
+compiler with this transformation disabled; the largest current-result case
+still takes 44–58 times the handwritten C derivative's time. Memory, output,
+code and stack limits pass. The first rejected AMD host remains recorded.
+Full CI exposed a mixed record-return C-generator defect; its repair passes 333
+focused tests on each GCC ARM64/AMD64 and Clang ARM64 host. The repaired-source
+recheck has one failure: AMD zero-update history is 2.28% slower than its reference
+(limit 2%). The emitted C is unchanged. Preserve this failure and diagnose the
+[timing variation](docs/measurements/timing-variation.md) before another acceptance run. Group
+N1's prepared baseline work in the same PR. Require all nine final-head production
+jobs, documentation and both G2 hosts before closing the selected D2 budget.
+Preserve failure/cancellation, mixed/stale-node, tape-full and nested-gradient
+controls. Do not fold F64 conversion elimination into this change: raw/native NaN
+payload differences prevent a bitwise-identity claim. Arbitrary AD is not promised
+constant memory or C/Rust parity.
+
+**D3 — Verified in #226.** Analytic, finite-difference, branch-boundary and
+checkpoint checks cover F64/F128. The [depth/size report](docs/measurements/ad-depth.md)
+records the first three derivatives of `sum(x^4)` for 1/16/128 inputs, against
+explicit fwp formulas, with managed/raw storage, code and stack costs. Both Linux
+measurement matrices and all final production platforms pass. The
+[delivery record](docs/roadmap-history.md#derivative-allocation-and-accuracy-pr-226)
+owns source identities and audited gates. No accuracy claim extends beyond the
+stated domains/tolerances; no derivative is promised at a discontinuity.
 
 ## 6. CPU numerical kernels
 
-**N1 — Establish kernel-specific budgets.** Use the existing 65,537-element
+**N1 — Establish kernel-specific budgets.** Follow the
+[frozen kernel protocol](docs/measurements/kernel-baselines.md). Use the existing 65,537-element
 map/reduce and 65×67 by 67×63 matrix comparison, then add 262,145 elements
 and 257×259 by 259×255 matrices using the same formulas and eight rounds.
 Keep input values, reduction order, precision and output checks identical.
 **Done:** B1-quality time, memory and accuracy baselines for both architectures.
+The expanded run at `37da7441` completes both sessions on both CPUs. All matrix
+and computation-only array controls pass. One AMD small-array allocation-inclusive
+control fails at 3.08% (limit 2%); preserve that inconclusive overall result and
+investigate it without an unchanged rerun. Audited GCC reports reproduce the
+original binaries and show an integer loop accumulator in fwp versus a floating accumulator in C. The typed-state experiment
+passes its focused bit/ownership checks and removes those conversions in GCC; N1
+and N2 acceptance still require every stated control.
 
-**N2 — Optimize the selected kernel.** Change loop layout, data movement or
-workspace in `src/linalg.rs`, code generation and the corresponding C runtime.
+
+**N2 — Optimize the selected kernel.** The typed-state experiment passes focused
+GCC ARM64/AMD64 and Clang ARM64 checks, without timing acceptance. It gives F32/F64 loop fields native C types
+and checks exact bits, nested/mixed owners, preparation failures and cancellation.
+The inclusive measurement failure must be resolved and candidate budgets declared
+before accepting a speed claim. Further candidates may change loop layout, data
+movement or workspace in `src/linalg.rs`, code generation and the corresponding C runtime.
 Keep explicit floating-point rules; reassociation/fused operations require an
 agreed numerical contract. Extend `tests/linalg_ownership.rs` and kernel controls.
 **Done:** accuracy, shape-error order, cancellation and the N1 budgets pass.

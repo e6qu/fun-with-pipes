@@ -1,0 +1,288 @@
+{
+  "decision": "host-rejected-before-building-or-timing",
+  "run": 40876515001,
+  "source": "4ffeb0d26d859906d19c8d1a6edb0a77d6ca4745",
+  "session": 1,
+  "artifact": 12897259989,
+  "job": {
+    "id": 123456633821,
+    "run_id": 40876515001,
+    "workflow_name": "Numerical and ownership evidence",
+    "head_branch": "ad-eager-captures",
+    "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/40876515001",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOU33zxM8AAAAcvpa73Q",
+    "head_sha": "4ffeb0d26d859906d19c8d1a6edb0a77d6ca4745",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/123456633821",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/40876515001/job/123456633821",
+    "status": "completed",
+    "conclusion": "failure",
+    "created_at": "2026-10-29T12:49:49Z",
+    "started_at": "2026-10-29T12:50:25Z",
+    "completed_at": "2026-10-29T12:50:41Z",
+    "name": "descent_peers (1, ubuntu-latest)",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-10-29T12:50:25Z",
+        "completed_at": "2026-10-29T12:50:26Z"
+      },
+      {
+        "name": "Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-10-29T12:50:26Z",
+        "completed_at": "2026-10-29T12:50:31Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@stable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-10-29T12:50:31Z",
+        "completed_at": "2026-10-29T12:50:38Z"
+      },
+      {
+        "name": "Qualify the native host before building",
+        "status": "completed",
+        "conclusion": "failure",
+        "number": 4,
+        "started_at": "2026-10-29T12:50:38Z",
+        "completed_at": "2026-10-29T12:50:39Z"
+      },
+      {
+        "name": "Preserve host qualification, including rejected hosts",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-10-29T12:50:39Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 6,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Fetch locked Rust dependencies",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 7,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Run cargo build --locked --release --bin fwp",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 8,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Scalar recording ownership and failure controls",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 9,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Type inference and derivative precision regressions",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 10,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Interpreter regressions",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 11,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Native nominal selection",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 12,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Preserve derivative regression evidence",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 13,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Check explicit derivative source formatting",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 14,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Process scheduling and host qualification controls",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 15,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Numerical measurement requirement controls",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 16,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Derivative phase-observer controls",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 17,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Compare current AD, history, explicit derivatives and C/Rust",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 18,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Build the same-source reference without the scalar recording fact",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 19,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Compare stack recording with its same-source heap reference",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 20,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Verify the eager-capture comparison reference",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 21,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Build the same-source reference with constant-only capture binding",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 22,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Compare eager captures with their same-source closure reference",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 23,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Preserve capture-reference source and compiler identities",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 24,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Preserve reference source and compiler identities",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 25,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Run actions/upload-artifact@v7",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 26,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 52,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 53,
+        "started_at": "2026-10-29T12:50:40Z",
+        "completed_at": "2026-10-29T12:50:40Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/123456633821",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "runner_id": 1000382668,
+    "runner_name": "GitHub Actions 1000382668",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "qualification": {
+    "source": "4ffeb0d26d859906d19c8d1a6edb0a77d6ca4745",
+    "actual": {
+      "system": "Linux",
+      "machine": "x86_64",
+      "cpu": "AMD EPYC 9V45 96-Core Processor",
+      "processors": 4,
+      "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+      "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+    },
+    "expected": {
+      "system": "Linux",
+      "machine": "x86_64",
+      "cpu": "AMD EPYC 7763 64-Core Processor",
+      "processors": 4,
+      "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+      "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+    },
+    "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V45 96-Core Processor\nCPU family:                              26\nModel:                                   2\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.19\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+    "failures": [
+      "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'AMD EPYC 9V45 96-Core Processor'"
+    ],
+    "qualified": false
+  },
+  "hostFileBytes": 4117,
+  "hostFileSha256": "042b75edafb4cb0132767fd80d6062e5047e78884d9c94f732338f18de1ab049",
+  "log": "eager-captures-host-rejection-2026-10-29.log.gz",
+  "logBytes": 36441,
+  "logSha256": "113e4be787e0cff26fa71010e08a8673885e06d3dc398c26ce00846725056350"
+}

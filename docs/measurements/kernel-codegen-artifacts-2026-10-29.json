@@ -1,0 +1,268 @@
+{
+  "decision": "diagnostic-only",
+  "inputSource": "37da74419046eb568d30cc8a96ab11208db7ca91",
+  "sessions": {
+    "arm-553f": {
+      "run": 40954983480,
+      "job": 123732636881,
+      "artifact": 12932518753,
+      "jobMetadata": {
+        "id": 123732636881,
+        "run_id": 40954983480,
+        "workflow_name": "Numerical and ownership evidence",
+        "head_branch": "ad-eager-captures",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/40954983480",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAczwo00Q",
+        "head_sha": "553fb24f3d56645535bd73e70ed5fd1c5104411e",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/123732636881",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/40954983480/job/123732636881",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T21:07:05Z",
+        "started_at": "2026-10-29T21:07:09Z",
+        "completed_at": "2026-10-29T21:07:39Z",
+        "name": "kernel_codegen (ubuntu-24.04-arm)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-29T21:07:09Z",
+            "completed_at": "2026-10-29T21:07:10Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-29T21:07:10Z",
+            "completed_at": "2026-10-29T21:07:15Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@master",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-29T21:07:15Z",
+            "completed_at": "2026-10-29T21:07:21Z"
+          },
+          {
+            "name": "Require the declared input run and session",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-29T21:07:21Z",
+            "completed_at": "2026-10-29T21:07:21Z"
+          },
+          {
+            "name": "Qualify the compiler-report host before downloading or building",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-29T21:07:21Z",
+            "completed_at": "2026-10-29T21:07:21Z"
+          },
+          {
+            "name": "Retain qualification and any rejection",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-29T21:07:21Z",
+            "completed_at": "2026-10-29T21:07:22Z"
+          },
+          {
+            "name": "Retrieve retained kernel sources and binaries",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-29T21:07:22Z",
+            "completed_at": "2026-10-29T21:07:25Z"
+          },
+          {
+            "name": "Collect GCC reports without changing the measured binaries",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-29T21:07:25Z",
+            "completed_at": "2026-10-29T21:07:36Z"
+          },
+          {
+            "name": "Retain complete or partial compiler reports",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-29T21:07:36Z",
+            "completed_at": "2026-10-29T21:07:38Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-10-29T21:07:38Z",
+            "completed_at": "2026-10-29T21:07:38Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-10-29T21:07:38Z",
+            "completed_at": "2026-10-29T21:07:38Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/123732636881",
+        "labels": [
+          "ubuntu-24.04-arm"
+        ],
+        "runner_id": 1000383571,
+        "runner_name": "GitHub Actions 1000383571",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "artifactSha256": "fa1cc14d6eace32ba5f746b23375f523fbf59b2f854b39bd54be098c511ef8e2",
+      "report": "kernel-codegen-2026-10-29-arm-553f.json.gz",
+      "reportSha256": "3b968cfd1332723d1bff08a68485c0c53b1eec2d0a974afac7d301dfb4afe959",
+      "log": "kernel-codegen-2026-10-29-arm-553f.log.gz",
+      "logSha256": "c0549ef905d8d71cd4b9680cf3923f6ce4a5a4f706a09aa546a5451b1e83b7d4"
+    },
+    "amd-d2f2": {
+      "run": 40955525589,
+      "job": 123734517885,
+      "artifact": 12933361980,
+      "jobMetadata": {
+        "id": 123734517885,
+        "run_id": 40955525589,
+        "workflow_name": "Numerical and ownership evidence",
+        "head_branch": "ad-eager-captures",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/40955525589",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAczybofQ",
+        "head_sha": "d2f2553b90d368e1219a6981d15355bacee2751c",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/123734517885",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/40955525589/job/123734517885",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T21:10:44Z",
+        "started_at": "2026-10-29T21:10:46Z",
+        "completed_at": "2026-10-29T21:11:13Z",
+        "name": "kernel_codegen (ubuntu-latest)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-29T21:10:47Z",
+            "completed_at": "2026-10-29T21:10:47Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-29T21:10:47Z",
+            "completed_at": "2026-10-29T21:10:53Z"
+          },
+          {
+            "name": "Require the declared input run and session",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-29T21:10:53Z",
+            "completed_at": "2026-10-29T21:10:53Z"
+          },
+          {
+            "name": "Retrieve retained kernel sources and binaries",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-29T21:10:53Z",
+            "completed_at": "2026-10-29T21:10:58Z"
+          },
+          {
+            "name": "Collect GCC reports without changing the measured binaries",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-29T21:10:58Z",
+            "completed_at": "2026-10-29T21:11:10Z"
+          },
+          {
+            "name": "Retain complete or partial compiler reports",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-29T21:11:10Z",
+            "completed_at": "2026-10-29T21:11:12Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-10-29T21:11:12Z",
+            "completed_at": "2026-10-29T21:11:12Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-10-29T21:11:12Z",
+            "completed_at": "2026-10-29T21:11:12Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/123734517885",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000383574,
+        "runner_name": "GitHub Actions 1000383574",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "artifactSha256": "967b23b988cd5abb8f2a1d624e3ecb7756b17cc6ceb6efc535f203bd1be5a747",
+      "report": "kernel-codegen-2026-10-29-amd-d2f2.json.gz",
+      "reportSha256": "08c19f3ed5dfbdc783ff351a68a6f298ca81d767230801d1d5d27872f9ea4ae9",
+      "log": "kernel-codegen-2026-10-29-amd-d2f2.log.gz",
+      "logSha256": "e7e311b6e5d56681ef6c0b9874282e537b892c4a3c3293c9e344f7aea43f7ebb"
+    }
+  },
+  "rejection": {
+    "run": 40954983480,
+    "job": 123732637159,
+    "artifact": 12932309412,
+    "qualification": {
+      "codegen-host.json": {
+        "source": "553fb24f3d56645535bd73e70ed5fd1c5104411e",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 57 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              INTEL(R) XEON(R) PLATINUM 8573C\nCPU family:                              6\nModel:                                   207\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                2\nCPU(s) scaling MHz:                      152%\nCPU max MHz:                             2300.0000\nCPU min MHz:                             800.0000\nBogoMIPS:                                4599.99\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 vnmi avx512vbmi umip waitpkg avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid cldemote movdiri movdir64b fsrm serialize tsxldtrk ibt amx_bf16 avx512_fp16 amx_tile amx_int8 arch_capabilities\nVirtualization:                          VT-x\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                4 MiB (2 instances)\nL3 cache:                                260 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Vulnerable\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Retpoline\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [
+          "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'INTEL(R) XEON(R) PLATINUM 8573C'"
+        ],
+        "qualified": false
+      }
+    },
+    "log": "kernel-codegen-2026-10-29-rejected.log.gz",
+    "logSha256": "382bb475af9523b805cf42819576cb3c0f3e713c6d02dc2d05f8292091f0d9e5",
+    "artifactSha256": "6f5ee7be7d92b5cf9b840da60f7524666f0f24556193a1595ca8e9564ec599a1"
+  }
+}

@@ -45,6 +45,22 @@ functions and tuple positions start at zero. Fixed-precedence infix arithmetic
 and prefix calls coexist. See [parser rules](compiler-pipeline.md) and the
 [reference](reference.md) for layout, patterns and exact precedence.
 
+## Eager computations in partial applications
+
+`add (calculate ())` evaluates `calculate ()` when the partial function is made.
+Calling that function later must not repeat the calculation, move it past an
+effect or delay its failure. For a known partial function used once, the optimizer
+binds computed captures at their original point, then substitutes the remaining
+function value. Existing specialization can then expose a direct call.
+
+Only known unsaturated applications take this path. Unknown calls and fully
+applied functions returning closures keep their binding. Observable resource
+captures reject the transformation; rejection discards every prepared temporary.
+Original resource anchors, evaluation order and inlining limits remain unchanged.
+The [eager-capture experiment](measurements/eager-captures.md) supplies operation
+order tests and measured costs; it is not a promise that all closures allocate
+nothing.
+
 ## Types and effects
 
 Type inference solves constraints from uses, so ordinary expressions need few
@@ -241,6 +257,19 @@ permit it. Ignored fields still evaluate in their original order. Known tuple
 matches can expose direct callbacks, but multiple tested fields, whole-value uses
 and protected resources retain their required representation. A compiler-generated
 loop is not permission to interleave two trapping eager stages.
+
+When a worker returns record fields separately, every `match` arm must produce
+that same representation. An arm may unpack a dynamically returned record; an
+error arm may not return at all. Neither permits another arm to read the boxed
+local of a record whose box was eliminated earlier.
+
+Specialized loop state uses C struct members. F32/F64 members keep their floating
+types between iterations; other members keep their ordinary value words. Reads
+and writes at generic expression boundaries use bit-preserving conversions, not
+numeric casts. The next state is completed before replacing the current state;
+only counted fields participate in owner cleanup. This representation is under
+[test](measurements/timing-variation.md#compiler-reports-and-typed-state-experiment);
+its performance is not yet accepted.
 
 The F64 matrix path uses blocks of 32 over contiguous arrays and accumulates in
 ascending inner-index order. Multiply and add remain separate. Shape validation

@@ -1122,7 +1122,7 @@ static void g_connections_finish(void) {
 }
 
 #ifdef FWP_LIBRARY
-/* Called only after task draining and GC finalization, before SSL cache disposal. */
+/* Runs after task draining and heap resource cleanup, before SSL cache disposal. */
 static void g_environment_finish(void) {
     while (g_env_options_known) {
         g_env_options *k = g_env_options_known;

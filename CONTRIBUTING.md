@@ -106,6 +106,12 @@ selected host narrows that matrix and `all` uses the suite’s complete matrix.
 Functional probes run on two Linux hosts; analysis runs on Linux and Intel macOS.
 The `kernels` and `queued-sockets` suites also include their declared WebAssembly
 jobs. None of these selections replaces the nine production acceptance jobs.
+Derivative timing suites (`descent-peers`, `descent-recording`,
+`eager-capture-time`) require explicit `comparison_session=both`, `1` or `2`.
+Use `both` for the declared experiment; select one session only to replace a host
+rejected before timing, retaining the original evidence. `descent-checks` has one
+correctness session and does not use this setting. Missing or unsupported timing
+selections fail instead of silently skipping jobs.
 
 For `server-entries`, `server_entry_part=all` runs five parts per selected host.
 `checks` runs both functional jobs (entry/codec and REST API); `api` runs the API

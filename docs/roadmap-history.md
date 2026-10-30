@@ -6,6 +6,34 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Derivative allocation and accuracy (PR #226)
+
+Scalar recording copies its four input fields, so its temporary argument record
+can live on the stack. This removes one allocation per recorded operation;
+[the paired measurements](measurements/descent-costs.md#scalar-recording-results-allocation-reduction-retained-speed-goal-open)
+do **not** meet the frozen speed rule. The allocation reduction is retained by
+user decision, with D2's speed goal open. F64/F128 numerical and nested-depth
+checks establish D3's stated finite domains. Named callback record inference and
+its output expectations are repaired together. Analysis measurement now interleaves
+fresh proofs, retaining the earlier failed noise controls and all original limits.
+
+Final head `02e4ee2184a135df14f5e279c199134f7deb2816` passes all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40876750803),
+[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40876747233) and
+[both analysis hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/40876750730).
+Every full log is audited: 987 tests per Linux host, 622 per regular macOS host,
+362 per ownership macOS host, 805 per Windows host and two benchmark tests.
+Both analysis hosts pass 223 tests and lint; their
+[final record](measurements/ownership-analysis-final-226-2026-10-29.json) retains
+all 13,824 individual proof durations and full logs.
+
+The user merged [#226](https://github.com/e6qu/fun-with-pipes/pull/226) as
+`cdf881067dd87610badad56ed15cc5ecfbf66e17`. Its tree matches tested tree
+`873ded2873c1fdcaa059bda5acc034b9daf7dbfc`; the commit message is one line under
+80 characters, with no body or trailers. Duplicate post-merge CI `40899114681`
+was cancelled after checking tree equality. The remaining log audits were finished
+after the merge; they found no additional failures.
+
 ## Decimal counting and current derivative baselines (PR #225)
 
 The [exact decimal-threshold tree](measurements/decimal-count.md) reduces the
@@ -28,7 +56,7 @@ The original artifact-stream error and older Intel compiler abort remain unexpla
 Squash `6735c4e3841ad4991f99c3c413daeb9d432c709c` matches tested tree
 `f70bc35d25a9e8fb566ed085f8afab65fb2a9f48`. Its verified message has one line,
 no body and no trailers. Only duplicate post-merge CI `40830143795` was cancelled.
-Next is D1–D3: reliable derivative budgets, stack recording arguments and accuracy.
+D1–D3 subsequently continued in #226 and the eager-capture comparison.
 
 ## Scalar boundary checks and rejected CPU experiments (PR #224)
 

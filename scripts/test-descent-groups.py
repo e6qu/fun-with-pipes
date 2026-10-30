@@ -2,6 +2,7 @@
 """Reject relabeled hosts, changed timings and omitted derivative evidence."""
 import copy
 import gzip
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -19,9 +20,71 @@ REPEATED_SOURCE = 'a31f24c4fdc215383cc61d95f6f6d743e66cb1a3'
 REPEATED = json.loads(gzip.decompress((ROOT / 'docs/measurements/descent-repeated-2026-10-29-amd-2.json.gz').read_bytes()))
 
 RECORDING_ARCHIVE = ROOT / 'docs/measurements/descent-recording-artifacts-2026-10-29.json'
+CAPTURE_ARCHIVE = ROOT / 'docs/measurements/eager-captures-artifacts-2026-10-29.json'
+RECHECK_ARCHIVE = ROOT / 'docs/measurements/eager-captures-recheck-artifacts-2026-10-29.json'
 
 
 class Evidence(unittest.TestCase):
+    def test_capture_recheck_retains_its_failed_timing_rule(self):
+        CHECK.check_archive(RECHECK_ARCHIVE, 'eager-captures')
+        for change in ['decision', 'failure']:
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as directory:
+                archive = json.loads(RECHECK_ARCHIVE.read_text())
+                for session in archive['sessions'].values():
+                    for kind in ['report', 'log']:
+                        session[kind] = str(RECHECK_ARCHIVE.parent / session[kind])
+                if change == 'decision':
+                    archive['decision'] = 'accepted'
+                else:
+                    session = archive['sessions']['amd-1']
+                    session['budgetFailures'] = []
+                    session['job']['conclusion'] = 'success'
+                path = Path(directory) / 'index.json'
+                path.write_text(json.dumps(archive))
+                with self.assertRaises(AssertionError):
+                    CHECK.check_archive(path, 'eager-captures')
+
+    def test_eager_capture_comparison_preserves_all_four_sessions(self):
+        CHECK.check_archive(CAPTURE_ARCHIVE, 'eager-captures')
+
+    def test_eager_capture_archive_rejects_missing_or_changed_evidence(self):
+        for change in ['session', 'source', 'run', 'reference', 'decision', 'copied-job', 'samples', 'source-hash']:
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as directory:
+                archive = json.loads(CAPTURE_ARCHIVE.read_text())
+                for session in archive['sessions'].values():
+                    for kind in ['report', 'log']:
+                        session[kind] = str(CAPTURE_ARCHIVE.parent / session[kind])
+                session = archive['sessions']['arm-2']
+                if change == 'session':
+                    del archive['sessions']['arm-2']
+                elif change == 'source':
+                    session['source'] = 'changed'
+                elif change == 'run':
+                    session['run'] += 1
+                elif change == 'reference':
+                    session['referenceFiles']['fwp']['sha256'] = 'changed'
+                elif change == 'decision':
+                    archive['decision'] = 'not-accepted'
+                elif change == 'copied-job':
+                    session['job'] = archive['sessions']['arm-1']['job']
+                else:
+                    report = json.loads(gzip.decompress(Path(session['report']).read_bytes()))
+                    if change == 'samples':
+                        report['results']['3-1']['samplesNs']['fwp-ad'].pop()
+                    else:
+                        report['sourceHashes']['src/cgen.rs'] = 'changed'
+                    raw = json.dumps(report).encode()
+                    path = Path(directory) / 'report.json.gz'
+                    path.write_bytes(gzip.compress(raw, mtime=0))
+                    session['report'] = str(path)
+                    session['reportBytes'] = len(raw)
+                    session['reportSha256'] = hashlib.sha256(raw).hexdigest()
+                    session['files']['comparison.json']['sha256'] = session['reportSha256']
+                path = Path(directory) / 'index.json'
+                path.write_text(json.dumps(archive))
+                with self.assertRaises(AssertionError):
+                    CHECK.check_archive(path, 'eager-captures')
+
     def test_rejected_recording_retains_all_four_sessions_and_failures(self):
         CHECK.check_archive(RECORDING_ARCHIVE, 'recording')
 

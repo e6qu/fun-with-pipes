@@ -120,3 +120,8 @@ An earlier preparation run at b349 failed because the observer missed typed
 backward release; outputs and final totals were already correct. The repair
 observes the real release after both typed values and raw parents are freed and
 requires one checkpoint per derivative level. It adds no runtime cleanup.
+
+The grouped final platform checks pass in
+[PR #226](../roadmap-history.md#derivative-allocation-and-accuracy-pr-226), whose
+merged tree matches the tested source. This completes D3's stated finite matrix;
+it does not extend its precision, memory or speed claims to arbitrary programs.

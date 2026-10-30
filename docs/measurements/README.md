@@ -22,8 +22,9 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Numerical applications
 
-- [Nested derivative costs](ad-depth.md): audited F64/F128 depth/size comparisons with explicit fwp formulas, including allocation, code and stack costs; full PR acceptance remains pending.
+- [Nested derivative costs](ad-depth.md): audited F64/F128 depth/size comparisons with explicit fwp formulas, including allocation, code and stack costs; verified in #226.
 
+- [Eager capture bindings](eager-captures.md): 13–72% less updated-solve time in initial sessions; a repaired-source zero-update recheck still exceeds its limit. All outcomes and C/Rust gaps remain visible.
 - [Current derivative costs](descent-costs.md): initial and matched-host sessions, phase/memory observations and unresolved short-case timing noise.
 - [Current output versus checksum costs](descent-output-current.md): four audited sessions; short noisy controls and host differences remain visible.
 
@@ -50,6 +51,11 @@ These reports follow different versions of derivative descent. Read the variant 
 - [Array allocation, layout and startup costs](array-native-results.md)
 - [Numerical output after removing temporary lists](array-output-results.md)
 - [Array and matrix kernels: recorded comparison](numerical-kernels.md)
+
+## Current CPU kernels
+
+- [Array and matrix baselines](kernel-baselines.md): four sizes, exact output checks and separate computation/allocation-inclusive timings; one expanded array noise control remains inconclusive.
+- [Timing variation and GCC reports](timing-variation.md): retained failed controls, the matrix sampling repair and the typed loop-state experiment. Representation checks alone do not prove a speedup.
 
 ## Compiler cost
 

@@ -386,8 +386,8 @@ the reference. Diagnostic forward/recording intervals are 3.42 versus 3.67
 microseconds; the diagnostic changes whole-process time by about 1.2–1.3%.
 These intervals support a limited conclusion: the recorded forward-pass saving
 is small relative to whole-solve time. They do not attribute all remaining time
-to a particular runtime function. The next D2 candidate needs a source-level
-account of costs outside recording before another full timing matrix. Preserve
+to a particular runtime function. The subsequent [eager-capture experiment](eager-captures.md) identifies temporary
+closures outside recording and meets its own frozen paired timing limits. Preserve
 these samples; do not rerun unchanged code seeking a passing timing result.
 
 The [archive index](descent-recording-artifacts-2026-10-29.json) retains all four
@@ -397,7 +397,8 @@ identities, exact compiler patches and every failed limit. The audit checked all
 workspace-on/off cleanup and both deliberately broken controls. CI recomputes the
 rejection and rejects omitted failures or relabeled acceptance. The source
 correctness tests pass 247 Rust tests and 17 measurement controls on each Linux
-architecture; full grouped platform acceptance remains required.
+architecture. Full grouped platform checks subsequently pass in
+[PR #226](../roadmap-history.md#derivative-allocation-and-accuracy-pr-226).
 
 ## Separating costs before selecting D2
 
@@ -426,4 +427,5 @@ architecture; full grouped platform acceptance remains required.
 
 The [implementation plan](../../PLAN.md#5-differentiation) owns acceptance and
 [the handoff](../development-state.md) owns the current action. D1's repeated baseline
-and fixed limits are complete; D2 acceptance and the final production gates remain.
+and fixed limits are complete. PR #226 verifies the allocation-only delivery;
+the eager-capture report owns the next D2 experiment and its delivery status.

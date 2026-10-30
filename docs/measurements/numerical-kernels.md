@@ -47,8 +47,10 @@ The C reference marks fresh output non-aliasing (`restrict`); generated fwp C ca
 communicate different alias information to its C optimizer. Equal mathematical
 work does not imply identical optimization information or machine instructions.
 Forty uninstrumented samples per implementation come from eight rotating process
-batches of five samples after one warmup process per implementation; every
-implementation occupies each process-order position twice. Separate binaries
+batches of five samples after one warmup process per implementation. That
+historical run has **four** labels: C, Rust, tracing fwp and ARC fwp; each occupies
+every process-order position twice. The present GC-free runner has three labels
+and six batches instead. Separate binaries
 collect allocation counts and memory;
 profiling overhead is excluded from timings. Compilation and process startup
 are outside these timers. No stable regression threshold is inferred from shared

@@ -4,6 +4,125 @@ use fwp::value::Value;
 use std::process::Command;
 
 #[test]
+fn eager_partial_captures_preserve_effects_and_first_failure() {
+    let dir = fwp::cgen::TempDir::new("eager-partial-captures").unwrap();
+    let source = dir.join("main.fwp");
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let cases = [
+        (
+            r#"
+User = { name: String, admin: Bool }
+delete : User -> I64 -> RestReply[()] ! {Error[HttpError]}
+delete = curry (if
+    (.0 | .admin)
+    (const (rest.reply 204 ()))
+    (const "admins only" | http.fail 403))
+main = 3 | attempt (delete User { name = "alice", admin = True }) | echo
+"#,
+            "Ok (RestReply {body = (), headers = [], status = 204})\n",
+            0,
+        ),
+        (
+            r#"
+User = { name: String, admin: Bool }
+delete : User -> I64 -> RestReply[()] ! {Error[HttpError]}
+delete = curry (if
+    (.0 | .admin)
+    (const (rest.reply 204 ()))
+    (const "admins only" | http.fail 403))
+main = 3 | attempt (delete User { name = "alice", admin = False }) | echo
+"#,
+            "Err (HttpError {message = \"admins only\", status = 403})\n",
+            0,
+        ),
+        (
+            r#"
+left : () -> I64 ! {IO}
+left = const 7 | tap (const "left" | echo)
+right : () -> I64 ! {IO}
+right = const 5 | tap (const "right" | echo)
+input : () -> List[I64] ! {IO}
+input = const [1, 2, 3] | tap (const "input" | echo)
+main = input () | map (add (left ()) | add (right ())) | echo
+"#,
+            "left\nright\ninput\n[13, 14, 15]\n",
+            0,
+        ),
+        (
+            r#"
+left : () -> I64 ! {IO}
+left = const 7 | tap (const "left" | echo)
+bad : I64
+bad = 1 | div 0
+input : () -> List[I64] ! {IO}
+input = const [1, 2, 3] | tap (const "input" | echo)
+main = input () | map (add (left ()) | add bad) | echo
+"#,
+            "left\n",
+            101,
+        ),
+        (
+            r#"
+bad : I64
+bad = 9223372036854775807 | add 1
+input : () -> List[I64] ! {IO}
+input = const [1, 2, 3] | tap (const "input" | echo)
+main = input () | map (add (div 0 1) | add bad) | echo
+"#,
+            "",
+            101,
+        ),
+        (
+            r#"
+capture : () -> List[I64] ! {IO}
+capture = const [7, 8] | tap (const "capture" | echo)
+input : () -> List[I64] ! {IO}
+input = const [1, 2, 3] | tap (const "input" | echo)
+main = input () | map (const (capture ())) | echo
+"#,
+            "capture\ninput\n[[7, 8], [7, 8], [7, 8]]\n",
+            0,
+        ),
+    ];
+    for (index, (text, stdout, status)) in cases.iter().enumerate() {
+        std::fs::write(&source, text).unwrap();
+        let reference = Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&source)
+            .output()
+            .unwrap();
+        assert_eq!(
+            reference.status.code(),
+            Some(*status),
+            "{index}: {reference:?}"
+        );
+        assert_eq!(reference.stdout, stdout.as_bytes(), "case {index}");
+        if *status == 101 {
+            assert!(String::from_utf8_lossy(&reference.stderr).contains("division by zero"));
+        } else {
+            assert!(reference.stderr.is_empty());
+        }
+        for mode in ["--interp", "-O1", "-O2"] {
+            let actual = Command::new(compiler)
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_LTO", "0")
+                .args(["run", mode])
+                .arg(&source)
+                .output()
+                .unwrap();
+            assert_eq!(
+                actual.status.code(),
+                reference.status.code(),
+                "{index}: {mode}: {actual:?}"
+            );
+            assert_eq!(actual.stdout, reference.stdout, "{index}: {mode}");
+            assert_eq!(actual.stderr, reference.stderr, "{index}: {mode}");
+        }
+    }
+}
+
+#[test]
 fn repeated_known_function_aliases_become_direct_calls() {
     let text = MT::con("std::String");
     let integer = MT::con("std::I64");

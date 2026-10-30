@@ -131,30 +131,6 @@ impl<'p> Opt<'p> {
         }
     }
 
-    /// The arguments of a partial application that are constants
-    /// (`Func` of arity 0, whose evaluation may trap) become locals bound
-    /// in `out`, in evaluation order.
-    fn hoist_constants(&mut self, e: Expr, out: &mut Vec<(Local, Expr)>) -> Expr {
-        match e {
-            Expr::Apply(f, args) => {
-                let args = args
-                    .into_iter()
-                    .map(|a| match a {
-                        Expr::Func(id) if self.arity(id) == 0 => {
-                            let l = self.fresh(&self.funcs[id].ty);
-                            out.push((l, Expr::Func(id)));
-                            Expr::Local(l)
-                        }
-                        a @ Expr::Apply(..) => self.hoist_constants(a, out),
-                        a => a,
-                    })
-                    .collect();
-                Expr::Apply(f, args)
-            }
-            e => e,
-        }
-    }
-
     fn fresh(&mut self, ty: &MT) -> Local {
         self.locals.push(ty.clone());
         self.locals.len() as Local - 1
@@ -289,28 +265,42 @@ impl<'p> Opt<'p> {
                         }
                     }
                 }
-                // a partial application used once: substituted, so that
-                // applying it becomes a direct call
+                // A once-used known closure can expose a direct call. Keep
+                // eager capture computations at this binding, in their original
+                // order, rather than moving them to the closure's later use.
                 if matches!(v, Expr::Apply(..)) && uses(&b, l) == 1 {
-                    // constants it captures are evaluated here, first
-                    let mut consts = Vec::new();
+                    let mut captures = Vec::new();
                     let v = if self.pure(&v) || applied_first(&b, l) {
                         v
                     } else {
-                        self.hoist_constants(v, &mut consts)
+                        let count = self.nlocals();
+                        let known_partial = matches!(&v, Expr::Apply(f, args)
+                            if matches!(&**f, Expr::Func(id) if args.len() < self.arity(*id)));
+                        let normalized = if known_partial {
+                            bind_captures(
+                                &v,
+                                None,
+                                self.funcs,
+                                self.shapes,
+                                &mut self.locals,
+                                &mut captures,
+                            )
+                        } else {
+                            None
+                        };
+                        let Some(normalized) = normalized.filter(|e| self.pure(e)) else {
+                            // No partial hoist on rejection: an earlier capture
+                            // may fail before a later constant is evaluated.
+                            self.locals.truncate(count);
+                            return Expr::Let(l, Box::new(v), Box::new(self.expr(*b, depth)));
+                        };
+                        normalized
                     };
-                    if self.pure(&v) || applied_first(&b, l) {
-                        let mut s: Vec<Option<Expr>> = vec![None; self.nlocals()];
-                        s[l as usize] = Some(v);
-                        let mut out = self.expr(substitute(&b, &s), depth);
-                        for (c, e) in consts.into_iter().rev() {
-                            out = Expr::Let(c, Box::new(e), Box::new(out));
-                        }
-                        return out;
-                    }
-                    let mut out = Expr::Let(l, Box::new(v), Box::new(self.expr(*b, depth)));
-                    for (c, e) in consts.into_iter().rev() {
-                        out = Expr::Let(c, Box::new(e), Box::new(out));
+                    let mut s: Vec<Option<Expr>> = vec![None; self.nlocals()];
+                    s[l as usize] = Some(v);
+                    let mut out = self.expr(substitute(&b, &s), depth);
+                    for (capture, value) in captures.into_iter().rev() {
+                        out = Expr::Let(capture, Box::new(value), Box::new(out));
                     }
                     return out;
                 }
@@ -1243,4 +1233,197 @@ fn rename_locals(e: &Expr, caps: &[Local]) -> Expr {
         s.resize(max, None);
     }
     substitute(e, &s)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn computed_capture_stays_before_the_continuation_and_exposes_a_direct_call() {
+        let integer = MT::con("std::I64");
+        let unary = MT::Fun(Box::new(integer.clone()), Box::new(integer.clone()));
+        let funcs = vec![
+            Func {
+                name: "add".into(),
+                arity: 2,
+                ty: MT::Fun(Box::new(integer.clone()), Box::new(unary.clone())),
+                locals: vec![integer.clone(), integer.clone()],
+                body: Body::Prim("prim.add".into()),
+            },
+            Func {
+                name: "abs".into(),
+                arity: 1,
+                ty: unary.clone(),
+                locals: vec![integer.clone()],
+                body: Body::Prim("prim.abs".into()),
+            },
+        ];
+        let shapes = Shapes::default();
+        let mut opt = Opt {
+            funcs: &funcs,
+            shapes: &shapes,
+            current: usize::MAX,
+            locals: vec![integer.clone(), unary, integer],
+            budget: 600,
+            resource_locals: vec![],
+        };
+        let expression = Expr::Let(
+            1,
+            Box::new(Expr::Apply(
+                Box::new(Expr::Func(0)),
+                vec![Expr::Call(1, vec![Expr::Local(0)])],
+            )),
+            Box::new(Expr::Let(
+                2,
+                Box::new(Expr::Call(1, vec![Expr::Local(0)])),
+                Box::new(Expr::Apply(Box::new(Expr::Local(1)), vec![Expr::Local(0)])),
+            )),
+        );
+        let result = opt.expr(expression, 0);
+        let Expr::Let(capture, first, continuation) = result else {
+            panic!("the capture must still be evaluated before the continuation");
+        };
+        assert_eq!(capture, 3);
+        assert!(
+            matches!(*first, Expr::Call(1, ref args) if matches!(args.as_slice(), [Expr::Local(0)]))
+        );
+        let Expr::Let(2, second, call) = *continuation else {
+            panic!("the intervening computation must keep its original position");
+        };
+        assert!(matches!(*second, Expr::Call(1, _)));
+        assert!(matches!(*call, Expr::Call(0, ref args)
+            if matches!(args.as_slice(), [Expr::Local(3), Expr::Local(0)])));
+    }
+
+    #[test]
+    fn unknown_and_saturated_function_producers_keep_their_binding() {
+        let integer = MT::con("std::I64");
+        let unary = MT::Fun(Box::new(integer.clone()), Box::new(integer.clone()));
+        let factory = MT::Fun(Box::new(integer.clone()), Box::new(unary.clone()));
+        let funcs = vec![
+            Func {
+                name: "factory".into(),
+                arity: 1,
+                ty: factory.clone(),
+                locals: vec![integer.clone()],
+                body: Body::Prim("test.factory".into()),
+            },
+            Func {
+                name: "compute".into(),
+                arity: 1,
+                ty: unary.clone(),
+                locals: vec![integer.clone()],
+                body: Body::Prim("prim.abs".into()),
+            },
+        ];
+        let shapes = Shapes::default();
+        for known in [false, true] {
+            let mut opt = Opt {
+                funcs: &funcs,
+                shapes: &shapes,
+                current: usize::MAX,
+                locals: vec![
+                    factory.clone(),
+                    integer.clone(),
+                    unary.clone(),
+                    integer.clone(),
+                ],
+                budget: 600,
+                resource_locals: vec![],
+            };
+            let expression = Expr::Let(
+                2,
+                Box::new(Expr::Apply(
+                    Box::new(if known { Expr::Func(0) } else { Expr::Local(0) }),
+                    vec![Expr::Call(1, vec![Expr::Local(1)])],
+                )),
+                Box::new(Expr::Let(
+                    3,
+                    Box::new(Expr::Call(1, vec![Expr::Local(1)])),
+                    Box::new(Expr::Apply(Box::new(Expr::Local(2)), vec![Expr::Local(1)])),
+                )),
+            );
+            let locals = opt.locals.clone();
+            let result = opt.expr(expression, 0);
+            let Expr::Let(2, producer, continuation) = result else {
+                panic!("function-producing calls need their original binding");
+            };
+            if known {
+                assert!(matches!(*producer, Expr::Call(0, _)));
+            } else {
+                assert!(
+                    matches!(*producer, Expr::Apply(ref f, _) if matches!(**f, Expr::Local(0)))
+                );
+            }
+            assert!(matches!(*continuation, Expr::Let(3, _, _)));
+            assert_eq!(opt.locals, locals);
+        }
+    }
+
+    #[test]
+    fn rejected_observable_capture_discards_every_prepared_binding() {
+        let integer = MT::con("std::I64");
+        let channel = MT::Con("std::Channel".into(), vec![integer.clone()]);
+        let weak = MT::Con("std::WeakChannel".into(), vec![integer.clone()]);
+        let unary = MT::Fun(Box::new(integer.clone()), Box::new(integer.clone()));
+        let funcs = vec![
+            Func {
+                name: "capture".into(),
+                arity: 3,
+                ty: MT::Fun(
+                    Box::new(integer.clone()),
+                    Box::new(MT::Fun(Box::new(channel.clone()), Box::new(unary.clone()))),
+                ),
+                locals: vec![integer.clone(), channel.clone(), integer.clone()],
+                body: Body::Prim("test.capture".into()),
+            },
+            Func {
+                name: "compute".into(),
+                arity: 1,
+                ty: unary.clone(),
+                locals: vec![integer.clone()],
+                body: Body::Prim("prim.abs".into()),
+            },
+            Func {
+                name: "channel".into(),
+                arity: 1,
+                ty: MT::Fun(Box::new(integer.clone()), Box::new(channel)),
+                locals: vec![integer.clone(), weak],
+                body: Body::Prim("test.channel".into()),
+            },
+        ];
+        let shapes = Shapes::default();
+        let mut opt = Opt {
+            funcs: &funcs,
+            shapes: &shapes,
+            current: usize::MAX,
+            locals: vec![integer.clone(), unary, integer],
+            budget: 600,
+            resource_locals: vec![],
+        };
+        let expression = Expr::Let(
+            1,
+            Box::new(Expr::Apply(
+                Box::new(Expr::Func(0)),
+                vec![
+                    Expr::Call(1, vec![Expr::Local(0)]),
+                    Expr::Call(2, vec![Expr::Local(0)]),
+                ],
+            )),
+            Box::new(Expr::Let(
+                2,
+                Box::new(Expr::Call(1, vec![Expr::Local(0)])),
+                Box::new(Expr::Apply(Box::new(Expr::Local(1)), vec![Expr::Local(0)])),
+            )),
+        );
+        let original = format!("{expression:?}");
+        let locals = opt.locals.clone();
+        let result = opt.expr(expression, 0);
+        assert_eq!(format!("{result:?}"), original);
+        assert_eq!(
+            opt.locals, locals,
+            "rejection must not leave typed temporaries"
+        );
+    }
 }

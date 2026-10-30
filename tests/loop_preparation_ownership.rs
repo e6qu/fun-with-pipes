@@ -22,10 +22,10 @@ fn flattened_loop_preparation_releases_original_and_partial_fields() {
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(
         &src,
-        r#"step : (I64, String, String, I64) -> Step[(I64, String, String, I64), String]
+        r#"step : (I64, String, String, F64) -> Step[(I64, String, String, F64), String]
 step = if (.0 | eq 0) (.1 | Stop)
     (make { 0 = .0 | sub 1, 1 = .1 | concat "x", 2 = .2 | concat "y", 3 = .3 } | Again)
-main = [task.yield (), (1, "left", "right", 17) | loop step | echo] | ignore
+main = [task.yield (), (1, "left", "right", 17.0) | loop step | echo] | ignore
 "#,
     )
     .unwrap();
@@ -60,11 +60,13 @@ main = [task.yield (), (1, "left", "right", 17) | loop step | echo] | ignore
         let end = start + emitted[start..].find("\n}\n").unwrap() + 3;
         let original = &emitted[start..end];
         assert!(
-            original.contains("V st[4]"),
+            emitted.contains(&format!(
+                "typedef struct {{ V v0; V v1; V v2; double v3; }} fwp_loop_state{id};"
+            )),
             "state must flatten: {original}"
         );
         assert!(
-            original.contains("prepared.v0 = st[1]") && original.contains("prepared.v1 = st[2]")
+            original.contains("prepared.v0 = st.v1") && original.contains("prepared.v1 = st.v2")
         );
         let probe = r#"
 static volatile V first, second, scalar_word, state_box;
@@ -163,12 +165,12 @@ int main(void) {
             .replace("STRING_DROP", string_drop);
         let failing = original
         .replace(
-            "fwp_rc_dup(st[1]);",
-            "if (current_dup++==wanted_dup) fwp_trap(\"preparation fault\"); fwp_rc_dup(st[1]);",
+            "fwp_rc_dup(st.v1);",
+            "if (current_dup++==wanted_dup) fwp_trap(\"preparation fault\"); fwp_rc_dup(st.v1);",
         )
         .replace(
-            "fwp_rc_dup(st[2]);",
-            "if (current_dup++==wanted_dup) fwp_trap(\"preparation fault\"); fwp_rc_dup(st[2]);",
+            "fwp_rc_dup(st.v2);",
+            "if (current_dup++==wanted_dup) fwp_trap(\"preparation fault\"); fwp_rc_dup(st.v2);",
         );
         let runtime = "static int wanted_dup, current_dup;\n".to_string()
             + &emitted.replacen(original, &failing, 1).replace(
@@ -182,8 +184,8 @@ int main(void) {
                 ),
                 "",
             )
-            .replace("prepared.v0 = st[1];", "")
-            .replace("prepared.v1 = st[2];", "")
+            .replace("prepared.v0 = st.v1;", "")
+            .replace("prepared.v1 = st.v2;", "")
             .replace("fwp_cleanup_pop(&preparation_cleanup);", "");
         let old_runtime = runtime.replacen(&failing, &old, 1);
         for opt in ["-O1", "-O2"] {

@@ -46,12 +46,26 @@ fn temp_dir(name: &str) -> PathBuf {
 struct Server {
     child: Child,
     addr: String,
+    log: Arc<Mutex<String>>,
+    reader: Option<std::thread::JoinHandle<()>>,
 }
 
 impl Drop for Server {
     fn drop(&mut self) {
+        let exited = self.child.try_wait();
         let _ = self.child.kill();
-        let _ = self.child.wait();
+        let status = self.child.wait();
+        if let Some(reader) = self.reader.take() {
+            if reader.join().is_err() {
+                eprintln!("REST stderr reader panicked");
+            }
+        }
+        if std::thread::panicking() || !matches!(exited, Ok(None)) {
+            eprintln!(
+                "REST server exit: {exited:?}; reaped: {status:?}; stderr: {}",
+                self.log.lock().unwrap()
+            );
+        }
     }
 }
 
@@ -83,7 +97,12 @@ fn start(mut cmd: Command, timeout: Duration) -> Server {
         }
     });
     match address.recv_timeout(timeout) {
-        Ok(addr) => Server { child, addr },
+        Ok(addr) => Server {
+            child,
+            addr,
+            log,
+            reader: Some(reader),
+        },
         Err(error) => {
             let _ = child.kill();
             let _ = child.wait();

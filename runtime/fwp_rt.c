@@ -134,8 +134,6 @@ static V fwp_data(uint32_t tag, uint32_t n, const V *f) {
     o->tag = tag;
     o->n = n;
     for (uint32_t i = 0; i < n; i++) o->f[i] = f[i];
-    /* Inlining may preload fields before allocation: retain their owner. */
-
     return PTR(o);
 }
 
@@ -152,8 +150,6 @@ static V fwp_str_new(const char *s, size_t len) {
     r->len = len;
     memcpy(r->d, s, len);
     r->d[len] = 0;
-    /* A source slice can be the only remaining root of its allocation. */
-
     return PTR(r);
 }
 
@@ -176,7 +172,6 @@ static size_t fwp_list_len(V xs) {
 
 /* list -> temporary array of items */
 static V *fwp_list_items(V xs, size_t *n) {
-    V owner = xs;
     *n = fwp_list_len(xs);
     V *a = (V *)fwp_alloc((*n + 1) * sizeof(V));
     for (size_t i = 0; i < *n; i++) { a[i] = OBJ(xs)->f[0]; xs = OBJ(xs)->f[1]; }
@@ -187,10 +182,6 @@ static V *fwp_list_items(V xs, size_t *n) {
 static V fwp_list_from(const V *a, size_t n) {
     V r = 0;
     for (size_t i = n; i > 0; i--) r = fwp_cons(a[i - 1], r);
-    /* Clang can preload the elements of an inlined, short buffer and
-     * discard its only pointer before the allocating constructors run.
-     * Keep the owning buffer reachable until every cell has been built. */
-
     return r;
 }
 
@@ -550,7 +541,7 @@ static void fwp_fail(V value, const fwp_desc *d) {
     longjmp(fwp_handlers->jb, 1);
 }
 
-/* Unused State slots must not remain conservative roots in this buffer. */
+/* Clear retired slots; typed State owners handle value release separately. */
 static void fwp_state_restore(size_t depth) {
     while (fwp_state_len > depth) fwp_state[--fwp_state_len] = 0;
     fwp_state_len = depth;

@@ -4320,8 +4320,7 @@ static V fwp_p_cg(V itv, V tolv, V nv, V av, V bv) {
 }
 
 /* Borrow each input row, copy only list nodes and retain typed element aliases.
- * Scratch holds row cursors and completed columns, not copies of every row.
- * Build immutable links: rewriting an old node could hide a young GC root. */
+ * Scratch holds row cursors and completed columns, not copies of every row. */
 static V fwp_p_list_transpose_owned(V xss, void (*dup_element)(V),
         void (*drop_element)(V), void (*drop_row)(V), void (*drop_result)(V)) {
     size_t nr;

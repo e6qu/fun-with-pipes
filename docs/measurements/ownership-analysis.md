@@ -94,6 +94,17 @@ Only the ignored measurement test changes; production analysis and admission
 rules do not. These results verify the revised measurement at the named source;
 they do not establish an analyzer speedup or replace final-head gates.
 
+### PR #226 final source
+
+[Run 40876750730](https://github.com/e6qu/fun-with-pipes/actions/runs/40876750730)
+at `02e4ee21` passes both hosts with the same interleaved protocol and limits.
+All 13,824 individual durations, both logs and artifact identities are retained
+in the [final record](ownership-analysis-final-226-2026-10-29.json). The largest
+Separate/merged ratio is 1.466 on Linux and 1.350 on Intel macOS; identical-copy
+variation stays below 0.23% and 1.51%, respectively. Each host passes 223 tests
+and all-target lint. Full production validation and matching merged-tree identity
+are recorded in [delivery history](../roadmap-history.md#derivative-allocation-and-accuracy-pr-226).
+
 ## Current implementation: revisit changed dependencies
 
 PR #221 run `40674942219`, source `45f9e81013fdf3b9e07aa0d4222c87bcde289e2d`,

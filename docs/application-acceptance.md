@@ -13,8 +13,8 @@ performance and platform requirements in the last column.
 | [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [C/Rust baseline](measurements/wordfreq.md) and [paired/repeated text comparison](measurements/unchanged-text.md) on two Linux hosts | Set time/memory budgets; validate the current runtime and preserve six-platform cleanup evidence |
 | [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and small ownership controls | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | Preserve these observations as ownership changes; allocation-failure coverage remains |
 | [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scaled counting/filtering/CSV/task-file cleanup passes on six hosts; preserve current delivery coverage and separate input/output costs |
-| Numerical pipeline | Map/reduce 65,537 elements and multiply 65×67 by 67×63 matrices, eight rounds | [Existing C/Rust comparison](measurements/numerical-kernels.md#array-and-matrix-kernels-recorded-comparison) | Repeat against current source; add 262,145 elements and 257×259 by 259×255 matrices; set N1 budgets |
-| Derivative application | Rosenbrock descent at 3, 33 and 129 dimensions; 199 updates plus zero/one/1,999-update controls | [AD storage](measurements/ad-application.md), [C/Rust peers](measurements/descent-peers.md), [packed arrays](measurements/packed-descent.md) and [array-owner moves](measurements/array-owner-moves.md) and [borrowed captures](measurements/array-capture-descent.md) on two Linux hosts | Stabilize identical-code timing controls and set per-input budgets; extend nested and platform evidence |
+| Numerical pipeline | Map/reduce 65,537/262,145 elements; multiply 65×67 by 67×63 and 257×259 by 259×255 matrices, eight rounds | [Current four-case protocol and partial results](measurements/kernel-baselines.md) | Complete qualified N1 baselines and resolve the failed timing control before selecting N2 |
+| Derivative application | Rosenbrock descent at 3, 33 and 129 dimensions; 199 updates plus zero/one/1,999-update controls | [Repeated current baselines and fixed limits](measurements/descent-costs.md), [nested accuracy/storage](measurements/ad-depth.md) and [capture costs](measurements/eager-captures.md) | Resolve D2's failed zero-update recheck and preserve six-platform cleanup/accuracy coverage; earlier allocation gains do not close the speed goal |
 | Long-running service | Existing HTTP/gRPC clients, handlers, streams and task cancellation | [Service ownership](ownership.md#http-ownership) and [service measurements](measurements/remote-server-storage.md#server-memory-after-completed-remote-calls) | The [API memory scenario](measurements/http-application-memory.md) passed #208 delivery; preserve failure/cancellation and repeated-memory coverage as ownership changes |
 
 Before declaring this suite accepted, name the exact revisions, inputs and native
@@ -50,10 +50,9 @@ completed request groups, including disconnects and forced shutdown. It passed
 six-host production delivery in #208. Printed request counts are correctness
 results, not throughput benchmarks.
 
-Timing budgets remain unset until repeated baselines identify ordinary variation.
-Record the chosen host/input budget before optimizing, retain slower results and
-investigate inconclusive measurements. Do not choose a universal percentage or
-mark this suite complete because one application improved.
+Use each family's recorded timing budget where one exists. Other families need
+repeated baselines before setting a budget. Retain slower and inconclusive results;
+one application's improvement does not complete this suite.
 
 ## Word-frequency comparison
 
