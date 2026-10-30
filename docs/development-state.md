@@ -5,12 +5,14 @@ production run `41128213017`, documentation `41128213024`. All nine production
 jobs and docs must pass and be audited before the authorized squash merge.
 Keep the subject at most 80 characters and the body empty.
 
-Branch `generated-array-folds` prepares the next related batch. Its temporary
-worktree may be removed while #231 runs to preserve disk space; the committed
-branch retains all preparation. It has no PR and no
-compiler changes. The active PR remains [#231](https://github.com/e6qu/fun-with-pipes/pull/231)
-in `/private/tmp/fwp-ownership-peer-baselines`; its handoff has the latest live
-job status and full earlier repair audit. Preserve that head while CI runs.
+Work continues on `generated-array-folds` in `/private/tmp/fwp-ownership-peer-baselines`.
+The separate temporary checkout was removed to recover disk space. This branch
+has no PR. The active PR remains [#231](https://github.com/e6qu/fun-with-pipes/pull/231),
+whose remote head stays `377cf9ce`; do not push to `ownership-peer-baselines`.
+Its live handoff is saved in local-only commit `23839191` on that branch.
+Documentation and the benchmark gate pass with complete audits. The repaired
+wait tests pass on both macOS and Windows architectures; eight full native jobs
+are still running without reported failed steps.
 
 Prepared here: [all four current buffer sessions](measurements/buffer-current.md),
 their complete source/artifact/hash index and the [next allocation proof and
@@ -18,11 +20,11 @@ acceptance requirements](measurements/generated-array-folds.md). 25/48 copy
 controls fail; no case passes all four sessions. No failed measured session was
 rerun. Four wrong-CPU attempts were rejected before any build or timing.
 
-Before changing compiler code, publish this declaration and freeze the reference
-at #231's final tested source. Then implement the restricted producer-to-fold
-proof, its size validation and focused semantics/storage/cleanup controls. Keep
-all full builds and validation on GitHub; use guarded local focused checks only.
-Do not describe this proposal as implemented or verified.
+Declaration `97c8eac6` is published before implementation. The reference compiler
+is frozen at `377cf9ce25c65afba595b6413e5bb1d50721ea7a`. Implement the restricted
+producer-to-fold proof, shared size validation and focused semantics/storage/
+cleanup controls while monitoring #231. No compiler changes are verified yet.
+Keep full builds and validation on GitHub; use guarded local focused checks.
 
 ## Evidence and limits
 

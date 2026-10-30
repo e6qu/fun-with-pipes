@@ -44,9 +44,13 @@ omit validation because allocation was removed.
 
 ## Acceptance declared before implementation
 
-Use the same scan entry and lengths 0, 16, 4,096 and 262,144. Freeze the reference
-to #231's final tested compiler; record its exact source before candidate runs.
-Do not change the C/Rust programs, arithmetic, production flags or sample counts.
+Use the same scan entry and lengths 0, 16, 4,096 and 262,144. The frozen reference
+is `377cf9ce25c65afba595b6413e5bb1d50721ea7a`, the #231 head under final
+production validation. Its compiler/runtime match the measured `3ca66b54`; only
+wait tests, workflow ordering and documentation changed. #231 must pass before
+this next delivery merges. If a compiler repair changes the reference, declare
+that source before candidate runs. Do not change the C/Rust programs, arithmetic,
+production flags or sample counts.
 
 | Requirement | Passing evidence |
 |---|---|
