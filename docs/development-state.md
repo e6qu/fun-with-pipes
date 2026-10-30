@@ -12,9 +12,10 @@ whose remote head stays `377cf9ce`; do not push to `ownership-peer-baselines`.
 Its live handoff is saved in local-only commit `23839191` on that branch.
 Documentation and the benchmark gate pass with complete audits. The repaired
 wait tests pass on both macOS and Windows architectures. macOS ARM ownership
-job `124312094852` also passes: all 127 summaries / 366 tests were audited, with
-only the existing OpenSSL installation notice. Seven native jobs are still
-running without reported failed steps. The docs/benchmark audits are
+job `124312094852` passes with 127 summaries / 366 tests audited. Regular ARM
+job `124312094382` also passes: 132 summaries / 627 Rust tests, ten wait controls
+on Python 3.15.2 and twelve SDK checks. Both logs have only the existing OpenSSL
+installation notice. Six native jobs still run without reported failed steps. The docs/benchmark audits are
 `/private/tmp/fwp-docs-231-377c.audit.json` and `/private/tmp/fwp-231-bench-377c.audit.json`.
 
 Prepared here: [all four current buffer sessions](measurements/buffer-current.md),
@@ -32,10 +33,13 @@ operation sharing constructor validation, raw/optimized/native semantic cases
 and O1/O2, packing on/off allocation controls. Native Windows now selects the
 existing numeric-fusion test target too. No compiler change is verified yet.
 
-Next implementation check: dispatch `scalar-fold-checks` on this branch after
-publishing the coherent first batch. It now covers numeric fusion and array
+Initial candidate `a2e539b9` was published. Its focused run `41132906311` was
+cancelled while both jobs were queued, so dedicated two-step trap/cancellation
+and omitted-cleanup controls could join the same verification batch. No result
+from that cancelled run is a pass. Next: publish these added controls and
+dispatch `scalar-fold-checks` on this branch. It now covers numeric fusion and array
 size limits as well as the existing scalar/cleanup targets, retaining artifacts.
-Finish dedicated generated-loop failure/cancellation evidence, update the
+Audit generated-loop failure/cancellation evidence, update the
 materialized-scan storage observers and comparison reference/budgets, run G2
 checks and the final production gate before calling this task complete.
 The old scan/storage scripts assume an allocated scan array; do not run them

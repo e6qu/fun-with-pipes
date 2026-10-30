@@ -79,6 +79,68 @@ fn generated_numeric_fold_removes_the_array_allocation() {
                         directory.join(format!("unexpected-allocation-{packing}{opt}.bin"));
                     fwp::cgen::compile_c(&format!("{code}\n{negative}"), &binary, opt).unwrap();
                     assert_eq!(Command::new(&binary).status().unwrap().code(), Some(171));
+                    let loop_step = "        int done = fs";
+                    assert_eq!(source.matches(loop_step).count(), 1);
+                    let unwind = source
+                        .replace(
+                            "typedef uint64_t V;",
+                            "typedef uint64_t V;\nstatic void generated_interrupt_step(void);",
+                        )
+                        .replace(
+                            loop_step,
+                            "        generated_interrupt_step();\n        int done = fs",
+                        )
+                        .replace(
+                            "int main(int argc, char **argv)",
+                            "int original_main(int argc, char **argv)",
+                        );
+                    let probe = include_str!("fixtures/generated_array_fold_unwind.c")
+                        .replace("fGENERATED", &format!("f{id}"));
+                    let unwind = format!("{unwind}\n{probe}");
+                    let trap_cleanup = "        fwp_cleanup_unwind(fwp_trap_cleanup);";
+                    let cancel_cleanup = "t->unwinding = 1;\n    fwp_cleanup_unwind(0);";
+                    assert_eq!(unwind.matches(trap_cleanup).count(), 1);
+                    assert_eq!(unwind.matches(cancel_cleanup).count(), 1);
+                    for (label, code, expected) in [
+                        ("owned", unwind.clone(), 0),
+                        (
+                            "omitted-trap-cleanup",
+                            unwind.replace(trap_cleanup, "        /* omitted trap cleanup */"),
+                            185,
+                        ),
+                        (
+                            "omitted-cancel-cleanup",
+                            unwind.replace(
+                                cancel_cleanup,
+                                "t->unwinding = 1; /* omitted cancellation cleanup */",
+                            ),
+                            186,
+                        ),
+                    ] {
+                        let name = format!("generated-{packing}{opt}-{label}");
+                        let binary = directory.join(format!("{name}.bin"));
+                        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                        let output = Command::new(&binary).output().unwrap();
+                        if let Some(destination) = std::env::var_os("FWP_ARRAY_FUSION_ARTIFACTS") {
+                            let prefix = std::path::PathBuf::from(destination).join(name);
+                            std::fs::write(prefix.with_extension("c"), &code).unwrap();
+                            std::fs::copy(&binary, prefix.with_extension("bin")).unwrap();
+                            std::fs::write(prefix.with_extension("stdout"), &output.stdout)
+                                .unwrap();
+                            std::fs::write(prefix.with_extension("stderr"), &output.stderr)
+                                .unwrap();
+                            std::fs::write(
+                                prefix.with_extension("status"),
+                                format!("{}\n", output.status),
+                            )
+                            .unwrap();
+                        }
+                        assert_eq!(
+                            output.status.code(),
+                            Some(expected),
+                            "{label} {packing} {opt}: {output:?}"
+                        );
+                    }
                 }
             }
         }
@@ -99,6 +161,8 @@ fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
       ("generated-size","main = array.generate 2305843009213693952 id | array.fold add 0 | echo\n",101),
       ("generated-eager-arguments","main = array.generate (() | const 0 | tap (const \"count\" | echo)) (add (() | const 1 | tap (const \"capture\" | echo))) | array.fold add (() | const 0 | tap (const \"seed\" | echo)) | echo\n",0),
       ("generated-reused","main = array.generate 4 id | both array.to-list (array.fold add 0) | echo\n",0),
+      ("generated-nested-seed","main = array.fold add (array.generate 3 id | array.fold add 0) (array.generate 4 id) | echo\n",0),
+      ("generated-nested-capture","main = array.generate 4 (add (array.generate 3 id | array.fold add 0)) | array.fold add 0 | echo\n",0),
       ("generated-unknown","unknown : (I64 -> I64 -> I64) -> Array[I64] -> I64\nunknown = flip array.fold 0\nmain = array.generate 4 id | unknown (() | read-line | if (eq None) (const sub) (const add)) | echo\n",0),
       ("effect-order","main = [1i8, 2i8] | array.from-list | array.map (tap echo) | array.fold add 127i8 | echo\n",101),
       ("distinct-traps","main = [0, 9223372036854775807] | array.from-list | array.map (add 1) | array.fold div 0 | echo\n",101),
@@ -129,6 +193,12 @@ fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
         }
         if label == "generated" {
             assert_eq!(reference.stdout, b"0\n0\n6\n10\n6\n");
+        }
+        if label == "generated-nested-seed" {
+            assert_eq!(reference.stdout, b"9\n");
+        }
+        if label == "generated-nested-capture" {
+            assert_eq!(reference.stdout, b"18\n");
         }
         if label == "generated-size" {
             assert!(String::from_utf8_lossy(&reference.stderr).contains("array too large"));
