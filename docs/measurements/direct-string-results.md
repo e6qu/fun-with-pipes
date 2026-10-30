@@ -112,10 +112,14 @@ matrix once the group is ready. Preserve PR #228's running head meanwhile.
 `089465bb` implements direct construction without changing primitive contracts.
 Focused run `41021988225` passes all six native targets at O0/O1/O2: 18 integration
 tests per host, plus 224 library tests and 20 runner controls on GCC AMD64. Full
-logs and 954 saved boundary/cleanup executions are audited. All 162 retained
-probe images have the expected native architecture headers and recorded hashes.
+logs and 954 saved boundary/cleanup executions are audited. The
+[native evidence archive](direct-strings-native-2026-10-30.json) retains every
+source, output, status and complete job log. All 162 inspected probe images have
+the expected native architecture headers and recorded hashes. Those headers and
+identities are retained locally; full images remain in the named GitHub artifacts.
+An expired artifact would limit later inspection of those original binaries.
 This is correctness evidence, not a performance decision. WASI `41023744074` and
-the paired measurements remain outstanding.
+the paired measurements at `8da8f4cf` (run `41024798466`) remain outstanding.
 
 The runner is [measure-direct-string-results.py](../../scripts/measure-direct-string-results.py).
 [The source/count/acceptance checks](../../scripts/direct-string-evidence.py)

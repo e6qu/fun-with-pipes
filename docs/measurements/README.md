@@ -9,6 +9,8 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Ownership costs
 
+- [Direct string results](direct-string-results.md): temporary raw-buffer removal, verified native cleanup checks and pending paired timing acceptance.
+
 - [Directory allocation-boundary failures](directory-failures.md): partial-owner cleanup, caller aliases, deliberate leak controls and the separate terminal OOM contract.
 
 - [Parser workspace comparison](parser-workspace.md): four accepted sessions, C/Rust gaps, allocation tradeoffs and retained failed controls.

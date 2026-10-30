@@ -12,7 +12,7 @@ String-size failure rules. No application speed claim is accepted.
 ## Checks and measurements in progress
 
 PR #228 production `41018509811`: benchmarks, macOS ARM regular (626 tests/132
-summaries) and ARM ownership (364/127) pass with full audits. Six native jobs
+summaries), ARM ownership (364/127) and Intel ownership (364/127), plus Windows AMD64 (811/202), pass with full audits. Four native jobs
 remain running without reported failed steps. Documentation `41018509711` and
 both G2 hosts `41018512169` pass; G2 has 226 tests/three summaries each.
 
@@ -22,7 +22,9 @@ passes 224 library tests and 20 native-runner controls. Complete logs are audite
 including intentional missing-compiler/runner failures. Independent audit checks
 all 954 saved subprocess outputs/statuses and 162 native image headers/hashes.
 Artifacts are in `/private/tmp/fwp-direct-focused-089465bb`; the audit is
-`/private/tmp/fwp-direct-focused-audit.json`. WASI run `41023744074` is queued on
+`/private/tmp/fwp-direct-focused-audit.json`. The checked-in
+[native archive](measurements/direct-strings-native-2026-10-30.json) retains all
+text evidence and native headers/hashes; full images remain in GitHub artifacts. WASI run `41023744074` is queued on
 both Linux architectures and remains required.
 
 The paired runner restores exactly two frozen runtime bodies in generated C,
@@ -30,7 +32,7 @@ without an older compiler. It records separate candidate/reference and C/Rust
 comparisons, independent raw/managed profiles, all subprocess streams, native
 images, sections and stack reports. Its checker recomputes all 18,510 observations
 per complete session, including failed timing decisions; corrupted-evidence tests
-must also pass. Four qualified host sessions remain required. Keep the existing
+must also pass. Four qualified host sessions are queued in `41024798466` at `8da8f4cf`. Keep the existing
 limits and retain failed/inconclusive sessions; never retry unchanged timings.
 
 Guarded checks: six allocation/acceptance tests pass with small Clang O2 probes;
