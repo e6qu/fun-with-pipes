@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check code/stack report parsing without building or timing the compiler."""
 import importlib.util
+import json
 from pathlib import Path
 import unittest
 
@@ -19,11 +20,19 @@ class ProgramRecords(unittest.TestCase):
             with self.subTest(damaged=damaged), self.assertRaises((AssertionError, KeyError)):
                 PROGRAMS.sections(damaged)
 
-    def test_rust_frames_keep_zero_sized_frames_and_symbol_aliases(self):
-        text = 'Stack Sizes:\n   Size      Functions\n  0 leaf\n  32 work, alias\n'
-        self.assertEqual(PROGRAMS.rust_frames(text), [dict(functions='leaf', bytes=0), dict(functions='work, alias', bytes=32)])
-        for damaged in ['Stack Sizes:\nSize Functions\n', text.replace('work, alias', '?'),
-                        text.replace('32 work', '-32 work'), text + 'warning: incomplete\n']:
+    def test_rust_frames_require_exact_compiler_diagnostics(self):
+        def diagnostic(level, message):
+            return json.dumps(dict(message=message, level=level, code=None, spans=[],
+                                   children=[], **{'$message_type': 'diagnostic'})) + '\n'
+        warning = diagnostic('warning', '-C remark requires "-C debuginfo=n" to show source locations')
+        leaf = diagnostic('note', "<unknown file>:0:0 prolog-epilog (analysis): 0 stack bytes in function 'leaf'")
+        work = diagnostic('note', "<unknown file>:0:0 prolog-epilog (analysis): 32 stack bytes in function 'work'")
+        text = warning + leaf + work
+        self.assertEqual(PROGRAMS.rust_frames(text), [dict(functions='leaf', bytes=0), dict(functions='work', bytes=32)])
+        for damaged in ['', warning, leaf, text.replace('32 stack', '-32 stack'),
+                        text + warning, text + diagnostic('warning', 'incomplete'),
+                        text.replace('prolog-epilog', 'another-pass'),
+                        text.replace('"children": []', '"children": [{}]')]:
             with self.subTest(damaged=damaged), self.assertRaises(AssertionError):
                 PROGRAMS.rust_frames(damaged)
 

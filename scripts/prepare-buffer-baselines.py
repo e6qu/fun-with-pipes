@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import shutil
 import subprocess
 
@@ -29,14 +30,25 @@ def sections(text):
 
 
 def rust_frames(text):
-    lines = [line.strip() for line in text.splitlines() if line.strip()]
-    assert len(lines) >= 2 and lines[0] == 'Stack Sizes:' and lines[1].split() == ['Size', 'Functions'], lines[:2]
+    # Stable rustc exposes LLVM's final frame sizes through optimization remarks.
+    # With production debuginfo=0 it emits this one location warning; retain it
+    # and reject every other diagnostic, including an empty/missing frame report.
+    warning = '-C remark requires "-C debuginfo=n" to show source locations'
     result = []
-    for line in lines[2:]:
-        size, names = line.split(maxsplit=1)
-        assert size.isdecimal() and names != '?', line
-        result.append(dict(functions=names, bytes=int(size)))
-    assert result, 'no Rust static stack metadata'
+    warnings = 0
+    for line in text.splitlines():
+        row = json.loads(line)
+        assert row['$message_type'] == 'diagnostic' and row['code'] is None, row
+        assert row['spans'] == [] and row['children'] == [], row
+        if row['level'] == 'warning':
+            assert row['message'] == warning, row
+            warnings += 1
+        else:
+            assert row['level'] == 'note', row
+            match = re.fullmatch(r"<unknown file>:0:0 prolog-epilog \(analysis\): ([0-9]+) stack bytes in function '([^']+)'", row['message'])
+            assert match, row
+            result.append(dict(functions=match[2], bytes=int(match[1])))
+    assert warnings == 1 and result, 'missing Rust stack remarks or location diagnostic'
     return result
 
 
@@ -54,7 +66,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ['native-checks', 'output']:
         parser.add_argument('--' + name, type=Path, required=True)
-    for name in ['cc', 'rustc', 'c-arch', 'rust-cpu', 'size', 'objcopy', 'readobj']:
+    for name in ['cc', 'rustc', 'c-arch', 'rust-cpu', 'size', 'objcopy']:
         parser.add_argument('--' + name, required=True)
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
@@ -67,7 +79,7 @@ def main():
     out.mkdir(parents=True, exist_ok=False)
     records = {}
 
-    def run(command):
+    def run(command, *, stack_remarks):
         command = list(map(str, command))
         try:
             result = subprocess.run(command, capture_output=True, timeout=180)
@@ -80,11 +92,15 @@ def main():
                        stdout=base64.b64encode(result.stdout).decode(), stderr=base64.b64encode(result.stderr).decode())
         with (out / 'commands.jsonl').open('a') as stream:
             stream.write(json.dumps(row) + '\n')
-        assert row['status'] == 0 and not row['timedOut'] and not result.stderr, row
-        return result.stdout
+        assert row['status'] == 0 and not row['timedOut'], row
+        if stack_remarks:
+            rust_frames(result.stderr.decode())
+        else:
+            assert not result.stderr, row
+        return result
 
-    versions = {name: run([getattr(args, name), '--version']).decode()
-                for name in ['cc', 'rustc', 'size', 'objcopy', 'readobj']}
+    versions = {name: run([getattr(args, name), '--version'], stack_remarks=False).stdout.decode()
+                for name in ['cc', 'rustc', 'size', 'objcopy']}
     for index, entry in enumerate(ENTRIES):
         folder = out / entry
         folder.mkdir()
@@ -107,23 +123,24 @@ def main():
                            '-fno-lto', '-fstack-usage', '-march=' + args.c_arch,
                            f'-DBUFFER_ENTRY={index}', source, '-o', binary,
                            *(['-w', '-lm', '-lpthread', '-ldl'] if language == 'fwp' else ['-Wall', '-Wextra', '-Werror'])]
-            assert run(command) == b''
+            assert run(command, stack_remarks=False).stdout == b''
             image = binary.read_bytes()
             assert image[:6] == b'\x7fELF\x02\x01'
             assert int.from_bytes(image[18:20], 'little') == {'x86_64': 62, 'aarch64': 183}[machine]
-            size_text = run([args.size, '-A', '-d', binary]).decode()
+            size_text = run([args.size, '-A', '-d', binary], stack_remarks=False).stdout.decode()
             (folder / (language + '-sections.txt')).write_text(size_text)
             if language == 'rust':
                 stack_binary = folder / 'rust-stack'
-                stack_command = command[:-1] + [stack_binary, '-C', 'llvm-args=-stack-size-section']
-                assert run(stack_command) == b''
+                stack_command = command[:-1] + [stack_binary, '-C', 'remark=prolog-epilog', '--error-format=json']
+                stack_result = run(stack_command, stack_remarks=True)
+                assert stack_result.stdout == b''
                 # The stack-only build must preserve the ordinary instruction bytes.
                 text_paths = [folder / 'rust-text.bin', folder / 'rust-stack-text.bin']
                 for executable, text_path in zip([binary, stack_binary], text_paths):
-                    assert run([args.objcopy, '--dump-section', f'.text={text_path}', executable]) == b''
+                    assert run([args.objcopy, '--dump-section', f'.text={text_path}', executable], stack_remarks=False).stdout == b''
                 assert text_paths[0].read_bytes() == text_paths[1].read_bytes(), 'stack report changed Rust instructions'
-                stack_text = run([args.readobj, '--elf-output-style=GNU', '--stack-sizes', stack_binary]).decode()
-                (folder / 'rust-stack.txt').write_text(stack_text)
+                stack_text = stack_result.stderr.decode()
+                (folder / 'rust-stack.jsonl').write_text(stack_text)
                 frames = rust_frames(stack_text)
             else:
                 usage, = folder.glob(binary.name + '*.su')

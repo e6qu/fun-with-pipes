@@ -198,12 +198,20 @@ ARM64 uses `armv8-a`/Rust `generic`; AMD64 uses `x86-64` for both compilers.
 The baseline hosts remain Neoverse-N2 and AMD EPYC 7763 with the existing exact
 GCC/Rust qualification requirements.
 
-C emits per-function `.su` stack reports. For Rust, a separate build emits LLVM
-stack-size metadata. Its instruction bytes must match the ordinary binary before
-using that report. [LLVM's reader](https://www.llvm.org/docs/CommandGuide/llvm-readobj.html)
-extracts the function/frame pairs. This describes reported frames from the compiled
-source; it excludes prebuilt libraries and does not establish the total space used
-by simultaneously active calls. Dynamic C frames remain labelled dynamic.
+C emits per-function `.su` stack reports. Rust 1.99.1 emits final frame sizes
+through `-C remark=prolog-epilog`, using the production settings in a separate
+build. Its instruction bytes must match the ordinary binary before using the
+report. These are [LLVM's compiler-generated frame sizes](https://llvm.org/docs/doxygen/PrologEpilogInserter_8cpp_source.html),
+not estimates from disassembly. The parser retains the expected missing-source-location
+warning caused by `debuginfo=0` and rejects all other warnings or unknown records.
+Reported frames exclude prebuilt libraries and do not establish total active-call
+stack usage or all target-specific storage outside the adjusted frame. Dynamic C
+frames remain labelled dynamic.
+
+The first builder used `-stack-size-section`, but Rust's explicit target setting
+disables that section unless its unstable option is enabled. Both GCC-host runs
+therefore returned empty reports, which the checker correctly rejected. The repair
+uses stable compiler remarks; it does not change compilers or enable unstable features.
 
 All source files, commands, ordinary/copy binaries, section sizes and raw stack
 reports are retained. Each language's copy must be byte-identical. Rust normally
@@ -212,3 +220,19 @@ libc code. Executable bytes and whole-process memory therefore describe differen
 boundaries, and the report must state that distinction. The new builder/parser
 controls are implemented; native stack-report verification is pending. No timing
 session starts before the complete evidence path is verified.
+
+## Focused repair before baseline collection
+
+Run `41097911057` at `230b1e54` failed the memory and stack-report steps on both
+architectures. The complete logs and partial artifacts (`12995829431` AMD64,
+`12997202090` ARM64) were audited: peer, native, phase, storage and clock checks
+passed; both failures are confined to the two new observers. Docs run `41097913940`
+passed and its full log was audited. No timing session ran.
+
+Linux's `VmSize` uses a tab after the colon. The parser now accepts spaces and
+tabs before the decimal value, while rejecting signed values, wrong units,
+duplicates and overflow. Local checks pass 38 parser controls and compile all
+18 diagnostic programs with production Rust 1.99.1; Linux execution still needs
+native CI. Phase and storage checks now include the largest declared length,
+262,144: locally 90 phase executions, 270 events, 180 damaged-record rejections,
+and 90 storage executions including 18 intentional leak failures pass.

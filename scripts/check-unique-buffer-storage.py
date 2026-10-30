@@ -75,7 +75,7 @@ def main():
                                    '-fno-lto', f'-DBUFFER_ENTRY={entry_index}', source, '-o', executable, *flags]
                     built = run(command)
                     assert (built.returncode, built.stdout, built.stderr) == (0, b'', b''), built
-                    for length in ([16] if variant == 'omitted-release' else [0, 16, 4096]):
+                    for length in ([16] if variant == 'omitted-release' else [0, 16, 4096, 262144]):
                         result = run([executable, entry, length, 3])
                         if variant == 'omitted-release':
                             assert (result.returncode, result.stdout, result.stderr) == (225, b'', b'buffer still live\n'), result

@@ -62,13 +62,17 @@ int main(int argc, char **argv) {
 ''')
     invalid = ['Other: 12 kB\n', 'Rss: -1 kB\n', 'Rss: +1 kB\n', 'Rss: 12\n',
                'Rss: 12 MB\n', 'Rss: 12 kB', 'Rss: 12 kB\nRss: 12 kB\n',
-               'Rss: 18446744073709551616 kB\n', 'Rss: 12.5 kB\n', 'Rss: kB\n']
+               'Rss: 18446744073709551616 kB\n', 'Rss: 12.5 kB\n', 'Rss: kB\n', 'Rss:\t-1 kB\n',
+               'Rss:\t kB\n', 'Rss:\v12 kB\n', 'Rss:\t12 MB\n']
     parsed = 0
     for level in [1, 2]:
         executable = args.output / f'parse-O{level}'
         build([args.cc, '-std=gnu11', f'-O{level}', '-Wall', '-Wextra', '-Werror', parser_source, '-o', executable])
         for data, status, stdout, stderr in [
             ('Rss: 12 kB\n', 0, b'12\n', b''),
+            ('Rss:\t  12 kB\n', 0, b'12\n', b''),
+            ('Rss: \t0 kB\n', 0, b'0\n', b''),
+            ('Rss:\t18446744073709551615 kB\n', 0, b'18446744073709551615\n', b''),
             ('map header\nRss:     0 kB\nUnknown: 2 kB\n', 0, b'0\n', b''),
             *((text, 94, b'', b'invalid process memory observation\n') for text in invalid),
         ]:

@@ -35,7 +35,7 @@ static uint64_t buffer_memory_field(const char *bytes, const char *key) {
         if ((size_t)(end - line) > length && !strncmp(line, key, length) && line[length] == ':') {
             if (found++) buffer_memory_error();
             const char *value = line + length + 1;
-            while (value < end && *value == ' ') value++;
+            while (value < end && (*value == ' ' || *value == '\t')) value++;
             if (value == end || *value < '0' || *value > '9') buffer_memory_error();
             errno = 0;
             char *tail;

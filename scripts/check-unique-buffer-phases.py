@@ -80,7 +80,7 @@ def main():
                                '-fno-lto', f'-DBUFFER_ENTRY={entry_index}', source, '-o', executable, *flags]
                 built = run(command)
                 assert (built.returncode, built.stdout, built.stderr) == (0, b'', b''), built
-                for length in [-1, 0, 16, 4096]:
+                for length in [-1, 0, 16, 4096, 262144]:
                     size = max(0, length)
                     expected = size * (size - 1) // 2 if entry == 'scan' else size * (2 if entry == 'unique' else 1)
                     result = run([executable, entry, length, 3])

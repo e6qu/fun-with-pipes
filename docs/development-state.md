@@ -68,7 +68,8 @@ rounds and twelve processes per language/copy per round. Five controls verify
 ordering, checked results, complete-round statistics and rejection of 20 damaged
 or missing observation sets. A boolean exit status is rejected too (21 damaged sets). D2/N1 limits and sample counts are unchanged.
 
-Linux process-memory checkpoints are implemented but not yet executed on Linux.
+Linux process-memory checkpoints reached native execution but failed parsing;
+the grouped repair and current verification are recorded below.
 The local `--mode parser` check passes 24 parsing controls and compiles 18 programs
 in 3.50s/1.27s CPU. Output: `/private/tmp/fwp-buffer-process-memory-checks-1`.
 Separate HugeTLB fields were then added and compiled cleanly with Clang O2.
@@ -128,16 +129,26 @@ matrix. Completed PRs do not close those outstanding criteria in [PLAN.md](../PL
 
 ## Pending grouped verification
 
-`prepare-buffer-baselines.py` now builds ordinary/copy programs and collects C
-stack reports plus Rust metadata from a separately compiled image whose instruction
-bytes must match. Three parser tests pass; five schedule/evidence tests pass.
-The focused workflow adds this builder and Linux memory checkpoints. Those additions
-have not run on native GCC yet. Rust code-generation units, debug info and panic
-policy are now explicit across the peer/diagnostic builders (16, 0, unwind).
+Focused run `41097911057` at `230b1e54` failed memory and stack reporting on
+both architectures (AMD job `124208377003`, ARM `124208377741`). Full logs and
+all partial command records were audited; every earlier step passed. Artifacts
+`12995829431`/`12997202090` are retained as
+`/private/tmp/fwp-buffer-peer-{amd,arm}-230b.zip`. Docs `41097913940`, job
+`124208369671`, passes with a complete log audit. Draft production is skipped,
+not validation.
 
-Draft #231 at `4afb420eb272534078fd7602766901276f67423f` passes docs run
-`41094952882`, job `124198193040`, with a complete log audit. Its draft production
-run `41094953000` is skipped, not validation. PR body:
-`/private/tmp/fwp-buffer-peers-pr.md`. No full production run has been requested
-for this unfinished batch. The ordinary-binary process runner and complete
-baseline evidence verifier remain to implement before the four sessions.
+Both causes are repaired together: `/proc` values allow horizontal tabs; Rust
+uses stable 1.99.1 `prolog-epilog` remarks instead of an overridden LLVM section
+flag. Instruction-byte equality remains required. Local checks under the guard:
+three compiler-report parser tests pass; 38 memory parsing controls and 18
+program builds pass (3.14s); 90 phase checks/270 events/180 damaged results pass
+(5.68s); 90 storage checks including 18 omitted-release failures pass (11.37s).
+Outputs are `/private/tmp/fwp-buffer-{process-memory,phase,storage}-checks-2`.
+The latter two now include the largest timed input, 262,144. Actual Linux memory
+and instruction-equality results still require native CI.
+
+Next verify this grouped repair on both native GCC hosts while implementing the
+ordinary-binary process runner and complete retained-evidence verifier. Then
+collect the four sessions. No baseline timings or optimization acceptance exist.
+PR body: `/private/tmp/fwp-buffer-peers-pr.md`; keep #231 draft until the batch
+is complete, then require every final production gate before merging.
