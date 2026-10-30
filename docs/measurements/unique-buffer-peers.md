@@ -274,9 +274,9 @@ commands, settings, counts, outputs and summaries. It recomputes file hashes aft
 each change: the audit must detect false evidence even when its manifest agrees.
 Synthetic records have an explicit origin and cannot pass the observed-results check.
 
-The [baseline workflow](../../.github/workflows/buffer-baselines.yml) qualifies
-both hosts and checks complete evidence before measuring. Dispatch session 1 and
-session 2 once each on the same published source after focused checks pass.
+The [baseline workflow](../../.github/workflows/numerics.yml) qualifies
+both hosts and checks complete evidence before measuring. Dispatch `suite=buffer-baselines`, `native_runner=all` and explicit
+`comparison_session=1`, then `comparison_session=2`, once each on the same published source after focused checks pass.
 Retain complete or partial artifacts for all four jobs. This workflow is prepared,
 not yet run; no comparative performance result is claimed.
 

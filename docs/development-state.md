@@ -179,3 +179,9 @@ environment are frozen before collecting data. No baseline timings or optimizati
 acceptance exist. Full production gates follow the finished measurements/report.
 PR body: `/private/tmp/fwp-buffer-peers-pr.md`; keep #231 draft until the batch
 is complete, then require every final production gate before merging.
+
+Current repair head: `6eca1176422afab433229a43afaec763917d3449`; focused run
+`41102080961` is queued. The superseded `bd4b4343` run still reports queued;
+no timings were collected. Baseline dispatch is being integrated into the existing
+numerics workflow so it can run before merge (new workflow files are not yet
+registered on the default branch). The explicit session/host policy is unchanged.
