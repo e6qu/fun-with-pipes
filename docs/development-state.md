@@ -1,13 +1,21 @@
 # Current work
 
-**Next:** publish the batched test-inventory repair and final timing record for
-[PR #232](https://github.com/e6qu/fun-with-pipes/pull/232), then audit every final
-gate. Initial head `76ee7a80e68e6e9b6859d3696351a42cc47b900c` uses production
-run `41142900417` and docs `41142900328`. Documentation found a stale expected
+**Next:** publish the complete four-session archive audit while all checks at
+`93ee0dc8` remain queued, then preserve the resulting head of
+[PR #232](https://github.com/e6qu/fun-with-pipes/pull/232) through its production
+and documentation gates. Queued runs `41143677115` / `41143677127` can be
+superseded before execution; do not restart running gates for status-only edits.
+Initial head `76ee7a80` used production run `41142900417` and docs `41142900328`.
+Documentation found a stale expected
 count: `numeric_array_fusion` now has three tests, not two. Both the collection
 report inventory and its synthetic complete log/total are repaired (54 tests).
 Its callers in collection/map/hash reports retain the completeness check;
-historical measurement counts remain untouched. Squash-merge only after
+historical measurement counts remain untouched. All nine old production jobs
+had no failed steps when the repair was published. Their superseded run was
+cancelled to avoid duplicate full suites. All nine partial logs were reviewed:
+completed tests pass; cancellation before evidence generation explains the
+missing-artifact errors. No additional compiler/test failure was found.
+Squash-merge only after
 all nine production jobs and documentation pass and their full logs are audited;
 use an explicit one-line subject of at most 80 characters and an empty body.
 Keep failed timing controls visible; never retry a collected result or loosen
@@ -50,7 +58,7 @@ per host. Complete logs and artifacts were audited. The
 allocation cases, twelve cleanup variants and twenty native images per host.
 Zero storage/count costs and deliberate missing-cleanup failures are verified.
 The observer now rejects equal nonzero initial/peak/final count storage too.
-Both Python controls pass, and 120 retained observations pass the stronger rule.
+Both Python controls pass; retained observations pass the stronger rule.
 
 The initial run `41135554961` at `048c92c5` failed one new test on each host:
 its global C marker matched four loops. The repair locates the selected worker's
@@ -76,10 +84,12 @@ control and must not be rerun. AMD session two also fails its old and new copy
 controls. All allocation/code/frame checks pass. The
 [timing index](measurements/generated-array-timings-2026-10-31.json) records all
 four sessions. AMD session one passes its copy and elapsed limits at ratio
-0.664728; CI reconstructed all 2,736 observations. Its full log was reviewed:
+0.664728; CI and the local archive audit reconstruct all 2,736 observations.
+Its full log was reviewed:
 six native tests and all damaged-evidence controls pass without diagnostics.
-The original archive is retained on GitHub; a second local reconstruction is
-paused by the disk guard. The other three sessions retain their local audits.
+All four original archives and local reconstructions are retained. Copy ratios
+are 1.019470 / 1.019270 for AMD session one; the other three sessions fail at
+least one unchanged 1.02 control. Overall timing acceptance remains open.
 
 AMD attempts received incorrect EPYC 9V74/9V45 hosts and stopped before any
 build or timing. Their qualification artifacts are retained; only these
@@ -103,18 +113,19 @@ source IDs, hashes, raw observations and deliberate failures. No full local
 compiler build, suite or benchmark ran. Run the roadmap audit again after these
 documentation edits. The roadmap audit passed after the history/plan rewrite
 (188 link sets, 106 immutable pairs, eight steps); later edits need the CI audit.
-The focused collection-inventory repair check was explicitly refused by the
-guard (less than 64 GiB free); its validation must run in CI. No further local
-checks may run while free space is below the guard floor.
+The focused collection-inventory repair check was initially refused below
+64 GiB free. After disk space recovered, all eight tests pass in 0.13s through
+the guard. The fourth archive audit passes in 0.86s, and the complete timing
+index verifies all four archive hashes and eight wrong-host rejections.
 
 Preserve the primary checkout at `/Users/zardoz/projects/fun-with-pipes`: detached
 #209, dirty recovery handoff and untracked compiler-abort report. Automatic
 approval review rejected replacing its handoff; do not retry. Backup:
 `/private/tmp/fwp-primary-recovery-before-file-checks.md`. Keep original CI ZIPs;
-extract only needed files. Free space fell from about 65 to 57 GiB while local
-build directories stayed empty. Local validation is paused below the 64 GiB
-floor; continue validation on GitHub. Do not delete original evidence or bypass
-the guard. The user has been asked whether another disk-heavy task can be paused.
+extract only needed files. Free space temporarily fell from about 65 to 57 GiB
+while local build directories stayed empty, then recovered above the 64 GiB
+floor. No limits were bypassed and no original evidence was deleted. Recheck
+headroom before local work; full validation stays on GitHub.
 
 The [plan](../PLAN.md) owns remaining work: D2 timing, N1/N2 acceptance, B1/B2
 comparisons and V1/V2 applications. GC removal, scoped A1–A6 and F1–F3 are
