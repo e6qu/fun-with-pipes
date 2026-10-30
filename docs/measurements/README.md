@@ -11,6 +11,8 @@ identities. Do not edit observations to make an old experiment describe new code
 
 - [Direct string results](direct-string-results.md): two rejected experiments and a byte-search candidate with four qualified sessions, explicit C/Rust gaps, allocation savings and code/stack costs.
 
+- [File-read allocation failures](file-read-failures.md): text/byte scratch, handle and prior-result cleanup probes; focused Clang/GCC checks pass, with complete platform verification pending.
+
 - [Directory allocation-boundary failures](directory-failures.md): partial-owner cleanup, caller aliases, deliberate leak controls and the separate terminal OOM contract.
 
 - [Parser workspace comparison](parser-workspace.md): four accepted sessions, C/Rust gaps, allocation tradeoffs and retained failed controls.
@@ -59,7 +61,7 @@ These reports follow different versions of derivative descent. Read the variant 
 ## Current CPU kernels
 
 - [Array and matrix baselines](kernel-baselines.md): four sizes, exact output checks and separate computation/allocation-inclusive timings; one expanded array noise control remains inconclusive.
-- [Timing variation and GCC reports](timing-variation.md): retained failed controls, the matrix sampling repair and the typed loop-state experiment. Representation checks alone do not prove a speedup.
+- [Timing variation and GCC reports](timing-variation.md): retained failed controls, the matrix sampling repair, typed loop-state checks and the unsuccessful executable-name diagnostic. Representation checks alone do not prove a speedup.
 
 ## Compiler cost
 

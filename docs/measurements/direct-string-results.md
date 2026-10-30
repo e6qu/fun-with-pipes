@@ -7,7 +7,7 @@ no existing derivative or numerical-kernel timing limit. The first candidate is
 rejected by all four timing sessions. The second candidate reuses unique storage
 under a protocol published before implementation; it also misses timing acceptance
 in all four sessions. The third, byte-search candidate passes all four measurement sessions; final
-production validation remains required before delivery. The sections below distinguish these two experiments.
+production validation remains required before delivery. The sections below distinguish all three experiments.
 
 ## Current result: byte search with unique storage
 
@@ -64,6 +64,23 @@ records remain archived. No measured session was retried. Full log audits and
 28 evidence-rejection tests pass. Documentation CI both reconstructs the results
 and explicitly requires passing timing and the stricter allocation budgets for
 this archive; earlier rejected archives remain valid records of failed acceptance.
+
+## C-library observer repair
+
+The complete matrix at `3ddd989c` exposed two stale tests: their string observers
+only recorded `fwp_str_new`, while repetition now constructs its result directly.
+The input observer therefore missed one allocation; the result observer checked
+an earlier string instead of the new result. Runtime behavior was unchanged by
+the repair. The checks now observe direct construction too, preserve all generated
+probes and include deliberate omission controls that reproduce the old failures.
+Empty/nonempty inputs and zero/one/three repetitions cover both construction paths.
+
+Source `d0ccb80f`, focused ARM Mac run `41047507000`, job `124035107898`, passes
+17 tests in six summaries. Complete logs and all 26 saved probe executions/native
+headers are audited; artifact `12973930046` retains the C, binaries and outputs.
+The old complete matrix is still being audited and the combined repaired source
+needs a new complete platform matrix. This focused result alone does not establish
+GCC or other-platform acceptance.
 
 ## First candidate: direct result construction
 

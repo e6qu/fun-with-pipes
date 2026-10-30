@@ -1,17 +1,19 @@
 # Current work
 
-**Next:** run focused file-read checks for the combined PR #229 batch, finish
-auditing the original production matrix, then publish all known fixes together
-and run its complete final-head gates. Merge only after nine production jobs,
-documentation and both G2 hosts pass, using one squash subject of at most 80
-characters and an empty body. Continue PLAN.md after the verified merge.
+**Next:** publish the combined PR #229 repair and run its complete final-head
+gates. Keep the two older Linux jobs running and audit their results as they
+finish; the workflow does not cancel them on a PR update. All currently known
+failures are repaired and focused checks pass. Merge only after nine production
+jobs, documentation and both G2 hosts pass, using one squash subject of at most
+80 characters and an empty body. Continue PLAN.md after the verified merge.
 
 ## Active PR and source
 
 [PR #229](https://github.com/e6qu/fun-with-pipes/pull/229) still points to failed
 head `3ddd989c`. Worktree `/private/tmp/fwp-direct-string-results`, branch
 `direct-string-results`, contains the combined repair, file-read controls and
-retained numerical diagnostic. The separate preparation worktree
+retained numerical diagnostic at `f0357526`, published on preparation branch
+`numerical-measurement-controls` while the PR preserves the old matrix. The separate preparation worktree
 `/private/tmp/fwp-numerical-controls` is clean at `b46e8c04`; its work is now
 included in this branch. Do not open another PR.
 
@@ -22,12 +24,11 @@ post-merge production run was cancelled only after tree equality was checked.
 
 ## Original full matrix and repaired observers
 
-Production `41042531398`, source `3ddd989c`, remains running. Its completed
-ARM Mac regular job `124018564229` has 624 passing tests, two observer failures
-in 132 summaries, and 12 passing SDK tests. The Intel Mac regular shard has the
-same two failures among 131 targets/623 passes; its remaining job steps are still
-running. Windows AMD's completed TLS/ownership step has exactly the same failures
-among 98 targets/249 passes. All those completed logs are audited.
+Production `41042531398`, source `3ddd989c`, still has both Linux suites running.
+Both regular Mac jobs finish with 624 passing tests, two observer failures in
+132 summaries and 12 passing SDK tests. Both Windows jobs finish with 809 passes
+and the same two failures in 202 summaries. All four complete logs are audited;
+no additional failures or compiler warnings were found.
 
 `library_input_ownership` exits 8 and `library_result_ownership` exits 4 because
 their observers record `fwp_str_new` but miss repetition's direct allocation.
@@ -38,12 +39,12 @@ is unchanged. Focused ARM Mac run `41047507000`, job `124035107898`, passes all
 independently audited. Artifact `12973930046` retains those probes. Both omission
 controls reproduce the old failures without another code change.
 
-ARM Mac ownership job `124018564253` passes 364 tests/127 summaries. Original
-documentation `41042479406`, benchmarks and both G2 hosts `41042548622` pass.
-Their complete logs are audited. Remaining original Linux, Windows and Intel Mac
-jobs must finish so additional failures can join the repair. The ARM Mac crash
-artifact is the verified intentional cleanup-panic abort test, not a new compiler
-abort. Record final new run IDs in the PR while its tested source is frozen.
+Both Mac ownership jobs pass 364 tests/127 summaries each. Original documentation
+`41042479406`, benchmarks and both G2 hosts `41042548622` pass. Their complete logs
+are audited. Audit both original Linux jobs when they finish and fix any further
+issues. Their continuation does not require delaying the prepared final matrix. Both Mac crash artifacts are the verified intentional cleanup-panic
+abort test, not new compiler aborts. Record final new run IDs in the PR while its
+tested source is frozen.
 
 ## Work bundled before the final rerun
 
@@ -62,9 +63,14 @@ abort. Record final new run IDs in the PR while its tested source is frozen.
 - [File-read allocation controls](measurements/file-read-failures.md): first
   scratch allocation, growth and result construction during either of two reads;
   aliases, retries, omitted cleanup and terminal OOM. Text and byte probes are
-  implemented in `text_file_tools`, but **not yet executed**. Only formatting and
-  source review have run; do not claim platform coverage before the focused and
-  complete native checks pass.
+  implemented in `text_file_tools`. At combined source `f0357526`, ARM Mac focused
+  run `41049305186` / job `124041117692` passes 11 tests in three summaries.
+  All 40 saved boundary executions, exact omission controls and native headers
+  are independently audited. Artifact `12973813560` retains the evidence.
+  GCC run `41049886906` / job `124043037136` also passes all 11 tests and the
+  independent 40-execution audit; artifact `12973978657` retains its evidence.
+  Its admission inventory accepts 82 programs with three expected rejections.
+  Complete final-head platform validation remains required.
 
 Guarded local checks pass: Rust formatting, Python syntax, workflow lint, roadmap
 checks, all retained diagnostic observations and eight damage cases. The original

@@ -1,6 +1,6 @@
 # File-read allocation failures
 
-**Implemented, not yet verified.** These controls extend the
+**Focused ARM64 macOS and AMD64 Linux checks pass; complete platform verification is pending.** These controls extend the
 [application suite](../application-acceptance.md) beyond directory allocation
 failures. They are cleanup tests, not timing measurements or C/Rust comparisons.
 
@@ -37,5 +37,22 @@ They do not exhaust the runner or claim recovery/pre-exit cleanup for terminal O
 It retains the fwp inputs, generated C, native images and every output/status
 under `FWP_ARC_ARTIFACTS`. Use `suite=file-applications` for focused execution;
 normal production assignments already include this test target on all six hosts.
-A skip or one passing host does not establish complete platform support. Record
-the actual source, runs and audited outcomes here after execution.
+A skip or one passing host does not establish complete platform support.
+
+At source `f03575260a6d7a1c3508d65e934dd5847ce5b807`, the
+[ARM64 macOS run](https://github.com/e6qu/fun-with-pipes/actions/runs/41049305186/job/124041117692)
+passes 11 tests in three targets, including these controls. The complete log has
+no compiler warnings or other failures. Artifact `12973813560` retains all
+40 allocation-boundary executions: 192 recovered traps with retries, 12 deliberate
+cleanup omissions and 24 terminal OOM exits. An independent audit verifies every
+output/status, exact one-define changes in omission controls, and native ARM64
+headers. The existing 40 application binaries and 80 saved executions also match
+the report hashes.
+
+The [AMD64 Linux GCC run](https://github.com/e6qu/fun-with-pipes/actions/runs/41049886906/job/124043037136)
+also passes 11 tests/three targets at the same source. Its full log and all 40
+saved boundary executions pass the same independent audit, including native
+AMD64 headers and exact omitted-cleanup controls. Artifact `12973978657` retains
+the evidence. The admission inventory accepts 82 programs and records its three
+expected compile-time failures. Complete final-head platform coverage remains
+required before delivery.
