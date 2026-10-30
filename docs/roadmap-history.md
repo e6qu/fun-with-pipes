@@ -6,6 +6,38 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Eager captures and typed numerical loops (PR #227)
+
+Known partial applications now bind computed arguments once, in their original
+order. This lets specialization remove temporary closures without moving effects
+or failures. A mixed record-return repair fixes the REST DELETE native failure.
+F32/F64 loop fields use native C scalar types; bit-pattern and mixed-owner tests
+preserve precision, cleanup and evaluation order. This representation change has
+no accepted speed claim.
+
+The [capture measurements](measurements/eager-captures.md) retain 13–72% faster
+updated solves and one failed zero-update recheck: 2.28% slower against a 2% limit.
+The [expanded kernel measurements](measurements/kernel-baselines.md) retain one
+failed identical-code control at 3.08% against 2%. **D2 and N1 remain open**;
+merging the implementation does not change those limits or establish a cause.
+[Source and timing diagnostics](measurements/timing-variation.md) preserve every
+result, including later inconclusive identical-copy observations.
+
+Final head `8e29187617eaa84fd29a2f6a55d954d28d385266` passes all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40962967746),
+[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40962940196)
+and [both analysis hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/40962971405).
+Full logs are audited: 992 tests per Linux host, 626 per regular macOS host,
+363 per ownership macOS host, 810 per Windows host and two benchmark tests.
+Both analysis hosts pass 226 tests. Focused scalar-bit/ownership coverage also
+passes on GCC ARM64/AMD64 and Clang ARM64.
+
+The user merged [#227](https://github.com/e6qu/fun-with-pipes/pull/227) as
+`0e114aa56866c33e0f4617c1887e4514316a7447`. Its tree is exactly the tested
+`830e41b33a4ff62eb981fa324d44cfcb43765d87`; the commit message is one line under
+80 characters, with no body or trailers. The next delivery adds application
+failure coverage and current word-frequency comparisons, preserving these open goals.
+
 ## Derivative allocation and accuracy (PR #226)
 
 Scalar recording copies its four input fields, so its temporary argument record

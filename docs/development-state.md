@@ -1,15 +1,15 @@
 # Current work
 
-**Next:** integrate this prepared application/evidence batch after resolving
-PR #227's pending performance delivery choice. Do not open a second PR or rerun
-the completed measurements. Full final-head production/docs/G2 gates belong to
-the integrated delivery; its focused directory checks and all four word-frequency
-sessions already pass their complete audits.
+**Next:** publish the integrated application/evidence PR, then audit every final-head
+production and documentation job and both G2 hosts. Fix all failures together;
+squash-merge after passing checks, using one subject of at most 80 characters and
+an empty body. Continue to the remaining application and numerical work.
 
-The directory-failure batch passes [all six focused native hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/40967686175)
-at `1f364c09ae9d4fe43405fdc66c46849cc4aae6d5`; its compact archive and report are
-published in `5556353c`. Worktree `/private/tmp/fwp-application-failures`, branch
-`application-allocation-failures`. Only PR #227 is active.
+Worktree `/private/tmp/fwp-application-failures`, branch
+`application-allocation-failures`. The preparation was published in `74c49e95`;
+merge `fbcd7fca` incorporates current main without changing its files. No second
+active PR exists. The user merged #227; no performance-choice reply is pending.
+D2/N1 remain open under their unchanged limits.
 
 ## Directory-report failure checks
 
@@ -72,41 +72,25 @@ four sessions (28 tests). `actionlint` passes both modified workflows;
 build or benchmark ran. The compressed evidence reconstructs every retained
 text and binary byte exactly; ordinary documentation CI rechecks all four sessions.
 
-## Active delivery: PR #227
+## Previous delivery and unresolved timing
 
-[PR #227](https://github.com/e6qu/fun-with-pipes/pull/227) stays frozen at
-`8e29187617eaa84fd29a2f6a55d954d28d385266` on `ad-eager-captures`, worktree
-`/private/tmp/fwp-ad-captures`. All gates pass; preserve this verified head while the performance choice is pending.
+The user merged [PR #227](https://github.com/e6qu/fun-with-pipes/pull/227) as
+`0e114aa5`, with the exact tested tree from `8e291876`. All nine production jobs,
+documentation and both G2 hosts passed and were fully audited; the compact
+[delivery record](roadmap-history.md#eager-captures-and-typed-numerical-loops-pr-227)
+owns the identities and counts. Its message satisfies the one-line rule.
 
-- Production `40962967746`: all nine jobs pass with complete log audits. Linux
-  has 992 tests/257 summaries per host; regular macOS 626/132; ownership macOS
-  363/127; Windows 810/202; benchmark 2/2.
-- Documentation `40962940196` passes; its complete log is audited.
-- Both G2 jobs in `40962971405` pass with full audits: 226 tests/3 summaries each.
-- Typed-state focused run `40959086200` passes on GCC ARM64/AMD64 and Clang
-  ARM64: 253 tests/14 summaries per host. Exact bits, mixed owners, cleanup and
-  deliberately corrupted precision are checked. This is not measured speed.
-- Older production `40947897224` passes all nine jobs, fully audited. It does
-  not replace final-head coverage.
-
-Two performance requirements remain open. D2's zero-update recheck is
-**1.022815765 > 1.02** in `40912773534`; N1's small-array inclusive copy control is
-**1.030786192 > 1.02** in `40951090783`. Preserve all observations and limits.
-The delivery choice was presented again after all CI passed: retain the new
-closure improvements with D2/N1 timing goals open, or keep the PR open until
-the original timing requirements are resolved. No answer has arrived. Do not merge solely because correctness CI passes.
-
-The [timing report](measurements/timing-variation.md) links the retained reports,
-source identities, rejected hosts and diagnostics. Resource-counter run
-`40961695545` retains all 512 child-process observations. Identical reference
-copies also differ in CPU time; the cause remains unresolved. No diagnostic or
-unchanged acceptance experiment is running. Do not discard failures or repeat
-unchanged measurements until they pass.
+D2's zero-update recheck is **1.022815765 > 1.02** in `40912773534`; N1's
+small-array inclusive copy control is **1.030786192 > 1.02** in `40951090783`.
+The [timing report](measurements/timing-variation.md) retains these observations
+and all diagnostics. The cause remains unresolved. The user merge settles the
+delivery choice, not these performance requirements. Do not discard failures,
+relax their limits or repeat unchanged measurements until they pass.
 
 ## Resume and delivery rules
 
 [PLAN.md](../PLAN.md) owns acceptance; [history](roadmap-history.md) owns completed
-deliveries. User-merged #226 is `cdf881067d`, matching verified tree `02e4ee21`.
+deliveries. User-merged #227 is `0e114aa5`, matching verified tree `830e41b3`.
 The original Intel compiler abort remains unexplained; retain its
 [report](measurements/compiler-abort.md) and diagnose any recurrence from source.
 
