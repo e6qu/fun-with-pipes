@@ -10,8 +10,8 @@ performance and platform requirements in the last column.
 
 | Program family | Work and current input | Existing evidence | Still required for this suite |
 |---|---|---|---|
-| [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [C/Rust baseline](measurements/wordfreq.md) and [paired/repeated text comparison](measurements/unchanged-text.md) on two Linux hosts | Set time/memory budgets; validate the current runtime and preserve six-platform cleanup evidence |
-| [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and small ownership controls | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | Preserve these observations as ownership changes; allocation-failure coverage remains |
+| [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [Four current C/Rust sessions and fixed budgets](measurements/wordfreq-current.md), plus historical [text comparison](measurements/unchanged-text.md) | Preserve the new evidence controls and integrate current six-platform cleanup coverage |
+| [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and small ownership controls | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | [Allocation-boundary failure checks](measurements/directory-failures.md) pass on six native hosts; integrate them into final production coverage |
 | [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scaled counting/filtering/CSV/task-file cleanup passes on six hosts; preserve current delivery coverage and separate input/output costs |
 | Numerical pipeline | Map/reduce 65,537/262,145 elements; multiply 65×67 by 67×63 and 257×259 by 259×255 matrices, eight rounds | [Current four-case protocol and partial results](measurements/kernel-baselines.md) | Complete qualified N1 baselines and resolve the failed timing control before selecting N2 |
 | Derivative application | Rosenbrock descent at 3, 33 and 129 dimensions; 199 updates plus zero/one/1,999-update controls | [Repeated current baselines and fixed limits](measurements/descent-costs.md), [nested accuracy/storage](measurements/ad-depth.md) and [capture costs](measurements/eager-captures.md) | Resolve D2's failed zero-update recheck and preserve six-platform cleanup/accuracy coverage; earlier allocation gains do not close the speed goal |
@@ -56,67 +56,43 @@ one application's improvement does not complete this suite.
 
 ## Word-frequency comparison
 
-Use the **Numerical and ownership evidence** workflow with an explicit operation:
+The [current baseline](measurements/wordfreq-current.md) is the source for new
+work: two independent sessions on each named Linux CPU, a byte-identical fwp
+control, 16 measured rounds of 64 processes per label and retained complete
+outputs. It records source `dc963bb5`, whole-program C/Rust gaps, managed counts,
+code/stack costs and workload-specific limits declared before a candidate.
 
-- `wordfreq-baseline` records current fwp beside C and Rust. It needs no earlier
-  fwp compiler or report (`measure-wordfreq.py --comparison record`).
-- `wordfreq` compares current fwp with a named successful baseline run, rebuilding
-  its saved C with the same toolchain (`--comparison compare`). It requires fewer
-  allocation requests/bytes and no extra retains or higher managed peak. Timing
-  remains visible even if slower.
-- `wordfreq-repeat` repeats either accepted report with the same binaries and
-  verifies that collecting C stack estimates leaves their instructions unchanged.
+Use **Numerical and ownership evidence**, `suite=wordfreq-current`,
+`native_runner=all`, `comparison_session=both` to collect that protocol. A native
+build needs no earlier fwp compiler. Qualification rejects other CPU/toolchain
+assignments before execution. The evidence checker independently recomputes
+results and rejects damaged observations; a green baseline job accepts no speedup.
 
-A new baseline must use the current report schema and profiling implementation.
-Reproduce older measurements with scripts from their recorded source revision.
-It measures Linux AMD64 and ARM64 separately, using production GCC and explicit
-O2 settings. Each host builds once for native ownership checks, the 32-bit
-WebAssembly interpreter and generated-code checks, and the paired measurement.
-A failed check does not suppress the independent checks that follow it.
-The script requires every input size, tool, sample count, warmup
-count and timeout; it has no implicit benchmark configuration.
+The [program](../examples/wordfreq.fwp) lowercases ASCII letters and removes commas
+and periods. `words` splits on space, tab, line feed and carriage return; other
+characters remain in a word. It counts normalized words, sorts by decreasing
+count then by spelling, and prints five results. `Pear pear apple` therefore
+prints `pear: 2`, then `apple: 1`.
 
-The fwp program lowercases ASCII letters and removes commas and periods from
-each word. `words` splits on space, tab, line feed and carriage return. Other
-characters stay in a word. It counts normalized words, sorts by decreasing count
-and then by the word, and prints the first five. For example, `Pear pear apple`
-prints `pear: 2` and then `apple: 1`.
+The [C](../tests/fixtures/wordfreq_bench.c) and
+[Rust](../tests/fixtures/wordfreq_bench.rs) peers count with sorted contiguous
+key/count pairs, as fwp does. No peer uses a hash table. C/Rust combine three
+normalization operations; fwp uses its ordinary string/list/map representations.
+Allocation growth, ranking and I/O buffers also differ. This compares complete
+ASCII applications, not Unicode behavior or pure compiler overhead.
 
-[C](../tests/fixtures/wordfreq_bench.c) and
-[Rust](../tests/fixtures/wordfreq_bench.rs) implement that operation for ASCII
-input. All three materialize normalized words and count with sorted contiguous
-key/count pairs using binary search and insertion. No peer uses a hash table.
-The generated inputs vary case and punctuation and retain their exact hashes.
-A separate Python oracle checks results. Empty input, ties, punctuation-only
-words and separator boundaries have small correctness controls.
+Elapsed time includes process launch, input reads, computation, printing and
+cleanup; compilation, input generation and parent input-file opening are excluded.
+Managed counters come from separate instrumented runs, process RSS from separate
+fresh executions. Neither is a C/Rust allocation-count comparison. The report
+states the exact scopes, ratios, raw observations and limitations.
 
-This compares complete implementations, with known differences. fwp uses its
-general string/list/map representations. C/Rust combine normalization into one
-pass, while fwp expresses three operations. Their allocation growth, ranking sort
-and standard-I/O buffers also differ. The C/Rust peers reject non-ASCII input;
-this is not a Unicode benchmark or a pure measurement of compiler overhead.
-
-The timer includes process launch, reading the saved input, all computation,
-allocation, printing and teardown. Input generation and compilation are excluded.
-Current recording measures three implementations; comparison measures four. Both
-use 24 samples after two warmups. Order rotates and reverses, giving each
-implementation every position equally. Keep every sample. A ratio of 1.25 means
-fwp's median took 25% more time than that named peer on that host and input.
-
-Compilation time, executable size and disassembly are retained separately.
-Peak resident memory comes from a separate fresh-process run of each executable.
-Instrumented fwp runs count allocation requests, requested bytes, retains and
-peak/final managed charge after constant initialization through cleanup. These
-counts exclude raw buffers, stacks, allocator metadata and process startup; they
-are not resident memory or C/Rust allocation counts. Profiled execution times
-never enter the timing comparison. Every fwp binary must omit collector symbols and
-finish with zero managed charge. The report has five managed counter fields;
-collection counts no longer exist.
-
-The [Linux C/Rust baseline](measurements/wordfreq.md) and
-[paired text comparison](measurements/unchanged-text.md) retain the observed
-counts and timing limits. [B1–B2](../PLAN.md#7-reproducible-comparisons) specify
-how to turn repeated measurements into enforceable budgets.
+The [first comparison](measurements/wordfreq.md) and
+[text-copy experiment](measurements/unchanged-text.md) retain historical results.
+Their `wordfreq-baseline`, `wordfreq` and `wordfreq-repeat` workflow selections
+reproduce those protocols; they do not replace the current identical-copy controls
+or establish budgets for new work. Use scripts from each recorded source revision
+when reproducing it.
 
 ## Descent with and without a saved history
 
@@ -230,6 +206,19 @@ disassembly and size records. The explicit baseline source is
 
 
 ## Repeated directory and file work
+
+The [directory allocation-boundary checks](measurements/directory-failures.md) inject
+recoverable traps before the first scratch allocation, during name collection,
+at scratch growth and during result-list construction. Each trap must close
+opened handles, release partial owners and permit a successful retry, including
+when the caller retains a path alias. Controls deliberately omit each cleanup
+and must trigger the corresponding observer. Native O1/O2 checks pass on all
+six hosts, with the first failed harness and all final results retained.
+
+Managed-heap exhaustion has a different contract: `fwp_heap_oom` prints
+`fwp: out of memory` and exits with status 102. A separate subprocess checks that
+handler at the same boundaries. It does not claim recovery or pre-exit cleanup,
+and it does not exhaust the host's memory.
 
 The `file-applications` workflow suite checks larger inputs with the current
 compiler on all six native hosts. It is a cleanup experiment, **not a timing

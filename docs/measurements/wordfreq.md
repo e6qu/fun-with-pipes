@@ -4,8 +4,10 @@ The maintained [word-frequency program](../../examples/wordfreq.fwp) reads text,
 normalizes words, counts them and prints five results. This comparison gives the
 memory/performance roadmap a complete application with fixed inputs.
 It does not establish a language-wide overhead or an improvement over older fwp.
+For current collector-free costs and new-work limits, use the
+[four-session baseline](wordfreq-current.md).
 
-[The protocol](../application-acceptance.md#word-frequency-comparison) explains
+The recorded [source protocol](https://github.com/e6qu/fun-with-pipes/blob/74263bccf8e2e67865e1863e2c04a296a97877bb/docs/application-acceptance.md#word-frequency-comparison) explains
 the algorithms, input generation, controls and known differences. In particular,
 all peers count with sorted contiguous pairs, but C/Rust combine normalization
 into one pass. fwp expresses three operations and uses its string/list/map layouts.

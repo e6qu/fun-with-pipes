@@ -1,0 +1,321 @@
+{
+  "source": "dc963bb500748dabe393dfaed20f92a333f5996e",
+  "protocol": "6d4df06b",
+  "scope": "Current word-frequency baseline only; no candidate or speedup accepted",
+  "sessions": {
+    "arm-1": {
+      "run": 40974666332,
+      "job": 123799636907,
+      "artifact": {
+        "id": 12941778367,
+        "node_id": "MDg6QXJ0aWZhY3QxMjk0MTc3ODM2Nw==",
+        "name": "wordfreq-current-ubuntu-24.04-arm-1",
+        "size_in_bytes": 1710733,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12941778367",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12941778367/zip",
+        "expired": false,
+        "digest": "sha256:a9dd24679b0cdbde879fd4a5f12dea52d33b6bdab283d1015affd1a7ff69edc8",
+        "created_at": "2026-10-29T23:43:07Z",
+        "updated_at": "2026-10-29T23:43:07Z",
+        "expires_at": "2027-01-27T23:39:56Z",
+        "workflow_run": {
+          "id": 40974666332,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "dc963bb500748dabe393dfaed20f92a333f5996e"
+        }
+      },
+      "archiveSha256": "a9dd24679b0cdbde879fd4a5f12dea52d33b6bdab283d1015affd1a7ff69edc8",
+      "report": {
+        "file": "wordfreq-current-2026-10-30-arm-1.json.gz",
+        "sha256": "d60b562121dae5b5a3553f3921da40368cc5e609238080d6455138345a4d6bc2",
+        "bytes": 42199
+      },
+      "log": {
+        "file": "wordfreq-current-2026-10-30-arm-1.log.gz",
+        "sha256": "e8f717965e4a802c39c31fa1d411f1efd90d5e21e88b09f85a0f0349b574a98b",
+        "bytes": 43763
+      }
+    },
+    "arm-2": {
+      "run": 40974666332,
+      "job": 123799637188,
+      "artifact": {
+        "id": 12941578578,
+        "node_id": "MDg6QXJ0aWZhY3QxMjk0MTU3ODU3OA==",
+        "name": "wordfreq-current-ubuntu-24.04-arm-2",
+        "size_in_bytes": 1710983,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12941578578",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12941578578/zip",
+        "expired": false,
+        "digest": "sha256:366d97e9ece5e3f6ee8ca4e7863d2ff7ee147d74a326f6eb7a53eb6b07d7073e",
+        "created_at": "2026-10-29T23:43:16Z",
+        "updated_at": "2026-10-29T23:43:16Z",
+        "expires_at": "2027-01-27T23:39:56Z",
+        "workflow_run": {
+          "id": 40974666332,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "dc963bb500748dabe393dfaed20f92a333f5996e"
+        }
+      },
+      "archiveSha256": "366d97e9ece5e3f6ee8ca4e7863d2ff7ee147d74a326f6eb7a53eb6b07d7073e",
+      "report": {
+        "file": "wordfreq-current-2026-10-30-arm-2.json.gz",
+        "sha256": "905802190079c89fa34ffd0f6f6680f5f7f006277dffbdd163936ddaa1746fa5",
+        "bytes": 42190
+      },
+      "log": {
+        "file": "wordfreq-current-2026-10-30-arm-2.log.gz",
+        "sha256": "9a5f206d7392ad22ae79cdf62aba5ef35c64404dfed20ddc38bb837e39d744d3",
+        "bytes": 43833
+      }
+    },
+    "amd-1": {
+      "run": 40975221824,
+      "job": 123801495592,
+      "artifact": {
+        "id": 12942078196,
+        "node_id": "MDg6QXJ0aWZhY3QxMjk0MjA3ODE5Ng==",
+        "name": "wordfreq-current-ubuntu-latest-1",
+        "size_in_bytes": 1912176,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12942078196",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12942078196/zip",
+        "expired": false,
+        "digest": "sha256:088c449ca1bb032c8002319ee5b9cf3ad00a0d7dbbb0d84a1c168ab81a78945b",
+        "created_at": "2026-10-29T23:48:58Z",
+        "updated_at": "2026-10-29T23:48:58Z",
+        "expires_at": "2027-01-27T23:45:03Z",
+        "workflow_run": {
+          "id": 40975221824,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "dc963bb500748dabe393dfaed20f92a333f5996e"
+        }
+      },
+      "archiveSha256": "088c449ca1bb032c8002319ee5b9cf3ad00a0d7dbbb0d84a1c168ab81a78945b",
+      "report": {
+        "file": "wordfreq-current-2026-10-30-amd-1.json.gz",
+        "sha256": "08f39ba51ea3d7d7e0571670464a93424a4e7b7ac5535402b9b9003ad97a61b2",
+        "bytes": 43539
+      },
+      "log": {
+        "file": "wordfreq-current-2026-10-30-amd-1.log.gz",
+        "sha256": "45610e04f33e257f3b5ba6eefb3ed3b847012542e180f7ed282d24e5efca19a3",
+        "bytes": 43711
+      }
+    },
+    "amd-2": {
+      "run": 40976014339,
+      "job": 123804111260,
+      "artifact": {
+        "id": 12941644239,
+        "node_id": "MDg6QXJ0aWZhY3QxMjk0MTY0NDIzOQ==",
+        "name": "wordfreq-current-ubuntu-latest-2",
+        "size_in_bytes": 1911462,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12941644239",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12941644239/zip",
+        "expired": false,
+        "digest": "sha256:7d999ca049d87827408cd195511b5294857c6c1cb4c2906d09f2603d248335fd",
+        "created_at": "2026-10-29T23:55:57Z",
+        "updated_at": "2026-10-29T23:55:57Z",
+        "expires_at": "2027-01-27T23:52:22Z",
+        "workflow_run": {
+          "id": 40976014339,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "dc963bb500748dabe393dfaed20f92a333f5996e"
+        }
+      },
+      "archiveSha256": "7d999ca049d87827408cd195511b5294857c6c1cb4c2906d09f2603d248335fd",
+      "report": {
+        "file": "wordfreq-current-2026-10-30-amd-2.json.gz",
+        "sha256": "555322345c866942374f4d5561d64f37cd252af4f2c0028649239e2873730784",
+        "bytes": 43536
+      },
+      "log": {
+        "file": "wordfreq-current-2026-10-30-amd-2.log.gz",
+        "sha256": "77a34f8d3b3103ab33b076ebdabf68da2d89987ff508830c296002b0e8371e06",
+        "bytes": 43718
+      }
+    }
+  },
+  "rejections": [
+    {
+      "run": 40974666332,
+      "job": 123799637134,
+      "artifact": {
+        "id": 12941682379,
+        "node_id": "MDg6QXJ0aWZhY3QxMjk0MTY4MjM3OQ==",
+        "name": "wordfreq-current-host-ubuntu-latest-1",
+        "size_in_bytes": 1628,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12941682379",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12941682379/zip",
+        "expired": false,
+        "digest": "sha256:95f52c86b526ac46566a3adf9f29c38b14ea797879f9f5405b583d1808c1cf25",
+        "created_at": "2026-10-29T23:40:15Z",
+        "updated_at": "2026-10-29T23:40:15Z",
+        "expires_at": "2027-01-27T23:39:56Z",
+        "workflow_run": {
+          "id": 40974666332,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "dc963bb500748dabe393dfaed20f92a333f5996e"
+        }
+      },
+      "qualification": {
+        "source": "dc963bb500748dabe393dfaed20f92a333f5996e",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 9V45 96-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V45 96-Core Processor\nCPU family:                              26\nModel:                                   2\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.25\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [
+          "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'AMD EPYC 9V45 96-Core Processor'"
+        ],
+        "qualified": false
+      },
+      "archiveSha256": "95f52c86b526ac46566a3adf9f29c38b14ea797879f9f5405b583d1808c1cf25",
+      "log": {
+        "file": "wordfreq-current-rejected-40974666332-amd-1.log.gz",
+        "sha256": "cbecad0410e448bb3a72596eb604ff6816ed86eb80addd8fd5f49aeee18addf4",
+        "bytes": 34619
+      }
+    },
+    {
+      "run": 40974666332,
+      "job": 123799637090,
+      "artifact": {
+        "id": 12941632286,
+        "node_id": "MDg6QXJ0aWZhY3QxMjk0MTYzMjI4Ng==",
+        "name": "wordfreq-current-host-ubuntu-latest-2",
+        "size_in_bytes": 1618,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12941632286",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12941632286/zip",
+        "expired": false,
+        "digest": "sha256:e986687c32da8824aa60f8047c21b79a40c27a0ef8d36315104fc58964fc0c2a",
+        "created_at": "2026-10-29T23:40:15Z",
+        "updated_at": "2026-10-29T23:40:15Z",
+        "expires_at": "2027-01-27T23:39:56Z",
+        "workflow_run": {
+          "id": 40974666332,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "dc963bb500748dabe393dfaed20f92a333f5996e"
+        }
+      },
+      "qualification": {
+        "source": "dc963bb500748dabe393dfaed20f92a333f5996e",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 9V74 80-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.27\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [
+          "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'AMD EPYC 9V74 80-Core Processor'"
+        ],
+        "qualified": false
+      },
+      "archiveSha256": "e986687c32da8824aa60f8047c21b79a40c27a0ef8d36315104fc58964fc0c2a",
+      "log": {
+        "file": "wordfreq-current-rejected-40974666332-amd-2.log.gz",
+        "sha256": "ae275542bdc5eee4113fd6c51467065a7d1a70cb228daf04d2a29d1d4444ac7b",
+        "bytes": 34620
+      }
+    },
+    {
+      "run": 40975221824,
+      "job": 123801495199,
+      "artifact": {
+        "id": 12941629433,
+        "node_id": "MDg6QXJ0aWZhY3QxMjk0MTYyOTQzMw==",
+        "name": "wordfreq-current-host-ubuntu-latest-2",
+        "size_in_bytes": 1618,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12941629433",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/12941629433/zip",
+        "expired": false,
+        "digest": "sha256:523d2c0e0b78b7f1eaba73b57ddde77e15ff295ef7c5c0c159e1b566d13b1f2c",
+        "created_at": "2026-10-29T23:45:23Z",
+        "updated_at": "2026-10-29T23:45:23Z",
+        "expires_at": "2027-01-27T23:45:03Z",
+        "workflow_run": {
+          "id": 40975221824,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "application-allocation-failures",
+          "head_sha": "dc963bb500748dabe393dfaed20f92a333f5996e"
+        }
+      },
+      "qualification": {
+        "source": "dc963bb500748dabe393dfaed20f92a333f5996e",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 9V74 80-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.28\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [
+          "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'AMD EPYC 9V74 80-Core Processor'"
+        ],
+        "qualified": false
+      },
+      "archiveSha256": "523d2c0e0b78b7f1eaba73b57ddde77e15ff295ef7c5c0c159e1b566d13b1f2c",
+      "log": {
+        "file": "wordfreq-current-rejected-40975221824-amd-2.log.gz",
+        "sha256": "75d3e7c47db86dbe7beaf0131d6691adf81ddb3f1c8b21428de312c46e19e08d",
+        "bytes": 34623
+      }
+    }
+  ],
+  "binaryContents": {
+    "file": "wordfreq-current-binaries-2026-10-30.json.gz",
+    "sha256": "bb0018639fd95fc6fe07eff4d8ec76c852b081b9569ee4b61107853c58046271",
+    "bytes": 12873285
+  },
+  "textContents": {
+    "file": "wordfreq-current-contents-2026-10-30.json.gz",
+    "sha256": "131ecb51ced627d218f854b537544eb3d7c2ba1e65e5f3089c863cc84b662d2c",
+    "bytes": 29186205
+  }
+}

@@ -9,6 +9,8 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Ownership costs
 
+- [Directory allocation-boundary failures](directory-failures.md): partial-owner cleanup, caller aliases, deliberate leak controls and the separate terminal OOM contract.
+
 - [Parser workspace comparison](parser-workspace.md): four accepted sessions, C/Rust gaps, allocation tradeoffs and retained failed controls.
 
 - [Remaining ARC operations after GC removal](arc-residual-costs.md): per-owner attribution and static-callback reduction.
@@ -71,6 +73,7 @@ These compare complete implementations, including the differences each report na
 
 - [Checked arithmetic in the benchmark peers](checked-peers.md)
 - [Checked ARC compared with C and Rust](arc-comparison.md)
+- [Current word-frequency costs and fixed limits](wordfreq-current.md): four audited sessions, complete C/Rust comparisons and explicit short-input variation.
 - [Word-frequency application: first C/Rust comparison](wordfreq.md)
 - [Avoiding copies when text stays unchanged](unchanged-text.md)
 - [Moving strings through a list map](string-map-ownership.md)

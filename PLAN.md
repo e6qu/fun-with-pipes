@@ -197,15 +197,15 @@ noisy and rejected observations, equivalent-work differences and the large
 remaining gap to explicit C/Rust derivatives. D2's limits were published before
 its candidate. Preserve all observations and do not reset the limits.
 
-**D2 — Deliver the measured eager-capture improvement.** PR #226 retains the
+**D2 — Complete the remaining timing requirement.** PR #226 retains the
 scalar `ad.push` no-escape proof: it removes one 40-byte argument allocation per
 recorded operation. Its four paired sessions fail the original whole-solve speed
 rule; that failure and every unchanged limit remain in the
 [scalar-recording results](docs/measurements/descent-costs.md#scalar-recording-results-allocation-reduction-retained-speed-goal-open).
 The user accepted the allocation reduction while leaving D2's speed goal open.
 
-The next [eager-capture change](docs/measurements/eager-captures.md) meets its
-separately declared budget in four audited matching-host sessions. It binds
+The [eager-capture change](docs/measurements/eager-captures.md), delivered in
+#227, met its separately declared budget in the original four matching-host sessions. It binds
 computed arguments once, in their original order, so existing specialization can
 remove temporary closures. Updated solves take 13–72% less time than the same
 compiler with this transformation disabled; the largest current-result case
@@ -215,9 +215,10 @@ Full CI exposed a mixed record-return C-generator defect; its repair passes 333
 focused tests on each GCC ARM64/AMD64 and Clang ARM64 host. The repaired-source
 recheck has one failure: AMD zero-update history is 2.28% slower than its reference
 (limit 2%). The emitted C is unchanged. Preserve this failure and diagnose the
-[timing variation](docs/measurements/timing-variation.md) before another acceptance run. Group
-N1's prepared baseline work in the same PR. Require all nine final-head production
-jobs, documentation and both G2 hosts before closing the selected D2 budget.
+[timing variation](docs/measurements/timing-variation.md) before another acceptance run.
+All nine final-head production jobs, documentation and both G2 hosts passed
+#227; the [delivery record](docs/roadmap-history.md#eager-captures-and-typed-numerical-loops-pr-227)
+confirms the merged tree. D2 stays open because the timing rule did not pass.
 Preserve failure/cancellation, mixed/stale-node, tape-full and nested-gradient
 controls. Do not fold F64 conversion elimination into this change: raw/native NaN
 payload differences prevent a bitwise-identity claim. Arbitrary AD is not promised
@@ -244,13 +245,13 @@ The expanded run at `37da7441` completes both sessions on both CPUs. All matrix
 and computation-only array controls pass. One AMD small-array allocation-inclusive
 control fails at 3.08% (limit 2%); preserve that inconclusive overall result and
 investigate it without an unchanged rerun. Audited GCC reports reproduce the
-original binaries and show an integer loop accumulator in fwp versus a floating accumulator in C. The typed-state experiment
-passes its focused bit/ownership checks and removes those conversions in GCC; N1
+original binaries and show an integer loop accumulator in fwp versus a floating accumulator in C. The typed-state change shipped in #227,
+passes its full production and focused bit/ownership checks and removes those conversions in GCC; N1
 and N2 acceptance still require every stated control.
 
 
-**N2 — Optimize the selected kernel.** The typed-state experiment passes focused
-GCC ARM64/AMD64 and Clang ARM64 checks, without timing acceptance. It gives F32/F64 loop fields native C types
+**N2 — Optimize the selected kernel.** The typed-state change in #227 passes full
+production and focused GCC ARM64/AMD64 and Clang ARM64 checks, without timing acceptance. It gives F32/F64 loop fields native C types
 and checks exact bits, nested/mixed owners, preparation failures and cancellation.
 The inclusive measurement failure must be resolved and candidate budgets declared
 before accepting a speed claim. Further candidates may change loop layout, data
@@ -287,6 +288,19 @@ CI compares against the declared baseline rather than silently resetting it.
 directory reports, text-file tools, a numerical pipeline, derivative descent and
 a long-running HTTP/gRPC service. Preserve the listed inputs and add the missing
 allocation-failure and scale cases, with expected results from independent checks.
+The [directory allocation-boundary checks](docs/measurements/directory-failures.md)
+are implemented at `1f364c09`: four failure points, aliases, retries, missing-close/
+missing-builder controls and separate terminal OOM checks at C O1/O2. All six
+native hosts pass ten focused tests each, with full log/artifact audits. The
+first harness failure and all 84 saved probe executions are retained.
+The [current word-frequency baseline](docs/measurements/wordfreq-current.md) now
+retains four audited sessions at `dc963bb5`, all 37,080 child observations and
+workload-specific time/memory limits declared before a candidate. Its short-input
+identical-copy difference reaches 3.90%; the report limits the claims this allows.
+Next, integrate the directory controls and word-frequency evidence checks into
+the final six-platform application delivery. No word-frequency candidate is
+implemented or accepted by these measurements.
+This does not complete the other application families or integrated V2 coverage.
 **Done:** each family has explicit platform/memory-mode coverage, failure and
 cancellation tests, bounded post-operation storage and a B1 budget where timed.
 

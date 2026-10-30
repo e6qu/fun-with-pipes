@@ -17,15 +17,16 @@ SPEC.loader.exec_module(MEASURE)
 
 class NumericalBaselines(unittest.TestCase):
     def test_larger_sample_preserves_counts_positions_and_predecessors(self):
-        orders = [BASELINE.execution_order(i, 20261029, 256) for i in range(16)]
-        for order in orders:
-            self.assertEqual(Counter(order), {label: 256 for label in BASELINE.LABELS})
-            self.assertEqual(len(order), 1024)
-        for position in range(1024):
-            self.assertEqual(Counter(order[position] for order in orders),
-                             {label: 4 for label in BASELINE.LABELS})
-        pairs = Counter(pair for order in orders for pair in zip(order, order[1:]))
-        self.assertEqual(pairs, {(a, b): 1023 for a in BASELINE.LABELS for b in BASELINE.LABELS})
+        for count, seed in [(256, 20261029), (64, 20261030)]:
+            orders = [BASELINE.execution_order(i, seed, count) for i in range(16)]
+            for order in orders:
+                self.assertEqual(Counter(order), {label: count for label in BASELINE.LABELS})
+                self.assertEqual(len(order), 4*count)
+            for position in range(4*count):
+                self.assertEqual(Counter(order[position] for order in orders),
+                                 {label: 4 for label in BASELINE.LABELS})
+            pairs = Counter(pair for order in orders for pair in zip(order, order[1:]))
+            self.assertEqual(pairs, {(a, b): 4*count-1 for a in BASELINE.LABELS for b in BASELINE.LABELS})
         for count in [0, 1, 5, 128, 512]:
             with self.subTest(count=count), self.assertRaises(AssertionError):
                 BASELINE.execution_order(0, 20261029, count)

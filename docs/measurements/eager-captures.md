@@ -4,6 +4,9 @@ The comparison was published in `8a495a72` before implementation. All four match
 audit at the original sources listed below. Full CI exposed a mixed-record
 return defect; its repair passes focused checks. The repaired-source recheck
 retains one failed zero-update timing rule, so D2 acceptance remains open.
+[PR #227 delivered the implementation](../roadmap-history.md#eager-captures-and-typed-numerical-loops-pr-227)
+after all production, documentation and analysis checks passed; its user merge
+does not close the failed performance requirement.
 [The earlier scalar-recording experiment](descent-costs.md#scalar-recording-results-allocation-reduction-retained-speed-goal-open)
 keeps its allocation reduction and failed timing result. Its limits are unchanged.
 
