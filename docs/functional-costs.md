@@ -105,12 +105,16 @@ updated test is pending; these counters make no elapsed-time claim.
 The [State range candidate](measurements/state-range-folds.md) targets:
 
 ```fwp
+sum-range : I64 -> I64
 sum-range = range 0 | run-state 0 (each (add | modify)) | .1
 ```
 
+The signature says it takes and returns a signed 64-bit integer (`I64`).
 For input `4`, `range 0` supplies `0, 1, 2, 3`. `each` visits them in order;
 `add | modify` adds each number to the scoped State value, initially zero.
-`run-state` returns `((), 6)`, and `.1` selects `6` using zero-based indexing.
+`each` returns unit, written `()`, meaning there is no result to carry. `run-state`
+returns that result and the final State as `((), 6)`; `.1` selects `6` using
+zero-based indexing.
 
 The candidate passes the two bounds to a specialized callback and loops over
 indices, avoiding the temporary list. Its acceptance requires exactly two

@@ -7,12 +7,17 @@ does not promise linear running time.
 
 ## State range recheck
 
+The check compares two rules for tracking where callbacks were created. Merged
+combines creation sites; Separate distinguishes them. SeparateCopy repeats the
+same Separate implementation to detect timing variation unrelated to that rule.
+
 Run `41158981359` at `f82016d9` passes Linux's complete G2 check. Intel macOS
 passes 225 unit tests, lint, both startup fixtures, all analysis-size budgets,
 absolute timing limits and Separate/Merged ratios. Its identical-copy control
 fails at N=32: median batches are 357.748791 and 338.686527 ms, a 5.63%
-difference against the unchanged 5% limit. Individual proofs and all observations
-remain in artifacts `13026856049` (Intel) and `13026306985` (Linux). This is an
+difference against the unchanged 5% limit. The [retained record](state-range-rejected-2026-10-31.json)
+contains all 13,824 individual durations, recomputed medians, hardware and startup
+logs. Original artifacts are `13026856049` (Intel) and `13026306985` (Linux). This is an
 inconclusive timing result, not a passing G2 run or an established compiler slowdown.
 
 The old order cycles balance positions across 768 triplets, but a 64-triplet
@@ -29,6 +34,14 @@ median calculation and every acceptance limit remain unchanged. This fixes a
 schedule imbalance without discarding samples or selecting an order by its
 measured speed. It does not prove the cause of the Intel variation; the revised
 run must still pass the original control. Preserve the failed result.
+
+Run `41160463103` at `ea0f300b` passes both hosts with the corrected schedule:
+jobs `124416671214` (Linux) and `124416671326` (Intel). Each passes 226 unit cases,
+both explicit analysis checks, all-target lint and startup. The
+[retained results](state-range-focused-2026-10-31.json) preserve all 13,824 timings
+and recomputed checks. Largest identical-copy differences are 0.42% on Linux and
+1.32% on Intel. This is a passing measurement of the revised schedule, not proof
+of a compiler speedup or of the original variation's sole cause.
 
 ## Current measurement repair: longer samples and an identical control
 

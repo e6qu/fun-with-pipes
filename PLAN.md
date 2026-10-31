@@ -29,10 +29,7 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. Preserve [#231's verified scalar-fold delivery](docs/roadmap-history.md#direct-scalar-folds-and-process-timing-pr-231).
-   All production gates pass; its timing acceptance remains open.
-   The [handoff](docs/development-state.md) names the current source and checks.
-2. Finish verification of [generated-array elimination](docs/measurements/generated-array-folds.md).
+1. Finish verification of [generated-array elimination](docs/measurements/generated-array-folds.md).
    Both focused native GCC suites and compiler-analysis budgets pass. All four
    timing sessions are audited; three fail the unchanged copy-control limit.
    The complete first matrix is audited: six jobs fail only an obsolete
@@ -42,14 +39,19 @@ collector is not the same as removing these costs. The
    The [four repaired full-buffer
    sessions](docs/measurements/buffer-current.md) are audited: 25/48 copy controls
    fail, and no workload passes all four. Do not retry unchanged measurements.
-3. Prepare [State range-list removal](docs/measurements/state-range-folds.md) as
-   the next B1 allocation task: keep the existing State handler, specialize only
-   its proved single-use range consumer, and require the declared correctness,
-   cleanup, exact-count, code-size, stack and analysis checks. It is not verified.
-4. Resolve D2/N1's failed measurements before claiming numerical speed acceptance.
+2. Finish production verification of [State range-list removal](docs/measurements/state-range-folds.md),
+   the next B1 allocation task. Focused checks pass on GCC ARM64/AMD64 and Clang
+   ARM64; both G2 hosts pass. The known I64 consumer keeps its State handler and
+   uses two fixed allocations / 152 bytes. Code shrinks and frames stay unchanged.
+   Verify the full native matrix, rejected shapes and cleanup before delivery.
+3. Resolve D2/N1's failed measurements before claiming numerical speed acceptance.
    Fixed CPU affinity and equal executable names did not resolve the controls.
    Do not rerun unchanged experiments or increase sample counts again.
-5. Complete the remaining B1/B2 comparisons and finite V1/V2 application matrix.
+4. Complete the remaining B1/B2 comparisons and finite V1/V2 application matrix.
+
+[#231's scalar-fold delivery](docs/roadmap-history.md#direct-scalar-folds-and-process-timing-pr-231)
+has verified production gates; its timing acceptance remains open. The
+[handoff](docs/development-state.md) owns current source IDs and check results.
 
 The original intermittent Intel macOS compiler abort remains an open defect.
 Preserve [its evidence](docs/measurements/compiler-abort.md); diagnose a recurrence

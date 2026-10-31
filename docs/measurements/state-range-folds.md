@@ -1,8 +1,30 @@
 # Remove range-list storage inside a known State consumer
 
-This is a proposed allocation change, not a verified optimization. PR #232 must
+Focused checks pass; full production verification is pending. PR #232 must
 finish its own unchanged CI before this work is published as the next delivery.
 The starting compiler is `05d96484`; its compiler/runtime match `d92939b8`.
+
+## Focused results
+
+Source `ea0f300b2c553b519a1a9ae266b7b974c388bdd7`, run `41160459668`, passes
+249 Rust cases on each GCC Linux ARM64/AMD64 and Clang macOS ARM64 host. The
+Linux hosts also pass two measurement controls. Exact allocation costs,
+failure/cancellation cleanup, rejected shapes and the direct/function-value
+loop-step regression pass. The [retained results](state-range-focused-2026-10-31.json)
+include executed cost rows, commands, native binary/source hashes, code/stack
+reports and all G2 samples. The earlier failures remain below.
+
+| Native target | Generated worker bytes, off → on | Entire `.text`, off → on | Largest frame component, off → on |
+|---|---:|---:|---:|
+| ARM64 | 1,880 → 1,104 (41.28% less) | 25,996 → 24,124 | 944 → 944 |
+| AMD64 | 1,814 → 1,103 (39.20% less) | 26,914 → 25,154 | 1,008 → 1,008 |
+
+At O0 and O2, both 32 and 128 inputs request exactly two allocations / 152 bytes,
+two runtime applications, one result box and no retains. Both code and stack
+budgets pass. G2 run `41160463103` passes Linux AMD64 and Intel macOS: the largest
+identical-copy differences are 0.42% and 1.32%, within 5%. Every original analysis
+count, absolute-time and ratio limit passes. This verifies the stated focused
+checks; it does not replace the final nine production jobs and documentation.
 
 ## Program and source finding
 
@@ -25,7 +47,10 @@ existing State handler. Do not introduce syntax, an alternate runtime memory
 mode or compatibility wrappers.
 
 The first scope is I64 bounds, I64 State, unit callback results and plain scalar
-captures. The callback must consume its list exactly once through a known fold;
+captures. I64 is a signed 64-bit integer; unit, written `()`, carries no result.
+A capture is a value kept from the surrounding expression; here only numbers,
+booleans and unit qualify, with no resource owner to move. The callback must
+consume its list exactly once through a known fold;
 only trivial local bindings may precede it. Keep argument and capture evaluation
 in their original order, including empty/reversed ranges. Evaluate each callback
 once per index, in ascending order. Checked user arithmetic, nested State,
@@ -97,7 +122,9 @@ The repair run `41158976900` at `f82016d9` passes all 247 focused Rust cases on
 all three hosts, including the exact cost assertion and both TLS cases. Linux
 also passes the two measurement controls. The native code-size check fails:
 ARM worker bytes grow from 1,880 to 2,136 (13.62%); AMD grows from 1,814 to 2,109
-(16.26%). Largest frame components stay 944/1,008 bytes respectively. These
+(16.26%). The [retained failed checks](state-range-rejected-2026-10-31.json) include
+both reports, commands and verified binary/source hashes. Largest frame components
+stay 944/1,008 bytes respectively. These
 are failed 5% checks even though total executable `.text` grows much less.
 
 Generated C retains an unused boxed-step callback through the runtime table,
