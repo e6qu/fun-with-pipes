@@ -1,7 +1,8 @@
 # Remove range-list storage inside a known State consumer
 
-Focused checks pass; full production verification is pending. PR #232 must
-finish its own unchanged CI before this work is published as the next delivery.
+Focused checks pass; full production verification is pending for this delivery.
+The preceding [PR #232](../roadmap-history.md#generated-array-elimination-pr-232)
+has passed every production gate and merged.
 The starting compiler is `05d96484`; its compiler/runtime match `d92939b8`.
 
 ## Focused results

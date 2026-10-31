@@ -1,34 +1,35 @@
 # Current work
 
-**Next:** monitor PR #232's Intel macOS retry `124422281020`, audit its full log,
-and squash-merge only after all gates pass. Then publish
-the prepared State range batch as the next single PR and run its full matrix.
+**Next:** publish the State range batch as the next single PR, run the full
+production matrix, and audit every completed log and failed step. Squash-merge
+only when all nine production jobs and documentation pass for the final head.
 Keep one active PR. Preserve passing heads while remaining gates run.
 
-## Active delivery: PR #232
+## Previous delivery: PR #232
 
-Worktree `/private/tmp/fwp-ownership-peer-baselines`, branch `generated-array-folds`,
-head `05d96484a77241c9782a420e76ea69094b965e11`. Production run `41153845461`,
-documentation run `41153845377`. Nine gates pass with complete log audits:
-docs, benchmarks, both ARM macOS jobs, Intel ownership, both Windows hosts and
-both Linux hosts. Linux AMD completed with 997 Rust / 12 Python cases.
-
-Intel regular job `124396181638` passes all tests (628 Rust / 22 Python cases)
-but artifact creation fails with DNS `ENOTFOUND`. Its single-job retry began at
-02:58 UTC as `124422281020`, attempt 2 of the same run/head. Earlier passing jobs
-are carried forward under new IDs; they were not rerun. The initial HTTP 403
-refusal ended when the original run completed. Do not waive the upload. The
-active worktree's handoff owns all job IDs/audits.
-Squash subject: `Eliminate temporary arrays in numeric folds`; supply an empty
-body, verify one line <=80 characters and the merged tree against the tested head.
+Verified and merged as `c71ac217c5ea09d8bf1868f799fc0d8a574d2e2a`, with exactly
+the tested `05d96484` tree and a one-line subject, empty body and no trailers.
+All nine production jobs (`41153845461`) and docs (`41153845377`) pass and have
+complete log audits. Intel retry `124422281020` passes 628 Rust / 22 Python cases
+and all uploads after the original DNS failure. The
+[delivery history](roadmap-history.md#generated-array-elimination-pr-232) owns
+the results. Local logs/audits are `/private/tmp/fwp-232-*`; the final combined
+audit is `/private/tmp/fwp-check-232-merge-ready.py`. Both duplicate post-merge
+runs were cancelled after tree/message verification.
 
 ## Prepared State range batch
 
-Worktree `/private/tmp/fwp-state-range-folds`, branch `state-range-folds`, based
-on #232's head. No second PR is open. Protocol `68c99a3d` preceded implementation.
+Worktree `/private/tmp/fwp-state-range-folds`, branch `state-range-folds`.
+Verified main is merged through `203c501f`; resolving duplicate squash-history
+conflicts preserves the complete prepared tree byte-for-byte. No PR is open yet.
+Protocol `68c99a3d` preceded implementation.
 Current compiler/test source: `ea0f300b2c553b519a1a9ae266b7b974c388bdd7`.
 Documentation and evidence distinguish focused success from final acceptance.
-Tracked documentation is restored for the complete roadmap/link audit.
+Tracked documentation is restored for the complete roadmap/link audit. Expected
+production results: Linux 1,003 Rust cases / 257 summaries; regular macOS 633/132;
+ownership macOS 367/127; Windows 828/206; benchmark 2/2. Expected Python cases:
+Linux 12, regular macOS and Windows 22, benchmark 14, docs 325 in 49 suites.
+Confirm actual results and diagnostics; these expectations do not waive a gate.
 
 The [contract and results](measurements/state-range-folds.md) describe the scope:
 replace a known single-use I64 range input to a State consumer with scalar bounds,
@@ -104,7 +105,7 @@ Dirty historical worktrees and original downloaded archives remain untouched.
 | 4 | Verified | Preserve decimal savings and the recorded loop gap |
 | 5 | In progress | Meet D2's remaining timing requirement |
 | 6 | In progress | Resolve N1 controls before N2 timing acceptance |
-| 7 | In progress | Deliver array/State reductions and finish B1/B2 comparisons |
+| 7 | In progress | Deliver State reductions and finish B1/B2 comparisons |
 | 8 | In progress | Complete numerical and integrated V1/V2 acceptance |
 
 Keep the limits and retained failures in [PLAN.md](../PLAN.md); these allocation

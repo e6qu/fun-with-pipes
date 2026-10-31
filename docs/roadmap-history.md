@@ -1316,3 +1316,52 @@ has the tested tree `86715a392ec4e67674b8a47861d5596199257a53`.
 Its subject, `Reduce numeric fold overhead and repair process timing`, is
 54 characters with no body or trailers. Duplicate post-merge runs `41140834224`
 and `41140834097` were cancelled after verifying the tree and commit message.
+
+## Generated-array elimination (PR #232)
+
+[PR #232](https://github.com/e6qu/fun-with-pipes/pull/232) combines generation
+and reduction when a numeric array has one known, pure consumer. Three scans of
+4,096 elements remove three allocations and 98,328 requested bytes. Worker
+instruction bytes grow 3.17% on ARM64 and 3.03% on AMD64, within the frozen 5%
+limit; largest reported frames remain 368/320 bytes. The
+[report](measurements/generated-array-folds.md) retains the proof, binaries,
+focused GCC checks and all four timing sessions. Three sessions fail the
+unchanged identical-copy limit; no overall speed acceptance is claimed.
+
+The complete first matrix found one obsolete allocation expectation in six jobs.
+The repair requires exactly zero allocations and cleans up seven old ownership
+probes: remove inert GC controls, preserve repeated success after failure, and
+verify input teardown with a deliberately omitted-release control. Windows cwd
+checks also observe storage after the second read fails. Artifact collection now
+uploads actual retained failure files without misleading empty-archive warnings.
+
+All nine production gates in run `41153845461` and documentation `41153845377`
+pass at `05d96484a77241c9782a420e76ea69094b965e11`. Every complete log and
+diagnostic was audited. Counts are passed Rust cases / summaries; Python cases
+are additional.
+
+| Gate | Audited job | Result |
+|---|---|---|
+| Linux ARM64 | `124396181579` | 997 / 257; 12 Python |
+| Linux AMD64 | `124396181773` | 997 / 257; 12 Python |
+| macOS ARM64 regular | `124396181633` | 628 / 132; 22 Python |
+| macOS AMD64 regular | `124422281020` | 628 / 132; 22 Python |
+| macOS ARM64 ownership | `124396181421` | 366 / 127 |
+| macOS AMD64 ownership | `124396181642` | 366 / 127 |
+| Windows ARM64 | `124396181682` | 822 / 206; 22 Python |
+| Windows AMD64 | `124396181690` | 822 / 206; 22 Python |
+| C/Rust benchmarks | `124396181702` | 2 / 2; 14 Python |
+| Documentation | `124396180907` | 47 Python suites / 320 cases |
+
+Intel regular's first job `124396181638` passed all tests but failed one artifact
+upload with DNS `ENOTFOUND`. Attempt 2 reran only that job, preserving the other
+eight passing executions; the retry passed tests, packaging and uploads. Windows
+logs include sixteen intentional panic controls, each with its parent test
+passing. Platform-specific Python skips do not establish POSIX support on Windows.
+
+Squash `c71ac217c5ea09d8bf1868f799fc0d8a574d2e2a`, merged 2026-10-31,
+has exactly the tested tree. Its subject is `Eliminate temporary arrays in numeric
+folds`, on one line with no body or trailers. Duplicate post-merge runs
+`41166703635` and `41166703619` were cancelled after tree/message verification.
+State range-list removal is the next allocation task; D2/N1 timing and the wider
+B1/B2/V1/V2 requirements remain open.
