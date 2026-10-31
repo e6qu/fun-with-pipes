@@ -12,6 +12,19 @@ The first head `a7f6246150d7f300b926afe3e101e46db8e5bd59` has known comparison f
 The batched repair changes tests, measurement checks, workflows and docs; compiler
 and runtime source remain the focused `ea0f300b` implementation.
 
+The second head `87050f65` passes documentation run `41173692184` (job
+`124456750588`: 49 Python suites / 328 cases, complete log audited) and the
+benchmark job `124456750772` (two Rust / 14 Python cases, complete log audited).
+Production run `41173692181` cannot pass: both Linux WebAssembly lint steps
+selected native GCC after the workflow made `CC=gcc` explicit. Their retained
+diagnostics (`13032072786`, `13032082747`) show GCC rejecting Clang's target
+flags; native lint passes. No other failed step was reported before replacement.
+The correction sets `CC_wasm32_wasip1=clang` and
+`CXX_wasm32_wasip1=clang++` at job scope, also covering nested browser builds.
+It changes no compiler/runtime code. Workflow lint passes (0.24s); the completed
+docs/benchmark log audits pass (0.13s each). Supersede this known-failed run with
+the corrected head's full matrix; cancelled checks never count as acceptance.
+
 Use squash subject `Avoid temporary range lists in State folds`, with an empty
 body. Verify the merged tree equals the passing head and the commit has exactly
 one line, at most 80 characters, no trailers or attribution.

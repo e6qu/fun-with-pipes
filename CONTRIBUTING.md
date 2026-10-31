@@ -40,6 +40,10 @@ You need:
   compiler, linker and runtime libraries aligned. Also install the
   `wasm32-wasip1` Rust target (`rustup target add wasm32-wasip1`), node 24,
   and binaryen's `wasm-opt` (`npm install -g binaryen`).
+  When building that Rust target alongside native GCC builds, set
+  `CC_wasm32_wasip1=clang` and `CXX_wasm32_wasip1=clang++` explicitly.
+  These select the compiler's target libraries; `FWP_WASM_CC` selects the
+  compiler for generated WebAssembly programs.
 - Optional, for the cross-compilation tests: an aarch64 C compiler and
   qemu (`gcc-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user`). Tests
   that need a missing tool skip themselves.
