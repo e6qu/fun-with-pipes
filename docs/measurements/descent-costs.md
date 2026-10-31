@@ -425,7 +425,7 @@ architecture. Full grouped platform checks subsequently pass in
    neither derivatives at discontinuities nor constant storage for arbitrary AD
    are promised.
 
-The [implementation plan](../../PLAN.md#5-differentiation) owns acceptance and
+The [implementation plan](../../PLAN.md#8-automatic-differentiation) owns acceptance and
 [the handoff](../development-state.md) owns the current action. D1's repeated baseline
 and fixed limits are complete. PR #226 verifies the allocation-only delivery;
 the eager-capture report owns the next D2 experiment and its delivery status.

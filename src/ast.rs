@@ -54,7 +54,11 @@ pub enum ExprKind {
     Make(Option<String>, Vec<(String, Expr)>),
     /// Field-wise update `update { a = f }`: applies `f` to field `a`.
     Update(Vec<(String, Expr)>),
-    /// Tacit case function.
+    /// A single-argument function with lexical pattern bindings.
+    Lambda(Pattern, Box<Expr>),
+    /// Strict, nonrecursive local binding.
+    Let(Pattern, Box<Expr>, Box<Expr>),
+    /// Tacit or named case function.
     Match(Vec<Arm>),
     Comptime(Box<Expr>),
     Quote(Box<Expr>),
@@ -147,6 +151,12 @@ pub struct Pattern {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum PatKind {
+    /// A lexical, monomorphic value binding.
+    Bind(String),
+    /// Discard an irrefutable fn/let input without forwarding it.
+    Ignore,
+    /// Irrefutable field selection; unlisted fields are ignored.
+    Record(Vec<(String, Pattern)>),
     /// A hole: matches anything and passes the value to the arm body.
     Hole,
     Int {
@@ -337,7 +347,7 @@ impl Expr {
                 g.walk(f);
                 args.iter().for_each(|a| a.walk(f));
             }
-            ExprKind::Pipe(a, b) => {
+            ExprKind::Pipe(a, b) | ExprKind::Let(_, a, b) => {
                 a.walk(f);
                 b.walk(f);
             }
@@ -350,7 +360,7 @@ impl Expr {
             | ExprKind::Make(_, fs)
             | ExprKind::Update(fs) => fs.iter().for_each(|(_, x)| x.walk(f)),
             ExprKind::Match(arms) => arms.iter().for_each(|a| a.body.walk(f)),
-            ExprKind::Comptime(x) | ExprKind::Quote(x) => x.walk(f),
+            ExprKind::Lambda(_, x) | ExprKind::Comptime(x) | ExprKind::Quote(x) => x.walk(f),
             _ => {}
         }
     }
@@ -365,6 +375,26 @@ impl Decl {
             Decl::Trait(t) => t.defaults.iter().map(|b| &b.body).collect(),
             Decl::Impl(i) => i.bindings.iter().map(|b| &b.body).collect(),
             _ => vec![],
+        }
+    }
+}
+
+impl Pattern {
+    /// Lexical bindings, in source order. Holes never introduce a name.
+    pub fn bindings(&self, out: &mut Vec<(NodeId, String)>) {
+        match &self.kind {
+            PatKind::Bind(n) => out.push((self.id, n.clone())),
+            PatKind::Tuple(ps) | PatKind::Ctor(_, Some(ps)) => {
+                for p in ps {
+                    p.bindings(out);
+                }
+            }
+            PatKind::Record(fs) => {
+                for (_, p) in fs {
+                    p.bindings(out);
+                }
+            }
+            _ => {}
         }
     }
 }

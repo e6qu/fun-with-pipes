@@ -74,4 +74,4 @@ The grouped `file-applications` suite also runs all nine existing tests, includi
 scaled directory/text work, ordinary I/O failures, aliases and missing-cleanup
 controls. These focused checks do not replace the complete production matrix,
 prove arbitrary cancellation safe, or complete all six application families in
-[V1–V2](../../PLAN.md#8-larger-programs).
+[V1–V2](../../PLAN.md#10-integrated-delivery).

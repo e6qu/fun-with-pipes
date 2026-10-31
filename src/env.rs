@@ -1429,6 +1429,15 @@ pub fn renumber(e: &Expr, next: &mut NodeId) -> Expr {
             | ExprKind::With(fs)
             | ExprKind::Make(_, fs)
             | ExprKind::Update(fs) => fs.iter_mut().for_each(|(_, a)| go(a, next)),
+            ExprKind::Let(p, v, b) => {
+                pat(p, next);
+                go(v, next);
+                go(b, next);
+            }
+            ExprKind::Lambda(p, b) => {
+                pat(p, next);
+                go(b, next);
+            }
             ExprKind::Match(arms) => arms.iter_mut().for_each(|a| {
                 pat(&mut a.pat, next);
                 go(&mut a.body, next)
@@ -1441,6 +1450,11 @@ pub fn renumber(e: &Expr, next: &mut NodeId) -> Expr {
         p.id = *next;
         *next += 1;
         match &mut p.kind {
+            PatKind::Record(fs) => {
+                for (_, p) in fs {
+                    pat(p, next);
+                }
+            }
             PatKind::Ctor(_, Some(args)) | PatKind::Tuple(args) => {
                 args.iter_mut().for_each(|a| pat(a, next))
             }

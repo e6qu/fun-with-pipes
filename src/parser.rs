@@ -84,6 +84,8 @@ fn can_start_atom(t: &Tok) -> bool {
             | Tok::Sym(Sym::LParen)
             | Tok::Sym(Sym::LBracket)
             | Tok::Sym(Sym::LBrace)
+            | Tok::Keyword(Kw::Fn)
+            | Tok::Keyword(Kw::Let)
             | Tok::Keyword(Kw::Match)
             | Tok::Keyword(Kw::Quote)
             | Tok::Keyword(Kw::With)
@@ -1018,8 +1020,17 @@ impl<'a> Parser<'a> {
                     _ => return self.unexpected("field name"),
                 };
                 self.bump();
-                self.expect_sym(Sym::Eq)?;
-                (name, self.expr()?)
+                if self.eat_sym(Sym::Eq) {
+                    (name, self.expr()?)
+                } else if !projection
+                    && name.as_bytes()[0].is_ascii_alphabetic()
+                    && (self.at_sym(Sym::Comma) || self.at_sym(close))
+                {
+                    let value = self.mk(sp, ExprKind::Var(name.clone()));
+                    (name, value)
+                } else {
+                    return self.unexpected("`=` after field name");
+                }
             };
             if fs.iter().any(|(n, _): &(String, Expr)| *n == name) {
                 return Err(Diagnostic::error(sp, format!("duplicate field `{}`", name)));
@@ -1163,6 +1174,25 @@ impl<'a> Parser<'a> {
                 })?;
                 ExprKind::TypeOf(ty)
             }
+            Tok::Keyword(Kw::Fn) => {
+                let mut pat = self.pattern()?;
+                Self::irrefutable(&mut pat)?;
+                Self::unique_bindings(&pat)?;
+                self.expect_sym(Sym::Arrow)?;
+                ExprKind::Lambda(pat, Box::new(self.expr()?))
+            }
+            Tok::Keyword(Kw::Let) => {
+                let mut pat = self.pattern()?;
+                Self::irrefutable(&mut pat)?;
+                Self::unique_bindings(&pat)?;
+                self.expect_sym(Sym::Eq)?;
+                let value = self.expr()?;
+                if !self.at_kw(Kw::In) || self.at_boundary_strict() {
+                    return self.unexpected("`in` after the let initializer");
+                }
+                self.bump();
+                ExprKind::Let(pat, Box::new(value), Box::new(self.expr()?))
+            }
             Tok::Keyword(Kw::Match) => ExprKind::Match(self.match_arms(span)?),
             other => {
                 return Err(Diagnostic::error(
@@ -1177,6 +1207,7 @@ impl<'a> Parser<'a> {
     fn match_arms(&mut self, span: Span) -> DResult<Vec<Arm>> {
         let arms = self.block(|p| {
             let pat = p.pattern()?;
+            Self::unique_bindings(&pat)?;
             p.expect_sym(Sym::Arrow)?;
             let body = p.expr()?;
             Ok(Arm { pat, body })
@@ -1189,6 +1220,54 @@ impl<'a> Parser<'a> {
 
     // ----- patterns ------------------------------------------------------
 
+    fn irrefutable(p: &mut Pattern) -> DResult<()> {
+        match &mut p.kind {
+            PatKind::Hole => p.kind = PatKind::Ignore,
+            PatKind::Bind(_) | PatKind::Ignore | PatKind::Unit => {}
+            PatKind::Tuple(items) => {
+                for p in items {
+                    Self::irrefutable(p)?;
+                }
+            }
+            PatKind::Record(fields) => {
+                for (_, p) in fields {
+                    Self::irrefutable(p)?;
+                }
+            }
+            _ => return Err(Diagnostic::error(
+                p.span,
+                "fn, let and record field patterns must always match; use match for alternatives",
+            )),
+        }
+        Ok(())
+    }
+
+    fn unique_bindings(p: &Pattern) -> DResult<()> {
+        fn visit(p: &Pattern, seen: &mut std::collections::HashSet<String>) -> DResult<()> {
+            match &p.kind {
+                PatKind::Bind(name) if !seen.insert(name.clone()) => {
+                    return Err(Diagnostic::error(
+                        p.span,
+                        format!("duplicate pattern binding `{name}`"),
+                    ))
+                }
+                PatKind::Tuple(ps) | PatKind::Ctor(_, Some(ps)) => {
+                    for p in ps {
+                        visit(p, seen)?;
+                    }
+                }
+                PatKind::Record(fs) => {
+                    for (_, p) in fs {
+                        visit(p, seen)?;
+                    }
+                }
+                _ => {}
+            }
+            Ok(())
+        }
+        visit(p, &mut std::collections::HashSet::new())
+    }
+
     fn pattern(&mut self) -> DResult<Pattern> {
         let span = self.span();
         if let Tok::Upper(name) = self.peek_tok().clone() {
@@ -1197,6 +1276,8 @@ impl<'a> Parser<'a> {
             while !self.at_sym(Sym::Arrow)
                 && !self.at_sym(Sym::Comma)
                 && !self.at_sym(Sym::RParen)
+                && !self.at_sym(Sym::Eq)
+                && !self.at_sym(Sym::RBrace)
                 && !self.at_boundary_strict()
                 && !self.at(&Tok::Eof)
             {
@@ -1217,7 +1298,30 @@ impl<'a> Parser<'a> {
         let span = self.span();
         let t = self.bump();
         let kind = match t.tok {
+            Tok::Ident(name) if !name.contains('.') && !name.contains(':') => PatKind::Bind(name),
             Tok::Underscore => PatKind::Hole,
+            Tok::Sym(Sym::LBrace) => {
+                let fields = self.with_layout(0, |p| {
+                    let mut fields: Vec<(String, Pattern)> = Vec::new();
+                    while !p.at_sym(Sym::RBrace) {
+                        let (name, span) = p.ident("record pattern field")?;
+                        if fields.iter().any(|(n, _)| n == &name) {
+                            return Err(Diagnostic::error(span, "duplicate record pattern field"));
+                        }
+                        let mut value = if p.eat_sym(Sym::Eq) {
+                            p.pattern()?
+                        } else {
+                            Pattern { id: p.new_id(), span, kind: PatKind::Bind(name.clone()) }
+                        };
+                        Self::irrefutable(&mut value)?;
+                        fields.push((name, value));
+                        if !p.eat_sym(Sym::Comma) { break; }
+                    }
+                    p.expect_sym(Sym::RBrace)?;
+                    Ok(fields)
+                })?;
+                PatKind::Record(fields)
+            }
             Tok::Int {
                 neg,
                 mag,

@@ -437,6 +437,17 @@ impl Fmt<'_> {
                 }
                 Some(parts.join(" | "))
             }
+            ExprKind::Lambda(p, b) => Some(format!(
+                "fn {} -> {}",
+                self.pattern(p, false),
+                self.flat(b)?
+            )),
+            ExprKind::Let(p, v, b) => Some(format!(
+                "let {} = {} in {}",
+                self.pattern(p, false),
+                self.flat(v)?,
+                self.flat(b)?
+            )),
             ExprKind::Comptime(x) => Some(format!("comptime {}", self.flat_atom(x)?)),
             _ => self.flat_app(e),
         }
@@ -511,7 +522,9 @@ impl Fmt<'_> {
             ExprKind::Var(v) => v.clone(),
             ExprKind::Ctor(c) => c.clone(),
             ExprKind::Selector(p) => format!(".{}", p.join(".")),
-            ExprKind::App(..)
+            ExprKind::Lambda(..)
+            | ExprKind::Let(..)
+            | ExprKind::App(..)
             | ExprKind::Operator(..)
             | ExprKind::Pipe(..)
             | ExprKind::Comptime(_) => {
@@ -558,6 +571,22 @@ impl Fmt<'_> {
 
     fn hug(&self, e: &Expr, indent: usize, col: usize) -> Option<String> {
         match &e.kind {
+            ExprKind::Lambda(p, b) => Some(format!(
+                "fn {} ->\n{}{}",
+                self.pattern(p, false),
+                pad(indent + INDENT),
+                self.expr(b, indent + INDENT, indent + INDENT)
+            )),
+            ExprKind::Let(p, v, b) => Some(format!(
+                "{}\n{}{}",
+                self.rhs(
+                    &format!("let {} =", self.pattern(p, false)),
+                    v,
+                    indent + INDENT
+                ),
+                pad(indent + INDENT),
+                self.rhs("in", b, indent + INDENT)
+            )),
             ExprKind::Match(arms) => Some(self.arms(arms, indent)),
             ExprKind::Comptime(x) => {
                 Some(format!("comptime {}", self.hug_atom(x, indent, col + 9)?))
@@ -622,6 +651,9 @@ impl Fmt<'_> {
 
     fn hug_atom(&self, e: &Expr, indent: usize, col: usize) -> Option<String> {
         match &e.kind {
+            ExprKind::Lambda(..) | ExprKind::Let(..) => self
+                .hug(e, indent + INDENT, col + 1)
+                .map(|s| format!("({s})")),
             ExprKind::Match(arms) => Some(format!("({})", self.arms(arms, indent))),
             ExprKind::App(_, args) => {
                 // nested hugs only for a closing bracket or `match`
@@ -699,7 +731,9 @@ impl Fmt<'_> {
 
     fn pattern(&self, p: &Pattern, atom: bool) -> String {
         match &p.kind {
-            PatKind::Hole => "_".into(),
+            PatKind::Bind(n) => n.clone(),
+            PatKind::Ignore | PatKind::Hole => "_".into(),
+            PatKind::Record(_) => crate::pretty::pattern(p),
             PatKind::Int { .. } | PatKind::Str(_) => match self.src.spelling(p.span) {
                 Some(s) => s.to_string(),
                 None => crate::pretty::pattern(p),

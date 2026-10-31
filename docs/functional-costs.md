@@ -2,7 +2,7 @@
 
 These checks answer two different questions: what runtime work a convenient
 source construct introduces, and whether a recursive computation can use a
-bounded call stack. They are the F1–F3 work in [PLAN.md](../PLAN.md#3-functional-calls-and-recursion).
+bounded call stack. They are the F1–F3 work in [PLAN.md](../PLAN.md#3-known-calls-and-captures).
 F1–F3 are verified in PR #222. [Delivery history](roadmap-history.md#functional-calls-and-recursion-pr-222)
 records all nine platform jobs, documentation and analysis budgets. The accepted
 scope is these fixtures and lifetime rules, not zero overhead for every function.

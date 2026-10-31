@@ -1,0 +1,31 @@
+energy : I64 -> I64
+energy = fn x -> let square = x * x in square + square
+energy-tacit = fork mul id id | mul 2
+Point = { x: I64, y: I64 }
+point-sum : Point -> I64
+point-sum = fn { x, y } -> x + y
+make-adder : I64 -> I64 -> I64
+make-adder = fn offset -> fn value -> offset + value
+from-option : Option[I64] -> I64
+from-option = match
+    Some value -> value + 1
+    None -> 0
+forward-hole : (I64, I64) -> I64
+forward-hole = match (left, _) -> add left
+append-later : String -> String -> String
+append-later = fn text -> fn suffix -> text | concat suffix
+macro keep-caller = quote (let x = 100 in unquote!(0))
+main =
+    let _ = 3 | energy | echo
+    in let _ = 3 | energy-tacit | echo
+    in let _ = Point { x = 3, y = 4 } | point-sum | echo
+    in let _ = 10 | make-adder 3 | echo
+    in let _ = Some 7 | from-option | echo
+    in let _ = None | from-option | echo
+    in let _ = (4, 5) | forward-hole | echo
+    in let _ = "!" | append-later "hello" | echo
+    in let x = 3
+    in let x = x + 1
+    in let _ = { x } | .x | echo
+    in let x = 42
+    in keep-caller!(x) | echo

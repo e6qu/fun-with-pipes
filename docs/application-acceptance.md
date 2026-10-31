@@ -126,7 +126,7 @@ open: the repaired-source zero-update recheck exceeds its unchanged 2% limit.
 [Capture costs](measurements/eager-captures.md) and
 [timing variation](measurements/timing-variation.md) retain all observations.
 Do not replace that failed control with an earlier passing run. See
-[D1–D3](../PLAN.md#5-differentiation) for the remaining acceptance work.
+[D1–D3](../PLAN.md#8-automatic-differentiation) for the remaining acceptance work.
 
 ## Testing unchanged string ownership
 

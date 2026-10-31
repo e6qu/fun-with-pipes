@@ -177,14 +177,14 @@ they must not freeze unrelated future compiler development.
 For memory/representation changes, keep actual C/binaries, source/toolchain IDs,
 complete measurements and independent review. Deliberately broken controls must
 fail their intended observer. Require the complete golden corpus, reuse and physical-release controls, and
-[ownership checks](PLAN.md#1-remove-tracing-gc) for failures and cancellation.
+[ownership checks](PLAN.md#maintained-guarantees-and-evidence) for failures and cancellation.
 Optional-tool skips do not establish platform support.
 
 The separate benchmark job runs
 `CC=gcc FWP_LTO=0 cargo test --release --test bench benchmarks -- --ignored --exact --nocapture`.
 It fails on different program results, but currently reports rather than gates
 on timing. [The benchmark guide](docs/benchmarks.md) defines what each comparison
-includes; [B1–B2](PLAN.md#7-reproducible-comparisons) define the remaining budgets.
+includes; [B1–B2](PLAN.md#9-measurements) define the remaining budgets.
 
 ## Rules the code follows
 

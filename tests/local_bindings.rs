@@ -1,0 +1,132 @@
+//! Lexical names must preserve eager evaluation, ownership and pipe semantics.
+use fwp::{driver::check_source, fmt, parser, pretty};
+use std::process::Command;
+
+#[test]
+fn syntax_round_trips_and_rejects_refutable_binders() {
+    for expr in [
+        "fn x -> let square = x * x in square + square",
+        "fn (x, y) -> x + y",
+        "fn { x, y = other } -> x + other",
+        "let x = 3 in let x = x + 1 in { x }",
+        "match { Some value -> value + 1, None -> 0 }",
+        "match { (left, _) -> add left }",
+        "3 | (fn x -> x + 1) | echo",
+        "(let x = 3 in x + 1) * 2",
+        "fn _ -> 7",
+        "quote (fn x -> let y = unquote!(0) in x + y)",
+        "fn extraordinarily-long-input-name -> let extraordinarily-long-result-name = extraordinarily-long-input-name * extraordinarily-long-input-name in extraordinarily-long-result-name + extraordinarily-long-result-name",
+    ] {
+        let source = format!("main = {expr}\n");
+        let ast = parser::parse_expr_text(expr, 0, &mut 0).unwrap();
+        let shown = format!("main = {}\n", pretty::expr(&ast));
+        assert!(fmt::same_program(&source, &shown), "{source} -> {shown}");
+        let formatted = fmt::format_source(&source).unwrap();
+        assert!(fmt::same_program(&source, &formatted), "{source} -> {formatted}");
+        assert_eq!(fmt::format_source(&formatted).unwrap(), formatted);
+    }
+    for source in [
+        "fn Some x -> x",
+        "let Some x = Some 1 in x",
+        "fn (x, x) -> x",
+        "let { x, x } = { x = 1 } in x",
+        "let x = 1",
+        "fn x x -> x",
+        "match { Some (x, x) -> x, None -> 0 }",
+    ] {
+        assert!(
+            parser::parse_expr_text(source, 0, &mut 0).is_err(),
+            "{source}"
+        );
+    }
+}
+
+#[test]
+fn local_scope_monomorphism_and_resource_rules_are_checked() {
+    for source in [
+        "main = (let x = 1 in x) + x\n",
+        "main = let x = x in x\n",
+        "main = let same = fn x -> x in (same 1, same True)\n",
+        "resource Token = builtin\nbad : Token -> (Token, Token)\nbad = fn x -> (x, x)\n",
+        "resource Token = builtin\nbad : Token -> I64 -> Token\nbad = fn x -> fn _ -> x\n",
+        "main = let x = 1 in comptime x\n",
+    ] {
+        let checked = check_source("locals.fwp", source, None);
+        // Compile-time dependence is rejected during lowering, below.
+        if !source.contains("comptime") {
+            assert!(checked.is_err(), "unexpected acceptance: {source}");
+        }
+    }
+}
+
+#[test]
+fn named_tacit_captures_and_macros_agree_across_backends() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let directory = std::env::temp_dir().join(format!("fwp-locals-{}", std::process::id()));
+    std::fs::create_dir_all(&directory).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    for (name, source, output, failure) in [
+        (
+            "values",
+            std::fs::read_to_string(root.join("tests/fixtures/local_bindings.fwp")).unwrap(),
+            "18\n18\n7\n13\n8\n0\n9\nhello!\n4\n42\n",
+            None,
+        ),
+        (
+            "order",
+            "main = let x = (\"first\" | echo) in let y = (\"second\" | echo) in ()\n".into(),
+            "first\nsecond\n",
+            None,
+        ),
+        (
+            "failure",
+            "main = let x = (9223372036854775807 + 1) in let y = (1 / 0) in x + y | echo\n".into(),
+            "",
+            Some("overflow"),
+        ),
+    ] {
+        let path = directory.join(format!("{name}.fwp"));
+        std::fs::write(&path, source).unwrap();
+        let reference = Command::new(compiler)
+            .args(["run", "--interp"])
+            .arg(&path)
+            .env("FWP_NO_OPT", "1")
+            .output()
+            .unwrap();
+        assert_eq!(
+            String::from_utf8_lossy(&reference.stdout),
+            output,
+            "{reference:?}"
+        );
+        if let Some(message) = failure {
+            assert!(!reference.status.success(), "{reference:?}");
+            assert!(
+                String::from_utf8_lossy(&reference.stderr).contains(message),
+                "{reference:?}"
+            );
+        } else {
+            assert!(reference.status.success(), "{reference:?}");
+            assert!(reference.stderr.is_empty(), "{reference:?}");
+        }
+        for opt in ["-O1", "-O2"] {
+            let executable = directory.join(format!("{name}{opt}{}", std::env::consts::EXE_SUFFIX));
+            let build = Command::new(compiler)
+                .args(["build", opt])
+                .arg(&path)
+                .arg("-o")
+                .arg(&executable)
+                .output()
+                .unwrap();
+            assert!(build.status.success(), "{build:?}");
+            let native = Command::new(&executable).output().unwrap();
+            assert_eq!(
+                native.status.code(),
+                reference.status.code(),
+                "{name} {opt}"
+            );
+            assert_eq!(native.stdout, reference.stdout, "{name} {opt}");
+            assert_eq!(native.stderr, reference.stderr, "{name} {opt}");
+        }
+    }
+    std::fs::remove_dir_all(directory).unwrap();
+}

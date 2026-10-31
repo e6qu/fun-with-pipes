@@ -1,6 +1,6 @@
 # Where the CPU benchmark time goes
 
-This experiment prepares the next [P2 change](../../PLAN.md#4-cpu-performance).
+This experiment prepares the next [P2 change](../../PLAN.md#7-numerical-loops).
 Both native Linux sessions completed and their artifacts were audited. The [previous scalar changes](proved-scalar-bounds.md)
 did not meet the fixed improvement limits and were removed. Before choosing
 another optimization, separate calculation from runtime setup and output.

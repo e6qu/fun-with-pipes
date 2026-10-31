@@ -30,6 +30,8 @@ pub struct Inst {
 #[derive(Default)]
 pub struct Typed {
     pub node_types: HashMap<NodeId, Type>,
+    /// Variable use -> lexical pattern binder; never a global instantiation.
+    pub local_uses: HashMap<NodeId, NodeId>,
     pub insts: HashMap<NodeId, Inst>,
     pub pipe_modes: HashMap<NodeId, PipeMode>,
     /// Canonical constructor of each constructor pattern.
@@ -65,6 +67,7 @@ pub struct Infer<'a> {
     /// Monomorphic types of the unannotated bindings in the current group.
     pub(crate) group: HashMap<String, Type>,
     pub(crate) current: String,
+    locals: Vec<(String, NodeId, Type)>,
     deferred: Vec<Deferred>,
     field_reqs: Vec<FieldReq>,
     /// Predicates required by the binding being checked.
@@ -104,6 +107,7 @@ pub fn check_program(env: &mut Env, out: &mut Typed) {
             },
             group: HashMap::new(),
             current: String::new(),
+            locals: Vec::new(),
             deferred: Vec::new(),
             field_reqs: Vec::new(),
             wanted: Vec::new(),
@@ -159,6 +163,7 @@ fn check_superclasses(env: &mut Env, out: &mut Typed) {
             },
             group: HashMap::new(),
             current: String::new(),
+            locals: Vec::new(),
             deferred: Vec::new(),
             field_reqs: Vec::new(),
             wanted: Vec::new(),
@@ -216,7 +221,14 @@ fn free_names(e: &Expr, out: &mut Vec<(String, Span)>) {
         | ExprKind::With(fs)
         | ExprKind::Make(_, fs)
         | ExprKind::Update(fs) => fs.iter().for_each(|(_, a)| free_names(a, out)),
-        ExprKind::Match(arms) => arms.iter().for_each(|a| free_names(&a.body, out)),
+        ExprKind::Let(pat, value, body) => {
+            free_names(value, out);
+            scoped_free_names(pat, body, out);
+        }
+        ExprKind::Lambda(pat, body) => scoped_free_names(pat, body, out),
+        ExprKind::Match(arms) => arms
+            .iter()
+            .for_each(|a| scoped_free_names(&a.pat, &a.body, out)),
         ExprKind::Comptime(x) => free_names(x, out),
         ExprKind::Quote(x) => {
             let mut us = Vec::new();
@@ -225,6 +237,18 @@ fn free_names(e: &Expr, out: &mut Vec<(String, Span)>) {
         }
         _ => {}
     }
+}
+
+fn scoped_free_names(pat: &Pattern, body: &Expr, out: &mut Vec<(String, Span)>) {
+    let mut bindings = Vec::new();
+    pat.bindings(&mut bindings);
+    let mut names = Vec::new();
+    free_names(body, &mut names);
+    out.extend(
+        names
+            .into_iter()
+            .filter(|(n, _)| !bindings.iter().any(|(_, b)| b == n)),
+    );
 }
 
 /// Strongly connected components of bindings in dependency order (Tarjan).
@@ -672,6 +696,7 @@ impl<'a> Infer<'a> {
     fn check_group(&mut self, group: &[usize]) {
         self.level = 1;
         self.group.clear();
+        self.locals.clear();
         self.deferred.clear();
         self.field_reqs.clear();
         self.int_lits.clear();
@@ -1399,6 +1424,10 @@ impl<'a> Infer<'a> {
             )),
             ExprKind::Duration(_) => Ok(Type::con("std::Duration")),
             ExprKind::Var(name) => {
+                if let Some((_, binder, t)) = self.locals.iter().rev().find(|(n, _, _)| n == name) {
+                    self.out.local_uses.insert(e.id, *binder);
+                    return Ok(t.clone());
+                }
                 let t = self.lookup_var(e, name)?;
                 let user = self.scope.module != "std";
                 match self.env.resolve_value(&self.scope, name).as_deref() {
@@ -1577,6 +1606,28 @@ impl<'a> Infer<'a> {
                         .collect(),
                 });
                 Ok(Type::fun(tin, tout, eff))
+            }
+            ExprKind::Let(pat, value, body) => {
+                let value_type = self.infer(value, ctx)?;
+                let saved = self.locals.len();
+                self.check_pattern(pat, &value_type, &mut Vec::new())?;
+                let result = self.infer(body, ctx);
+                self.require_local_dup(pat, body);
+                self.locals.truncate(saved);
+                result
+            }
+            ExprKind::Lambda(pat, body) => {
+                let start = self.env.table.vars.len();
+                let input = self.fresh();
+                let effect = self.fresh_eff();
+                let saved = self.locals.len();
+                self.check_pattern(pat, &input, &mut Vec::new())?;
+                let result = self.infer(body, &effect);
+                self.require_local_dup(pat, body);
+                self.locals.truncate(saved);
+                let result = self.reabstract(start, Type::fun(input, result?, effect));
+                self.record_captures(e, &result);
+                Ok(result)
             }
             ExprKind::Match(arms) => self.infer_match(e, arms),
             ExprKind::Comptime(x) => {
@@ -1780,6 +1831,71 @@ impl<'a> Infer<'a> {
         }
     }
 
+    fn require_local_dup(&mut self, pat: &Pattern, body: &Expr) {
+        fn uses(e: &Expr, id: NodeId, typed: &Typed) -> usize {
+            match &e.kind {
+                ExprKind::Var(_) => usize::from(typed.local_uses.get(&e.id) == Some(&id)),
+                ExprKind::Match(arms) => arms
+                    .iter()
+                    .map(|a| uses(&a.body, id, typed))
+                    .max()
+                    .unwrap_or(0),
+                ExprKind::Lambda(_, b) | ExprKind::Comptime(b) => uses(b, id, typed),
+                ExprKind::Let(_, a, b) | ExprKind::Pipe(a, b) => {
+                    uses(a, id, typed).saturating_add(uses(b, id, typed))
+                }
+                ExprKind::App(f, xs) | ExprKind::Operator(_, f, xs) => {
+                    xs.iter().fold(uses(f, id, typed), |n, x| {
+                        n.saturating_add(uses(x, id, typed))
+                    })
+                }
+                ExprKind::Tuple(xs) | ExprKind::List(xs) | ExprKind::MacroCall(_, xs) => xs
+                    .iter()
+                    .fold(0usize, |n, x| n.saturating_add(uses(x, id, typed))),
+                ExprKind::Record(fs)
+                | ExprKind::NominalRecord(_, fs)
+                | ExprKind::With(fs)
+                | ExprKind::Make(_, fs)
+                | ExprKind::Update(fs) => fs
+                    .iter()
+                    .fold(0usize, |n, (_, x)| n.saturating_add(uses(x, id, typed))),
+                ExprKind::Quote(_) => {
+                    let mut n = 0usize;
+                    e.walk(&mut |x| n += usize::from(typed.local_uses.get(&x.id) == Some(&id)));
+                    n
+                }
+                _ => 0,
+            }
+        }
+        let mut bindings = Vec::new();
+        pat.bindings(&mut bindings);
+        for (id, _) in bindings {
+            if uses(body, id, self.out) > 1 {
+                self.wanted.push((
+                    Pred {
+                        trait_name: "std::Dup".into(),
+                        args: vec![self.out.node_types[&id].clone()],
+                    },
+                    pat.span,
+                ));
+            }
+        }
+    }
+
+    fn record_captures(&mut self, e: &Expr, result: &Type) {
+        let mut used = HashSet::new();
+        e.walk(&mut |x| {
+            if let Some(id) = self.out.local_uses.get(&x.id) {
+                used.insert(*id);
+            }
+        });
+        for (_, id, ty) in &self.locals {
+            if used.contains(id) {
+                self.captures.push((e.span, ty.clone(), result.clone()));
+            }
+        }
+    }
+
     fn infer_match(&mut self, e: &Expr, arms: &[Arm]) -> IResult<Type> {
         let start = self.env.table.vars.len();
         let scrut = self.fresh();
@@ -1787,10 +1903,14 @@ impl<'a> Infer<'a> {
         let eff = self.fresh_eff();
         let mut rows = Vec::new();
         for arm in arms {
+            let saved = self.locals.len();
             let mut holes = Vec::new();
             let p = self.check_pattern(&arm.pat, &scrut, &mut holes)?;
             rows.push((p, arm.pat.span));
-            let tb = self.infer(&arm.body, &eff)?;
+            let tb = self.infer(&arm.body, &eff);
+            self.require_local_dup(&arm.pat, &arm.body);
+            self.locals.truncate(saved);
+            let tb = tb?;
             let mut want = result.clone();
             for h in holes.iter().rev() {
                 want = Type::fun(h.clone(), want, eff.clone());
@@ -1822,7 +1942,9 @@ impl<'a> Infer<'a> {
                 format!("match is not exhaustive: `{}` is not covered", shown),
             ));
         }
-        Ok(self.reabstract(start, Type::fun(scrut, result, eff)))
+        let result = self.reabstract(start, Type::fun(scrut, result, eff));
+        self.record_captures(e, &result);
+        Ok(result)
     }
 
     /// A function runs its body once per call, so the sizes its body's
@@ -1855,7 +1977,28 @@ impl<'a> Infer<'a> {
         expected: &Type,
         holes: &mut Vec<Type>,
     ) -> IResult<exhaust::Pat> {
+        self.out.node_types.insert(p.id, expected.clone());
         match &p.kind {
+            PatKind::Bind(name) => {
+                self.locals.push((name.clone(), p.id, expected.clone()));
+                Ok(exhaust::Pat::Wild)
+            }
+            PatKind::Ignore => Ok(exhaust::Pat::Wild),
+            PatKind::Record(fields) => {
+                let mut required = Vec::new();
+                for (name, pattern) in fields {
+                    let ty = self.fresh();
+                    self.check_pattern(pattern, &ty, holes)?;
+                    required.push((name.clone(), ty.clone(), ty));
+                }
+                self.field_reqs.push(FieldReq {
+                    span: p.span,
+                    input: expected.clone(),
+                    output: expected.clone(),
+                    fields: required,
+                });
+                Ok(exhaust::Pat::Wild)
+            }
             PatKind::Hole => {
                 holes.push(expected.clone());
                 Ok(exhaust::Pat::Wild)
@@ -1969,6 +2112,11 @@ pub fn collect_unquotes<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
         | ExprKind::With(fs)
         | ExprKind::Make(_, fs)
         | ExprKind::Update(fs) => fs.iter().for_each(|(_, a)| collect_unquotes(a, out)),
+        ExprKind::Let(_, a, b) => {
+            collect_unquotes(a, out);
+            collect_unquotes(b, out);
+        }
+        ExprKind::Lambda(_, b) => collect_unquotes(b, out),
         ExprKind::Match(arms) => arms.iter().for_each(|a| collect_unquotes(&a.body, out)),
         ExprKind::Comptime(x) | ExprKind::Quote(x) => collect_unquotes(x, out),
         _ => {}

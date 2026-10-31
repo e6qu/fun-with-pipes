@@ -1,7 +1,8 @@
 //! Monomorphic typed IR shared by the interpreter and the C backend.
 //!
 //! Every function value at runtime is a partial application of a known
-//! function: fwp code has no local binders, so lambda lifting is trivial.
+//! function. Lexical functions are lifted with explicit leading capture
+//! parameters; local bindings retain their original evaluation points.
 
 use std::collections::HashSet;
 use std::fmt;

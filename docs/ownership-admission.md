@@ -1,6 +1,6 @@
 # Which programs can run without tracing?
 
-This is the execution and rejection checklist for [plan G1](../PLAN.md#1-remove-tracing-gc).
+This is the execution and rejection checklist for [plan G1](../PLAN.md#maintained-guarantees-and-evidence).
 **Admission** means the compiler accepts an ownership relationship. It is separate
 from executing the program, checking its output and proving cleanup. The
 [ownership guide](ownership.md) explains owners, borrows and cycles.

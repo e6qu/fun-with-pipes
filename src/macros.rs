@@ -32,6 +32,8 @@ fn has_call(e: &Expr) -> bool {
         | ExprKind::With(fs)
         | ExprKind::Make(_, fs)
         | ExprKind::Update(fs) => fs.iter().any(|(_, a)| has_call(a)),
+        ExprKind::Let(_, a, b) => has_call(a) || has_call(b),
+        ExprKind::Lambda(_, b) => has_call(b),
         ExprKind::Match(arms) => arms.iter().any(|a| has_call(&a.body)),
         ExprKind::Comptime(x) => has_call(x),
         // inside a quote only unquoted parts are code
@@ -85,10 +87,26 @@ fn names_in(e: &Expr, out: &mut HashSet<String>) {
         | ExprKind::With(fs)
         | ExprKind::Make(_, fs)
         | ExprKind::Update(fs) => fs.iter().for_each(|(_, a)| names_in(a, out)),
-        ExprKind::Match(arms) => arms.iter().for_each(|a| names_in(&a.body, out)),
+        ExprKind::Let(p, a, b) => {
+            names_in(a, out);
+            scoped_names(p, b, out);
+        }
+        ExprKind::Lambda(p, b) => scoped_names(p, b, out),
+        ExprKind::Match(arms) => arms.iter().for_each(|a| scoped_names(&a.pat, &a.body, out)),
         ExprKind::Comptime(x) | ExprKind::Quote(x) => names_in(x, out),
         _ => {}
     }
+}
+
+fn scoped_names(p: &Pattern, body: &Expr, out: &mut HashSet<String>) {
+    let mut bindings = Vec::new();
+    p.bindings(&mut bindings);
+    let mut names = HashSet::new();
+    names_in(body, &mut names);
+    for (_, name) in bindings {
+        names.remove(&name);
+    }
+    out.extend(names);
 }
 
 /// Names a declaration defines (as written).
@@ -335,6 +353,11 @@ impl Expander<'_> {
             | ExprKind::With(fs)
             | ExprKind::Make(_, fs)
             | ExprKind::Update(fs) => fs.iter_mut().for_each(|(_, a)| self.expr(a)),
+            ExprKind::Let(_, a, b) => {
+                self.expr(a);
+                self.expr(b);
+            }
+            ExprKind::Lambda(_, b) => self.expr(b),
             ExprKind::Match(arms) => arms.iter_mut().for_each(|a| self.expr(&mut a.body)),
             ExprKind::Comptime(x) => self.expr(x),
             ExprKind::Quote(x) => self.in_quote(x),
@@ -366,6 +389,11 @@ impl Expander<'_> {
             | ExprKind::With(fs)
             | ExprKind::Make(_, fs)
             | ExprKind::Update(fs) => fs.iter_mut().for_each(|(_, a)| self.in_quote(a)),
+            ExprKind::Let(_, a, b) => {
+                self.in_quote(a);
+                self.in_quote(b);
+            }
+            ExprKind::Lambda(_, b) => self.in_quote(b),
             ExprKind::Match(arms) => arms.iter_mut().for_each(|a| self.in_quote(&mut a.body)),
             ExprKind::Comptime(x) | ExprKind::Quote(x) => self.in_quote(x),
             _ => {}

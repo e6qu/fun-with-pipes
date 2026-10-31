@@ -250,7 +250,9 @@ pub fn duration(ns: i128) -> String {
 
 pub fn expr(e: &Expr) -> String {
     match &e.kind {
-        ExprKind::Pipe(a, b) => format!("{} | {}", expr(a), app_level(b)),
+        ExprKind::Lambda(p, b) => format!("fn {} -> {}", pattern(p), expr(b)),
+        ExprKind::Let(p, v, b) => format!("let {} = {} in {}", pattern(p), expr(v), expr(b)),
+        ExprKind::Pipe(a, b) => format!("{} | {}", app_level(a), app_level(b)),
         ExprKind::Comptime(x) => format!("comptime ({})", expr(x)),
         _ => app_level(e),
     }
@@ -290,7 +292,9 @@ pub(crate) fn infix_needs_parens(e: &Expr, op: Operator, right: bool) -> bool {
             inner.precedence() < op.precedence()
                 || ((right || op.comparison()) && inner.precedence() == op.precedence())
         }
-        ExprKind::Pipe(..) | ExprKind::Comptime(_) => true,
+        ExprKind::Lambda(..) | ExprKind::Let(..) | ExprKind::Pipe(..) | ExprKind::Comptime(_) => {
+            true
+        }
         _ => false,
     }
 }
@@ -325,7 +329,11 @@ pub fn atom(e: &Expr) -> String {
         ExprKind::Var(v) => v.clone(),
         ExprKind::Ctor(c) => c.clone(),
         ExprKind::Selector(p) => format!(".{}", p.join(".")),
-        ExprKind::App(..) | ExprKind::Operator(..) | ExprKind::Pipe(..) => {
+        ExprKind::Lambda(..)
+        | ExprKind::Let(..)
+        | ExprKind::App(..)
+        | ExprKind::Operator(..)
+        | ExprKind::Pipe(..) => {
             format!("({})", expr(e))
         }
         ExprKind::Unit => "()".into(),
@@ -364,7 +372,21 @@ pub fn atom(e: &Expr) -> String {
 
 pub fn pattern(p: &Pattern) -> String {
     match &p.kind {
-        PatKind::Hole => "_".into(),
+        PatKind::Bind(n) => n.clone(),
+        PatKind::Ignore | PatKind::Hole => "_".into(),
+        PatKind::Record(fs) => format!(
+            "{{ {} }}",
+            fs.iter()
+                .map(|(n, p)| {
+                    if matches!(&p.kind, PatKind::Bind(b) if b == n) {
+                        n.clone()
+                    } else {
+                        format!("{} = {}", n, pattern(p))
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
         PatKind::Int { neg, mag } => int_lit(*neg, *mag),
         PatKind::Str(s) => crate::value::escape_str(s),
         PatKind::Ctor(n, None) => n.clone(),
