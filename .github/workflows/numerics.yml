@@ -803,8 +803,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           brew install openssl@3
-          echo "OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
-          echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> "$GITHUB_ENV"
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
       - run: cargo fetch --locked
       - name: Compile the State and call checks with local-type assertions
         id: compiler
@@ -835,6 +834,16 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked --offline --no-fail-fast --test compiler_call_liveness --test state_sequence_ownership --test typed_state_ownership --test fold_unwind_ownership --test loop_unwind_ownership -- --nocapture 2>&1 | tee state-range-evidence/tests.log
+      - name: Native State range code and stack budgets
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' && runner.os == 'Linux' }}
+        run: |
+          python3 -W error::ResourceWarning scripts/test-state-range-size.py
+          case "$(uname -m)" in
+            x86_64) c_arch=x86-64 ;;
+            aarch64) c_arch=armv8-a ;;
+            *) echo 'Unsupported native architecture' >&2; exit 1 ;;
+          esac
+          python3 scripts/check-state-range-size.py --compiler target/debug/fwp --cc gcc --c-arch "$c_arch" --nm nm --size size --output state-range-evidence/representation
       - name: Retain all completed and failed observations
         if: ${{ always() && hashFiles('state-range-evidence/**') != '' }}
         uses: actions/upload-artifact@v7

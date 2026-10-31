@@ -5640,9 +5640,12 @@ impl<'g, 'p> FnGen<'g, 'p> {
             if let Some(Some(width)) = loop_shape(&self.g.prog.funcs[g]) {
                 let flat = record_fields(&self.g.prog.shapes, &self.g.prog.funcs[g].locals[0])
                     .is_some_and(|fields| {
-                        fields
-                            .iter()
-                            .all(|(_, ty)| record_fields(&self.g.prog.shapes, ty).is_none())
+                        fields.iter().all(|(_, ty)| {
+                            // Unit occupies one ordinary value slot, not
+                            // a nested record that needs unpacking.
+                            record_fields(&self.g.prog.shapes, ty)
+                                .is_none_or(|fields| fields.is_empty())
+                        })
                     });
                 if flat && self.unboxed(&args[1]) == Some(width) {
                     if !self.g.loops.iter().any(|(step, _)| *step == g) {
@@ -10803,10 +10806,9 @@ static const fwp_exec_spec exec_spec{i} = {{
     for (step, _) in &g.loops {
         let _ = writeln!(out, "static V fwp_loop{}(V s);", step);
         if let Some(fields) = record_fields(&prog.shapes, &prog.funcs[*step].locals[0]) {
-            if fields
-                .iter()
-                .all(|(_, ty)| record_fields(&prog.shapes, ty).is_none())
-            {
+            if fields.iter().all(|(_, ty)| {
+                record_fields(&prog.shapes, ty).is_none_or(|fields| fields.is_empty())
+            }) {
                 let parameters = (0..fields.len())
                     .map(|i| format!("V a{i}"))
                     .collect::<Vec<_>>()

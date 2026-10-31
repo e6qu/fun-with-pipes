@@ -62,3 +62,35 @@ needs its own declared inputs, peers, timing boundary and controls. D2/N1 and
 previous failed identical-copy controls remain open; allocation savings do not
 replace their requirements. Full builds and measurements run on GitHub after
 the implementation batch; focused local work stays resource-guarded.
+
+## How the code and stack check works
+
+`scripts/check-state-range-size.py` emits the example above with fusion explicitly
+off and on, using the same compiler. Native GCC builds use O2, no LTO, checked
+fwp arithmetic, disabled floating-point contraction/fast math, and explicit
+`x86-64` or `armv8-a` targets. A volatile function pointer keeps the input dynamic.
+The ordinary runtime startup and cleanup remain in both executables. Raw and
+optimized interpretation and native execution must agree for -3, 0, 1, 32, 128
+and 4096; the native program checks released storage before runtime teardown.
+
+The 5% limit applies to retained generated entries, workers, callbacks and their
+numbered loop/ownership/argument helpers in the linked binary, including GCC
+clones and runtime work inlined into them. Shared runtime functions are excluded;
+the report also gives the entire `.text` section, so that exclusion is visible.
+Identical symbol aliases count once. The stack report lists every compiler frame
+and compares the largest component against the unchanged +64-byte limit. This
+is not a whole-call-chain bound. Sources, commands, binaries, symbol sizes,
+section sizes, stack reports and outputs are retained; no elapsed time is sampled.
+
+## First focused run and repair
+
+Run `41157639553` at `855f53ce` passed all new semantic, failure, cancellation and
+rejected-shape checks on both GCC hosts and macOS Clang. The exact-cost test
+found one extra 32-byte allocation: the initial loop tuple was boxed because
+the generator treated its unit field as a nested record. Its existing direct
+field entry supports unit as an ordinary value slot. The repair corrects that
+eligibility check and its declaration; the two-allocation budget is unchanged.
+macOS also failed two TLS-using targets because this focused workflow omitted
+`FWP_OPENSSL_DIR`; the repair supplies the documented setting. Both Linux runs
+passed all 225 compiler unit tests; macOS passed 224 and failed the TLS case.
+These repairs and the code/stack budgets still require runner verification.
