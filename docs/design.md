@@ -200,6 +200,18 @@ The caller keeps the borrowed owner alive and releases it on failure.
 See [the ownership contracts](ownership.md#ownership-boundaries)
 for examples, restrictions and tests.
 
+An exactly saturated borrowed callback with only plain parameters can enter its
+typed consuming function without retaining the closure. Saturation means that
+the saved and newly supplied arguments exactly fill that entry. The generator's
+argument-destructor metadata covers the complete arrow spine: a null destructor
+proves no parameter owns storage. Copy scalar captures before entry, keep the
+caller's closure intact, and return the entry's owned result. This rule applies
+only to the initial borrowed callable. A function returned during overapplication
+is owned and must still be consumed. Owned captures, partial calls and extra
+arguments keep their existing ownership handling. The
+[callable comparison](measurements/returned-callables.md) records the pending
+native acceptance and fixed limits; implementation alone does not verify them.
+
 ### Proving a local array has one owner
 
 `src/rc/unique.rs` checks the ownership-lowered body after a candidate allocation.

@@ -198,3 +198,10 @@ Against this frozen baseline, at O1/O2 on **all three hosts**:
 
 These are count/code/stack limits, not a speed budget. Retain rejected results.
 This candidate cannot close D2/N1 timing acceptance or establish C/Rust parity.
+
+The candidate is implemented and awaiting the consolidated three-host checks.
+`scripts/check-returned-callable-budget.py` independently recomputes the retained
+commands and results before comparing every limit with the frozen baseline.
+It writes all decisions before rejecting a failed budget. Its rejection tests
+cover each limit, missing frames and missing phases. No accepted speed result is
+inferred from removing count operations.

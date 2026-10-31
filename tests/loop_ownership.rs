@@ -352,7 +352,7 @@ static void scalar_stop_args(V *a, uint32_t start, uint32_t n) {
     (void)a; (void)start; (void)n;
 }
 static void scalar_stop_caps(V f, int duplicate) { (void)f; (void)duplicate; }
-static const fwp_owned_fninfo scalar_owned = {scalar_stop_entry, scalar_stop_caps, scalar_stop_args};
+static const fwp_owned_fninfo scalar_owned = {scalar_stop_entry, scalar_stop_caps, scalar_stop_args, NULL};
 static const fwp_fninfo scalar_fns[] = {{1, scalar_stop_entry, "numeric stop", &scalar_owned}};
 int main(void) {
 #ifdef _WIN32

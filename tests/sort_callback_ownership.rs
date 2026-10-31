@@ -238,7 +238,7 @@ static void scalar_key_args(V *args, uint32_t start, uint32_t n) {
     (void)args; (void)start; (void)n;
 }
 static void scalar_key_caps(V f, int duplicate) { (void)f; (void)duplicate; }
-static const fwp_owned_fninfo scalar_owned = {scalar_key_entry, scalar_key_caps, scalar_key_args};
+static const fwp_owned_fninfo scalar_owned = {scalar_key_entry, scalar_key_caps, scalar_key_args, NULL};
 static const fwp_fninfo scalar_fns[] = {{1, scalar_key_entry, "scalar key", &scalar_owned}};
 int main(void) {
 #ifdef _WIN32

@@ -9,7 +9,7 @@ This worktree is `/private/tmp/fwp-returned-callables`, branch
 `returned-callable-peers`, protocol anchor `8c77d111`, based on State
 source `903b1819`. No PR is open for it. Tracked measurement files are restored
 for the docs audit; 322 MB was checked against the 64-GiB free-space floor first.
-The peer preparation is published through `df8f9ce8`; its commit message is
+The baseline and candidate budgets are published through `4f2defb2`; its commit message is
 verified as one line with no body or trailers.
 
 ## Work prepared
@@ -95,14 +95,42 @@ speed claim or full production acceptance of this preparation.
 
 ## Work remaining in this batch
 
-Publish the baseline and candidate limits, then remove unnecessary retain/release
-work for exactly saturated borrowed calls with no owned parameters. The existing
-generator's null argument destructor proves that property across the complete
-arrow spine. Audit and correct handwritten test metadata before relying on it:
-`borrowed_callbacks`, `owned_wide_counts`, `list_copy_probe` and other fixtures
-omit the fourth field. Preserve owned results, aliases, partial/extra arguments,
-inside-callback failure/cancellation and pointer-shaped scalar bits. No compiler
-or runtime implementation of this candidate has been made yet.
+The unpublished candidate now enters the existing owned function directly for
+initial, exactly saturated borrowed calls whose complete argument metadata has
+no owned parameters. Returned callables during overapplication remain consumed.
+Handwritten String/wide-value callback metadata is corrected; the copied-list
+key callback now consumes and protects its String argument like generated entries.
+No new metadata field, forwarding entry or language syntax was added.
+
+The new `borrowed_callbacks` regression covers pointer-shaped scalar bits, aliases,
+owned results, under/overapplication, typed failures, inside-callback failure and
+cancellation, followed by reuse. Its intentionally missing returned-owner guard
+must leave arithmetic intact but fail storage validation (229). Guarded Clang
+O1/O2 C preflight passes; all four binaries were checked again in 0.13s after
+tool output was lost. The temporary scripts use the retained generated C with
+the exact current runtime function and real allocation-ledger instrumentation;
+they do not replace production Rust-test or GCC verification.
+
+`/private/tmp/fwp-check-returned-candidate.py` passes ordinary/profiled O1/O2
+outputs, cleanup, retries and failure controls (2.16s). Invocation has zero
+retains/releases and one helper entry. `/private/tmp/fwp-check-plain-functional.py`
+passes all known cost rows at 32/128 and O1/O2 (1.72s): both State cases now have
+one helper entry, with unchanged allocations. Maintained expectations are updated.
+The budget checker has three passing tests (0.37s), including 18 damaged limits
+across the three frozen hosts. Current full Rust/native tests still need runners.
+
+The metadata/caller audit is complete. Generated metadata checks every parameter
+in the complete arrow spine; remaining entry-only grpc fixtures are deliberately
+unused call records, and the State-slot callback takes only unit. Existing
+non-null no-op destructors conservatively keep their old path. Eleven affected
+test targets are included in the focused runner batch, with `--no-fail-fast`.
+Archive verification passes again (3.08s), workflow lint passes (5.61s), and the
+roadmap audit passes (3.02s). Rust formatting uses the project's 2021 edition
+(0.14s); an initial check mistakenly selected 2024 and only reported style diffs.
+
+Next for this branch: publish the coherent candidate, then dispatch
+`returned-callables` with its affected ownership targets and fixed budget
+comparison. The active #233 head is untouched.
 
 Use the declared 105% worker/text limits, +64-byte frame limits and zero effective
 invocation counts on all three O1/O2 hosts. Keep constructor/destructor storage

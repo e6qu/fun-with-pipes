@@ -1074,6 +1074,18 @@ static V fwp_apply_borrowed_span(V f, uint32_t n, V *args, uint32_t owned_start,
             for (uint32_t i = 0; i < n; i++) fwp_rc_share(args[i]);
             return fwp_apply(f, n, args);
         }
+        /* The initial callable is borrowed. With plain parameters and exactly
+         * enough arguments, its captures need no duplicates and no transfer.
+         * Copy them before entry; the callback may fail or suspend, and its
+         * caller keeps the original owner. An owned returned callable later in
+         * an overapplication still goes through the consuming path below. */
+        if (first && !fi->owned->drop_arguments && n == fi->arity - c->n) {
+            if (!c->n) return fi->owned->entry(args);
+            V all[fi->arity ? fi->arity : 1];
+            for (uint32_t i = 0; i < c->n; i++) all[i] = c->a[i];
+            for (uint32_t i = 0; i < n; i++) all[c->n + i] = args[i];
+            return fi->owned->entry(all);
+        }
 #if FWP_UNWIND
         /* Keep the duplicated function and consumed span owned while typed
          * borrowed arguments are prepared; application takes them at entry. */

@@ -763,16 +763,19 @@ jobs:
       matrix:
         include:
           - runner: ubuntu-latest
+            host: linux-amd
             cc: gcc
             c_arch: x86-64
             rust_cpu: x86-64
             rust_target: x86_64-unknown-linux-gnu
           - runner: ubuntu-24.04-arm
+            host: linux-arm
             cc: gcc
             c_arch: armv8-a
             rust_cpu: generic
             rust_target: aarch64-unknown-linux-gnu
           - runner: macos-15
+            host: mac-arm
             cc: clang
             c_arch: armv8-a
             rust_cpu: generic
@@ -788,6 +791,8 @@ jobs:
       CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - uses: actions/cache@v6
         with:
@@ -809,9 +814,24 @@ jobs:
       - name: Source and evidence controls
         run: |
           target/debug/fwp fmt --check tests/fixtures/returned_callable_peer.fwp
+          target/debug/fwp fmt --check tests/fixtures/plain_borrowed_calls.fwp
           rustfmt --edition 2024 --check tests/fixtures/returned_callable_peer.rs
           python3 scripts/test-returned-callables.py
           python3 scripts/test-buffer-program-records.py
+          python3 scripts/test-returned-callable-evidence.py
+          python3 scripts/test-returned-callable-budget.py
+      - name: Borrowed calls, returned owners and affected callback contracts
+        env:
+          FWP_ARC_ARTIFACTS: returned-callable-probes
+        run: >-
+          cargo test --locked --offline --no-fail-fast
+          --test borrowed_callbacks --test runtime_call_ownership
+          --test list_copy_ownership --test wide_counts
+          --test sort_callback_ownership --test loop_ownership
+          --test compiler_call_liveness --test state_sequence_ownership
+          --test typed_state_ownership --test closure_cleanup
+          --test list_applicative_ownership
+          -- --test-threads=1
       - name: Separate native peers, ownership phases and code records
         run: >-
           python3 scripts/check-returned-callables.py --compiler target/debug/fwp
@@ -819,12 +839,24 @@ jobs:
           --rust-cpu "${{ matrix.rust_cpu }}" --rust-target "${{ matrix.rust_target }}"
           --rust-frame-pass prolog-epilog --objdump llvm-objdump --nm llvm-nm --size llvm-size
           --output returned-callable-evidence
+      - name: Check the published count, code and frame limits
+        run: >-
+          python3 scripts/check-returned-callable-budget.py
+          --input returned-callable-evidence --source "$GITHUB_SHA" --host "${{ matrix.host }}"
+          --output returned-callable-evidence/budget.json
       - name: Retain completed and failed evidence
         if: ${{ always() && hashFiles('returned-callable-evidence/**') != '' }}
         uses: actions/upload-artifact@v7
         with:
           name: returned-callables-${{ runner.os }}-${{ runner.arch }}
           path: returned-callable-evidence/
+          if-no-files-found: error
+      - name: Retain callback lifetime controls
+        if: ${{ always() && hashFiles('returned-callable-probes/**') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: returned-callable-probes-${{ runner.os }}-${{ runner.arch }}
+          path: returned-callable-probes/
           if-no-files-found: error
 
   state_range_checks:

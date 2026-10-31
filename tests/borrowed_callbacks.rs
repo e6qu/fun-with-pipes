@@ -25,6 +25,113 @@ impl Drop for Scratch {
 }
 
 #[test]
+fn plain_borrowed_calls_preserve_results_owners_and_nonlocal_cleanup() {
+    let dir = fwp::cgen::TempDir::new("plain-borrowed").unwrap();
+    let source = include_str!("fixtures/plain_borrowed_calls.fwp");
+    let input = dir.join("plain.fwp");
+    std::fs::write(&input, source).unwrap();
+    for raw in [false, true] {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
+        command.env_remove("FWP_NO_OPT");
+        if raw {
+            command.env("FWP_NO_OPT", "1");
+        }
+        let output = checked(command.args(["run", "--interp"]).arg(&input));
+        assert_eq!(output.stdout, b"10\n7\nErr (-1)\n");
+        assert!(output.stderr.is_empty(), "{output:?}");
+    }
+    let (_, program) = fwp::driver::compile_source(
+        "plain.fwp",
+        source,
+        fwp::mono::Roots {
+            main: true,
+            exports: true,
+            ..Default::default()
+        },
+    )
+    .map_err(|error| error.rendered)
+    .unwrap();
+    let function = |name: &str| {
+        program
+            .exports
+            .iter()
+            .find(|(candidate, _)| candidate == name)
+            .unwrap()
+            .1
+    };
+    let add = function("scalar-add");
+    let mut code = fwp::cgen::generate(&program).unwrap();
+    assert!(code.contains("#define FWP_UNWIND 1"));
+    for (marker, extra) in [
+        (
+            "typedef uint64_t V;".to_owned(),
+            "static int plain_counting;\nstatic unsigned plain_retains, plain_releases;".to_owned(),
+        ),
+        (
+            "static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {".into(),
+            "if(plain_counting) plain_retains++;".into(),
+        ),
+        (
+            "static inline int fwp_rc_release_last(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (!c || !*c) return 0;".into(),
+            "if(plain_counting) plain_releases++;".into(),
+        ),
+    ] {
+        assert_eq!(code.matches(&marker).count(), 1, "{marker}");
+        code = code.replace(&marker, &format!("{marker}\n{extra}"));
+    }
+    let entry = format!("static V fwp_owned_entry{add}(V *a) {{");
+    assert_eq!(code.matches(&entry).count(), 1);
+    code = code.replace(
+        &entry,
+        &format!("static void plain_entry_hook(void);\n{entry}\n    plain_entry_hook();"),
+    );
+    let code = ownership_ledger::instrument_native(&code, 1 << 14).replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let probe = include_str!("fixtures/plain_borrowed_probe.c")
+        .replace("ADD_FN", &add.to_string())
+        .replace("SHOW_FN", &function("scalar-show").to_string())
+        .replace("ERROR_FN", &function("scalar-checked").to_string());
+    let code = format!("{code}\n{probe}");
+    let guard = "first && !fi->owned->drop_arguments && n == fi->arity - c->n";
+    assert_eq!(code.matches(guard).count(), 1);
+    let leaking = code.replace(guard, "!fi->owned->drop_arguments && n == fi->arity - c->n");
+    for level in ["-O1", "-O2"] {
+        for (name, source, status) in [
+            ("ordinary", &code, 0),
+            ("lost-returned-owner", &leaking, 229),
+        ] {
+            let binary = dir.join(format!("{name}{level}.exe"));
+            fwp::cgen::compile_c(source, &binary, level).unwrap();
+            let output = Command::new(&binary).output().unwrap();
+            record_probe::save(
+                "plain_borrowed",
+                &format!("{name}{level}"),
+                source,
+                &binary,
+                &output,
+            );
+            assert_eq!(
+                output.status.code(),
+                Some(status),
+                "{name}{level}: {output:?}"
+            );
+            assert!(output.stderr.is_empty(), "{output:?}");
+            assert_eq!(
+                output.stdout,
+                if status == 0 {
+                    b"plain borrowed calls preserve counts, returned owners and unwind cleanup\n"
+                        .as_slice()
+                } else {
+                    b""
+                }
+            );
+        }
+    }
+}
+
+#[test]
 fn borrowed_application_preserves_aliases_and_typed_argument_slices() {
     let dir = Scratch(std::env::temp_dir().join(format!("fwp-borrowed-{}", std::process::id())));
     std::fs::create_dir_all(&dir.0).unwrap();
@@ -124,11 +231,21 @@ static void probe_capture_args(V *a, uint32_t start, uint32_t n) {
     (void)start;
     for (uint32_t i = 0; i < n; i++) fwp_rc_dup(a[i]);
 }
+static void probe_mixed_drop_args(V *a, uint32_t start, uint32_t n) {
+    if (!start && n) probe_drop_leaf(a[0]);
+}
+static void probe_factory_drop_args(V *a, uint32_t start, uint32_t n) {
+    if (start <= 1 && 1 - start < n) probe_drop_leaf(a[1 - start]);
+}
+static void probe_capture_drop_args(V *a, uint32_t start, uint32_t n) {
+    (void)start;
+    for (uint32_t i = 0; i < n; i++) probe_drop_leaf(a[i]);
+}
 static const fwp_owned_fninfo probe_owned[] = {
-    {probe_mixed, probe_mixed_caps, probe_mixed_args},
-    {probe_identity, probe_empty_caps, probe_identity_args},
-    {probe_factory, probe_empty_caps, probe_scalar_args},
-    {probe_capture, probe_mixed_caps, probe_capture_args},
+    {probe_mixed, probe_mixed_caps, probe_mixed_args, probe_mixed_drop_args},
+    {probe_identity, probe_empty_caps, probe_identity_args, probe_mixed_drop_args},
+    {probe_factory, probe_empty_caps, probe_scalar_args, probe_factory_drop_args},
+    {probe_capture, probe_mixed_caps, probe_capture_args, probe_capture_drop_args},
 };
 static const fwp_fninfo probe_fns[] = {
     {2, probe_mixed, "mixed", &probe_owned[0]},
