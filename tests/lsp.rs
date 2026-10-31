@@ -374,3 +374,61 @@ fn language_server() {
     assert_eq!(status.code(), Some(0));
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn local_navigation_and_rename_preserve_shadowing_and_field_labels() {
+    let dir = fwp::cgen::TempDir::new("lsp-locals").unwrap();
+    let path = dir.join("locals.fwp");
+    let source = "x = 100\nmain = let x = 3 in (let x = 4 in x, { x }) | echo\n";
+    std::fs::write(&path, source).unwrap();
+    let uri = path_to_uri(&path);
+    let mut c = Client::start();
+    c.request(
+        "initialize",
+        Json::obj(vec![("capabilities", Json::obj(vec![]))]),
+    );
+    c.notify(
+        "textDocument/didOpen",
+        Json::obj(vec![(
+            "textDocument",
+            Json::obj(vec![
+                ("uri", Json::str(&uri)),
+                ("languageId", Json::str("fwp")),
+                ("version", Json::Num("1".into())),
+                ("text", Json::str(source)),
+            ]),
+        )]),
+    );
+    let diagnostics = c.diagnostics(&uri);
+    assert!(
+        !diagnostics.iter().any(|d| num(d, &["severity"]) == 1),
+        "{diagnostics:?}"
+    );
+    let line = source.lines().nth(1).unwrap();
+    let inner = line.find("in x,").unwrap() as u32 + 3;
+    let definition = c.request("textDocument/definition", at(&uri, 1, inner));
+    assert_eq!(
+        num(&definition, &["range", "start", "character"]),
+        line.find("let x = 4").unwrap() as u32 + 4
+    );
+    let field = line.find("{ x }").unwrap() as u32 + 2;
+    let mut params = at(&uri, 1, field);
+    if let Json::Obj(fields) = &mut params {
+        fields.push(("newName".into(), Json::str("value")));
+    }
+    let renamed = c.request("textDocument/rename", params);
+    let edits = renamed.at(&["changes", &uri]).unwrap().as_array().unwrap();
+    assert_eq!(edits.len(), 2, "{renamed}");
+    assert!(edits
+        .iter()
+        .any(|e| e.get("newText").and_then(Json::as_str) == Some("x = value")));
+    let hover = c.request("textDocument/hover", at(&uri, 1, field));
+    assert!(hover
+        .at(&["contents", "value"])
+        .and_then(Json::as_str)
+        .unwrap()
+        .contains("I64"));
+    c.request("shutdown", Json::Null);
+    c.notify("exit", Json::Null);
+    assert!(c.child.wait().unwrap().success());
+}

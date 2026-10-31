@@ -247,6 +247,7 @@ mod tests {
             },
             Expr::Trace(
                 crate::ir::SourcePoint {
+                    names: Vec::new(),
                     span: crate::diag::Span::DUMMY,
                     ty: MT::con("std::I64"),
                 },

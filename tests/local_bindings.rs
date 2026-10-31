@@ -2,6 +2,9 @@
 use fwp::{driver::check_source, fmt, parser, pretty};
 use std::process::Command;
 
+#[path = "support/allocation_report.rs"]
+mod allocation_report;
+
 #[test]
 fn syntax_round_trips_and_rejects_refutable_binders() {
     for expr in [
@@ -91,6 +94,12 @@ fn named_tacit_captures_and_macros_agree_across_backends() {
             None,
         ),
         (
+            "shared-capture",
+            "make : String -> String -> String\nmake = fn text -> fn suffix -> text | concat suffix\nmain = let original = read-all () | concat \"retained\" in let append = make original in (append \"!\", original, append \"?\") | echo\n".into(),
+            "(\"retained!\", \"retained\", \"retained?\")\n",
+            None,
+        ),
+        (
             "order",
             "main = let x = (\"first\" | echo) in let y = (\"second\" | echo) in ()\n".into(),
             "first\nsecond\n",
@@ -144,6 +153,14 @@ fn named_tacit_captures_and_macros_agree_across_backends() {
             );
             assert_eq!(native.stdout, reference.stdout, "{name} {opt}");
             assert_eq!(native.stderr, reference.stderr, "{name} {opt}");
+            if failure.is_none() {
+                let counted = Command::new(&executable).env("FWP_ALLOC_STATS", "1").output().unwrap();
+                assert!(counted.status.success(), "{counted:?}");
+                assert_eq!(counted.stdout, reference.stdout);
+                let report = allocation_report::parse(&String::from_utf8_lossy(&counted.stderr)).unwrap();
+                assert_eq!(report.live, 0, "{name} {opt}: {report:?}");
+                assert_eq!(report.allocated, report.released, "{name} {opt}: {report:?}");
+            }
         }
     }
     std::fs::remove_dir_all(directory).unwrap();

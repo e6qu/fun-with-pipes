@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** implement the authorized lexical-binding package, then its compiler,
-macro, tooling and tutorial integration before the consolidated validation batch.
+**Next:** run and audit focused lexical-binding validation, repair all failures,
+then complete the named/tacit optimization evidence before final-head validation.
 The user approved all ten steps in the revised PLAN.md. New syntax is in progress,
 not verified support; do not publish examples as runnable until checks pass.
 
@@ -40,8 +40,19 @@ The initial implementation adds source fn/let nodes, named and record patterns, 
 monomorphic inference, resource duplication/capture constraints, and lifted
 functions with explicit capture parameters. Quote/format traversal and initial
 regressions are included. The first focused run `41242796910` failed compilation on all three platforms: the macro record-pattern decoder moved a field out of a value with a destructor. All failed steps were audited; none reached language tests. The repair borrows that field, validates macro-created patterns, captures lexical syntax in templates, and fixes scope-aware linting and pipe formatting. Support remains unverified. Documentation run `41242798221` passes.
-Still required: finish macro/capture edge cases, formatter/tooling, ownership tests,
-full documentation/tutorial audit and the remaining optimization batches.
+The second batch adds scope-aware editor definition/references/rename (including
+field-label preservation), debugger source names and Python inspection by name,
+shared-capture cleanup controls, and rewritten introductory/data/macro lessons.
+The reference and parser guide document the grammar, hygiene and lowering. The
+library reference was regenerated from source. Old milestone links now identify
+maintained guarantees or current concrete steps rather than obsolete backlogs.
+Still required: compile/test this integration, finish the all-doc audit, and
+complete the remaining optimization/evidence steps. Nothing here is verified
+language support until focused and final-head checks pass.
+
+Run `41243195909` remained queued without starting any of its three jobs and is
+superseded by the integrated batch. The next focused workflow includes debugger,
+editor, ownership, tutorials, generated docs and the raw interpreter corpus.
 
 Use `fn pattern -> body` and `let pattern = value in body`. Bindings are immutable,
 strict and nonrecursive. In fn/let, `_` discards; existing match holes still forward
@@ -80,7 +91,7 @@ Both hosts show order effects even without calls. Preserve original failures;
 any new study needs explicit CPU qualification and work counts frozen through
 reference-only calibration. Do not retry unchanged runs or relax thresholds.
 
-D2/N1 timing acceptance and broader B1/B2/V1/V2 work remain open in [PLAN.md](../PLAN.md).
+Original derivative/kernel timing acceptance, comparable measurements and integrated application verification remain open in [PLAN.md](../PLAN.md).
 Selected count/allocation reductions remain verified independently of timing.
 Prioritize removing intermediate storage, extending proved borrowing and direct
 representations, and measuring numerical/AD work against equivalent peers.
@@ -103,3 +114,9 @@ Earlier byte-preserving APFS deduplication recovered about 1.2 GiB; all ten olde
 checkout statuses and the primary checkout were preserved. Earlier whole-program
 Swift raw artifacts still expire in January 2027; their checked-in summary is not
 a complete archive. The callable raw archives are retained in the repository.
+
+Latest guarded checks: standalone `stdlib_doc.rs` generation passes (Rust O1,
+assertions and overflow checks enabled; 0.66 CPU seconds to compile, 0.01 seconds
+test time). This builds only the documentation generator, not the compiler.
+The updated roadmap audit still passes all 192 link sets, 106 preparation pairs
+and ten steps (3.65 seconds). Formatting and `git diff --check` pass.

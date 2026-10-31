@@ -454,6 +454,24 @@ impl Decl {
 }
 
 impl Pattern {
+    /// Visit named leaves, retaining their source positions and identities.
+    pub fn walk_bindings(&self, f: &mut dyn FnMut(&Pattern, &str)) {
+        match &self.kind {
+            PatKind::Bind(name) => f(self, name),
+            PatKind::Tuple(ps) | PatKind::Ctor(_, Some(ps)) => {
+                for p in ps {
+                    p.walk_bindings(f);
+                }
+            }
+            PatKind::Record(fs) => {
+                for (_, p) in fs {
+                    p.walk_bindings(f);
+                }
+            }
+            _ => {}
+        }
+    }
+
     /// Lexical bindings, in source order. Holes never introduce a name.
     pub fn bindings(&self, out: &mut Vec<(NodeId, String)>) {
         match &self.kind {

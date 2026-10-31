@@ -1,4 +1,4 @@
-squares = comptime (range 0 10 | map (fork mul id id))
+squares = comptime (range 0 10 | map (fn x -> x * x))
 
 commands : Map[String, String -> String]
 commands = comptime ([
@@ -8,10 +8,9 @@ commands = comptime ([
 ] | map.from-list)
 
 run : String -> String -> String
-run = curry (fork
-    apply
-    .1
-    (.0 | flip map.get commands | option.unwrap-or (const "unknown command")))
+run = fn name -> fn text ->
+    let command = commands | map.get name | option.unwrap-or (const "unknown command")
+    in command text
 
 Order = { id: I64, item: String, quantity: U32 }
 

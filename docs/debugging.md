@@ -46,10 +46,15 @@ program. Floating snapshots include their raw bits; `3.0f64` is
 | `continue` | Run until a breakpoint, error or completion. |
 | `stack` | Show active frames, their source locations and typed local slots. |
 | `frame N` | Select a frame; zero is the outermost call. |
-| `locals` / `print N` | Inspect initialized slots / one slot. |
+| `locals` / `print NAME_OR_SLOT` | Inspect initialized values / one value by its visible source name or slot. |
 | `list` | Show the selected frame's current source location and line. |
 | `trace EVENTS` | Stream the chosen instrumentation events in JSON mode. |
 | `quit` | End this debug execution. |
+
+Named fn/let/match bindings appear with a `name` beside their slot at source
+points. `print x` resolves the currently visible `x`; an outer shadowed value
+remains inspectable by its slot. These are snapshots, not evaluations of new
+expressions. The Python SDK accepts `debug.inspect("x")` as well as a slot number.
 
 Source points are expression boundaries, not every character or C instruction.
 One source line can contain several expressions and stop several times. A

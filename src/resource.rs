@@ -382,6 +382,7 @@ mod tests {
             bindings: vec![2],
             body: Box::new(Expr::Trace(
                 SourcePoint {
+                    names: Vec::new(),
                     span: crate::diag::Span::DUMMY,
                     ty: callback,
                 },

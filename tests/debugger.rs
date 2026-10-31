@@ -147,3 +147,58 @@ fn disassembly_keeps_encoding_and_assembly_separate() {
         Some("d65f03c0")
     );
 }
+
+#[test]
+fn debugger_resolves_shadowed_source_names() {
+    let dir = fwp::cgen::TempDir::new("debugger-locals").unwrap();
+    let source = dir.join("locals.fwp");
+    std::fs::write(
+        &source,
+        "main =\n    let x = 3\n    in let x = x + 2\n    in x | echo\n",
+    )
+    .unwrap();
+    let mut process = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .args(["debug", "--json"])
+        .arg(&source)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    process
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(
+            br#"{"id":1,"command":"break","argument":"locals.fwp:4"}
+{"id":2,"command":"continue"}
+{"id":3,"command":"print","argument":"x"}
+{"id":4,"command":"clear","argument":"locals.fwp:4"}
+{"id":5,"command":"continue"}
+"#,
+        )
+        .unwrap();
+    let output = process.wait_with_output().unwrap();
+    assert!(output.status.success(), "{output:?}");
+    let messages: Vec<Json> = std::str::from_utf8(&output.stdout)
+        .unwrap()
+        .lines()
+        .map(|line| Json::parse(line).unwrap())
+        .collect();
+    let answer = messages
+        .iter()
+        .find(|m| m.get("id") == Some(&Json::Num("3".into())))
+        .unwrap();
+    assert_eq!(
+        answer.at(&["result", "name"]).and_then(Json::as_str),
+        Some("x"),
+        "{messages:?}"
+    );
+    assert_eq!(
+        answer
+            .at(&["result", "value", "display"])
+            .and_then(Json::as_str),
+        Some("5"),
+        "{messages:?}"
+    );
+}

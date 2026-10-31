@@ -96,6 +96,9 @@ imported under the same name.
 
 | Form | Meaning |
 |---|---|
+| `fn pattern -> body` | name one input; return the body value |
+| `let pattern = value in body` | evaluate once and bind names within the body |
+| `{ x, y }` | field shorthand for `{ x = x, y = y }` |
 | `f x y` | successive single-argument applications: `(f x) y` |
 | `a + b`, `a - b`, `a * b`, `a / b`, `a % b` | arithmetic with fixed precedence; `%` is remainder |
 | `a == b`, `a != b`, `a < b`, `a <= b`, `a > b`, `a >= b` | equality and ordering; result is `Bool` |
@@ -124,6 +127,44 @@ evaluation. See [tail calls and recursion](design.md#tail-calls-and-recursion).
 
 The data being transformed comes last: `sub 1` subtracts one, `div 2` halves, `lt 0` tests
 `x < 0`, and `concat "!"` appends.
+
+### Local bindings and named functions
+
+```fwp
+energy : I64 -> I64
+energy = fn x -> let square = x * x in square + square
+```
+
+`fn` creates a single-argument function. `let` evaluates its initializer exactly
+once, then evaluates the expression after `in` with the new name available.
+For `energy 3`, the product is `9` and the body adds it to itself, giving `18`.
+The binding is strict, immutable and nonrecursive. An unused initializer still
+runs and may fail. `let x = x + 1 in x` reads an outer `x`, then shadows it.
+Without an outer definition that initializer is an error.
+
+The body extends to the enclosing expression's boundary. Write
+`map (fn x -> x * x)` when a function is one argument, or
+`(let x = 3 in x + 1) * 2` to delimit a local calculation. Indentation continues
+an expression under the existing layout rules; it does not replace `in`.
+
+Both forms allow irrefutable patterns: a name, `_` (discard), `()`, tuples and
+record field selections, nested in any combination. `let (x, y) = pair in x + y`
+unpacks one pair. `fn { x, y = height } -> x + height` selects two record fields;
+unlisted fields are ignored. Duplicate names/fields and refutable patterns such
+as `Some x` are errors here. Use `match` for alternatives.
+
+A local name has one inferred type. `let same = fn x -> x in (same 1, same True)`
+is rejected: local bindings do not implicitly introduce polymorphism. Put
+reusable generic functions at top level with an explicit generic signature.
+A captured local value must satisfy the existing storage/lifetime rules; naming
+an input does not permit copying a resource or retaining a scoped borrow.
+
+Successive inputs remain explicit nested functions, `fn a -> fn b -> a + b`.
+Tuples are never implicitly unpacked. Tacit functions and `curry`/`uncurry` retain
+their meaning. Field shorthand applies wherever ordinary record field expressions
+are accepted: `{ x }`, `Point { x }`, `with { x }`, and `update { x }` all expand
+`x` to `x = x`; the last requires that value to be a field-transforming function.
+`make { .x }` is the separate projection form, with an explicit selector.
 
 ### Arithmetic, comparisons and precedence
 
@@ -257,27 +298,30 @@ argument. It does not apply `add 1` or defer evaluation of its own argument.
 
 ### Pattern matching
 
+```fwp
+increment-option = match
+    Some value -> value + 1
+    None -> 0
 ```
-area = match
-    Circle _ _ -> const (fork mul id id | mul 3.14159)
-    Square _ _ -> const (fork mul id id)
-```
 
-A `match` is a function. Patterns are:
+A `match` is a function. `Some 3 | increment-option` gives `4`; `None` gives `0`.
+A lowercase name binds the corresponding value within that arm. Patterns support
+constructors, unsuffixed integer and string literals, tuples, unit, names, record
+field selections and `_` holes. Record fields must have irrefutable patterns;
+omitted fields are ignored. Duplicate bindings are errors. Arms are checked for
+exhaustiveness; the compiler names a missing case.
 
-- constructors with argument patterns (`Circle _ _`); a bare constructor
-  with fields, such as `Circle`, is short for `Circle _ _`;
-- integer literals without a suffix and string literals; their type comes
-  from the value matched;
-- tuples, including `(_, )` for a one-element tuple, and `()`;
-- `_` holes.
+Existing tacit holes retain their meaning: `Some _ -> add 1` forwards the stored
+value to `add 1`. Multiple holes pass their values in pattern order. A bare
+constructor with fields stands for its holes, so `Some -> id` returns its payload.
+A named binder supplies no argument to the arm body; it makes the value available
+by name. In `match { (left, _) -> add left }`, only the second component is
+forwarded; the arm adds it to the named first component.
 
-Records are matched through their fields with selectors, not patterns.
-Each hole's value is passed, in order, as an argument to the arm's body.
-Arms are checked for exhaustiveness, and the compiler names a missing case.
-For two arguments, `curry (match (_, _) -> const)` returns the first argument:
-its two holes pass both values to `const`, which ignores the second. The brace
-form `match { Some -> id, None -> const 0 }` fits on one line.
+`_` therefore forwards in `match` and discards in `fn`/`let`. Use named patterns
+when a formula is clearer with ordinary values. Use holes when the arm is already
+a pipeline. `const` remains explicit for a hole arm returning a fixed result:
+`match { Some _ -> const 1, None -> 0 }`.
 
 ### Counts and indices
 

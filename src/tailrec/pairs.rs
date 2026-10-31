@@ -326,6 +326,7 @@ mod tests {
                 2 => {
                     p.funcs[0].body = Body::Expr(Expr::Trace(
                         SourcePoint {
+                            names: Vec::new(),
                             span: crate::diag::Span::DUMMY,
                             ty: MT::con("std::I64"),
                         },

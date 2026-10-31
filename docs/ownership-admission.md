@@ -1,14 +1,14 @@
 # Which programs can run without tracing?
 
-This is the execution and rejection checklist for [plan G1](../PLAN.md#maintained-guarantees-and-evidence).
+This checklist records the [maintained ownership guarantees](../PLAN.md#maintained-guarantees-and-evidence).
 **Admission** means the compiler accepts an ownership relationship. It is separate
 from executing the program, checking its output and proving cleanup. The
 [ownership guide](ownership.md) explains owners, borrows and cycles.
 
 Every entry below applies the same lifetime policy before program effects.
 The [accepted ownership direction](gc-removal-design.md) defines weak links and
-rejection of unproved owning cycles. [The handoff](development-state.md) tracks
-verification of the collector deletion; a removed option alone is not proof.
+rejection of unproved owning cycles. [Delivery history](roadmap-history.md#tracing-gc-removal-pr-217) records
+verified collector deletion; a removed option alone is not proof.
 Neither a successful C emission nor an interpreter run proves native cleanup.
 
 ## Entry points and their checks

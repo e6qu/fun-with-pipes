@@ -45,6 +45,13 @@ functions and tuple positions start at zero. Fixed-precedence infix arithmetic
 and prefix calls coexist. See [parser rules](compiler-pipeline.md) and the
 [reference](reference.md) for layout, patterns and exact precedence.
 
+Local `let` values are strict and monomorphic. Pattern bindings have identities
+separate from their spelling, so shadowing does not confuse captures or uses.
+`fn` and named `match` arms lower to functions with explicit capture parameters.
+The initializer stays at its original position; optimization must prove any
+removal or movement, even when the local name is unused. Local aliases do not
+change resource duplication or lifetime rules. See the [local binding contract](reference.md#local-bindings-and-named-functions).
+
 ## Eager computations in partial applications
 
 `add (calculate ())` evaluates `calculate ()` when the partial function is made.

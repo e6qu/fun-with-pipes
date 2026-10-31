@@ -184,7 +184,7 @@ The separate benchmark job runs
 `CC=gcc FWP_LTO=0 cargo test --release --test bench benchmarks -- --ignored --exact --nocapture`.
 It fails on different program results, but currently reports rather than gates
 on timing. [The benchmark guide](docs/benchmarks.md) defines what each comparison
-includes; [B1–B2](PLAN.md#9-measurements) define the remaining budgets.
+includes; the [measurement plan](PLAN.md#9-measurements) defines the remaining evidence requirements.
 
 ## Rules the code follows
 

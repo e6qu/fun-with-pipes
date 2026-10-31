@@ -2,7 +2,7 @@
 
 For example, `-17 | show | string.length` returns `3`: a minus sign and two
 digits. Native fwp can compute that count without allocating a String. This
-[P2/P3 experiment](../../PLAN.md#7-numerical-loops) changes the counting algorithm,
+[verified experiment](../roadmap-history.md#decimal-counting-and-current-derivative-baselines-pr-225) changes the counting algorithm,
 not the language's result, arithmetic checks or memory ownership.
 
 **Current status:** the exact decimal-threshold tree meets the frozen timing

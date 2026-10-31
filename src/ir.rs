@@ -138,6 +138,8 @@ pub type Local = u32;
 
 #[derive(Clone, Debug)]
 pub struct SourcePoint {
+    /// Visible source names and their physical slots, only in debugger IR.
+    pub names: Vec<(String, Local)>,
     pub span: crate::diag::Span,
     pub ty: MT,
 }

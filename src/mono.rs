@@ -45,6 +45,7 @@ pub const DEFAULT_SERVICE_ADDR: &str = "127.0.0.1:50051";
 
 pub struct Mono<'a> {
     source_steps: bool,
+    debug_scopes: HashMap<NodeId, Vec<(NodeId, String)>>,
     env: &'a Env,
     typed: &'a Typed,
     pub prog: Program,
@@ -283,6 +284,7 @@ impl<'a> Mono<'a> {
         }
         Mono {
             source_steps: false,
+            debug_scopes: HashMap::new(),
             env,
             typed,
             prog,
@@ -656,6 +658,15 @@ impl<'a> Mono<'a> {
 
     pub fn with_source_steps(mut self) -> Self {
         self.source_steps = true;
+        for binding in &self.env.bindings {
+            binding.body.walk_scoped(&mut Vec::new(), &mut |e, scope| {
+                let mut names = Vec::new();
+                for p in scope {
+                    p.bindings(&mut names);
+                }
+                self.debug_scopes.insert(e.id, names);
+            });
+        }
         self
     }
 
@@ -1062,6 +1073,17 @@ impl<'a> Mono<'a> {
         Ok(if self.source_steps {
             Expr::Trace(
                 SourcePoint {
+                    names: {
+                        let mut names = std::collections::BTreeMap::new();
+                        if let Some(scope) = self.debug_scopes.get(&e.id) {
+                            for (binder, name) in scope {
+                                if let Some(slot) = fb.bindings.get(binder) {
+                                    names.insert(name.clone(), *slot);
+                                }
+                            }
+                        }
+                        names.into_iter().collect()
+                    },
                     span: e.span,
                     ty: self.node_mt(e.id, s),
                 },

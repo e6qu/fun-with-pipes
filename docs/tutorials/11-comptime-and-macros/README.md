@@ -34,8 +34,16 @@ macro twice = quote (unquote!(0) | unquote!(0))
 
 `unquote!(0)` stands for the macro's first syntax argument. Resolved names in
 a quote refer to their definition module; spliced argument names keep their
-caller spelling. This avoids accidental changes to known quoted names. Building
-names as strings does not provide that guarantee.
+caller spelling. Local binders introduced inside a quote have fresh identities,
+so `quote (let x = 100 in unquote!(0))` cannot capture an argument's unrelated `x`.
+This protection is called **hygiene**. Constructing `SName "x"` directly asks for
+that spelling; it does not obtain a fresh binding automatically.
+
+`SLambda pattern body` and `SLet pattern value body` represent named functions
+and local bindings. `PName "x"` binds a name, `PIgnore` discards an input and
+`PRecord` stores field patterns. `PHole` keeps the forwarding meaning used by
+`match`; it is rejected in generated fn/let patterns. Generated patterns receive
+the same duplicate-name and irrefutability checks as parsed source.
 
 The macro receives parsed syntax, so it cannot add new operators or change
 precedence. Its generated expression is type-checked after expansion.
@@ -49,8 +57,8 @@ value.
 ## Reading the example
 
 `squares` precomputes squares of 0 through 9. `commands` is a compile-time map
-whose values are functions. `run` looks up the requested name and uses `apply`
-to call that function on the text. For an unknown name, `const "unknown command"`
+whose values are functions. `run` names its two successive inputs, looks up the
+command once, then applies that local function to the text. For an unknown name, `const "unknown command"`
 creates a function with the same input type that ignores the supplied text.
 
 `type[Order]` returns type metadata; matching `ShapeRecord` exposes its fields,
@@ -64,7 +72,7 @@ serializer converts values to text/bytes. Reflection can help generate either.
 [`main.fwp`](main.fwp):
 
 ```fwp
-squares = comptime (range 0 10 | map (fork mul id id))
+squares = comptime (range 0 10 | map (fn x -> x * x))
 
 commands : Map[String, String -> String]
 commands = comptime ([
@@ -74,10 +82,9 @@ commands = comptime ([
 ] | map.from-list)
 
 run : String -> String -> String
-run = curry (fork
-    apply
-    .1
-    (.0 | flip map.get commands | option.unwrap-or (const "unknown command")))
+run = fn name -> fn text ->
+    let command = commands | map.get name | option.unwrap-or (const "unknown command")
+    in command text
 
 Order = { id: I64, item: String, quantity: U32 }
 

@@ -120,7 +120,9 @@ expression   := operators ("|" operators)*
 operators    := application followed by operators at the allowed precedence
 application  := atom atom* | "-" application
 atom         := name | literal | selector | grouped expression | collection
-                | match | quote | other fixed keyword forms
+                | match | quote | "fn" pattern "->" expression
+                | "let" pattern "=" expression "in" expression
+                | other fixed keyword forms
 ```
 
 | Tightest to loosest | Association |
@@ -152,6 +154,14 @@ subtraction. The lexer recognizes `name!(` as a macro-call token including its
 opening parenthesis. Macros receive already parsed arguments; they do not extend
 the token grammar or introduce new operators.
 
+`fn`, `let` and `in` are reserved tokens. Their fixed delimiters keep parsing
+predictive: `in` ends the initializer; the body uses the ordinary expression
+parser. Nested lets consume their own `in` first. No symbol table, type query,
+backtracking or new arithmetic precedence level is needed. A named pattern is
+recognized by its lowercase token; constructors retain uppercase tokens.
+Duplicate names and refutable fn/let patterns are rejected. The type checker
+repeats these admission rules for macro-generated trees, which bypass parsing.
+
 ## Where desugaring happens
 
 **Desugaring** turns convenient syntax into ordinary language operations. fwp
@@ -166,6 +176,9 @@ does this at several stages, not in one universal desugaring pass.
 | `.name`, `make`, `update`, `match`, tuples and lists | Kept as source forms, checked, then lowered to field access, calls, records, constructors and branches. |
 | `name!(...)` | Macro expansion substitutes an expression AST before final program checking. |
 | `comptime e` | The checked expression runs in the interpreter during specialization/lowering; its result becomes an IR constant. |
+| `{ x }` | Parser expands the field to `x = x`; no implicit input is introduced. |
+| `let pattern = value in body` | Inference assigns lexical binding identities; lowering evaluates the value once, then binds a local or destructures an irrefutable match. |
+| `fn pattern -> body` and named match arms | Lowering creates a function with explicit capture parameters followed by its single source input. Existing specialization/ownership passes see ordinary typed IR. |
 | Generic calls | Concrete used types select specialized functions and trait methods. |
 
 `a - b` is not rewritten to `sub b a` by swapping unevaluated expressions: that
@@ -224,9 +237,14 @@ stopped by that guard. Macros replace expressions, not whole declarations or
 imports. They cannot change precedence or bypass final type checking.
 
 Quoted names that resolve in the definition module become fully qualified names.
-Spliced argument names retain their caller spelling. This is the implemented
-hygiene mechanism; manually constructing `SName` values or unresolved quoted
-names does not give an unconditional protection against name capture.
+Quoted lexical binders carry private identities and expansion assigns fresh
+identities to introduced bindings. Spliced argument names retain their caller
+spelling and are excluded from binder renaming. This prevents an introduced
+`let x` from capturing the caller's unrelated `x`. Manually constructing `SName`
+values or unresolved quoted names still requests spelling-based resolution.
+`SLet`, `SLambda`, `PName`, `PRecord` and `PIgnore` represent the added forms;
+`PHole` retains match forwarding. Template functions may capture lexical Syntax
+values used by unquotes; their explicit capture parameters precede hole parameters.
 `SOther` represents syntax through validated source text; decoding reparses it
 with the same expression parser. `SFloat` carries decimal text rather than F64.
 

@@ -6,6 +6,9 @@ quadruple = double | double
 
 decrement = sub 1
 
+energy : I64 -> I64
+energy = fn x -> let square = x * x in square + square
+
 average = fork div length sum
 
 sum-pair : (I64, I64) -> I64
@@ -16,6 +19,7 @@ sum-curried = curry sum-pair
 
 main = [
     ten | echo,
+    3 | energy | echo,
     3 | quadruple | echo,
     10 | decrement | echo,
     [3, 5, 10] | average | echo,
