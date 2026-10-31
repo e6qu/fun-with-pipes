@@ -33,10 +33,12 @@ collector is not the same as removing these costs. The
    All production gates pass; its timing acceptance remains open.
    The [handoff](docs/development-state.md) names the current source and checks.
 2. Finish verification of [generated-array elimination](docs/measurements/generated-array-folds.md).
-   Both focused native GCC suites and compiler-analysis budgets pass. Audit the
-   declared timing sessions, then run the complete production matrix once the
-   batch is ready. Preserve oversized-count checks, argument/effect/failure order
-   and outer-owner cleanup. Allocation removal and timing acceptance are separate.
+   Both focused native GCC suites and compiler-analysis budgets pass. All four
+   timing sessions are audited; three fail the unchanged copy-control limit.
+   The complete first matrix is audited: six jobs fail only an obsolete
+   one-allocation expectation. Verify the combined expectation/cleanup-test
+   repair on all production hosts. Preserve oversized-count checks, argument/effect/failure order and
+   outer-owner cleanup. Allocation removal and timing acceptance are separate.
    The [four repaired full-buffer
    sessions](docs/measurements/buffer-current.md) are audited: 25/48 copy controls
    fail, and no workload passes all four. Do not retry unchanged measurements.

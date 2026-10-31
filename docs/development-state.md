@@ -1,136 +1,130 @@
 # Current work
 
-**Next:** publish the complete four-session archive audit while all checks at
-`93ee0dc8` remain queued, then preserve the resulting head of
-[PR #232](https://github.com/e6qu/fun-with-pipes/pull/232) through its production
-and documentation gates. Queued runs `41143677115` / `41143677127` can be
-superseded before execution; do not restart running gates for status-only edits.
-Initial head `76ee7a80` used production run `41142900417` and docs `41142900328`.
-Documentation found a stale expected
-count: `numeric_array_fusion` now has three tests, not two. Both the collection
-report inventory and its synthetic complete log/total are repaired (54 tests).
-Its callers in collection/map/hash reports retain the completeness check;
-historical measurement counts remain untouched. All nine old production jobs
-had no failed steps when the repair was published. Their superseded run was
-cancelled to avoid duplicate full suites. All nine partial logs were reviewed:
-completed tests pass; cancellation before evidence generation explains the
-missing-artifact errors. No additional compiler/test failure was found.
-Squash-merge only after
-all nine production jobs and documentation pass and their full logs are audited;
-use an explicit one-line subject of at most 80 characters and an empty body.
-Keep failed timing controls visible; never retry a collected result or loosen
-its limit. Allocation removal and timing acceptance are separate.
+**Next:** publish this combined repair to
+[PR #232](https://github.com/e6qu/fun-with-pipes/pull/232), then monitor and audit
+all nine production jobs and documentation for its new head. Squash-merge only
+when all pass, using an explicit one-line subject of at most 80 characters and
+an empty body. Production run `41144314581` at
+`d92939b897efa6290be37d9e82d0970bd7a9bc6f` is completely audited: six platform
+jobs fail only the stale allocation expectation; every other target and all
+post-test checks pass. The repair requires exactly zero allocations.
 
-Worktree: `/private/tmp/fwp-ownership-peer-baselines`, branch
-`generated-array-folds`. Measured candidate source
-`899ad012c19a9f49abce941070cdbfef610725d5` remains the timing run's checkout.
-Subsequent changes strengthen an observer's zero-storage assertion and update
-documentation; compiler/runtime and timed programs remain unchanged.
-Local merge `4bfe94da` records main's squash ancestry without changing files:
-main's tree exactly matched the already-contained `377cf9ce` ancestor.
+Worktree `/private/tmp/fwp-ownership-peer-baselines`, branch
+`generated-array-folds`. Combined repair:
 
-## Delivered
+- Require exactly zero allocation/byte costs for the known borrowed-array
+  pipeline; preserve original measurements as historical evidence.
+- Remove obsolete GC switches and empty collection hooks from seven cleanup
+  probes. Keep all cases and total repetitions; repeat complete success/failure sequences
+  so healthy calls follow prior failures, and check live bytes every time.
+- Release the mapped-array probe's own input, check final input teardown in
+  list/zip/unzip probes, and test an intentionally omitted input release.
+- Check managed storage after the Windows cwd second-read failure.
+- Upload retained failure binaries only when files exist. Preserve failures
+  from both the corpus and its artifact-retention controls; unrelated failures
+  previously produced a misleading empty-artifact warning.
+- Correct stale #230 application-delivery wording and explain the new counts.
 
-[#231](https://github.com/e6qu/fun-with-pipes/pull/231) passed all nine production
-jobs and documentation, with complete log audits, and was squash-merged as
-`97b2c29ae15ebec84f2534c523b8f1260fd2fb67`. Its tree matches tested head
-`377cf9ce25c65afba595b6413e5bb1d50721ea7a`; its 54-character subject has no body
-or trailers. Duplicate post-merge CI was cancelled after verification.
-[Delivery history](roadmap-history.md#direct-scalar-folds-and-process-timing-pr-231)
-owns the job IDs, counts and limits. Scalar-fold timing acceptance remains open,
-as the user accepted. Do not push the old `ownership-peer-baselines` branch.
+These edits were prepared in `/private/tmp/fwp-application-cleanup-controls`
+(branch `application-cleanup-controls`) and copied into this PR's worktree.
+That preparation branch is now superseded; do not publish it or open a second PR.
+No compiler/runtime change accompanies these repairs.
 
-## Prepared allocation reduction
+## CI audit
 
-[Generated-array elimination](measurements/generated-array-folds.md) removes an
-immediately consumed numeric array when known, pure, terminating callbacks and
-their trap behavior permit one loop. It shares the real constructor's count
-validation and preserves argument order. Reused arrays, resources, F128 and
-unknown callbacks retain storage. Declaration `97c8eac6` preceded implementation;
-the reference is frozen at `377cf9ce`, using identical compiler inputs from
-retained ordinary binaries at `3ca66b54`. No compiler implementation changed
-after `826e447f`.
+Production `41144314581`, documentation `41144314613`, source `d92939b8`:
 
-Focused native run `41138032240` at `899ad012` passes on ARM64 job
-`124345218388` and AMD64 job `124345218402`: thirteen tests across five targets
-per host. Complete logs and artifacts were audited. The
-[check index](measurements/generated-array-checks-2026-10-31.json) records 48
-allocation cases, twelve cleanup variants and twenty native images per host.
-Zero storage/count costs and deliberate missing-cleanup failures are verified.
-The observer now rejects equal nonzero initial/peak/final count storage too.
-Both Python controls pass; retained observations pass the stronger rule.
+| Gate | Job | Complete audit |
+|---|---|---|
+| Documentation | `124365690137` | Pass: 47 Python suites / 320 cases, tutorials and roadmap |
+| C/Rust benchmarks | `124365690783` | Pass: 2 Rust checks, 14 Python controls, binary/storage inspections |
+| macOS ARM regular | `124365690883` | Pass: 132 Rust summaries / 628 cases, 22 Python cases, 3,801 evidence files |
+| macOS Intel regular | `124365691086` | Pass: same counts and evidence coverage |
+| macOS ARM ownership | `124365691692` | 127 summaries / 365 passed, one stale allocation expectation |
+| macOS Intel ownership | `124365690825` | Same sole failure; all other targets pass |
+| Windows AMD | `124365691048` | 206 summaries / 821 passed, same sole failure |
+| Windows ARM | `124365690853` | Same complete result as AMD |
+| Linux ARM | `124365690786` | 257 summaries / 996 passed, same sole failure; post-test checks pass |
+| Linux AMD | `124365690784` | Same complete result as ARM, including passing post-test checks |
 
-The initial run `41135554961` at `048c92c5` failed one new test on each host:
-its global C marker matched four loops. The repair locates the selected worker's
-specific loop and requires exactly one interruption boundary there. The six
-retained-C macOS Clang O1/O2 controls and both repaired GCC suites pass.
-No cleanup assertion was relaxed. All independent observer steps at `048c92c5`
-passed and remain applicable to the unchanged implementation. Code grows by
-336 instruction bytes on each host (3.17% / 3.03%), within the 5% budget;
-largest reported frame components remain 368 / 320 bytes.
+Full logs/audits are `/private/tmp/fwp-232-<host>-d929.{log,audit.json}`;
+labels: `docs`, `bench`, `mac-arm-regular`, `mac-intel-regular`,
+`mac-arm-ownership`, `mac-intel-ownership`, `win-amd`, `win-arm`, `linux-arm`,
+`linux-amd`.
+All completed targets and diagnostics are audited. The Windows unit suite's sixteen
+panics are intentional controls; 22 Python cases include five platform-specific
+skips. The AMD TLS unknown-CA message is an intentional rejection control.
+The macOS empty corpus-failure archive warnings are repaired by checking for
+retained files before upload; copy failures now fail the collection step;
+the corpus passed on both hosts. The ARM crash ZIP contains only the compiler.
 
-Both G2 hosts pass run `41138040099`: Linux AMD64 `124345244380` and Intel macOS
-`124345244038`. Each passes 224 unit tests, all-target lint and independently
-reconstructed analysis/startup budgets. This measures ownership analysis, not
-the whole optimizer. The final production matrix is still required.
+Retained step archives: Windows AMD `13022467794`, Windows ARM `13022149747`
+(each 98 targets / 252 passed / same one failure); Linux ARM `13023227401`
+and Linux AMD `13024160184` (each 256 targets / 995 passed / same one failure).
+Their local ZIP/audit files use `win-{arm,amd}-tls` and
+`linux-{arm,amd}-targets` labels. Linux ARM verifies 7,301
+ownership evidence files; each macOS ownership job verifies 3,046.
 
-## Measurements in progress
+Query direct job endpoints when aggregate Actions listings lag. A repaired head
+needs all nine production jobs and documentation again. Squash-merge only when
+every final-head gate passes, with an explicit subject of at most 80 characters
+and empty body.
 
-Paired sessions use runs `41139714279` (session one) and `41139722605` (session
-two), source `899ad012`, with unchanged limits and explicit `generated-array`
-reference selection. Both original ARM jobs completed; their 2,736 process
-records per session were independently reconstructed. Both fail the 2% copy
-control and must not be rerun. AMD session two also fails its old and new copy
-controls. All allocation/code/frame checks pass. The
-[timing index](measurements/generated-array-timings-2026-10-31.json) records all
-four sessions. AMD session one passes its copy and elapsed limits at ratio
-0.664728; CI and the local archive audit reconstruct all 2,736 observations.
-Its full log was reviewed:
-six native tests and all damaged-evidence controls pass without diagnostics.
-All four original archives and local reconstructions are retained. Copy ratios
-are 1.019470 / 1.019270 for AMD session one; the other three sessions fail at
-least one unchanged 1.02 control. Overall timing acceptance remains open.
+The earlier `76ee7a80` docs failure was a stale numeric-array test count (2 → 3).
+Both inventory and synthetic total are repaired; eight focused checks and final
+docs pass. Superseded runs `41142900417`, `41143677115` and `41143677127` were
+cancelled; all completed targets/partial logs were audited. Missing artifacts
+there followed cancellation, not a new implementation failure.
 
-AMD attempts received incorrect EPYC 9V74/9V45 hosts and stopped before any
-build or timing. Their qualification artifacts are retained; only these
-unmeasured jobs were replaced. Session two's third attempt qualified on EPYC
-7763, completed and was independently audited. Session one's seventh attempt,
-job `124361211274`, completed on the qualified host. Six earlier attempts
-rejected wrong CPUs before measuring. Original rejection ZIPs and
-logs for all rejections remain retained. Query direct
-job endpoints because aggregate Actions listings can be stale.
+## Allocation and timing evidence
 
-The [four full-buffer baselines](measurements/buffer-current.md) retain 25/48
-failed copy controls; no case qualifies in all four. D2/N1 and #231 timing
-acceptance remain open. No failed measured session was retried.
+[Generated-array elimination](measurements/generated-array-folds.md) replaces
+eligible generate/map/fold chains with one loop. Reused arrays, unknown/effectful
+callbacks, resources and F128 remain excluded. Preserve count bounds, evaluation
+order and trap behavior. Compiler implementation is unchanged after `826e447f`;
+measured source is `899ad012c19a9f49abce941070cdbfef610725d5`.
+
+[Focused checks](measurements/generated-array-checks-2026-10-31.json) cover thirteen
+GCC tests per Linux host, allocation/unwind controls and both G2 analysis hosts.
+All pass. Three 4,096-element scans go from three allocations to zero; instruction
+bytes grow 3.17% / 3.03%, with unchanged largest reported frame components.
+The stronger observer rejects equal nonzero initial/peak/final count storage;
+144 retained observations pass it.
+
+[All four timing sessions](measurements/generated-array-timings-2026-10-31.json)
+are audited and retained. Only AMD session one passes all controls; three sessions
+fail the unchanged 2% identical-copy limit. Timing acceptance stays open. No
+measured session was retried. Eight wrong-CPU attempts stopped before measuring.
+The [full-buffer sessions](measurements/buffer-current.md) likewise retain 25/48
+failed controls. Keep verified cost reductions separate from elapsed speed.
 
 ## Local checks and recovery
 
-Guarded checks pass: rustfmt; primitive inventory (394 declarations, 384 symbols,
-40 aliases, no review symbols); workflow lint; two observer rejection tests;
-Python parsing; six macOS Clang interruption controls. Artifact audits verify
-source IDs, hashes, raw observations and deliberate failures. No full local
-compiler build, suite or benchmark ran. Run the roadmap audit again after these
-documentation edits. The roadmap audit passed after the history/plan rewrite
-(188 link sets, 106 immutable pairs, eight steps); later edits need the CI audit.
-The focused collection-inventory repair check was initially refused below
-64 GiB free. After disk space recovered, all eight tests pass in 0.13s through
-the guard. The fourth archive audit passes in 0.86s, and the complete timing
-index verifies all four archive hashes and eight wrong-host rejections.
+Guarded checks pass: corrected Rust formatting; workflow lint; eighteen Clang
+O1/O2 cleanup-fixture executions using retained generated C, including missing
+input/scratch controls (235/231). `/private/tmp/fwp-check-cleanup-inputs.py` took
+4.75s; the complete success/failure sequence recheck passes in 4.71s. This is a fixture preflight, not rebuilt Rust/GCC/Windows verification.
 
-Preserve the primary checkout at `/Users/zardoz/projects/fun-with-pipes`: detached
-#209, dirty recovery handoff and untracked compiler-abort report. Automatic
-approval review rejected replacing its handoff; do not retry. Backup:
-`/private/tmp/fwp-primary-recovery-before-file-checks.md`. Keep original CI ZIPs;
-extract only needed files. Free space temporarily fell from about 65 to 57 GiB
-while local build directories stayed empty, then recovered above the 64 GiB
-floor. No limits were bypassed and no original evidence was deleted. Recheck
-headroom before local work; full validation stays on GitHub.
+The downloaded exact-head ARM macOS compiler emitted the borrowed-array entry;
+its generated C contains a scalar loop. `/private/tmp/fwp-check-borrowed-cost.py`
+passes at Clang O0/O2 for inputs 32/128: correct sums, zero allocation requests
+and restored live bytes. Its initial entry lookup was repaired to handle the
+scalar worker. No full local build or suite ran. Final formatting and roadmap
+checks pass for the completed batch. The actual artifact-collection script
+passes empty, retained-file (including spaces), symlink/directory exclusion and
+forced-copy-failure controls. Workflow lint passes after that refinement.
 
-The [plan](../PLAN.md) owns remaining work: D2 timing, N1/N2 acceptance, B1/B2
-comparisons and V1/V2 applications. GC removal, scoped A1–A6 and F1–F3 are
-verified. The original intermittent Intel compiler abort remains unexplained;
-preserve its report and diagnose any recurrence from source and inputs.
+Keep the dirty primary checkout `/Users/zardoz/projects/fun-with-pipes` untouched:
+detached #209, recovery handoff and compiler-abort report. Automatic review rejected
+replacing that handoff. Backup `/private/tmp/fwp-primary-recovery-before-file-checks.md`.
+Preserve original CI archives. Space briefly fell below 64 GiB; guard refused work
+until it recovered. No limits were bypassed or original evidence deleted.
+
+[#231 delivery](roadmap-history.md#direct-scalar-folds-and-process-timing-pr-231)
+is verified, squash `97b2c29ae15ebec84f2534c523b8f1260fd2fb67`, tree equal to its
+tested head. The old `ownership-peer-baselines` branch must not be pushed.
+The unexplained Intel compiler abort remains open: diagnose any recurrence from
+source and input, preserving its evidence. Do not restart disassembly-led guessing.
 
 ## Roadmap status
 

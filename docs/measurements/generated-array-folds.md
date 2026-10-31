@@ -1,6 +1,12 @@
 # Remove an immediately consumed numeric array
 
-**Focused native and compiler-budget checks pass; full production verification is pending.** The [current buffer results](buffer-current.md)
+**Focused native and compiler-budget checks pass; full production verification is pending.**
+The first full matrix found a stale one-allocation expectation in the existing
+functional-call test: its known array pipeline now requests zero allocations.
+Both input sizes still return the expected sum and restore live storage.
+The exact zero-cost expectation and its [explanation](../functional-costs.md#generated-array-removal)
+are updated; the repaired full matrix is still required.
+The [current buffer results](buffer-current.md)
 retain all four sessions, including their failed timing controls. This work
 targets a remaining allocation, without claiming that the measurements already
 establish a stable speed comparison.

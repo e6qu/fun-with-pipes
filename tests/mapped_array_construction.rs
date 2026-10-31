@@ -151,13 +151,19 @@ fn mapped_array_scratch_releases_on_success_and_callback_failure() {
         let binary = dir.join("probe.exe");
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
         checked(&mut Command::new(&binary));
-        let broken = code.replace(
+        let missing_scratch = code.replace(
             "    fwp_scratch_finish(&items, &cleanup);",
             "    fwp_cleanup_pop(&cleanup);",
         );
-        assert_ne!(broken, code);
-        fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
-        assert_eq!(Command::new(&binary).status().unwrap().code(), Some(231));
+        let missing_input = code.replace("        fwp_rc_free_obj(source);", "");
+        for (broken, expected) in [(missing_scratch, 231), (missing_input, 235)] {
+            assert_ne!(broken, code);
+            fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
+            assert_eq!(
+                Command::new(&binary).status().unwrap().code(),
+                Some(expected)
+            );
+        }
     }
 }
 
