@@ -1,10 +1,10 @@
 # Current work
 
-**Next:** publish the array-to-list traversal candidate and dispatch
-`array-list-measurements`; audit every completed job before further repairs.
-Continue Swift allocation attribution and the remaining documentation review
-while those numerical checks run. The user authorized all ten steps in
-[PLAN.md](../PLAN.md), in draft [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236).
+**Next:** publish the array result-copy repair together with Swift allocation profiling and docs cleanup,
+then run `array-list-measurements`, `lexical-bindings`, `swift-allocations` and
+`ownership-analysis`. Keep the original `dc0a6407` timing jobs running and retain
+their results. The user authorized all ten steps in [PLAN.md](../PLAN.md), in
+draft [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236).
 
 Worktree: `/private/tmp/fwp-returned-callables`; branch `language-design-review`,
 based on main `781ebabb0463efc2f03f0d3aa44b7d2c4766959d`.
@@ -65,7 +65,7 @@ reports and binaries from original measured source
 Its SHA-256 is `8ddb06a630969718322cacd10e3a3472f7e0da1c5da97106b8c0090806604118`.
 The local audit recomputes timings and memory samples without executing binaries.
 
-## Numerical candidate awaiting runner verification
+## Numerical candidate and root-cause repair
 
 `src/fuse.rs` directly traverses numeric arrays beneath eligible list map/filter
 and fold stages, retaining actual floating conversions and arithmetic order.
@@ -74,13 +74,47 @@ before observations. New native probes use dynamic arrays, retained slices,
 packed/word storage and O1/O2. Semantics controls cover rounding/NaNs, aliases,
 eager effects, distinct traps and early stopping. Existing AD ownership and
 precision targets accompany whole-solve measurements on both Linux architectures.
-No count, timing or correctness claim is accepted for this new candidate yet.
+The first candidate `dc0a6407b5e5aa23517a86db71a3221a418cc7d6` fails the new
+allocation limit. Numerical run `41252379702` session 1 is fully audited on both
+Linux architectures: 33 tests pass, one cost test fails. At length one the mapped
+list saves only 16 bytes; at length 129 it still creates 258 list cells. Retained
+C shows a reversed result followed by the borrowing `reverse` primitive, which
+copies it. Direct folds allocate nothing. Original requirements are unchanged.
+
+The unpublished repair visits a numeric array backward only for list results
+whose callbacks are total/pure and whose captures are scalar. Prepending builds
+the final list directly. Folds and potentially trapping/effectful callbacks keep
+forward order. New cost diagnostics collect both storage modes before failing.
+Focused `41252383957` also fails only the same cost test on all three hosts.
+All completed logs and diagnostics are audited; other targets, tutorials, Python
+tools and the raw corpus pass without unexpected warnings.
+Documentation `41252374022` passes and its completed log is audited. Separate
+session-2 timing jobs in `41252379702` are still running; preserve their original
+observations even though the implementation has changed.
+
 
 `array-list-measurements` compares the same compiler with numeric array fusion
 explicitly enabled/disabled. It measures six whole-solve cases and six runtime
 phases, including original copy/noise controls. The final gradient list lies
 outside those phase clocks; whole-solve allocation savings cannot be called a
 recording-time reduction. Original D2 and N1/N2 timing requirements remain open.
+
+## Swift attribution and remaining review
+
+New `swift-allocations` jobs profile the pipeline and map peers with heaptrack
+on native Linux ARM64/AMD64. They retain exact allocator-stack totals and require
+an independent three-allocation/omitted-release control. fwp's direct-mapped
+managed heap is outside malloc tracking, so its existing managed observer runs
+separately; never call malloc-only bytes complete fwp heap use or add independent
+peaks. The collector and reader are implemented but have not run on a runner.
+The [protocol](measurements/swift-allocations.md) introduces each metric and the
+actual peer algorithms. Two local damaged-record tests pass.
+
+Remaining source review must check top-level applications returning named
+functions before claiming general curried-stage coverage. Current regression
+cases cover explicit fn, local calls, top-level let, match, aliases and unknown
+callbacks; they do not yet settle every global expression form. Complete this
+review before final delivery. No new representation rule is selected here.
 
 ## Local checks
 
@@ -93,12 +127,13 @@ Full builds, suites and benchmarks stay on runners; never raise local limits.
 | Workflow actionlint | Pass |
 | `scripts/test-native-test-runner.py` | 21 pass, including target coverage |
 | Frozen primitive inventory | 394 declarations, 384 symbols, no review symbols |
-| `scripts/check-roadmap.py` | 192 doc link sets, 106 preparation pairs, ten steps pass |
+| `scripts/check-roadmap.py` | 193 doc link sets, 106 preparation pairs, ten steps pass |
 | Standalone production parser/formatter | 17 tests and tutorial/new fixture round trips pass |
 | Tutorial source copies and library reference generator | Pass |
 | `scripts/test-collection-evidence.py` | Eight pass; new numeric test count included |
 | `scripts/test-descent-budgets.py` | Nine pass, including exact new savings/timing limits |
 | `scripts/test-swift-peer-records.py` | Five pass, including retained archive recomputation |
+| `scripts/test-swift-allocation-records.py` | Two pass, including incomplete-stack and omitted-release controls |
 
 Standalone harnesses live under `/private/tmp/fwp-236-*`. They use Rust O1 with
 assertions/overflow checks and do not verify inference, lowering or native output.

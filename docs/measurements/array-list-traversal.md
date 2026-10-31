@@ -21,7 +21,10 @@ The compiler uses its existing typed loop and callback proof. Known numeric
 map/filter stages can read the array directly; unsupported callbacks retain
 their existing implementation. Retained inputs and slices keep their owners.
 Effectful stages, distinct possible traps and early stopping keep the existing
-fusion restrictions. No new language syntax or runtime primitive is introduced.
+fusion restrictions. For a returned list, callbacks proved total, pure and free of owned captures may
+visit elements backward and prepend results directly in source order. This avoids
+copying a reversed list. Folds and possibly trapping callbacks retain forward
+order. No new language syntax or runtime primitive is introduced.
 
 ## Gradient results
 
@@ -90,3 +93,17 @@ the existing comparison's +1,024 instruction-byte and +128 static-frame-byte
 screens. These are measurement requirements, not universal runtime guarantees.
 Save all failing/noisy cases, sources, binaries, commands, profiles and samples.
 Never retry unchanged cases or relax limits to obtain acceptance.
+
+## First candidate: output reversal still copied
+
+At `dc0a6407`, the direct fold meets zero-allocation requirements. The returned
+mapped list fails the frozen savings rule: at length 129 it allocates 258 cells
+versus 259 allocation requests in the reference (6,192 versus 7,232 requested
+bytes). The input list is gone, but generated C calls the borrowing `reverse`
+primitive, which copies the newly built result. Length one saves only 16 bytes.
+Correctness, alias, cleanup and all separate AD tests pass on the first completed
+Linux ARM64 job in run `41252379702`; this is not acceptance of the cost change.
+
+The repair uses backward traversal only under the total-callback proof above;
+its measurements are pending. Original limits remain unchanged. The probe now
+collects all cost failures across both storage modes before reporting them.

@@ -123,3 +123,7 @@ costs to ownership. Keep
 parser, weak-subscription and numerical Swift comparisons as explicit missing
 coverage. The existing D2/N1 timing failures remain open. Prioritize measured
 execution time and working memory, retaining executable-size costs as context.
+
+The [allocator profile](swift-allocations.md) measures native allocation calls
+and peak heap bytes separately for the pipeline and ordered-map programs. Its
+results must not be interpreted as counts of every ARC operation.

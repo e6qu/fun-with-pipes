@@ -201,5 +201,5 @@ See [ownership contracts](../../ownership.md#cycle-and-retention-contract) for t
 limits. [Weak channels](../../weak-channels.md) provide non-owning links to queues;
 [the graph generation example](../../../tests/fixtures/graph_generations.fwp)
 shows how to reject a stale ID after reusing a deleted node’s slot. Both have
-verified regression checks. [The plan](../../../PLAN.md) tracks GC removal and
-the remaining work to reduce reference counting.
+verified regression checks. Tracing GC is removed; [the plan](../../../PLAN.md)
+tracks the remaining work to reduce reference counting and temporary storage.

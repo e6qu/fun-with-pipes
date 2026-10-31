@@ -1,6 +1,12 @@
 # C pointers without tracing collection
 
-This change lets native `--gc arc` programs use manually managed C pointers in
+Historical evidence from the recorded source below. Tracing and `--gc` were
+removed in [#217](../roadmap-history.md#tracing-gc-removal-pr-217); current programs
+use checked ownership. Read [the ownership guide](../ownership.md) for current
+acceptance rules and tests, rather than treating the old two-mode checks as
+commands for the current compiler.
+
+The measured change admitted manually managed C pointers in
 foreign calls, synchronous callbacks and exported libraries. It does not make
 raw pointers safe or automatically free them. A `Ptr[T]` copies an address;
 its programmer or host remains responsible for the storage at that address.

@@ -19,6 +19,7 @@ fn numeric_array_to_list_consumers_avoid_intermediate_cells() {
     let dir = fwp::cgen::TempDir::new("array-list-costs").unwrap();
     let input = dir.join("main.fwp");
     std::fs::write(&input, include_str!("fixtures/numeric_array_lists.fwp")).unwrap();
+    let mut failures = Vec::new();
     for packing in ["0", "1"] {
         let mut observations = Vec::new();
         for mode in ["0", "1"] {
@@ -106,16 +107,16 @@ fn numeric_array_to_list_consumers_avoid_intermediate_cells() {
             for (old, new) in reference.iter().zip(candidate) {
                 assert_eq!(&old[..3], &new[..3]);
                 let n = new[0];
-                assert!(
-                    new[3] + n <= old[3] && new[4] + 24 * n <= old[4],
-                    "packing={packing}: {old:?} -> {new:?}"
-                );
-                if new[2] == 1 {
-                    assert_eq!(&new[3..], &[0, 0], "{new:?}");
+                if new[3] + n > old[3] || new[4] + 24 * n > old[4] {
+                    failures.push(format!("packing={packing}: {old:?} -> {new:?}"));
+                }
+                if new[2] == 1 && new[3..] != [0, 0] {
+                    failures.push(format!("fold allocates: packing={packing}: {new:?}"));
                 }
             }
         }
     }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
 #[test]

@@ -204,7 +204,9 @@ allocation savings and D3 accuracy are maintained guarantees.
 Compare Swift alongside C and Rust. State both implementations, equivalent work,
 inputs, compiler flags, timing boundaries, allocations, live/peak memory and
 process RSS. RSS is not an allocation count or isolated ARC cost. Add Swift
-allocation/ownership attribution where it can be observed reliably; report what
+allocation/ownership attribution where it can be observed reliably; the selected
+[allocator profile](docs/measurements/swift-allocations.md) compares pipeline/map
+programs with explicit allocation and omitted-release controls. Report what
 is still unmeasured instead of estimating it from elapsed time.
 
 Preserve the [closure failures](docs/measurements/callable-phases.md) and

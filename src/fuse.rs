@@ -1860,6 +1860,19 @@ impl Fuser<'_> {
                 return None;
             }
         }
+        // Independent, total numeric callbacks may visit elements backward
+        // while consing the final list in source order. This avoids building
+        // and then copying a reversed result. Effects, traps, possible
+        // nontermination and owned captures keep forward traversal instead.
+        let backward_list = kind == "list"
+            && array_source
+            && traps.is_empty()
+            && fns.iter().all(|(id, captures)| {
+                let (params, _) = funcs[*id].ty.params(captures.len() + 1);
+                params[..captures.len()]
+                    .iter()
+                    .all(|ty| unboxed_numeric(ty))
+            });
         // the accumulator: a fold's, a count, the list so far in reverse,
         // or nothing (`find`)
         let (z, acc_ty) = match kind {
@@ -1896,10 +1909,28 @@ impl Fuser<'_> {
                 (Expr::Const(Value::I64(0)), Some(bind(self, &count, &index)))
             }
             Producer::List(e) => (bind(self, e, &prod_ty), None),
-            Producer::Array(e) => (
-                Expr::Record(vec![Expr::Const(Value::I64(0)), bind(self, e, &prod_ty)]),
-                None,
-            ),
+            Producer::Array(e) => {
+                let input = bind(self, e, &prod_ty);
+                let position = if backward_list {
+                    let index = MT::con("std::I64");
+                    let length = self.prim(
+                        "array.length",
+                        MT::Fun(Box::new(prod_ty.clone()), Box::new(index.clone())),
+                        1,
+                    );
+                    let add = self.prim("wrapping.add", fun2(&index, &index, &index), 2);
+                    Expr::Call(
+                        add,
+                        vec![
+                            Expr::Const(Value::I64(-1)),
+                            Expr::Call(length, vec![input.clone()]),
+                        ],
+                    )
+                } else {
+                    Expr::Const(Value::I64(0))
+                };
+                (Expr::Record(vec![position, input]), None)
+            }
         };
 
         // the state: position, accumulator, then the outer locals the step
@@ -2068,14 +2099,20 @@ impl Fuser<'_> {
                 let element = elem(&prod_ty)?;
                 let option = MT::Con("std::Option".into(), vec![element]);
                 let get = self.prim("array.get", fun2(&index_ty, &prod_ty, &option), 2);
-                // The index starts at zero and advances only after a successful
-                // array.get. Array lengths reserve the header's high bit for
-                // views, so position < length <= I64::MAX here. Adding one
-                // cannot overflow; user callback arithmetic remains checked.
+                // A successful read proves 0 <= position < length <= I64::MAX.
+                // Forward traversal increments to length; backward traversal
+                // decrements to -1. Neither can overflow. The next read returns
+                // None at either boundary; callback arithmetic stays checked.
                 let add = self.prim("wrapping.add", fun2(&index_ty, &index_ty, &index_ty), 2);
                 let position = st(0);
                 let input = st(1);
-                let next = Expr::Call(add, vec![Expr::Const(Value::I64(1)), position.clone()]);
+                let next = Expr::Call(
+                    add,
+                    vec![
+                        Expr::Const(Value::I64(if backward_list { -1 } else { 1 })),
+                        position.clone(),
+                    ],
+                );
                 Expr::Match(
                     Box::new(Expr::Call(get, vec![position, input])),
                     vec![
@@ -2177,7 +2214,7 @@ impl Fuser<'_> {
         };
         init.extend(outer.into_iter().map(Expr::Local));
         let mut out = Expr::Call(loop_id, vec![Expr::Func(step), Expr::Record(init)]);
-        if kind == "list" {
+        if kind == "list" && !backward_list {
             let ty = MT::Fun(Box::new(result_ty.clone()), Box::new(result_ty.clone()));
             let rev = self.prim("reverse", ty, 1);
             out = Expr::Call(rev, vec![out]);
